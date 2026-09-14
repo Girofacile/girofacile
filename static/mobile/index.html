@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>GiroFacile</title>
+  <link rel="stylesheet" href="/static/mobile/mobile.css?v=5000">
+</head>
+<body>
+
+<!-- ===== LOGIN ===== -->
+<div id="loginView" class="screen">
+  <div class="login-card" id="mLoginCard">
+    <div class="login-brand">
+      <div class="login-icon">G</div>
+      <h1>GiroFacile</h1>
+      <p>Accedi al tuo gestionale</p>
+    </div>
+    <div class="form-group"><label>Utente o Email</label><input id="mUser" autocomplete="username" placeholder="Nome utente o email"></div>
+    <div class="form-group"><label>Password</label><input id="mPass" type="password" autocomplete="current-password" placeholder="Password"></div>
+    <button class="btn-primary" onclick="mobileLogin()">Accedi</button>
+    <div id="loginError" class="error-msg"></div>
+    <div class="auth-switch">Non hai un account? <button onclick="mobileToggleSignup(true)">Registrati gratis</button></div>
+  </div>
+  <div class="login-card" id="mSignupCard" style="display:none">
+    <div class="login-brand"><div class="login-icon">G</div><h1>Crea account</h1><p>14 giorni gratis · Nessuna carta</p></div>
+    <div class="form-group"><label>Nome azienda</label><input id="mSignupCompany" placeholder="Es. Trasporti Rossi S.r.l."></div>
+    <div class="form-group"><label>Nome utente</label><input id="mSignupUser" placeholder="Scegli un nome utente"></div>
+    <div class="form-group"><label>Email</label><input id="mSignupEmail" type="email" placeholder="La tua email"></div>
+    <div class="form-group"><label>Password</label><input id="mSignupPass" type="password" placeholder="Minimo 6 caratteri"></div>
+    <div class="plan-label">Scegli il piano <span>· 14 giorni gratuiti</span></div>
+    <div class="plan-grid">
+      <div class="plan-card" data-plan="starter" onclick="mSelectPlan(this)"><div class="plan-name">Starter</div><div class="plan-price">€19<span>/mese</span></div><div class="plan-desc">30 clienti</div></div>
+      <div class="plan-card selected" data-plan="business" onclick="mSelectPlan(this)"><div class="plan-badge">Top</div><div class="plan-name">Business</div><div class="plan-price">€39<span>/mese</span></div><div class="plan-desc">150 clienti</div></div>
+      <div class="plan-card" data-plan="pro" onclick="mSelectPlan(this)"><div class="plan-name">Pro</div><div class="plan-price">€79<span>/mese</span></div><div class="plan-desc">Illimitato</div></div>
+    </div>
+    <button class="btn-primary" onclick="mobileSignup()">Crea account →</button>
+    <div id="signupError" class="error-msg"></div>
+    <div class="auth-switch">Hai già un account? <button onclick="mobileToggleSignup(false)">Accedi</button></div>
+  </div>
+</div>
+
+<!-- ===== APP ===== -->
+<div id="appView" class="app hidden">
+
+  <header class="app-header">
+    <div class="header-logo">
+      <div class="header-icon">G</div>
+      <span class="header-title">Giro<strong>Facile</strong></span>
+    </div>
+    <div class="header-user">
+      <div class="user-avatar" id="userAvatar">A</div>
+      <span class="online-dot"></span>
+    </div>
+  </header>
+
+  <main class="app-main">
+
+    <!-- DASHBOARD -->
+    <section id="view-dashboard" class="view active">
+      <div class="page-head"><h2>Dashboard</h2><p id="companyLabel">Panoramica operativa</p></div>
+      <div class="kpi-grid">
+        <div class="kpi-card blue"><div class="kpi-icon">👥</div><div class="kpi-val" id="kpiCustomers">0</div><div class="kpi-lbl">Clienti</div></div>
+        <div class="kpi-card green"><div class="kpi-icon">🚛</div><div class="kpi-val" id="kpiVehicles">0</div><div class="kpi-lbl">Mezzi</div></div>
+        <div class="kpi-card purple"><div class="kpi-icon">👤</div><div class="kpi-val" id="kpiDrivers">0</div><div class="kpi-lbl">Autisti</div></div>
+        <div class="kpi-card orange"><div class="kpi-icon">📍</div><div class="kpi-val" id="kpiRoutes">0</div><div class="kpi-lbl">Giri attivi</div></div>
+      </div>
+      <div class="section-card">
+        <div class="kpi-grid" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:0">
+          <div class="dash-stat"><div class="dash-stat-val" id="dashGiriOggi">0</div><div class="dash-stat-lbl">Giri oggi</div></div>
+          <div class="dash-stat"><div class="dash-stat-val" id="dashKmOggi">0</div><div class="dash-stat-lbl">Km oggi</div></div>
+          <div class="dash-stat"><div class="dash-stat-val" id="dashCostoOggi">€0</div><div class="dash-stat-lbl">Costo oggi</div></div>
+        </div>
+      </div>
+      <div class="section-card">
+        <div class="section-head"><h3>Giri operativi</h3><button class="link-btn" onclick="loadDashboard()">Aggiorna</button></div>
+        <div id="activeRoutes"></div>
+      </div>
+      <div id="dashRouteDetail" class="hidden"></div>
+      <button class="fab" onclick="showView('giri', document.querySelector('.bnav-btn:nth-child(2)'))">+ Nuovo giro</button>
+    </section>
+
+    <!-- GIRI -->
+    <section id="view-giri" class="view">
+      <div class="page-head"><h2>Giri consegna</h2></div>
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="showGiriTab('nuovo',this)">Nuovo giro</button>
+        <button class="tab-btn" onclick="showGiriTab('storico',this)">Storico</button>
+      </div>
+
+      <!-- TAB NUOVO GIRO -->
+      <div id="giriTab-nuovo" class="giri-tab">
+        <div class="section-card">
+          <div class="section-head"><h3>Dettagli giro</h3></div>
+          <div class="form-group"><label>Nome giro</label><input id="routeName" value="Giro consegne"></div>
+          <div class="form-row">
+            <div class="form-group"><label>Data</label><input id="routeDate" type="date"></div>
+            <div class="form-group"><label>Partenza</label><input id="routeStart" type="time" value="08:00"></div>
+          </div>
+          <div class="form-group"><label>Deposito</label><select id="routeDeposit"></select></div>
+          <div class="form-group"><label>Mezzo</label><select id="routeVehicle"><option value="">Nessun mezzo</option></select></div>
+          <div class="form-group"><label>Autista</label><select id="routeDriver"><option value="">Nessun autista</option></select></div>
+          <div class="form-group"><label>Prezzo carburante (€/L)</label><input id="routeFuel" type="number" step="0.01" value="1.75"></div>
+          <label class="check-row"><input id="returnDepot" type="checkbox" checked><span>Rientro al deposito</span></label>
+        </div>
+        <div class="section-card">
+          <div class="section-head"><h3>Clienti da consegnare</h3><span class="badge-count" id="deliveryCount">0</span></div>
+          <input id="customerSearch" class="search-input" placeholder="Cerca cliente o zona" oninput="loadPlanningCustomers()">
+          <div id="planningCustomers" class="stack-list"></div>
+        </div>
+        <div class="section-card">
+          <div class="section-head"><h3>Consegne selezionate</h3><button class="link-btn danger" onclick="clearDeliveries()">Svuota</button></div>
+          <div id="selectedDeliveries" class="stack-list"></div>
+        </div>
+        <div id="routeResult" class="hidden"></div>
+        <div class="action-bottom"><button class="btn-primary" onclick="optimizeMobileRoute()">🚚 Calcola percorso</button></div>
+      </div>
+
+      <!-- TAB STORICO -->
+      <div id="giriTab-storico" class="giri-tab hidden">
+        <div class="section-card">
+          <div class="section-head"><h3>Filtri</h3></div>
+          <div class="form-row">
+            <div class="form-group"><label>Dal</label><input id="storicoFrom" type="date"></div>
+            <div class="form-group"><label>Al</label><input id="storicoTo" type="date"></div>
+          </div>
+          <button class="btn-primary" onclick="loadStorico()">Cerca</button>
+        </div>
+        <div id="storicoList" class="stack-list" style="padding:0 12px 12px"></div>
+      </div>
+    </section>
+
+    <!-- CLIENTI -->
+    <section id="view-clienti" class="view">
+      <div class="page-head"><h2>Clienti</h2><p>Anagrafica e indirizzi</p></div>
+      <div class="section-card">
+        <input id="customerListSearch" class="search-input" placeholder="Cerca cliente, comune o indirizzo" oninput="loadCustomersMobile()">
+        <div class="form-row" style="margin-bottom:8px">
+          <select id="filterZtl" class="form-select" onchange="loadCustomersMobile()">
+            <option value="">ZTL: tutti</option>
+            <option value="true">Solo ZTL</option>
+            <option value="false">Senza ZTL</option>
+          </select>
+          <select id="filterSponda" class="form-select" onchange="loadCustomersMobile()">
+            <option value="">Sponda: tutti</option>
+            <option value="true">Con sponda</option>
+            <option value="false">Senza sponda</option>
+          </select>
+        </div>
+        <button class="btn-primary" onclick="openAddCustomer()" style="margin-bottom:8px">+ Nuovo cliente</button>
+        <button class="btn-secondary" onclick="verifyPendingMobile()" style="margin-bottom:8px">Verifica indirizzi in sospeso</button>
+        <label class="btn-secondary" style="text-align:center;cursor:pointer">
+          📂 Importa CSV/Excel
+          <input type="file" id="importFile" accept=".csv,.xlsx,.xls" style="display:none" onchange="importCustomersMobile()">
+        </label>
+      </div>
+      <div id="customersList" class="stack-list" style="padding:0 12px 12px"></div>
+    </section>
+
+    <!-- REPORT -->
+    <section id="view-report" class="view">
+      <div class="page-head"><h2>Report consegne</h2><p>Analisi e statistiche</p></div>
+      <div class="section-card">
+        <div class="section-head"><h3>Filtri</h3></div>
+        <div class="form-row">
+          <div class="form-group"><label>Dal</label><input id="reportFrom" type="date"></div>
+          <div class="form-group"><label>Al</label><input id="reportTo" type="date"></div>
+        </div>
+        <div class="form-group"><label>Autista</label><select id="reportDriver" class="form-select"><option value="">Tutti gli autisti</option></select></div>
+        <div class="form-group"><label>Mezzo</label><select id="reportVehicle" class="form-select"><option value="">Tutti i mezzi</option></select></div>
+        <div class="form-group"><label>Stato giro</label>
+          <select id="reportStatus" class="form-select">
+            <option value="">Tutti gli stati</option>
+            <option value="completato">Completato</option>
+            <option value="annullato">Annullato</option>
+            <option value="da_completare">Da completare</option>
+          </select>
+        </div>
+        <button class="btn-primary" onclick="loadReport()">Applica filtri</button>
+      </div>
+      <div id="reportContent"></div>
+    </section>
+
+    <!-- ALTRO -->
+    <section id="view-altro" class="view">
+      <div class="page-head"><h2>Altro</h2><p id="altroUserLabel">Impostazioni e risorse</p></div>
+      <div class="section-card">
+        <div class="section-head"><h3>Risorse aziendali</h3></div>
+        <div class="menu-list">
+          <div class="menu-item" onclick="showSubView('autisti')"><span class="menu-icon">👤</span><span class="menu-label">Autisti</span><span class="menu-arrow">›</span></div>
+          <div class="menu-item" onclick="showSubView('mezzi')"><span class="menu-icon">🚛</span><span class="menu-label">Mezzi</span><span class="menu-arrow">›</span></div>
+          <div class="menu-item" onclick="showSubView('depositi')"><span class="menu-icon">🏭</span><span class="menu-label">Depositi</span><span class="menu-arrow">›</span></div>
+          <div class="menu-item" onclick="showSubView('agenti')"><span class="menu-icon">🤝</span><span class="menu-label">Agenti</span><span class="menu-arrow">›</span></div>
+          <div class="menu-item" onclick="showSubView('storico')"><span class="menu-icon">🕐</span><span class="menu-label">Storico giri</span><span class="menu-arrow">›</span></div>
+        </div>
+      </div>
+      <div class="section-card">
+        <div class="section-head"><h3>Account</h3></div>
+        <div class="menu-list">
+          <div class="menu-item danger" onclick="mobileLogout()"><span class="menu-icon">↩</span><span class="menu-label">Esci</span><span class="menu-arrow">›</span></div>
+        </div>
+      </div>
+      <div id="subView" class="hidden" style="padding:0 12px">
+        <div class="subview-header">
+          <button class="back-btn" onclick="hideSubView()">‹ Indietro</button>
+          <h3 id="subViewTitle"></h3>
+        </div>
+        <div id="subViewContent" class="stack-list"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <nav class="bottom-nav">
+    <button class="bnav-btn active" onclick="showView('dashboard',this)"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span>Dashboard</span></button>
+    <button class="bnav-btn" onclick="showView('giri',this)"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg><span>Giri</span></button>
+    <button class="bnav-btn" onclick="showView('clienti',this)"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><span>Clienti</span></button>
+    <button class="bnav-btn" onclick="showView('report',this)"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span>Report</span></button>
+    <button class="bnav-btn" onclick="showView('altro',this)"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg><span>Altro</span></button>
+  </nav>
+</div>
+
+<!-- MODAL -->
+<div id="mModal" class="m-modal-overlay hidden">
+  <div class="m-modal">
+    <div class="m-modal-header"><h3 id="mModalTitle">Form</h3><button class="m-modal-close" onclick="closeMModal()">×</button></div>
+    <div class="m-modal-body" id="mModalBody"></div>
+    <div class="m-modal-footer" id="mModalFooter"></div>
+  </div>
+</div>
+
+<script src="/static/mobile/mobile.js?v=5000"></script>
+</body>
+</html>

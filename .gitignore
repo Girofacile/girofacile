@@ -1,0 +1,48 @@
+# === SEGRETI - MAI CARICARE ===
+.env
+.env.local
+.env.production
+*.pem
+*.key
+
+# === PYTHON ===
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.Python
+build/
+dist/
+
+# === AMBIENTI VIRTUALI ===
+venv/
+.venv/
+env/
+ENV/
+
+# === DATABASE E DATI LOCALI ===
+*.db
+*.sqlite
+*.sqlite3
+data/*.db
+data/*.sqlite*
+
+# === LOG ===
+*.log
+logs/
+
+# === CACHE TEST ===
+.pytest_cache/
+
+# === EDITOR / OS ===
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# === BACKUP / ZIP CHE TI PORTI DIETRO ===
+*.zip
+*.bak
+*_BACKUP*
+*_backup*

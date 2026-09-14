@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sicurezza - GiroFacile</title>
+<style>
+:root{--bg:#f6f8fb;--card:#fff;--text:#111827;--muted:#6b7280;--line:#e5e7eb;--blue:#2563eb;--dark:#0f172a}*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--text);line-height:1.65}.wrap{max-width:980px;margin:0 auto;padding:48px 20px}.doc{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:42px;box-shadow:0 18px 50px rgba(15,23,42,.06)}h1{margin:0 0 10px;font-size:34px;letter-spacing:-.04em;color:var(--dark)}h2{margin:34px 0 12px;font-size:22px;letter-spacing:-.02em;color:var(--dark)}h3{margin:22px 0 8px;font-size:17px;color:var(--dark)}p{margin:0 0 14px}.meta{color:var(--muted);margin-bottom:28px}.notice{background:#eff6ff;border:1px solid #bfdbfe;border-radius:16px;padding:16px;margin:24px 0;color:#1e3a8a}.warn{background:#fff7ed;border:1px solid #fed7aa;border-radius:16px;padding:16px;margin:24px 0;color:#7c2d12}ul{margin:8px 0 16px;padding-left:22px}li{margin:6px 0}.footer{margin-top:36px;padding-top:22px;border-top:1px solid var(--line);color:var(--muted);font-size:14px}.tag{display:inline-block;background:#eef2ff;color:#3730a3;border-radius:999px;padding:4px 10px;font-size:13px;margin:3px 5px 3px 0}table{border-collapse:collapse;width:100%;margin:16px 0}td,th{border:1px solid var(--line);padding:10px;text-align:left;vertical-align:top}th{background:#f9fafb}a{color:var(--blue)}@media(max-width:700px){.doc{padding:24px;border-radius:16px}.wrap{padding:24px 14px}h1{font-size:28px}}
+</style>
+</head>
+<body>
+<main class="wrap"><article class="doc">
+
+<h1>Sicurezza</h1>
+<p class="meta">Misure tecniche e organizzative adottate per il servizio GiroFacile</p>
+<h2>1. Principi generali</h2>
+<p>GiroFacile adotta misure tecniche e organizzative proporzionate alla fase di sviluppo e al tipo di dati trattati, con l’obiettivo di proteggere account, dati aziendali e dati operativi delle consegne.</p>
+<h2>2. Accesso e ruoli</h2>
+<ul>
+<li>account amministratore/azienda;</li>
+<li>portale autista separato;</li>
+<li>portale agente separato;</li>
+<li>funzioni e permessi distinti per ruolo;</li>
+<li>sezioni premium bloccate in base al piano.</li>
+</ul>
+<h2>3. Password e recupero accesso</h2>
+<p>Le password sono gestite con meccanismi di autenticazione e recupero tramite token temporanei. Il recupero password avviene tramite link valido per un tempo limitato e non tramite invio della password in chiaro.</p>
+<h2>4. Connessione sicura</h2>
+<p>Il servizio è erogato tramite connessione HTTPS sul dominio ufficiale https://girofacile.it, ove configurato con certificato SSL valido.</p>
+<h2>5. Database</h2>
+<p>Allo stato attuale il servizio utilizza un database SQLite. È prevista, per una fase di crescita e maggiore scalabilità, una futura migrazione a PostgreSQL o database professionale equivalente.</p>
+<h2>6. Mappe e API</h2>
+<p>Le integrazioni con Google Maps Platform sono configurate tramite chiavi API e limiti di utilizzo. Le coordinate dei clienti vengono salvate dopo verifica manuale dell’indirizzo, per ridurre chiamate inutili e migliorare il controllo dei costi.</p>
+<h2>7. Backup</h2>
+<p>La strategia di backup può variare in base all’ambiente di hosting e alla fase commerciale del servizio. Prima dell’utilizzo commerciale su larga scala si raccomanda l’attivazione di backup automatici periodici e conservazione sicura fuori server.</p>
+<h2>8. Limitazioni</h2>
+<p>Le misure di sicurezza vengono aggiornate progressivamente. Nessun sistema informatico può garantire sicurezza assoluta, ma GiroFacile mira a ridurre i rischi con misure adeguate alla natura del servizio.</p>
+
+<div class="footer">Documento predisposto per GiroFacile. Ultimo aggiornamento: 25/06/2026. Per richieste: <a href="mailto:info@girofacile.it">info@girofacile.it</a> - PEC: Pagliettale02@unapec.it.</div>
+</article></main>
+</body></html>

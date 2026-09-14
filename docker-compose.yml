@@ -1,0 +1,41 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: girofacile-postgres
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-girofacile}
+      POSTGRES_USER: ${POSTGRES_USER:-girofacile}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Imposta POSTGRES_PASSWORD nel file .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-girofacile} -d ${POSTGRES_DB:-girofacile}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  girofacile:
+    build: .
+    container_name: girofacile-app
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    environment:
+      APP_ENV: ${APP_ENV:-production}
+      DATABASE_URL: "postgresql+psycopg2://${POSTGRES_USER:-girofacile}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-girofacile}"
+      COOKIE_SECURE: ${COOKIE_SECURE:-true}
+      TRUST_PROXY_HEADERS: ${TRUST_PROXY_HEADERS:-true}
+      LOGIN_RATE_LIMIT_ENABLED: ${LOGIN_RATE_LIMIT_ENABLED:-true}
+    volumes:
+      - ./backups:/app/backups
+
+volumes:
+  postgres_data:

@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Portale Agente · GiroFacile</title>
+  <style>
+    :root{--bg:#f5f7fb;--card:#fff;--txt:#111827;--mut:#6b7280;--line:#e5e7eb;--blue:#2563eb;--green:#16a34a;--red:#dc2626;--shadow:0 12px 35px rgba(15,23,42,.09);}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif} button,input,select,textarea{font:inherit}
+    .hidden{display:none!important}.app{min-height:100dvh;display:flex;flex-direction:column}.top{height:64px;background:#0f172a;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 18px;position:sticky;top:0;z-index:10}.brand{display:flex;align-items:center;gap:10px;font-weight:900}.logo{width:34px;height:34px;border-radius:10px;background:#2563eb;display:grid;place-items:center}.top small{color:#cbd5e1}.wrap{width:min(1180px,100%);margin:0 auto;padding:20px}.grid{display:grid;grid-template-columns:1fr;gap:16px}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:18px}.hero{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}.hero h1{margin:0;font-size:24px}.hero p{margin:6px 0 0;color:var(--mut)}.actions{display:flex;gap:10px;flex-wrap:wrap}.btn{border:0;border-radius:12px;padding:11px 14px;font-weight:800;background:#eef2ff;color:#1d4ed8;cursor:pointer}.btn.primary{background:var(--blue);color:#fff}.btn.danger{background:#fee2e2;color:#991b1b}.btn.ghost{background:#f3f4f6;color:#374151}.searchbar{display:flex;gap:10px;align-items:center}.searchbar input{flex:1;min-width:180px}.field{display:flex;flex-direction:column;gap:7px}.field label{font-size:12px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:.03em}.field input,.field select,.field textarea{border:1px solid #d1d5db;border-radius:12px;padding:11px 12px;background:#fff;outline:none}.field textarea{min-height:92px;resize:vertical}.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.full{grid-column:1/-1}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px}table{width:100%;border-collapse:collapse;background:#fff}th,td{padding:13px 12px;border-bottom:1px solid #eef2f7;text-align:left;vertical-align:top}th{font-size:12px;text-transform:uppercase;color:#64748b;background:#f8fafc;letter-spacing:.04em}tr:last-child td{border-bottom:0}.badge{display:inline-flex;border-radius:999px;padding:5px 9px;font-size:12px;font-weight:800}.ok{background:#dcfce7;color:#166534}.warn{background:#fef3c7;color:#92400e}.muted{color:var(--mut)}.login{min-height:100dvh;display:grid;place-items:center;padding:18px}.login .card{width:min(430px,100%)}.login h1{margin:0 0 8px}.login p{color:var(--mut);margin:0 0 18px}.login form{display:grid;gap:12px}.modal{position:fixed;inset:0;background:rgba(15,23,42,.55);display:grid;place-items:center;padding:18px;z-index:50}.modal-card{width:min(860px,100%);max-height:92dvh;overflow:auto;background:#fff;border-radius:22px;box-shadow:0 30px 80px rgba(0,0,0,.25)}.modal-head{display:flex;justify-content:space-between;align-items:center;padding:18px 20px;border-bottom:1px solid var(--line)}.modal-head h2{margin:0;font-size:20px}.modal-body{padding:20px}.section{border:1px solid #e5e7eb;background:#f8fafc;border-radius:16px;padding:14px;margin-bottom:14px}.section h3{margin:0 0 12px;font-size:14px;color:#334155}.modal-foot{display:flex;justify-content:flex-end;gap:10px;padding:16px 20px;border-top:1px solid var(--line);background:#f8fafc}.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#111827;color:#fff;border-radius:999px;padding:10px 16px;font-weight:700;z-index:100;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    @media(max-width:760px){.top{height:58px}.wrap{padding:14px}.form-grid{grid-template-columns:1fr}.hero h1{font-size:21px}.actions,.searchbar{width:100%}.actions .btn{flex:1}.table-wrap{border-radius:12px}.modal{padding:8px}.modal-card{max-height:96dvh;border-radius:18px}.modal-foot{position:sticky;bottom:0}.top small{display:none}}
+  </style>
+</head>
+<body>
+  <div id="loginView" class="login hidden">
+    <div class="card">
+      <h1>Portale Agente</h1>
+      <p>Accedi per creare e gestire i clienti associati alla tua azienda.</p>
+      <form onsubmit="agentLogin(event)">
+        <div class="field"><label>Email</label><input id="loginEmail" type="email" required autocomplete="email"></div>
+        <div class="field"><label>Password</label><input id="loginPassword" type="password" required autocomplete="current-password"></div>
+        <button class="btn primary" type="submit">Accedi</button>
+        <button class="btn ghost" type="button" onclick="location.href='/'">Torna a GiroFacile</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="appView" class="app hidden">
+    <header class="top"><div class="brand"><div class="logo">GF</div><div>Portale Agente<br><small id="agentSub">GiroFacile</small></div></div><button class="btn ghost" onclick="logout()">Esci</button></header>
+    <main class="wrap grid">
+      <section class="card hero">
+        <div><h1 id="welcomeTitle">I miei clienti</h1><p id="welcomeText">Crea nuovi clienti e importali direttamente nella Dashboard aziendale.</p></div>
+        <div class="actions"><button class="btn primary" onclick="openCustomerModal()">+ Nuovo cliente</button><button class="btn" onclick="openImportModal()">Importa CSV/Excel</button></div>
+      </section>
+      <section class="card">
+        <div class="searchbar"><input id="searchInput" placeholder="Cerca cliente, codice, indirizzo o comune" oninput="debouncedLoad()"><button class="btn" onclick="loadCustomers()">Cerca</button></div>
+      </section>
+      <section class="card">
+        <div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Indirizzo</th><th>Stato</th><th>Contatti</th><th>Azioni</th></tr></thead><tbody id="customersBody"><tr><td colspan="5" class="muted">Caricamento...</td></tr></tbody></table></div>
+      </section>
+    </main>
+  </div>
+
+  <div id="customerModal" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-head"><h2 id="customerModalTitle">Nuovo cliente</h2><button class="btn ghost" onclick="closeCustomerModal()">Chiudi</button></div>
+      <div class="modal-body">
+        <input id="cId" type="hidden"><input id="cLat" type="hidden"><input id="cLon" type="hidden"><input id="cGeoStatus" type="hidden"><input id="cGeoProvider" type="hidden"><input id="cGooglePlaceId" type="hidden"><input id="cGeocodedAddress" type="hidden"><input id="cGeoConfidence" type="hidden">
+        <div class="section"><h3>Dati cliente</h3><div class="form-grid"><div class="field"><label>Codice cliente</label><input id="cCodice"></div><div class="field"><label>Nome cliente</label><input id="cNome" required></div><div class="field"><label>Telefono</label><input id="cTelefono"></div><div class="field"><label>Email</label><input id="cEmail" type="email"></div><div class="field full"><label>Referente</label><input id="cReferente"></div></div></div>
+        <div class="section"><h3>Indirizzo</h3><div class="form-grid"><div class="field full"><label>Indirizzo completo</label><input id="cIndirizzo" required oninput="clearGeo()"></div><div class="field"><label>Comune</label><input id="cComune" oninput="clearGeo()"></div><div class="field"><label>Provincia</label><input id="cProvincia" oninput="clearGeo()"></div><div class="field full"><button class="btn" type="button" onclick="verifyAddress()">Verifica indirizzo con Google</button><div id="geoResult" class="muted">Indirizzo da verificare</div></div></div></div>
+        <div class="section"><h3>Fasce orarie</h3><div class="form-grid"><div class="field"><label>Mattina da</label><input id="cMattinaDa" type="time"></div><div class="field"><label>Mattina a</label><input id="cMattinaA" type="time"></div><div class="field"><label>Pomeriggio da</label><input id="cPomeriggioDa" type="time"></div><div class="field"><label>Pomeriggio a</label><input id="cPomeriggioA" type="time"></div></div></div>
+        <div class="section"><h3>Dettagli operativi</h3><div class="form-grid"><div class="field"><label>Tempo scarico min</label><input id="cTempo" type="number" value="10" min="0"></div><div class="field"><label>ZTL</label><select id="cZtl"><option value="false">No</option><option value="true">Sì</option></select></div><div class="field"><label>Sponda richiesta</label><select id="cSponda"><option value="false">No</option><option value="true">Sì</option></select></div><div class="field"><label>Transpallet</label><select id="cTranspallet"><option value="false">No</option><option value="true">Sì</option></select></div></div></div>
+        <div class="section"><h3>Note</h3><div class="field"><textarea id="cNote" placeholder="Note cliente, accesso, scarico, riferimenti utili"></textarea></div></div>
+      </div>
+      <div class="modal-foot"><button class="btn ghost" onclick="closeCustomerModal()">Annulla</button><button class="btn primary" onclick="saveCustomer()">Salva cliente</button></div>
+    </div>
+  </div>
+
+  <div id="importModal" class="modal hidden">
+    <div class="modal-card" style="width:min(560px,100%)">
+      <div class="modal-head"><h2>Importa clienti CSV/Excel</h2><button class="btn ghost" onclick="closeImportModal()">Chiudi</button></div>
+      <div class="modal-body"><p class="muted">I clienti importati verranno associati automaticamente al tuo profilo agente.</p><div class="field"><label>File CSV o Excel</label><input id="importFile" type="file" accept=".csv,.xlsx,.xls"></div></div>
+      <div class="modal-foot"><button class="btn ghost" onclick="closeImportModal()">Annulla</button><button class="btn primary" onclick="importCustomers()">Importa</button></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+<script>
+let me=null, customers=[], timer=null;
+const $=id=>document.getElementById(id); const val=id=>($(id)?.value||"").trim(); const set=(id,v)=>{const e=$(id); if(e) e.value=v??""}; const esc=s=>String(s??"").replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); const bool=id=>val(id)==="true";
+async function api(url,opt={}){const r=await fetch(url,{headers:{'Content-Type':'application/json',...(opt.headers||{})},credentials:'include',...opt});let data=null;try{data=await r.json()}catch{} if(!r.ok) throw new Error(data?.detail||data?.message||`Errore ${r.status}`); return data;}
+function toast(t){$('toast').textContent=t;$('toast').classList.remove('hidden');setTimeout(()=>$('toast').classList.add('hidden'),2500)}
+async function init(){try{me=await api('/api/agent/me');$('loginView').classList.add('hidden');$('appView').classList.remove('hidden');$('agentSub').textContent=me.company_name||'GiroFacile';$('welcomeTitle').textContent=`Ciao, ${me.agent_name}`;await loadCustomers();}catch{window.location.href='/login'}}
+async function agentLogin(e){e.preventDefault();try{const res=await api('/api/login',{method:'POST',body:JSON.stringify({email:val('loginEmail'),password:val('loginPassword')})});window.location.href=res.redirect_url||'/agent'}catch(err){alert(err.message)}}
+async function logout(){await api('/api/logout',{method:'POST',body:'{}'}).catch(()=>{});window.location.href='/login'}
+function debouncedLoad(){clearTimeout(timer);timer=setTimeout(loadCustomers,350)}
+function geoBadge(c){const ok=c.stato_geocodifica==='verificato';return `<span class="badge ${ok?'ok':'warn'}">${ok?'Verificato Google':'Da verificare'}</span>`}
+async function loadCustomers(){try{const q=encodeURIComponent(val('searchInput'));customers=await api('/api/agent/customers?q='+q);const body=$('customersBody');if(!customers.length){body.innerHTML='<tr><td colspan="5" class="muted">Nessun cliente inserito.</td></tr>';return}body.innerHTML=customers.map(c=>`<tr><td><strong>${esc(c.nome)}</strong><br><small>${esc(c.codice_cliente||'')}</small></td><td>${esc(c.indirizzo)}<br><small>${esc([c.comune,c.provincia].filter(Boolean).join(' · '))}</small></td><td>${geoBadge(c)}</td><td>${esc(c.telefono||'-')}<br><small>${esc(c.email||'')}</small></td><td><button class="btn" onclick="openCustomerModal(${c.id})">Modifica</button> <button class="btn danger" onclick="deleteCustomer(${c.id})">Elimina</button></td></tr>`).join('')}catch(e){$('customersBody').innerHTML=`<tr><td colspan="5">${esc(e.message)}</td></tr>`}}
+function clearGeo(){set('cLat','');set('cLon','');set('cGeoStatus','da_verificare');set('cGeoProvider','');set('cGooglePlaceId','');set('cGeocodedAddress','');set('cGeoConfidence','');$('geoResult').innerHTML='Indirizzo da verificare'}
+function openCustomerModal(id=null){resetCustomer(); if(id){const c=customers.find(x=>x.id===id); if(!c) return; $('customerModalTitle').textContent='Modifica cliente'; set('cId',c.id); set('cCodice',c.codice_cliente); set('cNome',c.nome); set('cIndirizzo',c.indirizzo); set('cComune',c.comune); set('cProvincia',c.provincia); set('cTelefono',c.telefono); set('cEmail',c.email); set('cReferente',c.referente); set('cMattinaDa',c.scarico_mattina_da); set('cMattinaA',c.scarico_mattina_a); set('cPomeriggioDa',c.scarico_pomeriggio_da); set('cPomeriggioA',c.scarico_pomeriggio_a); set('cTempo',c.tempo_scarico_min||10); set('cZtl',String(!!c.ztl)); set('cSponda',String(!!c.sponda)); set('cTranspallet',String(!!c.transpallet)); set('cNote',c.note); set('cLat',c.lat); set('cLon',c.lon); set('cGeoStatus',c.stato_geocodifica); set('cGeoProvider',c.fonte_geocodifica); set('cGooglePlaceId',c.google_place_id); set('cGeocodedAddress',c.indirizzo_geocodificato); set('cGeoConfidence',c.affidabilita_geocodifica); $('geoResult').innerHTML=c.stato_geocodifica==='verificato'?`<span class="badge ok">Verificato Google</span><br><small>${esc(c.indirizzo_geocodificato||c.indirizzo)}</small>`:'Indirizzo da verificare'; } $('customerModal').classList.remove('hidden')}
+function closeCustomerModal(){ $('customerModal').classList.add('hidden')}
+function resetCustomer(){['cId','cCodice','cNome','cIndirizzo','cComune','cProvincia','cTelefono','cEmail','cReferente','cMattinaDa','cMattinaA','cPomeriggioDa','cPomeriggioA','cNote','cLat','cLon','cGeoProvider','cGooglePlaceId','cGeocodedAddress','cGeoConfidence'].forEach(id=>set(id,'')); set('cTempo',10); set('cZtl','false'); set('cSponda','false'); set('cTranspallet','false'); set('cGeoStatus','da_verificare'); $('customerModalTitle').textContent='Nuovo cliente'; $('geoResult').innerHTML='Indirizzo da verificare'}
+function payload(){return{codice_cliente:val('cCodice')||null,nome:val('cNome')||'Cliente',indirizzo:val('cIndirizzo'),comune:val('cComune')||null,provincia:val('cProvincia')||null,telefono:val('cTelefono')||null,email:val('cEmail')||null,referente:val('cReferente')||null,scarico_mattina_da:val('cMattinaDa')||null,scarico_mattina_a:val('cMattinaA')||null,scarico_pomeriggio_da:val('cPomeriggioDa')||null,scarico_pomeriggio_a:val('cPomeriggioA')||null,tempo_scarico_min:parseInt(val('cTempo')||'10'),ztl:bool('cZtl'),sponda:bool('cSponda'),transpallet:bool('cTranspallet'),note:val('cNote')||null,lat:val('cLat')?parseFloat(val('cLat')):null,lon:val('cLon')?parseFloat(val('cLon')):null,indirizzo_geocodificato:val('cGeocodedAddress')||null,stato_geocodifica:val('cGeoStatus')||'da_verificare',affidabilita_geocodifica:val('cGeoConfidence')?parseFloat(val('cGeoConfidence')):null,fonte_geocodifica:val('cGeoProvider')||null,google_place_id:val('cGooglePlaceId')||null}}
+async function verifyAddress(){try{const r=await api('/api/agent/customers/verify-address-preview',{method:'POST',body:JSON.stringify(payload())});const s=r.suggested||{};set('cIndirizzo',s.indirizzo||val('cIndirizzo'));set('cLat',s.lat);set('cLon',s.lon);set('cGeoStatus',s.stato_geocodifica||'non_trovato');set('cGeoProvider',s.fonte_geocodifica);set('cGooglePlaceId',s.google_place_id);set('cGeocodedAddress',s.indirizzo);set('cGeoConfidence',s.affidabilita_geocodifica);$('geoResult').innerHTML=s.stato_geocodifica==='verificato'?`<span class="badge ok">Verificato Google</span><br><small>${esc(s.indirizzo)}</small>`:`<span class="badge warn">Da verificare</span>`}catch(e){alert(e.message)}}
+async function saveCustomer(){const p=payload(); if(!p.indirizzo){alert('Inserisci indirizzo');return} if(p.stato_geocodifica!=='verificato'&&!confirm('Indirizzo non verificato con Google. Vuoi salvare comunque?')) return; const id=val('cId'); try{await api(id?`/api/agent/customers/${id}`:'/api/agent/customers',{method:id?'PUT':'POST',body:JSON.stringify(p)}); closeCustomerModal(); await loadCustomers(); toast('Cliente salvato')}catch(e){alert(e.message)}}
+async function deleteCustomer(id){if(!confirm('Eliminare questo cliente?'))return; await api(`/api/agent/customers/${id}`,{method:'DELETE'}); await loadCustomers(); toast('Cliente eliminato')}
+function openImportModal(){$('importModal').classList.remove('hidden')} function closeImportModal(){$('importModal').classList.add('hidden')}
+async function importCustomers(){const f=$('importFile').files[0]; if(!f){alert('Seleziona un file');return} const fd=new FormData(); fd.append('file',f); const r=await fetch('/api/agent/customers/import',{method:'POST',body:fd,credentials:'include'}); let data={}; try{data=await r.json()}catch{} if(!r.ok){alert(data.detail||'Errore import');return} closeImportModal(); await loadCustomers(); toast(`Import completato: ${data.created||0} nuovi, ${data.updated||0} aggiornati`)}
+init();
+</script>
+</body>
+</html>

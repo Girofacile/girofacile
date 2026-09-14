@@ -1,0 +1,3 @@
+codice_cliente,nome,indirizzo,comune,provincia,telefono,referente,email,scarico_mattina_da,scarico_mattina_a,scarico_pomeriggio_da,scarico_pomeriggio_a,tempo_scarico_min,ztl,sponda,transpallet,note
+C001,Ristorante Mare Blu,"Via Roma 10, Napoli",Napoli,NA,081000000,Mario,,10:00,14:00,16:00,19:00,20,si,no,si,"Ingresso laterale"
+C002,Market Sole,"Via Nazionale 25, Torre del Greco",Torre del Greco,NA,081000001,Luigi,,09:00,13:00,15:30,18:30,15,no,si,no,""

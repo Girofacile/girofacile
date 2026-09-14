@@ -1,0 +1,7 @@
+[Unit]
+Description=Backup database GiroFacile
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/girofacile_saas/girofacile_saas_COMPLETO_INVITO_AUTISTA
+ExecStart=/opt/girofacile_saas/girofacile_saas_COMPLETO_INVITO_AUTISTA/.venv/bin/python scripts/backup_database.py

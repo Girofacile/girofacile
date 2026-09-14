@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GiroFacile — Pianifica le consegne in pochi minuti</title>
+<meta name="description" content="GiroFacile è il gestionale per organizzare, pianificare e monitorare i giri di consegna.">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --blue:#2563eb;--blue-dark:#1d4ed8;--blue-light:#eff6ff;
+  --green:#10b981;--orange:#f59e0b;--red:#ef4444;--purple:#8b5cf6;
+  --text:#111827;--muted:#6b7280;--light:#f9fafb;--border:#e5e7eb;--white:#fff;
+}
+html{scroll-behavior:smooth;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:var(--text);background:var(--white);line-height:1.6;overflow-x:hidden;}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.97);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);padding:0 6%;height:68px;display:flex;align-items:center;justify-content:space-between;}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.nav-logo-icon{width:36px;height:36px;background:var(--blue);border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:18px;}
+.nav-logo-text{font-size:19px;font-weight:800;color:var(--text);}
+.nav-logo-text span{color:var(--blue);}
+.nav-links{display:flex;align-items:center;gap:32px;}
+.nav-links a{text-decoration:none;color:var(--muted);font-size:14px;font-weight:500;transition:color .15s;}
+.nav-links a:hover{color:var(--blue);}
+.nav-actions{display:flex;align-items:center;gap:10px;}
+.btn-login{padding:9px 20px;border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;font-weight:500;text-decoration:none;transition:all .15s;}
+.btn-login:hover{border-color:var(--blue);color:var(--blue);}
+.btn-cta-nav{padding:9px 20px;background:var(--blue);color:#fff;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;transition:background .15s;}
+.btn-cta-nav:hover{background:var(--blue-dark);}
+
+/* HERO */
+.hero{padding:80px 6% 64px;max-width:1280px;margin:0 auto;display:grid;grid-template-columns:1fr 1.15fr;gap:64px;align-items:center;}
+.hero-tag{display:inline-flex;align-items:center;gap:6px;background:var(--blue-light);color:var(--blue);font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:5px 14px;border-radius:20px;margin-bottom:22px;}
+.hero h1{font-size:48px;font-weight:900;line-height:1.1;margin-bottom:20px;letter-spacing:-.5px;color:var(--text);}
+.hero h1 span{color:var(--blue);}
+.hero-sub{font-size:18px;color:var(--muted);margin-bottom:36px;line-height:1.7;max-width:460px;}
+.hero-actions{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:32px;}
+.btn-hero{display:inline-flex;align-items:center;gap:8px;padding:14px 28px;background:var(--blue);color:#fff;border-radius:10px;font-size:16px;font-weight:700;text-decoration:none;transition:all .15s;}
+.btn-hero:hover{background:var(--blue-dark);transform:translateY(-1px);box-shadow:0 8px 24px rgba(37,99,235,.3);}
+.btn-hero-ghost{display:inline-flex;align-items:center;gap:8px;padding:14px 28px;border:1.5px solid var(--border);color:var(--text);border-radius:10px;font-size:16px;font-weight:500;text-decoration:none;transition:all .15s;}
+.btn-hero-ghost:hover{border-color:var(--blue);color:var(--blue);}
+.hero-note{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:8px;}
+.hero-note-dot{width:7px;height:7px;background:var(--green);border-radius:50%;}
+
+/* APP MOCKUP */
+.mockup-wrap{position:relative;}
+.app-mockup{background:#fff;border:1px solid #d1d5db;border-radius:16px;box-shadow:0 24px 64px rgba(0,0,0,.13);overflow:hidden;}
+.app-bar{background:#f1f5f9;border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;gap:12px;}
+.app-dots{display:flex;gap:6px;}
+.app-dot{width:11px;height:11px;border-radius:50%;}
+.app-dot.r{background:#ef4444;}.app-dot.y{background:#f59e0b;}.app-dot.g{background:#22c55e;}
+.app-url{flex:1;background:#e2e8f0;border-radius:6px;padding:4px 12px;font-size:11px;color:#64748b;font-family:monospace;}
+.app-body{display:grid;grid-template-columns:160px 1fr;min-height:300px;}
+.app-sidebar{background:#f8fafc;border-right:1px solid var(--border);padding:12px 0;}
+.app-brand{padding:8px 14px 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);margin-bottom:8px;}
+.app-brand-icon{width:20px;height:20px;background:var(--blue);border-radius:5px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:800;}
+.app-brand-name{font-size:12px;font-weight:800;color:var(--text);}
+.app-brand-name span{color:var(--blue);}
+.snav{padding:5px 10px;font-size:10.5px;color:#6b7280;display:flex;align-items:center;gap:8px;border-radius:6px;margin:1px 6px;cursor:pointer;}
+.snav.active{background:#eff6ff;color:var(--blue);font-weight:700;}
+.snav svg{flex-shrink:0;}
+.app-main{padding:14px 16px;}
+.am-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.am-title{font-size:14px;font-weight:800;}
+.am-btn{background:var(--blue);color:#fff;padding:5px 10px;border-radius:6px;font-size:9px;font-weight:700;}
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px;}
+.kpi-box{background:#fff;border:1px solid var(--border);border-radius:8px;padding:8px 10px;}
+.kpi-lbl{font-size:8.5px;color:#9ca3af;margin-bottom:3px;}
+.kpi-val{font-size:17px;font-weight:800;color:var(--text);line-height:1;}
+.kpi-trend{font-size:8px;color:var(--green);font-weight:600;margin-top:2px;}
+.chart-box{background:#fff;border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px;}
+.chart-lbl{font-size:9px;font-weight:700;margin-bottom:8px;display:flex;justify-content:space-between;}
+.chart-lbl span{color:#9ca3af;font-weight:400;}
+.bars{display:flex;align-items:flex-end;gap:3px;height:44px;}
+.bar{flex:1;border-radius:3px 3px 0 0;background:#dbeafe;}
+.bar.hi{background:var(--blue);}
+.routes{display:flex;flex-direction:column;gap:5px;}
+.route{display:flex;align-items:center;gap:8px;padding:7px 10px;background:#fff;border:1px solid var(--border);border-radius:8px;}
+.rnum{width:20px;height:20px;background:var(--blue);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;flex-shrink:0;}
+.rinfo{flex:1;}
+.rname{font-size:10px;font-weight:700;}
+.rmeta{font-size:9px;color:#9ca3af;}
+.rbadge{font-size:8.5px;font-weight:700;padding:2px 7px;border-radius:8px;}
+.rb-g{background:#dcfce7;color:#166534;}
+.rb-b{background:#dbeafe;color:#1e40af;}
+.rb-y{background:#fef9c3;color:#854d0e;}
+
+/* STATS */
+.stats{background:var(--light);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:28px 6%;}
+.stats-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:0;}
+.stat{display:flex;align-items:center;gap:14px;padding:0 28px;border-right:1px solid var(--border);}
+.stat:first-child{padding-left:0;}
+.stat:last-child{border-right:none;}
+.stat-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.stat-val{font-size:26px;font-weight:900;line-height:1;}
+.stat-lbl{font-size:12px;color:var(--muted);margin-top:2px;}
+
+/* SECTIONS */
+section{padding:80px 6%;}
+.sec-inner{max-width:1100px;margin:0 auto;}
+.sec-tag{text-align:center;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--blue);margin-bottom:12px;}
+.sec-title{text-align:center;font-size:38px;font-weight:900;margin-bottom:14px;letter-spacing:-.3px;}
+.sec-sub{text-align:center;font-size:16px;color:var(--muted);max-width:520px;margin:0 auto 52px;line-height:1.7;}
+
+/* FEATURES */
+.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
+.feat-card{border:1px solid var(--border);border-radius:14px;padding:28px 24px;transition:all .2s;cursor:default;background:#fff;}
+.feat-card:hover{box-shadow:0 8px 32px rgba(37,99,235,.09);border-color:#bfdbfe;transform:translateY(-2px);}
+.feat-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;}
+.feat-card h3{font-size:16px;font-weight:700;margin-bottom:8px;}
+.feat-card p{font-size:14px;color:var(--muted);line-height:1.65;}
+.feat-arrow{display:inline-flex;align-items:center;gap:4px;color:var(--blue);font-size:13px;font-weight:600;margin-top:12px;text-decoration:none;}
+
+/* SHOWCASE */
+.showcase-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:48px;}
+.sc-card{background:#fff;border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.07);}
+.sc-head{padding:12px 16px;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;gap:8px;}
+.sc-body{padding:14px 16px;}
+.sc-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #f3f4f6;font-size:12px;}
+.sc-row:last-child{border-bottom:none;}
+.sc-lbl{color:#9ca3af;}
+.sc-val{font-weight:700;}
+.sc-badge{padding:2px 8px;border-radius:8px;font-size:10px;font-weight:700;}
+.sc-green{background:#dcfce7;color:#166534;}
+.sc-blue{background:#dbeafe;color:#1e40af;}
+.sc-orange{background:#fef9c3;color:#854d0e;}
+.sc-kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.sc-kpi{background:#f8fafc;border-radius:8px;padding:9px;text-align:center;}
+.sc-kpi-val{font-size:15px;font-weight:800;color:var(--blue);}
+.sc-kpi-lbl{font-size:9px;color:#9ca3af;margin-top:2px;}
+.sc-stop{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f3f4f6;font-size:11px;}
+.sc-stop:last-child{border-bottom:none;}
+.sc-stop-n{width:20px;height:20px;background:var(--blue);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;flex-shrink:0;}
+.sc-stop-name{flex:1;font-weight:600;}
+.sc-stop-time{color:#9ca3af;font-size:10px;}
+
+/* ACCESS */
+.access-grid{display:grid;grid-template-columns:1fr 1.2fr;gap:60px;align-items:center;}
+.access-text .sec-tag{text-align:left;}
+.access-text h2{font-size:34px;font-weight:900;margin-bottom:14px;letter-spacing:-.3px;}
+.access-text p{font-size:16px;color:var(--muted);margin-bottom:28px;line-height:1.7;}
+.access-feat{display:flex;align-items:flex-start;gap:12px;margin-bottom:16px;}
+.access-feat-icon{width:36px;height:36px;background:var(--blue-light);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.access-feat-title{font-size:14px;font-weight:700;margin-bottom:2px;}
+.access-feat-desc{font-size:13px;color:var(--muted);}
+.login-mockup{background:#fff;border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 16px 48px rgba(0,0,0,.1);}
+.lm-wrap{display:grid;grid-template-columns:160px 1fr;}
+.lm-side{background:#0f172a;padding:24px 18px;}
+.lm-brand{color:#fff;font-size:16px;font-weight:800;margin-bottom:4px;}
+.lm-brand span{color:var(--blue);}
+.lm-brand-sub{color:#475569;font-size:11px;margin-bottom:20px;}
+.lm-divider{width:28px;height:2px;background:var(--blue);border-radius:2px;margin-bottom:20px;}
+.lm-item{display:flex;align-items:flex-start;gap:10px;margin-bottom:16px;}
+.lm-item-icon{width:30px;height:30px;background:#1e293b;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.lm-item-title{color:#e2e8f0;font-size:11px;font-weight:700;}
+.lm-item-desc{color:#475569;font-size:10px;margin-top:1px;}
+.lm-form{padding:24px 20px;}
+.lm-form-head{display:flex;align-items:center;gap:10px;margin-bottom:18px;}
+.lm-form-icon{width:38px;height:38px;background:var(--blue);border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:17px;}
+.lm-form-name{font-size:14px;font-weight:800;}
+.lm-form-sub{font-size:10px;color:#9ca3af;}
+.lm-heading{font-size:16px;font-weight:800;margin-bottom:4px;}
+.lm-desc{font-size:11px;color:#9ca3af;margin-bottom:16px;}
+.lm-label{font-size:11px;font-weight:600;color:#6b7280;margin-bottom:4px;display:block;}
+.lm-input{width:100%;border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:12px;background:#f9fafb;color:var(--text);margin-bottom:10px;}
+.lm-btn{width:100%;padding:11px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:10px;display:block;text-align:center;text-decoration:none;}
+.lm-switch{text-align:center;font-size:11px;color:#6b7280;}
+.lm-switch a{color:var(--blue);font-weight:600;text-decoration:none;}
+.lm-forgot{text-align:center;font-size:11px;color:var(--blue);margin-top:6px;cursor:pointer;}
+
+/* PRICING */
+.pricing-grid{max-width:960px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
+.pricing-card{background:#fff;border:1.5px solid var(--border);border-radius:16px;padding:32px 28px;position:relative;}
+.pricing-card.feat{border-color:var(--blue);box-shadow:0 8px 40px rgba(37,99,235,.15);}
+.pricing-pill{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:var(--blue);color:#fff;font-size:11px;font-weight:700;padding:4px 16px;border-radius:20px;white-space:nowrap;}
+.pricing-name{font-size:22px;font-weight:900;margin-bottom:8px;}
+.pricing-desc{font-size:13px;color:var(--muted);margin-bottom:22px;line-height:1.5;}
+.pricing-price{display:flex;align-items:baseline;gap:3px;margin-bottom:28px;}
+.pricing-price .cur{font-size:20px;font-weight:700;}
+.pricing-price .amt{font-size:44px;font-weight:900;line-height:1;}
+.pricing-price .per{font-size:14px;color:var(--muted);}
+.pricing-list{list-style:none;margin-bottom:28px;display:flex;flex-direction:column;gap:10px;}
+.pricing-list li{display:flex;align-items:flex-start;gap:10px;font-size:13.5px;}
+.pricing-list li svg{flex-shrink:0;margin-top:2px;}
+.btn-plan{display:block;width:100%;padding:13px;border-radius:9px;font-size:14px;font-weight:700;text-align:center;text-decoration:none;transition:all .15s;cursor:pointer;border:none;}
+.btn-outline{border:1.5px solid var(--border);color:var(--text);background:transparent;}
+.btn-outline:hover{border-color:var(--blue);color:var(--blue);}
+.btn-filled{background:var(--blue);color:#fff;}
+.btn-filled:hover{background:var(--blue-dark);}
+.pricing-note{text-align:center;margin-top:24px;font-size:12px;color:var(--muted);}
+
+/* CTA */
+.cta-sec{background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%);padding:80px 6%;text-align:center;}
+.cta-sec h2{font-size:38px;font-weight:900;color:#fff;margin-bottom:14px;}
+.cta-sec p{font-size:17px;color:rgba(255,255,255,.8);margin-bottom:36px;}
+.cta-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;}
+.btn-white{display:inline-flex;align-items:center;gap:8px;padding:14px 30px;background:#fff;color:var(--blue);border-radius:10px;font-size:15px;font-weight:700;text-decoration:none;transition:all .15s;}
+.btn-white:hover{background:#eff6ff;}
+.btn-ghost-white{display:inline-flex;align-items:center;gap:8px;padding:14px 30px;border:2px solid rgba(255,255,255,.4);color:#fff;border-radius:10px;font-size:15px;font-weight:600;text-decoration:none;transition:all .15s;}
+.btn-ghost-white:hover{border-color:#fff;background:rgba(255,255,255,.1);}
+
+/* FOOTER */
+footer{background:#0f172a;color:#e2e8f0;padding:60px 6% 28px;}
+.footer-inner{max-width:1100px;margin:0 auto;}
+.footer-top{display:grid;grid-template-columns:2.5fr 1fr 1fr 1fr;gap:48px;margin-bottom:48px;}
+.footer-logo{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.footer-logo-icon{width:32px;height:32px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:15px;}
+.footer-logo-text{font-size:17px;font-weight:800;color:#fff;}
+.footer-brand p{font-size:13px;color:#475569;line-height:1.7;max-width:240px;margin-bottom:20px;}
+.footer-social{display:flex;gap:8px;}
+.footer-social a{width:34px;height:34px;background:#1e293b;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#475569;text-decoration:none;transition:all .15s;}
+.footer-social a:hover{background:var(--blue);color:#fff;}
+.footer-col h4{font-size:13px;font-weight:700;color:#fff;margin-bottom:16px;}
+.footer-col ul{list-style:none;display:flex;flex-direction:column;gap:10px;}
+.footer-col ul a{font-size:13px;color:#475569;text-decoration:none;transition:color .15s;}
+.footer-col ul a:hover{color:#e2e8f0;}
+.footer-bottom{border-top:1px solid #1e293b;padding-top:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;}
+.footer-bottom p{font-size:12px;color:#334155;}
+.footer-links{display:flex;gap:20px;}
+.footer-links a{font-size:12px;color:#334155;text-decoration:none;}
+.footer-links a:hover{color:#64748b;}
+
+@media(max-width:960px){
+  .nav-links{display:none;}
+  .hero{grid-template-columns:1fr;gap:36px;padding:48px 5% 40px;}
+  .hero h1{font-size:34px;}
+  .stats-inner{grid-template-columns:1fr 1fr;}
+  .stat{border-right:none;border-bottom:1px solid var(--border);padding:16px 0;}
+  .feat-grid{grid-template-columns:1fr;}
+  .showcase-grid{grid-template-columns:1fr;}
+  .access-grid{grid-template-columns:1fr;}
+  .pricing-grid{grid-template-columns:1fr;max-width:400px;margin:0 auto;}
+  .footer-top{grid-template-columns:1fr 1fr;}
+  section{padding:60px 5%;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="/" class="nav-logo">
+    <div class="nav-logo-icon">G</div>
+    <span class="nav-logo-text">Giro<span>Facile</span></span>
+  </a>
+  <div class="nav-links">
+    <a href="#funzionalita">Funzionalità</a>
+    <a href="#prezzi">Prezzi</a>
+    <a href="#contatti">Contatti</a>
+  </div>
+  <div class="nav-actions">
+    <a href="https://girofacile.it/login" class="btn-login">Accedi</a>
+    <a href="https://girofacile.it/login" class="btn-cta-nav">Registrati</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div>
+    <div class="hero-tag">
+      <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      Gestionale consegne all-in-one
+    </div>
+    <h1>Pianifica le consegne <span>in pochi minuti.</span></h1>
+    <p class="hero-sub">Ottimizza percorsi, assegna autisti e monitora le consegne in tempo reale da un'unica piattaforma intuitiva.</p>
+    <div class="hero-actions">
+      <a href="https://girofacile.it/login" class="btn-hero">
+        Inizia gratis
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+      <a href="#funzionalita" class="btn-hero-ghost">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+        Scopri le funzionalità
+      </a>
+    </div>
+    <div class="hero-note">
+      <div class="hero-note-dot"></div>
+      14 giorni gratuiti &nbsp;·&nbsp; Nessuna carta richiesta &nbsp;·&nbsp; Attivo in 2 minuti
+    </div>
+  </div>
+
+  <!-- DASHBOARD MOCKUP -->
+  <div class="mockup-wrap">
+    <div class="app-mockup">
+      <div class="app-bar">
+        <div class="app-dots"><div class="app-dot r"></div><div class="app-dot y"></div><div class="app-dot g"></div></div>
+        <div class="app-url">girofacile.it/login</div>
+      </div>
+      <div class="app-body">
+        <div class="app-sidebar">
+          <div class="app-brand">
+            <div class="app-brand-icon">G</div>
+            <div class="app-brand-name">Giro<span>Facile</span></div>
+          </div>
+          <div class="snav active">
+            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            Dashboard
+          </div>
+          <div class="snav">
+            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+            Pianificazione
+          </div>
+          <div class="snav">
+            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            Clienti
+          </div>
+          <div class="snav">
+            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            Report
+          </div>
+          <div class="snav">
+            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><path d="M16 8h4a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-1l-3 3v-3H8a2 2 0 0 1-2-2v-1"/></svg>
+            Depositi
+          </div>
+          <div class="snav">
+            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4a2 2 0 0 1 2 2v6"/></svg>
+            Mezzi
+          </div>
+          <div class="snav">
+            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+            Autisti
+          </div>
+        </div>
+        <div class="app-main">
+          <div class="am-head">
+            <div class="am-title">Dashboard</div>
+            <div class="am-btn">+ Nuovo giro</div>
+          </div>
+          <div class="kpi-row">
+            <div class="kpi-box"><div class="kpi-lbl">Giri oggi</div><div class="kpi-val">8</div><div class="kpi-trend">+2 vs ieri</div></div>
+            <div class="kpi-box"><div class="kpi-lbl">In corso</div><div class="kpi-val">3</div><div class="kpi-trend">attivi ora</div></div>
+            <div class="kpi-box"><div class="kpi-lbl">Consegne</div><div class="kpi-val">124</div><div class="kpi-trend">completate</div></div>
+            <div class="kpi-box"><div class="kpi-lbl">Km oggi</div><div class="kpi-val">312</div><div class="kpi-trend">km totali</div></div>
+          </div>
+          <div class="chart-box">
+            <div class="chart-lbl">Andamento consegne <span>ultimi 7 giorni</span></div>
+            <div class="bars">
+              <div class="bar" style="height:55%"></div>
+              <div class="bar" style="height:72%"></div>
+              <div class="bar" style="height:48%"></div>
+              <div class="bar" style="height:84%"></div>
+              <div class="bar" style="height:62%"></div>
+              <div class="bar" style="height:91%"></div>
+              <div class="bar hi" style="height:76%"></div>
+            </div>
+          </div>
+          <div class="routes">
+            <div class="route"><div class="rnum">1</div><div class="rinfo"><div class="rname">Giro mattina Nord</div><div class="rmeta">Marco R. · 18 fermate · 87 km</div></div><div class="rbadge rb-g">Completato</div></div>
+            <div class="route"><div class="rnum">2</div><div class="rinfo"><div class="rname">Giro pomeriggio Centro</div><div class="rmeta">Luigi B. · 12 fermate · 54 km</div></div><div class="rbadge rb-b">In corso</div></div>
+            <div class="route"><div class="rnum">3</div><div class="rinfo"><div class="rname">Giro sera Sud</div><div class="rmeta">Anna V. · 9 fermate · 41 km</div></div><div class="rbadge rb-y">Programmato</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats">
+  <div class="stats-inner" style="max-width:1100px;margin:0 auto;">
+    <div class="stat">
+      <div class="stat-icon" style="background:#dbeafe">
+        <svg width="20" height="20" fill="none" stroke="#2563eb" stroke-width="2" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      </div>
+      <div><div class="stat-val" style="color:#2563eb">-21%</div><div class="stat-lbl">Riduzione km percorsi</div></div>
+    </div>
+    <div class="stat">
+      <div class="stat-icon" style="background:#dcfce7">
+        <svg width="20" height="20" fill="none" stroke="#16a34a" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      </div>
+      <div><div class="stat-val" style="color:#16a34a">-32%</div><div class="stat-lbl">Meno ritardi nelle consegne</div></div>
+    </div>
+    <div class="stat">
+      <div class="stat-icon" style="background:#fef9c3">
+        <svg width="20" height="20" fill="none" stroke="#ca8a04" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <div><div class="stat-val" style="color:#ca8a04">+28%</div><div class="stat-lbl">Pianificazione più veloce</div></div>
+    </div>
+    <div class="stat">
+      <div class="stat-icon" style="background:#ede9fe">
+        <svg width="20" height="20" fill="none" stroke="#7c3aed" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      </div>
+      <div><div class="stat-val" style="color:#7c3aed">14 gg</div><div class="stat-lbl">Prova gratuita senza impegno</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- FUNZIONALITÀ -->
+<section id="funzionalita" style="background:var(--white)">
+  <div class="sec-inner">
+    <div class="sec-tag">Funzionalità</div>
+    <h2 class="sec-title">Tutto ciò che serve per gestire le consegne</h2>
+    <p class="sec-sub">Strumenti completi e integrati per semplificare il lavoro quotidiano del tuo team.</p>
+    <div class="feat-grid">
+      <div class="feat-card">
+        <div class="feat-icon" style="background:#eff6ff">
+          <svg width="24" height="24" fill="none" stroke="#2563eb" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        </div>
+        <h3>Pianificazione intelligente</h3>
+        <p>Calcolo automatico del percorso migliore in base alle fermate, agli orari di scarico e alle esigenze specifiche dei clienti.</p>
+        <a href="https://girofacile.it/login" class="feat-arrow">Scopri di più <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon" style="background:#f0fdf4">
+          <svg width="24" height="24" fill="none" stroke="#16a34a" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <h3>Gestione autisti</h3>
+        <p>Assegna missioni e invia il link del giro direttamente all'autista via email. L'autista aggiorna le consegne dal telefono in tempo reale.</p>
+        <a href="https://girofacile.it/login" class="feat-arrow">Scopri di più <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon" style="background:#fef9c3">
+          <svg width="24" height="24" fill="none" stroke="#ca8a04" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+        </div>
+        <h3>Tracking missioni</h3>
+        <p>L'autista segna ogni consegna come completata o mancata direttamente dal portale mobile. Tu vedi tutto in tempo reale dalla dashboard.</p>
+        <a href="https://girofacile.it/login" class="feat-arrow">Scopri di più <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon" style="background:#fdf4ff">
+          <svg width="24" height="24" fill="none" stroke="#9333ea" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        </div>
+        <h3>Report avanzati</h3>
+        <p>Analizza performance, costi carburante, km percorsi e produttività per autista, mezzo e agente commerciale con filtri avanzati.</p>
+        <a href="https://girofacile.it/login" class="feat-arrow">Scopri di più <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon" style="background:#fff1f2">
+          <svg width="24" height="24" fill="none" stroke="#e11d48" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        </div>
+        <h3>Gestione clienti</h3>
+        <p>Anagrafica con geocodifica automatica degli indirizzi, fasce orarie di scarico, note, storico consegne e importazione da CSV.</p>
+        <a href="https://girofacile.it/login" class="feat-arrow">Scopri di più <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon" style="background:#f0f9ff">
+          <svg width="24" height="24" fill="none" stroke="#0284c7" stroke-width="2" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+        </div>
+        <h3>App mobile inclusa</h3>
+        <p>Interfaccia ottimizzata per smartphone con menu in basso, gestione completa di clienti, giri e report da qualsiasi dispositivo.</p>
+        <a href="https://app.girofacile.it/mobile" class="feat-arrow">Scopri di più <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SHOWCASE -->
+<section style="background:var(--light)">
+  <div class="sec-inner">
+    <div class="sec-tag">Una piattaforma progettata per la logistica moderna</div>
+    <h2 class="sec-title">Vedi GiroFacile in azione</h2>
+    <div class="showcase-grid">
+      <div class="sc-card">
+        <div class="sc-head" style="background:#1e40af">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          Risultato giro — 19 Giugno 2026
+        </div>
+        <div class="sc-body">
+          <div class="sc-kpi-grid">
+            <div class="sc-kpi"><div class="sc-kpi-val">109 km</div><div class="sc-kpi-lbl">Distanza totale</div></div>
+            <div class="sc-kpi"><div class="sc-kpi-val">169 min</div><div class="sc-kpi-lbl">Durata stimata</div></div>
+            <div class="sc-kpi"><div class="sc-kpi-val">12.03 L</div><div class="sc-kpi-lbl">Litri stimati</div></div>
+            <div class="sc-kpi"><div class="sc-kpi-val">€23.82</div><div class="sc-kpi-lbl">Costo carburante</div></div>
+          </div>
+          <div style="font-size:10px;font-weight:700;color:#6b7280;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Fermate pianificate</div>
+          <div class="sc-stop"><div class="sc-stop-n">1</div><div class="sc-stop-name">Pescheria Torre Blu</div><div class="sc-stop-time">08:45</div></div>
+          <div class="sc-stop"><div class="sc-stop-n">2</div><div class="sc-stop-name">Alimentari Oplonti</div><div class="sc-stop-time">09:30</div></div>
+          <div class="sc-stop"><div class="sc-stop-n">3</div><div class="sc-stop-name">Bar Centrale Roma</div><div class="sc-stop-time">10:15</div></div>
+          <div class="sc-stop"><div class="sc-stop-n">4</div><div class="sc-stop-name">Supermercato Verde</div><div class="sc-stop-time">11:00</div></div>
+        </div>
+      </div>
+      <div class="sc-card">
+        <div class="sc-head" style="background:#065f46">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Dashboard operativa — oggi
+        </div>
+        <div class="sc-body">
+          <div class="sc-row"><span class="sc-lbl">Giri programmati</span><span class="sc-badge sc-blue">8</span></div>
+          <div class="sc-row"><span class="sc-lbl">Giri in corso</span><span class="sc-badge sc-orange">3</span></div>
+          <div class="sc-row"><span class="sc-lbl">Consegne completate</span><span class="sc-badge sc-green">124</span></div>
+          <div class="sc-row"><span class="sc-lbl">Km totali oggi</span><span class="sc-val">312 km</span></div>
+          <div class="sc-row"><span class="sc-lbl">Costo carburante</span><span class="sc-val">€54.60</span></div>
+          <div class="sc-row"><span class="sc-lbl">Autisti attivi</span><span class="sc-val">5 / 6</span></div>
+          <div class="sc-row"><span class="sc-lbl">Mezzi in uso</span><span class="sc-val">4 / 5</span></div>
+          <div class="sc-row"><span class="sc-lbl">Rientro stimato</span><span class="sc-val">18:30</span></div>
+        </div>
+      </div>
+      <div class="sc-card">
+        <div class="sc-head" style="background:#6d28d9">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          Report mensile — Giugno 2026
+        </div>
+        <div class="sc-body">
+          <div class="sc-kpi-grid">
+            <div class="sc-kpi"><div class="sc-kpi-val">186</div><div class="sc-kpi-lbl">Giri effettuati</div></div>
+            <div class="sc-kpi"><div class="sc-kpi-val">2.847</div><div class="sc-kpi-lbl">Consegne totali</div></div>
+            <div class="sc-kpi"><div class="sc-kpi-val">7.420 km</div><div class="sc-kpi-lbl">Km totali</div></div>
+            <div class="sc-kpi"><div class="sc-kpi-val">€1.298</div><div class="sc-kpi-lbl">Costo carburante</div></div>
+          </div>
+          <div style="font-size:10px;font-weight:700;color:#6b7280;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Top autisti del mese</div>
+          <div class="sc-row"><span class="sc-lbl">Marco Rossi</span><span class="sc-val">487 consegne</span></div>
+          <div class="sc-row"><span class="sc-lbl">Luigi Bianchi</span><span class="sc-val">421 consegne</span></div>
+          <div class="sc-row"><span class="sc-lbl">Anna Verdi</span><span class="sc-val">398 consegne</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ACCESS -->
+<section style="background:var(--white)">
+  <div class="sec-inner">
+    <div class="access-grid">
+      <div class="access-text">
+        <div class="sec-tag" style="text-align:left">Accesso rapido</div>
+        <h2>Accedi al tuo portale</h2>
+        <p>Entra nella tua area riservata per gestire giri, clienti e report. Disponibile da qualsiasi dispositivo, ovunque tu sia.</p>
+        <div class="access-feat">
+          <div class="access-feat-icon">
+            <svg width="18" height="18" fill="none" stroke="#2563eb" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
+          <div>
+            <div class="access-feat-title">Sicuro e protetto</div>
+            <div class="access-feat-desc">Sessioni criptate e dati isolati per ogni azienda.</div>
+          </div>
+        </div>
+        <div class="access-feat">
+          <div class="access-feat-icon">
+            <svg width="18" height="18" fill="none" stroke="#2563eb" stroke-width="2" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+          </div>
+          <div>
+            <div class="access-feat-title">Mobile e desktop</div>
+            <div class="access-feat-desc">Usa GiroFacile dal PC in ufficio o dal telefono in giro.</div>
+          </div>
+        </div>
+        <div class="access-feat">
+          <div class="access-feat-icon">
+            <svg width="18" height="18" fill="none" stroke="#2563eb" stroke-width="2" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          </div>
+          <div>
+            <div class="access-feat-title">Sempre disponibile</div>
+            <div class="access-feat-desc">Server dedicato con uptime garantito 24/7.</div>
+          </div>
+        </div>
+      </div>
+      <div class="login-mockup">
+        <div class="lm-wrap">
+          <div class="lm-side">
+            <div class="lm-brand">Giro<span>Facile</span></div>
+            <div class="lm-brand-sub">Gestione percorsi e consegne</div>
+            <div class="lm-divider"></div>
+            <div class="lm-item">
+              <div class="lm-item-icon">
+                <svg width="14" height="14" fill="none" stroke="#60a5fa" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+              </div>
+              <div><div class="lm-item-title">Pianifica</div><div class="lm-item-desc">Organizza i percorsi in modo efficiente</div></div>
+            </div>
+            <div class="lm-item">
+              <div class="lm-item-icon">
+                <svg width="14" height="14" fill="none" stroke="#60a5fa" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              </div>
+              <div><div class="lm-item-title">Gestisci</div><div class="lm-item-desc">Monitora consegne e stati in tempo reale</div></div>
+            </div>
+            <div class="lm-item">
+              <div class="lm-item-icon">
+                <svg width="14" height="14" fill="none" stroke="#60a5fa" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+              </div>
+              <div><div class="lm-item-title">Analizza</div><div class="lm-item-desc">Report dettagliati per decisioni migliori</div></div>
+            </div>
+          </div>
+          <div class="lm-form">
+            <div class="lm-form-head">
+              <div class="lm-form-icon">G</div>
+              <div><div class="lm-form-name">GiroFacile</div><div class="lm-form-sub">Gestione percorsi e consegne</div></div>
+            </div>
+            <div class="lm-heading">Accesso riservato</div>
+            <div class="lm-desc">Accedi al tuo portale</div>
+            <label class="lm-label">Utente o Email</label>
+            <input class="lm-input" placeholder="Inserisci il tuo nome utente" disabled>
+            <label class="lm-label">Password</label>
+            <input class="lm-input" type="password" placeholder="Inserisci la tua password" disabled>
+            <a href="https://girofacile.it/login" class="lm-btn">Entra nel gestionale</a>
+            <div class="lm-switch">Non hai un account? <a href="https://girofacile.it/login">Registrati gratis</a></div>
+            <div class="lm-forgot">Password dimenticata?</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PREZZI -->
+<section style="background:var(--light)" id="prezzi">
+  <div class="sec-inner">
+    <div class="sec-tag">Piani e prezzi</div>
+    <h2 class="sec-title">Scegli il piano più adatto a te</h2>
+    <p class="sec-sub">Piani semplici e trasparenti, senza costi nascosti. 14 giorni di prova gratuita su tutti i piani.</p>
+    <div class="pricing-grid">
+      <div class="pricing-card">
+        <div class="pricing-name">Starter</div>
+        <div class="pricing-desc">Ideale per attività che iniziano a digitalizzare le consegne.</div>
+        <div class="pricing-price"><span class="cur">€</span><span class="amt">19</span><span class="per">/mese</span></div>
+        <ul class="pricing-list">
+          <li><svg width="15" height="15" fill="none" stroke="#10b981" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Fino a 30 clienti</li>
+          <li><svg width="15" height="15" fill="none" stroke="#10b981" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>5 giri al giorno</li>
+          <li><svg width="15" height="15" fill="none" stroke="#10b981" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>2 depositi · 3 mezzi · 3 autisti</li>
+          <li><svg width="15" height="15" fill="none" stroke="#10b981" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Pianificazione giri</li>
+          <li><svg width="15" height="15" fill="none" stroke="#10b981" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>App mobile inclusa</li>
+          <li><svg width="15" height="15" fill="none" stroke="#d1d5db" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg><span style="color:#9ca3af">Report avanzati</span></li>
+        </ul>
+        <a href="https://girofacile.it/login" class="btn-plan btn-outline">Inizia gratis</a>
+      </div>
+      <div class="pricing-card feat">
+        <div class="pricing-pill">✦ Più scelto</div>
+        <div class="pricing-name">Business</div>
+        <div class="pricing-desc">Per aziende con volumi elevati e bisogno di analisi avanzate.</div>
+        <div class="pricing-price"><span class="cur">€</span><span class="amt">39</span><span class="per">/mese</span></div>
+        <ul class="pricing-list">
+          <li><svg width="15" height="15" fill="none" stroke="#10b981" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Fino a 150 clienti</li>
+          <li><svg width="15" height="15" fill="none" stroke="#10b981" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>30 giri al giorno</li>
+          <li><svg width="15" height="15" fill="none" stroke="#10b981" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>10 depositi · 20 mezzi · 20 autisti</li>
+          <li><svg width="15" height="15" fill="none" stroke="#10b981" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Agenti commerciali</li>
+          <li><svg width="15" height="15" fill="none" stroke="#10b981" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Report e analisi avanzati</li>
+          <li><svg width="15" height="15" fill="none" stroke="#10b981" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Export CSV</li>
+        </ul>
+        <a href="https://girofacile.it/login" class="btn-plan btn-filled">Inizia gratis</a>
+      </div>
+      <div class="pricing-card">
+        <div class="pricing-name">Pro</div>
+        <div class="pricing-desc">Per team strutturati con volumi elevati e zero limiti.</div>
+        <div class="pricing-price"><span class="cur">€</span><span class="amt">79</span><span class="per">/mese</span></div>
+        <ul class="pricing-list">
+          <li><svg width="15" height="15" fill="none" stroke="#10b981" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Clienti illimitati</li>
+          <li><svg width="15" height="15" fill="none" stroke="#10b981" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Giri illimitati</li>
+          <li><svg width="15" height="15" fill="none" stroke="#10b981" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Tutto illimitato</li>
+          <li><svg width="15" height="15" fill="none" stroke="#10b981" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Tutte le funzionalità Business</li>
+          <li><svg width="15" height="15" fill="none" stroke="#10b981" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Supporto prioritario</li>
+        </ul>
+        <a href="https://girofacile.it/login" class="btn-plan btn-outline">Inizia gratis</a>
+      </div>
+    </div>
+    <p class="pricing-note">✓ 14 giorni gratuiti su tutti i piani &nbsp;·&nbsp; Nessuna carta di credito &nbsp;·&nbsp; Disdici quando vuoi</p>
+  </div>
+</section>
+
+<!-- CTA -->
+<div class="cta-sec">
+  <h2>Pronto a semplificare la tua logistica?</h2>
+  <p>Inizia la prova gratuita di 14 giorni. Nessuna carta di credito richiesta.</p>
+  <div class="cta-btns">
+    <a href="https://girofacile.it/login" class="btn-white">Inizia gratis →</a>
+    <a href="mailto:info@girofacile.it" class="btn-ghost-white">Contattaci</a>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer id="contatti">
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <div class="footer-logo-icon">G</div>
+          <span class="footer-logo-text">GiroFacile</span>
+        </div>
+        <p>Il gestionale completo per organizzare, pianificare e monitorare i tuoi giri di consegna.</p>
+        <div class="footer-social">
+          <a href="#">f</a>
+          <a href="#">in</a>
+          <a href="mailto:info@girofacile.it">@</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Prodotto</h4>
+        <ul>
+          <li><a href="#funzionalita">Funzionalità</a></li>
+          <li><a href="#prezzi">Prezzi</a></li>
+          <li><a href="/sicurezza">Sicurezza</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Azienda</h4>
+        <ul>
+          <li><a href="mailto:info@girofacile.it">Chi siamo</a></li>
+          <li><a href="mailto:info@girofacile.it">Contatti</a></li>
+          <li><a href="/termini-condizioni">Termini</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Supporto</h4>
+        <ul>
+          <li><a href="/cookie-policy">Cookie</a></li>
+          <li><a href="/privacy-policy">Privacy</a></li>
+          <li><a href="mailto:info@girofacile.it">Supporto</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 GiroFacile — Tutti i diritti riservati.</p>
+      <div class="footer-links">
+        <a href="/privacy-policy">Privacy Policy</a>
+        <a href="/termini-condizioni">Termini e condizioni</a>
+        <a href="/cookie-policy">Cookie Policy</a>
+        <a href="/sicurezza">Sicurezza</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

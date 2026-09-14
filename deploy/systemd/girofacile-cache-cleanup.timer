@@ -1,0 +1,11 @@
+[Unit]
+Description=GiroFacile - Timer pulizia cache Google Routes ogni 15 giorni
+
+[Timer]
+OnBootSec=10min
+OnUnitActiveSec=15d
+Persistent=true
+Unit=girofacile-cache-cleanup.service
+
+[Install]
+WantedBy=timers.target

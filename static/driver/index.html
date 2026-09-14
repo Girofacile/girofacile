@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>GiroFacile · Portale Autista</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --blue:#2563eb;--blue-dark:#1d4ed8;--blue-light:#eff6ff;
+  --green:#10b981;--red:#ef4444;--orange:#f59e0b;--purple:#8b5cf6;
+  --text:#111827;--muted:#6b7280;--border:#e5e7eb;--bg:#f3f4f6;--white:#fff;
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+  --nav-h:64px;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;-webkit-font-smoothing:antialiased;}
+
+/* LOGIN */
+.login-screen{min-height:100vh;background:linear-gradient(135deg,#1e3a8a,#2563eb);display:flex;align-items:center;justify-content:center;padding:24px;}
+.login-card{background:#fff;border-radius:20px;padding:36px 28px;width:100%;max-width:380px;box-shadow:0 24px 64px rgba(0,0,0,.2);}
+.login-brand{text-align:center;margin-bottom:28px;}
+.login-icon{width:56px;height:56px;background:#2563eb;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:26px;font-weight:800;margin:0 auto 12px;}
+.login-brand h1{font-size:22px;font-weight:800;}
+.login-brand p{font-size:13px;color:#6b7280;margin-top:4px;}
+.form-group{margin-bottom:14px;}
+.form-group label{display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:5px;}
+.form-group input{width:100%;padding:12px 14px;border:1.5px solid #e5e7eb;border-radius:9px;font-size:15px;background:#f9fafb;color:var(--text);outline:none;}
+.form-group input:focus{border-color:var(--blue);}
+.btn-login-submit{width:100%;padding:14px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;margin-top:4px;}
+.btn-login-submit:hover{background:var(--blue-dark);}
+.login-error{color:var(--red);font-size:13px;text-align:center;min-height:18px;margin-top:8px;}
+.login-footer{text-align:center;font-size:12px;color:#9ca3af;margin-top:16px;}
+.login-footer a{color:var(--blue);text-decoration:none;}
+.driver-forgot-link{margin-top:8px;background:none;border:none;color:var(--blue);font-size:12px;font-weight:700;cursor:pointer;text-decoration:none;}
+
+/* APP */
+.app{display:flex;flex-direction:column;height:100vh;}
+.hidden{display:none!important;}
+
+/* HEADER */
+.app-header{background:#fff;border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;flex-shrink:0;}
+.header-left{display:flex;align-items:center;gap:10px;}
+.header-logo{width:30px;height:30px;background:var(--blue);border-radius:7px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px;}
+.header-title{font-size:16px;font-weight:700;}
+.header-title span{color:var(--blue);}
+.header-driver{font-size:12px;color:#6b7280;margin-top:1px;}
+.header-right{display:flex;align-items:center;gap:10px;}
+.notif-btn{background:none;border:none;cursor:pointer;position:relative;padding:4px;}
+.notif-badge{position:absolute;top:0;right:0;width:16px;height:16px;background:var(--red);color:#fff;font-size:9px;font-weight:700;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+
+/* MAIN */
+.app-main{flex:1;overflow-y:auto;padding-bottom:calc(var(--nav-h) + var(--safe-bottom) + 16px);}
+body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
+
+/* BOTTOM NAV */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;height:calc(var(--nav-h) + var(--safe-bottom));background:#fff;border-top:1px solid var(--border);display:flex;align-items:flex-start;padding-top:6px;padding-bottom:var(--safe-bottom);z-index:100;box-shadow:0 -2px 12px rgba(0,0,0,.06);}
+.bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;color:#6b7280;cursor:pointer;padding:4px 0;font-size:10px;font-weight:500;-webkit-tap-highlight-color:transparent;}
+.bnav-btn.active{color:var(--blue);}
+.bnav-btn svg{stroke:currentColor;}
+
+/* VIEWS */
+.view{display:none;}
+.view.active{display:block;}
+.page-head{padding:20px 16px 12px;}
+.page-head h2{font-size:22px;font-weight:800;}
+.page-head p{font-size:13px;color:#6b7280;margin-top:2px;}
+
+/* SECTION CARD */
+.section-card{background:#fff;border-radius:16px;margin:0 12px 12px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.05);}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.section-head h3{font-size:15px;font-weight:700;}
+.link-btn{background:none;border:none;color:var(--blue);font-size:13px;font-weight:600;cursor:pointer;padding:0;}
+
+/* ROUTE CARDS */
+.route-card{background:#fff;border:1px solid var(--border);border-radius:14px;margin-bottom:10px;overflow:hidden;transition:box-shadow .2s;}
+.route-card.today{border-color:var(--blue);box-shadow:0 4px 16px rgba(37,99,235,.1);}
+.route-card.completed{opacity:.7;}
+.rc-head{padding:14px 16px;display:flex;align-items:flex-start;gap:12px;}
+.rc-date-badge{background:var(--blue);color:#fff;border-radius:9px;padding:6px 10px;text-align:center;flex-shrink:0;min-width:48px;}
+.rc-date-day{font-size:18px;font-weight:800;line-height:1;}
+.rc-date-month{font-size:9px;font-weight:600;text-transform:uppercase;opacity:.85;}
+.rc-info{flex:1;}
+.rc-name{font-size:15px;font-weight:700;margin-bottom:3px;}
+.rc-meta{font-size:12px;color:#6b7280;display:flex;flex-wrap:wrap;gap:8px;}
+.rc-status{flex-shrink:0;}
+.rc-badge{display:inline-block;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;}
+.rb-prog{background:#e0e7ff;color:#3730a3;}
+.rb-corso{background:#dbeafe;color:#1e40af;}
+.rb-done{background:#dcfce7;color:#166534;}
+.rb-cancel{background:#fee2e2;color:#991b1b;}
+.rc-progress{padding:10px 16px;border-top:1px solid #f3f4f6;}
+.rc-progress-track{background:#f3f4f6;border-radius:6px;height:6px;overflow:hidden;margin-bottom:6px;}
+.rc-progress-fill{height:100%;border-radius:6px;background:var(--green);}
+.rc-progress-label{font-size:11px;color:#6b7280;display:flex;justify-content:space-between;}
+.rc-actions{padding:10px 16px 14px;display:flex;gap:8px;}
+.btn-start{flex:1;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;}
+.btn-start:active{background:var(--blue-dark);}
+.btn-start.disabled{background:#d1d5db;color:#9ca3af;cursor:not-allowed;}
+.btn-view{padding:12px 16px;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;color:var(--text);}
+
+/* DELIVERY EXECUTION */
+.exec-header{background:#fff;border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;gap:12px;}
+.back-btn{background:none;border:none;color:var(--blue);font-size:16px;font-weight:600;cursor:pointer;padding:0;}
+.exec-title{font-size:15px;font-weight:700;flex:1;}
+.exec-progress-bar{background:#f3f4f6;height:4px;}
+.exec-progress-fill{height:100%;background:var(--blue);transition:width .4s;}
+.progress-strip{background:#fff;border-bottom:1px solid var(--border);padding:12px 16px;}
+.progress-strip-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px;}
+.ps-stat{text-align:center;}
+.ps-val{font-size:18px;font-weight:800;}
+.ps-lbl{font-size:10px;color:#6b7280;margin-top:1px;}
+.ps-val.green{color:var(--green);}
+.ps-val.red{color:var(--red);}
+.ps-val.blue{color:var(--blue);}
+.ps-val.gray{color:#6b7280;}
+.delivery-list{padding:12px;}
+.delivery-item{background:#fff;border:2px solid var(--border);border-radius:14px;margin-bottom:10px;overflow:hidden;}
+.delivery-item.active{border-color:var(--blue);box-shadow:0 4px 20px rgba(37,99,235,.12);}
+.delivery-item.done{border-color:var(--green);opacity:.85;}
+.delivery-item.mancata{border-color:var(--red);opacity:.85;}
+.di-head{padding:14px 16px;display:flex;align-items:flex-start;gap:10px;}
+.di-num{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0;color:#fff;}
+.di-num.active{background:var(--blue);}
+.di-num.done{background:var(--green);}
+.di-num.mancata{background:var(--red);}
+.di-num.waiting{background:#d1d5db;color:#6b7280;}
+.di-info{flex:1;}
+.di-name{font-size:15px;font-weight:700;}
+.di-addr{font-size:12px;color:#6b7280;margin-top:2px;}
+.di-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
+.di-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;}
+.db-ztl{background:#fee2e2;color:#991b1b;}
+.db-sponda{background:#fef3c7;color:#92400e;}
+.db-time{background:#dbeafe;color:#1e40af;}
+.di-status-icon{font-size:22px;}
+.di-details{padding:0 16px 12px;}
+.di-note-box{background:#f9fafb;border-radius:8px;padding:10px 12px;font-size:13px;color:#6b7280;margin-bottom:8px;}
+.di-done-box{background:#dcfce7;border-radius:8px;padding:10px 12px;font-size:13px;color:#166534;margin-bottom:8px;}
+.di-missed-box{background:#fee2e2;border-radius:8px;padding:10px 12px;font-size:13px;color:#991b1b;margin-bottom:8px;}
+.di-warn-box{background:#fef3c7;border-radius:8px;padding:8px 12px;font-size:12px;color:#92400e;margin-bottom:8px;}
+.di-times{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px;}
+.di-time-item{text-align:center;background:#f9fafb;border-radius:7px;padding:6px;}
+.di-time-lbl{font-size:9px;color:#9ca3af;margin-bottom:2px;}
+.di-time-val{font-size:13px;font-weight:700;}
+.di-actions{padding:0 16px 16px;display:flex;flex-direction:column;gap:8px;}
+.btn-navigate{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;background:var(--blue);color:#fff;border:none;border-radius:11px;font-size:15px;font-weight:700;cursor:pointer;text-decoration:none;}
+.btn-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.btn-done{padding:13px;background:#dcfce7;color:#166534;border:2px solid #10b981;border-radius:11px;font-size:14px;font-weight:700;cursor:pointer;}
+.btn-missed{padding:13px;background:#fee2e2;color:#991b1b;border:2px solid var(--red);border-radius:11px;font-size:14px;font-weight:700;cursor:pointer;}
+.btn-note-small{width:100%;padding:10px;background:#f9fafb;border:1.5px solid var(--border);border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;color:#6b7280;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;}
+.modal-overlay.hidden{display:none;}
+.modal{background:#fff;border-radius:20px 20px 0 0;width:100%;padding-bottom:var(--safe-bottom);}
+.modal-header{padding:16px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.modal-header h3{font-size:17px;font-weight:700;}
+.modal-close{background:none;border:none;font-size:24px;color:#6b7280;cursor:pointer;}
+.modal-body{padding:16px 20px 20px;}
+.modal-sub{font-size:13px;color:#6b7280;margin-bottom:14px;}
+.tempo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
+.tempo-btn{padding:14px 6px;border:2px solid var(--border);border-radius:12px;background:#f9fafb;font-size:14px;font-weight:700;cursor:pointer;text-align:center;}
+.tempo-btn.sel{border-color:var(--blue);background:var(--blue-light);color:var(--blue);}
+.motivo-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;}
+.motivo-btn{padding:13px 16px;border:2px solid var(--border);border-radius:11px;background:#f9fafb;font-size:14px;font-weight:600;cursor:pointer;text-align:left;}
+.motivo-btn.sel{border-color:var(--red);background:#fee2e2;color:#991b1b;}
+.note-textarea{width:100%;padding:12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;background:#f9fafb;min-height:80px;resize:none;margin-bottom:12px;font-family:inherit;outline:none;}
+.note-textarea:focus{border-color:var(--blue);}
+.btn-confirm{width:100%;padding:14px;border:none;border-radius:11px;font-size:16px;font-weight:700;cursor:pointer;color:#fff;}
+.btn-confirm.green{background:var(--green);}
+.btn-confirm.red{background:var(--red);}
+.btn-confirm.blue{background:var(--blue);}
+/* Firma cliente: nella conferma consegna mostriamo solo la card, la firma sta in una schermata dedicata */
+.signature-request-card{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:14px 0 12px;padding:13px;border:1.5px solid #bfdbfe;background:#eff6ff;border-radius:14px;}
+.signature-request-card.hidden{display:none;}
+.signature-request-info{display:flex;flex-direction:column;gap:3px;color:#1e3a8a;}
+.signature-request-info strong{font-size:14px;}
+.signature-request-info span{font-size:12px;color:#64748b;}
+.signature-request-card.done{border-color:#bbf7d0;background:#f0fdf4;}
+.signature-request-card.done .signature-request-info{color:#166534;}
+.btn-signature-open{border:none;background:#2563eb;color:#fff;border-radius:12px;padding:11px 12px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;}
+.signature-only-modal{max-height:94vh;}
+.signature-intro{background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;padding:11px 12px;color:#64748b;font-size:13px;line-height:1.35;margin-bottom:12px;}
+.signature-label{font-size:13px;font-weight:700;color:#374151;margin:10px 0 8px;}
+.signature-input{width:100%;padding:12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;background:#f9fafb;outline:none;margin-bottom:10px;}
+.signature-input:focus{border-color:var(--blue);}
+.signature-pad-wrap{border:1.5px dashed #cbd5e1;border-radius:14px;background:#fff;overflow:hidden;margin-bottom:10px;}
+#signatureCanvas{display:block;width:100%;height:220px;touch-action:none;background:#fff;}
+.signature-pad-large #signatureCanvas{height:240px;}
+.signature-tools{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;}
+.signature-tools small{color:#6b7280;font-size:11px;}
+.btn-clear-signature{border:1px solid #cbd5e1;background:#f8fafc;color:#334155;border-radius:9px;padding:8px 10px;font-size:12px;font-weight:700;cursor:pointer;}
+.di-signature-box{margin-top:8px;background:#eff6ff;color:#1e3a8a;border:1px solid #bfdbfe;border-radius:10px;padding:9px 10px;font-size:12px;font-weight:700;}
+
+/* CHAT */
+.chat-wrap{display:flex;flex-direction:column;height:calc(100dvh - 112px);padding-bottom:calc(82px + var(--safe-bottom));box-sizing:border-box;}
+.chat-messages{flex:1;overflow-y:auto;padding:16px 16px 18px;display:flex;flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch;}
+.chat-msg{max-width:80%;display:flex;flex-direction:column;}
+.chat-msg.driver{align-self:flex-end;align-items:flex-end;}
+.chat-msg.admin{align-self:flex-start;align-items:flex-start;}
+.chat-bubble{padding:10px 14px;border-radius:16px;font-size:14px;line-height:1.5;}
+.chat-msg.driver .chat-bubble{background:var(--blue);color:#fff;border-bottom-right-radius:4px;}
+.chat-msg.admin .chat-bubble{background:#fff;border:1px solid var(--border);color:var(--text);border-bottom-left-radius:4px;}
+.chat-time{font-size:10px;color:#9ca3af;margin-top:3px;}
+.chat-sender{font-size:11px;font-weight:600;color:#6b7280;margin-bottom:2px;}
+.chat-input-area{position:fixed;left:0;right:0;bottom:calc(var(--nav-h) + var(--safe-bottom));background:#fff;border-top:1px solid var(--border);padding:10px 16px 12px;display:flex;gap:10px;align-items:flex-end;z-index:99;box-shadow:0 -2px 12px rgba(15,23,42,.06);}
+.chat-input{flex:1;border:1.5px solid var(--border);border-radius:20px;padding:10px 16px;font-size:14px;outline:none;resize:none;font-family:inherit;max-height:100px;}
+.chat-input:focus{border-color:var(--blue);}
+.chat-send-btn{width:40px;height:40px;background:var(--blue);border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
+.chat-send-btn:active{background:var(--blue-dark);}
+.chat-empty{text-align:center;color:#9ca3af;font-size:14px;padding:40px 20px;}
+.chat-route-select{padding:12px 16px;border-bottom:1px solid var(--border);}
+.chat-route-select select{width:100%;padding:10px;border:1.5px solid var(--border);border-radius:9px;font-size:14px;background:#f9fafb;outline:none;}
+.chat-direct-info{margin:12px 16px 0;background:#eff6ff;border:1px solid #bfdbfe;border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:3px;}
+.chat-direct-info strong{font-size:14px;color:#1e3a8a;}
+.chat-direct-info span{font-size:12px;color:#475569;}
+
+/* STORICO */
+.history-item{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:8px;}
+.hi-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px;}
+.hi-name{font-size:14px;font-weight:700;}
+.hi-date{font-size:12px;color:#6b7280;}
+.hi-stats{display:flex;gap:12px;font-size:12px;color:#6b7280;}
+
+/* POPUP CONFIRM */
+.popup-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;display:flex;align-items:center;justify-content:center;padding:24px;}
+.popup-overlay.hidden{display:none;}
+.popup-card{background:#fff;border-radius:16px;padding:28px 24px;width:100%;max-width:360px;text-align:center;}
+.popup-icon{font-size:40px;margin-bottom:12px;}
+.popup-title{font-size:18px;font-weight:800;margin-bottom:8px;}
+.popup-text{font-size:14px;color:#6b7280;margin-bottom:24px;line-height:1.6;}
+.popup-actions{display:flex;gap:10px;}
+.popup-confirm{flex:1;padding:13px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;}
+.popup-cancel{flex:1;padding:13px;background:transparent;color:var(--text);border:1.5px solid var(--border);border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;}
+
+/* GIRO COMPLETATO */
+.completed-wrap{text-align:center;padding:48px 24px;}
+.completed-icon{font-size:64px;margin-bottom:16px;}
+.completed-wrap h2{font-size:24px;font-weight:800;margin-bottom:8px;}
+.completed-wrap p{font-size:15px;color:#6b7280;}
+
+/* KPI cards */
+.kpi-mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.kpi-mini{background:#f9fafb;border-radius:9px;padding:10px;text-align:center;}
+.kpi-mini-val{font-size:18px;font-weight:800;color:var(--blue);}
+.kpi-mini-lbl{font-size:10px;color:#9ca3af;margin-top:2px;}
+
+/* LOADING */
+.spinner-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:200px;color:#6b7280;}
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;margin-bottom:12px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen" class="login-screen">
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="login-icon">G</div>
+      <h1>Portale Autista</h1>
+      <p>GiroFacile — Accesso riservato</p>
+    </div>
+    <div class="form-group">
+      <label>Email</label>
+      <input id="loginEmail" type="email" placeholder="La tua email" autocomplete="email">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input id="loginPassword" type="password" placeholder="La tua password" autocomplete="current-password">
+    </div>
+    <button class="btn-login-submit" onclick="doLogin()">Accedi →</button>
+    <div class="login-error" id="loginError"></div>
+    <div class="login-footer">
+      Hai ricevuto un link di invito? <a href="#">Clicca il link nell'email</a><br>
+      <button type="button" class="driver-forgot-link" onclick="requestDriverPasswordReset()">Password dimenticata?</button>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="driverApp" class="app hidden">
+
+  <!-- HEADER -->
+  <div class="app-header">
+    <div class="header-left">
+      <div class="header-logo">G</div>
+      <div>
+        <div class="header-title">Giro<span>Facile</span></div>
+        <div class="header-driver" id="headerDriverName">Portale Autista</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <button class="notif-btn" onclick="showView('chat', document.querySelector('.bnav-btn:nth-child(4)'))">
+        <svg width="22" height="22" fill="none" stroke="#6b7280" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span class="notif-badge hidden" id="chatBadge">0</span>
+      </button>
+      <button id="backAdminBtnV79" class="hidden" onclick="window.location.href='/dashboard'" style="background:#eef2ff;border:1px solid #c7d2fe;color:#3730a3;cursor:pointer;font-size:13px;padding:8px 12px;border-radius:10px;font-weight:700;">← Dashboard amministratore</button>
+      <button onclick="doLogout()" style="background:none;border:none;color:#6b7280;cursor:pointer;font-size:13px;">Esci</button>
+    </div>
+  </div>
+
+  <div class="app-main">
+
+    <!-- DASHBOARD GIRI -->
+    <div id="view-dashboard" class="view active">
+      <div class="page-head"><h2>I miei giri</h2><p id="dashDriverName">Bentornato</p></div>
+      <div id="transferRunsSectionV79" class="hidden" style="padding:0 12px 12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin:4px 0 10px"><strong style="font-size:16px">Le mie corse Transfer</strong><span id="transferRunsCountV79" style="font-size:12px;color:#64748b"></span></div>
+        <div id="transferRunsListV79"></div>
+      </div>
+      <div id="routesList" style="padding:0 12px 12px"></div>
+    </div>
+
+    <!-- ESECUZIONE GIRO -->
+    <div id="view-execution" class="view">
+      <div class="exec-header">
+        <button class="back-btn" onclick="exitExecution()">‹ Giri</button>
+        <div class="exec-title" id="execTitle">Giro in corso</div>
+      </div>
+      <div class="exec-progress-bar"><div class="exec-progress-fill" id="execProgressBar" style="width:0%"></div></div>
+      <div class="progress-strip">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px">
+          <span id="execRouteName" style="font-weight:700"></span>
+          <strong id="execPercent" style="color:var(--blue)">0%</strong>
+        </div>
+        <div class="progress-strip-stats">
+          <div class="ps-stat"><div class="ps-val gray" id="psTotal">0</div><div class="ps-lbl">Totali</div></div>
+          <div class="ps-stat"><div class="ps-val green" id="psDone">0</div><div class="ps-lbl">Consegnate</div></div>
+          <div class="ps-stat"><div class="ps-val red" id="psMissed">0</div><div class="ps-lbl">Mancate</div></div>
+          <div class="ps-stat"><div class="ps-val blue" id="psRemaining">0</div><div class="ps-lbl">Rimanenti</div></div>
+        </div>
+      </div>
+      <div class="delivery-list" id="deliveryList"></div>
+      <div id="completedScreen" class="hidden">
+        <div class="completed-wrap">
+          <div class="completed-icon">🎉</div>
+          <h2>Giro completato!</h2>
+          <p>Ottimo lavoro! Tutte le consegne sono state gestite.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- STORICO -->
+    <div id="view-storico" class="view">
+      <div class="page-head"><h2>Storico giri</h2><p>I tuoi giri passati</p></div>
+      <div id="storicoList" style="padding:0 12px 12px"></div>
+    </div>
+
+    <!-- CHAT -->
+    <div id="view-chat" class="view">
+      <div class="page-head"><h2>Chat</h2><p>Messaggi col responsabile</p></div>
+      <div class="chat-wrap">
+        <div class="chat-messages" id="chatMessages">
+          <div class="chat-empty">Apri la conversazione con l’amministratore.</div>
+        </div>
+        <div class="chat-input-area">
+          <textarea class="chat-input" id="chatInput" placeholder="Scrivi un messaggio..." rows="1"></textarea>
+          <button class="chat-send-btn" onclick="sendMessage()">
+            <svg width="18" height="18" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <button class="bnav-btn active" onclick="showView('dashboard',this)">
+      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      <span>Giri</span>
+    </button>
+    <button class="bnav-btn" onclick="showView('storico',this)">
+      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span>Storico</span>
+    </button>
+    <button class="bnav-btn" onclick="showView('chat',this)">
+      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>Chat</span>
+    </button>
+  </nav>
+
+</div>
+
+<!-- MODAL CONSEGNATO -->
+<div id="modalDone" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header"><h3>✅ Consegna effettuata</h3><button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="modal-body">
+      <div class="modal-sub">Seleziona il tempo di scarico effettivo</div>
+      <div class="tempo-grid" id="tempoGrid"></div>
+      <div class="modal-sub">Note (opzionale)</div>
+      <textarea class="note-textarea" id="noteDone" placeholder="Es. lasciato a portineria..."></textarea>
+
+      <div id="signatureRequestCard" class="signature-request-card hidden">
+        <div class="signature-request-info">
+          <strong>Firma cliente richiesta</strong>
+          <span id="signatureRequestStatus">Firma non ancora acquisita</span>
+        </div>
+        <button type="button" class="btn-signature-open" onclick="openSignatureModal()">Firma avvenuta consegna</button>
+      </div>
+
+      <button class="btn-confirm green" onclick="confirmDone()">Conferma consegna</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL FIRMA CLIENTE -->
+<div id="modalSignature" class="modal-overlay hidden">
+  <div class="modal signature-only-modal">
+    <div class="modal-header"><h3>✍️ Firma cliente</h3><button class="modal-close" onclick="closeSignatureModal()">×</button></div>
+    <div class="modal-body">
+      <div class="signature-intro">Inserisci il nome del firmatario e fai firmare il cliente sul display.</div>
+      <div class="signature-label">Nome firmatario</div>
+      <input id="signedByName" class="signature-input" placeholder="Es. Mario Rossi">
+      <div class="signature-pad-wrap signature-pad-large"><canvas id="signatureCanvas"></canvas></div>
+      <div class="signature-tools">
+        <small>Firma con il dito sullo schermo.</small>
+        <button type="button" class="btn-clear-signature" onclick="clearSignaturePad()">Cancella firma</button>
+      </div>
+      <textarea class="note-textarea" id="signatureNote" placeholder="Nota firma opzionale" style="min-height:58px"></textarea>
+      <button class="btn-confirm green" onclick="saveSignatureFromModal()">Salva firma</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL MANCATA -->
+<div id="modalMissed" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header"><h3>❌ Mancata consegna</h3><button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="modal-body">
+      <div class="modal-sub">Seleziona il motivo</div>
+      <div class="motivo-list" id="motivoList"></div>
+      <div class="modal-sub">Note (opzionale)</div>
+      <textarea class="note-textarea" id="noteMissed" placeholder="Aggiungi dettagli..."></textarea>
+      <button class="btn-confirm red" onclick="confirmMissed()">Conferma mancata consegna</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOTA -->
+<div id="modalNote" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header"><h3>📝 Aggiungi nota</h3><button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="modal-body">
+      <textarea class="note-textarea" id="noteText" placeholder="Scrivi una nota..." style="min-height:120px"></textarea>
+      <button class="btn-confirm blue" onclick="confirmNote()">Salva nota</button>
+    </div>
+  </div>
+</div>
+
+<!-- POPUP CONFERMA AVVIO ANTICIPATO -->
+<div id="popupEarly" class="popup-overlay hidden">
+  <div class="popup-card">
+    <div class="popup-icon">⚠️</div>
+    <div class="popup-title">Avvio anticipato</div>
+    <div class="popup-text" id="popupEarlyText">Stai avviando il giro prima dell'orario previsto. Sei sicuro di voler procedere?</div>
+    <div class="popup-actions">
+      <button class="popup-cancel" onclick="closePopup()">Annulla</button>
+      <button class="popup-confirm" id="popupConfirmBtn">Conferma</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+let me = null;
+let allRoutes = [];
+let currentRoute = null;
+let currentRouteData = null;
+let currentDeliveryId = null;
+let currentSignatureDraft = null;
+let selectedTempo = null;
+let selectedMotivo = null;
+let chatLastId = 0;
+let chatRouteId = null;
+let chatPollInterval = null;
+let execPollInterval = null;
+
+const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const fmt = (n, d=1) => n == null ? '—' : parseFloat(n).toFixed(d);
+
+async function api(url, opts={}) {
+  const r = await fetch(url, {headers:{'Content-Type':'application/json'}, credentials:'same-origin', ...opts});
+  const d = await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(d.detail || 'Errore di rete');
+  return d;
+}
+
+// ============================================================
+// AUTH
+// ============================================================
+async function boot() {
+  try {
+    me = await api('/api/driver/me');
+    openApp();
+  } catch(e) {
+    window.location.href = '/login';
+  }
+}
+
+async function doLogin() {
+  const err = document.getElementById('loginError');
+  err.textContent = '';
+  try {
+    const res = await api('/api/login', {
+      method: 'POST',
+      body: JSON.stringify({
+        email: document.getElementById('loginEmail').value,
+        password: document.getElementById('loginPassword').value
+      })
+    });
+    window.location.href = res.redirect_url || '/driver';
+  } catch(e) { err.textContent = e.message; }
+}
+
+async function doLogout() {
+  await api('/api/logout', {method:'POST', body:'{}'});
+  window.location.href='/login';
+}
+
+async function openApp() {
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('driverApp').classList.remove('hidden');
+  document.getElementById('headerDriverName').textContent = me.driver_name;
+  document.getElementById('dashDriverName').textContent = `Bentornato, ${me.driver_name}`;
+  await loadRoutes();
+  await loadTransferRunsV79();
+  populateChatSelect();
+  startChatBadgePoll();
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function showView(name, btn) {
+  if(name !== 'execution') {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById('view-'+name).classList.add('active');
+    document.querySelectorAll('.bnav-btn').forEach(b => b.classList.remove('active'));
+    if(btn) btn.classList.add('active');
+    if(name === 'storico') loadStorico();
+    if(name === 'chat') { chatLastId = 0; loadChat(); }
+    if(name === 'dashboard'){ loadRoutes(); loadTransferRunsV79(); }
+  }
+}
+
+// ============================================================
+// ROUTES LIST
+// ============================================================
+async function loadRoutes() {
+  try {
+    allRoutes = await api('/api/driver/routes');
+    renderRoutes();
+    populateChatSelect();
+  } catch(e) { console.error(e); }
+}
+
+function renderRoutes() {
+  const today = new Date().toISOString().split('T')[0];
+  const box = document.getElementById('routesList');
+
+  const upcoming = allRoutes.filter(r => r.data_giro >= today && r.status !== 'completato' && r.status !== 'annullato');
+  const past = allRoutes.filter(r => r.data_giro < today || r.status === 'completato' || r.status === 'annullato').slice(0,3);
+
+  let html = '';
+  if(upcoming.length === 0) {
+    html += `<div class="section-card"><p style="text-align:center;color:#6b7280;font-size:14px;padding:16px 0">Nessun giro programmato</p></div>`;
+  } else {
+    html += `<div style="font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Giri programmati</div>`;
+    upcoming.forEach(r => { html += renderRouteCard(r, today); });
+  }
+  if(past.length > 0) {
+    html += `<div style="font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px">Recenti</div>`;
+    past.forEach(r => { html += renderRouteCard(r, today); });
+  }
+  box.innerHTML = html;
+}
+
+function renderRouteCard(r, today) {
+  const isToday = r.data_giro === today;
+  const dateParts = r.data_giro ? r.data_giro.split('-') : ['','',''];
+  const months = ['','Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+  const day = dateParts[2] || '';
+  const month = months[parseInt(dateParts[1])] || '';
+  const pct = r.n_consegne > 0 ? Math.round((r.completate + r.mancate) / r.n_consegne * 100) : 0;
+  const statusMap = {programmato:'rb-prog',in_corso:'rb-corso',completato:'rb-done',annullato:'rb-cancel',bozza:'rb-prog'};
+  const statusLabels = {programmato:'Programmato',in_corso:'In corso',completato:'Completato',annullato:'Annullato',bozza:'Bozza'};
+  const badge = statusMap[r.status] || 'rb-prog';
+  const label = statusLabels[r.status] || r.status;
+
+  let actionsHtml = '';
+  if(r.status === 'in_corso') {
+    actionsHtml = `<div class="rc-actions">
+      <button class="btn-start" onclick="openExecution(${r.id})">▶ Continua giro</button>
+    </div>`;
+  } else if(r.can_start) {
+    actionsHtml = `<div class="rc-actions">
+      <button class="btn-start" onclick="tryStartRoute(${r.id}, ${r.before_time}, '${esc(r.orario_partenza||'')}', '${esc(r.nome||'')}')">▶ Avvia giro</button>
+      <button class="btn-view" onclick="openExecution(${r.id})">Dettaglio</button>
+    </div>`;
+  } else if(r.is_future) {
+    actionsHtml = `<div class="rc-actions">
+      <button class="btn-start disabled" disabled>Disponibile il ${r.data_giro}</button>
+    </div>`;
+  } else {
+    actionsHtml = `<div class="rc-actions">
+      <button class="btn-view" onclick="openExecution(${r.id})">Visualizza</button>
+    </div>`;
+  }
+
+  return `<div class="route-card ${isToday?'today':''} ${r.status==='completato'?'completed':''}">
+    <div class="rc-head">
+      <div class="rc-date-badge" style="${isToday?'background:var(--green)':''}">
+        <div class="rc-date-day">${day}</div>
+        <div class="rc-date-month">${month}</div>
+      </div>
+      <div class="rc-info">
+        <div class="rc-name">${esc(r.nome)}</div>
+        <div class="rc-meta">
+          <span>🕐 ${esc(r.orario_partenza||'—')}</span>
+          <span>📍 ${r.n_consegne} fermate</span>
+          ${r.totale_km?`<span>📏 ${fmt(r.totale_km)} km</span>`:''}
+          ${r.deposit_nome?`<span>🏭 ${esc(r.deposit_nome)}</span>`:''}
+        </div>
+      </div>
+      <div class="rc-status"><span class="rc-badge ${badge}">${label}</span></div>
+    </div>
+    ${r.n_consegne > 0 && (r.status === 'in_corso' || r.status === 'completato') ? `
+    <div class="rc-progress">
+      <div class="rc-progress-track"><div class="rc-progress-fill" style="width:${pct}%"></div></div>
+      <div class="rc-progress-label"><span>${r.completate} consegnate · ${r.mancate} mancate</span><span>${pct}%</span></div>
+    </div>` : ''}
+    ${actionsHtml}
+  </div>`;
+}
+
+// ============================================================
+// AVVIO GIRO
+// ============================================================
+let pendingStartRouteId = null;
+
+function tryStartRoute(routeId, beforeTime, orario, nome) {
+  if(beforeTime) {
+    pendingStartRouteId = routeId;
+    document.getElementById('popupEarlyText').textContent = `Stai avviando "${nome}" prima dell'orario previsto (${orario}). Sei sicuro di voler procedere?`;
+    document.getElementById('popupConfirmBtn').onclick = () => { closePopup(); startRoute(pendingStartRouteId); };
+    document.getElementById('popupEarly').classList.remove('hidden');
+  } else {
+    startRoute(routeId);
+  }
+}
+
+async function startRoute(routeId) {
+  try {
+    await api(`/api/driver/routes/${routeId}/start`, {method:'POST', body:'{}'});
+    await openExecution(routeId);
+  } catch(e) { alert(e.message); }
+}
+
+function closePopup() {
+  document.getElementById('popupEarly').classList.add('hidden');
+}
+
+// ============================================================
+// ESECUZIONE GIRO
+// ============================================================
+async function openExecution(routeId) {
+  currentRoute = routeId;
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-execution').classList.add('active');
+  document.querySelectorAll('.bnav-btn').forEach(b => b.classList.remove('active'));
+  await loadExecution();
+  if(execPollInterval) clearInterval(execPollInterval);
+  execPollInterval = setInterval(loadExecution, 30000);
+}
+
+function exitExecution() {
+  if(execPollInterval) clearInterval(execPollInterval);
+  currentRoute = null;
+  currentRouteData = null;
+  showView('dashboard', document.querySelector('.bnav-btn:nth-child(1)'));
+  loadRoutes();
+}
+
+async function loadExecution() {
+  try {
+    const data = await api(`/api/driver/routes/${currentRoute}`);
+    currentRouteData = data;
+    renderExecution(data);
+  } catch(e) { console.error(e); }
+}
+
+function renderExecution(data) {
+  const { route, consegne, progress } = data;
+  document.getElementById('execTitle').textContent = route.nome;
+  document.getElementById('execRouteName').textContent = route.nome;
+  document.getElementById('execPercent').textContent = progress.percentuale + '%';
+  document.getElementById('execProgressBar').style.width = progress.percentuale + '%';
+  document.getElementById('psTotal').textContent = progress.totale;
+  document.getElementById('psDone').textContent = progress.completate;
+  document.getElementById('psMissed').textContent = progress.mancate;
+  document.getElementById('psRemaining').textContent = progress.rimanenti;
+
+  const list = document.getElementById('deliveryList');
+  const comp = document.getElementById('completedScreen');
+
+  if(progress.rimanenti === 0 && progress.totale > 0) {
+    list.classList.add('hidden');
+    comp.classList.remove('hidden');
+    return;
+  }
+  comp.classList.add('hidden');
+  list.classList.remove('hidden');
+
+  const mapsUrl = encodeURIComponent;
+  list.innerHTML = consegne.map((c, i) => {
+    const isActive = c.status === 'in_attesa' && i === progress.prossima_idx;
+    const isDone = c.status === 'completata';
+    const isMissed = c.status === 'mancata';
+    const numClass = isActive?'active':isDone?'done':isMissed?'mancata':'waiting';
+    const cardClass = isActive?'active':isDone?'done':isMissed?'mancata':'';
+    const statusIcon = isDone?'✅':isMissed?'❌':isActive?'📍':'';
+    const navUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(c.indirizzo)}`;
+
+    let detailsHtml = '';
+    if(isActive || isDone || isMissed) {
+      detailsHtml = `<div class="di-details">`;
+      if(c.arrivo_stimato || c.km_tappa) {
+        detailsHtml += `<div class="di-times">
+          ${c.arrivo_stimato?`<div class="di-time-item"><div class="di-time-lbl">Arrivo est.</div><div class="di-time-val">${esc(c.arrivo_stimato)}</div></div>`:''}
+          ${c.partenza_stimata?`<div class="di-time-item"><div class="di-time-lbl">Ripartenza</div><div class="di-time-val">${esc(c.partenza_stimata)}</div></div>`:''}
+          ${c.km_tappa?`<div class="di-time-item"><div class="di-time-lbl">Km tappa</div><div class="di-time-val">${fmt(c.km_tappa)} km</div></div>`:''}
+        </div>`;
+      }
+      if(c.note) detailsHtml += `<div class="di-note-box">📝 ${esc(c.note)}</div>`;
+      if(c.warning) detailsHtml += `<div class="di-warn-box">⚠️ ${esc(c.warning.split('|').join(' · '))}</div>`;
+      if(isDone) {
+        detailsHtml += `<div class="di-done-box">✅ Consegnato${c.tempo_scarico_effettivo?` in ${c.tempo_scarico_effettivo} min`:''}${c.note_operatore?` · "${esc(c.note_operatore)}"`:''}</div>`;
+        if(c.signed_by_name || c.signed_at){
+          detailsHtml += `<div class="di-signature-box">✍️ Firma raccolta${c.signed_by_name?`: ${esc(c.signed_by_name)}`:''}</div>`;
+        }
+      }
+      if(isMissed) {
+        const motiviLabels = {assente:'Cliente assente',chiuso:'Attività chiusa',rifiutato:'Consegna rifiutata',altro:'Altro'};
+        detailsHtml += `<div class="di-missed-box">❌ ${motiviLabels[c.motivo_mancata]||c.motivo_mancata||'Mancata'}${c.note_operatore?` · "${esc(c.note_operatore)}"`:''}</div>`;
+      }
+      detailsHtml += `</div>`;
+    }
+
+    let actionsHtml = '';
+    if(isActive) {
+      actionsHtml = `<div class="di-actions">
+        <a class="btn-navigate" href="${navUrl}" target="_blank">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+          Naviga verso ${esc(c.cliente_nome)}
+        </a>
+        <div class="btn-row">
+          <button class="btn-done" onclick="openDone(${c.id})">✅ Consegnato</button>
+          <button class="btn-missed" onclick="openMissed(${c.id})">❌ Mancata</button>
+        </div>
+        <button class="btn-note-small" onclick="openNote(${c.id})">📝 ${c.note_operatore?'Modifica nota':'Aggiungi nota'}</button>
+      </div>`;
+    } else if(isDone || isMissed) {
+      actionsHtml = `<div class="di-actions">
+        <button class="btn-note-small" onclick="openNote(${c.id})">📝 ${c.note_operatore?'Modifica nota':'Aggiungi nota'}</button>
+      </div>`;
+    }
+
+    return `<div class="delivery-item ${cardClass}">
+      <div class="di-head">
+        <div class="di-num ${numClass}">${i+1}</div>
+        <div class="di-info">
+          <div class="di-name">${esc(c.cliente_nome)}</div>
+          <div class="di-addr">📍 ${esc(c.indirizzo)}</div>
+          <div class="di-badges">
+            ${c.ztl?'<span class="di-badge db-ztl">⚠ ZTL</span>':''}
+            ${c.sponda?'<span class="di-badge db-sponda">🔧 Sponda</span>':''}
+            ${c.tempo_scarico_min?`<span class="di-badge db-time">⏱ ${c.tempo_scarico_min} min</span>`:''}
+          </div>
+        </div>
+        ${statusIcon?`<div class="di-status-icon">${statusIcon}</div>`:''}
+      </div>
+      ${detailsHtml}
+      ${actionsHtml}
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// FIRMA CLIENTE
+// ============================================================
+let signaturePadDirty = false;
+let signatureDrawing = false;
+
+function initSignaturePad(){
+  const canvas = document.getElementById('signatureCanvas');
+  if(!canvas) return;
+  const rect = canvas.getBoundingClientRect();
+  const ratio = window.devicePixelRatio || 1;
+  canvas.width = Math.max(1, Math.floor(rect.width * ratio));
+  canvas.height = Math.max(1, Math.floor(rect.height * ratio));
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(ratio,0,0,ratio,0,0);
+  ctx.lineWidth = 2.2;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = '#111827';
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  signaturePadDirty = false;
+
+  if(canvas.dataset.bound === '1') return;
+  canvas.dataset.bound = '1';
+
+  const pos = (ev) => {
+    const r = canvas.getBoundingClientRect();
+    const p = ev.touches ? ev.touches[0] : ev;
+    return {x:p.clientX-r.left, y:p.clientY-r.top};
+  };
+  const start = (ev) => { ev.preventDefault(); signatureDrawing = true; signaturePadDirty = true; const p = pos(ev); ctx.beginPath(); ctx.moveTo(p.x,p.y); };
+  const move = (ev) => { if(!signatureDrawing) return; ev.preventDefault(); const p = pos(ev); ctx.lineTo(p.x,p.y); ctx.stroke(); };
+  const end = () => { signatureDrawing = false; };
+  canvas.addEventListener('mousedown', start);
+  canvas.addEventListener('mousemove', move);
+  window.addEventListener('mouseup', end);
+  canvas.addEventListener('touchstart', start, {passive:false});
+  canvas.addEventListener('touchmove', move, {passive:false});
+  canvas.addEventListener('touchend', end);
+}
+
+function clearSignaturePad(){
+  const canvas = document.getElementById('signatureCanvas');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  signaturePadDirty = false;
+}
+
+function getSignatureData(){
+  const canvas = document.getElementById('signatureCanvas');
+  if(!canvas || !signaturePadDirty) return null;
+  return canvas.toDataURL('image/png');
+}
+
+function updateSignatureRequestCard(){
+  const sigEnabled = !!currentRouteData?.settings?.delivery_signature_enabled;
+  const card = document.getElementById('signatureRequestCard');
+  const status = document.getElementById('signatureRequestStatus');
+  if(!card) return;
+  card.classList.toggle('hidden', !sigEnabled);
+  const hasSignature = !!currentSignatureDraft?.signature_data;
+  card.classList.toggle('done', hasSignature);
+  if(status){
+    status.textContent = hasSignature
+      ? `Firma acquisita${currentSignatureDraft.signed_by_name ? ' da ' + currentSignatureDraft.signed_by_name : ''}`
+      : 'Firma non ancora acquisita';
+  }
+}
+
+function openSignatureModal(){
+  if(!currentDeliveryId){ alert('Seleziona prima la consegna.'); return; }
+  document.getElementById('modalSignature')?.classList.remove('hidden');
+  if(document.getElementById('signedByName')) document.getElementById('signedByName').value = currentSignatureDraft?.signed_by_name || '';
+  if(document.getElementById('signatureNote')) document.getElementById('signatureNote').value = currentSignatureDraft?.signature_note || '';
+  setTimeout(initSignaturePad, 90);
+}
+
+function closeSignatureModal(){
+  document.getElementById('modalSignature')?.classList.add('hidden');
+}
+
+async function saveSignatureFromModal(){
+  const signature_data = getSignatureData();
+  const signed_by_name = (document.getElementById('signedByName')?.value || '').trim();
+  const signature_note = (document.getElementById('signatureNote')?.value || '').trim();
+  if(!signed_by_name){ alert('Inserisci il nome del firmatario.'); return; }
+  if(!signature_data){ alert('Fai firmare il cliente nel riquadro firma.'); return; }
+  currentSignatureDraft = {signature_data, signed_by_name, signature_note};
+  try{
+    await api(`/api/driver/delivery/${currentDeliveryId}/signature`, {
+      method:'POST', body:JSON.stringify(currentSignatureDraft)
+    });
+  }catch(e){
+    // In caso di rete lenta manteniamo comunque la firma nella conferma: verrà inviata anche alla chiusura consegna.
+    console.warn('Salvataggio firma anticipato non riuscito:', e);
+  }
+  closeSignatureModal();
+  updateSignatureRequestCard();
+}
+
+// ============================================================
+// MODAL CONSEGNATO
+// ============================================================
+function openDone(id) {
+  currentDeliveryId = id;
+  selectedTempo = null;
+  signaturePadDirty = false;
+  const existing = (currentRouteData?.consegne || []).find(x => Number(x.id) === Number(id));
+  currentSignatureDraft = existing?.signature_data ? {
+    signature_data: existing.signature_data,
+    signed_by_name: existing.signed_by_name || '',
+    signature_note: existing.signature_note || ''
+  } : null;
+  document.getElementById('noteDone').value = '';
+  updateSignatureRequestCard();
+  const opts = currentRouteData?.tempo_scarico_options || [10,15,20,30,45,60,90];
+  document.getElementById('tempoGrid').innerHTML = opts.map(t =>
+    `<button class="tempo-btn" onclick="selectTempo(${t},this)">${t<60?t+' min':t===60?'1 ora':t+' min'}</button>`
+  ).join('');
+  document.getElementById('modalDone').classList.remove('hidden');
+}
+function selectTempo(val, btn) {
+  selectedTempo = val;
+  document.querySelectorAll('.tempo-btn').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+}
+async function confirmDone() {
+  if(!selectedTempo) { alert('Seleziona il tempo di scarico'); return; }
+  const sigEnabled = !!currentRouteData?.settings?.delivery_signature_enabled;
+  const payload = {
+    tempo_scarico:selectedTempo,
+    note:document.getElementById('noteDone').value
+  };
+  if(sigEnabled){
+    if(!currentSignatureDraft?.signature_data){
+      alert('Devi prima acquisire la firma del cliente.');
+      return;
+    }
+    payload.signature_data = currentSignatureDraft.signature_data;
+    payload.signed_by_name = currentSignatureDraft.signed_by_name || '';
+    payload.signature_note = currentSignatureDraft.signature_note || '';
+  }
+  try {
+    await api(`/api/driver/delivery/${currentDeliveryId}/complete`, {
+      method:'POST', body:JSON.stringify(payload)
+    });
+    closeModal(); await loadExecution();
+  } catch(e) { alert(e.message); }
+}
+
+// ============================================================
+// MODAL MANCATA
+// ============================================================
+function openMissed(id) {
+  currentDeliveryId = id;
+  selectedMotivo = null;
+  document.getElementById('noteMissed').value = '';
+  const motivi = {assente:'👤 Cliente assente',chiuso:'🔒 Attività chiusa',rifiutato:'🚫 Consegna rifiutata',altro:'💬 Altro motivo'};
+  document.getElementById('motivoList').innerHTML = Object.entries(motivi).map(([k,v]) =>
+    `<button class="motivo-btn" onclick="selectMotivo('${k}',this)">${v}</button>`
+  ).join('');
+  document.getElementById('modalMissed').classList.remove('hidden');
+}
+function selectMotivo(val, btn) {
+  selectedMotivo = val;
+  document.querySelectorAll('.motivo-btn').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+}
+async function confirmMissed() {
+  if(!selectedMotivo) { alert('Seleziona il motivo'); return; }
+  try {
+    await api(`/api/driver/delivery/${currentDeliveryId}/missed`, {
+      method:'POST', body:JSON.stringify({motivo:selectedMotivo, note:document.getElementById('noteMissed').value})
+    });
+    closeModal(); await loadExecution();
+  } catch(e) { alert(e.message); }
+}
+
+// ============================================================
+// MODAL NOTA
+// ============================================================
+function openNote(id) {
+  currentDeliveryId = id;
+  const c = currentRouteData?.consegne?.find(x => x.id === id);
+  document.getElementById('noteText').value = c?.note_operatore || '';
+  document.getElementById('modalNote').classList.remove('hidden');
+}
+async function confirmNote() {
+  try {
+    await api(`/api/driver/delivery/${currentDeliveryId}/note`, {
+      method:'POST', body:JSON.stringify({note:document.getElementById('noteText').value})
+    });
+    closeModal(); await loadExecution();
+  } catch(e) { alert(e.message); }
+}
+
+function closeModal() {
+  document.querySelectorAll('.modal-overlay').forEach(m => m.classList.add('hidden'));
+}
+
+// ============================================================
+// STORICO
+// ============================================================
+async function loadStorico() {
+  const box = document.getElementById('storicoList');
+  box.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
+  try {
+    const routes = await api('/api/driver/routes');
+    const past = routes.filter(r => r.status === 'completato' || r.is_past);
+    if(!past.length) { box.innerHTML = '<div class="section-card"><p style="text-align:center;color:#6b7280;padding:16px">Nessun giro nello storico</p></div>'; return; }
+    box.innerHTML = past.map(r => `
+      <div class="history-item">
+        <div class="hi-head">
+          <div>
+            <div class="hi-name">${esc(r.nome)}</div>
+            <div class="hi-date">${esc(r.data_giro)} · ${esc(r.orario_partenza||'')}</div>
+          </div>
+          <span class="rc-badge ${r.status==='completato'?'rb-done':'rb-prog'}">${r.status==='completato'?'Completato':'—'}</span>
+        </div>
+        <div class="hi-stats">
+          <span>📍 ${r.n_consegne} fermate</span>
+          <span>✅ ${r.completate} consegnate</span>
+          <span>❌ ${r.mancate} mancate</span>
+          ${r.totale_km?`<span>📏 ${fmt(r.totale_km)} km</span>`:''}
+        </div>
+      </div>`).join('');
+  } catch(e) { box.innerHTML = `<div class="section-card"><small>Errore: ${esc(e.message)}</small></div>`; }
+}
+
+// ============================================================
+// CHAT
+// ============================================================
+function populateChatSelect() {
+  // Chat libera: non serve più scegliere un giro.
+  chatRouteId = null;
+}
+
+async function loadChat() {
+  chatLastId = 0;
+  await fetchChatMessages(true);
+  if(chatPollInterval) clearInterval(chatPollInterval);
+  chatPollInterval = setInterval(() => fetchChatMessages(false), 5000);
+}
+
+async function fetchChatMessages(scroll) {
+  try {
+    const msgs = await api(`/api/driver/chat/direct?since_id=${chatLastId}`);
+    if(!msgs.length && chatLastId === 0) {
+      document.getElementById('chatMessages').innerHTML = '<div class="chat-empty">Nessun messaggio. Scrivi al responsabile quando vuoi.</div>';
+      return;
+    }
+    if(msgs.length) {
+      const box = document.getElementById('chatMessages');
+      if(chatLastId === 0) box.innerHTML = '';
+      msgs.forEach(m => {
+        chatLastId = Math.max(chatLastId, m.id);
+        const isDriver = m.sender_type === 'driver';
+        const time = new Date(m.created_at).toLocaleTimeString('it-IT', {hour:'2-digit',minute:'2-digit'});
+        const el = document.createElement('div');
+        el.className = `chat-msg ${isDriver?'driver':'admin'}`;
+        el.innerHTML = `
+          ${!isDriver?`<div class="chat-sender">${esc(m.sender_name)}</div>`:''}
+          <div class="chat-bubble">${esc(m.message)}</div>
+          <div class="chat-time">${time}</div>`;
+        box.appendChild(el);
+      });
+      if(scroll) box.scrollTop = box.scrollHeight;
+    }
+  } catch(e) {
+    document.getElementById('chatMessages').innerHTML = `<div class="chat-empty">Errore chat: ${esc(e.message||'Errore')}</div>`;
+  }
+}
+
+async function sendMessage() {
+  const input = document.getElementById('chatInput');
+  const msg = input.value.trim();
+  if(!msg) return;
+  input.value = '';
+  try {
+    await api('/api/driver/chat/direct', {method:'POST', body:JSON.stringify({message:msg})});
+    await fetchChatMessages(true);
+  } catch(e) { alert(e.message); }
+}
+
+// Enter to send
+document.getElementById('chatInput').addEventListener('keydown', e => {
+  if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+});
+
+// ============================================================
+// CHAT BADGE (unread counter)
+// ============================================================
+async function startChatBadgePoll() {
+  setInterval(async () => {
+    try {
+      // Controlla messaggi non letti su tutti i giri
+      const activeRoutes = allRoutes.filter(r => r.status === 'in_corso' || r.status === 'programmato');
+      let totalUnread = 0;
+      for(const r of activeRoutes.slice(0,3)) {
+        try {
+          const msgs = await api(`/api/driver/chat/${r.id}?since_id=0`);
+          // Conta non letti (admin non ancora letti)
+        } catch(e) {}
+      }
+      const badge = document.getElementById('chatBadge');
+      if(totalUnread > 0) {
+        badge.textContent = totalUnread;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+    } catch(e) {}
+  }, 30000);
+}
+
+boot();
+
+
+async function loadTransferRunsV79(){
+  try{
+    const rows=await api('/api/driver/transfer-bookings');
+    const sec=document.getElementById('transferRunsSectionV79'), host=document.getElementById('transferRunsListV79'), count=document.getElementById('transferRunsCountV79');
+    if(!sec||!host)return;
+    sec.classList.toggle('hidden',!rows.length); if(count)count.textContent=`${rows.length} corse`;
+    host.innerHTML=rows.map(r=>`<div style="background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:14px;margin-bottom:10px;box-shadow:0 8px 20px rgba(15,23,42,.04)">
+      <div style="display:flex;justify-content:space-between;gap:10px"><div><b style="font-size:17px">${esc(r.pickup_time)} · ${esc(r.customer_name)}</b><div style="font-size:12px;color:#64748b;margin-top:3px">${esc(r.pickup_date)} · ${esc(r.status||'proposed')}</div></div><span style="font-size:12px;background:#eff6ff;color:#1d4ed8;padding:5px 8px;border-radius:999px;height:max-content">${esc(r.service_type||'Transfer')}</span></div>
+      <div style="margin:12px 0;font-size:14px"><b>${esc(r.pickup_address)}</b><div style="color:#94a3b8;margin:3px 0">↓</div><b>${esc(r.destination_address)}</b></div>
+      <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px"><span class="meta-pill">👥 ${r.passengers||1}</span>${r.phone?`<a class="meta-pill" href="tel:${esc(r.phone)}">☎ Chiama</a>`:''}${r.vehicle_name?`<span class="meta-pill">🚘 ${esc(r.vehicle_name)}</span>`:''}</div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:7px">
+        ${['proposed','new','pending'].includes(r.status)?`<button class="btn-confirm green" onclick="updateTransferRunV79(${r.id},'accepted')">Accetta</button><button class="btn-confirm" style="background:#fee2e2;color:#991b1b" onclick="updateTransferRunV79(${r.id},'rejected')">Rifiuta</button>`:''}
+        ${r.status==='accepted'?`<button class="btn-confirm" onclick="openTransferNavigationV79('${encodeURIComponent(r.pickup_address)}')">Naviga al cliente</button><button class="btn-confirm green" onclick="updateTransferRunV79(${r.id},'arrived')">Sono arrivato</button>`:''}
+        ${r.status==='arrived'?`<button class="btn-confirm green" onclick="updateTransferRunV79(${r.id},'passenger_on_board')">Passeggero a bordo</button>`:''}
+        ${['passenger_on_board','in_progress'].includes(r.status)?`<button class="btn-confirm" onclick="openTransferNavigationV79('${encodeURIComponent(r.destination_address)}')">Naviga a destinazione</button><button class="btn-confirm green" onclick="updateTransferRunV79(${r.id},'completed')">Termina corsa</button>`:''}
+      </div></div>`).join('');
+  }catch(e){console.warn('Corse Transfer',e);}
+}
+async function updateTransferRunV79(id,status){try{await api(`/api/driver/transfer-bookings/${id}`,{method:'PUT',body:JSON.stringify({status})});await loadTransferRunsV79();}catch(e){alert(e.message||e)}}
+function openTransferNavigationV79(address){window.open(`https://www.google.com/maps/dir/?api=1&destination=${address}`,'_blank')}
+
+</script>
+</body>
+</html>

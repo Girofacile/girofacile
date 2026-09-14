@@ -1,0 +1,1957 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>GiroFacile</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="/static/dashboard/style.css?v=transfer_dashboard_v84" rel="stylesheet">
+</head>
+<body>
+
+<section id="loginCard" class="login-screen gf-login-page">
+  <aside class="login-side">
+    <div class="login-side-inner">
+      <div class="login-brand-large">
+        <h1>Giro<span>Facile</span></h1>
+        <p>Gestione percorsi e consegne</p>
+      </div>
+
+      <div class="login-accent-line"></div>
+
+      <div class="login-features">
+        <div class="login-feature">
+          <div class="login-feature-icon icon-route"><svg viewBox="0 0 64 64" aria-hidden="true">
+  <path d="M18 45c10-14 20-20 33-25" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="16" cy="46" r="7" fill="none" stroke="currentColor" stroke-width="5"/>
+  <path d="M50 9c-7 0-12 5-12 12 0 9 12 21 12 21s12-12 12-21c0-7-5-12-12-12z" fill="currentColor"/>
+  <circle cx="50" cy="21" r="4" fill="#06152e"/>
+</svg></div>
+          <div>
+            <strong>Pianifica</strong>
+            <span>Organizza i percorsi<br>in modo efficiente</span>
+          </div>
+        </div>
+
+        <div class="login-feature">
+          <div class="login-feature-icon icon-box"><svg viewBox="0 0 64 64" aria-hidden="true">
+  <path d="M32 8 54 20 32 32 10 20 32 8z" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M10 20v24l22 12 22-12V20" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M32 32v24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+  <path d="M21 14 43 26" fill="none" stroke="currentColor" stroke-width="3" opacity=".65"/>
+</svg></div>
+          <div>
+            <strong>Gestisci</strong>
+            <span>Monitora consegne<br>e stati in tempo reale</span>
+          </div>
+        </div>
+
+        <div class="login-feature">
+          <div class="login-feature-icon icon-chart"><svg viewBox="0 0 64 64" aria-hidden="true">
+  <path d="M12 52h40" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" opacity=".55"/>
+  <rect x="16" y="35" width="9" height="17" rx="2" fill="currentColor"/>
+  <rect x="29" y="25" width="9" height="27" rx="2" fill="currentColor" opacity=".86"/>
+  <rect x="42" y="13" width="9" height="39" rx="2" fill="currentColor"/>
+</svg></div>
+          <div>
+            <strong>Analizza</strong>
+            <span>Report dettagliati per<br>decisioni migliori</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="login-side-footer">
+        <span>© 2026 GiroFacile</span>
+        <small>Tutti i diritti riservati</small>
+      </div>
+    </div>
+  </aside>
+
+  <main class="login-main">
+
+    <!-- PANNELLO LOGIN -->
+    <div class="login-card-pro" id="loginPanel">
+      <div class="login-card-brand">
+        <img src="/static/girofacile-logo.jpeg" alt="Logo GiroFacile">
+        <div>
+          <strong>GiroFacile</strong>
+          <span>Gestione percorsi e consegne</span>
+        </div>
+      </div>
+      <div class="login-card-title">
+        <h2>Accesso riservato</h2>
+        <p>Accedi al tuo portale</p>
+      </div>
+      <label>Utente o Email</label>
+      <div class="login-input-wrap login-input-wrap-pro">
+        <span class="login-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 12.2a4.1 4.1 0 1 0 0-8.2 4.1 4.1 0 0 0 0 8.2Z"/><path d="M4.8 20.2c.8-4 3.4-6.1 7.2-6.1s6.4 2.1 7.2 6.1"/></svg></span>
+        <input id="loginUser" placeholder="Email o nome utente" value="" autocomplete="username">
+      </div>
+      <label>Password</label>
+      <div class="login-input-wrap login-input-wrap-pro">
+        <span class="login-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7.2 10.4V8a4.8 4.8 0 0 1 9.6 0v2.4"/><rect x="5.4" y="10.4" width="13.2" height="9.2" rx="2.4"/><path d="M12 14.2v2.2"/></svg></span>
+        <input id="loginPass" type="password" placeholder="Inserisci la tua password" value="">
+        <button type="button" class="password-eye password-eye-pro" onclick="toggleLoginPassword()" aria-label="Mostra o nascondi password"><svg viewBox="0 0 24 24"><path d="M2.8 12s3.3-5.7 9.2-5.7 9.2 5.7 9.2 5.7-3.3 5.7-9.2 5.7S2.8 12 2.8 12Z"/><circle cx="12" cy="12" r="2.7"/></svg></button>
+      </div>
+      <button onclick="login()" class="btn-primary login-submit">Accedi a GiroFacile</button>
+      <div class="login-switch">
+        <span>Non hai un account?</span>
+        <button type="button" onclick="toggleSignup(true)">Registrati gratis</button>
+      </div>
+      <button type="button" id="forgotPasswordBtn" class="forgot-link" onclick="toggleForgotPassword(true)">Password dimenticata?</button>
+      <div id="forgotBox" class="signup-box hidden">
+        <h3>Recupero password</h3>
+        <p class="forgot-help">Inserisci l'email del tuo account. Riceverai un link sicuro per impostare una nuova password.</p>
+        <input id="forgotEmail" type="email" placeholder="Email registrata">
+        <button type="button" id="forgotPasswordSubmitBtn" class="btn-primary full" onclick="requestPasswordReset()">Invia link di recupero</button>
+        <button type="button" id="forgotPasswordCancelBtn" class="forgot-link" onclick="toggleForgotPassword(false)">Annulla</button>
+      </div>
+    </div>
+
+
+
+    <!-- PANNELLO RESET PASSWORD -->
+    <div class="login-card-pro hidden" id="resetPasswordPanel" style="max-width:460px">
+      <div class="login-card-brand">
+        <img src="/static/girofacile-logo.jpeg" alt="Logo GiroFacile">
+        <div>
+          <strong>GiroFacile</strong>
+          <span>Recupero password</span>
+        </div>
+      </div>
+      <div class="login-card-title">
+        <h2>Imposta nuova password</h2>
+        <p id="resetPasswordHelp">Inserisci una nuova password per il tuo account.</p>
+      </div>
+      <label>Nuova password</label>
+      <div class="login-input-wrap">
+        <span>▣</span>
+        <input id="resetPassword1" type="password" placeholder="Minimo 6 caratteri" autocomplete="new-password">
+      </div>
+      <label>Conferma password</label>
+      <div class="login-input-wrap">
+        <span>▣</span>
+        <input id="resetPassword2" type="password" placeholder="Ripeti la nuova password" autocomplete="new-password">
+      </div>
+      <button type="button" class="btn-primary login-submit" onclick="confirmPasswordReset()">Aggiorna password</button>
+      <button type="button" class="forgot-link" onclick="location.href='/login'">Torna al login</button>
+    </div>
+
+    <!-- PANNELLO REGISTRAZIONE v46 - onboarding aziende a step -->
+    <div class="login-card-pro signup-wizard-v46" id="signupPanel" style="display:none;max-width:760px">
+      <div class="login-card-brand">
+        <img src="/static/girofacile-logo.jpeg" alt="Logo GiroFacile">
+        <div>
+          <strong>GiroFacile</strong>
+          <span>Registrazione azienda</span>
+        </div>
+      </div>
+      <div class="login-card-title signup-title-v46">
+        <h2>Configura la tua azienda</h2>
+        <p>14 giorni di prova gratuita · Nessuna carta richiesta</p>
+      </div>
+
+      <div class="signup-progress-v46" aria-label="Avanzamento registrazione">
+        <div class="signup-step-dot active" data-signup-step-dot="1"><span>1</span><small>Account</small></div>
+        <div class="signup-step-dot" data-signup-step-dot="2"><span>2</span><small>Azienda</small></div>
+        <div class="signup-step-dot" data-signup-step-dot="3"><span>3</span><small>Fatturazione</small></div>
+        <div class="signup-step-dot" data-signup-step-dot="4"><span>4</span><small>Settore</small></div>
+      </div>
+
+      <div class="signup-step-panel-v46" data-signup-step="1">
+        <div class="signup-section-head-v46">
+          <h3>Dati di accesso</h3>
+          <p>Crea l'account principale che userai per accedere alla Dashboard.</p>
+        </div>
+        <div class="signup-grid-v46">
+          <div><label>Nome azienda / insegna</label><input id="signupCompany" placeholder="Es. Trasporti Rossi S.r.l."></div>
+          <div><label>Nome utente</label><input id="signupUser" placeholder="Scegli un nome utente"></div>
+          <div><label>Email account</label><input id="signupEmail" type="email" placeholder="La tua email aziendale"></div>
+          <div><label>Password</label><input id="signupPass" type="password" placeholder="Minimo 6 caratteri"></div>
+          <div><label>Telefono referente</label><input id="signupPhone" placeholder="Es. 333 1234567"></div>
+          <div><label>Dimensione azienda</label><select id="signupCompanySize"><option value="">Seleziona</option><option value="1-5">1-5 persone</option><option value="6-15">6-15 persone</option><option value="16-50">16-50 persone</option><option value="51-100">51-100 persone</option><option value="100+">Oltre 100 persone</option></select></div>
+        </div>
+      </div>
+
+      <div class="signup-step-panel-v46 hidden" data-signup-step="2">
+        <div class="signup-section-head-v46">
+          <h3>Dati aziendali</h3>
+          <p>Queste informazioni saranno usate per il profilo azienda e per configurare il gestionale.</p>
+        </div>
+        <div class="signup-grid-v46">
+          <div><label>Ragione sociale</label><input id="signupLegalName" placeholder="Es. Rossi Distribuzione S.r.l."></div>
+          <div><label>Partita IVA</label><input id="signupVat" placeholder="IT01234567890"></div>
+          <div><label>Codice fiscale</label><input id="signupFiscalCode" placeholder="Opzionale"></div>
+          <div><label>Telefono aziendale</label><input id="signupCompanyPhone" placeholder="Telefono aziendale"></div>
+          <div class="full"><label>Sede operativa</label><input id="signupAddress" placeholder="Via, numero civico"></div>
+          <div><label>Città</label><input id="signupCity" placeholder="Città"></div>
+          <div><label>CAP</label><input id="signupZip" placeholder="CAP"></div>
+          <div><label>Paese</label><input id="signupCountry" placeholder="Italia" value="Italia"></div>
+        </div>
+      </div>
+
+      <div class="signup-step-panel-v46 hidden" data-signup-step="3">
+        <div class="signup-section-head-v46">
+          <h3>Fatturazione</h3>
+          <p>Dati utili per future fatture, abbonamenti e documenti aziendali.</p>
+        </div>
+        <div class="signup-grid-v46">
+          <div><label>PEC</label><input id="signupPec" type="email" placeholder="azienda@pec.it"></div>
+          <div><label>Codice SDI</label><input id="signupSdi" placeholder="Es. ABC1234"></div>
+          <div class="full"><label>Sede legale</label><input id="signupLegalAddress" placeholder="Lascia vuoto se coincide con la sede operativa"></div>
+          <div class="full"><label>Indirizzo di fatturazione</label><input id="signupBillingAddress" placeholder="Lascia vuoto se coincide con la sede legale"></div>
+        </div>
+        <div class="signup-helper-box-v46">Potrai modificare questi dati in seguito dalla sezione <strong>Azienda</strong>.</div>
+      </div>
+
+      <div class="signup-step-panel-v46 hidden" data-signup-step="4">
+        <div class="signup-section-head-v46">
+          <h3>Settore e necessità operative</h3>
+          <p>Questa scelta servirà per adattare GiroFacile al tipo di attività.</p>
+        </div>
+        <div class="signup-grid-v46">
+          <div class="full"><label>Tipo di attività</label><select id="signupSector">
+            <option value="">Seleziona il settore</option>
+            <option value="distribution">Distribuzione / Cash & Carry</option>
+            <option value="logistics">Logistica / Corrieri locali</option>
+            <option value="ecommerce">E-commerce / Consegna ordini</option>
+            <option value="food_delivery">Food delivery / Ristorazione</option>
+            <option value="transfer">Servizio transfer</option>
+            <option value="healthcare">Farmaceutico / Sanitario</option>
+            <option value="other">Altro</option>
+          </select></div>
+          <div><label>Consegne medie al giorno</label><select id="signupDailyDeliveries"><option value="">Seleziona</option><option value="1-10">1-10</option><option value="11-30">11-30</option><option value="31-80">31-80</option><option value="81-150">81-150</option><option value="150+">Oltre 150</option></select></div>
+          <div><label>Piano iniziale</label><select id="signupPlanSelect"><option value="starter">Starter</option><option value="business" selected>Business</option><option value="pro">Pro</option></select></div>
+          <div class="full"><label>Descrizione attività</label><input id="signupActivityType" placeholder="Se hai scelto Altro, specifica qui il tuo settore. Altrimenti puoi descrivere brevemente la tua attività."></div>
+        </div>
+        <div class="signup-checks-v46">
+          <label><input type="checkbox" id="signupHasTimeWindows"> Uso fasce orarie di consegna</label>
+          <label><input type="checkbox" id="signupNeedsSignature"> Mi serve la firma alla consegna</label>
+          <label><input type="checkbox" id="signupNeedsPhotoProof"> Mi serve la foto prova consegna</label>
+          <label><input type="checkbox" id="signupRefrigerated"> Gestisco merce refrigerata/surgelata</label>
+          <label><input type="checkbox" id="signupZtl"> Ho consegne in ZTL o zone difficili</label>
+          <label><input type="checkbox" id="signupTailLift"> Uso sponda idraulica/transpallet</label>
+        </div>
+      </div>
+
+      <div class="signup-actions-v46">
+        <button type="button" class="btn-light" id="signupBackBtn" onclick="signupWizardBack()" disabled>Indietro</button>
+        <button type="button" class="btn-primary" id="signupNextBtn" onclick="signupWizardNext()">Avanti</button>
+        <button type="button" class="btn-primary hidden" id="signupCreateBtn" onclick="signup()">Crea account gratuito →</button>
+      </div>
+
+      <div class="login-switch" style="margin-top:14px">
+        <span>Hai già un account?</span>
+        <button type="button" onclick="toggleSignup(false)">Accedi</button>
+      </div>
+    </div>
+
+    <div class="login-main-footer">© 2026 GiroFacile · <a href="/privacy-policy" target="_blank">Privacy</a> · <a href="/termini-condizioni" target="_blank">Termini</a> · <a href="/cookie-policy" target="_blank">Cookie</a></div>
+  </main>
+</section>
+
+<section id="app" class="app-shell hidden">
+
+  <!-- Mobile shell v62: visibile solo su schermi piccoli, mantiene tutte le funzioni desktop tramite menu Altro -->
+  <div class="gf-mobile-topbar-v62" id="gfMobileTopbarV62">
+    <button type="button" class="gf-mobile-icon-btn-v62" onclick="toggleMobileMoreMenuV62()" aria-label="Apri menu mobile">☰</button>
+    <div class="gf-mobile-brand-v62"><span>Giro</span><strong>Facile</strong></div>
+    <div class="gf-mobile-top-actions-v62">
+      <button type="button" class="gf-mobile-icon-btn-v62" onclick="toggleNotificationsDropdown()" aria-label="Notifiche">🔔<i id="gfMobileBellDotV62" class="gf-mobile-dot-v62 hidden"></i></button>
+      <button type="button" class="gf-mobile-avatar-v62" onclick="openProfilePanel()" aria-label="Profilo"><span id="gfMobileAvatarTextV62">A</span></button>
+    </div>
+  </div>
+
+  <div class="gf-mobile-more-backdrop-v62 hidden" id="gfMobileMoreBackdropV62" onclick="closeMobileMoreMenuV62()"></div>
+  <div class="gf-mobile-more-menu-v62 hidden" id="gfMobileMoreMenuV62">
+    <div class="gf-mobile-more-head-v62"><strong>Menu</strong><button type="button" onclick="closeMobileMoreMenuV62()">×</button></div>
+    <button onclick="mobileGoTabV62('company')">⌂ Azienda</button>
+    <button onclick="mobileGoTabV62('giro')">▣ Pianificazione</button>
+    <button onclick="mobileGoTabV62('clienti')">♙ Clienti</button>
+    <button onclick="mobileGoTabV62('agenti')">◇ Agenti</button>
+    <button onclick="mobileGoTabV62('report')">▥ Report</button>
+    <button onclick="mobileGoTabV62('depositi')">⌂ Depositi</button>
+    <button onclick="mobileGoTabV62('mezzi')">▰ Mezzi</button>
+    <button onclick="mobileGoTabV62('autisti')">♙ Autisti</button>
+    <button onclick="mobileGoTabV62('storico')">↺ Storico</button>
+    <button onclick="mobileGoTabV62('chat-autisti')">▱ Chat autisti</button>
+    <button id="gfMobileIntegrationsBtnV62" class="hidden" onclick="mobileGoTabV62('integrations')">⛓ Integrazioni</button>
+    <button id="gfMobileTransferBookingsBtnV79" class="hidden" onclick="mobileGoTabV62('transfer-bookings')">▣ Prenotazioni</button>
+    <button id="gfMobileTransferPlanningBtnV79" class="hidden" onclick="mobileGoTabV62('transfer-planning')">▤ Planning corse</button>
+    <button id="gfMobileTransferSettingsBtnV79" class="hidden" onclick="mobileGoTabV62('transfer-settings')">⚙ Impostazioni Transfer</button>
+    <button id="gfMobileTransferAdminDriverBtnV79" class="hidden" onclick="openAdminDriverPortalV79()">◉ Portale autista admin</button>
+    <button id="gfMobileTransferPortalBtnV78" class="hidden" onclick="mobileGoTabV62('transfer-portal')">✦ Portale prenotazioni</button>
+    <button onclick="openSupportPanelV49(); closeMobileMoreMenuV62();">▱ Supporto</button>
+    <button onclick="mobileGoTabV62('settings')">⚙ Impostazioni</button>
+    <button class="danger" onclick="document.getElementById('logoutBtn')?.click(); closeMobileMoreMenuV62();">↩ Esci</button>
+  </div>
+
+  <nav class="gf-mobile-bottom-nav-v62" id="gfMobileBottomNavV62" aria-label="Navigazione mobile">
+    <button type="button" data-mobile-tab="dashboard" onclick="mobileGoTabV62('dashboard')"><span>▦</span><strong>Dashboard</strong></button>
+    <button type="button" data-mobile-tab="dashboard-in-progress" onclick="mobileGoTabV62('dashboard-in-progress')"><span>▰</span><strong>Giri</strong></button>
+    <button type="button" class="main" onclick="mobileGoTabV62('giro')"><span>+</span><strong>Nuovo giro</strong></button>
+    <button type="button" data-mobile-tab="activity" onclick="mobileGoTabV62('activity')"><span>▤</span><strong>Attività</strong></button>
+    <button type="button" onclick="toggleMobileMoreMenuV62()"><span>•••</span><strong>Altro</strong></button>
+  </nav>
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-title"><img src="/static/girofacile-logo.jpeg" class="brand-logo-img" alt="GiroFacile"> Giro<span>Facile</span></div>
+    </div>
+
+    <nav class="side-nav">
+      <button data-tab="dashboard" data-workspace-common="1" onclick="showTab('dashboard')" class="nav-item user-only active"><span class="nav-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4" width="7" height="7" rx="1.8"/><rect x="13.5" y="4" width="7" height="4.8" rx="1.8"/><rect x="13.5" y="11.2" width="7" height="8.8" rx="1.8"/><rect x="3.5" y="14" width="7" height="6" rx="1.8"/></svg></span> Dashboard</button>
+      <button data-tab="company" data-workspace-common="1" onclick="showTab('company')" class="nav-item user-only"><span class="nav-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V7.5L12 4l8 3.5V20"/><path d="M8 20v-7h8v7"/><path d="M9 9h2M13 9h2"/></svg></span> Azienda</button>
+      <button data-tab="giro" data-workspace-operational="1" onclick="showTab('giro')" class="nav-item user-only"><span class="nav-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.8v3M17 3.8v3"/><rect x="4" y="5.7" width="16" height="14.3" rx="3"/><path d="M4 10h16M8 14h3M13.5 14H16M8 17h2.5"/></svg></span> Pianificazione</button>
+      <button data-tab="clienti" data-workspace-operational="1" onclick="showTab('clienti')" class="nav-item user-only"><span class="nav-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 18.5c0-2.2-1.8-4-4-4s-4 1.8-4 4"/><circle cx="12" cy="9" r="3"/><path d="M19.5 18c0-1.7-1.1-3-2.7-3.5M15.8 6.7a2.4 2.4 0 1 1 1.8 4"/></svg></span> Clienti</button>
+      <button data-tab="agenti" data-workspace-operational="1" onclick="showTab('agenti')" class="nav-item user-only"><span class="nav-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.5l7 4v7l-7 4-7-4v-7l7-4z"/><path d="M12 8.2v7.6M8.7 10.1l6.6 3.8M15.3 10.1l-6.6 3.8"/></svg></span> Agenti</button>
+      <button data-tab="report" data-workspace-operational="1" onclick="showTab('report')" class="nav-item user-only"><span class="nav-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V10M12 20V4M19 20v-7"/><path d="M3.5 20.2h17"/></svg></span> Report</button>
+      <button data-tab="depositi" data-workspace-operational="1" onclick="showTab('depositi')" class="nav-item user-only"><span class="nav-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10.5 12 4l8 6.5"/><path d="M6.5 9.5V20h11V9.5"/><path d="M9.2 20v-5.2h5.6V20"/></svg></span> Depositi</button>
+      <button data-tab="mezzi" data-workspace-operational="1" onclick="showTab('mezzi')" class="nav-item user-only"><span class="nav-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 8.5h10v7h-10z"/><path d="M13.5 11h3.6l3.4 3.4v1.1h-7"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17.2" cy="17.5" r="1.8"/></svg></span> Mezzi</button>
+      <button data-tab="autisti" data-workspace-operational="1" onclick="showTab('autisti')" class="nav-item user-only"><span class="nav-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 20c.8-3.5 3.2-5.2 6.5-5.2s5.7 1.7 6.5 5.2"/></svg></span> Autisti</button>
+      <button data-tab="storico" data-workspace-operational="1" onclick="showTab('storico')" class="nav-item user-only"><span class="nav-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 5.2v4.3h4.3"/><path d="M12 7.5V12l3 1.8"/></svg></span> Storico</button>
+      <button data-tab="activity" data-workspace-common="1" onclick="showTab('activity')" class="nav-item user-only"><span class="nav-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v14H5z"/><path d="M8 9h8M8 12h8M8 15h5"/></svg></span> Attività</button>
+      <button data-tab="integrations" data-workspace-operational="1" data-sector-only="ecommerce" onclick="showTab('integrations')" class="nav-item user-only hidden"><span class="nav-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 12a4.5 4.5 0 0 1 4.5-4.5h3.5a4.5 4.5 0 0 1 0 9H13"/><path d="M16.5 12a4.5 4.5 0 0 1-4.5 4.5H8.5a4.5 4.5 0 0 1 0-9H11"/></svg></span> Integrazioni</button>
+      <button data-tab="transfer-bookings" data-workspace-operational="1" data-sector-only="transfer" onclick="showTab('transfer-bookings')" class="nav-item user-only hidden"><span class="nav-svg"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span> Prenotazioni</button>
+      <button data-tab="transfer-planning" data-workspace-operational="1" data-sector-only="transfer" onclick="showTab('transfer-planning')" class="nav-item user-only hidden"><span class="nav-svg"><svg viewBox="0 0 24 24"><path d="M4 6h16v14H4z"/><path d="M8 3v5M16 3v5M4 10h16"/></svg></span> Planning corse</button>
+      <button data-tab="transfer-settings" data-workspace-operational="1" data-sector-only="transfer" onclick="showTab('transfer-settings')" class="nav-item user-only hidden"><span class="nav-svg"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.4-2.3 1a7 7 0 0 0-1.8-1L14.5 3h-5L9.2 6.1a7 7 0 0 0-1.8 1l-2.3-1-2 3.4L5.1 11a7 7 0 0 0 0 2L3 14.5l2 3.4 2.3-1a7 7 0 0 0 1.8 1l.4 3.1h5l.4-3.1a7 7 0 0 0 1.8-1l2.3 1 2-3.4-2-1.5c.1-.3.1-.7.1-1z"/></svg></span> Impostazioni Transfer</button>
+      <button id="transferAdminDriverNavV79" data-sector-only="transfer" onclick="openAdminDriverPortalV79()" class="nav-item user-only hidden"><span class="nav-svg"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3"/><path d="M5 20c1-4 3.4-6 7-6s6 2 7 6"/></svg></span> Portale autista admin</button>
+      <button data-tab="transfer-portal" data-workspace-operational="1" data-sector-only="transfer" onclick="showTab('transfer-portal')" class="nav-item user-only hidden"><span class="nav-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5h16v13H4z"/><path d="M4 9h16M8 13h8M8 16h5"/></svg></span> Portale prenotazioni</button>
+      <button data-tab="chat-autisti" data-workspace-operational="1" onclick="showTab('chat-autisti')" class="nav-item user-only"><span class="nav-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5.5h14v9.5H9l-4 3.5v-13z"/><path d="M8.5 9h7M8.5 12h4"/></svg></span> Chat autisti <span id="sidebarChatBadge" class="side-chat-badge hidden">0</span></button>
+      <button data-workspace-common="1" onclick="openSupportPanelV49()" class="nav-item user-only"><span class="nav-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5.5h14v9.5H9l-4 3.5v-13z"/><path d="M8.5 9h7M8.5 12h4"/></svg></span> Supporto</button>
+      <button data-tab="settings" data-workspace-common="1" onclick="showTab('settings')" class="nav-item user-only"><span class="nav-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.5 12a7.4 7.4 0 0 0-.1-1.2l2-1.5-2-3.5-2.4 1a7.5 7.5 0 0 0-2-1.1L14.7 3h-5.4L9 5.7a7.5 7.5 0 0 0-2 1.1l-2.4-1-2 3.5 2 1.5a7.7 7.7 0 0 0 0 2.4l-2 1.5 2 3.5 2.4-1a7.5 7.5 0 0 0 2 1.1l.3 2.7h5.4l.3-2.7a7.5 7.5 0 0 0 2-1.1l2.4 1 2-3.5-2-1.5c.1-.4.1-.8.1-1.2z"/></svg></span> Impostazioni</button>
+      <button data-tab="admin-dashboard" onclick="showTab('admin-dashboard')" class="nav-item admin-only"><span class="nav-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4" width="7" height="7" rx="1.8"/><rect x="13.5" y="4" width="7" height="4.8" rx="1.8"/><rect x="13.5" y="11.2" width="7" height="8.8" rx="1.8"/><rect x="3.5" y="14" width="7" height="6" rx="1.8"/></svg></span> Dashboard admin</button>
+      <button data-tab="admin-users" onclick="showTab('admin-users')" class="nav-item admin-only"><span class="nav-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 18.5c0-2.2-1.8-4-4-4s-4 1.8-4 4"/><circle cx="12" cy="9" r="3"/><path d="M19 15h2M20 14v2"/></svg></span> Utenti</button>
+      <button data-tab="admin-tickets" onclick="showTab('admin-tickets')" class="nav-item admin-only"><span class="nav-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5.5h14v9.5H9l-4 3.5v-13z"/><path d="M8.5 9h7M8.5 12h4"/></svg></span> Ticket</button>
+      <button data-tab="admin-settings" onclick="showTab('admin-settings')" class="nav-item admin-only"><span class="nav-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.5 12a7.4 7.4 0 0 0-.1-1.2l2-1.5-2-3.5-2.4 1a7.5 7.5 0 0 0-2-1.1L14.7 3h-5.4L9 5.7a7.5 7.5 0 0 0-2 1.1l-2.4-1-2 3.5 2 1.5a7.7 7.7 0 0 0 0 2.4l-2 1.5 2 3.5 2.4-1a7.5 7.5 0 0 0 2 1.1l.3 2.7h5.4l.3-2.7a7.5 7.5 0 0 0 2-1.1l2.4 1 2-3.5-2-1.5c.1-.4.1-.8.1-1.2z"/></svg></span> Impostazioni</button>
+    </nav>
+
+    <div class="side-footer">© 2026 GiroFacile<br>v3.11.0<div class="side-legal-links"><a href="/privacy-policy" target="_blank">Privacy</a><span>·</span><a href="/termini-condizioni" target="_blank">Termini</a><span>·</span><a href="/cookie-policy" target="_blank">Cookie</a></div></div>
+  </aside>
+
+  <main class="main-area">
+    <header class="topbar">
+      <div class="topbar-spacer"></div>
+
+      <div class="top-actions">
+        <div class="notification-center-v30">
+          <button id="notificationBellBtn" class="notification-bell-v30 hidden" onclick="toggleNotificationsDropdown()" title="Notifiche interne">
+            <span class="bell-icon-v30">🔔</span>
+            <span id="notificationBadge" class="notification-badge-v30 hidden">0</span>
+          </button>
+          <div id="notificationDropdown" class="notification-dropdown-v30 hidden">
+            <div class="notification-head-v30">
+              <div><strong>Notifiche</strong><small id="notificationSubtitle">Aggiornamenti operativi</small></div>
+              <button class="btn-light mini" onclick="markAllNotificationsRead()">Segna lette</button>
+            </div>
+            <div id="notificationList" class="notification-list-v30">
+              <div class="notification-empty-v30">Nessuna notifica.</div>
+            </div>
+          </div>
+        </div>
+        <button id="logoutBtn" class="btn-light hidden">Esci</button>
+        <button class="profile profile-button" onclick="openProfilePanel()" title="Apri profilo account">
+          <div id="topProfileAvatar" class="avatar">A</div>
+          <div>
+            <strong id="topProfileName">Admin</strong>
+            <small id="topProfileRole">Amministratore</small>
+          </div>
+        </button>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <section id="tab-transfer-bookings" class="tab hidden transfer-workspace-v79">
+        <div class="transfer-page-head-v79"><div><span class="eyebrow-v79">CENTRO OPERATIVO TRANSFER</span><h1>Prenotazioni</h1><p>Ricevi, controlla e assegna rapidamente le richieste provenienti dal portale o dal telefono.</p></div><button class="primary" onclick="openTransferBookingModalV79()">+ Nuova prenotazione</button></div>
+        <div class="transfer-kpis-v79" id="transferBookingKpisV79"></div>
+        <div class="transfer-toolbar-v79"><input id="transferBookingSearchV79" placeholder="Cerca passeggero, indirizzo o telefono" oninput="renderTransferBookingsV79()"><select id="transferBookingStatusV79" onchange="loadTransferBookingsV79()"><option value="">Tutti gli stati</option><option value="new">Nuove</option><option value="proposed">Proposte</option><option value="accepted">Accettate</option><option value="in_progress">In corso</option><option value="completed">Completate</option><option value="cancelled">Annullate</option></select><input type="date" id="transferBookingDateV79" onchange="loadTransferBookingsV79()"><button onclick="loadTransferBookingsV79()">Aggiorna</button></div>
+        <div class="transfer-booking-grid-v79" id="transferBookingsListV79"><div class="empty-state">Caricamento prenotazioni...</div></div>
+      </section>
+
+      <section id="tab-transfer-planning" class="tab hidden transfer-workspace-v79">
+        <div class="transfer-page-head-v79"><div><span class="eyebrow-v79">AGENDA AUTISTI</span><h1>Planning corse</h1><p>Visualizza le prenotazioni per orario e organizza il lavoro giornaliero degli autisti.</p></div><div class="transfer-head-actions-v79"><input type="date" id="transferPlanningDateV79" onchange="loadTransferPlanningV79()"><button class="primary" onclick="loadTransferPlanningV79()">Aggiorna planning</button></div></div>
+        <div class="transfer-planning-summary-v79" id="transferPlanningSummaryV79"></div>
+        <div class="transfer-timeline-v79" id="transferPlanningTimelineV79"><div class="empty-state">Caricamento agenda...</div></div>
+      </section>
+
+      <section id="tab-transfer-settings" class="tab hidden transfer-workspace-v79">
+        <div class="transfer-page-head-v79"><div><span class="eyebrow-v79">CONFIGURAZIONE OPERATIVA</span><h1>Impostazioni Transfer</h1><p>Scegli come GiroFacile deve gestire le nuove prenotazioni e crea il tuo profilo autista amministratore.</p></div></div>
+        <div class="transfer-settings-layout-v79">
+          <div class="card transfer-settings-card-v79"><h3>Modalità di assegnazione</h3><p class="muted">Puoi cambiare modalità in qualsiasi momento.</p><div class="dispatch-mode-grid-v79">
+            <label><input type="radio" name="transferDispatchModeV79" value="manual"><b>Manuale</b><span>Le richieste arrivano in Dashboard e vengono assegnate dall'amministratore.</span></label>
+            <label><input type="radio" name="transferDispatchModeV79" value="assisted"><b>Assistita</b><span>GiroFacile propone l'autista più compatibile, poi l'amministratore conferma.</span></label>
+            <label><input type="radio" name="transferDispatchModeV79" value="automatic"><b>Automatica</b><span>La richiesta viene proposta automaticamente all'autista migliore.</span></label>
+          </div><div class="form-grid-v79"><label>Strategia automatica<select id="transferAutoStrategyV79"><option value="best_fit">Migliore compatibilità</option><option value="nearest">Autista più vicino</option><option value="least_empty_km">Meno km a vuoto</option><option value="balanced">Bilanciamento lavoro</option></select></label><label>Tempo risposta autista (secondi)<input type="number" id="transferResponseSecondsV79" min="15" max="600"></label><label>Margine standard tra corse (minuti)<input type="number" id="transferBufferV79" min="0" max="180"></label><label>Margine aeroporto (minuti)<input type="number" id="transferAirportBufferV79" min="0" max="240"></label></div><div class="check-grid-v79"><label><input type="checkbox" id="transferNotifyEmailV79"> Notifica via email</label><label><input type="checkbox" id="transferNotifyInternalV79"> Notifica interna</label><label><input type="checkbox" id="transferAllowRejectV79"> Consenti rifiuto autista</label></div><button class="primary transfer-save-btn-v80" onclick="saveTransferOperationsV79()"><span>✓</span> Salva impostazioni</button></div>
+          <div class="card transfer-admin-driver-card-v79"><div id="transferAdminDriverContentV79"><h3>Profilo autista amministratore</h3><p>Usa lo stesso account per passare dalla Dashboard al portale autista senza un secondo login.</p><button class="primary transfer-admin-driver-btn-v80" onclick="createAdminDriverProfileV79()"><span>＋</span> Crea profilo autista per amministratore</button></div></div>
+        </div>
+      </section>
+
+      <div id="transferBookingModalV79" class="modal hidden"><div class="modal-card transfer-booking-modal-card-v79"><div class="modal-head"><h3>Nuova prenotazione</h3><button onclick="closeTransferBookingModalV79()">×</button></div><div class="form-grid-v79"><label>Nome passeggero *<input id="tbCustomerV79"></label><label>Telefono<input id="tbPhoneV79"></label><label>Email<input id="tbEmailV79" type="email"></label><label>Numero passeggeri<input id="tbPassengersV79" type="number" min="1" value="1"></label><label class="full">Luogo di partenza *<input id="tbPickupV79"></label><label class="full">Destinazione *<input id="tbDestinationV79"></label><label>Data *<input id="tbDateV79" type="date"></label><label>Ora *<input id="tbTimeV79" type="time"></label><label>Servizio<input id="tbServiceV79" placeholder="Transfer aeroportuale"></label><label>Volo / treno<input id="tbFlightV79"></label><label class="full">Bagagli<input id="tbLuggageV79"></label><label class="full">Note<textarea id="tbNotesV79"></textarea></label></div><div class="modal-actions"><button onclick="closeTransferBookingModalV79()">Annulla</button><button class="primary" onclick="saveManualTransferBookingV79()">Salva prenotazione</button></div></div></div>
+
+
+      <div id="transferBookingDetailModalV86" class="modal hidden">
+        <div class="modal-card transfer-detail-modal-v86">
+          <div class="modal-head"><div><small class="eyebrow-v79">SCHEDA PRENOTAZIONE</small><h3 id="tbDetailTitleV86">Dettaglio prenotazione</h3></div><button onclick="closeTransferBookingDetailV86()">×</button></div>
+          <div class="transfer-detail-layout-v86">
+            <div class="transfer-detail-form-v86">
+              <div class="form-grid-v79">
+                <label>Nome passeggero *<input id="tbdCustomerV86"></label><label>Telefono<input id="tbdPhoneV86"></label>
+                <label>Email<input id="tbdEmailV86" type="email"></label><label>Passeggeri<input id="tbdPassengersV86" type="number" min="1"></label>
+                <label class="full">Partenza *<input id="tbdPickupV86"></label><label class="full">Destinazione *<input id="tbdDestinationV86"></label>
+                <label>Data *<input id="tbdDateV86" type="date"></label><label>Ora *<input id="tbdTimeV86" type="time"></label>
+                <label>Servizio<input id="tbdServiceV86"></label><label>Volo / treno<input id="tbdFlightV86"></label>
+                <label>Durata stimata (min)<input id="tbdMinutesV86" type="number" min="1"></label><label>Km stimati<input id="tbdKmV86" type="number" min="0" step="0.1"></label>
+                <label class="full">Bagagli<input id="tbdLuggageV86"></label><label class="full">Note cliente<textarea id="tbdNotesV86"></textarea></label>
+                <label class="full">Note amministratore<textarea id="tbdAdminNoteV86"></textarea></label>
+              </div>
+              <div class="transfer-detail-flags-v86"><label><input id="tbdChildSeatV86" type="checkbox"> Seggiolino</label><label><input id="tbdPetsV86" type="checkbox"> Animali</label><label><input id="tbdRoundTripV86" type="checkbox"> Andata e ritorno</label></div>
+              <div class="transfer-detail-actions-v86"><button onclick="closeTransferBookingDetailV86()">Chiudi</button><button onclick="openDetailRouteV86()">Apri mappa</button><button class="primary" onclick="saveTransferBookingDetailV86()">Salva modifiche</button></div>
+            </div>
+            <aside class="transfer-detail-side-v86">
+              <div class="transfer-detail-summary-v86" id="tbDetailSummaryV86"></div>
+              <div class="transfer-suggest-v86"><div><small>ASSEGNAZIONE ASSISTITA</small><h4>Autista consigliato</h4><p>Controllo compatibilità oraria e carico giornaliero.</p></div><button onclick="loadTransferSuggestionsV86()">Calcola suggerimento</button><div id="tbSuggestionsV86"></div></div>
+              <div class="transfer-history-v86"><small>CRONOLOGIA</small><h4>Attività prenotazione</h4><div id="tbHistoryV86"><div class="empty-state">Nessuna attività registrata.</div></div></div>
+            </aside>
+          </div>
+        </div>
+      </div>
+
+      <section id="tab-transfer-portal" class="tab hidden">
+        <div class="transfer-builder-v78">
+          <div class="transfer-builder-head-v78">
+            <div>
+              <span class="transfer-eyebrow-v78">Servizio Transfer</span>
+              <h1>Personalizza portale prenotazioni</h1>
+              <p>Configura identità, colori, contenuti e campi del modulo. L’anteprima si aggiorna in tempo reale.</p>
+            </div>
+            <div class="transfer-builder-head-actions-v78">
+              <button class="btn-light" type="button" onclick="openTransferPortalPublicV78()">Apri portale</button>
+              <button class="btn-primary" type="button" onclick="saveTransferPortalV78('published')">Salva e pubblica</button>
+            </div>
+          </div>
+
+          <div class="transfer-builder-layout-v78">
+            <aside class="transfer-builder-controls-v78">
+              <details open>
+                <summary>Brand e identità</summary>
+                <div class="transfer-control-group-v78">
+                  <label>Nome azienda</label><input id="tpCompanyNameV78" oninput="updateTransferPreviewV78()">
+                  <label>Logo aziendale</label><input id="tpLogoFileV78" type="file" accept="image/*" onchange="readTransferImageV78(this,'logo')">
+                  <div class="transfer-upload-row-v78"><span id="tpLogoStateV78">Nessun logo caricato</span><button type="button" class="btn-light mini" onclick="clearTransferImageV78('logo')">Rimuovi</button></div>
+                  <label>Slug link pubblico</label><div class="transfer-slug-v78"><span>/prenota/</span><input id="tpSlugV78" oninput="updateTransferPreviewV78()"></div>
+                </div>
+              </details>
+
+              <details open>
+                <summary>Tema e colori</summary>
+                <div class="transfer-control-group-v78">
+                  <label>Stile grafico</label><select id="tpThemeV78" onchange="updateTransferPreviewV78()"><option value="modern">Modern</option><option value="minimal">Minimal</option><option value="elegant">Elegant</option><option value="luxury">Luxury</option><option value="corporate">Corporate</option></select>
+                  <div class="transfer-color-grid-v78">
+                    <label>Principale<input id="tpPrimaryV78" type="color" oninput="updateTransferPreviewV78()"></label>
+                    <label>Secondario<input id="tpSecondaryV78" type="color" oninput="updateTransferPreviewV78()"></label>
+                    <label>Pulsanti<input id="tpButtonV78" type="color" oninput="updateTransferPreviewV78()"></label>
+                    <label>Testo<input id="tpTextV78" type="color" oninput="updateTransferPreviewV78()"></label>
+                    <label>Sfondo<input id="tpBackgroundV78" type="color" oninput="updateTransferPreviewV78()"></label>
+                  </div>
+                  <label>Immagine di copertina</label><input id="tpHeroFileV78" type="file" accept="image/*" onchange="readTransferImageV78(this,'hero')">
+                  <div class="transfer-upload-row-v78"><span id="tpHeroStateV78">Nessuna immagine caricata</span><button type="button" class="btn-light mini" onclick="clearTransferImageV78('hero')">Rimuovi</button></div>
+                </div>
+              </details>
+
+              <details>
+                <summary>Testi del portale</summary>
+                <div class="transfer-control-group-v78">
+                  <label>Titolo principale</label><input id="tpTitleV78" oninput="updateTransferPreviewV78()">
+                  <label>Sottotitolo</label><textarea id="tpSubtitleV78" oninput="updateTransferPreviewV78()"></textarea>
+                  <label>Testo introduttivo</label><textarea id="tpIntroV78" oninput="updateTransferPreviewV78()"></textarea>
+                  <label>Messaggio di conferma</label><textarea id="tpConfirmationV78"></textarea>
+                  <label>Messaggio portale chiuso</label><textarea id="tpClosedV78"></textarea>
+                  <label>Testo footer</label><input id="tpFooterV78" oninput="updateTransferPreviewV78()">
+                </div>
+              </details>
+
+              <details>
+                <summary>Campi prenotazione</summary>
+                <div id="tpFieldsV78" class="transfer-field-list-v78"></div>
+              </details>
+
+              <details>
+                <summary>Servizi disponibili</summary>
+                <div class="transfer-control-group-v78">
+                  <label>Un servizio per riga</label><textarea id="tpServicesV78" rows="6" oninput="updateTransferPreviewV78()"></textarea>
+                </div>
+              </details>
+
+              <details>
+                <summary>Contatti e pubblicazione</summary>
+                <div class="transfer-control-group-v78">
+                  <label>Telefono</label><input id="tpPhoneV78" oninput="updateTransferPreviewV78()">
+                  <label>WhatsApp</label><input id="tpWhatsappV78">
+                  <label>Email</label><input id="tpEmailV78" type="email" oninput="updateTransferPreviewV78()">
+                  <label>Sito web</label><input id="tpWebsiteV78">
+                  <label>Anticipo minimo (minuti)</label><input id="tpAdvanceV78" type="number" min="0" value="30">
+                  <label>Stato portale</label><select id="tpStatusV78" onchange="updateTransferPreviewV78()"><option value="draft">Bozza</option><option value="published">Pubblicato</option><option value="closed">Temporaneamente chiuso</option></select>
+                  <label class="transfer-switch-row-v78"><input id="tpAcceptV78" type="checkbox" onchange="updateTransferPreviewV78()"><span>Accetta nuove prenotazioni</span></label>
+                  <label class="transfer-switch-row-v78"><input id="tpBrandV78" type="checkbox" onchange="updateTransferPreviewV78()"><span>Mostra “Powered by GiroFacile”</span></label>
+                </div>
+              </details>
+            </aside>
+
+            <section class="transfer-builder-preview-v78">
+              <div class="transfer-preview-toolbar-v78">
+                <div class="transfer-preview-tabs-v78">
+                  <button type="button" class="active" data-transfer-preview="desktop" onclick="setTransferPreviewModeV78('desktop',this)">Desktop</button>
+                  <button type="button" data-transfer-preview="mobile" onclick="setTransferPreviewModeV78('mobile',this)">Mobile</button>
+                  <button type="button" data-transfer-preview="email" onclick="setTransferPreviewModeV78('email',this)">Email conferma</button>
+                </div>
+                <span id="tpSaveStateV78">Modifiche non salvate</span>
+              </div>
+              <div class="transfer-preview-stage-v78" id="tpPreviewStageV78">
+                <div class="transfer-preview-device-v78 desktop" id="tpPreviewDeviceV78">
+                  <div class="transfer-preview-browser-v78"><i></i><i></i><i></i><span id="tpPreviewUrlV78">girofacile.it/prenota/azienda</span></div>
+                  <div id="tpPreviewContentV78"></div>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <section id="transferSharePanelV85" class="transfer-share-panel-v85">
+            <div class="transfer-share-head-v85">
+              <div>
+                <span class="transfer-eyebrow-v78">Condivisione portale</span>
+                <h2>Condividi il link di prenotazione</h2>
+                <p>Invia il portale ai clienti, crea QR Code e genera link tracciati per hotel, social e partner.</p>
+              </div>
+              <button class="btn-light" type="button" onclick="openTransferPortalPublicV78()">Apri portale</button>
+            </div>
+
+            <div class="transfer-share-grid-v85">
+              <div class="transfer-share-main-v85">
+                <div class="transfer-link-card-v85">
+                  <label>Link pubblico</label>
+                  <div class="transfer-link-row-v85">
+                    <input id="tpShareLinkV85" readonly value="Configura e salva il portale">
+                    <button type="button" onclick="copyTransferPortalLinkV85()">Copia link</button>
+                  </div>
+                  <div class="transfer-share-actions-v85">
+                    <button type="button" class="whatsapp" onclick="shareTransferWhatsappV85()"><span>WA</span> WhatsApp</button>
+                    <button type="button" onclick="shareTransferEmailV85()"><span>✉</span> Email</button>
+                    <button type="button" onclick="nativeShareTransferV85()"><span>↗</span> Condividi</button>
+                    <button type="button" onclick="openTransferPortalPublicV78()"><span>⌁</span> Apri portale</button>
+                  </div>
+                </div>
+
+                <div class="transfer-tracked-card-v85">
+                  <div class="transfer-section-title-v85">
+                    <div><h3>Link tracciato</h3><p>Identifica da quale canale arriva ogni prenotazione.</p></div>
+                    <span class="transfer-premium-badge-v85">Analytics ready</span>
+                  </div>
+                  <div class="transfer-source-row-v85">
+                    <input id="tpShareSourceV85" placeholder="Es. hotel-vesuvio, instagram, qr-veicolo" oninput="refreshTransferShareV85()">
+                    <button type="button" onclick="copyTransferTrackedLinkV85()">Copia link tracciato</button>
+                  </div>
+                  <div id="tpTrackedPreviewV85" class="transfer-tracked-preview-v85">Inserisci un nome canale per generare il link.</div>
+                  <div class="transfer-source-presets-v85">
+                    <button type="button" onclick="setTransferSourceV85('whatsapp')">WhatsApp</button>
+                    <button type="button" onclick="setTransferSourceV85('instagram')">Instagram</button>
+                    <button type="button" onclick="setTransferSourceV85('hotel')">Hotel</button>
+                    <button type="button" onclick="setTransferSourceV85('qr-veicolo')">QR veicolo</button>
+                  </div>
+                </div>
+
+                <div class="transfer-embed-card-v85">
+                  <div class="transfer-section-title-v85"><div><h3>Inserisci nel tuo sito</h3><p>Copia un pulsante “Prenota ora” già collegato al portale.</p></div></div>
+                  <div class="transfer-code-row-v85"><code id="tpEmbedCodeV85">Salva prima il portale</code><button type="button" onclick="copyTransferEmbedV85()">Copia codice</button></div>
+                </div>
+              </div>
+
+              <aside class="transfer-qr-card-v85">
+                <div class="transfer-section-title-v85"><div><h3>QR Code</h3><p>Ideale per hotel, veicoli, volantini e biglietti da visita.</p></div></div>
+                <div class="transfer-qr-frame-v85"><img id="tpQrImageV85" alt="QR Code portale prenotazioni"></div>
+                <small id="tpQrSourceV85">QR collegato al link generale</small>
+                <div class="transfer-qr-actions-v85">
+                  <button type="button" class="primary" onclick="downloadTransferQrV85()">Scarica PNG</button>
+                  <button type="button" onclick="printTransferQrV85()">Stampa QR</button>
+                </div>
+              </aside>
+            </div>
+          </section>
+
+          <div class="transfer-builder-savebar-v78">
+            <div><strong>Portale prenotazioni</strong><span id="tpPublicLinkV78">Configura e pubblica il tuo link.</span></div>
+            <div><button class="btn-light" type="button" onclick="loadTransferPortalV78(true)">Annulla modifiche</button><button class="btn-light" type="button" onclick="saveTransferPortalV78('draft')">Salva bozza</button><button class="btn-primary" type="button" onclick="saveTransferPortalV78('published')">Salva e pubblica</button></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="tab-integrations" class="tab hidden">
+        <div class="integrations-v52">
+          <div class="integrations-hero-v52">
+            <span>Modulo e-commerce</span>
+            <h1>Integrazioni</h1>
+            <p>Collega il tuo shop online a GiroFacile per importare ordini, destinatari, indirizzi, tracking e dati di consegna.</p>
+          </div>
+
+          <div class="integrations-grid-v52">
+            <section class="integration-card-v52 integration-shopify-v52">
+              <div class="integration-card-head-v52">
+                <div class="integration-logo-v52">S</div>
+                <div>
+                  <h2>Shopify</h2>
+                  <p>Importa ordini Shopify e trasformali in consegne da pianificare.</p>
+                </div>
+                <span class="integration-badge-v52">In preparazione</span>
+              </div>
+
+              <div class="integration-form-v52">
+                <label>Dominio shop</label>
+                <input id="shopifyDomainV52" placeholder="es. nome-negozio.myshopify.com">
+                <label>Access token Admin API</label>
+                <input id="shopifyTokenV52" type="password" placeholder="shpat_...">
+              </div>
+
+              <div class="integration-actions-v52">
+                <button class="btn-primary" type="button" onclick="showShopifyComingSoonV52('test')">Test connessione</button>
+                <button class="btn-light" type="button" onclick="showShopifyComingSoonV52('import')">Importa ordini</button>
+              </div>
+
+              <div class="integration-note-v52">
+                <strong>Prossimo step</strong>
+                <p>Qui inseriremo il collegamento reale con Shopify: test credenziali, import ordini, controllo doppioni e creazione automatica delle consegne.</p>
+              </div>
+            </section>
+
+            <section class="integration-side-v52">
+              <h2>Cosa importeremo da Shopify</h2>
+              <ul>
+                <li>Numero ordine e data ordine</li>
+                <li>Nome, email e telefono cliente</li>
+                <li>Indirizzo di spedizione</li>
+                <li>Prodotti ordinati e totale ordine</li>
+                <li>Contrassegno, note e stato pagamento</li>
+                <li>Tracking e stato spedizione quando disponibili</li>
+              </ul>
+            </section>
+          </div>
+        </div>
+      </section>
+
+
+      <section id="tab-company" class="tab hidden">
+        <div id="logisticsDashboardV50" class="hidden"></div>
+        <div class="dash-hero-row">
+          <div>
+            <h1>Profilo azienda</h1>
+            <p>Configura i dati principali della tua azienda e completa la prima configurazione di GiroFacile.</p>
+          </div>
+          <div class="company-header-actions-v40">
+            <span id="companyConfiguredBadge" class="company-configured-badge-v40 hidden">✓ Profilo configurato</span>
+            <button id="showOnboardingBtn" class="btn-secondary" onclick="openOnboardingPanel()">Mostra configurazione guidata</button>
+          </div>
+        </div>
+
+        <div id="companyLayoutV29" class="company-layout-v29">
+          <div class="card company-card-v29">
+            <div class="section-title-row">
+              <div>
+                <h2>Dati aziendali</h2>
+                <p>Questi dati saranno usati per personalizzare il gestionale e preparare il software alla vendita SaaS.</p>
+              </div>
+            </div>
+
+            <div class="company-logo-row-v29">
+              <div id="companyLogoPreview" class="company-logo-preview-v29">GF</div>
+              <div>
+                <label class="btn-light file-btn">Carica logo
+                  <input type="file" accept="image/*" onchange="handleImageUpload(event,'companyLogoUrl','companyLogoPreview','GF')">
+                </label>
+                <input id="companyLogoUrl" type="hidden">
+                <p class="muted-small">Consigliato logo quadrato o orizzontale, massimo 2,5 MB.</p>
+              </div>
+            </div>
+
+            <div class="form-grid profile-grid">
+              <div><label>Nome azienda / insegna</label><input id="companyNameInput" placeholder="Es. GiroFacile Demo"></div>
+              <div><label>Email aziendale</label><input id="companyEmailInput" type="email" placeholder="info@azienda.it"></div>
+              <div><label>Telefono</label><input id="companyPhoneInput" placeholder="Telefono aziendale"></div>
+              <div><label>Partita IVA</label><input id="companyVatInput" placeholder="Partita IVA"></div>
+              <div class="full"><label>Indirizzo sede</label><input id="companyAddressInput" placeholder="Via, numero civico"></div>
+              <div><label>Città</label><input id="companyCityInput" placeholder="Città"></div>
+              <div><label>CAP</label><input id="companyZipInput" placeholder="CAP"></div>
+              <div><label>Paese</label><input id="companyCountryInput" placeholder="Italia"></div>
+              <div><label>Codice fiscale</label><input id="companyFiscalCodeInput" placeholder="Codice fiscale"></div>
+              <div><label>PEC</label><input id="companyPecInput" type="email" placeholder="azienda@pec.it"></div>
+              <div><label>Codice SDI</label><input id="companySdiInput" placeholder="ABC1234"></div>
+              <div><label>Settore attività</label><select id="companySectorInput" onchange="const opt=this.options[this.selectedIndex]; document.getElementById('companySectorPillV47') && (document.getElementById('companySectorPillV47').textContent = opt ? opt.textContent : 'Settore');"></select></div>
+              <div><label>Dimensione azienda</label><select id="companySizeInput"><option value="">Seleziona</option><option value="1-5">1-5 persone</option><option value="6-15">6-15 persone</option><option value="16-50">16-50 persone</option><option value="51-100">51-100 persone</option><option value="100+">Oltre 100 persone</option></select></div>
+              <div><label>Consegne / servizi medi al giorno</label><select id="companyDailyDeliveriesInput"><option value="">Seleziona</option><option value="1-10">1-10</option><option value="11-30">11-30</option><option value="31-80">31-80</option><option value="81-150">81-150</option><option value="150+">Oltre 150</option></select></div>
+              <div class="full"><label>Descrizione attività</label><input id="companyActivityTypeInput" placeholder="Es. transfer aeroportuale, distribuzione alimentare, corriere locale..."></div>
+              <div class="full"><label>Sede legale</label><input id="companyLegalAddressInput" placeholder="Lascia vuoto se coincide con la sede operativa"></div>
+              <div class="full"><label>Indirizzo di fatturazione</label><input id="companyBillingAddressInput" placeholder="Lascia vuoto se coincide con la sede legale"></div>
+            </div>
+
+            <div class="sector-config-card-v47">
+              <div>
+                <small>Settore selezionato</small>
+                <strong id="companySectorPillV47">Settore generico</strong>
+                <p id="companySectorDescriptionV47">GiroFacile userà questa scelta per adattare testi, campi e funzioni consigliate.</p>
+              </div>
+              <div id="companySectorFeatureChips" class="sector-feature-chips-v47"><span>Configurazione generica</span></div>
+            </div>
+
+            <div class="modal-actions">
+              <button class="btn-light" onclick="loadCompanyProfile()">Annulla modifiche</button>
+              <button class="btn-primary" onclick="saveCompanyProfile()">Salva profilo azienda</button>
+            </div>
+          </div>
+
+          <div class="card onboarding-card-v29">
+            <div class="section-title-row">
+              <div>
+                <h2>Configurazione iniziale</h2>
+                <p>Completa questi passaggi per rendere l'account pronto all'utilizzo operativo.</p>
+              </div>
+            </div>
+            <div class="onboarding-progress-v29">
+              <div><strong id="onboardingProgressLabel">0/6</strong><span> completati</span></div>
+              <div class="onboarding-track-v29"><div id="onboardingProgressFill" style="width:0%"></div></div>
+            </div>
+            <div id="onboardingStepsList" class="onboarding-steps-v29"></div>
+            <button class="btn-primary full" onclick="completeOnboarding()">Segna configurazione come completata</button>
+          </div>
+        </div>
+      </section>
+
+
+
+      <section id="tab-dashboard" class="tab">
+        <div id="transferDashboardV84" class="transfer-ops-dashboard-v84 hidden"></div>
+        <div id="workspaceEmptyDashboardV49" class="workspace-empty-v49 hidden">
+          <div class="workspace-empty-hero-v49">
+            <span class="workspace-empty-kicker-v49">Nuovo account aziendale</span>
+            <h1>Benvenuto in GiroFacile</h1>
+            <p>Il tuo account è stato creato e collegato al settore scelto. Prima di attivare i moduli operativi, completa la configurazione iniziale del gestionale.</p>
+            <div class="workspace-sector-card-v49">
+              <small>Settore attività</small>
+              <strong id="workspaceSectorNameV49">Settore non configurato</strong>
+              <p id="workspaceSectorSubtitleV49">GiroFacile preparerà interfaccia, testi e funzioni in base al settore aziendale.</p>
+            </div>
+          </div>
+          <div class="workspace-setup-grid-v49">
+            <button onclick="showTab('company')"><span>1</span><strong>Profilo azienda</strong><small>Controlla dati aziendali, sede, fatturazione e settore.</small></button>
+            <button onclick="showTab('settings')"><span>2</span><strong>Impostazioni</strong><small>Configura firma, notifiche e preferenze comuni.</small></button>
+            <button onclick="openUpgradePanelFor('business')"><span>3</span><strong>Piano</strong><small>Verifica piano, limiti e funzionalità disponibili.</small></button>
+            <button onclick="openSupportPanelV49()"><span>4</span><strong>Supporto</strong><small>Richiedi aiuto per attivare i moduli del tuo settore.</small></button>
+          </div>
+          <div class="workspace-empty-note-v49">
+            <strong>Moduli operativi non ancora attivi</strong>
+            <p>Clienti, mezzi, autisti, pianificazione, storico e report saranno mostrati quando l’area operativa verrà configurata per il settore dell’azienda.</p>
+          </div>
+        </div>
+        <div class="dash-hero-row">
+          <div>
+            <h1>Dashboard</h1>
+            <p>Panoramica operativa delle consegne e dell'attività aziendale.</p>
+          </div>
+          <button class="btn-primary" onclick="showTab('giro')" data-gf-label="new_route">+ Nuovo giro</button>
+        </div>
+
+        <div class="dash-kpi-grid">
+          <div class="dash-kpi-card dash-kpi-click" onclick="openDashboardScheduledPage()" role="button" tabindex="0"><div class="dash-kpi-icon blue"><svg viewBox="0 0 24 24"><path d="M7 3.8v3M17 3.8v3"/><rect x="4" y="5.7" width="16" height="14.3" rx="3"/><path d="M8 12.2h3M13.5 12.2H16M8 16h7"/></svg></div><div><span><span data-gf-label="scheduled_routes">Giri programmati</span> oggi</span><strong id="dashTodayScheduled">0</strong><small>oggi</small></div></div>
+          <div class="dash-kpi-card dash-kpi-click" onclick="openDashboardInProgressPage()"><div class="dash-kpi-icon green"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l10-6.5-10-6.5z"/></svg></div><div><span data-gf-label="active_routes">Giri in corso</span><strong id="dashTodayProgress">0</strong><small>attivi adesso</small></div></div>
+          <div class="dash-kpi-card"><div class="dash-kpi-icon purple"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="m8.2 12.4 2.5 2.5 5.2-5.6"/></svg></div><div><span><span data-gf-label="deliveries">Consegne</span> completate oggi</span><strong id="dashTodayCompletedDeliveries">0</strong><small>fermate dei giri completati</small></div></div>
+          <div class="dash-kpi-card"><div class="dash-kpi-icon red"><svg viewBox="0 0 24 24"><path d="M16 18.5c0-2.2-1.8-4-4-4s-4 1.8-4 4"/><circle cx="12" cy="9" r="3"/><path d="M19 16.5h2M20 15.5v2"/></svg></div><div><span>Risorse impegnate</span><strong id="dashTodayBusyResources">0/0</strong><small id="dashTodayBusyResourcesSub">autisti e mezzi</small></div></div>
+        </div>
+
+        <div class="dash-board-columns">
+          <section class="panel dash-list-card">
+            <div class="dash-list-head"><h2 data-gf-label="scheduled_routes">Giri programmati</h2><span id="dashScheduledBadge">0</span></div>
+            <div id="dashScheduledList" class="dash-route-list"></div>
+            <button class="dash-link-btn" onclick="openDashboardScheduledPage()">Vedi tutti</button>
+          </section>
+
+          <section class="panel dash-list-card">
+            <div class="dash-list-head"><h2 data-gf-label="active_routes">Giri in corso</h2><span id="dashInProgressBadge">0</span></div>
+            <div id="dashProgressList" class="dash-route-list"></div>
+            <button class="dash-link-btn" onclick="openDashboardInProgressPage()">Apri controllo giri</button>
+          </section>
+
+          <section class="panel dash-list-card">
+            <div class="dash-list-head"><h2 data-gf-label="completed_today">Giri completati oggi</h2><span id="dashCompletedBadge">0</span></div>
+            <div id="dashCompletedList" class="dash-route-list"></div>
+            <button class="dash-link-btn" onclick="openDashboardCompletedPage()">Vedi storico</button>
+          </section>
+        </div>
+
+
+        <div class="dash-resource-row">
+          <section class="panel dash-vehicles-panel">
+            <div class="panel-header dash-panel-title">
+              <h2><span>Stato </span><span data-gf-label="vehicles">mezzi</span></h2>
+              <button class="dash-link-inline" onclick="showTab('mezzi')"><span>Vedi tutti i </span><span data-gf-label="vehicles">mezzi</span></button>
+            </div>
+            <div id="dashVehicleStatus" class="dash-vehicle-grid"></div>
+          </section>
+
+          <section class="panel dash-vehicles-panel">
+            <div class="panel-header dash-panel-title">
+              <h2><span>Stato </span><span data-gf-label="drivers">autisti</span></h2>
+              <button class="dash-link-inline" onclick="showTab('autisti')"><span>Vedi tutti gli </span><span data-gf-label="drivers">autisti</span></button>
+            </div>
+            <div id="dashDriverStatus" class="dash-driver-grid"></div>
+          </section>
+        </div>
+      </section>
+
+
+      <section id="tab-dashboard-scheduled" class="tab hidden">
+        <div class="dash-subpage-topbar">
+          <button class="btn-light" onclick="showTab('dashboard')">← Torna alla Dashboard</button>
+          <div class="dash-breadcrumb">Dashboard <span>›</span> Giri programmati</div>
+        </div>
+        <div class="dash-subpage-title-row">
+          <div>
+            <h1>Giri programmati</h1>
+            <p>Giri assegnati ma non ancora avviati dall'autista.</p>
+          </div>
+          <div class="dash-date-chip">Programmato</div>
+        </div>
+        <div id="dashboardScheduledPage" class="dashboard-in-progress-page">
+          <div class="dash-detail-empty"><h2>Caricamento giri programmati...</h2><p>Attendi qualche secondo.</p></div>
+        </div>
+      </section>
+
+      <section id="tab-dashboard-completed" class="tab hidden">
+        <div class="dash-subpage-topbar">
+          <button class="btn-light" onclick="showTab('dashboard')">← Torna alla Dashboard</button>
+          <div class="dash-breadcrumb">Dashboard <span>›</span> Giri completati</div>
+        </div>
+        <div class="dash-subpage-title-row">
+          <div>
+            <h1>Giri completati</h1>
+            <p>Archivio operativo dei giri conclusi dall'autista.</p>
+          </div>
+          <div class="dash-date-chip">Completati</div>
+        </div>
+        <div id="dashboardCompletedPage" class="dashboard-in-progress-page">
+          <div class="dash-detail-empty"><h2>Caricamento giri completati...</h2><p>Attendi qualche secondo.</p></div>
+        </div>
+      </section>
+
+
+      <section id="tab-dashboard-in-progress" class="tab hidden">
+        <div class="dash-subpage-topbar">
+          <button class="btn-light" onclick="showTab('dashboard')">← Torna alla Dashboard</button>
+          <div class="dash-breadcrumb">Dashboard <span>›</span> Giri in corso</div>
+        </div>
+        <div class="dash-subpage-title-row">
+          <div>
+            <h1>Giri in corso</h1>
+            <p>Controllo operativo dei giri attivi: avanzamento consegne, stato fermate e chat con l'autista.</p>
+          </div>
+          <div class="dash-date-chip">Oggi</div>
+        </div>
+        <div id="dashboardInProgressPage" class="dashboard-in-progress-page">
+          <div class="dash-detail-empty">
+            <h2>Caricamento giri in corso...</h2>
+            <p>Attendi qualche secondo.</p>
+          </div>
+        </div>
+      </section>
+
+
+      <section id="tab-chat-autisti" class="tab hidden">
+        <div class="page-title-row">
+          <div>
+            <h1>Chat autisti</h1>
+            <p>Centro comunicazioni con gli autisti: conversazioni collegate ai giri e notifiche dei messaggi non letti.</p>
+          </div>
+          <button class="btn-light" onclick="loadDriverChatCenter()">Aggiorna</button>
+        </div>
+        <div class="driver-chat-center">
+          <aside class="driver-chat-list-card">
+            <div class="driver-chat-list-head">
+              <strong>Conversazioni</strong>
+              <small id="driverChatCenterCount">0 chat</small>
+            </div>
+            <div id="driverChatThreadList" class="driver-chat-thread-list">
+              <div class="dash-empty">Caricamento conversazioni...</div>
+            </div>
+          </aside>
+          <section class="driver-chat-room-card">
+            <div class="driver-chat-room-head">
+              <div>
+                <h2 id="driverChatRoomTitle">Seleziona una chat</h2>
+                <p id="driverChatRoomSubtitle">Apri una conversazione per leggere e rispondere all'autista.</p>
+              </div>
+              <span id="driverChatRoomBadge" class="chat-room-badge hidden">0 nuovi</span>
+            </div>
+            <div id="driverChatRoomMessages" class="dash-admin-chat-messages chat-center-messages">
+              <div class="dash-empty">Nessuna chat selezionata.</div>
+            </div>
+            <div class="dash-admin-chat-input chat-center-input">
+              <textarea id="driverChatCenterInput" rows="2" placeholder="Scrivi all'autista..."></textarea>
+              <button class="btn-primary" onclick="sendDriverChatCenterMessage()">Invia</button>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section id="tab-giro" class="tab hidden">
+        <div class="page-title-row">
+          <div>
+            <h1 data-gf-label="route_planning">Pianificazione giro</h1>
+            <p>Seleziona clienti, configura risorse e calcola il percorso prima della programmazione.</p>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon blue"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.8v3M17 3.8v3"/><rect x="4" y="5.7" width="16" height="14.3" rx="3"/><path d="M8 12.2h8M8 16h5"/></svg></div>
+            <div>
+              <span><span data-gf-label="deliveries">Consegne</span> pianificate</span>
+              <strong id="statDeliveries">0</strong>
+              <small><span>Nel </span><span data-gf-label="route">giro</span><span> corrente</span></small>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon orange"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8v4.2l2.7 1.7"/><circle cx="12" cy="12" r="7.8"/><path d="M18.5 5.5 20 4"/><path d="M5.5 5.5 4 4"/></svg></div>
+            <div>
+              <span>Attese / avvisi</span>
+              <strong id="statWarnings">0</strong>
+              <small>Da verificare</small>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon green"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.5 19 8v8L12 19.5 5 16V8l7-3.5z"/><path d="M9.2 12.2 11 14l3.8-4"/></svg></div>
+            <div>
+              <span>Colli totali</span>
+              <strong id="statColli">0</strong>
+              <small>Carico inserito</small>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon purple"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 5.2h7v13.6h-7z"/><path d="M8.8 8h2.4"/><path d="M13.5 7.2h2l1.8 2.2V17a1.8 1.8 0 0 0 3.5.6"/><path d="M15.5 5.2v3"/></svg></div>
+            <div>
+              <span>Carburante</span>
+              <strong id="statFuel">€ / L</strong>
+              <small>Prezzo impostato</small>
+            </div>
+          </div>
+        </div>
+        <div class="giro-layout giro-layout-full">
+          <div class="left-column">
+            <section class="panel">
+              <div class="panel-header">
+                <h2>Dettagli pianificazione</h2>
+              </div>
+
+              <div class="form-grid">
+                <div><label><span>Nome </span><span data-gf-label="route">giro</span></label><input id="routeName" placeholder="Giro mattina"></div>
+                <div><label>Data</label><input id="routeDate" type="date"></div>
+                <div><label>Orario partenza</label><input id="routeStart" type="time"></div>
+                <div><label>Deposito</label><select id="routeDeposit"></select></div>
+                <div><label data-gf-label="vehicle">Mezzo</label><select id="routeVehicle" disabled></select><small id="vehicleAvailabilityHint" class="availability-hint">Seleziona prima data e orario di partenza</small></div>
+                <div><label data-gf-label="driver">Autista</label><select id="routeDriver" disabled></select><small id="driverAvailabilityHint" class="availability-hint">Seleziona prima data e orario di partenza</small></div>
+                <div><label>Prezzo carburante €/L</label><input id="fuelPrice" type="number" step="0.01" value="1.75"></div>
+                <div><label>Rientro deposito</label><select id="returnDepot"><option value="true">Sì, rientro previsto</option><option value="false">No</option></select></div>
+              </div>
+            </section>
+
+            <section class="panel route-step-panel" id="routePlanningGatePanel">
+              <div class="route-step-ready">
+                <div>
+                  <h2>Passaggio successivo</h2>
+                  <p class="panel-subtitle">Completa prima tutte le informazioni del giro. Solo dopo potrai aprire la selezione clienti e preparare le fermate.</p>
+                  <small id="routePlanningGateHint" class="route-gate-hint">Compila data, orario, deposito, mezzo, autista e carburante.</small>
+                </div>
+                <button id="openCustomerStepBtn" class="btn-primary large" onclick="openCustomerPlanningStep()" disabled>Inserisci clienti</button>
+              </div>
+            </section>
+
+            <section class="panel delivery-picker-panel hidden" id="customerPlanningStep">
+              <div class="panel-header">
+                <div>
+                  <h2><span>Seleziona </span><span data-gf-label="customers">clienti</span></h2>
+                  <p class="panel-subtitle">Filtra la lista e aggiungi le fermate al giro. Le specifiche operative si modificano dal pulsante Dettagli.</p>
+                </div>
+                <button class="btn-secondary compact-btn" onclick="closeCustomerPlanningStep()">Nascondi selezione</button>
+              </div>
+
+              <div class="customer-picker-panel compact-picker customer-picker-panel-large">
+                <div class="picker-header"><strong data-gf-label="customers">Clienti disponibili</strong><small>Usa i filtri per zona, ZTL o sponda</small></div>
+                <div class="picker-filters">
+                  <input id="pickQ" placeholder="Nome, codice o indirizzo" oninput="loadCustomerPicker()">
+                  <input id="pickComune" placeholder="Comune / zona" oninput="loadCustomerPicker()">
+                  <input id="pickProvincia" placeholder="Provincia" oninput="loadCustomerPicker()">
+                  <select id="pickZtl" onchange="loadCustomerPicker()"><option value="">ZTL tutte</option><option value="true">Solo ZTL</option><option value="false">No ZTL</option></select>
+                  <select id="pickSponda" onchange="loadCustomerPicker()"><option value="">Sponda tutte</option><option value="true">Serve sponda</option><option value="false">No sponda</option></select>
+                </div>
+                <div id="customerPickerList" class="customer-picker-list"></div>
+              </div>
+            </section>
+          </div>
+
+        </div>
+
+        <section class="panel wide delivery-workbench hidden" id="deliveryWorkbenchStep">
+          <div class="panel-header">
+            <div>
+              <h2><span data-gf-label="deliveries">Consegne</span><span> nel </span><span data-gf-label="route">giro</span></h2>
+              <p class="panel-subtitle">Righe semplificate: l'indirizzo resta in evidenza, le specifiche si aprono in pop-up.</p>
+            </div>
+            <span id="deliveryTableCounter" class="table-counter">0 fermate</span>
+          </div>
+
+          <div class="tableWrap editable-delivery-wrap">
+            <table class="editable-delivery-table">
+              <thead>
+                <tr>
+                  <th>Cliente</th>
+                  <th>Indirizzo</th>
+                  <th>Stato indirizzo</th>
+                  <th>Specifiche</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="deliveryBody"></tbody>
+            </table>
+          </div>
+
+          <div class="delivery-footer-actions">
+            <div>
+              <strong id="deliveryFooterCount">0 consegne inserite</strong>
+              <small>Quando la tabella è completa, procedi con il calcolo del percorso.</small>
+            </div>
+            <button class="btn-primary large" onclick="optimizeRoute()">Calcola percorso</button>
+          </div>
+
+          <div id="routePlanningInlineHint" class="route-preview-inline-hint hidden">Anteprima calcolata nella schermata dedicata.</div>
+        </section>
+      </section>
+
+      <section id="tab-route-preview" class="tab hidden">
+        <!-- v77: intestazione statica rimossa per evitare doppio titolo e doppio tasto.
+             L'intestazione dell'anteprima viene generata dal risultato calcolato. -->
+        <div id="routePreviewResult" class="route-preview-result-v76">
+          <section class="panel route-preview-empty-v76">
+            <h2>Nessuna anteprima calcolata</h2>
+            <p>Vai in Pianificazione, inserisci i dati del giro, seleziona i clienti e calcola il percorso.</p>
+            <button class="btn-primary" onclick="showTab('giro')">Vai alla pianificazione</button>
+          </section>
+        </div>
+      </section>
+
+      <section id="tab-clienti" class="tab hidden">
+        <div class="page-title-row customer-page-title">
+          <div><h1 data-gf-label="customers">Clienti</h1><p><span>Anagrafica </span><span data-gf-label="customers">clienti</span><span> e fasce orarie di scarico.</span></p></div>
+          <div class="page-actions">
+            <button class="btn-secondary" onclick="openCustomerImportModal()">Importa clienti CSV/Excel</button>
+            <button class="btn-primary" onclick="openCustomerModal()"><span>+ Nuovo </span><span data-gf-label="customer">cliente</span></button>
+          </div>
+        </div>
+
+        <section class="panel customer-list-panel-v8">
+          <div class="panel-header customer-list-head">
+            <div>
+              <h2><span>Elenco </span><span data-gf-label="customers">clienti</span></h2>
+              <p class="panel-subtitle">Cerca rapidamente oppure apri i filtri avanzati quando servono.</p>
+            </div>
+            <button class="btn-danger" onclick="deleteAllCustomers()">Elimina tutti i clienti</button>
+          </div>
+          <div class="customer-searchbar-v8">
+            <input id="customerListSearch" placeholder="Cerca cliente, codice o indirizzo" oninput="loadCustomers()">
+            <button class="btn-secondary" onclick="toggleCustomerFilters()">Filtra</button>
+          </div>
+          <div id="customerAdvancedFilters" class="customer-filters customer-filters-advanced hidden">
+            <input id="customerFilterComune" placeholder="Comune / zona" oninput="loadCustomers()">
+            <input id="customerFilterProvincia" placeholder="Provincia" oninput="loadCustomers()">
+            <select id="customerFilterAgent" onchange="loadCustomers()"><option value="">Agente tutti</option><option value="interno">Cliente interno</option></select>
+            <select id="customerFilterZtl" onchange="loadCustomers()"><option value="">ZTL tutte</option><option value="true">Solo ZTL</option><option value="false">No ZTL</option></select>
+            <select id="customerFilterSponda" onchange="loadCustomers()"><option value="">Sponda tutte</option><option value="true">Serve sponda</option><option value="false">No sponda</option></select>
+            <button class="btn-secondary" onclick="clearCustomerFilters()">Pulisci filtri</button>
+          </div>
+          <div class="tableWrap">
+            <table>
+              <thead><tr><th>Codice</th><th>Nome</th><th>Agente</th><th>Indirizzo</th><th>Scarico</th><th>Indirizzo</th><th>ZTL</th><th>Sponda</th><th></th></tr></thead>
+              <tbody id="customersBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+
+      <section id="tab-agenti" class="tab hidden">
+        <div class="page-title-row">
+          <div><h1>Agenti</h1><p>Anagrafica agenti collegabili ai clienti.</p></div>
+        </div>
+
+        <section class="panel">
+          <div class="panel-header"><h2>Scheda agente</h2><p>Inserisci i dati dell'agente. I clienti senza agente restano come “Cliente interno”.</p></div>
+          <input type="hidden" id="agId">
+          <input type="hidden" id="agPhotoUrl">
+          <div class="asset-photo-row">
+            <div id="agentPhotoPreview" class="asset-photo-preview agent-photo-preview">👤</div>
+            <div>
+              <strong>Foto agente</strong>
+              <small>Carica una foto profilo. Se manca, resta l'icona standard.</small>
+              <input id="agPhotoFile" type="file" accept="image/*" onchange="handleImageUpload(event,'agPhotoUrl','agentPhotoPreview','👤')">
+            </div>
+          </div>
+          <div class="form-grid">
+            <input id="agCodice" placeholder="Codice agente">
+            <input id="agNome" placeholder="Nome">
+            <input id="agCognome" placeholder="Cognome">
+            <input id="agTelefono" placeholder="Telefono">
+            <input id="agEmail" type="email" placeholder="Email">
+            <input id="agZona" placeholder="Zona / area">
+            <select id="agAttivo"><option value="true">Attivo</option><option value="false">Non attivo</option></select>
+          </div>
+          <textarea id="agNote" rows="2" placeholder="Note agente"></textarea>
+          <div class="actions-row"><button type="button" id="saveAgentBtn" onclick="saveAgent()" class="btn-primary">Salva agente</button><button type="button" onclick="resetAgentForm()" class="btn-secondary">Nuovo</button></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header"><h2>Elenco agenti</h2></div>
+          <div class="customer-filters">
+            <input id="agentSearch" placeholder="Cerca agente, codice, zona o contatti" oninput="loadAgents()">
+            <select id="agentStatusFilter" onchange="loadAgents()"><option value="">Tutti</option><option value="attivi">Solo attivi</option><option value="non_attivi">Non attivi</option></select>
+          </div>
+          <div class="tableWrap">
+            <table>
+              <thead><tr><th>Codice</th><th>Agente</th><th>Contatti</th><th>Zona</th><th>Stato</th><th>Clienti</th><th></th></tr></thead>
+              <tbody id="agentsBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+
+      <section id="tab-report" class="tab hidden">
+        <div class="report-hero-row">
+          <div>
+            <h1>Report consegne</h1>
+            <p>Analizza performance, costi e produttività usando i dati finali dei giri completati.</p>
+          </div>
+          <div class="report-actions">
+            <button class="btn-secondary" onclick="generateReportAIv67()">Genera report AI</button>
+            <button class="btn-secondary" onclick="reportPdfComingSoon()">Esporta PDF</button>
+            <button class="btn-primary" onclick="exportReportCsv()">Scarica CSV</button>
+          </div>
+        </div>
+
+        <section class="panel report-filter-shell-v40">
+          <div class="report-filter-toolbar-v40">
+            <button type="button" id="reportFilterToggleBtn" class="btn-secondary report-filter-toggle-v40" onclick="toggleReportFilters()">
+              <span class="filter-icon-v40">⌄</span> Mostra filtri
+            </button>
+            <span id="reportFilterSummary" class="report-filter-summary-v40">Nessun filtro applicato</span>
+          </div>
+          <div id="reportFilterPanel" class="report-filter-panel report-filter-panel-v40 hidden">
+            <div class="report-filter-grid">
+              <div><label>Da data</label><input id="reportDateFrom" type="date" onchange="updateReportFilterSummary(); loadReport()"></div>
+              <div><label>A data</label><input id="reportDateTo" type="date" onchange="updateReportFilterSummary(); loadReport()"></div>
+              <div><label>Agente</label><select id="reportAgent" onchange="updateReportFilterSummary(); loadReport()"><option value="">Tutti gli agenti</option><option value="interno">Cliente interno</option></select></div>
+              <div><label>Cliente</label><select id="reportCustomer" onchange="updateReportFilterSummary(); loadReport()"><option value="">Tutti i clienti</option></select></div>
+              <div><label>Autista</label><select id="reportDriver" onchange="updateReportFilterSummary(); loadReport()"><option value="">Tutti gli autisti</option></select></div>
+              <div><label>Mezzo</label><select id="reportVehicle" onchange="updateReportFilterSummary(); loadReport()"><option value="">Tutti i mezzi</option></select></div>
+              <div><label>Stato giro</label><select id="reportStatus" onchange="updateReportFilterSummary(); loadReport()"><option value="">Solo giri completati</option><option value="completato">Completato</option></select></div>
+              <div class="report-filter-buttons"><button class="btn-primary" onclick="updateReportFilterSummary(); loadReport()">Applica filtri</button><button class="btn-secondary" onclick="resetReportFilters()">Reset</button></div>
+            </div>
+          </div>
+        </section>
+
+        <div id="reportAiSummaryV67" class="ai-report-summary-v67 hidden"></div>
+
+        <div class="report-kpi-grid">
+          <div class="report-kpi-card"><span class="report-kpi-icon blue">⇄</span><small>1. Giri effettuati</small><strong id="repGiri">0</strong></div>
+          <div class="report-kpi-card"><span class="report-kpi-icon green">▣</span><small>2. Consegne totali</small><strong id="repConsegne">0</strong></div>
+          <div class="report-kpi-card"><span class="report-kpi-icon purple">⌖</span><small>3. Km totali percorsi</small><strong id="repKm">0 km</strong></div>
+          <div class="report-kpi-card"><span class="report-kpi-icon orange">◷</span><small>4. Ore totali effettive</small><strong id="repOre">0 h</strong></div>
+          <div class="report-kpi-card"><span class="report-kpi-icon cyan">⛽</span><small>5. Litri carburante</small><strong id="repLitri">0 L</strong></div>
+          <div class="report-kpi-card"><span class="report-kpi-icon yellow">€</span><small>6. Costo carburante</small><strong id="repCosto">€ 0</strong></div>
+          <div class="report-kpi-card"><span class="report-kpi-icon pink">◴</span><small>7. Costo medio/giro</small><strong id="repCostoGiro">€ 0</strong></div>
+          <div class="report-kpi-card"><span class="report-kpi-icon cyan">□</span><small>8. Costo medio/consegna</small><strong id="repCostoConsegna">€ 0</strong></div>
+          <div class="report-kpi-card"><span class="report-kpi-icon purple">↝</span><small>9. Km medi/giro</small><strong id="repKmGiro">0 km</strong></div>
+          <div class="report-kpi-card"><span class="report-kpi-icon green">☷</span><small>10. Consegne medie/giro</small><strong id="repConsegneGiro">0</strong></div>
+        </div>
+
+        <div class="report-chart-grid">
+          <section class="panel report-chart-card wide"><div class="panel-header report-chart-head"><div><h2>Andamento consegne e km</h2><p>Confronto tra numero consegne e chilometri nel periodo filtrato.</p></div></div><div id="reportLineChart" class="report-chart"></div></section>
+          <section class="panel report-chart-card"><div class="panel-header report-chart-head"><div><h2>Costo carburante</h2><p>Costo stimato per giorno nel periodo selezionato.</p></div></div><div id="reportCostChart" class="report-chart"></div></section>
+          <section class="panel report-chart-card"><div class="panel-header"><h2>Distribuzione per agente</h2></div><div id="reportAgentDonut" class="report-chart"></div></section>
+          <section class="panel report-chart-card"><div class="panel-header"><h2>Performance autisti</h2></div><div id="reportDriversChart" class="report-chart"></div></section>
+          <section class="panel report-chart-card"><div class="panel-header"><h2>Utilizzo mezzi</h2></div><div id="reportVehiclesChart" class="report-chart"></div></section>
+          <section class="panel report-chart-card"><div class="panel-header"><h2>Top clienti</h2></div><div id="reportCustomersChart" class="report-chart"></div></section>
+        </div>
+
+        <div class="report-bottom-grid">
+          <section class="panel report-table-card">
+            <div class="panel-header"><h2>Riepilogo per autista</h2><input class="report-table-search" id="reportDriverTableSearch" oninput="renderReportTables()" placeholder="Filtra tabella..."></div>
+            <div class="tableWrap"><table class="report-data-table"><thead><tr><th onclick="sortReportTable('drivers','nome')">Autista</th><th onclick="sortReportTable('drivers','giri')">Giri</th><th onclick="sortReportTable('drivers','consegne')">Consegne</th><th onclick="sortReportTable('drivers','km')">Km</th><th>Ore</th><th>Costo</th><th>Consegne/giro</th></tr></thead><tbody id="reportDriversBody"></tbody></table></div>
+          </section>
+
+          <section class="panel report-insights-card">
+            <div class="panel-header"><h2>Insight rapidi</h2></div>
+            <div id="reportInsights" class="report-insights"></div>
+          </section>
+        </div>
+
+        <div class="report-table-grid">
+          <section class="panel report-table-card">
+            <div class="panel-header"><h2>Riepilogo per agente</h2></div>
+            <div class="tableWrap"><table class="report-data-table"><thead><tr><th>Agente</th><th>Giri</th><th>Consegne</th><th>Km</th><th>Costo</th><th>Consegne/giro</th></tr></thead><tbody id="reportAgentsBody"></tbody></table></div>
+          </section>
+          <section class="panel report-table-card">
+            <div class="panel-header"><h2>Riepilogo clienti</h2><input class="report-table-search" id="reportCustomersSearch" oninput="renderReportTables()" placeholder="Cerca cliente..."></div>
+            <div class="tableWrap"><table class="report-data-table"><thead><tr><th>Cliente</th><th>Consegne</th><th>Giri</th><th>Km tappe</th></tr></thead><tbody id="reportCustomersBody"></tbody></table></div>
+          </section>
+        </div>
+      </section>
+
+
+      <section id="tab-settings" class="tab hidden">
+        <div class="page-title-row">
+          <div>
+            <h1>Impostazioni</h1>
+            <p>Configura le preferenze operative applicate al gestionale aziendale.</p>
+          </div>
+        </div>
+
+        <section class="panel settings-panel">
+          <div class="settings-section-head">
+            <div>
+              <h2>Consegne</h2>
+              <p>Decidi quali funzioni mostrare nel portale autista durante l'esecuzione dei giri.</p>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-copy">
+              <strong>Firma cliente alla consegna</strong>
+              <span>Se attiva, l'autista potrà raccogliere la firma del cliente quando completa una consegna. Se disattiva, il portale autista resta nella modalità standard.</span>
+            </div>
+            <label class="switch-toggle">
+              <input id="settingDeliverySignature" type="checkbox" onchange="saveSettingsV41()">
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+
+          <div id="settingsSaveState" class="settings-save-state">Impostazioni azienda sincronizzate.</div>
+        </section>
+      </section>
+
+      <section id="tab-depositi" class="tab hidden">
+        <div class="page-title-row"><div><h1>Depositi</h1><p>Gestisci indirizzi di partenza e rientro.</p></div></div>
+        <section class="panel">
+          <input type="hidden" id="depId">
+          <div class="form-grid">
+            <input id="depNome" placeholder="Nome deposito">
+            <input id="depIndirizzo" placeholder="Indirizzo completo">
+          </div>
+          <label class="checkbox-label"><input id="depDefault" type="checkbox"> deposito predefinito</label>
+          <div class="actions-row"><button onclick="saveDeposit()" class="btn-primary">Salva deposito</button><button onclick="resetDepositForm()" class="btn-secondary">Nuovo</button></div>
+          <div class="tableWrap"><table><thead><tr><th>Nome</th><th>Indirizzo</th><th>Default</th><th></th></tr></thead><tbody id="depositsBody"></tbody></table></div>
+        </section>
+      </section>
+
+      <section id="tab-mezzi" class="tab hidden">
+        <div class="page-title-row"><div><h1>Mezzi</h1><p>Configura consumi, capacità e accessori dei mezzi.</p></div></div>
+        <section class="panel">
+          <input type="hidden" id="vId">
+          <input type="hidden" id="vPhotoUrl">
+          <div class="asset-photo-row">
+            <div id="vehiclePhotoPreview" class="asset-photo-preview vehicle-photo-preview">🚚</div>
+            <div>
+              <strong>Foto mezzo</strong>
+              <small>Carica un'immagine del veicolo. Se manca, resta l'icona standard.</small>
+              <input id="vPhotoFile" type="file" accept="image/*" onchange="handleImageUpload(event,'vPhotoUrl','vehiclePhotoPreview','🚚')">
+            </div>
+          </div>
+          <div class="form-grid">
+            <input id="vNome" placeholder="Nome mezzo">
+            <input id="vTarga" placeholder="Targa">
+            <input id="vConsumo" type="number" step="0.1" value="8.5" placeholder="Consumo L/100km">
+            <input id="vKg" type="number" value="1000" placeholder="Capacità kg">
+            <input id="vColli" type="number" value="100" placeholder="Capacità colli">
+            <select id="vSponda"><option value="false">Sponda No</option><option value="true">Sponda Sì</option></select>
+            <select id="vZtl"><option value="false">ZTL No</option><option value="true">ZTL Sì</option></select>
+          </div>
+          <div class="actions-row"><button type="button" id="saveVehicleBtn" onclick="saveVehicle()" class="btn-primary">Salva mezzo</button><button type="button" onclick="resetVehicleForm()" class="btn-secondary">Nuovo</button></div>
+          <div class="tableWrap"><table><thead><tr><th>Mezzo</th><th>Targa</th><th>Consumo</th><th>Sponda</th><th>ZTL</th><th></th></tr></thead><tbody id="vehiclesBody"></tbody></table></div>
+        </section>
+      </section>
+
+
+      <section id="tab-autisti" class="tab hidden">
+        <div class="page-title-row">
+          <div><h1>Autisti</h1><p>Gestisci anagrafiche, contatti, patenti e assegnazioni operative.</p></div>
+          <button class="btn-primary" onclick="openNewDriverModal()">+ Nuovo autista</button>
+        </div>
+
+        <div class="driver-stats-grid">
+          <div class="stat-card driver-stat"><div class="stat-icon blue"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 19.5c.8-3.4 3.2-5.1 6.5-5.1s5.7 1.7 6.5 5.1"/><path d="M18.2 7.2h2.3"/></svg></div><div><span>Autisti registrati</span><strong id="driversTotal">0</strong><small>Anagrafica aziendale</small></div></div>
+          <div class="stat-card driver-stat"><div class="stat-icon green"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7.8"/><path d="m8.6 12.3 2.2 2.2 4.8-5"/></svg></div><div><span>Disponibili</span><strong id="driversAvailable">0</strong><small>Nessun giro in corso</small></div></div>
+          <div class="stat-card driver-stat"><div class="stat-icon orange"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.8 14.2h8.5v-4.7H5.7z"/><path d="M12.3 11.8h3.2l2.7 2.7v1.3h-5.9"/><circle cx="7.1" cy="16.6" r="1.6"/><circle cx="16.6" cy="16.6" r="1.6"/></svg></div><div><span>In servizio</span><strong id="driversWorking">0</strong><small>Giro attivo oggi</small></div></div>
+        </div>
+
+        <section class="panel drivers-list-panel drivers-list-panel-full">
+          <div class="panel-header drivers-list-header">
+            <div><h2>Elenco autisti</h2><p>Consulta stato, contatti, patente e accesso al portale autista.</p></div>
+          </div>
+          <div class="driver-toolbar">
+            <input id="driverSearch" placeholder="Cerca autista, telefono, email o patente" oninput="renderDrivers()">
+            <select id="driverStatusFilter" onchange="renderDrivers()"><option value="">Tutti gli stati</option><option value="Disponibile">Disponibili</option><option value="In servizio">In servizio</option></select>
+          </div>
+          <div id="driversCards" class="drivers-cards"></div>
+        </section>
+      </section>
+
+      <section id="tab-activity" class="tab hidden">
+        <div class="page-title-row">
+          <div>
+            <h1>Registro attività</h1>
+            <p>Cronologia degli eventi operativi più importanti della tua azienda.</p>
+          </div>
+          <button class="btn-secondary" onclick="loadActivityLogV31()">Aggiorna</button>
+        </div>
+
+        <div class="activity-layout-v31">
+          <div class="activity-panel-v31">
+            <div class="activity-filters-v31">
+              <select id="activityTypeFilter" onchange="loadActivityLogV31()">
+                <option value="">Tutti gli eventi</option>
+                <option value="company">Azienda</option>
+                <option value="onboarding">Onboarding</option>
+                <option value="agent">Agenti</option>
+                <option value="driver">Autisti</option>
+                <option value="customer">Clienti</option>
+                <option value="address">Indirizzi</option>
+                <option value="route">Giri</option>
+                <option value="delivery">Consegne</option>
+                <option value="chat">Chat</option>
+              </select>
+              <select id="activitySeverityFilter" onchange="loadActivityLogV31()">
+                <option value="">Tutte le priorità</option>
+                <option value="info">Info</option>
+                <option value="success">Completate</option>
+                <option value="warning">Da controllare</option>
+                <option value="danger">Critiche</option>
+              </select>
+            </div>
+            <div id="activityListV31" class="activity-list-v31">
+              <div class="activity-empty-v31">Caricamento attività...</div>
+            </div>
+          </div>
+
+          <aside class="activity-side-v31">
+            <h3>Perché è utile</h3>
+            <p>Il registro attività ti permette di controllare chi ha creato clienti, quando un giro è stato avviato o completato, quali consegne sono mancate e quali eventi richiedono attenzione.</p>
+            <div class="activity-legend-v31">
+              <span><i class="dot info"></i> Info</span>
+              <span><i class="dot success"></i> Completato</span>
+              <span><i class="dot warning"></i> Da controllare</span>
+              <span><i class="dot danger"></i> Critico</span>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section id="tab-storico" class="tab hidden">
+        <div class="page-title-row"><div><h1>Storico giri</h1><p>Consulta i percorsi calcolati e riapri Google Maps.</p></div></div>
+        <section class="panel">
+          <button onclick="loadRoutes()" class="btn-primary">Aggiorna storico</button>
+          <div class="tableWrap"><table><thead><tr><th>Data</th><th>Nome</th><th>Partenza</th><th>Rientro</th><th>Autista</th><th>Km</th><th>Costo carburante</th><th>Azioni</th></tr></thead><tbody id="routesBody"></tbody></table></div>
+          <div id="historyResult"></div>
+        </section>
+      </section>
+
+      <section id="tab-plan-account" class="tab hidden plan-account-page-v875">
+        <div class="plan-page-top-v875">
+          <div class="plan-title-block-v875">
+            <button class="plan-back-v875" onclick="returnFromPlanAccount()">← Torna al profilo</button>
+            <span class="plan-kicker-v875">ABBONAMENTO</span>
+            <h1>Piani e abbonamento</h1>
+            <p>Gestisci il piano attivo, confronta in modo chiaro le funzionalità e scegli la soluzione più adatta alla tua azienda.</p>
+          </div>
+          <button class="plan-billing-btn-v875" onclick="openBillingPanel()">Fatturazione</button>
+        </div>
+
+        <div class="plan-current-hero-v875">
+          <div class="plan-current-main-v875">
+            <span class="plan-eyebrow-v875">IL TUO PIANO ATTUALE</span>
+            <div class="plan-current-title-row-v875">
+              <h2 id="planPageCurrentNameV874">Piano attivo</h2>
+              <span id="planPageBadgeV874" class="plan-badge-ui">—</span>
+            </div>
+            <p id="planPageCurrentStatusV874">Caricamento informazioni piano...</p>
+          </div>
+          <div class="plan-current-side-v875">
+            <span>Stato abbonamento</span>
+            <strong>Attivo</strong>
+            <small>Gestisci pagamenti e documenti dalla sezione Fatturazione.</small>
+          </div>
+        </div>
+
+        <div class="plan-section-head-v875">
+          <div><span>CONFRONTA I PIANI</span><h2>Scegli il piano più adatto</h2></div>
+          <p>Seleziona un piano per vedere subito cosa include.</p>
+        </div>
+        <div class="plan-page-grid-v875" id="upgradePlanCards"></div>
+
+        <div class="plan-detail-grid-v875">
+          <div id="upgradeFeatures" class="plan-page-features-v875"></div>
+          <div class="plan-help-card-v875">
+            <span class="plan-help-icon-v875">?</span>
+            <div><strong>Hai dubbi sul piano?</strong><p>Puoi confrontare le funzionalità qui sotto oppure contattare il supporto prima di cambiare abbonamento.</p></div>
+          </div>
+        </div>
+
+        <div class="plan-comparison-v875" id="planComparisonV875"></div>
+
+        <div class="plan-page-actions-v875">
+          <button class="btn-secondary" onclick="returnFromPlanAccount()">Torna al profilo</button>
+          <button class="btn-primary" id="btnConfirmUpgrade" onclick="confirmUpgrade()">Attiva piano selezionato</button>
+        </div>
+      </section>
+
+      <section id="tab-billing-account" class="tab hidden billing-page-v876">
+        <div class="billing-page-top-v876">
+          <div>
+            <button class="billing-back-v876" onclick="returnFromBillingPageV876()">← Torna a Piani e abbonamento</button>
+            <span class="billing-kicker-v876">AMMINISTRAZIONE</span>
+            <h1>Fatturazione e pagamenti</h1>
+            <p>Gestisci abbonamento, metodo di pagamento, dati fiscali, fatture e storico degli addebiti da un'unica area.</p>
+          </div>
+          <button class="btn-secondary billing-help-v876" onclick="showTab('support')">Assistenza pagamenti</button>
+        </div>
+
+        <div id="billingLoadingV63" class="billing-loading-v63">Caricamento area fatturazione...</div>
+
+        <div id="billingContentV63" class="billing-content-v876 hidden">
+          <div class="billing-summary-grid-v876">
+            <article class="billing-summary-card-v876 plan">
+              <div class="billing-summary-icon-v876">▣</div>
+              <span>Piano attivo</span>
+              <strong id="billingPlanNameV63">—</strong>
+              <small id="billingPlanStatusV63">—</small>
+              <button onclick="openPlanAccountPage()">Gestisci piano</button>
+            </article>
+            <article class="billing-summary-card-v876 charge">
+              <div class="billing-summary-icon-v876">€</div>
+              <span>Prossimo addebito</span>
+              <strong id="billingNextChargeV63">—</strong>
+              <small id="billingNextChargeDateV63">—</small>
+            </article>
+            <article class="billing-summary-card-v876 method">
+              <div class="billing-summary-icon-v876">▤</div>
+              <span>Metodo principale</span>
+              <strong id="billingPaymentMethodV63">—</strong>
+              <small id="billingPaymentMethodHintV876">Usato per i rinnovi automatici</small>
+              <button onclick="managePaymentMethodsV876()">Gestisci metodo</button>
+            </article>
+            <article class="billing-summary-card-v876 status">
+              <div class="billing-summary-icon-v876">✓</div>
+              <span>Stato pagamenti</span>
+              <strong id="billingPaymentStatusV876">Regolare</strong>
+              <small id="billingPaymentStatusHintV876">Nessuna azione richiesta</small>
+            </article>
+          </div>
+
+          <div class="billing-main-grid-v876">
+            <section class="billing-section-v876 billing-details-v876">
+              <div class="billing-section-head-v876">
+                <div>
+                  <span class="billing-section-kicker-v876">DATI FISCALI</span>
+                  <h2>Dati di fatturazione</h2>
+                  <p>Informazioni utilizzate per intestare fatture e documenti contabili.</p>
+                </div>
+                <button class="btn-primary" onclick="saveBillingDetailsV63()">Salva dati</button>
+              </div>
+              <div class="form-grid profile-grid billing-form-grid-v876">
+                <div><label>Ragione sociale</label><input id="billingCompanyNameV63"></div>
+                <div><label>Email fatturazione</label><input id="billingCompanyEmailV63" type="email"></div>
+                <div><label>Partita IVA</label><input id="billingCompanyVatV63"></div>
+                <div><label>Codice fiscale</label><input id="billingCompanyFiscalCodeV63"></div>
+                <div><label>PEC</label><input id="billingCompanyPecV63" type="email"></div>
+                <div><label>Codice SDI</label><input id="billingCompanySdiV63"></div>
+                <div class="full"><label>Sede legale</label><input id="billingCompanyLegalAddressV63"></div>
+                <div class="full"><label>Indirizzo di fatturazione</label><input id="billingCompanyBillingAddressV63"></div>
+              </div>
+            </section>
+
+            <aside class="billing-side-v876">
+              <section class="billing-section-v876 payment-methods-v876">
+                <div class="billing-section-head-v876 compact">
+                  <div><span class="billing-section-kicker-v876">PAGAMENTI</span><h2>Metodi di pagamento</h2></div>
+                </div>
+                <div class="payment-method-card-v876">
+                  <div class="payment-method-brand-v876">CARD</div>
+                  <div><strong id="billingMethodCardLabelV876">Nessun metodo configurato</strong><span id="billingMethodCardSubV876">Aggiungi un metodo per i rinnovi automatici.</span></div>
+                  <span id="billingMethodDefaultV876" class="payment-default-v876">Predefinito</span>
+                </div>
+                <button class="payment-add-v876" onclick="managePaymentMethodsV876()">+ Aggiungi o modifica metodo</button>
+                <p class="billing-note-v876">I dati completi della carta non vengono salvati in GiroFacile: saranno gestiti dal provider di pagamento quando il collegamento sarà attivo.</p>
+              </section>
+
+              <section class="billing-section-v876 billing-notifications-v876">
+                <div class="billing-section-head-v876 compact"><div><span class="billing-section-kicker-v876">COMUNICAZIONI</span><h2>Notifiche di pagamento</h2></div></div>
+                <div class="billing-notification-row-v876"><div><strong>Ricevute e fatture</strong><span>Invio all'email di fatturazione</span></div><span class="billing-state-v876">Attivo</span></div>
+                <div class="billing-notification-row-v876"><div><strong>Pagamento non riuscito</strong><span>Avviso automatico all'amministratore</span></div><span class="billing-state-v876">Attivo</span></div>
+              </section>
+            </aside>
+          </div>
+
+          <section class="billing-section-v876 billing-history-v876">
+            <div class="billing-section-head-v876">
+              <div><span class="billing-section-kicker-v876">DOCUMENTI</span><h2>Storico fatture</h2><p>Consulta e scarica i documenti emessi per il tuo abbonamento.</p></div>
+            </div>
+            <div class="billing-table-head-v876"><span>Documento</span><span>Periodo</span><span>Importo / Stato</span><span>PDF</span></div>
+            <div id="billingInvoicesV63" class="billing-list-v876"></div>
+          </section>
+
+          <section class="billing-section-v876 billing-history-v876">
+            <div class="billing-section-head-v876">
+              <div><span class="billing-section-kicker-v876">MOVIMENTI</span><h2>Storico pagamenti</h2><p>Controlla addebiti completati, in attesa o non riusciti.</p></div>
+            </div>
+            <div class="billing-table-head-v876 payments"><span>Data / Esito</span><span>Metodo</span><span>Importo</span></div>
+            <div id="billingPaymentsV63" class="billing-list-v876"></div>
+          </section>
+
+          <div class="billing-footer-help-v876">
+            <div><strong>Hai bisogno di assistenza su una fattura o un pagamento?</strong><span>Apri una richiesta al supporto indicando il documento o l'addebito interessato.</span></div>
+            <button class="btn-secondary" onclick="showTab('support')">Contatta supporto</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="tab-admin-dashboard" class="tab hidden admin-tab">
+        <div class="page-title-row">
+          <div>
+            <h1>Dashboard admin</h1>
+            <p>Controlla utenti registrati, ticket aperti e richieste di assistenza.</p>
+          </div>
+        </div>
+
+        <div class="dash-kpi-grid">
+          <div class="dash-kpi-card"><div class="dash-kpi-icon blue"><svg viewBox="0 0 24 24"><path d="M16 18.5c0-2.2-1.8-4-4-4s-4 1.8-4 4"/><circle cx="12" cy="9" r="3"/><path d="M19 15h2M20 14v2"/></svg></div><div><span>Utenti registrati</span><strong id="adminTotalUsers">0</strong><small>account piattaforma</small></div></div>
+          <div class="dash-kpi-card"><div class="dash-kpi-icon orange"><svg viewBox="0 0 24 24"><path d="M5 5.5h14v9.5H9l-4 3.5v-13z"/><path d="M8.5 9h7M8.5 12h4"/></svg></div><div><span>Ticket aperti</span><strong id="adminOpenTickets">0</strong><small>da gestire</small></div></div>
+          <div class="dash-kpi-card"><div class="dash-kpi-icon purple"><svg viewBox="0 0 24 24"><path d="M8 11V8a4 4 0 0 1 8 0v3"/><rect x="6" y="11" width="12" height="9" rx="2"/><path d="M12 15v2"/></svg></div><div><span>Richieste password</span><strong id="adminPasswordTickets">0</strong><small>recuperi aperti</small></div></div>
+          <div class="dash-kpi-card"><div class="dash-kpi-icon green"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="m8.2 12.4 2.5 2.5 5.2-5.6"/></svg></div><div><span>Ticket totali</span><strong id="adminTotalTickets">0</strong><small>storico richieste</small></div></div>
+        </div>
+
+        <div class="dash-main-grid">
+          <section class="panel">
+            <div class="panel-header"><h2>Ultimi utenti registrati</h2><button class="dash-link-inline" onclick="showTab('admin-users')">Vedi utenti</button></div>
+            <div id="adminRecentUsers" class="admin-list"></div>
+          </section>
+          <section class="panel">
+            <div class="panel-header"><h2>Ticket recenti</h2><button class="dash-link-inline" onclick="showTab('admin-tickets')">Vedi ticket</button></div>
+            <div id="adminRecentTickets" class="admin-list"></div>
+          </section>
+        </div>
+      </section>
+
+      <section id="tab-admin-users" class="tab hidden admin-tab">
+        <div class="page-title-row">
+          <div><h1>Utenti</h1><p>Visualizza gli account registrati al gestionale e le informazioni principali.</p></div>
+        </div>
+        <section class="panel">
+          <div class="panel-header"><h2>Utenti registrati</h2><button class="btn-secondary" onclick="loadAdminUsers()">Aggiorna</button></div>
+          <div class="tableWrap"><table><thead><tr><th>Azienda</th><th>Username</th><th>Email</th><th>Registrazione</th><th>Clienti</th><th>Giri</th><th>Mezzi</th><th>Autisti</th><th>Ruolo</th></tr></thead><tbody id="adminUsersBody"></tbody></table></div>
+        </section>
+      </section>
+
+      <section id="tab-admin-tickets" class="tab hidden admin-tab">
+        <div class="page-title-row">
+          <div><h1>Ticket</h1><p>Gestisci richieste di recupero password e segnalazioni degli utenti.</p></div>
+        </div>
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Richieste ricevute</h2>
+            <div class="admin-filter-row">
+              <select id="adminTicketStatus" onchange="loadAdminTickets()"><option value="">Tutti</option><option value="aperto">Aperti</option><option value="in_lavorazione">In lavorazione</option><option value="chiuso">Chiusi</option></select>
+              <button class="btn-secondary" onclick="loadAdminTickets()">Aggiorna</button>
+            </div>
+          </div>
+          <div id="adminTicketsList" class="admin-ticket-list"></div>
+        </section>
+      </section>
+
+      <section id="tab-admin-settings" class="tab hidden admin-tab">
+        <div class="page-title-row">
+          <div><h1>Impostazioni admin</h1><p>Configurazioni di piattaforma e strumenti amministrativi.</p></div>
+        </div>
+        <section class="panel">
+          <div class="empty-state-small">In questa prima versione l'area admin include utenti e ticket. Le impostazioni avanzate verranno aggiunte in seguito.</div>
+        </section>
+      </section>
+
+      </section>
+
+    </div>
+    <footer class="dashboard-legal-footer">
+      <span>© 2026 GiroFacile</span>
+      <a href="/privacy-policy" target="_blank">Privacy Policy</a>
+      <a href="/cookie-policy" target="_blank">Cookie Policy</a>
+      <a href="/termini-condizioni" target="_blank">Termini e Condizioni</a>
+      <a href="/sicurezza" target="_blank">Sicurezza</a>
+      <a href="/dpa-responsabile-trattamento" target="_blank">DPA</a>
+      <a href="/subprocessors" target="_blank">Fornitori</a>
+    </footer>
+  </main>
+</section>
+
+
+<div id="driverFormOverlay" class="modal-overlay hidden" onclick="closeDriverModal(event)">
+  <div class="profile-modal driver-form-modal" onclick="event.stopPropagation()">
+    <div class="modal-header driver-modal-header">
+      <div>
+        <span class="modal-eyebrow">Anagrafica autista</span>
+        <h2 id="driverModalTitle">Nuovo autista</h2>
+        <p>Inserisci dati, documenti e contatti. L'invito al portale parte automaticamente se è presente l'email.</p>
+      </div>
+      <button class="modal-close" onclick="closeDriverModal()">×</button>
+    </div>
+
+    <input type="hidden" id="drId">
+    <input type="hidden" id="drPhotoUrl">
+
+    <section class="driver-modal-section driver-modal-identity">
+      <div class="driver-profile-head driver-profile-head-modal">
+        <div class="driver-avatar-big" id="driverAvatarPreview">A</div>
+        <div>
+          <strong id="driverPreviewName">Nuovo autista</strong>
+          <small id="driverPreviewInfo">Patente e contatti operativi</small>
+          <label class="photo-upload-inline">
+            <span>Carica foto autista</span>
+            <input id="drPhotoFile" type="file" accept="image/*" onchange="handleImageUpload(event,'drPhotoUrl','driverAvatarPreview','A')">
+          </label>
+        </div>
+      </div>
+      <div class="driver-modal-grid two-cols">
+        <div><label>Nome</label><input id="drNome" placeholder="Mario" oninput="updateDriverPreview()"></div>
+        <div><label>Cognome</label><input id="drCognome" placeholder="Rossi" oninput="updateDriverPreview()"></div>
+        <div><label>Cellulare</label><input id="drTelefono" placeholder="+39 ..."></div>
+        <div><label>Email</label><input id="drEmail" type="email" placeholder="autista@email.it"></div>
+      </div>
+    </section>
+
+    <section class="driver-modal-section">
+      <div class="driver-modal-section-title">
+        <h3>Patente e abilitazioni</h3>
+        <p>Informazioni utili per assegnazioni e controlli operativi.</p>
+      </div>
+      <div class="driver-modal-grid two-cols">
+        <div><label>Tipo patente</label><select id="drPatente" onchange="updateDriverPreview()"><option value="">Seleziona patente</option><option>B</option><option>C</option><option>CE</option><option>C + CQC</option><option>CE + CQC</option><option>Altro</option></select></div>
+        <div><label>Scadenza patente</label><input id="drScadenzaPatente" type="date"></div>
+      </div>
+    </section>
+
+    <section class="driver-modal-section">
+      <div class="driver-modal-section-title">
+        <h3>Note operative</h3>
+        <p>Disponibilità, preferenze di contatto o informazioni utili.</p>
+      </div>
+      <textarea id="drNote" rows="3" placeholder="Annotazioni, disponibilità particolari, preferenze di contatto..."></textarea>
+    </section>
+
+    <div class="actions-row driver-modal-actions">
+      <button type="button" onclick="closeDriverModal()" class="btn-secondary">Annulla</button>
+      <button type="button" id="saveDriverBtn" onclick="saveDriver()" class="btn-primary">Salva autista</button>
+    </div>
+  </div>
+</div>
+
+
+<div id="customerOverlay" class="modal-overlay hidden" onclick="closeCustomerModal(event)">
+  <div class="profile-modal customer-modal-v8" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <div class="modal-kicker">ANAGRAFICA CLIENTE</div>
+        <h2 id="customerModalTitle">Nuovo cliente</h2>
+        <p>Inserisci dati, indirizzo, fasce orarie e specifiche operative del cliente.</p>
+      </div>
+      <button class="modal-close" onclick="closeCustomerModal()">×</button>
+    </div>
+    <input type="hidden" id="cId">
+
+    <section class="delivery-modal-section">
+      <div class="delivery-modal-section-title"><span>01</span><div><h3>Dati cliente</h3><p>Informazioni principali e contatti.</p></div></div>
+      <div class="customer-modal-grid-v8">
+        <div><label>Codice cliente</label><input id="cCodice" placeholder="Codice cliente"></div>
+        <div><label>Nome / ragione sociale</label><input id="cNome" placeholder="Nome cliente"></div>
+        <div><label>Telefono</label><input id="cTelefono" placeholder="Telefono"></div>
+        <div><label>Email</label><input id="cEmail" type="email" placeholder="Email"></div>
+        <div><label>Referente</label><input id="cReferente" placeholder="Referente"></div>
+        <div><label>Agente</label><select id="cAgent"><option value="">Cliente interno</option></select></div>
+      </div>
+    </section>
+
+    <section class="delivery-modal-section">
+      <div class="delivery-modal-section-title"><span>02</span><div><h3>Indirizzo</h3><p>L'indirizzo è usato per calcolo percorso e verifica geografica.</p></div></div>
+      <div class="customer-modal-grid-v8 address-grid-v8">
+        <div class="span-2"><label>Indirizzo completo</label><input id="cIndirizzo" placeholder="Via, numero civico, città"></div>
+        <div><label>Comune / zona</label><input id="cComune" placeholder="Comune / zona"></div>
+        <div><label>Provincia</label><input id="cProvincia" placeholder="Provincia"></div>
+      </div>
+      <input type="hidden" id="cLat">
+      <input type="hidden" id="cLon">
+      <input type="hidden" id="cGeoStatus">
+      <input type="hidden" id="cGeoProvider">
+      <input type="hidden" id="cGeoConfidence">
+      <input type="hidden" id="cGooglePlaceId">
+      <input type="hidden" id="cGeocodedAddress">
+      <div class="customer-address-verify-row">
+        <button type="button" class="btn-secondary" onclick="verifyCustomerModalAddress()">Verifica indirizzo con Google</button>
+        <div id="customerAddressVerifyStatus" class="address-verify-status muted">Indirizzo non ancora verificato.</div>
+      </div>
+    </section>
+
+    <section class="delivery-modal-section">
+      <div class="delivery-modal-section-title"><span>03</span><div><h3>Fasce orarie</h3><p>Quando il cliente può ricevere la consegna.</p></div></div>
+      <div class="customer-modal-grid-v8">
+        <div><label>Mattina dalle</label><input id="cMattinaDa" type="time"></div>
+        <div><label>Mattina alle</label><input id="cMattinaA" type="time"></div>
+        <div><label>Pomeriggio dalle</label><input id="cPomeriggioDa" type="time"></div>
+        <div><label>Pomeriggio alle</label><input id="cPomeriggioA" type="time"></div>
+      </div>
+    </section>
+
+    <section class="delivery-modal-section">
+      <div class="delivery-modal-section-title"><span>04</span><div><h3>Dettagli operativi</h3><p>Dati usati per scarico, vincoli e consegna.</p></div></div>
+      <div class="customer-modal-grid-v8">
+        <div><label>Tempo scarico stimato</label><input id="cScarico" type="number" value="10" placeholder="Minuti"></div>
+        <div><label>ZTL</label><select id="cZtl"><option value="false">ZTL No</option><option value="true">ZTL Sì</option></select></div>
+        <div><label>Sponda richiesta</label><select id="cSponda"><option value="false">Sponda No</option><option value="true">Sponda Sì</option></select></div>
+      </div>
+    </section>
+
+    <section class="delivery-modal-section">
+      <div class="delivery-modal-section-title"><span>05</span><div><h3>Note cliente</h3><p>Indicazioni utili per consegne future.</p></div></div>
+      <textarea id="cNote" rows="4" placeholder="Note consegna"></textarea>
+    </section>
+
+    <div class="actions-row delivery-modal-actions-v5">
+      <button type="button" class="btn-secondary" onclick="closeCustomerModal()">Annulla</button>
+      <button type="button" id="saveCustomerBtn" class="btn-primary" onclick="saveCustomer()">Salva cliente</button>
+    </div>
+  </div>
+</div>
+
+<div id="customerImportOverlay" class="modal-overlay hidden" onclick="closeCustomerImportModal(event)">
+  <div class="profile-modal customer-import-modal-v8" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <div class="modal-kicker">IMPORTAZIONE CLIENTI</div>
+        <h2>Importa clienti CSV/Excel</h2>
+        <p>Carica il file con i clienti e poi verifica gli indirizzi importati.</p>
+      </div>
+      <button class="modal-close" onclick="closeCustomerImportModal()">×</button>
+    </div>
+    <section class="delivery-modal-section">
+      <div class="import-drop-v8">
+        <strong>Seleziona file CSV/Excel</strong>
+        <small>Formati supportati: .csv, .xlsx, .xls</small>
+        <input type="file" id="importFile" accept=".csv,.xlsx,.xls">
+      </div>
+      <div id="addressValidationSummary" class="address-validation-summary"></div>
+    </section>
+    <div class="actions-row delivery-modal-actions-v5">
+      <button onclick="verifyPendingAddresses()" class="btn-secondary">Verifica indirizzi</button>
+      <button onclick="importCustomers()" class="btn-primary">Importa clienti</button>
+    </div>
+  </div>
+</div>
+
+<div id="deliveryDetailsOverlay" class="modal-overlay hidden" onclick="closeDeliveryDetailsModal(event)">
+  <div class="profile-modal delivery-details-modal delivery-details-modal-v5" onclick="event.stopPropagation()">
+    <div class="modal-header delivery-modal-header-v5">
+      <div>
+        <h2>Dettagli consegna</h2>
+        <p id="deliveryDetailsSubtitle">Modifica le specifiche operative della fermata.</p>
+      </div>
+      <button class="modal-close" onclick="closeDeliveryDetailsModal()">×</button>
+    </div>
+
+    <input type="hidden" id="deliveryModalIndex">
+
+    <section class="delivery-modal-section delivery-modal-summary-section">
+      <div class="delivery-modal-section-title">
+        <span>01</span>
+        <div>
+          <h3>Cliente e indirizzo</h3>
+          <p>Controlla la fermata che stai modificando.</p>
+        </div>
+      </div>
+      <div class="delivery-modal-summary delivery-modal-summary-v5">
+        <div class="delivery-modal-client-box">
+          <label>Cliente</label>
+          <strong id="deliveryModalCustomer">-</strong>
+          <small id="deliveryModalCode">Codice cliente: -</small>
+        </div>
+        <div class="delivery-modal-address-box">
+          <label>Indirizzo</label>
+          <strong id="deliveryModalAddressText">-</strong>
+          <small id="deliveryModalGeoStatus" class="delivery-geo-status-badge">Da verificare</small>
+        </div>
+      </div>
+    </section>
+
+    <section class="delivery-modal-section">
+      <div class="delivery-modal-section-title">
+        <span>02</span>
+        <div>
+          <h3>Fasce orarie</h3>
+          <p>Imposta quando il cliente può ricevere la consegna.</p>
+        </div>
+      </div>
+      <div class="delivery-modal-grid-v5 time-grid">
+        <div><label>Mattina dalle</label><input id="dmMattinaDa" type="time"></div>
+        <div><label>Mattina alle</label><input id="dmMattinaA" type="time"></div>
+        <div><label>Pomeriggio dalle</label><input id="dmPomeriggioDa" type="time"></div>
+        <div><label>Pomeriggio alle</label><input id="dmPomeriggioA" type="time"></div>
+      </div>
+    </section>
+
+    <section class="delivery-modal-section">
+      <div class="delivery-modal-section-title">
+        <span>03</span>
+        <div>
+          <h3>Dettagli operativi</h3>
+          <p>Dati usati per calcolo tempi, vincoli e carico.</p>
+        </div>
+      </div>
+      <div class="delivery-modal-grid-v5 ops-grid">
+        <div><label>Tempo scarico stimato</label><input id="dmScarico" type="number" min="0" step="1"></div>
+        <div><label>ZTL</label><select id="dmZtl"><option value="false">No</option><option value="true">Sì</option></select></div>
+        <div><label>Sponda richiesta</label><select id="dmSponda"><option value="false">No</option><option value="true">Sì</option></select></div>
+        <div><label>Peso kg</label><input id="dmPeso" type="number" min="0" step="0.1"></div>
+        <div><label>Colli</label><input id="dmColli" type="number" min="0" step="1"></div>
+      </div>
+    </section>
+
+    <section class="delivery-modal-section">
+      <div class="delivery-modal-section-title">
+        <span>04</span>
+        <div>
+          <h3>Note consegna</h3>
+          <p>Indicazioni operative specifiche per questa fermata.</p>
+        </div>
+      </div>
+      <textarea id="dmNote" rows="4" placeholder="Note operative per questa fermata"></textarea>
+    </section>
+
+    <div class="actions-row delivery-modal-actions-v5">
+      <button class="btn-secondary" onclick="closeDeliveryDetailsModal()">Annulla</button>
+      <button class="btn-primary" onclick="saveDeliveryDetailsModal()">Salva modifiche</button>
+    </div>
+  </div>
+</div>
+
+
+<div id="onboardingOverlay" class="modal-overlay hidden" onclick="closeOnboardingPanel(event)">
+  <div class="profile-modal onboarding-modal-v29" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <div>
+        <h2>Completa la configurazione di GiroFacile</h2>
+        <p>Segui i passaggi principali per rendere il gestionale pronto all'utilizzo.</p>
+      </div>
+      <button class="icon-btn" onclick="closeOnboardingPanel()">×</button>
+    </div>
+    <div class="onboarding-progress-v29 compact">
+      <div><strong id="onboardingModalProgressLabel">0/6</strong><span> completati</span></div>
+      <div class="onboarding-track-v29"><div id="onboardingModalProgressFill" style="width:0%"></div></div>
+    </div>
+    <div id="onboardingModalSteps" class="onboarding-steps-v29"></div>
+    <div class="modal-actions">
+      <button class="btn-light" onclick="dismissOnboarding()">Ricordamelo più tardi</button>
+      <button class="btn-primary" onclick="showTab('company'); closeOnboardingPanel();">Apri profilo azienda</button>
+      <button class="btn-secondary" onclick="completeOnboarding()">Ho completato</button>
+    </div>
+  </div>
+</div>
+
+<div id="profileOverlay" class="modal-overlay hidden" onclick="closeProfilePanel(event)">
+  <div class="profile-modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <h2>Profilo account</h2>
+        <p>Gestisci le informazioni del profilo collegato a GiroFacile.</p>
+      </div>
+      <button class="modal-close" onclick="closeProfilePanel()">×</button>
+    </div>
+
+    <div class="profile-photo-row">
+      <div id="profilePreview" class="profile-preview">A</div>
+      <div>
+        <label>Fotografia profilo</label>
+        <input id="profilePhoto" type="file" accept="image/*" onchange="previewProfilePhoto(event)">
+        <small>La foto viene salvata localmente sul browser.</small>
+      </div>
+    </div>
+
+    <div class="form-grid profile-grid">
+      <div><label>Nome account</label><input id="profileName" placeholder="Admin"><small>Salvato nel database e sincronizzato su tutti i dispositivi.</small></div>
+      <div><label>Email account</label><input id="profileEmail" type="email" placeholder="nome@email.it"><small>Usata per accesso, recupero password e comunicazioni dell'account.</small></div>
+      <div><label>Ruolo</label><input id="profileRole" value="Amministratore" readonly></div>
+      <div><label>Nuova password</label><input id="profilePassword" type="password" placeholder="Lascia vuoto per non cambiarla"></div>
+    </div>
+
+
+    <!-- SEZIONE IL MIO PIANO (compatta) -->
+    <div style="margin-top:16px;border-top:1px solid #e5e7eb;padding-top:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <h3 style="font-size:14px;font-weight:700">Il mio piano</h3>
+        <span id="planBadge" class="plan-badge-ui">—</span>
+      </div>
+      <div id="planStatusBox" style="background:#eff6ff;border-radius:8px;padding:10px 12px;margin-bottom:10px;display:flex;align-items:center;gap:8px">
+        <span id="planStatusIcon" style="font-size:18px">⏳</span>
+        <div>
+          <div id="planStatusLabel" style="font-size:13px;font-weight:600">Caricamento...</div>
+          <div id="planStatusDesc" style="font-size:11px;color:#6b7280;margin-top:2px"></div>
+        </div>
+      </div>
+      <div id="planUsageRows" class="plan-usage-rowline-v40"></div>
+      <div class="profile-plan-actions-v63">
+        <button id="btnPlanActive" class="btn-plan-active-v88" onclick="openPlanAccountPage()">Piano attivo</button>
+        <button class="btn-billing-v63" onclick="openBillingPanel()">Fatturazione</button>
+      </div>
+    </div>
+
+    <div class="actions-row" style="margin-top:16px">
+      <button class="btn-secondary" onclick="closeProfilePanel()">Chiudi</button>
+      <button class="btn-primary" onclick="saveProfilePanel()">Salva profilo</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- COOKIE NOTICE TECNICO -->
+<div id="cookieNotice" class="cookie-notice hidden" role="dialog" aria-live="polite" aria-label="Informativa cookie">
+  <div class="cookie-notice-card">
+    <div class="cookie-notice-icon">🍪</div>
+    <div class="cookie-notice-text">
+      <strong>Cookie tecnici</strong>
+      <p>GiroFacile utilizza solo cookie tecnici necessari per login, sicurezza e funzionamento del servizio. Non usiamo cookie di marketing nella Dashboard.</p>
+      <a href="/cookie-policy" target="_blank">Leggi la Cookie Policy</a>
+    </div>
+    <button type="button" class="btn-primary cookie-accept-btn" onclick="acceptCookieNotice()">Ho capito</button>
+  </div>
+</div>
+
+<script src="/static/dashboard/app.js?v=notifiche_v30"></script>
+
+<script>
+function toggleLoginPassword(){
+  const input = document.getElementById("loginPass");
+  if(!input) return;
+  input.type = input.type === "password" ? "text" : "password";
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>GiroFacile · Giro consegne</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --blue:#2563eb;--blue-dark:#1d4ed8;--blue-light:#eff6ff;
+  --green:#10b981;--red:#ef4444;--orange:#f59e0b;--gray:#6b7280;
+  --text:#111827;--border:#e5e7eb;--bg:#f3f4f6;--white:#fff;
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;-webkit-font-smoothing:antialiased;}
+
+/* HEADER */
+.header{background:var(--white);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+.header-logo{display:flex;align-items:center;gap:8px;}
+.header-icon{width:30px;height:30px;background:var(--blue);border-radius:7px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px;}
+.header-title{font-size:16px;font-weight:700;color:var(--text);}
+.header-title strong{color:var(--blue);}
+.header-info{font-size:12px;color:var(--gray);text-align:right;}
+
+/* PROGRESS BAR */
+.progress-bar-wrap{background:var(--white);padding:14px 16px;border-bottom:1px solid var(--border);}
+.progress-label{display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px;}
+.progress-label strong{color:var(--blue);}
+.progress-track{background:var(--bg);border-radius:8px;height:10px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--green));border-radius:8px;transition:width .4s;}
+.progress-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px;}
+.prog-stat{text-align:center;padding:8px;background:var(--bg);border-radius:8px;}
+.prog-stat-val{font-size:18px;font-weight:800;}
+.prog-stat-val.blue{color:var(--blue);}
+.prog-stat-val.green{color:var(--green);}
+.prog-stat-val.red{color:var(--red);}
+.prog-stat-val.gray{color:var(--gray);}
+.prog-stat-lbl{font-size:10px;color:var(--gray);margin-top:2px;}
+
+/* CONTENT */
+.content{padding:12px 12px calc(20px + var(--safe-bottom));}
+
+/* CARD CONSEGNA */
+.delivery-card{background:var(--white);border-radius:16px;margin-bottom:12px;overflow:hidden;border:2px solid var(--border);transition:border-color .2s;}
+.delivery-card.active{border-color:var(--blue);box-shadow:0 4px 20px rgba(37,99,235,.12);}
+.delivery-card.done{border-color:var(--green);opacity:.85;}
+.delivery-card.mancata{border-color:var(--red);opacity:.85;}
+
+.dc-header{padding:14px 16px;display:flex;align-items:flex-start;gap:12px;}
+.dc-num{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;flex-shrink:0;color:#fff;}
+.dc-num.active{background:var(--blue);}
+.dc-num.done{background:var(--green);}
+.dc-num.mancata{background:var(--red);}
+.dc-num.waiting{background:#d1d5db;color:var(--gray);}
+.dc-info{flex:1;}
+.dc-name{font-size:16px;font-weight:700;margin-bottom:2px;}
+.dc-addr{font-size:13px;color:var(--gray);margin-bottom:4px;}
+.dc-meta{display:flex;gap:8px;flex-wrap:wrap;}
+.dc-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;}
+.dc-badge.ztl{background:#fee2e2;color:var(--red);}
+.dc-badge.sponda{background:#fef3c7;color:#92400e;}
+.dc-badge.time{background:var(--blue-light);color:var(--blue);}
+.dc-status{flex-shrink:0;}
+.status-icon{font-size:22px;}
+
+.dc-details{padding:0 16px 14px;}
+.dc-detail-row{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:8px;}
+.dc-detail{font-size:12px;color:var(--gray);}
+.dc-detail strong{color:var(--text);font-weight:600;}
+.dc-note{background:var(--bg);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--gray);margin-bottom:10px;}
+.dc-warning{background:#fef3c7;border-radius:8px;padding:8px 12px;font-size:12px;color:#92400e;margin-bottom:10px;font-weight:500;}
+.dc-done-info{background:#d1fae5;border-radius:8px;padding:10px 12px;font-size:13px;color:#065f46;margin-bottom:10px;}
+.dc-mancata-info{background:#fee2e2;border-radius:8px;padding:10px 12px;font-size:13px;color:#991b1b;margin-bottom:10px;}
+
+/* AZIONI */
+.dc-actions{padding:0 16px 16px;display:flex;flex-direction:column;gap:8px;}
+.btn-navigate{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;background:var(--blue);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;text-decoration:none;}
+.btn-navigate:active{background:var(--blue-dark);}
+.action-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.btn-done{padding:13px;background:#d1fae5;color:#065f46;border:2px solid #10b981;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;}
+.btn-done:active{background:var(--green);color:#fff;}
+.btn-missed{padding:13px;background:#fee2e2;color:#991b1b;border:2px solid var(--red);border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;}
+.btn-missed:active{background:var(--red);color:#fff;}
+.btn-note{width:100%;padding:10px;background:var(--bg);color:var(--gray);border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;}
+
+/* MODAL TEMPO SCARICO */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;}
+.modal-overlay.hidden{display:none;}
+.modal{background:var(--white);border-radius:20px 20px 0 0;width:100%;padding-bottom:var(--safe-bottom);}
+.modal-header{padding:16px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.modal-header h3{font-size:17px;font-weight:700;}
+.modal-close{background:none;border:none;font-size:24px;color:var(--gray);cursor:pointer;}
+.modal-body{padding:16px 20px;}
+.modal-subtitle{font-size:13px;color:var(--gray);margin-bottom:16px;}
+
+/* TEMPO OPTIONS */
+.tempo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
+.tempo-btn{padding:14px 8px;border:2px solid var(--border);border-radius:12px;background:var(--bg);font-size:14px;font-weight:700;cursor:pointer;text-align:center;transition:all .15s;}
+.tempo-btn.selected{border-color:var(--blue);background:var(--blue-light);color:var(--blue);}
+.tempo-btn:active{border-color:var(--blue);background:var(--blue);}
+
+/* MOTIVO OPTIONS */
+.motivo-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;}
+.motivo-btn{padding:13px 16px;border:2px solid var(--border);border-radius:12px;background:var(--bg);font-size:14px;font-weight:600;cursor:pointer;text-align:left;transition:all .15s;}
+.motivo-btn.selected{border-color:var(--red);background:#fee2e2;color:#991b1b;}
+
+/* NOTE */
+.note-area{width:100%;padding:12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;background:var(--bg);min-height:80px;resize:none;margin-bottom:12px;font-family:inherit;}
+.note-area:focus{border-color:var(--blue);outline:none;}
+
+.btn-confirm{width:100%;padding:14px;background:var(--blue);color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;}
+.btn-confirm.green{background:var(--green);}
+.btn-confirm.red{background:var(--red);}
+
+/* LOADING */
+.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;color:var(--gray);}
+.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;margin-bottom:14px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* GIRO COMPLETATO */
+.completed-screen{text-align:center;padding:48px 24px;}
+.completed-icon{font-size:64px;margin-bottom:16px;}
+.completed-screen h2{font-size:24px;font-weight:800;margin-bottom:8px;}
+.completed-screen p{font-size:15px;color:var(--gray);}
+
+/* DEPOSIT CARD */
+.deposit-card{background:var(--blue);border-radius:16px;padding:16px;margin-bottom:12px;color:#fff;}
+.deposit-card h3{font-size:15px;font-weight:700;margin-bottom:4px;}
+.deposit-card p{font-size:13px;opacity:.85;}
+.deposit-card .btn-dep-nav{display:inline-flex;align-items:center;gap:6px;margin-top:10px;background:rgba(255,255,255,.2);color:#fff;border:1.5px solid rgba(255,255,255,.4);padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;}
+</style>
+</head>
+<body>
+
+<div id="loadingScreen" class="loading">
+  <div class="spinner"></div>
+  <p>Caricamento giro...</p>
+</div>
+
+<div id="errorScreen" class="loading hidden">
+  <div style="font-size:48px;margin-bottom:16px">⚠️</div>
+  <h2 style="font-size:20px;font-weight:700;margin-bottom:8px">Link non valido</h2>
+  <p id="errorMsg" style="font-size:14px;color:var(--gray)">Il link è scaduto o non è valido.</p>
+</div>
+
+<div id="mainApp" class="hidden">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-logo">
+      <div class="header-icon">G</div>
+      <div class="header-title">Giro<strong>Facile</strong></div>
+    </div>
+    <div class="header-info">
+      <div id="hDate"></div>
+      <div id="hDriver"></div>
+    </div>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="progress-bar-wrap">
+    <div class="progress-label">
+      <span id="progLabel">Caricamento...</span>
+      <strong id="progPercent">0%</strong>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progFill" style="width:0%"></div></div>
+    <div class="progress-stats">
+      <div class="prog-stat"><div class="prog-stat-val gray" id="statTotale">0</div><div class="prog-stat-lbl">Totali</div></div>
+      <div class="prog-stat"><div class="prog-stat-val green" id="statFatte">0</div><div class="prog-stat-lbl">Consegnate</div></div>
+      <div class="prog-stat"><div class="prog-stat-val red" id="statMancate">0</div><div class="prog-stat-lbl">Mancate</div></div>
+      <div class="prog-stat"><div class="prog-stat-val blue" id="statRimanenti">0</div><div class="prog-stat-lbl">Rimanenti</div></div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content" id="deliveryList"></div>
+
+  <!-- SCHERMATA COMPLETATA -->
+  <div id="completedScreen" class="hidden">
+    <div class="completed-screen">
+      <div class="completed-icon">🎉</div>
+      <h2>Giro completato!</h2>
+      <p>Tutte le consegne sono state gestite. Ottimo lavoro!</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL CONSEGNATO -->
+<div id="modalDone" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>✅ Consegna effettuata</h3>
+      <button class="modal-close" onclick="closeModals()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-subtitle">Seleziona il tempo di scarico effettivo</div>
+      <div class="tempo-grid" id="tempoGrid"></div>
+      <div class="modal-subtitle" style="margin-top:8px">Note (opzionale)</div>
+      <textarea class="note-area" id="noteDone" placeholder="Es. cliente assente, lasciato a portineria..."></textarea>
+      <button class="btn-confirm green" onclick="confirmDone()">Conferma consegna</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL MANCATA -->
+<div id="modalMissed" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>❌ Mancata consegna</h3>
+      <button class="modal-close" onclick="closeModals()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-subtitle">Seleziona il motivo</div>
+      <div class="motivo-list" id="motivoList"></div>
+      <div class="modal-subtitle">Note (opzionale)</div>
+      <textarea class="note-area" id="noteMissed" placeholder="Aggiungi dettagli..."></textarea>
+      <button class="btn-confirm red" onclick="confirmMissed()">Conferma mancata consegna</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOTA -->
+<div id="modalNote" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>📝 Aggiungi nota</h3>
+      <button class="modal-close" onclick="closeModals()">×</button>
+    </div>
+    <div class="modal-body">
+      <textarea class="note-area" id="noteText" placeholder="Scrivi una nota per questa consegna..." style="min-height:120px"></textarea>
+      <button class="btn-confirm" onclick="confirmNote()">Salva nota</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const token = location.pathname.split('/giro/')[1] || '';
+let routeData = null;
+let currentDeliveryId = null;
+let selectedTempo = null;
+let selectedMotivo = null;
+
+const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const fmt = (n, d=1) => n == null ? '—' : parseFloat(n).toFixed(d);
+
+async function api(url, opts = {}) {
+  const r = await fetch(url, { headers: { 'Content-Type': 'application/json' }, ...opts });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.detail || 'Errore');
+  return d;
+}
+
+async function load() {
+  try {
+    routeData = await api(`/api/operator/${token}`);
+    render();
+    document.getElementById('loadingScreen').classList.add('hidden');
+    document.getElementById('mainApp').classList.remove('hidden');
+  } catch(e) {
+    document.getElementById('loadingScreen').classList.add('hidden');
+    document.getElementById('errorScreen').classList.remove('hidden');
+    document.getElementById('errorMsg').textContent = e.message;
+  }
+}
+
+function render() {
+  const { route, consegne, progress, tempo_scarico_options, motivi_mancata } = routeData;
+
+  // Header
+  document.getElementById('hDate').textContent = route.data_giro + ' · ' + (route.orario_partenza || '');
+  document.getElementById('hDriver').textContent = route.driver_nome || route.nome;
+
+  // Progress
+  const pct = progress.percentuale;
+  document.getElementById('progLabel').textContent = route.nome;
+  document.getElementById('progPercent').textContent = pct + '%';
+  document.getElementById('progFill').style.width = pct + '%';
+  document.getElementById('statTotale').textContent = progress.totale;
+  document.getElementById('statFatte').textContent = progress.completate;
+  document.getElementById('statMancate').textContent = progress.mancate;
+  document.getElementById('statRimanenti').textContent = progress.rimanenti;
+
+  // Controlla se tutto completato
+  if (progress.rimanenti === 0 && progress.totale > 0) {
+    document.getElementById('deliveryList').classList.add('hidden');
+    document.getElementById('completedScreen').classList.remove('hidden');
+    return;
+  }
+
+  // Deposito (info partenza)
+  let html = '';
+  if (route.deposit_indirizzo) {
+    html += `<div class="deposit-card">
+      <h3>🏭 Punto di partenza</h3>
+      <p>${esc(route.deposit_nome || '')} · ${esc(route.deposit_indirizzo)}</p>
+      <a class="btn-dep-nav" href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(route.deposit_indirizzo)}" target="_blank">🗺 Naviga al deposito</a>
+    </div>`;
+  }
+
+  // Consegne
+  consegne.forEach((c, i) => {
+    const isActive = c.status === 'in_attesa' && i === progress.prossima_idx;
+    const isDone = c.status === 'completata';
+    const isMissed = c.status === 'mancata';
+    const isWaiting = c.status === 'in_attesa' && !isActive;
+
+    let cardClass = 'delivery-card';
+    if (isActive) cardClass += ' active';
+    if (isDone) cardClass += ' done';
+    if (isMissed) cardClass += ' mancata';
+
+    let numClass = 'dc-num ';
+    if (isActive) numClass += 'active';
+    else if (isDone) numClass += 'done';
+    else if (isMissed) numClass += 'mancata';
+    else numClass += 'waiting';
+
+    let statusIcon = '';
+    if (isDone) statusIcon = '✅';
+    if (isMissed) statusIcon = '❌';
+    if (isActive) statusIcon = '📍';
+
+    // Fasce orarie
+    let orari = '';
+    if (c.scarico_mattina_da) orari += `🕐 Mattina: ${c.scarico_mattina_da}–${c.scarico_mattina_a || ''}`;
+    if (c.scarico_pomeriggio_da) orari += (orari ? ' · ' : '') + `🕑 Pomeriggio: ${c.scarico_pomeriggio_da}–${c.scarico_pomeriggio_a || ''}`;
+
+    // Maps URL per questo cliente
+    const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(c.indirizzo)}`;
+
+    html += `<div class="${cardClass}" id="card-${c.id}">
+      <div class="dc-header">
+        <div class="${numClass}">${i + 1}</div>
+        <div class="dc-info">
+          <div class="dc-name">${esc(c.cliente_nome)}</div>
+          <div class="dc-addr">📍 ${esc(c.indirizzo)}</div>
+          <div class="dc-meta">
+            ${c.ztl ? '<span class="dc-badge ztl">⚠ ZTL</span>' : ''}
+            ${c.sponda ? '<span class="dc-badge sponda">🔧 Sponda</span>' : ''}
+            ${c.arrivo_stimato ? `<span class="dc-badge time">🕐 Arrivo est. ${c.arrivo_stimato}</span>` : ''}
+          </div>
+        </div>
+        ${statusIcon ? `<div class="dc-status"><span class="status-icon">${statusIcon}</span></div>` : ''}
+      </div>`;
+
+    // Dettagli sempre visibili per la fermata attiva
+    if (isActive || isDone || isMissed) {
+      html += `<div class="dc-details">`;
+
+      if (c.colli > 0 || c.peso_kg > 0) {
+        html += `<div class="dc-detail-row">
+          ${c.colli > 0 ? `<div class="dc-detail"><strong>📦 ${c.colli}</strong> colli</div>` : ''}
+          ${c.peso_kg > 0 ? `<div class="dc-detail"><strong>⚖ ${fmt(c.peso_kg)} kg</strong></div>` : ''}
+          <div class="dc-detail"><strong>⏱ ${c.tempo_scarico_min} min</strong> scarico previsto</div>
+        </div>`;
+      }
+      if (orari) {
+        html += `<div class="dc-note">🕐 ${orari}</div>`;
+      }
+      if (c.note) {
+        html += `<div class="dc-note">📝 ${esc(c.note)}</div>`;
+      }
+      if (c.warning) {
+        html += `<div class="dc-warning">⚠️ ${esc(c.warning.split('|').join(' · '))}</div>`;
+      }
+      if (isDone) {
+        html += `<div class="dc-done-info">✅ Consegnato${c.tempo_scarico_effettivo ? ` in ${c.tempo_scarico_effettivo} min` : ''}${c.note_operatore ? ` · "${esc(c.note_operatore)}"` : ''}</div>`;
+      }
+      if (isMissed) {
+        const motiviLabels = {assente:'Cliente assente',chiuso:'Attività chiusa',rifiutato:'Consegna rifiutata',altro:'Altro'};
+        html += `<div class="dc-mancata-info">❌ Mancata: ${motiviLabels[c.motivo_mancata] || c.motivo_mancata || ''}${c.note_operatore ? ` · "${esc(c.note_operatore)}"` : ''}</div>`;
+      }
+      html += `</div>`;
+    }
+
+    // Azioni solo per la fermata attiva
+    if (isActive) {
+      html += `<div class="dc-actions">
+        <a class="btn-navigate" href="${mapsUrl}" target="_blank">
+          🗺 Naviga verso ${esc(c.cliente_nome)}
+        </a>
+        <div class="action-row">
+          <button class="btn-done" onclick="openDone(${c.id})">✅ Consegnato</button>
+          <button class="btn-missed" onclick="openMissed(${c.id})">❌ Mancata</button>
+        </div>
+        <button class="btn-note" onclick="openNote(${c.id})">📝 Aggiungi nota</button>
+      </div>`;
+    }
+
+    // Pulsante nota anche per completate/mancate
+    if ((isDone || isMissed) && !isWaiting) {
+      html += `<div class="dc-actions">
+        <button class="btn-note" onclick="openNote(${c.id})">📝 ${c.note_operatore ? 'Modifica nota' : 'Aggiungi nota'}</button>
+      </div>`;
+    }
+
+    html += `</div>`;
+  });
+
+  document.getElementById('deliveryList').innerHTML = html;
+
+  // Scroll alla fermata attiva
+  if (progress.prossima_idx !== null && progress.prossima_idx !== undefined) {
+    const active = consegne[progress.prossima_idx];
+    if (active) {
+      setTimeout(() => {
+        const el = document.getElementById(`card-${active.id}`);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 300);
+    }
+  }
+}
+
+// ---- MODAL CONSEGNATO ----
+function openDone(id) {
+  currentDeliveryId = id;
+  selectedTempo = null;
+  document.getElementById('noteDone').value = '';
+  const grid = document.getElementById('tempoGrid');
+  grid.innerHTML = routeData.tempo_scarico_options.map(t => `
+    <button class="tempo-btn" onclick="selectTempo(${t}, this)">${t < 60 ? t + ' min' : t === 60 ? '1 ora' : t + ' min'}</button>
+  `).join('');
+  document.getElementById('modalDone').classList.remove('hidden');
+}
+function selectTempo(val, btn) {
+  selectedTempo = val;
+  document.querySelectorAll('.tempo-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+async function confirmDone() {
+  if (!selectedTempo) return alert('Seleziona il tempo di scarico');
+  try {
+    await api(`/api/operator/${token}/delivery/${currentDeliveryId}/complete`, {
+      method: 'POST',
+      body: JSON.stringify({ tempo_scarico: selectedTempo, note: document.getElementById('noteDone').value })
+    });
+    closeModals();
+    await load();
+  } catch(e) { alert(e.message); }
+}
+
+// ---- MODAL MANCATA ----
+function openMissed(id) {
+  currentDeliveryId = id;
+  selectedMotivo = null;
+  document.getElementById('noteMissed').value = '';
+  const motiviLabels = {assente:'👤 Cliente assente',chiuso:'🔒 Attività chiusa',rifiutato:'🚫 Consegna rifiutata',altro:'💬 Altro motivo'};
+  document.getElementById('motivoList').innerHTML = routeData.motivi_mancata.map(m => `
+    <button class="motivo-btn" onclick="selectMotivo('${m}', this)">${motiviLabels[m] || m}</button>
+  `).join('');
+  document.getElementById('modalMissed').classList.remove('hidden');
+}
+function selectMotivo(val, btn) {
+  selectedMotivo = val;
+  document.querySelectorAll('.motivo-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+async function confirmMissed() {
+  if (!selectedMotivo) return alert('Seleziona il motivo');
+  try {
+    await api(`/api/operator/${token}/delivery/${currentDeliveryId}/missed`, {
+      method: 'POST',
+      body: JSON.stringify({ motivo: selectedMotivo, note: document.getElementById('noteMissed').value })
+    });
+    closeModals();
+    await load();
+  } catch(e) { alert(e.message); }
+}
+
+// ---- MODAL NOTA ----
+function openNote(id) {
+  currentDeliveryId = id;
+  const c = routeData.consegne.find(x => x.id === id);
+  document.getElementById('noteText').value = c?.note_operatore || '';
+  document.getElementById('modalNote').classList.remove('hidden');
+}
+async function confirmNote() {
+  try {
+    await api(`/api/operator/${token}/delivery/${currentDeliveryId}/note`, {
+      method: 'POST',
+      body: JSON.stringify({ note: document.getElementById('noteText').value })
+    });
+    closeModals();
+    await load();
+  } catch(e) { alert(e.message); }
+}
+
+function closeModals() {
+  document.querySelectorAll('.modal-overlay').forEach(m => m.classList.add('hidden'));
+}
+
+// Auto-refresh ogni 30 secondi
+setInterval(load, 30000);
+load();
+</script>
+</body>
+</html>

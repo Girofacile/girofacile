@@ -1,0 +1,9 @@
+[Unit]
+Description=GiroFacile - Pulizia cache Google Routes
+After=network.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/girofacile_saas/girofacile_saas_COMPLETO_INVITO_AUTISTA
+EnvironmentFile=-/opt/girofacile_saas/girofacile_saas_COMPLETO_INVITO_AUTISTA/.env
+ExecStart=/opt/girofacile_saas/girofacile_saas_COMPLETO_INVITO_AUTISTA/.venv/bin/python scripts/cleanup_distance_cache.py
