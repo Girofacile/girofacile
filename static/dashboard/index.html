@@ -4,7 +4,9 @@
 <meta charset="utf-8">
 <title>GiroFacile</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link href="/static/dashboard/style.css?v=transfer_dashboard_v84" rel="stylesheet">
+<link href="/static/dashboard/css/core.css?v=v88" rel="stylesheet">
+<link href="/static/dashboard/css/transfer.css?v=v88" rel="stylesheet">
+<link href="/static/dashboard/css/account.css?v=v88" rel="stylesheet">
 </head>
 <body>
 
@@ -289,7 +291,7 @@
     <button type="button" data-mobile-tab="dashboard" onclick="mobileGoTabV62('dashboard')"><span>▦</span><strong>Dashboard</strong></button>
     <button type="button" data-mobile-tab="dashboard-in-progress" onclick="mobileGoTabV62('dashboard-in-progress')"><span>▰</span><strong>Giri</strong></button>
     <button type="button" class="main" onclick="mobileGoTabV62('giro')"><span>+</span><strong>Nuovo giro</strong></button>
-    <button type="button" data-mobile-tab="clienti" onclick="mobileGoTabV62('clienti')"><span>◎</span><strong>Clienti</strong></button>
+    <button type="button" data-mobile-tab="activity" onclick="mobileGoTabV62('activity')"><span>▤</span><strong>Attività</strong></button>
     <button type="button" onclick="toggleMobileMoreMenuV62()"><span>•••</span><strong>Altro</strong></button>
   </nav>
 
@@ -309,6 +311,7 @@
       <button data-tab="mezzi" data-workspace-operational="1" onclick="showTab('mezzi')" class="nav-item user-only"><span class="nav-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 8.5h10v7h-10z"/><path d="M13.5 11h3.6l3.4 3.4v1.1h-7"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17.2" cy="17.5" r="1.8"/></svg></span> Mezzi</button>
       <button data-tab="autisti" data-workspace-operational="1" onclick="showTab('autisti')" class="nav-item user-only"><span class="nav-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 20c.8-3.5 3.2-5.2 6.5-5.2s5.7 1.7 6.5 5.2"/></svg></span> Autisti</button>
       <button data-tab="storico" data-workspace-operational="1" onclick="showTab('storico')" class="nav-item user-only"><span class="nav-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 5.2v4.3h4.3"/><path d="M12 7.5V12l3 1.8"/></svg></span> Storico</button>
+      <button data-tab="activity" data-workspace-common="1" onclick="showTab('activity')" class="nav-item user-only"><span class="nav-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v14H5z"/><path d="M8 9h8M8 12h8M8 15h5"/></svg></span> Attività</button>
       <button data-tab="integrations" data-workspace-operational="1" data-sector-only="ecommerce" onclick="showTab('integrations')" class="nav-item user-only hidden"><span class="nav-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 12a4.5 4.5 0 0 1 4.5-4.5h3.5a4.5 4.5 0 0 1 0 9H13"/><path d="M16.5 12a4.5 4.5 0 0 1-4.5 4.5H8.5a4.5 4.5 0 0 1 0-9H11"/></svg></span> Integrazioni</button>
       <button data-tab="transfer-bookings" data-workspace-operational="1" data-sector-only="transfer" onclick="showTab('transfer-bookings')" class="nav-item user-only hidden"><span class="nav-svg"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span> Prenotazioni</button>
       <button data-tab="transfer-planning" data-workspace-operational="1" data-sector-only="transfer" onclick="showTab('transfer-planning')" class="nav-item user-only hidden"><span class="nav-svg"><svg viewBox="0 0 24 24"><path d="M4 6h16v14H4z"/><path d="M8 3v5M16 3v5M4 10h16"/></svg></span> Planning corse</button>
@@ -1309,6 +1312,56 @@
         </section>
       </section>
 
+      <section id="tab-activity" class="tab hidden">
+        <div class="page-title-row">
+          <div>
+            <h1>Registro attività</h1>
+            <p>Cronologia degli eventi operativi più importanti della tua azienda.</p>
+          </div>
+          <button class="btn-secondary" onclick="loadActivityLogV31()">Aggiorna</button>
+        </div>
+
+        <div class="activity-layout-v31">
+          <div class="activity-panel-v31">
+            <div class="activity-filters-v31">
+              <select id="activityTypeFilter" onchange="loadActivityLogV31()">
+                <option value="">Tutti gli eventi</option>
+                <option value="company">Azienda</option>
+                <option value="onboarding">Onboarding</option>
+                <option value="agent">Agenti</option>
+                <option value="driver">Autisti</option>
+                <option value="customer">Clienti</option>
+                <option value="address">Indirizzi</option>
+                <option value="route">Giri</option>
+                <option value="delivery">Consegne</option>
+                <option value="chat">Chat</option>
+              </select>
+              <select id="activitySeverityFilter" onchange="loadActivityLogV31()">
+                <option value="">Tutte le priorità</option>
+                <option value="info">Info</option>
+                <option value="success">Completate</option>
+                <option value="warning">Da controllare</option>
+                <option value="danger">Critiche</option>
+              </select>
+            </div>
+            <div id="activityListV31" class="activity-list-v31">
+              <div class="activity-empty-v31">Caricamento attività...</div>
+            </div>
+          </div>
+
+          <aside class="activity-side-v31">
+            <h3>Perché è utile</h3>
+            <p>Il registro attività ti permette di controllare chi ha creato clienti, quando un giro è stato avviato o completato, quali consegne sono mancate e quali eventi richiedono attenzione.</p>
+            <div class="activity-legend-v31">
+              <span><i class="dot info"></i> Info</span>
+              <span><i class="dot success"></i> Completato</span>
+              <span><i class="dot warning"></i> Da controllare</span>
+              <span><i class="dot danger"></i> Critico</span>
+            </div>
+          </aside>
+        </div>
+      </section>
+
       <section id="tab-storico" class="tab hidden">
         <div class="page-title-row"><div><h1>Storico giri</h1><p>Consulta i percorsi calcolati e riapri Google Maps.</p></div></div>
         <section class="panel">
@@ -1892,7 +1945,8 @@
   </div>
 </div>
 
-<script src="/static/dashboard/app.js?v=notifiche_v30"></script>
+<script src="/static/dashboard/js/core.js?v=v88"></script>
+<script src="/static/dashboard/js/transfer.js?v=v88"></script>
 
 <script>
 function toggleLoginPassword(){
