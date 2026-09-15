@@ -1526,7 +1526,6 @@ function showTab(name){
   if(name==="mezzi") loadVehicles();
   if(name==="autisti") loadDrivers();
   if(name==="storico") loadRoutes();
-  if(name==="activity") loadActivityLogV31();
   if(name==="chat-autisti") loadDriverChatCenter();
   if(name==="settings") loadSettingsV41();
   if(name==="plan-account"){ renderUpgradeCards(); syncPlanPageHeaderV874(); }
@@ -3946,7 +3945,6 @@ function showTab(name){
   if(name==="mezzi") loadVehicles();
   if(name==="autisti") loadDrivers();
   if(name==="storico") loadRoutes();
-  if(name==="activity") loadActivityLogV31();
   if(name==="chat-autisti") loadDriverChatCenter();
   if(name==="settings") loadSettingsV41();
   if(name==="plan-account"){ renderUpgradeCards(); syncPlanPageHeaderV874(); }
@@ -4684,7 +4682,7 @@ window.openActivityTargetV31 = openActivityTargetV31;
 // v49 - Account legato al settore + Dashboard iniziale pulita
 // -----------------------------------------------------------------------------
 let gfWorkspaceOperationalV49 = true;
-const GF_COMMON_TABS_V49 = new Set(["dashboard", "company", "activity", "settings"]);
+const GF_COMMON_TABS_V49 = new Set(["dashboard", "company", "settings"]);
 const GF_OPERATIONAL_TABS_V49 = new Set([
   "giro", "clienti", "agenti", "report", "depositi", "mezzi", "autisti", "storico",
   "chat-autisti", "integrations", "dashboard-scheduled", "dashboard-in-progress", "dashboard-completed"
@@ -5004,8 +5002,8 @@ function applyTransferMenuCleanupV83(sectorNow){
         buttons[1].innerHTML = '<span>▰</span><strong>Giri</strong>';
         buttons[2].setAttribute('onclick', "mobileGoTabV62('giro')");
         buttons[2].innerHTML = '<span>+</span><strong>Nuovo giro</strong>';
-        buttons[3].setAttribute('onclick', "mobileGoTabV62('activity')");
-        buttons[3].innerHTML = '<span>▤</span><strong>Attività</strong>';
+        buttons[3].setAttribute('onclick', "mobileGoTabV62('clienti')");
+        buttons[3].innerHTML = '<span>◎</span><strong>Clienti</strong>';
       }
     }
   }
