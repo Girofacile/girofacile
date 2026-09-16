@@ -220,9 +220,14 @@ def migrate_database():
     preparer = dialect.identifier_preparer
 
     def table_columns(table_name: str) -> set[str]:
-        if not insp.has_table(table_name):
+        # Usa un Inspector fresco: SQLAlchemy può mettere in cache la struttura
+        # letta all'avvio e, dopo un ALTER TABLE, continuare a vedere lo schema
+        # precedente. Questo causava /api/vehicles -> 500 sui DB locali aggiornati
+        # da versioni più vecchie.
+        fresh_insp = inspect(engine)
+        if not fresh_insp.has_table(table_name):
             return set()
-        return {c["name"] for c in insp.get_columns(table_name)}
+        return {c["name"] for c in fresh_insp.get_columns(table_name)}
 
     def q(name: str) -> str:
         return preparer.quote(name)
@@ -247,10 +252,33 @@ def migrate_database():
         if insp.has_table(table):
             add_column(table, "user_id", sql_type(Integer()))
 
-    if insp.has_table("vehicles"):
+    if inspect(engine).has_table("vehicles"):
+        # Riparazione completa dello schema Vehicle. Non affidiamoci al fatto che
+        # il database provenga da una versione specifica: ogni colonna usata dal
+        # modello ORM viene verificata prima che /api/vehicles venga interrogato.
+        add_column("vehicles", "is_active", sql_type(Boolean()), "1" if dialect.name == "sqlite" else "true")
+        add_column("vehicles", "deleted_at", sql_type(DateTime()))
+        add_column("vehicles", "nome", sql_type(String(150)), "''")
+        add_column("vehicles", "targa", sql_type(String(50)))
+        add_column("vehicles", "consumo_l_100km", sql_type(Float()), "8.5")
+        add_column("vehicles", "capacita_kg", sql_type(Float()), "1000")
+        add_column("vehicles", "capacita_colli", sql_type(Integer()), "100")
+        add_column("vehicles", "ha_sponda", sql_type(Boolean()), "0" if dialect.name == "sqlite" else "false")
+        add_column("vehicles", "accesso_ztl", sql_type(Boolean()), "0" if dialect.name == "sqlite" else "false")
+        add_column("vehicles", "note", sql_type(Text()))
+        add_column("vehicles", "photo_url", sql_type(Text()))
         add_column("vehicles", "alimentazione", sql_type(String(40)), "'gasolio'")
         add_column("vehicles", "consumo_primario_100km", sql_type(Float()), "8.5")
         add_column("vehicles", "consumo_kwh_100km", sql_type(Float()), "0")
+        add_column("vehicles", "marca", sql_type(String(100)))
+        add_column("vehicles", "modello", sql_type(String(160)))
+        add_column("vehicles", "anno_immatricolazione", sql_type(Integer()))
+        add_column("vehicles", "cilindrata_cc", sql_type(Integer()))
+        add_column("vehicles", "potenza_kw", sql_type(Float()))
+        add_column("vehicles", "classe_euro", sql_type(String(60)))
+        add_column("vehicles", "carrozzeria", sql_type(String(100)))
+        add_column("vehicles", "lookup_provider", sql_type(String(60)))
+        add_column("vehicles", "lookup_at", sql_type(DateTime()))
         with engine.begin() as conn:
             conn.execute(text("UPDATE vehicles SET consumo_primario_100km = consumo_l_100km WHERE consumo_primario_100km IS NULL OR consumo_primario_100km = 0"))
 

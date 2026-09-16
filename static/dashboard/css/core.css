@@ -4431,3 +4431,24 @@ html[data-gf-tail-lift="off"] .gf-vehicles-table-v892 td:nth-child(4) { display:
 
 /* V89.5 - alimentazione mezzi e prezzo energia */
 .energy-price-box-v895{grid-column:span 2;padding:14px;border:1px solid #e2e8f0;border-radius:14px;background:#f8fafc}.energy-vehicle-info-v895{font-size:13px;font-weight:700;color:#334155;margin:4px 0 10px}.energy-mode-row-v895{display:flex;gap:18px;margin-bottom:10px}.energy-mode-row-v895 label{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700}.energy-price-box-v895 input[type=number]{width:100%}.energy-price-box-v895>div:not(.energy-mode-row-v895):not(.energy-vehicle-info-v895){margin-top:8px}@media(max-width:760px){.energy-price-box-v895{grid-column:auto}}
+
+/* V89.6 - Registro targa e recupero dati mezzo */
+.vehicle-plate-lookup-v896{margin:18px 0 16px;padding:18px;border:1px solid #dbe7f5;border-radius:16px;background:linear-gradient(180deg,#f8fbff,#fff)}
+.vehicle-plate-field-v896>label{display:block;margin-bottom:7px;font-weight:800;color:#0f172a}
+.vehicle-plate-input-v896{display:grid;grid-template-columns:minmax(220px,360px) auto;gap:10px;align-items:center}
+.vehicle-plate-input-v896 input{font-size:18px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase}
+.vehicle-plate-input-v896 button{white-space:nowrap;min-height:44px}
+#vehiclePlateLookupStateV896{display:block;margin-top:8px;color:#64748b}
+#vehiclePlateLookupStateV896.ok{color:#15803d;font-weight:700}
+#vehiclePlateLookupStateV896.error{color:#b91c1c;font-weight:700}
+.vehicle-data-grid-v896 input[readonly]{background:#f8fafc;color:#334155}
+@media(max-width:760px){.vehicle-plate-input-v896{grid-template-columns:1fr}.vehicle-plate-input-v896 button{width:100%}}
+
+/* V89.6.6 - rifinitura registro targa */
+.vehicle-lookup-status-row-v8966{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:8px}
+.vehicle-lookup-status-row-v8966 small{margin:0}
+.vehicle-verified-badge-v8966{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:#ecfdf3;border:1px solid #b7ebc7;color:#087a35;font-size:12px;font-weight:800;white-space:nowrap}
+.vehicle-data-grid-v896 .vehicle-field-from-lookup-v8966{border-color:#9eddb5!important;background:#fbfffc!important;box-shadow:0 0 0 2px rgba(34,197,94,.06)}
+.vehicle-data-grid-v896 .vehicle-field-missing-v8966{border-style:dashed!important;background:#fffdf7!important}
+.vehicle-data-grid-v896 .vehicle-field-from-lookup-v8966:focus{border-color:#22a95a!important;box-shadow:0 0 0 3px rgba(34,197,94,.12)!important}
+@media(max-width:720px){.vehicle-lookup-status-row-v8966{align-items:flex-start}.vehicle-verified-badge-v8966{white-space:normal}}

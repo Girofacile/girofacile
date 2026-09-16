@@ -1,0 +1,162 @@
+/* GiroFacile V89.7 - Pianificazione giro ricostruita e isolata */
+#tab-giro.planning-page-v896{
+  --gf-plan-blue:#0b63f6;
+  --gf-plan-blue-2:#0f6dff;
+  --gf-plan-ink:#0b1739;
+  --gf-plan-muted:#63718c;
+  --gf-plan-border:#dfe8f5;
+  --gf-plan-soft:#f6f9fe;
+  --gf-plan-shadow:0 12px 34px rgba(25,61,117,.055);
+  max-width:1420px!important;
+  margin:0 auto!important;
+  padding:26px 18px 34px!important;
+  background:transparent!important;
+}
+
+#tab-giro .planning-breadcrumb-v896{
+  display:flex!important;align-items:center!important;gap:8px!important;
+  margin:0 0 10px!important;color:#74819b!important;font-size:13px!important;font-weight:650!important;
+}
+#tab-giro .planning-breadcrumb-v896 b{font-size:16px!important;color:#a0aec0!important;font-weight:500!important}
+
+#tab-giro .planning-title-row-v896{
+  display:flex!important;align-items:flex-start!important;justify-content:space-between!important;gap:24px!important;
+  margin:0 0 20px!important;
+}
+#tab-giro .planning-title-row-v896 h1{
+  margin:0 0 8px!important;font-size:31px!important;line-height:1.06!important;letter-spacing:-.035em!important;
+  color:var(--gf-plan-ink)!important;font-weight:850!important;
+}
+#tab-giro .planning-title-row-v896 p{margin:0!important;font-size:14px!important;color:var(--gf-plan-muted)!important;line-height:1.45!important}
+#tab-giro .planning-guide-btn-v896{
+  height:46px!important;min-height:46px!important;padding:0 17px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:9px!important;
+  border:1px solid #dce6f3!important;border-radius:12px!important;background:#fff!important;color:#17346d!important;
+  box-shadow:0 8px 22px rgba(38,74,132,.05)!important;font-size:13px!important;font-weight:800!important;
+}
+#tab-giro .planning-guide-icon-v896{width:21px!important;height:21px!important;font-size:12px!important;border:2px solid var(--gf-plan-blue)!important}
+
+#tab-giro .stats-grid{
+  display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:14px!important;margin:0 0 18px!important;
+}
+#tab-giro .stat-card{
+  min-height:118px!important;padding:19px 20px!important;border:1px solid #e7edf6!important;border-radius:17px!important;background:#fff!important;
+  box-shadow:var(--gf-plan-shadow)!important;display:flex!important;align-items:center!important;gap:16px!important;overflow:hidden!important;
+}
+#tab-giro .stat-icon{width:52px!important;height:52px!important;border-radius:15px!important;flex:0 0 52px!important}
+#tab-giro .stat-icon svg{width:27px!important;height:27px!important;stroke-width:1.8!important}
+#tab-giro .stat-card>div:last-child{display:flex!important;flex-direction:column!important;align-items:flex-start!important;min-width:0!important}
+#tab-giro .stat-card>div:last-child>span{font-size:13px!important;font-weight:700!important;color:#425474!important;line-height:1.2!important;white-space:normal!important}
+#tab-giro .stat-card strong{font-size:25px!important;line-height:1.05!important;margin:4px 0 5px!important;color:#07152f!important;font-weight:850!important;letter-spacing:-.025em!important}
+#tab-giro .stat-card small{font-size:12px!important;color:#71809a!important;line-height:1.2!important;white-space:normal!important}
+
+#tab-giro .giro-layout,#tab-giro .giro-layout.giro-layout-full{display:block!important}
+#tab-giro .left-column{display:flex!important;flex-direction:column!important;gap:16px!important}
+
+#tab-giro .planning-details-card-v896{
+  padding:0!important;border:1px solid #e3eaf4!important;border-radius:18px!important;background:#fff!important;overflow:hidden!important;
+  box-shadow:var(--gf-plan-shadow)!important;
+}
+#tab-giro .planning-details-head-v896{
+  margin:0!important;padding:18px 20px!important;display:flex!important;align-items:center!important;justify-content:space-between!important;gap:18px!important;
+  border-bottom:1px solid #edf2f8!important;
+}
+#tab-giro .planning-head-main-v896{display:flex!important;align-items:center!important;gap:13px!important}
+#tab-giro .planning-head-icon-v896{
+  width:44px!important;height:44px!important;border-radius:13px!important;background:#eaf3ff!important;color:var(--gf-plan-blue)!important;flex:0 0 44px!important;
+}
+#tab-giro .planning-head-icon-v896 svg{width:23px!important;height:23px!important;stroke:currentColor!important;stroke-width:1.8!important}
+#tab-giro .planning-details-head-v896 h2{margin:0 0 3px!important;font-size:18px!important;line-height:1.2!important;color:#0d1b3d!important;font-weight:850!important}
+#tab-giro .planning-details-head-v896 p{margin:0!important;font-size:13px!important;color:#73819a!important;line-height:1.35!important}
+#tab-giro .planning-model-btn-v897{
+  height:44px;min-width:145px;padding:0 15px;display:inline-flex;align-items:center;justify-content:space-between;gap:14px;
+  border:1px solid #d6e1ef;border-radius:11px;background:#fff;color:#233c6b;font-family:inherit;font-size:13px;font-weight:750;
+  box-shadow:0 4px 12px rgba(25,61,117,.025);opacity:.9;
+}
+
+#tab-giro .planning-form-grid-v896{
+  display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:16px 18px!important;padding:18px 20px 14px!important;
+}
+#tab-giro .planning-field-v896{position:relative!important;min-width:0!important}
+#tab-giro .planning-form-grid-v896>div>label{
+  display:block!important;margin:0 0 7px!important;color:#20365f!important;font-size:12.5px!important;line-height:1.2!important;font-weight:800!important;
+}
+#tab-giro .planning-field-v896:before{
+  content:attr(data-icon)!important;position:absolute!important;left:13px!important;top:39px!important;z-index:2!important;
+  width:23px!important;height:23px!important;display:grid!important;place-items:center!important;color:#0b63f6!important;font-size:14px!important;font-weight:900!important;pointer-events:none!important;
+}
+#tab-giro .planning-field-v896 input,#tab-giro .planning-field-v896 select{
+  width:100%!important;height:46px!important;min-height:46px!important;padding:10px 13px 10px 43px!important;
+  border:1px solid #cedaeb!important;border-radius:10px!important;background:#fff!important;color:#172746!important;font-family:inherit!important;font-size:13px!important;font-weight:650!important;
+  box-shadow:inset 0 1px 1px rgba(15,23,42,.01)!important;outline:none!important;
+}
+#tab-giro .planning-field-v896 input:focus,#tab-giro .planning-field-v896 select:focus{border-color:#78adfa!important;box-shadow:0 0 0 3px rgba(11,99,246,.07)!important}
+#tab-giro .availability-hint{
+  display:table!important;margin:5px auto 0!important;padding:3px 9px!important;border-radius:999px!important;background:#eaf9ef!important;color:#158344!important;font-size:10px!important;line-height:1.2!important;font-weight:800!important;
+}
+
+#tab-giro .planning-secondary-grid-v896{
+  display:grid!important;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr)!important;gap:14px!important;padding:2px 20px 20px!important;align-items:stretch!important;
+}
+#tab-giro .planning-energy-card-v896,#tab-giro .planning-return-card-v896{
+  min-height:178px!important;padding:15px 16px!important;border:1px solid #dce6f3!important;border-radius:14px!important;background:#fbfdff!important;
+}
+#tab-giro .planning-energy-card-v896{grid-column:auto!important;width:auto!important;min-width:0!important}
+#tab-giro .planning-return-card-v896{grid-column:auto!important}
+#tab-giro .planning-subcard-title-v896{display:flex!important;align-items:center!important;gap:11px!important;margin:0 0 10px!important}
+#tab-giro .planning-subcard-icon-v896{
+  width:38px!important;height:38px!important;border:1px solid #d9e7f8!important;border-radius:11px!important;background:#fff!important;color:#0b63f6!important;font-size:17px!important;flex:0 0 38px!important;
+}
+#tab-giro .planning-subcard-title-v896 label{margin:0!important;font-size:13px!important;color:#1b3159!important;font-weight:850!important}
+#tab-giro .energy-vehicle-info-v895{margin:-1px 0 8px 49px!important;font-size:10.5px!important;color:#72819a!important;line-height:1.25!important}
+#tab-giro .energy-mode-row-v895{display:flex!important;align-items:center!important;gap:20px!important;margin:4px 0 10px 49px!important}
+#tab-giro .energy-mode-row-v895 label{display:flex!important;align-items:center!important;gap:6px!important;margin:0!important;font-size:12px!important;color:#223a65!important;font-weight:800!important}
+#tab-giro .energy-mode-row-v895 input[type="radio"]{width:15px!important;height:15px!important;min-height:15px!important;padding:0!important;accent-color:var(--gf-plan-blue)!important}
+#tab-giro #primaryEnergyPriceWrap,#tab-giro #electricEnergyPriceWrap{margin:0 0 0 49px!important}
+#tab-giro #primaryEnergyPriceWrap label,#tab-giro #electricEnergyPriceWrap label{display:block!important;margin:0 0 5px!important;font-size:11px!important;color:#263a5e!important;font-weight:800!important}
+#tab-giro .planning-secondary-grid-v896 input,#tab-giro .planning-secondary-grid-v896 select{
+  width:100%!important;height:42px!important;min-height:42px!important;padding:8px 11px!important;border:1px solid #cedaeb!important;border-radius:9px!important;background:#fff!important;font-family:inherit!important;font-size:12.5px!important;color:#172746!important;font-weight:650!important;
+}
+#tab-giro #automaticFuelPriceInfo{display:block!important;margin:5px 0 0 49px!important;padding:0!important;background:transparent!important;color:#75849c!important;font-size:9.8px!important;line-height:1.25!important}
+#tab-giro .planning-return-card-v896 select{margin:0!important}
+#tab-giro .planning-info-v896{
+  display:flex!important;align-items:center!important;gap:9px!important;margin-top:10px!important;padding:11px 12px!important;min-height:50px!important;border:1px solid #d7e9ff!important;border-radius:10px!important;background:#eef6ff!important;color:#1f61c2!important;
+}
+#tab-giro .planning-info-v896>span{width:20px!important;height:20px!important;display:grid!important;place-items:center!important;border:1.5px solid #1670f8!important;border-radius:50%!important;font-size:11px!important;font-weight:900!important;flex:0 0 20px!important}
+#tab-giro .planning-info-v896 p{margin:0!important;font-size:11px!important;line-height:1.35!important}
+
+#tab-giro .route-step-panel{
+  margin:0!important;padding:13px 14px!important;border:1px solid #dce8fa!important;border-radius:17px!important;background:linear-gradient(90deg,#f8fbff 0%,#fff 82%)!important;box-shadow:0 9px 26px rgba(31,76,145,.045)!important;
+}
+#tab-giro .planning-next-step-v896{display:grid!important;grid-template-columns:auto minmax(0,1fr) auto!important;align-items:center!important;gap:14px!important}
+#tab-giro .planning-next-icon-v896{width:48px!important;height:48px!important;border-radius:14px!important;background:#e8f2ff!important;color:#0b63f6!important;font-size:20px!important;display:grid!important;place-items:center!important}
+#tab-giro .planning-next-copy-v896 h2{margin:0 0 4px!important;font-size:17px!important;line-height:1.2!important;color:#102044!important;font-weight:850!important}
+#tab-giro .planning-next-copy-v896 .panel-subtitle{margin:0!important;font-size:12px!important;line-height:1.35!important;color:#6d7c96!important}
+#tab-giro .planning-next-copy-v896 .route-gate-hint{display:block!important;margin-top:4px!important;font-size:10px!important;line-height:1.25!important}
+#tab-giro .planning-next-btn-v896{min-width:168px!important;height:46px!important;padding:0 19px!important;border-radius:10px!important;font-size:12.5px!important;font-weight:850!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:10px!important}
+
+@media(max-width:1180px){
+  #tab-giro.planning-page-v896{max-width:none!important;padding-left:12px!important;padding-right:12px!important}
+  #tab-giro .stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  #tab-giro .planning-form-grid-v896{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  #tab-giro .planning-secondary-grid-v896{grid-template-columns:1fr!important}
+}
+@media(max-width:760px){
+  #tab-giro.planning-page-v896{padding:16px 10px 90px!important}
+  #tab-giro .planning-title-row-v896{flex-direction:column!important;align-items:stretch!important}
+  #tab-giro .planning-title-row-v896 h1{font-size:26px!important}
+  #tab-giro .planning-guide-btn-v896{width:100%!important}
+  #tab-giro .stats-grid{grid-template-columns:1fr 1fr!important;gap:10px!important}
+  #tab-giro .stat-card{min-height:100px!important;padding:14px!important;gap:11px!important}
+  #tab-giro .stat-icon{width:42px!important;height:42px!important;flex-basis:42px!important}
+  #tab-giro .stat-card strong{font-size:21px!important}
+  #tab-giro .planning-details-head-v896{padding:15px!important}
+  #tab-giro .planning-model-btn-v897{display:none!important}
+  #tab-giro .planning-form-grid-v896{grid-template-columns:1fr!important;padding:15px!important}
+  #tab-giro .planning-secondary-grid-v896{padding:0 15px 15px!important}
+  #tab-giro .energy-vehicle-info-v895,#tab-giro .energy-mode-row-v895,#tab-giro #primaryEnergyPriceWrap,#tab-giro #electricEnergyPriceWrap,#tab-giro #automaticFuelPriceInfo{margin-left:0!important}
+  #tab-giro .planning-next-step-v896{grid-template-columns:auto minmax(0,1fr)!important}
+  #tab-giro .planning-next-btn-v896{grid-column:1/-1!important;width:100%!important}
+}
+@media(max-width:500px){
+  #tab-giro .stats-grid{grid-template-columns:1fr!important}
+}

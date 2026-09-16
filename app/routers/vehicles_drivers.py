@@ -1,12 +1,14 @@
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 
 from ..core.dependencies import current_user, owned
 from ..core.utils import local_today, parse_date_value
 from ..database import get_db
 from ..models import Driver, DriverAccount, RoutePlan, User, Vehicle
 from ..services.fuel_prices import get_daily_prices
+from ..services.vehicle_lookup import VehicleLookupError, lookup_vehicle_by_plate, normalize_plate
 from ..schemas import DriverIn, VehicleIn
 from ..services.plans import check_vehicle_limit, check_driver_limit
 
@@ -23,6 +25,13 @@ def normalize_optional(value):
 def normalize_email(value):
     value = normalize_optional(value)
     return value.lower() if value else None
+
+
+def normalize_vehicle_targa(value):
+    value = normalize_optional(value)
+    if not value:
+        return None
+    return "".join(ch for ch in value.upper() if ch.isalnum())
 
 
 def ensure_vehicle_targa_unique(db: Session, user: User, targa: str | None, exclude_id: int | None = None):
@@ -58,31 +67,74 @@ vehicles_router = APIRouter(prefix="/api/vehicles", tags=["vehicles"])
 
 
 def vehicle_status(vehicle, db: Session) -> str:
+    """Stato del mezzo, isolato dalla sessione principale.
+
+    In alcune installazioni aggiornate da versioni precedenti una query sulle
+    route può fallire per differenze di schema. Eseguirla sulla connection
+    dell'engine evita di lasciare la Session in stato aborted e quindi di far
+    fallire l'intero endpoint /api/vehicles.
+    """
     today = local_today()
-    routes = db.query(RoutePlan).filter(
-        RoutePlan.vehicle_id == vehicle.id, RoutePlan.data_giro == today
-    ).all()
-    for r in routes:
-        if computed_route_status_simple(r) == "in_corso":
-            return "In uso"
+    vehicle_id = getattr(vehicle, "id", None)
+    if not vehicle_id:
+        return "Disponibile"
+    try:
+        engine = db.get_bind()
+        with engine.connect() as conn:
+            rows = conn.execute(
+                text("SELECT status FROM route_plans WHERE vehicle_id = :vehicle_id AND data_giro = :today"),
+                {"vehicle_id": vehicle_id, "today": today},
+            ).fetchall()
+        for row in rows:
+            stored = ((row[0] if row else None) or "programmato").lower()
+            if stored == "in_corso":
+                return "In uso"
+    except Exception as exc:
+        print(f"[VEHICLES] stato mezzo {vehicle_id}: fallback Disponibile ({exc})")
     return "Disponibile"
 
 
+def _vehicle_value(vehicle, name, default=None):
+    try:
+        value = getattr(vehicle, name, default)
+    except Exception:
+        return default
+    return default if value is None else value
+
+
+def _iso_or_none(value):
+    if value is None:
+        return None
+    if hasattr(value, "isoformat"):
+        return value.isoformat()
+    return str(value)
+
+
 def vehicle_to_dict(vehicle, db: Session) -> dict:
+    consumo_legacy = _vehicle_value(vehicle, "consumo_l_100km", 0) or 0
     return {
-        "id": vehicle.id,
-        "nome": vehicle.nome,
-        "targa": vehicle.targa,
-        "consumo_l_100km": vehicle.consumo_l_100km,
-        "alimentazione": vehicle.alimentazione or "gasolio",
-        "consumo_primario_100km": vehicle.consumo_primario_100km or vehicle.consumo_l_100km or 0,
-        "consumo_kwh_100km": vehicle.consumo_kwh_100km or 0,
-        "capacita_kg": vehicle.capacita_kg,
-        "capacita_colli": vehicle.capacita_colli,
-        "ha_sponda": vehicle.ha_sponda,
-        "accesso_ztl": vehicle.accesso_ztl,
-        "note": vehicle.note,
-        "photo_url": vehicle.photo_url,
+        "id": _vehicle_value(vehicle, "id"),
+        "nome": _vehicle_value(vehicle, "nome", ""),
+        "targa": _vehicle_value(vehicle, "targa"),
+        "marca": _vehicle_value(vehicle, "marca"),
+        "modello": _vehicle_value(vehicle, "modello"),
+        "anno_immatricolazione": _vehicle_value(vehicle, "anno_immatricolazione"),
+        "cilindrata_cc": _vehicle_value(vehicle, "cilindrata_cc"),
+        "potenza_kw": _vehicle_value(vehicle, "potenza_kw"),
+        "classe_euro": _vehicle_value(vehicle, "classe_euro"),
+        "carrozzeria": _vehicle_value(vehicle, "carrozzeria"),
+        "lookup_provider": _vehicle_value(vehicle, "lookup_provider"),
+        "lookup_at": _iso_or_none(_vehicle_value(vehicle, "lookup_at")),
+        "consumo_l_100km": consumo_legacy,
+        "alimentazione": _vehicle_value(vehicle, "alimentazione", "gasolio") or "gasolio",
+        "consumo_primario_100km": _vehicle_value(vehicle, "consumo_primario_100km", consumo_legacy) or consumo_legacy,
+        "consumo_kwh_100km": _vehicle_value(vehicle, "consumo_kwh_100km", 0) or 0,
+        "capacita_kg": _vehicle_value(vehicle, "capacita_kg", 0) or 0,
+        "capacita_colli": _vehicle_value(vehicle, "capacita_colli", 0) or 0,
+        "ha_sponda": bool(_vehicle_value(vehicle, "ha_sponda", False)),
+        "accesso_ztl": bool(_vehicle_value(vehicle, "accesso_ztl", False)),
+        "note": _vehicle_value(vehicle, "note"),
+        "photo_url": _vehicle_value(vehicle, "photo_url"),
         "stato": vehicle_status(vehicle, db),
     }
 
@@ -92,10 +144,77 @@ def current_fuel_prices(db: Session = Depends(get_db), user: User = Depends(curr
     return get_daily_prices(db)
 
 
+@vehicles_router.get("/lookup-plate/{plate}")
+def lookup_plate(plate: str, db: Session = Depends(get_db), user: User = Depends(current_user)):
+    try:
+        normalized = normalize_plate(plate)
+
+        # Registro targa gratuito interno: se la stessa targa è già presente
+        # nell'azienda, riutilizziamo i dati salvati senza chiamare servizi esterni.
+        existing = (
+            owned(db.query(Vehicle), Vehicle, user)
+            .filter(Vehicle.targa == normalized)
+            .first()
+        )
+        if existing:
+            return {
+                "targa": normalized,
+                "marca": existing.marca,
+                "modello": existing.modello,
+                "anno_immatricolazione": existing.anno_immatricolazione,
+                "alimentazione": existing.alimentazione,
+                "cilindrata_cc": existing.cilindrata_cc,
+                "potenza_kw": existing.potenza_kw,
+                "classe_euro": existing.classe_euro,
+                "carrozzeria": existing.carrozzeria,
+                "provider": "girofacile",
+                "manual_required": False,
+                "message": "Dati recuperati dal registro targa interno di GiroFacile.",
+            }
+
+        return lookup_vehicle_by_plate(normalized)
+    except VehicleLookupError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
 @vehicles_router.get("")
 def list_vehicles(db: Session = Depends(get_db), user: User = Depends(current_user)):
-    rows = owned(db.query(Vehicle), Vehicle, user).order_by(Vehicle.nome.asc()).all()
-    return [vehicle_to_dict(x, db) for x in rows]
+    try:
+        rows = owned(db.query(Vehicle), Vehicle, user).order_by(Vehicle.nome.asc()).all()
+        return [vehicle_to_dict(x, db) for x in rows]
+    except Exception as exc:
+        # Log locale utile: l'errore resta visibile nel terminale senza
+        # trasformare una singola riga legacy in un 500 opaco.
+        db.rollback()
+        print(f"[VEHICLES] errore caricamento lista ORM: {type(exc).__name__}: {exc}")
+
+        # Fallback compatibile con database legacy: leggiamo le colonne
+        # effettivamente presenti e restituiamo comunque il registro mezzi.
+        engine = db.get_bind()
+        from sqlalchemy import inspect
+        columns = {c["name"] for c in inspect(engine).get_columns("vehicles")}
+        clauses = []
+        params = {}
+        if "user_id" in columns:
+            clauses.append("user_id = :uid")
+            params["uid"] = user.id
+        if "deleted_at" in columns:
+            clauses.append("deleted_at IS NULL")
+        where_sql = (" WHERE " + " AND ".join(clauses)) if clauses else ""
+        order_sql = " ORDER BY nome ASC" if "nome" in columns else ""
+        with engine.connect() as conn:
+            result = conn.execute(text(f"SELECT * FROM vehicles{where_sql}{order_sql}"), params)
+            mappings = result.mappings().all()
+
+        output = []
+        for row in mappings:
+            class RowVehicle:
+                pass
+            item = RowVehicle()
+            for key, value in row.items():
+                setattr(item, key, value)
+            output.append(vehicle_to_dict(item, db))
+        return output
 
 
 @vehicles_router.post("")
@@ -103,8 +222,10 @@ def create_vehicle(data: VehicleIn, db: Session = Depends(get_db), user: User = 
     check_vehicle_limit(user, db)
     payload = data.model_dump()
     payload["consumo_l_100km"] = payload.get("consumo_primario_100km") or payload.get("consumo_l_100km") or 0
-    payload["targa"] = normalize_optional(payload.get("targa"))
+    payload["targa"] = normalize_vehicle_targa(payload.get("targa"))
     ensure_vehicle_targa_unique(db, user, payload.get("targa"))
+    if payload.get("lookup_provider"):
+        payload["lookup_at"] = datetime.utcnow()
     item = Vehicle(**payload, user_id=user.id)
     db.add(item)
     db.commit()
@@ -119,8 +240,10 @@ def update_vehicle(item_id: int, data: VehicleIn, db: Session = Depends(get_db),
         raise HTTPException(404, "Mezzo non trovato")
     payload = data.model_dump()
     payload["consumo_l_100km"] = payload.get("consumo_primario_100km") or payload.get("consumo_l_100km") or 0
-    payload["targa"] = normalize_optional(payload.get("targa"))
+    payload["targa"] = normalize_vehicle_targa(payload.get("targa"))
     ensure_vehicle_targa_unique(db, user, payload.get("targa"), exclude_id=item.id)
+    if payload.get("lookup_provider"):
+        payload["lookup_at"] = datetime.utcnow()
     for k, v in payload.items():
         setattr(item, k, v)
     db.commit()

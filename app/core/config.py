@@ -80,3 +80,10 @@ PLAN_PRICES = {
 TRIAL_DAYS = 14
 
 # Ambiente e sicurezza HTTP
+
+# Lookup dati veicolo da targa (V89.6)
+VEHICLE_LOOKUP_PROVIDER = os.getenv("VEHICLE_LOOKUP_PROVIDER", "free").strip().lower()
+OPENAPI_AUTOMOTIVE_TOKEN = os.getenv("OPENAPI_AUTOMOTIVE_TOKEN", "").strip()
+OPENAPI_AUTOMOTIVE_BASE_URL = os.getenv("OPENAPI_AUTOMOTIVE_BASE_URL", "https://automotive.openapi.com").strip().rstrip("/")
+MYCARPLATE_API_KEY = os.getenv("MYCARPLATE_API_KEY", "").strip()
+MYCARPLATE_BASE_URL = os.getenv("MYCARPLATE_BASE_URL", "https://mycarplate.online/api/v1").strip().rstrip("/")

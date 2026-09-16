@@ -1025,6 +1025,16 @@
         <section class="panel">
           <input type="hidden" id="vId">
           <input type="hidden" id="vPhotoUrl">
+          <div class="vehicle-plate-lookup-v896">
+            <div class="vehicle-plate-field-v896">
+              <label for="vTarga">Targa</label>
+              <div class="vehicle-plate-input-v896">
+                <input id="vTarga" placeholder="Es. AB123CD" maxlength="10" autocomplete="off" oninput="normalizeVehiclePlateInputV896()">
+                <button type="button" id="vehiclePlateLookupBtnV896" class="btn-secondary" onclick="lookupVehiclePlateV896()">Recupera dati veicolo</button>
+              </div>
+              <div class="vehicle-lookup-status-row-v8966"><small id="vehiclePlateLookupStateV896">Inserisci la targa per compilare automaticamente i dati disponibili.</small><span id="vehiclePlateVerifiedBadgeV8966" class="vehicle-verified-badge-v8966 hidden">✓ Dati verificati da targa</span></div>
+            </div>
+          </div>
           <div class="asset-photo-row">
             <div id="vehiclePhotoPreview" class="asset-photo-preview vehicle-photo-preview">🚚</div>
             <div>
@@ -1033,9 +1043,15 @@
               <input id="vPhotoFile" type="file" accept="image/*" onchange="handleImageUpload(event,'vPhotoUrl','vehiclePhotoPreview','🚚')">
             </div>
           </div>
-          <div class="form-grid">
+          <div class="form-grid vehicle-data-grid-v896">
             <input id="vNome" placeholder="Nome mezzo">
-            <input id="vTarga" placeholder="Targa">
+            <input id="vMarca" placeholder="Marca">
+            <input id="vModello" placeholder="Modello">
+            <input id="vAnnoImmatricolazione" type="number" min="1900" max="2100" placeholder="Anno immatricolazione">
+            <input id="vCarrozzeria" placeholder="Carrozzeria / tipo veicolo">
+            <input id="vCilindrata" type="number" min="0" placeholder="Cilindrata cc">
+            <input id="vPotenzaKw" type="number" min="0" step="0.1" placeholder="Potenza kW">
+            <input id="vClasseEuro" placeholder="Classe Euro">
             <select id="vFuelType" onchange="updateVehicleEnergyFieldsV895()">
               <option value="gasolio">Gasolio</option><option value="benzina">Benzina</option><option value="gpl">GPL</option><option value="metano">Metano</option><option value="elettrico">Elettrico</option><option value="ibrido_benzina">Ibrido benzina</option><option value="ibrido_diesel">Ibrido diesel</option><option value="ibrido_plugin_benzina">Ibrido plug-in benzina</option><option value="ibrido_plugin_diesel">Ibrido plug-in diesel</option>
             </select>
