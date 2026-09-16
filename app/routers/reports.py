@@ -74,7 +74,12 @@ def _actual_route_km(route, deliveries=None) -> float:
 
 
 def _actual_route_liters(route, km: float) -> float:
+    # Compatibilità report legacy: per mezzi elettrici non sommiamo kWh nella colonna "Litri".
     try:
+        if getattr(route, "energy_type", None) == "elettrico":
+            return 0.0
+        if getattr(route, "energy_quantity_primary", 0):
+            return float(route.energy_quantity_primary or 0)
         consumo = float(route.vehicle.consumo_l_100km or 0) if route.vehicle else 0
         if consumo > 0:
             return (km * consumo) / 100
@@ -85,6 +90,9 @@ def _actual_route_liters(route, km: float) -> float:
 
 def _actual_route_cost(route, liters: float) -> float:
     try:
+        # Dalla V89.5 il costo salvato è lo snapshot storico di carburante + eventuale energia elettrica.
+        if getattr(route, "energy_type", None):
+            return float(route.costo_carburante or 0)
         price = float(route.prezzo_carburante_litro or 0)
         if price > 0:
             return liters * price

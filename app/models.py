@@ -375,6 +375,9 @@ class Vehicle(Base):
     nome: Mapped[str] = mapped_column(String(150), nullable=False)
     targa: Mapped[str | None] = mapped_column(String(50), nullable=True)
     consumo_l_100km: Mapped[float] = mapped_column(Float, default=8.5)
+    alimentazione: Mapped[str] = mapped_column(String(40), default="gasolio")
+    consumo_primario_100km: Mapped[float] = mapped_column(Float, default=8.5)
+    consumo_kwh_100km: Mapped[float] = mapped_column(Float, default=0)
     capacita_kg: Mapped[float] = mapped_column(Float, default=1000)
     capacita_colli: Mapped[int] = mapped_column(Integer, default=100)
     ha_sponda: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -382,6 +385,16 @@ class Vehicle(Base):
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
     photo_url: Mapped[str | None] = mapped_column(Text, nullable=True)
 
+
+class FuelPriceSnapshot(Base):
+    __tablename__ = "fuel_price_snapshots"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    reference_date: Mapped[object] = mapped_column(Date, nullable=False, index=True)
+    fuel_type: Mapped[str] = mapped_column(String(30), nullable=False, index=True)
+    price: Mapped[float] = mapped_column(Float, nullable=False)
+    unit: Mapped[str] = mapped_column(String(10), nullable=False, default="€/L")
+    source: Mapped[str] = mapped_column(String(180), nullable=False, default="MIMIT")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 class Driver(Base):
     __tablename__ = "drivers"
@@ -419,6 +432,15 @@ class RoutePlan(Base):
     driver_id: Mapped[int | None] = mapped_column(ForeignKey("drivers.id", ondelete="SET NULL"), nullable=True)
     rientro_deposito: Mapped[bool] = mapped_column(Boolean, default=True)
     prezzo_carburante_litro: Mapped[float] = mapped_column(Float, default=1.75)
+    energy_price_mode: Mapped[str] = mapped_column(String(20), default="manual")
+    energy_type: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    energy_unit: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    energy_price_primary: Mapped[float] = mapped_column(Float, default=0)
+    energy_price_electric: Mapped[float] = mapped_column(Float, default=0)
+    energy_consumption_primary: Mapped[float] = mapped_column(Float, default=0)
+    energy_consumption_electric: Mapped[float] = mapped_column(Float, default=0)
+    energy_quantity_primary: Mapped[float] = mapped_column(Float, default=0)
+    energy_quantity_electric: Mapped[float] = mapped_column(Float, default=0)
     totale_km: Mapped[float] = mapped_column(Float, default=0)
     totale_minuti: Mapped[float] = mapped_column(Float, default=0)
     litri_stimati: Mapped[float] = mapped_column(Float, default=0)

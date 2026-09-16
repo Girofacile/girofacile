@@ -4428,3 +4428,6 @@ html[data-gf-tail-lift="off"] .gf-vehicles-table-v892 td:nth-child(4) { display:
 .settings-save-bar-v893 button{min-width:150px}
 .settings-save-bar-v893 button:disabled{opacity:.5;cursor:not-allowed}
 @media(max-width:760px){.settings-save-bar-v893{bottom:76px;align-items:stretch;flex-direction:column}.settings-save-bar-v893 button{width:100%}}
+
+/* V89.5 - alimentazione mezzi e prezzo energia */
+.energy-price-box-v895{grid-column:span 2;padding:14px;border:1px solid #e2e8f0;border-radius:14px;background:#f8fafc}.energy-vehicle-info-v895{font-size:13px;font-weight:700;color:#334155;margin:4px 0 10px}.energy-mode-row-v895{display:flex;gap:18px;margin-bottom:10px}.energy-mode-row-v895 label{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700}.energy-price-box-v895 input[type=number]{width:100%}.energy-price-box-v895>div:not(.energy-mode-row-v895):not(.energy-vehicle-info-v895){margin-top:8px}@media(max-width:760px){.energy-price-box-v895{grid-column:auto}}

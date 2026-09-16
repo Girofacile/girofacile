@@ -242,6 +242,11 @@ def route_response(plan, result):
         "driver_name": ((plan.driver.nome + (" " + plan.driver.cognome if plan.driver.cognome else "")) if plan.driver else None),
         "driver_email": (plan.driver.email if plan.driver else None),
         "rientro_deposito": plan.rientro_deposito,
+        "prezzo_carburante_litro": plan.prezzo_carburante_litro,
+        "energy_price_mode": plan.energy_price_mode, "energy_type": plan.energy_type, "energy_unit": plan.energy_unit,
+        "energy_price_primary": plan.energy_price_primary, "energy_price_electric": plan.energy_price_electric,
+        "energy_consumption_primary": plan.energy_consumption_primary, "energy_consumption_electric": plan.energy_consumption_electric,
+        "energy_quantity_primary": plan.energy_quantity_primary, "energy_quantity_electric": plan.energy_quantity_electric,
         "totale_km": plan.totale_km, "totale_minuti": plan.totale_minuti,
         "litri_stimati": plan.litri_stimati, "costo_carburante": plan.costo_carburante,
         "costo_totale": plan.costo_totale, "google_maps_url": plan.google_maps_url,
@@ -274,6 +279,10 @@ def serialize_route(plan):
         "driver_name": ((plan.driver.nome + (" " + plan.driver.cognome if plan.driver.cognome else "")) if plan.driver else None),
         "driver_email": (plan.driver.email if plan.driver else None),
         "rientro_deposito": plan.rientro_deposito, "prezzo_carburante_litro": plan.prezzo_carburante_litro,
+        "energy_price_mode": plan.energy_price_mode, "energy_type": plan.energy_type, "energy_unit": plan.energy_unit,
+        "energy_price_primary": plan.energy_price_primary, "energy_price_electric": plan.energy_price_electric,
+        "energy_consumption_primary": plan.energy_consumption_primary, "energy_consumption_electric": plan.energy_consumption_electric,
+        "energy_quantity_primary": plan.energy_quantity_primary, "energy_quantity_electric": plan.energy_quantity_electric,
         "totale_km": plan.totale_km, "totale_minuti": plan.totale_minuti,
         "litri_stimati": plan.litri_stimati, "costo_carburante": plan.costo_carburante,
         "costo_totale": plan.costo_totale, "google_maps_url": plan.google_maps_url,
@@ -302,9 +311,18 @@ def serialize_route(plan):
 
 
 def save_route_result(db, user, data, result, vehicle, route_id=None):
-    consumo = vehicle.consumo_l_100km if vehicle else 8.5
-    litri = result["total_km"] * consumo / 100
-    costo_carburante = litri * data.prezzo_carburante_litro
+    fuel_type = (getattr(vehicle, "alimentazione", None) or "gasolio") if vehicle else "gasolio"
+    primary_cons = float(getattr(vehicle, "consumo_primario_100km", 0) or getattr(vehicle, "consumo_l_100km", 0) or 0)
+    electric_cons = float(getattr(vehicle, "consumo_kwh_100km", 0) or 0)
+    electric_only = fuel_type == "elettrico"
+    plugin = fuel_type in ("ibrido_plugin_benzina", "ibrido_plugin_diesel")
+    primary_qty = 0.0 if electric_only else result["total_km"] * primary_cons / 100
+    electric_qty = result["total_km"] * electric_cons / 100 if (electric_only or plugin) else 0.0
+    primary_price = float(data.energy_price_primary or data.prezzo_carburante_litro or 0)
+    electric_price = float(data.energy_price_electric or 0)
+    costo_carburante = primary_qty * primary_price + electric_qty * electric_price
+    litri = primary_qty
+    unit = "kg" if fuel_type == "metano" else ("kWh" if electric_only else "L")
     plan = owned(db.query(RoutePlan), RoutePlan, user).filter(RoutePlan.id == route_id).first() if route_id else None
     if not plan:
         plan = RoutePlan(user_id=user.id)
@@ -319,7 +337,16 @@ def save_route_result(db, user, data, result, vehicle, route_id=None):
     plan.vehicle_id = data.vehicle_id
     plan.driver_id = data.driver_id
     plan.rientro_deposito = data.rientro_deposito
-    plan.prezzo_carburante_litro = data.prezzo_carburante_litro
+    plan.prezzo_carburante_litro = primary_price
+    plan.energy_price_mode = data.energy_price_mode or "manual"
+    plan.energy_type = fuel_type
+    plan.energy_unit = unit
+    plan.energy_price_primary = primary_price
+    plan.energy_price_electric = electric_price
+    plan.energy_consumption_primary = primary_cons
+    plan.energy_consumption_electric = electric_cons
+    plan.energy_quantity_primary = round(primary_qty, 3)
+    plan.energy_quantity_electric = round(electric_qty, 3)
     plan.totale_km = result["total_km"]
     plan.totale_minuti = result["total_min"]
     plan.litri_stimati = round(litri, 2)
@@ -370,6 +397,7 @@ def resources_availability(
         busy = busy_vehicles.get(v.id)
         vehicles.append({
             "id": v.id, "nome": v.nome, "targa": v.targa, "consumo_l_100km": v.consumo_l_100km,
+            "alimentazione": v.alimentazione or "gasolio", "consumo_primario_100km": v.consumo_primario_100km or v.consumo_l_100km or 0, "consumo_kwh_100km": v.consumo_kwh_100km or 0,
             "available": busy is None,
             "status": "Disponibile" if busy is None else "In uso",
             "note": "" if busy is None else f"In uso su {busy['route_name']} fino alle {busy['busy_until']}",

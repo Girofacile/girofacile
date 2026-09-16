@@ -247,8 +247,24 @@ def migrate_database():
         if insp.has_table(table):
             add_column(table, "user_id", sql_type(Integer()))
 
+    if insp.has_table("vehicles"):
+        add_column("vehicles", "alimentazione", sql_type(String(40)), "'gasolio'")
+        add_column("vehicles", "consumo_primario_100km", sql_type(Float()), "8.5")
+        add_column("vehicles", "consumo_kwh_100km", sql_type(Float()), "0")
+        with engine.begin() as conn:
+            conn.execute(text("UPDATE vehicles SET consumo_primario_100km = consumo_l_100km WHERE consumo_primario_100km IS NULL OR consumo_primario_100km = 0"))
+
     if insp.has_table("route_plans"):
         add_column("route_plans", "driver_id", sql_type(Integer()))
+        add_column("route_plans", "energy_price_mode", sql_type(String(20)), "'manual'")
+        add_column("route_plans", "energy_type", sql_type(String(40)))
+        add_column("route_plans", "energy_unit", sql_type(String(20)))
+        add_column("route_plans", "energy_price_primary", sql_type(Float()), "0")
+        add_column("route_plans", "energy_price_electric", sql_type(Float()), "0")
+        add_column("route_plans", "energy_consumption_primary", sql_type(Float()), "0")
+        add_column("route_plans", "energy_consumption_electric", sql_type(Float()), "0")
+        add_column("route_plans", "energy_quantity_primary", sql_type(Float()), "0")
+        add_column("route_plans", "energy_quantity_electric", sql_type(Float()), "0")
         add_column("route_plans", "status", sql_type(String(30)), "'programmato'")
         add_column("route_plans", "started_at", sql_type(DateTime()))
         add_column("route_plans", "completed_at", sql_type(DateTime()))

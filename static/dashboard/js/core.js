@@ -523,7 +523,7 @@ function updateDashboardStats(){
     setText("summaryKg", kg.toFixed(0)+" kg");
     setText("summaryColli", colli);
     setText("statColli", colli);
-    setText("statFuel", fuel ? fuel+" € / L" : "€ / L");
+    const sv=vehiclesCache.find(v=>String(v.id)===String(val("routeVehicle"))); const unit=(sv?.alimentazione==="metano")?"€/kg":(sv?.alimentazione==="elettrico"?"€/kWh":"€/L"); setText("statFuel", fuel ? fuel+" "+unit : unit);
   }catch(e){}
 }
 
@@ -1627,6 +1627,9 @@ function renderResourceSelects(){
       const busy = rows.filter(v=>!v.available).length;
       setAvailabilityHint("vehicleAvailabilityHint", busy ? `${busy} mezzo/i non disponibili nell'orario selezionato` : "Tutti i mezzi risultano disponibili", busy ? "warn" : "ok");
     }
+    // V89.5.1: sincronizza sempre il pannello energia con il mezzo selezionato,
+    // anche dopo il refresh delle disponibilità che ricostruisce il <select>.
+    updateRouteEnergyPricingV895();
   }
 
   if(driverSel){
@@ -1700,8 +1703,12 @@ function routePlanningMissingFieldsV68(){
   if(!val("routeDeposit")) missing.push("deposito");
   if(!val("routeVehicle")) missing.push("mezzo");
   if(!val("routeDriver")) missing.push("autista");
+  const vehicle = vehiclesCache.find(v=>String(v.id)===String(val("routeVehicle")));
+  const fuelType = vehicle?.alimentazione || "gasolio";
   const fuel = parseFloat(val("fuelPrice") || "0");
-  if(!fuel || fuel <= 0) missing.push("prezzo carburante");
+  const electricity = parseFloat(val("electricityPrice") || "0");
+  if(fuelType !== "elettrico" && (!fuel || fuel <= 0)) missing.push("prezzo carburante");
+  if(["elettrico","ibrido_plugin_benzina","ibrido_plugin_diesel"].includes(fuelType) && (!electricity || electricity <= 0)) missing.push("prezzo energia");
   return missing;
 }
 
@@ -1754,14 +1761,18 @@ function closeCustomerPlanningStep(){
 }
 
 function initRoutePlanningGateV68(){
-  ["routeName","routeDate","routeStart","routeDeposit","routeVehicle","routeDriver","fuelPrice","returnDepot"].forEach(id=>{
+  ["routeName","routeDate","routeStart","routeDeposit","routeVehicle","routeDriver","fuelPrice","electricityPrice","returnDepot"].forEach(id=>{
     const el = document.getElementById(id);
     if(!el || el.dataset.gfGateBound === "1") return;
     el.dataset.gfGateBound = "1";
     el.addEventListener("input", updateRoutePlanningGateV68);
     el.addEventListener("change", updateRoutePlanningGateV68);
+    if(id === "routeVehicle"){
+      el.addEventListener("change", updateRouteEnergyPricingV895);
+    }
   });
   updateRoutePlanningGateV68();
+  updateRouteEnergyPricingV895();
 }
 
 function fmtEuro(v){ return "€ " + (Number(v||0)).toFixed(1).replace(".", ","); }
@@ -2382,26 +2393,95 @@ async function saveDeposit(){
 }
 async function deleteDeposit(id){ if(confirm("Eliminare deposito?")){ await api(`/api/deposits/${id}`, {method:"DELETE"}); loadDeposits(); } }
 
+const GF_FUEL_LABELS_V895={gasolio:"Gasolio",benzina:"Benzina",gpl:"GPL",metano:"Metano",elettrico:"Elettrico",ibrido_benzina:"Ibrido benzina",ibrido_diesel:"Ibrido diesel",ibrido_plugin_benzina:"Ibrido plug-in benzina",ibrido_plugin_diesel:"Ibrido plug-in diesel"};
+function fuelBaseTypeV895(type){if(["ibrido_benzina","ibrido_plugin_benzina"].includes(type))return "benzina";if(["ibrido_diesel","ibrido_plugin_diesel"].includes(type))return "gasolio";return type;}
+function energyConsumptionLabelV895(v){const t=v.alimentazione||"gasolio", p=Number(v.consumo_primario_100km??v.consumo_l_100km??0), e=Number(v.consumo_kwh_100km||0);if(t==="elettrico")return `${e} kWh/100 km`;if(t==="metano")return `${p} kg/100 km`;if(t.startsWith("ibrido_plugin"))return `${p} L + ${e} kWh/100 km`;return `${p} L/100 km`;}
+function updateVehicleEnergyFieldsV895(){const t=val("vFuelType")||"gasolio";const p=document.getElementById("vPrimaryConsumptionWrap"),e=document.getElementById("vElectricConsumptionWrap"),l=document.getElementById("vPrimaryConsumptionLabel");if(p)p.classList.toggle("hidden",t==="elettrico");if(e)e.classList.toggle("hidden",!(t==="elettrico"||t.startsWith("ibrido_plugin")));if(l)l.textContent=t==="metano"?"Consumo kg/100 km":"Consumo L/100 km";}
+let gfFuelPricesV895=null;
+async function loadAutomaticFuelPricesV895(){try{gfFuelPricesV895=await api("/api/vehicles/fuel-prices/current");}catch(e){gfFuelPricesV895={};}return gfFuelPricesV895;}
+async function updateRouteEnergyPricingV895(){
+  const v=vehiclesCache.find(x=>String(x.id)===String(val("routeVehicle")));
+  const box=document.getElementById("routeEnergyPriceBoxV895"),
+        title=document.getElementById("routeEnergyPriceTitleV895"),
+        info=document.getElementById("routeEnergyVehicleInfo"),
+        auto=document.querySelector('input[name="energyPriceMode"][value="automatic"]'),
+        manual=document.querySelector('input[name="energyPriceMode"][value="manual"]'),
+        primaryWrap=document.getElementById("primaryEnergyPriceWrap"),
+        electricWrap=document.getElementById("electricEnergyPriceWrap"),
+        label=document.getElementById("primaryEnergyPriceLabel"),
+        note=document.getElementById("automaticFuelPriceInfo"),
+        priceInput=document.getElementById("fuelPrice");
+
+  if(!v){
+    box?.classList.add("hidden");
+    if(info) info.textContent="";
+    primaryWrap?.classList.remove("hidden");
+    electricWrap?.classList.add("hidden");
+    if(title) title.textContent="Costo del giro";
+    if(label) label.textContent="Prezzo carburante €/L";
+    if(auto){ auto.disabled=false; auto.closest("label")?.classList.remove("muted"); }
+    if(note) note.textContent="";
+    updateRoutePlanningGateV68();
+    updateDashboardStats();
+    return;
+  }
+
+  box?.classList.remove("hidden");
+  const t=v.alimentazione||"gasolio", base=fuelBaseTypeV895(t), electric=t==="elettrico", plugin=t.startsWith("ibrido_plugin");
+  if(title) title.textContent=electric?"Costo energia del giro":plugin?"Costo carburante ed energia del giro":"Costo carburante del giro";
+  if(info) info.textContent=`${GF_FUEL_LABELS_V895[t]||t} · ${energyConsumptionLabelV895(v)}`;
+  primaryWrap?.classList.toggle("hidden",electric);
+  electricWrap?.classList.toggle("hidden",!(electric||plugin));
+  if(label) label.textContent=t==="metano"?"Prezzo metano €/kg":"Prezzo carburante €/L";
+
+  if(auto){
+    auto.disabled=electric;
+    auto.closest("label")?.classList.toggle("muted",electric);
+  }
+  if(electric){
+    if(manual) manual.checked=true;
+    if(auto) auto.checked=false;
+  }
+
+  const mode=document.querySelector('input[name="energyPriceMode"]:checked')?.value||"manual";
+  if(mode==="automatic"&&!electric){
+    const prices=gfFuelPricesV895||await loadAutomaticFuelPricesV895();
+    const row=prices?.[base];
+    if(row?.price){
+      set("fuelPrice",row.price);
+      if(priceInput) priceInput.readOnly=true;
+      if(note) note.textContent=`Automatico · ${row.source} · ${row.reference_date}${row.stale?" · ultimo dato disponibile":""}`;
+    }else{
+      if(priceInput) priceInput.readOnly=false;
+      if(note) note.textContent="Prezzo automatico non disponibile: inserisci un valore manuale.";
+    }
+  }else{
+    if(priceInput) priceInput.readOnly=false;
+    if(note) note.textContent=electric?"Mezzo elettrico: inserisci la tariffa energia aziendale in €/kWh.":plugin?"Ibrido plug-in: imposta carburante ed energia elettrica per questo giro.":"Prezzo inserito manualmente per questo giro.";
+  }
+  updateRoutePlanningGateV68();
+  updateDashboardStats();
+}
 async function loadVehicles(){
   vehiclesCache = await api("/api/vehicles");
   const body = document.getElementById("vehiclesBody");
   if(body){
     body.innerHTML = "";
     vehiclesCache.forEach(x=>{
-      body.innerHTML += `<tr><td><div class="entity-cell">${imageThumb(x.photo_url,'🚚','vehicle-thumb')}<div><strong>${esc(x.nome)}</strong><br><small>${esc(x.note||'')}</small></div></div></td><td>${esc(x.targa||"")}</td><td>${x.consumo_l_100km}</td><td>${x.ha_sponda?"Sì":"No"}</td><td>${x.accesso_ztl?"Sì":"No"}</td><td><button onclick="editVehicle(${x.id})">Modifica</button><button onclick="deleteVehicle(${x.id})">Elimina</button></td></tr>`;
+      body.innerHTML += `<tr><td><div class="entity-cell">${imageThumb(x.photo_url,'🚚','vehicle-thumb')}<div><strong>${esc(x.nome)}</strong><br><small>${esc(x.note||'')}</small></div></div></td><td>${esc(x.targa||"")}</td><td>${energyConsumptionLabelV895(x)}</td><td>${x.ha_sponda?"Sì":"No"}</td><td>${x.accesso_ztl?"Sì":"No"}</td><td><button onclick="editVehicle(${x.id})">Modifica</button><button onclick="deleteVehicle(${x.id})">Elimina</button></td></tr>`;
     });
   }
   renderResourceSelects();
 }
 function editVehicle(id){
   const x = vehiclesCache.find(v=>v.id===id); if(!x) return;
-  set("vId",x.id); set("vNome",x.nome); set("vTarga",x.targa); set("vConsumo",x.consumo_l_100km); set("vKg",x.capacita_kg); set("vColli",x.capacita_colli);
+  set("vId",x.id); set("vNome",x.nome); set("vTarga",x.targa); set("vFuelType",x.alimentazione||"gasolio"); set("vConsumo",x.consumo_primario_100km ?? x.consumo_l_100km ?? 0); set("vConsumoKwh",x.consumo_kwh_100km||0); set("vKg",x.capacita_kg); set("vColli",x.capacita_colli); updateVehicleEnergyFieldsV895();
   set("vSponda",x.ha_sponda?"true":"false"); set("vZtl",x.accesso_ztl?"true":"false"); set("vPhotoUrl", x.photo_url || ""); clearFileInput("vPhotoFile"); setImagePreview("vehiclePhotoPreview","vPhotoUrl","🚚");
 }
-function resetVehicleForm(){ ["vId","vNome","vTarga","vPhotoUrl"].forEach(id=>set(id,"")); set("vConsumo",8.5); set("vKg",1000); set("vColli",100); set("vSponda","false"); set("vZtl","false"); clearFileInput("vPhotoFile"); setImagePreview("vehiclePhotoPreview","vPhotoUrl","🚚"); }
+function resetVehicleForm(){ ["vId","vNome","vTarga","vPhotoUrl"].forEach(id=>set(id,"")); set("vFuelType","gasolio"); set("vConsumo",8.5); set("vConsumoKwh",0); updateVehicleEnergyFieldsV895(); set("vKg",1000); set("vColli",100); set("vSponda","false"); set("vZtl","false"); clearFileInput("vPhotoFile"); setImagePreview("vehiclePhotoPreview","vPhotoUrl","🚚"); }
 async function saveVehicle(){
   return withButtonLoading("saveVehicleBtn", "Salvataggio...", async()=>{
-    const payload = {nome:val("vNome"), targa:val("vTarga"), consumo_l_100km:parseFloat(val("vConsumo")||8.5), capacita_kg:parseFloat(val("vKg")||1000), capacita_colli:parseInt(val("vColli")||100), ha_sponda:boolVal("vSponda"), accesso_ztl:boolVal("vZtl"), photo_url:val("vPhotoUrl") || null};
+    const payload = {nome:val("vNome"), targa:val("vTarga"), alimentazione:val("vFuelType")||"gasolio", consumo_primario_100km:parseFloat(val("vConsumo")||0), consumo_kwh_100km:parseFloat(val("vConsumoKwh")||0), consumo_l_100km:parseFloat(val("vConsumo")||0), capacita_kg:parseFloat(val("vKg")||1000), capacita_colli:parseInt(val("vColli")||100), ha_sponda:boolVal("vSponda"), accesso_ztl:boolVal("vZtl"), photo_url:val("vPhotoUrl") || null};
     if(!payload.nome){ alert("Inserisci il nome del mezzo"); return; }
     const id = val("vId");
     await api(id?`/api/vehicles/${id}`:"/api/vehicles", {method:id?"PUT":"POST", body:JSON.stringify(payload)});
@@ -3190,7 +3270,9 @@ function routePayloadFromResult(){
     vehicle_id: (lastRouteResult?.vehicle_id || val("routeVehicle")) ? parseInt(lastRouteResult?.vehicle_id || val("routeVehicle")) : null,
     driver_id: (lastRouteResult?.driver_id || val("routeDriver")) ? parseInt(lastRouteResult?.driver_id || val("routeDriver")) : null,
     rientro_deposito: lastRouteResult?.rientro_deposito ?? boolVal("returnDepot"),
-    prezzo_carburante_litro: parseFloat(lastRouteResult?.prezzo_carburante_litro || val("fuelPrice") || 1.75),
+    prezzo_carburante_litro: parseFloat(lastRouteResult?.prezzo_carburante_litro || val("fuelPrice") || 0),
+    energy_price_mode: document.querySelector('input[name="energyPriceMode"]:checked')?.value || lastRouteResult?.energy_price_mode || "manual",
+    energy_price_primary: parseFloat(val("fuelPrice")||lastRouteResult?.energy_price_primary||0), energy_price_electric: parseFloat(val("electricityPrice")||lastRouteResult?.energy_price_electric||0),
     consegne: (lastRouteResult?.consegne || deliveries).map(cleanDeliveryForPayload)
   };
 }
@@ -3283,11 +3365,14 @@ async function openProgrammedRouteForEdit(id){
     set("routeDate", r.data_giro || todayIso());
     set("routeStart", r.orario_partenza || "");
     set("routeDeposit", r.deposit_id || "");
-    set("fuelPrice", r.prezzo_carburante_litro || val("fuelPrice") || "1.75");
+    set("fuelPrice", r.energy_price_primary ?? r.prezzo_carburante_litro ?? val("fuelPrice") ?? "1.75");
+    set("electricityPrice", r.energy_price_electric ?? val("electricityPrice") ?? "0.30");
+    const savedMode=document.querySelector(`input[name="energyPriceMode"][value="${r.energy_price_mode||'manual'}"]`); if(savedMode)savedMode.checked=true;
     set("returnDepot", r.rientro_deposito ? "true" : "false");
     await refreshResourceAvailability();
     set("routeVehicle", r.vehicle_id || "");
     set("routeDriver", r.driver_id || "");
+    await updateRouteEnergyPricingV895();
     deliveries = (r.consegne || []).map(cleanDeliveryForPayload);
     customerPlanningStepOpenedV68 = true;
     updateRoutePlanningGateV68();
@@ -3568,7 +3653,7 @@ async function optimizeRoute(){
   if(!routeDateIsValid()){ alert("Non puoi programmare un giro in una data precedente a oggi"); enforceRouteDateMin(); return; }
   await refreshResourceAvailability();
   const payload = {nome:val("routeName") || "Giro consegne", data_giro:val("routeDate"), orario_partenza:val("routeStart"), deposit_id:parseInt(val("routeDeposit")),
-    vehicle_id:val("routeVehicle") ? parseInt(val("routeVehicle")) : null, driver_id:val("routeDriver") ? parseInt(val("routeDriver")) : null, rientro_deposito:boolVal("returnDepot"), prezzo_carburante_litro:parseFloat(val("fuelPrice")||1.75), consegne:deliveries};
+    vehicle_id:val("routeVehicle") ? parseInt(val("routeVehicle")) : null, driver_id:val("routeDriver") ? parseInt(val("routeDriver")) : null, rientro_deposito:boolVal("returnDepot"), prezzo_carburante_litro:parseFloat(val("fuelPrice")||0), energy_price_mode:(document.querySelector('input[name="energyPriceMode"]:checked')?.value||"manual"), energy_price_primary:parseFloat(val("fuelPrice")||0), energy_price_electric:parseFloat(val("electricityPrice")||0), consegne:deliveries};
   const box = document.getElementById("routePreviewResult");
   if(box) box.innerHTML = `<section class="panel"><div class="resultBox">Calcolo anteprima giro in corso...</div></section>`;
   showTab("route-preview");

@@ -6,6 +6,7 @@ from ..core.dependencies import current_user, owned
 from ..core.utils import local_today, parse_date_value
 from ..database import get_db
 from ..models import Driver, DriverAccount, RoutePlan, User, Vehicle
+from ..services.fuel_prices import get_daily_prices
 from ..schemas import DriverIn, VehicleIn
 from ..services.plans import check_vehicle_limit, check_driver_limit
 
@@ -73,6 +74,9 @@ def vehicle_to_dict(vehicle, db: Session) -> dict:
         "nome": vehicle.nome,
         "targa": vehicle.targa,
         "consumo_l_100km": vehicle.consumo_l_100km,
+        "alimentazione": vehicle.alimentazione or "gasolio",
+        "consumo_primario_100km": vehicle.consumo_primario_100km or vehicle.consumo_l_100km or 0,
+        "consumo_kwh_100km": vehicle.consumo_kwh_100km or 0,
         "capacita_kg": vehicle.capacita_kg,
         "capacita_colli": vehicle.capacita_colli,
         "ha_sponda": vehicle.ha_sponda,
@@ -81,6 +85,11 @@ def vehicle_to_dict(vehicle, db: Session) -> dict:
         "photo_url": vehicle.photo_url,
         "stato": vehicle_status(vehicle, db),
     }
+
+
+@vehicles_router.get("/fuel-prices/current")
+def current_fuel_prices(db: Session = Depends(get_db), user: User = Depends(current_user)):
+    return get_daily_prices(db)
 
 
 @vehicles_router.get("")
@@ -93,6 +102,7 @@ def list_vehicles(db: Session = Depends(get_db), user: User = Depends(current_us
 def create_vehicle(data: VehicleIn, db: Session = Depends(get_db), user: User = Depends(current_user)):
     check_vehicle_limit(user, db)
     payload = data.model_dump()
+    payload["consumo_l_100km"] = payload.get("consumo_primario_100km") or payload.get("consumo_l_100km") or 0
     payload["targa"] = normalize_optional(payload.get("targa"))
     ensure_vehicle_targa_unique(db, user, payload.get("targa"))
     item = Vehicle(**payload, user_id=user.id)
@@ -108,6 +118,7 @@ def update_vehicle(item_id: int, data: VehicleIn, db: Session = Depends(get_db),
     if not item:
         raise HTTPException(404, "Mezzo non trovato")
     payload = data.model_dump()
+    payload["consumo_l_100km"] = payload.get("consumo_primario_100km") or payload.get("consumo_l_100km") or 0
     payload["targa"] = normalize_optional(payload.get("targa"))
     ensure_vehicle_targa_unique(db, user, payload.get("targa"), exclude_id=item.id)
     for k, v in payload.items():

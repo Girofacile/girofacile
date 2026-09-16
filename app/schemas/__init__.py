@@ -80,6 +80,9 @@ class VehicleIn(BaseModel):
     nome: str | None = None
     targa: Optional[str] = None
     consumo_l_100km: float = 8.5
+    alimentazione: str = "gasolio"
+    consumo_primario_100km: float = 8.5
+    consumo_kwh_100km: float = 0
     capacita_kg: float = 1000
     capacita_colli: int = 100
     ha_sponda: bool = False
@@ -128,6 +131,9 @@ class RoutePlanIn(BaseModel):
     driver_id: Optional[int] = None
     rientro_deposito: bool = True
     prezzo_carburante_litro: float = 1.75
+    energy_price_mode: str = "manual"
+    energy_price_primary: float = 0
+    energy_price_electric: float = 0
     consegne: List[DeliveryIn]
 
 class ManualRoutePlanIn(RoutePlanIn):

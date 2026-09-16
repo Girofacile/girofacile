@@ -650,7 +650,14 @@
                 <div><label>Deposito</label><select id="routeDeposit"></select></div>
                 <div><label data-gf-label="vehicle">Mezzo</label><select id="routeVehicle" disabled></select><small id="vehicleAvailabilityHint" class="availability-hint">Seleziona prima data e orario di partenza</small></div>
                 <div><label data-gf-label="driver">Autista</label><select id="routeDriver" disabled></select><small id="driverAvailabilityHint" class="availability-hint">Seleziona prima data e orario di partenza</small></div>
-                <div><label>Prezzo carburante €/L</label><input id="fuelPrice" type="number" step="0.01" value="1.75"></div>
+                <div id="routeEnergyPriceBoxV895" class="energy-price-box-v895 hidden">
+                  <label id="routeEnergyPriceTitleV895">Costo del giro</label>
+                  <div id="routeEnergyVehicleInfo" class="energy-vehicle-info-v895">Seleziona un mezzo</div>
+                  <div class="energy-mode-row-v895"><label><input type="radio" name="energyPriceMode" value="automatic" onchange="updateRouteEnergyPricingV895()"> Automatico</label><label><input type="radio" name="energyPriceMode" value="manual" checked onchange="updateRouteEnergyPricingV895()"> Manuale</label></div>
+                  <div id="primaryEnergyPriceWrap"><label id="primaryEnergyPriceLabel">Prezzo carburante €/L</label><input id="fuelPrice" type="number" step="0.001" value="1.75"></div>
+                  <div id="electricEnergyPriceWrap" class="hidden"><label>Prezzo energia €/kWh</label><input id="electricityPrice" type="number" step="0.001" value="0.30"></div>
+                  <small id="automaticFuelPriceInfo" class="availability-hint"></small>
+                </div>
                 <div><label>Rientro deposito</label><select id="returnDepot"><option value="true">Sì, rientro previsto</option><option value="false">No</option></select></div>
               </div>
             </section>
@@ -1029,7 +1036,11 @@
           <div class="form-grid">
             <input id="vNome" placeholder="Nome mezzo">
             <input id="vTarga" placeholder="Targa">
-            <input id="vConsumo" type="number" step="0.1" value="8.5" placeholder="Consumo L/100km">
+            <select id="vFuelType" onchange="updateVehicleEnergyFieldsV895()">
+              <option value="gasolio">Gasolio</option><option value="benzina">Benzina</option><option value="gpl">GPL</option><option value="metano">Metano</option><option value="elettrico">Elettrico</option><option value="ibrido_benzina">Ibrido benzina</option><option value="ibrido_diesel">Ibrido diesel</option><option value="ibrido_plugin_benzina">Ibrido plug-in benzina</option><option value="ibrido_plugin_diesel">Ibrido plug-in diesel</option>
+            </select>
+            <div id="vPrimaryConsumptionWrap"><label id="vPrimaryConsumptionLabel">Consumo L/100 km</label><input id="vConsumo" type="number" step="0.1" value="8.5"></div>
+            <div id="vElectricConsumptionWrap" class="hidden"><label>Consumo elettrico kWh/100 km</label><input id="vConsumoKwh" type="number" step="0.1" value="0"></div>
             <input id="vKg" type="number" value="1000" placeholder="Capacità kg">
             <input id="vColli" type="number" value="100" placeholder="Capacità colli">
             <select data-gf-feature="tail_lift" id="vSponda"><option value="false">Sponda No</option><option value="true">Sponda Sì</option></select>
@@ -1698,7 +1709,7 @@
   </div>
 </div>
 
-<script src="/static/dashboard/js/core.js?v=v89_3"></script>
+<script src="/static/dashboard/js/core.js?v=v89_5"></script>
 
 <script>
 function toggleLoginPassword(){
