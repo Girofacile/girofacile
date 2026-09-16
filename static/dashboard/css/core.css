@@ -4423,3 +4423,11 @@ html[data-gf-tail-lift="off"] .gf-customers-table-v892 th:nth-child(8),
 html[data-gf-tail-lift="off"] .gf-customers-table-v892 td:nth-child(8),
 html[data-gf-tail-lift="off"] .gf-vehicles-table-v892 th:nth-child(4),
 html[data-gf-tail-lift="off"] .gf-vehicles-table-v892 td:nth-child(4) { display:none !important; }
+
+
+/* v89.3 - barra salvataggio manuale impostazioni */
+.settings-save-bar-v893{position:sticky;bottom:14px;z-index:8;margin-top:22px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:16px;background:rgba(255,255,255,.96);border:1px solid #e2e8f0;border-radius:14px;box-shadow:0 10px 28px rgba(15,23,42,.10);backdrop-filter:blur(8px)}
+.settings-save-bar-v893 .settings-save-state{margin-top:0}
+.settings-save-bar-v893 button{min-width:150px}
+.settings-save-bar-v893 button:disabled{opacity:.5;cursor:not-allowed}
+@media(max-width:760px){.settings-save-bar-v893{bottom:76px;align-items:stretch;flex-direction:column}.settings-save-bar-v893 button{width:100%}}

@@ -5441,6 +5441,56 @@ function openTransferPortalPublicV78(){ const slug=transferValV78("tpSlugV78")||
 
 
 
+
+// v89.3 - salvataggio manuale della pagina Impostazioni
+let gfSettingsDirtyV893=false;
+function markSettingsDirtyV893(){
+  gfSettingsDirtyV893=true;
+  const state=document.getElementById('settingsSaveState');
+  const btn=document.getElementById('settingsSaveBtnV893');
+  if(state) state.textContent='Modifiche non salvate.';
+  if(btn) btn.disabled=false;
+}
+function markSettingsCleanV893(message='Impostazioni salvate.') {
+  gfSettingsDirtyV893=false;
+  const state=document.getElementById('settingsSaveState');
+  const btn=document.getElementById('settingsSaveBtnV893');
+  if(state) state.textContent=message;
+  if(btn) btn.disabled=true;
+}
+async function saveAllSettingsV893(){
+  const btn=document.getElementById('settingsSaveBtnV893');
+  const state=document.getElementById('settingsSaveState');
+  if(!gfSettingsDirtyV893) return;
+  if(btn){btn.disabled=true;btn.dataset.oldText=btn.textContent;btn.textContent='Salvataggio...';}
+  if(state) state.textContent='Salvataggio impostazioni...';
+  const features={
+    has_time_windows:!!document.getElementById('featureTimeWindowsV89')?.checked,
+    needs_photo_proof:!!document.getElementById('featurePhotoProofV89')?.checked,
+    has_ztl:!!document.getElementById('featureZtlV89')?.checked,
+    needs_tail_lift:!!document.getElementById('featureTailLiftV89')?.checked,
+    has_refrigerated_goods:!!document.getElementById('featureRefrigeratedV89')?.checked
+  };
+  const signature=!!document.getElementById('settingDeliverySignature')?.checked;
+  try{
+    await api('/api/company-profile',{method:'PUT',body:JSON.stringify(features)});
+    settingsV41=await api('/api/settings',{method:'PUT',body:JSON.stringify({delivery_signature_enabled:signature})});
+    gfUniversalFeaturesV891={...gfUniversalFeaturesV891,...features};
+    applyUniversalFeaturesV891();
+    markSettingsCleanV893('Impostazioni salvate e applicate.');
+    toast('Impostazioni salvate.');
+  }catch(e){
+    gfSettingsDirtyV893=true;
+    if(state) state.textContent='Errore salvataggio: '+e.message;
+    if(btn) btn.disabled=false;
+    alert(e.message||'Errore durante il salvataggio.');
+  }finally{
+    if(btn) btn.textContent=btn.dataset.oldText||'Salva modifiche';
+  }
+}
+window.markSettingsDirtyV893=markSettingsDirtyV893;
+window.saveAllSettingsV893=saveAllSettingsV893;
+
 // -----------------------------------------------------------------------------
 // v89 - GiroFacile universale per aziende che effettuano consegne
 // Elimina la verticalizzazione visiva per settore mantenendo compatibilità dati.

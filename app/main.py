@@ -337,7 +337,8 @@ def migrate_database():
         add_column("users", "universal_features_initialized", sql_type(Boolean()), "0" if dialect.name == "sqlite" else "false")
         # V89.2: inizializzazione UNA SOLA VOLTA delle preferenze universali per gli account esistenti.
         # Dopo questa migrazione le scelte dell’utente non vengono più sovrascritte ai riavvii.
-        conn.execute(text("UPDATE users SET has_time_windows = :tw, needs_photo_proof = :photo, has_refrigerated_goods = :cold, has_ztl = :ztl, needs_tail_lift = :tail, universal_features_initialized = :done WHERE universal_features_initialized IS NULL OR universal_features_initialized = :pending"), {"tw": True, "photo": False, "cold": False, "ztl": False, "tail": False, "done": True, "pending": False})
+        with engine.begin() as conn:
+            conn.execute(text("UPDATE users SET has_time_windows = :tw, needs_photo_proof = :photo, has_refrigerated_goods = :cold, has_ztl = :ztl, needs_tail_lift = :tail, universal_features_initialized = :done WHERE universal_features_initialized IS NULL OR universal_features_initialized = :pending"), {"tw": True, "photo": False, "cold": False, "ztl": False, "tail": False, "done": True, "pending": False})
         add_column("users", "onboarding_completed", sql_type(Boolean()), "0" if dialect.name == "sqlite" else "false")
         add_column("users", "onboarding_completed_at", sql_type(DateTime()))
         add_column("users", "onboarding_dismissed", sql_type(Boolean()), "0" if dialect.name == "sqlite" else "false")
