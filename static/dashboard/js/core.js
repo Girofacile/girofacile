@@ -1387,9 +1387,7 @@ function validateSignupStep(step){
       if(!ok) return false;
     }
   }
-  if(step === 4){
-    if(!val("signupSector")){ alert("Seleziona il tipo di attività."); return false; }
-  }
+
   return true;
 }
 function signupWizardNext(){
@@ -1473,7 +1471,7 @@ async function signup(){
       company_country: val("signupCountry") || "Italia",
       company_legal_address: val("signupLegalAddress") || val("signupAddress"),
       company_billing_address: val("signupBillingAddress") || val("signupLegalAddress") || val("signupAddress"),
-      company_sector: val("signupSector"),
+      company_sector: "distribution",
       company_activity_type: val("signupActivityType"),
       company_size: val("signupCompanySize"),
       daily_deliveries: val("signupDailyDeliveries"),
@@ -4392,7 +4390,6 @@ async function saveCompanyProfile(){
       company_sdi: val("companySdiInput"),
       company_legal_address: val("companyLegalAddressInput"),
       company_billing_address: val("companyBillingAddressInput"),
-      company_sector: val("companySectorInput"),
       company_activity_type: val("companyActivityTypeInput"),
       company_size: val("companySizeInput"),
       daily_deliveries: val("companyDailyDeliveriesInput"),
@@ -5441,3 +5438,80 @@ function openTransferPortalPublicV78(){ const slug=transferValV78("tpSlugV78")||
 
 
 
+
+
+// -----------------------------------------------------------------------------
+// v89 - GiroFacile universale per aziende che effettuano consegne
+// Elimina la verticalizzazione visiva per settore mantenendo compatibilità dati.
+// -----------------------------------------------------------------------------
+let gfUniversalFeaturesV891={has_time_windows:true,needs_photo_proof:false,has_ztl:false,needs_tail_lift:false,has_refrigerated_goods:false};
+function applyUniversalFeaturesV891(){
+  const enabled=!!gfUniversalFeaturesV891.has_time_windows;
+  // Nasconde le fasce orarie in anagrafica cliente e nella modifica specifiche
+  // del giro. I dati non vengono cancellati: riattivando la funzione ricompaiono.
+  ['cMattinaDa','dmMattinaDa','dMattinaDa'].forEach(id=>{
+    const el=document.getElementById(id);
+    const section=el?.closest('.delivery-modal-section') || el?.closest('.panel') || el?.parentElement;
+    if(section) section.style.display=enabled?'':'none';
+  });
+  document.documentElement.dataset.gfTimeWindows=enabled?'on':'off';
+}
+async function loadUniversalFeaturesV89(){
+  try{
+    const c=await api('/api/company-profile');
+    gfUniversalFeaturesV891={
+      has_time_windows:c.has_time_windows !== false,
+      needs_photo_proof:!!c.needs_photo_proof,
+      has_ztl:!!c.has_ztl,
+      needs_tail_lift:!!c.needs_tail_lift,
+      has_refrigerated_goods:!!c.has_refrigerated_goods
+    };
+    const map={featureTimeWindowsV89:'has_time_windows',featurePhotoProofV89:'needs_photo_proof',featureZtlV89:'has_ztl',featureTailLiftV89:'needs_tail_lift',featureRefrigeratedV89:'has_refrigerated_goods'};
+    Object.entries(map).forEach(([id,key])=>{const el=document.getElementById(id);if(el)el.checked=!!gfUniversalFeaturesV891[key];});
+    applyUniversalFeaturesV891();
+  }catch(e){ console.warn('Funzionalità opzionali',e); }
+}
+async function saveUniversalFeaturesV89(){
+  const state=document.getElementById('settingsSaveState'); if(state)state.textContent='Salvataggio funzionalità...';
+  const payload={
+    has_time_windows:!!document.getElementById('featureTimeWindowsV89')?.checked,
+    needs_photo_proof:!!document.getElementById('featurePhotoProofV89')?.checked,
+    has_ztl:!!document.getElementById('featureZtlV89')?.checked,
+    needs_tail_lift:!!document.getElementById('featureTailLiftV89')?.checked,
+    has_refrigerated_goods:!!document.getElementById('featureRefrigeratedV89')?.checked
+  };
+  try{
+    await api('/api/company-profile',{method:'PUT',body:JSON.stringify(payload)});
+    gfUniversalFeaturesV891={...gfUniversalFeaturesV891,...payload};
+    applyUniversalFeaturesV891();
+    if(state)state.textContent='Funzionalità aggiornate.'; toast('Funzionalità salvate.');
+  }catch(e){ if(state)state.textContent='Errore salvataggio: '+e.message; alert(e.message); }
+}
+window.applyUniversalFeaturesV891=applyUniversalFeaturesV891;
+window.loadUniversalFeaturesV89=loadUniversalFeaturesV89;
+window.saveUniversalFeaturesV89=saveUniversalFeaturesV89;
+
+const gfShowTabUniversalV89=window.showTab;
+window.showTab=function(name){
+  // Le vecchie pagine verticali restano nel codice solo per compatibilità, ma non sono navigabili.
+  if(['transfer-portal','transfer-bookings','transfer-planning','transfer-settings','integrations'].includes(name)){ name='dashboard'; }
+  gfShowTabUniversalV89(name);
+  if(name==='settings') loadUniversalFeaturesV89();
+};
+
+const gfApplyLogisticsLegacyV89=window.applyLogisticsWorkspaceV50;
+window.applyLogisticsWorkspaceV50=function(){
+  // Neutralizza classi/etichette verticali legacy.
+  ['sector-logistics-v50','sector-ecommerce-v51','sector-food-v53','sector-transfer-v54','sector-healthcare-v55'].forEach(c=>document.body.classList.remove(c));
+  document.querySelectorAll('[data-sector-only]').forEach(el=>{el.classList.add('hidden');el.style.display='none';});
+  ['gfMobileTransferPortalBtnV78','gfMobileTransferBookingsBtnV79','gfMobileTransferPlanningBtnV79','gfMobileTransferSettingsBtnV79','gfMobileTransferAdminDriverBtnV79'].forEach(id=>{const el=document.getElementById(id);if(el){el.classList.add('hidden');el.style.display='none';}});
+  const transferDash=document.getElementById('transferDashboardV84'); if(transferDash){transferDash.classList.add('hidden');transferDash.style.display='none';}
+  const title=document.querySelector('#tab-dashboard .dash-hero-row h1'); if(title)title.textContent='Dashboard';
+  const sub=document.querySelector('#tab-dashboard .dash-hero-row p'); if(sub)sub.textContent='Panoramica operativa delle consegne e dell’attività aziendale.';
+  const btn=document.querySelector('#tab-dashboard .dash-hero-row .btn-primary'); if(btn)btn.textContent='+ Nuovo giro';
+  setNavTextV50('giro','Pianificazione'); setNavTextV50('clienti','Clienti'); setNavTextV50('mezzi','Mezzi'); setNavTextV50('autisti','Autisti'); setNavTextV50('storico','Storico'); setNavTextV50('report','Report'); setNavTextV50('chat-autisti','Chat autisti');
+};
+
+// La vecchia configurazione settore non deve più cambiare l'interfaccia.
+const gfSetSectorLegacyV89=window.setSectorConfigV47;
+window.setSectorConfigV47=function(data){ gfSetSectorLegacyV89(data); window.applyLogisticsWorkspaceV50(); };

@@ -408,6 +408,15 @@ def create_and_optimize_route(
         if not driver:
             raise HTTPException(400, "Autista non trovato")
     deliveries = [c.model_dump() for c in data.consegne]
+    # V89.1: se le fasce orarie sono disattivate a livello azienda, il motore
+    # le ignora completamente anche se restano salvate nell'anagrafica cliente.
+    # In questo modo riattivando la funzione i dati storici tornano disponibili.
+    if not bool(getattr(user, "has_time_windows", True)):
+        for delivery in deliveries:
+            delivery["scarico_mattina_da"] = None
+            delivery["scarico_mattina_a"] = None
+            delivery["scarico_pomeriggio_da"] = None
+            delivery["scarico_pomeriggio_a"] = None
     for delivery in deliveries:
         if delivery.get("customer_id"):
             customer = owned(db.query(Customer), Customer, user).filter(Customer.id == delivery["customer_id"]).first()

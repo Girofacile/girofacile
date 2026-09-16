@@ -28,7 +28,7 @@ class User(Base):
     company_activity_type: Mapped[str | None] = mapped_column(String(180), nullable=True)
     company_size: Mapped[str | None] = mapped_column(String(80), nullable=True)
     daily_deliveries: Mapped[str | None] = mapped_column(String(80), nullable=True)
-    has_time_windows: Mapped[bool] = mapped_column(Boolean, default=False)
+    has_time_windows: Mapped[bool] = mapped_column(Boolean, default=True)
     needs_signature: Mapped[bool] = mapped_column(Boolean, default=False)
     needs_photo_proof: Mapped[bool] = mapped_column(Boolean, default=False)
     has_refrigerated_goods: Mapped[bool] = mapped_column(Boolean, default=False)

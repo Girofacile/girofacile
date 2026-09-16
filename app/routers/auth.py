@@ -26,8 +26,8 @@ def _workspace_operational_for_user(user: User) -> bool:
     Logistica/Corrieri locali viene attivata con la nuova interfaccia v50.
     Gli altri settori restano nella dashboard pulita finché non vengono cuciti su misura.
     """
-    sector = normalize_sector_key(getattr(user, "company_sector", None))
-    return bool(user.onboarding_completed) or sector in {"distribution", "logistics"}
+    # v89: un unico prodotto per tutte le aziende che effettuano consegne.
+    return True
 
 
 
@@ -65,7 +65,7 @@ def signup(data: SignupIn, response: Response, db: Session = Depends(get_db)):
         company_country=(data.company_country or "Italia").strip() or "Italia",
         company_legal_address=(data.company_legal_address or "").strip() or None,
         company_billing_address=(data.company_billing_address or "").strip() or None,
-        company_sector=normalize_sector_key(data.company_sector),
+        company_sector="distribution",  # v89: valore legacy interno; nessuna verticalizzazione UI
         company_activity_type=(data.company_activity_type or "").strip() or None,
         company_size=(data.company_size or "").strip() or None,
         daily_deliveries=(data.daily_deliveries or "").strip() or None,
@@ -664,7 +664,12 @@ def update_company_profile(payload: dict, user: User = Depends(current_user), db
                 value = value.strip()
             if key == "company_sector":
                 value = normalize_sector_key(value)
-            setattr(user, key, value or None)
+            # I booleani devono restare True/False: `value or None` trasformava
+            # False in NULL e causava il 500 sulle colonne NOT NULL.
+            if key in {"has_time_windows", "needs_signature", "needs_photo_proof", "has_refrigerated_goods", "has_ztl", "needs_tail_lift"}:
+                setattr(user, key, bool(value))
+            else:
+                setattr(user, key, value or None)
     if not user.company_country:
         user.company_country = "Italia"
     db.commit()
@@ -692,12 +697,10 @@ def onboarding_status(user: User = Depends(current_user), db: Session = Depends(
         "routes": _count_for_user(db, RoutePlan, user.id),
     }
     company_ready = bool((user.company_name or "").strip())
-    sector_ready = bool((user.company_sector or "").strip())
     settings_ready = True
     steps = [
         {"key": "company", "label": "Completa il profilo azienda", "done": company_ready, "tab": "company"},
-        {"key": "sector", "label": "Conferma il settore attività", "done": sector_ready, "tab": "company"},
-        {"key": "settings", "label": "Controlla le impostazioni generali", "done": settings_ready, "tab": "settings"},
+        {"key": "settings", "label": "Configura le funzionalità utili", "done": settings_ready, "tab": "settings"},
     ]
     progress = sum(1 for s in steps if s["done"])
     return {

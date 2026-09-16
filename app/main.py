@@ -328,7 +328,7 @@ def migrate_database():
         add_column("users", "company_activity_type", sql_type(String(180)))
         add_column("users", "company_size", sql_type(String(80)))
         add_column("users", "daily_deliveries", sql_type(String(80)))
-        add_column("users", "has_time_windows", sql_type(Boolean()), "0" if dialect.name == "sqlite" else "false")
+        add_column("users", "has_time_windows", sql_type(Boolean()), "1" if dialect.name == "sqlite" else "true")
         add_column("users", "needs_signature", sql_type(Boolean()), "0" if dialect.name == "sqlite" else "false")
         add_column("users", "needs_photo_proof", sql_type(Boolean()), "0" if dialect.name == "sqlite" else "false")
         add_column("users", "has_refrigerated_goods", sql_type(Boolean()), "0" if dialect.name == "sqlite" else "false")

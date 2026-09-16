@@ -306,10 +306,6 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
     <!-- DASHBOARD GIRI -->
     <div id="view-dashboard" class="view active">
       <div class="page-head"><h2>I miei giri</h2><p id="dashDriverName">Bentornato</p></div>
-      <div id="transferRunsSectionV79" class="hidden" style="padding:0 12px 12px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin:4px 0 10px"><strong style="font-size:16px">Le mie corse Transfer</strong><span id="transferRunsCountV79" style="font-size:12px;color:#64748b"></span></div>
-        <div id="transferRunsListV79"></div>
-      </div>
       <div id="routesList" style="padding:0 12px 12px"></div>
     </div>
 
@@ -529,7 +525,6 @@ async function openApp() {
   document.getElementById('headerDriverName').textContent = me.driver_name;
   document.getElementById('dashDriverName').textContent = `Bentornato, ${me.driver_name}`;
   await loadRoutes();
-  await loadTransferRunsV79();
   populateChatSelect();
   startChatBadgePoll();
 }
@@ -545,7 +540,7 @@ function showView(name, btn) {
     if(btn) btn.classList.add('active');
     if(name === 'storico') loadStorico();
     if(name === 'chat') { chatLastId = 0; loadChat(); }
-    if(name === 'dashboard'){ loadRoutes(); loadTransferRunsV79(); }
+    if(name === 'dashboard'){ loadRoutes(); }
   }
 }
 

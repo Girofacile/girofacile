@@ -25,7 +25,7 @@ class SignupIn(BaseModel):
     company_activity_type: Optional[str] = None
     company_size: Optional[str] = None
     daily_deliveries: Optional[str] = None
-    has_time_windows: bool = False
+    has_time_windows: bool = True
     needs_signature: bool = False
     needs_photo_proof: bool = False
     has_refrigerated_goods: bool = False

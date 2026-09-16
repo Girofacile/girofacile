@@ -4,9 +4,8 @@
 <meta charset="utf-8">
 <title>GiroFacile</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link href="/static/dashboard/css/core.css?v=v88" rel="stylesheet">
-<link href="/static/dashboard/css/transfer.css?v=v88" rel="stylesheet">
-<link href="/static/dashboard/css/account.css?v=v88" rel="stylesheet">
+<link href="/static/dashboard/css/core.css?v=v89" rel="stylesheet">
+<link href="/static/dashboard/css/account.css?v=v89" rel="stylesheet">
 </head>
 <body>
 
@@ -156,7 +155,7 @@
         <div class="signup-step-dot active" data-signup-step-dot="1"><span>1</span><small>Account</small></div>
         <div class="signup-step-dot" data-signup-step-dot="2"><span>2</span><small>Azienda</small></div>
         <div class="signup-step-dot" data-signup-step-dot="3"><span>3</span><small>Fatturazione</small></div>
-        <div class="signup-step-dot" data-signup-step-dot="4"><span>4</span><small>Settore</small></div>
+        <div class="signup-step-dot" data-signup-step-dot="4"><span>4</span><small>Operatività</small></div>
       </div>
 
       <div class="signup-step-panel-v46" data-signup-step="1">
@@ -207,31 +206,21 @@
 
       <div class="signup-step-panel-v46 hidden" data-signup-step="4">
         <div class="signup-section-head-v46">
-          <h3>Settore e necessità operative</h3>
-          <p>Questa scelta servirà per adattare GiroFacile al tipo di attività.</p>
+          <h3>Come lavori con le consegne?</h3>
+          <p>Configura solo le funzioni utili alla tua attività. Potrai cambiarle in qualsiasi momento dalle Impostazioni.</p>
         </div>
         <div class="signup-grid-v46">
-          <div class="full"><label>Tipo di attività</label><select id="signupSector">
-            <option value="">Seleziona il settore</option>
-            <option value="distribution">Distribuzione / Cash & Carry</option>
-            <option value="logistics">Logistica / Corrieri locali</option>
-            <option value="ecommerce">E-commerce / Consegna ordini</option>
-            <option value="food_delivery">Food delivery / Ristorazione</option>
-            <option value="transfer">Servizio transfer</option>
-            <option value="healthcare">Farmaceutico / Sanitario</option>
-            <option value="other">Altro</option>
-          </select></div>
           <div><label>Consegne medie al giorno</label><select id="signupDailyDeliveries"><option value="">Seleziona</option><option value="1-10">1-10</option><option value="11-30">11-30</option><option value="31-80">31-80</option><option value="81-150">81-150</option><option value="150+">Oltre 150</option></select></div>
           <div><label>Piano iniziale</label><select id="signupPlanSelect"><option value="starter">Starter</option><option value="business" selected>Business</option><option value="pro">Pro</option></select></div>
-          <div class="full"><label>Descrizione attività</label><input id="signupActivityType" placeholder="Se hai scelto Altro, specifica qui il tuo settore. Altrimenti puoi descrivere brevemente la tua attività."></div>
+          <div class="full"><label>Descrizione attività <span class="muted">(opzionale)</span></label><input id="signupActivityType" placeholder="Es. distribuzione alimentare, ricambi, consegne e-commerce..."></div>
         </div>
         <div class="signup-checks-v46">
-          <label><input type="checkbox" id="signupHasTimeWindows"> Uso fasce orarie di consegna</label>
-          <label><input type="checkbox" id="signupNeedsSignature"> Mi serve la firma alla consegna</label>
-          <label><input type="checkbox" id="signupNeedsPhotoProof"> Mi serve la foto prova consegna</label>
-          <label><input type="checkbox" id="signupRefrigerated"> Gestisco merce refrigerata/surgelata</label>
-          <label><input type="checkbox" id="signupZtl"> Ho consegne in ZTL o zone difficili</label>
-          <label><input type="checkbox" id="signupTailLift"> Uso sponda idraulica/transpallet</label>
+          <label><input type="checkbox" id="signupHasTimeWindows" checked> Finestre orarie di consegna</label>
+          <label><input type="checkbox" id="signupNeedsSignature"> Firma alla consegna</label>
+          <label><input type="checkbox" id="signupNeedsPhotoProof"> Foto prova consegna</label>
+          <label><input type="checkbox" id="signupRefrigerated"> Merce refrigerata/surgelata</label>
+          <label><input type="checkbox" id="signupZtl"> Consegne in ZTL o zone difficili</label>
+          <label><input type="checkbox" id="signupTailLift"> Sponda idraulica / transpallet</label>
         </div>
       </div>
 
@@ -277,11 +266,6 @@
     <button onclick="mobileGoTabV62('storico')">↺ Storico</button>
     <button onclick="mobileGoTabV62('chat-autisti')">▱ Chat autisti</button>
     <button id="gfMobileIntegrationsBtnV62" class="hidden" onclick="mobileGoTabV62('integrations')">⛓ Integrazioni</button>
-    <button id="gfMobileTransferBookingsBtnV79" class="hidden" onclick="mobileGoTabV62('transfer-bookings')">▣ Prenotazioni</button>
-    <button id="gfMobileTransferPlanningBtnV79" class="hidden" onclick="mobileGoTabV62('transfer-planning')">▤ Planning corse</button>
-    <button id="gfMobileTransferSettingsBtnV79" class="hidden" onclick="mobileGoTabV62('transfer-settings')">⚙ Impostazioni Transfer</button>
-    <button id="gfMobileTransferAdminDriverBtnV79" class="hidden" onclick="openAdminDriverPortalV79()">◉ Portale autista admin</button>
-    <button id="gfMobileTransferPortalBtnV78" class="hidden" onclick="mobileGoTabV62('transfer-portal')">✦ Portale prenotazioni</button>
     <button onclick="openSupportPanelV49(); closeMobileMoreMenuV62();">▱ Supporto</button>
     <button onclick="mobileGoTabV62('settings')">⚙ Impostazioni</button>
     <button class="danger" onclick="document.getElementById('logoutBtn')?.click(); closeMobileMoreMenuV62();">↩ Esci</button>
@@ -312,12 +296,6 @@
       <button data-tab="autisti" data-workspace-operational="1" onclick="showTab('autisti')" class="nav-item user-only"><span class="nav-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 20c.8-3.5 3.2-5.2 6.5-5.2s5.7 1.7 6.5 5.2"/></svg></span> Autisti</button>
       <button data-tab="storico" data-workspace-operational="1" onclick="showTab('storico')" class="nav-item user-only"><span class="nav-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 5.2v4.3h4.3"/><path d="M12 7.5V12l3 1.8"/></svg></span> Storico</button>
       <button data-tab="activity" data-workspace-common="1" onclick="showTab('activity')" class="nav-item user-only"><span class="nav-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v14H5z"/><path d="M8 9h8M8 12h8M8 15h5"/></svg></span> Attività</button>
-      <button data-tab="integrations" data-workspace-operational="1" data-sector-only="ecommerce" onclick="showTab('integrations')" class="nav-item user-only hidden"><span class="nav-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 12a4.5 4.5 0 0 1 4.5-4.5h3.5a4.5 4.5 0 0 1 0 9H13"/><path d="M16.5 12a4.5 4.5 0 0 1-4.5 4.5H8.5a4.5 4.5 0 0 1 0-9H11"/></svg></span> Integrazioni</button>
-      <button data-tab="transfer-bookings" data-workspace-operational="1" data-sector-only="transfer" onclick="showTab('transfer-bookings')" class="nav-item user-only hidden"><span class="nav-svg"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span> Prenotazioni</button>
-      <button data-tab="transfer-planning" data-workspace-operational="1" data-sector-only="transfer" onclick="showTab('transfer-planning')" class="nav-item user-only hidden"><span class="nav-svg"><svg viewBox="0 0 24 24"><path d="M4 6h16v14H4z"/><path d="M8 3v5M16 3v5M4 10h16"/></svg></span> Planning corse</button>
-      <button data-tab="transfer-settings" data-workspace-operational="1" data-sector-only="transfer" onclick="showTab('transfer-settings')" class="nav-item user-only hidden"><span class="nav-svg"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.4-2.3 1a7 7 0 0 0-1.8-1L14.5 3h-5L9.2 6.1a7 7 0 0 0-1.8 1l-2.3-1-2 3.4L5.1 11a7 7 0 0 0 0 2L3 14.5l2 3.4 2.3-1a7 7 0 0 0 1.8 1l.4 3.1h5l.4-3.1a7 7 0 0 0 1.8-1l2.3 1 2-3.4-2-1.5c.1-.3.1-.7.1-1z"/></svg></span> Impostazioni Transfer</button>
-      <button id="transferAdminDriverNavV79" data-sector-only="transfer" onclick="openAdminDriverPortalV79()" class="nav-item user-only hidden"><span class="nav-svg"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3"/><path d="M5 20c1-4 3.4-6 7-6s6 2 7 6"/></svg></span> Portale autista admin</button>
-      <button data-tab="transfer-portal" data-workspace-operational="1" data-sector-only="transfer" onclick="showTab('transfer-portal')" class="nav-item user-only hidden"><span class="nav-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5h16v13H4z"/><path d="M4 9h16M8 13h8M8 16h5"/></svg></span> Portale prenotazioni</button>
       <button data-tab="chat-autisti" data-workspace-operational="1" onclick="showTab('chat-autisti')" class="nav-item user-only"><span class="nav-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5.5h14v9.5H9l-4 3.5v-13z"/><path d="M8.5 9h7M8.5 12h4"/></svg></span> Chat autisti <span id="sidebarChatBadge" class="side-chat-badge hidden">0</span></button>
       <button data-workspace-common="1" onclick="openSupportPanelV49()" class="nav-item user-only"><span class="nav-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5.5h14v9.5H9l-4 3.5v-13z"/><path d="M8.5 9h7M8.5 12h4"/></svg></span> Supporto</button>
       <button data-tab="settings" data-workspace-common="1" onclick="showTab('settings')" class="nav-item user-only"><span class="nav-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.5 12a7.4 7.4 0 0 0-.1-1.2l2-1.5-2-3.5-2.4 1a7.5 7.5 0 0 0-2-1.1L14.7 3h-5.4L9 5.7a7.5 7.5 0 0 0-2 1.1l-2.4-1-2 3.5 2 1.5a7.7 7.7 0 0 0 0 2.4l-2 1.5 2 3.5 2.4-1a7.5 7.5 0 0 0 2 1.1l.3 2.7h5.4l.3-2.7a7.5 7.5 0 0 0 2-1.1l2.4 1 2-3.5-2-1.5c.1-.4.1-.8.1-1.2z"/></svg></span> Impostazioni</button>
@@ -362,282 +340,6 @@
     </header>
 
     <div class="content">
-
-      <section id="tab-transfer-bookings" class="tab hidden transfer-workspace-v79">
-        <div class="transfer-page-head-v79"><div><span class="eyebrow-v79">CENTRO OPERATIVO TRANSFER</span><h1>Prenotazioni</h1><p>Ricevi, controlla e assegna rapidamente le richieste provenienti dal portale o dal telefono.</p></div><button class="primary" onclick="openTransferBookingModalV79()">+ Nuova prenotazione</button></div>
-        <div class="transfer-kpis-v79" id="transferBookingKpisV79"></div>
-        <div class="transfer-toolbar-v79"><input id="transferBookingSearchV79" placeholder="Cerca passeggero, indirizzo o telefono" oninput="renderTransferBookingsV79()"><select id="transferBookingStatusV79" onchange="loadTransferBookingsV79()"><option value="">Tutti gli stati</option><option value="new">Nuove</option><option value="proposed">Proposte</option><option value="accepted">Accettate</option><option value="in_progress">In corso</option><option value="completed">Completate</option><option value="cancelled">Annullate</option></select><input type="date" id="transferBookingDateV79" onchange="loadTransferBookingsV79()"><button onclick="loadTransferBookingsV79()">Aggiorna</button></div>
-        <div class="transfer-booking-grid-v79" id="transferBookingsListV79"><div class="empty-state">Caricamento prenotazioni...</div></div>
-      </section>
-
-      <section id="tab-transfer-planning" class="tab hidden transfer-workspace-v79">
-        <div class="transfer-page-head-v79"><div><span class="eyebrow-v79">AGENDA AUTISTI</span><h1>Planning corse</h1><p>Visualizza le prenotazioni per orario e organizza il lavoro giornaliero degli autisti.</p></div><div class="transfer-head-actions-v79"><input type="date" id="transferPlanningDateV79" onchange="loadTransferPlanningV79()"><button class="primary" onclick="loadTransferPlanningV79()">Aggiorna planning</button></div></div>
-        <div class="transfer-planning-summary-v79" id="transferPlanningSummaryV79"></div>
-        <div class="transfer-timeline-v79" id="transferPlanningTimelineV79"><div class="empty-state">Caricamento agenda...</div></div>
-      </section>
-
-      <section id="tab-transfer-settings" class="tab hidden transfer-workspace-v79">
-        <div class="transfer-page-head-v79"><div><span class="eyebrow-v79">CONFIGURAZIONE OPERATIVA</span><h1>Impostazioni Transfer</h1><p>Scegli come GiroFacile deve gestire le nuove prenotazioni e crea il tuo profilo autista amministratore.</p></div></div>
-        <div class="transfer-settings-layout-v79">
-          <div class="card transfer-settings-card-v79"><h3>Modalità di assegnazione</h3><p class="muted">Puoi cambiare modalità in qualsiasi momento.</p><div class="dispatch-mode-grid-v79">
-            <label><input type="radio" name="transferDispatchModeV79" value="manual"><b>Manuale</b><span>Le richieste arrivano in Dashboard e vengono assegnate dall'amministratore.</span></label>
-            <label><input type="radio" name="transferDispatchModeV79" value="assisted"><b>Assistita</b><span>GiroFacile propone l'autista più compatibile, poi l'amministratore conferma.</span></label>
-            <label><input type="radio" name="transferDispatchModeV79" value="automatic"><b>Automatica</b><span>La richiesta viene proposta automaticamente all'autista migliore.</span></label>
-          </div><div class="form-grid-v79"><label>Strategia automatica<select id="transferAutoStrategyV79"><option value="best_fit">Migliore compatibilità</option><option value="nearest">Autista più vicino</option><option value="least_empty_km">Meno km a vuoto</option><option value="balanced">Bilanciamento lavoro</option></select></label><label>Tempo risposta autista (secondi)<input type="number" id="transferResponseSecondsV79" min="15" max="600"></label><label>Margine standard tra corse (minuti)<input type="number" id="transferBufferV79" min="0" max="180"></label><label>Margine aeroporto (minuti)<input type="number" id="transferAirportBufferV79" min="0" max="240"></label></div><div class="check-grid-v79"><label><input type="checkbox" id="transferNotifyEmailV79"> Notifica via email</label><label><input type="checkbox" id="transferNotifyInternalV79"> Notifica interna</label><label><input type="checkbox" id="transferAllowRejectV79"> Consenti rifiuto autista</label></div><button class="primary transfer-save-btn-v80" onclick="saveTransferOperationsV79()"><span>✓</span> Salva impostazioni</button></div>
-          <div class="card transfer-admin-driver-card-v79"><div id="transferAdminDriverContentV79"><h3>Profilo autista amministratore</h3><p>Usa lo stesso account per passare dalla Dashboard al portale autista senza un secondo login.</p><button class="primary transfer-admin-driver-btn-v80" onclick="createAdminDriverProfileV79()"><span>＋</span> Crea profilo autista per amministratore</button></div></div>
-        </div>
-      </section>
-
-      <div id="transferBookingModalV79" class="modal hidden"><div class="modal-card transfer-booking-modal-card-v79"><div class="modal-head"><h3>Nuova prenotazione</h3><button onclick="closeTransferBookingModalV79()">×</button></div><div class="form-grid-v79"><label>Nome passeggero *<input id="tbCustomerV79"></label><label>Telefono<input id="tbPhoneV79"></label><label>Email<input id="tbEmailV79" type="email"></label><label>Numero passeggeri<input id="tbPassengersV79" type="number" min="1" value="1"></label><label class="full">Luogo di partenza *<input id="tbPickupV79"></label><label class="full">Destinazione *<input id="tbDestinationV79"></label><label>Data *<input id="tbDateV79" type="date"></label><label>Ora *<input id="tbTimeV79" type="time"></label><label>Servizio<input id="tbServiceV79" placeholder="Transfer aeroportuale"></label><label>Volo / treno<input id="tbFlightV79"></label><label class="full">Bagagli<input id="tbLuggageV79"></label><label class="full">Note<textarea id="tbNotesV79"></textarea></label></div><div class="modal-actions"><button onclick="closeTransferBookingModalV79()">Annulla</button><button class="primary" onclick="saveManualTransferBookingV79()">Salva prenotazione</button></div></div></div>
-
-
-      <div id="transferBookingDetailModalV86" class="modal hidden">
-        <div class="modal-card transfer-detail-modal-v86">
-          <div class="modal-head"><div><small class="eyebrow-v79">SCHEDA PRENOTAZIONE</small><h3 id="tbDetailTitleV86">Dettaglio prenotazione</h3></div><button onclick="closeTransferBookingDetailV86()">×</button></div>
-          <div class="transfer-detail-layout-v86">
-            <div class="transfer-detail-form-v86">
-              <div class="form-grid-v79">
-                <label>Nome passeggero *<input id="tbdCustomerV86"></label><label>Telefono<input id="tbdPhoneV86"></label>
-                <label>Email<input id="tbdEmailV86" type="email"></label><label>Passeggeri<input id="tbdPassengersV86" type="number" min="1"></label>
-                <label class="full">Partenza *<input id="tbdPickupV86"></label><label class="full">Destinazione *<input id="tbdDestinationV86"></label>
-                <label>Data *<input id="tbdDateV86" type="date"></label><label>Ora *<input id="tbdTimeV86" type="time"></label>
-                <label>Servizio<input id="tbdServiceV86"></label><label>Volo / treno<input id="tbdFlightV86"></label>
-                <label>Durata stimata (min)<input id="tbdMinutesV86" type="number" min="1"></label><label>Km stimati<input id="tbdKmV86" type="number" min="0" step="0.1"></label>
-                <label class="full">Bagagli<input id="tbdLuggageV86"></label><label class="full">Note cliente<textarea id="tbdNotesV86"></textarea></label>
-                <label class="full">Note amministratore<textarea id="tbdAdminNoteV86"></textarea></label>
-              </div>
-              <div class="transfer-detail-flags-v86"><label><input id="tbdChildSeatV86" type="checkbox"> Seggiolino</label><label><input id="tbdPetsV86" type="checkbox"> Animali</label><label><input id="tbdRoundTripV86" type="checkbox"> Andata e ritorno</label></div>
-              <div class="transfer-detail-actions-v86"><button onclick="closeTransferBookingDetailV86()">Chiudi</button><button onclick="openDetailRouteV86()">Apri mappa</button><button class="primary" onclick="saveTransferBookingDetailV86()">Salva modifiche</button></div>
-            </div>
-            <aside class="transfer-detail-side-v86">
-              <div class="transfer-detail-summary-v86" id="tbDetailSummaryV86"></div>
-              <div class="transfer-suggest-v86"><div><small>ASSEGNAZIONE ASSISTITA</small><h4>Autista consigliato</h4><p>Controllo compatibilità oraria e carico giornaliero.</p></div><button onclick="loadTransferSuggestionsV86()">Calcola suggerimento</button><div id="tbSuggestionsV86"></div></div>
-              <div class="transfer-history-v86"><small>CRONOLOGIA</small><h4>Attività prenotazione</h4><div id="tbHistoryV86"><div class="empty-state">Nessuna attività registrata.</div></div></div>
-            </aside>
-          </div>
-        </div>
-      </div>
-
-      <section id="tab-transfer-portal" class="tab hidden">
-        <div class="transfer-builder-v78">
-          <div class="transfer-builder-head-v78">
-            <div>
-              <span class="transfer-eyebrow-v78">Servizio Transfer</span>
-              <h1>Personalizza portale prenotazioni</h1>
-              <p>Configura identità, colori, contenuti e campi del modulo. L’anteprima si aggiorna in tempo reale.</p>
-            </div>
-            <div class="transfer-builder-head-actions-v78">
-              <button class="btn-light" type="button" onclick="openTransferPortalPublicV78()">Apri portale</button>
-              <button class="btn-primary" type="button" onclick="saveTransferPortalV78('published')">Salva e pubblica</button>
-            </div>
-          </div>
-
-          <div class="transfer-builder-layout-v78">
-            <aside class="transfer-builder-controls-v78">
-              <details open>
-                <summary>Brand e identità</summary>
-                <div class="transfer-control-group-v78">
-                  <label>Nome azienda</label><input id="tpCompanyNameV78" oninput="updateTransferPreviewV78()">
-                  <label>Logo aziendale</label><input id="tpLogoFileV78" type="file" accept="image/*" onchange="readTransferImageV78(this,'logo')">
-                  <div class="transfer-upload-row-v78"><span id="tpLogoStateV78">Nessun logo caricato</span><button type="button" class="btn-light mini" onclick="clearTransferImageV78('logo')">Rimuovi</button></div>
-                  <label>Slug link pubblico</label><div class="transfer-slug-v78"><span>/prenota/</span><input id="tpSlugV78" oninput="updateTransferPreviewV78()"></div>
-                </div>
-              </details>
-
-              <details open>
-                <summary>Tema e colori</summary>
-                <div class="transfer-control-group-v78">
-                  <label>Stile grafico</label><select id="tpThemeV78" onchange="updateTransferPreviewV78()"><option value="modern">Modern</option><option value="minimal">Minimal</option><option value="elegant">Elegant</option><option value="luxury">Luxury</option><option value="corporate">Corporate</option></select>
-                  <div class="transfer-color-grid-v78">
-                    <label>Principale<input id="tpPrimaryV78" type="color" oninput="updateTransferPreviewV78()"></label>
-                    <label>Secondario<input id="tpSecondaryV78" type="color" oninput="updateTransferPreviewV78()"></label>
-                    <label>Pulsanti<input id="tpButtonV78" type="color" oninput="updateTransferPreviewV78()"></label>
-                    <label>Testo<input id="tpTextV78" type="color" oninput="updateTransferPreviewV78()"></label>
-                    <label>Sfondo<input id="tpBackgroundV78" type="color" oninput="updateTransferPreviewV78()"></label>
-                  </div>
-                  <label>Immagine di copertina</label><input id="tpHeroFileV78" type="file" accept="image/*" onchange="readTransferImageV78(this,'hero')">
-                  <div class="transfer-upload-row-v78"><span id="tpHeroStateV78">Nessuna immagine caricata</span><button type="button" class="btn-light mini" onclick="clearTransferImageV78('hero')">Rimuovi</button></div>
-                </div>
-              </details>
-
-              <details>
-                <summary>Testi del portale</summary>
-                <div class="transfer-control-group-v78">
-                  <label>Titolo principale</label><input id="tpTitleV78" oninput="updateTransferPreviewV78()">
-                  <label>Sottotitolo</label><textarea id="tpSubtitleV78" oninput="updateTransferPreviewV78()"></textarea>
-                  <label>Testo introduttivo</label><textarea id="tpIntroV78" oninput="updateTransferPreviewV78()"></textarea>
-                  <label>Messaggio di conferma</label><textarea id="tpConfirmationV78"></textarea>
-                  <label>Messaggio portale chiuso</label><textarea id="tpClosedV78"></textarea>
-                  <label>Testo footer</label><input id="tpFooterV78" oninput="updateTransferPreviewV78()">
-                </div>
-              </details>
-
-              <details>
-                <summary>Campi prenotazione</summary>
-                <div id="tpFieldsV78" class="transfer-field-list-v78"></div>
-              </details>
-
-              <details>
-                <summary>Servizi disponibili</summary>
-                <div class="transfer-control-group-v78">
-                  <label>Un servizio per riga</label><textarea id="tpServicesV78" rows="6" oninput="updateTransferPreviewV78()"></textarea>
-                </div>
-              </details>
-
-              <details>
-                <summary>Contatti e pubblicazione</summary>
-                <div class="transfer-control-group-v78">
-                  <label>Telefono</label><input id="tpPhoneV78" oninput="updateTransferPreviewV78()">
-                  <label>WhatsApp</label><input id="tpWhatsappV78">
-                  <label>Email</label><input id="tpEmailV78" type="email" oninput="updateTransferPreviewV78()">
-                  <label>Sito web</label><input id="tpWebsiteV78">
-                  <label>Anticipo minimo (minuti)</label><input id="tpAdvanceV78" type="number" min="0" value="30">
-                  <label>Stato portale</label><select id="tpStatusV78" onchange="updateTransferPreviewV78()"><option value="draft">Bozza</option><option value="published">Pubblicato</option><option value="closed">Temporaneamente chiuso</option></select>
-                  <label class="transfer-switch-row-v78"><input id="tpAcceptV78" type="checkbox" onchange="updateTransferPreviewV78()"><span>Accetta nuove prenotazioni</span></label>
-                  <label class="transfer-switch-row-v78"><input id="tpBrandV78" type="checkbox" onchange="updateTransferPreviewV78()"><span>Mostra “Powered by GiroFacile”</span></label>
-                </div>
-              </details>
-            </aside>
-
-            <section class="transfer-builder-preview-v78">
-              <div class="transfer-preview-toolbar-v78">
-                <div class="transfer-preview-tabs-v78">
-                  <button type="button" class="active" data-transfer-preview="desktop" onclick="setTransferPreviewModeV78('desktop',this)">Desktop</button>
-                  <button type="button" data-transfer-preview="mobile" onclick="setTransferPreviewModeV78('mobile',this)">Mobile</button>
-                  <button type="button" data-transfer-preview="email" onclick="setTransferPreviewModeV78('email',this)">Email conferma</button>
-                </div>
-                <span id="tpSaveStateV78">Modifiche non salvate</span>
-              </div>
-              <div class="transfer-preview-stage-v78" id="tpPreviewStageV78">
-                <div class="transfer-preview-device-v78 desktop" id="tpPreviewDeviceV78">
-                  <div class="transfer-preview-browser-v78"><i></i><i></i><i></i><span id="tpPreviewUrlV78">girofacile.it/prenota/azienda</span></div>
-                  <div id="tpPreviewContentV78"></div>
-                </div>
-              </div>
-            </section>
-          </div>
-
-          <section id="transferSharePanelV85" class="transfer-share-panel-v85">
-            <div class="transfer-share-head-v85">
-              <div>
-                <span class="transfer-eyebrow-v78">Condivisione portale</span>
-                <h2>Condividi il link di prenotazione</h2>
-                <p>Invia il portale ai clienti, crea QR Code e genera link tracciati per hotel, social e partner.</p>
-              </div>
-              <button class="btn-light" type="button" onclick="openTransferPortalPublicV78()">Apri portale</button>
-            </div>
-
-            <div class="transfer-share-grid-v85">
-              <div class="transfer-share-main-v85">
-                <div class="transfer-link-card-v85">
-                  <label>Link pubblico</label>
-                  <div class="transfer-link-row-v85">
-                    <input id="tpShareLinkV85" readonly value="Configura e salva il portale">
-                    <button type="button" onclick="copyTransferPortalLinkV85()">Copia link</button>
-                  </div>
-                  <div class="transfer-share-actions-v85">
-                    <button type="button" class="whatsapp" onclick="shareTransferWhatsappV85()"><span>WA</span> WhatsApp</button>
-                    <button type="button" onclick="shareTransferEmailV85()"><span>✉</span> Email</button>
-                    <button type="button" onclick="nativeShareTransferV85()"><span>↗</span> Condividi</button>
-                    <button type="button" onclick="openTransferPortalPublicV78()"><span>⌁</span> Apri portale</button>
-                  </div>
-                </div>
-
-                <div class="transfer-tracked-card-v85">
-                  <div class="transfer-section-title-v85">
-                    <div><h3>Link tracciato</h3><p>Identifica da quale canale arriva ogni prenotazione.</p></div>
-                    <span class="transfer-premium-badge-v85">Analytics ready</span>
-                  </div>
-                  <div class="transfer-source-row-v85">
-                    <input id="tpShareSourceV85" placeholder="Es. hotel-vesuvio, instagram, qr-veicolo" oninput="refreshTransferShareV85()">
-                    <button type="button" onclick="copyTransferTrackedLinkV85()">Copia link tracciato</button>
-                  </div>
-                  <div id="tpTrackedPreviewV85" class="transfer-tracked-preview-v85">Inserisci un nome canale per generare il link.</div>
-                  <div class="transfer-source-presets-v85">
-                    <button type="button" onclick="setTransferSourceV85('whatsapp')">WhatsApp</button>
-                    <button type="button" onclick="setTransferSourceV85('instagram')">Instagram</button>
-                    <button type="button" onclick="setTransferSourceV85('hotel')">Hotel</button>
-                    <button type="button" onclick="setTransferSourceV85('qr-veicolo')">QR veicolo</button>
-                  </div>
-                </div>
-
-                <div class="transfer-embed-card-v85">
-                  <div class="transfer-section-title-v85"><div><h3>Inserisci nel tuo sito</h3><p>Copia un pulsante “Prenota ora” già collegato al portale.</p></div></div>
-                  <div class="transfer-code-row-v85"><code id="tpEmbedCodeV85">Salva prima il portale</code><button type="button" onclick="copyTransferEmbedV85()">Copia codice</button></div>
-                </div>
-              </div>
-
-              <aside class="transfer-qr-card-v85">
-                <div class="transfer-section-title-v85"><div><h3>QR Code</h3><p>Ideale per hotel, veicoli, volantini e biglietti da visita.</p></div></div>
-                <div class="transfer-qr-frame-v85"><img id="tpQrImageV85" alt="QR Code portale prenotazioni"></div>
-                <small id="tpQrSourceV85">QR collegato al link generale</small>
-                <div class="transfer-qr-actions-v85">
-                  <button type="button" class="primary" onclick="downloadTransferQrV85()">Scarica PNG</button>
-                  <button type="button" onclick="printTransferQrV85()">Stampa QR</button>
-                </div>
-              </aside>
-            </div>
-          </section>
-
-          <div class="transfer-builder-savebar-v78">
-            <div><strong>Portale prenotazioni</strong><span id="tpPublicLinkV78">Configura e pubblica il tuo link.</span></div>
-            <div><button class="btn-light" type="button" onclick="loadTransferPortalV78(true)">Annulla modifiche</button><button class="btn-light" type="button" onclick="saveTransferPortalV78('draft')">Salva bozza</button><button class="btn-primary" type="button" onclick="saveTransferPortalV78('published')">Salva e pubblica</button></div>
-          </div>
-        </div>
-      </section>
-
-      <section id="tab-integrations" class="tab hidden">
-        <div class="integrations-v52">
-          <div class="integrations-hero-v52">
-            <span>Modulo e-commerce</span>
-            <h1>Integrazioni</h1>
-            <p>Collega il tuo shop online a GiroFacile per importare ordini, destinatari, indirizzi, tracking e dati di consegna.</p>
-          </div>
-
-          <div class="integrations-grid-v52">
-            <section class="integration-card-v52 integration-shopify-v52">
-              <div class="integration-card-head-v52">
-                <div class="integration-logo-v52">S</div>
-                <div>
-                  <h2>Shopify</h2>
-                  <p>Importa ordini Shopify e trasformali in consegne da pianificare.</p>
-                </div>
-                <span class="integration-badge-v52">In preparazione</span>
-              </div>
-
-              <div class="integration-form-v52">
-                <label>Dominio shop</label>
-                <input id="shopifyDomainV52" placeholder="es. nome-negozio.myshopify.com">
-                <label>Access token Admin API</label>
-                <input id="shopifyTokenV52" type="password" placeholder="shpat_...">
-              </div>
-
-              <div class="integration-actions-v52">
-                <button class="btn-primary" type="button" onclick="showShopifyComingSoonV52('test')">Test connessione</button>
-                <button class="btn-light" type="button" onclick="showShopifyComingSoonV52('import')">Importa ordini</button>
-              </div>
-
-              <div class="integration-note-v52">
-                <strong>Prossimo step</strong>
-                <p>Qui inseriremo il collegamento reale con Shopify: test credenziali, import ordini, controllo doppioni e creazione automatica delle consegne.</p>
-              </div>
-            </section>
-
-            <section class="integration-side-v52">
-              <h2>Cosa importeremo da Shopify</h2>
-              <ul>
-                <li>Numero ordine e data ordine</li>
-                <li>Nome, email e telefono cliente</li>
-                <li>Indirizzo di spedizione</li>
-                <li>Prodotti ordinati e totale ordine</li>
-                <li>Contrassegno, note e stato pagamento</li>
-                <li>Tracking e stato spedizione quando disponibili</li>
-              </ul>
-            </section>
-          </div>
-        </div>
-      </section>
-
 
       <section id="tab-company" class="tab hidden">
         <div id="logisticsDashboardV50" class="hidden"></div>
@@ -684,21 +386,11 @@
               <div><label>Codice fiscale</label><input id="companyFiscalCodeInput" placeholder="Codice fiscale"></div>
               <div><label>PEC</label><input id="companyPecInput" type="email" placeholder="azienda@pec.it"></div>
               <div><label>Codice SDI</label><input id="companySdiInput" placeholder="ABC1234"></div>
-              <div><label>Settore attività</label><select id="companySectorInput" onchange="const opt=this.options[this.selectedIndex]; document.getElementById('companySectorPillV47') && (document.getElementById('companySectorPillV47').textContent = opt ? opt.textContent : 'Settore');"></select></div>
               <div><label>Dimensione azienda</label><select id="companySizeInput"><option value="">Seleziona</option><option value="1-5">1-5 persone</option><option value="6-15">6-15 persone</option><option value="16-50">16-50 persone</option><option value="51-100">51-100 persone</option><option value="100+">Oltre 100 persone</option></select></div>
-              <div><label>Consegne / servizi medi al giorno</label><select id="companyDailyDeliveriesInput"><option value="">Seleziona</option><option value="1-10">1-10</option><option value="11-30">11-30</option><option value="31-80">31-80</option><option value="81-150">81-150</option><option value="150+">Oltre 150</option></select></div>
-              <div class="full"><label>Descrizione attività</label><input id="companyActivityTypeInput" placeholder="Es. transfer aeroportuale, distribuzione alimentare, corriere locale..."></div>
+              <div><label>Consegne medie al giorno</label><select id="companyDailyDeliveriesInput"><option value="">Seleziona</option><option value="1-10">1-10</option><option value="11-30">11-30</option><option value="31-80">31-80</option><option value="81-150">81-150</option><option value="150+">Oltre 150</option></select></div>
+              <div class="full"><label>Descrizione attività</label><input id="companyActivityTypeInput" placeholder="Es. distribuzione alimentare, ricambi, consegne e-commerce..."></div>
               <div class="full"><label>Sede legale</label><input id="companyLegalAddressInput" placeholder="Lascia vuoto se coincide con la sede operativa"></div>
               <div class="full"><label>Indirizzo di fatturazione</label><input id="companyBillingAddressInput" placeholder="Lascia vuoto se coincide con la sede legale"></div>
-            </div>
-
-            <div class="sector-config-card-v47">
-              <div>
-                <small>Settore selezionato</small>
-                <strong id="companySectorPillV47">Settore generico</strong>
-                <p id="companySectorDescriptionV47">GiroFacile userà questa scelta per adattare testi, campi e funzioni consigliate.</p>
-              </div>
-              <div id="companySectorFeatureChips" class="sector-feature-chips-v47"><span>Configurazione generica</span></div>
             </div>
 
             <div class="modal-actions">
@@ -732,22 +424,22 @@
           <div class="workspace-empty-hero-v49">
             <span class="workspace-empty-kicker-v49">Nuovo account aziendale</span>
             <h1>Benvenuto in GiroFacile</h1>
-            <p>Il tuo account è stato creato e collegato al settore scelto. Prima di attivare i moduli operativi, completa la configurazione iniziale del gestionale.</p>
+            <p>Il tuo account è pronto. Completa la configurazione iniziale per adattare GiroFacile al modo in cui gestisci le consegne.</p>
             <div class="workspace-sector-card-v49">
-              <small>Settore attività</small>
-              <strong id="workspaceSectorNameV49">Settore non configurato</strong>
-              <p id="workspaceSectorSubtitleV49">GiroFacile preparerà interfaccia, testi e funzioni in base al settore aziendale.</p>
+              <small>Configurazione consegne</small>
+              <strong id="workspaceSectorNameV49">GiroFacile per le tue consegne</strong>
+              <p id="workspaceSectorSubtitleV49">Un unico ambiente operativo, personalizzabile in base alle funzioni che ti servono.</p>
             </div>
           </div>
           <div class="workspace-setup-grid-v49">
-            <button onclick="showTab('company')"><span>1</span><strong>Profilo azienda</strong><small>Controlla dati aziendali, sede, fatturazione e settore.</small></button>
+            <button onclick="showTab('company')"><span>1</span><strong>Profilo azienda</strong><small>Controlla dati aziendali, sede e fatturazione.</small></button>
             <button onclick="showTab('settings')"><span>2</span><strong>Impostazioni</strong><small>Configura firma, notifiche e preferenze comuni.</small></button>
             <button onclick="openUpgradePanelFor('business')"><span>3</span><strong>Piano</strong><small>Verifica piano, limiti e funzionalità disponibili.</small></button>
-            <button onclick="openSupportPanelV49()"><span>4</span><strong>Supporto</strong><small>Richiedi aiuto per attivare i moduli del tuo settore.</small></button>
+            <button onclick="openSupportPanelV49()"><span>4</span><strong>Supporto</strong><small>Richiedi aiuto per configurare GiroFacile.</small></button>
           </div>
           <div class="workspace-empty-note-v49">
             <strong>Moduli operativi non ancora attivi</strong>
-            <p>Clienti, mezzi, autisti, pianificazione, storico e report saranno mostrati quando l’area operativa verrà configurata per il settore dell’azienda.</p>
+            <p>Clienti, mezzi, autisti, pianificazione, storico e report saranno disponibili appena completi la configurazione iniziale.</p>
           </div>
         </div>
         <div class="dash-hero-row">
@@ -1240,6 +932,15 @@
               <input id="settingDeliverySignature" type="checkbox" onchange="saveSettingsV41()">
               <span class="switch-slider"></span>
             </label>
+          </div>
+
+          <div class="settings-section-head gf-feature-head-v89"><div><h2>Funzionalità opzionali</h2><p>Attiva solo ciò che serve alla tua organizzazione. Le preferenze vengono salvate sul profilo azienda.</p></div></div>
+          <div class="gf-feature-grid-v89">
+            <label class="gf-feature-card-v89"><span><strong>Finestre orarie</strong><small>Gestisci fasce orarie e vincoli di consegna dei clienti.</small></span><input id="featureTimeWindowsV89" type="checkbox" checked onchange="saveUniversalFeaturesV89()"></label>
+            <label class="gf-feature-card-v89"><span><strong>Foto prova consegna</strong><small>Predisponi il flusso per la prova fotografica della consegna.</small></span><input id="featurePhotoProofV89" type="checkbox" onchange="saveUniversalFeaturesV89()"></label>
+            <label class="gf-feature-card-v89"><span><strong>ZTL e zone difficili</strong><small>Usa i vincoli di accesso quando pianifichi clienti e mezzi.</small></span><input id="featureZtlV89" type="checkbox" onchange="saveUniversalFeaturesV89()"></label>
+            <label class="gf-feature-card-v89"><span><strong>Sponda idraulica / transpallet</strong><small>Gestisci compatibilità tra esigenze del cliente e mezzo.</small></span><input id="featureTailLiftV89" type="checkbox" onchange="saveUniversalFeaturesV89()"></label>
+            <label class="gf-feature-card-v89"><span><strong>Merce refrigerata</strong><small>Memorizza questa esigenza operativa per la configurazione aziendale.</small></span><input id="featureRefrigeratedV89" type="checkbox" onchange="saveUniversalFeaturesV89()"></label>
           </div>
 
           <div id="settingsSaveState" class="settings-save-state">Impostazioni azienda sincronizzate.</div>
@@ -1945,8 +1646,7 @@
   </div>
 </div>
 
-<script src="/static/dashboard/js/core.js?v=v88"></script>
-<script src="/static/dashboard/js/transfer.js?v=v88"></script>
+<script src="/static/dashboard/js/core.js?v=v89"></script>
 
 <script>
 function toggleLoginPassword(){
