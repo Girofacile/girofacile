@@ -4452,3 +4452,18 @@ html[data-gf-tail-lift="off"] .gf-vehicles-table-v892 td:nth-child(4) { display:
 .vehicle-data-grid-v896 .vehicle-field-missing-v8966{border-style:dashed!important;background:#fffdf7!important}
 .vehicle-data-grid-v896 .vehicle-field-from-lookup-v8966:focus{border-color:#22a95a!important;box-shadow:0 0 0 3px rgba(34,197,94,.12)!important}
 @media(max-width:720px){.vehicle-lookup-status-row-v8966{align-items:flex-start}.vehicle-verified-badge-v8966{white-space:normal}}
+
+/* GiroFacile V89.6.9 - Fix orientamento/logo sidebar */
+.brand-logo-img,
+.login-card-brand img,
+.brand-login img {
+  transform: none !important;
+  rotate: 0deg !important;
+  object-fit: contain !important;
+  object-position: center center !important;
+}
+
+.brand-logo-img {
+  background: #075dff !important;
+  padding: 0 !important;
+}
