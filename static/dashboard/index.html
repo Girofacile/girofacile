@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>GiroFacile</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link href="/static/dashboard/css/core.css?v=v89" rel="stylesheet">
+<link href="/static/dashboard/css/core.css?v=v89_2" rel="stylesheet">
 <link href="/static/dashboard/css/account.css?v=v89" rel="stylesheet">
 </head>
 <body>
@@ -681,8 +681,8 @@
                   <input id="pickQ" placeholder="Nome, codice o indirizzo" oninput="loadCustomerPicker()">
                   <input id="pickComune" placeholder="Comune / zona" oninput="loadCustomerPicker()">
                   <input id="pickProvincia" placeholder="Provincia" oninput="loadCustomerPicker()">
-                  <select id="pickZtl" onchange="loadCustomerPicker()"><option value="">ZTL tutte</option><option value="true">Solo ZTL</option><option value="false">No ZTL</option></select>
-                  <select id="pickSponda" onchange="loadCustomerPicker()"><option value="">Sponda tutte</option><option value="true">Serve sponda</option><option value="false">No sponda</option></select>
+                  <select data-gf-feature="ztl" id="pickZtl" onchange="loadCustomerPicker()"><option value="">ZTL tutte</option><option value="true">Solo ZTL</option><option value="false">No ZTL</option></select>
+                  <select data-gf-feature="tail_lift" id="pickSponda" onchange="loadCustomerPicker()"><option value="">Sponda tutte</option><option value="true">Serve sponda</option><option value="false">No sponda</option></select>
                 </div>
                 <div id="customerPickerList" class="customer-picker-list"></div>
               </div>
@@ -764,13 +764,13 @@
             <input id="customerFilterComune" placeholder="Comune / zona" oninput="loadCustomers()">
             <input id="customerFilterProvincia" placeholder="Provincia" oninput="loadCustomers()">
             <select id="customerFilterAgent" onchange="loadCustomers()"><option value="">Agente tutti</option><option value="interno">Cliente interno</option></select>
-            <select id="customerFilterZtl" onchange="loadCustomers()"><option value="">ZTL tutte</option><option value="true">Solo ZTL</option><option value="false">No ZTL</option></select>
-            <select id="customerFilterSponda" onchange="loadCustomers()"><option value="">Sponda tutte</option><option value="true">Serve sponda</option><option value="false">No sponda</option></select>
+            <select data-gf-feature="ztl" id="customerFilterZtl" onchange="loadCustomers()"><option value="">ZTL tutte</option><option value="true">Solo ZTL</option><option value="false">No ZTL</option></select>
+            <select data-gf-feature="tail_lift" id="customerFilterSponda" onchange="loadCustomers()"><option value="">Sponda tutte</option><option value="true">Serve sponda</option><option value="false">No sponda</option></select>
             <button class="btn-secondary" onclick="clearCustomerFilters()">Pulisci filtri</button>
           </div>
           <div class="tableWrap">
-            <table>
-              <thead><tr><th>Codice</th><th>Nome</th><th>Agente</th><th>Indirizzo</th><th>Scarico</th><th>Indirizzo</th><th>ZTL</th><th>Sponda</th><th></th></tr></thead>
+            <table class="gf-customers-table-v892">
+              <thead><tr><th>Codice</th><th>Nome</th><th>Agente</th><th>Indirizzo</th><th data-gf-feature="time_windows">Scarico</th><th>Indirizzo</th><th data-gf-feature="ztl">ZTL</th><th data-gf-feature="tail_lift">Sponda</th><th></th></tr></thead>
               <tbody id="customersBody"></tbody>
             </table>
           </div>
@@ -980,11 +980,11 @@
             <input id="vConsumo" type="number" step="0.1" value="8.5" placeholder="Consumo L/100km">
             <input id="vKg" type="number" value="1000" placeholder="Capacità kg">
             <input id="vColli" type="number" value="100" placeholder="Capacità colli">
-            <select id="vSponda"><option value="false">Sponda No</option><option value="true">Sponda Sì</option></select>
-            <select id="vZtl"><option value="false">ZTL No</option><option value="true">ZTL Sì</option></select>
+            <select data-gf-feature="tail_lift" id="vSponda"><option value="false">Sponda No</option><option value="true">Sponda Sì</option></select>
+            <select data-gf-feature="ztl" id="vZtl"><option value="false">ZTL No</option><option value="true">ZTL Sì</option></select>
           </div>
           <div class="actions-row"><button type="button" id="saveVehicleBtn" onclick="saveVehicle()" class="btn-primary">Salva mezzo</button><button type="button" onclick="resetVehicleForm()" class="btn-secondary">Nuovo</button></div>
-          <div class="tableWrap"><table><thead><tr><th>Mezzo</th><th>Targa</th><th>Consumo</th><th>Sponda</th><th>ZTL</th><th></th></tr></thead><tbody id="vehiclesBody"></tbody></table></div>
+          <div class="tableWrap"><table class="gf-vehicles-table-v892"><thead><tr><th>Mezzo</th><th>Targa</th><th>Consumo</th><th data-gf-feature="tail_lift">Sponda</th><th data-gf-feature="ztl">ZTL</th><th></th></tr></thead><tbody id="vehiclesBody"></tbody></table></div>
         </section>
       </section>
 
@@ -1414,7 +1414,7 @@
       </div>
     </section>
 
-    <section class="delivery-modal-section">
+    <section class="delivery-modal-section" data-gf-feature="time_windows">
       <div class="delivery-modal-section-title"><span>03</span><div><h3>Fasce orarie</h3><p>Quando il cliente può ricevere la consegna.</p></div></div>
       <div class="customer-modal-grid-v8">
         <div><label>Mattina dalle</label><input id="cMattinaDa" type="time"></div>
@@ -1428,8 +1428,8 @@
       <div class="delivery-modal-section-title"><span>04</span><div><h3>Dettagli operativi</h3><p>Dati usati per scarico, vincoli e consegna.</p></div></div>
       <div class="customer-modal-grid-v8">
         <div><label>Tempo scarico stimato</label><input id="cScarico" type="number" value="10" placeholder="Minuti"></div>
-        <div><label>ZTL</label><select id="cZtl"><option value="false">ZTL No</option><option value="true">ZTL Sì</option></select></div>
-        <div><label>Sponda richiesta</label><select id="cSponda"><option value="false">Sponda No</option><option value="true">Sponda Sì</option></select></div>
+        <div data-gf-feature="ztl"><label>ZTL</label><select id="cZtl"><option value="false">ZTL No</option><option value="true">ZTL Sì</option></select></div>
+        <div data-gf-feature="tail_lift"><label>Sponda richiesta</label><select id="cSponda"><option value="false">Sponda No</option><option value="true">Sponda Sì</option></select></div>
       </div>
     </section>
 
@@ -1504,7 +1504,7 @@
       </div>
     </section>
 
-    <section class="delivery-modal-section">
+    <section class="delivery-modal-section" data-gf-feature="time_windows">
       <div class="delivery-modal-section-title">
         <span>02</span>
         <div>
@@ -1530,8 +1530,8 @@
       </div>
       <div class="delivery-modal-grid-v5 ops-grid">
         <div><label>Tempo scarico stimato</label><input id="dmScarico" type="number" min="0" step="1"></div>
-        <div><label>ZTL</label><select id="dmZtl"><option value="false">No</option><option value="true">Sì</option></select></div>
-        <div><label>Sponda richiesta</label><select id="dmSponda"><option value="false">No</option><option value="true">Sì</option></select></div>
+        <div data-gf-feature="ztl"><label>ZTL</label><select id="dmZtl"><option value="false">No</option><option value="true">Sì</option></select></div>
+        <div data-gf-feature="tail_lift"><label>Sponda richiesta</label><select id="dmSponda"><option value="false">No</option><option value="true">Sì</option></select></div>
         <div><label>Peso kg</label><input id="dmPeso" type="number" min="0" step="0.1"></div>
         <div><label>Colli</label><input id="dmColli" type="number" min="0" step="1"></div>
       </div>
@@ -1646,7 +1646,7 @@
   </div>
 </div>
 
-<script src="/static/dashboard/js/core.js?v=v89"></script>
+<script src="/static/dashboard/js/core.js?v=v89_2"></script>
 
 <script>
 function toggleLoginPassword(){

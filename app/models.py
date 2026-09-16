@@ -34,6 +34,7 @@ class User(Base):
     has_refrigerated_goods: Mapped[bool] = mapped_column(Boolean, default=False)
     has_ztl: Mapped[bool] = mapped_column(Boolean, default=False)
     needs_tail_lift: Mapped[bool] = mapped_column(Boolean, default=False)
+    universal_features_initialized: Mapped[bool] = mapped_column(Boolean, default=False)
     onboarding_completed: Mapped[bool] = mapped_column(Boolean, default=False)
     onboarding_completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     onboarding_dismissed: Mapped[bool] = mapped_column(Boolean, default=False)

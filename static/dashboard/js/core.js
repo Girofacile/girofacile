@@ -1549,6 +1549,7 @@ async function initApp(){
   }
   document.getElementById("fuelPrice")?.addEventListener("input", updateDashboardStats);
   initRoutePlanningGateV68();
+  await loadUniversalFeaturesV89();
   loadProfilePanel();
   initAddressAutocomplete();
   initResourceAvailabilityControls();
@@ -5446,15 +5447,23 @@ function openTransferPortalPublicV78(){ const slug=transferValV78("tpSlugV78")||
 // -----------------------------------------------------------------------------
 let gfUniversalFeaturesV891={has_time_windows:true,needs_photo_proof:false,has_ztl:false,needs_tail_lift:false,has_refrigerated_goods:false};
 function applyUniversalFeaturesV891(){
-  const enabled=!!gfUniversalFeaturesV891.has_time_windows;
-  // Nasconde le fasce orarie in anagrafica cliente e nella modifica specifiche
-  // del giro. I dati non vengono cancellati: riattivando la funzione ricompaiono.
-  ['cMattinaDa','dmMattinaDa','dMattinaDa'].forEach(id=>{
-    const el=document.getElementById(id);
-    const section=el?.closest('.delivery-modal-section') || el?.closest('.panel') || el?.parentElement;
-    if(section) section.style.display=enabled?'':'none';
-  });
-  document.documentElement.dataset.gfTimeWindows=enabled?'on':'off';
+  const f=gfUniversalFeaturesV891;
+  const root=document.documentElement;
+  root.dataset.gfTimeWindows=f.has_time_windows?'on':'off';
+  root.dataset.gfZtl=f.has_ztl?'on':'off';
+  root.dataset.gfTailLift=f.needs_tail_lift?'on':'off';
+  root.dataset.gfPhotoProof=f.needs_photo_proof?'on':'off';
+  root.dataset.gfRefrigerated=f.has_refrigerated_goods?'on':'off';
+
+  // Pulisce filtri disattivati: una funzione OFF non deve continuare a influenzare le query.
+  if(!f.has_ztl){ ['pickZtl','customerFilterZtl'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';}); ['cZtl','dmZtl','vZtl'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='false';}); }
+  if(!f.needs_tail_lift){ ['pickSponda','customerFilterSponda'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';}); ['cSponda','dmSponda','vSponda'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='false';}); }
+
+  const hint=document.querySelector('.customer-picker-panel .picker-header small');
+  if(hint){
+    const extras=[]; if(f.has_ztl) extras.push('ZTL'); if(f.needs_tail_lift) extras.push('sponda');
+    hint.textContent=extras.length ? `Usa i filtri per zona, ${extras.join(' o ')}` : 'Usa i filtri per zona';
+  }
 }
 async function loadUniversalFeaturesV89(){
   try{

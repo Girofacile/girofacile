@@ -417,6 +417,12 @@ def create_and_optimize_route(
             delivery["scarico_mattina_a"] = None
             delivery["scarico_pomeriggio_da"] = None
             delivery["scarico_pomeriggio_a"] = None
+    if not bool(getattr(user, "has_ztl", False)):
+        for delivery in deliveries:
+            delivery["ztl"] = False
+    if not bool(getattr(user, "needs_tail_lift", False)):
+        for delivery in deliveries:
+            delivery["sponda"] = False
     for delivery in deliveries:
         if delivery.get("customer_id"):
             customer = owned(db.query(Customer), Customer, user).filter(Customer.id == delivery["customer_id"]).first()

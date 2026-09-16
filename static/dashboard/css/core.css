@@ -4406,3 +4406,20 @@ body.workspace-empty-v49-active #tab-dashboard > :not(#workspaceEmptyDashboardV4
 .gf-feature-card-v89 span{display:flex;flex-direction:column;gap:4px}.gf-feature-card-v89 strong{font-size:14px}.gf-feature-card-v89 small{color:var(--muted,#64748b);line-height:1.35}
 .gf-feature-card-v89 input{width:19px;height:19px;flex:0 0 auto}
 @media(max-width:760px){.gf-feature-grid-v89{grid-template-columns:1fr}.gf-feature-card-v89{padding:14px}}
+
+/* V89.2 - visibilità globale funzionalità opzionali */
+html[data-gf-time-windows="off"] [data-gf-feature="time_windows"],
+html[data-gf-ztl="off"] [data-gf-feature="ztl"],
+html[data-gf-tail-lift="off"] [data-gf-feature="tail_lift"],
+html[data-gf-photo-proof="off"] [data-gf-feature="photo_proof"],
+html[data-gf-refrigerated="off"] [data-gf-feature="refrigerated"] { display:none !important; }
+html[data-gf-time-windows="off"] .gf-customers-table-v892 th:nth-child(5),
+html[data-gf-time-windows="off"] .gf-customers-table-v892 td:nth-child(5) { display:none !important; }
+html[data-gf-ztl="off"] .gf-customers-table-v892 th:nth-child(7),
+html[data-gf-ztl="off"] .gf-customers-table-v892 td:nth-child(7),
+html[data-gf-ztl="off"] .gf-vehicles-table-v892 th:nth-child(5),
+html[data-gf-ztl="off"] .gf-vehicles-table-v892 td:nth-child(5) { display:none !important; }
+html[data-gf-tail-lift="off"] .gf-customers-table-v892 th:nth-child(8),
+html[data-gf-tail-lift="off"] .gf-customers-table-v892 td:nth-child(8),
+html[data-gf-tail-lift="off"] .gf-vehicles-table-v892 th:nth-child(4),
+html[data-gf-tail-lift="off"] .gf-vehicles-table-v892 td:nth-child(4) { display:none !important; }
