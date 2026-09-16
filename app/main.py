@@ -100,11 +100,11 @@ def index(request_headers: dict = None):
 
 @app.get("/favicon.ico", include_in_schema=False)
 def favicon():
-    """Serve the GiroFacile symbol as the browser favicon."""
+    """Serve la favicon ufficiale GiroFacile in formato ICO."""
     return FileResponse(
-        static_dir / "girofacile-logo.jpeg",
-        media_type="image/jpeg",
-        headers={"Cache-Control": "public, max-age=86400"},
+        static_dir / "favicon.ico",
+        media_type="image/x-icon",
+        headers={"Cache-Control": "no-cache, no-store, must-revalidate"},
     )
 
 
