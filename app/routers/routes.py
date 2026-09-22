@@ -22,6 +22,82 @@ router = APIRouter(tags=["routes"])
 DEFAULT_AVAILABILITY_PREVIEW_MINUTES = 240
 
 
+def _require_owned_entity(db, model, user: User, entity_id, label: str, *, optional: bool = False):
+    """Restituisce una risorsa solo se appartiene all'azienda autenticata.
+
+    Importante per l'isolamento multi-tenant: un ID valido di un'altra azienda
+    viene trattato esattamente come un ID inesistente e non può essere salvato
+    dentro un giro dell'utente corrente.
+    """
+    if entity_id is None:
+        if optional:
+            return None
+        raise HTTPException(status_code=400, detail=f"{label} non trovato")
+    item = owned(db.query(model), model, user).filter(model.id == entity_id).first()
+    if not item:
+        raise HTTPException(status_code=400, detail=f"{label} non trovato")
+    return item
+
+
+def _owned_customer_map(db, user: User, deliveries: list[dict]) -> dict[int, Customer]:
+    """Valida in blocco tutti i customer_id presenti nelle consegne.
+
+    Prima di questa protezione, un customer_id appartenente a un'altra azienda
+    non veniva trovato dalla query `owned(...)`, ma restava nel payload e poteva
+    comunque essere persistito nella tabella deliveries.
+    """
+    customer_ids: set[int] = set()
+    for delivery in deliveries:
+        customer_id = delivery.get("customer_id")
+        if customer_id is None:
+            continue
+        try:
+            customer_ids.add(int(customer_id))
+        except (TypeError, ValueError):
+            raise HTTPException(status_code=400, detail="Cliente non trovato")
+
+    if not customer_ids:
+        return {}
+
+    customers = (
+        owned(db.query(Customer), Customer, user)
+        .filter(Customer.id.in_(customer_ids))
+        .all()
+    )
+    customer_map = {int(customer.id): customer for customer in customers}
+    if set(customer_map) != customer_ids:
+        # Messaggio volutamente generico: non rivela se l'ID esiste in un altro tenant.
+        raise HTTPException(status_code=400, detail="Uno o più clienti non sono disponibili per questa azienda")
+    return customer_map
+
+
+def _enrich_owned_deliveries(db, user: User, deliveries: list[dict]) -> None:
+    """Valida i clienti e aggiunge solo coordinate provenienti dal tenant corrente."""
+    customer_map = _owned_customer_map(db, user, deliveries)
+    for delivery in deliveries:
+        customer_id = delivery.get("customer_id")
+        if customer_id is None:
+            continue
+        customer = customer_map[int(customer_id)]
+        if customer.lat is not None and customer.lon is not None:
+            delivery["lat"] = customer.lat
+            delivery["lon"] = customer.lon
+            delivery["stato_geocodifica"] = customer.stato_geocodifica
+            delivery["indirizzo_geocodificato"] = customer.indirizzo_geocodificato
+
+
+def _validate_route_tenant_scope(db, user: User, data, deliveries: list[dict]):
+    """Valida tutte le FK di un giro contro l'azienda autenticata.
+
+    Ritorna le entità già validate per evitare query duplicate nei caller.
+    """
+    deposit = _require_owned_entity(db, Deposit, user, data.deposit_id, "Deposito")
+    vehicle = _require_owned_entity(db, Vehicle, user, data.vehicle_id, "Mezzo", optional=True)
+    driver = _require_owned_entity(db, Driver, user, data.driver_id, "Autista", optional=True)
+    _enrich_owned_deliveries(db, user, deliveries)
+    return deposit, vehicle, driver
+
+
 def _is_route_api_configuration_error(exc: Exception) -> bool:
     """Riconosce errori operativi da notificare al Super Admin.
 
@@ -311,6 +387,16 @@ def serialize_route(plan):
 
 
 def save_route_result(db, user, data, result, vehicle, route_id=None):
+    # Ultima barriera prima della persistenza: anche se un nuovo endpoint futuro
+    # dimenticasse la validazione iniziale, una consegna non può mantenere il
+    # riferimento a un cliente appartenente a un'altra azienda.
+    _owned_customer_map(db, user, list(result.get("ordered") or []))
+    _require_owned_entity(db, Deposit, user, data.deposit_id, "Deposito")
+    if data.vehicle_id is not None:
+        _require_owned_entity(db, Vehicle, user, data.vehicle_id, "Mezzo")
+    if data.driver_id is not None:
+        _require_owned_entity(db, Driver, user, data.driver_id, "Autista")
+
     fuel_type = (getattr(vehicle, "alimentazione", None) or "gasolio") if vehicle else "gasolio"
     primary_cons = float(getattr(vehicle, "consumo_primario_100km", 0) or getattr(vehicle, "consumo_l_100km", 0) or 0)
     electric_cons = float(getattr(vehicle, "consumo_kwh_100km", 0) or 0)
@@ -427,15 +513,8 @@ def create_and_optimize_route(
 ):
     ensure_not_past_route_date(data.data_giro)
     check_daily_route_limit(user, db, data.data_giro)
-    deposit = owned(db.query(Deposit), Deposit, user).filter(Deposit.id == data.deposit_id).first()
-    if not deposit:
-        raise HTTPException(400, "Deposito non trovato")
-    vehicle = owned(db.query(Vehicle), Vehicle, user).filter(Vehicle.id == data.vehicle_id).first() if data.vehicle_id else None
-    if data.driver_id:
-        driver = owned(db.query(Driver), Driver, user).filter(Driver.id == data.driver_id).first()
-        if not driver:
-            raise HTTPException(400, "Autista non trovato")
     deliveries = [c.model_dump() for c in data.consegne]
+    deposit, vehicle, _driver = _validate_route_tenant_scope(db, user, data, deliveries)
     # V89.1: se le fasce orarie sono disattivate a livello azienda, il motore
     # le ignora completamente anche se restano salvate nell'anagrafica cliente.
     # In questo modo riattivando la funzione i dati storici tornano disponibili.
@@ -451,14 +530,6 @@ def create_and_optimize_route(
     if not bool(getattr(user, "needs_tail_lift", False)):
         for delivery in deliveries:
             delivery["sponda"] = False
-    for delivery in deliveries:
-        if delivery.get("customer_id"):
-            customer = owned(db.query(Customer), Customer, user).filter(Customer.id == delivery["customer_id"]).first()
-            if customer and customer.lat is not None and customer.lon is not None:
-                delivery["lat"] = customer.lat
-                delivery["lon"] = customer.lon
-                delivery["stato_geocodifica"] = customer.stato_geocodifica
-                delivery["indirizzo_geocodificato"] = customer.indirizzo_geocodificato
     started_api = time.perf_counter()
     try:
         result = optimize_route(db, deposit, deliveries, build_vehicle_dict(vehicle), data.rientro_deposito, data.orario_partenza)
@@ -500,23 +571,8 @@ def recalc_manual_route(
     db: Session = Depends(get_db), user: User = Depends(current_user),
 ):
     ensure_not_past_route_date(data.data_giro)
-    deposit = owned(db.query(Deposit), Deposit, user).filter(Deposit.id == data.deposit_id).first()
-    if not deposit:
-        raise HTTPException(400, "Deposito non trovato")
-    vehicle = owned(db.query(Vehicle), Vehicle, user).filter(Vehicle.id == data.vehicle_id).first() if data.vehicle_id else None
-    if data.driver_id:
-        driver = owned(db.query(Driver), Driver, user).filter(Driver.id == data.driver_id).first()
-        if not driver:
-            raise HTTPException(400, "Autista non trovato")
     deliveries = [c.model_dump() for c in data.consegne]
-    for delivery in deliveries:
-        if delivery.get("customer_id"):
-            customer = owned(db.query(Customer), Customer, user).filter(Customer.id == delivery["customer_id"]).first()
-            if customer and customer.lat is not None and customer.lon is not None:
-                delivery["lat"] = customer.lat
-                delivery["lon"] = customer.lon
-                delivery["stato_geocodifica"] = customer.stato_geocodifica
-                delivery["indirizzo_geocodificato"] = customer.indirizzo_geocodificato
+    deposit, vehicle, _driver = _validate_route_tenant_scope(db, user, data, deliveries)
     started_api = time.perf_counter()
     try:
         result = recalculate_manual_route(db, deposit, deliveries, build_vehicle_dict(vehicle), data.rientro_deposito, data.orario_partenza)

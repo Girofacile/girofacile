@@ -1,7 +1,7 @@
-# CHANGELOG V89.7
+# GiroFacile V89.7 — Hardening isolamento aziende
 
-- Ricostruita la pagina Pianificazione con stylesheet dedicato `planning.css`.
-- Layout desktop riallineato al riferimento grafico: titolo, KPI, card dettagli, griglia 3x2, pannelli costo/rientro e passaggio successivo.
-- Nessuna modifica alla logica di pianificazione o al backend.
-- Aggiunto controllo visivo disabilitato "Modello giro" come nel riferimento, in attesa della relativa funzione.
-- Responsive mobile mantenuto.
+- Bloccato il salvataggio di consegne che referenziano clienti appartenenti a un'altra azienda.
+- Centralizzata la validazione tenant di deposito, mezzo, autista e clienti per creazione e ricalcolo giro.
+- Aggiunta una seconda validazione immediatamente prima della persistenza del giro (defense in depth).
+- Aggiunta bonifica automatica all'avvio per vecchi riferimenti cross-tenant già presenti nel database: le FK non valide vengono scollegate senza cancellare lo storico testuale del giro.
+- Aggiunti test automatici specifici per impedire regressioni sull'isolamento multi-tenant.

@@ -393,11 +393,6 @@ def migrate_database():
         add_column("users", "stripe_customer_id", sql_type(String(200)))
         add_column("users", "stripe_subscription_id", sql_type(String(200)))
         add_column("users", "delivery_signature_enabled", sql_type(Boolean()), "0" if dialect.name == "sqlite" else "false")
-        if "agents_enabled" not in table_columns("users"):
-            add_column("users", "agents_enabled", sql_type(Boolean()), "0" if dialect.name == "sqlite" else "false")
-            # Preserve existing agent workflows, only when adding this preference.
-            with engine.begin() as conn:
-                conn.execute(text("UPDATE users SET agents_enabled = true WHERE EXISTS (SELECT 1 FROM agents WHERE agents.user_id = users.id AND agents.deleted_at IS NULL)"))
 
     if insp.has_table("delivery_statuses"):
         add_column("delivery_statuses", "signature_data", sql_type(Text()))
@@ -577,6 +572,35 @@ def harden_tenant_schema():
         create_unique_index_if_clean("drivers", "email", "uq_drivers_company_email_idx")
         create_unique_index_if_clean("agents", "email", "uq_agents_company_email_idx")
         create_unique_index_if_clean("agents", "codice_agente", "uq_agents_company_code_idx")
+
+        # Bonifica sicurezza multi-tenant dei riferimenti storici creati da
+        # versioni precedenti: un giro non deve mai mantenere FK verso risorse
+        # appartenenti a un'altra azienda. Usiamo SET NULL per preservare lo
+        # storico testuale del giro senza esporre la relazione cross-tenant.
+        if insp.has_table("deliveries") and insp.has_table("route_plans") and insp.has_table("customers"):
+            repaired = conn.execute(text(
+                f"UPDATE {q('deliveries')} SET {q('customer_id')} = NULL "
+                f"WHERE {q('customer_id')} IS NOT NULL AND EXISTS ("
+                f"SELECT 1 FROM {q('route_plans')} rp JOIN {q('customers')} c "
+                f"ON c.{q('id')} = {q('deliveries')}.{q('customer_id')} "
+                f"WHERE rp.{q('id')} = {q('deliveries')}.{q('route_plan_id')} "
+                f"AND rp.{q('user_id')} <> c.{q('user_id')})"
+            ))
+            if getattr(repaired, "rowcount", 0):
+                print(f"[SECURITY] Rimossi {repaired.rowcount} riferimenti delivery->customer cross-tenant")
+
+        for fk_column, target_table in (("deposit_id", "deposits"), ("vehicle_id", "vehicles"), ("driver_id", "drivers")):
+            if not (insp.has_table("route_plans") and insp.has_table(target_table)):
+                continue
+            repaired = conn.execute(text(
+                f"UPDATE {q('route_plans')} SET {q(fk_column)} = NULL "
+                f"WHERE {q(fk_column)} IS NOT NULL AND EXISTS ("
+                f"SELECT 1 FROM {q(target_table)} t "
+                f"WHERE t.{q('id')} = {q('route_plans')}.{q(fk_column)} "
+                f"AND t.{q('user_id')} <> {q('route_plans')}.{q('user_id')})"
+            ))
+            if getattr(repaired, "rowcount", 0):
+                print(f"[SECURITY] Rimossi {repaired.rowcount} riferimenti route_plans.{fk_column} cross-tenant")
 
         # Su PostgreSQL possiamo rendere il vincolo obbligatorio a livello database.
         if dialect.name.startswith("postgres"):
