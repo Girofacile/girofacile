@@ -10,7 +10,7 @@ function reportParams(){
   return new URLSearchParams({
     date_from: val("reportDateFrom") || "",
     date_to: val("reportDateTo") || "",
-    agent_id: val("reportAgent") || "",
+    agent_id: agentsFeatureEnabled() ? (val("reportAgent") || "") : "",
     customer_id: val("reportCustomer") || "",
     driver_id: val("reportDriver") || "",
     vehicle_id: val("reportVehicle") || "",
@@ -30,7 +30,7 @@ function fillSelectOptions(id, rows, labelFn, firstLabel){
 async function ensureReportFilters(){
   if(featureLockedForTab("report")) return;
   try{
-    if(!featureLockedForTab("agenti") && !agentsCache.length) await loadAgents();
+    if(agentsFeatureEnabled() && !agentsCache.length) await loadAgents();
     if(!customersCache.length) customersCache = await api("/api/customers?limit=1000");
     if(!driversCache.length) await loadDrivers();
     if(!vehiclesCache.length) await loadVehicles();
@@ -553,11 +553,46 @@ function boolVal(id){ const el=document.getElementById(id); return el ? el.value
 function val(id){ const el=document.getElementById(id); return el ? el.value : ""; }
 function set(id,v){ const el=document.getElementById(id); if(el) el.value = v ?? ""; }
 
-let settingsV41 = {delivery_signature_enabled:false};
+let settingsV41 = {delivery_signature_enabled:false, agents_enabled:false};
+
+function agentsFeatureEnabled(){
+  return !!settingsV41.agents_enabled && !featureLockedForTab("agenti");
+}
+
+function applyAgentsFeature(){
+  const enabled = agentsFeatureEnabled();
+  document.documentElement.dataset.gfAgents = enabled ? 'on' : 'off';
+  const toggle = document.getElementById('settingAgentsEnabled');
+  if(toggle){
+    toggle.checked = enabled;
+    toggle.disabled = !!featureLockedForTab('agenti');
+  }
+  if(!enabled){
+    agentsCache = [];
+    ['cAgent','customerFilterAgent','reportAgent'].forEach(id=>set(id,''));
+  }
+  ['cAgent','customerFilterAgent','reportAgent'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.disabled = !enabled;
+  });
+  updateReportFilterSummary();
+}
+
+async function refreshAgentsFeature(){
+  applyAgentsFeature();
+  await loadAgents();
+  await loadCustomers();
+  await loadCustomerPicker();
+  const filter = document.getElementById('reportAgent');
+  if(filter) filter.innerHTML = '<option value="">Tutti gli agenti</option><option value="interno">Cliente interno</option>';
+  await loadNotificationsV30(false);
+}
+
 
 async function loadSettingsV41(){
   try{
     settingsV41 = await api('/api/settings');
+    applyAgentsFeature();
     const toggle = document.getElementById('settingDeliverySignature');
     if(toggle) toggle.checked = !!settingsV41.delivery_signature_enabled;
     const state = document.getElementById('settingsSaveState');
@@ -573,8 +608,9 @@ async function saveSettingsV41(){
   const state = document.getElementById('settingsSaveState');
   if(state) state.textContent = 'Salvataggio impostazioni...';
   try{
-    settingsV41 = await api('/api/settings', {method:'PUT', body:JSON.stringify({delivery_signature_enabled: !!toggle?.checked})});
+    settingsV41 = await api('/api/settings', {method:'PUT', body:JSON.stringify({delivery_signature_enabled: !!toggle?.checked, agents_enabled: !!document.getElementById('settingAgentsEnabled')?.checked})});
     if(state) state.textContent = settingsV41.delivery_signature_enabled ? 'Firma cliente attivata nel portale autista.' : 'Firma cliente disattivata nel portale autista.';
+    await refreshAgentsFeature();
     toast('Impostazioni salvate.');
   }catch(e){
     if(state) state.textContent = 'Errore salvataggio: ' + e.message;
@@ -1504,6 +1540,7 @@ async function login(){
 document.getElementById("logoutBtn").onclick = async () => { await api("/api/logout", {method:"POST", body:"{}"}); location.reload(); };
 
 function showTab(name){
+  if(name === "agenti" && !agentsFeatureEnabled()) name = "settings";
   setTimeout(showCookieNoticeIfNeeded, 150);
   setTimeout(showCookieNoticeIfNeeded, 150);
   if(showLockedOrProceed(name)) return;
@@ -1517,7 +1554,7 @@ function showTab(name){
   if(name==="company") { loadCompanyProfile(); loadOnboardingStatus(false); }
   if(name==="dashboard-in-progress") loadDashboardInProgressPage();
   if(name==="giro") loadDashboardRoutes();
-  if(name==="clienti"){ loadCustomers(); if(!featureLockedForTab("agenti")) loadAgents(); }
+  if(name==="clienti"){ loadCustomers(); if(agentsFeatureEnabled()) loadAgents(); }
   if(name==="agenti") loadAgents();
   if(name==="report") loadReport();
   if(name==="depositi") loadDeposits();
@@ -1549,12 +1586,13 @@ async function initApp(){
   }
   document.getElementById("fuelPrice")?.addEventListener("input", updateDashboardStats);
   initRoutePlanningGateV68();
+  await loadSettingsV41();
   await loadUniversalFeaturesV89();
   loadProfilePanel();
   initAddressAutocomplete();
   initResourceAvailabilityControls();
   await loadDeposits(); await loadVehicles(); await loadDrivers();
-  if(!featureLockedForTab("agenti")) await loadAgents();
+  if(agentsFeatureEnabled()) await loadAgents();
   await loadCustomers(); await loadCustomerPicker();
   await refreshResourceAvailability();
   await loadDashboardRoutes();
@@ -2706,7 +2744,7 @@ function renderAgentOptions(){
 }
 
 async function loadAgents(){
-  if(featureLockedForTab("agenti")){ agentsCache = []; renderAgentOptions(); return; }
+  if(!agentsFeatureEnabled()){ agentsCache = []; renderAgentOptions(); return; }
   try{
     const params = new URLSearchParams({
       q: document.getElementById("agentSearch")?.value || "",
@@ -2866,7 +2904,7 @@ function applyCustomerModalGeocode(data){
 
 function customerPayloadFromModal(){
   return {
-    agent_id: val("cAgent") ? parseInt(val("cAgent")) : null,
+    ...(agentsFeatureEnabled() ? {agent_id: val("cAgent") ? parseInt(val("cAgent")) : null} : {}),
     codice_cliente: val("cCodice"),
     nome: val("cNome"),
     indirizzo: val("cIndirizzo"),
@@ -2915,8 +2953,8 @@ async function loadCustomers(){
   const provincia = document.getElementById("customerFilterProvincia")?.value || "";
   const ztl = document.getElementById("customerFilterZtl")?.value || "";
   const sponda = document.getElementById("customerFilterSponda")?.value || "";
-  const agent = document.getElementById("customerFilterAgent")?.value || "";
-  const params = new URLSearchParams({q, comune, provincia, ztl, sponda, agent, limit:"500"});
+  const agent_id = agentsFeatureEnabled() ? (val("customerFilterAgent") || "") : "";
+  const params = new URLSearchParams({q, comune, provincia, ztl, sponda, agent_id, limit:"500"});
   customersCache = await api("/api/customers?"+params.toString());
   const body = document.getElementById("customersBody");
   if(!body) return;
@@ -2924,7 +2962,7 @@ async function loadCustomers(){
   customersCache.forEach(x=>{
     const geo = x.stato_geocodifica || "da_verificare";
     const geoLabel = {verificato:"Verificato",da_verificare:"Da verificare",non_trovato:"Non trovato",manuale:"Manuale"}[geo] || geo;
-    body.innerHTML += `<tr><td>${esc(x.codice_cliente||"")}</td><td><strong>${esc(x.nome)}</strong><br><small>${esc(x.comune||"")} ${esc(x.provincia||"")}</small></td><td>${esc(x.agent_name||"Cliente interno")}</td><td>${esc(x.indirizzo)}</td><td>${fascia(x)}</td><td><span class="geo-badge ${geo}">${geoLabel}</span><br><button class="btn-link-small" onclick="verifyCustomerAddress(${x.id})">Verifica</button></td><td>${x.ztl?"Sì":"No"}</td><td>${x.sponda?"Sì":"No"}</td><td><button onclick="openCustomerModal(${x.id})">Modifica</button><button onclick="deleteCustomer(${x.id})">Elimina</button></td></tr>`;
+    body.innerHTML += `<tr><td>${esc(x.codice_cliente||"")}</td><td><strong>${esc(x.nome)}</strong><br><small>${esc(x.comune||"")} ${esc(x.provincia||"")}</small></td><td data-gf-agents-only>${esc(x.agent_name||"Cliente interno")}</td><td>${esc(x.indirizzo)}</td><td>${fascia(x)}</td><td><span class="geo-badge ${geo}">${geoLabel}</span><br><button class="btn-link-small" onclick="verifyCustomerAddress(${x.id})">Verifica</button></td><td>${x.ztl?"Sì":"No"}</td><td>${x.sponda?"Sì":"No"}</td><td><button onclick="openCustomerModal(${x.id})">Modifica</button><button onclick="deleteCustomer(${x.id})">Elimina</button></td></tr>`;
   });
 }
 function editCustomer(id, fromModal=false){
@@ -3027,7 +3065,7 @@ async function loadCustomerPicker(){
   box.innerHTML = rows.map(c=>{
     const already = deliveries.some(d=>String(d.customer_id||"")===String(c.id));
     return `<div class="picker-customer-row ${already ? 'already-added' : ''}">
-      <div><strong>${esc(c.codice_cliente||"")} ${esc(c.nome)}</strong><small>${esc(c.indirizzo)} · ${esc(c.comune||"")} ${esc(c.provincia||"")} · ${esc(c.agent_name||"Cliente interno")} · ${fascia(c)}</small></div>
+      <div><strong>${esc(c.codice_cliente||"")} ${esc(c.nome)}</strong><small>${esc(c.indirizzo)} · ${esc(c.comune||"")} ${esc(c.provincia||"")} · ${agentsFeatureEnabled() ? esc(c.agent_name||"Cliente interno") + " · " : ""}${fascia(c)}</small></div>
       <button onclick="quickAddCustomerToDelivery(${c.id})" ${already ? 'class="btn-secondary"' : ''}>${already ? 'Aggiunto' : '+ Aggiungi'}</button>
     </div>`;
   }).join("") || `<div class="empty-picker">Nessun cliente trovato con questi filtri</div>`;
@@ -4083,6 +4121,7 @@ let dashboardScheduledSelectedId = null;
 let dashboardCompletedSelectedId = null;
 
 function showTab(name){
+  if(name === "agenti" && !agentsFeatureEnabled()) name = "settings";
   if(showLockedOrProceed(name)) return;
   document.querySelectorAll(".tab").forEach(x=>x.classList.add("hidden"));
   const tab = document.getElementById("tab-"+name);
@@ -4096,7 +4135,7 @@ function showTab(name){
   if(name==="dashboard-in-progress") loadDashboardInProgressPage();
   if(name==="dashboard-completed") loadDashboardCompletedPage();
   if(name==="giro") loadDashboardRoutes();
-  if(name==="clienti"){ loadCustomers(); if(!featureLockedForTab("agenti")) loadAgents(); }
+  if(name==="clienti"){ loadCustomers(); if(agentsFeatureEnabled()) loadAgents(); }
   if(name==="agenti") loadAgents();
   if(name==="report") loadReport();
   if(name==="depositi") loadDeposits();
@@ -5632,10 +5671,11 @@ async function saveAllSettingsV893(){
   const signature=!!document.getElementById('settingDeliverySignature')?.checked;
   try{
     await api('/api/company-profile',{method:'PUT',body:JSON.stringify(features)});
-    settingsV41=await api('/api/settings',{method:'PUT',body:JSON.stringify({delivery_signature_enabled:signature})});
+    settingsV41=await api('/api/settings',{method:'PUT',body:JSON.stringify({delivery_signature_enabled:signature,agents_enabled:!!document.getElementById('settingAgentsEnabled')?.checked})});
     gfUniversalFeaturesV891={...gfUniversalFeaturesV891,...features};
     applyUniversalFeaturesV891();
     markSettingsCleanV893('Impostazioni salvate e applicate.');
+    await refreshAgentsFeature();
     toast('Impostazioni salvate.');
   }catch(e){
     gfSettingsDirtyV893=true;

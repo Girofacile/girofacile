@@ -11,6 +11,7 @@ from ..database import get_db
 from ..models import RoutePlan, User, DeliveryStatus
 from ..routers.routes import computed_route_status, route_status_label
 from ..services.plans import require_feature
+from ..services.agents_feature import agents_enabled
 from ..services.ai_assistant import ensure_company_ai_allowed, run_ai_text
 import json
 
@@ -108,6 +109,9 @@ def build_report_data(
     driver_id: str = "", vehicle_id: str = "",
     status: str = "",
 ) -> dict:
+    show_agents = agents_enabled(user)
+    if not show_agents:
+        agent_id = ""
     query = owned(db.query(RoutePlan), RoutePlan, user)
     if date_from:
         query = query.filter(RoutePlan.data_giro >= parse_date_value(date_from))
@@ -258,14 +262,14 @@ def build_report_data(
         },
         "charts": {
             "andamento": days,
-            "agenti": finalize_group(by_agent, 8),
+            "agenti": finalize_group(by_agent, 8) if show_agents else [],
             "autisti": finalize_group(by_driver, 8),
             "mezzi": finalize_group(by_vehicle, 8),
             "clienti": top_customers[:10],
             "stati": [{"nome": status_labels.get(k, k), "valore": v} for k, v in status_counts.items()],
         },
         "tables": {
-            "agenti": finalize_group(by_agent),
+            "agenti": finalize_group(by_agent) if show_agents else [],
             "autisti": finalize_group(by_driver),
             "mezzi": finalize_group(by_vehicle),
             "clienti": top_customers,

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="it">
+<html lang="it" data-gf-agents="off">
 <head>
 <link rel="icon" href="/favicon.ico?v=8968" sizes="any">
 <link rel="shortcut icon" href="/favicon.ico?v=8968">
@@ -10,7 +10,7 @@
 <meta charset="utf-8">
 <title>GiroFacile</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link href="/static/dashboard/css/core.css?v=v89_6_9" rel="stylesheet">
+<link href="/static/dashboard/css/core.css?v=agents_optional_1" rel="stylesheet">
 <link href="/static/dashboard/css/account.css?v=v89" rel="stylesheet">
 </head>
 <body>
@@ -776,14 +776,14 @@
           <div id="customerAdvancedFilters" class="customer-filters customer-filters-advanced hidden">
             <input id="customerFilterComune" placeholder="Comune / zona" oninput="loadCustomers()">
             <input id="customerFilterProvincia" placeholder="Provincia" oninput="loadCustomers()">
-            <select id="customerFilterAgent" onchange="loadCustomers()"><option value="">Agente tutti</option><option value="interno">Cliente interno</option></select>
+            <select data-gf-agents-only id="customerFilterAgent" onchange="loadCustomers()"><option value="">Agente tutti</option><option value="interno">Cliente interno</option></select>
             <select data-gf-feature="ztl" id="customerFilterZtl" onchange="loadCustomers()"><option value="">ZTL tutte</option><option value="true">Solo ZTL</option><option value="false">No ZTL</option></select>
             <select data-gf-feature="tail_lift" id="customerFilterSponda" onchange="loadCustomers()"><option value="">Sponda tutte</option><option value="true">Serve sponda</option><option value="false">No sponda</option></select>
             <button class="btn-secondary" onclick="clearCustomerFilters()">Pulisci filtri</button>
           </div>
           <div class="tableWrap">
             <table class="gf-customers-table-v892">
-              <thead><tr><th>Codice</th><th>Nome</th><th>Agente</th><th>Indirizzo</th><th data-gf-feature="time_windows">Scarico</th><th>Indirizzo</th><th data-gf-feature="ztl">ZTL</th><th data-gf-feature="tail_lift">Sponda</th><th></th></tr></thead>
+              <thead><tr><th>Codice</th><th>Nome</th><th data-gf-agents-only>Agente</th><th>Indirizzo</th><th data-gf-feature="time_windows">Scarico</th><th>Indirizzo</th><th data-gf-feature="ztl">ZTL</th><th data-gf-feature="tail_lift">Sponda</th><th></th></tr></thead>
               <tbody id="customersBody"></tbody>
             </table>
           </div>
@@ -861,7 +861,7 @@
             <div class="report-filter-grid">
               <div><label>Da data</label><input id="reportDateFrom" type="date" onchange="updateReportFilterSummary(); loadReport()"></div>
               <div><label>A data</label><input id="reportDateTo" type="date" onchange="updateReportFilterSummary(); loadReport()"></div>
-              <div><label>Agente</label><select id="reportAgent" onchange="updateReportFilterSummary(); loadReport()"><option value="">Tutti gli agenti</option><option value="interno">Cliente interno</option></select></div>
+              <div data-gf-agents-only><label>Agente</label><select id="reportAgent" onchange="updateReportFilterSummary(); loadReport()"><option value="">Tutti gli agenti</option><option value="interno">Cliente interno</option></select></div>
               <div><label>Cliente</label><select id="reportCustomer" onchange="updateReportFilterSummary(); loadReport()"><option value="">Tutti i clienti</option></select></div>
               <div><label>Autista</label><select id="reportDriver" onchange="updateReportFilterSummary(); loadReport()"><option value="">Tutti gli autisti</option></select></div>
               <div><label>Mezzo</label><select id="reportVehicle" onchange="updateReportFilterSummary(); loadReport()"><option value="">Tutti i mezzi</option></select></div>
@@ -889,7 +889,7 @@
         <div class="report-chart-grid">
           <section class="panel report-chart-card wide"><div class="panel-header report-chart-head"><div><h2>Andamento consegne e km</h2><p>Confronto tra numero consegne e chilometri nel periodo filtrato.</p></div></div><div id="reportLineChart" class="report-chart"></div></section>
           <section class="panel report-chart-card"><div class="panel-header report-chart-head"><div><h2>Costo carburante</h2><p>Costo stimato per giorno nel periodo selezionato.</p></div></div><div id="reportCostChart" class="report-chart"></div></section>
-          <section class="panel report-chart-card"><div class="panel-header"><h2>Distribuzione per agente</h2></div><div id="reportAgentDonut" class="report-chart"></div></section>
+          <section data-gf-agents-only class="panel report-chart-card"><div class="panel-header"><h2>Distribuzione per agente</h2></div><div id="reportAgentDonut" class="report-chart"></div></section>
           <section class="panel report-chart-card"><div class="panel-header"><h2>Performance autisti</h2></div><div id="reportDriversChart" class="report-chart"></div></section>
           <section class="panel report-chart-card"><div class="panel-header"><h2>Utilizzo mezzi</h2></div><div id="reportVehiclesChart" class="report-chart"></div></section>
           <section class="panel report-chart-card"><div class="panel-header"><h2>Top clienti</h2></div><div id="reportCustomersChart" class="report-chart"></div></section>
@@ -908,7 +908,7 @@
         </div>
 
         <div class="report-table-grid">
-          <section class="panel report-table-card">
+          <section data-gf-agents-only class="panel report-table-card">
             <div class="panel-header"><h2>Riepilogo per agente</h2></div>
             <div class="tableWrap"><table class="report-data-table"><thead><tr><th>Agente</th><th>Giri</th><th>Consegne</th><th>Km</th><th>Costo</th><th>Consegne/giro</th></tr></thead><tbody id="reportAgentsBody"></tbody></table></div>
           </section>
@@ -949,6 +949,16 @@
 
           <div class="settings-section-head gf-feature-head-v89"><div><h2>Funzionalità opzionali</h2><p>Attiva solo ciò che serve alla tua organizzazione. Le preferenze vengono salvate sul profilo azienda.</p></div></div>
           <div class="gf-feature-list-v89">
+            <div class="setting-row">
+              <div class="setting-copy">
+                <strong>Gestione agenti</strong>
+                <span>Abilita la sezione Agenti, il portale agenti, le assegnazioni dei clienti e i report per agente. Disattivandola, i nuovi clienti non avranno un agente; le associazioni esistenti saranno conservate. Disponibile nei piani che includono gli agenti.</span>
+              </div>
+              <label class="switch-toggle">
+                <input id="settingAgentsEnabled" type="checkbox" aria-label="Attiva gestione agenti" onchange="markSettingsDirtyV893()">
+                <span class="switch-slider"></span>
+              </label>
+            </div>
             <div class="setting-row">
               <div class="setting-copy">
                 <strong>Finestre orarie</strong>
@@ -1475,7 +1485,7 @@
         <div><label>Telefono</label><input id="cTelefono" placeholder="Telefono"></div>
         <div><label>Email</label><input id="cEmail" type="email" placeholder="Email"></div>
         <div><label>Referente</label><input id="cReferente" placeholder="Referente"></div>
-        <div><label>Agente</label><select id="cAgent"><option value="">Cliente interno</option></select></div>
+        <div data-gf-agents-only><label>Agente</label><select id="cAgent"><option value="">Cliente interno</option></select></div>
       </div>
     </section>
 
@@ -1731,7 +1741,7 @@
   </div>
 </div>
 
-<script src="/static/dashboard/js/core.js?v=v89_5"></script>
+<script src="/static/dashboard/js/core.js?v=agents_optional_1"></script>
 
 <script>
 function toggleLoginPassword(){

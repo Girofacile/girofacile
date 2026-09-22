@@ -14,6 +14,7 @@ from ..database import get_db
 from ..models import Agent, AgentAccount, Customer, Deposit, Driver, DriverAccount, PasswordResetToken, RoutePlan, User, Vehicle, SuperAdminCollaborator
 from ..schemas import SignupIn
 from ..services.plans import user_plan_info
+from ..services.agents_feature import require_agents_enabled
 from ..services.sector_config import get_sector_config, normalize_sector_key, public_sector_options
 
 router = APIRouter()
@@ -265,6 +266,8 @@ async def login(payload: dict, response: Response, db: Session = Depends(get_db)
     # 3) Account agente
     agent_account = db.query(AgentAccount).filter(func.lower(AgentAccount.email) == identifier_norm).first()
     if agent_account and verify_password(password, agent_account.password_hash):
+        agent = db.get(Agent, agent_account.agent_id)
+        require_agents_enabled(db.get(User, agent.user_id) if agent else None)
         if not agent_account.is_active:
             raise HTTPException(403, "Account agente disabilitato")
         if password_needs_rehash(agent_account.password_hash):
@@ -367,6 +370,7 @@ def me(request: Request, db: Session = Depends(get_db)):
     agent_account = _read_agent_session(request.cookies.get("agent_session"), db)
     if agent_account:
         agent = db.get(Agent, agent_account.agent_id)
+        require_agents_enabled(db.get(User, agent.user_id) if agent else None)
         return {
             "authenticated": True,
             "role": "agent",

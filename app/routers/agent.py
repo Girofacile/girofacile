@@ -18,6 +18,7 @@ from ..models import Agent, AgentAccount, AgentSetupToken, Customer, User
 from ..schemas import CustomerIn
 from ..services.geocoding import geocode_customer
 from ..routers.customers import customer_to_dict
+from ..services.agents_feature import require_agents_enabled
 
 router = APIRouter(prefix="/api/agent", tags=["agent"])
 
@@ -66,6 +67,7 @@ def ensure_agent_owner(account: AgentAccount, db: Session) -> tuple[Agent, User]
     user = db.get(User, agent.user_id)
     if not user:
         raise HTTPException(404, "Azienda non trovata")
+    require_agents_enabled(user)
     return agent, user
 
 
@@ -82,6 +84,7 @@ def get_setup_info(token: str, db: Session = Depends(get_db)):
     if not agent:
         raise HTTPException(404, "Agente non trovato")
     company = db.get(User, agent.user_id) if agent.user_id else None
+    require_agents_enabled(company)
     return {
         "agent_name": agent_full_name(agent),
         "email": agent.email,
@@ -107,6 +110,7 @@ def complete_setup(token: str, payload: dict, response: Response, db: Session = 
     agent = db.get(Agent, st.agent_id)
     if not agent or not agent.email:
         raise HTTPException(400, "Email agente non configurata")
+    require_agents_enabled(db.get(User, agent.user_id))
     email = agent.email.strip().lower()
     existing = db.query(AgentAccount).filter(AgentAccount.agent_id == agent.id).first()
     if existing:
@@ -133,12 +137,12 @@ def agent_login(payload: dict, response: Response, db: Session = Depends(get_db)
         raise HTTPException(401, "Email o password non corretti")
     if not account.is_active:
         raise HTTPException(403, "Account disabilitato")
+    agent, user = ensure_agent_owner(account, db)
     if password_needs_rehash(account.password_hash):
         account.password_hash = hash_password(password)
     account.last_login = datetime.utcnow()
     db.commit()
     response.set_cookie("agent_session", make_session_token(account), **cookie_options(60*60*24*30))
-    agent, user = ensure_agent_owner(account, db)
     return {"ok": True, "agent_id": agent.id, "agent_name": agent_full_name(agent), "email": account.email, "company_name": user.company_name}
 
 

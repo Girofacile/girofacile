@@ -4467,3 +4467,8 @@ html[data-gf-tail-lift="off"] .gf-vehicles-table-v892 td:nth-child(4) { display:
   background: #075dff !important;
   padding: 0 !important;
 }
+
+/* Company-level optional agent management. */
+html[data-gf-agents="off"] [data-gf-agents-only],
+html[data-gf-agents="off"] .nav-item[data-tab="agenti"],
+html[data-gf-agents="off"] #tab-agenti { display:none!important; }

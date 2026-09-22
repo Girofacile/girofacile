@@ -10,7 +10,7 @@ from ..database import get_db
 from ..core.config import APP_BASE_URL
 from ..models import Agent, AgentAccount, AgentSetupToken, Customer, User
 from ..schemas import AgentIn
-from ..services.plans import require_feature
+from ..services.agents_feature import require_agents_enabled
 from ..services.email import send_agent_invitation
 
 router = APIRouter(prefix="/api/agents", tags=["agents"])
@@ -110,7 +110,7 @@ def list_agents(
     q: str = "", stato: str = "",
     db: Session = Depends(get_db), user: User = Depends(current_user)
 ):
-    require_feature(user, "has_agents")
+    require_agents_enabled(user)
     query = owned(db.query(Agent), Agent, user)
     if q:
         like = f"%{q}%"
@@ -129,7 +129,7 @@ def list_agents(
 
 @router.post("")
 def create_agent(data: AgentIn, db: Session = Depends(get_db), user: User = Depends(current_user)):
-    require_feature(user, "has_agents")
+    require_agents_enabled(user)
     payload = data.model_dump()
     payload["nome"] = (payload.get("nome") or "").strip() or "Agente"
     payload["email"] = normalize_email(payload.get("email"))
@@ -147,7 +147,7 @@ def create_agent(data: AgentIn, db: Session = Depends(get_db), user: User = Depe
 
 @router.put("/{item_id}")
 def update_agent(item_id: int, data: AgentIn, db: Session = Depends(get_db), user: User = Depends(current_user)):
-    require_feature(user, "has_agents")
+    require_agents_enabled(user)
     item = owned(db.query(Agent), Agent, user).filter(Agent.id == item_id).first()
     if not item:
         raise HTTPException(404, "Agente non trovato")
@@ -171,7 +171,7 @@ def update_agent(item_id: int, data: AgentIn, db: Session = Depends(get_db), use
 
 @router.post("/{item_id}/invite")
 def invite_agent(item_id: int, db: Session = Depends(get_db), user: User = Depends(current_user)):
-    require_feature(user, "has_agents")
+    require_agents_enabled(user)
     item = owned(db.query(Agent), Agent, user).filter(Agent.id == item_id).first()
     if not item:
         raise HTTPException(404, "Agente non trovato")
@@ -183,7 +183,7 @@ def invite_agent(item_id: int, db: Session = Depends(get_db), user: User = Depen
 
 @router.delete("/{item_id}")
 def delete_agent(item_id: int, db: Session = Depends(get_db), user: User = Depends(current_user)):
-    require_feature(user, "has_agents")
+    require_agents_enabled(user)
     item = owned(db.query(Agent), Agent, user).filter(Agent.id == item_id).first()
     if not item:
         raise HTTPException(404, "Agente non trovato")

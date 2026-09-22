@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from ..core.dependencies import current_user
 from ..database import get_db
+from ..services.agents_feature import agents_enabled
 from ..models import (
     Agent,
     ChatMessage,
@@ -140,7 +141,7 @@ def sync_operational_notifications(db: Session, user: User) -> None:
         .limit(50)
         .all()
     )
-    for customer in agent_customers:
+    for customer in agent_customers if agents_enabled(user) else []:
         agent = db.get(Agent, customer.agent_id) if customer.agent_id else None
         _ensure_notification(
             db,
@@ -237,17 +238,22 @@ def list_notifications(
 ):
     sync_operational_notifications(db, user)
     q = db.query(Notification).filter(Notification.user_id == user.id)
+    if not agents_enabled(user):
+        q = q.filter(Notification.type != "agent_customer")
     if unread_only:
         q = q.filter(Notification.is_read.is_(False))
     rows = q.order_by(Notification.is_read.asc(), Notification.created_at.desc()).limit(max(1, min(limit, 100))).all()
-    unread = db.query(Notification).filter(Notification.user_id == user.id, Notification.is_read.is_(False)).count()
+    unread = q.filter(Notification.is_read.is_(False)).count()
     return {"unread": unread, "items": [_notif_payload(n) for n in rows]}
 
 
 @router.get("/count")
 def notification_count(db: Session = Depends(get_db), user: User = Depends(current_user)):
     sync_operational_notifications(db, user)
-    unread = db.query(Notification).filter(Notification.user_id == user.id, Notification.is_read.is_(False)).count()
+    q = db.query(Notification).filter(Notification.user_id == user.id, Notification.is_read.is_(False))
+    if not agents_enabled(user):
+        q = q.filter(Notification.type != "agent_customer")
+    unread = q.count()
     return {"unread": unread}
 
 

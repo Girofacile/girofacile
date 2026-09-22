@@ -54,6 +54,7 @@ class User(Base):
 
     # --- Impostazioni operative aziendali ---
     delivery_signature_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    agents_enabled: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
 
 
 class BillingInvoice(Base):

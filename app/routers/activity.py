@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 
 from ..core.dependencies import current_user
 from ..database import get_db
+from ..services.agents_feature import agents_enabled
 from ..models import (
     ActivityEvent,
     Agent,
@@ -172,7 +173,7 @@ def sync_activity_events(db: Session, user: User) -> None:
         )
 
     # Agenti e autisti creati.
-    for agent in db.query(Agent).filter(Agent.user_id == user_id, Agent.deleted_at.is_(None)).order_by(Agent.id.desc()).limit(200).all():
+    for agent in (db.query(Agent).filter(Agent.user_id == user_id, Agent.deleted_at.is_(None)).order_by(Agent.id.desc()).limit(200).all() if agents_enabled(user) else []):
         log_activity(
             db, user_id, f"agent_created:{agent.id}", "agent",
             "Agente creato",
@@ -193,7 +194,7 @@ def sync_activity_events(db: Session, user: User) -> None:
         )
 
     # Clienti collegati ad agenti.
-    for customer in db.query(Customer).filter(Customer.user_id == user_id, Customer.agent_id.isnot(None), Customer.deleted_at.is_(None)).order_by(Customer.id.desc()).limit(250).all():
+    for customer in (db.query(Customer).filter(Customer.user_id == user_id, Customer.agent_id.isnot(None), Customer.deleted_at.is_(None)).order_by(Customer.id.desc()).limit(250).all() if agents_enabled(user) else []):
         agent = db.get(Agent, customer.agent_id) if customer.agent_id else None
         log_activity(
             db, user_id, f"agent_customer:{customer.id}", "customer",

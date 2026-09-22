@@ -16,6 +16,7 @@ from ..schemas import CustomerIn
 from ..services.geocoding import apply_geocode, geocode_customer
 from ..services import distance_cache as dc
 from ..services.plans import check_customer_limit
+from ..services.agents_feature import agents_enabled
 from ..services.api_usage import log_api_usage
 
 router = APIRouter(prefix="/api/customers", tags=["customers"])
@@ -110,6 +111,8 @@ def list_customers(
         query = query.filter(Customer.provincia.ilike(f"%{provincia}%"))
     if comune:
         query = query.filter(Customer.comune.ilike(f"%{comune}%"))
+    if not agents_enabled(user):
+        agent_id = ""
     if agent_id == "interno":
         query = query.filter(Customer.agent_id.is_(None))
     elif agent_id:
@@ -129,6 +132,8 @@ def list_customers(
 def create_customer(data: CustomerIn, db: Session = Depends(get_db), user: User = Depends(current_user)):
     check_customer_limit(user, db)
     payload = data.model_dump()
+    if not agents_enabled(user):
+        payload.pop("agent_id", None)
     payload["codice_cliente"] = normalize_optional(payload.get("codice_cliente"))
     ensure_customer_code_unique(db, user, payload.get("codice_cliente"))
     if payload.get("agent_id"):
@@ -154,6 +159,8 @@ def update_customer(item_id: int, data: CustomerIn, db: Session = Depends(get_db
         raise HTTPException(404, "Cliente non trovato")
     old_key = "|".join([item.indirizzo or "", item.comune or "", item.provincia or ""]).strip().lower()
     payload = data.model_dump()
+    if not agents_enabled(user):
+        payload.pop("agent_id", None)
     payload["codice_cliente"] = normalize_optional(payload.get("codice_cliente"))
     ensure_customer_code_unique(db, user, payload.get("codice_cliente"), exclude_id=item.id)
     if payload.get("agent_id"):
@@ -216,6 +223,8 @@ def verify_customer_address_preview(data: CustomerIn, db: Session = Depends(get_
     mostrare l'indirizzo corretto, latitudine e longitudine prima di salvare.
     """
     payload = data.model_dump()
+    if not agents_enabled(user):
+        payload.pop("agent_id", None)
 
     # I campi Time nel modello SQLAlchemy richiedono oggetti datetime.time,
     # non stringhe tipo "08:00". Convertiamo prima di creare Customer temporaneo.
@@ -323,7 +332,7 @@ async def import_customers(
     def b(x):
         return str(x).strip().lower() in ["1", "si", "sì", "yes", "true", "vero"]
 
-    agents = owned(db.query(Agent), Agent, user).all()
+    agents = owned(db.query(Agent), Agent, user).all() if agents_enabled(user) else []
     agent_lookup_by_code = {str(a.codice_agente or "").strip().lower(): a.id for a in agents if a.codice_agente}
     agent_lookup_by_name = {agent_full_name(a).strip().lower(): a.id for a in agents}
 
@@ -348,7 +357,8 @@ async def import_customers(
         item.indirizzo = indirizzo
         codice_agente = str(get(row, "codice_agente", "") or "").strip().lower()
         agente_nome = str(get(row, "agente", "") or "").strip().lower()
-        item.agent_id = agent_lookup_by_code.get(codice_agente) or agent_lookup_by_name.get(agente_nome) or None
+        if agents_enabled(user):
+            item.agent_id = agent_lookup_by_code.get(codice_agente) or agent_lookup_by_name.get(agente_nome) or None
         item.comune = get(row, "comune")
         item.provincia = get(row, "provincia")
         item.telefono = str(get(row, "telefono", "") or "")
