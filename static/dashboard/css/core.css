@@ -4455,12 +4455,22 @@ html[data-gf-tail-lift="off"] .gf-vehicles-table-v892 td:nth-child(4) { display:
 
 /* GiroFacile V89.6.9 - Fix orientamento/logo sidebar */
 .brand-logo-img,
-.login-card-brand img,
 .brand-login img {
   transform: none !important;
   rotate: 0deg !important;
   object-fit: contain !important;
   object-position: center center !important;
+}
+
+.login-card-brand img {
+  transform: none !important;
+  rotate: 0deg !important;
+  object-fit: cover !important;
+  object-position: center !important;
+  flex-shrink: 0;
+  padding: 0 !important;
+  border: 0 !important;
+  box-shadow: none !important;
 }
 
 .brand-logo-img {
