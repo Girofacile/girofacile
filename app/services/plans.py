@@ -106,15 +106,16 @@ def require_feature(user: User, feature: str):
         )
 
 
-def check_customer_limit(user: User, db: Session):
+def check_customer_limit(user: User, db: Session, additional: int = 1):
     """Controlla se l'utente ha raggiunto il limite clienti del piano."""
     require_active_plan(user)
     limits = get_plan_limits(user.plan or "starter")
+    db.query(User).filter(User.id == user.id).with_for_update().first()
     max_c = limits.get("max_customers")
     if max_c is None:
         return  # illimitato
     count = db.query(Customer).filter(Customer.user_id == user.id, Customer.deleted_at.is_(None)).count()
-    if count >= max_c:
+    if additional > 0 and count + additional > max_c:
         raise HTTPException(
             status_code=403,
             detail=f"Hai raggiunto il limite di {max_c} clienti per il piano {limits['name']}. Effettua l'upgrade per aggiungerne altri."
@@ -163,15 +164,17 @@ def check_driver_limit(user: User, db: Session):
         )
 
 
-def check_daily_route_limit(user: User, db: Session, data_giro: str):
+def check_daily_route_limit(user: User, db: Session, data_giro: str, exclude_route_id: int | None = None):
     require_active_plan(user)
     limits = get_plan_limits(user.plan or "starter")
+    db.query(User).filter(User.id == user.id).with_for_update().first()
     max_r = limits.get("max_routes_per_day")
     if max_r is None:
         return
     count = (
         db.query(RoutePlan)
         .filter(RoutePlan.user_id == user.id, RoutePlan.data_giro == parse_date_value(data_giro))
+        .filter(RoutePlan.id != exclude_route_id if exclude_route_id is not None else True)
         .count()
     )
     if count >= max_r:

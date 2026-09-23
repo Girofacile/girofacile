@@ -8,7 +8,7 @@ from ..core.dependencies import current_user, owned
 from ..core.utils import local_now, local_today, local_today_iso, minutes_from_hhmm, parse_date_value, parse_time_value, date_to_iso, time_to_hhmm
 from ..database import get_db
 from ..models import Customer, Delivery, DeliveryStatus, Deposit, Driver, RoutePlan, User, Vehicle, ChatMessage
-from ..optimizer import optimize_route, recalculate_manual_route, google_route_polyline
+from ..optimizer import optimize_route, recalculate_manual_route, google_route_polyline, validate_vehicle_load
 from ..schemas import ManualRoutePlanIn, RoutePlanIn
 from ..services.plans import check_daily_route_limit
 from ..services.error_monitor import log_exception
@@ -96,6 +96,24 @@ def _validate_route_tenant_scope(db, user: User, data, deliveries: list[dict]):
     driver = _require_owned_entity(db, Driver, user, data.driver_id, "Autista", optional=True)
     _enrich_owned_deliveries(db, user, deliveries)
     return deposit, vehicle, driver
+
+
+def _apply_route_preferences(user, deliveries):
+    # V89.1: se le fasce orarie sono disattivate a livello azienda, il motore
+    # le ignora completamente anche se restano salvate nell'anagrafica cliente.
+    # In questo modo riattivando la funzione i dati storici tornano disponibili.
+    if not bool(getattr(user, "has_time_windows", True)):
+        for delivery in deliveries:
+            delivery["scarico_mattina_da"] = None
+            delivery["scarico_mattina_a"] = None
+            delivery["scarico_pomeriggio_da"] = None
+            delivery["scarico_pomeriggio_a"] = None
+    if not bool(getattr(user, "has_ztl", False)):
+        for delivery in deliveries:
+            delivery["ztl"] = False
+    if not bool(getattr(user, "needs_tail_lift", False)):
+        for delivery in deliveries:
+            delivery["sponda"] = False
 
 
 def _is_route_api_configuration_error(exc: Exception) -> bool:
@@ -298,6 +316,7 @@ def build_vehicle_dict(vehicle):
     return {
         "id": vehicle.id, "nome": vehicle.nome, "targa": vehicle.targa,
         "ha_sponda": bool(vehicle.ha_sponda), "accesso_ztl": bool(vehicle.accesso_ztl),
+        "capacita_kg": vehicle.capacita_kg, "capacita_colli": vehicle.capacita_colli,
     }
 
 
@@ -387,6 +406,7 @@ def serialize_route(plan):
 
 
 def save_route_result(db, user, data, result, vehicle, route_id=None):
+    check_daily_route_limit(user, db, data.data_giro, exclude_route_id=route_id)
     # Ultima barriera prima della persistenza: anche se un nuovo endpoint futuro
     # dimenticasse la validazione iniziale, una consegna non può mantenere il
     # riferimento a un cliente appartenente a un'altra azienda.
@@ -410,6 +430,10 @@ def save_route_result(db, user, data, result, vehicle, route_id=None):
     litri = primary_qty
     unit = "kg" if fuel_type == "metano" else ("kWh" if electric_only else "L")
     plan = owned(db.query(RoutePlan), RoutePlan, user).filter(RoutePlan.id == route_id).first() if route_id else None
+    if route_id and not plan:
+        raise HTTPException(404, "Giro non trovato")
+    if plan and computed_route_status(plan) not in ("bozza", "programmato"):
+        raise HTTPException(400, "Non puoi ricalcolare un giro avviato, completato o annullato")
     if not plan:
         plan = RoutePlan(user_id=user.id)
         db.add(plan)
@@ -515,24 +539,10 @@ def create_and_optimize_route(
     check_daily_route_limit(user, db, data.data_giro)
     deliveries = [c.model_dump() for c in data.consegne]
     deposit, vehicle, _driver = _validate_route_tenant_scope(db, user, data, deliveries)
-    # V89.1: se le fasce orarie sono disattivate a livello azienda, il motore
-    # le ignora completamente anche se restano salvate nell'anagrafica cliente.
-    # In questo modo riattivando la funzione i dati storici tornano disponibili.
-    if not bool(getattr(user, "has_time_windows", True)):
-        for delivery in deliveries:
-            delivery["scarico_mattina_da"] = None
-            delivery["scarico_mattina_a"] = None
-            delivery["scarico_pomeriggio_da"] = None
-            delivery["scarico_pomeriggio_a"] = None
-    if not bool(getattr(user, "has_ztl", False)):
-        for delivery in deliveries:
-            delivery["ztl"] = False
-    if not bool(getattr(user, "needs_tail_lift", False)):
-        for delivery in deliveries:
-            delivery["sponda"] = False
+    _apply_route_preferences(user, deliveries)
     started_api = time.perf_counter()
     try:
-        result = optimize_route(db, deposit, deliveries, build_vehicle_dict(vehicle), data.rientro_deposito, data.orario_partenza)
+        result = optimize_route(db, deposit, deliveries, build_vehicle_dict(vehicle), data.rientro_deposito, data.orario_partenza, route_date=data.data_giro)
         log_api_usage(db, user_id=user.id, service="google_routes_matrix", action="Calcolo giro", endpoint="/api/routes/optimize", status="success", message=f"{len(deliveries)} consegne", response_ms=int((time.perf_counter()-started_api)*1000))
     except ValueError as e:
         log_api_usage(db, user_id=user.id, service="google_routes_matrix", action="Calcolo giro", endpoint="/api/routes/optimize", status="failed", message=str(e), response_ms=int((time.perf_counter()-started_api)*1000))
@@ -573,9 +583,11 @@ def recalc_manual_route(
     ensure_not_past_route_date(data.data_giro)
     deliveries = [c.model_dump() for c in data.consegne]
     deposit, vehicle, _driver = _validate_route_tenant_scope(db, user, data, deliveries)
+    check_daily_route_limit(user, db, data.data_giro, exclude_route_id=data.route_id)
+    _apply_route_preferences(user, deliveries)
     started_api = time.perf_counter()
     try:
-        result = recalculate_manual_route(db, deposit, deliveries, build_vehicle_dict(vehicle), data.rientro_deposito, data.orario_partenza)
+        result = recalculate_manual_route(db, deposit, deliveries, build_vehicle_dict(vehicle), data.rientro_deposito, data.orario_partenza, route_date=data.data_giro)
         log_api_usage(db, user_id=user.id, service="google_routes_matrix", action="Ricalcolo manuale giro", endpoint="/api/routes/recalculate-manual", status="success", message=f"{len(deliveries)} consegne", response_ms=int((time.perf_counter()-started_api)*1000))
     except ValueError as e:
         log_api_usage(db, user_id=user.id, service="google_routes_matrix", action="Ricalcolo manuale giro", endpoint="/api/routes/recalculate-manual", status="failed", message=str(e), response_ms=int((time.perf_counter()-started_api)*1000))
@@ -743,6 +755,12 @@ def program_route(
     status = computed_route_status(plan)
     if status not in ("bozza", "programmato"):
         raise HTTPException(400, "Puoi programmare solo un giro non ancora avviato.")
+    check_daily_route_limit(user, db, plan.data_giro, exclude_route_id=plan.id)
+    _check_resource_overlap(db, user, plan, minutes_from_hhmm(plan.orario_partenza) or 0, (minutes_from_hhmm(plan.orario_partenza) or 0) + int(plan.totale_minuti or 0), exclude_route_id=plan.id)
+    try:
+        validate_vehicle_load([{"peso_kg": d.peso_kg, "colli": d.colli} for d in plan.deliveries], build_vehicle_dict(plan.vehicle))
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
     plan.status = "programmato"
     plan.completed_at = None
     plan.cancelled_at = None
@@ -858,6 +876,7 @@ def get_route_map_data(route_id: int, db: Session = Depends(get_db), user: User 
             route_points,
             return_depot=bool(plan.rientro_deposito),
             start_time=time_to_hhmm(plan.orario_partenza) or "08:00",
+            route_date=plan.data_giro,
             db=db,
         )
 

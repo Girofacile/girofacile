@@ -393,6 +393,10 @@ def migrate_database():
         add_column("users", "stripe_customer_id", sql_type(String(200)))
         add_column("users", "stripe_subscription_id", sql_type(String(200)))
         add_column("users", "delivery_signature_enabled", sql_type(Boolean()), "0" if dialect.name == "sqlite" else "false")
+        if "agents_enabled" not in table_columns("users"):
+            add_column("users", "agents_enabled", sql_type(Boolean()), "0" if dialect.name == "sqlite" else "false")
+            with engine.begin() as conn:
+                conn.execute(text("UPDATE users SET agents_enabled = true WHERE EXISTS (SELECT 1 FROM agents WHERE agents.user_id = users.id AND agents.deleted_at IS NULL)"))
 
     if insp.has_table("delivery_statuses"):
         add_column("delivery_statuses", "signature_data", sql_type(Text()))

@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from ..core.dependencies import current_user, owned
 from ..core.utils import time_to_hhmm, parse_time_value
 from ..database import get_db
+from ..services.customer_import import read_customer_import, preflight_customer_import
 from ..models import Agent, Customer, User
 from ..routers.agents import agent_full_name
 from ..schemas import CustomerIn
@@ -317,11 +318,8 @@ async def import_customers(
     file: UploadFile = File(...),
     db: Session = Depends(get_db), user: User = Depends(current_user),
 ):
-    name = file.filename or "import"
-    content = await file.read()
-    tmp = Path("/tmp") / name
-    tmp.write_bytes(content)
-    df = pd.read_csv(tmp) if name.lower().endswith(".csv") else pd.read_excel(tmp)
+    df = await read_customer_import(file)
+    preflight_customer_import(df, db, user)
     created, updated = 0, 0
 
     def get(row, col, default=None):

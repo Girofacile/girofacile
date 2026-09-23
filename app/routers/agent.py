@@ -14,11 +14,13 @@ from ..core.http_security import cookie_options
 from ..core.security import hash_password as secure_hash_password, password_needs_rehash, validate_password_strength, verify_password
 from ..core.utils import time_to_hhmm, parse_time_value
 from ..database import get_db
+from ..services.customer_import import read_customer_import, preflight_customer_import
 from ..models import Agent, AgentAccount, AgentSetupToken, Customer, User
 from ..schemas import CustomerIn
 from ..services.geocoding import geocode_customer
 from ..routers.customers import customer_to_dict
 from ..services.agents_feature import require_agents_enabled
+from ..services.plans import check_customer_limit
 
 router = APIRouter(prefix="/api/agent", tags=["agent"])
 
@@ -184,7 +186,8 @@ def list_agent_customers(q: str = "", db: Session = Depends(get_db), account: Ag
 
 @router.post("/customers")
 def create_agent_customer(data: CustomerIn, db: Session = Depends(get_db), account: AgentAccount = Depends(get_current_agent)):
-    agent, _ = ensure_agent_owner(account, db)
+    agent, user = ensure_agent_owner(account, db)
+    check_customer_limit(user, db)
     payload = data.model_dump()
     for _f in ["scarico_mattina_da", "scarico_mattina_a", "scarico_pomeriggio_da", "scarico_pomeriggio_a"]:
         payload[_f] = parse_time_value(payload.get(_f))
@@ -261,12 +264,9 @@ def verify_agent_customer_address_preview(data: CustomerIn, db: Session = Depend
 
 @router.post("/customers/import")
 async def import_agent_customers(file: UploadFile = File(...), db: Session = Depends(get_db), account: AgentAccount = Depends(get_current_agent)):
-    agent, _ = ensure_agent_owner(account, db)
-    name = file.filename or "import"
-    content = await file.read()
-    tmp = Path("/tmp") / f"agent_{agent.id}_{secrets.token_hex(4)}_{name}"
-    tmp.write_bytes(content)
-    df = pd.read_csv(tmp) if name.lower().endswith(".csv") else pd.read_excel(tmp)
+    agent, user = ensure_agent_owner(account, db)
+    df = await read_customer_import(file)
+    preflight_customer_import(df, db, user, agent_id=agent.id)
     created, updated = 0, 0
 
     def get(row, col, default=None):

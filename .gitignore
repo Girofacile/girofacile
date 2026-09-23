@@ -46,3 +46,4 @@ Thumbs.db
 *.bak
 *_BACKUP*
 *_backup*
+!tests/test_backup_restore_integration.py

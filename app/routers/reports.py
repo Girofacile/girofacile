@@ -277,7 +277,7 @@ def build_report_data(
         },
         "insights": [
             {"titolo": "Media consegne per giro", "testo": f"{round(total_deliveries / total_routes, 2) if total_routes else 0} consegne medie per giro nel periodo selezionato."},
-            {"titolo": "Costo medio consegna", "testo": f"€ {round(total_cost / total_deliveries, 2) if total_deliveries else 0} di carburante consuntivo per consegna."},
+            {"titolo": "Costo medio consegna", "testo": f"€ {round(total_cost / total_deliveries, 2) if total_deliveries else 0} di energia stimata per consegna (personale, pedaggi e manutenzione esclusi)."},
             {"titolo": "Utilizzo risorse", "testo": f"{len(by_driver)} autisti e {len(by_vehicle)} mezzi presenti nei giri completati filtrati."},
         ],
     }
@@ -336,7 +336,7 @@ def reports_export(
     data = build_report_data(db, user, date_from, date_to, agent_id, customer_id, driver_id, vehicle_id, status)
     output = io.StringIO()
     writer = csv.writer(output, delimiter=";")
-    writer.writerow(["Data", "Giro", "Stato", "Autista", "Mezzo", "Consegne", "Km", "Ore", "Litri", "Costo carburante"])
+    writer.writerow(["Data", "Giro", "Stato", "Autista", "Mezzo", "Consegne", "Km pianificati", "Ore rilevate o stimate", "Litri stimati", "Costo energetico stimato"])
     for row in data["tables"]["giri"]:
         writer.writerow([row["data_giro"], row["nome"], row["status_label"], row["driver_name"], row["vehicle_name"], row["consegne"], row["km"], row["ore"], row["litri"], row["costo"]])
     return Response(

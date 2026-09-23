@@ -1,319 +1,3 @@
-
-
-function fmtNumber(n, digits=0){
-  const num = Number(n || 0);
-  return num.toLocaleString("it-IT", {minimumFractionDigits:digits, maximumFractionDigits:digits});
-}
-function fmtMoney(n){ return "€ " + fmtNumber(n, 2); }
-
-function reportParams(){
-  return new URLSearchParams({
-    date_from: val("reportDateFrom") || "",
-    date_to: val("reportDateTo") || "",
-    agent_id: agentsFeatureEnabled() ? (val("reportAgent") || "") : "",
-    customer_id: val("reportCustomer") || "",
-    driver_id: val("reportDriver") || "",
-    vehicle_id: val("reportVehicle") || "",
-    status: val("reportStatus") || ""
-  });
-}
-
-function fillSelectOptions(id, rows, labelFn, firstLabel){
-  const sel = document.getElementById(id);
-  if(!sel) return;
-  const current = sel.value || "";
-  sel.innerHTML = `<option value="">${firstLabel}</option>`;
-  rows.forEach(x=>{ sel.innerHTML += `<option value="${x.id}">${esc(labelFn(x))}</option>`; });
-  if(current) sel.value = current;
-}
-
-async function ensureReportFilters(){
-  if(featureLockedForTab("report")) return;
-  try{
-    if(agentsFeatureEnabled() && !agentsCache.length) await loadAgents();
-    if(!customersCache.length) customersCache = await api("/api/customers?limit=1000");
-    if(!driversCache.length) await loadDrivers();
-    if(!vehiclesCache.length) await loadVehicles();
-  }catch(e){}
-  const ag = document.getElementById("reportAgent");
-  if(ag && ag.options.length <= 2){
-    const cur = ag.value;
-    ag.innerHTML = `<option value="">Tutti gli agenti</option><option value="interno">Cliente interno</option>`;
-    agentsCache.forEach(a=> ag.innerHTML += `<option value="${a.id}">${esc(agentDisplayName(a))}</option>`);
-    ag.value = cur || "";
-  }
-  fillSelectOptions("reportCustomer", customersCache, c => `${c.codice_cliente ? c.codice_cliente + " · " : ""}${c.nome}`, "Tutti i clienti");
-  fillSelectOptions("reportDriver", driversCache, d => driverFullName(d), "Tutti gli autisti");
-  fillSelectOptions("reportVehicle", vehiclesCache, v => `${v.nome}${v.targa ? " · " + v.targa : ""}`, "Tutti i mezzi");
-  updateReportFilterSummary();
-}
-
-function resetReportFilters(){
-  if(showLockedOrProceed("report")) return;
-  ["reportDateFrom","reportDateTo","reportAgent","reportCustomer","reportDriver","reportVehicle","reportStatus"].forEach(id=>set(id,""));
-  updateReportFilterSummary();
-  loadReport();
-}
-
-function toggleReportFilters(forceOpen){
-  const panel = document.getElementById("reportFilterPanel");
-  const btn = document.getElementById("reportFilterToggleBtn");
-  if(!panel) return;
-  const shouldOpen = typeof forceOpen === "boolean" ? forceOpen : panel.classList.contains("hidden");
-  panel.classList.toggle("hidden", !shouldOpen);
-  if(btn){
-    btn.classList.toggle("open", shouldOpen);
-    btn.innerHTML = `<span class="filter-icon-v40">${shouldOpen ? '⌃' : '⌄'}</span> ${shouldOpen ? 'Nascondi filtri' : 'Mostra filtri'}`;
-  }
-}
-
-function updateReportFilterSummary(){
-  const summary = document.getElementById("reportFilterSummary");
-  if(!summary) return;
-  const ids = ["reportDateFrom","reportDateTo","reportAgent","reportCustomer","reportDriver","reportVehicle","reportStatus"];
-  const active = ids.filter(id=>{ const el=document.getElementById(id); return el && String(el.value || "").trim(); }).length;
-  summary.textContent = active ? `${active} filtro${active>1?'i':''} applicat${active>1?'i':'o'}` : "Nessun filtro applicato";
-}
-
-async function loadReport(){
-  if(showLockedOrProceed("report")) return;
-  await ensureReportFilters();
-  updateReportFilterSummary();
-  const box = document.getElementById("tab-report");
-  if(!box) return;
-  try{
-    reportData = await api("/api/reports/summary?" + reportParams().toString());
-    renderReportMetrics(reportData.metrics || {});
-    renderReportCharts(reportData.charts || {});
-    renderReportTables();
-    renderReportInsights(reportData.insights || []);
-  }catch(e){
-    toast("Errore caricamento report: " + (e.message || "Errore"));
-  }
-}
-
-async function generateReportAIv67(){
-  if(showLockedOrProceed("report")) return;
-  const box = document.getElementById("reportAiSummaryV67");
-  if(!box) return;
-  box.classList.remove("hidden");
-  box.innerHTML = `<strong>Report AI</strong><p>Generazione riepilogo assistito in corso...</p>`;
-  try{
-    const r = await api("/api/reports/ai-summary?" + reportParams().toString());
-    box.innerHTML = `<strong>Report AI</strong><p>${esc(r.text || "Nessun riepilogo generato.")}</p>${r.fallback ? `<small>Nota: AI non configurata, testo locale di supporto.</small>` : ``}`;
-  }catch(e){
-    box.innerHTML = `<strong>AI non disponibile</strong><p>${esc(e.message || "Non è stato possibile generare il report AI.")}</p>`;
-  }
-}
-
-function renderReportMetrics(m){
-  const setText=(id,v)=>{ const el=document.getElementById(id); if(el) el.textContent=v; };
-  setText("repGiri", fmtNumber(m.giri_effettuati));
-  setText("repConsegne", fmtNumber(m.consegne_totali));
-  setText("repKm", fmtNumber(m.km_totali,2) + " km");
-  setText("repOre", fmtNumber(m.ore_totali,2) + " h");
-  setText("repLitri", fmtNumber(m.litri_stimati,2) + " L");
-  setText("repCosto", fmtMoney(m.costo_carburante));
-  setText("repCostoGiro", fmtMoney(m.costo_medio_giro));
-  setText("repCostoConsegna", fmtMoney(m.costo_medio_consegna));
-  setText("repKmGiro", fmtNumber(m.km_medi_giro,2) + " km");
-  setText("repConsegneGiro", fmtNumber(m.consegne_medie_giro,2));
-}
-
-function chartEmpty(id, text="Nessun dato disponibile"){
-  const el=document.getElementById(id); if(el) el.innerHTML = `<div class="report-chart-empty">${esc(text)}</div>`;
-}
-
-function compactDateLabel(value){
-  const s = String(value || "");
-  if(/^\d{4}-\d{2}-\d{2}$/.test(s)) return s.slice(8,10) + "/" + s.slice(5,7);
-  return s;
-}
-
-function reportSinglePointCard(id, row, mode){
-  const el=document.getElementById(id); if(!el) return;
-  if(mode === "trend"){
-    el.innerHTML = `<div class="report-single-chart">
-      <div class="single-date">${esc(compactDateLabel(row.data))}</div>
-      <div class="single-values">
-        <div><span class="dot blue"></span><small>Consegne</small><strong>${fmtNumber(row.consegne || 0)}</strong></div>
-        <div><span class="dot purple"></span><small>Km percorsi</small><strong>${fmtNumber(row.km || 0,2)} km</strong></div>
-      </div>
-      <p>Nel periodo selezionato è presente un solo giorno con dati. Il grafico andamento completo apparirà con più giornate.</p>
-    </div>`;
-    return;
-  }
-  el.innerHTML = `<div class="report-single-chart fuel">
-    <div class="single-date">${esc(compactDateLabel(row.data))}</div>
-    <div class="single-fuel-box">
-      <small>Costo carburante stimato</small>
-      <strong>${fmtMoney(row.costo || 0)}</strong>
-    </div>
-    <p>Con più giorni nel filtro verrà mostrato il confronto a colonne.</p>
-  </div>`;
-}
-
-function svgLineChart(id, rows){
-  const el=document.getElementById(id); if(!el) return;
-  rows = rows || [];
-  if(!rows.length){ chartEmpty(id); return; }
-  if(rows.length === 1){ reportSinglePointCard(id, rows[0], "trend"); return; }
-
-  const w=760,h=310,pL=54,pR=54,pT=38,pB=48;
-  const plotW=w-pL-pR, plotH=h-pT-pB;
-  const maxC=Math.max(1,...rows.map(r=>Number(r.consegne)||0));
-  const maxK=Math.max(1,...rows.map(r=>Number(r.km)||0));
-  const x=(i)=> pL + i*plotW/(rows.length-1);
-  const yC=(v)=> pT + plotH - (Number(v)||0)/maxC*plotH;
-  const yK=(v)=> pT + plotH - (Number(v)||0)/maxK*plotH;
-  const pathC=rows.map((r,i)=>`${i?'L':'M'}${x(i)},${yC(r.consegne)}`).join(" ");
-  const pathK=rows.map((r,i)=>`${i?'L':'M'}${x(i)},${yK(r.km)}`).join(" ");
-  const areaC=`${pathC} L ${x(rows.length-1)},${pT+plotH} L ${x(0)},${pT+plotH} Z`;
-  const step=Math.max(1, Math.ceil(rows.length/7));
-  const labels=rows.map((r,i)=> i%step===0 || i===rows.length-1 ? `<text x="${x(i)}" y="${h-16}" text-anchor="middle">${esc(compactDateLabel(r.data))}</text>` : "").join("");
-  const grid=[0,1,2,3,4].map(i=>{
-    const y=pT+i*plotH/4;
-    const val=Math.round(maxC-(maxC*i/4));
-    return `<line x1="${pL}" x2="${w-pR}" y1="${y}" y2="${y}"/><text x="${pL-10}" y="${y+4}" text-anchor="end">${val}</text>`;
-  }).join("");
-  const kmAxis=[0,1,2,3,4].map(i=>{
-    const y=pT+i*plotH/4;
-    const val=Math.round(maxK-(maxK*i/4));
-    return `<text x="${w-pR+10}" y="${y+4}" text-anchor="start">${val}</text>`;
-  }).join("");
-  const points=rows.map((r,i)=>`<g class="hover-point"><circle cx="${x(i)}" cy="${yC(r.consegne)}" r="5"><title>${r.data}: ${r.consegne} consegne</title></circle><circle class="km" cx="${x(i)}" cy="${yK(r.km)}" r="5"><title>${r.data}: ${fmtNumber(r.km,2)} km</title></circle></g>`).join("");
-  el.innerHTML = `<svg viewBox="0 0 ${w} ${h}" class="report-svg line improved">
-    <defs>
-      <linearGradient id="reportTrendFill" x1="0" x2="0" y1="0" y2="1">
-        <stop offset="0%" stop-opacity=".18"></stop>
-        <stop offset="100%" stop-opacity="0"></stop>
-      </linearGradient>
-    </defs>
-    <g class="grid">${grid}${kmAxis}</g>
-    <path class="area-consegne" d="${areaC}"/>
-    <path class="line-consegne" d="${pathC}"/><path class="line-km" d="${pathK}"/>
-    ${points}${labels}
-    <g class="legend"><circle cx="58" cy="20" r="5"/><text x="70" y="24">Consegne</text><circle class="km" cx="165" cy="20" r="5"/><text x="177" y="24">Km percorsi</text></g>
-    <text class="axis-title left" x="${pL}" y="18">Consegne</text>
-    <text class="axis-title right" x="${w-pR}" y="18" text-anchor="end">Km</text>
-  </svg>`;
-}
-
-function svgBarChart(id, rows, key="costo", suffix="€"){
-  const el=document.getElementById(id); if(!el) return;
-  rows=(rows||[]).slice(-10);
-  if(!rows.length){ chartEmpty(id); return; }
-  if(rows.length === 1){ reportSinglePointCard(id, rows[0], "fuel"); return; }
-
-  const w=560,h=310,pL=46,pR=24,pT=34,pB=48;
-  const plotW=w-pL-pR, plotH=h-pT-pB;
-  const max=Math.max(1,...rows.map(r=>Number(r[key])||0));
-  const slot=plotW/rows.length;
-  const bw=Math.min(44, slot*.58);
-  const grid=[0,1,2,3,4].map(i=>{
-    const y=pT+i*plotH/4;
-    const val=max-(max*i/4);
-    return `<line x1="${pL}" x2="${w-pR}" y1="${y}" y2="${y}"/><text x="${pL-8}" y="${y+4}" text-anchor="end">${fmtNumber(val,0)}</text>`;
-  }).join("");
-  const bars=rows.map((r,i)=>{
-    const val=Number(r[key])||0, bh=Math.max(2, val/max*plotH);
-    const x=pL+i*slot+(slot-bw)/2, y=pT+plotH-bh;
-    return `<g class="bar-item"><rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="10"><title>${r.data||r.nome}: ${fmtMoney(val)}</title></rect><text x="${x+bw/2}" y="${h-16}" text-anchor="middle">${esc(compactDateLabel(r.data||r.nome))}</text></g>`;
-  }).join("");
-  el.innerHTML=`<svg viewBox="0 0 ${w} ${h}" class="report-svg bar improved">
-    <defs>
-      <linearGradient id="fuelBarGradient" x1="0" x2="0" y1="0" y2="1">
-        <stop offset="0%" stop-opacity="1"></stop>
-        <stop offset="100%" stop-opacity=".72"></stop>
-      </linearGradient>
-    </defs>
-    <g class="grid">${grid}</g>${bars}
-    <g class="legend"><rect x="46" y="14" width="12" height="12" rx="3"></rect><text x="66" y="24">Costo carburante (€)</text></g>
-  </svg>`;
-}
-
-
-function svgDonutChart(id, rows){
-  const el=document.getElementById(id); if(!el) return;
-  rows=(rows||[]).slice(0,6);
-  const total=rows.reduce((a,r)=>a+(Number(r.consegne)||0),0);
-  if(!rows.length || !total){ chartEmpty(id); return; }
-  const cx=130, cy=130, r=82, c=2*Math.PI*r;
-  let acc=0;
-  const slices=rows.map((row,i)=>{
-    const val=Number(row.consegne)||0;
-    const len=val/total*c;
-    const dash=`${len} ${c-len}`;
-    const off=-acc;
-    acc+=len;
-    return `<circle class="slice s${i}" cx="${cx}" cy="${cy}" r="${r}" stroke-dasharray="${dash}" stroke-dashoffset="${off}"><title>${row.nome}: ${val} consegne</title></circle>`;
-  }).join("");
-  const legend=rows.map((r,i)=>`<div><span class="donut-dot s${i}"></span><strong>${esc(r.nome)}</strong><small>${Math.round((r.consegne/total)*100)}%</small></div>`).join("");
-  el.innerHTML=`<div class="report-donut-wrap"><svg viewBox="0 0 260 260" class="report-svg donut"><circle class="base" cx="${cx}" cy="${cy}" r="${r}"></circle>${slices}<text x="${cx}" y="${cy-5}" text-anchor="middle">${fmtNumber(total)}</text><text x="${cx}" y="${cy+18}" text-anchor="middle">consegne</text></svg><div class="report-donut-legend">${legend}</div></div>`;
-}
-
-function svgHorizontalBars(id, rows, key="consegne", suffix=""){
-  const el=document.getElementById(id); if(!el) return;
-  rows=(rows||[]).slice(0,7);
-  if(!rows.length){ chartEmpty(id); return; }
-  const max=Math.max(1,...rows.map(r=>Number(r[key])||0));
-  el.innerHTML = `<div class="report-hbars">${rows.map(r=>{
-    const val=Number(r[key])||0, pct=Math.max(2, val/max*100);
-    return `<div class="report-hbar-row"><span>${esc(r.nome)}</span><div class="report-hbar-track"><b style="width:${pct}%"></b></div><strong>${fmtNumber(val, key==='costo'?2:0)}${suffix}</strong></div>`;
-  }).join("")}</div>`;
-}
-
-function renderReportCharts(charts){
-  svgLineChart("reportLineChart", charts.andamento || []);
-  svgBarChart("reportCostChart", charts.andamento || [], "costo", "€");
-  svgDonutChart("reportAgentDonut", charts.agenti || []);
-  svgHorizontalBars("reportDriversChart", charts.autisti || [], "consegne", "");
-  svgHorizontalBars("reportVehiclesChart", charts.mezzi || [], "km", " km");
-  svgHorizontalBars("reportCustomersChart", charts.clienti || [], "consegne", "");
-}
-
-function sortReportTable(table, key){
-  if(!reportSort[table]) reportSort[table] = {key, dir:-1};
-  reportSort[table].dir = reportSort[table].key === key ? reportSort[table].dir * -1 : -1;
-  reportSort[table].key = key;
-  renderReportTables();
-}
-
-function renderReportTables(){
-  if(!reportData) return;
-  const t=reportData.tables || {};
-  const driverQ=(document.getElementById("reportDriverTableSearch")?.value || "").toLowerCase();
-  let drivers=[...(t.autisti||[])].filter(r=>!driverQ || String(r.nome||"").toLowerCase().includes(driverQ));
-  const s=reportSort.drivers || {key:"consegne", dir:-1};
-  drivers.sort((a,b)=>((a[s.key]>b[s.key])?1:-1)*s.dir);
-  const driverBody=document.getElementById("reportDriversBody");
-  if(driverBody) driverBody.innerHTML=drivers.map(r=>`<tr><td><strong>${esc(r.nome)}</strong></td><td>${r.giri}</td><td>${r.consegne}</td><td>${fmtNumber(r.km,2)}</td><td>${fmtNumber(r.ore,2)}</td><td>${fmtMoney(r.costo)}</td><td>${fmtNumber(r.consegne_per_giro,2)}</td></tr>`).join("") || `<tr><td colspan="7">Nessun dato</td></tr>`;
-
-  const agentBody=document.getElementById("reportAgentsBody");
-  const agents=t.agenti||[];
-  if(agentBody) agentBody.innerHTML=agents.map(r=>`<tr><td><strong>${esc(r.nome)}</strong></td><td>${r.giri}</td><td>${r.consegne}</td><td>${fmtNumber(r.km,2)}</td><td>${fmtMoney(r.costo)}</td><td>${fmtNumber(r.consegne_per_giro,2)}</td></tr>`).join("") || `<tr><td colspan="6">Nessun dato</td></tr>`;
-
-  const customerQ=(document.getElementById("reportCustomersSearch")?.value || "").toLowerCase();
-  const customerBody=document.getElementById("reportCustomersBody");
-  const customers=(t.clienti||[]).filter(r=>!customerQ || String(r.nome||"").toLowerCase().includes(customerQ)).slice(0,80);
-  if(customerBody) customerBody.innerHTML=customers.map(r=>`<tr><td><strong>${esc(r.nome||"Cliente")}</strong></td><td>${r.consegne}</td><td>${r.giri}</td><td>${fmtNumber(r.km_tappe,2)} km</td></tr>`).join("") || `<tr><td colspan="4">Nessun cliente trovato</td></tr>`;
-}
-
-function renderReportInsights(rows){
-  const el=document.getElementById("reportInsights"); if(!el) return;
-  el.innerHTML=(rows||[]).map((x,i)=>`<div class="report-insight"><span class="report-insight-icon i${i}">✦</span><div><strong>${esc(x.titolo)}</strong><p>${esc(x.testo)}</p></div></div>`).join("") || `<div class="dash-empty">Nessun insight disponibile.</div>`;
-}
-
-function exportReportCsv(){
-  if(showLockedOrProceed("report")) return;
-  window.open("/api/reports/export?" + reportParams().toString(), "_blank");
-}
-
-function reportPdfComingSoon(){
-  toast("Esportazione PDF: la prepariamo nella prossima fase. Il CSV è già disponibile.");
-}
-
-
 function showGestionaleAfterLogin(isAdmin=false){
   // Dashboard aziendale: non attivare mai il vecchio menu Admin SaaS qui.
   // Il Super Admin usa /admin/login e /admin, separati dal gestionale aziendale.
@@ -1050,11 +734,7 @@ async function saveBillingDetailsV63(){
   }catch(e){ alert(e.message); }
 }
 
-function selectUpgradePlan(planKey){
-  document.querySelectorAll(".plan-card-mini").forEach(c => c.classList.remove("current"));
-  const el = document.querySelector(`.plan-card-mini[onclick*="${planKey}"]`);
-  if(el) el.classList.add("current");
-}
+
 
 let _selectedUpgradePlan = null;
 let _currentPlan = null;
@@ -1539,43 +1219,7 @@ async function login(){
 }
 document.getElementById("logoutBtn").onclick = async () => { await api("/api/logout", {method:"POST", body:"{}"}); location.reload(); };
 
-function showTab(name){
-  if(name === "agenti" && !agentsFeatureEnabled()) name = "settings";
-  setTimeout(showCookieNoticeIfNeeded, 150);
-  setTimeout(showCookieNoticeIfNeeded, 150);
-  if(showLockedOrProceed(name)) return;
-  document.querySelectorAll(".tab").forEach(x=>x.classList.add("hidden"));
-  const tab = document.getElementById("tab-"+name);
-  if(tab) tab.classList.remove("hidden");
-  document.querySelectorAll(".nav-item").forEach(x=>x.classList.remove("active"));
-  document.querySelectorAll(`.nav-item[data-tab="${name}"]`).forEach(x=>x.classList.add("active"));
 
-  if(name==="dashboard"){ loadDashboardHome(); loadNotificationsV30(false); if(!featureLockedForTab("chat-autisti")) loadDriverChatNotifications(); }
-  if(name==="company") { loadCompanyProfile(); loadOnboardingStatus(false); }
-  if(name==="dashboard-in-progress") loadDashboardInProgressPage();
-  if(name==="giro") loadDashboardRoutes();
-  if(name==="clienti"){ loadCustomers(); if(agentsFeatureEnabled()) loadAgents(); }
-  if(name==="agenti") loadAgents();
-  if(name==="report") loadReport();
-  if(name==="depositi") loadDeposits();
-  if(name==="mezzi") loadVehicles();
-  if(name==="autisti") loadDrivers();
-  if(name==="storico") loadRoutes();
-  if(name==="activity") loadActivityLogV31();
-  if(name==="chat-autisti") loadDriverChatCenter();
-  if(name==="settings") loadSettingsV41();
-  if(name==="plan-account"){ renderUpgradeCards(); syncPlanPageHeaderV874(); }
-  if(name==="billing-account") loadBillingOverviewV63();
-  if(name==="integrations") renderIntegrationsV52();
-  if(name==="transfer-portal") loadTransferPortalV78();
-  if(name==="transfer-bookings") loadTransferBookingsV79();
-  if(name==="transfer-planning") loadTransferPlanningV79();
-  if(name==="transfer-settings") loadTransferSettingsV79();
-
-  if(name==="admin-dashboard") loadAdminDashboard();
-  if(name==="admin-users") loadAdminUsers();
-  if(name==="admin-tickets") loadAdminTickets();
-}
 
 async function initApp(){
   const routeDateInput = document.getElementById("routeDate");
@@ -1835,31 +1479,7 @@ function routeProgressPercent(r){
     return Math.max(8, Math.min(95, Math.round(((cur-start)/(end-start))*100)));
   }catch(e){ return 0; }
 }
-function dashRouteItem(r, type){
-  const progress = routeProgressPercent(r);
-  const meta = `${esc(r.data_giro||"-")} · ${r.consegne_count||0} consegne${r.totale_km?` · ${r.totale_km} km`:""}`;
-  const pill = routeStatusBadge(r.status, r.status_label);
-  const unread = Number(r.unread_driver_messages||0);
-  const isProgress = type === 'progress';
-  const next = r.next_delivery ? `${r.next_delivery.cliente_nome || 'Prossima consegna'}${r.next_delivery.indirizzo ? ' · ' + r.next_delivery.indirizzo : ''}` : '';
-  return `<div class="dash-route-item ${isProgress?'dash-route-item-live':''}" onclick="${isProgress ? 'openDashboardInProgressPage(' + r.id + ')' : 'openDashboardRoute(' + r.id + ')'}">
-    <div class="dash-route-main">
-      <strong>${esc(r.nome||"Giro consegne")}</strong>
-      <small>${meta}</small>
-      ${isProgress?`
-        <div class="dash-progress"><span style="width:${progress}%"></span></div>
-        <div class="dash-live-grid">
-          <span><b>${r.completed_count||0}</b> completate</span>
-          <span><b>${r.missed_count||0}</b> mancate</span>
-          <span><b>${r.remaining_count ?? 0}</b> da fare</span>
-        </div>
-        ${next?`<small class="dash-next-stop">Prossima: ${esc(next)}</small>`:""}
-        ${unread?`<div class="dash-chat-alert">💬 ${unread} messagg${unread===1?'io':'i'} autista non lett${unread===1?'o':'i'}</div>`:""}
-      `:""}
-    </div>
-    <div class="dash-route-side">${pill}<span class="dash-arrow">›</span></div>
-  </div>`;
-}
+
 function renderEmptyDashList(text){ return `<div class="dash-empty">${esc(text)}</div>`; }
 function renderDashTrend(routes){
   const el = document.getElementById("dashTrendChart");
@@ -2156,40 +1776,9 @@ function renderDashboardRouteDetail(r){
 
 let dashboardInProgressSelectedId = null;
 
-function renderUnifiedRouteView(r, targetId='historyResult', context='history'){
-  const target = document.getElementById(targetId);
-  if(!target) return;
-  const rows = r.consegne || [];
-  const status = r.status || 'programmato';
-  const statusLabel = r.status_label || ({programmato:'Programmato', in_corso:'In corso', completato:'Completato', bozza:'Bozza'}[status] || 'Giro');
-  const icon = status === 'completato' ? '✓' : (status === 'in_corso' ? '▶' : '📅');
-  target.innerHTML = `<section class="panel dash-sub-card gf-unified-route-view">
-    <div class="gf-unified-route-head">
-      <div class="dash-sub-card-title"><div class="dash-sub-icon">${icon}</div><div><h2>${esc(r.nome || 'Giro consegne')}</h2><p>Schermata giro unificata · ${esc(statusLabel)} · ${esc(r.data_giro || '-')}</p></div></div>
-      <div class="gf-unified-route-actions">
-        ${routeStatusBadge(status, statusLabel)}
-        ${r.google_maps_url ? `<a target="_blank" href="${esc(r.google_maps_url)}"><button class="btn-primary">Apri Maps</button></a>` : ''}
-      </div>
-    </div>
-    <div class="gf-route-meta-grid">
-      <div><span>Autista</span><strong>${esc(r.driver_name || 'Non assegnato')}</strong></div>
-      <div><span>Mezzo</span><strong>${esc(r.vehicle_name || '-')}</strong></div>
-      <div><span>Partenza prevista</span><strong>${esc(r.orario_partenza || '-')}</strong></div>
-      <div><span>Partenza reale</span><strong>${gfTimeFromIso(r.started_at) || '-'}</strong></div>
-      <div><span>Rientro previsto</span><strong>${esc(r.orario_rientro_stimato || '-')}</strong></div>
-      <div><span>Rientro reale</span><strong>${gfTimeFromIso(r.completed_at) || '-'}</strong></div>
-    </div>
-    ${dashboardRouteSummaryCards(r, rows)}
-    <div class="gf-unified-section-title"><h3>Fermate del giro</h3><p>Confronto tra orario previsto dal software e orario reale registrato dall'autista.</p></div>
-    ${dashboardStopRowsUnified(r, context)}
-  </section>`;
-}
 
-async function openDashboardInProgressPage(routeId=null){
-  dashboardInProgressSelectedId = routeId;
-  showTab('dashboard-in-progress');
-  await loadDashboardInProgressPage(routeId);
-}
+
+
 
 function dashboardDeliveryRowsForSubpage(r){
   const rows = r.consegne || [];
@@ -2231,102 +1820,9 @@ function dashboardStopsTimelineForSubpage(r){
   </div>`;
 }
 
-function renderDashboardInProgressSubpage(routes, selectedRoute){
-  const page = document.getElementById('dashboardInProgressPage');
-  if(!page) return;
-  if(!routes.length){
-    page.innerHTML = `<div class="dash-empty-subpage"><div class="dash-empty-icon">▶</div><h2>Nessun giro in corso</h2><p>Quando un autista avvia un giro, lo troverai qui con avanzamento, fermate e chat.</p><button class="btn-primary" onclick="showTab('giro')">Pianifica un giro</button></div>`;
-    return;
-  }
-  const r = selectedRoute || routes[0];
-  dashboardInProgressSelectedId = r.id;
-  const rows = r.consegne || [];
-  const completed = rows.filter(x=>x.delivery_status === 'completata').length;
-  const missed = rows.filter(x=>x.delivery_status === 'mancata').length;
-  const pending = Math.max(rows.length - completed - missed, 0);
-  const progress = rows.length ? Math.round(((completed + missed) / rows.length) * 100) : routeProgressPercent(r);
-  const next = rows.find(x => !['completata','mancata'].includes(x.delivery_status || 'in_attesa'));
-  const unread = Number(r.unread_driver_messages || 0);
-  const mapsBtn = r.google_maps_url ? `<a target="_blank" href="${esc(r.google_maps_url)}"><button class="btn-primary">Apri Google Maps ↗</button></a>` : '';
-  page.innerHTML = `
-    <div class="dash-sub-layout">
-      <aside class="dash-sub-sidebar">
-        <div class="dash-sub-route-picker">
-          <label>Giro attivo</label>
-          <select onchange="openDashboardInProgressPage(Number(this.value))">
-            ${routes.map(x=>`<option value="${x.id}" ${x.id===r.id?'selected':''}>${esc(x.nome || 'Giro consegne')} · ${esc(x.driver_name || 'Autista')}</option>`).join('')}
-          </select>
-        </div>
-        <div class="dash-live-summary-card">
-          <div class="dash-live-header">
-            <div class="dash-live-play">▶</div>
-            <div><span>Stato giro in corso</span><strong>${routes.length}</strong><small>${routes.length===1?'giro attivo':'giri attivi'}</small></div>
-          </div>
-          <div class="dash-live-summary-body">
-            <div><span>Autista</span><strong>${esc(r.driver_name || 'Non assegnato')}</strong></div>
-            <div><span>Mezzo</span><strong>${esc(r.vehicle_name || '-')}</strong></div>
-            <div><span>Completati</span><strong>${completed} / ${rows.length}</strong></div>
-            <div><span>Mancate</span><strong>${missed}</strong></div>
-            <div><span>Da fare</span><strong>${pending}</strong></div>
-            <div><span>Orario</span><strong>${esc(r.orario_partenza || '-')} → ${esc(r.orario_rientro_stimato || '-')}</strong></div>
-            <div><span>Avanzamento</span><strong>${progress}%</strong></div>
-            <div class="dash-side-progress"><span style="width:${progress}%"></span></div>
-            ${next?`<div class="dash-next-box"><span>Prossima consegna</span><strong>${esc(next.cliente_nome || '-')}</strong><small>${esc(next.indirizzo || '')}</small></div>`:''}
-            ${unread?`<div class="dash-chat-alert strong">💬 ${unread} messagg${unread===1?'io':'i'} non lett${unread===1?'o':'i'}</div>`:''}
-          </div>
-          <button class="btn-light full" onclick="showTab('dashboard')">Chiudi controllo</button>
-        </div>
-      </aside>
-      <main class="dash-sub-main">
-        <section class="panel dash-sub-card">
-          <div class="dash-sub-card-title"><div class="dash-sub-icon">🚚</div><div><h2>Consegne del giro</h2><p>Dettaglio consegne affidate a questo giro.</p></div></div>
-          ${dashboardDeliveryRowsForSubpage(r)}
-          <div class="dash-sub-totals"><strong>Totale consegne: ${rows.length}</strong><strong>Distanza totale: ${r.totale_km || 0} km</strong></div>
-        </section>
-        <section class="panel dash-sub-card">
-          <div class="dash-sub-card-title dash-sub-card-title-actions"><div class="dash-sub-card-title-left"><div class="dash-sub-icon">📍</div><div><h2>Fermate del giro</h2><p>Sequenza delle fermate pianificate.</p></div></div>${mapsBtn}</div>
-          ${dashboardStopsTimelineForSubpage(r)}
-        </section>
-        <section class="panel dash-sub-card dash-sub-bottom-grid">
-          <div>
-            <div class="dash-sub-card-title"><div class="dash-sub-icon">📝</div><div><h2>Note e stato</h2><p>Stato aggiornato dal portale autista.</p></div></div>
-            <div class="dash-note-grid">
-              <div><span>Stato</span>${routeStatusBadge(r.status, r.status_label)}</div>
-              <div><span>Note autista</span><strong>${esc(rows.map(x=>x.note_operatore).filter(Boolean).slice(-1)[0] || '-')}</strong></div>
-              <div><span>Note giro</span><strong>${esc(r.note || '-')}</strong></div>
-            </div>
-          </div>
-          <aside class="dash-admin-chat-card embedded">
-            <div class="dash-chat-title"><h3>Chat autista</h3><small id="dashChatStatus">Messaggi collegati a questo giro</small></div>
-            <div id="dashAdminChatMessages" class="dash-admin-chat-messages"><div class="dash-empty">Caricamento chat...</div></div>
-            <div class="dash-admin-chat-input">
-              <textarea id="dashAdminChatInput" rows="2" placeholder="Scrivi all'autista..."></textarea>
-              <button class="btn-primary" onclick="sendDashboardRouteChat(${r.id})">Invia</button>
-            </div>
-          </aside>
-        </section>
-      </main>
-    </div>`;
-  loadDashboardRouteChat(r.id, true);
-}
 
-async function loadDashboardInProgressPage(routeId=null){
-  const page = document.getElementById('dashboardInProgressPage');
-  if(page) page.innerHTML = `<div class="dash-detail-empty"><h2>Caricamento giri in corso...</h2><p>Sto recuperando avanzamento, consegne e chat.</p></div>`;
-  try{
-    const rows = await api('/api/routes/operativi');
-    const progress = rows.filter(r=>r.status==='in_corso');
-    const selectedId = routeId || dashboardInProgressSelectedId || (progress[0] && progress[0].id);
-    let selected = progress.find(r=>Number(r.id)===Number(selectedId)) || progress[0] || null;
-    if(selected){
-      selected = await api(`/api/routes/${selected.id}`);
-    }
-    renderDashboardInProgressSubpage(progress, selected);
-    await loadDashboardHome();
-  }catch(e){
-    if(page) page.innerHTML = `<div class="dash-detail-empty"><h2>Errore</h2><p>${esc(e.message)}</p></div>`;
-  }
-}
+
+
 
 let dashboardChatRouteId = null;
 async function loadDashboardRouteChat(routeId, markRead=true){
@@ -3575,7 +3071,7 @@ function renderRouteResult(r, targetId="routeResult", fromHistory=false){
         <div class="summary-row"><span>Mezzo</span><strong>${esc(r.vehicle_name||"Nessun mezzo")}</strong></div>
         <div class="summary-row"><span>Avvisi critici</span><strong>${counts.critici}</strong></div>
         <div class="summary-row"><span>Soste con attesa</span><strong>${counts.attesa}</strong></div>
-        <div class="summary-highlight"><span>Costo totale stimato</span><strong>€ ${r.costo_totale ?? r.costo_carburante ?? "-"}</strong></div>
+        <div class="summary-highlight"><span>Costo energetico stimato</span><strong>€ ${r.costo_totale ?? r.costo_carburante ?? "-"}</strong></div>
         <button class="btn-secondary full" onclick="printStopsTable()">Stampa dettaglio fermate</button>
         ${r.id ? `<button class="btn-secondary full" onclick="explainRouteSequenceAIv67(${r.id})">Spiega sequenza giro AI</button><div id="routeAiExplanationV67" class="ai-explanation-v67 hidden"></div>` : ""}
         ${isProgrammable ? `<button class="btn-primary full" onclick="programCurrentRoute()">Programma giro</button><small class="program-route-note">Dopo la conferma verrai portato direttamente in Giri programmati.</small>` : ""}
@@ -5382,7 +4878,7 @@ function renderLogisticsDashboardV50(routes=[]){
           <button onclick="showTab('clienti')"><b>Ordini e destinatari</b><span>Numero ordine, tracking, email cliente, contrassegno e indirizzo.</span></button>
           <button onclick="showTab('giro')"><b>Giri consegna ordini</b><span>Assegna ordini, corriere, mezzo e fascia prevista.</span></button>
           <button onclick="openDashboardInProgressPage()"><b>Tracking operativo</b><span>Segui ordini in consegna, firme, note e anomalie.</span></button>
-          <button onclick="showTab('integrations')"><b>Integrazioni</b><span>Collega Shopify e prepara import automatico degli ordini.</span></button>
+          <button onclick="showTab('integrations')"><b>Integrazioni</b><span>Shopify: integrazione in sviluppo, import automatico non ancora disponibile.</span></button>
           <button onclick="showTab('storico')"><b>Storico ordini e resi</b><span>Consulta esiti, prove consegna e ordini non riusciti.</span></button>
         </div>
       </section>
@@ -5442,19 +4938,8 @@ window.showFoodMenuComingSoonV53 = showFoodMenuComingSoonV53;
 // v52 - Sezione Integrazioni per E-commerce
 // -----------------------------------------------------------------------------
 function renderIntegrationsV52(){
-  const sector = gfCurrentSectorKeyV50();
-  const tab = document.getElementById("tab-integrations");
-  if(!tab) return;
-  if(sector !== "ecommerce"){
-    tab.innerHTML = `
-      <div class="integrations-v52">
-        <div class="integrations-empty-v52">
-          <h1>Integrazioni non disponibili per questo settore</h1>
-          <p>La sezione Integrazioni è stata preparata per il settore E-commerce / Consegna ordini. Per gli altri settori attiveremo integrazioni dedicate più avanti.</p>
-          <button class="btn-primary" onclick="showTab('dashboard')">Torna alla Dashboard</button>
-        </div>
-      </div>`;
-  }
+  const tab=document.getElementById('tab-integrations');
+  if(tab) tab.innerHTML='<section class="panel"><h1>Integrazioni · In sviluppo</h1><p>Il collegamento Shopify e l’importazione automatica degli ordini non sono ancora disponibili.</p><p>Puoi già importare i clienti da CSV o XLSX nella sezione Clienti.</p></section>';
 }
 
 function showShopifyComingSoonV52(action){

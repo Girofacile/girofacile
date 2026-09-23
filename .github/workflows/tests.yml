@@ -1,0 +1,41 @@
+name: Tests and container
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: test_runner
+          POSTGRES_PASSWORD: test_only_password
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U test_runner"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      DATABASE_URL: 'sqlite+pysqlite:///:memory:'
+      ALLOW_SQLITE_LEGACY: 'true'
+      TEST_POSTGRES_URL: postgresql://test_runner:test_only_password@127.0.0.1:5432/postgres
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: sudo apt-get update && sudo apt-get install -y postgresql-client-16
+      - run: pip install -r requirements.txt
+      - run: python -m pytest tests -q
+      - run: node --test tests/*.cjs
+      - run: docker build -t girofacile-test .
+      - name: Verify backup tools in the deployable image
+        run: docker run --rm --entrypoint sh girofacile-test -c 'test -f /app/scripts/backup_database.py && pg_dump --version && pg_restore --version'

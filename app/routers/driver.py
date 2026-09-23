@@ -10,6 +10,7 @@ from fastapi import APIRouter, Cookie, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
 
 from ..database import get_db
+from ..services.delivery_signature import apply_delivery_signature
 from ..core.dependencies import current_user, owned
 from ..core.security import hash_password as secure_hash_password, password_needs_rehash, validate_password_strength, verify_password
 from ..core.utils import local_now, local_today, date_to_iso, time_to_hhmm, minutes_from_hhmm
@@ -413,19 +414,8 @@ def save_delivery_signature(delivery_id: int, payload: dict, da: DriverAccount =
     if not owner or not getattr(owner, "delivery_signature_enabled", False):
         raise HTTPException(400, "Firma cliente non attiva per questa azienda")
 
-    signature_data = (payload.get("signature_data") or "").strip()
-    signed_by_name = (payload.get("signed_by_name") or "").strip()
-    signature_note = (payload.get("signature_note") or "").strip()
-    if not signature_data:
-        raise HTTPException(400, "Firma mancante")
-    if not signed_by_name:
-        raise HTTPException(400, "Nome firmatario mancante")
-
     ds = get_or_create_delivery_status(delivery_id, d.route_plan_id, db)
-    ds.signature_data = signature_data
-    ds.signed_by_name = signed_by_name
-    ds.signature_note = signature_note or None
-    ds.signed_at = local_now().replace(tzinfo=None)
+    apply_delivery_signature(ds, payload, owner, required=True)
     db.commit()
     return {"ok": True}
 
@@ -438,23 +428,12 @@ def complete_delivery(delivery_id: int, payload: dict, da: DriverAccount = Depen
     if not r or r.driver_id != da.driver_id:
         raise HTTPException(403, "Non autorizzato")
     ds = get_or_create_delivery_status(delivery_id, d.route_plan_id, db)
+    owner = db.get(User, r.user_id) if r.user_id else None
+    apply_delivery_signature(ds, payload, owner, required=True)
     ds.status = "completata"
     ds.tempo_scarico_effettivo = payload.get("tempo_scarico")
     ds.note_operatore = payload.get("note") or None
     ds.completata_il = local_now().replace(tzinfo=None)
-
-    owner = db.get(User, r.user_id) if r and r.user_id else None
-    if owner and getattr(owner, "delivery_signature_enabled", False):
-        signature_data = (payload.get("signature_data") or "").strip()
-        signed_by_name = (payload.get("signed_by_name") or "").strip()
-        signature_note = (payload.get("signature_note") or payload.get("note") or "").strip()
-        if signature_data:
-            ds.signature_data = signature_data
-            ds.signed_by_name = signed_by_name or ds.signed_by_name or None
-            ds.signature_note = signature_note or ds.signature_note or None
-            ds.signed_at = local_now().replace(tzinfo=None)
-        elif not ds.signature_data:
-            raise HTTPException(400, "Firma cliente richiesta prima di confermare la consegna")
 
     if payload.get("tempo_scarico") and d.customer_id:
         customer = db.get(Customer, d.customer_id)

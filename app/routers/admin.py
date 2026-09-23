@@ -22,7 +22,8 @@ from sqlalchemy.orm import Session
 
 from ..core.config import PLAN_PRICES, SUPERADMIN_USERNAME, APP_BASE_URL, ERROR_NOTIFICATIONS_EMAIL, GOOGLE_MAPS_API_KEY
 from ..core.dependencies import is_admin_user, require_superadmin
-from ..database import get_db, engine, database_kind
+from ..database import get_db
+from ..services.backups import backup_directory, backup_files, resolve_backup, engine, database_kind
 from ..core.utils import date_to_iso, time_to_hhmm
 from ..models import Customer, Delivery, Driver, RoutePlan, SupportTicket, SystemErrorLog, User, Vehicle, SaaSPlatformSetting, SuperAdminProfile, SuperAdminActivityLog, SuperAdminCollaborator, ApiUsageLog
 from ..services.plans import PLAN_LIMITS, get_user_plan_status
@@ -199,30 +200,20 @@ def _database_file_path() -> Path:
 
 
 def _backup_dir() -> Path:
-    path = _project_root() / "data" / "backups"
-    path.mkdir(parents=True, exist_ok=True)
-    return path
+    return backup_directory()
 
 
 def _list_backups() -> list[dict]:
-    items = []
-    backup_files = list(_backup_dir().glob("*.dump")) + list(_backup_dir().glob("*.sql")) + list(_backup_dir().glob("*.zip"))
-    for f in sorted(backup_files, key=lambda x: x.stat().st_mtime, reverse=True)[:20]:
-        st = f.stat()
-        items.append({
-            "filename": f.name,
-            "size_bytes": st.st_size,
-            "created_at": datetime.fromtimestamp(st.st_mtime).isoformat(),
-        })
-    return items
+    return [{"filename": p.name, "size_bytes": p.stat().st_size,
+             "created_at": datetime.fromtimestamp(p.stat().st_mtime).isoformat()}
+            for p in backup_files()[:20]]
 
 
 def _safe_backup_name(filename: str) -> Path:
-    clean = Path(filename).name
-    path = (_backup_dir() / clean).resolve()
-    if not str(path).startswith(str(_backup_dir().resolve())) or not path.exists() or path.suffix.lower() != ".zip":
+    try:
+        return resolve_backup(filename)
+    except ValueError:
         raise HTTPException(404, "Backup non trovato")
-    return path
 
 
 def _service_key_status(db: Session) -> list[dict]:
@@ -760,13 +751,13 @@ def admin_server_test_service(payload: dict, db: Session = Depends(get_db), supe
 def admin_create_backup(db: Session = Depends(get_db), superadmin: dict = Depends(require_superadmin)):
     _require_perm(superadmin, "create_backups")
     import subprocess
-    result = subprocess.run([sys.executable, "scripts/backup_database.py"], cwd=str(_project_root()), capture_output=True, text=True)
+    result = subprocess.run([sys.executable, "scripts/backup_database.py"], cwd=str(_project_root()), capture_output=True, text=True, timeout=300)
     if result.returncode != 0:
         raise HTTPException(400, result.stderr.strip() or result.stdout.strip() or "Backup PostgreSQL non riuscito")
     backups_now = _list_backups()
     if not backups_now:
         raise HTTPException(400, "Backup completato ma file non trovato nella cartella backup")
-    out = _backup_dir() / backups_now[0]["filename"]
+    out = _safe_backup_name(backups_now[0]["filename"])
     _activity(db, superadmin.get("username"), "database_backup_created", f"Creato backup PostgreSQL {out.name}")
     db.commit()
     return {"ok": True, "backup": {"filename": out.name, "size_bytes": out.stat().st_size, "created_at": datetime.fromtimestamp(out.stat().st_mtime).isoformat()}, "backups": _list_backups()}

@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from ..core.dependencies import current_user
 from ..database import get_db
+from ..services.delivery_signature import apply_delivery_signature
 from ..models import (
     Customer, Delivery, DeliveryStatus, RoutePlan, RouteToken, User
 )
@@ -225,6 +226,7 @@ def get_operator_route(token: str, db: Session = Depends(get_db)):
             "prossima_idx": prossima_idx,
             "percentuale": round((completate + mancate) / len(deliveries) * 100) if deliveries else 0,
         },
+        "delivery_signature_enabled": bool(getattr(db.get(User, plan.user_id), "delivery_signature_enabled", False)),
         "tempo_scarico_options": TEMPO_SCARICO_OPTIONS,
         "motivi_mancata": MOTIVI_MANCATA,
     }
@@ -248,10 +250,13 @@ def complete_delivery(
         raise HTTPException(404, "Consegna non trovata")
 
     ds = get_or_create_delivery_status(delivery_id, plan.id, db)
+    owner = db.get(User, plan.user_id)
+    apply_delivery_signature(ds, payload, owner, required=True)
     ds.status = "completata"
     ds.tempo_scarico_effettivo = payload.get("tempo_scarico")
     ds.note_operatore = payload.get("note") or None
-    ds.completata_il = datetime.utcnow()
+    from ..core.utils import local_now
+    ds.completata_il = local_now().replace(tzinfo=None)
 
     # Aggiorna tempo scarico nel profilo cliente con media progressiva
     tempo = payload.get("tempo_scarico")
@@ -260,6 +265,8 @@ def complete_delivery(
         if customer:
             update_customer_unload_time(customer, tempo)
 
+    from .driver import refresh_route_completion
+    refresh_route_completion(plan.id, db)
     db.commit()
     return {"ok": True, "status": "completata"}
 
@@ -289,7 +296,8 @@ def missed_delivery(
     ds.status = "mancata"
     ds.motivo_mancata = motivo
     ds.note_operatore = payload.get("note") or None
-    ds.completata_il = datetime.utcnow()
+    from ..core.utils import local_now
+    ds.completata_il = local_now().replace(tzinfo=None)
     db.commit()
     return {"ok": True, "status": "mancata"}
 

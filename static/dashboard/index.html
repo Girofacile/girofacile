@@ -10,7 +10,7 @@
 <meta charset="utf-8">
 <title>GiroFacile</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link href="/static/dashboard/css/core.css?v=agents_optional_1" rel="stylesheet">
+<link href="/static/dashboard/css/core.css?v=stability_1" rel="stylesheet">
 <link href="/static/dashboard/css/account.css?v=v89" rel="stylesheet">
 </head>
 <body>
@@ -223,8 +223,8 @@
         <div class="signup-checks-v46">
           <label><input type="checkbox" id="signupHasTimeWindows" checked> Finestre orarie di consegna</label>
           <label><input type="checkbox" id="signupNeedsSignature"> Firma alla consegna</label>
-          <label><input type="checkbox" id="signupNeedsPhotoProof"> Foto prova consegna</label>
-          <label><input type="checkbox" id="signupRefrigerated"> Merce refrigerata/surgelata</label>
+          <label><input type="checkbox" id="signupNeedsPhotoProof" disabled title="Funzione in sviluppo"> Foto prova consegna (in sviluppo)</label>
+          <label><input type="checkbox" id="signupRefrigerated" disabled title="Funzione in sviluppo"> Merce refrigerata/surgelata (in sviluppo)</label>
           <label><input type="checkbox" id="signupZtl"> Consegne in ZTL o zone difficili</label>
           <label><input type="checkbox" id="signupTailLift"> Sponda idraulica / transpallet</label>
         </div>
@@ -841,11 +841,11 @@
         <div class="report-hero-row">
           <div>
             <h1>Report consegne</h1>
-            <p>Analizza performance, costi e produttività usando i dati finali dei giri completati.</p>
+            <p>Analizza i giri completati. Km, consumi e costi energetici sono stime; le ore sono rilevate quando disponibili, altrimenti stimate. Costi del personale, pedaggi e manutenzione non sono inclusi.</p>
           </div>
           <div class="report-actions">
             <button class="btn-secondary" onclick="generateReportAIv67()">Genera report AI</button>
-            <button class="btn-secondary" onclick="reportPdfComingSoon()">Esporta PDF</button>
+            <button class="btn-secondary" onclick="printReport()">Stampa / Salva PDF</button>
             <button class="btn-primary" onclick="exportReportCsv()">Scarica CSV</button>
           </div>
         </div>
@@ -876,12 +876,12 @@
         <div class="report-kpi-grid">
           <div class="report-kpi-card"><span class="report-kpi-icon blue">⇄</span><small>1. Giri effettuati</small><strong id="repGiri">0</strong></div>
           <div class="report-kpi-card"><span class="report-kpi-icon green">▣</span><small>2. Consegne totali</small><strong id="repConsegne">0</strong></div>
-          <div class="report-kpi-card"><span class="report-kpi-icon purple">⌖</span><small>3. Km totali percorsi</small><strong id="repKm">0 km</strong></div>
-          <div class="report-kpi-card"><span class="report-kpi-icon orange">◷</span><small>4. Ore totali effettive</small><strong id="repOre">0 h</strong></div>
-          <div class="report-kpi-card"><span class="report-kpi-icon cyan">⛽</span><small>5. Litri carburante</small><strong id="repLitri">0 L</strong></div>
-          <div class="report-kpi-card"><span class="report-kpi-icon yellow">€</span><small>6. Costo carburante</small><strong id="repCosto">€ 0</strong></div>
-          <div class="report-kpi-card"><span class="report-kpi-icon pink">◴</span><small>7. Costo medio/giro</small><strong id="repCostoGiro">€ 0</strong></div>
-          <div class="report-kpi-card"><span class="report-kpi-icon cyan">□</span><small>8. Costo medio/consegna</small><strong id="repCostoConsegna">€ 0</strong></div>
+          <div class="report-kpi-card"><span class="report-kpi-icon purple">⌖</span><small>3. Km pianificati</small><strong id="repKm">0 km</strong></div>
+          <div class="report-kpi-card"><span class="report-kpi-icon orange">◷</span><small>4. Ore rilevate / stimate</small><strong id="repOre">0 h</strong></div>
+          <div class="report-kpi-card"><span class="report-kpi-icon cyan">⛽</span><small>5. Litri stimati</small><strong id="repLitri">0 L</strong></div>
+          <div class="report-kpi-card"><span class="report-kpi-icon yellow">€</span><small>6. Energia stimata</small><strong id="repCosto">€ 0</strong></div>
+          <div class="report-kpi-card"><span class="report-kpi-icon pink">◴</span><small>7. Energia media/giro</small><strong id="repCostoGiro">€ 0</strong></div>
+          <div class="report-kpi-card"><span class="report-kpi-icon cyan">□</span><small>8. Energia media/consegna</small><strong id="repCostoConsegna">€ 0</strong></div>
           <div class="report-kpi-card"><span class="report-kpi-icon purple">↝</span><small>9. Km medi/giro</small><strong id="repKmGiro">0 km</strong></div>
           <div class="report-kpi-card"><span class="report-kpi-icon green">☷</span><small>10. Consegne medie/giro</small><strong id="repConsegneGiro">0</strong></div>
         </div>
@@ -972,11 +972,11 @@
 
             <div class="setting-row">
               <div class="setting-copy">
-                <strong>Foto prova consegna</strong>
-                <span>Predisponi il flusso per la prova fotografica della consegna.</span>
+                <strong>Foto prova consegna · In sviluppo</strong>
+                <span>La raccolta di fotografie non è ancora disponibile. Questa opzione sarà attivabile al completamento della funzione.</span>
               </div>
               <label class="switch-toggle">
-                <input id="featurePhotoProofV89" type="checkbox" onchange="markSettingsDirtyV893()">
+                <input id="featurePhotoProofV89" type="checkbox" disabled aria-label="Foto prova consegna: in sviluppo" onchange="markSettingsDirtyV893()">
                 <span class="switch-slider"></span>
               </label>
             </div>
@@ -1005,11 +1005,11 @@
 
             <div class="setting-row">
               <div class="setting-copy">
-                <strong>Merce refrigerata</strong>
-                <span>Memorizza questa esigenza operativa per la configurazione aziendale.</span>
+                <strong>Merce refrigerata · In sviluppo</strong>
+                <span>La gestione della catena del freddo non è ancora disponibile. Questa opzione sarà attivabile al completamento della funzione.</span>
               </div>
               <label class="switch-toggle">
-                <input id="featureRefrigeratedV89" type="checkbox" onchange="markSettingsDirtyV893()">
+                <input id="featureRefrigeratedV89" type="checkbox" disabled aria-label="Merce refrigerata: in sviluppo" onchange="markSettingsDirtyV893()">
                 <span class="switch-slider"></span>
               </label>
             </div>
@@ -1741,7 +1741,8 @@
   </div>
 </div>
 
-<script src="/static/dashboard/js/core.js?v=agents_optional_1"></script>
+<script src="/static/dashboard/js/reports.js?v=stability_1"></script>
+<script src="/static/dashboard/js/core.js?v=stability_1"></script>
 
 <script>
 function toggleLoginPassword(){

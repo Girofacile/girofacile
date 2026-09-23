@@ -1,6 +1,7 @@
 import math, os, time, requests
 from itertools import permutations
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+from .core.utils import LOCAL_TZ, local_now, parse_date_value, parse_time_value
 from urllib.parse import quote
 
 from sqlalchemy.orm import Session
@@ -102,7 +103,7 @@ def geocode_deposit(db: Session, deposit):
     return coord
 
 
-def build_distance_matrix(db: Session, user_id: int, points, keys, start_time="08:00"):
+def build_distance_matrix(db: Session, user_id: int, points, keys, start_time="08:00", route_date=None):
     """Costruisce la matrice tempi/distanze usando cache persistente.
 
     Google Routes viene chiamato solo per le coppie non ancora presenti in cache.
@@ -116,6 +117,8 @@ def build_distance_matrix(db: Session, user_id: int, points, keys, start_time="0
     if n < 2:
         return {}
 
+    departure = _route_departure_time_iso(start_time, route_date)
+    keys = [f"{key}|departure={departure}" for key in keys]
     needed_pairs = [(i, j) for i in range(n) for j in range(n) if i != j]
     key_pairs = [(keys[i], keys[j]) for i, j in needed_pairs]
     cached = dc.get_pairs(db, user_id, key_pairs)
@@ -140,7 +143,7 @@ def build_distance_matrix(db: Session, user_id: int, points, keys, start_time="0
     sub_points = [points[i] for i in global_indices]
     local_of_global = {g: local for local, g in enumerate(global_indices)}
 
-    sub_matrix = google_route_matrix(sub_points, start_time=start_time, db=db)
+    sub_matrix = google_route_matrix(sub_points, start_time=start_time, db=db, route_date=route_date)
     if sub_matrix is None:
         return None
 
@@ -202,21 +205,40 @@ def _google_duration_to_min(value):
         return None
 
 
-def _route_departure_time_iso(start_time="08:00"):
-    """Restituisce un departureTime valido per Google Routes.
+def _route_departure_time_iso(start_time="08:00", route_date=None):
+    """Use the actual company-local departure, serialized as UTC for Google."""
+    day = parse_date_value(route_date) if route_date is not None else local_now().date()
+    clock = parse_time_value(start_time)
+    if day is None or clock is None:
+        raise ValueError("Data o orario di partenza non valido")
+    departure = datetime.combine(day, clock, tzinfo=LOCAL_TZ)
+    utc = departure.astimezone(timezone.utc)
+    if utc.astimezone(LOCAL_TZ).replace(tzinfo=None) != departure.replace(tzinfo=None):
+        raise ValueError("Orario inesistente per il cambio dell'ora: scegli un altro orario")
+    if utc <= local_now().astimezone(timezone.utc):
+        raise ValueError("L'orario di partenza è già passato: scegli un orario futuro")
+    return utc.isoformat().replace("+00:00", "Z")
 
-    Per avere tempi realistici con traffico, Google richiede un orario futuro.
-    Usiamo oggi se l'orario non è già passato, altrimenti domani.
-    """
-    start_min = parse_hhmm(start_time) or 8 * 60
-    now = datetime.now().replace(microsecond=0)
-    dep = now.replace(hour=start_min // 60, minute=start_min % 60, second=0)
-    if dep <= now:
-        dep = dep + timedelta(days=1)
-    return dep.isoformat() + "Z"
+
+def validate_vehicle_load(deliveries, vehicle=None):
+    total_kg = 0.0
+    total_packages = 0
+    for delivery in deliveries:
+        kg = float(delivery.get("peso_kg") or 0)
+        packages = float(delivery.get("colli") or 0)
+        if not math.isfinite(kg) or not math.isfinite(packages) or kg < 0 or packages < 0 or not packages.is_integer():
+            raise ValueError("Peso e colli devono essere valori validi e non negativi; i colli devono essere interi")
+        total_kg += kg
+        total_packages += int(packages)
+    if not vehicle:
+        return
+    for total, field, label in [(total_kg, "capacita_kg", "kg"), (total_packages, "capacita_colli", "colli")]:
+        capacity = vehicle.get(field)
+        if capacity is not None and total > float(capacity):
+            raise ValueError(f"Capacità mezzo superata: {total:g} {label}, massimo {float(capacity):g}. Riduci il carico o scegli un altro mezzo.")
 
 
-def google_route_matrix(points, start_time="08:00", db: Session | None = None):
+def google_route_matrix(points, start_time="08:00", db: Session | None = None, route_date=None):
     """Calcola una matrice tempi/distanze con Google Routes.
 
     Ritorna dict (origin_index, destination_index) -> {km, min}.
@@ -247,7 +269,7 @@ def google_route_matrix(points, start_time="08:00", db: Session | None = None):
         "destinations": waypoints,
         "travelMode": "DRIVE",
         "routingPreference": "TRAFFIC_AWARE",
-        "departureTime": _route_departure_time_iso(start_time),
+        "departureTime": _route_departure_time_iso(start_time, route_date),
     }
     try:
         r = requests.post(
@@ -285,7 +307,7 @@ def google_route_matrix(points, start_time="08:00", db: Session | None = None):
 
 
 
-def google_route_polyline(points, return_depot=True, start_time="08:00", db: Session | None = None):
+def google_route_polyline(points, return_depot=True, start_time="08:00", db: Session | None = None, route_date=None):
     """Restituisce la polyline stradale reale del giro usando Google Routes API.
 
     A differenza della vecchia linea tra coordinate, questa funzione chiede a
@@ -323,16 +345,20 @@ def google_route_polyline(points, return_depot=True, start_time="08:00", db: Ses
             }
         }
 
+    try:
+        departure = _route_departure_time_iso(start_time, route_date)
+    except ValueError:
+        departure = None
     body = {
         "origin": waypoint(origin),
         "destination": waypoint(destination),
         "intermediates": [waypoint(p) for p in intermediate_points],
         "travelMode": "DRIVE",
-        "routingPreference": "TRAFFIC_AWARE",
+        "routingPreference": "TRAFFIC_AWARE" if departure else "TRAFFIC_UNAWARE",
         "computeAlternativeRoutes": False,
         "polylineQuality": "HIGH_QUALITY",
         "polylineEncoding": "ENCODED_POLYLINE",
-        "departureTime": _route_departure_time_iso(start_time),
+        **({"departureTime": departure} if departure else {}),
     }
 
     try:
@@ -717,7 +743,9 @@ def _best_internal_sequence(deliveries, matrix, points, vehicle=None, return_dep
     return result
 
 
-def optimize_route(db: Session, deposit, deliveries, vehicle=None, return_depot=True, start_time="08:00"):
+def optimize_route(db: Session, deposit, deliveries, vehicle=None, return_depot=True, start_time="08:00", route_date=None):
+    validate_vehicle_load(deliveries, vehicle)
+    _route_departure_time_iso(start_time, route_date)
     depot_coord = geocode_deposit(db, deposit)
 
     missing = []
@@ -739,7 +767,7 @@ def optimize_route(db: Session, deposit, deliveries, vehicle=None, return_depot=
     for idx, d in enumerate(deliveries, start=1):
         d["_matrix_index"] = idx
 
-    matrix = build_distance_matrix(db, user_id, points, keys, start_time=start_time)
+    matrix = build_distance_matrix(db, user_id, points, keys, start_time=start_time, route_date=route_date)
 
     result = _best_internal_sequence(deliveries, matrix, points, vehicle, return_depot, start_time)
 
@@ -752,8 +780,10 @@ def optimize_route(db: Session, deposit, deliveries, vehicle=None, return_depot=
     result["google_maps_url"] = build_google_maps_url(deposit.indirizzo, result["ordered"], return_depot)
     return result
 
-def recalculate_manual_route(db: Session, deposit, deliveries, vehicle=None, return_depot=True, start_time="08:00"):
+def recalculate_manual_route(db: Session, deposit, deliveries, vehicle=None, return_depot=True, start_time="08:00", route_date=None):
     """Ricalcola km, tempi e orari rispettando l'ordine scelto manualmente dall'utente."""
+    validate_vehicle_load(deliveries, vehicle)
+    _route_departure_time_iso(start_time, route_date)
     depot_coord = geocode_deposit(db, deposit)
     missing = []
     for d in deliveries:
@@ -773,7 +803,7 @@ def recalculate_manual_route(db: Session, deposit, deliveries, vehicle=None, ret
     ]
     for idx, d in enumerate(deliveries, start=1):
         d["_matrix_index"] = idx
-    matrix = build_distance_matrix(db, user_id, points, keys, start_time=start_time)
+    matrix = build_distance_matrix(db, user_id, points, keys, start_time=start_time, route_date=route_date)
 
     ordered = []
     total_km = 0.0

@@ -93,6 +93,7 @@ def save_pairs(db: Session, user_id: int, entries: list[tuple[str, str, float, f
     now = datetime.utcnow()
     expires_at = cache_expires_at(now)
     for origin_key, dest_key, km, minutes in entries:
+        expires_at = min(cache_expires_at(now), now + timedelta(minutes=15)) if "|departure=" in origin_key else cache_expires_at(now)
         row = existing.get((origin_key, dest_key))
         if row:
             row.km = km
@@ -120,7 +121,10 @@ def invalidate_key(db: Session, key: str, user_id: int | None = None):
     Da chiamare quando un cliente o un deposito cambia indirizzo/coordinate.
     Se user_id è passato, la cancellazione resta confinata all'azienda.
     """
-    q = db.query(DistanceCache).filter(or_(DistanceCache.origin_key == key, DistanceCache.dest_key == key))
+    q = db.query(DistanceCache).filter(or_(
+        DistanceCache.origin_key == key, DistanceCache.dest_key == key,
+        DistanceCache.origin_key.startswith(key + "|departure=", autoescape=True),
+        DistanceCache.dest_key.startswith(key + "|departure=", autoescape=True)))
     if user_id is not None:
         q = q.filter(DistanceCache.user_id == user_id)
     q.delete(synchronize_session=False)
