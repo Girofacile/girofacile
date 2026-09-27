@@ -298,6 +298,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 @media(max-width:390px){.kpi-grid{grid-template-columns:1fr}.admin-mobile-brand-v62 strong{font-size:22px}.admin-mobile-icon-btn-v62,.admin-mobile-avatar-v62{width:44px;height:44px}.admin-mobile-bottom-nav-v62{left:8px;right:8px;grid-template-columns:1fr 1fr 70px 1fr 1fr}.admin-mobile-bottom-nav-v62 button.main{width:70px;height:70px}.admin-mobile-bottom-nav-v62 button strong{font-size:10px}.content{padding-left:12px;padding-right:12px}}
 
 </style>
+<script src="/api/billing/catalog.js"></script>
 </head>
 <body>
 
@@ -660,16 +661,13 @@ textarea.form-control { resize: vertical; min-height: 80px; }
         </div>
         <div class="settings-card-v64">
           <h3>Intelligenza artificiale</h3>
-          <p>Attiva l'AI assistita solo per piani Business e Pro: spiegazione sequenza giro, ticket collegati a errori, analisi Super Admin e report aziendali.</p>
+          <p>Attiva l'AI assistita per le aziende con piano Pro, senza quota mensile; l’analisi Super Admin resta separata: spiegazione sequenza giro, ticket collegati a errori, analisi Super Admin e report aziendali.</p>
           <div class="switch-row-v64"><div><strong>AI attiva</strong><small>Se spenta, nessuna funzione AI sarà disponibile.</small></div><label class="switch-v64"><input id="platform-ai-enabled" type="checkbox"><span></span></label></div>
           <div class="form-row-v64" style="margin-top:16px">
             <div class="form-group"><label class="form-label">OpenAI API key</label><input id="platform-openai-key" class="form-control" type="password" placeholder="sk-..."></div>
             <div class="form-group"><label class="form-label">Modello AI</label><select id="platform-openai-model" class="form-control"><option value="gpt-4o-mini">gpt-4o-mini</option><option value="gpt-4.1-mini">gpt-4.1-mini</option></select></div>
           </div>
-          <div class="form-row-v64">
-            <div class="form-group"><label class="form-label">Limite Business/mese</label><input id="platform-ai-limit-business" type="number" class="form-control" min="0"></div>
-            <div class="form-group"><label class="form-label">Limite Pro/mese</label><input id="platform-ai-limit-pro" type="number" class="form-control" min="0"></div>
-          </div>
+          <p>Pro: nessun limite mensile di richieste AI. Consumi visibili nella sezione API.</p>
           <button class="btn btn-primary" onclick="savePlatformSettings()">Salva impostazioni AI</button>
         </div>
       </div>
@@ -1140,9 +1138,9 @@ async function openUserModal(userId) {
       <div class="form-group">
         <label class="form-label">Piano</label>
         <select class="form-control" id="edit-plan">
-          <option value="starter" ${u.plan==='starter'?'selected':''}>Starter — €19/mese</option>
-          <option value="business" ${u.plan==='business'?'selected':''}>Business — €39/mese</option>
-          <option value="pro" ${u.plan==='pro'?'selected':''}>Pro — €79/mese</option>
+          <option value="starter" ${u.plan==='starter'?'selected':''}>Starter — €${window.GF_PLANS.starter.price_eur}/mese</option>
+          <option value="business" ${u.plan==='business'?'selected':''}>Business — €${window.GF_PLANS.business.price_eur}/mese</option>
+          <option value="pro" ${u.plan==='pro'?'selected':''}>Pro — €${window.GF_PLANS.pro.price_eur}/mese</option>
         </select>
       </div>
       <div class="form-group">
@@ -1405,6 +1403,9 @@ async function loadRevenue() {
     const data = await api('/api/admin/revenue');
     if (!data) return;
     document.getElementById('rev-mrr').textContent = `€${data.mrr}`;
+    let billingNote=document.getElementById('billingRevenueNote');
+    if(!billingNote){billingNote=document.createElement('p');billingNote.id='billingRevenueNote';document.getElementById('rev-mrr').parentElement.appendChild(billingNote);}
+    billingNote.textContent=`Incassi reali: €${data.actual_receipts_eur || 0} · Account test: ${data.test_accounts || 0} · Accessi amministrativi: ${data.manual_accounts || 0}. Test e accessi gratuiti esclusi dall’MRR.`;
     document.getElementById('rev-arr').textContent = `ARR stimato: €${data.arr}`;
     document.getElementById('rev-kpi').innerHTML = `
       <div style="background:var(--surface2);border-radius:8px;padding:12px;text-align:center">
@@ -1509,8 +1510,6 @@ async function loadPlatformSettings(){
     document.getElementById('platform-ai-enabled').checked = String(data.ai_enabled || 'false').toLowerCase() === 'true';
     document.getElementById('platform-openai-key').value = data.openai_api_key || '';
     document.getElementById('platform-openai-model').value = data.openai_model || 'gpt-4o-mini';
-    document.getElementById('platform-ai-limit-business').value = data.ai_monthly_limit_business || '1500';
-    document.getElementById('platform-ai-limit-pro').value = data.ai_monthly_limit_pro || '3000';
   }catch(e){ showToast(e.message, 'error'); }
 }
 async function savePlatformSettings(){
@@ -1528,16 +1527,12 @@ async function savePlatformSettings(){
       default_plan: document.getElementById('platform-default-plan').value,
       ai_enabled: document.getElementById('platform-ai-enabled').checked,
       openai_model: document.getElementById('platform-openai-model').value,
-      ai_monthly_limit_business: document.getElementById('platform-ai-limit-business').value,
-      ai_monthly_limit_pro: document.getElementById('platform-ai-limit-pro').value
     };
     if(openaiKey && !openaiKey.includes('•')) payload.openai_api_key = openaiKey;
     const saved = await api('/api/admin/platform-settings', { method:'PUT', body: JSON.stringify(payload)});
     if(saved){
       document.getElementById('platform-ai-enabled').checked = String(saved.ai_enabled || 'false').toLowerCase() === 'true';
       document.getElementById('platform-openai-model').value = saved.openai_model || 'gpt-4o-mini';
-      document.getElementById('platform-ai-limit-business').value = saved.ai_monthly_limit_business || '1500';
-      document.getElementById('platform-ai-limit-pro').value = saved.ai_monthly_limit_pro || '3000';
     }
     showToast('Impostazioni SaaS e AI salvate', 'success');
   }catch(e){ showToast(e.message, 'error'); }
@@ -1789,7 +1784,7 @@ document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('cli
 
 // ---- UTILS ----
 function planName(p) { return { starter: 'Starter', business: 'Business', pro: 'Pro' }[p] || p; }
-function statusLabel(s) { return { trial: 'Trial', active: 'Attivo', expired: 'Scaduto', cancelled: 'Cancellato' }[s] || s; }
+function statusLabel(s) { return { trial: 'Trial', active: 'Attivo', expired: 'Scaduto', cancelled: 'Cancellato', past_due: 'Pagamento in ritardo', incomplete: 'Pagamento da completare' }[s] || s; }
 async function analyzeTicketWithAI(ticketId){
   const box = document.getElementById('ticket-ai-box');
   if(box){ box.style.display='block'; box.textContent='Analisi AI in corso...'; }

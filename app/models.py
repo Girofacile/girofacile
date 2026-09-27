@@ -51,6 +51,16 @@ class User(Base):
     # --- Stripe ---
     stripe_customer_id: Mapped[str | None] = mapped_column(String(200), nullable=True)
     stripe_subscription_id: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    billing_source: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    billing_suspended: Mapped[bool] = mapped_column(Boolean, default=False)
+    billing_grace_until: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    billing_cancel_at_period_end: Mapped[bool] = mapped_column(Boolean, default=False)
+    billing_pending_plan: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    billing_change_key: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    billing_checkout_id: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    billing_checkout_plan: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    billing_checkout_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    billing_checkout_expires: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     # --- Impostazioni operative aziendali ---
     delivery_signature_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -72,6 +82,8 @@ class BillingInvoice(Base):
     currency: Mapped[str] = mapped_column(String(10), default="EUR")
     status: Mapped[str] = mapped_column(String(30), default="paid", index=True)
     pdf_path: Mapped[str | None] = mapped_column(Text, nullable=True)
+    stripe_invoice_id: Mapped[str | None] = mapped_column(String(200), nullable=True, unique=True)
+    is_test: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
@@ -85,8 +97,35 @@ class BillingPayment(Base):
     payment_method: Mapped[str | None] = mapped_column(String(120), nullable=True)
     payment_status: Mapped[str] = mapped_column(String(30), default="paid", index=True)
     transaction_id: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    is_test: Mapped[bool] = mapped_column(Boolean, default=True)
     paid_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class BillingEvent(Base):
+    __tablename__ = "billing_events"
+    event_id: Mapped[str] = mapped_column(String(200), primary_key=True)
+    event_type: Mapped[str] = mapped_column(String(100))
+    processed_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class RouteUsage(Base):
+    """Immutable usage survives route deletion and is charged only at first start."""
+    __tablename__ = "route_usage"
+    route_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    month: Mapped[str] = mapped_column(String(7), index=True)
+    deliveries: Mapped[int] = mapped_column(Integer)
+    started_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class BillingNotice(Base):
+    __tablename__ = "billing_notices"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    notice_key: Mapped[str] = mapped_column(String(160))
+    sent_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    __table_args__ = (UniqueConstraint("user_id", "notice_key"),)
 
 
 class SaaSPlatformSetting(Base):

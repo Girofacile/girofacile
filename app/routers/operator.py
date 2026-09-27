@@ -249,6 +249,8 @@ def complete_delivery(
     if not delivery:
         raise HTTPException(404, "Consegna non trovata")
 
+    from ..services.usage_limits import start_route_usage
+    start_route_usage(db, plan)
     ds = get_or_create_delivery_status(delivery_id, plan.id, db)
     owner = db.get(User, plan.user_id)
     apply_delivery_signature(ds, payload, owner, required=True)
@@ -292,6 +294,8 @@ def missed_delivery(
     if motivo not in MOTIVI_MANCATA:
         motivo = "altro"
 
+    from ..services.usage_limits import start_route_usage
+    start_route_usage(db, plan)
     ds = get_or_create_delivery_status(delivery_id, plan.id, db)
     ds.status = "mancata"
     ds.motivo_mancata = motivo
@@ -318,6 +322,8 @@ def add_delivery_note(
     if not delivery:
         raise HTTPException(404, "Consegna non trovata")
 
+    from ..services.usage_limits import start_route_usage
+    start_route_usage(db, plan)
     ds = get_or_create_delivery_status(delivery_id, plan.id, db)
     ds.note_operatore = (payload.get("note") or "").strip() or None
     db.commit()

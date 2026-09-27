@@ -19,7 +19,7 @@ from ..services.api_usage import log_api_usage
 from ..services.platform_settings import ai_enabled as db_ai_enabled, openai_api_key, openai_model
 from ..services.plans import get_user_plan_status
 
-AI_ALLOWED_PLANS = {"business", "pro"}
+AI_ALLOWED_PLANS = {"pro"}
 AI_DEFAULT_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 AI_COSTS_EUR_PER_1M = {
     # stime interne conservative, modificabili quando si aggiorna listino
@@ -52,10 +52,10 @@ def get_ai_model(db: Session) -> str:
 def ensure_company_ai_allowed(user: User, db: Session):
     if not ai_enabled(db):
         raise HTTPException(403, "AI non attiva nelle impostazioni SaaS")
-    if get_user_plan_status(user) not in ("active", "trial"):
+    if get_user_plan_status(user) not in ("active", "trial", "past_due"):
         raise HTTPException(403, "AI disponibile solo con piano attivo")
     if (user.plan or "starter").lower() not in AI_ALLOWED_PLANS:
-        raise HTTPException(403, "Funzione AI disponibile solo nei piani Business e Pro")
+        raise HTTPException(403, "Funzione AI disponibile solo nel piano Pro")
 
 
 def estimate_ai_cost(model: str, input_tokens: int, output_tokens: int) -> float:

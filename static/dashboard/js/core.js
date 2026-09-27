@@ -154,17 +154,17 @@ function renderFeatureLockedTab(name, cfg){
       </section>
       <aside class="feature-lock-side">
         <div class="feature-lock-side-title">Piani consigliati</div>
-        ${premiumPlanCard('business','Business','€39','Consigliato',[
+        ${premiumPlanCard('business','Business',`€${window.GF_PLANS.business.price_eur}`,'Consigliato',[
           'Agenti commerciali',
           'Report e analisi finali',
           'Chat autisti',
           'Export CSV'
         ])}
-        ${premiumPlanCard('pro','Pro','€79','Completo',[
-          'Clienti e giri illimitati',
+        ${premiumPlanCard('pro','Pro',`€${window.GF_PLANS.pro.price_eur}`,'Completo',[
+          `${window.GF_PLANS.pro.max_customers} clienti · ${window.GF_PLANS.pro.max_routes_per_month} giri/mese`,
           'Tutte le funzioni Business',
-          'Mezzi e autisti illimitati',
-          'Supporto prioritario'
+          `${window.GF_PLANS.pro.max_vehicles} mezzi · ${window.GF_PLANS.pro.max_drivers} autisti`,
+          'Funzioni AI senza quota mensile'
         ])}
       </aside>
     </div>
@@ -519,6 +519,16 @@ function loadProfilePanel(){
 }
 async function loadPlanInfo(){
   try{
+    const checkoutResult = new URLSearchParams(window.location.search).get('checkout');
+    if(checkoutResult && !window.billingReturnHandled){
+      window.billingReturnHandled = true;
+      if(checkoutResult === 'success'){
+        try { await api('/api/billing/sync', {method:'POST',body:'{}'}); toast('Stato pagamento verificato. Consulta Piani e abbonamento.'); }
+        catch(e){ toast('Conferma pagamento in attesa: aggiorna lo stato nella sezione abbonamento.'); }
+      } else toast('Checkout annullato: nessun piano attivato.');
+      const cleanUrl = new URL(window.location.href); cleanUrl.searchParams.delete('checkout');
+      window.history.replaceState({}, '', cleanUrl);
+    }
     const me = await api("/api/me");
     const plan = me.plan || "starter";
     _currentPlan = plan;
@@ -527,6 +537,7 @@ async function loadPlanInfo(){
     currentSessionUser = {...(currentSessionUser || {}), ...me};
     setSectorConfigV47(me);
     updatePremiumNavState();
+    document.querySelectorAll('[onclick="generateReportAIv67()"]').forEach(el=>el.classList.toggle("hidden", !limits.has_ai));
 
     // Badge piano
     const badge = document.getElementById("planBadge");
@@ -560,7 +571,10 @@ async function loadPlanInfo(){
       if(statusIcon) statusIcon.textContent = "✅";
       if(statusLabel) statusLabel.textContent = `Piano ${planNames[plan]} attivo`;
       if(statusDesc) statusDesc.textContent = "Il tuo abbonamento è attivo. Grazie per usare GiroFacile!";
-    } else if(status === "expired" || status === "cancelled"){
+    } else if(status === "past_due"){
+      if(statusLabel) statusLabel.textContent = "Pagamento da completare — tolleranza di 7 giorni";
+      if(statusDesc) statusDesc.textContent = "Aggiorna il metodo di pagamento nella sezione abbonamento.";
+    } else if(status === "expired" || status === "cancelled" || status === "incomplete"){
       if(statusBox) statusBox.style.background = "#fee2e2";
       if(statusIcon) statusIcon.textContent = "❌";
       if(statusLabel) statusLabel.textContent = "Piano scaduto";
@@ -596,11 +610,7 @@ async function loadPlanInfo(){
     const planCards = document.getElementById("planCards");
     if(plan !== "pro" && planCards && upgradeBox){
       upgradeBox.style.display = "block";
-      const allPlans = [
-        {key:"starter",name:"Starter",price:"€19"},
-        {key:"business",name:"Business",price:"€39"},
-        {key:"pro",name:"Pro",price:"€79"},
-      ];
+      const allPlans = Object.entries(window.GF_PLANS).map(([key,p])=>({key,name:p.name,price:`€${p.price_eur}`}));
       planCards.innerHTML = allPlans.map(p => `
         <div class="plan-card-mini ${p.key === plan ? "current" : ""}" onclick="selectUpgradePlan('${p.key}')">
           <div class="pname">${p.name}</div>
@@ -641,8 +651,9 @@ function returnFromBillingPageV876(){
   const target = _billingReturnTabV876 === "billing-account" ? "plan-account" : (_billingReturnTabV876 || "plan-account");
   showTab(target);
 }
-function managePaymentMethodsV876(){
-  toast("Gestione metodo di pagamento in preparazione: il collegamento sicuro al provider verrà attivato qui.");
+async function managePaymentMethodsV876(){
+  try { const data=await api('/api/billing/portal',{method:'POST',body:'{}'}); window.location.assign(data.url); }
+  catch(e){ alert(e.message); }
 }
 async function loadBillingOverviewV63(){
   const loading = document.getElementById("billingLoadingV63");
@@ -663,11 +674,11 @@ async function loadBillingOverviewV63(){
     setText("billingPaymentMethodV63", methodLabel);
     setText("billingMethodCardLabelV876", method.label || "Nessun metodo configurato");
     setText("billingMethodCardSubV876", method.details || (method.label ? "Metodo utilizzato per il rinnovo del piano." : "Aggiungi un metodo per i rinnovi automatici."));
-    const hasMethod = !!method.label;
+    const hasMethod = !!method.configured;
     const defBadge = document.getElementById("billingMethodDefaultV876");
     if(defBadge) defBadge.style.display = hasMethod ? "inline-flex" : "none";
-    setText("billingPaymentStatusV876", plan.status === "overdue" || plan.status === "failed" ? "Da verificare" : "Regolare");
-    setText("billingPaymentStatusHintV876", plan.status === "overdue" || plan.status === "failed" ? "Controlla il metodo di pagamento" : "Nessuna azione richiesta");
+    setText("billingPaymentStatusV876", ["overdue","failed","past_due","incomplete","expired"].includes(plan.status) ? "Da verificare" : "Regolare");
+    setText("billingPaymentStatusHintV876", ["overdue","failed","past_due","incomplete","expired"].includes(plan.status) ? "Controlla il metodo di pagamento" : "Nessuna azione richiesta");
     set("billingCompanyNameV63", company.company_name || "");
     set("billingCompanyEmailV63", company.billing_email || company.company_email || "");
     set("billingCompanyVatV63", company.company_vat || "");
@@ -694,7 +705,7 @@ function renderBillingInvoicesV63(invoices){
   host.innerHTML = invoices.map(inv => `
     <div class="billing-row-v63">
       <div>
-        <strong>Fattura ${esc(inv.number || "—")}</strong>
+        <strong>${inv.is_test ? "Documento di prova" : "Fattura"} ${esc(inv.number || "—")}</strong>
         <span>${fmtDateV63(inv.date)} · Periodo ${fmtDateV63(inv.period_start)} - ${fmtDateV63(inv.period_end)}</span>
       </div>
       <div><b>${fmtEuroV63(inv.total)}</b><small class="billing-status-v63 ${esc(inv.status)}">${billingStatusLabelV63(inv.status)}</small></div>
@@ -711,7 +722,7 @@ function renderBillingPaymentsV63(payments){
   host.innerHTML = payments.map(pay => `
     <div class="billing-row-v63 payment">
       <div>
-        <strong>${billingStatusLabelV63(pay.status)}</strong>
+        <strong>${pay.is_test ? "Prova — " : ""}${billingStatusLabelV63(pay.status)}</strong>
         <span>${fmtDateV63(pay.paid_at || pay.created_at)} · ${esc(pay.method || "Metodo non indicato")}</span>
       </div>
       <div><b>${fmtEuroV63(pay.amount)}</b><small>${esc(pay.transaction_id || "")}</small></div>
@@ -739,23 +750,7 @@ async function saveBillingDetailsV63(){
 let _selectedUpgradePlan = null;
 let _currentPlan = null;
 
-const PLAN_FEATURES = {
-  starter: {
-    name:"Starter", price:"€19", period:"/mese",
-    features:["30 clienti","5 giri al giorno","2 depositi","3 mezzi · 3 autisti","Interfaccia mobile"],
-    missing:["Sezione agenti","Chat autisti","Report e analisi","Export CSV"]
-  },
-  business: {
-    name:"Business", price:"€39", period:"/mese",
-    features:["150 clienti","30 giri al giorno","10 depositi","20 mezzi · 20 autisti","Agenti commerciali","Report e analisi","Export CSV","Interfaccia mobile"],
-    missing:[]
-  },
-  pro: {
-    name:"Pro", price:"€79", period:"/mese",
-    features:["Clienti illimitati","Giri illimitati","Depositi illimitati","Mezzi e autisti illimitati","Tutte le funzionalità Business","Supporto prioritario"],
-    missing:[]
-  }
-};
+const PLAN_FEATURES = Object.fromEntries(Object.keys(window.GF_PLANS || {}).map(p=>[p,planFeatures(p)]));
 
 let _planReturnTabV874 = "dashboard";
 function getVisibleTabV874(){
@@ -795,7 +790,7 @@ function renderUpgradeCards(){
   const descriptions = {
     starter:"Per iniziare con le funzioni essenziali di pianificazione.",
     business:"Per aziende operative che gestiscono più risorse e consegne.",
-    pro:"Per realtà strutturate che vogliono limiti estesi e priorità."
+    pro:"Per flotte fino a 50 autisti, con funzioni AI incluse."
   };
   document.getElementById("upgradePlanCards").innerHTML = plans.map(p => {
     const f = PLAN_FEATURES[p];
@@ -816,6 +811,7 @@ function renderUpgradeCards(){
       <span class="up-select-v875">${isCurrent?'Attivo':(isSelected?'Selezionato':'Seleziona piano')}</span>
     </button>`;
   }).join("");
+  api("/api/billing/my-plan").then(renderSubscriptionControls).catch(e=>toast(e.message));
   renderUpgradeFeatures(_selectedUpgradePlan || _currentPlan);
   renderPlanComparisonV875();
 }
@@ -840,40 +836,17 @@ function renderPlanComparisonV875(){
   const box = document.getElementById("planComparisonV875");
   if(!box) return;
   const rows = [
-    ["Clienti","30","150","Illimitati"],
-    ["Giri giornalieri","5","30","Illimitati"],
-    ["Depositi","2","10","Illimitati"],
-    ["Mezzi e autisti","3 + 3","20 + 20","Illimitati"],
-    ["Agenti commerciali","—","Inclusi","Inclusi"],
-    ["Report e analisi","—","Inclusi","Inclusi"],
-    ["Export CSV","—","Incluso","Incluso"],
-    ["Supporto prioritario","—","—","Incluso"]
-  ];
+    ["Clienti", "max_customers"], ["Giri al mese", "max_routes_per_month"],
+    ["Consegne al mese", "max_deliveries_per_month"], ["Depositi", "max_deposits"],
+    ["Autisti", "max_drivers"], ["Mezzi", "max_vehicles"], ["Agenti", "has_agents"],
+    ["Report", "has_reports"], ["Export dati", "has_export"], ["AI", "has_ai"]
+  ].map(([label,key])=>[label,...["starter","business","pro"].map(p=>
+    typeof window.GF_PLANS[p][key] === 'boolean' ? (window.GF_PLANS[p][key]?'Incluso':'—') : window.GF_PLANS[p][key])]);
+
   box.innerHTML = `<div class="plan-comparison-head-v875"><div><span>CONFRONTO COMPLETO</span><h2>Funzionalità incluse</h2></div><p>Una vista unica per confrontare rapidamente i tre livelli.</p></div>
   <div class="plan-table-wrap-v875"><table class="plan-table-v875"><thead><tr><th>Funzionalità</th><th>Starter</th><th>Business</th><th>Pro</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`).join("")}</tbody></table></div>`;
 }
-async function confirmUpgrade(){
-  if(!_selectedUpgradePlan || _selectedUpgradePlan === _currentPlan){
-    alert("Seleziona un piano diverso da quello attuale.");return;
-  }
-  const planNames = {starter:"Starter",business:"Business",pro:"Pro"};
-  if(!confirm(`Attivare il piano ${planNames[_selectedUpgradePlan]}?`)) return;
-  try{
-    const btn = document.getElementById("btnConfirmUpgrade");
-    btn.textContent = "Attivazione...";btn.disabled = true;
-    // Chiama endpoint per cambiare piano (test mode — senza pagamento)
-    const res = await api("/api/billing/select-plan", {method:"POST", body:JSON.stringify({plan:_selectedUpgradePlan})});
-    toast(`Piano ${planNames[_selectedUpgradePlan]} attivato con successo!`);
-    await loadPlanInfo();
-    _selectedUpgradePlan = _currentPlan;
-    renderUpgradeCards();
-    syncPlanPageHeaderV874();
-  }catch(e){
-    alert(e.message);
-    const btn = document.getElementById("btnConfirmUpgrade");
-    btn.textContent = "Attiva piano selezionato";btn.disabled = false;
-  }
-}
+async function confirmUpgrade(){ return checkoutOrChangePlan(); }
 
 async function loadAccountProfileV81(){
   try{
@@ -3073,7 +3046,7 @@ function renderRouteResult(r, targetId="routeResult", fromHistory=false){
         <div class="summary-row"><span>Soste con attesa</span><strong>${counts.attesa}</strong></div>
         <div class="summary-highlight"><span>Costo energetico stimato</span><strong>€ ${r.costo_totale ?? r.costo_carburante ?? "-"}</strong></div>
         <button class="btn-secondary full" onclick="printStopsTable()">Stampa dettaglio fermate</button>
-        ${r.id ? `<button class="btn-secondary full" onclick="explainRouteSequenceAIv67(${r.id})">Spiega sequenza giro AI</button><div id="routeAiExplanationV67" class="ai-explanation-v67 hidden"></div>` : ""}
+        ${r.id && currentSessionUser?.limits?.has_ai ? `<button class="btn-secondary full" onclick="explainRouteSequenceAIv67(${r.id})">Spiega sequenza giro AI</button><div id="routeAiExplanationV67" class="ai-explanation-v67 hidden"></div>` : ""}
         ${isProgrammable ? `<button class="btn-primary full" onclick="programCurrentRoute()">Programma giro</button><small class="program-route-note">Dopo la conferma verrai portato direttamente in Giri programmati.</small>` : ""}
       </aside>
     </div>
@@ -4434,7 +4407,7 @@ function ensureSupportModalV60(){
         </label>
         <div id="supportTicketLinkedErrorV60" class="support-linked-error-v60 hidden"></div>
         <button type="button" id="supportTicketAiBtnV67" class="btn-secondary hidden" onclick="generateSupportTicketTextAIv67()">Genera testo assistito AI</button>
-        <small id="supportTicketAiHintV67" class="hidden" style="color:var(--muted)">Disponibile solo per ticket collegati a un errore sistema e piani Business/Pro.</small>
+        <small id="supportTicketAiHintV67" class="hidden" style="color:var(--muted)">Disponibile solo per ticket collegati a un errore sistema e piano Pro.</small>
       </div>
       <div class="support-actions-v60">
         <button type="button" class="btn-secondary" onclick="closeSupportTicketModalV60()">Annulla</button>
@@ -4459,7 +4432,7 @@ function openSupportPanelV49(errorId=null, suggestedMessage=""){
   if(errorId){
     linked.classList.remove("hidden");
     linked.textContent = `Questo ticket verrà collegato all'errore di sistema #${errorId}. Quando il ticket sarà chiuso, anche l'errore verrà segnato come risolto.`;
-    aiBtn?.classList.remove("hidden");
+    aiBtn?.classList.toggle("hidden", !currentSessionUser?.limits?.has_ai);
     aiHint?.classList.remove("hidden");
   }else{
     linked.classList.add("hidden");

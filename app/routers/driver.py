@@ -317,6 +317,8 @@ def start_route(route_id: int, da: DriverAccount = Depends(get_current_driver), 
     if not r:
         raise HTTPException(404, "Giro non trovato")
     if r.status not in ("completato", "annullato"):
+        from ..services.usage_limits import start_route_usage
+        start_route_usage(db, r)
         r.status = "in_corso"
         if not getattr(r, "started_at", None):
             r.started_at = local_now().replace(tzinfo=None)
@@ -414,6 +416,8 @@ def save_delivery_signature(delivery_id: int, payload: dict, da: DriverAccount =
     if not owner or not getattr(owner, "delivery_signature_enabled", False):
         raise HTTPException(400, "Firma cliente non attiva per questa azienda")
 
+    from ..services.usage_limits import start_route_usage
+    start_route_usage(db, r)
     ds = get_or_create_delivery_status(delivery_id, d.route_plan_id, db)
     apply_delivery_signature(ds, payload, owner, required=True)
     db.commit()
@@ -427,6 +431,8 @@ def complete_delivery(delivery_id: int, payload: dict, da: DriverAccount = Depen
     r = db.get(RoutePlan, d.route_plan_id)
     if not r or r.driver_id != da.driver_id:
         raise HTTPException(403, "Non autorizzato")
+    from ..services.usage_limits import start_route_usage
+    start_route_usage(db, r)
     ds = get_or_create_delivery_status(delivery_id, d.route_plan_id, db)
     owner = db.get(User, r.user_id) if r.user_id else None
     apply_delivery_signature(ds, payload, owner, required=True)
@@ -451,6 +457,8 @@ def missed_delivery(delivery_id: int, payload: dict, da: DriverAccount = Depends
     r = db.get(RoutePlan, d.route_plan_id)
     if not r or r.driver_id != da.driver_id:
         raise HTTPException(403, "Non autorizzato")
+    from ..services.usage_limits import start_route_usage
+    start_route_usage(db, r)
     ds = get_or_create_delivery_status(delivery_id, d.route_plan_id, db)
     ds.status = "mancata"
     ds.motivo_mancata = payload.get("motivo") or "altro"
@@ -468,6 +476,8 @@ def add_note(delivery_id: int, payload: dict, da: DriverAccount = Depends(get_cu
     r = db.get(RoutePlan, d.route_plan_id)
     if not r or r.driver_id != da.driver_id:
         raise HTTPException(403, "Non autorizzato")
+    from ..services.usage_limits import start_route_usage
+    start_route_usage(db, r)
     ds = get_or_create_delivery_status(delivery_id, d.route_plan_id, db)
     ds.note_operatore = (payload.get("note") or "").strip() or None
     db.commit()
@@ -512,6 +522,7 @@ def send_driver_direct_message(payload: dict, da: DriverAccount = Depends(get_cu
 
 @router.get("/chat/{route_id}")
 def get_driver_chat(route_id: int, since_id: int = 0, da: DriverAccount = Depends(get_current_driver), db: Session = Depends(get_db)):
+    _require_driver_chat_feature(da.driver_id, db)
     r = db.query(RoutePlan).filter(RoutePlan.id == route_id, RoutePlan.driver_id == da.driver_id).first()
     if not r:
         raise HTTPException(404, "Giro non trovato")
@@ -529,6 +540,7 @@ def get_driver_chat(route_id: int, since_id: int = 0, da: DriverAccount = Depend
 
 @router.post("/chat/{route_id}")
 def send_driver_message(route_id: int, payload: dict, da: DriverAccount = Depends(get_current_driver), db: Session = Depends(get_db)):
+    _require_driver_chat_feature(da.driver_id, db)
     r = db.query(RoutePlan).filter(RoutePlan.id == route_id, RoutePlan.driver_id == da.driver_id).first()
     if not r:
         raise HTTPException(404, "Giro non trovato")

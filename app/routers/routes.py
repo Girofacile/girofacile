@@ -407,6 +407,10 @@ def serialize_route(plan):
 
 def save_route_result(db, user, data, result, vehicle, route_id=None):
     check_daily_route_limit(user, db, data.data_giro, exclude_route_id=route_id)
+    if route_id:
+        existing = owned(db.query(RoutePlan), RoutePlan, user).filter(RoutePlan.id == route_id).first()
+        if existing and (existing.started_at or existing.status in ("in_corso", "completato")):
+            raise HTTPException(409, "Un giro già avviato non può essere riscritto: crea un nuovo giro")
     # Ultima barriera prima della persistenza: anche se un nuovo endpoint futuro
     # dimenticasse la validazione iniziale, una consegna non può mantenere il
     # riferimento a un cliente appartenente a un'altra azienda.
@@ -827,6 +831,8 @@ def complete_route(route_id: int, db: Session = Depends(get_db), user: User = De
     plan = owned(db.query(RoutePlan), RoutePlan, user).filter(RoutePlan.id == route_id).first()
     if not plan:
         raise HTTPException(404, "Giro non trovato")
+    from ..services.usage_limits import start_route_usage
+    start_route_usage(db, plan)
     plan.status = "completato"
     plan.completed_at = local_now().replace(tzinfo=None)
     db.commit()

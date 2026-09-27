@@ -13,50 +13,7 @@ from ..core.utils import local_today_iso
 # -----------------------------------------------------------------------
 # Definizione limiti per piano
 # -----------------------------------------------------------------------
-PLAN_LIMITS = {
-    "starter": {
-        "name": "Starter",
-        "max_customers": 30,
-        "max_routes_per_day": 5,
-        "max_deposits": 2,
-        "max_vehicles": 3,
-        "max_drivers": 3,
-        "has_agents": False,
-        "has_reports": False,
-        "has_export": False,
-        "has_geocoding": True,
-        "has_mobile": True,
-        "has_driver_chat": False,
-    },
-    "business": {
-        "name": "Business",
-        "max_customers": 150,
-        "max_routes_per_day": 30,
-        "max_deposits": 10,
-        "max_vehicles": 20,
-        "max_drivers": 20,
-        "has_agents": True,
-        "has_reports": True,
-        "has_export": True,
-        "has_geocoding": True,
-        "has_mobile": True,
-        "has_driver_chat": True,
-    },
-    "pro": {
-        "name": "Pro",
-        "max_customers": None,       # illimitato
-        "max_routes_per_day": None,  # illimitato
-        "max_deposits": None,
-        "max_vehicles": None,
-        "max_drivers": None,
-        "has_agents": True,
-        "has_reports": True,
-        "has_export": True,
-        "has_geocoding": True,
-        "has_mobile": True,
-        "has_driver_chat": True,
-    },
-}
+from .plan_catalog import PLAN_LIMITS, PLAN_PRICES
 
 
 def get_plan_limits(plan: str) -> dict:
@@ -71,7 +28,12 @@ def get_user_plan_status(user: User) -> str:
     - expired → trial o abbonamento scaduto
     - cancelled → abbonamento cancellato
     """
+    if getattr(user, "billing_suspended", False):
+        return "cancelled"
     status = user.plan_status or "trial"
+    if status == "past_due":
+        grace = getattr(user, "billing_grace_until", None)
+        return "past_due" if grace and datetime.utcnow() < grace else "expired"
     if status == "trial":
         if user.trial_ends_at and datetime.utcnow() > user.trial_ends_at:
             return "expired"
@@ -82,7 +44,7 @@ def get_user_plan_status(user: User) -> str:
 
 
 def is_plan_active(user: User) -> bool:
-    return get_user_plan_status(user) in ("trial", "active")
+    return get_user_plan_status(user) in ("trial", "active", "past_due")
 
 
 def require_active_plan(user: User):
@@ -96,7 +58,8 @@ def require_active_plan(user: User):
 
 def require_feature(user: User, feature: str):
     """Lancia 403 se la feature non è disponibile nel piano dell'utente."""
-    require_active_plan(user)
+    if feature not in ("has_export", "has_reports"):
+        require_active_plan(user)
     limits = get_plan_limits(user.plan or "starter")
     if not limits.get(feature, False):
         plan_name = limits["name"]
@@ -124,6 +87,7 @@ def check_customer_limit(user: User, db: Session, additional: int = 1):
 
 def check_deposit_limit(user: User, db: Session):
     require_active_plan(user)
+    db.query(User).filter(User.id == user.id).with_for_update().first()
     limits = get_plan_limits(user.plan or "starter")
     max_d = limits.get("max_deposits")
     if max_d is None:
@@ -138,6 +102,7 @@ def check_deposit_limit(user: User, db: Session):
 
 def check_vehicle_limit(user: User, db: Session):
     require_active_plan(user)
+    db.query(User).filter(User.id == user.id).with_for_update().first()
     limits = get_plan_limits(user.plan or "starter")
     max_v = limits.get("max_vehicles")
     if max_v is None:
@@ -152,6 +117,7 @@ def check_vehicle_limit(user: User, db: Session):
 
 def check_driver_limit(user: User, db: Session):
     require_active_plan(user)
+    db.query(User).filter(User.id == user.id).with_for_update().first()
     limits = get_plan_limits(user.plan or "starter")
     max_dr = limits.get("max_drivers")
     if max_dr is None:
@@ -194,4 +160,9 @@ def user_plan_info(user: User) -> dict:
         "trial_ends_at": user.trial_ends_at.isoformat() if user.trial_ends_at else None,
         "plan_expires_at": user.plan_expires_at.isoformat() if user.plan_expires_at else None,
         "limits": limits,
+        "price_eur": PLAN_PRICES[user.plan or "starter"]["price_eur"],
+        "billing_source": getattr(user, "billing_source", None) or "legacy",
+        "cancel_at_period_end": bool(getattr(user, "billing_cancel_at_period_end", False)),
+        "grace_until": user.billing_grace_until.isoformat() if getattr(user, "billing_grace_until", None) else None,
+        "pending_plan": getattr(user, "billing_pending_plan", None),
     }

@@ -25,7 +25,7 @@ from ..core.dependencies import is_admin_user, require_superadmin
 from ..database import get_db, engine, database_kind
 from ..services.backups import backup_directory, backup_files, resolve_backup
 from ..core.utils import date_to_iso, time_to_hhmm
-from ..models import Customer, Delivery, Driver, RoutePlan, SupportTicket, SystemErrorLog, User, Vehicle, SaaSPlatformSetting, SuperAdminProfile, SuperAdminActivityLog, SuperAdminCollaborator, ApiUsageLog
+from ..models import BillingPayment, Customer, Delivery, Driver, RoutePlan, SupportTicket, SystemErrorLog, User, Vehicle, SaaSPlatformSetting, SuperAdminProfile, SuperAdminActivityLog, SuperAdminCollaborator, ApiUsageLog
 from ..services.plans import PLAN_LIMITS, get_user_plan_status
 from ..services.error_monitor import error_log_to_dict
 from ..services.email import send_ticket_resolved, send_superadmin_collaborator_invitation
@@ -36,7 +36,7 @@ from ..core.security import hash_password
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
-PLAN_MRR = {"starter": 19, "business": 39, "pro": 79}
+PLAN_MRR = {key: info["price_eur"] for key, info in PLAN_PRICES.items()}
 
 
 COLLABORATOR_PERMISSIONS = {
@@ -258,6 +258,9 @@ def user_to_dict(u: User, db: Session) -> dict:
         "plan_expires_at": u.plan_expires_at.isoformat() if u.plan_expires_at else None,
         "stripe_customer_id": u.stripe_customer_id or "",
         "stripe_subscription_id": u.stripe_subscription_id or "",
+        "billing_source": u.billing_source or "legacy",
+        "cancel_at_period_end": bool(u.billing_cancel_at_period_end),
+        "grace_until": u.billing_grace_until.isoformat() if u.billing_grace_until else None,
         "customers_count": db.query(Customer).filter(Customer.user_id == u.id, Customer.deleted_at.is_(None)).count(),
         "routes_count": db.query(RoutePlan).filter(RoutePlan.user_id == u.id).count(),
         "vehicles_count": db.query(Vehicle).filter(Vehicle.user_id == u.id, Vehicle.deleted_at.is_(None)).count(),
@@ -375,8 +378,6 @@ def admin_platform_settings(db: Session = Depends(get_db), superadmin: dict = De
         "ai_enabled": "false",
         "openai_api_key": "",
         "openai_model": "gpt-4o-mini",
-        "ai_monthly_limit_business": "1500",
-        "ai_monthly_limit_pro": "3000",
         "google_maps_api_key": GOOGLE_MAPS_API_KEY or "",
         "google_geocoding_enabled": "true" if GOOGLE_MAPS_API_KEY else "false",
         "google_routes_enabled": "true" if GOOGLE_MAPS_API_KEY else "false",
@@ -395,7 +396,7 @@ def admin_update_platform_settings(payload: dict, db: Session = Depends(get_db),
     allowed = {
         "platform_name", "support_email", "error_notification_email", "main_domain",
         "maintenance_mode", "registrations_enabled", "trial_days", "default_plan", "support_phone",
-        "ai_enabled", "openai_api_key", "openai_model", "ai_monthly_limit_business", "ai_monthly_limit_pro",
+        "ai_enabled", "openai_api_key", "openai_model",
         "google_maps_api_key", "google_geocoding_enabled", "google_routes_enabled", "stripe_secret_key", "shopify_domain", "backup_storage_target", "backup_frequency", "server_console_url"
     }
     for key in allowed:
@@ -924,7 +925,7 @@ def admin_overview(db: Session = Depends(get_db), superadmin: dict = Depends(req
     thirty_days_ago = now - timedelta(days=30)
 
     trial_active = [u for u in non_admin if get_user_plan_status(u) == "trial"]
-    paying = [u for u in non_admin if get_user_plan_status(u) == "active"]
+    paying = [u for u in non_admin if get_user_plan_status(u) == "active" and u.billing_source == "stripe_live"]
     expired = [u for u in non_admin if get_user_plan_status(u) in ("expired", "cancelled")]
     new_this_month = [u for u in non_admin if u.created_at and u.created_at >= first_of_month]
 
@@ -1046,6 +1047,11 @@ def admin_update_plan(user_id: int, payload: dict, db: Session = Depends(get_db)
     user = db.get(User, user_id)
     if not user:
         raise HTTPException(404, "Utente non trovato")
+    if user.stripe_subscription_id:
+        raise HTTPException(409, "Account collegato a Stripe: usare sincronizzazione e gestione abbonamento")
+    reason = (payload.get("reason") or "Assegnazione amministrativa dal pannello").strip()[:500]
+    user.billing_source = "manual"
+    _activity(db, superadmin.get("username"), "manual_plan_change", f"Account {user.id}: {user.plan} -> {payload.get('plan', user.plan)}. {reason}", "warning")
     valid_plans = ("starter", "business", "pro")
     valid_statuses = ("trial", "active", "expired", "cancelled")
     if payload.get("plan") in valid_plans:
@@ -1069,7 +1075,11 @@ def admin_toggle_user(user_id: int, payload: dict, db: Session = Depends(get_db)
     if not user or is_admin_user(user):
         raise HTTPException(404, "Utente non trovato")
     disable = payload.get("disable", True)
-    user.plan_status = "cancelled" if disable else "active"
+    user.billing_suspended = bool(disable)
+    if not user.stripe_subscription_id:
+        user.plan_status = "cancelled" if disable else "active"
+        user.billing_source = "manual"
+    _activity(db, superadmin.get("username"), "account_suspension_changed", f"Account {user.id}: sospensione={bool(disable)}", "warning")
     db.commit()
     return {"ok": True, "plan_status": user.plan_status}
 
@@ -1309,7 +1319,7 @@ Non inventare dati e non promettere soluzioni già completate.
 def admin_revenue(db: Session = Depends(get_db), superadmin: dict = Depends(require_superadmin)):
     _require_perm(superadmin, "view_revenue")
     all_users = [u for u in db.query(User).all() if not is_admin_user(u)]
-    paying = [u for u in all_users if get_user_plan_status(u) == "active"]
+    paying = [u for u in all_users if get_user_plan_status(u) == "active" and u.billing_source == "stripe_live"]
     trial = [u for u in all_users if get_user_plan_status(u) == "trial"]
 
     mrr = sum(PLAN_MRR.get(u.plan or "starter", 0) for u in paying)
@@ -1333,6 +1343,9 @@ def admin_revenue(db: Session = Depends(get_db), superadmin: dict = Depends(requ
 
     return {
         "mrr": mrr,
+        "test_accounts": sum(u.billing_source == "stripe_test" for u in all_users),
+        "manual_accounts": sum(u.billing_source in (None, "manual", "legacy") and get_user_plan_status(u) == "active" for u in all_users),
+        "actual_receipts_eur": float(db.query(func.coalesce(func.sum(BillingPayment.amount), 0)).filter(BillingPayment.is_test.is_(False), BillingPayment.payment_status == "paid", BillingPayment.currency == "EUR").scalar() or 0),
         "arr": arr,
         "abbonamenti_attivi": len(paying),
         "trial_attivi": len(trial),
@@ -1340,3 +1353,19 @@ def admin_revenue(db: Session = Depends(get_db), superadmin: dict = Depends(requ
         "breakdown_piani": list(by_plan.values()),
         "utenti_in_trial_scadenza": [user_to_dict(u, db) for u in trial_converting],
     }
+
+
+@router.post("/users/{user_id}/billing-sync")
+def admin_billing_sync(user_id: int, db: Session = Depends(get_db), superadmin: dict = Depends(require_superadmin)):
+    _require_perm(superadmin, "manage_users")
+    from ..services.billing import reconcile, lock_user, stripe_client, select_current_subscription
+    user = db.get(User, user_id)
+    if not user:
+        raise HTTPException(404, "Utente non trovato")
+    user = lock_user(db, user)
+    stripe = stripe_client(user)
+    select_current_subscription(stripe, user)
+    reconcile(db, user, stripe)
+    _activity(db, superadmin.get("username"), "billing_reconciled", f"Sincronizzato account {user.id}")
+    db.commit()
+    return {"ok": True}

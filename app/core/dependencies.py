@@ -14,6 +14,8 @@ def current_user(request: Request, db: Session = Depends(get_db)) -> User:
     user = db.get(User, user_id)
     if not user:
         raise HTTPException(status_code=401, detail="Sessione non valida")
+    from ..services.usage_limits import guard_company_write
+    guard_company_write(request, user)
     return user
 
 

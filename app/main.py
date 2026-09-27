@@ -392,6 +392,20 @@ def migrate_database():
         add_column("users", "plan_expires_at", sql_type(DateTime()))
         add_column("users", "stripe_customer_id", sql_type(String(200)))
         add_column("users", "stripe_subscription_id", sql_type(String(200)))
+        for column in ("billing_source", "billing_pending_plan", "billing_checkout_plan"):
+            add_column("users", column, sql_type(String(30)))
+        add_column("users", "billing_change_key", sql_type(String(40)))
+        add_column("users", "billing_checkout_id", sql_type(String(200)))
+        add_column("users", "billing_checkout_url", sql_type(Text()))
+        for column in ("billing_grace_until", "billing_checkout_expires"):
+            add_column("users", column, sql_type(DateTime()))
+        add_column("users", "billing_cancel_at_period_end", sql_type(Boolean()), "false")
+        add_column("users", "billing_suspended", sql_type(Boolean()), "false")
+        add_column("billing_invoices", "stripe_invoice_id", sql_type(String(200)))
+        add_column("billing_invoices", "is_test", sql_type(Boolean()), "true")
+        add_column("billing_payments", "is_test", sql_type(Boolean()), "true")
+        with engine.begin() as conn:
+            conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS uq_billing_stripe_invoice ON billing_invoices (stripe_invoice_id)"))
         add_column("users", "delivery_signature_enabled", sql_type(Boolean()), "0" if dialect.name == "sqlite" else "false")
         if "agents_enabled" not in table_columns("users"):
             add_column("users", "agents_enabled", sql_type(Boolean()), "0" if dialect.name == "sqlite" else "false")
@@ -427,6 +441,12 @@ def migrate_database():
             alter_type("deliveries", col, "TIME", f"NULLIF({col}::text, '')::time")
         for col in ["scadenza_patente", "scadenza_cqc"]:
             alter_type("drivers", col, "DATE", f"NULLIF({col}::text, '')::date")
+
+    from app.services.usage_limits import backfill_started_routes
+    from sqlalchemy.orm import Session
+    with Session(engine) as db:
+        backfill_started_routes(db)
+
 
 def ensure_default_user():
     with Session(engine) as db:

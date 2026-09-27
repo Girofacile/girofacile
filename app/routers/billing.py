@@ -1,7 +1,6 @@
 """
 Router billing - gestione piani e abbonamenti Stripe.
-La struttura è pronta; l'integrazione Stripe completa
-va attivata inserendo STRIPE_SECRET_KEY nel .env.
+Acquisti sandbox riservati agli account di collaudo; incassi reali bloccati.
 """
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
@@ -10,10 +9,29 @@ from datetime import datetime, timedelta
 from ..core.config import PLAN_PRICES, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET
 from ..core.dependencies import current_user
 from ..database import get_db
-from ..models import User, BillingInvoice, BillingPayment
+from ..models import User, BillingInvoice, BillingPayment, BillingEvent
 from ..services.plans import PLAN_LIMITS, get_user_plan_status, user_plan_info
 
 router = APIRouter(prefix="/api/billing", tags=["billing"])
+
+
+def billing_state(user):
+    from ..core import config
+    return {"mode": config.BILLING_MODE, "live_enabled": False,
+            "checkout_enabled": config.BILLING_MODE == "test" and user.id in config.BILLING_TEST_USER_IDS,
+            "source": user.billing_source or "legacy", "subscription": bool(user.stripe_subscription_id),
+            "cancel_at_period_end": bool(user.billing_cancel_at_period_end),
+            "pending_plan": user.billing_pending_plan,
+            "grace_until": _date_iso(user.billing_grace_until)}
+
+
+@router.get("/catalog.js", include_in_schema=False)
+def public_catalog_script():
+    import json
+    from fastapi.responses import Response
+    catalog = {key: {**limits, "price_eur": PLAN_PRICES[key]["price_eur"]} for key, limits in PLAN_LIMITS.items()}
+    return Response("window.GF_PLANS = " + json.dumps(catalog) + ";", media_type="application/javascript",
+                    headers={"Cache-Control": "no-cache"})
 
 
 def _plan_display_name(plan: str | None) -> str:
@@ -50,17 +68,18 @@ def _billing_company_payload(user: User) -> dict:
 def billing_overview(db: Session = Depends(get_db), user: User = Depends(current_user)):
     """Area fatturazione utente: piano, dati fiscali, fatture e pagamenti."""
     plan = (user.plan or "starter").lower()
-    status = user.plan_status or "trial"
+    status = get_user_plan_status(user)
     price = _plan_monthly_price(plan)
     now = datetime.utcnow()
-    next_charge = user.plan_expires_at or user.trial_ends_at
-    if not next_charge and status == "active":
-        next_charge = now + timedelta(days=30)
+    next_charge = user.plan_expires_at if user.stripe_subscription_id and not user.billing_cancel_at_period_end else None
 
     invoices = db.query(BillingInvoice).filter(BillingInvoice.user_id == user.id).order_by(BillingInvoice.invoice_date.desc()).limit(24).all()
     payments = db.query(BillingPayment).filter(BillingPayment.user_id == user.id).order_by(BillingPayment.created_at.desc()).limit(24).all()
 
+    from ..services.usage_limits import usage_summary
     return {
+        "billing": billing_state(user),
+        "usage": usage_summary(db, user),
         "plan": {
             "key": plan,
             "name": _plan_display_name(plan),
@@ -70,12 +89,12 @@ def billing_overview(db: Session = Depends(get_db), user: User = Depends(current
             "trial_ends_at": _date_iso(user.trial_ends_at),
             "plan_expires_at": _date_iso(user.plan_expires_at),
             "next_charge_at": _date_iso(next_charge),
-            "next_charge_amount": price if status in ("active", "trial") else 0,
+            "next_charge_amount": price if next_charge else 0,
         },
         "company": _billing_company_payload(user),
         "payment_method": {
-            "configured": bool(getattr(user, "stripe_customer_id", None)),
-            "label": "Metodo di pagamento non ancora configurato" if not getattr(user, "stripe_customer_id", None) else "Metodo collegato",
+            "configured": False,
+            "label": "Verifica o aggiorna il metodo nel portale Stripe" if user.stripe_customer_id else "Nessun metodo collegato",
             "provider": "Stripe" if getattr(user, "stripe_customer_id", None) else "",
             "last4": "",
         },
@@ -92,7 +111,8 @@ def billing_overview(db: Session = Depends(get_db), user: User = Depends(current
                 "total": inv.total,
                 "currency": inv.currency or "EUR",
                 "status": inv.status,
-                "pdf_available": bool(inv.pdf_path),
+                "pdf_available": bool(inv.stripe_invoice_id),
+                "is_test": bool(inv.is_test),
             }
             for inv in invoices
         ],
@@ -105,6 +125,7 @@ def billing_overview(db: Session = Depends(get_db), user: User = Depends(current
                 "method": pay.payment_method or "—",
                 "status": pay.payment_status,
                 "transaction_id": pay.transaction_id or "",
+                "is_test": bool(pay.is_test),
                 "paid_at": _date_iso(pay.paid_at),
                 "created_at": _date_iso(pay.created_at),
             }
@@ -131,183 +152,200 @@ def update_billing_details(payload: dict, db: Session = Depends(get_db), user: U
     return {"ok": True, "company": _billing_company_payload(user)}
 
 
+
 @router.get("/plans")
 def list_plans():
-    """Ritorna i piani disponibili con prezzi e limiti (endpoint pubblico)."""
-    result = []
-    for plan_key, limits in PLAN_LIMITS.items():
-        price_info = PLAN_PRICES.get(plan_key, {})
-        result.append({
-            "id": plan_key,
-            "name": limits["name"],
-            "price_eur": price_info.get("price_eur", 0),
-            "trial_days": 14,
-            "limits": {
-                "clienti": limits["max_customers"] or "Illimitati",
-                "giri_al_giorno": limits["max_routes_per_day"] or "Illimitati",
-                "depositi": limits["max_deposits"] or "Illimitati",
-                "mezzi": limits["max_vehicles"] or "Illimitati",
-                "autisti": limits["max_drivers"] or "Illimitati",
-            },
-            "features": {
-                "agenti": limits["has_agents"],
-                "report": limits["has_reports"],
-                "export_csv": limits["has_export"],
-                "geocodifica": limits["has_geocoding"],
-                "interfaccia_mobile": limits["has_mobile"],
-            },
-        })
-    return result
+    return [{"id": key, "name": info["name"], "price_eur": PLAN_PRICES[key]["price_eur"],
+             "trial_days": 14, "limits": info, "features": info} for key, info in PLAN_LIMITS.items()]
 
 
 @router.get("/my-plan")
-def my_plan(user: User = Depends(current_user)):
-    """Ritorna le info del piano dell'utente corrente."""
-    return user_plan_info(user)
+def my_plan(db: Session = Depends(get_db), user: User = Depends(current_user)):
+    from ..services.usage_limits import usage_summary
+    return {**user_plan_info(user), "billing": billing_state(user), "usage": usage_summary(db, user)}
+
+
+@router.get("/data-export")
+def export_company_data(db: Session = Depends(get_db), user: User = Depends(current_user)):
+    """Customer-owned operational data remain portable on every plan and after expiry."""
+    import csv
+    import io
+    import zipfile
+    from fastapi.responses import StreamingResponse
+    from ..models import Customer, Vehicle, Driver, Deposit, RoutePlan, Delivery
+    tables = [
+        (Customer, ("id", "nome", "indirizzo", "email", "telefono", "codice_cliente")),
+        (Vehicle, ("id", "nome", "targa", "capacita_kg", "capacita_colli")),
+        (Driver, ("id", "nome", "cognome", "email", "telefono")),
+        (Deposit, ("id", "nome", "indirizzo")),
+        (RoutePlan, ("id", "nome", "data_giro", "status", "driver_id", "vehicle_id", "deposit_id")),
+        (Delivery, ("id", "route_plan_id", "customer_id", "cliente_nome", "indirizzo", "ordine")),
+    ]
+    archive = io.BytesIO()
+    with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as z:
+        for model, fields in tables:
+            query = db.query(model)
+            if model is Delivery:
+                query = query.join(RoutePlan, Delivery.route_plan_id == RoutePlan.id).filter(RoutePlan.user_id == user.id)
+            else:
+                query = query.filter(model.user_id == user.id)
+            output = io.StringIO()
+            writer = csv.writer(output)
+            writer.writerow(fields)
+            for row in query.all():
+                values = [getattr(row, key, "") for key in fields]
+                # Neutralize spreadsheet formulas in user-entered cells.
+                writer.writerow(["'" + v if isinstance(v, str) and v.startswith(("=", "+", "-", "@", "\t", "\r")) else v for v in values])
+            z.writestr(model.__tablename__ + ".csv", output.getvalue().encode("utf-8-sig"))
+    archive.seek(0)
+    return StreamingResponse(archive, media_type="application/zip", headers={"Content-Disposition": 'attachment; filename="dati_girofacile.zip"'})
 
 
 @router.post("/select-plan")
-def select_plan(
-    payload: dict,
-    db: Session = Depends(get_db),
-    user: User = Depends(current_user),
-):
-    """
-    Cambia il piano dell'utente (modalità test senza pagamento).
-    Quando Stripe sarà attivo, questo endpoint verrà sostituito dal checkout.
-    """
-    plan_key = (payload.get("plan") or "").strip().lower()
-    if plan_key not in ("starter", "business", "pro"):
-        raise HTTPException(400, "Piano non valido")
-
-    user.plan = plan_key
-    # Se era in trial o expired, lo attiviamo
-    if user.plan_status in ("trial", "expired", "cancelled"):
-        user.plan_status = "active"
-    db.commit()
-    return {
-        "ok": True,
-        "plan": user.plan,
-        "plan_status": user.plan_status,
-        **user_plan_info(user),
-    }
+def select_plan(payload: dict, db: Session = Depends(get_db), user: User = Depends(current_user)):
+    raise HTTPException(410, "Attivazione diretta rimossa: usa il checkout o il cambio piano verificato")
 
 
 @router.post("/create-checkout-session")
-async def create_checkout_session(
-    payload: dict,
-    request: Request,
-    db: Session = Depends(get_db),
-    user: User = Depends(current_user),
-):
-    """
-    Crea una sessione Stripe Checkout per l'acquisto/upgrade del piano.
-    Richiede STRIPE_SECRET_KEY nel .env.
-    """
-    if not STRIPE_SECRET_KEY:
-        raise HTTPException(503, "Pagamenti non ancora configurati. Contatta l'amministratore.")
+def create_checkout_session(payload: dict, db: Session = Depends(get_db), user: User = Depends(current_user)):
+    from ..services.billing import checkout
+    return checkout(db, user, payload.get("plan"))
 
-    plan_key = (payload.get("plan") or "").strip().lower()
-    if plan_key not in PLAN_PRICES:
-        raise HTTPException(400, "Piano non valido")
 
-    price_info = PLAN_PRICES[plan_key]
-    stripe_price_id = price_info.get("stripe_price_id", "")
-    if not stripe_price_id:
-        raise HTTPException(503, f"Prezzo Stripe non configurato per il piano {plan_key}")
+@router.post("/cancel-checkout")
+def cancel_checkout(db: Session = Depends(get_db), user: User = Depends(current_user)):
+    from ..services.billing import stripe_client, assert_test, lock_user, checkout
+    stripe = stripe_client(user)
+    user = lock_user(db, user)
+    if user.billing_checkout_id and user.billing_checkout_id.startswith("pending_") and user.billing_checkout_expires and user.billing_checkout_expires > datetime.utcnow():
+        # Recover an API response lost after creation before cancelling the session.
+        checkout(db, user, user.billing_checkout_plan)
+        user = lock_user(db, user)
+    if user.billing_checkout_id and not user.billing_checkout_id.startswith("pending_"):
+        session = assert_test(stripe.checkout.Session.retrieve(user.billing_checkout_id))
+        if session.get("status") == "open":
+            stripe.checkout.Session.expire(session["id"])
+    user.billing_checkout_id = user.billing_checkout_url = user.billing_checkout_expires = user.billing_checkout_plan = None
+    db.commit()
+    return {"ok": True}
 
-    try:
-        import stripe
-        stripe.api_key = STRIPE_SECRET_KEY
 
-        # Crea o recupera il customer Stripe
-        if not user.stripe_customer_id:
-            customer = stripe.Customer.create(
-                email=user.email or "",
-                name=user.company_name or user.username,
-                metadata={"user_id": str(user.id), "username": user.username},
-            )
-            user.stripe_customer_id = customer.id
-            db.commit()
+@router.post("/sync")
+def sync_billing(db: Session = Depends(get_db), user: User = Depends(current_user)):
+    from ..services.billing import reconcile, stripe_client, lock_user, select_current_subscription
+    stripe = stripe_client(user)
+    user = lock_user(db, user)
+    select_current_subscription(stripe, user)
+    if user.stripe_subscription_id:
+        reconcile(db, user, stripe)
+    db.commit()
+    return {"ok": True, **user_plan_info(user)}
 
-        base_url = str(request.base_url).rstrip("/")
-        session = stripe.checkout.Session.create(
-            customer=user.stripe_customer_id,
-            payment_method_types=["card"],
-            line_items=[{"price": stripe_price_id, "quantity": 1}],
-            mode="subscription",
-            success_url=f"{base_url}/dashboard?checkout=success&plan={plan_key}",
-            cancel_url=f"{base_url}/dashboard?checkout=cancelled",
-            metadata={"user_id": str(user.id), "plan": plan_key},
-        )
-        return {"checkout_url": session.url}
 
-    except ImportError:
-        raise HTTPException(503, "Libreria Stripe non installata. Aggiungi 'stripe' ai requirements.")
-    except Exception as e:
-        raise HTTPException(500, f"Errore creazione sessione pagamento: {str(e)}")
+@router.post("/change-preview")
+def preview_change(payload: dict, db: Session = Depends(get_db), user: User = Depends(current_user)):
+    from ..services.billing import change_preview
+    result = change_preview(db, user, payload.get("plan"))
+    result.pop("subscription")
+    return result
+
+
+@router.post("/change-plan")
+def update_subscription(payload: dict, db: Session = Depends(get_db), user: User = Depends(current_user)):
+    from ..services.billing import change_plan
+    return change_plan(db, user, payload.get("plan"), payload)
+
+
+@router.post("/cancel")
+def cancel_subscription(db: Session = Depends(get_db), user: User = Depends(current_user)):
+    from ..services.billing import cancel_or_resume
+    return cancel_or_resume(db, user, True)
+
+
+@router.post("/resume")
+def resume_subscription(db: Session = Depends(get_db), user: User = Depends(current_user)):
+    from ..services.billing import cancel_or_resume
+    return cancel_or_resume(db, user, False)
+
+
+@router.post("/portal")
+def billing_portal(db: Session = Depends(get_db), user: User = Depends(current_user)):
+    from ..services.billing import stripe_client, retrieve_subscription
+    from ..core.config import APP_BASE_URL
+    stripe = stripe_client(user)
+    retrieve_subscription(stripe, user)
+    # Isolated portal configuration prevents unmanaged plan changes/cancellation.
+    configuration = stripe.billing_portal.Configuration.create(
+        business_profile={"headline": "GiroFacile - pagamenti di prova"},
+        features={"customer_update": {"enabled": True, "allowed_updates": ["email", "address", "tax_id"]},
+                  "invoice_history": {"enabled": True}, "payment_method_update": {"enabled": True},
+                  "subscription_cancel": {"enabled": False}, "subscription_update": {"enabled": False}},
+        idempotency_key="gf-sandbox-portal-v1")
+    session = stripe.billing_portal.Session.create(customer=user.stripe_customer_id,
+        configuration=configuration["id"], return_url=APP_BASE_URL.rstrip("/") + "/dashboard")
+    return {"url": session["url"]}
+
+
+@router.get("/invoices/{invoice_id}/download")
+def invoice_download(invoice_id: int, db: Session = Depends(get_db), user: User = Depends(current_user)):
+    from fastapi.responses import RedirectResponse
+    from ..services.billing import stripe_client, assert_test, object_id
+    row = db.query(BillingInvoice).filter_by(id=invoice_id, user_id=user.id).first()
+    if not row or not row.stripe_invoice_id:
+        raise HTTPException(404, "Documento non disponibile")
+    stripe = stripe_client(user)
+    invoice = assert_test(stripe.Invoice.retrieve(row.stripe_invoice_id))
+    if object_id(invoice.get("customer")) != user.stripe_customer_id:
+        raise HTTPException(404, "Documento non disponibile")
+    url = invoice.get("invoice_pdf")
+    if not url or not url.startswith("https://"):
+        raise HTTPException(404, "PDF non disponibile")
+    return RedirectResponse(url)
 
 
 @router.post("/webhook")
 async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
-    """
-    Webhook Stripe per aggiornare automaticamente lo stato degli abbonamenti.
-    Configura l'URL https://app.girofacile.it/api/billing/webhook nel pannello Stripe.
-    """
-    if not STRIPE_SECRET_KEY:
-        raise HTTPException(503, "Stripe non configurato")
-
-    payload = await request.body()
-    sig_header = request.headers.get("stripe-signature", "")
-
+    from ..services.billing import stripe_client, assert_test, object_id, reconcile, sync_invoice, select_current_subscription
+    from ..core import config
+    from sqlalchemy.exc import IntegrityError
+    stripe = stripe_client()
+    if not config.STRIPE_WEBHOOK_SECRET:
+        raise HTTPException(503, "Webhook sandbox non configurato")
     try:
-        import stripe
-        stripe.api_key = STRIPE_SECRET_KEY
-        event = stripe.Webhook.construct_event(payload, sig_header, STRIPE_WEBHOOK_SECRET)
-    except ImportError:
-        raise HTTPException(503, "Libreria Stripe non installata")
+        event = stripe.Webhook.construct_event(await request.body(), request.headers.get("stripe-signature", ""), config.STRIPE_WEBHOOK_SECRET)
     except Exception:
-        raise HTTPException(400, "Webhook non valido")
-
-    event_type = event["type"]
+        raise HTTPException(400, "Firma webhook non valida")
+    assert_test(event)
+    if db.get(BillingEvent, event["id"]):
+        return {"ok": True, "duplicate": True}
     data = event["data"]["object"]
-
-    # Abbonamento attivato / rinnovato
-    if event_type in ("customer.subscription.created", "customer.subscription.updated"):
-        stripe_customer_id = data.get("customer")
-        user = db.query(User).filter(User.stripe_customer_id == stripe_customer_id).first()
-        if user:
-            plan_key = data.get("metadata", {}).get("plan") or _stripe_plan_from_subscription(data)
-            status = data.get("status")
-            if status == "active":
-                user.plan = plan_key or user.plan
-                user.plan_status = "active"
-                # Imposta scadenza dal periodo corrente Stripe
-                period_end = data.get("current_period_end")
-                if period_end:
-                    from datetime import datetime
-                    user.plan_expires_at = datetime.utcfromtimestamp(period_end)
-                user.stripe_subscription_id = data.get("id")
-            db.commit()
-
-    # Abbonamento cancellato / scaduto
-    elif event_type == "customer.subscription.deleted":
-        stripe_customer_id = data.get("customer")
-        user = db.query(User).filter(User.stripe_customer_id == stripe_customer_id).first()
-        if user:
-            user.plan_status = "cancelled"
-            db.commit()
-
-    return {"ok": True}
-
-
-def _stripe_plan_from_subscription(subscription_data: dict) -> str:
-    """Tenta di ricavare il piano dal price_id Stripe."""
+    customer = object_id(data.get("customer"))
+    user = db.query(User).filter(User.stripe_customer_id == customer, User.billing_source == "stripe_test").with_for_update().populate_existing().first() if customer else None
+    if not user or user.id not in config.BILLING_TEST_USER_IDS:
+        return {"ok": True, "ignored": True}
+    if db.get(BillingEvent, event["id"]):
+        return {"ok": True, "duplicate": True}
+    event_type = event["type"]
+    # Read current Stripe state, never overwrite it with an older event snapshot.
+    select_current_subscription(stripe, user)
+    if event_type.startswith("customer.subscription."):
+        if user.stripe_subscription_id and user.stripe_subscription_id != data["id"]:
+            return {"ok": True, "ignored": True}
+        user.stripe_subscription_id = data["id"]
+    elif event_type == "checkout.session.completed":
+        sub_id = object_id(data.get("subscription"))
+        if sub_id and (not user.stripe_subscription_id or user.stripe_subscription_id == sub_id):
+            user.stripe_subscription_id = sub_id
+            user.billing_checkout_expires = None
+    if user.stripe_subscription_id:
+        reconcile(db, user, stripe)
+    if event_type.startswith("invoice."):
+        sync_invoice(db, user, stripe.Invoice.retrieve(data["id"]))
+    db.add(BillingEvent(event_id=event["id"], event_type=event_type))
     try:
-        price_id = subscription_data["items"]["data"][0]["price"]["id"]
-        for plan_key, info in PLAN_PRICES.items():
-            if info.get("stripe_price_id") == price_id:
-                return plan_key
-    except Exception:
-        pass
-    return "starter"
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        if not db.get(BillingEvent, event["id"]):
+            raise
+    return {"ok": True}

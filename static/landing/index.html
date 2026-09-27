@@ -603,50 +603,18 @@ footer{background:#0f172a;color:#e2e8f0;padding:60px 6% 28px;}
     <div class="sec-tag">Piani e prezzi</div>
     <h2 class="sec-title">Scegli il piano più adatto a te</h2>
     <p class="sec-sub">Piani semplici e trasparenti, senza costi nascosti. 14 giorni di prova gratuita su tutti i piani.</p>
-    <div class="pricing-grid">
-      <div class="pricing-card">
-        <div class="pricing-name">Starter</div>
-        <div class="pricing-desc">Ideale per attività che iniziano a digitalizzare le consegne.</div>
-        <div class="pricing-price"><span class="cur">€</span><span class="amt">19</span><span class="per">/mese</span></div>
-        <ul class="pricing-list">
-          <li><svg width="15" height="15" fill="none" stroke="#10b981" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Fino a 30 clienti</li>
-          <li><svg width="15" height="15" fill="none" stroke="#10b981" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>5 giri al giorno</li>
-          <li><svg width="15" height="15" fill="none" stroke="#10b981" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>2 depositi · 3 mezzi · 3 autisti</li>
-          <li><svg width="15" height="15" fill="none" stroke="#10b981" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Pianificazione giri</li>
-          <li><svg width="15" height="15" fill="none" stroke="#10b981" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>App mobile inclusa</li>
-          <li><svg width="15" height="15" fill="none" stroke="#d1d5db" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg><span style="color:#9ca3af">Report avanzati</span></li>
-        </ul>
-        <a href="https://girofacile.it/login" class="btn-plan btn-outline">Inizia gratis</a>
-      </div>
-      <div class="pricing-card feat">
-        <div class="pricing-pill">✦ Più scelto</div>
-        <div class="pricing-name">Business</div>
-        <div class="pricing-desc">Per aziende con volumi elevati e bisogno di analisi avanzate.</div>
-        <div class="pricing-price"><span class="cur">€</span><span class="amt">39</span><span class="per">/mese</span></div>
-        <ul class="pricing-list">
-          <li><svg width="15" height="15" fill="none" stroke="#10b981" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Fino a 150 clienti</li>
-          <li><svg width="15" height="15" fill="none" stroke="#10b981" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>30 giri al giorno</li>
-          <li><svg width="15" height="15" fill="none" stroke="#10b981" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>10 depositi · 20 mezzi · 20 autisti</li>
-          <li><svg width="15" height="15" fill="none" stroke="#10b981" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Agenti commerciali</li>
-          <li><svg width="15" height="15" fill="none" stroke="#10b981" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Report e analisi avanzati</li>
-          <li><svg width="15" height="15" fill="none" stroke="#10b981" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Export CSV</li>
-        </ul>
-        <a href="https://girofacile.it/login" class="btn-plan btn-filled">Inizia gratis</a>
-      </div>
-      <div class="pricing-card">
-        <div class="pricing-name">Pro</div>
-        <div class="pricing-desc">Per team strutturati con volumi elevati e zero limiti.</div>
-        <div class="pricing-price"><span class="cur">€</span><span class="amt">79</span><span class="per">/mese</span></div>
-        <ul class="pricing-list">
-          <li><svg width="15" height="15" fill="none" stroke="#10b981" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Clienti illimitati</li>
-          <li><svg width="15" height="15" fill="none" stroke="#10b981" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Giri illimitati</li>
-          <li><svg width="15" height="15" fill="none" stroke="#10b981" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Tutto illimitato</li>
-          <li><svg width="15" height="15" fill="none" stroke="#10b981" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Tutte le funzionalità Business</li>
-          <li><svg width="15" height="15" fill="none" stroke="#10b981" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Supporto prioritario</li>
-        </ul>
-        <a href="https://girofacile.it/login" class="btn-plan btn-outline">Inizia gratis</a>
-      </div>
-    </div>
+    <div class="pricing-grid" id="publicPricing"></div>
+    <script src="/api/billing/catalog.js"></script>
+    <script src="/static/dashboard/js/billing.js?v=billing1"></script>
+    <script>
+    document.getElementById('publicPricing').innerHTML = Object.entries(window.GF_PLANS || {}).map(([key,p])=> {
+      const f=planFeatures(key);
+      return `<div class="pricing-card"><div class="pricing-name">${p.name}</div>
+      <div class="pricing-price">€${p.price_eur}<span class="per">/mese</span></div>
+      <ul class="pricing-feats">${f.features.map(x=>`<li>✓ ${x}</li>`).join('')}</ul>
+      <a class="btn-primary" href="/login?plan=${key}">Prova gratis per 14 giorni</a></div>`;
+    }).join('');
+    </script>
     <p class="pricing-note">✓ 14 giorni gratuiti su tutti i piani &nbsp;·&nbsp; Nessuna carta di credito &nbsp;·&nbsp; Disdici quando vuoi</p>
   </div>
 </section>

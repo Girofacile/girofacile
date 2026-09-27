@@ -55,29 +55,11 @@ ERROR_NOTIFICATIONS_ENABLED = os.getenv("ERROR_NOTIFICATIONS_ENABLED", "true").s
 ERROR_NOTIFICATIONS_EMAIL = os.getenv("ERROR_NOTIFICATIONS_EMAIL", "").strip()
 ERROR_NOTIFICATION_MIN_SEVERITY = os.getenv("ERROR_NOTIFICATION_MIN_SEVERITY", "high").strip().lower()
 
-# Prezzi piani (in centesimi per Stripe)
-PLAN_PRICES = {
-    "starter": {
-        "name": "Starter",
-        "price_eur": 19,
-        "price_cents": 1900,
-        "stripe_price_id": os.getenv("STRIPE_PRICE_STARTER", ""),
-    },
-    "business": {
-        "name": "Business",
-        "price_eur": 39,
-        "price_cents": 3900,
-        "stripe_price_id": os.getenv("STRIPE_PRICE_BUSINESS", ""),
-    },
-    "pro": {
-        "name": "Pro",
-        "price_eur": 79,
-        "price_cents": 7900,
-        "stripe_price_id": os.getenv("STRIPE_PRICE_PRO", ""),
-    },
-}
-
-TRIAL_DAYS = 14
+# Single commercial catalogue; payment processing remains sandbox-only.
+from ..services.plan_catalog import PLAN_PRICES, TRIAL_DAYS
+BILLING_MODE = os.getenv("BILLING_MODE", "disabled").strip().lower()
+BILLING_TEST_USER_IDS = {int(v) for v in os.getenv("BILLING_TEST_USER_IDS", "").split(",") if v.strip().isdigit()}
+STRIPE_API_VERSION = "2025-06-30.basil"
 
 # Ambiente e sicurezza HTTP
 
