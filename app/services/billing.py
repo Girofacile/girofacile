@@ -33,7 +33,13 @@ def stripe_client(user=None):
     return stripe
 
 
+def stripe_dict(obj):
+    """Normalize SDK 15 resources, including nested expanded objects."""
+    return obj.to_dict() if hasattr(obj, "to_dict") else obj
+
+
 def assert_test(obj):
+    obj = stripe_dict(obj)
     if obj.get("livemode") is not False:
         raise HTTPException(400, "Oggetto Stripe non appartenente alla sandbox")
     return obj
@@ -79,7 +85,7 @@ def subscription_plan(sub):
 
 
 def sync_subscription(db, user, sub):
-    assert_test(sub)
+    sub = assert_test(sub)
     if object_id(sub.get("customer")) != user.stripe_customer_id:
         raise HTTPException(409, "Cliente Stripe non corrispondente")
     plan = subscription_plan(sub)
@@ -121,7 +127,7 @@ def sync_subscription(db, user, sub):
 
 
 def sync_invoice(db, user, invoice):
-    assert_test(invoice)
+    invoice = assert_test(invoice)
     if object_id(invoice.get("customer")) != user.stripe_customer_id:
         raise HTTPException(409, "Documento non associato all'azienda")
     row = db.query(BillingInvoice).filter_by(stripe_invoice_id=invoice["id"]).first()
@@ -162,8 +168,8 @@ def select_current_subscription(stripe, user):
     if not user.stripe_customer_id or user.billing_source != "stripe_test":
         return
     subscriptions = stripe.Subscription.list(customer=user.stripe_customer_id, status="all", limit=100)
-    active = [assert_test(s) for s in subscriptions.auto_paging_iter()
-              if s.get("status") not in ("canceled", "incomplete_expired")]
+    candidates = (assert_test(s) for s in subscriptions.auto_paging_iter())
+    active = [s for s in candidates if s.get("status") not in ("canceled", "incomplete_expired")]
     if len(active) > 1:
         raise HTTPException(409, "Più abbonamenti rilevati: contattare l'assistenza")
     if active:
@@ -185,6 +191,7 @@ def checkout(db, user, plan):
         user = lock_user(db, user)
     subs = stripe.Subscription.list(customer=user.stripe_customer_id, status="all", limit=100)
     for sub in subs.auto_paging_iter():
+        sub = stripe_dict(sub)
         if sub.get("status") not in ("canceled", "incomplete_expired"):
             user.stripe_subscription_id = sub["id"]
             db.commit()
@@ -298,7 +305,7 @@ def change_plan(db, user, plan, preview):
         expand=["latest_invoice"], idempotency_key=f"gf-upgrade-{sub['id']}-{plan}-{stamp}")
     sync_subscription(db, user, updated)
     db.commit()
-    latest = updated.get("latest_invoice") or {}
+    latest = stripe_dict(updated).get("latest_invoice") or {}
     return {"message": "Cambio richiesto: il nuovo piano si attiva dopo il pagamento", "payment_url": latest.get("hosted_invoice_url")}
 
 

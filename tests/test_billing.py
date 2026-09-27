@@ -384,3 +384,22 @@ def test_repurchase_selects_new_subscription_after_cancellation(billing_env):
         {'id':'sub_old','status':'canceled','livemode':False}, {'id':'sub_new','status':'active','livemode':False}]))))
     select_current_subscription(fake,user)
     assert user.stripe_subscription_id=='sub_new'
+
+
+def test_sdk_resources_are_normalized_recursively(billing_env, monkeypatch):
+    import stripe
+    from app.services.billing import assert_test, sync_subscription, sync_invoice
+    _, db, user, *_ = billing_env
+    configure_prices(monkeypatch)
+    user.stripe_customer_id = 'cus_sdk'
+    obj = stripe.StripeObject.construct_from(subscription(user), 'sk_test_fake')
+    normalized = assert_test(obj)
+    assert isinstance(normalized, dict)
+    assert isinstance(normalized['latest_invoice'], dict)
+    sync_subscription(db, user, obj)
+    assert user.plan == 'pro' and user.plan_status == 'active'
+    invoice = stripe.StripeObject.construct_from({'id': 'in_sdk', 'customer': 'cus_sdk',
+        'livemode': False, 'status': 'paid', 'amount_paid': 9900, 'total': 9900,
+        'total_taxes': None, 'status_transitions': {'paid_at': 1700000000}}, 'sk_test_fake')
+    sync_invoice(db, user, invoice)
+    db.flush()

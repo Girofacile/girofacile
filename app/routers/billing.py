@@ -315,7 +315,7 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
         event = stripe.Webhook.construct_event(await request.body(), request.headers.get("stripe-signature", ""), config.STRIPE_WEBHOOK_SECRET)
     except Exception:
         raise HTTPException(400, "Firma webhook non valida")
-    assert_test(event)
+    event = assert_test(event)
     if db.get(BillingEvent, event["id"]):
         return {"ok": True, "duplicate": True}
     data = event["data"]["object"]
