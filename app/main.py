@@ -18,7 +18,7 @@ from .database import Base, engine, get_db
 from .models import Agent, Customer, Deposit, Driver, RoutePlan, User, Vehicle, PasswordResetToken, DistanceCache
 from .routers import (
     admin, agents, auth, billing, customers,
-    deposits, reports, routes, operator, notifications, activity, settings, support, transfer_portal, driver as driver_router_module, agent as agent_router_module,
+    deposits, reports, routes, operator, notifications, settings, support, transfer_portal, driver as driver_router_module, agent as agent_router_module,
 )
 from .routers.vehicles_drivers import drivers_router, vehicles_router
 from .services.geocoding import search_address_autocomplete
@@ -76,7 +76,6 @@ app.include_router(admin.router)
 app.include_router(billing.router)
 app.include_router(operator.router)
 app.include_router(notifications.router)
-app.include_router(activity.router)
 app.include_router(settings.router)
 app.include_router(support.router)
 app.include_router(transfer_portal.router)
@@ -508,7 +507,6 @@ def harden_tenant_schema():
         "route_plans",
         "distance_cache",
         "notifications",
-        "activity_events",
     ]
 
     with engine.begin() as conn:
