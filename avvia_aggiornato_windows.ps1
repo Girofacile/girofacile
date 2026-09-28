@@ -1,9 +1,10 @@
-param([switch]$CheckOnly)
+﻿param([switch]$CheckOnly)
 $ErrorActionPreference = 'Stop'
 Set-Location -LiteralPath $PSScriptRoot
 $server = $null
 try {
     Write-Host '=== GiroFacile: aggiorna e avvia ===' -ForegroundColor Cyan
+    if (-not $CheckOnly -and ([System.Net.NetworkInformation.IPGlobalProperties]::GetIPGlobalProperties().GetActiveTcpListeners() | Where-Object Port -eq 8000)) { throw 'La porta 8000 e occupata. Chiudi il precedente terminale GiroFacile e riprova.' }
     if (-not $CheckOnly) {
         $listener = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Loopback, 8000)
         try { $listener.Start() } catch { throw 'GiroFacile o un altro server e gia aperto sulla porta 8000. Chiudi il precedente terminale e riprova.' } finally { $listener.Stop() }
@@ -70,4 +71,3 @@ try {
 } finally {
     if ($server -and -not $server.HasExited) { Stop-Process -Id $server.Id -ErrorAction SilentlyContinue }
 }
-
