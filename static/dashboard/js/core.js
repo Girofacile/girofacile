@@ -3269,8 +3269,21 @@ async function optimizeRoute(){
 async function loadRoutes(){
   const rows = await api("/api/routes");
   const body = document.getElementById("routesBody");
-  body.innerHTML = "";
+  const emptyState = document.getElementById("historyEmptyState");
+  const dataPanel = document.getElementById("historyDataPanel");
+  const historyResult = document.getElementById("historyResult");
+
+  if(body) body.innerHTML = "";
+  if(historyResult) historyResult.innerHTML = "";
+
+  const hasRoutes = Array.isArray(rows) && rows.length > 0;
+  if(emptyState) emptyState.classList.toggle("hidden", hasRoutes);
+  if(dataPanel) dataPanel.classList.toggle("hidden", !hasRoutes);
+
+  if(!hasRoutes) return;
+
   rows.forEach(r=>{
+    if(!body) return;
     body.innerHTML += `<tr><td>${esc(r.data_giro)}</td><td><strong>${esc(r.nome)}</strong></td><td>${r.orario_partenza||""}</td><td>${r.orario_rientro_stimato||""}</td><td>${esc(r.driver_name||"-")}</td><td>${r.totale_km}</td><td>€ ${r.costo_carburante}</td><td class="row-actions"><button onclick="openSavedRoute(${r.id})">Apri giro</button>${r.google_maps_url?`<a target="_blank" href="${r.google_maps_url}"><button>Maps</button></a><button onclick="copyText('${String(r.google_maps_url).replace(/'/g,"\\'")}', 'Link Google Maps copiato')">Condividi</button>`:""}</td></tr>`;
   });
 }
