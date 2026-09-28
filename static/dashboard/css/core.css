@@ -3021,41 +3021,8 @@ body.admin-mode .side-nav .nav-item.active{
 .notification-body-v30{min-width:0;flex:1}.notification-title-v30{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.notification-title-v30 strong{font-size:13px;color:#0f172a}.notification-title-v30 small{font-size:11px;color:#64748b;white-space:nowrap}.notification-body-v30 p{margin:4px 0 8px;color:#475569;font-size:12.5px;line-height:1.35}.notification-actions-v30{display:flex;gap:8px;flex-wrap:wrap}.notification-actions-v30 button{border:0;background:#2563eb;color:#fff;border-radius:10px;padding:6px 9px;font-size:12px;font-weight:700;cursor:pointer}.notification-actions-v30 button.light{background:#fff;color:#334155;border:1px solid rgba(15,23,42,.12)}
 @media (max-width:760px){.notification-dropdown-v30{right:-86px;width:calc(100vw - 24px);top:52px}.notification-bell-v30{width:40px;height:40px;border-radius:12px}.notification-list-v30{max-height:55vh}}
 
-/* v31 - Registro attività aziendale */
-.activity-layout-v31{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:18px;align-items:start}
-.activity-panel-v31,.activity-side-v31{background:#fff;border:1px solid rgba(15,23,42,.08);border-radius:22px;box-shadow:0 14px 40px rgba(15,23,42,.06);padding:18px}
-.activity-filters-v31{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
-.activity-filters-v31 select{min-width:190px;border:1px solid rgba(15,23,42,.12);border-radius:14px;padding:11px 12px;background:#f8fafc;color:#0f172a;font-weight:700}
-.activity-list-v31{display:flex;flex-direction:column;gap:10px;max-height:680px;overflow:auto;padding-right:4px}
-.activity-item-v31{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:12px;align-items:start;border:1px solid rgba(15,23,42,.08);background:#fbfdff;border-radius:18px;padding:13px 14px;position:relative;overflow:hidden}
-.activity-item-v31:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:#64748b}
-.activity-item-v31.success:before{background:#16a34a}.activity-item-v31.warning:before{background:#f59e0b}.activity-item-v31.danger:before{background:#ef4444}.activity-item-v31.info:before{background:#2563eb}
-.activity-icon-v31{width:40px;height:40px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:#eef2ff;font-size:18px}
-.activity-body-v31 p{margin:5px 0 8px;color:#475569;line-height:1.35}.activity-row-v31{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.activity-row-v31 strong{color:#0f172a}.activity-row-v31 small{color:#94a3b8;white-space:nowrap;font-weight:700}
-.activity-meta-v31{display:flex;gap:8px;flex-wrap:wrap}.activity-meta-v31 span{font-size:12px;font-weight:800;color:#64748b;background:#f1f5f9;border-radius:999px;padding:5px 8px}.activity-meta-v31 .sev.success{background:#dcfce7;color:#166534}.activity-meta-v31 .sev.warning{background:#fef3c7;color:#92400e}.activity-meta-v31 .sev.danger{background:#fee2e2;color:#991b1b}.activity-meta-v31 .sev.info{background:#dbeafe;color:#1d4ed8}
-.activity-actions-v31 button{border:0;border-radius:12px;background:#0f172a;color:#fff;padding:8px 12px;font-weight:800;cursor:pointer}.activity-empty-v31{border:1px dashed rgba(15,23,42,.18);background:#f8fafc;border-radius:18px;padding:24px;text-align:center;color:#64748b;font-weight:800}.activity-empty-v31.danger{color:#991b1b;background:#fef2f2;border-color:#fecaca}
-.activity-side-v31 h3{margin:0 0 8px;color:#0f172a}.activity-side-v31 p{color:#64748b;line-height:1.45}.activity-legend-v31{display:flex;flex-direction:column;gap:8px;margin-top:14px}.activity-legend-v31 span{display:flex;align-items:center;gap:8px;font-weight:800;color:#475569}.activity-legend-v31 .dot{width:10px;height:10px;border-radius:999px;display:inline-block}.activity-legend-v31 .dot.info{background:#2563eb}.activity-legend-v31 .dot.success{background:#16a34a}.activity-legend-v31 .dot.warning{background:#f59e0b}.activity-legend-v31 .dot.danger{background:#ef4444}
-@media(max-width:980px){.activity-layout-v31{grid-template-columns:1fr}.activity-row-v31{flex-direction:column;gap:3px}.activity-item-v31{grid-template-columns:40px 1fr}.activity-actions-v31{grid-column:2}.activity-actions-v31 button{width:100%}}
 
-/* v31.1 - Registro attività più leggibile */
-.activity-layout-v31{grid-template-columns:minmax(0,1fr) 300px;gap:20px}
-.activity-panel-v31{padding:20px;min-width:0}
-.activity-list-v31{gap:12px;max-height:620px;overflow-y:auto;overflow-x:hidden;padding:2px 8px 2px 2px}
-.activity-item-v31{display:grid;grid-template-columns:44px minmax(0,1fr) 96px;gap:14px;align-items:center;min-height:86px;padding:16px 16px 16px 18px;border-radius:20px;background:#fff;box-shadow:0 10px 24px rgba(15,23,42,.035)}
-.activity-icon-v31{align-self:flex-start;margin-top:2px;flex-shrink:0}
-.activity-body-v31{min-width:0;overflow:hidden}
-.activity-row-v31{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:start;margin-bottom:5px}
-.activity-row-v31 strong{display:block;min-width:0;white-space:normal;overflow:visible;text-overflow:clip;line-height:1.25;font-size:15px}
-.activity-row-v31 small{font-size:12px;line-height:1.2;color:#64748b;background:#f8fafc;border:1px solid rgba(15,23,42,.06);border-radius:999px;padding:4px 8px}
-.activity-body-v31 p{margin:6px 0 10px;font-size:13.5px;line-height:1.45;color:#475569;display:block;white-space:normal;overflow:visible}
-.activity-meta-v31{gap:7px}.activity-meta-v31 span{font-size:11.5px;padding:5px 8px;line-height:1.1}
-.activity-actions-v31{display:flex;align-items:center;justify-content:flex-end;align-self:stretch}
-.activity-actions-v31 button{width:80px;border-radius:13px;background:#2563eb;color:#fff;padding:9px 10px;box-shadow:0 8px 16px rgba(37,99,235,.20)}
-.activity-actions-v31 button:hover{background:#1d4ed8;transform:translateY(-1px)}
-.activity-side-v31{position:sticky;top:18px}
 .notification-dropdown-v30{max-width:430px}.notification-item-v30{align-items:flex-start}.notification-actions-v30 button{border-radius:11px}
-@media(max-width:1180px){.activity-layout-v31{grid-template-columns:1fr}.activity-side-v31{position:static}.activity-list-v31{max-height:none}}
-@media(max-width:760px){.activity-panel-v31{padding:14px}.activity-filters-v31 select{width:100%;min-width:0}.activity-item-v31{grid-template-columns:40px minmax(0,1fr);min-height:auto;padding:14px}.activity-actions-v31{grid-column:1 / -1;justify-content:stretch}.activity-actions-v31 button{width:100%}.activity-row-v31{grid-template-columns:1fr}.activity-row-v31 small{justify-self:start}}
 
 /* v40 - Ritocchi estetici dashboard/login/report/profilo */
 .login-input-wrap-pro .login-field-icon{
