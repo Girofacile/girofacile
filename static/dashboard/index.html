@@ -10,7 +10,7 @@
 <meta charset="utf-8">
 <title>GiroFacile</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link href="/static/dashboard/css/core.css?v=dashboard_bg_20260928" rel="stylesheet">
+<link href="/static/dashboard/css/core.css?v=dashboard_bg_topbar_20260928" rel="stylesheet">
 <link href="/static/dashboard/css/account.css?v=v89" rel="stylesheet">
 <script src="/api/billing/catalog.js"></script>
 <script src="/static/dashboard/js/billing.js?v=billing1"></script>
@@ -1701,6 +1701,21 @@ function toggleLoginPassword(){
   if(!input) return;
   input.type = input.type === "password" ? "text" : "password";
 }
+
+
+/* GiroFacile topbar scroll state 2026-09-28 */
+(function initDashboardTopbarScrollState(){
+  const topbar = document.querySelector(".topbar");
+  if(!topbar) return;
+
+  const syncTopbar = () => {
+    const scrollTop = document.scrollingElement ? document.scrollingElement.scrollTop : window.scrollY;
+    topbar.classList.toggle("topbar-scrolled", scrollTop > 8);
+  };
+
+  syncTopbar();
+  window.addEventListener("scroll", syncTopbar, {passive:true});
+})();
 </script>
 
 </body>
