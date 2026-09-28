@@ -283,7 +283,7 @@
     <button type="button" data-mobile-tab="dashboard" onclick="mobileGoTabV62('dashboard')"><span>▦</span><strong>Dashboard</strong></button>
     <button type="button" data-mobile-tab="dashboard-in-progress" onclick="mobileGoTabV62('dashboard-in-progress')"><span>▰</span><strong>Giri</strong></button>
     <button type="button" class="main" onclick="mobileGoTabV62('giro')"><span>+</span><strong>Nuovo giro</strong></button>
-    <button type="button" data-mobile-tab="activity" onclick="mobileGoTabV62('activity')"><span>▤</span><strong>Attività</strong></button>
+    <button type="button" data-mobile-tab="storico" onclick="mobileGoTabV62('storico')"><span>↺</span><strong>Storico</strong></button>
     <button type="button" onclick="toggleMobileMoreMenuV62()"><span>•••</span><strong>Altro</strong></button>
   </nav>
 
@@ -303,7 +303,6 @@
       <button data-tab="mezzi" data-workspace-operational="1" onclick="showTab('mezzi')" class="nav-item user-only"><span class="nav-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 8.5h10v7h-10z"/><path d="M13.5 11h3.6l3.4 3.4v1.1h-7"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17.2" cy="17.5" r="1.8"/></svg></span> Mezzi</button>
       <button data-tab="autisti" data-workspace-operational="1" onclick="showTab('autisti')" class="nav-item user-only"><span class="nav-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 20c.8-3.5 3.2-5.2 6.5-5.2s5.7 1.7 6.5 5.2"/></svg></span> Autisti</button>
       <button data-tab="storico" data-workspace-operational="1" onclick="showTab('storico')" class="nav-item user-only"><span class="nav-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 5.2v4.3h4.3"/><path d="M12 7.5V12l3 1.8"/></svg></span> Storico</button>
-      <button data-tab="activity" data-workspace-common="1" onclick="showTab('activity')" class="nav-item user-only"><span class="nav-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v14H5z"/><path d="M8 9h8M8 12h8M8 15h5"/></svg></span> Attività</button>
       <button data-tab="chat-autisti" data-workspace-operational="1" onclick="showTab('chat-autisti')" class="nav-item user-only"><span class="nav-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5.5h14v9.5H9l-4 3.5v-13z"/><path d="M8.5 9h7M8.5 12h4"/></svg></span> Chat autisti <span id="sidebarChatBadge" class="side-chat-badge hidden">0</span></button>
       <button data-workspace-common="1" onclick="openSupportPanelV49()" class="nav-item user-only"><span class="nav-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5.5h14v9.5H9l-4 3.5v-13z"/><path d="M8.5 9h7M8.5 12h4"/></svg></span> Supporto</button>
       <button data-tab="settings" data-workspace-common="1" onclick="showTab('settings')" class="nav-item user-only"><span class="nav-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.5 12a7.4 7.4 0 0 0-.1-1.2l2-1.5-2-3.5-2.4 1a7.5 7.5 0 0 0-2-1.1L14.7 3h-5.4L9 5.7a7.5 7.5 0 0 0-2 1.1l-2.4-1-2 3.5 2 1.5a7.7 7.7 0 0 0 0 2.4l-2 1.5 2 3.5 2.4-1a7.5 7.5 0 0 0 2 1.1l.3 2.7h5.4l.3-2.7a7.5 7.5 0 0 0 2-1.1l2.4 1 2-3.5-2-1.5c.1-.4.1-.8.1-1.2z"/></svg></span> Impostazioni</button>
@@ -1108,56 +1107,6 @@
           </div>
           <div id="driversCards" class="drivers-cards"></div>
         </section>
-      </section>
-
-      <section id="tab-activity" class="tab hidden">
-        <div class="page-title-row">
-          <div>
-            <h1>Registro attività</h1>
-            <p>Cronologia degli eventi operativi più importanti della tua azienda.</p>
-          </div>
-          <button class="btn-secondary" onclick="loadActivityLogV31()">Aggiorna</button>
-        </div>
-
-        <div class="activity-layout-v31">
-          <div class="activity-panel-v31">
-            <div class="activity-filters-v31">
-              <select id="activityTypeFilter" onchange="loadActivityLogV31()">
-                <option value="">Tutti gli eventi</option>
-                <option value="company">Azienda</option>
-                <option value="onboarding">Onboarding</option>
-                <option value="agent">Agenti</option>
-                <option value="driver">Autisti</option>
-                <option value="customer">Clienti</option>
-                <option value="address">Indirizzi</option>
-                <option value="route">Giri</option>
-                <option value="delivery">Consegne</option>
-                <option value="chat">Chat</option>
-              </select>
-              <select id="activitySeverityFilter" onchange="loadActivityLogV31()">
-                <option value="">Tutte le priorità</option>
-                <option value="info">Info</option>
-                <option value="success">Completate</option>
-                <option value="warning">Da controllare</option>
-                <option value="danger">Critiche</option>
-              </select>
-            </div>
-            <div id="activityListV31" class="activity-list-v31">
-              <div class="activity-empty-v31">Caricamento attività...</div>
-            </div>
-          </div>
-
-          <aside class="activity-side-v31">
-            <h3>Perché è utile</h3>
-            <p>Il registro attività ti permette di controllare chi ha creato clienti, quando un giro è stato avviato o completato, quali consegne sono mancate e quali eventi richiedono attenzione.</p>
-            <div class="activity-legend-v31">
-              <span><i class="dot info"></i> Info</span>
-              <span><i class="dot success"></i> Completato</span>
-              <span><i class="dot warning"></i> Da controllare</span>
-              <span><i class="dot danger"></i> Critico</span>
-            </div>
-          </aside>
-        </div>
       </section>
 
       <section id="tab-storico" class="tab hidden">
