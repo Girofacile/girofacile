@@ -4449,3 +4449,20 @@ html[data-gf-tail-lift="off"] .gf-vehicles-table-v892 td:nth-child(4) { display:
 html[data-gf-agents="off"] [data-gf-agents-only],
 html[data-gf-agents="off"] .nav-item[data-tab="agenti"],
 html[data-gf-agents="off"] #tab-agenti { display:none!important; }
+
+/* GiroFacile dashboard background 2026-09-28
+   Sfondo globale dell'area gestionale: conserva la composizione originale
+   (paesaggio in alto, camion a destra, sfumatura chiara verso il basso). */
+body.app-logged-in{
+  background:#f5f7fb;
+}
+body.app-logged-in .app-shell{
+  background:transparent;
+}
+body.app-logged-in .main-area{
+  background-color:#f5f7fb;
+  background-image:url('/static/dashboard/dashboard-background.webp?v=20260928');
+  background-repeat:no-repeat;
+  background-position:top center;
+  background-size:100% auto;
+}
