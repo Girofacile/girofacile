@@ -634,7 +634,15 @@ def harden_tenant_schema():
                     conn.execute(text(f"ALTER TABLE {q(table)} ALTER COLUMN {q('user_id')} SET NOT NULL"))
 
 
+
+def cleanup_removed_features():
+    """Rimuove strutture dati appartenenti a funzionalità dismesse."""
+    with engine.begin() as conn:
+        conn.execute(text("DROP TABLE IF EXISTS activity_events"))
+
+
 migrate_database()
+cleanup_removed_features()
 ensure_default_user()
 harden_tenant_schema()
 
