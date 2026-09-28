@@ -963,7 +963,6 @@ body.app-logged-in #app{
 /* V3.7.8.1 - Dashboard professionale */
 .dash-hero-row{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;gap:18px}
 .dash-hero-row h1{font-size:34px;margin:0 0 6px;color:var(--text)}
-.dash-hero-row h1.dashboard-home-title{color:#dc2626}
 .dash-hero-row p{margin:0;color:var(--muted);font-size:16px}
 .dash-kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;margin-bottom:18px}
 .dash-kpi-card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px 24px;box-shadow:var(--shadow);display:flex;align-items:center;gap:18px;min-height:112px}
