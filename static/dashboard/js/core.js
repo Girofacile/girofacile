@@ -3611,7 +3611,6 @@ function showTab(name){
   if(name==="mezzi") loadVehicles();
   if(name==="autisti") loadDrivers();
   if(name==="storico") loadRoutes();
-  if(name==="activity") loadActivityLogV31();
   if(name==="chat-autisti") loadDriverChatCenter();
   if(name==="settings") loadSettingsV41();
   if(name==="plan-account"){ renderUpgradeCards(); syncPlanPageHeaderV874(); }
@@ -4267,88 +4266,10 @@ window.openNotificationActionV30 = openNotificationActionV30;
 
 
 // -----------------------------------------------------------------------------
-// v31 - Registro attività aziendale
-// -----------------------------------------------------------------------------
-function activityIconV31(type){
-  const map = {company:"🏢", onboarding:"✅", agent:"🧑‍💼", driver:"🚚", customer:"👥", address:"📍", route:"🗺️", delivery:"📦", chat:"💬"};
-  return map[type] || "•";
-}
-
-function activityDateV31(value){
-  if(!value) return "";
-  try{
-    const d = new Date(value);
-    return d.toLocaleString("it-IT", {day:"2-digit", month:"2-digit", year:"numeric", hour:"2-digit", minute:"2-digit"});
-  }catch(e){ return String(value); }
-}
-
-async function loadActivityLogV31(){
-  const box = document.getElementById("activityListV31");
-  if(!box) return;
-  box.innerHTML = `<div class="activity-empty-v31">Caricamento attività...</div>`;
-  const type = document.getElementById("activityTypeFilter")?.value || "";
-  const severity = document.getElementById("activitySeverityFilter")?.value || "";
-  const params = new URLSearchParams({limit:"120"});
-  if(type) params.set("type", type);
-  if(severity) params.set("severity", severity);
-  try{
-    const data = await api("/api/activity?" + params.toString());
-    renderActivityLogV31(data.items || []);
-  }catch(e){
-    box.innerHTML = `<div class="activity-empty-v31 danger">Errore caricamento registro attività: ${esc(e.message || "Errore")}</div>`;
-  }
-}
-
-function renderActivityLogV31(items){
-  const box = document.getElementById("activityListV31");
-  if(!box) return;
-  if(!items.length){
-    box.innerHTML = `<div class="activity-empty-v31">Nessuna attività trovata con i filtri selezionati.</div>`;
-    return;
-  }
-  box.innerHTML = items.map(x=>{
-    const safeTab = esc(x.action_tab || "");
-    const action = x.action_tab ? `<button type="button" onclick="openActivityTargetV31('${safeTab}')">Apri</button>` : "";
-    const typeLabel = String(x.type || 'evento').replaceAll('_',' ');
-    const title = x.count && x.count > 1 ? `${x.title || 'Attività'} · ${x.count}` : (x.title || 'Attività');
-    return `<article class="activity-item-v31 ${esc(x.severity || 'info')}">
-      <div class="activity-icon-v31" aria-hidden="true">${activityIconV31(x.type)}</div>
-      <div class="activity-body-v31">
-        <div class="activity-row-v31">
-          <strong>${esc(title)}</strong>
-          <small>${esc(activityDateV31(x.created_at))}</small>
-        </div>
-        <p>${esc(x.description || '')}</p>
-        <div class="activity-meta-v31">
-          <span>${esc(x.actor_name || 'Sistema')}</span>
-          <span>${esc(typeLabel)}</span>
-          <span class="sev ${esc(x.severity || 'info')}">${esc(labelSeverityV31(x.severity))}</span>
-        </div>
-      </div>
-      <div class="activity-actions-v31">${action}</div>
-    </article>`;
-  }).join("");
-}
-
-function labelSeverityV31(sev){
-  if(sev === "success") return "Completato";
-  if(sev === "warning") return "Da controllare";
-  if(sev === "danger") return "Critico";
-  return "Info";
-}
-
-function openActivityTargetV31(tab){
-  showTab(tab);
-}
-
-window.loadActivityLogV31 = loadActivityLogV31;
-window.openActivityTargetV31 = openActivityTargetV31;
-
-// -----------------------------------------------------------------------------
 // v49 - Account legato al settore + Dashboard iniziale pulita
 // -----------------------------------------------------------------------------
 let gfWorkspaceOperationalV49 = true;
-const GF_COMMON_TABS_V49 = new Set(["dashboard", "company", "activity", "settings"]);
+const GF_COMMON_TABS_V49 = new Set(["dashboard", "company", "settings"]);
 const GF_OPERATIONAL_TABS_V49 = new Set([
   "giro", "clienti", "agenti", "report", "depositi", "mezzi", "autisti", "storico",
   "chat-autisti", "integrations", "dashboard-scheduled", "dashboard-in-progress", "dashboard-completed"
@@ -4668,8 +4589,8 @@ function applyTransferMenuCleanupV83(sectorNow){
         buttons[1].innerHTML = '<span>▰</span><strong>Giri</strong>';
         buttons[2].setAttribute('onclick', "mobileGoTabV62('giro')");
         buttons[2].innerHTML = '<span>+</span><strong>Nuovo giro</strong>';
-        buttons[3].setAttribute('onclick', "mobileGoTabV62('activity')");
-        buttons[3].innerHTML = '<span>▤</span><strong>Attività</strong>';
+        buttons[3].setAttribute('onclick', "mobileGoTabV62('storico')");
+        buttons[3].innerHTML = '<span>↺</span><strong>Storico</strong>';
       }
     }
   }
