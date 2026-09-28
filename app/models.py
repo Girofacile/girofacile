@@ -661,28 +661,6 @@ class Notification(Base):
     read_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
 
-class ActivityEvent(Base):
-    """Registro attività aziendale.
-
-    Salva gli eventi operativi importanti per audit interno:
-    creazioni, modifiche, import, giri, consegne, chat e attività agenti/autisti.
-    """
-    __tablename__ = "activity_events"
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
-    entity_key: Mapped[str] = mapped_column(String(220), unique=True, index=True, nullable=False)
-    type: Mapped[str] = mapped_column(String(70), index=True, nullable=False)
-    actor_type: Mapped[str | None] = mapped_column(String(40), nullable=True)
-    actor_name: Mapped[str | None] = mapped_column(String(180), nullable=True)
-    title: Mapped[str] = mapped_column(String(220), nullable=False)
-    description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    entity_type: Mapped[str | None] = mapped_column(String(70), nullable=True)
-    entity_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    action_tab: Mapped[str | None] = mapped_column(String(80), nullable=True)
-    severity: Mapped[str] = mapped_column(String(30), default="info", index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
-
-
 class ChatMessage(Base):
     """Messaggi chat tra autista e responsabile.
 
