@@ -16,6 +16,7 @@
 <script src="/static/dashboard/js/billing.js?v=billing1"></script>
 <link href="/static/dashboard/css/dashboard.css?v=20260928_1" rel="stylesheet">
 <link href="/static/dashboard/css/company.css?v=company_1" rel="stylesheet">
+<link href="/static/dashboard/css/planning.css?v=planning_20260929" rel="stylesheet">
 </head>
 <body>
 
@@ -675,19 +676,27 @@
         </div>
         <div class="giro-layout giro-layout-full">
           <div class="left-column">
-            <section class="panel">
-              <div class="panel-header">
-                <h2>Dettagli pianificazione</h2>
-              </div>
-
-              <div class="form-grid">
-                <div><label><span>Nome </span><span data-gf-label="route">giro</span></label><input id="routeName" placeholder="Giro mattina"></div>
-                <div><label>Data</label><input id="routeDate" type="date"></div>
-                <div><label>Orario partenza</label><input id="routeStart" type="time"></div>
-                <div><label>Deposito</label><select id="routeDeposit"></select></div>
-                <div><label data-gf-label="vehicle">Mezzo</label><select id="routeVehicle" disabled></select><small id="vehicleAvailabilityHint" class="availability-hint">Seleziona prima data e orario di partenza</small></div>
-                <div><label data-gf-label="driver">Autista</label><select id="routeDriver" disabled></select><small id="driverAvailabilityHint" class="availability-hint">Seleziona prima data e orario di partenza</small></div>
-                <div id="routeEnergyPriceBoxV895" class="energy-price-box-v895 hidden">
+<section class="panel planning-setup-panel">
+ <div class="planning-steps"><section class="plan-step plan-step-1" aria-labelledby="planStepTitle1">
+ <header class="plan-step-heading"><span class="plan-step-number">1</span><h2 id="planStepTitle1">Dati del giro</h2><span id="planStepStatus1" class="plan-status" role="status"></span></header>
+ <p class="plan-step-description">Inserisci le informazioni di base per identificare il giro di consegne.</p><svg class="plan-step-art" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="3"/><path d="M8 3v4m8-4v4M4 11h16m-11 4h2m3 0h2m-7 3h2"/></svg>
+ <div class="plan-step-fields"><div><label for="routeName"><span>Nome </span><span data-gf-label="route">giro</span></label><input id="routeName" placeholder="Giro mattina"></div>
+<div><label for="routeDate">Data</label><input id="routeDate" type="date"></div>
+<div><label for="routeStart">Orario partenza</label><input id="routeStart" type="time"></div></div>
+ </section>
+<section class="plan-step plan-step-2" aria-labelledby="planStepTitle2">
+ <header class="plan-step-heading"><span class="plan-step-number">2</span><h2 id="planStepTitle2">Risorse</h2><span id="planStepStatus2" class="plan-status" role="status"></span></header>
+ <p class="plan-step-description">Seleziona il mezzo e l’autista che verranno utilizzati per il giro.</p><svg class="plan-step-art" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h11v12H3zM14 10h4l3 4v4h-7"/><circle cx="7" cy="19" r="2"/><circle cx="18" cy="19" r="2"/></svg>
+ <div class="plan-step-fields"><div><label for="routeDeposit">Deposito</label><select id="routeDeposit"></select></div>
+<div><label for="routeVehicle" data-gf-label="vehicle">Mezzo</label><select id="routeVehicle" disabled></select><small id="vehicleAvailabilityHint" class="availability-hint">Seleziona prima data e orario di partenza</small></div>
+<div><label for="routeDriver" data-gf-label="driver">Autista</label><select id="routeDriver" disabled></select><small id="driverAvailabilityHint" class="availability-hint">Seleziona prima data e orario di partenza</small></div></div>
+ </section>
+<section class="plan-step plan-step-3" aria-labelledby="planStepTitle3">
+ <header class="plan-step-heading"><span class="plan-step-number">3</span><h2 id="planStepTitle3">Rientro</h2><span id="planStepStatus3" class="plan-status" role="status"></span></header>
+ <p class="plan-step-description">Definisci se è previsto il rientro al deposito a fine giro.</p><svg class="plan-step-art" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8a9 9 0 1 1-1 7M5 3v5h5"/></svg>
+ <div class="plan-step-fields"><div><label for="returnDepot">Rientro deposito</label><select id="returnDepot"><option value="true">Sì, rientro previsto</option><option value="false">No</option></select></div></div>
+ </section></div>
+                 <div id="routeEnergyPriceBoxV895" class="energy-price-box-v895 hidden">
                   <label id="routeEnergyPriceTitleV895">Costo del giro</label>
                   <div id="routeEnergyVehicleInfo" class="energy-vehicle-info-v895">Seleziona un mezzo</div>
                   <div class="energy-mode-row-v895"><label><input type="radio" name="energyPriceMode" value="automatic" onchange="updateRouteEnergyPricingV895()"> Automatico</label><label><input type="radio" name="energyPriceMode" value="manual" checked onchange="updateRouteEnergyPricingV895()"> Manuale</label></div>
@@ -695,20 +704,12 @@
                   <div id="electricEnergyPriceWrap" class="hidden"><label>Prezzo energia €/kWh</label><input id="electricityPrice" type="number" step="0.001" value="0.30"></div>
                   <small id="automaticFuelPriceInfo" class="availability-hint"></small>
                 </div>
-                <div><label>Rientro deposito</label><select id="returnDepot"><option value="true">Sì, rientro previsto</option><option value="false">No</option></select></div>
-              </div>
-            </section>
 
-            <section class="panel route-step-panel" id="routePlanningGatePanel">
-              <div class="route-step-ready">
-                <div>
-                  <h2>Passaggio successivo</h2>
-                  <p class="panel-subtitle">Completa prima tutte le informazioni del giro. Solo dopo potrai aprire la selezione clienti e preparare le fermate.</p>
-                  <small id="routePlanningGateHint" class="route-gate-hint">Compila data, orario, deposito, mezzo, autista e carburante.</small>
-                </div>
-                <button id="openCustomerStepBtn" class="btn-primary large" onclick="openCustomerPlanningStep()" disabled>Inserisci clienti</button>
-              </div>
-            </section>
+ <section id="routePlanningGatePanel" class="planning-completion" aria-labelledby="planningCompletionTitle">
+ <div class="planning-completion-content"><h2 id="planningCompletionTitle">Cosa manca?</h2><p>Completa tutte le informazioni del giro per selezionare i clienti e preparare le fermate.</p><div id="planningChecklist" class="planning-checklist"></div><small id="routePlanningGateHint" class="route-gate-hint" role="status"></small></div>
+ <div class="planning-completion-action"><button id="openCustomerStepBtn" class="btn-primary large" onclick="advanceRoutePlanning()">Completa dati giro</button></div>
+ </section>
+ </section>
 
             <section class="panel delivery-picker-panel hidden" id="customerPlanningStep">
               <div class="panel-header">
@@ -1747,7 +1748,7 @@
 </div>
 
 <script src="/static/dashboard/js/reports.js?v=stability_1"></script>
-<script src="/static/dashboard/js/core.js?v=dashboard_20260928_1"></script>
+<script src="/static/dashboard/js/core.js?v=planning_20260929"></script>
 
 <script>
 function toggleLoginPassword(){
