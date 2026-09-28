@@ -1453,7 +1453,15 @@ function routeProgressPercent(r){
   }catch(e){ return 0; }
 }
 
-function renderEmptyDashList(text){ return `<div class="dash-empty">${esc(text)}</div>`; }
+function renderEmptyDashList(text, illustration){
+  if(!illustration) return `<div class="dash-empty">${esc(text)}</div>`;
+  const descriptions = {
+    scheduled: 'I giri pianificati appariranno qui, pronti per la partenza.',
+    progress: 'Segui qui i giri avviati e lo stato delle consegne.',
+    completed: 'I giri completati oggi appariranno qui.'
+  };
+  return `<div class="dash-empty dash-empty-illustrated"><img src="/static/dashboard/illustrations/${illustration}.svg" alt="" width="200" height="125"><strong>${esc(text)}</strong><p>${descriptions[illustration]}</p></div>`;
+}
 function renderDashTrend(routes){
   const el = document.getElementById("dashTrendChart");
   if(!el) return;
@@ -1514,9 +1522,9 @@ async function loadDashboardHome(){
     const progressBox=document.getElementById("dashProgressList");
     const completedBox=document.getElementById("dashCompletedList");
     renderLogisticsDashboardV50([...(operational || []), ...(routes || [])]);
-    if(scheduledBox) scheduledBox.innerHTML = scheduled.slice(0,3).map(r=>dashRouteItem(r,'scheduled')).join("") || renderEmptyDashList("Nessun giro programmato.");
-    if(progressBox) progressBox.innerHTML = progress.slice(0,3).map(r=>dashRouteItem(r,'progress')).join("") || renderEmptyDashList("Nessun giro in corso.");
-    if(completedBox) completedBox.innerHTML = completedToday.slice(0,3).map(r=>dashRouteItem(r,'completed')).join("") || renderEmptyDashList("Nessun giro completato oggi.");
+    if(scheduledBox) scheduledBox.innerHTML = scheduled.slice(0,3).map(r=>dashRouteItem(r,'scheduled')).join("") || renderEmptyDashList("Nessun giro programmato.", "scheduled");
+    if(progressBox) progressBox.innerHTML = progress.slice(0,3).map(r=>dashRouteItem(r,'progress')).join("") || renderEmptyDashList("Nessun giro in corso.", "progress");
+    if(completedBox) completedBox.innerHTML = completedToday.slice(0,3).map(r=>dashRouteItem(r,'completed')).join("") || renderEmptyDashList("Nessun giro completato oggi.", "completed");
 
     const vehBox = document.getElementById("dashVehicleStatus");
     if(vehBox){
