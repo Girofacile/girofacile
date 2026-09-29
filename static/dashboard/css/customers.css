@@ -1,0 +1,108 @@
+/* Customer directory matching the supplied reference. */
+#tab-clienti{font-family:Arial,Helvetica,sans-serif;color:#0f172a}
+#tab-clienti .customer-page-title{align-items:center;margin-bottom:22px}
+#tab-clienti h1{font-size:34px;line-height:1.15;letter-spacing:-1.1px;margin:0 0 5px;font-weight:800}
+#tab-clienti .customer-page-title p{font-size:14px;color:#727e91;margin:0}
+#tab-clienti button,#tab-clienti select{font-family:inherit;cursor:pointer}
+#tab-clienti button:focus-visible,#tab-clienti input:focus-visible,#tab-clienti select:focus-visible{outline:2px solid #0866ff;outline-offset:3px}
+#tab-clienti svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+#tab-clienti .btn-secondary,#tab-clienti .btn-primary,#tab-clienti .btn-danger{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;border-radius:9px;font-size:12px;font-weight:700;padding:10px 17px;white-space:nowrap}
+#tab-clienti .btn-secondary{background:#fff;border:1px solid #e6e9ef;color:#344156;box-shadow:0 2px 5px #172b4d03}
+#tab-clienti .btn-primary{background:linear-gradient(135deg,#087bff,#0756f3);box-shadow:0 5px 12px #0866ff20;color:white;border:1px solid #3382ff}
+#tab-clienti .btn-danger{background:linear-gradient(135deg,#e62b34,#d71925);border:1px solid #e4424c;color:white;box-shadow:none}
+#tab-clienti .customer-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:16px}
+#tab-clienti .customer-metric{display:flex;gap:19px;align-items:flex-start;background:#fffffff2;border:1px solid #edf0f5;border-radius:12px;padding:18px 17px;min-height:108px;box-sizing:border-box;box-shadow:0 5px 16px #366ca005}
+#tab-clienti .customer-metric-icon{display:grid;place-items:center;flex:0 0 52px;width:52px;height:52px;border-radius:12px}
+#tab-clienti .customer-metric-icon svg{width:27px;height:27px;stroke-width:2}
+#tab-clienti .blue{background:#edf5ff;color:#1574ef}#tab-clienti .green{background:#e8fbef;color:#119957}#tab-clienti .orange{background:#fff8e8;color:#ed9509}#tab-clienti .purple{background:#f5edff;color:#9144e2}
+#tab-clienti .customer-metric h2{font-size:12px;line-height:1.4;color:#465168;margin:0 0 5px;font-weight:700}
+#tab-clienti .customer-metric strong{display:block;font-size:27px;line-height:1.1;letter-spacing:-.6px}
+#tab-clienti .customer-metric p{font-size:12px;line-height:1.4;color:#8a92a1;margin:7px 0 0}
+#tab-clienti .customer-list-panel-v8{padding:18px 20px 9px;border:1px solid #e9edf4;border-radius:13px;background:#fffffff2;box-shadow:0 5px 18px #366ca005;margin:0}
+#tab-clienti .customer-list-head{display:flex;justify-content:space-between;gap:16px;align-items:center;margin:0 0 14px;padding:0;border:0}
+#tab-clienti .customer-list-head h2{font-size:20px;letter-spacing:-.6px;margin:0 0 5px;font-weight:800}
+#tab-clienti .panel-subtitle{font-size:12px;font-weight:400;color:#768092;margin:0;line-height:1.5}
+#tab-clienti .customer-searchbar-v8{display:grid;grid-template-columns:minmax(200px,1fr) 115px 165px auto;gap:9px;margin-bottom:14px}
+#tab-clienti .customer-search{position:relative;display:flex;align-items:center;margin:0;min-width:0}
+#tab-clienti .customer-search>svg{position:absolute;left:14px;color:#617087;width:19px;height:19px}
+#tab-clienti .customer-search input{height:37px;min-width:0;width:100%;box-sizing:border-box;border:1px solid #dfe3eb;box-shadow:inset 0 1px 2px #10182803;border-radius:8px;padding:0 12px 0 44px;font-size:12px;color:#344156;background:white}
+#tab-clienti input::placeholder{color:#8590a0}
+#tab-clienti .customer-searchbar-v8 button,#tab-clienti #customerSort{min-height:37px;height:37px;padding:7px 15px;border-radius:8px;font-size:12px}
+#tab-clienti #customerSort{width:100%;background:#fff;border:1px solid #e6e9ef;color:#344156;font-weight:700}
+#tab-clienti .customer-view-controls{display:flex;gap:4px}
+#tab-clienti .customer-view-controls button{width:55px}
+#tab-clienti .customer-view-controls button[aria-pressed="true"]{border-color:#82b2f4;color:#2674dc;box-shadow:inset 0 0 0 1px #cee1fc}
+#tab-clienti .tableWrap{border:1px solid #e8ebf1;border-radius:10px;overflow-x:auto;margin:0}
+#tab-clienti .customer-table{width:100%;border-collapse:collapse;min-width:980px;table-layout:auto;font-size:12px;margin:0}
+#tab-clienti .customer-table th{background:#f9fafc;color:#536077;font-size:11px;font-weight:700;text-align:left;padding:10px 12px;border-bottom:1px solid #edf0f5;white-space:nowrap}
+#tab-clienti .customer-table th button{border:0;background:none;color:inherit;font:inherit;display:flex;align-items:center;gap:8px;padding:0}
+#tab-clienti .customer-table th button span{color:#8090a5}
+#tab-clienti .customer-table td{padding:7px 12px;height:50px;box-sizing:border-box;border-bottom:1px solid #edf0f5;color:#344156;vertical-align:middle;background:transparent}
+#tab-clienti .customer-table tr:last-child td{border-bottom:0}
+#tab-clienti .customer-table tr:hover{background:#f7faff}
+#tab-clienti .customer-table tr.is-selected{background:#eff6ff}
+#tab-clienti .customer-table td strong{display:block;font-size:12px;font-weight:700;color:#101c33;line-height:1.4}
+#tab-clienti .customer-table td small{display:block;font-size:11px;color:#697589;margin-top:3px;line-height:1.3}
+#tab-clienti .customer-table .customer-checkbox{width:44px;text-align:center;padding:8px 12px}
+#tab-clienti input[type="checkbox"]{width:16px;height:16px;margin:0;vertical-align:middle;accent-color:#0866ff;cursor:pointer}
+#tab-clienti .customer-unloading{white-space:nowrap;color:#7a8495}
+#tab-clienti .customer-status,.customer-details-dialog .customer-status{display:inline-flex;align-items:center;gap:7px;border-radius:999px;font-size:11px;font-weight:700;padding:5px 9px;white-space:nowrap}
+#tab-clienti .customer-status.verified,.customer-details-dialog .verified{background:#e9fcf1;border:1px solid #c8f1dc;color:#168553}
+#tab-clienti .customer-status.pending,.customer-details-dialog .pending{background:#fff8e8;border:1px solid #faebc8;color:#d68a16}
+#tab-clienti .customer-status svg{width:15px;height:15px;stroke-width:2.4}
+#tab-clienti .customer-status.verified svg{fill:#168553;stroke:#fff;border-radius:50%;background:#168553}
+#tab-clienti .customer-row-actions{display:flex;gap:9px;align-items:center;white-space:nowrap}
+#tab-clienti .customer-row-actions button{display:inline-flex;align-items:center;justify-content:center;gap:9px;height:35px;padding:8px 12px;border:1px solid #e4e7ed;border-radius:8px;background:#fff;color:#344156;font-size:11px;font-weight:700;box-shadow:0 1px 2px #172b4d03}
+#tab-clienti .customer-row-actions .customer-delete{color:#e23746;border-color:#f2d8dc;padding:8px 11px;margin-left:8px}
+#tab-clienti .customer-row-actions svg{width:15px;height:15px}
+#tab-clienti .customer-list-footer{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-top:9px;color:#8a94a4;font-size:12px}
+#tab-clienti #customerPagination{display:flex;align-items:center;gap:8px}
+#tab-clienti #customerPagination button{height:34px;min-width:34px;border:1px solid #e8ebf1;border-radius:8px;background:#fff;color:#617087;font-size:13px}
+#tab-clienti #customerPagination button[aria-current="page"]{background:linear-gradient(135deg,#147cff,#0c60ee);color:#fff;border-color:#1871ef;box-shadow:0 2px 4px #1671ef22}
+#tab-clienti #customerPagination button:disabled{opacity:.45;cursor:default}
+#tab-clienti .customer-empty{text-align:center;padding:40px!important;color:#7a8495}
+#tab-clienti .customer-selection{padding:8px 0 14px;color:#2470ca;font-size:12px}
+#tab-clienti .customer-selection button{margin-left:10px;border:0;background:none;color:inherit;text-decoration:underline}
+#tab-clienti .customer-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+#tab-clienti .customer-card{padding:16px;border:1px solid #e8ebf1;border-radius:10px;background:#fff;min-width:0}
+#tab-clienti .customer-card-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;color:#697589}
+#tab-clienti .customer-card h3{font-size:16px;margin:16px 0 8px}
+#tab-clienti .customer-card p{font-size:12px;color:#697589;overflow-wrap:anywhere}
+#tab-clienti .customer-card .customer-row-actions{flex-wrap:wrap;margin-top:18px;gap:5px}
+.customer-details-dialog{width:min(600px,calc(100% - 40px));box-sizing:border-box;max-height:85vh;overflow:auto;padding:26px;border:1px solid #e6eaf2;border-radius:16px;color:#17243b;box-shadow:0 20px 80px #14284d33}
+.customer-details-dialog::backdrop{background:#12203e66}
+.customer-details-dialog h2{margin:0 0 12px}.customer-details-dialog svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2}
+.customer-details-dialog dl{display:grid;grid-template-columns:1fr 1fr;gap:16px}.customer-details-dialog dt{font-size:12px;color:#7b8799}.customer-details-dialog dd{margin:5px 0;font-size:14px;white-space:pre-wrap;overflow-wrap:anywhere}
+.customer-detail-actions{display:flex;gap:10px;margin:20px 0}.customer-details-dialog form{text-align:right}
+@media(max-width:1200px){#tab-clienti .customer-metric{gap:12px;padding:17px 12px}#tab-clienti .customer-metric-icon{width:44px;height:44px;flex-basis:44px}#tab-clienti .customer-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:1000px){#tab-clienti .customer-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}#tab-clienti .customer-page-title{align-items:flex-start;gap:16px}#tab-clienti .customer-searchbar-v8{grid-template-columns:1fr 1fr auto}#tab-clienti .customer-search{grid-column:1/-1}}
+@media(max-width:600px){#tab-clienti .customer-page-title,#tab-clienti .customer-list-head{flex-direction:column;align-items:stretch}#tab-clienti .page-actions{gap:7px}#tab-clienti .page-actions button{flex:1;padding:10px;font-size:11px}#tab-clienti .customer-metrics{gap:9px}#tab-clienti .customer-metric{gap:9px;padding:14px 10px;min-height:120px}#tab-clienti .customer-metric-icon{width:32px;height:32px;flex-basis:32px;border-radius:9px}#tab-clienti .customer-metric-icon svg{width:21px;height:21px}#tab-clienti .customer-metric p{font-size:10px}#tab-clienti .customer-metric h2{font-size:11px}#tab-clienti .customer-list-panel-v8{padding:15px 12px}#tab-clienti .customer-view-controls button{width:38px;padding:8px}#tab-clienti .customer-searchbar-v8{grid-template-columns:1fr 1.25fr auto;gap:6px}#tab-clienti .customer-cards{grid-template-columns:1fr}#tab-clienti .customer-list-footer{flex-wrap:wrap}.customer-details-dialog dl{grid-template-columns:1fr}}
+/* Override inherited form/table sizing so all eight rows fit the reference. */
+#tab-clienti .customer-table td{font-size:12px;line-height:1.4}
+#tab-clienti .customer-table th{height:36px;line-height:1.4}
+#tab-clienti input[type="checkbox"]{min-height:0;padding:0;box-shadow:none;border-radius:4px}
+#tab-clienti .customer-search input{min-height:0;font-weight:400}
+#tab-clienti .customer-metric-icon.green svg{fill:#119957;stroke:white;background:#119957;border-radius:50%}
+@media(min-width:1101px){
+  body:has(#tab-clienti:not(.hidden)) .sidebar{width:212px;padding:16px 12px}
+  body:has(#tab-clienti:not(.hidden)) .main-area{margin-left:212px;width:calc(100% - 212px)}
+  body:has(#tab-clienti:not(.hidden)) .content{padding:8px 26px 16px}
+  body:has(#tab-clienti:not(.hidden)) .topbar{height:60px;min-height:60px;padding:6px 30px}
+  body:has(#tab-clienti:not(.hidden)) .side-nav{padding-top:15px;gap:5px}
+  body:has(#tab-clienti:not(.hidden)) .nav-item{font-size:13px;padding:9px 12px;min-height:44px;border-radius:9px;gap:10px}
+  body:has(#tab-clienti:not(.hidden)) .brand{height:42px;padding:0 7px 8px}
+  body:has(#tab-clienti:not(.hidden)) .brand-title{font-size:19px}
+}
+@media(max-width:820px){
+  #tab-clienti #customerSort{font-size:12px!important;border-radius:8px!important;padding:7px}
+  #tab-clienti .customer-search input{height:42px}
+  #tab-clienti .customer-table{min-width:1100px}
+  #tab-clienti input[type="checkbox"]{border-radius:4px!important}
+}
+#tab-clienti .customer-row-actions button{margin:0}
+#tab-clienti .customer-table th:last-child{width:292px}
+@media(min-width:1101px){
+  #tab-clienti .customer-page-title{margin-bottom:16px}
+  #tab-clienti .customer-metric{padding-top:15px;padding-bottom:15px}
+  body:has(#tab-clienti:not(.hidden)) .nav-item{padding-top:7px;padding-bottom:7px;min-height:43px}
+}

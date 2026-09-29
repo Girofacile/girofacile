@@ -98,7 +98,7 @@ def safe_geocode_customer(customer):
 def list_customers(
     q: str = "", provincia: str = "", comune: str = "",
     ztl: str = "", sponda: str = "", agent_id: str = "",
-    limit: int = 300,
+    limit: int = 300, offset: int = 0,
     db: Session = Depends(get_db), user: User = Depends(current_user),
 ):
     query = owned(db.query(Customer), Customer, user)
@@ -125,7 +125,7 @@ def list_customers(
         query = query.filter(Customer.ztl == (ztl == "true"))
     if sponda in ["true", "false"]:
         query = query.filter(Customer.sponda == (sponda == "true"))
-    rows = query.order_by(Customer.nome.asc()).limit(max(10, min(limit, 1000))).all()
+    rows = query.order_by(Customer.nome.asc(), Customer.id.asc()).offset(max(0, offset)).limit(max(10, min(limit, 1000))).all()
     return [customer_to_dict(x) for x in rows]
 
 

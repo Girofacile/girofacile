@@ -5,7 +5,7 @@ const vm = require('node:vm');
 
 test('dashboard modules parse and have no duplicate top-level function declarations', () => {
   const names = new Set();
-  for(const path of ['static/dashboard/js/reports.js','static/dashboard/js/core.js']){
+  for(const path of ['static/dashboard/js/reports.js','static/dashboard/js/customers.js','static/dashboard/js/core.js']){
     const source=readFileSync(path,'utf8');
     new vm.Script(source,{filename:path});
     for(const [,name] of source.matchAll(/^(?:async )?function (\w+)\(/gm)){

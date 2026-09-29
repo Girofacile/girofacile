@@ -19,6 +19,7 @@
 <link href="/static/dashboard/css/planning.css?v=planning_20260929" rel="stylesheet">
 <link href="/static/dashboard/css/route-preview.css?v=preview_20260929" rel="stylesheet">
 <link href="/static/dashboard/css/scheduled.css?v=scheduled_20260929" rel="stylesheet">
+<link href="/static/dashboard/css/customers.css?v=customers_20260929" rel="stylesheet">
 </head>
 <body>
 
@@ -789,42 +790,39 @@
 
       <section id="tab-clienti" class="tab hidden">
         <div class="page-title-row customer-page-title">
-          <div><h1 data-gf-label="customers">Clienti</h1><p><span>Anagrafica </span><span data-gf-label="customers">clienti</span><span> e fasce orarie di scarico.</span></p></div>
-          <div class="page-actions">
-            <button class="btn-secondary" onclick="openCustomerImportModal()">Importa clienti CSV/Excel</button>
-            <button class="btn-primary" onclick="openCustomerModal()"><span>+ Nuovo </span><span data-gf-label="customer">cliente</span></button>
-          </div>
+          <div><h1 data-gf-label="customers">Clienti</h1><p>Anagrafica <span data-gf-label="customers">Clienti</span> e fasce orarie di scarico.</p></div>
+          <div class="page-actions"><button class="btn-secondary" onclick="openCustomerImportModal()">Importa clienti CSV/Excel</button><button class="btn-primary" onclick="openCustomerModal()">+ Nuovo <span data-gf-label="customer">Cliente</span></button></div>
         </div>
-
+        <div class="customer-metrics" aria-label="Riepilogo clienti"><article class="customer-metric"><span class="customer-metric-icon blue"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2m20 0v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/><circle cx="9" cy="7" r="4"/></svg></span><div><h2>Totale clienti</h2><strong id="customerMetricTotal">—</strong><p>Tutti i clienti registrati</p></div></article>
+<article class="customer-metric"><span class="customer-metric-icon green"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg></span><div><h2>Indirizzi verificati</h2><strong id="customerMetricVerified">—</strong><p>Indirizzi con verifica completata</p></div></article>
+<article class="customer-metric"><span class="customer-metric-icon orange"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><div><h2>Da verificare</h2><strong id="customerMetricPending">—</strong><p>Indirizzi ancora da verificare</p></div></article>
+<article class="customer-metric"><span class="customer-metric-icon purple"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21V7l10-4v18M13 9h7v12H3m4-12v2m0 3v2m3-8v2m0 3v2m6-1v2m0-6v1"/></svg></span><div><h2>Clienti attivi</h2><strong id="customerMetricActive">—</strong><p>Clienti nel sistema</p></div></article>
+</div>
         <section class="panel customer-list-panel-v8">
-          <div class="panel-header customer-list-head">
-            <div>
-              <h2><span>Elenco </span><span data-gf-label="customers">clienti</span></h2>
-              <p class="panel-subtitle">Cerca rapidamente oppure apri i filtri avanzati quando servono.</p>
-            </div>
-            <button class="btn-danger" onclick="deleteAllCustomers()">Elimina tutti i clienti</button>
-          </div>
+          <div class="panel-header customer-list-head"><div><h2>Elenco <span data-gf-label="customers">Clienti</span></h2><p class="panel-subtitle">Cerca rapidamente oppure apri i filtri avanzati quando servono.</p></div>
+          <button class="btn-danger" onclick="deleteAllCustomers()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/></svg>Elimina tutti i clienti</button></div>
           <div class="customer-searchbar-v8">
-            <input id="customerListSearch" placeholder="Cerca cliente, codice o indirizzo" oninput="loadCustomers()">
-            <button class="btn-secondary" onclick="toggleCustomerFilters()">Filtra</button>
+            <label class="customer-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="customerListSearch" aria-label="Cerca clienti" placeholder="Cerca cliente, codice o indirizzo..." oninput="filterCustomerList()"></label>
+            <button id="customerFilterToggle" class="btn-secondary" onclick="toggleCustomerFilters()" aria-expanded="false" aria-controls="customerAdvancedFilters"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18l-7 8v7l-4 2V12Z"/></svg>Filtra</button>
+            <select id="customerSort" aria-label="Ordina clienti" onchange="setCustomerSort(this.value)"><option value="nome:asc">↕　Ordina per</option><option value="nome:desc">Nome: Z–A</option><option value="codice_cliente:asc">Codice: crescente</option><option value="codice_cliente:desc">Codice: decrescente</option><option value="indirizzo:asc">Indirizzo: A–Z</option><option value="stato_geocodifica:asc">Stato indirizzo</option><option value="scarico_mattina_da:asc">Orario di scarico</option></select>
+            <div class="customer-view-controls" role="group" aria-label="Vista clienti"><button id="customerListView" class="btn-secondary" aria-label="Vista elenco" aria-pressed="true" onclick="setCustomerView('list')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h1M3 12h1M3 18h1"/></svg></button><button id="customerGridView" class="btn-secondary" aria-label="Vista griglia" aria-pressed="false" onclick="setCustomerView('grid')"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="15" y="3" width="6" height="6" rx="1"/><rect x="3" y="15" width="6" height="6" rx="1"/><rect x="15" y="15" width="6" height="6" rx="1"/></svg></button></div>
           </div>
           <div id="customerAdvancedFilters" class="customer-filters customer-filters-advanced hidden">
-            <input id="customerFilterComune" placeholder="Comune / zona" oninput="loadCustomers()">
-            <input id="customerFilterProvincia" placeholder="Provincia" oninput="loadCustomers()">
-            <select data-gf-agents-only id="customerFilterAgent" onchange="loadCustomers()"><option value="">Agente tutti</option><option value="interno">Cliente interno</option></select>
-            <select data-gf-feature="ztl" id="customerFilterZtl" onchange="loadCustomers()"><option value="">ZTL tutte</option><option value="true">Solo ZTL</option><option value="false">No ZTL</option></select>
-            <select data-gf-feature="tail_lift" id="customerFilterSponda" onchange="loadCustomers()"><option value="">Sponda tutte</option><option value="true">Serve sponda</option><option value="false">No sponda</option></select>
+            <input id="customerFilterComune" placeholder="Comune / zona" oninput="filterCustomerList()">
+            <input id="customerFilterProvincia" placeholder="Provincia" oninput="filterCustomerList()">
+            <select data-gf-agents-only id="customerFilterAgent" onchange="filterCustomerList()"><option value="">Agente tutti</option><option value="interno">Cliente interno</option></select>
+            <select data-gf-feature="ztl" id="customerFilterZtl" onchange="filterCustomerList()"><option value="">ZTL tutte</option><option value="true">Solo ZTL</option><option value="false">No ZTL</option></select>
+            <select data-gf-feature="tail_lift" id="customerFilterSponda" onchange="filterCustomerList()"><option value="">Sponda tutte</option><option value="true">Serve sponda</option><option value="false">No sponda</option></select>
             <button class="btn-secondary" onclick="clearCustomerFilters()">Pulisci filtri</button>
           </div>
-          <div class="tableWrap">
-            <table class="gf-customers-table-v892">
-              <thead><tr><th>Codice</th><th>Nome</th><th data-gf-agents-only>Agente</th><th>Indirizzo</th><th data-gf-feature="time_windows">Scarico</th><th>Indirizzo</th><th data-gf-feature="ztl">ZTL</th><th data-gf-feature="tail_lift">Sponda</th><th></th></tr></thead>
-              <tbody id="customersBody"></tbody>
-            </table>
-          </div>
+          <div id="customerSelection" class="customer-selection hidden" role="status"></div>
+          <div id="customerTableWrap" class="tableWrap"><table class="customer-table">
+            <thead><tr><th class="customer-checkbox"><input id="customerSelectAll" type="checkbox" aria-label="Seleziona tutti i clienti della pagina" onchange="selectCustomerPage(this.checked)"></th><th data-customer-sort="codice_cliente"><button onclick="toggleCustomerSort('codice_cliente')">Codice <span aria-hidden="true">↕</span></button></th><th data-customer-sort="nome"><button onclick="toggleCustomerSort('nome')">Nome <span aria-hidden="true">↕</span></button></th><th data-customer-sort="indirizzo"><button onclick="toggleCustomerSort('indirizzo')">Indirizzo <span aria-hidden="true">↕</span></button></th><th data-customer-sort="scarico_mattina_da" data-gf-feature="time_windows"><button onclick="toggleCustomerSort('scarico_mattina_da')">Scarico <span aria-hidden="true">↕</span></button></th><th data-customer-sort="stato_geocodifica"><button onclick="toggleCustomerSort('stato_geocodifica')">Stato indirizzo <span aria-hidden="true">↕</span></button></th><th>Azioni</th></tr></thead><tbody id="customersBody"></tbody></table></div>
+          <div id="customerCards" class="customer-cards hidden"></div>
+          <div class="customer-list-footer"><span id="customerCount" role="status"></span><nav id="customerPagination" aria-label="Pagine clienti"></nav></div>
         </section>
       </section>
-
+      <dialog id="customerDetailsDialog" class="customer-details-dialog" aria-labelledby="customerDetailsTitle"><div id="customerDetailsContent"></div><form method="dialog"><button class="btn-secondary">Chiudi</button></form></dialog>
 
       <section id="tab-agenti" class="tab hidden">
         <div class="page-title-row">
@@ -1751,7 +1749,8 @@
 </div>
 
 <script src="/static/dashboard/js/reports.js?v=stability_1"></script>
-<script src="/static/dashboard/js/core.js?v=scheduled_20260929"></script>
+<script src="/static/dashboard/js/customers.js?v=customers_20260929"></script>
+<script src="/static/dashboard/js/core.js?v=customers_20260929"></script>
 
 <script>
 function toggleLoginPassword(){

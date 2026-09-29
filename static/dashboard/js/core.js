@@ -2384,10 +2384,13 @@ function closeCustomerImportModal(e){
   if(e && e.target && e.currentTarget && e.target !== e.currentTarget) return;
   document.getElementById("customerImportOverlay")?.classList.add("hidden");
 }
-function toggleCustomerFilters(){ document.getElementById("customerAdvancedFilters")?.classList.toggle("hidden"); }
+function toggleCustomerFilters(){
+  const hidden = document.getElementById("customerAdvancedFilters")?.classList.toggle("hidden");
+  document.getElementById("customerFilterToggle")?.setAttribute("aria-expanded", String(!hidden));
+}
 function clearCustomerFilters(){
   ["customerFilterComune","customerFilterProvincia","customerFilterAgent","customerFilterZtl","customerFilterSponda"].forEach(id=>set(id,""));
-  loadCustomers();
+  filterCustomerList();
 }
 
 function setCustomerAddressStatus(text, status="muted"){
@@ -2466,22 +2469,7 @@ async function verifyCustomerModalAddress(){
 }
 
 async function loadCustomers(){
-  const q = document.getElementById("customerListSearch")?.value || "";
-  const comune = document.getElementById("customerFilterComune")?.value || "";
-  const provincia = document.getElementById("customerFilterProvincia")?.value || "";
-  const ztl = document.getElementById("customerFilterZtl")?.value || "";
-  const sponda = document.getElementById("customerFilterSponda")?.value || "";
-  const agent_id = agentsFeatureEnabled() ? (val("customerFilterAgent") || "") : "";
-  const params = new URLSearchParams({q, comune, provincia, ztl, sponda, agent_id, limit:"500"});
-  customersCache = await api("/api/customers?"+params.toString());
-  const body = document.getElementById("customersBody");
-  if(!body) return;
-  body.innerHTML = "";
-  customersCache.forEach(x=>{
-    const geo = x.stato_geocodifica || "da_verificare";
-    const geoLabel = {verificato:"Verificato",da_verificare:"Da verificare",non_trovato:"Non trovato",manuale:"Manuale"}[geo] || geo;
-    body.innerHTML += `<tr><td>${esc(x.codice_cliente||"")}</td><td><strong>${esc(x.nome)}</strong><br><small>${esc(x.comune||"")} ${esc(x.provincia||"")}</small></td><td data-gf-agents-only>${esc(x.agent_name||"Cliente interno")}</td><td>${esc(x.indirizzo)}</td><td>${fascia(x)}</td><td><span class="geo-badge ${geo}">${geoLabel}</span><br><button class="btn-link-small" onclick="verifyCustomerAddress(${x.id})">Verifica</button></td><td>${x.ztl?"Sì":"No"}</td><td>${x.sponda?"Sì":"No"}</td><td><button onclick="openCustomerModal(${x.id})">Modifica</button><button onclick="deleteCustomer(${x.id})">Elimina</button></td></tr>`;
-  });
+  return refreshCustomerDirectory();
 }
 function editCustomer(id, fromModal=false){
   const c = customersCache.find(x=>x.id===id); if(!c) return;

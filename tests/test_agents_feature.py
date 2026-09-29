@@ -172,3 +172,17 @@ def test_existing_database_migration_preserves_usage_and_runs_only_once(env):
     namespace['migrate_database']()
     with engine.connect() as conn:
         assert not any(conn.execute(sqlalchemy.text('SELECT agents_enabled FROM users')).scalars())
+
+
+def test_customer_directory_pagination_preserves_tenant_and_soft_delete_filter(env):
+    client, db, owner, other, *_ = env
+    from app.models import Customer
+    db.add_all([Customer(user_id=owner.id, nome=f"Paging {i:02}", indirizzo="Via Test") for i in range(15)])
+    db.add(Customer(user_id=other.id, nome="Paging foreign", indirizzo="Via Test"))
+    db.add(Customer(user_id=owner.id, nome="Paging deleted", indirizzo="Via Test", deleted_at=datetime.utcnow()))
+    db.commit()
+    first = client.get('/api/customers?q=Paging&limit=10&offset=0').json()
+    second = client.get('/api/customers?q=Paging&limit=10&offset=10').json()
+    assert len(first) == 10 and len(second) == 5
+    assert not ({row['id'] for row in first} & {row['id'] for row in second})
+    assert all(row['user_id'] == owner.id and row['nome'] != 'Paging deleted' for row in first + second)
