@@ -2985,7 +2985,7 @@ async function programCurrentRoute(){
   }
 }
 
-async function openProgrammedRouteForEdit(id){
+async function openProgrammedRouteForEdit(id, goToPlanning=false){
   try{
     const r = await api(`/api/routes/${id}`);
     const st = r.status || "programmato";
@@ -3008,6 +3008,11 @@ async function openProgrammedRouteForEdit(id){
     renderDeliveries();
     lastRouteResult = r;
     lastMapsUrl = r.google_maps_url || "";
+    if(goToPlanning && (st === "programmato" || st === "bozza")){
+      document.getElementById("tab-giro")?.scrollIntoView({behavior:"smooth", block:"start"});
+      toast("Giro caricato: modifica i dati e ricalcola il percorso.");
+      return;
+    }
     if(st === "programmato" || st === "bozza"){
       renderRouteResult(r, "routePreviewResult", false);
       showTab("route-preview");
@@ -3799,7 +3804,7 @@ function dashboardStopRowsUnified(r, mode='live'){
             <td>${gfDeltaBadge(planned, real)}</td>
             <td>${deliveryStatusPill(st)}${d.motivo_mancata?`<small class="delivery-reason">${esc(d.motivo_mancata)}</small>`:''}</td>
             <td>${deliverySignatureAction(d, r.driver_name) || '<span class="muted">-</span>'}</td>
-            <td>${note ? `<button type="button" class="btn-mini note-mini-btn" onclick="alert('${esc(String(note)).replace(/'/g,"\'")}')">Note</button>` : '<span class="muted">-</span>'}</td>
+            <td>${note ? `<button type="button" class="btn-mini note-mini-btn" data-note="${esc(String(note))}" onclick="alert(this.dataset.note)">Note</button>` : '<span class="muted">-</span>'}</td>
           </tr>`;
         }).join('')}
       </tbody>
@@ -3952,36 +3957,60 @@ function renderDashboardScheduledSubpage(routes, selectedRoute){
   const page = document.getElementById('dashboardScheduledPage');
   if(!page) return;
   if(!routes.length){
-    page.innerHTML = `<div class="dash-empty-subpage"><div class="dash-empty-icon">📅</div><h2>Nessun giro programmato</h2><p>I giri salvati e assegnati compariranno qui finché l'autista non li avvia.</p><button class="btn-primary" onclick="showTab('giro')">Pianifica un giro</button></div>`;
+    page.innerHTML = `<div class="dash-empty-subpage"><div class="dash-empty-icon">📅</div><h2>Nessun giro programmato</h2><p>I giri salvati e assegnati compariranno qui finché l’autista non li avvia.</p><button class="btn-primary" onclick="showTab('giro')">Pianifica un giro</button></div>`;
     return;
   }
   const r = selectedRoute || routes[0];
   dashboardScheduledSelectedId = r.id;
   const rows = r.consegne || [];
-  page.innerHTML = `<div class="dash-sub-layout">
-    <aside class="dash-sub-sidebar">
-      ${dashboardRoutePicker(routes, r.id, 'openDashboardScheduledPage', 'Giro programmato')}
-      <div class="dash-live-summary-card scheduled">
-        <div class="dash-live-header"><div class="dash-live-play calendar">📅</div><div><span>Giro programmato</span><strong>${esc(r.nome || 'Giro consegne')}</strong><small>${esc(r.data_giro || '-')}</small></div></div>
-        <div class="dash-live-summary-body">
-          <div><span>Autista</span><strong>${esc(r.driver_name || 'Non assegnato')}</strong></div>
-          <div><span>Mezzo</span><strong>${esc(r.vehicle_name || '-')}</strong></div>
-          <div><span>Partenza prevista</span><strong>${esc(r.orario_partenza || '-')}</strong></div>
-          <div><span>Rientro stimato</span><strong>${esc(r.rientro_stimato_aggiornato || r.orario_rientro_stimato || '-')}</strong></div>
-          <div><span>Consegne</span><strong>${rows.length}</strong></div>
-          <div><span>Km</span><strong>${esc(r.totale_km || 0)} km</strong></div>
-        </div>
-        <button class="btn-primary full" onclick="showTab('giro')">Modifica dalla pianificazione</button>
-      </div>
-    </aside>
-    <main class="dash-sub-main">
-      <section class="panel dash-sub-card">
-        <div class="dash-sub-card-title"><div class="dash-sub-icon">📍</div><div><h2>Fermate programmate</h2><p>Sequenza prevista prima dell'avvio del giro. La colonna reale resta vuota finché l'autista non gestisce la tappa.</p></div></div>
-        ${dashboardRouteSummaryCards(r, rows)}
+  const completed = rows.filter(d=>(d.delivery_status || d.status) === 'completata').length;
+  const missed = rows.filter(d=>(d.delivery_status || d.status) === 'mancata').length;
+  const pending = Math.max(rows.length - completed - missed, 0);
+  const paths = {
+    calendar:'<rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4m8-4v4M4 11h16m-11 4h2m3 0h2m-7 3h2"/>',
+    driver:'<circle cx="12" cy="7" r="4"/><path d="M4 21v-2a8 5 0 0 1 16 0v2z"/>',
+    truck:'<path d="M3 5h12v13H3zM15 10h3l3 4v4h-6"/><circle cx="7" cy="19" r="2"/><circle cx="18" cy="19" r="2"/>',
+    road:'<path d="M7 3 3 21M17 3l4 18M12 3v3m0 4v4m0 4v3"/>',
+    clock:'<circle cx="12" cy="12" r="9"/><path d="M12 6v6l4 2"/>',
+    box:'<path d="m12 3 9 5v9l-9 5-9-5V8zM3 8l9 5 9-5m-9 5v9M7 5.8l9 5"/>',
+    fuel:'<path d="M5 21V4h9v17M5 9h9m0 4h2v5a2 2 0 0 0 4 0v-8l-3-3M3 21h13"/>',
+    euro:'<path d="M17 6a7 7 0 1 0 0 12M4 10h11M4 14h10"/>',
+    return:'<path d="M4 8a9 9 0 1 1-1 7M4 3v5h5M12 7v5l3 2"/>',
+    pin:'<circle cx="12" cy="8" r="6"/><path d="M12 14v8"/>',
+    chart:'<path d="M5 21V11m7 10V3m7 18V8"/>',
+    edit:'<path d="m4 16 12-12 4 4L8 20H4zm10-10 4 4"/>'
+  };
+  const icon = (name, color='blue') => '<span class="scheduled-icon '+color+'"><svg viewBox="0 0 24 24" aria-hidden="true">'+paths[name]+'</svg></span>';
+  const metrics = [
+    ['Km previsti', (r.totale_km ?? '-')+' km', 'road', 'blue'],
+    ['Tempo previsto', Math.round(Number(r.totale_minuti||0))+' min', 'clock', 'pink'],
+    ['Consegne', completed+'/'+rows.length, 'box', 'purple', missed+' mancate · '+pending+' da fare'],
+    ['Litri stimati', (r.litri_stimati ?? '-')+' L', 'fuel', 'green'],
+    ['Costo stimato', '€ '+(r.costo_carburante ?? '-'), 'euro', 'orange'],
+    ['Rientro previsto', r.rientro_stimato_aggiornato || r.orario_rientro_stimato || '-', 'return', 'blue']
+  ];
+  const vehicleParts = String(r.vehicle_name || '-').split(' · ');
+  page.innerHTML = `
+    ${routes.length > 1 ? dashboardRoutePicker(routes, r.id, 'openDashboardScheduledPage', 'Seleziona giro programmato') : ''}
+    <section class="scheduled-overview" aria-label="Giro programmato">
+      <div class="scheduled-identity">${icon('calendar')}<div><span>Giro programmato</span><h2>${esc(r.nome || 'Giro consegne')}</h2><small>${esc(r.data_giro || '-')}</small></div></div>
+      <div class="scheduled-resource">${icon('driver','purple')}<div><span>Autista</span><strong>${esc(r.driver_name || 'Non assegnato')}</strong></div></div>
+      <div class="scheduled-resource">${icon('truck')}<div><span>Mezzo</span><strong>${esc(vehicleParts[0])}</strong>${vehicleParts.length>1 ? '<small>'+esc(vehicleParts.slice(1).join(' · '))+'</small>' : ''}</div></div>
+      <div class="scheduled-status"><span aria-hidden="true"></span>Programmato</div>
+      <button type="button" class="btn-primary scheduled-edit" onclick="openProgrammedRouteForEdit(${Number(r.id)}, true)">${icon('edit')}Modifica dalla pianificazione</button>
+    </section>
+    <div class="scheduled-metrics">${metrics.map(([label,value,symbol,color,detail])=>`<div class="scheduled-metric">${icon(symbol,color)}<div><span>${label}</span><strong>${esc(value)}</strong>${detail ? '<small>'+esc(detail)+'</small>' : ''}</div></div>`).join('')}</div>
+    <div class="scheduled-content">
+      <section class="scheduled-stops">
+        <div class="scheduled-panel-heading">${icon('pin','pink')}<div><h2>Fermate programmate</h2><p>Sequenza prevista prima dell'avvio del giro. La colonna reale resta vuota finché l'autista non gestisce la tappa.</p></div></div>
         ${dashboardStopRowsUnified(r, 'scheduled')}
       </section>
-    </main>
-  </div>`;
+      <aside class="scheduled-summary" aria-label="Riepilogo giro">
+        <div class="scheduled-panel-heading">${icon('chart')}<div><h2>Riepilogo giro</h2><p>Totali e informazioni principali</p></div></div>
+        ${metrics.map(([label,value,symbol,color,detail])=>`<div class="scheduled-summary-row">${icon(symbol,color)}<span>${label}</span><div><strong>${esc(value)}</strong>${detail ? '<small>'+esc(detail)+'</small>' : ''}</div></div>`).join('')}
+        <details class="scheduled-departure"><summary>Orario di partenza</summary><strong>${esc(r.orario_partenza || '-')}</strong></details>
+      </aside>
+    </div>`;
 }
 
 async function openDashboardCompletedPage(routeId=null){
