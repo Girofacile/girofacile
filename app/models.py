@@ -522,6 +522,7 @@ class Delivery(Base):
     partenza_stimata: Mapped[object | None] = mapped_column(Time, nullable=True)
     attesa_min: Mapped[float] = mapped_column(Float, default=0)
     warning: Mapped[str | None] = mapped_column(Text, nullable=True)
+    optimizer_details: Mapped[str | None] = mapped_column(Text, nullable=True)
     customer = relationship("Customer")
 
 

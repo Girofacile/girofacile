@@ -105,8 +105,8 @@ def test_operator_order_is_candidate_above_fifteen():
     assert result["score"] <= operator["score"]
 
 
-def test_finite_penalty_can_prefer_infeasible_route():
-    # Existing score limitation: reproduce without changing weights or constraints.
+def test_feasibility_beats_finite_penalty():
+    # Historical score is unchanged, but can no longer override feasibility.
     rows, matrix = deliveries(2), constant_matrix(2, km=1, minutes=1)
     rows[1].update(scarico_mattina_da="08:00", scarico_mattina_a="08:01")
     matrix[0, 2]["km"] = 200000
@@ -114,7 +114,7 @@ def test_finite_penalty_can_prefer_infeasible_route():
     feasible = opt._evaluate_fixed_sequence(rows[::-1], matrix, [])
     assert feasible["violations"] == 0 and infeasible["violations"] == 1
     assert infeasible["score"] < feasible["score"]
-    assert opt._best_internal_sequence(rows, matrix, [])["violations"] == 1
+    assert opt._best_internal_sequence(rows, matrix, [])["violations"] == 0
 
 def test_fallback_uses_no_additional_road_pairs(monkeypatch):
     rows, matrix = directed_case(9)

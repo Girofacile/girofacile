@@ -1,0 +1,39 @@
+{
+  "split": "validation",
+  "records": [],
+  "summary": {
+    "count": 0,
+    "improved": 0,
+    "unchanged": 0,
+    "worsened": 0,
+    "feasibility_regressions": 0,
+    "violations_increased": 0,
+    "delta_km": {
+      "mean": null,
+      "median": null,
+      "best": null,
+      "worst": null
+    },
+    "delta_km_pct": {
+      "mean": null,
+      "median": null,
+      "best": null,
+      "worst": null
+    },
+    "delta_min": {
+      "mean": null,
+      "median": null,
+      "best": null,
+      "worst": null
+    },
+    "delta_min_pct": {
+      "mean": null,
+      "median": null,
+      "best": null,
+      "worst": null
+    },
+    "best_km_scenario": null,
+    "worst_km_scenario": null
+  },
+  "note": "No real routes supplied"
+}

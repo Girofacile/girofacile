@@ -3027,6 +3027,7 @@ function renderRouteResult(r, targetId="routeResult", fromHistory=false){
   lastMapsUrl = r.google_maps_url || "";
   const consegne = r.consegne || [];
   const counts = warnTypeCounts(consegne);
+  const violationsCount = Number(r.violations_count ?? consegne.filter(d=>d.time_window_violation).length);
   const target = document.getElementById(targetId);
   const routeStatus = r.status || "bozza";
   const isDraft = routeStatus === "bozza";
@@ -3037,9 +3038,9 @@ function renderRouteResult(r, targetId="routeResult", fromHistory=false){
     const dragAttrs = fromHistory ? "" : `draggable="true" ondragstart="resultDragStart(event, ${idx})" ondragover="resultDragOver(event)" ondrop="resultDrop(event, ${idx})"`;
     rows += `<tr class="draggable-stop" ${dragAttrs}>
       <td><span class="drag-handle">☰</span> <strong>${d.ordine}</strong></td>
-      <td><strong>${esc(d.cliente_nome)}</strong></td>
+      <td><strong>${esc(d.cliente_nome)}</strong>${d.time_window_violation ? `<br><span class="badge danger-badge">Finestra non rispettata · ${Number(d.lateness_min||0).toFixed(1)} min</span>` : ""}</td>
       <td>${esc(d.indirizzo)}</td>
-      <td>${esc(d.arrivo_stimato||"-")}</td>
+      <td>${esc(d.arrivo_fisico||"-")}<br><small>Inizio scarico: ${esc(d.inizio_servizio||d.arrivo_stimato||"-")}</small></td>
       <td>${esc(d.partenza_stimata||"-")}</td>
       <td>${Math.round(parseFloat(d.attesa_min)||0)} min</td>
       <td>${d.km_tappa ?? "-"}</td>
@@ -3065,6 +3066,7 @@ function renderRouteResult(r, targetId="routeResult", fromHistory=false){
         <div class="alerts-panel">
           <h3>Avvisi principali</h3>
           <div class="alert-grid">
+            ${violationsCount > 0 ? `<div class="alert-card danger" role="alert"><strong>Finestre orarie non rispettate</strong><span>${violationsCount} fermate · ${Number(r.total_lateness_min||0).toFixed(1)} min di ritardo totale</span><small>Verifica le fermate prima di programmare. Puoi comunque confermare il giro.</small></div>` : ""}
             <div class="alert-card danger"><strong>🚚 Sponda richiesta non disponibile</strong><span>${counts.sponda} fermate</span></div>
             <div class="alert-card orange"><strong>🏙 Cliente in ZTL</strong><span>${counts.ztl} fermate</span></div>
             <div class="alert-card yellow"><strong>🕒 Arrivo prima dell'apertura / attesa</strong><span>${counts.attesa} fermate</span></div>
@@ -3072,7 +3074,7 @@ function renderRouteResult(r, targetId="routeResult", fromHistory=false){
         </div>
         <div class="stops-panel">
           <h3>Dettaglio fermate</h3>
-          <div class="tableWrap"><table class="result-table"><thead><tr><th>Ordine</th><th>Cliente</th><th>Indirizzo</th><th>Arrivo</th><th>Ripartenza</th><th>Attesa</th><th>Km tappa</th><th>Avvisi</th><th>Azioni</th></tr></thead><tbody>${rows}</tbody></table></div>
+          <div class="tableWrap"><table class="result-table"><thead><tr><th>Ordine</th><th>Cliente</th><th>Indirizzo</th><th>Arrivo fisico / inizio scarico</th><th>Ripartenza</th><th>Attesa</th><th>Km tappa</th><th>Avvisi</th><th>Azioni</th></tr></thead><tbody>${rows}</tbody></table></div>
         </div>
         ${r.id ? `<div class="route-map-panel-v74">
           <div class="route-map-head-v74">

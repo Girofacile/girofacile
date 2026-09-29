@@ -26,7 +26,7 @@
         "score": 1470.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 9.721,
+        "runtime_ms": 9.534,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -37,7 +37,7 @@
         "score": 1470.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 13.723,
+        "runtime_ms": 10.174,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -70,7 +70,7 @@
         "score": 2016.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 4472.829,
+        "runtime_ms": 4030.288,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -81,7 +81,7 @@
         "score": 2016.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 4118.584,
+        "runtime_ms": 3679.787,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -115,7 +115,7 @@
         "score": 2268.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 15.006,
+        "runtime_ms": 4.291,
         "total_km_gap_pct": 12.5,
         "total_min_gap_pct": 12.5,
         "score_gap_pct": 12.5
@@ -126,7 +126,7 @@
         "score": 2016.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 143.494,
+        "runtime_ms": 48.087,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -161,7 +161,7 @@
         "score": 2310.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 9.571,
+        "runtime_ms": 11.058,
         "total_km_gap_pct": 12.244897959183673,
         "total_min_gap_pct": 12.244897959183673,
         "score_gap_pct": 12.244897959183673
@@ -172,7 +172,7 @@
         "score": 2058.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 129.81,
+        "runtime_ms": 121.681,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -209,7 +209,7 @@
         "score": 2310.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 18.735,
+        "runtime_ms": 14.211,
         "total_km_gap_pct": 7.8431372549019605,
         "total_min_gap_pct": 7.8431372549019605,
         "score_gap_pct": 7.8431372549019605
@@ -220,7 +220,7 @@
         "score": 2142.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 234.576,
+        "runtime_ms": 142.477,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -260,7 +260,7 @@
         "score": 2310.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 117.979,
+        "runtime_ms": 124.121,
         "total_km_gap_pct": 3.7735849056603774,
         "total_min_gap_pct": 3.7735849056603774,
         "score_gap_pct": 3.7735849056603774
@@ -271,7 +271,7 @@
         "score": 2226.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 567.029,
+        "runtime_ms": 939.999,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -305,7 +305,7 @@
         "score": 601.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 13.665,
+        "runtime_ms": 18.631,
         "total_km_gap_pct": 2.34375,
         "total_min_gap_pct": 23.68421052631579,
         "score_gap_pct": 18.30708661417323
@@ -316,7 +316,7 @@
         "score": 533.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 168.582,
+        "runtime_ms": 354.935,
         "total_km_gap_pct": -11.71875,
         "total_min_gap_pct": 10.526315789473685,
         "score_gap_pct": 4.921259842519685
@@ -350,7 +350,7 @@
         "score": 601.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 19.88,
+        "runtime_ms": 24.488,
         "total_km_gap_pct": 2.34375,
         "total_min_gap_pct": 23.68421052631579,
         "score_gap_pct": 18.30708661417323
@@ -361,7 +361,7 @@
         "score": 508.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 154.682,
+        "runtime_ms": 176.991,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -395,7 +395,7 @@
         "score": 601.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 12.853,
+        "runtime_ms": 18.508,
         "total_km_gap_pct": 2.34375,
         "total_min_gap_pct": 23.68421052631579,
         "score_gap_pct": 18.30708661417323
@@ -406,7 +406,7 @@
         "score": 508.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 134.06,
+        "runtime_ms": 475.465,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -440,7 +440,7 @@
         "score": 669.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 14.406,
+        "runtime_ms": 45.247,
         "total_km_gap_pct": 2.0547945205479454,
         "total_min_gap_pct": 20.930232558139537,
         "score_gap_pct": 16.145833333333332
@@ -451,7 +451,7 @@
         "score": 646.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 121.63,
+        "runtime_ms": 612.121,
         "total_km_gap_pct": -13.698630136986301,
         "total_min_gap_pct": 20.930232558139537,
         "score_gap_pct": 12.152777777777779
@@ -485,7 +485,7 @@
         "score": 669.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 13.467,
+        "runtime_ms": 82.41,
         "total_km_gap_pct": 2.0547945205479454,
         "total_min_gap_pct": 20.930232558139537,
         "score_gap_pct": 16.145833333333332
@@ -496,7 +496,7 @@
         "score": 576.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 114.757,
+        "runtime_ms": 198.075,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -530,7 +530,7 @@
         "score": 669.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 9.756,
+        "runtime_ms": 37.845,
         "total_km_gap_pct": 2.0547945205479454,
         "total_min_gap_pct": 20.930232558139537,
         "score_gap_pct": 16.145833333333332
@@ -541,7 +541,7 @@
         "score": 646.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 149.53,
+        "runtime_ms": 219.474,
         "total_km_gap_pct": -13.698630136986301,
         "total_min_gap_pct": 20.930232558139537,
         "score_gap_pct": 12.152777777777779
@@ -576,7 +576,7 @@
         "score": 595.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 30.088,
+        "runtime_ms": 18.533,
         "total_km_gap_pct": 11.538461538461538,
         "total_min_gap_pct": 28.571428571428573,
         "score_gap_pct": 23.958333333333332
@@ -587,7 +587,7 @@
         "score": 480.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 277.853,
+        "runtime_ms": 210.011,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -622,7 +622,7 @@
         "score": 595.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 31.583,
+        "runtime_ms": 31.708,
         "total_km_gap_pct": 11.538461538461538,
         "total_min_gap_pct": 28.571428571428573,
         "score_gap_pct": 23.958333333333332
@@ -633,7 +633,7 @@
         "score": 524.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 231.326,
+        "runtime_ms": 263.839,
         "total_km_gap_pct": 3.076923076923077,
         "total_min_gap_pct": 11.428571428571429,
         "score_gap_pct": 9.166666666666666
@@ -668,7 +668,7 @@
         "score": 595.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 32.866,
+        "runtime_ms": 39.777,
         "total_km_gap_pct": 11.538461538461538,
         "total_min_gap_pct": 28.571428571428573,
         "score_gap_pct": 23.958333333333332
@@ -679,7 +679,7 @@
         "score": 480.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 230.976,
+        "runtime_ms": 279.692,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -714,7 +714,7 @@
         "score": 663.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 24.106,
+        "runtime_ms": 23.279,
         "total_km_gap_pct": 13.986013986013987,
         "total_min_gap_pct": 11.11111111111111,
         "score_gap_pct": 11.804384485666105
@@ -725,7 +725,7 @@
         "score": 632.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 174.387,
+        "runtime_ms": 396.598,
         "total_km_gap_pct": 6.293706293706293,
         "total_min_gap_pct": 6.666666666666667,
         "score_gap_pct": 6.57672849915683
@@ -760,7 +760,7 @@
         "score": 663.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 23.3,
+        "runtime_ms": 49.839,
         "total_km_gap_pct": 13.986013986013987,
         "total_min_gap_pct": 11.11111111111111,
         "score_gap_pct": 11.804384485666105
@@ -771,7 +771,7 @@
         "score": 593.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 263.751,
+        "runtime_ms": 295.895,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -806,7 +806,7 @@
         "score": 663.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 21.432,
+        "runtime_ms": 59.926,
         "total_km_gap_pct": 13.986013986013987,
         "total_min_gap_pct": 11.11111111111111,
         "score_gap_pct": 11.804384485666105
@@ -817,7 +817,7 @@
         "score": 632.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 236.32,
+        "runtime_ms": 213.429,
         "total_km_gap_pct": 6.293706293706293,
         "total_min_gap_pct": 6.666666666666667,
         "score_gap_pct": 6.57672849915683
@@ -854,7 +854,7 @@
         "score": 865.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 71.773,
+        "runtime_ms": 36.199,
         "total_km_gap_pct": -13.194444444444445,
         "total_min_gap_pct": 60.869565217391305,
         "score_gap_pct": 43.211920529801326
@@ -865,7 +865,7 @@
         "score": 618.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 437.149,
+        "runtime_ms": 442.014,
         "total_km_gap_pct": -4.166666666666667,
         "total_min_gap_pct": 4.3478260869565215,
         "score_gap_pct": 2.3178807947019866
@@ -902,7 +902,7 @@
         "score": 865.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 51.339,
+        "runtime_ms": 67.598,
         "total_km_gap_pct": -13.194444444444445,
         "total_min_gap_pct": 60.869565217391305,
         "score_gap_pct": 43.211920529801326
@@ -913,7 +913,7 @@
         "score": 618.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 433.774,
+        "runtime_ms": 445.775,
         "total_km_gap_pct": -4.166666666666667,
         "total_min_gap_pct": 4.3478260869565215,
         "score_gap_pct": 2.3178807947019866
@@ -950,7 +950,7 @@
         "score": 865.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 65.321,
+        "runtime_ms": 33.914,
         "total_km_gap_pct": -13.194444444444445,
         "total_min_gap_pct": 60.869565217391305,
         "score_gap_pct": 43.211920529801326
@@ -961,7 +961,7 @@
         "score": 611.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 607.952,
+        "runtime_ms": 358.013,
         "total_km_gap_pct": 4.861111111111111,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 1.1589403973509933
@@ -998,7 +998,7 @@
         "score": 994.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 55.193,
+        "runtime_ms": 30.906,
         "total_km_gap_pct": -12.418300653594772,
         "total_min_gap_pct": 62.264150943396224,
         "score_gap_pct": 45.534407027818446
@@ -1009,7 +1009,7 @@
         "score": 710.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 348.401,
+        "runtime_ms": 222.304,
         "total_km_gap_pct": 11.11111111111111,
         "total_min_gap_pct": 1.8867924528301887,
         "score_gap_pct": 3.953147877013177
@@ -1046,7 +1046,7 @@
         "score": 994.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 52.225,
+        "runtime_ms": 65.602,
         "total_km_gap_pct": -12.418300653594772,
         "total_min_gap_pct": 62.264150943396224,
         "score_gap_pct": 45.534407027818446
@@ -1057,7 +1057,7 @@
         "score": 780.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 374.41,
+        "runtime_ms": 336.394,
         "total_km_gap_pct": -8.49673202614379,
         "total_min_gap_pct": 20.754716981132077,
         "score_gap_pct": 14.202049780380673
@@ -1094,7 +1094,7 @@
         "score": 994.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 61.014,
+        "runtime_ms": 64.003,
         "total_km_gap_pct": -12.418300653594772,
         "total_min_gap_pct": 62.264150943396224,
         "score_gap_pct": 45.534407027818446
@@ -1105,7 +1105,7 @@
         "score": 780.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 431.91,
+        "runtime_ms": 262.127,
         "total_km_gap_pct": -8.49673202614379,
         "total_min_gap_pct": 20.754716981132077,
         "score_gap_pct": 14.202049780380673
@@ -1145,7 +1145,7 @@
         "score": 871.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 110.419,
+        "runtime_ms": 92.814,
         "total_km_gap_pct": 6.015037593984962,
         "total_min_gap_pct": 48.97959183673469,
         "score_gap_pct": 39.807383627608345
@@ -1156,7 +1156,7 @@
         "score": 702.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 745.262,
+        "runtime_ms": 435.999,
         "total_km_gap_pct": 6.7669172932330826,
         "total_min_gap_pct": 14.285714285714286,
         "score_gap_pct": 12.680577849117174
@@ -1196,7 +1196,7 @@
         "score": 871.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 97.396,
+        "runtime_ms": 60.023,
         "total_km_gap_pct": 6.015037593984962,
         "total_min_gap_pct": 48.97959183673469,
         "score_gap_pct": 39.807383627608345
@@ -1207,7 +1207,7 @@
         "score": 702.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 788.932,
+        "runtime_ms": 443.605,
         "total_km_gap_pct": 6.7669172932330826,
         "total_min_gap_pct": 14.285714285714286,
         "score_gap_pct": 12.680577849117174
@@ -1247,7 +1247,7 @@
         "score": 871.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 87.462,
+        "runtime_ms": 73.111,
         "total_km_gap_pct": 6.015037593984962,
         "total_min_gap_pct": 48.97959183673469,
         "score_gap_pct": 39.807383627608345
@@ -1258,7 +1258,7 @@
         "score": 702.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 1053.204,
+        "runtime_ms": 588.847,
         "total_km_gap_pct": 6.7669172932330826,
         "total_min_gap_pct": 14.285714285714286,
         "score_gap_pct": 12.680577849117174
@@ -1298,7 +1298,7 @@
         "score": 931.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 81.929,
+        "runtime_ms": 71.38,
         "total_km_gap_pct": 5.228758169934641,
         "total_min_gap_pct": 35.08771929824562,
         "score_gap_pct": 28.76901798063624
@@ -1309,7 +1309,7 @@
         "score": 793.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 641.134,
+        "runtime_ms": 1624.835,
         "total_km_gap_pct": 6.5359477124183005,
         "total_min_gap_pct": 10.526315789473685,
         "score_gap_pct": 9.681881051175656
@@ -1349,7 +1349,7 @@
         "score": 931.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 74.738,
+        "runtime_ms": 144.573,
         "total_km_gap_pct": 5.228758169934641,
         "total_min_gap_pct": 35.08771929824562,
         "score_gap_pct": 28.76901798063624
@@ -1360,7 +1360,7 @@
         "score": 792.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 657.153,
+        "runtime_ms": 1040.715,
         "total_km_gap_pct": 5.882352941176471,
         "total_min_gap_pct": 10.526315789473685,
         "score_gap_pct": 9.54356846473029
@@ -1400,7 +1400,7 @@
         "score": 931.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 73.593,
+        "runtime_ms": 91.195,
         "total_km_gap_pct": 5.228758169934641,
         "total_min_gap_pct": 35.08771929824562,
         "score_gap_pct": 28.76901798063624
@@ -1411,7 +1411,7 @@
         "score": 770.0,
         "violations": 0,
         "total_wait": 0.0,
-        "runtime_ms": 654.005,
+        "runtime_ms": 964.377,
         "total_km_gap_pct": -1.9607843137254901,
         "total_min_gap_pct": 8.771929824561404,
         "score_gap_pct": 6.500691562932227
@@ -1436,7 +1436,7 @@
         "score": 1705.5,
         "violations": 0,
         "total_wait": 21.0,
-        "runtime_ms": 9.351,
+        "runtime_ms": 27.707,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -1447,7 +1447,7 @@
         "score": 1705.5,
         "violations": 0,
         "total_wait": 21.0,
-        "runtime_ms": 81.064,
+        "runtime_ms": 186.345,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -1472,7 +1472,7 @@
         "score": 1705.5,
         "violations": 0,
         "total_wait": 21.0,
-        "runtime_ms": 14.316,
+        "runtime_ms": 19.863,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -1483,7 +1483,7 @@
         "score": 1705.5,
         "violations": 0,
         "total_wait": 21.0,
-        "runtime_ms": 74.602,
+        "runtime_ms": 143.211,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -1508,7 +1508,7 @@
         "score": 1705.5,
         "violations": 0,
         "total_wait": 21.0,
-        "runtime_ms": 12.878,
+        "runtime_ms": 17.823,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -1519,7 +1519,7 @@
         "score": 1705.5,
         "violations": 0,
         "total_wait": 21.0,
-        "runtime_ms": 143.257,
+        "runtime_ms": 268.559,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -1544,7 +1544,7 @@
         "score": 1773.5,
         "violations": 0,
         "total_wait": 21.0,
-        "runtime_ms": 10.655,
+        "runtime_ms": 16.824,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -1555,7 +1555,7 @@
         "score": 1773.5,
         "violations": 0,
         "total_wait": 21.0,
-        "runtime_ms": 83.007,
+        "runtime_ms": 371.884,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -1580,7 +1580,7 @@
         "score": 1773.5,
         "violations": 0,
         "total_wait": 21.0,
-        "runtime_ms": 10.745,
+        "runtime_ms": 41.576,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -1591,7 +1591,7 @@
         "score": 1773.5,
         "violations": 0,
         "total_wait": 21.0,
-        "runtime_ms": 89.083,
+        "runtime_ms": 230.329,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -1616,7 +1616,7 @@
         "score": 1773.5,
         "violations": 0,
         "total_wait": 21.0,
-        "runtime_ms": 10.184,
+        "runtime_ms": 26.478,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -1627,7 +1627,7 @@
         "score": 1773.5,
         "violations": 0,
         "total_wait": 21.0,
-        "runtime_ms": 159.704,
+        "runtime_ms": 279.459,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -1652,7 +1652,7 @@
         "score": 1872.0,
         "violations": 0,
         "total_wait": 28.0,
-        "runtime_ms": 12.234,
+        "runtime_ms": 15.693,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -1663,7 +1663,7 @@
         "score": 1872.0,
         "violations": 0,
         "total_wait": 28.0,
-        "runtime_ms": 103.594,
+        "runtime_ms": 278.057,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -1688,7 +1688,7 @@
         "score": 1872.0,
         "violations": 0,
         "total_wait": 28.0,
-        "runtime_ms": 15.304,
+        "runtime_ms": 28.768,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -1699,7 +1699,7 @@
         "score": 1872.0,
         "violations": 0,
         "total_wait": 28.0,
-        "runtime_ms": 114.943,
+        "runtime_ms": 415.189,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -1724,7 +1724,7 @@
         "score": 1872.0,
         "violations": 0,
         "total_wait": 28.0,
-        "runtime_ms": 16.921,
+        "runtime_ms": 51.607,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -1735,7 +1735,7 @@
         "score": 1872.0,
         "violations": 0,
         "total_wait": 28.0,
-        "runtime_ms": 251.464,
+        "runtime_ms": 427.971,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -1760,7 +1760,7 @@
         "score": 2054.0,
         "violations": 0,
         "total_wait": 28.0,
-        "runtime_ms": 16.152,
+        "runtime_ms": 20.977,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -1771,7 +1771,7 @@
         "score": 2054.0,
         "violations": 0,
         "total_wait": 28.0,
-        "runtime_ms": 132.205,
+        "runtime_ms": 198.113,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -1796,7 +1796,7 @@
         "score": 2054.0,
         "violations": 0,
         "total_wait": 28.0,
-        "runtime_ms": 19.532,
+        "runtime_ms": 19.75,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -1807,7 +1807,7 @@
         "score": 2054.0,
         "violations": 0,
         "total_wait": 28.0,
-        "runtime_ms": 245.044,
+        "runtime_ms": 193.344,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -1832,7 +1832,7 @@
         "score": 2054.0,
         "violations": 0,
         "total_wait": 28.0,
-        "runtime_ms": 30.918,
+        "runtime_ms": 20.393,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -1843,7 +1843,7 @@
         "score": 2054.0,
         "violations": 0,
         "total_wait": 28.0,
-        "runtime_ms": 268.785,
+        "runtime_ms": 301.184,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -1868,7 +1868,7 @@
         "score": 102371.0,
         "violations": 1,
         "total_wait": 22.0,
-        "runtime_ms": 29.057,
+        "runtime_ms": 32.774,
         "total_km_gap_pct": 7.518796992481203,
         "total_min_gap_pct": 10.695187165775401,
         "score_gap_pct": 4672.540792540793
@@ -1879,7 +1879,7 @@
         "score": 2145.0,
         "violations": 0,
         "total_wait": 28.0,
-        "runtime_ms": 343.192,
+        "runtime_ms": 639.894,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -1904,7 +1904,7 @@
         "score": 102371.0,
         "violations": 1,
         "total_wait": 22.0,
-        "runtime_ms": 26.775,
+        "runtime_ms": 38.193,
         "total_km_gap_pct": 7.518796992481203,
         "total_min_gap_pct": 10.695187165775401,
         "score_gap_pct": 4672.540792540793
@@ -1915,7 +1915,7 @@
         "score": 2145.0,
         "violations": 0,
         "total_wait": 28.0,
-        "runtime_ms": 418.062,
+        "runtime_ms": 792.039,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -1940,7 +1940,7 @@
         "score": 102371.0,
         "violations": 1,
         "total_wait": 22.0,
-        "runtime_ms": 24.718,
+        "runtime_ms": 43.395,
         "total_km_gap_pct": 7.518796992481203,
         "total_min_gap_pct": 10.695187165775401,
         "score_gap_pct": 4672.540792540793
@@ -1951,7 +1951,7 @@
         "score": 2145.0,
         "violations": 0,
         "total_wait": 28.0,
-        "runtime_ms": 496.813,
+        "runtime_ms": 862.341,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -1976,7 +1976,7 @@
         "score": 102447.5,
         "violations": 1,
         "total_wait": 27.0,
-        "runtime_ms": 52.421,
+        "runtime_ms": 108.23,
         "total_km_gap_pct": 2.0134228187919465,
         "total_min_gap_pct": 10.362694300518134,
         "score_gap_pct": 4512.6744709590275
@@ -1987,7 +1987,7 @@
         "score": 2221.0,
         "violations": 0,
         "total_wait": 28.0,
-        "runtime_ms": 356.337,
+        "runtime_ms": 975.916,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -2012,7 +2012,7 @@
         "score": 102447.5,
         "violations": 1,
         "total_wait": 27.0,
-        "runtime_ms": 79.211,
+        "runtime_ms": 121.795,
         "total_km_gap_pct": 2.0134228187919465,
         "total_min_gap_pct": 10.362694300518134,
         "score_gap_pct": 4512.6744709590275
@@ -2023,7 +2023,7 @@
         "score": 2221.0,
         "violations": 0,
         "total_wait": 28.0,
-        "runtime_ms": 358.097,
+        "runtime_ms": 1371.126,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -2048,7 +2048,7 @@
         "score": 102447.5,
         "violations": 1,
         "total_wait": 27.0,
-        "runtime_ms": 56.476,
+        "runtime_ms": 125.008,
         "total_km_gap_pct": 2.0134228187919465,
         "total_min_gap_pct": 10.362694300518134,
         "score_gap_pct": 4512.6744709590275
@@ -2059,7 +2059,7 @@
         "score": 2221.0,
         "violations": 0,
         "total_wait": 28.0,
-        "runtime_ms": 476.236,
+        "runtime_ms": 1184.839,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -2084,7 +2084,7 @@
         "score": 102858.5,
         "violations": 1,
         "total_wait": 35.0,
-        "runtime_ms": 98.439,
+        "runtime_ms": 100.195,
         "total_km_gap_pct": -11.864406779661017,
         "total_min_gap_pct": 4.166666666666667,
         "score_gap_pct": 3634.1985841350515
@@ -2095,7 +2095,7 @@
         "score": 2754.5,
         "violations": 0,
         "total_wait": 35.0,
-        "runtime_ms": 726.795,
+        "runtime_ms": 1761.017,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -2120,7 +2120,7 @@
         "score": 102858.5,
         "violations": 1,
         "total_wait": 35.0,
-        "runtime_ms": 111.17,
+        "runtime_ms": 146.804,
         "total_km_gap_pct": -11.864406779661017,
         "total_min_gap_pct": 4.166666666666667,
         "score_gap_pct": 3634.1985841350515
@@ -2131,7 +2131,7 @@
         "score": 2754.5,
         "violations": 0,
         "total_wait": 35.0,
-        "runtime_ms": 774.668,
+        "runtime_ms": 1522.762,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -2156,7 +2156,7 @@
         "score": 102858.5,
         "violations": 1,
         "total_wait": 35.0,
-        "runtime_ms": 157.983,
+        "runtime_ms": 129.487,
         "total_km_gap_pct": -11.864406779661017,
         "total_min_gap_pct": 4.166666666666667,
         "score_gap_pct": 3634.1985841350515
@@ -2167,7 +2167,7 @@
         "score": 2754.5,
         "violations": 0,
         "total_wait": 35.0,
-        "runtime_ms": 875.602,
+        "runtime_ms": 1380.089,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -2192,7 +2192,7 @@
         "score": 103017.5,
         "violations": 1,
         "total_wait": 59.0,
-        "runtime_ms": 150.111,
+        "runtime_ms": 181.854,
         "total_km_gap_pct": 1.5706806282722514,
         "total_min_gap_pct": 3.6437246963562755,
         "score_gap_pct": 3529.2936410075745
@@ -2203,7 +2203,7 @@
         "score": 2838.5,
         "violations": 0,
         "total_wait": 35.0,
-        "runtime_ms": 607.505,
+        "runtime_ms": 977.713,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -2228,7 +2228,7 @@
         "score": 103017.5,
         "violations": 1,
         "total_wait": 59.0,
-        "runtime_ms": 151.844,
+        "runtime_ms": 200.709,
         "total_km_gap_pct": 1.5706806282722514,
         "total_min_gap_pct": 3.6437246963562755,
         "score_gap_pct": 3529.2936410075745
@@ -2239,7 +2239,7 @@
         "score": 2838.5,
         "violations": 0,
         "total_wait": 35.0,
-        "runtime_ms": 1822.374,
+        "runtime_ms": 1206.042,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -2264,7 +2264,7 @@
         "score": 103017.5,
         "violations": 1,
         "total_wait": 59.0,
-        "runtime_ms": 294.694,
+        "runtime_ms": 183.529,
         "total_km_gap_pct": 1.5706806282722514,
         "total_min_gap_pct": 3.6437246963562755,
         "score_gap_pct": 3529.2936410075745
@@ -2275,7 +2275,7 @@
         "score": 2838.5,
         "violations": 0,
         "total_wait": 35.0,
-        "runtime_ms": 1739.037,
+        "runtime_ms": 1201.711,
         "total_km_gap_pct": 0.0,
         "total_min_gap_pct": 0.0,
         "score_gap_pct": 0.0
@@ -2292,7 +2292,7 @@
           "score": 2268.0,
           "violations": 0,
           "total_wait": 0.0,
-          "runtime_ms": 12.284
+          "runtime_ms": 11.776
         },
         "relocation_only": {
           "total_km": 108.0,
@@ -2300,7 +2300,7 @@
           "score": 2268.0,
           "violations": 0,
           "total_wait": 0.0,
-          "runtime_ms": 24.471
+          "runtime_ms": 18.935
         },
         "multistart_only": {
           "total_km": 96.0,
@@ -2308,7 +2308,7 @@
           "score": 2016.0,
           "violations": 0,
           "total_wait": 0.0,
-          "runtime_ms": 60.696
+          "runtime_ms": 46.005
         },
         "combined": {
           "total_km": 96.0,
@@ -2316,7 +2316,7 @@
           "score": 2016.0,
           "violations": 0,
           "total_wait": 0.0,
-          "runtime_ms": 133.352
+          "runtime_ms": 98.445
         }
       }
     },
@@ -2329,7 +2329,7 @@
           "score": 2310.0,
           "violations": 0,
           "total_wait": 0.0,
-          "runtime_ms": 19.127
+          "runtime_ms": 12.829
         },
         "relocation_only": {
           "total_km": 110.0,
@@ -2337,7 +2337,7 @@
           "score": 2310.0,
           "violations": 0,
           "total_wait": 0.0,
-          "runtime_ms": 35.422
+          "runtime_ms": 28.178
         },
         "multistart_only": {
           "total_km": 110.0,
@@ -2345,7 +2345,7 @@
           "score": 2310.0,
           "violations": 0,
           "total_wait": 0.0,
-          "runtime_ms": 85.927
+          "runtime_ms": 69.968
         },
         "combined": {
           "total_km": 98.0,
@@ -2353,7 +2353,7 @@
           "score": 2058.0,
           "violations": 0,
           "total_wait": 0.0,
-          "runtime_ms": 228.382
+          "runtime_ms": 152.148
         }
       }
     },
@@ -2366,7 +2366,7 @@
           "score": 2310.0,
           "violations": 0,
           "total_wait": 0.0,
-          "runtime_ms": 33.506
+          "runtime_ms": 24.652
         },
         "relocation_only": {
           "total_km": 110.0,
@@ -2374,7 +2374,7 @@
           "score": 2310.0,
           "violations": 0,
           "total_wait": 0.0,
-          "runtime_ms": 78.387
+          "runtime_ms": 45.971
         },
         "multistart_only": {
           "total_km": 108.0,
@@ -2382,7 +2382,7 @@
           "score": 2268.0,
           "violations": 0,
           "total_wait": 0.0,
-          "runtime_ms": 210.441
+          "runtime_ms": 145.311
         },
         "combined": {
           "total_km": 102.0,
@@ -2390,7 +2390,7 @@
           "score": 2142.0,
           "violations": 0,
           "total_wait": 0.0,
-          "runtime_ms": 371.453
+          "runtime_ms": 389.549
         }
       }
     },
@@ -2403,7 +2403,7 @@
           "score": 2310.0,
           "violations": 0,
           "total_wait": 0.0,
-          "runtime_ms": 298.954
+          "runtime_ms": 307.905
         },
         "relocation_only": {
           "total_km": 106.0,
@@ -2411,7 +2411,7 @@
           "score": 2226.0,
           "violations": 0,
           "total_wait": 0.0,
-          "runtime_ms": 566.823
+          "runtime_ms": 440.05
         },
         "multistart_only": {
           "total_km": 106.0,
@@ -2419,7 +2419,7 @@
           "score": 2226.0,
           "violations": 0,
           "total_wait": 0.0,
-          "runtime_ms": 649.904
+          "runtime_ms": 513.302
         },
         "combined": {
           "total_km": 106.0,
@@ -2427,7 +2427,7 @@
           "score": 2226.0,
           "violations": 0,
           "total_wait": 0.0,
-          "runtime_ms": 666.595
+          "runtime_ms": 974.887
         }
       }
     }

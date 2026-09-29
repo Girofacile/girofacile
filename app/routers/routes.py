@@ -8,7 +8,7 @@ from ..core.dependencies import current_user, owned
 from ..core.utils import local_now, local_today, local_today_iso, minutes_from_hhmm, parse_date_value, parse_time_value, date_to_iso, time_to_hhmm
 from ..database import get_db
 from ..models import Customer, Delivery, DeliveryStatus, Deposit, Driver, RoutePlan, User, Vehicle, ChatMessage
-from ..optimizer import optimize_route, recalculate_manual_route, google_route_polyline, validate_vehicle_load
+from ..optimizer import window_summary, enrich_saved_schedule, optimize_route, recalculate_manual_route, google_route_polyline, validate_vehicle_load
 from ..schemas import ManualRoutePlanIn, RoutePlanIn
 from ..services.plans import check_daily_route_limit
 from ..services.error_monitor import log_exception
@@ -347,6 +347,7 @@ def route_response(plan, result):
         "costo_totale": plan.costo_totale, "google_maps_url": plan.google_maps_url,
         "status": computed_route_status(plan), "status_label": route_status_label(computed_route_status(plan)),
         "consegne": result["ordered"],
+        **window_summary(result["ordered"]),
     }
 
 
@@ -363,7 +364,7 @@ def serialize_route(plan):
         pass
     live_sched = live_route_schedule(plan, status_map)
     live_delivery_times = live_sched.get("delivery_times", {})
-    return {
+    response = {
         "id": plan.id, "nome": plan.nome, "data_giro": date_to_iso(plan.data_giro),
         "orario_partenza": time_to_hhmm(plan.orario_partenza), "orario_rientro_stimato": time_to_hhmm(plan.orario_rientro_stimato),
         "started_at": (plan.started_at.isoformat() if getattr(plan, "started_at", None) else None),
@@ -403,6 +404,14 @@ def serialize_route(plan):
             "signature_note": (status_map.get(d.id).signature_note if status_map.get(d.id) else None),
         } for d in consegne],
     }
+
+    enrich_saved_schedule(response["consegne"], plan.orario_partenza)
+    for row, delivery in zip(response["consegne"], consegne):
+        if delivery.optimizer_details:
+            details = json.loads(delivery.optimizer_details)
+            row.update({k: details[k] for k in ("arrivo_fisico", "inizio_servizio", "lateness_min", "time_window_violation") if k in details})
+    response.update(window_summary(response["consegne"]))
+    return response
 
 
 def save_route_result(db, user, data, result, vehicle, route_id=None):
@@ -479,7 +488,10 @@ def save_route_result(db, user, data, result, vehicle, route_id=None):
     db.flush()
     for item in result["ordered"]:
         delivery_data = dict(item)
-        for extra in ("coord", "lat", "lon", "stato_geocodifica", "indirizzo_geocodificato"):
+        delivery_data["optimizer_details"] = json.dumps({k: item[k] for k in
+            ("arrivo_fisico", "inizio_servizio", "lateness_min", "time_window_violation") if k in item})
+        for extra in ("coord", "lat", "lon", "stato_geocodifica", "indirizzo_geocodificato",
+                      "arrivo_fisico", "inizio_servizio", "lateness_min", "time_window_violation"):
             delivery_data.pop(extra, None)
         for _f in ["scarico_mattina_da", "scarico_mattina_a", "scarico_pomeriggio_da", "scarico_pomeriggio_a", "arrivo_stimato", "partenza_stimata"]:
             if _f in delivery_data:

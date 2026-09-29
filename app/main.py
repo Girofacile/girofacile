@@ -246,6 +246,9 @@ def migrate_database():
 
     from sqlalchemy import Boolean, DateTime, Date, Time, Float, Integer, String, Text
 
+    if insp.has_table("deliveries"):
+        add_column("deliveries", "optimizer_details", sql_type(Text()))
+
     # Colonne legacy comuni
     for table in ["customers", "deposits", "vehicles", "route_plans", "drivers", "agents"]:
         if insp.has_table(table):

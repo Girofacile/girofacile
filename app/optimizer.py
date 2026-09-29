@@ -578,7 +578,116 @@ def _has_strong_constraints(deliveries):
     return False
 
 
-def _evaluate_fixed_sequence(sequence, matrix, points, vehicle=None, return_depot=True, start_time="08:00"):
+def _earliest_feasible_candidate(clock, leg, delivery):
+    """Earliest feasible service for the exact feasibility fallback (same-day windows)."""
+    windows = delivery_windows(delivery)
+    arrival = clock + leg["min"]
+    service = float(delivery.get("tempo_scarico_min") or 0)
+    slots = [(max(arrival, a), b) for a, b in windows if max(arrival, a) + service <= b]
+    if not windows or not slots:
+        return evaluate_candidate(clock, leg, delivery)
+    start, end = min(slots)
+    wait = start - arrival
+    return {"feasible": True, "service_start": start, "wait": wait, "window_end": end,
+            "warning": f"Arrivo prima dell'apertura: attesa {int(round(wait))} min" if wait else ""}
+
+
+def _feasible_fallback(deliveries, matrix, points, vehicle, return_depot, start_time, best):
+    """Exact feasibility DP for up to 15 selected stops, only if search found none.
+
+    Earliest completion dominates later completion at the same (subset, last):
+    waiting is allowed and matrix travel times are fixed. Retain parents to
+    reconstruct a witness, not a claim of optimal duration/distance.
+    """
+    n = len(deliveries)
+    if not best["violations"] or n > 15 or not n:
+        return best
+    states = {(0, -1): (_start_clock(start_time), None)}
+    for mask in range(1 << n):
+        for last in range(-1, n):
+            state = states.get((mask, last))
+            if state is None:
+                continue
+            clock = state[0]
+            origin = 0 if last == -1 else deliveries[last]["_matrix_index"]
+            for nxt, delivery in enumerate(deliveries):
+                bit = 1 << nxt
+                if mask & bit:
+                    continue
+                leg = _matrix_leg(matrix, points, origin, delivery["_matrix_index"])
+                ev = _earliest_feasible_candidate(clock, leg, delivery)
+                if not ev["feasible"]:
+                    continue
+                end = ev["service_start"] + float(delivery.get("tempo_scarico_min") or 0)
+                key = (mask | bit, nxt)
+                if key not in states or end < states[key][0]:
+                    states[key] = (end, (mask, last))
+    terminals = [key for key in states if key[0] == (1 << n) - 1]
+    if not terminals:
+        return best  # Still return the least-late searched route; never block planning.
+    for key in terminals:
+        sequence = []
+        while key[1] != -1:
+            sequence.append(deliveries[key[1]])
+            key = states[key][1]
+        candidate = _evaluate_fixed_sequence(sequence[::-1], matrix, points, vehicle, return_depot, start_time, earliest_windows=True)
+        if solution_key(candidate) < solution_key(best):
+            best = candidate
+    return best
+
+
+def solution_key(result):
+    """Feasibility is absolute; infeasible routes minimize lateness before count.
+
+    The historical score stays available and unchanged for quality comparisons.
+    This ranks complete solutions; the bounded DP separately checks feasibility.
+    """
+    violations = result["violations"]
+    return (bool(violations), result["total_lateness_min"] if violations else 0,
+            violations, result["score"])
+
+
+def stop_timing_details(delivery, arrival, service_start, service_end, window_end=None):
+    windows = delivery_windows(delivery)
+    if window_end is None and windows:
+        # Reconstruct saved schedules from their persisted leg/wait/service times.
+        eligible = [(a, b) for a, b in windows if a <= service_start]
+        window_end = max(b for a, b in (eligible or windows[:1]))
+    chosen = next(((a, b) for a, b in windows if b == window_end), None)
+    lateness = max(0.0, service_end - window_end) if window_end is not None else 0.0
+    detail = {
+        "customer_id": delivery.get("customer_id"), "cliente_nome": delivery.get("cliente_nome"),
+        "ordine": delivery.get("ordine"),
+        "requested_windows": [{"start": fmt_hhmm(a), "end": fmt_hhmm(b)} for a, b in windows],
+        "window": {"start": fmt_hhmm(chosen[0]), "end": fmt_hhmm(chosen[1])} if chosen else None,
+        "arrivo_fisico": fmt_hhmm(arrival), "inizio_servizio": fmt_hhmm(service_start),
+        "fine_servizio": fmt_hhmm(service_end), "lateness_min": lateness,
+        "warning": f"Finestra oraria non rispettata: scarico oltre la chiusura di {lateness:.1f} min" if lateness else "",
+    }
+    return {"arrivo_fisico": detail["arrivo_fisico"], "inizio_servizio": detail["inizio_servizio"],
+            "lateness_min": lateness, "time_window_violation": detail if lateness > 0 else None}
+
+
+def window_summary(ordered):
+    violations = [d["time_window_violation"] for d in ordered if d.get("time_window_violation")]
+    return {"violations_count": len(violations),
+            "total_lateness_min": sum(v["lateness_min"] for v in violations),
+            "total_wait_min": round(sum(float(d.get("attesa_min") or 0) for d in ordered), 1),
+            "time_window_violations": violations}
+
+
+def enrich_saved_schedule(ordered, start_time):
+    """Reconstruct legacy diagnostics without routing, at stored precision."""
+    clock = _start_clock(start_time)
+    for d in ordered:
+        arrival = clock + float(d.get("minuti_tappa") or 0)
+        start = arrival + float(d.get("attesa_min") or 0)
+        clock = start + float(d.get("tempo_scarico_min") or 0)
+        d.update(stop_timing_details(d, arrival, start, clock))
+    return window_summary(ordered)
+
+
+def _evaluate_fixed_sequence(sequence, matrix, points, vehicle=None, return_depot=True, start_time="08:00", include_details=True, earliest_windows=False):
     """Valuta un ordine già deciso usando una sola matrice Google.
 
     arrivo_stimato rappresenta l'inizio servizio dopo l'eventuale attesa.
@@ -590,6 +699,7 @@ def _evaluate_fixed_sequence(sequence, matrix, points, vehicle=None, return_depo
     ordered = []
     total_km = 0.0
     total_wait = 0.0
+    total_lateness = 0.0
     violations = 0
     warning_count = 0
     start_clock = _start_clock(start_time)
@@ -599,7 +709,7 @@ def _evaluate_fixed_sequence(sequence, matrix, points, vehicle=None, return_depo
     for original in sequence:
         selected = dict(original)
         leg = _matrix_leg(matrix, points, current_idx, selected["_matrix_index"])
-        ev = evaluate_candidate(current_clock, leg, selected)
+        ev = (_earliest_feasible_candidate if earliest_windows else evaluate_candidate)(current_clock, leg, selected)
 
         warnings = []
         if ev.get("warning"):
@@ -621,6 +731,10 @@ def _evaluate_fixed_sequence(sequence, matrix, points, vehicle=None, return_depo
         selected["arrivo_stimato"] = fmt_hhmm(service_start)
         selected["partenza_stimata"] = fmt_hhmm(service_end)
         selected["warning"] = "; ".join(warnings) if warnings else ""
+        if ev.get("window_end") is not None:
+            total_lateness += max(0.0, service_end - ev["window_end"])
+        if include_details:
+            selected.update(stop_timing_details(selected, current_clock + leg["min"], service_start, service_end, ev.get("window_end")))
 
         total_km += leg["km"]
         total_wait += float(ev.get("wait") or 0)
@@ -655,6 +769,7 @@ def _evaluate_fixed_sequence(sequence, matrix, points, vehicle=None, return_depo
         "score": score,
         "violations": violations,
         "total_wait": round(total_wait, 1),
+        **(window_summary(ordered) if include_details else {"total_lateness_min": total_lateness}),
     }
 
 
@@ -691,7 +806,7 @@ def _greedy_sequence(deliveries, matrix, points, vehicle=None, start_time="08:00
 def _local_optimize_sequence(initial_sequence, matrix, points, vehicle=None, return_depot=True, start_time="08:00", max_rounds=4, relocate=False):
     """Migliora un ordine provando scambi e inversioni senza nuove chiamate Google."""
     best_sequence = initial_sequence[:]
-    best_result = _evaluate_fixed_sequence(best_sequence, matrix, points, vehicle, return_depot, start_time)
+    best_result = _evaluate_fixed_sequence(best_sequence, matrix, points, vehicle, return_depot, start_time, include_details=False)
     n = len(best_sequence)
     improved = True
     rounds = 0
@@ -705,8 +820,8 @@ def _local_optimize_sequence(initial_sequence, matrix, points, vehicle=None, ret
             for j in range(i + 1, n):
                 candidate = best_sequence[:]
                 candidate[i], candidate[j] = candidate[j], candidate[i]
-                result = _evaluate_fixed_sequence(candidate, matrix, points, vehicle, return_depot, start_time)
-                if result["score"] + 0.0001 < best_result["score"]:
+                result = _evaluate_fixed_sequence(candidate, matrix, points, vehicle, return_depot, start_time, include_details=False)
+                if solution_key(result) < solution_key(best_result):
                     best_sequence = candidate
                     best_result = result
                     improved = True
@@ -715,8 +830,8 @@ def _local_optimize_sequence(initial_sequence, matrix, points, vehicle=None, ret
         for i in range(n - 2):
             for j in range(i + 2, n):
                 candidate = best_sequence[:i] + list(reversed(best_sequence[i:j + 1])) + best_sequence[j + 1:]
-                result = _evaluate_fixed_sequence(candidate, matrix, points, vehicle, return_depot, start_time)
-                if result["score"] + 0.0001 < best_result["score"]:
+                result = _evaluate_fixed_sequence(candidate, matrix, points, vehicle, return_depot, start_time, include_details=False)
+                if solution_key(result) < solution_key(best_result):
                     best_sequence = candidate
                     best_result = result
                     improved = True
@@ -731,13 +846,13 @@ def _local_optimize_sequence(initial_sequence, matrix, points, vehicle=None, ret
                     candidate = best_sequence[:]
                     stop = candidate.pop(i)
                     candidate.insert(j, stop)
-                    result = _evaluate_fixed_sequence(candidate, matrix, points, vehicle, return_depot, start_time)
-                    if result["score"] + 0.0001 < best_result["score"]:
+                    result = _evaluate_fixed_sequence(candidate, matrix, points, vehicle, return_depot, start_time, include_details=False)
+                    if solution_key(result) < solution_key(best_result):
                         best_sequence = candidate
                         best_result = result
                         improved = True
 
-    return best_result
+    return _evaluate_fixed_sequence(best_sequence, matrix, points, vehicle, return_depot, start_time)
 
 
 class _CachedRoadLegs(dict):
@@ -770,18 +885,20 @@ def _best_internal_sequence(deliveries, matrix, points, vehicle=None, return_dep
         checked = 0
         for seq in permutations(deliveries):
             checked += 1
-            result = _evaluate_fixed_sequence(list(seq), matrix, points, vehicle, return_depot, start_time)
-            if best is None or result["score"] < best["score"]:
+            result = _evaluate_fixed_sequence(list(seq), matrix, points, vehicle, return_depot, start_time, include_details=False)
+            if best is None or solution_key(result) < solution_key(best):
                 best = result
+                best_sequence = list(seq)
+        best = _evaluate_fixed_sequence(best_sequence, matrix, points, vehicle, return_depot, start_time)
         print(f"[OPTIMIZER] Ottimizzazione completa: fermate={n} combinazioni={checked} tempo={best['total_min']} min km={best['total_km']}")
-        return best
+        return _feasible_fallback(deliveries, matrix, points, vehicle, return_depot, start_time, best)
 
     initial = _greedy_sequence(deliveries, matrix, points, vehicle, start_time)
     result = _local_optimize_sequence(initial, matrix, points, vehicle, return_depot, start_time)
     # Keep the original heuristic as a candidate, even when new moves take a
-    # different search path. Also guarantee no worse score than the operator order.
+    # different search path. Never rank worse than the operator under solution_key.
     operator = _evaluate_fixed_sequence(deliveries, matrix, points, vehicle, return_depot, start_time)
-    if operator["score"] < result["score"]:
+    if solution_key(operator) < solution_key(result):
         result = operator
     if 9 <= n <= 15:
         seeds = [initial, deliveries, list(reversed(initial))]
@@ -792,10 +909,10 @@ def _best_internal_sequence(deliveries, matrix, points, vehicle=None, return_dep
                 continue
             seen.add(key)
             candidate = _local_optimize_sequence(seed, matrix, points, vehicle, return_depot, start_time, relocate=True)
-            if candidate["score"] < result["score"]:
+            if solution_key(candidate) < solution_key(result):
                 result = candidate
     print(f"[OPTIMIZER] Ottimizzazione locale: fermate={n} tempo={result['total_min']} min km={result['total_km']}")
-    return result
+    return _feasible_fallback(deliveries, matrix, points, vehicle, return_depot, start_time, result)
 
 
 def optimize_route(db: Session, deposit, deliveries, vehicle=None, return_depot=True, start_time="08:00", route_date=None):
@@ -860,45 +977,10 @@ def recalculate_manual_route(db: Session, deposit, deliveries, vehicle=None, ret
         d["_matrix_index"] = idx
     matrix = build_distance_matrix(db, user_id, points, keys, start_time=start_time, route_date=route_date)
 
-    ordered = []
-    total_km = 0.0
-    start_clock = _start_clock(start_time)
-    current_clock = start_clock
-    current_idx = 0
-
-    for selected in deliveries:
-        leg = _matrix_leg(matrix, points, current_idx, selected["_matrix_index"])
-        ev = evaluate_candidate(current_clock, leg, selected)
-        warnings = []
-        if ev.get("warning"):
-            warnings.append(ev["warning"])
-        warnings.extend(delivery_warnings(selected, vehicle))
-
-        service_start = ev["service_start"]
-        service_end = service_start + float(selected.get("tempo_scarico_min") or 0)
-        selected["ordine"] = len(ordered) + 1
-        selected["km_tappa"] = round(leg["km"], 2)
-        selected["minuti_tappa"] = round(leg["min"], 1)
-        selected["attesa_min"] = round(ev.get("wait") or 0, 1)
-        selected["arrivo_stimato"] = fmt_hhmm(service_start)
-        selected["partenza_stimata"] = fmt_hhmm(service_end)
-        selected["warning"] = "; ".join(warnings) if warnings else ""
-        total_km += leg["km"]
-        current_clock = service_end
-        current_idx = selected["_matrix_index"]
-        selected.pop("_matrix_index", None)
-        ordered.append(selected)
-
-    if return_depot and ordered:
-        back = _matrix_leg(matrix, points, current_idx, 0)
-        total_km += back["km"]
-        current_clock += back["min"]
-
-    total_min = current_clock - start_clock
-    return {
-        "ordered": ordered,
-        "total_km": round(total_km, 2),
-        "total_min": round(total_min, 1),
-        "return_time": fmt_hhmm(current_clock),
-        "google_maps_url": build_google_maps_url(deposit.indirizzo, ordered, return_depot),
-    }
+    result = _evaluate_fixed_sequence(deliveries, matrix, points, vehicle, return_depot, start_time)
+    for delivery in deliveries:
+        delivery.pop("_matrix_index", None)
+    for key in ("score", "violations", "total_wait"):
+        result.pop(key, None)
+    result["google_maps_url"] = build_google_maps_url(deposit.indirizzo, result["ordered"], return_depot)
+    return result
