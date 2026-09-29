@@ -3033,11 +3033,15 @@ function renderRouteResult(r, targetId="routeResult", fromHistory=false){
   const isDraft = routeStatus === "bozza";
   const isProgrammable = !fromHistory && !!r.id && (routeStatus === "bozza" || routeStatus === "programmato");
   const title = fromHistory ? `Risultato giro salvato` : (isProgrammable ? `Anteprima giro da programmare` : `Anteprima giro`);
+  const icon = (name) => {
+    const paths = {clock:'<circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/>',return:'<path d="M9 7H5l4-4M5 7h10a5 5 0 0 1 0 10H9m0-4-4 4 4 4"/>',distance:'<path d="m12 3 6 9-6 9-6-9zM6 12h12m-6-9v18"/>',fuel:'<path d="M5 21V4h9v17M5 9h9m0 4h2v5a2 2 0 0 0 4 0v-8l-3-3M3 21h13"/>',euro:'<path d="M17 6a7 7 0 1 0 0 12M4 10h11M4 14h10"/>',calendar:'<rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4m8-4v4M4 11h16m-11 4h2m3 0h2m-7 3h2"/>',map:'<path d="m3 5 6-2 6 2 6-2v16l-6 2-6-2-6 2zM9 3v16m6-14v16"/>',truck:'<path d="M3 5h12v13H3zM15 10h3l3 4v4h-6"/><circle cx="7" cy="19" r="2"/><circle cx="18" cy="19" r="2"/>'};
+    return '<svg viewBox="0 0 24 24" aria-hidden="true">'+paths[name]+'</svg>';
+  };
   let rows = "";
   consegne.forEach((d,idx)=>{
     const dragAttrs = fromHistory ? "" : `draggable="true" ondragstart="resultDragStart(event, ${idx})" ondragover="resultDragOver(event)" ondrop="resultDrop(event, ${idx})"`;
     rows += `<tr class="draggable-stop" ${dragAttrs}>
-      <td><span class="drag-handle">☰</span> <strong>${d.ordine}</strong></td>
+      <td><span class="drag-handle">☰</span> <strong class="stop-order">${esc(d.ordine ?? idx+1)}</strong></td>
       <td><strong>${esc(d.cliente_nome)}</strong>${d.time_window_violation ? `<br><span class="badge danger-badge">Finestra non rispettata · ${Number(d.lateness_min||0).toFixed(1)} min</span>` : ""}</td>
       <td>${esc(d.indirizzo)}</td>
       <td>${esc(d.arrivo_fisico||"-")}<br><small>Inizio scarico: ${esc(d.inizio_servizio||d.arrivo_stimato||"-")}</small></td>
@@ -3045,52 +3049,61 @@ function renderRouteResult(r, targetId="routeResult", fromHistory=false){
       <td>${Math.round(parseFloat(d.attesa_min)||0)} min</td>
       <td>${d.km_tappa ?? "-"}</td>
       <td>${warningBadges(d.warning)}</td>
-      <td class="row-actions compact"><a target="_blank" href="${mapsAddressUrl(d.indirizzo)}"><button title="Apri fermata su Maps">📍</button></a><button onclick="copyText('${esc(d.indirizzo).replace(/'/g,"\\'")}', 'Indirizzo copiato')" title="Copia indirizzo">⧉</button>${deliverySignatureAction(d, r.driver_name)}</td>
+      <td class="preview-stop-actions"><details><summary aria-label="Azioni fermata ${idx+1}">›</summary><div class="row-actions compact"><a target="_blank" href="${mapsAddressUrl(d.indirizzo)}"><button title="Apri fermata su Maps">📍</button></a><button onclick="copyText('${esc(d.indirizzo).replace(/'/g,"\\'")}', 'Indirizzo copiato')" title="Copia indirizzo">⧉</button>${deliverySignatureAction(d, r.driver_name)}</div></details></td>
     </tr>`;
   });
-  target.innerHTML = `<section class="result-pro">
+  target.innerHTML = `<section class="result-pro route-preview-design">
+    <nav class="preview-breadcrumb" aria-label="Percorso"><button type="button" onclick="showTab('giro')">Pianificazione</button><span aria-hidden="true">›</span><span>${fromHistory ? "Giro salvato" : "Nuovo giro"}</span></nav>
     <div class="result-header">
-      <div><h2>${title}</h2><p>Analisi del percorso e delle fermate pianificate${fromHistory ? " dallo storico" : ""}.</p></div>
-      ${fromHistory ? "" : `<div class="result-header-actions route-preview-top-actions-v76"><button class="btn-secondary" onclick="showTab('giro')">Torna alla pianificazione</button><small>Controlla il riepilogo prima di confermare. Per modificare clienti o dati del giro torna alla pianificazione e ricalcola.</small></div>`}
+      <div><h2>${title}</h2><p>Verifica il percorso, le fermate e le informazioni principali${fromHistory ? " del giro salvato" : ""}.</p></div>
+
     </div>
+    <div class="result-cards">
+          <div class="mini-card"><span class="mini-icon blue">${icon("clock")}</span><div><small>Partenza</small><strong>${esc(r.orario_partenza||"-")}</strong></div></div>
+          <div class="mini-card"><span class="mini-icon orange">${icon("return")}</span><div><small>Rientro stimato</small><strong>${esc(r.orario_rientro_stimato||"-")}</strong></div></div>
+          <div class="mini-card"><span class="mini-icon green">${icon("distance")}</span><div><small>Km totali</small><strong>${r.totale_km ?? "-"} km</strong></div></div>
+          <div class="mini-card"><span class="mini-icon purple">${icon("clock")}</span><div><small>Tempo totale</small><strong>${Math.round(r.totale_minuti||0)} min</strong></div></div>
+          <div class="mini-card"><span class="mini-icon blue">${icon("fuel")}</span><div><small>Litri stimati</small><strong>${r.litri_stimati ?? "-"} L</strong></div></div>
+          <div class="mini-card"><span class="mini-icon purple">${icon("euro")}</span><div><small>Costo carburante</small><strong>€ ${r.costo_carburante ?? "-"}</strong></div></div>
+        </div>
     <div class="result-layout">
       <div class="result-main">
-        <div class="result-cards">
-          <div class="mini-card"><span class="mini-icon blue">◷</span><div><small>Partenza</small><strong>${esc(r.orario_partenza||"-")}</strong></div></div>
-          <div class="mini-card"><span class="mini-icon orange">↩</span><div><small>Rientro stimato</small><strong>${esc(r.orario_rientro_stimato||"-")}</strong></div></div>
-          <div class="mini-card"><span class="mini-icon green">⌖</span><div><small>Km totali</small><strong>${r.totale_km ?? "-"} km</strong></div></div>
-          <div class="mini-card"><span class="mini-icon purple">◴</span><div><small>Tempo totale</small><strong>${Math.round(r.totale_minuti||0)} min</strong></div></div>
-          <div class="mini-card"><span class="mini-icon blue">⛽</span><div><small>Litri stimati</small><strong>${r.litri_stimati ?? "-"} L</strong></div></div>
-          <div class="mini-card"><span class="mini-icon purple">€</span><div><small>Costo carburante</small><strong>€ ${r.costo_carburante ?? "-"}</strong></div></div>
-        </div>
-        <div class="alerts-panel">
+        ${violationsCount || counts.sponda || counts.ztl || counts.attesa || counts.critici ? `<div class="alerts-panel">
           <h3>Avvisi principali</h3>
           <div class="alert-grid">
             ${violationsCount > 0 ? `<div class="alert-card danger" role="alert"><strong>Finestre orarie non rispettate</strong><span>${violationsCount} fermate · ${Number(r.total_lateness_min||0).toFixed(1)} min di ritardo totale</span><small>Verifica le fermate prima di programmare. Puoi comunque confermare il giro.</small></div>` : ""}
-            <div class="alert-card danger"><strong>🚚 Sponda richiesta non disponibile</strong><span>${counts.sponda} fermate</span></div>
-            <div class="alert-card orange"><strong>🏙 Cliente in ZTL</strong><span>${counts.ztl} fermate</span></div>
-            <div class="alert-card yellow"><strong>🕒 Arrivo prima dell'apertura / attesa</strong><span>${counts.attesa} fermate</span></div>
+            ${counts.sponda ? `<div class="alert-card danger"><strong>🚚 Sponda richiesta non disponibile</strong><span>${counts.sponda} fermate</span></div>` : ""}
+            ${counts.ztl ? `<div class="alert-card orange"><strong>🏙 Cliente in ZTL</strong><span>${counts.ztl} fermate</span></div>` : ""}
+            ${counts.attesa ? `<div class="alert-card yellow"><strong>🕒 Arrivo prima dell'apertura / attesa</strong><span>${counts.attesa} fermate</span></div>` : ""}
+            ${counts.critici && !counts.sponda && !counts.ztl && !counts.attesa ? `<div class="alert-card orange"><strong>Fermate da verificare</strong><span>${counts.critici} fermate con avvisi: consulta il dettaglio nella tabella.</span></div>` : ""}
           </div>
-        </div>
+        </div>` : ""}
         <div class="stops-panel">
-          <h3>Dettaglio fermate</h3>
-          <div class="tableWrap"><table class="result-table"><thead><tr><th>Ordine</th><th>Cliente</th><th>Indirizzo</th><th>Arrivo fisico / inizio scarico</th><th>Ripartenza</th><th>Attesa</th><th>Km tappa</th><th>Avvisi</th><th>Azioni</th></tr></thead><tbody>${rows}</tbody></table></div>
+          <div class="preview-panel-heading"><div class="preview-heading-copy"><span class="preview-section-icon">${icon('calendar')}</span><div><h3>Dettaglio fermate</h3><p>${consegne.length} fermate pianificate</p></div></div>${r.id ? `<button type="button" class="btn-secondary preview-map-jump" onclick="document.getElementById('routeGoogleMapV74_${r.id}').scrollIntoView({behavior:'smooth',block:'center'})">${icon('map')}Visualizza su mappa</button>` : ''}</div>
+          <div class="tableWrap"><table class="result-table"><thead><tr><th>#</th><th>Cliente</th><th>Indirizzo</th><th>Arrivo</th><th>Partenza</th><th>Attesa</th><th>Km tappa</th><th>Avvisi</th><th><span class="preview-sr-only">Azioni</span></th></tr></thead><tbody>${rows}</tbody></table></div>
         </div>
         ${r.id ? `<div class="route-map-panel-v74">
           <div class="route-map-head-v74">
-            <div><h3>Mappa del giro</h3><p>Percorso stradale reale del giro, con deposito e marker numerati.</p></div>
+            <div class="preview-heading-copy"><span class="preview-section-icon">${icon("map")}</span><div><h3>Mappa del giro</h3><p>Percorso stradale con ordine delle fermate.</p></div></div>
             <div class="route-map-actions-v74">
-              ${r.google_maps_url ? `<a target="_blank" href="${esc(r.google_maps_url)}"><button class="btn-secondary">Apri in Google Maps</button></a>` : ``}
-              <button class="btn-secondary" onclick="renderRouteGoogleMapV74(${r.id}, 'routeGoogleMapV74_${r.id}')">Ricarica mappa</button>
+              ${r.google_maps_url ? `<a class="btn-secondary" target="_blank" rel="noopener noreferrer" href="${esc(r.google_maps_url)}">${icon("map")}Apri in Google Maps ↗</a>` : ``}
+
             </div>
           </div>
           <div id="routeGoogleMapV74_${r.id}" class="route-google-map-v74"><div class="route-map-loading-v74">Caricamento mappa...</div></div>
-          <small class="route-map-note-v74">La mappa visualizza la sequenza già calcolata da GiroFacile. Non modifica il percorso.</small>
+          <small class="route-map-note-v74">La mappa visualizza la sequenza calcolata. <button type="button" class="preview-reload-map" onclick="renderRouteGoogleMapV74(${r.id}, 'routeGoogleMapV74_${r.id}')">Ricarica mappa</button></small>
         </div>` : ``}
       </div>
       <aside class="result-summary-card">
-        <h3>Riepilogo esito</h3>
+        <div class="preview-heading-copy"><span class="preview-section-icon">${icon("truck")}</span><h3>Riepilogo giro</h3></div>
         <div class="summary-row"><span>Totale fermate</span><strong>${consegne.length}</strong></div>
+        <div class="summary-row"><span>Km totali</span><strong>${r.totale_km ?? "-"} km</strong></div>
+        <div class="summary-row"><span>Tempo totale</span><strong>${Math.round(r.totale_minuti||0)} min</strong></div>
+        <div class="summary-row"><span>Litri stimati</span><strong>${r.litri_stimati ?? "-"} L</strong></div>
+        <div class="summary-row"><span>Costo carburante</span><strong>€ ${r.costo_carburante ?? "-"}</strong></div>
+        ${isProgrammable ? '<button class="btn-primary full preview-program" onclick="programCurrentRoute()"><span aria-hidden="true">▷</span>Programma giro</button>' : ''}
+        <button class="btn-secondary full preview-back" onclick="showTab('giro')"><span aria-hidden="true">←</span>Torna alla pianificazione</button>
+        <details class="preview-extra"><summary>Risorse e altre azioni</summary>
         <div class="summary-row"><span>Autista</span><strong>${esc(r.driver_name||"Non assegnato")}</strong></div>
         <div class="summary-row"><span>Mezzo</span><strong>${esc(r.vehicle_name||"Nessun mezzo")}</strong></div>
         <div class="summary-row"><span>Avvisi critici</span><strong>${counts.critici}</strong></div>
@@ -3098,7 +3111,7 @@ function renderRouteResult(r, targetId="routeResult", fromHistory=false){
         <div class="summary-highlight"><span>Costo energetico stimato</span><strong>€ ${r.costo_totale ?? r.costo_carburante ?? "-"}</strong></div>
         <button class="btn-secondary full" onclick="printStopsTable()">Stampa dettaglio fermate</button>
         ${r.id && currentSessionUser?.limits?.has_ai ? `<button class="btn-secondary full" onclick="explainRouteSequenceAIv67(${r.id})">Spiega sequenza giro AI</button><div id="routeAiExplanationV67" class="ai-explanation-v67 hidden"></div>` : ""}
-        ${isProgrammable ? `<button class="btn-primary full" onclick="programCurrentRoute()">Programma giro</button><small class="program-route-note">Dopo la conferma verrai portato direttamente in Giri programmati.</small>` : ""}
+        </details>
       </aside>
     </div>
   </section>`;
