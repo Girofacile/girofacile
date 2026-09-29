@@ -15,6 +15,8 @@
 <script src="/api/billing/catalog.js"></script>
 <script src="/static/dashboard/js/billing.js?v=billing1"></script>
 <link href="/static/dashboard/css/dashboard.css?v=20260928_1" rel="stylesheet">
+<link href="/static/dashboard/css/company.css?v=company_1" rel="stylesheet">
+<link href="/static/dashboard/css/planning.css?v=planning_20260929" rel="stylesheet">
 </head>
 <body>
 
@@ -363,48 +365,76 @@
         </div>
 
         <div id="companyLayoutV29" class="company-layout-v29">
-          <div class="card company-card-v29">
-            <div class="section-title-row">
-              <div>
-                <h2>Dati aziendali</h2>
-                <p>Questi dati saranno usati per personalizzare il gestionale e preparare il software alla vendita SaaS.</p>
-              </div>
+          <div class="company-profile-grid">
+          <section class="card company-card-v29 company-identity" aria-labelledby="companyIdentityTitle">
+            <div class="company-section-heading">
+              <span class="company-section-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="8" y="3" width="9" height="18" rx="2"/><path d="M8 8H5a2 2 0 0 0-2 2v11h18V10a2 2 0 0 0-2-2h-2M11 7h3M11 11h3M11 15h3M11 21v-3h3v3"/></svg></span>
+              <div><h2 id="companyIdentityTitle">Identità aziendale</h2><p>Le informazioni principali sulla tua azienda.</p></div>
             </div>
-
             <div class="company-logo-row-v29">
               <div id="companyLogoPreview" class="company-logo-preview-v29">GF</div>
               <div>
-                <label class="btn-light file-btn">Carica logo
-                  <input type="file" accept="image/*" onchange="handleImageUpload(event,'companyLogoUrl','companyLogoPreview','GF')">
+                <label class="btn-light file-btn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V3m-5 5 5-5 5 5M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg>Carica logo
+                  <input type="file" aria-label="Carica logo aziendale" accept="image/*" onchange="handleImageUpload(event,'companyLogoUrl','companyLogoPreview','GF')">
                 </label>
                 <input id="companyLogoUrl" type="hidden">
                 <p class="muted-small">Consigliato logo quadrato o orizzontale, massimo 2,5 MB.</p>
               </div>
             </div>
+            <div class="company-field"><label for="companyNameInput">Nome azienda / insegna</label><input id="companyNameInput" autocomplete="organization" placeholder="Es. GiroFacile Demo"></div>
+          </section>
 
-            <div class="form-grid profile-grid">
-              <div><label>Nome azienda / insegna</label><input id="companyNameInput" placeholder="Es. GiroFacile Demo"></div>
-              <div><label>Email aziendale</label><input id="companyEmailInput" type="email" placeholder="info@azienda.it"></div>
-              <div><label>Telefono</label><input id="companyPhoneInput" placeholder="Telefono aziendale"></div>
-              <div><label>Partita IVA</label><input id="companyVatInput" placeholder="Partita IVA"></div>
-              <div class="full"><label>Indirizzo sede</label><input id="companyAddressInput" placeholder="Via, numero civico"></div>
-              <div><label>Città</label><input id="companyCityInput" placeholder="Città"></div>
-              <div><label>CAP</label><input id="companyZipInput" placeholder="CAP"></div>
-              <div><label>Paese</label><input id="companyCountryInput" placeholder="Italia"></div>
-              <div><label>Codice fiscale</label><input id="companyFiscalCodeInput" placeholder="Codice fiscale"></div>
-              <div><label>PEC</label><input id="companyPecInput" type="email" placeholder="azienda@pec.it"></div>
-              <div><label>Codice SDI</label><input id="companySdiInput" placeholder="ABC1234"></div>
-              <div><label>Dimensione azienda</label><select id="companySizeInput"><option value="">Seleziona</option><option value="1-5">1-5 persone</option><option value="6-15">6-15 persone</option><option value="16-50">16-50 persone</option><option value="51-100">51-100 persone</option><option value="100+">Oltre 100 persone</option></select></div>
-              <div><label>Consegne medie al giorno</label><select id="companyDailyDeliveriesInput"><option value="">Seleziona</option><option value="1-10">1-10</option><option value="11-30">11-30</option><option value="31-80">31-80</option><option value="81-150">81-150</option><option value="150+">Oltre 150</option></select></div>
-              <div class="full"><label>Descrizione attività</label><input id="companyActivityTypeInput" placeholder="Es. distribuzione alimentare, ricambi, consegne e-commerce..."></div>
-              <div class="full"><label>Sede legale</label><input id="companyLegalAddressInput" placeholder="Lascia vuoto se coincide con la sede operativa"></div>
-              <div class="full"><label>Indirizzo di fatturazione</label><input id="companyBillingAddressInput" placeholder="Lascia vuoto se coincide con la sede legale"></div>
+          <section class="card company-card-v29 company-contacts" aria-labelledby="companyContactsTitle">
+            <div class="company-section-heading">
+              <span class="company-section-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m8 3 3 5-3 3a16 16 0 0 0 5 5l3-3 5 3v3a2 2 0 0 1-2 2C10 21 3 14 3 5a2 2 0 0 1 2-2z"/></svg></span>
+              <div><h2 id="companyContactsTitle">Contatti</h2><p>Recapiti e sede della tua azienda.</p></div>
             </div>
+            <div class="company-contact-grid">
+              <div class="company-field"><label for="companyPhoneInput">Telefono</label><input id="companyPhoneInput" type="tel" autocomplete="tel" placeholder="Telefono aziendale"></div>
+              <div class="company-field"><label for="companyEmailInput">Email aziendale</label><input id="companyEmailInput" type="email" autocomplete="email" placeholder="info@azienda.it"></div>
+              <div class="company-field"><label for="companyAddressInput">Indirizzo sede</label><input id="companyAddressInput" autocomplete="street-address" placeholder="Via, numero civico"></div>
+              <div class="company-field"><label for="companyCityInput">Città</label><input id="companyCityInput" autocomplete="address-level2" placeholder="Città"></div>
+              <div class="company-field"><label for="companyZipInput">CAP</label><input id="companyZipInput" autocomplete="postal-code" placeholder="CAP"></div>
+              <div class="company-field"><label for="companyCountryInput">Paese</label><input id="companyCountryInput" autocomplete="country-name" placeholder="Italia"></div>
+            </div>
+          </section>
 
-            <div class="modal-actions">
-              <button class="btn-light" onclick="loadCompanyProfile()">Annulla modifiche</button>
-              <button class="btn-primary" onclick="saveCompanyProfile()">Salva profilo azienda</button>
+          <section class="card company-card-v29 company-fiscal" aria-labelledby="companyFiscalTitle">
+            <div class="company-section-heading">
+              <span class="company-section-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6M8 13h8M8 17h6"/></svg></span>
+              <div><h2 id="companyFiscalTitle">Dati fiscali</h2><p>Informazioni fiscali e codice azienda.</p></div>
             </div>
+            <div class="company-horizontal-fields">
+              <div class="company-field"><label for="companyVatInput">Partita IVA</label><input id="companyVatInput" placeholder="Partita IVA"></div>
+              <div class="company-field"><label for="companyFiscalCodeInput">Codice fiscale</label><input id="companyFiscalCodeInput" placeholder="Codice fiscale"></div>
+              <div class="company-field"><label for="companySdiInput">Codice SDI</label><input id="companySdiInput" placeholder="ABC1234"></div>
+              <div class="company-field"><label for="companyPecInput">PEC</label><input id="companyPecInput" type="email" placeholder="azienda@pec.it"></div>
+            </div>
+          </section>
+
+          <section class="card company-card-v29 company-operations" aria-labelledby="companyOperationsTitle">
+            <div class="company-section-heading">
+              <span class="company-section-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="m10 3-.5 2.5-2 .9-2.2-.8-2 3.4L5 10.6v2.8l-1.7 1.6 2 3.4 2.2-.8 2 .9.5 2.5h4l.5-2.5 2-.9 2.2.8 2-3.4-1.7-1.6v-2.8L20.7 9l-2-3.4-2.2.8-2-.9L14 3z"/></svg></span>
+              <div><h2 id="companyOperationsTitle">Operatività</h2><p>Impostazioni operative della tua attività.</p></div>
+            </div>
+            <div class="company-horizontal-fields">
+              <div class="company-field"><label for="companySizeInput">Dimensione azienda</label><select id="companySizeInput"><option value="">Seleziona</option><option value="1-5">1-5 persone</option><option value="6-15">6-15 persone</option><option value="16-50">16-50 persone</option><option value="51-100">51-100 persone</option><option value="100+">Oltre 100 persone</option></select></div>
+              <div class="company-field"><label for="companyDailyDeliveriesInput">Consegne medie al giorno</label><select id="companyDailyDeliveriesInput"><option value="">Consegne medie al giorno</option><option value="1-10">1-10</option><option value="11-30">11-30</option><option value="31-80">31-80</option><option value="81-150">81-150</option><option value="150+">Oltre 150</option></select></div>
+              <div class="company-field company-description"><label for="companyActivityTypeInput">Descrizione attività</label><textarea id="companyActivityTypeInput" rows="3" placeholder="Descrizione attività"></textarea></div>
+            </div>
+          </section>
+
+          <details class="company-address-details">
+            <summary>Indirizzi legali e di fatturazione <span>Se diversi dalla sede aziendale</span></summary>
+            <div class="company-contact-grid">
+              <div class="company-field"><label for="companyLegalAddressInput">Sede legale</label><input id="companyLegalAddressInput" placeholder="Lascia vuoto se coincide con la sede operativa"></div>
+              <div class="company-field"><label for="companyBillingAddressInput">Indirizzo di fatturazione</label><input id="companyBillingAddressInput" placeholder="Lascia vuoto se coincide con la sede legale"></div>
+            </div>
+          </details>
+          <div class="company-save-actions">
+            <button type="button" class="btn-light" onclick="loadCompanyProfile()">Annulla modifiche</button>
+            <button type="button" class="btn-primary" onclick="saveCompanyProfile()">Salva profilo azienda</button>
+          </div>
           </div>
 
           <div class="card onboarding-card-v29">
@@ -646,19 +676,27 @@
         </div>
         <div class="giro-layout giro-layout-full">
           <div class="left-column">
-            <section class="panel">
-              <div class="panel-header">
-                <h2>Dettagli pianificazione</h2>
-              </div>
-
-              <div class="form-grid">
-                <div><label><span>Nome </span><span data-gf-label="route">giro</span></label><input id="routeName" placeholder="Giro mattina"></div>
-                <div><label>Data</label><input id="routeDate" type="date"></div>
-                <div><label>Orario partenza</label><input id="routeStart" type="time"></div>
-                <div><label>Deposito</label><select id="routeDeposit"></select></div>
-                <div><label data-gf-label="vehicle">Mezzo</label><select id="routeVehicle" disabled></select><small id="vehicleAvailabilityHint" class="availability-hint">Seleziona prima data e orario di partenza</small></div>
-                <div><label data-gf-label="driver">Autista</label><select id="routeDriver" disabled></select><small id="driverAvailabilityHint" class="availability-hint">Seleziona prima data e orario di partenza</small></div>
-                <div id="routeEnergyPriceBoxV895" class="energy-price-box-v895 hidden">
+<section class="panel planning-setup-panel">
+ <div class="planning-steps"><section class="plan-step plan-step-1" aria-labelledby="planStepTitle1">
+ <header class="plan-step-heading"><span class="plan-step-number">1</span><h2 id="planStepTitle1">Dati del giro</h2><span id="planStepStatus1" class="plan-status" role="status"></span></header>
+ <p class="plan-step-description">Inserisci le informazioni di base per identificare il giro di consegne.</p><svg class="plan-step-art" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="3"/><path d="M8 3v4m8-4v4M4 11h16m-11 4h2m3 0h2m-7 3h2"/></svg>
+ <div class="plan-step-fields"><div><label for="routeName"><span>Nome </span><span data-gf-label="route">giro</span></label><input id="routeName" placeholder="Giro mattina"></div>
+<div><label for="routeDate">Data</label><input id="routeDate" type="date"></div>
+<div><label for="routeStart">Orario partenza</label><input id="routeStart" type="time"></div></div>
+ </section>
+<section class="plan-step plan-step-2" aria-labelledby="planStepTitle2">
+ <header class="plan-step-heading"><span class="plan-step-number">2</span><h2 id="planStepTitle2">Risorse</h2><span id="planStepStatus2" class="plan-status" role="status"></span></header>
+ <p class="plan-step-description">Seleziona il mezzo e l’autista che verranno utilizzati per il giro.</p><svg class="plan-step-art" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h11v12H3zM14 10h4l3 4v4h-7"/><circle cx="7" cy="19" r="2"/><circle cx="18" cy="19" r="2"/></svg>
+ <div class="plan-step-fields"><div><label for="routeDeposit">Deposito</label><select id="routeDeposit"></select></div>
+<div><label for="routeVehicle" data-gf-label="vehicle">Mezzo</label><select id="routeVehicle" disabled></select><small id="vehicleAvailabilityHint" class="availability-hint">Seleziona prima data e orario di partenza</small></div>
+<div><label for="routeDriver" data-gf-label="driver">Autista</label><select id="routeDriver" disabled></select><small id="driverAvailabilityHint" class="availability-hint">Seleziona prima data e orario di partenza</small></div></div>
+ </section>
+<section class="plan-step plan-step-3" aria-labelledby="planStepTitle3">
+ <header class="plan-step-heading"><span class="plan-step-number">3</span><h2 id="planStepTitle3">Rientro</h2><span id="planStepStatus3" class="plan-status" role="status"></span></header>
+ <p class="plan-step-description">Definisci se è previsto il rientro al deposito a fine giro.</p><svg class="plan-step-art" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8a9 9 0 1 1-1 7M5 3v5h5"/></svg>
+ <div class="plan-step-fields"><div><label for="returnDepot">Rientro deposito</label><select id="returnDepot"><option value="true">Sì, rientro previsto</option><option value="false">No</option></select></div></div>
+ </section></div>
+                 <div id="routeEnergyPriceBoxV895" class="energy-price-box-v895 hidden">
                   <label id="routeEnergyPriceTitleV895">Costo del giro</label>
                   <div id="routeEnergyVehicleInfo" class="energy-vehicle-info-v895">Seleziona un mezzo</div>
                   <div class="energy-mode-row-v895"><label><input type="radio" name="energyPriceMode" value="automatic" onchange="updateRouteEnergyPricingV895()"> Automatico</label><label><input type="radio" name="energyPriceMode" value="manual" checked onchange="updateRouteEnergyPricingV895()"> Manuale</label></div>
@@ -666,20 +704,12 @@
                   <div id="electricEnergyPriceWrap" class="hidden"><label>Prezzo energia €/kWh</label><input id="electricityPrice" type="number" step="0.001" value="0.30"></div>
                   <small id="automaticFuelPriceInfo" class="availability-hint"></small>
                 </div>
-                <div><label>Rientro deposito</label><select id="returnDepot"><option value="true">Sì, rientro previsto</option><option value="false">No</option></select></div>
-              </div>
-            </section>
 
-            <section class="panel route-step-panel" id="routePlanningGatePanel">
-              <div class="route-step-ready">
-                <div>
-                  <h2>Passaggio successivo</h2>
-                  <p class="panel-subtitle">Completa prima tutte le informazioni del giro. Solo dopo potrai aprire la selezione clienti e preparare le fermate.</p>
-                  <small id="routePlanningGateHint" class="route-gate-hint">Compila data, orario, deposito, mezzo, autista e carburante.</small>
-                </div>
-                <button id="openCustomerStepBtn" class="btn-primary large" onclick="openCustomerPlanningStep()" disabled>Inserisci clienti</button>
-              </div>
-            </section>
+ <section id="routePlanningGatePanel" class="planning-completion" aria-labelledby="planningCompletionTitle">
+ <div class="planning-completion-content"><h2 id="planningCompletionTitle">Cosa manca?</h2><p>Completa tutte le informazioni del giro per selezionare i clienti e preparare le fermate.</p><div id="planningChecklist" class="planning-checklist"></div><small id="routePlanningGateHint" class="route-gate-hint" role="status"></small></div>
+ <div class="planning-completion-action"><button id="openCustomerStepBtn" class="btn-primary large" onclick="advanceRoutePlanning()">Completa dati giro</button></div>
+ </section>
+ </section>
 
             <section class="panel delivery-picker-panel hidden" id="customerPlanningStep">
               <div class="panel-header">
@@ -1718,7 +1748,7 @@
 </div>
 
 <script src="/static/dashboard/js/reports.js?v=stability_1"></script>
-<script src="/static/dashboard/js/core.js?v=dashboard_20260928_1"></script>
+<script src="/static/dashboard/js/core.js?v=planning_20260929"></script>
 
 <script>
 function toggleLoginPassword(){

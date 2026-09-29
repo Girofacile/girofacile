@@ -1371,6 +1371,46 @@ function routePlanningDetailsCompleteV68(){
   return routePlanningMissingFieldsV68().length === 0;
 }
 
+// Keep the visual checklist aligned with the existing planning validation.
+function renderPlanningCompletion(missing){
+  const items = [
+    ["Nome giro", true, val("routeName").trim() ? "Completato" : "Nome automatico"],
+    ["Data", !missing.includes("data")],
+    ["Orario partenza", !missing.includes("orario partenza")],
+    ["Mezzo", !missing.includes("mezzo")],
+    ["Autista", !missing.includes("autista")]
+  ];
+  if(missing.includes("deposito")) items.push(["Deposito", false]);
+  if(missing.includes("prezzo carburante")) items.push(["Carburante", false]);
+  if(missing.includes("prezzo energia")) items.push(["Energia", false]);
+  const checklist = document.getElementById("planningChecklist");
+  if(checklist) checklist.innerHTML = items.map(([label, done, detail]) =>
+    `<div class="planning-check ${done ? 'complete' : ''}"><span class="planning-check-icon" aria-hidden="true">${done ? '✓' : '!'}</span><div><strong>${label}</strong><small>${detail || (done ? 'Completato' : 'Da completare')}</small></div></div>`
+  ).join("");
+  const basicDone = [!missing.includes("data"), !missing.includes("orario partenza")];
+  const resourceDone = ["deposito", "mezzo", "autista", "prezzo carburante", "prezzo energia"].every(field=>!missing.includes(field));
+  const states = [basicDone.every(Boolean) ? "complete" : basicDone.some(Boolean) ? "partial" : "", resourceDone ? "complete" : "", "complete"];
+  states.forEach((state, i)=>{
+    const badge = document.getElementById(`planStepStatus${i+1}`);
+    if(badge){
+      badge.className = `plan-status ${state}`;
+      badge.textContent = state === "complete" ? "Completato" : state === "partial" ? "Quasi completato" : "Da completare";
+    }
+  });
+  const title = document.getElementById("planningCompletionTitle");
+  if(title) title.textContent = missing.length ? "Cosa manca?" : "Pronto per le consegne";
+}
+
+function advanceRoutePlanning(){
+  const missing = routePlanningMissingFieldsV68();
+  if(!missing.length){ openCustomerPlanningStep(); return; }
+  const fields = {data:"routeDate", "orario partenza":"routeStart", deposito:"routeDeposit", mezzo:"routeVehicle", autista:"routeDriver", "prezzo carburante":"fuelPrice", "prezzo energia":"electricityPrice"};
+  updateRoutePlanningGateV68();
+  const target = document.getElementById(fields[missing[0]]);
+  target?.scrollIntoView({behavior:"smooth", block:"center"});
+  target?.focus({preventScroll:true});
+}
+
 function updateRoutePlanningGateV68(){
   const btn = document.getElementById("openCustomerStepBtn");
   const hint = document.getElementById("routePlanningGateHint");
@@ -1379,13 +1419,14 @@ function updateRoutePlanningGateV68(){
   const missing = routePlanningMissingFieldsV68();
   const ready = missing.length === 0;
   if(btn){
-    btn.disabled = !ready;
+    btn.disabled = false;
     btn.textContent = ready ? (customerPlanningStepOpenedV68 ? "Clienti aperti" : "Inserisci clienti") : "Completa dati giro";
   }
   if(hint){
     hint.textContent = ready ? "Dati giro completi: puoi selezionare i clienti e preparare il percorso." : `Campi mancanti: ${missing.join(", ")}.`;
     hint.className = `route-gate-hint ${ready ? "ok" : "warn"}`;
   }
+  renderPlanningCompletion(missing);
   if(!ready){
     customerPlanningStepOpenedV68 = false;
     picker?.classList.add("hidden");
