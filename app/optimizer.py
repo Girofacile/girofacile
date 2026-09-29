@@ -33,6 +33,12 @@ def parse_hhmm(value):
     except Exception:
         return None
 
+def _start_clock(start_time):
+    # Midnight is a valid zero; only a missing/unparseable value uses the fallback.
+    parsed = parse_hhmm(start_time)
+    return 8 * 60 if parsed is None else parsed
+
+
 def fmt_hhmm(total_min):
     total_min = int(round(total_min)) % (24 * 60)
     return f"{total_min // 60:02d}:{total_min % 60:02d}"
@@ -575,6 +581,8 @@ def _has_strong_constraints(deliveries):
 def _evaluate_fixed_sequence(sequence, matrix, points, vehicle=None, return_depot=True, start_time="08:00"):
     """Valuta un ordine già deciso usando una sola matrice Google.
 
+    arrivo_stimato rappresenta l'inizio servizio dopo l'eventuale attesa.
+
     Questa funzione non richiama Google: usa soltanto i tempi/distanze già
     presenti nella matrice. Serve per provare molte combinazioni internamente
     senza aumentare le richieste Google.
@@ -584,7 +592,7 @@ def _evaluate_fixed_sequence(sequence, matrix, points, vehicle=None, return_depo
     total_wait = 0.0
     violations = 0
     warning_count = 0
-    start_clock = parse_hhmm(start_time) or 8 * 60
+    start_clock = _start_clock(start_time)
     current_clock = start_clock
     current_idx = 0
 
@@ -655,7 +663,7 @@ def _greedy_sequence(deliveries, matrix, points, vehicle=None, start_time="08:00
     remaining = deliveries[:]
     ordered = []
     current_idx = 0
-    current_clock = parse_hhmm(start_time) or 8 * 60
+    current_clock = _start_clock(start_time)
 
     while remaining:
         best_idx = 0
@@ -680,7 +688,7 @@ def _greedy_sequence(deliveries, matrix, points, vehicle=None, start_time="08:00
     return ordered
 
 
-def _local_optimize_sequence(initial_sequence, matrix, points, vehicle=None, return_depot=True, start_time="08:00", max_rounds=4):
+def _local_optimize_sequence(initial_sequence, matrix, points, vehicle=None, return_depot=True, start_time="08:00", max_rounds=4, relocate=False):
     """Migliora un ordine provando scambi e inversioni senza nuove chiamate Google."""
     best_sequence = initial_sequence[:]
     best_result = _evaluate_fixed_sequence(best_sequence, matrix, points, vehicle, return_depot, start_time)
@@ -713,16 +721,47 @@ def _local_optimize_sequence(initial_sequence, matrix, points, vehicle=None, ret
                     best_result = result
                     improved = True
 
+        if relocate:
+            # Remove one stop and insert it at every other position. Evaluate the
+            # entire directed route: symmetric 2-opt delta formulas are invalid here.
+            for i in range(n):
+                for j in range(n):
+                    if i == j:
+                        continue
+                    candidate = best_sequence[:]
+                    stop = candidate.pop(i)
+                    candidate.insert(j, stop)
+                    result = _evaluate_fixed_sequence(candidate, matrix, points, vehicle, return_depot, start_time)
+                    if result["score"] + 0.0001 < best_result["score"]:
+                        best_sequence = candidate
+                        best_result = result
+                        improved = True
+
     return best_result
+
+
+class _CachedRoadLegs(dict):
+    """Per-search lazy OSRM cache when the Google matrix is unavailable."""
+    def __init__(self, points):
+        super().__init__()
+        self.points = points
+
+    def get(self, key, default=None):
+        if key not in self:
+            self[key] = osrm_route(self.points[key[0]], self.points[key[1]])
+        return super().get(key, default)
 
 
 def _best_internal_sequence(deliveries, matrix, points, vehicle=None, return_depot=True, start_time="08:00"):
     """Sceglie il miglior ordine usando una sola chiamata Google Routes.
 
     - Fino a 8 consegne prova tutte le combinazioni: risultato quasi ottimale.
-    - Oltre 8 consegne usa un ordine iniziale + miglioramento locale.
+    - Oltre 8 consegne conserva il migliore tra ordini deterministici.
+    - Per 9-15 consegne aggiunge rilocazioni e partenze multiple.
     """
     n = len(deliveries)
+    if matrix is None:
+        matrix = _CachedRoadLegs(points)
     if n == 0:
         return _evaluate_fixed_sequence([], matrix, points, vehicle, return_depot, start_time)
 
@@ -739,6 +778,22 @@ def _best_internal_sequence(deliveries, matrix, points, vehicle=None, return_dep
 
     initial = _greedy_sequence(deliveries, matrix, points, vehicle, start_time)
     result = _local_optimize_sequence(initial, matrix, points, vehicle, return_depot, start_time)
+    # Keep the original heuristic as a candidate, even when new moves take a
+    # different search path. Also guarantee no worse score than the operator order.
+    operator = _evaluate_fixed_sequence(deliveries, matrix, points, vehicle, return_depot, start_time)
+    if operator["score"] < result["score"]:
+        result = operator
+    if 9 <= n <= 15:
+        seeds = [initial, deliveries, list(reversed(initial))]
+        seen = set()
+        for seed in seeds:
+            key = tuple(d["_matrix_index"] for d in seed)
+            if key in seen:
+                continue
+            seen.add(key)
+            candidate = _local_optimize_sequence(seed, matrix, points, vehicle, return_depot, start_time, relocate=True)
+            if candidate["score"] < result["score"]:
+                result = candidate
     print(f"[OPTIMIZER] Ottimizzazione locale: fermate={n} tempo={result['total_min']} min km={result['total_km']}")
     return result
 
@@ -807,7 +862,7 @@ def recalculate_manual_route(db: Session, deposit, deliveries, vehicle=None, ret
 
     ordered = []
     total_km = 0.0
-    start_clock = parse_hhmm(start_time) or 8 * 60
+    start_clock = _start_clock(start_time)
     current_clock = start_clock
     current_idx = 0
 

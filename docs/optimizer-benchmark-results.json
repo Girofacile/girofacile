@@ -1,0 +1,2435 @@
+{
+  "baseline_commit": "81f512189916f5e7e091c6956689fa5be38eb1b9",
+  "timing": "One wall-clock sample per variant; includes search only, not oracle/import. No timing assertions.",
+  "records": [
+    {
+      "n": 5,
+      "kind": "grid",
+      "return_depot": true,
+      "input_order": "forward",
+      "reference_kind": "exact_additive_optimum",
+      "reference": {
+        "total_km": 70,
+        "total_min": 140,
+        "order": [
+          1,
+          3,
+          2,
+          5,
+          4
+        ],
+        "score": 1470
+      },
+      "before": {
+        "total_km": 70.0,
+        "total_min": 140.0,
+        "score": 1470.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 15.571,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      },
+      "after": {
+        "total_km": 70.0,
+        "total_min": 140.0,
+        "score": 1470.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 9.262,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      }
+    },
+    {
+      "n": 8,
+      "kind": "grid",
+      "return_depot": true,
+      "input_order": "forward",
+      "reference_kind": "exact_additive_optimum",
+      "reference": {
+        "total_km": 96,
+        "total_min": 192,
+        "order": [
+          1,
+          8,
+          3,
+          6,
+          5,
+          4,
+          7,
+          2
+        ],
+        "score": 2016
+      },
+      "before": {
+        "total_km": 96.0,
+        "total_min": 192.0,
+        "score": 2016.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 4341.625,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      },
+      "after": {
+        "total_km": 96.0,
+        "total_min": 192.0,
+        "score": 2016.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 3880.996,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      }
+    },
+    {
+      "n": 9,
+      "kind": "grid",
+      "return_depot": true,
+      "input_order": "forward",
+      "reference_kind": "exact_additive_optimum",
+      "reference": {
+        "total_km": 96,
+        "total_min": 192,
+        "order": [
+          1,
+          8,
+          3,
+          9,
+          6,
+          5,
+          4,
+          7,
+          2
+        ],
+        "score": 2016
+      },
+      "before": {
+        "total_km": 108.0,
+        "total_min": 216.0,
+        "score": 2268.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 6.963,
+        "total_km_gap_pct": 12.5,
+        "total_min_gap_pct": 12.5,
+        "score_gap_pct": 12.5
+      },
+      "after": {
+        "total_km": 96.0,
+        "total_min": 192.0,
+        "score": 2016.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 52.282,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      }
+    },
+    {
+      "n": 10,
+      "kind": "grid",
+      "return_depot": true,
+      "input_order": "forward",
+      "reference_kind": "exact_additive_optimum",
+      "reference": {
+        "total_km": 98,
+        "total_min": 196,
+        "order": [
+          1,
+          8,
+          10,
+          3,
+          9,
+          6,
+          5,
+          4,
+          7,
+          2
+        ],
+        "score": 2058
+      },
+      "before": {
+        "total_km": 110.0,
+        "total_min": 220.0,
+        "score": 2310.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 6.857,
+        "total_km_gap_pct": 12.244897959183673,
+        "total_min_gap_pct": 12.244897959183673,
+        "score_gap_pct": 12.244897959183673
+      },
+      "after": {
+        "total_km": 98.0,
+        "total_min": 196.0,
+        "score": 2058.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 77.154,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      }
+    },
+    {
+      "n": 12,
+      "kind": "grid",
+      "return_depot": true,
+      "input_order": "forward",
+      "reference_kind": "exact_additive_optimum",
+      "reference": {
+        "total_km": 102,
+        "total_min": 204,
+        "order": [
+          1,
+          11,
+          8,
+          12,
+          10,
+          3,
+          9,
+          6,
+          5,
+          4,
+          7,
+          2
+        ],
+        "score": 2142
+      },
+      "before": {
+        "total_km": 110.0,
+        "total_min": 220.0,
+        "score": 2310.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 10.873,
+        "total_km_gap_pct": 7.8431372549019605,
+        "total_min_gap_pct": 7.8431372549019605,
+        "score_gap_pct": 7.8431372549019605
+      },
+      "after": {
+        "total_km": 102.0,
+        "total_min": 204.0,
+        "score": 2142.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 141.377,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      }
+    },
+    {
+      "n": 15,
+      "kind": "grid",
+      "return_depot": true,
+      "input_order": "forward",
+      "reference_kind": "exact_additive_optimum",
+      "reference": {
+        "total_km": 106,
+        "total_min": 212,
+        "order": [
+          1,
+          11,
+          8,
+          12,
+          15,
+          10,
+          3,
+          9,
+          6,
+          13,
+          5,
+          4,
+          7,
+          2,
+          14
+        ],
+        "score": 2226
+      },
+      "before": {
+        "total_km": 110.0,
+        "total_min": 220.0,
+        "score": 2310.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 105.657,
+        "total_km_gap_pct": 3.7735849056603774,
+        "total_min_gap_pct": 3.7735849056603774,
+        "score_gap_pct": 3.7735849056603774
+      },
+      "after": {
+        "total_km": 106.0,
+        "total_min": 212.0,
+        "score": 2226.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 456.506,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      }
+    },
+    {
+      "n": 9,
+      "kind": "directed",
+      "return_depot": false,
+      "input_order": "forward",
+      "reference_kind": "exact_additive_optimum",
+      "reference": {
+        "total_km": 128,
+        "total_min": 38,
+        "order": [
+          1,
+          8,
+          5,
+          2,
+          3,
+          4,
+          7,
+          6,
+          9
+        ],
+        "score": 508
+      },
+      "before": {
+        "total_km": 131.0,
+        "total_min": 47.0,
+        "score": 601.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 7.622,
+        "total_km_gap_pct": 2.34375,
+        "total_min_gap_pct": 23.68421052631579,
+        "score_gap_pct": 18.30708661417323
+      },
+      "after": {
+        "total_km": 113.0,
+        "total_min": 42.0,
+        "score": 533.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 99.202,
+        "total_km_gap_pct": -11.71875,
+        "total_min_gap_pct": 10.526315789473685,
+        "score_gap_pct": 4.921259842519685
+      }
+    },
+    {
+      "n": 9,
+      "kind": "directed",
+      "return_depot": false,
+      "input_order": "reverse",
+      "reference_kind": "exact_additive_optimum",
+      "reference": {
+        "total_km": 128,
+        "total_min": 38,
+        "order": [
+          1,
+          8,
+          5,
+          2,
+          3,
+          4,
+          7,
+          6,
+          9
+        ],
+        "score": 508
+      },
+      "before": {
+        "total_km": 131.0,
+        "total_min": 47.0,
+        "score": 601.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 11.151,
+        "total_km_gap_pct": 2.34375,
+        "total_min_gap_pct": 23.68421052631579,
+        "score_gap_pct": 18.30708661417323
+      },
+      "after": {
+        "total_km": 128.0,
+        "total_min": 38.0,
+        "score": 508.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 86.232,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      }
+    },
+    {
+      "n": 9,
+      "kind": "directed",
+      "return_depot": false,
+      "input_order": "interleaved",
+      "reference_kind": "exact_additive_optimum",
+      "reference": {
+        "total_km": 128,
+        "total_min": 38,
+        "order": [
+          1,
+          8,
+          5,
+          2,
+          3,
+          4,
+          7,
+          6,
+          9
+        ],
+        "score": 508
+      },
+      "before": {
+        "total_km": 131.0,
+        "total_min": 47.0,
+        "score": 601.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 9.685,
+        "total_km_gap_pct": 2.34375,
+        "total_min_gap_pct": 23.68421052631579,
+        "score_gap_pct": 18.30708661417323
+      },
+      "after": {
+        "total_km": 128.0,
+        "total_min": 38.0,
+        "score": 508.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 137.026,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      }
+    },
+    {
+      "n": 9,
+      "kind": "directed",
+      "return_depot": true,
+      "input_order": "forward",
+      "reference_kind": "exact_additive_optimum",
+      "reference": {
+        "total_km": 146,
+        "total_min": 43,
+        "order": [
+          1,
+          8,
+          5,
+          2,
+          3,
+          4,
+          7,
+          6,
+          9
+        ],
+        "score": 576
+      },
+      "before": {
+        "total_km": 149.0,
+        "total_min": 52.0,
+        "score": 669.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 8.186,
+        "total_km_gap_pct": 2.0547945205479454,
+        "total_min_gap_pct": 20.930232558139537,
+        "score_gap_pct": 16.145833333333332
+      },
+      "after": {
+        "total_km": 126.0,
+        "total_min": 52.0,
+        "score": 646.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 99.869,
+        "total_km_gap_pct": -13.698630136986301,
+        "total_min_gap_pct": 20.930232558139537,
+        "score_gap_pct": 12.152777777777779
+      }
+    },
+    {
+      "n": 9,
+      "kind": "directed",
+      "return_depot": true,
+      "input_order": "reverse",
+      "reference_kind": "exact_additive_optimum",
+      "reference": {
+        "total_km": 146,
+        "total_min": 43,
+        "order": [
+          1,
+          8,
+          5,
+          2,
+          3,
+          4,
+          7,
+          6,
+          9
+        ],
+        "score": 576
+      },
+      "before": {
+        "total_km": 149.0,
+        "total_min": 52.0,
+        "score": 669.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 10.652,
+        "total_km_gap_pct": 2.0547945205479454,
+        "total_min_gap_pct": 20.930232558139537,
+        "score_gap_pct": 16.145833333333332
+      },
+      "after": {
+        "total_km": 146.0,
+        "total_min": 43.0,
+        "score": 576.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 91.168,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      }
+    },
+    {
+      "n": 9,
+      "kind": "directed",
+      "return_depot": true,
+      "input_order": "interleaved",
+      "reference_kind": "exact_additive_optimum",
+      "reference": {
+        "total_km": 146,
+        "total_min": 43,
+        "order": [
+          1,
+          8,
+          5,
+          2,
+          3,
+          4,
+          7,
+          6,
+          9
+        ],
+        "score": 576
+      },
+      "before": {
+        "total_km": 149.0,
+        "total_min": 52.0,
+        "score": 669.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 9.675,
+        "total_km_gap_pct": 2.0547945205479454,
+        "total_min_gap_pct": 20.930232558139537,
+        "score_gap_pct": 16.145833333333332
+      },
+      "after": {
+        "total_km": 126.0,
+        "total_min": 52.0,
+        "score": 646.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 108.513,
+        "total_km_gap_pct": -13.698630136986301,
+        "total_min_gap_pct": 20.930232558139537,
+        "score_gap_pct": 12.152777777777779
+      }
+    },
+    {
+      "n": 10,
+      "kind": "directed",
+      "return_depot": false,
+      "input_order": "forward",
+      "reference_kind": "exact_additive_optimum",
+      "reference": {
+        "total_km": 130,
+        "total_min": 35,
+        "order": [
+          8,
+          1,
+          2,
+          3,
+          4,
+          7,
+          6,
+          9,
+          10,
+          5
+        ],
+        "score": 480
+      },
+      "before": {
+        "total_km": 145.0,
+        "total_min": 45.0,
+        "score": 595.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 17.598,
+        "total_km_gap_pct": 11.538461538461538,
+        "total_min_gap_pct": 28.571428571428573,
+        "score_gap_pct": 23.958333333333332
+      },
+      "after": {
+        "total_km": 130.0,
+        "total_min": 35.0,
+        "score": 480.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 184.114,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      }
+    },
+    {
+      "n": 10,
+      "kind": "directed",
+      "return_depot": false,
+      "input_order": "reverse",
+      "reference_kind": "exact_additive_optimum",
+      "reference": {
+        "total_km": 130,
+        "total_min": 35,
+        "order": [
+          8,
+          1,
+          2,
+          3,
+          4,
+          7,
+          6,
+          9,
+          10,
+          5
+        ],
+        "score": 480
+      },
+      "before": {
+        "total_km": 145.0,
+        "total_min": 45.0,
+        "score": 595.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 18.029,
+        "total_km_gap_pct": 11.538461538461538,
+        "total_min_gap_pct": 28.571428571428573,
+        "score_gap_pct": 23.958333333333332
+      },
+      "after": {
+        "total_km": 134.0,
+        "total_min": 39.0,
+        "score": 524.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 140.662,
+        "total_km_gap_pct": 3.076923076923077,
+        "total_min_gap_pct": 11.428571428571429,
+        "score_gap_pct": 9.166666666666666
+      }
+    },
+    {
+      "n": 10,
+      "kind": "directed",
+      "return_depot": false,
+      "input_order": "interleaved",
+      "reference_kind": "exact_additive_optimum",
+      "reference": {
+        "total_km": 130,
+        "total_min": 35,
+        "order": [
+          8,
+          1,
+          2,
+          3,
+          4,
+          7,
+          6,
+          9,
+          10,
+          5
+        ],
+        "score": 480
+      },
+      "before": {
+        "total_km": 145.0,
+        "total_min": 45.0,
+        "score": 595.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 18.487,
+        "total_km_gap_pct": 11.538461538461538,
+        "total_min_gap_pct": 28.571428571428573,
+        "score_gap_pct": 23.958333333333332
+      },
+      "after": {
+        "total_km": 130.0,
+        "total_min": 35.0,
+        "score": 480.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 149.931,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      }
+    },
+    {
+      "n": 10,
+      "kind": "directed",
+      "return_depot": true,
+      "input_order": "forward",
+      "reference_kind": "exact_additive_optimum",
+      "reference": {
+        "total_km": 143,
+        "total_min": 45,
+        "order": [
+          8,
+          1,
+          2,
+          3,
+          4,
+          7,
+          6,
+          9,
+          10,
+          5
+        ],
+        "score": 593
+      },
+      "before": {
+        "total_km": 163.0,
+        "total_min": 50.0,
+        "score": 663.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 19.327,
+        "total_km_gap_pct": 13.986013986013987,
+        "total_min_gap_pct": 11.11111111111111,
+        "score_gap_pct": 11.804384485666105
+      },
+      "after": {
+        "total_km": 152.0,
+        "total_min": 48.0,
+        "score": 632.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 142.923,
+        "total_km_gap_pct": 6.293706293706293,
+        "total_min_gap_pct": 6.666666666666667,
+        "score_gap_pct": 6.57672849915683
+      }
+    },
+    {
+      "n": 10,
+      "kind": "directed",
+      "return_depot": true,
+      "input_order": "reverse",
+      "reference_kind": "exact_additive_optimum",
+      "reference": {
+        "total_km": 143,
+        "total_min": 45,
+        "order": [
+          8,
+          1,
+          2,
+          3,
+          4,
+          7,
+          6,
+          9,
+          10,
+          5
+        ],
+        "score": 593
+      },
+      "before": {
+        "total_km": 163.0,
+        "total_min": 50.0,
+        "score": 663.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 19.237,
+        "total_km_gap_pct": 13.986013986013987,
+        "total_min_gap_pct": 11.11111111111111,
+        "score_gap_pct": 11.804384485666105
+      },
+      "after": {
+        "total_km": 143.0,
+        "total_min": 45.0,
+        "score": 593.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 170.3,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      }
+    },
+    {
+      "n": 10,
+      "kind": "directed",
+      "return_depot": true,
+      "input_order": "interleaved",
+      "reference_kind": "exact_additive_optimum",
+      "reference": {
+        "total_km": 143,
+        "total_min": 45,
+        "order": [
+          8,
+          1,
+          2,
+          3,
+          4,
+          7,
+          6,
+          9,
+          10,
+          5
+        ],
+        "score": 593
+      },
+      "before": {
+        "total_km": 163.0,
+        "total_min": 50.0,
+        "score": 663.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 22.285,
+        "total_km_gap_pct": 13.986013986013987,
+        "total_min_gap_pct": 11.11111111111111,
+        "score_gap_pct": 11.804384485666105
+      },
+      "after": {
+        "total_km": 152.0,
+        "total_min": 48.0,
+        "score": 632.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 159.609,
+        "total_km_gap_pct": 6.293706293706293,
+        "total_min_gap_pct": 6.666666666666667,
+        "score_gap_pct": 6.57672849915683
+      }
+    },
+    {
+      "n": 12,
+      "kind": "directed",
+      "return_depot": false,
+      "input_order": "forward",
+      "reference_kind": "exact_additive_optimum",
+      "reference": {
+        "total_km": 144,
+        "total_min": 46,
+        "order": [
+          8,
+          1,
+          2,
+          3,
+          4,
+          7,
+          12,
+          6,
+          9,
+          10,
+          5,
+          11
+        ],
+        "score": 604
+      },
+      "before": {
+        "total_km": 125.0,
+        "total_min": 74.0,
+        "score": 865.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 34.963,
+        "total_km_gap_pct": -13.194444444444445,
+        "total_min_gap_pct": 60.869565217391305,
+        "score_gap_pct": 43.211920529801326
+      },
+      "after": {
+        "total_km": 138.0,
+        "total_min": 48.0,
+        "score": 618.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 264.641,
+        "total_km_gap_pct": -4.166666666666667,
+        "total_min_gap_pct": 4.3478260869565215,
+        "score_gap_pct": 2.3178807947019866
+      }
+    },
+    {
+      "n": 12,
+      "kind": "directed",
+      "return_depot": false,
+      "input_order": "reverse",
+      "reference_kind": "exact_additive_optimum",
+      "reference": {
+        "total_km": 144,
+        "total_min": 46,
+        "order": [
+          8,
+          1,
+          2,
+          3,
+          4,
+          7,
+          12,
+          6,
+          9,
+          10,
+          5,
+          11
+        ],
+        "score": 604
+      },
+      "before": {
+        "total_km": 125.0,
+        "total_min": 74.0,
+        "score": 865.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 34.88,
+        "total_km_gap_pct": -13.194444444444445,
+        "total_min_gap_pct": 60.869565217391305,
+        "score_gap_pct": 43.211920529801326
+      },
+      "after": {
+        "total_km": 138.0,
+        "total_min": 48.0,
+        "score": 618.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 396.812,
+        "total_km_gap_pct": -4.166666666666667,
+        "total_min_gap_pct": 4.3478260869565215,
+        "score_gap_pct": 2.3178807947019866
+      }
+    },
+    {
+      "n": 12,
+      "kind": "directed",
+      "return_depot": false,
+      "input_order": "interleaved",
+      "reference_kind": "exact_additive_optimum",
+      "reference": {
+        "total_km": 144,
+        "total_min": 46,
+        "order": [
+          8,
+          1,
+          2,
+          3,
+          4,
+          7,
+          12,
+          6,
+          9,
+          10,
+          5,
+          11
+        ],
+        "score": 604
+      },
+      "before": {
+        "total_km": 125.0,
+        "total_min": 74.0,
+        "score": 865.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 38.01,
+        "total_km_gap_pct": -13.194444444444445,
+        "total_min_gap_pct": 60.869565217391305,
+        "score_gap_pct": 43.211920529801326
+      },
+      "after": {
+        "total_km": 151.0,
+        "total_min": 46.0,
+        "score": 611.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 318.288,
+        "total_km_gap_pct": 4.861111111111111,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 1.1589403973509933
+      }
+    },
+    {
+      "n": 12,
+      "kind": "directed",
+      "return_depot": true,
+      "input_order": "forward",
+      "reference_kind": "exact_additive_optimum",
+      "reference": {
+        "total_km": 153,
+        "total_min": 53,
+        "order": [
+          8,
+          1,
+          6,
+          9,
+          10,
+          5,
+          11,
+          2,
+          3,
+          4,
+          7,
+          12
+        ],
+        "score": 683
+      },
+      "before": {
+        "total_km": 134.0,
+        "total_min": 86.0,
+        "score": 994.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 41.382,
+        "total_km_gap_pct": -12.418300653594772,
+        "total_min_gap_pct": 62.264150943396224,
+        "score_gap_pct": 45.534407027818446
+      },
+      "after": {
+        "total_km": 170.0,
+        "total_min": 54.0,
+        "score": 710.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 254.627,
+        "total_km_gap_pct": 11.11111111111111,
+        "total_min_gap_pct": 1.8867924528301887,
+        "score_gap_pct": 3.953147877013177
+      }
+    },
+    {
+      "n": 12,
+      "kind": "directed",
+      "return_depot": true,
+      "input_order": "reverse",
+      "reference_kind": "exact_additive_optimum",
+      "reference": {
+        "total_km": 153,
+        "total_min": 53,
+        "order": [
+          8,
+          1,
+          6,
+          9,
+          10,
+          5,
+          11,
+          2,
+          3,
+          4,
+          7,
+          12
+        ],
+        "score": 683
+      },
+      "before": {
+        "total_km": 134.0,
+        "total_min": 86.0,
+        "score": 994.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 40.685,
+        "total_km_gap_pct": -12.418300653594772,
+        "total_min_gap_pct": 62.264150943396224,
+        "score_gap_pct": 45.534407027818446
+      },
+      "after": {
+        "total_km": 140.0,
+        "total_min": 64.0,
+        "score": 780.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 227.335,
+        "total_km_gap_pct": -8.49673202614379,
+        "total_min_gap_pct": 20.754716981132077,
+        "score_gap_pct": 14.202049780380673
+      }
+    },
+    {
+      "n": 12,
+      "kind": "directed",
+      "return_depot": true,
+      "input_order": "interleaved",
+      "reference_kind": "exact_additive_optimum",
+      "reference": {
+        "total_km": 153,
+        "total_min": 53,
+        "order": [
+          8,
+          1,
+          6,
+          9,
+          10,
+          5,
+          11,
+          2,
+          3,
+          4,
+          7,
+          12
+        ],
+        "score": 683
+      },
+      "before": {
+        "total_km": 134.0,
+        "total_min": 86.0,
+        "score": 994.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 40.386,
+        "total_km_gap_pct": -12.418300653594772,
+        "total_min_gap_pct": 62.264150943396224,
+        "score_gap_pct": 45.534407027818446
+      },
+      "after": {
+        "total_km": 140.0,
+        "total_min": 64.0,
+        "score": 780.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 295.667,
+        "total_km_gap_pct": -8.49673202614379,
+        "total_min_gap_pct": 20.754716981132077,
+        "score_gap_pct": 14.202049780380673
+      }
+    },
+    {
+      "n": 15,
+      "kind": "directed",
+      "return_depot": false,
+      "input_order": "forward",
+      "reference_kind": "exact_additive_optimum",
+      "reference": {
+        "total_km": 133,
+        "total_min": 49,
+        "order": [
+          12,
+          5,
+          11,
+          2,
+          8,
+          1,
+          15,
+          6,
+          14,
+          3,
+          4,
+          7,
+          9,
+          13,
+          10
+        ],
+        "score": 623
+      },
+      "before": {
+        "total_km": 141.0,
+        "total_min": 73.0,
+        "score": 871.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 42.121,
+        "total_km_gap_pct": 6.015037593984962,
+        "total_min_gap_pct": 48.97959183673469,
+        "score_gap_pct": 39.807383627608345
+      },
+      "after": {
+        "total_km": 142.0,
+        "total_min": 56.0,
+        "score": 702.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 348.847,
+        "total_km_gap_pct": 6.7669172932330826,
+        "total_min_gap_pct": 14.285714285714286,
+        "score_gap_pct": 12.680577849117174
+      }
+    },
+    {
+      "n": 15,
+      "kind": "directed",
+      "return_depot": false,
+      "input_order": "reverse",
+      "reference_kind": "exact_additive_optimum",
+      "reference": {
+        "total_km": 133,
+        "total_min": 49,
+        "order": [
+          12,
+          5,
+          11,
+          2,
+          8,
+          1,
+          15,
+          6,
+          14,
+          3,
+          4,
+          7,
+          9,
+          13,
+          10
+        ],
+        "score": 623
+      },
+      "before": {
+        "total_km": 141.0,
+        "total_min": 73.0,
+        "score": 871.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 42.813,
+        "total_km_gap_pct": 6.015037593984962,
+        "total_min_gap_pct": 48.97959183673469,
+        "score_gap_pct": 39.807383627608345
+      },
+      "after": {
+        "total_km": 142.0,
+        "total_min": 56.0,
+        "score": 702.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 392.988,
+        "total_km_gap_pct": 6.7669172932330826,
+        "total_min_gap_pct": 14.285714285714286,
+        "score_gap_pct": 12.680577849117174
+      }
+    },
+    {
+      "n": 15,
+      "kind": "directed",
+      "return_depot": false,
+      "input_order": "interleaved",
+      "reference_kind": "exact_additive_optimum",
+      "reference": {
+        "total_km": 133,
+        "total_min": 49,
+        "order": [
+          12,
+          5,
+          11,
+          2,
+          8,
+          1,
+          15,
+          6,
+          14,
+          3,
+          4,
+          7,
+          9,
+          13,
+          10
+        ],
+        "score": 623
+      },
+      "before": {
+        "total_km": 141.0,
+        "total_min": 73.0,
+        "score": 871.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 40.599,
+        "total_km_gap_pct": 6.015037593984962,
+        "total_min_gap_pct": 48.97959183673469,
+        "score_gap_pct": 39.807383627608345
+      },
+      "after": {
+        "total_km": 142.0,
+        "total_min": 56.0,
+        "score": 702.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 395.907,
+        "total_km_gap_pct": 6.7669172932330826,
+        "total_min_gap_pct": 14.285714285714286,
+        "score_gap_pct": 12.680577849117174
+      }
+    },
+    {
+      "n": 15,
+      "kind": "directed",
+      "return_depot": true,
+      "input_order": "forward",
+      "reference_kind": "exact_additive_optimum",
+      "reference": {
+        "total_km": 153,
+        "total_min": 57,
+        "order": [
+          12,
+          5,
+          14,
+          3,
+          4,
+          7,
+          9,
+          13,
+          10,
+          11,
+          2,
+          8,
+          1,
+          15,
+          6
+        ],
+        "score": 723
+      },
+      "before": {
+        "total_km": 161.0,
+        "total_min": 77.0,
+        "score": 931.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 46.579,
+        "total_km_gap_pct": 5.228758169934641,
+        "total_min_gap_pct": 35.08771929824562,
+        "score_gap_pct": 28.76901798063624
+      },
+      "after": {
+        "total_km": 163.0,
+        "total_min": 63.0,
+        "score": 793.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 443.182,
+        "total_km_gap_pct": 6.5359477124183005,
+        "total_min_gap_pct": 10.526315789473685,
+        "score_gap_pct": 9.681881051175656
+      }
+    },
+    {
+      "n": 15,
+      "kind": "directed",
+      "return_depot": true,
+      "input_order": "reverse",
+      "reference_kind": "exact_additive_optimum",
+      "reference": {
+        "total_km": 153,
+        "total_min": 57,
+        "order": [
+          12,
+          5,
+          14,
+          3,
+          4,
+          7,
+          9,
+          13,
+          10,
+          11,
+          2,
+          8,
+          1,
+          15,
+          6
+        ],
+        "score": 723
+      },
+      "before": {
+        "total_km": 161.0,
+        "total_min": 77.0,
+        "score": 931.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 59.835,
+        "total_km_gap_pct": 5.228758169934641,
+        "total_min_gap_pct": 35.08771929824562,
+        "score_gap_pct": 28.76901798063624
+      },
+      "after": {
+        "total_km": 162.0,
+        "total_min": 63.0,
+        "score": 792.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 455.199,
+        "total_km_gap_pct": 5.882352941176471,
+        "total_min_gap_pct": 10.526315789473685,
+        "score_gap_pct": 9.54356846473029
+      }
+    },
+    {
+      "n": 15,
+      "kind": "directed",
+      "return_depot": true,
+      "input_order": "interleaved",
+      "reference_kind": "exact_additive_optimum",
+      "reference": {
+        "total_km": 153,
+        "total_min": 57,
+        "order": [
+          12,
+          5,
+          14,
+          3,
+          4,
+          7,
+          9,
+          13,
+          10,
+          11,
+          2,
+          8,
+          1,
+          15,
+          6
+        ],
+        "score": 723
+      },
+      "before": {
+        "total_km": 161.0,
+        "total_min": 77.0,
+        "score": 931.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 40.683,
+        "total_km_gap_pct": 5.228758169934641,
+        "total_min_gap_pct": 35.08771929824562,
+        "score_gap_pct": 28.76901798063624
+      },
+      "after": {
+        "total_km": 150.0,
+        "total_min": 62.0,
+        "score": 770.0,
+        "violations": 0,
+        "total_wait": 0.0,
+        "runtime_ms": 350.414,
+        "total_km_gap_pct": -1.9607843137254901,
+        "total_min_gap_pct": 8.771929824561404,
+        "score_gap_pct": 6.500691562932227
+      }
+    },
+    {
+      "n": 9,
+      "kind": "windows",
+      "return_depot": false,
+      "input_order": "forward",
+      "reference_kind": "feasible_witness_not_optimum",
+      "reference": {
+        "total_km": 99,
+        "total_min": 150,
+        "total_wait": 21,
+        "violations": 0,
+        "score": 1705.5
+      },
+      "before": {
+        "total_km": 99.0,
+        "total_min": 150.0,
+        "score": 1705.5,
+        "violations": 0,
+        "total_wait": 21.0,
+        "runtime_ms": 6.099,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      },
+      "after": {
+        "total_km": 99.0,
+        "total_min": 150.0,
+        "score": 1705.5,
+        "violations": 0,
+        "total_wait": 21.0,
+        "runtime_ms": 58.655,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      }
+    },
+    {
+      "n": 9,
+      "kind": "windows",
+      "return_depot": false,
+      "input_order": "reverse",
+      "reference_kind": "feasible_witness_not_optimum",
+      "reference": {
+        "total_km": 99,
+        "total_min": 150,
+        "total_wait": 21,
+        "violations": 0,
+        "score": 1705.5
+      },
+      "before": {
+        "total_km": 99.0,
+        "total_min": 150.0,
+        "score": 1705.5,
+        "violations": 0,
+        "total_wait": 21.0,
+        "runtime_ms": 8.559,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      },
+      "after": {
+        "total_km": 99.0,
+        "total_min": 150.0,
+        "score": 1705.5,
+        "violations": 0,
+        "total_wait": 21.0,
+        "runtime_ms": 57.92,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      }
+    },
+    {
+      "n": 9,
+      "kind": "windows",
+      "return_depot": false,
+      "input_order": "interleaved",
+      "reference_kind": "feasible_witness_not_optimum",
+      "reference": {
+        "total_km": 99,
+        "total_min": 150,
+        "total_wait": 21,
+        "violations": 0,
+        "score": 1705.5
+      },
+      "before": {
+        "total_km": 99.0,
+        "total_min": 150.0,
+        "score": 1705.5,
+        "violations": 0,
+        "total_wait": 21.0,
+        "runtime_ms": 6.604,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      },
+      "after": {
+        "total_km": 99.0,
+        "total_min": 150.0,
+        "score": 1705.5,
+        "violations": 0,
+        "total_wait": 21.0,
+        "runtime_ms": 102.903,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      }
+    },
+    {
+      "n": 9,
+      "kind": "windows",
+      "return_depot": true,
+      "input_order": "forward",
+      "reference_kind": "feasible_witness_not_optimum",
+      "reference": {
+        "total_km": 117,
+        "total_min": 155,
+        "total_wait": 21,
+        "violations": 0,
+        "score": 1773.5
+      },
+      "before": {
+        "total_km": 117.0,
+        "total_min": 155.0,
+        "score": 1773.5,
+        "violations": 0,
+        "total_wait": 21.0,
+        "runtime_ms": 6.204,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      },
+      "after": {
+        "total_km": 117.0,
+        "total_min": 155.0,
+        "score": 1773.5,
+        "violations": 0,
+        "total_wait": 21.0,
+        "runtime_ms": 61.496,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      }
+    },
+    {
+      "n": 9,
+      "kind": "windows",
+      "return_depot": true,
+      "input_order": "reverse",
+      "reference_kind": "feasible_witness_not_optimum",
+      "reference": {
+        "total_km": 117,
+        "total_min": 155,
+        "total_wait": 21,
+        "violations": 0,
+        "score": 1773.5
+      },
+      "before": {
+        "total_km": 117.0,
+        "total_min": 155.0,
+        "score": 1773.5,
+        "violations": 0,
+        "total_wait": 21.0,
+        "runtime_ms": 5.952,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      },
+      "after": {
+        "total_km": 117.0,
+        "total_min": 155.0,
+        "score": 1773.5,
+        "violations": 0,
+        "total_wait": 21.0,
+        "runtime_ms": 60.337,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      }
+    },
+    {
+      "n": 9,
+      "kind": "windows",
+      "return_depot": true,
+      "input_order": "interleaved",
+      "reference_kind": "feasible_witness_not_optimum",
+      "reference": {
+        "total_km": 117,
+        "total_min": 155,
+        "total_wait": 21,
+        "violations": 0,
+        "score": 1773.5
+      },
+      "before": {
+        "total_km": 117.0,
+        "total_min": 155.0,
+        "score": 1773.5,
+        "violations": 0,
+        "total_wait": 21.0,
+        "runtime_ms": 6.493,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      },
+      "after": {
+        "total_km": 117.0,
+        "total_min": 155.0,
+        "score": 1773.5,
+        "violations": 0,
+        "total_wait": 21.0,
+        "runtime_ms": 150.635,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      }
+    },
+    {
+      "n": 10,
+      "kind": "windows",
+      "return_depot": false,
+      "input_order": "forward",
+      "reference_kind": "feasible_witness_not_optimum",
+      "reference": {
+        "total_km": 110,
+        "total_min": 162,
+        "total_wait": 28,
+        "violations": 0,
+        "score": 1872.0
+      },
+      "before": {
+        "total_km": 110.0,
+        "total_min": 162.0,
+        "score": 1872.0,
+        "violations": 0,
+        "total_wait": 28.0,
+        "runtime_ms": 17.214,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      },
+      "after": {
+        "total_km": 110.0,
+        "total_min": 162.0,
+        "score": 1872.0,
+        "violations": 0,
+        "total_wait": 28.0,
+        "runtime_ms": 130.65,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      }
+    },
+    {
+      "n": 10,
+      "kind": "windows",
+      "return_depot": false,
+      "input_order": "reverse",
+      "reference_kind": "feasible_witness_not_optimum",
+      "reference": {
+        "total_km": 110,
+        "total_min": 162,
+        "total_wait": 28,
+        "violations": 0,
+        "score": 1872.0
+      },
+      "before": {
+        "total_km": 110.0,
+        "total_min": 162.0,
+        "score": 1872.0,
+        "violations": 0,
+        "total_wait": 28.0,
+        "runtime_ms": 14.969,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      },
+      "after": {
+        "total_km": 110.0,
+        "total_min": 162.0,
+        "score": 1872.0,
+        "violations": 0,
+        "total_wait": 28.0,
+        "runtime_ms": 116.624,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      }
+    },
+    {
+      "n": 10,
+      "kind": "windows",
+      "return_depot": false,
+      "input_order": "interleaved",
+      "reference_kind": "feasible_witness_not_optimum",
+      "reference": {
+        "total_km": 110,
+        "total_min": 162,
+        "total_wait": 28,
+        "violations": 0,
+        "score": 1872.0
+      },
+      "before": {
+        "total_km": 110.0,
+        "total_min": 162.0,
+        "score": 1872.0,
+        "violations": 0,
+        "total_wait": 28.0,
+        "runtime_ms": 10.279,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      },
+      "after": {
+        "total_km": 110.0,
+        "total_min": 162.0,
+        "score": 1872.0,
+        "violations": 0,
+        "total_wait": 28.0,
+        "runtime_ms": 166.009,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      }
+    },
+    {
+      "n": 10,
+      "kind": "windows",
+      "return_depot": true,
+      "input_order": "forward",
+      "reference_kind": "feasible_witness_not_optimum",
+      "reference": {
+        "total_km": 112,
+        "total_min": 180,
+        "total_wait": 28,
+        "violations": 0,
+        "score": 2054.0
+      },
+      "before": {
+        "total_km": 112.0,
+        "total_min": 180.0,
+        "score": 2054.0,
+        "violations": 0,
+        "total_wait": 28.0,
+        "runtime_ms": 9.591,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      },
+      "after": {
+        "total_km": 112.0,
+        "total_min": 180.0,
+        "score": 2054.0,
+        "violations": 0,
+        "total_wait": 28.0,
+        "runtime_ms": 101.684,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      }
+    },
+    {
+      "n": 10,
+      "kind": "windows",
+      "return_depot": true,
+      "input_order": "reverse",
+      "reference_kind": "feasible_witness_not_optimum",
+      "reference": {
+        "total_km": 112,
+        "total_min": 180,
+        "total_wait": 28,
+        "violations": 0,
+        "score": 2054.0
+      },
+      "before": {
+        "total_km": 112.0,
+        "total_min": 180.0,
+        "score": 2054.0,
+        "violations": 0,
+        "total_wait": 28.0,
+        "runtime_ms": 9.409,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      },
+      "after": {
+        "total_km": 112.0,
+        "total_min": 180.0,
+        "score": 2054.0,
+        "violations": 0,
+        "total_wait": 28.0,
+        "runtime_ms": 85.264,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      }
+    },
+    {
+      "n": 10,
+      "kind": "windows",
+      "return_depot": true,
+      "input_order": "interleaved",
+      "reference_kind": "feasible_witness_not_optimum",
+      "reference": {
+        "total_km": 112,
+        "total_min": 180,
+        "total_wait": 28,
+        "violations": 0,
+        "score": 2054.0
+      },
+      "before": {
+        "total_km": 112.0,
+        "total_min": 180.0,
+        "score": 2054.0,
+        "violations": 0,
+        "total_wait": 28.0,
+        "runtime_ms": 9.398,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      },
+      "after": {
+        "total_km": 112.0,
+        "total_min": 180.0,
+        "score": 2054.0,
+        "violations": 0,
+        "total_wait": 28.0,
+        "runtime_ms": 140.546,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      }
+    },
+    {
+      "n": 12,
+      "kind": "windows",
+      "return_depot": false,
+      "input_order": "forward",
+      "reference_kind": "feasible_witness_not_optimum",
+      "reference": {
+        "total_km": 133,
+        "total_min": 187,
+        "total_wait": 28,
+        "violations": 0,
+        "score": 2145.0
+      },
+      "before": {
+        "total_km": 143.0,
+        "total_min": 207.0,
+        "score": 102371.0,
+        "violations": 1,
+        "total_wait": 22.0,
+        "runtime_ms": 15.885,
+        "total_km_gap_pct": 7.518796992481203,
+        "total_min_gap_pct": 10.695187165775401,
+        "score_gap_pct": 4672.540792540793
+      },
+      "after": {
+        "total_km": 133.0,
+        "total_min": 187.0,
+        "score": 2145.0,
+        "violations": 0,
+        "total_wait": 28.0,
+        "runtime_ms": 210.736,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      }
+    },
+    {
+      "n": 12,
+      "kind": "windows",
+      "return_depot": false,
+      "input_order": "reverse",
+      "reference_kind": "feasible_witness_not_optimum",
+      "reference": {
+        "total_km": 133,
+        "total_min": 187,
+        "total_wait": 28,
+        "violations": 0,
+        "score": 2145.0
+      },
+      "before": {
+        "total_km": 143.0,
+        "total_min": 207.0,
+        "score": 102371.0,
+        "violations": 1,
+        "total_wait": 22.0,
+        "runtime_ms": 15.62,
+        "total_km_gap_pct": 7.518796992481203,
+        "total_min_gap_pct": 10.695187165775401,
+        "score_gap_pct": 4672.540792540793
+      },
+      "after": {
+        "total_km": 133.0,
+        "total_min": 187.0,
+        "score": 2145.0,
+        "violations": 0,
+        "total_wait": 28.0,
+        "runtime_ms": 269.703,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      }
+    },
+    {
+      "n": 12,
+      "kind": "windows",
+      "return_depot": false,
+      "input_order": "interleaved",
+      "reference_kind": "feasible_witness_not_optimum",
+      "reference": {
+        "total_km": 133,
+        "total_min": 187,
+        "total_wait": 28,
+        "violations": 0,
+        "score": 2145.0
+      },
+      "before": {
+        "total_km": 143.0,
+        "total_min": 207.0,
+        "score": 102371.0,
+        "violations": 1,
+        "total_wait": 22.0,
+        "runtime_ms": 15.001,
+        "total_km_gap_pct": 7.518796992481203,
+        "total_min_gap_pct": 10.695187165775401,
+        "score_gap_pct": 4672.540792540793
+      },
+      "after": {
+        "total_km": 133.0,
+        "total_min": 187.0,
+        "score": 2145.0,
+        "violations": 0,
+        "total_wait": 28.0,
+        "runtime_ms": 253.074,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      }
+    },
+    {
+      "n": 12,
+      "kind": "windows",
+      "return_depot": true,
+      "input_order": "forward",
+      "reference_kind": "feasible_witness_not_optimum",
+      "reference": {
+        "total_km": 149,
+        "total_min": 193,
+        "total_wait": 28,
+        "violations": 0,
+        "score": 2221.0
+      },
+      "before": {
+        "total_km": 152.0,
+        "total_min": 213.0,
+        "score": 102447.5,
+        "violations": 1,
+        "total_wait": 27.0,
+        "runtime_ms": 29.343,
+        "total_km_gap_pct": 2.0134228187919465,
+        "total_min_gap_pct": 10.362694300518134,
+        "score_gap_pct": 4512.6744709590275
+      },
+      "after": {
+        "total_km": 149.0,
+        "total_min": 193.0,
+        "score": 2221.0,
+        "violations": 0,
+        "total_wait": 28.0,
+        "runtime_ms": 245.888,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      }
+    },
+    {
+      "n": 12,
+      "kind": "windows",
+      "return_depot": true,
+      "input_order": "reverse",
+      "reference_kind": "feasible_witness_not_optimum",
+      "reference": {
+        "total_km": 149,
+        "total_min": 193,
+        "total_wait": 28,
+        "violations": 0,
+        "score": 2221.0
+      },
+      "before": {
+        "total_km": 152.0,
+        "total_min": 213.0,
+        "score": 102447.5,
+        "violations": 1,
+        "total_wait": 27.0,
+        "runtime_ms": 29.415,
+        "total_km_gap_pct": 2.0134228187919465,
+        "total_min_gap_pct": 10.362694300518134,
+        "score_gap_pct": 4512.6744709590275
+      },
+      "after": {
+        "total_km": 149.0,
+        "total_min": 193.0,
+        "score": 2221.0,
+        "violations": 0,
+        "total_wait": 28.0,
+        "runtime_ms": 351.731,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      }
+    },
+    {
+      "n": 12,
+      "kind": "windows",
+      "return_depot": true,
+      "input_order": "interleaved",
+      "reference_kind": "feasible_witness_not_optimum",
+      "reference": {
+        "total_km": 149,
+        "total_min": 193,
+        "total_wait": 28,
+        "violations": 0,
+        "score": 2221.0
+      },
+      "before": {
+        "total_km": 152.0,
+        "total_min": 213.0,
+        "score": 102447.5,
+        "violations": 1,
+        "total_wait": 27.0,
+        "runtime_ms": 35.764,
+        "total_km_gap_pct": 2.0134228187919465,
+        "total_min_gap_pct": 10.362694300518134,
+        "score_gap_pct": 4512.6744709590275
+      },
+      "after": {
+        "total_km": 149.0,
+        "total_min": 193.0,
+        "score": 2221.0,
+        "violations": 0,
+        "total_wait": 28.0,
+        "runtime_ms": 262.484,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      }
+    },
+    {
+      "n": 15,
+      "kind": "windows",
+      "return_depot": false,
+      "input_order": "forward",
+      "reference_kind": "feasible_witness_not_optimum",
+      "reference": {
+        "total_km": 177,
+        "total_min": 240,
+        "total_wait": 35,
+        "violations": 0,
+        "score": 2754.5
+      },
+      "before": {
+        "total_km": 156.0,
+        "total_min": 250.0,
+        "score": 102858.5,
+        "violations": 1,
+        "total_wait": 35.0,
+        "runtime_ms": 60.504,
+        "total_km_gap_pct": -11.864406779661017,
+        "total_min_gap_pct": 4.166666666666667,
+        "score_gap_pct": 3634.1985841350515
+      },
+      "after": {
+        "total_km": 177.0,
+        "total_min": 240.0,
+        "score": 2754.5,
+        "violations": 0,
+        "total_wait": 35.0,
+        "runtime_ms": 475.097,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      }
+    },
+    {
+      "n": 15,
+      "kind": "windows",
+      "return_depot": false,
+      "input_order": "reverse",
+      "reference_kind": "feasible_witness_not_optimum",
+      "reference": {
+        "total_km": 177,
+        "total_min": 240,
+        "total_wait": 35,
+        "violations": 0,
+        "score": 2754.5
+      },
+      "before": {
+        "total_km": 156.0,
+        "total_min": 250.0,
+        "score": 102858.5,
+        "violations": 1,
+        "total_wait": 35.0,
+        "runtime_ms": 57.284,
+        "total_km_gap_pct": -11.864406779661017,
+        "total_min_gap_pct": 4.166666666666667,
+        "score_gap_pct": 3634.1985841350515
+      },
+      "after": {
+        "total_km": 177.0,
+        "total_min": 240.0,
+        "score": 2754.5,
+        "violations": 0,
+        "total_wait": 35.0,
+        "runtime_ms": 654.204,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      }
+    },
+    {
+      "n": 15,
+      "kind": "windows",
+      "return_depot": false,
+      "input_order": "interleaved",
+      "reference_kind": "feasible_witness_not_optimum",
+      "reference": {
+        "total_km": 177,
+        "total_min": 240,
+        "total_wait": 35,
+        "violations": 0,
+        "score": 2754.5
+      },
+      "before": {
+        "total_km": 156.0,
+        "total_min": 250.0,
+        "score": 102858.5,
+        "violations": 1,
+        "total_wait": 35.0,
+        "runtime_ms": 54.858,
+        "total_km_gap_pct": -11.864406779661017,
+        "total_min_gap_pct": 4.166666666666667,
+        "score_gap_pct": 3634.1985841350515
+      },
+      "after": {
+        "total_km": 177.0,
+        "total_min": 240.0,
+        "score": 2754.5,
+        "violations": 0,
+        "total_wait": 35.0,
+        "runtime_ms": 663.88,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      }
+    },
+    {
+      "n": 15,
+      "kind": "windows",
+      "return_depot": true,
+      "input_order": "forward",
+      "reference_kind": "feasible_witness_not_optimum",
+      "reference": {
+        "total_km": 191,
+        "total_min": 247,
+        "total_wait": 35,
+        "violations": 0,
+        "score": 2838.5
+      },
+      "before": {
+        "total_km": 194.0,
+        "total_min": 256.0,
+        "score": 103017.5,
+        "violations": 1,
+        "total_wait": 59.0,
+        "runtime_ms": 84.438,
+        "total_km_gap_pct": 1.5706806282722514,
+        "total_min_gap_pct": 3.6437246963562755,
+        "score_gap_pct": 3529.2936410075745
+      },
+      "after": {
+        "total_km": 191.0,
+        "total_min": 247.0,
+        "score": 2838.5,
+        "violations": 0,
+        "total_wait": 35.0,
+        "runtime_ms": 1009.523,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      }
+    },
+    {
+      "n": 15,
+      "kind": "windows",
+      "return_depot": true,
+      "input_order": "reverse",
+      "reference_kind": "feasible_witness_not_optimum",
+      "reference": {
+        "total_km": 191,
+        "total_min": 247,
+        "total_wait": 35,
+        "violations": 0,
+        "score": 2838.5
+      },
+      "before": {
+        "total_km": 194.0,
+        "total_min": 256.0,
+        "score": 103017.5,
+        "violations": 1,
+        "total_wait": 59.0,
+        "runtime_ms": 117.85,
+        "total_km_gap_pct": 1.5706806282722514,
+        "total_min_gap_pct": 3.6437246963562755,
+        "score_gap_pct": 3529.2936410075745
+      },
+      "after": {
+        "total_km": 191.0,
+        "total_min": 247.0,
+        "score": 2838.5,
+        "violations": 0,
+        "total_wait": 35.0,
+        "runtime_ms": 708.772,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      }
+    },
+    {
+      "n": 15,
+      "kind": "windows",
+      "return_depot": true,
+      "input_order": "interleaved",
+      "reference_kind": "feasible_witness_not_optimum",
+      "reference": {
+        "total_km": 191,
+        "total_min": 247,
+        "total_wait": 35,
+        "violations": 0,
+        "score": 2838.5
+      },
+      "before": {
+        "total_km": 194.0,
+        "total_min": 256.0,
+        "score": 103017.5,
+        "violations": 1,
+        "total_wait": 59.0,
+        "runtime_ms": 99.295,
+        "total_km_gap_pct": 1.5706806282722514,
+        "total_min_gap_pct": 3.6437246963562755,
+        "score_gap_pct": 3529.2936410075745
+      },
+      "after": {
+        "total_km": 191.0,
+        "total_min": 247.0,
+        "score": 2838.5,
+        "violations": 0,
+        "total_wait": 35.0,
+        "runtime_ms": 653.618,
+        "total_km_gap_pct": 0.0,
+        "total_min_gap_pct": 0.0,
+        "score_gap_pct": 0.0
+      }
+    }
+  ],
+  "ablation": [
+    {
+      "n": 9,
+      "variants": {
+        "legacy": {
+          "total_km": 108.0,
+          "total_min": 216.0,
+          "score": 2268.0,
+          "violations": 0,
+          "total_wait": 0.0,
+          "runtime_ms": 4.25
+        },
+        "relocation_only": {
+          "total_km": 108.0,
+          "total_min": 216.0,
+          "score": 2268.0,
+          "violations": 0,
+          "total_wait": 0.0,
+          "runtime_ms": 12.67
+        },
+        "multistart_only": {
+          "total_km": 96.0,
+          "total_min": 192.0,
+          "score": 2016.0,
+          "violations": 0,
+          "total_wait": 0.0,
+          "runtime_ms": 39.764
+        },
+        "combined": {
+          "total_km": 96.0,
+          "total_min": 192.0,
+          "score": 2016.0,
+          "violations": 0,
+          "total_wait": 0.0,
+          "runtime_ms": 70.301
+        }
+      }
+    },
+    {
+      "n": 10,
+      "variants": {
+        "legacy": {
+          "total_km": 110.0,
+          "total_min": 220.0,
+          "score": 2310.0,
+          "violations": 0,
+          "total_wait": 0.0,
+          "runtime_ms": 9.838
+        },
+        "relocation_only": {
+          "total_km": 110.0,
+          "total_min": 220.0,
+          "score": 2310.0,
+          "violations": 0,
+          "total_wait": 0.0,
+          "runtime_ms": 30.828
+        },
+        "multistart_only": {
+          "total_km": 110.0,
+          "total_min": 220.0,
+          "score": 2310.0,
+          "violations": 0,
+          "total_wait": 0.0,
+          "runtime_ms": 53.101
+        },
+        "combined": {
+          "total_km": 98.0,
+          "total_min": 196.0,
+          "score": 2058.0,
+          "violations": 0,
+          "total_wait": 0.0,
+          "runtime_ms": 127.027
+        }
+      }
+    },
+    {
+      "n": 12,
+      "variants": {
+        "legacy": {
+          "total_km": 110.0,
+          "total_min": 220.0,
+          "score": 2310.0,
+          "violations": 0,
+          "total_wait": 0.0,
+          "runtime_ms": 44.423
+        },
+        "relocation_only": {
+          "total_km": 110.0,
+          "total_min": 220.0,
+          "score": 2310.0,
+          "violations": 0,
+          "total_wait": 0.0,
+          "runtime_ms": 61.922
+        },
+        "multistart_only": {
+          "total_km": 108.0,
+          "total_min": 216.0,
+          "score": 2268.0,
+          "violations": 0,
+          "total_wait": 0.0,
+          "runtime_ms": 119.354
+        },
+        "combined": {
+          "total_km": 102.0,
+          "total_min": 204.0,
+          "score": 2142.0,
+          "violations": 0,
+          "total_wait": 0.0,
+          "runtime_ms": 167.796
+        }
+      }
+    },
+    {
+      "n": 15,
+      "variants": {
+        "legacy": {
+          "total_km": 110.0,
+          "total_min": 220.0,
+          "score": 2310.0,
+          "violations": 0,
+          "total_wait": 0.0,
+          "runtime_ms": 116.425
+        },
+        "relocation_only": {
+          "total_km": 106.0,
+          "total_min": 212.0,
+          "score": 2226.0,
+          "violations": 0,
+          "total_wait": 0.0,
+          "runtime_ms": 189.48
+        },
+        "multistart_only": {
+          "total_km": 106.0,
+          "total_min": 212.0,
+          "score": 2226.0,
+          "violations": 0,
+          "total_wait": 0.0,
+          "runtime_ms": 268.846
+        },
+        "combined": {
+          "total_km": 106.0,
+          "total_min": 212.0,
+          "score": 2226.0,
+          "violations": 0,
+          "total_wait": 0.0,
+          "runtime_ms": 372.169
+        }
+      }
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-"""Punto 1: deterministic characterization, no production algorithm changes."""
+"""Punto 1 fixtures preserved; Punto 2 enforces measured quality improvements."""
 import json
 import os
 from copy import deepcopy
@@ -41,8 +41,8 @@ def ids(result):
 
 
 @pytest.mark.parametrize("n,expected,reference", [
-    (5, 70, 70), (8, 96, 96), (9, 108, 96),
-    (10, 110, 98), (12, 110, 102), (15, 110, 106),
+    (5, 70, 70), (8, 96, 96), (9, 96, 96),
+    (10, 98, 98), (12, 102, 102), (15, 106, 106),
 ])
 def test_quality_against_exact_reference(n, expected, reference, record_property):
     rows, matrix = deliveries(n), metric_matrix(GRID[:n+1])
@@ -96,7 +96,9 @@ def test_nine_stops_are_trapped_in_a_local_minimum():
     before = opt._evaluate_fixed_sequence(greedy, matrix, [])
     local = opt._local_optimize_sequence(greedy, matrix, [])
     assert local["score"] <= before["score"]
-    assert opt._best_internal_sequence(rows, matrix, []) == local
+    improved = opt._best_internal_sequence(rows, matrix, [])
+    assert improved["total_km"] == 96
+    assert improved["score"] < local["score"]
     lookup = {d["customer_id"]: d for d in rows}
     sequence = [lookup[i] for i in ids(local)]
     # Exhaust the actual neighborhood to distinguish a local minimum from the round cap.
@@ -296,7 +298,6 @@ def test_empty_route_and_zero_reference():
     assert report["delta_km"] == report["delta_min"] == 0
 
 
-@pytest.mark.xfail(strict=True, reason="Known bug: parse_hhmm('00:00') is falsy and falls back to 08:00")
 def test_midnight_departure_is_preserved():
     result = opt._evaluate_fixed_sequence(deliveries(1), constant_matrix(1), [], start_time="00:00")
     assert result["return_time"] == "00:10"
