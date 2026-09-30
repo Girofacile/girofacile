@@ -112,9 +112,10 @@ def evaluate_legs(snapshot, legs, plan, *, return_depot=None):
               for i, leg in enumerate(legs[:len(rows)])}
     if plan.rientro_deposito and len(legs) > len(rows):
         matrix[len(rows), 0] = {"km": snapshot["base_legs"][-1]["km"], "min": legs[-1]["duration"] / 60}
+    vehicle = {"ha_sponda": bool(plan.vehicle.ha_sponda), "accesso_ztl": bool(plan.vehicle.accesso_ztl)} if plan.vehicle else None
     include_return = plan.rientro_deposito if return_depot is None else return_depot
     return _evaluate_fixed_sequence(rows[:min(len(rows), len(legs))], matrix, [],
-                                    return_depot=include_return, start_time=plan.orario_partenza)
+                                    vehicle=vehicle, return_depot=include_return, start_time=plan.orario_partenza)
 
 
 def _persist_timing(plan, result, departure):

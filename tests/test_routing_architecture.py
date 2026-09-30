@@ -440,3 +440,19 @@ def test_platform_settings_override_env_for_traffic(routing_env, monkeypatch):
     ctx[1].commit()
     assert traffic_provider.get_traffic_provider(ctx[1]).name == "none"
     assert traffic_provider.get_traffic_provider().name == "mapbox"
+
+
+def test_traffic_refresh_preserves_ztl_and_tail_lift_warnings(routing_env):
+    ctx = routing_env
+    ctx[2].has_ztl = True
+    ctx[2].needs_tail_lift = True
+    ctx[1].commit()
+    data = payload(ctx)
+    data["consegne"][0].update(ztl=True, sponda=True)
+    response = ctx[0].post("/api/routes/recalculate-manual", json=data)
+    assert response.status_code == 200, response.text
+    programmed = ctx[0].post(f"/api/routes/{response.json()['id']}/program", json={})
+    assert programmed.status_code == 200, programmed.text
+    warning = programmed.json()["consegne"][0]["warning"]
+    assert "Serve sponda ma il mezzo selezionato non la possiede" in warning
+    assert "Cliente in ZTL: verificare accesso mezzo" in warning

@@ -87,7 +87,7 @@ def evaluate_scenario(data, allow_synthetic=False):
     def forbidden(*args, **kwargs):
         raise AssertionError("Real-route runner must stay offline")
     with ExitStack() as stack, redirect_stdout(io.StringIO()):
-        for name in ("osrm_route", "geocode", "google_route_matrix", "google_route_polyline", "build_distance_matrix"):
+        for name in ("osrm_route", "geocode", "build_distance_matrix"):
             stack.enter_context(patch.object(optimizer, name, forbidden))
         stack.enter_context(patch.object(optimizer.requests.sessions.Session, "request", forbidden))
         options = dict(start_time=data["start_time"], return_depot=data["return_depot"])

@@ -171,6 +171,9 @@ def update_customer(item_id: int, data: CustomerIn, db: Session = Depends(get_db
     new_key = "|".join([
         payload.get("indirizzo") or "", payload.get("comune") or "", payload.get("provincia") or ""
     ]).strip().lower()
+    payload["stato_geocodifica"] = payload.get("stato_geocodifica") or (
+        "da_verificare" if old_key != new_key or old_coordinates != (payload.get("lat"), payload.get("lon"))
+        else item.stato_geocodifica or "da_verificare")
     for k, v in payload.items():
         setattr(item, k, v)
     if old_key != new_key and (payload.get("lat") is None or payload.get("lon") is None):
