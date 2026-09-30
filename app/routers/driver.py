@@ -1,3 +1,4 @@
+from ..services.route_enrichment import routing_metadata, json_data, TIMING_DETAILS
 """
 Portale autista — autenticazione separata, giri assegnati, chat, monitoraggio.
 """
@@ -364,6 +365,7 @@ def get_driver_route_detail(route_id: int, da: DriverAccount = Depends(get_curre
             "tempo_scarico_min": d.tempo_scarico_min, "ztl": d.ztl, "sponda": d.sponda,
             "note": d.note, "arrivo_stimato": time_to_hhmm(d.arrivo_stimato), "partenza_stimata": time_to_hhmm(d.partenza_stimata),
             "km_tappa": d.km_tappa, "warning": d.warning,
+            **{k: v for k, v in json_data(d.optimizer_details).items() if k in TIMING_DETAILS},
             "status": ds.status if ds else "in_attesa",
             "motivo_mancata": ds.motivo_mancata if ds else None,
             "tempo_scarico_effettivo": ds.tempo_scarico_effettivo if ds else None,
@@ -377,6 +379,7 @@ def get_driver_route_detail(route_id: int, da: DriverAccount = Depends(get_curre
 
     return {
         "route": {
+            **routing_metadata(r),
             "id": r.id, "nome": r.nome, "data_giro": date_to_iso(r.data_giro),
             "orario_partenza": time_to_hhmm(r.orario_partenza), "orario_rientro_stimato": time_to_hhmm(r.orario_rientro_stimato),
             "totale_km": r.totale_km, "totale_minuti": r.totale_minuti,

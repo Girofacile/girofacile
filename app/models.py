@@ -205,6 +205,7 @@ class ApiUsageLog(Base):
     __tablename__ = "api_usage_logs"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), index=True, nullable=True)
+    route_plan_id: Mapped[int | None] = mapped_column(ForeignKey("route_plans.id", ondelete="SET NULL"), nullable=True, index=True)
     provider: Mapped[str] = mapped_column(String(80), default="google", index=True)
     service: Mapped[str] = mapped_column(String(120), index=True, nullable=False)
     action: Mapped[str | None] = mapped_column(String(180), nullable=True)
@@ -414,6 +415,7 @@ class Vehicle(Base):
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, index=True)
     nome: Mapped[str] = mapped_column(String(150), nullable=False)
     targa: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    toll_class: Mapped[str] = mapped_column(String(10), default="B")
     consumo_l_100km: Mapped[float] = mapped_column(Float, default=8.5)
     alimentazione: Mapped[str] = mapped_column(String(40), default="gasolio")
     consumo_primario_100km: Mapped[float] = mapped_column(Float, default=8.5)
@@ -486,6 +488,19 @@ class RoutePlan(Base):
     litri_stimati: Mapped[float] = mapped_column(Float, default=0)
     costo_carburante: Mapped[float] = mapped_column(Float, default=0)
     costo_totale: Mapped[float] = mapped_column(Float, default=0)
+    base_routing_provider: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    routing_snapshot_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    traffic_provider: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    traffic_calculated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    traffic_departure_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    traffic_status: Mapped[str | None] = mapped_column(String(30), default="legacy", nullable=True)
+    traffic_version: Mapped[int] = mapped_column(Integer, default=0)
+    traffic_result_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    road_geometry_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    toll_provider: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    toll_status: Mapped[str | None] = mapped_column(String(30), default="unavailable", nullable=True)
+    toll_estimated_eur: Mapped[float | None] = mapped_column(Float, nullable=True)
+    toll_details_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     google_maps_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     status: Mapped[str] = mapped_column(String(30), default="programmato")
     started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
@@ -625,9 +640,9 @@ class PasswordResetToken(Base):
 class DistanceCache(Base):
     """Cache aziendale delle distanze/tempi tra due punti del giro.
 
-    Ogni riga rappresenta una tratta A->B già calcolata con Google Routes.
-    La cache è separata per azienda tramite user_id e scade automaticamente
-    dopo un periodo configurabile, di default 15 giorni.
+    Ogni riga rappresenta una tratta stradale OSRM A->B, senza traffico.
+    La cache è separata per azienda, coordinate e versione dati; non scade
+    salvo TTL esplicito. Le tratte inverse rimangono distinte.
     """
     __tablename__ = "distance_cache"
     __table_args__ = (

@@ -14,6 +14,8 @@
   <link rel="stylesheet" href="/static/mobile/mobile.css?v=5000">
 <script src="/api/billing/catalog.js"></script>
 <script>document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('.plan-card[data-plan]').forEach(el=>{const p=window.GF_PLANS[el.dataset.plan];if(p){el.querySelector('.plan-price').textContent=`€${p.price_eur}/mese`;el.querySelector('.plan-desc').textContent=`${p.max_customers} clienti`;}});});</script>
+<link rel="stylesheet" href="/static/routing-summary.css">
+<script src="/static/routing-summary.js"></script>
 </head>
 <body>
 

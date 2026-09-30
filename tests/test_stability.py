@@ -135,26 +135,24 @@ def test_past_departure_is_not_silently_moved_to_tomorrow(monkeypatch):
         optimizer._route_departure_time_iso('08:00', '2030-01-15')
 
 
-def test_traffic_cache_separates_departures_and_invalidates_all_versions(env, monkeypatch):
+def test_base_cache_reuses_departures_and_invalidates_all_versions(env, monkeypatch):
     from app import optimizer
-    from app.services import distance_cache as cache
+    from app.services import distance_cache as cache, road_routing
     from app.models import DistanceCache
     _, db, owner, *_ = env
-    monkeypatch.setattr(optimizer, 'google_routes_enabled', lambda db: True)
-    monkeypatch.setattr(optimizer, 'google_maps_api_key', lambda db: 'test')
-    calls=[]
+    calls = []
     def matrix(points, **kwargs):
         calls.append(kwargs)
-        return {(0,1):{'km':1,'min':5},(1,0):{'km':1,'min':6}}
-    monkeypatch.setattr(optimizer, 'google_route_matrix', matrix)
-    monkeypatch.setattr(optimizer, 'local_now', lambda: datetime(2029,1,1,tzinfo=timezone.utc))
-    keys=[cache.deposit_key(1,user_id=owner.id),cache.customer_key(1,user_id=owner.id)]
-    for clock in ['08:00','08:00','09:00']:
-        optimizer.build_distance_matrix(db,owner.id,[{},{}],keys,clock,route_date='2030-01-15')
-    assert len(calls)==2
-    assert calls[0]['route_date']=='2030-01-15'
-    cache.invalidate_key(db,keys[1],user_id=owner.id)
-    assert db.query(DistanceCache).count()==0
+        return {(0, 1): {"km": 1, "min": 5}, (1, 0): {"km": 1, "min": 6}}
+    monkeypatch.setattr(road_routing, "osrm_table", matrix)
+    keys = [cache.deposit_key(1, user_id=owner.id), cache.customer_key(1, user_id=owner.id)]
+    for clock, day in [("08:00", "2030-01-15"), ("08:00", "2030-01-15"), ("09:00", "2030-07-15")]:
+        optimizer.build_distance_matrix(db, owner.id, [{}, {}], keys, clock, route_date=day)
+    assert len(calls) == 1
+    assert all("|departure=" not in row.origin_key for row in db.query(DistanceCache).all())
+    assert all(row.expires_at is None for row in db.query(DistanceCache).all())
+    cache.invalidate_key(db, keys[1], user_id=owner.id)
+    assert db.query(DistanceCache).count() == 0
 
 
 def test_manual_route_respects_same_optional_preferences(env):

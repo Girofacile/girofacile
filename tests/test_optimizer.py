@@ -27,7 +27,7 @@ def offline(monkeypatch):
     def forbidden(*args, **kwargs):
         pytest.fail("Optimizer tests must never access external services")
     monkeypatch.setattr(opt.requests.sessions.Session, "request", forbidden)
-    for name in ("osrm_route", "geocode", "google_route_matrix", "google_route_polyline"):
+    for name in ("osrm_route", "geocode"):
         monkeypatch.setattr(opt, name, forbidden)
 
 

@@ -2099,18 +2099,18 @@ async function lookupVehiclePlateV896(){
 }
 function editVehicle(id){
   const x = vehiclesCache.find(v=>v.id===id); if(!x) return;
-  set("vId",x.id); set("vNome",x.nome); set("vTarga",x.targa); set("vMarca",x.marca||""); set("vModello",x.modello||""); set("vAnnoImmatricolazione",x.anno_immatricolazione||""); set("vCarrozzeria",x.carrozzeria||""); set("vCilindrata",x.cilindrata_cc||""); set("vPotenzaKw",x.potenza_kw||""); set("vClasseEuro",x.classe_euro||""); set("vFuelType",x.alimentazione||"gasolio"); set("vConsumo",x.consumo_primario_100km ?? x.consumo_l_100km ?? 0); set("vConsumoKwh",x.consumo_kwh_100km||0); set("vKg",x.capacita_kg); set("vColli",x.capacita_colli); updateVehicleEnergyFieldsV895();
+  set("vId",x.id); set("vNome",x.nome); set("vTarga",x.targa); set("vMarca",x.marca||""); set("vModello",x.modello||""); set("vAnnoImmatricolazione",x.anno_immatricolazione||""); set("vCarrozzeria",x.carrozzeria||""); set("vCilindrata",x.cilindrata_cc||""); set("vPotenzaKw",x.potenza_kw||""); set("vClasseEuro",x.classe_euro||""); set("vTollClass",x.toll_class||"B"); set("vFuelType",x.alimentazione||"gasolio"); set("vConsumo",x.consumo_primario_100km ?? x.consumo_l_100km ?? 0); set("vConsumoKwh",x.consumo_kwh_100km||0); set("vKg",x.capacita_kg); set("vColli",x.capacita_colli); updateVehicleEnergyFieldsV895();
   const t=document.getElementById("vTarga"); if(t)t.dataset.lookupProvider=x.lookup_provider||"";
   setVehiclePlateLookupStateV896(x.lookup_provider?`Dati targa già acquisiti · Fonte ${String(x.lookup_provider).toUpperCase()}`:"Puoi aggiornare i dati del mezzo effettuando una nuova ricerca targa.",x.lookup_provider?"ok":"");
   clearVehicleLookupHighlightsV8966(); if(x.lookup_provider) markVehicleLookupResultV8966({...x,provider:x.lookup_provider});
   set("vSponda",x.ha_sponda?"true":"false"); set("vZtl",x.accesso_ztl?"true":"false"); set("vPhotoUrl", x.photo_url || ""); clearFileInput("vPhotoFile"); setImagePreview("vehiclePhotoPreview","vPhotoUrl","🚚");
 }
-function resetVehicleForm(){ clearVehicleLookupHighlightsV8966(); ["vId","vNome","vTarga","vMarca","vModello","vAnnoImmatricolazione","vCarrozzeria","vCilindrata","vPotenzaKw","vClasseEuro","vPhotoUrl"].forEach(id=>set(id,"")); const t=document.getElementById("vTarga"); if(t)t.dataset.lookupProvider=""; setVehiclePlateLookupStateV896("Inserisci la targa per compilare automaticamente i dati disponibili."); set("vFuelType","gasolio"); set("vConsumo",8.5); set("vConsumoKwh",0); updateVehicleEnergyFieldsV895(); set("vKg",1000); set("vColli",100); set("vSponda","false"); set("vZtl","false"); clearFileInput("vPhotoFile"); setImagePreview("vehiclePhotoPreview","vPhotoUrl","🚚"); }
+function resetVehicleForm(){ clearVehicleLookupHighlightsV8966(); ["vId","vNome","vTarga","vMarca","vModello","vAnnoImmatricolazione","vCarrozzeria","vCilindrata","vPotenzaKw","vClasseEuro","vPhotoUrl"].forEach(id=>set(id,"")); const t=document.getElementById("vTarga"); if(t)t.dataset.lookupProvider=""; setVehiclePlateLookupStateV896("Inserisci la targa per compilare automaticamente i dati disponibili."); set("vTollClass","B"); set("vFuelType","gasolio"); set("vConsumo",8.5); set("vConsumoKwh",0); updateVehicleEnergyFieldsV895(); set("vKg",1000); set("vColli",100); set("vSponda","false"); set("vZtl","false"); clearFileInput("vPhotoFile"); setImagePreview("vehiclePhotoPreview","vPhotoUrl","🚚"); }
 async function saveVehicle(){
   return withButtonLoading("saveVehicleBtn", "Salvataggio...", async()=>{
     normalizeVehiclePlateInputV896();
     const plateEl=document.getElementById("vTarga");
-    const payload = {nome:val("vNome"), targa:val("vTarga"), marca:val("vMarca")||null, modello:val("vModello")||null, anno_immatricolazione:val("vAnnoImmatricolazione")?parseInt(val("vAnnoImmatricolazione")):null, cilindrata_cc:val("vCilindrata")?parseInt(val("vCilindrata")):null, potenza_kw:val("vPotenzaKw")?parseFloat(val("vPotenzaKw")):null, classe_euro:val("vClasseEuro")||null, carrozzeria:val("vCarrozzeria")||null, lookup_provider:plateEl?.dataset?.lookupProvider||null, alimentazione:val("vFuelType")||"gasolio", consumo_primario_100km:parseFloat(val("vConsumo")||0), consumo_kwh_100km:parseFloat(val("vConsumoKwh")||0), consumo_l_100km:parseFloat(val("vConsumo")||0), capacita_kg:parseFloat(val("vKg")||1000), capacita_colli:parseInt(val("vColli")||100), ha_sponda:boolVal("vSponda"), accesso_ztl:boolVal("vZtl"), photo_url:val("vPhotoUrl") || null};
+    const payload = {nome:val("vNome"), targa:val("vTarga"), toll_class:val("vTollClass")||"B", marca:val("vMarca")||null, modello:val("vModello")||null, anno_immatricolazione:val("vAnnoImmatricolazione")?parseInt(val("vAnnoImmatricolazione")):null, cilindrata_cc:val("vCilindrata")?parseInt(val("vCilindrata")):null, potenza_kw:val("vPotenzaKw")?parseFloat(val("vPotenzaKw")):null, classe_euro:val("vClasseEuro")||null, carrozzeria:val("vCarrozzeria")||null, lookup_provider:plateEl?.dataset?.lookupProvider||null, alimentazione:val("vFuelType")||"gasolio", consumo_primario_100km:parseFloat(val("vConsumo")||0), consumo_kwh_100km:parseFloat(val("vConsumoKwh")||0), consumo_l_100km:parseFloat(val("vConsumo")||0), capacita_kg:parseFloat(val("vKg")||1000), capacita_colli:parseInt(val("vColli")||100), ha_sponda:boolVal("vSponda"), accesso_ztl:boolVal("vZtl"), photo_url:val("vPhotoUrl") || null};
     if(!payload.nome){ alert("Inserisci il nome del mezzo"); return; }
     const id = val("vId");
     await api(id?`/api/vehicles/${id}`:"/api/vehicles", {method:id?"PUT":"POST", body:JSON.stringify(payload)});
@@ -3051,6 +3051,7 @@ function renderRouteResult(r, targetId="routeResult", fromHistory=false){
       <div><h2>${title}</h2><p>Verifica il percorso, le fermate e le informazioni principali${fromHistory ? " del giro salvato" : ""}.</p></div>
 
     </div>
+    ${window.GiroFacileRouting.summaryHtml(r, `refreshRouteTraffic(${Number(r.id)}, '${targetId}', 'preview')`)}
     <div class="result-cards">
           <div class="mini-card"><span class="mini-icon blue">${icon("clock")}</span><div><small>Partenza</small><strong>${esc(r.orario_partenza||"-")}</strong></div></div>
           <div class="mini-card"><span class="mini-icon orange">${icon("return")}</span><div><small>Rientro stimato</small><strong>${esc(r.orario_rientro_stimato||"-")}</strong></div></div>
@@ -3101,7 +3102,7 @@ function renderRouteResult(r, targetId="routeResult", fromHistory=false){
         <div class="summary-row"><span>Mezzo</span><strong>${esc(r.vehicle_name||"Nessun mezzo")}</strong></div>
         <div class="summary-row"><span>Avvisi critici</span><strong>${counts.critici}</strong></div>
         <div class="summary-row"><span>Soste con attesa</span><strong>${counts.attesa}</strong></div>
-        <div class="summary-highlight"><span>Costo energetico stimato</span><strong>€ ${r.costo_totale ?? r.costo_carburante ?? "-"}</strong></div>
+        <div class="summary-highlight"><span>Costo operativo stimato</span><strong>€ ${r.costo_totale ?? r.costo_carburante ?? "-"}</strong></div>
         <button class="btn-secondary full" onclick="printStopsTable()">Stampa dettaglio fermate</button>
         ${r.id && currentSessionUser?.limits?.has_ai ? `<button class="btn-secondary full" onclick="explainRouteSequenceAIv67(${r.id})">Spiega sequenza giro AI</button><div id="routeAiExplanationV67" class="ai-explanation-v67 hidden"></div>` : ""}
         </details>
@@ -3111,31 +3112,22 @@ function renderRouteResult(r, targetId="routeResult", fromHistory=false){
   if(r.id){ setTimeout(()=>renderRouteGoogleMapV74(r.id, `routeGoogleMapV74_${r.id}`), 120); }
 }
 
-async function loadGoogleMapsScriptV74(apiKey){
-  if(window.google && window.google.maps) return true;
-  if(!apiKey) return false;
-  if(window.__gfGoogleMapsLoadingV74){
-    return window.__gfGoogleMapsLoadingV74;
-  }
-  window.__gfGoogleMapsLoadingV74 = new Promise((resolve, reject)=>{
-    const existing = document.querySelector('script[data-gf-google-maps-v74="1"]');
-    if(existing){
-      existing.addEventListener('load', ()=>resolve(true));
-      existing.addEventListener('error', reject);
-      return;
-    }
+async function loadRoadMapLibrary(){
+  if(window.L) return true;
+  if(window.__gfRoadMapLoading) return window.__gfRoadMapLoading;
+  window.__gfRoadMapLoading = new Promise((resolve, reject)=>{
+    const css = document.createElement('link');
+    css.rel = 'stylesheet';
+    css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    document.head.appendChild(css);
     const script = document.createElement('script');
-    script.dataset.gfGoogleMapsV74 = '1';
-    script.async = true;
-    script.defer = true;
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}`;
+    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
     script.onload = ()=>resolve(true);
-    script.onerror = ()=>reject(new Error('Impossibile caricare Google Maps JS'));
+    script.onerror = ()=>reject(new Error('Impossibile caricare la mappa'));
     document.head.appendChild(script);
   });
-  return window.__gfGoogleMapsLoadingV74;
+  return window.__gfRoadMapLoading;
 }
-
 
 
 function decodeGooglePolylineV75(encoded){
@@ -3177,93 +3169,59 @@ function markerLabelV74(text){
 async function renderRouteGoogleMapV74(routeId, elementId){
   const el = document.getElementById(elementId);
   if(!el) return;
+  if(el.__gfRoadMap){el.__gfRoadMap.remove();el.__gfRoadMap=null;}
   el.innerHTML = '<div class="route-map-loading-v74">Caricamento mappa...</div>';
   try{
     const data = await api(`/api/routes/${routeId}/map-data`);
-    if(!data.api_key){
-      el.innerHTML = '<div class="route-map-empty-v74"><strong>Chiave Google non configurata</strong><p>Inserisci la chiave in Super Admin → Server / Manutenzione oppure Impostazioni SaaS.</p></div>';
-      return;
-    }
-    await loadGoogleMapsScriptV74(data.api_key);
-    if(!window.google || !window.google.maps){ throw new Error('Google Maps non disponibile'); }
-
+    await loadRoadMapLibrary();
     const depot = data.depot || {};
-    const validStops = (data.stops || []).filter(s=>s.lat !== null && s.lon !== null);
     const points = [];
-    if(depot.lat !== null && depot.lon !== null) points.push({type:'deposit', title: depot.name || 'Deposito', address: depot.address || '', lat: depot.lat, lon: depot.lon});
-    validStops.forEach(s=>points.push({type:'stop', order:s.order, title:s.name, address:s.address, arrival:s.arrival, departure:s.departure, lat:s.lat, lon:s.lon}));
-    if(data.return_depot && depot.lat !== null && depot.lon !== null) points.push({type:'return', title:'Rientro deposito', address: depot.address || '', lat: depot.lat, lon: depot.lon});
-
+    if(depot.lat != null && depot.lon != null) points.push({lat:depot.lat,lon:depot.lon,name:depot.name,address:depot.address,order:'D'});
+    const stops = data.stops || [];
+    stops.filter(s=>s.lat != null && s.lon != null).forEach(s=>points.push(s));
     if(points.length < 2){
-      const missing = (data.stops || []).length - validStops.length;
-      el.innerHTML = `<div class="route-map-empty-v74"><strong>Coordinate insufficienti</strong><p>Verifica gli indirizzi clienti con Google per visualizzare la mappa del giro.${missing>0 ? ` Fermate senza coordinate: ${missing}.` : ''}</p>${data.google_maps_url ? `<a target="_blank" href="${esc(data.google_maps_url)}"><button class="btn-primary">Apri Google Maps</button></a>` : ''}</div>`;
+      el.innerHTML = '<div class="route-map-empty-v74">Coordinate insufficienti per visualizzare il giro.</div>';
       return;
     }
-
-    const map = new google.maps.Map(el, {
-      center: {lat: points[0].lat, lng: points[0].lon},
-      zoom: 12,
-      mapTypeControl: false,
-      streetViewControl: false,
-      fullscreenControl: true,
+    el.innerHTML = '';
+    const map = L.map(el);
+    el.__gfRoadMap = map;
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom:19, attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(map);
+    const bounds = L.latLngBounds(points.map(p=>[p.lat,p.lon]));
+    points.forEach(p=>{
+      L.marker([p.lat,p.lon], {icon:L.divIcon({className:'gf-road-marker',html:esc(p.order),iconSize:[30,30]})})
+       .addTo(map).bindPopup('<strong>'+esc(p.name||'Deposito')+'</strong><br>'+esc(p.address||'')+
+         (p.arrival ? '<br>Arrivo previsto: '+esc(p.arrival) : ''));
     });
-    const bounds = new google.maps.LatLngBounds();
-    const path = [];
-    const info = new google.maps.InfoWindow();
-
-    points.forEach((p, idx)=>{
-      const pos = {lat:p.lat, lng:p.lon};
-      bounds.extend(pos);
-      path.push(pos);
-      const label = p.type === 'deposit' ? 'D' : (p.type === 'return' ? 'R' : p.order);
-      const marker = new google.maps.Marker({
-        position: pos,
-        map,
-        label: markerLabelV74(label),
-        title: p.title || '',
-      });
-      marker.addListener('click', ()=>{
-        const arrival = p.arrival ? `<br><small>Arrivo previsto: ${esc(p.arrival)}</small>` : '';
-        const departure = p.departure ? `<br><small>Ripartenza: ${esc(p.departure)}</small>` : '';
-        info.setContent(`<div class="route-map-popup-v74"><strong>${p.type==='stop' ? `${p.order}. ` : ''}${esc(p.title||'Fermata')}</strong><br><span>${esc(p.address||'')}</span>${arrival}${departure}</div>`);
-        info.open(map, marker);
-      });
-    });
-
-    const encodedRoadPolyline = data.road_polyline && data.road_polyline.encoded_polyline;
-    const roadPath = encodedRoadPolyline ? decodeGooglePolylineV75(encodedRoadPolyline) : [];
-    if(roadPath.length > 1){
-      roadPath.forEach(pos=>bounds.extend(pos));
-      new google.maps.Polyline({
-        path: roadPath,
-        geodesic: false,
-        strokeOpacity: 0.95,
-        strokeWeight: 5,
-        map,
-      });
-    }else{
-      new google.maps.Polyline({
-        path,
-        geodesic: true,
-        strokeOpacity: 0.45,
-        strokeWeight: 4,
-        map,
-      });
-      const warnRoad = document.createElement('div');
-      warnRoad.className = 'route-map-warn-v74';
-      warnRoad.textContent = 'Percorso stradale Google non disponibile: visualizzazione provvisoria con linea diretta tra le fermate.';
-      el.appendChild(warnRoad);
+    const encoded = data.road_polyline?.encoded_polylines || (data.road_polyline?.encoded_polyline ? [data.road_polyline.encoded_polyline] : []);
+    for(const line of encoded){
+      const path = decodeGooglePolylineV75(line).map(p=>[p.lat,p.lng]);
+      if(path.length>1){L.polyline(path,{color:'#2563eb',weight:5}).addTo(map);path.forEach(p=>bounds.extend(p));}
     }
-    map.fitBounds(bounds);
-    if((data.stops || []).length !== validStops.length){
-      const warn = document.createElement('div');
-      warn.className = 'route-map-warn-v74';
-      warn.textContent = `${(data.stops||[]).length-validStops.length} fermate senza coordinate: verifica gli indirizzi con Google.`;
-      el.appendChild(warn);
+    if(!encoded.length){
+      const path=points.map(p=>[p.lat,p.lon]);
+      if(data.return_depot)path.push(path[0]);
+      L.polyline(path,{color:'#64748b',weight:3,dashArray:'5 7'}).addTo(map);
+      const note=document.createElement('div');note.className='route-map-warn-v74';
+      note.textContent='Anteprima dell’ordine delle fermate. Il percorso stradale viene salvato alla programmazione.';
+      el.appendChild(note);
     }
+    map.fitBounds(bounds,{padding:[25,25]});
   }catch(e){
-    el.innerHTML = `<div class="route-map-empty-v74"><strong>Mappa non disponibile</strong><p>${esc(e.message || 'Errore durante il caricamento della mappa.')}</p></div>`;
+    el.innerHTML = '<div class="route-map-empty-v74"><strong>Mappa non disponibile</strong><p>'+esc(e.message)+'</p></div>';
   }
+}
+
+async function refreshRouteTraffic(routeId, targetId="routeResult", context="preview"){
+  try{
+    const r=await api(`/api/routes/${routeId}/refresh-traffic`,{method:"POST"});
+    if(context==="scheduled"){await loadDashboardScheduledPage(routeId);}
+    else if(context==="preview"){renderRouteResult(r,targetId);}
+    else{renderUnifiedRouteView(r,targetId,context);}
+    toast(r.traffic_status==="updated" ? "ETA aggiornati" : "Salvati ETA senza traffico");
+  }catch(e){alert(e.message);}
 }
 
 async function explainRouteSequenceAIv67(routeId){
@@ -3304,7 +3262,7 @@ async function optimizeRoute(){
     const setText = (id,val)=>{ const el=document.getElementById(id); if(el) el.textContent=val; };
     setText("summaryKm", r.totale_km + " km");
     setText("summaryTime", Math.round(r.totale_minuti) + " min");
-    setText("summaryCost", "€ " + r.costo_carburante);
+    setText("summaryCost", "€ " + (r.costo_totale ?? r.costo_carburante));
     loadRoutes();
     loadDashboardRoutes();
     await loadVehicles();
@@ -3341,7 +3299,7 @@ async function loadRoutes(){
 
   rows.forEach(r=>{
     if(!body) return;
-    body.innerHTML += `<tr><td>${esc(r.data_giro)}</td><td><strong>${esc(r.nome)}</strong></td><td>${r.orario_partenza||""}</td><td>${r.orario_rientro_stimato||""}</td><td>${esc(r.driver_name||"-")}</td><td>${r.totale_km}</td><td>€ ${r.costo_carburante}</td><td class="row-actions"><button onclick="openSavedRoute(${r.id})">Apri giro</button>${r.google_maps_url?`<a target="_blank" href="${r.google_maps_url}"><button>Maps</button></a><button onclick="copyText('${String(r.google_maps_url).replace(/'/g,"\\'")}', 'Link Google Maps copiato')">Condividi</button>`:""}</td></tr>`;
+    body.innerHTML += `<tr><td>${esc(r.data_giro)}</td><td><strong>${esc(r.nome)}</strong></td><td>${r.orario_partenza||""}</td><td>${r.orario_rientro_stimato||""}</td><td>${esc(r.driver_name||"-")}</td><td>${r.totale_km}</td><td>€ ${r.costo_totale ?? r.costo_carburante}</td><td class="row-actions"><button onclick="openSavedRoute(${r.id})">Apri giro</button>${r.google_maps_url?`<a target="_blank" href="${r.google_maps_url}"><button>Maps</button></a><button onclick="copyText('${String(r.google_maps_url).replace(/'/g,"\\'")}', 'Link Google Maps copiato')">Condividi</button>`:""}</td></tr>`;
   });
 }
 async function openSavedRoute(id){
@@ -3852,7 +3810,8 @@ function renderDashboardInProgressSubpage(routes, selectedRoute){
       <main class="dash-sub-main">
         <section class="panel dash-sub-card">
           <div class="dash-sub-card-title"><div class="dash-sub-icon">📍</div><div><h2>Fermate del giro</h2><p>Confronto tra arrivo previsto e arrivo reale registrato dall'autista.</p></div></div>
-          ${dashboardRouteSummaryCards(r, rows)}
+          ${window.GiroFacileRouting.summaryHtml(r, `refreshRouteTraffic(${Number(r.id)}, '${targetId}', '${context}')`)}
+    ${dashboardRouteSummaryCards(r, rows)}
           ${dashboardStopRowsUnified(r, 'live')}
         </section>
         <section class="panel dash-sub-card">
@@ -3988,6 +3947,7 @@ function renderDashboardScheduledSubpage(routes, selectedRoute){
       <button type="button" class="btn-primary scheduled-edit" onclick="openProgrammedRouteForEdit(${Number(r.id)}, true)">${icon('edit')}Modifica dalla pianificazione</button>
     </section>
     <div class="scheduled-metrics">${metrics.map(([label,value,symbol,color,detail])=>`<div class="scheduled-metric">${icon(symbol,color)}<div><span>${label}</span><strong>${esc(value)}</strong>${detail ? '<small>'+esc(detail)+'</small>' : ''}</div></div>`).join('')}</div>
+    ${window.GiroFacileRouting.summaryHtml(r, `refreshRouteTraffic(${Number(r.id)}, 'dashboardScheduledPage', 'scheduled')`)}
     <div class="scheduled-content">
       <section class="scheduled-stops">
         <div class="scheduled-panel-heading">${icon('pin','pink')}<div><h2>Fermate programmate</h2><p>Sequenza prevista prima dell'avvio del giro. La colonna reale resta vuota finché l'autista non gestisce la tappa.</p></div></div>

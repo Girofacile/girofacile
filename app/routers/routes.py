@@ -8,13 +8,12 @@ from ..core.dependencies import current_user, owned
 from ..core.utils import local_now, local_today, local_today_iso, minutes_from_hhmm, parse_date_value, parse_time_value, date_to_iso, time_to_hhmm
 from ..database import get_db
 from ..models import Customer, Delivery, DeliveryStatus, Deposit, Driver, RoutePlan, User, Vehicle, ChatMessage
-from ..optimizer import window_summary, enrich_saved_schedule, optimize_route, recalculate_manual_route, google_route_polyline, validate_vehicle_load
+from ..optimizer import window_summary, enrich_saved_schedule, optimize_route, recalculate_manual_route, validate_vehicle_load
 from ..schemas import ManualRoutePlanIn, RoutePlanIn
 from ..services.plans import check_daily_route_limit
 from ..services.error_monitor import log_exception
-from ..services.api_usage import log_api_usage
+from ..services.route_enrichment import initialize_snapshot, enrich_final_route, routing_metadata, json_data, TIMING_DETAILS
 from ..services.ai_assistant import ensure_company_ai_allowed, run_ai_text
-from ..services.platform_settings import google_maps_api_key
 import json
 
 router = APIRouter(tags=["routes"])
@@ -345,6 +344,7 @@ def route_response(plan, result):
         "totale_km": plan.totale_km, "totale_minuti": plan.totale_minuti,
         "litri_stimati": plan.litri_stimati, "costo_carburante": plan.costo_carburante,
         "costo_totale": plan.costo_totale, "google_maps_url": plan.google_maps_url,
+        **routing_metadata(plan),
         "status": computed_route_status(plan), "status_label": route_status_label(computed_route_status(plan)),
         "consegne": result["ordered"],
         **window_summary(result["ordered"]),
@@ -382,6 +382,7 @@ def serialize_route(plan):
         "totale_km": plan.totale_km, "totale_minuti": plan.totale_minuti,
         "litri_stimati": plan.litri_stimati, "costo_carburante": plan.costo_carburante,
         "costo_totale": plan.costo_totale, "google_maps_url": plan.google_maps_url,
+        **routing_metadata(plan),
         "status": computed_route_status(plan), "status_label": route_status_label(computed_route_status(plan)),
         "consegne": [{
             "id": d.id, "customer_id": d.customer_id, "cliente_nome": d.cliente_nome, "indirizzo": d.indirizzo,
@@ -409,7 +410,7 @@ def serialize_route(plan):
     for row, delivery in zip(response["consegne"], consegne):
         if delivery.optimizer_details:
             details = json.loads(delivery.optimizer_details)
-            row.update({k: details[k] for k in ("arrivo_fisico", "inizio_servizio", "lateness_min", "time_window_violation") if k in details})
+            row.update({k: details[k] for k in TIMING_DETAILS if k in details})
     response.update(window_summary(response["consegne"]))
     return response
 
@@ -486,10 +487,11 @@ def save_route_result(db, user, data, result, vehicle, route_id=None):
     plan.completed_at = None
     plan.cancelled_at = None
     db.flush()
+    initialize_snapshot(plan, result)
     for item in result["ordered"]:
         delivery_data = dict(item)
         delivery_data["optimizer_details"] = json.dumps({k: item[k] for k in
-            ("arrivo_fisico", "inizio_servizio", "lateness_min", "time_window_violation") if k in item})
+            TIMING_DETAILS if k in item} | (item.get("coord") or {}))
         for extra in ("coord", "lat", "lon", "stato_geocodifica", "indirizzo_geocodificato",
                       "arrivo_fisico", "inizio_servizio", "lateness_min", "time_window_violation"):
             delivery_data.pop(extra, None)
@@ -556,13 +558,10 @@ def create_and_optimize_route(
     deliveries = [c.model_dump() for c in data.consegne]
     deposit, vehicle, _driver = _validate_route_tenant_scope(db, user, data, deliveries)
     _apply_route_preferences(user, deliveries)
-    started_api = time.perf_counter()
     try:
         result = optimize_route(db, deposit, deliveries, build_vehicle_dict(vehicle), data.rientro_deposito, data.orario_partenza, route_date=data.data_giro)
-        log_api_usage(db, user_id=user.id, service="google_routes_matrix", action="Calcolo giro", endpoint="/api/routes/optimize", status="success", message=f"{len(deliveries)} consegne", response_ms=int((time.perf_counter()-started_api)*1000))
     except ValueError as e:
-        log_api_usage(db, user_id=user.id, service="google_routes_matrix", action="Calcolo giro", endpoint="/api/routes/optimize", status="failed", message=str(e), response_ms=int((time.perf_counter()-started_api)*1000))
-        # Gli errori Google Routes/configurazione arrivano come ValueError
+        # Gli errori di configurazione del routing arrivano come ValueError
         # per poter essere mostrati bene in Dashboard, ma sono errori tecnici
         # importanti e devono comparire nel pannello Super Admin.
         error_id = None
@@ -601,12 +600,9 @@ def recalc_manual_route(
     deposit, vehicle, _driver = _validate_route_tenant_scope(db, user, data, deliveries)
     check_daily_route_limit(user, db, data.data_giro, exclude_route_id=data.route_id)
     _apply_route_preferences(user, deliveries)
-    started_api = time.perf_counter()
     try:
         result = recalculate_manual_route(db, deposit, deliveries, build_vehicle_dict(vehicle), data.rientro_deposito, data.orario_partenza, route_date=data.data_giro)
-        log_api_usage(db, user_id=user.id, service="google_routes_matrix", action="Ricalcolo manuale giro", endpoint="/api/routes/recalculate-manual", status="success", message=f"{len(deliveries)} consegne", response_ms=int((time.perf_counter()-started_api)*1000))
     except ValueError as e:
-        log_api_usage(db, user_id=user.id, service="google_routes_matrix", action="Ricalcolo manuale giro", endpoint="/api/routes/recalculate-manual", status="failed", message=str(e), response_ms=int((time.perf_counter()-started_api)*1000))
         error_id = None
         if _is_route_api_configuration_error(e):
             error_id = log_exception(
@@ -737,6 +733,7 @@ def list_operational_routes(db: Session = Depends(get_db), user: User = Depends(
             "driver_name": ((r.driver.nome + (" " + r.driver.cognome if r.driver.cognome else "")) if r.driver else ""),
             "vehicle_id": r.vehicle_id, "vehicle_name": (r.vehicle.nome if r.vehicle else ""),
             "totale_km": r.totale_km, "totale_minuti": r.totale_minuti,
+            **routing_metadata(r),
             "consegne_count": total_count,
             "completed_count": completed_count,
             "missed_count": missed_count,
@@ -764,7 +761,7 @@ def program_route(
     from ..models import RouteToken
     from ..services.email import send_driver_route_assigned
 
-    plan = owned(db.query(RoutePlan), RoutePlan, user).filter(RoutePlan.id == route_id).first()
+    plan = owned(db.query(RoutePlan), RoutePlan, user).filter(RoutePlan.id == route_id).with_for_update().first()
     if not plan:
         raise HTTPException(404, "Giro non trovato")
     ensure_not_past_route_date(plan.data_giro)
@@ -777,6 +774,18 @@ def program_route(
         validate_vehicle_load([{"peso_kg": d.peso_kg, "colli": d.colli} for d in plan.deliveries], build_vehicle_dict(plan.vehicle))
     except ValueError as exc:
         raise HTTPException(400, str(exc))
+    try:
+        enrich_final_route(db, plan)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
+    try:
+        _check_resource_overlap(db, user, plan, minutes_from_hhmm(plan.orario_partenza) or 0,
+                                (minutes_from_hhmm(plan.orario_partenza) or 0) + int(plan.totale_minuti or 0),
+                                exclude_route_id=plan.id)
+    except HTTPException:
+        # Save the computed result/logs even when the longer ETA conflicts with a booking.
+        db.commit()
+        raise
     plan.status = "programmato"
     plan.completed_at = None
     plan.cancelled_at = None
@@ -823,6 +832,23 @@ def program_route(
     return result
 
 
+
+@router.post("/api/routes/{route_id}/refresh-traffic")
+def refresh_route_traffic(route_id: int, db: Session = Depends(get_db), user: User = Depends(current_user)):
+    plan = owned(db.query(RoutePlan), RoutePlan, user).filter(RoutePlan.id == route_id).with_for_update().first()
+    if not plan:
+        raise HTTPException(404, "Giro non trovato")
+    if computed_route_status(plan) not in ("bozza", "programmato"):
+        raise HTTPException(409, "Aggiorna il traffico prima di avviare il giro")
+    try:
+        enrich_final_route(db, plan, force=True)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
+    db.commit()
+    db.refresh(plan)
+    return serialize_route(plan)
+
+
 @router.post("/api/routes/{route_id}/cancel")
 def cancel_route(route_id: int, db: Session = Depends(get_db), user: User = Depends(current_user)):
     plan = owned(db.query(RoutePlan), RoutePlan, user).filter(RoutePlan.id == route_id).first()
@@ -855,20 +881,21 @@ def complete_route(route_id: int, db: Session = Depends(get_db), user: User = De
 def get_route_map_data(route_id: int, db: Session = Depends(get_db), user: User = Depends(current_user)):
     """Dati sicuri per visualizzare la mappa del giro nella dashboard.
 
-    La chiave Google arriva dalle impostazioni SaaS salvate nel database; il file
-    .env resta solo fallback gestito da platform_settings. La mappa non ricalcola
-    il percorso: mostra l'ordine già calcolato e salvato per il giro.
+    Coordinate e geometria provengono dagli snapshot salvati. Questo endpoint
+    non invoca alcun provider di routing o traffico.
     """
     plan = owned(db.query(RoutePlan), RoutePlan, user).filter(RoutePlan.id == route_id).first()
     if not plan:
         raise HTTPException(404, "Giro non trovato")
 
     deposit = plan.deposit
+    snapshot_points = json_data(plan.routing_snapshot_json).get("points") or []
     stops = []
     for d in sorted(plan.deliveries or [], key=lambda x: x.ordine or 0):
         c = d.customer
-        lat = getattr(c, "lat", None) if c else None
-        lon = getattr(c, "lon", None) if c else None
+        saved = json_data(d.optimizer_details)
+        lat = saved.get("lat", getattr(c, "lat", None) if c else None)
+        lon = saved.get("lon", getattr(c, "lon", None) if c else None)
         stops.append({
             "id": d.id,
             "order": d.ordine,
@@ -881,25 +908,12 @@ def get_route_map_data(route_id: int, db: Session = Depends(get_db), user: User 
             "lon": float(lon) if lon is not None else None,
         })
 
-    route_points = []
-    if deposit and deposit.lat is not None and deposit.lon is not None:
-        route_points.append({"lat": float(deposit.lat), "lon": float(deposit.lon)})
-    for s in stops:
-        if s.get("lat") is not None and s.get("lon") is not None:
-            route_points.append({"lat": s["lat"], "lon": s["lon"]})
-
-    road_polyline = None
-    if len(route_points) >= 2 and len(route_points) == (1 + len(stops)):
-        road_polyline = google_route_polyline(
-            route_points,
-            return_depot=bool(plan.rientro_deposito),
-            start_time=time_to_hhmm(plan.orario_partenza) or "08:00",
-            route_date=plan.data_giro,
-            db=db,
-        )
-
+    geometries = json_data(plan.road_geometry_json, [])
+    road_polyline = {"encoded_polylines": geometries, "encoded_polyline": geometries[0] if len(geometries) == 1 else None} if geometries else None
+    depot_coord = snapshot_points[0] if snapshot_points else {}
     return {
-        "api_key": google_maps_api_key(db),
+        "map_provider": "openstreetmap",
+        **routing_metadata(plan),
         "route_id": plan.id,
         "name": plan.nome,
         "google_maps_url": plan.google_maps_url,
@@ -909,8 +923,8 @@ def get_route_map_data(route_id: int, db: Session = Depends(get_db), user: User 
             "id": getattr(deposit, "id", None),
             "name": getattr(deposit, "nome", "Deposito"),
             "address": getattr(deposit, "indirizzo", ""),
-            "lat": float(deposit.lat) if deposit and deposit.lat is not None else None,
-            "lon": float(deposit.lon) if deposit and deposit.lon is not None else None,
+            "lat": depot_coord.get("lat", float(deposit.lat) if deposit and deposit.lat is not None else None),
+            "lon": depot_coord.get("lon", float(deposit.lon) if deposit and deposit.lon is not None else None),
         },
         "stops": stops,
     }
@@ -932,6 +946,7 @@ def list_routes(db: Session = Depends(get_db), user: User = Depends(current_user
         "id": r.id, "nome": r.nome, "data_giro": date_to_iso(r.data_giro),
         "orario_partenza": time_to_hhmm(r.orario_partenza), "orario_rientro_stimato": time_to_hhmm(r.orario_rientro_stimato),
         "totale_km": r.totale_km, "costo_carburante": r.costo_carburante,
+        **routing_metadata(r),
         "google_maps_url": r.google_maps_url, "consegne_count": len(r.deliveries or []),
         "driver_id": r.driver_id,
         "driver_name": ((r.driver.nome + (" " + r.driver.cognome if r.driver.cognome else "")) if r.driver else ""),

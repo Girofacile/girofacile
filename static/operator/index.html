@@ -136,6 +136,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 .deposit-card p{font-size:13px;opacity:.85;}
 .deposit-card .btn-dep-nav{display:inline-flex;align-items:center;gap:6px;margin-top:10px;background:rgba(255,255,255,.2);color:#fff;border:1.5px solid rgba(255,255,255,.4);padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;}
 </style>
+<link rel="stylesheet" href="/static/routing-summary.css">
+<script src="/static/routing-summary.js"></script>
 </head>
 <body>
 
@@ -180,7 +182,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
   </div>
 
   <!-- CONTENT -->
-  <div class="content" id="deliveryList"></div>
+  <div id="operatorRoutingSummary"></div>
+<div class="content" id="deliveryList"></div>
 
   <!-- SCHERMATA COMPLETATA -->
   <div id="completedScreen" class="hidden">
@@ -279,6 +282,7 @@ async function load() {
 
 function render() {
   const { route, consegne, progress, tempo_scarico_options, motivi_mancata } = routeData;
+  document.getElementById("operatorRoutingSummary").innerHTML = window.GiroFacileRouting.summaryHtml(route);
 
   // Header
   document.getElementById('hDate').textContent = route.data_giro + ' · ' + (route.orario_partenza || '');

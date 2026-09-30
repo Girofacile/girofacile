@@ -7,10 +7,10 @@ from urllib.parse import quote
 from sqlalchemy.orm import Session
 
 from .services.geocoding import geocode_address
-from .services.platform_settings import google_geocoding_enabled, google_routes_enabled, google_maps_api_key
+from .services.platform_settings import google_geocoding_enabled, google_maps_api_key
+from .services import road_routing
 from .services import distance_cache as dc
 
-OSRM_URL = os.getenv("OSRM_URL", "https://router.project-osrm.org").rstrip("/")
 NOMINATIM_URL = os.getenv("NOMINATIM_URL", "https://nominatim.openstreetmap.org").rstrip("/")
 
 # V3.2 - Motore percorso con priorità alle finestre orarie di scarico.
@@ -66,7 +66,7 @@ def haversine_km(a, b):
     x = math.sin(dlat / 2) ** 2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2) ** 2
     return 6371 * 2 * math.atan2(math.sqrt(x), math.sqrt(1 - x))
 
-def geocode(address, db: Session | None = None):
+def geocode(address, db: Session | None = None, user_id=None):
     """Geocodifica deposito o indirizzo mancante.
 
     Con Google attivo usa esclusivamente Google Geocoding, così anche il
@@ -75,7 +75,7 @@ def geocode(address, db: Session | None = None):
     non bloccare installazioni locali senza chiave.
     """
     if google_geocoding_enabled(db) and google_maps_api_key(db):
-        result = geocode_address(address, db=db)
+        result = geocode_address(address, db=db, user_id=user_id)
         if result.get("lat") is not None and result.get("lon") is not None:
             return {"lat": float(result["lat"]), "lon": float(result["lon"])}
         raise ValueError(f"Indirizzo non trovato con Google: {address}")
@@ -102,7 +102,7 @@ def geocode_deposit(db: Session, deposit):
     if deposit.lat is not None and deposit.lon is not None:
         return {"lat": float(deposit.lat), "lon": float(deposit.lon)}
 
-    coord = geocode(deposit.indirizzo, db=db)
+    coord = geocode(deposit.indirizzo, db=db, user_id=deposit.user_id)
     deposit.lat = coord["lat"]
     deposit.lon = coord["lon"]
     db.commit()
@@ -110,109 +110,18 @@ def geocode_deposit(db: Session, deposit):
 
 
 def build_distance_matrix(db: Session, user_id: int, points, keys, start_time="08:00", route_date=None):
-    """Costruisce la matrice tempi/distanze usando cache persistente.
-
-    Google Routes viene chiamato solo per le coppie non ancora presenti in cache.
-    Se tutte le coppie deposito/clienti sono già note, il calcolo non effettua
-    alcuna nuova richiesta Google.
-    """
-    if not google_routes_enabled(db) or not google_maps_api_key(db):
-        return None
-
-    n = len(points)
-    if n < 2:
-        return {}
-
-    departure = _route_departure_time_iso(start_time, route_date)
-    keys = [f"{key}|departure={departure}" for key in keys]
-    needed_pairs = [(i, j) for i in range(n) for j in range(n) if i != j]
-    key_pairs = [(keys[i], keys[j]) for i, j in needed_pairs]
-    cached = dc.get_pairs(db, user_id, key_pairs)
-
-    index_matrix = {}
-    missing = []
-    for (i, j), key_pair in zip(needed_pairs, key_pairs):
-        hit = cached.get(key_pair)
-        if hit:
-            index_matrix[(i, j)] = hit
-        else:
-            missing.append((i, j))
-
-    if not missing:
-        print(f"[ROUTES] Matrice interamente da cache: punti={n} tratte={len(needed_pairs)} chiamate_google=0")
-        return index_matrix
-
-    # Richiediamo a Google solo il sottoinsieme di punti coinvolti in tratte mancanti.
-    origin_subset = sorted({i for i, _ in missing})
-    dest_subset = sorted({j for _, j in missing})
-    global_indices = origin_subset + [j for j in dest_subset if j not in origin_subset]
-    sub_points = [points[i] for i in global_indices]
-    local_of_global = {g: local for local, g in enumerate(global_indices)}
-
-    sub_matrix = google_route_matrix(sub_points, start_time=start_time, db=db, route_date=route_date)
-    if sub_matrix is None:
-        return None
-
-    to_save = []
-    for gi in origin_subset:
-        for gj in dest_subset:
-            if gi == gj:
-                continue
-            local_leg = sub_matrix.get((local_of_global[gi], local_of_global[gj]))
-            if not local_leg:
-                continue
-            index_matrix[(gi, gj)] = local_leg
-            to_save.append((keys[gi], keys[gj], local_leg["km"], local_leg["min"]))
-
-    dc.save_pairs(db, user_id, to_save)
-
-    reused = len(needed_pairs) - len(missing)
-    print(
-        f"[ROUTES] Matrice parziale: punti_totali={n} punti_richiesti_a_google={len(sub_points)} "
-        f"tratte_da_cache={reused} tratte_da_google={len(to_save)} chiamate_google=1"
-    )
-
-    for i, j in needed_pairs:
-        if (i, j) not in index_matrix:
-            raise ValueError("Google Routes non ha restituito una tratta necessaria. Verifica coordinate e copertura dell'indirizzo.")
-
-    return index_matrix
+    """A date-independent OSRM/cache matrix; every search uses these same legs."""
+    return road_routing.build_matrix(db, user_id, points, keys)
 
 
 def osrm_route(a, b):
-    try:
-        r = requests.get(
-            f"{OSRM_URL}/route/v1/driving/{a['lon']},{a['lat']};{b['lon']},{b['lat']}",
-            params={"overview": "false"},
-            timeout=15
-        )
-        r.raise_for_status()
-        data = r.json()
-        if data.get("routes"):
-            route = data["routes"][0]
-            return {"km": route["distance"] / 1000, "min": route["duration"] / 60}
-    except Exception:
-        pass
-
-    # Fallback: stima semplice se OSRM non risponde.
-    km = haversine_km(a, b) * 1.25
-    return {"km": km, "min": (km / 45) * 60}
-
-
-def _google_duration_to_min(value):
-    if value is None:
-        return None
-    text = str(value).strip()
-    if text.endswith("s"):
-        text = text[:-1]
-    try:
-        return float(text) / 60.0
-    except Exception:
-        return None
+    """Compatibility helper for callers outside the optimizer."""
+    legs = road_routing.osrm_table([a, b], pairs=[(0, 1)])
+    return legs.get((0, 1)) or road_routing.estimated_leg(a, b)
 
 
 def _route_departure_time_iso(start_time="08:00", route_date=None):
-    """Use the actual company-local departure, serialized as UTC for Google."""
+    """Use the actual company-local departure, serialized as UTC for traffic providers."""
     day = parse_date_value(route_date) if route_date is not None else local_now().date()
     clock = parse_time_value(start_time)
     if day is None or clock is None:
@@ -244,165 +153,13 @@ def validate_vehicle_load(deliveries, vehicle=None):
             raise ValueError(f"Capacità mezzo superata: {total:g} {label}, massimo {float(capacity):g}. Riduci il carico o scegli un altro mezzo.")
 
 
-def google_route_matrix(points, start_time="08:00", db: Session | None = None, route_date=None):
-    """Calcola una matrice tempi/distanze con Google Routes.
-
-    Ritorna dict (origin_index, destination_index) -> {km, min}.
-    Ogni punto deve avere lat/lon. Include anche deposito->clienti,
-    cliente->cliente e cliente->deposito in una singola chiamata Google.
-    """
-    api_key = google_maps_api_key(db)
-    if not google_routes_enabled(db) or not api_key:
-        return None
-    if len(points) < 2:
-        return {}
-
-    waypoints = []
-    for p in points:
-        waypoints.append({
-            "waypoint": {
-                "location": {
-                    "latLng": {
-                        "latitude": float(p["lat"]),
-                        "longitude": float(p["lon"]),
-                    }
-                }
-            }
-        })
-
-    body = {
-        "origins": waypoints,
-        "destinations": waypoints,
-        "travelMode": "DRIVE",
-        "routingPreference": "TRAFFIC_AWARE",
-        "departureTime": _route_departure_time_iso(start_time, route_date),
-    }
-    try:
-        r = requests.post(
-            "https://routes.googleapis.com/distanceMatrix/v2:computeRouteMatrix",
-            headers={
-                "Content-Type": "application/json",
-                "X-Goog-Api-Key": api_key,
-                "X-Goog-FieldMask": "originIndex,destinationIndex,duration,distanceMeters,status,condition",
-            },
-            json=body,
-            timeout=30,
-        )
-        r.raise_for_status()
-        rows = r.json()
-        matrix = {}
-        for item in rows:
-            oi = item.get("originIndex")
-            di = item.get("destinationIndex")
-            if oi is None or di is None or oi == di:
-                continue
-            status = item.get("status") or {}
-            if status and status.get("code") not in (0, None):
-                continue
-            minutes = _google_duration_to_min(item.get("duration"))
-            meters = item.get("distanceMeters")
-            if minutes is None or meters is None:
-                continue
-            matrix[(int(oi), int(di))] = {"km": float(meters) / 1000.0, "min": float(minutes)}
-        print(f"[ROUTES] Google matrix OK punti={len(points)} archi={len(matrix)}")
-        return matrix
-    except Exception as e:
-        print(f"[ROUTES] Errore Google Routes: {e}")
-        raise ValueError("Google Routes non disponibile o non configurato correttamente. Controlla API key, Routes API e fatturazione Google Cloud.")
-
-
-
-
-def google_route_polyline(points, return_depot=True, start_time="08:00", db: Session | None = None, route_date=None):
-    """Restituisce la polyline stradale reale del giro usando Google Routes API.
-
-    A differenza della vecchia linea tra coordinate, questa funzione chiede a
-    Google il percorso DRIVE effettivo e ritorna l'encoded polyline da disegnare
-    sulla mappa. L'ordine delle fermate NON viene ottimizzato qui: viene usato
-    esattamente l'ordine gia' calcolato e salvato da GiroFacile.
-    """
-    api_key = google_maps_api_key(db)
-    if not google_routes_enabled(db) or not api_key:
-        return None
-    if not points or len(points) < 2:
-        return None
-
-    clean_points = []
-    for p in points:
-        if p.get("lat") is None or p.get("lon") is None:
-            return None
-        clean_points.append({"lat": float(p["lat"]), "lon": float(p["lon"])})
-
-    origin = clean_points[0]
-    if return_depot:
-        destination = clean_points[0]
-        intermediate_points = clean_points[1:]
-    else:
-        destination = clean_points[-1]
-        intermediate_points = clean_points[1:-1]
-
-    def waypoint(p):
-        return {
-            "location": {
-                "latLng": {
-                    "latitude": p["lat"],
-                    "longitude": p["lon"],
-                }
-            }
-        }
-
-    try:
-        departure = _route_departure_time_iso(start_time, route_date)
-    except ValueError:
-        departure = None
-    body = {
-        "origin": waypoint(origin),
-        "destination": waypoint(destination),
-        "intermediates": [waypoint(p) for p in intermediate_points],
-        "travelMode": "DRIVE",
-        "routingPreference": "TRAFFIC_AWARE" if departure else "TRAFFIC_UNAWARE",
-        "computeAlternativeRoutes": False,
-        "polylineQuality": "HIGH_QUALITY",
-        "polylineEncoding": "ENCODED_POLYLINE",
-        **({"departureTime": departure} if departure else {}),
-    }
-
-    try:
-        r = requests.post(
-            "https://routes.googleapis.com/directions/v2:computeRoutes",
-            headers={
-                "Content-Type": "application/json",
-                "X-Goog-Api-Key": api_key,
-                "X-Goog-FieldMask": "routes.polyline.encodedPolyline,routes.distanceMeters,routes.duration",
-            },
-            json=body,
-            timeout=30,
-        )
-        r.raise_for_status()
-        data = r.json()
-        routes = data.get("routes") or []
-        if not routes:
-            return None
-        encoded = ((routes[0].get("polyline") or {}).get("encodedPolyline"))
-        if not encoded:
-            return None
-        return {
-            "encoded_polyline": encoded,
-            "distance_meters": routes[0].get("distanceMeters"),
-            "duration": routes[0].get("duration"),
-        }
-    except Exception as e:
-        print(f"[ROUTES] Errore polyline Google Routes: {e}")
-        return None
-
-
 def _matrix_leg(matrix, points, origin_idx, dest_idx):
     if matrix is not None:
         leg = matrix.get((origin_idx, dest_idx))
         if leg:
             return leg
-        raise ValueError("Google Routes non ha restituito una tratta necessaria. Verifica coordinate e copertura dell'indirizzo.")
-    return osrm_route(points[origin_idx], points[dest_idx])
+        raise ValueError("Matrice stradale incompleta. Verifica coordinate e copertura dell'indirizzo.")
+    return road_routing.estimated_leg(points[origin_idx], points[dest_idx])
 
 def build_google_maps_url(depot_address, deliveries, return_depot):
     stops = [depot_address] + [d["indirizzo"] for d in deliveries]
@@ -804,7 +561,7 @@ def _greedy_sequence(deliveries, matrix, points, vehicle=None, start_time="08:00
 
 
 def _local_optimize_sequence(initial_sequence, matrix, points, vehicle=None, return_depot=True, start_time="08:00", max_rounds=4, relocate=False):
-    """Migliora un ordine provando scambi e inversioni senza nuove chiamate Google."""
+    """Migliora un ordine provando scambi e inversioni senza nuove chiamate di routing."""
     best_sequence = initial_sequence[:]
     best_result = _evaluate_fixed_sequence(best_sequence, matrix, points, vehicle, return_depot, start_time, include_details=False)
     n = len(best_sequence)
@@ -855,20 +612,8 @@ def _local_optimize_sequence(initial_sequence, matrix, points, vehicle=None, ret
     return _evaluate_fixed_sequence(best_sequence, matrix, points, vehicle, return_depot, start_time)
 
 
-class _CachedRoadLegs(dict):
-    """Per-search lazy OSRM cache when the Google matrix is unavailable."""
-    def __init__(self, points):
-        super().__init__()
-        self.points = points
-
-    def get(self, key, default=None):
-        if key not in self:
-            self[key] = osrm_route(self.points[key[0]], self.points[key[1]])
-        return super().get(key, default)
-
-
 def _best_internal_sequence(deliveries, matrix, points, vehicle=None, return_depot=True, start_time="08:00"):
-    """Sceglie il miglior ordine usando una sola chiamata Google Routes.
+    """Sceglie il miglior ordine usando solo la matrice stradale già acquisita.
 
     - Fino a 8 consegne prova tutte le combinazioni: risultato quasi ottimale.
     - Oltre 8 consegne conserva il migliore tra ordini deterministici.
@@ -876,7 +621,7 @@ def _best_internal_sequence(deliveries, matrix, points, vehicle=None, return_dep
     """
     n = len(deliveries)
     if matrix is None:
-        matrix = _CachedRoadLegs(points)
+        matrix = road_routing.build_matrix(None, 0, points, [str(i) for i in range(len(points))])
     if n == 0:
         return _evaluate_fixed_sequence([], matrix, points, vehicle, return_depot, start_time)
 
@@ -932,7 +677,7 @@ def optimize_route(db: Session, deposit, deliveries, vehicle=None, return_depot=
 
     points = [depot_coord] + [d["coord"] for d in deliveries]
     user_id = int(getattr(deposit, "user_id", 0) or 0)
-    keys = [dc.deposit_key(deposit.id, user_id=user_id)] + [
+    keys = [dc.point_key(deposit_id=deposit.id, lat=depot_coord["lat"], lon=depot_coord["lon"], user_id=user_id)] + [
         dc.point_key(customer_id=d.get("customer_id"), lat=d["coord"]["lat"], lon=d["coord"]["lon"], user_id=user_id)
         for d in deliveries
     ]
@@ -949,6 +694,14 @@ def optimize_route(db: Session, deposit, deliveries, vehicle=None, return_depot=
     result.pop("score", None)
     result.pop("violations", None)
     result.pop("total_wait", None)
+
+    result["base_routing_provider"] = getattr(matrix, "source", "osrm")
+    result["depot_coord"] = depot_coord
+    result["base_return_leg"] = {}
+    if return_depot and result["ordered"]:
+        last_index = points.index(result["ordered"][-1]["coord"])
+        result["base_return_leg"] = dict(matrix.get((last_index, 0)) or {})
+
     result["google_maps_url"] = build_google_maps_url(deposit.indirizzo, result["ordered"], return_depot)
     return result
 
@@ -969,7 +722,7 @@ def recalculate_manual_route(db: Session, deposit, deliveries, vehicle=None, ret
 
     points = [depot_coord] + [d["coord"] for d in deliveries]
     user_id = int(getattr(deposit, "user_id", 0) or 0)
-    keys = [dc.deposit_key(deposit.id, user_id=user_id)] + [
+    keys = [dc.point_key(deposit_id=deposit.id, lat=depot_coord["lat"], lon=depot_coord["lon"], user_id=user_id)] + [
         dc.point_key(customer_id=d.get("customer_id"), lat=d["coord"]["lat"], lon=d["coord"]["lon"], user_id=user_id)
         for d in deliveries
     ]
@@ -982,5 +735,13 @@ def recalculate_manual_route(db: Session, deposit, deliveries, vehicle=None, ret
         delivery.pop("_matrix_index", None)
     for key in ("score", "violations", "total_wait"):
         result.pop(key, None)
+
+    result["base_routing_provider"] = getattr(matrix, "source", "osrm")
+    result["depot_coord"] = depot_coord
+    result["base_return_leg"] = {}
+    if return_depot and result["ordered"]:
+        last_index = points.index(result["ordered"][-1]["coord"])
+        result["base_return_leg"] = dict(matrix.get((last_index, 0)) or {})
+
     result["google_maps_url"] = build_google_maps_url(deposit.indirizzo, result["ordered"], return_depot)
     return result

@@ -89,12 +89,12 @@ def test_public_invalid_start_still_rejected(entrypoint, start):
 def test_fallback_does_not_repeat_routing_calls(monkeypatch):
     rows, matrix = directed_case(9)
     calls = []
-    def road(a, b):
-        calls.append((a, b))
-        return matrix[a, b]
-    monkeypatch.setattr(opt, "osrm_route", road)
+    def table(points, **kwargs):
+        calls.append(points)
+        return matrix
+    monkeypatch.setattr(opt.road_routing, "osrm_table", table)
     result = opt._best_internal_sequence(rows, None, list(range(10)))
-    assert len(calls) == len(set(calls)) <= 90
+    assert len(calls) == 1
     assert result == opt._best_internal_sequence(rows, matrix, [])
 
 
@@ -116,22 +116,14 @@ def test_feasibility_beats_finite_penalty():
     assert infeasible["score"] < feasible["score"]
     assert opt._best_internal_sequence(rows, matrix, [])["violations"] == 0
 
-def test_fallback_uses_no_additional_road_pairs(monkeypatch):
+def test_fallback_uses_one_table_without_per_combination_requests(monkeypatch):
     rows, matrix = directed_case(9)
-    points = list(range(10))
     calls = []
-    def road(a, b):
-        calls.append((a, b))
-        return matrix[a, b]
-    monkeypatch.setattr(opt, "osrm_route", road)
-    # The unchanged greedy + swap/reversal path is the old fallback behavior.
-    seed = opt._greedy_sequence(rows, None, points)
-    opt._local_optimize_sequence(seed, None, points)
-    old_calls = calls[:]
-    calls.clear()
-    opt._best_internal_sequence(rows, None, points)
-    assert set(calls) <= set(old_calls)
-    assert len(calls) <= len(old_calls)
+    monkeypatch.setattr(opt.road_routing, "osrm_table", lambda points, **kwargs: calls.append(kwargs) or matrix)
+    monkeypatch.setattr(opt, "osrm_route", lambda *args: pytest.fail("Per-leg routing is forbidden"))
+    opt._best_internal_sequence(rows, None, list(range(10)))
+    assert len(calls) == 1
+    assert len(calls[0]["pairs"]) == 90
 
 
 def test_operator_candidate_is_kept_even_when_search_misses_it(monkeypatch):

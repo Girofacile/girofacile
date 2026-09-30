@@ -20,6 +20,8 @@
 <link href="/static/dashboard/css/route-preview.css?v=preview_20260929" rel="stylesheet">
 <link href="/static/dashboard/css/scheduled.css?v=scheduled_20260929" rel="stylesheet">
 <link href="/static/dashboard/css/customers.css?v=customers_20260929" rel="stylesheet">
+<link rel="stylesheet" href="/static/routing-summary.css">
+<script src="/static/routing-summary.js"></script>
 </head>
 <body>
 
@@ -1101,6 +1103,7 @@
             <input id="vCilindrata" type="number" min="0" placeholder="Cilindrata cc">
             <input id="vPotenzaKw" type="number" min="0" step="0.1" placeholder="Potenza kW">
             <input id="vClasseEuro" placeholder="Classe Euro">
+            <label for="vTollClass">Classe pedaggio</label><select id="vTollClass"><option value="A">A · 2 assi, altezza fino a 1,3 m all’asse anteriore</option><option value="B" selected>B · 2 assi, altezza oltre 1,3 m</option><option value="3">3 assi</option><option value="4">4 assi</option><option value="5">5 o più assi</option></select>
             <select id="vFuelType" onchange="updateVehicleEnergyFieldsV895()">
               <option value="gasolio">Gasolio</option><option value="benzina">Benzina</option><option value="gpl">GPL</option><option value="metano">Metano</option><option value="elettrico">Elettrico</option><option value="ibrido_benzina">Ibrido benzina</option><option value="ibrido_diesel">Ibrido diesel</option><option value="ibrido_plugin_benzina">Ibrido plug-in benzina</option><option value="ibrido_plugin_diesel">Ibrido plug-in diesel</option>
             </select>

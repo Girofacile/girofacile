@@ -604,7 +604,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
               <select id="api-usage-service" class="form-control" style="width:auto;min-width:180px" onchange="loadApiUsage()">
                 <option value="">Tutti i servizi</option>
                 <option value="google_geocoding">Geocoding Google</option>
-                <option value="google_routes_matrix">Routes API / Calcolo giri</option>
+                <option value="mapbox_traffic">Mapbox traffico / ETA</option><option value="google_routes_matrix">Google Matrix (storico)</option>
                 <option value="google_maps_link">Link Google Maps</option><option value="openai_route_explanation">AI spiegazione giro</option><option value="openai_support_ticket_text">AI testo ticket</option><option value="openai_admin_error_analysis">AI analisi errori/ticket</option><option value="openai_report_summary">AI report aziendale</option>
               </select>
             </div>
@@ -658,6 +658,18 @@ textarea.form-control { resize: vertical; min-height: 80px; }
             <div class="form-group"><label class="form-label">Piano default</label><select id="platform-default-plan" class="form-control"><option value="starter">Starter</option><option value="business">Business</option><option value="pro">Pro</option></select></div>
           </div>
           <button class="btn btn-primary" onclick="savePlatformSettings()">Salva impostazioni SaaS</button>
+        </div>
+        <div class="settings-card-v64">
+          <h3>Routing, traffico e pedaggi</h3>
+          <p>L’ordine delle fermate è calcolato da GiroFacile. Il traffico viene richiesto alla programmazione o all’aggiornamento degli ETA.</p>
+          <div class="form-group"><label for="platform-osrm-url" class="form-label">OSRM URL · istanza propria</label><input id="platform-osrm-url" class="form-control" placeholder="http://osrm:5000"></div>
+          <div class="form-group"><label for="platform-osrm-version" class="form-label">Versione dati stradali / cache</label><input id="platform-osrm-version" class="form-control" maxlength="24"></div>
+          <div class="form-group"><label for="platform-traffic-provider" class="form-label">Provider traffico</label><select id="platform-traffic-provider" class="form-control"><option value="none">Nessuno · ETA stradali</option><option value="mapbox">Mapbox driving-traffic</option></select></div>
+          <div class="form-group"><label for="platform-mapbox-token" class="form-label">Token Mapbox</label><input id="platform-mapbox-token" class="form-control" type="password" autocomplete="new-password"></div>
+          <div class="form-group"><label for="platform-mapbox-cost" class="form-label">Costo stimato per richiesta Mapbox (€)</label><input id="platform-mapbox-cost" type="number" min="0" step="0.00001" class="form-control"><small>Imposta il costo del tuo contratto per il monitoraggio consumi.</small></div>
+          <div class="form-group"><label for="platform-toll-rates" class="form-label">Tariffe pedaggio €/km per classe (JSON)</label><textarea id="platform-toll-rates" class="form-control" rows="3" placeholder='{"A":0.08,"B":0.10,"3":0.14,"4":0.18,"5":0.22}'></textarea><small>Stime configurabili, sostituibili con tariffe fisse nel dataset.</small></div>
+          <div class="form-group"><label for="platform-toll-dataset" class="form-label">Percorso del dataset OSM sul server</label><input id="platform-toll-dataset" class="form-control"></div>
+          <button class="btn btn-primary" onclick="savePlatformSettings()">Salva routing e traffico</button>
         </div>
         <div class="settings-card-v64">
           <h3>Intelligenza artificiale</h3>
@@ -1486,11 +1498,11 @@ async function loadApiUsage(){
       <div class="api-row-v66"><div><strong>${escapeHtml(x.company_name)}</strong><small>${x.errors||0} errori</small></div><div style="text-align:right"><strong>${x.calls}</strong><small>€${Number(x.cost||0).toFixed(3)}</small></div></div>`).join('') : '<div class="empty"><p>Nessuna azienda nel periodo.</p></div>';
     document.getElementById('api-usage-tbody').innerHTML = (data.recent||[]).length ? data.recent.map(r=>`
       <tr>
-        <td>${fmtDate(r.created_at)}</td><td>${escapeHtml(r.company_name||'Sistema')}</td><td>${serviceLabel(r.service)}</td><td>${escapeHtml(r.action||'—')}</td><td>${r.request_count||1}</td><td><span class="${r.status==='success'?'api-status-ok':'api-status-failed'}">${r.status==='success'?'Riuscita':'Fallita'}</span></td><td>€${Number(r.estimated_cost_eur||0).toFixed(3)}</td><td style="max-width:260px;white-space:normal">${escapeHtml(r.message||'')}</td>
+        <td>${fmtDate(r.created_at)}</td><td>${escapeHtml(r.company_name||'Sistema')}</td><td>${escapeHtml(r.provider||'')} · ${escapeHtml(serviceLabel(r.service))}<br><small>${r.route_id ? 'Giro #'+Number(r.route_id)+' · ' : ''}${r.response_ms != null ? Number(r.response_ms)+' ms' : ''}</small></td><td>${escapeHtml(r.action||'—')}</td><td>${r.request_count||1}</td><td><span class="${r.status==='success'?'api-status-ok':'api-status-failed'}">${r.status==='success'?'Riuscita':'Fallita'}</span></td><td>€${Number(r.estimated_cost_eur||0).toFixed(3)}</td><td style="max-width:260px;white-space:normal">${escapeHtml(r.message||'')}</td>
       </tr>`).join('') : '<tr><td colspan="8"><div class="empty"><p>Nessuna chiamata API registrata nel periodo selezionato.</p></div></td></tr>';
   }catch(e){ showToast(e.message, 'error'); }
 }
-function serviceLabel(s){ return {google_geocoding:'Google Geocoding',google_routes_matrix:'Google Routes API',google_maps_link:'Google Maps link',openai_route_explanation:'AI spiegazione giro',openai_support_ticket_text:'AI testo ticket',openai_admin_error_analysis:'AI analisi errori/ticket',openai_report_summary:'AI report aziendale'}[s] || s || 'API'; }
+function serviceLabel(s){ return {google_geocoding:'Google Geocoding',google_routes_matrix:'Google Matrix (storico)',mapbox_traffic:'Mapbox traffico / ETA',google_maps_link:'Google Maps link',openai_route_explanation:'AI spiegazione giro',openai_support_ticket_text:'AI testo ticket',openai_admin_error_analysis:'AI analisi errori/ticket',openai_report_summary:'AI report aziendale'}[s] || s || 'API'; }
 
 
 // ---- PLATFORM SETTINGS / ADMIN PROFILE v64 ----
@@ -1510,12 +1522,25 @@ async function loadPlatformSettings(){
     document.getElementById('platform-ai-enabled').checked = String(data.ai_enabled || 'false').toLowerCase() === 'true';
     document.getElementById('platform-openai-key').value = data.openai_api_key || '';
     document.getElementById('platform-openai-model').value = data.openai_model || 'gpt-4o-mini';
+    document.getElementById('platform-osrm-url').value = data.osrm_url || '';
+    document.getElementById('platform-osrm-version').value = data.osrm_cache_version || 'v1';
+    document.getElementById('platform-traffic-provider').value = data.traffic_provider || 'none';
+    document.getElementById('platform-mapbox-token').value = data.mapbox_access_token || '';
+    document.getElementById('platform-mapbox-cost').value = data.mapbox_traffic_cost_eur || '0';
+    document.getElementById('platform-toll-rates').value = data.toll_rates_json || '{}';
+    document.getElementById('platform-toll-dataset').value = data.toll_dataset_path || '';
   }catch(e){ showToast(e.message, 'error'); }
 }
 async function savePlatformSettings(){
   try{
     const openaiKey = document.getElementById('platform-openai-key').value.trim();
     const payload = {
+      osrm_url: document.getElementById('platform-osrm-url').value,
+      osrm_cache_version: document.getElementById('platform-osrm-version').value,
+      traffic_provider: document.getElementById('platform-traffic-provider').value,
+      mapbox_traffic_cost_eur: document.getElementById('platform-mapbox-cost').value,
+      toll_rates_json: document.getElementById('platform-toll-rates').value,
+      toll_dataset_path: document.getElementById('platform-toll-dataset').value,
       platform_name: document.getElementById('platform-name').value,
       support_email: document.getElementById('platform-support-email').value,
       support_phone: document.getElementById('platform-support-phone').value,
@@ -1529,6 +1554,8 @@ async function savePlatformSettings(){
       openai_model: document.getElementById('platform-openai-model').value,
     };
     if(openaiKey && !openaiKey.includes('•')) payload.openai_api_key = openaiKey;
+    const mapboxToken=document.getElementById('platform-mapbox-token').value.trim();
+    if(mapboxToken && !mapboxToken.includes('•')) payload.mapbox_access_token=mapboxToken;
     const saved = await api('/api/admin/platform-settings', { method:'PUT', body: JSON.stringify(payload)});
     if(saved){
       document.getElementById('platform-ai-enabled').checked = String(saved.ai_enabled || 'false').toLowerCase() === 'true';

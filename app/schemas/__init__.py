@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional, List, Literal
 
 
 class SignupIn(BaseModel):
@@ -79,6 +79,7 @@ class CustomerIn(BaseModel):
 class VehicleIn(BaseModel):
     nome: str | None = None
     targa: Optional[str] = None
+    toll_class: Literal["A", "B", "3", "4", "5"] = "B"
     consumo_l_100km: float = 8.5
     alimentazione: str = "gasolio"
     consumo_primario_100km: float = 8.5

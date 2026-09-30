@@ -14,7 +14,6 @@ from ..models import ApiUsageLog, User
 # Sono usate solo per un primo controllo interno dei consumi.
 ESTIMATED_COSTS_EUR = {
     "google_geocoding": 0.005,
-    "google_routes_matrix": 0.01,
     "google_maps_link": 0.0,
 }
 
@@ -27,6 +26,7 @@ def log_api_usage(
     db: Session,
     *,
     user_id: int | None = None,
+    route_id: int | None = None,
     provider: str = "google",
     service: str = "google_geocoding",
     action: str = "",
@@ -37,10 +37,12 @@ def log_api_usage(
     response_ms: int | None = None,
     estimated_cost_eur: float | None = None,
     meta: dict[str, Any] | None = None,
+    commit: bool = True,
 ):
     try:
         row = ApiUsageLog(
             user_id=user_id,
+            route_plan_id=route_id,
             provider=(provider or "google")[:80],
             service=(service or "google")[:120],
             action=(action or "")[:180],
@@ -52,12 +54,16 @@ def log_api_usage(
             estimated_cost_eur=estimate_cost(service, request_count) if estimated_cost_eur is None else float(estimated_cost_eur or 0),
             meta_json=json.dumps(meta or {}, ensure_ascii=False) if meta else None,
         )
-        db.add(row)
-        db.commit()
+        with db.begin_nested():
+            db.add(row)
+            db.flush()
+        if commit:
+            db.commit()
         return row
     except Exception:
         try:
-            db.rollback()
+            if commit:
+                db.rollback()
         except Exception:
             pass
         return None
@@ -94,27 +100,36 @@ def api_usage_summary(db: Session, period: str = "today", service: str = "", sta
     q = db.query(ApiUsageLog).filter(ApiUsageLog.created_at >= start_dt, ApiUsageLog.created_at <= end_dt)
     if service:
         q = q.filter(ApiUsageLog.service == service)
-    rows = q.order_by(ApiUsageLog.created_at.desc()).limit(250).all()
-    total_calls = sum(int(r.request_count or 1) for r in rows)
-    total_cost = round(sum(float(r.estimated_cost_eur or 0) for r in rows), 4)
-    success = sum(int(r.request_count or 1) for r in rows if r.status == "success")
-    failed = sum(int(r.request_count or 1) for r in rows if r.status != "success")
-    by_service: dict[str, dict] = {}
-    by_company: dict[int, dict] = {}
-    users = {u.id: u for u in db.query(User).all()}
-    for r in rows:
-        item = by_service.setdefault(r.service, {"service": r.service, "calls": 0, "cost": 0, "errors": 0})
-        item["calls"] += int(r.request_count or 1)
-        item["cost"] = round(item["cost"] + float(r.estimated_cost_eur or 0), 4)
-        if r.status != "success":
-            item["errors"] += 1
-        if r.user_id:
-            u = users.get(r.user_id)
-            comp = by_company.setdefault(r.user_id, {"user_id": r.user_id, "company_name": (u.company_name if u else "") or (u.username if u else f"Azienda #{r.user_id}"), "calls": 0, "cost": 0, "errors": 0})
-            comp["calls"] += int(r.request_count or 1)
-            comp["cost"] = round(comp["cost"] + float(r.estimated_cost_eur or 0), 4)
-            if r.status != "success":
-                comp["errors"] += 1
+    rows = q.order_by(ApiUsageLog.created_at.desc()).limit(100).all()
+    # Aggregate in SQL over the entire period; recent rows are just the drill-down.
+    aggregates = q.with_entities(
+        ApiUsageLog.provider, ApiUsageLog.service, ApiUsageLog.user_id, ApiUsageLog.status,
+        func.sum(ApiUsageLog.request_count), func.sum(ApiUsageLog.estimated_cost_eur)
+    ).group_by(ApiUsageLog.provider, ApiUsageLog.service, ApiUsageLog.user_id, ApiUsageLog.status).all()
+    user_ids = {a[2] for a in aggregates if a[2]} | {r.user_id for r in rows if r.user_id}
+    users = {u.id: u for u in db.query(User).filter(User.id.in_(user_ids)).all()} if user_ids else {}
+    total_calls, total_cost, success, failed = 0, 0.0, 0, 0
+    by_service, by_company = {}, {}
+    for provider, service_name, company_id, status, calls, cost in aggregates:
+        calls, cost = int(calls or 0), float(cost or 0)
+        total_calls += calls
+        total_cost += cost
+        success += calls if status == "success" else 0
+        failed += calls if status != "success" else 0
+        item = by_service.setdefault((provider, service_name), {
+            "provider": provider, "service": service_name, "calls": 0, "cost": 0, "errors": 0})
+        item["calls"] += calls
+        item["cost"] = round(item["cost"] + cost, 4)
+        item["errors"] += calls if status != "success" else 0
+        if company_id:
+            u = users.get(company_id)
+            comp = by_company.setdefault(company_id, {"user_id": company_id,
+                "company_name": (u.company_name if u else "") or (u.username if u else f"Azienda #{company_id}"),
+                "calls": 0, "cost": 0, "errors": 0})
+            comp["calls"] += calls
+            comp["cost"] = round(comp["cost"] + cost, 4)
+            comp["errors"] += calls if status != "success" else 0
+    total_cost = round(total_cost, 4)
 
     def row_to_dict(r: ApiUsageLog):
         u = users.get(r.user_id) if r.user_id else None
@@ -124,6 +139,7 @@ def api_usage_summary(db: Session, period: str = "today", service: str = "", sta
             "company_name": (u.company_name if u else "") or (u.username if u else "Sistema"),
             "user_id": r.user_id,
             "provider": r.provider,
+            "route_id": r.route_plan_id,
             "service": r.service,
             "action": r.action or "",
             "endpoint": r.endpoint or "",

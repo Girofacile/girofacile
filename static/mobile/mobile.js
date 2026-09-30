@@ -139,7 +139,7 @@ async function loadDashboard(){
     const todayRoutes=routes.filter(r=>r.data_giro===today);
     document.getElementById("dashGiriOggi").textContent=todayRoutes.length;
     const km=todayRoutes.reduce((s,r)=>s+parseFloat(r.totale_km||0),0);
-    const cost=todayRoutes.reduce((s,r)=>s+parseFloat(r.costo_carburante||0),0);
+    const cost=todayRoutes.reduce((s,r)=>s+parseFloat(r.costo_totale??r.costo_carburante??0),0);
     document.getElementById("dashKmOggi").textContent=fmt(km)+" km";
     document.getElementById("dashCostoOggi").textContent="€"+fmt(cost,2);
     const box=document.getElementById("activeRoutes");
@@ -169,38 +169,49 @@ async function cancelRoute(id){
   try{await api(`/api/routes/${id}/cancel`,{method:"POST",body:"{}"});loadDashboard();}
   catch(e){alert(e.message);}
 }
+function renderMobileRouteDetails(r, targetId="routeResult"){
+  const box=document.getElementById(targetId);
+  box.classList.remove("hidden");
+  const stops=(r.consegne||[]).map((d,i)=>`
+    <div class="stop-card">
+      <div class="stop-header"><div class="stop-num">${i+1}</div><div><div class="stop-name">${esc(d.cliente_nome)}</div><div class="stop-addr">${esc(d.indirizzo)}</div></div></div>
+      ${d.warning ? `<div class="warning-tag">${esc(d.warning)}</div>` : ""}
+      <div class="stop-times">
+        <div class="stop-time"><span>Arrivo</span><strong>${esc(d.arrivo_fisico||d.arrivo_stimato||"—")}</strong></div>
+        <div class="stop-time"><span>Inizio scarico</span><strong>${esc(d.inizio_servizio||d.arrivo_stimato||"—")}</strong></div>
+        <div class="stop-time"><span>Ripartenza</span><strong>${esc(d.partenza_stimata||"—")}</strong></div>
+        <div class="stop-time"><span>Attesa</span><strong>${Number(d.attesa_min||0)} min</strong></div>
+        <div class="stop-time"><span>Km</span><strong>${fmt(d.km_tappa)}</strong></div>
+      </div>
+    </div>`).join("");
+  box.innerHTML=`<div class="section-card"><div class="section-head"><h3>${esc(r.nome)}</h3><span>${esc(r.status_label||"Bozza")}</span></div>
+    <div class="route-kpi-grid"><div class="route-kpi"><strong>${fmt(r.totale_km)} km</strong><span>Distanza</span></div><div class="route-kpi"><strong>${Math.round(r.totale_minuti||0)} min</strong><span>Durata</span></div><div class="route-kpi"><strong>${esc(r.orario_rientro_stimato||"—")}</strong><span>Rientro stimato</span></div></div>
+    ${window.GiroFacileRouting.summaryHtml(r, `refreshMobileRouteTraffic(${Number(r.id)}, '${targetId}')`)}
+    ${r.status==="bozza" ? `<button class="btn-primary" onclick="programMobileRoute(${Number(r.id)}, '${targetId}')">Programma giro</button>` : ""}
+    ${stops}
+    ${r.google_maps_url ? `<a class="maps-btn" target="_blank" rel="noopener noreferrer" href="${esc(r.google_maps_url)}">Apri in Google Maps</a>` : ""}
+  </div>`;
+}
 async function viewRouteDetail(id){
   try{
-    const r=await api(`/api/routes/${id}`);
-    const box=document.getElementById("dashRouteDetail");
-    box.classList.remove("hidden");
-    const stops=(r.consegne||[]).map((d,i)=>`
-      <div class="stop-card">
-        <div class="stop-header">
-          <div class="stop-num">${i+1}</div>
-          <div><div class="stop-name">${esc(d.cliente_nome)}</div><div class="stop-addr">${esc(d.indirizzo)}</div></div>
-        </div>
-        ${d.warning?`<div class="warning-tag">${esc(d.warning.split("|")[0])}</div>`:""}
-        <div class="stop-times">
-          <div class="stop-time"><span>Arrivo</span><strong>${esc(d.arrivo_stimato||"—")}</strong></div>
-          <div class="stop-time"><span>Ripartenza</span><strong>${esc(d.partenza_stimata||"—")}</strong></div>
-          <div class="stop-time"><span>Attesa</span><strong>${d.attesa_min>0?d.attesa_min+" min":"—"}</strong></div>
-          <div class="stop-time"><span>Km</span><strong>${fmt(d.km_tappa)}</strong></div>
-        </div>
-      </div>`).join("");
-    box.innerHTML=`
-      <div class="section-card">
-        <div class="section-head"><h3>${esc(r.nome)}</h3><button class="link-btn" onclick="document.getElementById('dashRouteDetail').classList.add('hidden')">Chiudi</button></div>
-        <div class="route-kpi-grid">
-          <div class="route-kpi"><strong>${fmt(r.totale_km)} km</strong><span>Distanza</span></div>
-          <div class="route-kpi"><strong>${Math.round(r.totale_minuti||0)} min</strong><span>Durata</span></div>
-          <div class="route-kpi"><strong>€${fmt(r.costo_carburante,2)}</strong><span>Carburante</span></div>
-        </div>
-        ${stops}
-        ${r.google_maps_url?`<a class="maps-btn" target="_blank" href="${r.google_maps_url}">🗺 Apri in Google Maps</a>`:""}
-      </div>`;
-    box.scrollIntoView({behavior:"smooth"});
+    renderMobileRouteDetails(await api(`/api/routes/${id}`),"dashRouteDetail");
+    document.getElementById("dashRouteDetail").scrollIntoView({behavior:"smooth"});
   }catch(e){alert(e.message);}
+}
+const mobileTrafficBusy=new Set();
+async function refreshMobileRouteTraffic(id, targetId="routeResult"){
+  if(mobileTrafficBusy.has(id))return;
+  mobileTrafficBusy.add(id);
+  try{renderMobileRouteDetails(await api(`/api/routes/${id}/refresh-traffic`,{method:"POST"}),targetId);}
+  catch(e){alert(e.message);}finally{mobileTrafficBusy.delete(id);}
+}
+async function programMobileRoute(id, targetId="routeResult"){
+  if(mobileTrafficBusy.has(id))return;
+  mobileTrafficBusy.add(id);
+  try{
+    renderMobileRouteDetails(await api(`/api/routes/${id}/program`,{method:"POST",body:"{}"}),targetId);
+    loadDashboard();
+  }catch(e){alert(e.message);}finally{mobileTrafficBusy.delete(id);}
 }
 
 // ---- STORICO ----
@@ -221,7 +232,7 @@ async function loadStorico(){
           <div><div class="rh-name">${esc(r.nome)}</div><div class="rh-date">${esc(r.data_giro)} · ${esc(r.driver_name||"Autista n/a")}</div></div>
           <span class="badge ${r.status||"programmato"}">${esc(r.status_label||"")}</span>
         </div>
-        <div class="rh-meta"><span>📍 ${r.consegne_count||0} fermate</span><span>📏 ${fmt(r.totale_km)} km</span><span>💰 €${fmt(r.costo_carburante,2)}</span></div>
+        <div class="rh-meta"><span>📍 ${r.consegne_count||0} fermate</span><span>📏 ${fmt(r.totale_km)} km</span><span>💰 €${fmt(r.costo_totale??r.costo_carburante,2)}</span></div>
         <div class="rh-actions">
           ${r.status==="programmato"||r.status==="in_corso"?`<button class="mini-btn green" onclick="completeRoute(${r.id});loadStorico()">✓ Completa</button>`:""}
           ${r.status!=="completato"&&r.status!=="annullato"?`<button class="mini-btn red" onclick="cancelRoute(${r.id});loadStorico()">✕ Annulla</button>`:""}
@@ -354,41 +365,7 @@ async function optimizeMobileRoute(){
     const r=await api("/api/routes/optimize",{method:"POST",body:JSON.stringify(payload)});
     deliveries=(r.consegne||[]).map(d=>({...d}));
     renderSelected();
-    const warnings=[];
-    (r.consegne||[]).forEach(d=>{if(d.warning)d.warning.split("|").forEach(w=>{if(w.trim())warnings.push({nome:d.cliente_nome,w:w.trim()});});});
-    const warningsHtml=warnings.length?`<div class="section-card" style="margin-bottom:12px">
-      <div class="section-head"><h3>⚠️ Avvisi</h3></div>
-      ${warnings.map(x=>`<div class="warning-tag" style="display:block;margin-bottom:4px"><strong>${esc(x.nome)}:</strong> ${esc(x.w)}</div>`).join("")}
-    </div>`:"";
-    const stopsHtml=(r.consegne||[]).map((d,i)=>`
-      <div class="stop-card">
-        <div class="stop-header">
-          <div class="stop-num">${i+1}</div>
-          <div><div class="stop-name">${esc(d.cliente_nome)}</div><div class="stop-addr">${esc(d.indirizzo)}</div></div>
-        </div>
-        ${d.warning?`<div class="warning-tag">${esc(d.warning.split("|")[0])}</div>`:""}
-        <div class="stop-times">
-          <div class="stop-time"><span>Arrivo</span><strong>${esc(d.arrivo_stimato||"—")}</strong></div>
-          <div class="stop-time"><span>Ripartenza</span><strong>${esc(d.partenza_stimata||"—")}</strong></div>
-          <div class="stop-time"><span>Attesa</span><strong>${d.attesa_min>0?d.attesa_min+" min":"—"}</strong></div>
-          <div class="stop-time"><span>Km</span><strong>${fmt(d.km_tappa)} km</strong></div>
-        </div>
-      </div>`).join("");
-    box.innerHTML=`
-      <div class="section-card">
-        <div class="section-head"><h3>Risultato giro</h3></div>
-        <div class="route-kpi-grid">
-          <div class="route-kpi"><strong>${fmt(r.totale_km)} km</strong><span>Distanza</span></div>
-          <div class="route-kpi"><strong>${Math.round(r.totale_minuti||0)} min</strong><span>Durata</span></div>
-          <div class="route-kpi"><strong>€${fmt(r.costo_carburante,2)}</strong><span>Carburante</span></div>
-        </div>
-      </div>
-      ${warningsHtml}
-      <div class="section-card" style="padding:12px">
-        <div class="section-head" style="margin-bottom:10px"><h3>Dettaglio fermate</h3><span style="font-size:12px;color:#6b7280">${(r.consegne||[]).length} fermate</span></div>
-        ${stopsHtml}
-        ${r.google_maps_url?`<a class="maps-btn" target="_blank" href="${r.google_maps_url}">🗺 Apri in Google Maps</a>`:""}
-      </div>`;
+    renderMobileRouteDetails(r,"routeResult");
     loadDashboard();
   }catch(e){
     box.innerHTML=`<div class="section-card"><strong style="color:var(--red)">Errore</strong><p style="margin-top:8px;font-size:13px;color:#6b7280">${esc(e.message)}</p></div>`;
@@ -628,6 +605,7 @@ async function openEditDriver(id){
 function vehicleForm(v={}){return `
   <div class="form-group"><label>Nome *</label><input id="fNome" value="${esc(v.nome||'')}"></div>
   <div class="form-group"><label>Targa</label><input id="fTarga" value="${esc(v.targa||'')}"></div>
+  <div class="form-group"><label>Classe pedaggio</label><select id="fTollClass">${["A","B","3","4","5"].map(c=>`<option value="${c}" ${(v.toll_class||"B")===c?"selected":""}>${c==="A"?"A · 2 assi fino a 1,3 m":c==="B"?"B · 2 assi oltre 1,3 m":c+" assi"}</option>`).join("")}</select></div>
   <div class="form-row">
     <div class="form-group"><label>Consumo (L/100km)</label><input id="fConsumo" type="number" step="0.1" value="${v.consumo_l_100km||8.5}"></div>
     <div class="form-group"><label>Capacità (kg)</label><input id="fKg" type="number" value="${v.capacita_kg||1000}"></div>
@@ -639,14 +617,14 @@ function vehicleForm(v={}){return `
 
 function openAddVehicle(){openMModal("Nuovo mezzo",vehicleForm(),async()=>{
   if(!mval("fNome")) return alert("Nome obbligatorio");
-  try{await api("/api/vehicles",{method:"POST",body:JSON.stringify({nome:mval("fNome"),targa:mval("fTarga")||null,consumo_l_100km:parseFloat(mval("fConsumo"))||8.5,capacita_kg:parseFloat(mval("fKg"))||1000,capacita_colli:parseInt(mval("fColli"))||100,ha_sponda:mcheck("fSponda"),accesso_ztl:mcheck("fZtl"),note:mval("fNote")||null})});
+  try{await api("/api/vehicles",{method:"POST",body:JSON.stringify({nome:mval("fNome"),targa:mval("fTarga")||null,toll_class:mval("fTollClass")||"B",consumo_l_100km:parseFloat(mval("fConsumo"))||8.5,capacita_kg:parseFloat(mval("fKg"))||1000,capacita_colli:parseInt(mval("fColli"))||100,ha_sponda:mcheck("fSponda"),accesso_ztl:mcheck("fZtl"),note:mval("fNote")||null})});
   closeMModal();showSubView("mezzi");loadResources();}catch(e){alert(e.message);}});}
 
 async function openEditVehicle(id){
   try{const rows=await api("/api/vehicles");const v=rows.find(x=>x.id===id);if(!v)return;
   openMModal("Modifica mezzo",vehicleForm(v),async()=>{
     if(!mval("fNome")) return alert("Nome obbligatorio");
-    try{await api(`/api/vehicles/${id}`,{method:"PUT",body:JSON.stringify({nome:mval("fNome"),targa:mval("fTarga")||null,consumo_l_100km:parseFloat(mval("fConsumo"))||8.5,capacita_kg:parseFloat(mval("fKg"))||1000,capacita_colli:parseInt(mval("fColli"))||100,ha_sponda:mcheck("fSponda"),accesso_ztl:mcheck("fZtl"),note:mval("fNote")||null})});
+    try{await api(`/api/vehicles/${id}`,{method:"PUT",body:JSON.stringify({nome:mval("fNome"),targa:mval("fTarga")||null,toll_class:mval("fTollClass")||"B",consumo_l_100km:parseFloat(mval("fConsumo"))||8.5,capacita_kg:parseFloat(mval("fKg"))||1000,capacita_colli:parseInt(mval("fColli"))||100,ha_sponda:mcheck("fSponda"),accesso_ztl:mcheck("fZtl"),note:mval("fNote")||null})});
     closeMModal();showSubView("mezzi");loadResources();}catch(e){alert(e.message);}
   },true,async()=>{if(!confirm("Eliminare?"))return;try{await api(`/api/vehicles/${id}`,{method:"DELETE"});closeMModal();showSubView("mezzi");loadResources();}catch(e){alert(e.message);}});
   }catch(e){alert(e.message);}

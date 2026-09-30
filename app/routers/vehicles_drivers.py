@@ -116,6 +116,7 @@ def vehicle_to_dict(vehicle, db: Session) -> dict:
         "id": _vehicle_value(vehicle, "id"),
         "nome": _vehicle_value(vehicle, "nome", ""),
         "targa": _vehicle_value(vehicle, "targa"),
+        "toll_class": _vehicle_value(vehicle, "toll_class", "B"),
         "marca": _vehicle_value(vehicle, "marca"),
         "modello": _vehicle_value(vehicle, "modello"),
         "anno_immatricolazione": _vehicle_value(vehicle, "anno_immatricolazione"),

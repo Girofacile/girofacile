@@ -22,7 +22,6 @@ from .routers import (
 )
 from .routers.vehicles_drivers import drivers_router, vehicles_router
 from .services.geocoding import search_address_autocomplete
-from .services.api_usage import log_api_usage
 
 # -----------------------------------------------------------------------
 # App
@@ -190,15 +189,7 @@ def address_search(
     db: Session = Depends(get_db),
     _user: UserModel = Depends(current_user),
 ):
-    import time
-    started = time.perf_counter()
-    try:
-        result = search_address_autocomplete(q, comune, provincia)
-        log_api_usage(db, user_id=_user.id, service="google_geocoding", action="Autocomplete indirizzi", endpoint="/api/address/search", status="success", message=f"{len(result or [])} risultati", response_ms=int((time.perf_counter()-started)*1000))
-        return result
-    except Exception as exc:
-        log_api_usage(db, user_id=_user.id, service="google_geocoding", action="Autocomplete indirizzi", endpoint="/api/address/search", status="failed", message=str(exc), response_ms=int((time.perf_counter()-started)*1000))
-        raise
+    return search_address_autocomplete(q, comune, provincia, db=db, user_id=_user.id)
 
 
 # -----------------------------------------------------------------------
@@ -249,6 +240,24 @@ def migrate_database():
     if insp.has_table("deliveries"):
         add_column("deliveries", "optimizer_details", sql_type(Text()))
 
+    if insp.has_table("api_usage_logs"):
+        add_column("api_usage_logs", "route_plan_id", sql_type(Integer()))
+
+    if insp.has_table("route_plans"):
+        add_column("route_plans", "base_routing_provider", sql_type(String(30)))
+        add_column("route_plans", "routing_snapshot_json", sql_type(Text()))
+        add_column("route_plans", "traffic_provider", sql_type(String(30)))
+        add_column("route_plans", "traffic_calculated_at", sql_type(DateTime()))
+        add_column("route_plans", "traffic_departure_at", sql_type(DateTime(timezone=True)))
+        add_column("route_plans", "traffic_status", sql_type(String(30)))
+        add_column("route_plans", "traffic_version", sql_type(Integer()), "0")
+        add_column("route_plans", "traffic_result_json", sql_type(Text()))
+        add_column("route_plans", "road_geometry_json", sql_type(Text()))
+        add_column("route_plans", "toll_provider", sql_type(String(30)))
+        add_column("route_plans", "toll_status", sql_type(String(30)))
+        add_column("route_plans", "toll_estimated_eur", sql_type(Float()))
+        add_column("route_plans", "toll_details_json", sql_type(Text()))
+
     # Colonne legacy comuni
     for table in ["customers", "deposits", "vehicles", "route_plans", "drivers", "agents"]:
         if insp.has_table(table):
@@ -262,6 +271,7 @@ def migrate_database():
         add_column("vehicles", "deleted_at", sql_type(DateTime()))
         add_column("vehicles", "nome", sql_type(String(150)), "''")
         add_column("vehicles", "targa", sql_type(String(50)))
+        add_column("vehicles", "toll_class", sql_type(String(10)), "'B'")
         add_column("vehicles", "consumo_l_100km", sql_type(Float()), "8.5")
         add_column("vehicles", "capacita_kg", sql_type(Float()), "1000")
         add_column("vehicles", "capacita_colli", sql_type(Integer()), "100")
@@ -339,6 +349,11 @@ def migrate_database():
     if insp.has_table("distance_cache"):
         add_column("distance_cache", "user_id", sql_type(Integer()))
         add_column("distance_cache", "expires_at", sql_type(DateTime()))
+    if insp.has_table("distance_cache"):
+        # Legacy traffic cache is disposable; saved tours are never touched.
+        with engine.begin() as conn:
+            conn.execute(text("DELETE FROM distance_cache WHERE origin_key LIKE '%|departure=%' OR dest_key LIKE '%|departure=%'"))
+            conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS ix_distance_cache_road_pair ON distance_cache(user_id, origin_key, dest_key)"))
         # Le installazioni precedenti potrebbero avere tratte senza azienda.
         # Le lasciamo nel DB ma la nuova logica usa solo cache con user_id,
         # così non si mischiano dati tra aziende. La pulizia automatica le rimuoverà.

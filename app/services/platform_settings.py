@@ -63,3 +63,38 @@ def openai_model(db: Session | None = None) -> str:
 
 def ai_enabled(db: Session | None = None) -> bool:
     return setting_bool(db, "ai_enabled", os.getenv("AI_ENABLED", "false").strip().lower() in ("1", "true", "yes", "si", "sì", "on"))
+
+# Routing di base e traffico: le impostazioni DB prevalgono sulle variabili env.
+def routing_setting(db: Session | None, key: str, default: str = "") -> str:
+    return get_platform_setting(db, key, os.getenv(key.upper(), default))
+
+
+def osrm_url(db: Session | None = None) -> str:
+    from urllib.parse import urlparse
+    url = routing_setting(db, "osrm_url", "http://localhost:5000").rstrip("/")
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https") or not parsed.hostname or parsed.username or parsed.password:
+        raise ValueError("OSRM_URL deve essere un URL HTTP(S) senza credenziali")
+    public = parsed.hostname.lower() in ("router.project-osrm.org", "routing.openstreetmap.de")
+    production = os.getenv("APP_ENV", os.getenv("ENVIRONMENT", "production")).lower() in ("production", "prod")
+    allow_public = routing_setting(db, "osrm_allow_public_fallback", "false").lower() in ("1", "true", "yes", "on")
+    if public and (production or not allow_public):
+        raise ValueError("In produzione OSRM richiede un'istanza propria; il server pubblico è solo per sviluppo esplicito")
+    return url
+
+
+def traffic_provider_name(db: Session | None = None) -> str:
+    return routing_setting(db, "traffic_provider", "none").lower()
+
+
+def mapbox_access_token(db: Session | None = None) -> str:
+    return routing_setting(db, "mapbox_access_token")
+
+
+def routing_number(db: Session | None, key: str, default: float, minimum: float = 0) -> float:
+    import math
+    try:
+        value = float(routing_setting(db, key, str(default)))
+        return max(minimum, value) if math.isfinite(value) else default
+    except (TypeError, ValueError):
+        return default

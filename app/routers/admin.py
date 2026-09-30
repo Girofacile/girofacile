@@ -31,7 +31,7 @@ from ..services.error_monitor import error_log_to_dict
 from ..services.email import send_ticket_resolved, send_superadmin_collaborator_invitation
 from ..services.api_usage import api_usage_summary
 from ..services.ai_assistant import run_ai_text
-from ..services.platform_settings import google_maps_api_key, google_geocoding_enabled, google_routes_enabled, openai_api_key, openai_model, ai_enabled as platform_ai_enabled
+from ..services.platform_settings import google_maps_api_key, google_geocoding_enabled, openai_api_key, openai_model, ai_enabled as platform_ai_enabled
 from ..core.security import hash_password
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
@@ -320,13 +320,15 @@ def admin_api_usage(
     data["google"] = {
         "api_key_configured": bool(google_maps_api_key(db)),
         "geocoding_enabled": bool(google_geocoding_enabled(db)),
-        "routes_enabled": bool(google_routes_enabled(db)),
+        "routes_enabled": False,
         "services": [
             {"key": "google_geocoding", "label": "Google Geocoding / Verifica indirizzi"},
-            {"key": "google_routes_matrix", "label": "Google Routes API / Calcolo giri"},
             {"key": "google_maps_link", "label": "Link Google Maps"},
         ],
     }
+    from ..services.platform_settings import traffic_provider_name, mapbox_access_token
+    data["traffic"] = {"provider": traffic_provider_name(db), "mapbox_configured": bool(mapbox_access_token(db)),
+                       "services": [{"key": "mapbox_traffic", "label": "Mapbox traffic / ETA percorso definitivo"}]}
     return data
 
 # -----------------------------------------------------------------------
@@ -380,7 +382,16 @@ def admin_platform_settings(db: Session = Depends(get_db), superadmin: dict = De
         "openai_model": "gpt-4o-mini",
         "google_maps_api_key": GOOGLE_MAPS_API_KEY or "",
         "google_geocoding_enabled": "true" if GOOGLE_MAPS_API_KEY else "false",
-        "google_routes_enabled": "true" if GOOGLE_MAPS_API_KEY else "false",
+        "google_routes_enabled": "false",
+        "osrm_url": os.getenv("OSRM_URL", "http://localhost:5000"),
+        "osrm_cache_version": os.getenv("OSRM_CACHE_VERSION", "v1"),
+        "osrm_table_max_coordinates": os.getenv("OSRM_TABLE_MAX_COORDINATES", "100"),
+        "osrm_allow_public_fallback": os.getenv("OSRM_ALLOW_PUBLIC_FALLBACK", "false"),
+        "traffic_provider": os.getenv("TRAFFIC_PROVIDER", "none"),
+        "mapbox_access_token": os.getenv("MAPBOX_ACCESS_TOKEN", ""),
+        "mapbox_traffic_cost_eur": os.getenv("MAPBOX_TRAFFIC_COST_EUR", "0"),
+        "toll_rates_json": os.getenv("TOLL_RATES_JSON", "{}"),
+        "toll_dataset_path": os.getenv("TOLL_DATASET_PATH", ""),
         "stripe_secret_key": os.getenv("STRIPE_SECRET_KEY", ""),
         "shopify_domain": "",
         "backup_storage_target": "locale",
@@ -397,13 +408,34 @@ def admin_update_platform_settings(payload: dict, db: Session = Depends(get_db),
         "platform_name", "support_email", "error_notification_email", "main_domain",
         "maintenance_mode", "registrations_enabled", "trial_days", "default_plan", "support_phone",
         "ai_enabled", "openai_api_key", "openai_model",
+        "osrm_url", "osrm_cache_version", "osrm_table_max_coordinates", "osrm_allow_public_fallback",
+        "traffic_provider", "mapbox_access_token", "mapbox_traffic_cost_eur", "toll_rates_json", "toll_dataset_path",
         "google_maps_api_key", "google_geocoding_enabled", "google_routes_enabled", "stripe_secret_key", "shopify_domain", "backup_storage_target", "backup_frequency", "server_console_url"
     }
     for key in allowed:
         if key not in payload:
             continue
         value = payload.get(key)
-        if key in ("maintenance_mode", "registrations_enabled", "ai_enabled", "google_geocoding_enabled", "google_routes_enabled"):
+        if key == "traffic_provider" and value not in ("mapbox", "none"):
+            raise HTTPException(400, "Provider traffico non supportato")
+        if key == "osrm_cache_version" and (not str(value).strip() or len(str(value)) > 24):
+            raise HTTPException(400, "Versione cache OSRM: usa da 1 a 24 caratteri")
+        if key in ("mapbox_traffic_cost_eur", "osrm_table_max_coordinates"):
+            import math
+            try:
+                numeric = float(value)
+                if not math.isfinite(numeric) or numeric < (2 if key == "osrm_table_max_coordinates" else 0):
+                    raise ValueError()
+            except (TypeError, ValueError):
+                raise HTTPException(400, "Valore numerico non valido")
+        if key == "toll_rates_json":
+            try:
+                rates = json.loads(value)
+                if not isinstance(rates, dict) or any(k not in ("A", "B", "3", "4", "5") or float(v) < 0 for k, v in rates.items()):
+                    raise ValueError()
+            except (TypeError, ValueError):
+                raise HTTPException(400, "Tariffe pedaggio: oggetto JSON con classi A, B, 3, 4, 5 e importi non negativi")
+        if key in ("maintenance_mode", "registrations_enabled", "ai_enabled", "google_geocoding_enabled", "google_routes_enabled", "osrm_allow_public_fallback"):
             value = _bool_to_str(value)
         if key == "trial_days":
             try:

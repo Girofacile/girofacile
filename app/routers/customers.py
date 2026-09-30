@@ -18,7 +18,6 @@ from ..services.geocoding import apply_geocode, geocode_customer
 from ..services import distance_cache as dc
 from ..services.plans import check_customer_limit
 from ..services.agents_feature import agents_enabled
-from ..services.api_usage import log_api_usage
 
 router = APIRouter(prefix="/api/customers", tags=["customers"])
 
@@ -158,6 +157,7 @@ def update_customer(item_id: int, data: CustomerIn, db: Session = Depends(get_db
     item = owned(db.query(Customer), Customer, user).filter(Customer.id == item_id).first()
     if not item:
         raise HTTPException(404, "Cliente non trovato")
+    old_coordinates = (item.lat, item.lon)
     old_key = "|".join([item.indirizzo or "", item.comune or "", item.provincia or ""]).strip().lower()
     payload = data.model_dump()
     if not agents_enabled(user):
@@ -184,7 +184,7 @@ def update_customer(item_id: int, data: CustomerIn, db: Session = Depends(get_db
         item.fonte_geocodifica = None
         item.google_place_id = None
         item.geocodificato_il = None
-        # Se cambia indirizzo, le tratte cachate del cliente non sono più valide.
+    if old_key != new_key or old_coordinates != (item.lat, item.lon):
         dc.invalidate_key(db, dc.customer_key(item.id, user_id=user.id), user_id=user.id)
     normalize_customer_times(item)
     db.commit()
@@ -238,15 +238,7 @@ def verify_customer_address_preview(data: CustomerIn, db: Session = Depends(get_
         payload[_field] = parse_time_value(payload.get(_field))
 
     temp = Customer(**payload, user_id=user.id)
-    started = time.perf_counter()
-    try:
-        result = geocode_customer(temp, db=db)
-        elapsed_ms = int((time.perf_counter() - started) * 1000)
-        log_api_usage(db, user_id=user.id, service="google_geocoding", action="Anteprima verifica indirizzo", endpoint="/api/customers/verify-address-preview", status="success" if result.get("status") == "verificato" else "failed", message=result.get("status", ""), response_ms=elapsed_ms)
-    except Exception as exc:
-        elapsed_ms = int((time.perf_counter() - started) * 1000)
-        log_api_usage(db, user_id=user.id, service="google_geocoding", action="Anteprima verifica indirizzo", endpoint="/api/customers/verify-address-preview", status="failed", message=str(exc), response_ms=elapsed_ms)
-        raise
+    result = geocode_customer(temp, db=db)
     return {
         "result": result,
         "suggested": {
@@ -266,15 +258,7 @@ def verify_customer_address(item_id: int, db: Session = Depends(get_db), user: U
     item = owned(db.query(Customer), Customer, user).filter(Customer.id == item_id).first()
     if not item:
         raise HTTPException(404, "Cliente non trovato")
-    started = time.perf_counter()
-    try:
-        result = geocode_customer(item, db=db)
-        elapsed_ms = int((time.perf_counter() - started) * 1000)
-        log_api_usage(db, user_id=user.id, service="google_geocoding", action="Verifica indirizzo cliente", endpoint=f"/api/customers/{item_id}/verify-address", status="success" if result.get("status") == "verificato" else "failed", message=result.get("status", ""), response_ms=elapsed_ms)
-    except Exception as exc:
-        elapsed_ms = int((time.perf_counter() - started) * 1000)
-        log_api_usage(db, user_id=user.id, service="google_geocoding", action="Verifica indirizzo cliente", endpoint=f"/api/customers/{item_id}/verify-address", status="failed", message=str(exc), response_ms=elapsed_ms)
-        raise
+    result = geocode_customer(item, db=db)
     apply_geocode(item, result)
     db.commit()
     db.refresh(item)
@@ -296,15 +280,7 @@ def verify_pending_addresses(
     )
     stats = {"verificato": 0, "da_verificare": 0, "non_trovato": 0}
     for item in rows:
-        started = time.perf_counter()
-        try:
-            result = geocode_customer(item, db=db)
-            elapsed_ms = int((time.perf_counter() - started) * 1000)
-            log_api_usage(db, user_id=user.id, service="google_geocoding", action="Verifica indirizzi pendenti", endpoint="/api/customers/verify-pending", status="success" if result.get("status") == "verificato" else "failed", message=result.get("status", ""), response_ms=elapsed_ms)
-        except Exception as exc:
-            elapsed_ms = int((time.perf_counter() - started) * 1000)
-            log_api_usage(db, user_id=user.id, service="google_geocoding", action="Verifica indirizzi pendenti", endpoint="/api/customers/verify-pending", status="failed", message=str(exc), response_ms=elapsed_ms)
-            raise
+        result = geocode_customer(item, db=db)
         apply_geocode(item, result)
         stats[result.get("status", "non_trovato")] = stats.get(result.get("status", "non_trovato"), 0) + 1
         db.commit()

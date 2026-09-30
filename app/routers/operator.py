@@ -1,3 +1,4 @@
+from ..services.route_enrichment import routing_metadata, json_data, TIMING_DETAILS
 """
 Router portale operatore.
 Accessibile tramite token senza login — /giro/{token}
@@ -87,6 +88,7 @@ def delivery_to_operator_dict(delivery: Delivery, status: DeliveryStatus | None)
         "arrivo_stimato": time_to_hhmm(delivery.arrivo_stimato),
         "partenza_stimata": time_to_hhmm(delivery.partenza_stimata),
         "km_tappa": delivery.km_tappa,
+        **{k: v for k, v in json_data(delivery.optimizer_details).items() if k in TIMING_DETAILS},
         "warning": delivery.warning,
         "status": status.status if status else "in_attesa",
         "motivo_mancata": status.motivo_mancata if status else None,
@@ -201,6 +203,7 @@ def get_operator_route(token: str, db: Session = Depends(get_db)):
 
     return {
         "route": {
+            **routing_metadata(plan),
             "id": plan.id,
             "nome": plan.nome,
             "data_giro": date_to_iso(plan.data_giro),
