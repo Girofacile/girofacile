@@ -187,3 +187,43 @@ assenza di Google Matrix, riuso per date/orari diversi, invalidazione,
 direzioni/tenant, OSRM Table e fallback, ETA Mapbox con attese/scarico,
 segmentazione e partenze dei segmenti, pedaggi a km/fissi/copertura ignota,
 riapertura senza richieste, conservazione energetica e migrazioni.
+
+## File modificati
+
+- `README_ROUTING.md`
+- `app/main.py`
+- `app/models.py`
+- `app/optimizer.py`
+- `app/routers/admin.py`
+- `app/routers/customers.py`
+- `app/routers/driver.py`
+- `app/routers/operator.py`
+- `app/routers/routes.py`
+- `app/routers/vehicles_drivers.py`
+- `app/schemas/__init__.py`
+- `app/services/api_usage.py`
+- `app/services/distance_cache.py`
+- `app/services/geocoding.py`
+- `app/services/platform_settings.py`
+- `app/services/road_routing.py`
+- `app/services/route_enrichment.py`
+- `app/services/toll_provider.py`
+- `app/services/traffic_provider.py`
+- `static/admin/index.html`
+- `static/dashboard/index.html`
+- `static/dashboard/js/core.js`
+- `static/driver/index.html`
+- `static/mobile/index.html`
+- `static/mobile/mobile.js`
+- `static/operator/index.html`
+- `static/routing-summary.css`
+- `static/routing-summary.js`
+- `tests/run_real_optimizer_benchmark.py`
+- `tests/test_optimizer.py`
+- `tests/test_optimizer_improvements.py`
+- `tests/test_optimizer_preview.cjs`
+- `tests/test_routing_architecture.py`
+- `tests/test_routing_postgres.py`
+- `tests/test_routing_ui.cjs`
+- `tests/test_scheduled_ui.cjs`
+- `tests/test_stability.py`
