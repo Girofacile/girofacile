@@ -62,8 +62,6 @@
 .route-preview-design .preview-sr-only { position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap; }
 .route-preview-design :is(button,a,summary):focus-visible { outline:3px solid #9ec7ff;outline-offset:3px; }
 @media(min-width:1101px) {
- body:has(#tab-route-preview:not(.hidden)) .sidebar { width:222px; }
- body:has(#tab-route-preview:not(.hidden)) .main-area { margin-left:222px;width:calc(100% - 222px); }
  body:has(#tab-route-preview:not(.hidden)) .content { padding:0 30px 28px; }
  .route-preview-design .preview-breadcrumb { margin-top:-35px;min-height:22px;margin-bottom:23px;width:max-content;max-width:55%;position:relative;z-index:11; }
 }

@@ -117,10 +117,7 @@ body:has(#tab-company:not(.hidden)) .topbar {
 #tab-company .company-save-actions button { min-height: 44px; font-size: 14px; }
 #tab-company .onboarding-card-v29 { margin: 0; }
 @media (min-width: 1101px) {
-  body:has(#tab-company:not(.hidden)) .sidebar { width: 218px; }
-  body:has(#tab-company:not(.hidden)) .main-area { margin-left: 218px; width: calc(100% - 218px); }
   body:has(#tab-company:not(.hidden)) .content { padding: 28px 30px 36px; }
-  body:has(#tab-company:not(.hidden)) .sidebar .nav-item { font-family: Arial, Helvetica, sans-serif; font-size: 14px; gap: 10px; padding-left: 10px; padding-right: 10px; }
 }
 @media (min-width: 1400px) {
   #tab-company .company-identity, #tab-company .company-contacts { min-height: 360px; }

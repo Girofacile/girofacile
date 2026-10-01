@@ -66,10 +66,7 @@
 .nav-item.scheduled-nav-entry { display:none; }
 body:has(#tab-dashboard-scheduled:not(.hidden)) .nav-item.scheduled-nav-entry { display:flex; }
 @media(min-width:1101px) {
- body:has(#tab-dashboard-scheduled:not(.hidden)) .sidebar { width:214px; }
- body:has(#tab-dashboard-scheduled:not(.hidden)) .main-area { margin-left:214px;width:calc(100% - 214px); }
  body:has(#tab-dashboard-scheduled:not(.hidden)) .content { padding:0 20px 36px; }
- body:has(#tab-dashboard-scheduled:not(.hidden)) .sidebar .nav-item { font:600 13px Arial,Helvetica,sans-serif;gap:8px;min-height:46px;padding:9px 10px; }
  #tab-dashboard-scheduled .dash-subpage-topbar,#tab-dashboard-scheduled .dash-subpage-title-row { margin-left:14px; }
 }
 @media(max-width:1500px) {

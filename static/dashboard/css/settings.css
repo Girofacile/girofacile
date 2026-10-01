@@ -37,14 +37,7 @@
 #tab-settings #settingsSaveBtnV893{background:linear-gradient(120deg,#0879ff,#075bf0);color:#fff;border:0;border-radius:10px;padding:12px 18px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
 #tab-settings #settingsSaveBtnV893:disabled{opacity:.6;cursor:wait}
 @media(min-width:1101px){
- body:has(#tab-settings:not(.hidden)) .sidebar{width:224px;padding:18px 15px}
- body:has(#tab-settings:not(.hidden)) .main-area{margin-left:224px;width:calc(100% - 224px)}
  body:has(#tab-settings:not(.hidden)) .content{padding:21px 25px 28px}
- body:has(#tab-settings:not(.hidden)) .topbar{height:68px;min-height:68px;padding:6px 38px}
- body:has(#tab-settings:not(.hidden)) .side-nav{padding-top:20px;gap:7px}
- body:has(#tab-settings:not(.hidden)) .nav-item{font-size:14px;padding:8px 12px;min-height:44px;border-radius:10px;gap:10px}
- body:has(#tab-settings:not(.hidden)) .brand{height:48px;padding:0 2px 8px}
- body:has(#tab-settings:not(.hidden)) .brand-title{font-size:20px}
 }
 @media(max-width:1200px){#tab-settings .setting-row{gap:18px;grid-template-columns:64px minmax(0,1fr) 65px 24px}#tab-settings .settings-icon{width:64px;height:64px}#tab-settings .settings-detail{margin-left:82px}}
 @media(max-width:700px){#tab-settings .settings-panel{padding:0 16px!important;border-radius:19px!important}#tab-settings .setting-row{grid-template-columns:48px minmax(0,1fr) 54px 20px;gap:12px;padding:20px 0;min-height:110px}#tab-settings .settings-icon{width:48px;height:48px;border-radius:13px}#tab-settings .settings-icon svg{width:27px;height:27px}#tab-settings .setting-copy strong{font-size:14px}#tab-settings .setting-copy>span{font-size:12px;line-height:1.5}#tab-settings .switch-toggle{width:54px;min-width:54px;height:32px}#tab-settings .switch-slider:before{width:24px;height:24px}#tab-settings .switch-toggle input:checked+.switch-slider:before{transform:translateX(21px)}#tab-settings .settings-expand{width:20px}#tab-settings .settings-detail{margin-left:0}#tab-settings .settings-save-bar-v893{bottom:100px;flex-wrap:wrap}}
