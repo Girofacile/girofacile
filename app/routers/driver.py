@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..services.delivery_signature import apply_delivery_signature
 from ..core.dependencies import current_user, owned
+from ..core.http_security import cookie_options
 from ..core.security import hash_password as secure_hash_password, password_needs_rehash, validate_password_strength, verify_password
 from ..core.utils import local_now, local_today, date_to_iso, time_to_hhmm, minutes_from_hhmm
 from ..services.plans import require_feature
