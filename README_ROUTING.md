@@ -18,7 +18,7 @@ prevalgono sull'env. Nessuna chiave è inclusa nel repository.
 | OSRM_ALLOW_PUBLIC_FALLBACK | osrm_allow_public_fallback | false |
 | TRAFFIC_PROVIDER | traffic_provider | none |
 | MAPBOX_ACCESS_TOKEN | mapbox_access_token | vuoto |
-| MAPBOX_MAX_COORDINATES | env | 10, massimo 10 per driving-traffic |
+| MAPBOX_MAX_COORDINATES | env | 25, massimo 25 per Directions driving-traffic |
 | MAPBOX_TRAFFIC_COST_EUR | mapbox_traffic_cost_eur | 0, impostare costo contrattuale |
 | ROUTING_TIMEOUT_SECONDS | env | 15 |
 | DISTANCE_CACHE_TTL_DAYS | env | 0: nessuna scadenza |
@@ -60,7 +60,7 @@ configurabile, da adeguare al piano effettivo; non è una tariffa certificata.
 - Programmazione: geometria/annotazioni OSRM del percorso ordinato, stima
   pedaggi e Mapbox driving-traffic. GiroFacile ricalcola gli ETA dai legs,
   sommando scarico e attese, senza cambiare ordine.
-- Driving-traffic accetta 10 coordinate: deposito, 8 consegne e rientro
+- Directions driving-traffic accetta 25 coordinate: deposito, 23 consegne e rientro
   rientrano in una richiesta. Percorsi più lunghi vengono suddivisi in
   segmenti consecutivi con un solo punto condiviso tra segmenti; ogni leg
   compare una volta. Le partenze dei segmenti includono scarico e attese.
@@ -227,3 +227,5 @@ riapertura senza richieste, conservazione energetica e migrazioni.
 - `tests/test_routing_ui.cjs`
 - `tests/test_scheduled_ui.cjs`
 - `tests/test_stability.py`
+
+Limite Directions verificato il 1 ottobre 2026: https://docs.mapbox.com/api/navigation/directions/ . Il limite Matrix driving-traffic (10) non si applica a Directions.

@@ -250,7 +250,11 @@ def test_none_provider_never_calls_traffic(routing_env, monkeypatch):
     assert routing_env[1].query(ApiUsageLog).count() == 0
 
 
-def test_mapbox_over_waypoint_limit_preserves_all_directed_legs(routing_env, monkeypatch):
+@pytest.mark.parametrize("count,configured,sizes", [(25, None, [25]), (26, None, [25, 2]), (51, "100", [25, 25, 3]), (23, "10", [10, 10, 5])])
+def test_mapbox_over_waypoint_limit_preserves_all_directed_legs(routing_env, monkeypatch, count, configured, sizes):
+    monkeypatch.delenv("MAPBOX_MAX_COORDINATES", raising=False)
+    if configured:
+        monkeypatch.setenv("MAPBOX_MAX_COORDINATES", configured)
     calls = []
     def get(url, params, **kwargs):
         coordinates = [tuple(map(float, value.split(","))) for value in url.rsplit("/", 1)[-1].split(";")]
@@ -258,15 +262,16 @@ def test_mapbox_over_waypoint_limit_preserves_all_directed_legs(routing_env, mon
         return Response({"code": "Ok", "routes": [{"geometry": "g", "legs":
             [{"duration": destination[0] * 60} for destination in coordinates[1:]]}]})
     monkeypatch.setattr(requests, "get", get)
-    points = [{"lat": 45, "lon": i} for i in range(23)]
+    points = [{"lat": 45, "lon": i} for i in range(count)]
     result = traffic_provider.MapboxTrafficProvider().calculate(points, "2099-01-15T07:00:00Z")
-    assert [len(chunk) for chunk, _ in calls] == [10, 10, 5]
-    assert calls[0][0][-1] == calls[1][0][0] and calls[1][0][-1] == calls[2][0][0]
-    assert [leg["duration"] for leg in result["legs"]] == [i * 60 for i in range(1, 23)]
-    assert [p for chunk, _ in calls for p in chunk[1:]] == [(i, 45) for i in range(1, 23)]
+    assert [len(chunk) for chunk, _ in calls] == sizes
+    assert all(a[0][-1] == b[0][0] for a, b in zip(calls, calls[1:]))
+    assert [leg["duration"] for leg in result["legs"]] == [i * 60 for i in range(1, count)]
+    assert [p for chunk, _ in calls for p in chunk[1:]] == [(i, 45) for i in range(1, count)]
 
 
 def test_failed_later_traffic_segment_falls_back_as_a_whole(routing_env, monkeypatch):
+    monkeypatch.setenv("MAPBOX_MAX_COORDINATES", "10")
     counter = 0
     def get(url, **kwargs):
         nonlocal counter
@@ -320,10 +325,11 @@ def test_traffic_and_saved_route_cannot_cross_company_boundaries(routing_env):
 
 
 @pytest.mark.parametrize("fuel_type,primary,electric,expected", [
-    ("gasolio", 8, 0, 0.28), ("elettrico", 0, 20, 0.12),
+    ("gasolio", 8, 0, 0.28), ("benzina", 8, 0, 0.28), ("elettrico", 0, 20, 0.12),
     ("ibrido_plugin_benzina", 4, 10, 0.20),
 ])
-def test_energy_calculations_are_preserved(routing_env, fuel_type, primary, electric, expected):
+@pytest.mark.parametrize("two", [False, True])
+def test_energy_calculations_are_preserved(routing_env, fuel_type, primary, electric, expected, two):
     ctx = routing_env
     vehicle = ctx[6]
     vehicle.alimentazione = fuel_type
@@ -331,12 +337,17 @@ def test_energy_calculations_are_preserved(routing_env, fuel_type, primary, elec
     vehicle.consumo_l_100km = primary
     vehicle.consumo_kwh_100km = electric
     ctx[1].commit()
-    data = payload(ctx)
+    data = payload(ctx, two=two)
     data["energy_price_electric"] = 0.30
     response = ctx[0].post("/api/routes/recalculate-manual", json=data)
     assert response.status_code == 200, response.text
     # 2 km round trip, diesel 1.75 EUR/L, electric 0.30 EUR/kWh.
-    assert response.json()["costo_carburante"] == expected
+    result = response.json()
+    km = 3 if two else 2
+    assert result["totale_km"] == km
+    assert result["energy_quantity_primary"] == round(km * primary / 100, 3)
+    assert result["energy_quantity_electric"] == round(km * electric / 100, 3)
+    assert result["costo_carburante"] == round(expected * km / 2, 2)
 
 
 def test_public_osrm_requires_explicit_development_setting(monkeypatch):
@@ -386,7 +397,8 @@ def test_api_summary_counts_entire_period_and_actual_provider_requests(routing_e
     assert estimate_cost("google_routes_matrix") == 0
 
 
-def test_segment_departures_include_unloading_and_window_waits(routing_env):
+def test_segment_departures_include_unloading_and_window_waits(routing_env, monkeypatch):
+    monkeypatch.setenv("MAPBOX_MAX_COORDINATES", "10")
     ctx = routing_env
     data = payload(ctx)
     data["consegne"] += [dict(cliente_nome=f"Stop {i}", indirizzo=f"Address {i}", lat=45 + i / 1000,

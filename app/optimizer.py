@@ -197,7 +197,8 @@ def evaluate_candidate(current_clock, leg, d):
     Ritorna:
     {
       feasible: bool,
-      score: float,
+      score: float (historical diagnostic),
+      priority: tuple (feasibility, distance, duration, waiting),
       service_start: minuti assoluti del giorno,
       wait: minuti attesa,
       warning: testo,
@@ -213,6 +214,7 @@ def evaluate_candidate(current_clock, leg, d):
         return {
             "feasible": True,
             "score": leg["min"] + leg["km"] * 1.15,
+            "priority": (False, 0, leg["km"], leg["min"], 0, math.inf),
             "service_start": travel_arrival,
             "wait": 0,
             "warning": "",
@@ -233,10 +235,8 @@ def evaluate_candidate(current_clock, leg, d):
 
             if feasible:
                 warning = f"Arrivo prima dell'apertura: attesa {int(round(wait))} min" if wait > 0 else ""
-                # Score: finestre orarie prima, distanza dopo.
-                # - attesa: costa, ma è accettabile
-                # - slack basso: cliente rischia di chiudere, quindi va anticipato
-                # - finestra stretta: va gestita prima
+                # Historical diagnostic; the explicit priority below selects
+                # feasible candidates by distance, then time and waiting.
                 score = (
                     wait * 1.6
                     + leg["min"] * 0.85
@@ -261,8 +261,7 @@ def evaluate_candidate(current_clock, leg, d):
 
             if feasible:
                 warning = ""
-                # Cliente già aperto: molto preferibile.
-                # Se sta per chiudere, lo score rimane basso per farlo prima.
+                # Historical diagnostic only, not the feasible search key.
                 score = (
                     leg["min"] * 0.75
                     + leg["km"] * 1.0
@@ -287,7 +286,10 @@ def evaluate_candidate(current_clock, leg, d):
             "window_end": end,
         }
 
-        if best is None or candidate["score"] < best["score"]:
+        # For a fixed leg, earliest feasible service dominates later service.
+        candidate["priority"] = (not feasible, 0 if feasible else score,
+                                 leg["km"], leg["min"] + wait, wait, end)
+        if best is None or candidate["priority"] < best["priority"]:
             best = candidate
 
     # Se nessuna fascia futura è utile, il cliente è non fattibile con l'orario attuale.
@@ -303,10 +305,12 @@ def evaluate_candidate(current_clock, leg, d):
             "window_end": last_end,
         }
 
-    # Piccola priorità a consegne pesanti/colli, ma solo dopo la fattibilità oraria.
+    # Preserve the historical score for infeasible candidates/diagnostics only.
     best["score"] -= float(d.get("peso_kg") or 0) * 0.01
     best["score"] -= float(d.get("colli") or 0) * 0.03
 
+    if not best["feasible"]:
+        best["priority"] = (True, best["score"], leg["km"], leg["min"] + best["wait"], best["wait"], best["window_end"])
     return best
 
 def _coord_from_delivery(delivery):
@@ -319,12 +323,7 @@ def _coord_from_delivery(delivery):
 
 
 def _has_strong_constraints(deliveries):
-    """Indica se nel giro ci sono vincoli logistici reali oltre alla strada.
-
-    Se non ci sono finestre orarie, scarichi, ZTL o sponda, il motore deve
-    comportarsi come un navigatore: cerca il minor tempo totale. Se invece ci
-    sono vincoli, il tempo totale resta importante ma viene dopo la fattibilità.
-    """
+    """Identify constraints for the historical diagnostic score only."""
     for d in deliveries:
         if delivery_windows(d):
             return True
@@ -394,14 +393,17 @@ def _feasible_fallback(deliveries, matrix, points, vehicle, return_depot, start_
 
 
 def solution_key(result):
-    """Feasibility is absolute; infeasible routes minimize lateness before count.
+    """Absolute feasibility, then distance, duration, waiting and warnings.
 
-    The historical score stays available and unchanged for quality comparisons.
-    This ranks complete solutions; the bounded DP separately checks feasibility.
+    Infeasible routes retain the historical lateness/count/score ordering.
+    Constant vehicle consumption is proportional to km, not a separate weight.
+    Raw totals avoid letting display rounding override a distance improvement.
     """
     violations = result["violations"]
-    return (bool(violations), result["total_lateness_min"] if violations else 0,
-            violations, result["score"])
+    if violations:
+        return (True, result["total_lateness_min"], violations, result["score"])
+    return (False, *result.get("_objective", (
+        result["total_km"], result["total_min"], result.get("total_wait", 0), 0)))
 
 
 def stop_timing_details(delivery, arrival, service_start, service_end, window_end=None):
@@ -445,13 +447,13 @@ def enrich_saved_schedule(ordered, start_time):
 
 
 def _evaluate_fixed_sequence(sequence, matrix, points, vehicle=None, return_depot=True, start_time="08:00", include_details=True, earliest_windows=False):
-    """Valuta un ordine già deciso usando una sola matrice Google.
+    """Valuta un ordine già deciso usando la matrice stradale OSRM/cache.
 
     arrivo_stimato rappresenta l'inizio servizio dopo l'eventuale attesa.
 
-    Questa funzione non richiama Google: usa soltanto i tempi/distanze già
+    Questa funzione non richiama provider: usa soltanto i tempi/distanze già
     presenti nella matrice. Serve per provare molte combinazioni internamente
-    senza aumentare le richieste Google.
+    senza nuove richieste di routing.
     """
     ordered = []
     total_km = 0.0
@@ -508,11 +510,10 @@ def _evaluate_fixed_sequence(sequence, matrix, points, vehicle=None, return_depo
     has_constraints = _has_strong_constraints(sequence)
 
     if has_constraints:
-        # Prima la fattibilità, poi il tempo, poi attese/distanza.
+        # Historical diagnostic only; solution_key controls the search.
         score = violations * 100000 + total_min * 10 + total_wait * 1.5 + warning_count * 25 + total_km
     else:
-        # Senza vincoli il giro deve essere il più simile possibile a Maps:
-        # tempo totale prima, km come secondo criterio.
+        # Retained for historical benchmark comparisons, never feasible ranking.
         score = total_min * 10 + total_km
 
     for d in ordered:
@@ -524,6 +525,7 @@ def _evaluate_fixed_sequence(sequence, matrix, points, vehicle=None, return_depo
         "total_min": round(total_min, 1),
         "return_time": fmt_hhmm(current_clock),
         "score": score,
+        "_objective": (total_km, total_min, total_wait, warning_count),
         "violations": violations,
         "total_wait": round(total_wait, 1),
         **(window_summary(ordered) if include_details else {"total_lateness_min": total_lateness}),
@@ -545,7 +547,7 @@ def _greedy_sequence(deliveries, matrix, points, vehicle=None, start_time="08:00
         for idx, d in enumerate(remaining):
             leg = _matrix_leg(matrix, points, current_idx, d["_matrix_index"])
             ev = evaluate_candidate(current_clock, leg, d)
-            score = ev["score"]
+            score = ev["priority"]
             if best_score is None or score < best_score:
                 best_idx = idx
                 best_score = score
@@ -691,6 +693,7 @@ def optimize_route(db: Session, deposit, deliveries, vehicle=None, return_depot=
     for d in deliveries:
         d.pop("_matrix_index", None)
 
+    result.pop("_objective", None)
     result.pop("score", None)
     result.pop("violations", None)
     result.pop("total_wait", None)
@@ -733,7 +736,7 @@ def recalculate_manual_route(db: Session, deposit, deliveries, vehicle=None, ret
     result = _evaluate_fixed_sequence(deliveries, matrix, points, vehicle, return_depot, start_time)
     for delivery in deliveries:
         delivery.pop("_matrix_index", None)
-    for key in ("score", "violations", "total_wait"):
+    for key in ("_objective", "score", "violations", "total_wait"):
         result.pop(key, None)
 
     result["base_routing_provider"] = getattr(matrix, "source", "osrm")

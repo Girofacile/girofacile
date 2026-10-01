@@ -1,5 +1,7 @@
 # Priorita di fattibilita e validazione offline — 29 settembre 2026
 
+> Report storico: la priorità corrente distanza-prima è descritta in [optimizer-distance-first.md](optimizer-distance-first.md).
+
 Commit di partenza: `e331503c36445ee526c2edfac50d9229d3cfa213` (`main`). Riferimenti remoti aggiornati prima del lavoro e prima della consegna. I due dump locali preesistenti sono esclusi dal commit e preservati.
 
 ## Modifiche e logica

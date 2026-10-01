@@ -34,8 +34,8 @@ class MapboxTrafficProvider:
         token = mapbox_access_token(db)
         if not token:
             raise TrafficUnavailable("Token Mapbox non configurato")
-        # driving-traffic accepts at most 10 coordinates (including depot/return).
-        limit = min(10, int(routing_number(db, "mapbox_max_coordinates", 10, 2)))
+        # driving-traffic accepts at most 25 coordinates (including depot/return).
+        limit = min(25, int(routing_number(db, "mapbox_max_coordinates", 25, 2)))
         legs, geometries = [], []
         segment_departure = departure
         for start in range(0, len(points) - 1, limit - 1):

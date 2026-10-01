@@ -29,7 +29,7 @@ def test_equal_lateness_prefers_fewer_violations_then_score():
     assert opt.solution_key(a) < opt.solution_key(b)
     assert opt.solution_key(dict(a, score=100)) < opt.solution_key(a)
     # Feasibility cannot be bought with minutes, distance, or score.
-    assert opt.solution_key(dict(a, violations=0, total_lateness_min=0, score=1e30)) < opt.solution_key(a)
+    assert opt.solution_key(dict(a, violations=0, total_lateness_min=0, score=1e30, total_km=1e30, total_min=1e30)) < opt.solution_key(a)
 
 
 @pytest.mark.parametrize("n", [2, 9, 16])

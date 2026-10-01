@@ -30,7 +30,7 @@ def test_directed_scenarios(n, return_depot, order, windows):
     assert rows == original
     assert sorted(ids(after)) == list(range(1, n + 1))
     assert after == opt._best_internal_sequence(rows, matrix, [], return_depot=return_depot)
-    assert after["score"] <= min(before["score"], operator["score"])
+    assert opt.solution_key(after) <= min(opt.solution_key(before), opt.solution_key(operator))
     assert after["violations"] <= before["violations"]
     if windows:
         reference = independent_window_reference(canonical, matrix, return_depot)
@@ -102,7 +102,7 @@ def test_operator_order_is_candidate_above_fifteen():
     rows, matrix = directed_case(16)
     operator = opt._evaluate_fixed_sequence(rows, matrix, [])
     result = opt._best_internal_sequence(rows, matrix, [])
-    assert result["score"] <= operator["score"]
+    assert opt.solution_key(result) <= opt.solution_key(operator)
 
 
 def test_feasibility_beats_finite_penalty():
