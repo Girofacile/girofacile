@@ -284,6 +284,7 @@ async function loadSettingsV41(){
   }catch(e){
     const state = document.getElementById('settingsSaveState');
     if(state) state.textContent = 'Impossibile caricare le impostazioni: ' + e.message;
+    document.getElementById('settingsSaveBar')?.classList.remove('hidden');
   }
 }
 
@@ -5134,7 +5135,13 @@ function openTransferPortalPublicV78(){ const slug=transferValV78("tpSlugV78")||
 
 // v89.3 - salvataggio manuale della pagina Impostazioni
 let gfSettingsDirtyV893=false;
+function toggleSettingsDetail(button){
+  const expanded=button.getAttribute('aria-expanded')!=='true';
+  button.setAttribute('aria-expanded',String(expanded));
+  document.getElementById(button.getAttribute('aria-controls'))?.classList.toggle('hidden',!expanded);
+}
 function markSettingsDirtyV893(){
+  document.getElementById('settingsSaveBar')?.classList.remove('hidden');
   gfSettingsDirtyV893=true;
   const state=document.getElementById('settingsSaveState');
   const btn=document.getElementById('settingsSaveBtnV893');
@@ -5142,6 +5149,7 @@ function markSettingsDirtyV893(){
   if(btn) btn.disabled=false;
 }
 function markSettingsCleanV893(message='Impostazioni salvate.') {
+  document.getElementById('settingsSaveBar')?.classList.add('hidden');
   gfSettingsDirtyV893=false;
   const state=document.getElementById('settingsSaveState');
   const btn=document.getElementById('settingsSaveBtnV893');
@@ -5172,6 +5180,7 @@ async function saveAllSettingsV893(){
     toast('Impostazioni salvate.');
   }catch(e){
     gfSettingsDirtyV893=true;
+    document.getElementById('settingsSaveBar')?.classList.remove('hidden');
     if(state) state.textContent='Errore salvataggio: '+e.message;
     if(btn) btn.disabled=false;
     alert(e.message||'Errore durante il salvataggio.');

@@ -1,0 +1,53 @@
+/* Settings reference: a continuous white panel with colored feature icons. */
+#tab-settings{font-family:Arial,Helvetica,sans-serif;color:#0f172a}
+#tab-settings .page-title-row{margin:0 0 28px}
+#tab-settings .page-title-row h1{font-size:36px;font-weight:800;letter-spacing:-1.2px;line-height:1.2;margin:0 0 5px}
+#tab-settings .page-title-row p{font-size:15px;line-height:1.5;color:#69778a;margin:0;font-weight:400}
+#tab-settings .settings-panel{max-width:none;padding:0 25px;margin:0;background:#fffffff2;border:1px solid #e9eef5;border-radius:19px;box-shadow:0 7px 25px #365b8805}
+#tab-settings .settings-item+.settings-item{border-top:1px solid #e9edf3}
+#tab-settings .setting-row{display:grid;grid-template-columns:72px minmax(0,1fr) 65px 24px;gap:28px;align-items:center;min-height:115px;padding:21px 0;margin:0;border:0;border-radius:0;background:transparent;box-shadow:none}
+#tab-settings .settings-icon{display:grid;place-items:center;width:72px;height:70px;border-radius:17px;background:#eaf4ff;color:#1479f7}
+#tab-settings .settings-icon.green{background:#e7fbef;color:#16c66a}
+#tab-settings .settings-icon.orange{background:#fff4e6;color:#f39a12}
+#tab-settings .settings-icon.purple{background:#f4eafd;color:#963de6}
+#tab-settings .settings-icon.pink{background:#ffedf3;color:#f3427d}
+#tab-settings svg{width:35px;height:35px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#tab-settings .setting-copy{min-width:0;display:flex;flex-direction:column;gap:9px}
+#tab-settings .setting-copy strong{font-size:16px;font-weight:750;line-height:1.35;color:#0c1428;letter-spacing:-.3px;margin:0}
+#tab-settings .setting-copy>span{display:block;font-size:13px;line-height:1.6;color:#788599;font-weight:400;max-width:none;margin:0}
+#tab-settings .switch-toggle{position:relative;display:block;width:65px;height:37px;min-width:65px;margin:0;flex-shrink:0;cursor:pointer}
+#tab-settings .switch-toggle input{position:absolute;inset:0;width:100%;height:100%;min-height:0;margin:0;opacity:0;z-index:2;cursor:pointer}
+#tab-settings .switch-slider{position:absolute;inset:0;background:#cbd5e1;border:1px solid #d1dbe7;border-radius:999px;transition:background .18s;box-shadow:inset 0 1px 3px #60718c0a}
+#tab-settings .switch-slider:before{content:'';position:absolute;left:3px;top:3px;bottom:auto;width:29px;height:29px;background:#fff;border-radius:50%;box-shadow:0 2px 5px #26395825;transform:translateX(0);transition:transform .18s}
+#tab-settings .switch-toggle input:checked+.switch-slider{background:linear-gradient(120deg,#0879ff,#0060ee);border-color:#147af8}
+#tab-settings .switch-toggle input:checked+.switch-slider:before{transform:translateX(28px)}
+#tab-settings .switch-toggle input:disabled{cursor:not-allowed}
+#tab-settings .switch-toggle input:disabled+.switch-slider{opacity:.65}
+#tab-settings .switch-toggle input:focus-visible+.switch-slider{outline:3px solid #83b7fc;outline-offset:4px}
+#tab-settings .settings-expand{display:grid;place-items:center;width:28px;height:40px;padding:0;border:0;background:transparent;color:#60728e;cursor:pointer;margin:0;box-shadow:none}
+#tab-settings .settings-expand svg{width:20px;height:20px;stroke-width:1.8;transition:transform .18s}
+#tab-settings .settings-expand[aria-expanded="true"] svg{transform:rotate(90deg)}
+#tab-settings .settings-expand:focus-visible,#tab-settings summary:focus-visible{outline:2px solid #1676fa;outline-offset:3px;border-radius:5px}
+#tab-settings .settings-detail{margin:0 0 20px 100px;padding:12px 15px;border-radius:9px;background:#f6f9fe;color:#60728b;font-size:13px;line-height:1.6}
+#tab-settings .settings-more{margin-top:14px}
+#tab-settings .settings-more>summary{display:list-item;width:fit-content;cursor:pointer;font-size:13px;color:#687a94;padding:8px 2px;font-weight:600}
+#tab-settings .settings-more[open]>summary{margin-bottom:8px}
+#tab-settings .settings-save-bar-v893{position:sticky;bottom:20px;z-index:15;display:flex;align-items:center;justify-content:space-between;gap:15px;padding:14px 18px;margin-top:16px;border:1px solid #dce8fa;border-radius:14px;background:#fff;box-shadow:0 8px 24px #20365014}
+#tab-settings .settings-save-state{color:#52667f;font-size:13px}
+#tab-settings #settingsSaveBtnV893{background:linear-gradient(120deg,#0879ff,#075bf0);color:#fff;border:0;border-radius:10px;padding:12px 18px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
+#tab-settings #settingsSaveBtnV893:disabled{opacity:.6;cursor:wait}
+@media(min-width:1101px){
+ body:has(#tab-settings:not(.hidden)) .sidebar{width:224px;padding:18px 15px}
+ body:has(#tab-settings:not(.hidden)) .main-area{margin-left:224px;width:calc(100% - 224px)}
+ body:has(#tab-settings:not(.hidden)) .content{padding:21px 25px 28px}
+ body:has(#tab-settings:not(.hidden)) .topbar{height:68px;min-height:68px;padding:6px 38px}
+ body:has(#tab-settings:not(.hidden)) .side-nav{padding-top:20px;gap:7px}
+ body:has(#tab-settings:not(.hidden)) .nav-item{font-size:14px;padding:8px 12px;min-height:44px;border-radius:10px;gap:10px}
+ body:has(#tab-settings:not(.hidden)) .brand{height:48px;padding:0 2px 8px}
+ body:has(#tab-settings:not(.hidden)) .brand-title{font-size:20px}
+}
+@media(max-width:1200px){#tab-settings .setting-row{gap:18px;grid-template-columns:64px minmax(0,1fr) 65px 24px}#tab-settings .settings-icon{width:64px;height:64px}#tab-settings .settings-detail{margin-left:82px}}
+@media(max-width:700px){#tab-settings .settings-panel{padding:0 16px!important;border-radius:19px!important}#tab-settings .setting-row{grid-template-columns:48px minmax(0,1fr) 54px 20px;gap:12px;padding:20px 0;min-height:110px}#tab-settings .settings-icon{width:48px;height:48px;border-radius:13px}#tab-settings .settings-icon svg{width:27px;height:27px}#tab-settings .setting-copy strong{font-size:14px}#tab-settings .setting-copy>span{font-size:12px;line-height:1.5}#tab-settings .switch-toggle{width:54px;min-width:54px;height:32px}#tab-settings .switch-slider:before{width:24px;height:24px}#tab-settings .switch-toggle input:checked+.switch-slider:before{transform:translateX(21px)}#tab-settings .settings-expand{width:20px}#tab-settings .settings-detail{margin-left:0}#tab-settings .settings-save-bar-v893{bottom:100px;flex-wrap:wrap}}
+@media(max-width:480px){#tab-settings .setting-row{grid-template-columns:48px minmax(0,1fr) 54px 18px;column-gap:9px}#tab-settings .setting-copy{display:contents}#tab-settings .setting-copy strong{grid-column:2;grid-row:1;align-self:center}#tab-settings .settings-icon{grid-column:1;grid-row:1}#tab-settings .switch-toggle{grid-column:3;grid-row:1}#tab-settings .settings-expand{grid-column:4;grid-row:1}#tab-settings .setting-copy>span{grid-column:1/-1;grid-row:2;margin-top:2px}#tab-settings .page-title-row h1{font-size:32px}}
+@media(prefers-reduced-motion:reduce){#tab-settings .switch-slider,#tab-settings .switch-slider:before,#tab-settings .settings-expand svg{transition:none}}
+@media(min-width:1101px){#tab-settings .page-title-row{margin-bottom:22px}}

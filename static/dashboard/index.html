@@ -23,6 +23,7 @@
 <link rel="stylesheet" href="/static/routing-summary.css">
 <script src="/static/routing-summary.js"></script>
 <link href="/static/dashboard/css/deposits.css?v=deposits_20261001" rel="stylesheet">
+<link href="/static/dashboard/css/settings.css?v=settings_20261001" rel="stylesheet">
 </head>
 <body>
 
@@ -957,105 +958,57 @@
 
 
       <section id="tab-settings" class="tab hidden">
-        <div class="page-title-row">
-          <div>
-            <h1>Impostazioni</h1>
-            <p>Configura le preferenze operative applicate al gestionale aziendale.</p>
-          </div>
-        </div>
-
-        <section class="panel settings-panel">
-          <div class="settings-section-head">
-            <div>
-              <h2>Consegne</h2>
-              <p>Decidi quali funzioni mostrare nel portale autista durante l'esecuzione dei giri.</p>
-            </div>
-          </div>
-
-          <div class="setting-row">
-            <div class="setting-copy">
-              <strong>Firma cliente alla consegna</strong>
-              <span>Se attiva, l'autista potrà raccogliere la firma del cliente quando completa una consegna. Se disattiva, il portale autista resta nella modalità standard.</span>
-            </div>
-            <label class="switch-toggle">
-              <input id="settingDeliverySignature" type="checkbox" onchange="markSettingsDirtyV893()">
-              <span class="switch-slider"></span>
-            </label>
-          </div>
-
-          <div class="settings-section-head gf-feature-head-v89"><div><h2>Funzionalità opzionali</h2><p>Attiva solo ciò che serve alla tua organizzazione. Le preferenze vengono salvate sul profilo azienda.</p></div></div>
-          <div class="gf-feature-list-v89">
-            <div class="setting-row">
-              <div class="setting-copy">
-                <strong>Gestione agenti</strong>
-                <span>Abilita la sezione Agenti, il portale agenti, le assegnazioni dei clienti e i report per agente. Disattivandola, i nuovi clienti non avranno un agente; le associazioni esistenti saranno conservate. Disponibile nei piani che includono gli agenti.</span>
-              </div>
-              <label class="switch-toggle">
-                <input id="settingAgentsEnabled" type="checkbox" aria-label="Attiva gestione agenti" onchange="markSettingsDirtyV893()">
-                <span class="switch-slider"></span>
-              </label>
-            </div>
-            <div class="setting-row">
-              <div class="setting-copy">
-                <strong>Finestre orarie</strong>
-                <span>Gestisci fasce orarie e vincoli di consegna dei clienti.</span>
-              </div>
-              <label class="switch-toggle">
-                <input id="featureTimeWindowsV89" type="checkbox" checked onchange="markSettingsDirtyV893()">
-                <span class="switch-slider"></span>
-              </label>
-            </div>
-
-            <div class="setting-row">
-              <div class="setting-copy">
-                <strong>Foto prova consegna · In sviluppo</strong>
-                <span>La raccolta di fotografie non è ancora disponibile. Questa opzione sarà attivabile al completamento della funzione.</span>
-              </div>
-              <label class="switch-toggle">
-                <input id="featurePhotoProofV89" type="checkbox" disabled aria-label="Foto prova consegna: in sviluppo" onchange="markSettingsDirtyV893()">
-                <span class="switch-slider"></span>
-              </label>
-            </div>
-
-            <div class="setting-row">
-              <div class="setting-copy">
-                <strong>ZTL e zone difficili</strong>
-                <span>Usa i vincoli di accesso quando pianifichi clienti e mezzi.</span>
-              </div>
-              <label class="switch-toggle">
-                <input id="featureZtlV89" type="checkbox" onchange="markSettingsDirtyV893()">
-                <span class="switch-slider"></span>
-              </label>
-            </div>
-
-            <div class="setting-row">
-              <div class="setting-copy">
-                <strong>Sponda idraulica / transpallet</strong>
-                <span>Gestisci compatibilità tra esigenze del cliente e mezzo.</span>
-              </div>
-              <label class="switch-toggle">
-                <input id="featureTailLiftV89" type="checkbox" onchange="markSettingsDirtyV893()">
-                <span class="switch-slider"></span>
-              </label>
-            </div>
-
-            <div class="setting-row">
-              <div class="setting-copy">
-                <strong>Merce refrigerata · In sviluppo</strong>
-                <span>La gestione della catena del freddo non è ancora disponibile. Questa opzione sarà attivabile al completamento della funzione.</span>
-              </div>
-              <label class="switch-toggle">
-                <input id="featureRefrigeratedV89" type="checkbox" disabled aria-label="Merce refrigerata: in sviluppo" onchange="markSettingsDirtyV893()">
-                <span class="switch-slider"></span>
-              </label>
-            </div>
-          </div>
-
-          <div class="settings-save-bar-v893">
-            <div id="settingsSaveState" class="settings-save-state">Impostazioni azienda sincronizzate.</div>
-            <button id="settingsSaveBtnV893" class="primary" type="button" onclick="saveAllSettingsV893()" disabled>Salva modifiche</button>
-          </div>
+        <div class="page-title-row"><div><h1>Impostazioni</h1><p>Configura le preferenze operative applicate al gestionale aziendale.</p></div></div>
+        <section class="panel settings-panel" aria-label="Preferenze operative">
+          <div class="settings-item"><div class="setting-row">
+            <span class="settings-icon blue"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h10l4 4v8M5 3v18h8M14 3v5h5M8 11h7M8 15h4M3 7H1v11h3m12 0 5-5 2 2-5 5-3 1Z"/></svg></span>
+            <div class="setting-copy"><strong id="settingsTitle0">Firma cliente alla consegna</strong><span id="settingsDescription0">Se attiva, l'autista potrà raccogliere la firma del cliente quando completa una consegna. Se disattiva, il portale autista resta nella modalità standard.</span></div>
+            <label class="switch-toggle"><input id="settingDeliverySignature" type="checkbox" role="switch" aria-labelledby="settingsTitle0" aria-describedby="settingsDescription0" onchange="markSettingsDirtyV893()"><span class="switch-slider"></span></label>
+            <button type="button" class="settings-expand" aria-label="Dettagli: Firma cliente alla consegna" aria-expanded="false" aria-controls="settingsDetail0" onclick="toggleSettingsDetail(this)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button>
+          </div><p id="settingsDetail0" class="settings-detail hidden">La preferenza si applica alle consegne nel portale autista. Salva le modifiche per applicarla.</p></div>
+          <div class="settings-item"><div class="setting-row">
+            <span class="settings-icon green"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="7" r="3"/><path d="M2 21v-3a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v3ZM17 4a3 3 0 0 1 0 6m1 4a4 4 0 0 1 4 4v3h-3"/></svg></span>
+            <div class="setting-copy"><strong id="settingsTitle1">Gestione agenti</strong><span id="settingsDescription1">Abilita la sezione Agenti, le assegnazioni clienti e i report per agente. Disattivandola, i nuovi clienti non avranno un agente; le associazioni esistenti saranno conservate.</span></div>
+            <label class="switch-toggle"><input id="settingAgentsEnabled" type="checkbox" role="switch" aria-labelledby="settingsTitle1" aria-describedby="settingsDescription1" onchange="markSettingsDirtyV893()"><span class="switch-slider"></span></label>
+            <button type="button" class="settings-expand" aria-label="Dettagli: Gestione agenti" aria-expanded="false" aria-controls="settingsDetail1" onclick="toggleSettingsDetail(this)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button>
+          </div><p id="settingsDetail1" class="settings-detail hidden">La disponibilità dipende dal piano aziendale. Disattivando la funzione le associazioni già registrate vengono conservate.</p></div>
+          <div class="settings-item"><div class="setting-row">
+            <span class="settings-icon orange"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 6v6l4 3"/></svg></span>
+            <div class="setting-copy"><strong id="settingsTitle2">Finestre orarie</strong><span id="settingsDescription2">Gestisci fasce orarie e vincoli di consegna dei clienti.</span></div>
+            <label class="switch-toggle"><input id="featureTimeWindowsV89" type="checkbox" role="switch" aria-labelledby="settingsTitle2" aria-describedby="settingsDescription2" checked onchange="markSettingsDirtyV893()"><span class="switch-slider"></span></label>
+            <button type="button" class="settings-expand" aria-label="Dettagli: Finestre orarie" aria-expanded="false" aria-controls="settingsDetail2" onclick="toggleSettingsDetail(this)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button>
+          </div><p id="settingsDetail2" class="settings-detail hidden">Le fasce orarie dei clienti vengono considerate nella pianificazione dei giri.</p></div>
+          <div class="settings-item"><div class="setting-row">
+            <span class="settings-icon purple"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h4l2-3h6l2 3h4v14H3Z"/><circle cx="12" cy="13" r="4"/></svg></span>
+            <div class="setting-copy"><strong id="settingsTitle3">Foto prova consegna - In sviluppo</strong><span id="settingsDescription3">La raccolta di fotografie non è ancora disponibile. Questa opzione sarà attivabile al completamento della funzione.</span></div>
+            <label class="switch-toggle"><input id="featurePhotoProofV89" type="checkbox" role="switch" aria-labelledby="settingsTitle3" aria-describedby="settingsDescription3" disabled onchange="markSettingsDirtyV893()"><span class="switch-slider"></span></label>
+            <button type="button" class="settings-expand" aria-label="Dettagli: Foto prova consegna - In sviluppo" aria-expanded="false" aria-controls="settingsDetail3" onclick="toggleSettingsDetail(this)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button>
+          </div><p id="settingsDetail3" class="settings-detail hidden">Funzione in sviluppo: al momento non è possibile attivare la raccolta di fotografie.</p></div>
+          <div class="settings-item"><div class="setting-row">
+            <span class="settings-icon pink"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 5 6-2 6 3 6-2v16l-6 2-6-3-6 2ZM9 3v16M15 6v16"/></svg></span>
+            <div class="setting-copy"><strong id="settingsTitle4">ZTL e zone difficili</strong><span id="settingsDescription4">Usa i vincoli di accesso quando pianifichi clienti e mezzi.</span></div>
+            <label class="switch-toggle"><input id="featureZtlV89" type="checkbox" role="switch" aria-labelledby="settingsTitle4" aria-describedby="settingsDescription4" onchange="markSettingsDirtyV893()"><span class="switch-slider"></span></label>
+            <button type="button" class="settings-expand" aria-label="Dettagli: ZTL e zone difficili" aria-expanded="false" aria-controls="settingsDetail4" onclick="toggleSettingsDetail(this)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button>
+          </div><p id="settingsDetail4" class="settings-detail hidden">Attiva questa preferenza per gestire i vincoli di accesso di clienti e mezzi.</p></div>
         </section>
+        <details class="settings-more"><summary>Altre impostazioni</summary><section class="panel settings-panel" aria-label="Altre preferenze operative">
+          <div class="settings-item"><div class="setting-row">
+            <span class="settings-icon blue"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4v15h18M7 15h12V7H7ZM11 7v8M17 19v3M5 19v3"/></svg></span>
+            <div class="setting-copy"><strong id="settingsTitle5">Sponda idraulica / transpallet</strong><span id="settingsDescription5">Gestisci compatibilità tra esigenze del cliente e mezzo.</span></div>
+            <label class="switch-toggle"><input id="featureTailLiftV89" type="checkbox" role="switch" aria-labelledby="settingsTitle5" aria-describedby="settingsDescription5" onchange="markSettingsDirtyV893()"><span class="switch-slider"></span></label>
+            <button type="button" class="settings-expand" aria-label="Dettagli: Sponda idraulica / transpallet" aria-expanded="false" aria-controls="settingsDetail5" onclick="toggleSettingsDetail(this)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button>
+          </div><p id="settingsDetail5" class="settings-detail hidden">Attiva questa preferenza per gestire i requisiti di sponda idraulica e transpallet.</p></div>
+          <div class="settings-item"><div class="setting-row">
+            <span class="settings-icon purple"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v20M3.3 7l17.4 10M3.3 17 20.7 7M9 4l3 3 3-3M9 20l3-3 3 3"/></svg></span>
+            <div class="setting-copy"><strong id="settingsTitle6">Merce refrigerata - In sviluppo</strong><span id="settingsDescription6">La gestione della catena del freddo non è ancora disponibile. Questa opzione sarà attivabile al completamento della funzione.</span></div>
+            <label class="switch-toggle"><input id="featureRefrigeratedV89" type="checkbox" role="switch" aria-labelledby="settingsTitle6" aria-describedby="settingsDescription6" disabled onchange="markSettingsDirtyV893()"><span class="switch-slider"></span></label>
+            <button type="button" class="settings-expand" aria-label="Dettagli: Merce refrigerata - In sviluppo" aria-expanded="false" aria-controls="settingsDetail6" onclick="toggleSettingsDetail(this)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button>
+          </div><p id="settingsDetail6" class="settings-detail hidden">Funzione in sviluppo: al momento non è possibile attivare la gestione della merce refrigerata.</p></div>
+        </section></details>
+        <div id="settingsSaveBar" class="settings-save-bar-v893 hidden">
+          <div id="settingsSaveState" class="settings-save-state" role="status" aria-live="polite">Impostazioni azienda sincronizzate.</div>
+          <button id="settingsSaveBtnV893" class="primary" type="button" onclick="saveAllSettingsV893()" disabled>Salva modifiche</button>
+        </div>
       </section>
 
       <section id="tab-depositi" class="tab hidden">
@@ -1767,7 +1720,7 @@
 
 <script src="/static/dashboard/js/reports.js?v=stability_1"></script>
 <script src="/static/dashboard/js/customers.js?v=customers_20260929"></script>
-<script src="/static/dashboard/js/core.js?v=deposits_20261001"></script>
+<script src="/static/dashboard/js/core.js?v=settings_20261001"></script>
 
 <script>
 function toggleLoginPassword(){
