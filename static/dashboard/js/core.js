@@ -1926,28 +1926,88 @@ async function completeDashboardRoute(id){
 }
 
 
+function depositActionIcon(kind){
+  const path=kind==='edit'?'<path d="m15 4 5 5M4 20l5-1L21 7a2 2 0 0 0-5-5L4 14Z"/>':'<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/>';
+  return `<svg viewBox="0 0 24 24" aria-hidden="true">${path}</svg>`;
+}
+function depositStatus(id,message,error=false){
+  const node=document.getElementById(id);if(!node)return;
+  node.textContent=message;node.classList.toggle('hidden',!message);node.classList.toggle('is-error',error);
+}
+function renderDepositSummary(){
+  const write=(id,value)=>{const node=document.getElementById(id);if(node)node.textContent=value;};
+  const count=depositsCache.length,defaults=depositsCache.filter(x=>x.predefinito).length;
+  write('depositTotal',count);write('depositTotalCaption',count===1?'deposito configurato':'depositi configurati');
+  write('depositDefaultCount',defaults);write('depositDefaultCaption',defaults===1?'deposito impostato come predefinito':'depositi impostati come predefinito');
+  // The API stores UTC without an offset. Legacy deposits have no recorded date.
+  const dates=depositsCache.map(x=>x.updated_at).filter(Boolean).map(value=>new Date(/(?:Z|[+-]\d{2}:\d{2})$/i.test(value)?value:value+'Z')).filter(date=>!Number.isNaN(date.getTime()));
+  const latest=dates.length?new Date(Math.max(...dates.map(date=>date.getTime()))):null;
+  write('depositLastUpdate',latest?latest.toLocaleDateString('it-IT',{day:'numeric',month:'short',year:'numeric',timeZone:'Europe/Rome'}):'—');
+  write('depositLastUpdateTime',latest?'ore '+latest.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Rome'}):'Data non disponibile');
+}
+let depositLoadRequest=0;
 async function loadDeposits(){
-  depositsCache = await api("/api/deposits");
-  const body = document.getElementById("depositsBody"), sel = document.getElementById("routeDeposit");
-  body.innerHTML = ""; sel.innerHTML = "";
-  depositsCache.forEach(x=>{
-    body.innerHTML += `<tr><td>${esc(x.nome)}</td><td>${esc(x.indirizzo)}</td><td>${x.predefinito?"Sì":"No"}</td><td><button onclick="editDeposit(${x.id})">Modifica</button><button onclick="deleteDeposit(${x.id})">Elimina</button></td></tr>`;
-    sel.innerHTML += `<option value="${x.id}">${esc(x.nome)} - ${esc(x.indirizzo)}</option>`;
-  });
+  const request=++depositLoadRequest;
+  try{
+    const rows=await api('/api/deposits');
+    if(request!==depositLoadRequest)return;
+    depositsCache=rows;
+    const body=document.getElementById('depositsBody'),sel=document.getElementById('routeDeposit');
+    if(body)body.innerHTML=rows.map(x=>`<tr><td>${esc(x.nome)}</td><td>${esc(x.indirizzo)}</td><td><span class="deposit-default-badge ${x.predefinito?'is-default':''}">${x.predefinito?'Sì':'No'}</span></td><td><div class="deposit-row-actions"><button type="button" class="deposit-edit" onclick="editDeposit(${Number(x.id)})" aria-label="Modifica ${esc(x.nome)}">${depositActionIcon('edit')}Modifica</button><button type="button" class="deposit-delete" onclick="deleteDeposit(${Number(x.id)})" aria-label="Elimina ${esc(x.nome)}">${depositActionIcon('delete')}Elimina</button></div></td></tr>`).join('')||'<tr><td colspan="4" class="deposit-empty">Nessun deposito configurato. Aggiungi il tuo primo deposito dal modulo.</td></tr>';
+    if(sel){
+      const selected=sel.value;
+      sel.innerHTML=rows.map(x=>`<option value="${Number(x.id)}">${esc(x.nome)} - ${esc(x.indirizzo)}</option>`).join('');
+      if(rows.some(x=>String(x.id)===selected))sel.value=selected;
+    }
+    renderDepositSummary();depositStatus('depositListStatus','');
+  }catch(error){
+    if(request!==depositLoadRequest)return;
+    depositStatus('depositListStatus','Impossibile caricare i depositi. Riapri la sezione per riprovare.',true);
+    throw error;
+  }
 }
 function editDeposit(id){
-  const x = depositsCache.find(d=>d.id===id); if(!x) return;
-  set("depId", x.id); set("depNome", x.nome); set("depIndirizzo", x.indirizzo);
-  document.getElementById("depDefault").checked = !!x.predefinito;
+  if(document.getElementById('saveDepositBtn')?.disabled)return;
+  const x=depositsCache.find(d=>d.id===id);if(!x)return;
+  set('depId',x.id);set('depNome',x.nome);set('depIndirizzo',x.indirizzo);
+  document.getElementById('depDefault').checked=!!x.predefinito;
+  document.getElementById('depositFormTitle').textContent='Modifica deposito';
+  document.getElementById('depositFormSubtitle').textContent='Aggiorna i dati del deposito selezionato.';
+  depositStatus('depositFormStatus','');
+  document.getElementById('depositForm').scrollIntoView({behavior:'smooth',block:'nearest'});
+  document.getElementById('depNome').focus({preventScroll:true});
 }
-function resetDepositForm(){ set("depId",""); set("depNome",""); set("depIndirizzo",""); document.getElementById("depDefault").checked=false; }
+function resetDepositForm(){
+  set('depId','');set('depNome','');set('depIndirizzo','');document.getElementById('depDefault').checked=false;
+  document.getElementById('depositFormTitle').textContent='Nuovo deposito';
+  document.getElementById('depositFormSubtitle').textContent='Aggiungi un nuovo deposito alla tua azienda.';
+  depositStatus('depositFormStatus','');
+}
 async function saveDeposit(){
-  const payload = {nome:val("depNome"), indirizzo:val("depIndirizzo"), predefinito:document.getElementById("depDefault").checked};
-  const id = val("depId");
-  await api(id?`/api/deposits/${id}`:"/api/deposits", {method:id?"PUT":"POST", body:JSON.stringify(payload)});
-  resetDepositForm(); loadDeposits();
+  const button=document.getElementById('saveDepositBtn');if(button.disabled)return;
+  const form=document.getElementById('depositForm');
+  set('depNome',val('depNome').trim());set('depIndirizzo',val('depIndirizzo').trim());
+  if(!form.reportValidity())return;
+  const id=val('depId'),existing=depositsCache.find(x=>String(x.id)===id);
+  const payload={nome:val('depNome'),indirizzo:val('depIndirizzo'),predefinito:document.getElementById('depDefault').checked,note:existing?.note??null};
+  const fields=Array.from(form.querySelectorAll('input,textarea,button'));
+  fields.forEach(el=>el.disabled=true);button.querySelector('span').textContent='Salvataggio...';depositStatus('depositFormStatus','');
+  try{
+    await api(id?`/api/deposits/${id}`:'/api/deposits',{method:id?'PUT':'POST',body:JSON.stringify(payload)});
+    resetDepositForm();
+    depositStatus('depositFormStatus',id?'Deposito aggiornato.':'Deposito salvato.');
+    try{await loadDeposits();}catch(error){depositStatus('depositFormStatus','Deposito salvato. Riapri la sezione per aggiornare l’elenco.',true);}
+  }catch(error){depositStatus('depositFormStatus',error.message||'Impossibile salvare il deposito. Riprova.',true);}
+  finally{fields.forEach(el=>el.disabled=false);button.querySelector('span').textContent='Salva deposito';}
 }
-async function deleteDeposit(id){ if(confirm("Eliminare deposito?")){ await api(`/api/deposits/${id}`, {method:"DELETE"}); loadDeposits(); } }
+async function deleteDeposit(id){
+  if(document.getElementById('saveDepositBtn')?.disabled||!confirm('Eliminare deposito?'))return;
+  try{
+    await api(`/api/deposits/${id}`,{method:'DELETE'});
+    if(val('depId')===String(id))resetDepositForm();
+    await loadDeposits();
+  }catch(error){depositStatus('depositListStatus',error.message||'Impossibile eliminare il deposito. Riprova.',true);}
+}
 
 const GF_FUEL_LABELS_V895={gasolio:"Gasolio",benzina:"Benzina",gpl:"GPL",metano:"Metano",elettrico:"Elettrico",ibrido_benzina:"Ibrido benzina",ibrido_diesel:"Ibrido diesel",ibrido_plugin_benzina:"Ibrido plug-in benzina",ibrido_plugin_diesel:"Ibrido plug-in diesel"};
 function fuelBaseTypeV895(type){if(["ibrido_benzina","ibrido_plugin_benzina"].includes(type))return "benzina";if(["ibrido_diesel","ibrido_plugin_diesel"].includes(type))return "gasolio";return type;}

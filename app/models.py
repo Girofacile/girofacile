@@ -342,6 +342,7 @@ class Deposit(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, index=True)
+    updated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, default=datetime.utcnow)
     nome: Mapped[str] = mapped_column(String(200), nullable=False)
     indirizzo: Mapped[str] = mapped_column(String(500), nullable=False)
     predefinito: Mapped[bool] = mapped_column(Boolean, default=False)

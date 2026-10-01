@@ -41,6 +41,7 @@ def update_deposit(item_id: int, data: DepositIn, db: Session = Depends(get_db),
     address_changed = (data.indirizzo or "").strip().lower() != (item.indirizzo or "").strip().lower()
     for k, v in data.model_dump().items():
         setattr(item, k, v)
+    item.updated_at = datetime.utcnow()
     if address_changed:
         item.lat = None
         item.lon = None

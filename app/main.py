@@ -343,6 +343,7 @@ def migrate_database():
         add_column("customers", "geocodificato_il", sql_type(DateTime()))
 
     if insp.has_table("deposits"):
+        add_column("deposits", "updated_at", sql_type(DateTime()))
         add_column("deposits", "lat", sql_type(Float()))
         add_column("deposits", "lon", sql_type(Float()))
 
