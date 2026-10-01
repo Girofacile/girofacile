@@ -38,7 +38,8 @@ DISTANCE_CACHE_TTL_DAYS=0
 TOLL_DATASET_PATH=/app/data/osm-tolls.json
 ```
 
-Occorre avviare un'istanza OSRM propria con dataset OSM aggiornato e profilo
+Lo stack Compose include un'istanza OSRM propria; preparare prima un dataset
+seguendo la sezione «Installazione e gestione OSRM» sotto. Usare dati aggiornati e profilo
 stradale appropriato. Il profilo OSRM driving standard non garantisce vincoli
 stradali per mezzi pesanti: i vincoli gestionali del mezzo restano quelli
 esistenti in GiroFacile. Cambiare versione cache quando cambia il dataset o
@@ -229,3 +230,172 @@ riapertura senza richieste, conservazione energetica e migrazioni.
 - `tests/test_stability.py`
 
 Limite Directions verificato il 1 ottobre 2026: https://docs.mapbox.com/api/navigation/directions/ . Il limite Matrix driving-traffic (10) non si applica a Directions.
+
+## Installazione e gestione OSRM
+
+L'architettura resta: **OSRM Table → ottimizzazione GiroFacile → OSRM Route →
+Mapbox per ETA finali**. OSRM non decide l'ordine delle consegne. Il servizio
+`osrm` di Compose esegue soltanto `osrm-routed --algorithm mld`, legge
+`./data/osrm` in sola lettura ed espone `5000:5000`. Extract, partition e
+customize non vengono mai lanciati all'avvio dell'applicazione.
+
+### Immagine e dataset
+
+Compose e i due script usano la stessa immagine ufficiale
+`ghcr.io/project-osrm/osrm-backend`, fissata al digest multiarch
+`sha256:8a1b1bc938412f15f9b5b32d794c4ec6bf4a85dfbbabfa0a014b70b187edb53b`
+(il binario dichiara `v26.9.0`). Il digest è verificato nel registry, non un
+tag `latest` variabile. Per cambiare versione impostare **la stessa**
+`OSRM_IMAGE` in Compose e nell'ambiente degli script (oppure `-Image` in
+PowerShell) e rigenerare i dati con quella versione. Gli script non caricano
+automaticamente `.env`: il default coincide già con Compose.
+
+`OSRM_DATASET_BASENAME` in `.env` seleziona il dataset da servire, senza
+estensione; default `sud-latest`. Per esempio:
+
+```dotenv
+OSRM_DATASET_BASENAME=sud-latest
+OSRM_CACHE_VERSION=sud-20261001-car
+```
+
+Il PBF deve essere già scaricato, oppure si deve passare esplicitamente un
+URL HTTP(S) allo script. Non esiste un download implicito. I dati PBF e
+`.osrm*` sono esclusi da Git e dal contesto di build Docker. RAM, spazio e
+tempo necessari dipendono dall'estensione geografica; iniziare con un
+estratto regionale e assegnare a Docker risorse sufficienti prima dell'Italia.
+
+### Sviluppo Windows
+
+Con Docker Desktop avviato in modalità container Linux, dalla radice del progetto:
+
+```powershell
+.\scripts\osrm_prepare_windows.ps1 -Source 'C:\OSM\sud-latest.osm.pbf'
+# Solo se si desidera scaricare esplicitamente il file:
+.\scripts\osrm_prepare_windows.ps1 -Source 'https://download.geofabrik.de/europe/italy/sud-latest.osm.pbf'
+docker compose up -d osrm
+```
+
+Usare **una** delle due preparazioni, non entrambe per lo stesso basename.
+Lo script funziona con Windows PowerShell 5.1 e PowerShell 7. Il parametro
+facoltativo `-Basename sud-20261101` prepara un nuovo nome senza toccare quello
+in uso. `-DataDirectory` o `OSRM_DATA_DIR` cambiano la directory di uscita:
+se si usano, adeguare anche il bind mount Compose. Non eliminare il PBF
+originale dopo la preparazione: lo script lo conserva automaticamente.
+
+### Sviluppo macOS/Linux
+
+Servono Docker, Bash e, solo per URL espliciti, curl:
+
+```bash
+bash scripts/osrm_prepare_unix.sh /percorso/sud-latest.osm.pbf
+# In alternativa, download esplicito:
+bash scripts/osrm_prepare_unix.sh https://download.geofabrik.de/europe/italy/sud-latest.osm.pbf
+docker compose up -d osrm
+```
+
+Il secondo argomento facoltativo specifica il nuovo basename:
+`bash scripts/osrm_prepare_unix.sh /percorso/sud-latest.osm.pbf sud-20261101`.
+I file generati appartengono all'utente chiamante. Gli script si fermano
+al primo errore Docker, verificano i file MLD effettivi e non sovrascrivono
+dataset esistenti. Un errore può lasciare file parziali: usare un nuovo
+basename o rimuovere manualmente solo i file di quella preparazione fallita,
+dopo aver verificato che non siano serviti da OSRM. Un download interrotto
+resta `.part` e non viene preprocessato.
+
+La verifica finale esegue anche `osrm-routed --algorithm mld --trial=1`:
+carica tutti i file necessari e termina, senza avviare un server persistente.
+Così file mancanti, danneggiati o incompatibili non vengono dichiarati pronti.
+
+### App Python diretta oppure stack completo
+
+| Esecuzione app | OSRM_URL effettivo |
+| --- | --- |
+| Python sul PC, OSRM in Docker | `http://localhost:5000` |
+| App nello stack Compose | `http://osrm:5000` |
+
+Per Python diretto impostare `OSRM_URL=http://localhost:5000` nel proprio
+ambiente e avviare solo `docker compose up -d osrm`. Compose legge comunque
+la configurazione dello stack: il `.env` deve contenere il
+`POSTGRES_PASSWORD` richiesto, anche se PostgreSQL non viene avviato.
+
+Per lo stack completo, dopo preparazione e configurazione delle credenziali
+app/PostgreSQL nel `.env`, usare:
+
+```bash
+docker compose config --quiet
+docker compose up -d --build
+docker compose ps osrm
+```
+
+Compose imposta esplicitamente `OSRM_URL=http://osrm:5000` per l'app e aspetta
+che PostgreSQL e OSRM siano healthy. I test Python e l'app avviata direttamente
+non acquisiscono questa dipendenza: possono continuare a usare i mock.
+Se si usa un OSRM esterno personalizzato, sovrascrivere l'ambiente Compose
+con un override dedicato e gestire le dipendenze coerentemente.
+
+Se una precedente installazione manuale occupa già la porta 5000, preparare
+e verificare prima il nuovo dataset; durante il passaggio arrestare il vecchio
+container e avviare il servizio Compose. I due server non possono pubblicare
+contemporaneamente la stessa porta. Gli script non arrestano né sostituiscono
+container preesistenti e non modificano i loro dataset.
+
+**Il valore salvato in Super Admin → Impostazioni SaaS → Routing prevale
+sempre sull'ambiente.** Se il DB contiene `http://localhost:5000`, passando
+a Compose bisogna cambiarlo in `http://osrm:5000`: localhost nel container
+indica il container dell'app, non il PC né il servizio OSRM. Per tornare
+all'app diretta impostare nuovamente localhost. Nessuna riscrittura o
+migrazione silenziosa delle impostazioni viene effettuata. La diagnostica
+indica la fonte della configurazione e segnala loopback in Compose.
+
+### Aggiornamento: dal Sud all'Italia
+
+1. Scaricare esplicitamente `italy-latest.osm.pbf` dalla
+   [pagina Italia Geofabrik](https://download.geofabrik.de/europe/italy.html),
+   oppure passare l'URL scelto allo script.
+2. Prepararlo con `-Basename italy-20261001` (Windows) o secondo argomento
+   `italy-20261001` (Unix). La sequenza è **extract con `/opt/car.lua` →
+   partition → customize → verifica file**. Il Sud resta intatto e può
+   continuare a essere servito durante la preparazione.
+3. In una finestra di manutenzione, sospendere nuovi calcoli; impostare
+   `OSRM_DATASET_BASENAME=italy-20261001` nel `.env`.
+4. Cambiare **OSRM_CACHE_VERSION** in un valore nuovo, ad esempio
+   `it-20261001-car` (massimo 24 caratteri), **prima di riprendere i calcoli**.
+   Se è salvato nel Super Admin, aggiornare lì: anche per la versione cache
+   il DB prevale sull'env. Se si usa solo l'env, ricreare/riavviare l'app
+   perché rilegga il valore.
+5. `docker compose up -d --force-recreate osrm`, attendere lo stato healthy,
+   quindi `docker compose up -d --force-recreate girofacile` per l'app Compose.
+   Per Python diretto riavviare invece il processo Python.
+6. Eseguire «Verifica routing» prima di riaprire i calcoli.
+
+Il cambio versione rende inutilizzabili per i nuovi calcoli le vecchie
+distanze della cache PostgreSQL; non cancella né riscrive storici e giri.
+Ripetere il cambio versione anche per aggiornamenti dello stesso estratto,
+del profilo `/opt/car.lua` o dell'immagine OSRM. Anche un rollback richiede
+una versione cache coerente; non cambiare file del dataset attivo in-place.
+
+### Diagnostica
+
+L'healthcheck del container invia una vera richiesta HTTP Nearest e richiede
+HTTP 200 con `code: Ok` e waypoints. Usa Bash/coreutils presenti nell'immagine
+ufficiale, senza assumere curl/wget. La coordinata di test `0,0`, senza limite
+di raggio, viene agganciata al segmento più vicino anche negli estratti
+regionali: verifica che il grafo sia caricato, non la copertura di un cliente.
+
+Nel Super Admin → Server / manutenzione → Stato routing, il pulsante
+«Verifica routing» chiama `GET /api/admin/routing-health`. Sono necessari
+la sessione Super Admin e, per collaboratori, entrambi i permessi di
+visualizzazione manutenzione e test connessioni. Il controllo distingue
+`ok`, `unreachable`, `invalid_response`, `invalid_configuration`, mostra
+millisecondi e fonte DB/ambiente/default, senza restituire URL o segreti.
+Mapbox viene verificato solo come provider/token configurati: **zero richieste
+a pagamento**. Il controllo non altera cache, giri o log dei consumi API.
+
+```bash
+docker compose ps osrm
+docker compose logs --tail=50 osrm
+docker compose exec osrm timeout 5 bash /opt/girofacile-healthcheck.sh
+```
+
+Le istruzioni di preparazione seguono il [progetto OSRM ufficiale](https://github.com/Project-OSRM/osrm-backend).
+La CI usa soltanto un piccolo PBF sintetico generato localmente, mai l'Italia.

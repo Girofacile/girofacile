@@ -36,6 +36,32 @@ jobs:
       - run: pip install -r requirements.txt
       - run: python -m pytest tests -q
       - run: node --test tests/*.cjs
+      - name: Validate OSRM infrastructure and synthetic dataset
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash -n scripts/osrm_prepare_unix.sh
+          bash -n scripts/osrm_healthcheck.sh
+          printf 'POSTGRES_PASSWORD=compose-validation-only\n' > .env
+          docker compose config --quiet
+          OSRM_IMAGE=$(docker compose config --format json | python -c 'import json,sys; print(json.load(sys.stdin)["services"]["osrm"]["image"])')
+          export OSRM_IMAGE
+          python tests/create_osrm_smoke_fixture.py data/osrm/synthetic.osm.pbf
+          bash scripts/osrm_prepare_unix.sh data/osrm/synthetic.osm.pbf synthetic-ci
+          trap 'docker rm -f girofacile-osrm-ci >/dev/null 2>&1 || true' EXIT
+          docker run -d --name girofacile-osrm-ci \
+            -v "$PWD/data/osrm:/data:ro" \
+            -v "$PWD/scripts/osrm_healthcheck.sh:/opt/girofacile-healthcheck.sh:ro" \
+            --health-cmd 'timeout 5 bash /opt/girofacile-healthcheck.sh' \
+            --health-interval 2s --health-timeout 6s --health-retries 5 \
+            "$OSRM_IMAGE" osrm-routed --algorithm mld /data/synthetic-ci.osrm
+          for attempt in $(seq 1 30); do
+            status=$(docker inspect --format '{{.State.Health.Status}}' girofacile-osrm-ci)
+            if [ "$status" = healthy ]; then break; fi
+            if [ "$status" = unhealthy ]; then docker logs girofacile-osrm-ci; exit 1; fi
+            sleep 2
+          done
+          test "$status" = healthy
       - run: docker build -t girofacile-test .
       - name: Verify backup tools in the deployable image
         run: docker run --rm --entrypoint sh girofacile-test -c 'test -f /app/scripts/backup_database.py && pg_dump --version && pg_restore --version'

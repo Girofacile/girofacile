@@ -1,4 +1,21 @@
 services:
+  osrm:
+    # Same immutable official image is used by both preparation scripts.
+    image: ${OSRM_IMAGE:-ghcr.io/project-osrm/osrm-backend@sha256:8a1b1bc938412f15f9b5b32d794c4ec6bf4a85dfbbabfa0a014b70b187edb53b}
+    restart: unless-stopped
+    command: ["osrm-routed", "--algorithm", "mld", "/data/${OSRM_DATASET_BASENAME:-sud-latest}.osrm"]
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./data/osrm:/data:ro
+      - ./scripts/osrm_healthcheck.sh:/opt/girofacile-healthcheck.sh:ro
+    healthcheck:
+      test: ["CMD", "timeout", "5", "bash", "/opt/girofacile-healthcheck.sh"]
+      interval: 15s
+      timeout: 6s
+      retries: 8
+      start_period: 60s
+
   postgres:
     image: postgres:16
     container_name: girofacile-postgres
@@ -26,10 +43,15 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      osrm:
+        condition: service_healthy
     ports:
       - "8000:8000"
     environment:
       APP_ENV: ${APP_ENV:-production}
+      # Host Python uses localhost; containers use service DNS. DB overrides still win.
+      OSRM_URL: http://osrm:5000
+      GIROFACILE_RUNTIME: docker-compose
       DATABASE_URL: "postgresql+psycopg2://${POSTGRES_USER:-girofacile}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-girofacile}"
       COOKIE_SECURE: ${COOKIE_SECURE:-true}
       TRUST_PROXY_HEADERS: ${TRUST_PROXY_HEADERS:-true}

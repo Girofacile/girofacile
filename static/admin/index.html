@@ -741,6 +741,10 @@ textarea.form-control { resize: vertical; min-height: 80px; }
                 <h3>Chiavi e servizi collegati</h3>
                 <p>Le chiavi vengono mostrate mascherate. Per sicurezza non è previsto il tasto “mostra chiave completa”.</p>
                 <div class="service-list-v69" id="server-services-list"></div>
+                <h3 style="margin-top:18px">Stato routing</h3>
+                <p>Verifica OSRM e la configurazione traffico. Nessuna chiamata a pagamento a Mapbox.</p>
+                <button class="btn btn-ghost btn-sm" id="routing-health-button" onclick="checkRoutingHealth()">Verifica routing</button>
+                <p id="routing-health-result" role="status" aria-live="polite">Controllo non ancora eseguito.</p>
               </div>
               <div class="maintenance-card-v69">
                 <h3>Backup database</h3>
@@ -1645,6 +1649,24 @@ async function loadServerMaintenance(){
     document.getElementById('server-console-url').value = data.settings?.server_console_url || '';
     loading.style.display='none'; content.style.display='block';
   }catch(e){ loading.style.display='none'; showToast(e.message,'error'); }
+}
+async function checkRoutingHealth(){
+  const button=document.getElementById('routing-health-button');
+  const output=document.getElementById('routing-health-result');
+  button.disabled=true; output.textContent='Verifica in corso…';
+  try{
+    const result=await api('/api/admin/routing-health');
+    if(!result){output.textContent='Accesso Super Admin richiesto.';return;}
+    const labels={ok:'operativo',unreachable:'non raggiungibile',invalid_response:'risposta non valida',invalid_configuration:'configurazione non valida'};
+    const sources={database:'Super Admin',environment:'ambiente',default:'predefinita'};
+    const road=result.osrm;
+    output.textContent='OSRM: '+(labels[road.status]||'stato sconosciuto')+
+      (road.response_ms==null?'':' ('+road.response_ms+' ms)')+
+      '. Configurazione: '+(sources[road.configuration_source]||'sconosciuta')+
+      '. Traffico: '+(result.traffic.provider==='none'?'disattivato':result.traffic.provider==='mapbox'?(result.traffic.configured?'Mapbox configurato':'token Mapbox mancante'):'provider non supportato')+'.';
+    if(road.warning==='docker_loopback_configuration') output.textContent+=' L’app gira in Docker: nelle impostazioni Routing usa http://osrm:5000. Il valore salvato nel Super Admin prevale sull’ambiente.';
+  }catch(e){output.textContent='Verifica non riuscita. Controlla accesso e permessi Super Admin.';}
+  finally{button.disabled=false;}
 }
 async function testServerService(service){ try{ const r=await api('/api/admin/server-maintenance/test-service',{method:'POST',body:JSON.stringify({service})}); showToast(r.message, r.ok?'success':'error'); }catch(e){ showToast(e.message,'error'); } }
 async function createServerBackup(){ try{ const r=await api('/api/admin/server-maintenance/backups',{method:'POST'}); showToast('Backup creato', 'success'); await loadServerMaintenance(); }catch(e){ showToast(e.message,'error'); } }

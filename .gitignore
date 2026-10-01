@@ -25,6 +25,9 @@ ENV/
 *.db
 *.sqlite
 *.sqlite3
+*.osm.pbf
+*.osrm*
+data/osrm/
 data/*.db
 data/*.sqlite*
 

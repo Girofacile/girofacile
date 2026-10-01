@@ -686,6 +686,14 @@ def _db_table_summary(table_name: str) -> dict:
 # Server / Manutenzione v69
 # -----------------------------------------------------------------------
 
+@router.get("/routing-health")
+def admin_routing_health(db: Session = Depends(get_db), superadmin: dict = Depends(require_superadmin)):
+    _require_perm(superadmin, "view_server_maintenance")
+    _require_perm(superadmin, "test_service_connections")
+    from ..services.routing_health import routing_health
+    return routing_health(db)
+
+
 @router.get("/server-maintenance")
 def admin_server_maintenance(db: Session = Depends(get_db), superadmin: dict = Depends(require_superadmin)):
     _require_perm(superadmin, "view_server_maintenance")
