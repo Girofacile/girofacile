@@ -1,0 +1,3168 @@
+{
+  "baseline_commit": "824816f252e89274ebed6ef22f2d59e8483cb51a",
+  "dataset": "synthetic, deterministic, offline; not real-world savings",
+  "timing": "single process CPU/wall sample; no latency threshold assertions",
+  "or_opt_ablation": {
+    "swap_2opt_relocate": {
+      "total_km": 152.0,
+      "total_min": 198.0,
+      "candidates_evaluated": 136,
+      "cpu_ms": 15.625
+    },
+    "with_or_opt_2_3": {
+      "total_km": 93.0,
+      "total_min": 158.0,
+      "candidates_evaluated": 702,
+      "cpu_ms": 15.625
+    }
+  },
+  "records": [
+    {
+      "n": 5,
+      "kind": "asymmetric",
+      "return_depot": false,
+      "before": {
+        "total_km": 32.0,
+        "total_min": 64.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 0.0,
+        "wall_ms": 22.386,
+        "candidates_evaluated": 121,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 32.0,
+        "total_min": 64.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 15.625,
+        "wall_ms": 13.957,
+        "candidates_evaluated": 121,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "exact-permutations",
+          "candidates_evaluated": 121,
+          "optimization_budget_exhausted": false,
+          "candidate_budget": null,
+          "optimization_cpu_ms": 15.625,
+          "optimization_ms": 13.863099997251993
+        }
+      },
+      "reference": {
+        "total_km": 32,
+        "total_min": 64,
+        "kind": "exact_distance_time"
+      },
+      "delta_km": 0.0,
+      "improvement_km_pct": 0.0,
+      "improved": false
+    },
+    {
+      "n": 5,
+      "kind": "asymmetric",
+      "return_depot": true,
+      "before": {
+        "total_km": 40.0,
+        "total_min": 79.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 15.625,
+        "wall_ms": 21.64,
+        "candidates_evaluated": 121,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 40.0,
+        "total_min": 79.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 0.0,
+        "wall_ms": 17.577,
+        "candidates_evaluated": 121,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "exact-permutations",
+          "candidates_evaluated": 121,
+          "optimization_budget_exhausted": false,
+          "candidate_budget": null,
+          "optimization_cpu_ms": 0.0,
+          "optimization_ms": 17.511199999717064
+        }
+      },
+      "reference": {
+        "total_km": 40,
+        "total_min": 79,
+        "kind": "exact_distance_time"
+      },
+      "delta_km": 0.0,
+      "improvement_km_pct": 0.0,
+      "improved": false
+    },
+    {
+      "n": 5,
+      "kind": "clusters",
+      "return_depot": false,
+      "before": {
+        "total_km": 106.1,
+        "total_min": 24.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 31.25,
+        "wall_ms": 27.204,
+        "candidates_evaluated": 121,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 106.1,
+        "total_min": 24.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 15.625,
+        "wall_ms": 12.448,
+        "candidates_evaluated": 121,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "exact-permutations",
+          "candidates_evaluated": 121,
+          "optimization_budget_exhausted": false,
+          "candidate_budget": null,
+          "optimization_cpu_ms": 15.625,
+          "optimization_ms": 12.374099998851307
+        }
+      },
+      "reference": {
+        "total_km": 106.1,
+        "total_min": 24,
+        "kind": "exact_distance_time"
+      },
+      "delta_km": 0.0,
+      "improvement_km_pct": 0.0,
+      "improved": false
+    },
+    {
+      "n": 5,
+      "kind": "clusters",
+      "return_depot": true,
+      "before": {
+        "total_km": 140.66,
+        "total_min": 31.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 0.0,
+        "wall_ms": 10.739,
+        "candidates_evaluated": 121,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 140.66,
+        "total_min": 31.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 15.625,
+        "wall_ms": 16.777,
+        "candidates_evaluated": 121,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "exact-permutations",
+          "candidates_evaluated": 121,
+          "optimization_budget_exhausted": false,
+          "candidate_budget": null,
+          "optimization_cpu_ms": 15.625,
+          "optimization_ms": 16.700800002581673
+        }
+      },
+      "reference": {
+        "total_km": 140.66,
+        "total_min": 31,
+        "kind": "exact_distance_time"
+      },
+      "delta_km": 0.0,
+      "improvement_km_pct": 0.0,
+      "improved": false
+    },
+    {
+      "n": 5,
+      "kind": "nearest_trap",
+      "return_depot": false,
+      "before": {
+        "total_km": 6.0,
+        "total_min": 16.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 0.0,
+        "wall_ms": 10.704,
+        "candidates_evaluated": 121,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 6.0,
+        "total_min": 16.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 15.625,
+        "wall_ms": 14.779,
+        "candidates_evaluated": 121,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "exact-permutations",
+          "candidates_evaluated": 121,
+          "optimization_budget_exhausted": false,
+          "candidate_budget": null,
+          "optimization_cpu_ms": 15.625,
+          "optimization_ms": 14.724000000569504
+        }
+      },
+      "reference": {
+        "total_km": 6,
+        "total_min": 16,
+        "kind": "exact_distance_time"
+      },
+      "delta_km": 0.0,
+      "improvement_km_pct": 0.0,
+      "improved": false
+    },
+    {
+      "n": 5,
+      "kind": "nearest_trap",
+      "return_depot": true,
+      "before": {
+        "total_km": 7.0,
+        "total_min": 19.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 15.625,
+        "wall_ms": 19.15,
+        "candidates_evaluated": 121,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 7.0,
+        "total_min": 19.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 15.625,
+        "wall_ms": 14.797,
+        "candidates_evaluated": 121,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "exact-permutations",
+          "candidates_evaluated": 121,
+          "optimization_budget_exhausted": false,
+          "candidate_budget": null,
+          "optimization_cpu_ms": 15.625,
+          "optimization_ms": 14.723600001161685
+        }
+      },
+      "reference": {
+        "total_km": 7,
+        "total_min": 19,
+        "kind": "exact_distance_time"
+      },
+      "delta_km": 0.0,
+      "improvement_km_pct": 0.0,
+      "improved": false
+    },
+    {
+      "n": 5,
+      "kind": "windows",
+      "return_depot": false,
+      "before": {
+        "total_km": 109.81,
+        "total_min": 59.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 24.0,
+        "cpu_ms": 15.625,
+        "wall_ms": 17.103,
+        "candidates_evaluated": 121,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 109.81,
+        "total_min": 59.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 24.0,
+        "cpu_ms": 15.625,
+        "wall_ms": 22.86,
+        "candidates_evaluated": 121,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "exact-permutations",
+          "candidates_evaluated": 121,
+          "optimization_budget_exhausted": false,
+          "candidate_budget": null,
+          "optimization_cpu_ms": 15.625,
+          "optimization_ms": 22.797400000854395
+        }
+      },
+      "reference": {
+        "total_km": 109.81,
+        "total_min": 59,
+        "kind": "exact_feasible_distance_time"
+      },
+      "delta_km": 0.0,
+      "improvement_km_pct": 0.0,
+      "improved": false
+    },
+    {
+      "n": 5,
+      "kind": "windows",
+      "return_depot": true,
+      "before": {
+        "total_km": 154.73,
+        "total_min": 66.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 24.0,
+        "cpu_ms": 62.5,
+        "wall_ms": 51.608,
+        "candidates_evaluated": 121,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 154.73,
+        "total_min": 66.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 24.0,
+        "cpu_ms": 15.625,
+        "wall_ms": 21.826,
+        "candidates_evaluated": 121,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "exact-permutations",
+          "candidates_evaluated": 121,
+          "optimization_budget_exhausted": false,
+          "candidate_budget": null,
+          "optimization_cpu_ms": 15.625,
+          "optimization_ms": 21.7609999999695
+        }
+      },
+      "reference": {
+        "total_km": 154.73,
+        "total_min": 66,
+        "kind": "exact_feasible_distance_time"
+      },
+      "delta_km": 0.0,
+      "improvement_km_pct": 0.0,
+      "improved": false
+    },
+    {
+      "n": 8,
+      "kind": "asymmetric",
+      "return_depot": false,
+      "before": {
+        "total_km": 38.0,
+        "total_min": 100.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 5531.25,
+        "wall_ms": 6164.494,
+        "candidates_evaluated": 40321,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 38.0,
+        "total_min": 100.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 6343.75,
+        "wall_ms": 7328.064,
+        "candidates_evaluated": 40321,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "exact-permutations",
+          "candidates_evaluated": 40321,
+          "optimization_budget_exhausted": false,
+          "candidate_budget": null,
+          "optimization_cpu_ms": 6343.75,
+          "optimization_ms": 7327.987399999984
+        }
+      },
+      "reference": {
+        "total_km": 38,
+        "total_min": 100,
+        "kind": "exact_distance_time"
+      },
+      "delta_km": 0.0,
+      "improvement_km_pct": 0.0,
+      "improved": false
+    },
+    {
+      "n": 8,
+      "kind": "asymmetric",
+      "return_depot": true,
+      "before": {
+        "total_km": 45.0,
+        "total_min": 107.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 4921.875,
+        "wall_ms": 5189.294,
+        "candidates_evaluated": 40321,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 45.0,
+        "total_min": 107.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 7156.25,
+        "wall_ms": 8716.07,
+        "candidates_evaluated": 40321,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "exact-permutations",
+          "candidates_evaluated": 40321,
+          "optimization_budget_exhausted": false,
+          "candidate_budget": null,
+          "optimization_cpu_ms": 7156.25,
+          "optimization_ms": 8715.991699998995
+        }
+      },
+      "reference": {
+        "total_km": 45,
+        "total_min": 107,
+        "kind": "exact_distance_time"
+      },
+      "delta_km": 0.0,
+      "improvement_km_pct": 0.0,
+      "improved": false
+    },
+    {
+      "n": 8,
+      "kind": "clusters",
+      "return_depot": false,
+      "before": {
+        "total_km": 117.5,
+        "total_min": 32.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 6343.75,
+        "wall_ms": 7198.221,
+        "candidates_evaluated": 40321,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 117.5,
+        "total_min": 32.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 5046.875,
+        "wall_ms": 5337.687,
+        "candidates_evaluated": 40321,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "exact-permutations",
+          "candidates_evaluated": 40321,
+          "optimization_budget_exhausted": false,
+          "candidate_budget": null,
+          "optimization_cpu_ms": 5046.875,
+          "optimization_ms": 5337.596400000621
+        }
+      },
+      "reference": {
+        "total_km": 117.5,
+        "total_min": 32,
+        "kind": "exact_distance_time"
+      },
+      "delta_km": 0.0,
+      "improvement_km_pct": 0.0,
+      "improved": false
+    },
+    {
+      "n": 8,
+      "kind": "clusters",
+      "return_depot": true,
+      "before": {
+        "total_km": 154.15,
+        "total_min": 36.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 10546.875,
+        "wall_ms": 28804.981,
+        "candidates_evaluated": 40321,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 154.15,
+        "total_min": 36.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 10984.375,
+        "wall_ms": 30513.442,
+        "candidates_evaluated": 40321,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "exact-permutations",
+          "candidates_evaluated": 40321,
+          "optimization_budget_exhausted": false,
+          "candidate_budget": null,
+          "optimization_cpu_ms": 10984.375,
+          "optimization_ms": 30513.093900000968
+        }
+      },
+      "reference": {
+        "total_km": 154.15,
+        "total_min": 36,
+        "kind": "exact_distance_time"
+      },
+      "delta_km": 0.0,
+      "improvement_km_pct": 0.0,
+      "improved": false
+    },
+    {
+      "n": 8,
+      "kind": "nearest_trap",
+      "return_depot": false,
+      "before": {
+        "total_km": 9.0,
+        "total_min": 25.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 9937.5,
+        "wall_ms": 18789.287,
+        "candidates_evaluated": 40321,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 9.0,
+        "total_min": 25.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 9281.25,
+        "wall_ms": 13975.211,
+        "candidates_evaluated": 40321,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "exact-permutations",
+          "candidates_evaluated": 40321,
+          "optimization_budget_exhausted": false,
+          "candidate_budget": null,
+          "optimization_cpu_ms": 9281.25,
+          "optimization_ms": 13975.126500001352
+        }
+      },
+      "reference": {
+        "total_km": 9,
+        "total_min": 25,
+        "kind": "exact_distance_time"
+      },
+      "delta_km": 0.0,
+      "improvement_km_pct": 0.0,
+      "improved": false
+    },
+    {
+      "n": 8,
+      "kind": "nearest_trap",
+      "return_depot": true,
+      "before": {
+        "total_km": 10.0,
+        "total_min": 28.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 9828.125,
+        "wall_ms": 18066.623,
+        "candidates_evaluated": 40321,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 10.0,
+        "total_min": 28.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 9687.5,
+        "wall_ms": 12532.106,
+        "candidates_evaluated": 40321,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "exact-permutations",
+          "candidates_evaluated": 40321,
+          "optimization_budget_exhausted": false,
+          "candidate_budget": null,
+          "optimization_cpu_ms": 9687.5,
+          "optimization_ms": 12531.989900002372
+        }
+      },
+      "reference": {
+        "total_km": 10,
+        "total_min": 28,
+        "kind": "exact_distance_time"
+      },
+      "delta_km": 0.0,
+      "improvement_km_pct": 0.0,
+      "improved": false
+    },
+    {
+      "n": 8,
+      "kind": "windows",
+      "return_depot": false,
+      "before": {
+        "total_km": 117.5,
+        "total_min": 78.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 30.0,
+        "cpu_ms": 12046.875,
+        "wall_ms": 16141.897,
+        "candidates_evaluated": 40321,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 117.5,
+        "total_min": 78.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 30.0,
+        "cpu_ms": 12843.75,
+        "wall_ms": 17863.496,
+        "candidates_evaluated": 40321,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "exact-permutations",
+          "candidates_evaluated": 40321,
+          "optimization_budget_exhausted": false,
+          "candidate_budget": null,
+          "optimization_cpu_ms": 12843.75,
+          "optimization_ms": 17863.393200001155
+        }
+      },
+      "reference": {
+        "total_km": 117.5,
+        "total_min": 78,
+        "kind": "exact_feasible_distance_time"
+      },
+      "delta_km": 0.0,
+      "improvement_km_pct": 0.0,
+      "improved": false
+    },
+    {
+      "n": 8,
+      "kind": "windows",
+      "return_depot": true,
+      "before": {
+        "total_km": 171.1,
+        "total_min": 85.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 30.0,
+        "cpu_ms": 13156.25,
+        "wall_ms": 19563.163,
+        "candidates_evaluated": 40321,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 171.1,
+        "total_min": 85.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 30.0,
+        "cpu_ms": 13421.875,
+        "wall_ms": 17495.763,
+        "candidates_evaluated": 40321,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "exact-permutations",
+          "candidates_evaluated": 40321,
+          "optimization_budget_exhausted": false,
+          "candidate_budget": null,
+          "optimization_cpu_ms": 13421.875,
+          "optimization_ms": 17495.607900000323
+        }
+      },
+      "reference": {
+        "total_km": 171.1,
+        "total_min": 85,
+        "kind": "exact_feasible_distance_time"
+      },
+      "delta_km": 0.0,
+      "improvement_km_pct": 0.0,
+      "improved": false
+    },
+    {
+      "n": 9,
+      "kind": "asymmetric",
+      "return_depot": false,
+      "before": {
+        "total_km": 36.0,
+        "total_min": 109.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 250.0,
+        "wall_ms": 252.824,
+        "candidates_evaluated": 1025,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 36.0,
+        "total_min": 109.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 125.0,
+        "wall_ms": 145.266,
+        "candidates_evaluated": 4074,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 4074,
+          "baseline_candidates": 1025,
+          "additional_candidates": 3048,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": false,
+          "baseline_cpu_ms": 31.25,
+          "optimization_ms": 142.58350000091013,
+          "optimization_cpu_ms": 125.0,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "operator",
+            "reverse_operator",
+            "reverse_greedy",
+            "cheapest_insertion"
+          ]
+        }
+      },
+      "reference": {
+        "total_km": 35,
+        "total_min": 122,
+        "kind": "exact_distance_time"
+      },
+      "delta_km": 0.0,
+      "improvement_km_pct": 0.0,
+      "improved": false
+    },
+    {
+      "n": 9,
+      "kind": "asymmetric",
+      "return_depot": true,
+      "before": {
+        "total_km": 46.0,
+        "total_min": 133.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 171.875,
+        "wall_ms": 180.713,
+        "candidates_evaluated": 753,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 43.0,
+        "total_min": 124.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 125.0,
+        "wall_ms": 176.918,
+        "candidates_evaluated": 4270,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 4270,
+          "baseline_candidates": 753,
+          "additional_candidates": 3516,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": false,
+          "baseline_cpu_ms": 31.25,
+          "optimization_ms": 176.7777000022761,
+          "optimization_cpu_ms": 125.0,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "operator",
+            "reverse_operator",
+            "reverse_greedy",
+            "cheapest_insertion"
+          ]
+        }
+      },
+      "reference": {
+        "total_km": 42,
+        "total_min": 128,
+        "kind": "exact_distance_time"
+      },
+      "delta_km": -3.0,
+      "improvement_km_pct": 6.522,
+      "improved": true
+    },
+    {
+      "n": 9,
+      "kind": "clusters",
+      "return_depot": false,
+      "before": {
+        "total_km": 117.53,
+        "total_min": 32.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 250.0,
+        "wall_ms": 292.004,
+        "candidates_evaluated": 953,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 117.53,
+        "total_min": 32.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 156.25,
+        "wall_ms": 164.372,
+        "candidates_evaluated": 4470,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 4470,
+          "baseline_candidates": 953,
+          "additional_candidates": 3516,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": false,
+          "baseline_cpu_ms": 31.25,
+          "optimization_ms": 164.23180000128923,
+          "optimization_cpu_ms": 156.25,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "operator",
+            "reverse_operator",
+            "reverse_greedy",
+            "cheapest_insertion"
+          ]
+        }
+      },
+      "reference": {
+        "total_km": 117.53,
+        "total_min": 32,
+        "kind": "exact_distance_time"
+      },
+      "delta_km": 0.0,
+      "improvement_km_pct": 0.0,
+      "improved": false
+    },
+    {
+      "n": 9,
+      "kind": "clusters",
+      "return_depot": true,
+      "before": {
+        "total_km": 152.72,
+        "total_min": 37.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 343.75,
+        "wall_ms": 414.968,
+        "candidates_evaluated": 1353,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 152.72,
+        "total_min": 37.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 140.625,
+        "wall_ms": 144.789,
+        "candidates_evaluated": 4401,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 4401,
+          "baseline_candidates": 1353,
+          "additional_candidates": 3047,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": false,
+          "baseline_cpu_ms": 46.875,
+          "optimization_ms": 144.6246000014071,
+          "optimization_cpu_ms": 140.625,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "operator",
+            "reverse_operator",
+            "reverse_greedy"
+          ]
+        }
+      },
+      "reference": {
+        "total_km": 152.72,
+        "total_min": 37,
+        "kind": "exact_distance_time"
+      },
+      "delta_km": 0.0,
+      "improvement_km_pct": 0.0,
+      "improved": false
+    },
+    {
+      "n": 9,
+      "kind": "nearest_trap",
+      "return_depot": false,
+      "before": {
+        "total_km": 10.0,
+        "total_min": 28.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 171.875,
+        "wall_ms": 215.54,
+        "candidates_evaluated": 753,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 10.0,
+        "total_min": 28.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 109.375,
+        "wall_ms": 127.696,
+        "candidates_evaluated": 3333,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 3333,
+          "baseline_candidates": 753,
+          "additional_candidates": 2579,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": false,
+          "baseline_cpu_ms": 15.625,
+          "optimization_ms": 127.55800000013551,
+          "optimization_cpu_ms": 109.375,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "operator",
+            "reverse_operator",
+            "reverse_greedy"
+          ]
+        }
+      },
+      "reference": {
+        "total_km": 10,
+        "total_min": 28,
+        "kind": "exact_distance_time"
+      },
+      "delta_km": 0.0,
+      "improvement_km_pct": 0.0,
+      "improved": false
+    },
+    {
+      "n": 9,
+      "kind": "nearest_trap",
+      "return_depot": true,
+      "before": {
+        "total_km": 11.0,
+        "total_min": 31.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 218.75,
+        "wall_ms": 230.815,
+        "candidates_evaluated": 953,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 11.0,
+        "total_min": 31.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 140.625,
+        "wall_ms": 128.954,
+        "candidates_evaluated": 3533,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 3533,
+          "baseline_candidates": 953,
+          "additional_candidates": 2579,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": false,
+          "baseline_cpu_ms": 31.25,
+          "optimization_ms": 128.82819999867934,
+          "optimization_cpu_ms": 140.625,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "operator",
+            "reverse_operator",
+            "reverse_greedy"
+          ]
+        }
+      },
+      "reference": {
+        "total_km": 11,
+        "total_min": 31,
+        "kind": "exact_distance_time"
+      },
+      "delta_km": 0.0,
+      "improvement_km_pct": 0.0,
+      "improved": false
+    },
+    {
+      "n": 9,
+      "kind": "windows",
+      "return_depot": false,
+      "before": {
+        "total_km": 117.53,
+        "total_min": 83.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 33.0,
+        "cpu_ms": 375.0,
+        "wall_ms": 928.829,
+        "candidates_evaluated": 953,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 117.53,
+        "total_min": 83.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 33.0,
+        "cpu_ms": 343.75,
+        "wall_ms": 646.616,
+        "candidates_evaluated": 5218,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 5218,
+          "baseline_candidates": 953,
+          "additional_candidates": 4264,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": false,
+          "baseline_cpu_ms": 93.75,
+          "optimization_ms": 645.6365999983973,
+          "optimization_cpu_ms": 343.75,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "operator",
+            "reverse_operator",
+            "reverse_greedy",
+            "cheapest_insertion",
+            "window_insertion"
+          ]
+        }
+      },
+      "reference": null,
+      "delta_km": 0.0,
+      "improvement_km_pct": 0.0,
+      "improved": false
+    },
+    {
+      "n": 9,
+      "kind": "windows",
+      "return_depot": true,
+      "before": {
+        "total_km": 172.73,
+        "total_min": 90.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 33.0,
+        "cpu_ms": 375.0,
+        "wall_ms": 382.119,
+        "candidates_evaluated": 953,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 172.73,
+        "total_min": 90.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 33.0,
+        "cpu_ms": 312.5,
+        "wall_ms": 341.662,
+        "candidates_evaluated": 5218,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 5218,
+          "baseline_candidates": 953,
+          "additional_candidates": 4264,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": false,
+          "baseline_cpu_ms": 78.125,
+          "optimization_ms": 340.58989999903133,
+          "optimization_cpu_ms": 312.5,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "operator",
+            "reverse_operator",
+            "reverse_greedy",
+            "cheapest_insertion",
+            "window_insertion"
+          ]
+        }
+      },
+      "reference": null,
+      "delta_km": 0.0,
+      "improvement_km_pct": 0.0,
+      "improved": false
+    },
+    {
+      "n": 12,
+      "kind": "asymmetric",
+      "return_depot": false,
+      "before": {
+        "total_km": 35.0,
+        "total_min": 169.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 984.375,
+        "wall_ms": 2012.501,
+        "candidates_evaluated": 3155,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 35.0,
+        "total_min": 169.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 406.25,
+        "wall_ms": 665.681,
+        "candidates_evaluated": 9957,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 9957,
+          "baseline_candidates": 3155,
+          "additional_candidates": 6801,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": false,
+          "baseline_cpu_ms": 125.0,
+          "optimization_ms": 665.0379999991856,
+          "optimization_cpu_ms": 406.25,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "operator",
+            "reverse_operator",
+            "reverse_greedy",
+            "cheapest_insertion"
+          ]
+        }
+      },
+      "reference": {
+        "total_km": 35,
+        "total_min": 169,
+        "kind": "exact_distance_time"
+      },
+      "delta_km": 0.0,
+      "improvement_km_pct": 0.0,
+      "improved": false
+    },
+    {
+      "n": 12,
+      "kind": "asymmetric",
+      "return_depot": true,
+      "before": {
+        "total_km": 49.0,
+        "total_min": 183.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 828.125,
+        "wall_ms": 1048.4,
+        "candidates_evaluated": 2275,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 49.0,
+        "total_min": 183.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 375.0,
+        "wall_ms": 370.92,
+        "candidates_evaluated": 9077,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 9077,
+          "baseline_candidates": 2275,
+          "additional_candidates": 6801,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": false,
+          "baseline_cpu_ms": 93.75,
+          "optimization_ms": 370.77590000262717,
+          "optimization_cpu_ms": 375.0,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "operator",
+            "reverse_operator",
+            "reverse_greedy",
+            "cheapest_insertion"
+          ]
+        }
+      },
+      "reference": {
+        "total_km": 49,
+        "total_min": 183,
+        "kind": "exact_distance_time"
+      },
+      "delta_km": 0.0,
+      "improvement_km_pct": 0.0,
+      "improved": false
+    },
+    {
+      "n": 12,
+      "kind": "clusters",
+      "return_depot": false,
+      "before": {
+        "total_km": 138.52,
+        "total_min": 36.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 546.875,
+        "wall_ms": 555.074,
+        "candidates_evaluated": 1648,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 138.52,
+        "total_min": 36.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 234.375,
+        "wall_ms": 245.039,
+        "candidates_evaluated": 5730,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 5730,
+          "baseline_candidates": 1648,
+          "additional_candidates": 4081,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": false,
+          "baseline_cpu_ms": 78.125,
+          "optimization_ms": 244.8990999982925,
+          "optimization_cpu_ms": 234.375,
+          "seeds_evaluated": [
+            "baseline",
+            "operator",
+            "reverse_operator",
+            "reverse_greedy"
+          ]
+        }
+      },
+      "reference": {
+        "total_km": 138.52,
+        "total_min": 36,
+        "kind": "exact_distance_time"
+      },
+      "delta_km": 0.0,
+      "improvement_km_pct": 0.0,
+      "improved": false
+    },
+    {
+      "n": 12,
+      "kind": "clusters",
+      "return_depot": true,
+      "before": {
+        "total_km": 175.6,
+        "total_min": 42.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 703.125,
+        "wall_ms": 946.853,
+        "candidates_evaluated": 2154,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 175.6,
+        "total_min": 42.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 359.375,
+        "wall_ms": 417.187,
+        "candidates_evaluated": 8956,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 8956,
+          "baseline_candidates": 2154,
+          "additional_candidates": 6801,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": false,
+          "baseline_cpu_ms": 62.5,
+          "optimization_ms": 417.0449000012013,
+          "optimization_cpu_ms": 359.375,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "operator",
+            "reverse_operator",
+            "reverse_greedy",
+            "cheapest_insertion"
+          ]
+        }
+      },
+      "reference": {
+        "total_km": 175.6,
+        "total_min": 42,
+        "kind": "exact_distance_time"
+      },
+      "delta_km": 0.0,
+      "improvement_km_pct": 0.0,
+      "improved": false
+    },
+    {
+      "n": 12,
+      "kind": "nearest_trap",
+      "return_depot": false,
+      "before": {
+        "total_km": 13.0,
+        "total_min": 37.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 578.125,
+        "wall_ms": 585.477,
+        "candidates_evaluated": 1648,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 13.0,
+        "total_min": 37.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 234.375,
+        "wall_ms": 296.84,
+        "candidates_evaluated": 6637,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 6637,
+          "baseline_candidates": 1648,
+          "additional_candidates": 4988,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": false,
+          "baseline_cpu_ms": 93.75,
+          "optimization_ms": 296.70809999879566,
+          "optimization_cpu_ms": 234.375,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "operator",
+            "reverse_operator",
+            "reverse_greedy"
+          ]
+        }
+      },
+      "reference": {
+        "total_km": 13,
+        "total_min": 37,
+        "kind": "exact_distance_time"
+      },
+      "delta_km": 0.0,
+      "improvement_km_pct": 0.0,
+      "improved": false
+    },
+    {
+      "n": 12,
+      "kind": "nearest_trap",
+      "return_depot": true,
+      "before": {
+        "total_km": 14.0,
+        "total_min": 40.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 687.5,
+        "wall_ms": 728.536,
+        "candidates_evaluated": 2022,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 14.0,
+        "total_min": 40.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 296.875,
+        "wall_ms": 805.244,
+        "candidates_evaluated": 7011,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 7011,
+          "baseline_candidates": 2022,
+          "additional_candidates": 4988,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": false,
+          "baseline_cpu_ms": 109.375,
+          "optimization_ms": 800.7842000006349,
+          "optimization_cpu_ms": 296.875,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "operator",
+            "reverse_operator",
+            "reverse_greedy"
+          ]
+        }
+      },
+      "reference": {
+        "total_km": 14,
+        "total_min": 40,
+        "kind": "exact_distance_time"
+      },
+      "delta_km": 0.0,
+      "improvement_km_pct": 0.0,
+      "improved": false
+    },
+    {
+      "n": 12,
+      "kind": "windows",
+      "return_depot": false,
+      "before": {
+        "total_km": 145.72,
+        "total_min": 106.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 44.0,
+        "cpu_ms": 1531.25,
+        "wall_ms": 2010.203,
+        "candidates_evaluated": 2770,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 145.72,
+        "total_min": 106.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 44.0,
+        "cpu_ms": 828.125,
+        "wall_ms": 888.97,
+        "candidates_evaluated": 11010,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 11010,
+          "baseline_candidates": 2770,
+          "additional_candidates": 8239,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": false,
+          "baseline_cpu_ms": 218.75,
+          "optimization_ms": 885.9488999987661,
+          "optimization_cpu_ms": 828.125,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "operator",
+            "reverse_operator",
+            "reverse_greedy",
+            "nearest_distance",
+            "window_lookahead"
+          ]
+        }
+      },
+      "reference": null,
+      "delta_km": 0.0,
+      "improvement_km_pct": 0.0,
+      "improved": false
+    },
+    {
+      "n": 12,
+      "kind": "windows",
+      "return_depot": true,
+      "before": {
+        "total_km": 202.95,
+        "total_min": 110.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 40.0,
+        "cpu_ms": 1296.875,
+        "wall_ms": 1404.143,
+        "candidates_evaluated": 2770,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 202.15,
+        "total_min": 117.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 46.0,
+        "cpu_ms": 1062.5,
+        "wall_ms": 3054.094,
+        "candidates_evaluated": 12670,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 12670,
+          "baseline_candidates": 2770,
+          "additional_candidates": 9899,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": false,
+          "baseline_cpu_ms": 250.0,
+          "optimization_ms": 3050.6741999997757,
+          "optimization_cpu_ms": 1062.5,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "operator",
+            "reverse_operator",
+            "reverse_greedy",
+            "nearest_distance",
+            "cheapest_insertion",
+            "window_lookahead",
+            "window_insertion"
+          ]
+        }
+      },
+      "reference": null,
+      "delta_km": -0.8,
+      "improvement_km_pct": 0.394,
+      "improved": true
+    },
+    {
+      "n": 15,
+      "kind": "asymmetric",
+      "return_depot": false,
+      "before": {
+        "total_km": 41.0,
+        "total_min": 184.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 1578.125,
+        "wall_ms": 2128.956,
+        "candidates_evaluated": 3453,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 41.0,
+        "total_min": 184.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 703.125,
+        "wall_ms": 834.187,
+        "candidates_evaluated": 13454,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 13454,
+          "baseline_candidates": 3453,
+          "additional_candidates": 10000,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": true,
+          "baseline_cpu_ms": 171.875,
+          "optimization_ms": 834.0431999968132,
+          "optimization_cpu_ms": 703.125,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "operator",
+            "reverse_operator",
+            "reverse_greedy",
+            "cheapest_insertion"
+          ]
+        }
+      },
+      "reference": null,
+      "delta_km": 0.0,
+      "improvement_km_pct": 0.0,
+      "improved": false
+    },
+    {
+      "n": 15,
+      "kind": "asymmetric",
+      "return_depot": true,
+      "before": {
+        "total_km": 55.0,
+        "total_min": 198.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 1703.125,
+        "wall_ms": 1808.769,
+        "candidates_evaluated": 3859,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 54.0,
+        "total_min": 195.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 687.5,
+        "wall_ms": 752.658,
+        "candidates_evaluated": 13860,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 13860,
+          "baseline_candidates": 3859,
+          "additional_candidates": 10000,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": true,
+          "baseline_cpu_ms": 203.125,
+          "optimization_ms": 752.509400001145,
+          "optimization_cpu_ms": 687.5,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "operator",
+            "reverse_operator",
+            "reverse_greedy",
+            "cheapest_insertion"
+          ]
+        }
+      },
+      "reference": null,
+      "delta_km": -1.0,
+      "improvement_km_pct": 1.818,
+      "improved": true
+    },
+    {
+      "n": 15,
+      "kind": "clusters",
+      "return_depot": false,
+      "before": {
+        "total_km": 155.04,
+        "total_min": 43.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 1546.875,
+        "wall_ms": 1713.296,
+        "candidates_evaluated": 3649,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 155.04,
+        "total_min": 43.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 515.625,
+        "wall_ms": 644.484,
+        "candidates_evaluated": 13288,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 13288,
+          "baseline_candidates": 3649,
+          "additional_candidates": 9638,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": false,
+          "baseline_cpu_ms": 156.25,
+          "optimization_ms": 644.3447999990894,
+          "optimization_cpu_ms": 515.625,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "operator",
+            "reverse_operator",
+            "reverse_greedy",
+            "cheapest_insertion"
+          ]
+        }
+      },
+      "reference": null,
+      "delta_km": 0.0,
+      "improvement_km_pct": 0.0,
+      "improved": false
+    },
+    {
+      "n": 15,
+      "kind": "clusters",
+      "return_depot": true,
+      "before": {
+        "total_km": 186.04,
+        "total_min": 48.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 1875.0,
+        "wall_ms": 2061.755,
+        "candidates_evaluated": 4055,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 186.04,
+        "total_min": 48.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 718.75,
+        "wall_ms": 757.12,
+        "candidates_evaluated": 14056,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 14056,
+          "baseline_candidates": 4055,
+          "additional_candidates": 10000,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": true,
+          "baseline_cpu_ms": 203.125,
+          "optimization_ms": 756.9747999987158,
+          "optimization_cpu_ms": 718.75,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "operator",
+            "reverse_operator",
+            "reverse_greedy",
+            "cheapest_insertion"
+          ]
+        }
+      },
+      "reference": null,
+      "delta_km": 0.0,
+      "improvement_km_pct": 0.0,
+      "improved": false
+    },
+    {
+      "n": 15,
+      "kind": "nearest_trap",
+      "return_depot": false,
+      "before": {
+        "total_km": 16.0,
+        "total_min": 46.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 953.125,
+        "wall_ms": 1495.335,
+        "candidates_evaluated": 2235,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 16.0,
+        "total_min": 46.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 546.875,
+        "wall_ms": 596.026,
+        "candidates_evaluated": 10425,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 10425,
+          "baseline_candidates": 2235,
+          "additional_candidates": 8189,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": false,
+          "baseline_cpu_ms": 109.375,
+          "optimization_ms": 595.8692000021983,
+          "optimization_cpu_ms": 546.875,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "operator",
+            "reverse_operator",
+            "reverse_greedy"
+          ]
+        }
+      },
+      "reference": null,
+      "delta_km": 0.0,
+      "improvement_km_pct": 0.0,
+      "improved": false
+    },
+    {
+      "n": 15,
+      "kind": "nearest_trap",
+      "return_depot": true,
+      "before": {
+        "total_km": 17.0,
+        "total_min": 49.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 1515.625,
+        "wall_ms": 1691.698,
+        "candidates_evaluated": 3649,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 17.0,
+        "total_min": 49.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 562.5,
+        "wall_ms": 641.498,
+        "candidates_evaluated": 11839,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 11839,
+          "baseline_candidates": 3649,
+          "additional_candidates": 8189,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": false,
+          "baseline_cpu_ms": 187.5,
+          "optimization_ms": 641.3461999982246,
+          "optimization_cpu_ms": 562.5,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "operator",
+            "reverse_operator",
+            "reverse_greedy"
+          ]
+        }
+      },
+      "reference": null,
+      "delta_km": 0.0,
+      "improvement_km_pct": 0.0,
+      "improved": false
+    },
+    {
+      "n": 15,
+      "kind": "windows",
+      "return_depot": false,
+      "before": {
+        "total_km": 169.05,
+        "total_min": 133.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 56.0,
+        "cpu_ms": 2234.375,
+        "wall_ms": 2672.625,
+        "candidates_evaluated": 3635,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 169.05,
+        "total_min": 133.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 56.0,
+        "cpu_ms": 1265.625,
+        "wall_ms": 1411.581,
+        "candidates_evaluated": 13636,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 13636,
+          "baseline_candidates": 3635,
+          "additional_candidates": 10000,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": true,
+          "baseline_cpu_ms": 406.25,
+          "optimization_ms": 1408.4698000006028,
+          "optimization_cpu_ms": 1265.625,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "operator",
+            "reverse_operator",
+            "reverse_greedy",
+            "nearest_distance",
+            "cheapest_insertion",
+            "window_lookahead",
+            "window_insertion"
+          ]
+        }
+      },
+      "reference": null,
+      "delta_km": 0.0,
+      "improvement_km_pct": 0.0,
+      "improved": false
+    },
+    {
+      "n": 15,
+      "kind": "windows",
+      "return_depot": true,
+      "before": {
+        "total_km": 223.09,
+        "total_min": 140.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 56.0,
+        "cpu_ms": 2500.0,
+        "wall_ms": 3249.253,
+        "candidates_evaluated": 3635,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 223.09,
+        "total_min": 140.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 56.0,
+        "cpu_ms": 1453.125,
+        "wall_ms": 2181.145,
+        "candidates_evaluated": 13636,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 13636,
+          "baseline_candidates": 3635,
+          "additional_candidates": 10000,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": true,
+          "baseline_cpu_ms": 359.375,
+          "optimization_ms": 2178.2223000009253,
+          "optimization_cpu_ms": 1453.125,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "operator",
+            "reverse_operator",
+            "reverse_greedy",
+            "nearest_distance",
+            "cheapest_insertion",
+            "window_lookahead",
+            "window_insertion"
+          ]
+        }
+      },
+      "reference": null,
+      "delta_km": 0.0,
+      "improvement_km_pct": 0.0,
+      "improved": false
+    },
+    {
+      "n": 20,
+      "kind": "asymmetric",
+      "return_depot": false,
+      "before": {
+        "total_km": 51.0,
+        "total_min": 234.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 265.625,
+        "wall_ms": 274.261,
+        "candidates_evaluated": 364,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 43.0,
+        "total_min": 229.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 656.25,
+        "wall_ms": 891.684,
+        "candidates_evaluated": 10365,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 10365,
+          "baseline_candidates": 364,
+          "additional_candidates": 10000,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": true,
+          "baseline_cpu_ms": 31.25,
+          "optimization_ms": 891.5186999984144,
+          "optimization_cpu_ms": 656.25,
+          "seeds_evaluated": [
+            "baseline",
+            "operator",
+            "reverse_operator",
+            "reverse_greedy",
+            "cheapest_insertion"
+          ]
+        }
+      },
+      "reference": null,
+      "delta_km": -8.0,
+      "improvement_km_pct": 15.686,
+      "improved": true
+    },
+    {
+      "n": 20,
+      "kind": "asymmetric",
+      "return_depot": true,
+      "before": {
+        "total_km": 68.0,
+        "total_min": 230.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 546.875,
+        "wall_ms": 937.253,
+        "candidates_evaluated": 725,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 47.0,
+        "total_min": 246.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 812.5,
+        "wall_ms": 1437.266,
+        "candidates_evaluated": 10726,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 10726,
+          "baseline_candidates": 725,
+          "additional_candidates": 10000,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": true,
+          "baseline_cpu_ms": 31.25,
+          "optimization_ms": 1437.1102999975847,
+          "optimization_cpu_ms": 812.5,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "operator",
+            "reverse_operator",
+            "reverse_greedy",
+            "cheapest_insertion"
+          ]
+        }
+      },
+      "reference": null,
+      "delta_km": -21.0,
+      "improvement_km_pct": 30.882,
+      "improved": true
+    },
+    {
+      "n": 20,
+      "kind": "clusters",
+      "return_depot": false,
+      "before": {
+        "total_km": 169.69,
+        "total_min": 55.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 484.375,
+        "wall_ms": 575.841,
+        "candidates_evaluated": 725,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 168.26,
+        "total_min": 55.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 640.625,
+        "wall_ms": 674.075,
+        "candidates_evaluated": 10726,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 10726,
+          "baseline_candidates": 725,
+          "additional_candidates": 10000,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": true,
+          "baseline_cpu_ms": 46.875,
+          "optimization_ms": 673.9011999998183,
+          "optimization_cpu_ms": 640.625,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "operator",
+            "reverse_operator",
+            "reverse_greedy",
+            "cheapest_insertion"
+          ]
+        }
+      },
+      "reference": null,
+      "delta_km": -1.43,
+      "improvement_km_pct": 0.843,
+      "improved": true
+    },
+    {
+      "n": 20,
+      "kind": "clusters",
+      "return_depot": true,
+      "before": {
+        "total_km": 211.61,
+        "total_min": 62.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 546.875,
+        "wall_ms": 767.65,
+        "candidates_evaluated": 725,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 204.71,
+        "total_min": 60.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 703.125,
+        "wall_ms": 790.176,
+        "candidates_evaluated": 10726,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 10726,
+          "baseline_candidates": 725,
+          "additional_candidates": 10000,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": true,
+          "baseline_cpu_ms": 62.5,
+          "optimization_ms": 789.6607000002405,
+          "optimization_cpu_ms": 703.125,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "operator",
+            "reverse_operator",
+            "reverse_greedy",
+            "cheapest_insertion"
+          ]
+        }
+      },
+      "reference": null,
+      "delta_km": -6.9,
+      "improvement_km_pct": 3.261,
+      "improved": true
+    },
+    {
+      "n": 20,
+      "kind": "nearest_trap",
+      "return_depot": false,
+      "before": {
+        "total_km": 120.5,
+        "total_min": 60.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 234.375,
+        "wall_ms": 231.587,
+        "candidates_evaluated": 364,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 21.0,
+        "total_min": 61.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 609.375,
+        "wall_ms": 645.27,
+        "candidates_evaluated": 10365,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 10365,
+          "baseline_candidates": 364,
+          "additional_candidates": 10000,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": true,
+          "baseline_cpu_ms": 15.625,
+          "optimization_ms": 645.1176000009582,
+          "optimization_cpu_ms": 609.375,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "reverse_operator",
+            "reverse_greedy"
+          ]
+        }
+      },
+      "reference": null,
+      "delta_km": -99.5,
+      "improvement_km_pct": 82.573,
+      "improved": true
+    },
+    {
+      "n": 20,
+      "kind": "nearest_trap",
+      "return_depot": true,
+      "before": {
+        "total_km": 228.5,
+        "total_min": 68.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 187.5,
+        "wall_ms": 202.468,
+        "candidates_evaluated": 364,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 22.0,
+        "total_min": 64.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 578.125,
+        "wall_ms": 636.902,
+        "candidates_evaluated": 9755,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 9755,
+          "baseline_candidates": 364,
+          "additional_candidates": 9390,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": false,
+          "baseline_cpu_ms": 31.25,
+          "optimization_ms": 636.725700001989,
+          "optimization_cpu_ms": 578.125,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "reverse_operator",
+            "reverse_greedy",
+            "cheapest_insertion"
+          ]
+        }
+      },
+      "reference": null,
+      "delta_km": -206.5,
+      "improvement_km_pct": 90.372,
+      "improved": true
+    },
+    {
+      "n": 20,
+      "kind": "windows",
+      "return_depot": false,
+      "before": {
+        "total_km": 199.9,
+        "total_min": 174.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 73.0,
+        "cpu_ms": 1078.125,
+        "wall_ms": 1168.1,
+        "candidates_evaluated": 1447,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 196.33,
+        "total_min": 174.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 74.0,
+        "cpu_ms": 1515.625,
+        "wall_ms": 1725.234,
+        "candidates_evaluated": 11448,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 11448,
+          "baseline_candidates": 1447,
+          "additional_candidates": 10000,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": true,
+          "baseline_cpu_ms": 203.125,
+          "optimization_ms": 1723.397699999623,
+          "optimization_cpu_ms": 1515.625,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "operator",
+            "reverse_operator",
+            "reverse_greedy",
+            "nearest_distance",
+            "cheapest_insertion",
+            "window_lookahead",
+            "window_insertion"
+          ]
+        }
+      },
+      "reference": null,
+      "delta_km": -3.57,
+      "improvement_km_pct": 1.786,
+      "improved": true
+    },
+    {
+      "n": 20,
+      "kind": "windows",
+      "return_depot": true,
+      "before": {
+        "total_km": 255.57,
+        "total_min": 181.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 73.0,
+        "cpu_ms": 1140.625,
+        "wall_ms": 1182.907,
+        "candidates_evaluated": 1447,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 251.99,
+        "total_min": 181.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 74.0,
+        "cpu_ms": 1640.625,
+        "wall_ms": 1792.055,
+        "candidates_evaluated": 11448,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 11448,
+          "baseline_candidates": 1447,
+          "additional_candidates": 10000,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": true,
+          "baseline_cpu_ms": 234.375,
+          "optimization_ms": 1789.6126999985427,
+          "optimization_cpu_ms": 1640.625,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "operator",
+            "reverse_operator",
+            "reverse_greedy",
+            "nearest_distance",
+            "cheapest_insertion",
+            "window_lookahead",
+            "window_insertion"
+          ]
+        }
+      },
+      "reference": null,
+      "delta_km": -3.58,
+      "improvement_km_pct": 1.401,
+      "improved": true
+    },
+    {
+      "n": 30,
+      "kind": "asymmetric",
+      "return_depot": false,
+      "before": {
+        "total_km": 85.0,
+        "total_min": 305.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 1390.625,
+        "wall_ms": 1527.229,
+        "candidates_evaluated": 1685,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 81.0,
+        "total_min": 311.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 1125.0,
+        "wall_ms": 1675.767,
+        "candidates_evaluated": 11686,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 11686,
+          "baseline_candidates": 1685,
+          "additional_candidates": 10000,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": true,
+          "baseline_cpu_ms": 140.625,
+          "optimization_ms": 1675.5923999990046,
+          "optimization_cpu_ms": 1125.0,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "operator",
+            "reverse_operator",
+            "reverse_greedy",
+            "cheapest_insertion"
+          ]
+        }
+      },
+      "reference": null,
+      "delta_km": -4.0,
+      "improvement_km_pct": 4.706,
+      "improved": true
+    },
+    {
+      "n": 30,
+      "kind": "asymmetric",
+      "return_depot": true,
+      "before": {
+        "total_km": 106.0,
+        "total_min": 317.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 1359.375,
+        "wall_ms": 2071.03,
+        "candidates_evaluated": 1685,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 102.0,
+        "total_min": 306.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 1015.625,
+        "wall_ms": 1032.738,
+        "candidates_evaluated": 11686,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 11686,
+          "baseline_candidates": 1685,
+          "additional_candidates": 10000,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": true,
+          "baseline_cpu_ms": 156.25,
+          "optimization_ms": 1032.5516999982938,
+          "optimization_cpu_ms": 1015.625,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "operator",
+            "reverse_operator",
+            "reverse_greedy",
+            "cheapest_insertion"
+          ]
+        }
+      },
+      "reference": null,
+      "delta_km": -4.0,
+      "improvement_km_pct": 3.774,
+      "improved": true
+    },
+    {
+      "n": 30,
+      "kind": "clusters",
+      "return_depot": false,
+      "before": {
+        "total_km": 210.31,
+        "total_min": 72.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 2171.875,
+        "wall_ms": 2251.262,
+        "candidates_evaluated": 2526,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 208.31,
+        "total_min": 72.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 968.75,
+        "wall_ms": 1001.331,
+        "candidates_evaluated": 12527,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 12527,
+          "baseline_candidates": 2526,
+          "additional_candidates": 10000,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": true,
+          "baseline_cpu_ms": 203.125,
+          "optimization_ms": 1001.1594999996305,
+          "optimization_cpu_ms": 968.75,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "operator",
+            "reverse_operator",
+            "reverse_greedy",
+            "cheapest_insertion"
+          ]
+        }
+      },
+      "reference": null,
+      "delta_km": -2.0,
+      "improvement_km_pct": 0.951,
+      "improved": true
+    },
+    {
+      "n": 30,
+      "kind": "clusters",
+      "return_depot": true,
+      "before": {
+        "total_km": 248.55,
+        "total_min": 78.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 2109.375,
+        "wall_ms": 2163.274,
+        "candidates_evaluated": 2526,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 243.07,
+        "total_min": 77.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 890.625,
+        "wall_ms": 901.963,
+        "candidates_evaluated": 12527,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 12527,
+          "baseline_candidates": 2526,
+          "additional_candidates": 10000,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": true,
+          "baseline_cpu_ms": 187.5,
+          "optimization_ms": 901.8313000015041,
+          "optimization_cpu_ms": 890.625,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "operator",
+            "reverse_operator",
+            "reverse_greedy",
+            "cheapest_insertion"
+          ]
+        }
+      },
+      "reference": null,
+      "delta_km": -5.48,
+      "improvement_km_pct": 2.205,
+      "improved": true
+    },
+    {
+      "n": 30,
+      "kind": "nearest_trap",
+      "return_depot": false,
+      "before": {
+        "total_km": 130.5,
+        "total_min": 90.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 437.5,
+        "wall_ms": 449.678,
+        "candidates_evaluated": 844,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 31.0,
+        "total_min": 91.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 390.625,
+        "wall_ms": 430.51,
+        "candidates_evaluated": 10845,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 10845,
+          "baseline_candidates": 844,
+          "additional_candidates": 10000,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": true,
+          "baseline_cpu_ms": 31.25,
+          "optimization_ms": 430.39110000245273,
+          "optimization_cpu_ms": 390.625,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "reverse_operator",
+            "reverse_greedy"
+          ]
+        }
+      },
+      "reference": null,
+      "delta_km": -99.5,
+      "improvement_km_pct": 76.245,
+      "improved": true
+    },
+    {
+      "n": 30,
+      "kind": "nearest_trap",
+      "return_depot": true,
+      "before": {
+        "total_km": 231.5,
+        "total_min": 94.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 328.125,
+        "wall_ms": 325.259,
+        "candidates_evaluated": 844,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 32.0,
+        "total_min": 94.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 390.625,
+        "wall_ms": 386.296,
+        "candidates_evaluated": 10845,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 10845,
+          "baseline_candidates": 844,
+          "additional_candidates": 10000,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": true,
+          "baseline_cpu_ms": 31.25,
+          "optimization_ms": 386.1782000021776,
+          "optimization_cpu_ms": 390.625,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "reverse_operator",
+            "reverse_greedy",
+            "cheapest_insertion"
+          ]
+        }
+      },
+      "reference": null,
+      "delta_km": -199.5,
+      "improvement_km_pct": 86.177,
+      "improved": true
+    },
+    {
+      "n": 30,
+      "kind": "windows",
+      "return_depot": false,
+      "before": {
+        "total_km": 248.41,
+        "total_min": 245.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 108.0,
+        "cpu_ms": 1953.125,
+        "wall_ms": 1992.56,
+        "candidates_evaluated": 3367,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 248.41,
+        "total_min": 245.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 108.0,
+        "cpu_ms": 1312.5,
+        "wall_ms": 1322.766,
+        "candidates_evaluated": 13368,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 13368,
+          "baseline_candidates": 3367,
+          "additional_candidates": 10000,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": true,
+          "baseline_cpu_ms": 375.0,
+          "optimization_ms": 1321.136700000352,
+          "optimization_cpu_ms": 1312.5,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "operator",
+            "reverse_operator",
+            "reverse_greedy",
+            "nearest_distance",
+            "cheapest_insertion",
+            "window_lookahead",
+            "window_insertion"
+          ]
+        }
+      },
+      "reference": null,
+      "delta_km": 0.0,
+      "improvement_km_pct": 0.0,
+      "improved": false
+    },
+    {
+      "n": 30,
+      "kind": "windows",
+      "return_depot": true,
+      "before": {
+        "total_km": 298.2,
+        "total_min": 252.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 108.0,
+        "cpu_ms": 1937.5,
+        "wall_ms": 1966.529,
+        "candidates_evaluated": 3367,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 298.2,
+        "total_min": 252.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 108.0,
+        "cpu_ms": 1437.5,
+        "wall_ms": 1448.567,
+        "candidates_evaluated": 13368,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 13368,
+          "baseline_candidates": 3367,
+          "additional_candidates": 10000,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": true,
+          "baseline_cpu_ms": 421.875,
+          "optimization_ms": 1446.541099998285,
+          "optimization_cpu_ms": 1437.5,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "operator",
+            "reverse_operator",
+            "reverse_greedy",
+            "nearest_distance",
+            "cheapest_insertion",
+            "window_lookahead",
+            "window_insertion"
+          ]
+        }
+      },
+      "reference": null,
+      "delta_km": 0.0,
+      "improvement_km_pct": 0.0,
+      "improved": false
+    },
+    {
+      "n": 50,
+      "kind": "asymmetric",
+      "return_depot": false,
+      "before": {
+        "total_km": 126.0,
+        "total_min": 474.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 4593.75,
+        "wall_ms": 4772.349,
+        "candidates_evaluated": 7206,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 122.0,
+        "total_min": 489.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 1046.875,
+        "wall_ms": 1081.715,
+        "candidates_evaluated": 17207,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 17207,
+          "baseline_candidates": 7206,
+          "additional_candidates": 10000,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": true,
+          "baseline_cpu_ms": 359.375,
+          "optimization_ms": 1081.547199999477,
+          "optimization_cpu_ms": 1046.875,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "operator",
+            "reverse_operator",
+            "reverse_greedy",
+            "cheapest_insertion"
+          ]
+        }
+      },
+      "reference": null,
+      "delta_km": -4.0,
+      "improvement_km_pct": 3.175,
+      "improved": true
+    },
+    {
+      "n": 50,
+      "kind": "asymmetric",
+      "return_depot": true,
+      "before": {
+        "total_km": 133.0,
+        "total_min": 482.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 4734.375,
+        "wall_ms": 4879.896,
+        "candidates_evaluated": 7206,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 129.0,
+        "total_min": 497.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 984.375,
+        "wall_ms": 1020.264,
+        "candidates_evaluated": 17207,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 17207,
+          "baseline_candidates": 7206,
+          "additional_candidates": 10000,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": true,
+          "baseline_cpu_ms": 390.625,
+          "optimization_ms": 1020.1311999990139,
+          "optimization_cpu_ms": 984.375,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "operator",
+            "reverse_operator",
+            "reverse_greedy",
+            "cheapest_insertion"
+          ]
+        }
+      },
+      "reference": null,
+      "delta_km": -4.0,
+      "improvement_km_pct": 3.008,
+      "improved": true
+    },
+    {
+      "n": 50,
+      "kind": "clusters",
+      "return_depot": false,
+      "before": {
+        "total_km": 273.52,
+        "total_min": 113.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 5062.5,
+        "wall_ms": 5141.297,
+        "candidates_evaluated": 7206,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 273.52,
+        "total_min": 113.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 921.875,
+        "wall_ms": 976.769,
+        "candidates_evaluated": 17207,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 17207,
+          "baseline_candidates": 7206,
+          "additional_candidates": 10000,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": true,
+          "baseline_cpu_ms": 359.375,
+          "optimization_ms": 976.6578999988269,
+          "optimization_cpu_ms": 921.875,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "operator",
+            "reverse_operator",
+            "reverse_greedy",
+            "cheapest_insertion"
+          ]
+        }
+      },
+      "reference": null,
+      "delta_km": 0.0,
+      "improvement_km_pct": 0.0,
+      "improved": false
+    },
+    {
+      "n": 50,
+      "kind": "clusters",
+      "return_depot": true,
+      "before": {
+        "total_km": 315.6,
+        "total_min": 120.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 5093.75,
+        "wall_ms": 5170.374,
+        "candidates_evaluated": 7206,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 296.15,
+        "total_min": 116.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 1828.125,
+        "wall_ms": 1940.026,
+        "candidates_evaluated": 17207,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 17207,
+          "baseline_candidates": 7206,
+          "additional_candidates": 10000,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": true,
+          "baseline_cpu_ms": 562.5,
+          "optimization_ms": 1939.859099999012,
+          "optimization_cpu_ms": 1828.125,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "operator",
+            "reverse_operator",
+            "reverse_greedy",
+            "cheapest_insertion"
+          ]
+        }
+      },
+      "reference": null,
+      "delta_km": -19.45,
+      "improvement_km_pct": 6.163,
+      "improved": true
+    },
+    {
+      "n": 50,
+      "kind": "nearest_trap",
+      "return_depot": false,
+      "before": {
+        "total_km": 150.5,
+        "total_min": 150.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 2828.125,
+        "wall_ms": 3115.09,
+        "candidates_evaluated": 2404,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 51.0,
+        "total_min": 151.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 1203.125,
+        "wall_ms": 1447.82,
+        "candidates_evaluated": 12405,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 12405,
+          "baseline_candidates": 2404,
+          "additional_candidates": 10000,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": true,
+          "baseline_cpu_ms": 171.875,
+          "optimization_ms": 1447.6672999990114,
+          "optimization_cpu_ms": 1203.125,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "reverse_operator",
+            "reverse_greedy"
+          ]
+        }
+      },
+      "reference": null,
+      "delta_km": -99.5,
+      "improvement_km_pct": 66.113,
+      "improved": true
+    },
+    {
+      "n": 50,
+      "kind": "nearest_trap",
+      "return_depot": true,
+      "before": {
+        "total_km": 259.5,
+        "total_min": 153.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 3062.5,
+        "wall_ms": 3210.464,
+        "candidates_evaluated": 2404,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 52.0,
+        "total_min": 154.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 0.0,
+        "cpu_ms": 1437.5,
+        "wall_ms": 1648.087,
+        "candidates_evaluated": 12405,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 12405,
+          "baseline_candidates": 2404,
+          "additional_candidates": 10000,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": true,
+          "baseline_cpu_ms": 250.0,
+          "optimization_ms": 1647.9335999974865,
+          "optimization_cpu_ms": 1437.5,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "reverse_operator",
+            "reverse_greedy",
+            "cheapest_insertion"
+          ]
+        }
+      },
+      "reference": null,
+      "delta_km": -207.5,
+      "improvement_km_pct": 79.961,
+      "improved": true
+    },
+    {
+      "n": 50,
+      "kind": "windows",
+      "return_depot": false,
+      "before": {
+        "total_km": 400.53,
+        "total_min": 397.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 168.0,
+        "cpu_ms": 9609.375,
+        "wall_ms": 9978.35,
+        "candidates_evaluated": 9607,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 385.88,
+        "total_min": 393.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 168.0,
+        "cpu_ms": 5421.875,
+        "wall_ms": 6002.203,
+        "candidates_evaluated": 19608,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 19608,
+          "baseline_candidates": 9607,
+          "additional_candidates": 10000,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": true,
+          "baseline_cpu_ms": 2718.75,
+          "optimization_ms": 5999.312500000087,
+          "optimization_cpu_ms": 5421.875,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "operator",
+            "reverse_operator",
+            "reverse_greedy",
+            "nearest_distance",
+            "cheapest_insertion",
+            "window_lookahead",
+            "window_insertion"
+          ]
+        }
+      },
+      "reference": null,
+      "delta_km": -14.65,
+      "improvement_km_pct": 3.658,
+      "improved": true
+    },
+    {
+      "n": 50,
+      "kind": "windows",
+      "return_depot": true,
+      "before": {
+        "total_km": 452.37,
+        "total_min": 404.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 168.0,
+        "cpu_ms": 12843.75,
+        "wall_ms": 13801.284,
+        "candidates_evaluated": 9607,
+        "feasible": true
+      },
+      "after": {
+        "total_km": 452.37,
+        "total_min": 404.0,
+        "violations": 0,
+        "total_lateness_min": 0,
+        "total_wait": 168.0,
+        "cpu_ms": 6453.125,
+        "wall_ms": 7794.222,
+        "candidates_evaluated": 19608,
+        "feasible": true,
+        "diagnostics": {
+          "optimizer_strategy": "legacy-floor+bounded-multistart",
+          "candidates_evaluated": 19608,
+          "baseline_candidates": 9607,
+          "additional_candidates": 10000,
+          "candidate_budget": 10000,
+          "optimization_budget_exhausted": true,
+          "baseline_cpu_ms": 2343.75,
+          "optimization_ms": 7791.63619999963,
+          "optimization_cpu_ms": 6437.5,
+          "seeds_evaluated": [
+            "baseline",
+            "greedy",
+            "operator",
+            "reverse_operator",
+            "reverse_greedy",
+            "nearest_distance",
+            "cheapest_insertion",
+            "window_lookahead",
+            "window_insertion"
+          ]
+        }
+      },
+      "reference": null,
+      "delta_km": 0.0,
+      "improvement_km_pct": 0.0,
+      "improved": false
+    }
+  ]
+}

@@ -195,7 +195,9 @@ swap/inversioni, mentre il dispatcher aggiornato deve raggiungere 96 km.
 
 ## Misure prima/dopo
 
-Riproduzione: `python tests/run_optimizer_benchmark.py`. Legge il codice originale
+Nota storica: il comando `python tests/run_optimizer_benchmark.py` ora esegue il
+[benchmark corrente distance-first e scaling](optimizer-scaling.md). I report
+di questa sezione restano snapshot storici. Il runner originale leggeva il codice
 con `git show 81f512189916f5e7e091c6956689fa5be38eb1b9:app/optimizer.py` e confronta
 la copia in memoria con il codice corrente, senza checkout o modifiche Git.
 Tutti gli accessi esterni falliscono esplicitamente. Dati completi e tempi delle

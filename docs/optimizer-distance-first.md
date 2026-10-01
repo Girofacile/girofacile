@@ -1,5 +1,8 @@
 # Ottimizzazione distanza-prima — 1 ottobre 2026
 
+> Per la ricerca oltre 8 fermate, budget e nuovi benchmark vedere
+> [optimizer-scaling.md](optimizer-scaling.md). Le priorità qui descritte restano valide.
+
 Le soluzioni fattibili sono confrontate lessicograficamente per chilometri totali, durata totale, attese e numero di avvisi. Il rientro, quando richiesto, entra nei totali. Il confronto usa valori non arrotondati: anche una piccola differenza di distanza precede il tempo, senza pesi o tolleranze arbitrarie. A consumo costante per mezzo, ridurre i km riduce anche energia e costo; le formule economiche non cambiano.
 
 La fattibilità precede sempre i km. Per soluzioni impossibili resta il confronto storico: ritardo totale, numero di violazioni, score storico. Lo score numerico resta per diagnostica e benchmark storici; non decide fra percorsi fattibili. ZTL e sponda mantengono il ruolo esistente di avvisi, la capacità viene validata prima del routing e non viene aggiunto un vincolo orario di rientro assente dal modello.

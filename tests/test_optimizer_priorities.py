@@ -41,9 +41,15 @@ def test_comparator_applies_to_every_search_branch(monkeypatch, n):
                     violations=0 if feasible else 1, total_lateness_min=0 if feasible else 10,
                     total_km=1, total_min=1)
     monkeypatch.setattr(opt, "_evaluate_fixed_sequence", evaluate)
+    # Large-route search has a score-only evaluator as well as final rendering.
+    from app.services.optimizer_search import RouteEvaluator
+    def score_only(self, seq, *args, **kwargs):
+        self.candidates += 1
+        return {**evaluate(seq), '_search_order': tuple(d['_matrix_index'] for d in seq)}
+    monkeypatch.setattr(RouteEvaluator, "evaluate", score_only)
     monkeypatch.setattr(opt, "_greedy_sequence", lambda *a, **k: rows[:])
     assert opt._local_optimize_sequence(rows, {}, [])["violations"] == 0
-    assert opt._best_internal_sequence(rows, {}, [])["violations"] == 0
+    assert opt._best_internal_sequence(rows, constant_matrix(n), [])["violations"] == 0
 
 
 @pytest.mark.parametrize("entrypoint", [opt.optimize_route, opt.recalculate_manual_route])

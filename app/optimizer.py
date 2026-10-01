@@ -190,7 +190,7 @@ def delivery_warnings(selected, vehicle=None):
     return warnings
 
 
-def evaluate_candidate(current_clock, leg, d):
+def evaluate_candidate(current_clock, leg, d, *, windows=None):
     """
     Valuta una possibile prossima consegna.
 
@@ -207,7 +207,7 @@ def evaluate_candidate(current_clock, leg, d):
     """
     travel_arrival = current_clock + leg["min"]
     service_min = float(d.get("tempo_scarico_min") or 0)
-    windows = delivery_windows(d)
+    windows = delivery_windows(d) if windows is None else windows
 
     # Se il cliente non ha finestre orarie, lo considero sempre fattibile.
     if not windows:
@@ -348,13 +348,14 @@ def _earliest_feasible_candidate(clock, leg, delivery):
             "warning": f"Arrivo prima dell'apertura: attesa {int(round(wait))} min" if wait else ""}
 
 
-def _feasible_fallback(deliveries, matrix, points, vehicle, return_depot, start_time, best):
+def _feasible_fallback(deliveries, matrix, points, vehicle, return_depot, start_time, best, evaluator=None):
     """Exact feasibility DP for up to 15 selected stops, only if search found none.
 
     Earliest completion dominates later completion at the same (subset, last):
     waiting is allowed and matrix travel times are fixed. Retain parents to
     reconstruct a witness, not a claim of optimal duration/distance.
     """
+    evaluate = evaluator or _evaluate_fixed_sequence
     n = len(deliveries)
     if not best["violations"] or n > 15 or not n:
         return best
@@ -386,7 +387,7 @@ def _feasible_fallback(deliveries, matrix, points, vehicle, return_depot, start_
         while key[1] != -1:
             sequence.append(deliveries[key[1]])
             key = states[key][1]
-        candidate = _evaluate_fixed_sequence(sequence[::-1], matrix, points, vehicle, return_depot, start_time, earliest_windows=True)
+        candidate = evaluate(sequence[::-1], matrix, points, vehicle, return_depot, start_time, earliest_windows=True)
         if solution_key(candidate) < solution_key(best):
             best = candidate
     return best
@@ -562,10 +563,11 @@ def _greedy_sequence(deliveries, matrix, points, vehicle=None, start_time="08:00
     return ordered
 
 
-def _local_optimize_sequence(initial_sequence, matrix, points, vehicle=None, return_depot=True, start_time="08:00", max_rounds=4, relocate=False):
+def _local_optimize_sequence(initial_sequence, matrix, points, vehicle=None, return_depot=True, start_time="08:00", max_rounds=4, relocate=False, evaluator=None):
     """Migliora un ordine provando scambi e inversioni senza nuove chiamate di routing."""
+    evaluate = evaluator or _evaluate_fixed_sequence
     best_sequence = initial_sequence[:]
-    best_result = _evaluate_fixed_sequence(best_sequence, matrix, points, vehicle, return_depot, start_time, include_details=False)
+    best_result = evaluate(best_sequence, matrix, points, vehicle, return_depot, start_time, include_details=False)
     n = len(best_sequence)
     improved = True
     rounds = 0
@@ -579,7 +581,7 @@ def _local_optimize_sequence(initial_sequence, matrix, points, vehicle=None, ret
             for j in range(i + 1, n):
                 candidate = best_sequence[:]
                 candidate[i], candidate[j] = candidate[j], candidate[i]
-                result = _evaluate_fixed_sequence(candidate, matrix, points, vehicle, return_depot, start_time, include_details=False)
+                result = evaluate(candidate, matrix, points, vehicle, return_depot, start_time, include_details=False)
                 if solution_key(result) < solution_key(best_result):
                     best_sequence = candidate
                     best_result = result
@@ -589,7 +591,7 @@ def _local_optimize_sequence(initial_sequence, matrix, points, vehicle=None, ret
         for i in range(n - 2):
             for j in range(i + 2, n):
                 candidate = best_sequence[:i] + list(reversed(best_sequence[i:j + 1])) + best_sequence[j + 1:]
-                result = _evaluate_fixed_sequence(candidate, matrix, points, vehicle, return_depot, start_time, include_details=False)
+                result = evaluate(candidate, matrix, points, vehicle, return_depot, start_time, include_details=False)
                 if solution_key(result) < solution_key(best_result):
                     best_sequence = candidate
                     best_result = result
@@ -605,25 +607,29 @@ def _local_optimize_sequence(initial_sequence, matrix, points, vehicle=None, ret
                     candidate = best_sequence[:]
                     stop = candidate.pop(i)
                     candidate.insert(j, stop)
-                    result = _evaluate_fixed_sequence(candidate, matrix, points, vehicle, return_depot, start_time, include_details=False)
+                    result = evaluate(candidate, matrix, points, vehicle, return_depot, start_time, include_details=False)
                     if solution_key(result) < solution_key(best_result):
                         best_sequence = candidate
                         best_result = result
                         improved = True
 
-    return _evaluate_fixed_sequence(best_sequence, matrix, points, vehicle, return_depot, start_time)
+    return evaluate(best_sequence, matrix, points, vehicle, return_depot, start_time)
 
 
-def _best_internal_sequence(deliveries, matrix, points, vehicle=None, return_depot=True, start_time="08:00"):
+def _best_internal_sequence(deliveries, matrix, points, vehicle=None, return_depot=True, start_time="08:00", diagnostics=None):
     """Sceglie il miglior ordine usando solo la matrice stradale già acquisita.
 
     - Fino a 8 consegne prova tutte le combinazioni: risultato quasi ottimale.
     - Oltre 8 consegne conserva il migliore tra ordini deterministici.
-    - Per 9-15 consegne aggiunge rilocazioni e partenze multiple.
+    - Oltre 8: baseline garantita e multi-start con budget deterministico.
     """
+    started_cpu, started_wall = time.process_time(), time.perf_counter()
     n = len(deliveries)
     if matrix is None:
         matrix = road_routing.build_matrix(None, 0, points, [str(i) for i in range(len(points))])
+    if n <= 8 and diagnostics is not None:
+        diagnostics.update(optimizer_strategy='exact-permutations', candidates_evaluated=math.factorial(n) + 1 if n else 1,
+                           optimization_budget_exhausted=False, candidate_budget=None)
     if n == 0:
         return _evaluate_fixed_sequence([], matrix, points, vehicle, return_depot, start_time)
 
@@ -638,13 +644,25 @@ def _best_internal_sequence(deliveries, matrix, points, vehicle=None, return_dep
                 best_sequence = list(seq)
         best = _evaluate_fixed_sequence(best_sequence, matrix, points, vehicle, return_depot, start_time)
         print(f"[OPTIMIZER] Ottimizzazione completa: fermate={n} combinazioni={checked} tempo={best['total_min']} min km={best['total_km']}")
-        return _feasible_fallback(deliveries, matrix, points, vehicle, return_depot, start_time, best)
+        result = _feasible_fallback(deliveries, matrix, points, vehicle, return_depot, start_time, best)
+        if diagnostics is not None:
+            diagnostics.update(optimization_cpu_ms=(time.process_time()-started_cpu)*1000,
+                               optimization_ms=(time.perf_counter()-started_wall)*1000)
+        return result
 
+    from .services.optimizer_search import search_large_route
+    return search_large_route(deliveries, matrix, points, vehicle, return_depot, start_time, diagnostics)
+
+
+def _legacy_internal_sequence(deliveries, matrix, points, vehicle=None, return_depot=True, start_time="08:00", evaluator=None):
+    """The complete pre-multistart baseline, including its feasibility fallback."""
+    n = len(deliveries)
+    evaluate = evaluator or _evaluate_fixed_sequence
     initial = _greedy_sequence(deliveries, matrix, points, vehicle, start_time)
-    result = _local_optimize_sequence(initial, matrix, points, vehicle, return_depot, start_time)
+    result = _local_optimize_sequence(initial, matrix, points, vehicle, return_depot, start_time, evaluator=evaluator)
     # Keep the original heuristic as a candidate, even when new moves take a
     # different search path. Never rank worse than the operator under solution_key.
-    operator = _evaluate_fixed_sequence(deliveries, matrix, points, vehicle, return_depot, start_time)
+    operator = evaluate(deliveries, matrix, points, vehicle, return_depot, start_time)
     if solution_key(operator) < solution_key(result):
         result = operator
     if 9 <= n <= 15:
@@ -655,11 +673,11 @@ def _best_internal_sequence(deliveries, matrix, points, vehicle=None, return_dep
             if key in seen:
                 continue
             seen.add(key)
-            candidate = _local_optimize_sequence(seed, matrix, points, vehicle, return_depot, start_time, relocate=True)
+            candidate = _local_optimize_sequence(seed, matrix, points, vehicle, return_depot, start_time, relocate=True, evaluator=evaluator)
             if solution_key(candidate) < solution_key(result):
                 result = candidate
     print(f"[OPTIMIZER] Ottimizzazione locale: fermate={n} tempo={result['total_min']} min km={result['total_km']}")
-    return _feasible_fallback(deliveries, matrix, points, vehicle, return_depot, start_time, result)
+    return _feasible_fallback(deliveries, matrix, points, vehicle, return_depot, start_time, result, evaluator=evaluator)
 
 
 def optimize_route(db: Session, deposit, deliveries, vehicle=None, return_depot=True, start_time="08:00", route_date=None):
