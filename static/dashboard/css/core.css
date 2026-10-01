@@ -1692,6 +1692,11 @@ body{
   color:#0b63f6;
   box-shadow:inset 3px 0 0 #0b63f6;
 }
+.side-nav .nav-item[data-tab="giro"]:focus,
+.side-nav .nav-item[data-tab="giro"]:focus-visible{
+  outline:none;
+  border:0;
+}
 .nav-item span{
   width:28px;
   height:28px;
