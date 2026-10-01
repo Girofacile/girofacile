@@ -18,6 +18,7 @@ dist/
 # === AMBIENTI VIRTUALI ===
 venv/
 .venv/
+.venv-benchmark/
 env/
 ENV/
 

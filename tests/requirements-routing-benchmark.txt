@@ -1,0 +1,3 @@
+# Isolated research environment only; not a production dependency.
+-r ../requirements.txt
+ortools==9.14.6206
