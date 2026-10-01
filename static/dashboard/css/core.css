@@ -4592,3 +4592,12 @@ body.app-logged-in .main-area{
   .history-toolbar-v311{align-items:stretch;flex-direction:column}
   .history-toolbar-v311 .btn-primary{width:100%}
 }
+
+/* Keep branding and legal links visible; only navigation scrolls on short screens. */
+@media(min-width:821px){
+  body.app-logged-in .sidebar{height:100vh;height:100dvh;min-height:0;overflow:hidden;}
+  body.app-logged-in .sidebar>.brand,body.app-logged-in .sidebar>.side-footer{flex-shrink:0;}
+  body.app-logged-in .sidebar>.side-nav{flex:1 1 0;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior-y:contain;scrollbar-width:thin;}
+  body.app-logged-in .sidebar>.side-nav>.nav-item{flex-shrink:0;}
+  body.app-logged-in .sidebar>.side-footer{margin-top:12px;}
+}
