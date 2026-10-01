@@ -1692,14 +1692,26 @@ body{
   color:#0b63f6;
   box-shadow:inset 3px 0 0 #0b63f6;
 }
-.nav-item span,
-.nav-svg{
+.nav-item span{
   width:28px;
   height:28px;
   border-radius:9px;
   background:transparent;
   color:currentColor;
   flex:0 0 28px;
+}
+.nav-svg{
+  width:38px;
+  height:38px;
+  border-radius:12px;
+  background:#f4f7fb;
+  color:currentColor;
+  flex:0 0 38px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid rgba(16,24,40,.025);
+  transition:background .16s ease, border-color .16s ease;
 }
 .nav-svg svg{
   width:21px;
@@ -1717,8 +1729,13 @@ body{
 .nav-svg svg circle{
   fill:none;
 }
+.nav-item:hover .nav-svg{
+  background:#eef4ff;
+  border-color:rgba(11,99,246,.08);
+}
 .nav-item.active .nav-svg{
   background:#e6f0ff;
+  border-color:rgba(11,99,246,.10);
 }
 .side-footer{
   color:#98a2b3;
