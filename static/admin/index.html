@@ -485,7 +485,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
         <div class="table-wrap" id="users-table-wrap" style="display:none">
           <table>
             <thead><tr>
-              <th>Utente</th><th>Azienda</th><th>Piano</th><th>Stato</th>
+              <th>Codice</th><th>Utente</th><th>Azienda</th><th>Piano</th><th>Stato</th>
               <th>Iscritto</th><th>Clienti</th><th>Giri</th><th>Azioni</th>
             </tr></thead>
             <tbody id="users-tbody"></tbody>
@@ -1059,7 +1059,7 @@ function renderRecentUsers(users) {
     <thead><tr><th>Utente</th><th>Piano</th><th>Stato</th><th>Data</th></tr></thead>
     <tbody>${users.map(u => `
       <tr>
-        <td><strong>${u.username}</strong>${u.company_name ? `<br><small style="color:var(--muted)">${u.company_name}</small>` : ''}</td>
+        <td><strong>${u.customer_code ? u.customer_code + " · " : ""}${u.username}</strong>${u.company_name ? `<br><small style="color:var(--muted)">${u.company_name}</small>` : ''}</td>
         <td><span class="badge ${u.plan}">${planName(u.plan)}</span></td>
         <td><span class="badge ${u.plan_status}">${statusLabel(u.plan_status)}</span></td>
         <td style="color:var(--muted);font-size:11px">${fmtDate(u.created_at)}</td>
@@ -1108,9 +1108,10 @@ function filterUsers() {
 function renderUsers(users) {
   document.getElementById('user-count').textContent = `${users.length} utenti`;
   const tbody = document.getElementById('users-tbody');
-  if (!users.length) { tbody.innerHTML = '<tr><td colspan="8"><div class="empty"><svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><p>Nessun utente trovato</p></div></td></tr>'; return; }
+  if (!users.length) { tbody.innerHTML = '<tr><td colspan="9"><div class="empty"><svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><p>Nessun utente trovato</p></div></td></tr>'; return; }
   tbody.innerHTML = users.map(u => `
     <tr>
+      <td><strong>${u.customer_code || "—"}</strong></td>
       <td>
         <strong>${u.username}</strong>
         ${u.email ? `<br><small style="color:var(--muted)">${u.email}</small>` : ''}
@@ -1137,6 +1138,7 @@ async function openUserModal(userId) {
     if (!u) return;
     document.getElementById('modal-user-body').innerHTML = `
       <div class="user-detail-grid">
+        <div class="detail-item"><div class="label">Codice cliente</div><div class="value">${u.customer_code || "—"}</div></div>
         <div class="detail-item"><div class="label">Username</div><div class="value">${u.username}</div></div>
         <div class="detail-item"><div class="label">Email</div><div class="value">${u.email || '—'}</div></div>
         <div class="detail-item"><div class="label">Azienda</div><div class="value">${u.company_name || '—'}</div></div>
