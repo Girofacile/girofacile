@@ -13,7 +13,7 @@
 <link href="/static/dashboard/css/core.css?v=menu_fix_20261001_2" rel="stylesheet">
 <link href="/static/dashboard/css/account.css?v=v89" rel="stylesheet">
 <script src="/api/billing/catalog.js"></script>
-<script src="/static/dashboard/js/billing.js?v=billing1"></script>
+<script src="/static/dashboard/js/billing.js?v=electric_bonus_20261002"></script>
 <link href="/static/dashboard/css/dashboard.css?v=20260928_1" rel="stylesheet">
 <link href="/static/dashboard/css/company.css?v=sidebar_stable_20261001" rel="stylesheet">
 <link href="/static/dashboard/css/planning.css?v=menu_fix_20261001_2" rel="stylesheet">
@@ -24,6 +24,8 @@
 <script src="/static/routing-summary.js"></script>
 <link href="/static/dashboard/css/deposits.css?v=sidebar_stable_20261001" rel="stylesheet">
 <link href="/static/dashboard/css/settings.css?v=sidebar_stable_20261001" rel="stylesheet">
+<link rel="stylesheet" href="/static/dashboard/css/electric-vehicles.css?v=electric_bonus_20261002">
+<script src="/static/dashboard/js/electric-vehicles.js?v=electric_bonus_20261002"></script>
 </head>
 <body>
 
@@ -1040,6 +1042,7 @@
 
       <section id="tab-mezzi" class="tab hidden">
         <div class="page-title-row"><div><h1>Mezzi</h1><p>Configura consumi, capacità e accessori dei mezzi.</p></div></div>
+        <div id="vehicleUsageSummary" aria-live="polite"></div>
         <section class="panel">
           <input type="hidden" id="vId">
           <input type="hidden" id="vPhotoUrl">
@@ -1081,6 +1084,7 @@
             <select data-gf-feature="tail_lift" id="vSponda"><option value="false">Sponda No</option><option value="true">Sponda Sì</option></select>
             <select data-gf-feature="ztl" id="vZtl"><option value="false">ZTL No</option><option value="true">ZTL Sì</option></select>
           </div>
+          <p id="vehicleElectricBonusHint" class="gf-electric-form-hint" role="status" aria-live="polite"></p>
           <div class="actions-row"><button type="button" id="saveVehicleBtn" onclick="saveVehicle()" class="btn-primary">Salva mezzo</button><button type="button" onclick="resetVehicleForm()" class="btn-secondary">Nuovo</button></div>
           <div class="tableWrap"><table class="gf-vehicles-table-v892"><thead><tr><th>Mezzo</th><th>Targa</th><th>Consumo</th><th data-gf-feature="tail_lift">Sponda</th><th data-gf-feature="ztl">ZTL</th><th></th></tr></thead><tbody id="vehiclesBody"></tbody></table></div>
         </section>
@@ -1720,7 +1724,7 @@
 
 <script src="/static/dashboard/js/reports.js?v=stability_1"></script>
 <script src="/static/dashboard/js/customers.js?v=customers_20260929"></script>
-<script src="/static/dashboard/js/core.js?v=settings_20261001"></script>
+<script src="/static/dashboard/js/core.js?v=electric_bonus_20261002"></script>
 
 <script>
 function toggleLoginPassword(){

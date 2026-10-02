@@ -197,6 +197,21 @@ section{padding:80px 6%;}
 .btn-filled:hover{background:var(--blue-dark);}
 .pricing-note{text-align:center;margin-top:24px;font-size:12px;color:var(--muted);}
 
+/* ELECTRIC MOBILITY */
+.electric-mobility{padding:40px 6%;}
+.electric-inner{max-width:960px;margin:0 auto;padding:26px 30px;border:1px solid #dbeafe;border-radius:16px;background:#f8fbff;display:grid;grid-template-columns:1.3fr 1fr;gap:18px 28px;align-items:center;}
+.electric-title{display:flex;align-items:center;gap:10px;font-size:24px;font-weight:800;line-height:1.25;margin-bottom:10px;}
+.electric-icon{width:36px;height:36px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;background:#ecfdf5;border-radius:10px;font-size:20px;}
+.electric-copy{font-size:14px;color:var(--muted);line-height:1.65;}
+.electric-plan-bonuses{display:flex;flex-wrap:wrap;gap:8px;align-content:center;}
+.electric-plan-bonus{display:inline-flex;flex-direction:column;gap:2px;padding:10px 14px;border:1px solid #ccebe1;border-radius:10px;background:#fff;color:#065f46;font-size:13px;}
+.electric-plan-bonus strong{font-weight:750;}
+.electric-note{grid-column:1/-1;font-size:13px;color:var(--muted);line-height:1.65;}
+.pricing-electric-bonus{display:flex;align-items:flex-start;gap:8px;padding:11px 12px;margin:0 0 20px;border:1px solid #ccebe1;border-radius:9px;background:#ecfdf5;color:#065f46;font-size:14px;font-weight:700;line-height:1.45;}
+.pricing-electric-bonus small{display:block;font-size:11px;font-weight:500;margin-top:3px;}
+.pricing-card{min-width:0;}
+.pricing-list li span{min-width:0;}
+
 /* CTA */
 .cta-sec{background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%);padding:80px 6%;text-align:center;}
 .cta-sec h2{font-size:38px;font-weight:900;color:#fff;margin-bottom:14px;}
@@ -240,6 +255,22 @@ footer{background:#0f172a;color:#e2e8f0;padding:60px 6% 28px;}
   .pricing-grid{grid-template-columns:1fr;max-width:400px;margin:0 auto;}
   .footer-top{grid-template-columns:1fr 1fr;}
   section{padding:60px 5%;}
+  .electric-mobility{padding:28px 5%;}
+  .electric-inner{grid-template-columns:1fr;gap:14px;padding:22px;}
+  .electric-title{font-size:22px;}
+  .electric-plan-bonuses{gap:7px;}
+  .electric-plan-bonus{flex:1 1 96px;padding:9px 11px;}
+  .electric-note{font-size:12px;}
+  .pricing-electric-bonus{font-size:13px;}
+}
+@media(max-width:480px){
+  nav{padding:0 4%;}
+  .nav-logo{gap:6px;}
+  .nav-logo-icon{width:30px;height:30px;}
+  .nav-logo-text{font-size:16px;}
+  .nav-actions{gap:6px;}
+  .btn-login{padding:8px;font-size:12px;}
+  .btn-cta-nav{padding:8px 10px;font-size:12px;}
 }
 </style>
 </head>
@@ -597,6 +628,18 @@ footer{background:#0f172a;color:#e2e8f0;padding:60px 6% 28px;}
   </div>
 </section>
 
+<!-- MOBILITÀ ELETTRICA -->
+<section class="electric-mobility" aria-labelledby="electricMobilityTitle">
+  <div class="electric-inner">
+    <div>
+      <h2 class="electric-title" id="electricMobilityTitle"><span class="electric-icon" aria-hidden="true">⚡</span>Più spazio alla mobilità elettrica</h2>
+      <p class="electric-copy">Con GiroFacile i veicoli elettrici possono avere spazio aggiuntivo nel tuo piano, senza consumare gli slot standard previsti dall’abbonamento.</p>
+    </div>
+    <div class="electric-plan-bonuses" id="electricPlanBonuses" aria-label="Bonus elettrici inclusi nei piani"></div>
+    <p class="electric-note">Pianificare percorsi migliori aiuta a ridurre chilometri inutili e a controllare costi e consumi. Per questo GiroFacile incentiva anche l’utilizzo dei veicoli elettrici.</p>
+  </div>
+</section>
+
 <!-- PREZZI -->
 <section style="background:var(--light)" id="prezzi">
   <div class="sec-inner">
@@ -605,15 +648,32 @@ footer{background:#0f172a;color:#e2e8f0;padding:60px 6% 28px;}
     <p class="sec-sub">Piani semplici e trasparenti, senza costi nascosti. 14 giorni di prova gratuita su tutti i piani.</p>
     <div class="pricing-grid" id="publicPricing"></div>
     <script src="/api/billing/catalog.js"></script>
-    <script src="/static/dashboard/js/billing.js?v=billing1"></script>
+    <script src="/static/dashboard/js/billing.js?v=electric_bonus_20261002"></script>
     <script>
-    document.getElementById('publicPricing').innerHTML = Object.entries(window.GF_PLANS || {}).map(([key,p])=> {
-      const f=planFeatures(key);
-      return `<div class="pricing-card"><div class="pricing-name">${p.name}</div>
-      <div class="pricing-price">€${p.price_eur}<span class="per">/mese</span></div>
-      <ul class="pricing-feats">${f.features.map(x=>`<li>✓ ${x}</li>`).join('')}</ul>
-      <a class="btn-primary" href="/login?plan=${key}">Prova gratis per 14 giorni</a></div>`;
-    }).join('');
+    function escapePublicPlan(value) {
+      return String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+    }
+    function electricBonusForPlan(plan) {
+      const value = Number(plan.electric_vehicle_bonus);
+      return Number.isFinite(value) && value > 0 ? Math.floor(value) : 0;
+    }
+    function electricBonusLabel(bonus) {
+      return '+' + bonus + ' ' + (bonus === 1 ? 'veicolo elettrico' : 'veicoli elettrici') + ' bonus';
+    }
+    function renderPublicPlans() {
+      const plans = Object.entries(window.GF_PLANS || {});
+      document.getElementById('publicPricing').innerHTML = plans.map(([key, p]) => {
+        const f = planFeatures(key);
+        const bonus = electricBonusForPlan(p);
+        const bonusHtml = bonus ? '<div class="pricing-electric-bonus"><span aria-hidden="true">⚡</span><div>' + electricBonusLabel(bonus) + '<small>Slot aggiuntivi riservati ai mezzi elettrici</small></div></div>' : '';
+        return '<div class="pricing-card"><div class="pricing-name">' + escapePublicPlan(p.name) + '</div>' + '<div class="pricing-price"><span class="cur">€</span><span class="amt">' + escapePublicPlan(p.price_eur) + '</span><span class="per">/mese</span></div>' + bonusHtml + '<ul class="pricing-list">' + f.features.map(label => '<li><span aria-hidden="true">✓</span><span>' + escapePublicPlan(label) + '</span></li>').join('') + '</ul>' + '<a class="btn-plan btn-outline" href="/login?plan=' + encodeURIComponent(key) + '">Prova gratis per 14 giorni</a></div>';
+      }).join('');
+      document.getElementById('electricPlanBonuses').innerHTML = plans.map(([, p]) => {
+        const bonus = electricBonusForPlan(p);
+        return bonus ? '<span class="electric-plan-bonus"><strong>' + escapePublicPlan(p.name) + '</strong><span>' + electricBonusLabel(bonus) + '</span></span>' : '';
+      }).join('');
+    }
+    renderPublicPlans();
     </script>
     <p class="pricing-note">✓ 14 giorni gratuiti su tutti i piani &nbsp;·&nbsp; Nessuna carta di credito &nbsp;·&nbsp; Disdici quando vuoi</p>
   </div>

@@ -51,3 +51,6 @@ Thumbs.db
 *_BACKUP*
 *_backup*
 !tests/test_backup_restore_integration.py
+
+# Responsive browser screenshots are CI artifacts, not application files.
+test-results/

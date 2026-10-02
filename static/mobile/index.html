@@ -13,9 +13,20 @@
   <title>GiroFacile</title>
   <link rel="stylesheet" href="/static/mobile/mobile.css?v=5000">
 <script src="/api/billing/catalog.js"></script>
-<script>document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('.plan-card[data-plan]').forEach(el=>{const p=window.GF_PLANS[el.dataset.plan];if(p){el.querySelector('.plan-price').textContent=`€${p.price_eur}/mese`;el.querySelector('.plan-desc').textContent=`${p.max_customers} clienti`;}});});</script>
+<script>document.addEventListener('DOMContentLoaded',()=>{
+  document.querySelectorAll('.plan-card[data-plan]').forEach(el=>{
+    const p=window.GF_PLANS?.[el.dataset.plan];if(!p)return;
+    el.querySelector('.plan-price').textContent=`€${p.price_eur}/mese`;
+    el.querySelector('.plan-desc').textContent=`${p.max_customers} clienti · ${p.max_vehicles} mezzi standard`;
+    const bonus=document.createElement('div');bonus.className='gf-electric-benefit';
+    bonus.textContent=window.GiroFacileElectricVehicles?.planBenefit(p)||'';
+    if(bonus.textContent)el.appendChild(bonus);
+  });
+});</script>
 <link rel="stylesheet" href="/static/routing-summary.css">
 <script src="/static/routing-summary.js"></script>
+<link rel="stylesheet" href="/static/dashboard/css/electric-vehicles.css?v=electric_bonus_20261002">
+<script src="/static/dashboard/js/electric-vehicles.js?v=electric_bonus_20261002"></script>
 </head>
 <body>
 
@@ -240,6 +251,6 @@
   </div>
 </div>
 
-<script src="/static/mobile/mobile.js?v=5000"></script>
+<script src="/static/mobile/mobile.js?v=electric_bonus_20261002"></script>
 </body>
 </html>

@@ -37,6 +37,7 @@ let customersCache = [];
 let agentsCache = [];
 let depositsCache = [];
 let vehiclesCache = [];
+let vehicleUsageCache = null;
 let driversCache = [];
 let editingDeliveryIndex = null;
 let lastMapsUrl = "";
@@ -584,23 +585,25 @@ async function loadPlanInfo(){
 
     // Utilizzo risorse
     try{
-      const [customers, vehicles, drivers, deposits] = await Promise.all([
+      const [customers, vehicleUsage, drivers, deposits] = await Promise.all([
         api("/api/customers?limit=1000"),
-        api("/api/vehicles"),
+        api("/api/vehicles/usage"),
         api("/api/drivers"),
         api("/api/deposits"),
       ]);
+      renderVehicleUsage(vehicleUsage);
       const usageRows = document.getElementById("planUsageRows");
       if(usageRows){
         const rows = [
           {label:"Clienti", used: customers.length, max: limits.max_customers},
-          {label:"Mezzi", used: vehicles.length, max: limits.max_vehicles},
+          {label:"Mezzi standard", used: vehicleUsage.standard_used, max: vehicleUsage.standard_limit},
+          {label:"Bonus elettrici", used: vehicleUsage.bonus_used, max: vehicleUsage.electric_bonus},
           {label:"Autisti", used: drivers.length, max: limits.max_drivers},
           {label:"Depositi", used: deposits.length, max: limits.max_deposits},
         ];
-        const icons = {Clienti:"👥", Mezzi:"🚚", Autisti:"👤", Depositi:"🏢"};
+        const icons = {Clienti:"👥", "Mezzi standard":"🚚", "Bonus elettrici":"⚡", Autisti:"👤", Depositi:"🏢"};
         usageRows.innerHTML = rows.map(r => {
-          const maxLabel = r.max ? `${r.used} / ${r.max}` : `${r.used} / ∞`;
+          const maxLabel = r.max != null ? `${r.used} / ${r.max}` : `${r.used} / ∞`;
           return `<div class="plan-usage-chip-v40"><span class="plan-usage-chip-icon">${icons[r.label] || "•"}</span><span>${r.label}</span><strong>${maxLabel}</strong></div>`;
         }).join("");
       }
@@ -616,6 +619,7 @@ async function loadPlanInfo(){
         <div class="plan-card-mini ${p.key === plan ? "current" : ""}" onclick="selectUpgradePlan('${p.key}')">
           <div class="pname">${p.name}</div>
           <div class="pprice">${p.price}<span>/mese</span></div>
+          ${PLAN_FEATURES[p.key]?.electricBenefit ? `<div class="gf-electric-benefit">${esc(PLAN_FEATURES[p.key].electricBenefit)}</div>` : ""}
           ${p.key === plan ? '<div style="font-size:10px;color:#2563eb;margin-top:2px">Piano attuale</div>' : ""}
         </div>`).join("");
     }
@@ -807,6 +811,7 @@ function renderUpgradeCards(){
         ${isCurrent?'<span class="up-tag-v875">Piano attuale</span>':''}
       </div>
       <div class="up-price-v875">${f.price}<span>${f.period}</span></div>
+      ${f.electricBenefit ? `<div class="gf-electric-benefit">${esc(f.electricBenefit)}</div>` : ""}
       <div class="up-divider-v875"></div>
       <div class="up-preview-v875">${preview.map(x=>`<span><i>✓</i>${x}</span>`).join("")}</div>
       <span class="up-select-v875">${isCurrent?'Attivo':(isSelected?'Selezionato':'Seleziona piano')}</span>
@@ -839,7 +844,7 @@ function renderPlanComparisonV875(){
   const rows = [
     ["Clienti", "max_customers"], ["Giri al mese", "max_routes_per_month"],
     ["Consegne al mese", "max_deliveries_per_month"], ["Depositi", "max_deposits"],
-    ["Autisti", "max_drivers"], ["Mezzi", "max_vehicles"], ["Agenti", "has_agents"],
+    ["Autisti", "max_drivers"], ["Mezzi standard", "max_vehicles"], ["⚡ Veicoli elettrici bonus", "electric_vehicle_bonus"], ["Agenti", "has_agents"],
     ["Report", "has_reports"], ["Export dati", "has_export"], ["AI", "has_ai"]
   ].map(([label,key])=>[label,...["starter","business","pro"].map(p=>
     typeof window.GF_PLANS[p][key] === 'boolean' ? (window.GF_PLANS[p][key]?'Incluso':'—') : window.GF_PLANS[p][key])]);
@@ -2013,7 +2018,7 @@ async function deleteDeposit(id){
 const GF_FUEL_LABELS_V895={gasolio:"Gasolio",benzina:"Benzina",gpl:"GPL",metano:"Metano",elettrico:"Elettrico",ibrido_benzina:"Ibrido benzina",ibrido_diesel:"Ibrido diesel",ibrido_plugin_benzina:"Ibrido plug-in benzina",ibrido_plugin_diesel:"Ibrido plug-in diesel"};
 function fuelBaseTypeV895(type){if(["ibrido_benzina","ibrido_plugin_benzina"].includes(type))return "benzina";if(["ibrido_diesel","ibrido_plugin_diesel"].includes(type))return "gasolio";return type;}
 function energyConsumptionLabelV895(v){const t=v.alimentazione||"gasolio", p=Number(v.consumo_primario_100km??v.consumo_l_100km??0), e=Number(v.consumo_kwh_100km||0);if(t==="elettrico")return `${e} kWh/100 km`;if(t==="metano")return `${p} kg/100 km`;if(t.startsWith("ibrido_plugin"))return `${p} L + ${e} kWh/100 km`;return `${p} L/100 km`;}
-function updateVehicleEnergyFieldsV895(){const t=val("vFuelType")||"gasolio";const p=document.getElementById("vPrimaryConsumptionWrap"),e=document.getElementById("vElectricConsumptionWrap"),l=document.getElementById("vPrimaryConsumptionLabel");if(p)p.classList.toggle("hidden",t==="elettrico");if(e)e.classList.toggle("hidden",!(t==="elettrico"||t.startsWith("ibrido_plugin")));if(l)l.textContent=t==="metano"?"Consumo kg/100 km":"Consumo L/100 km";}
+function updateVehicleEnergyFieldsV895(){const t=val("vFuelType")||"gasolio";const p=document.getElementById("vPrimaryConsumptionWrap"),e=document.getElementById("vElectricConsumptionWrap"),l=document.getElementById("vPrimaryConsumptionLabel");if(p)p.classList.toggle("hidden",t==="elettrico");if(e)e.classList.toggle("hidden",!(t==="elettrico"||t.startsWith("ibrido_plugin")));if(l)l.textContent=t==="metano"?"Consumo kg/100 km":"Consumo L/100 km";updateVehicleBonusHint();}
 let gfFuelPricesV895=null;
 async function loadAutomaticFuelPricesV895(){try{gfFuelPricesV895=await api("/api/vehicles/fuel-prices/current");}catch(e){gfFuelPricesV895={};}return gfFuelPricesV895;}
 async function updateRouteEnergyPricingV895(){
@@ -2079,8 +2084,26 @@ async function updateRouteEnergyPricingV895(){
   updateRoutePlanningGateV68();
   updateDashboardStats();
 }
+function updateVehicleBonusHint(){
+  const id=val("vId");
+  const editingVehicle=id?vehiclesCache.find(v=>String(v.id)===String(id))||{id}:null;
+  window.GiroFacileElectricVehicles?.renderHint(document.getElementById("vehicleElectricBonusHint"),vehicleUsageCache,val("vFuelType")||"gasolio",editingVehicle);
+}
+function renderVehicleUsage(usage){
+  vehicleUsageCache=usage;
+  const host=document.getElementById("vehicleUsageSummary");
+  if(host)host.innerHTML=window.GiroFacileElectricVehicles?.summaryHtml(vehicleUsageCache)||"";
+  updateVehicleBonusHint();
+}
+async function loadVehicleUsage(){
+  let usage=null;
+  try{usage=await api("/api/vehicles/usage");}catch(e){}
+  renderVehicleUsage(usage);
+  return usage;
+}
 async function loadVehicles(){
   vehiclesCache = await api("/api/vehicles");
+  await loadVehicleUsage();
   const body = document.getElementById("vehiclesBody");
   if(body){
     body.innerHTML = "";
@@ -2181,7 +2204,7 @@ async function saveVehicle(){
     toast(id ? "Mezzo aggiornato." : "Mezzo creato.");
   });
 }
-async function deleteVehicle(id){ if(confirm("Eliminare mezzo?")){ await api(`/api/vehicles/${id}`, {method:"DELETE"}); loadVehicles(); } }
+async function deleteVehicle(id){ if(confirm("Eliminare mezzo?")){ try{await api(`/api/vehicles/${id}`, {method:"DELETE"});await loadVehicles();}catch(e){alert(e.message);} } }
 
 async function loadDrivers(){
   try{

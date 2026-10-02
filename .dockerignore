@@ -12,3 +12,6 @@ backups
 data/osrm
 **/*.osm.pbf
 **/*.osrm*
+
+# Responsive browser screenshots are CI artifacts, not application files.
+test-results/

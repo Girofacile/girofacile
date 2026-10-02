@@ -10,7 +10,9 @@ function planFeatures(plan) {
       ['has_reports','Report operativi'],['has_ai','Funzioni AI senza quota mensile']]) {
     (p[key] ? features : missing).push(label);
   }
-  return {name:p.name, price:`€${p.price_eur}`, period:'/mese', features, missing};
+  const bonus=Number(p.electric_vehicle_bonus||0);
+  const electricBenefit=bonus>0?`⚡ +${bonus} ${bonus===1?'veicolo elettrico':'veicoli elettrici'} bonus`:'';
+  return {name:p.name, price:`€${p.price_eur}`, period:'/mese', features, missing, electricBenefit};
 }
 
 function renderSubscriptionControls(data) {
@@ -30,7 +32,7 @@ function renderSubscriptionControls(data) {
   if (['expired','cancelled','incomplete'].includes(status)) messages.push('Puoi consultare ed esportare i dati e terminare i giri già avviati. Nuovi giri non disponibili.');
   box.innerHTML = `<div class="billing-empty-v63">${messages.map(m=>`<p>${esc(m)}</p>`).join('')}
     <p><a href="/api/billing/data-export">Esporta i tuoi dati (CSV in ZIP)</a></p>
-    ${Object.entries(usage.resources || {}).map(([key,value])=>`<p>${({customers:'Clienti',vehicles:'Mezzi',drivers:'Autisti',deposits:'Depositi'})[key]}: ${value.used} / ${value.limit}${value.warning?' — Quota utilizzata almeno all’80%':''}</p>`).join('')}
+    ${Object.entries(usage.resources || {}).map(([key,value])=>key==='vehicles' && value.standard_used!=null ? `<p>Mezzi standard: <strong>${value.standard_used} / ${value.standard_limit??'∞'}</strong> · ⚡ Bonus elettrici: <strong>${value.bonus_used} / ${value.electric_bonus??0}</strong></p>${value.over_limit?`<p class="gf-vehicle-usage-warning">${esc(value.message||'La flotta supera i limiti del piano. I mezzi esistenti sono conservati.')}</p>`:''}`:`<p>${({customers:'Clienti',vehicles:'Mezzi',drivers:'Autisti',deposits:'Depositi'})[key]}: ${value.used} / ${value.limit}${value.warning?' — Quota utilizzata almeno all’80%':''}</p>`).join('')}
     ${['routes','deliveries'].map(k=>usage[k] ? `<p>${k==='routes'?'Giri':'Consegne'} nel mese ${esc(usage.month)}: <strong>${usage[k].used} / ${usage[k].limit}</strong>${usage[k].warning?' — Attenzione: quota utilizzata almeno all’80%':''}</p>`:'').join('')}
     ${b.checkout_enabled ? `<button class="btn-light" onclick="subscriptionAction('sync')">Aggiorna stato</button>
       <button class="btn-light" onclick="subscriptionAction('cancel-checkout')">Annulla checkout aperto</button>` : ''}

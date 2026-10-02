@@ -34,8 +34,21 @@ jobs:
           node-version: '22'
       - run: sudo apt-get update && sudo apt-get install -y postgresql-client-16
       - run: pip install -r requirements.txt
-      - run: python -m pytest tests -q
+      - run: python -m pytest tests -q -ra
       - run: node --test tests/*.cjs
+      - name: Verify electric mobility responsive interfaces
+        run: |
+          pip install playwright==1.55.0
+          python -m playwright install --with-deps chromium
+          python tests/check_electric_responsive.py
+      - name: Preserve electric mobility responsive screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: electric-mobility-responsive
+          path: test-results/electric-responsive/
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Validate OSRM infrastructure and synthetic dataset
         shell: bash
         run: |

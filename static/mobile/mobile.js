@@ -2,6 +2,7 @@
 // GIROFACILE MOBILE — JS COMPLETO
 // ============================================================
 let me=null, customers=[], deposits=[], vehicles=[], drivers=[], agents=[], deliveries=[];
+let mobileVehicleUsage=null, mobileEditingVehicle=null;
 
 const api=async(url,opts={})=>{
   const o={credentials:"same-origin",headers:{"Content-Type":"application/json"},...opts};
@@ -441,11 +442,12 @@ async function showSubView(name){
         </div>`).join("")||`<div class="list-card"><small>Nessun autista registrato.</small></div>`;
     }
     else if(name==="mezzi"){
-      const rows=await api("/api/vehicles");
-      html=`<button class="btn-primary" onclick="openAddVehicle()">+ Nuovo mezzo</button>`+
+      const [rows,usage]=await Promise.all([api("/api/vehicles"),loadMobileVehicleUsage()]);
+      vehicles=rows;
+      html=(window.GiroFacileElectricVehicles?.summaryHtml(usage)||"")+`<button class="btn-primary" onclick="openAddVehicle()">+ Nuovo mezzo</button>`+
         rows.map(v=>`<div class="route-history-card">
           <div class="rh-head">
-            <div><div class="rh-name">${esc(v.nome)}${v.targa?" · "+esc(v.targa):""}</div><div class="rh-date">${v.capacita_kg}kg · ${v.capacita_colli}colli${v.ha_sponda?" · Sponda":""}</div></div>
+            <div><div class="rh-name">${esc(v.nome)}${v.targa?" · "+esc(v.targa):""}</div><div class="rh-date">${v.capacita_kg}kg · ${v.capacita_colli}colli · ${esc(GF_MOBILE_FUEL_LABELS[v.alimentazione||"gasolio"]||v.alimentazione||"Gasolio")}${v.ha_sponda?" · Sponda":""}</div></div>
             <span class="badge verificato">${esc(v.stato||"Disponibile")}</span>
           </div>
           <div class="rh-actions"><button class="mini-btn" onclick="openEditVehicle(${v.id})">Modifica</button></div>
@@ -602,31 +604,72 @@ async function openEditDriver(id){
 // ============================================================
 // CRUD MEZZI
 // ============================================================
-function vehicleForm(v={}){return `
-  <div class="form-group"><label>Nome *</label><input id="fNome" value="${esc(v.nome||'')}"></div>
-  <div class="form-group"><label>Targa</label><input id="fTarga" value="${esc(v.targa||'')}"></div>
-  <div class="form-group"><label>Classe pedaggio</label><select id="fTollClass">${["A","B","3","4","5"].map(c=>`<option value="${c}" ${(v.toll_class||"B")===c?"selected":""}>${c==="A"?"A · 2 assi fino a 1,3 m":c==="B"?"B · 2 assi oltre 1,3 m":c+" assi"}</option>`).join("")}</select></div>
-  <div class="form-row">
-    <div class="form-group"><label>Consumo (L/100km)</label><input id="fConsumo" type="number" step="0.1" value="${v.consumo_l_100km||8.5}"></div>
-    <div class="form-group"><label>Capacità (kg)</label><input id="fKg" type="number" value="${v.capacita_kg||1000}"></div>
+const GF_MOBILE_FUEL_LABELS={gasolio:"Gasolio",benzina:"Benzina",gpl:"GPL",metano:"Metano",elettrico:"Elettrico",ibrido_benzina:"Ibrido benzina",ibrido_diesel:"Ibrido diesel",ibrido_plugin_benzina:"Ibrido plug-in benzina",ibrido_plugin_diesel:"Ibrido plug-in diesel"};
+async function loadMobileVehicleUsage(){
+  try{mobileVehicleUsage=await api("/api/vehicles/usage");}catch(e){mobileVehicleUsage=null;}
+  return mobileVehicleUsage;
+}
+function updateMobileVehicleEnergyFields(){
+  const type=mval("fFuelType")||"gasolio";
+  document.getElementById("fPrimaryConsumptionWrap")?.classList.toggle("hidden",type==="elettrico");
+  document.getElementById("fElectricConsumptionWrap")?.classList.toggle("hidden",!(type==="elettrico"||type.startsWith("ibrido_plugin")));
+  const label=document.getElementById("fPrimaryConsumptionLabel");
+  if(label)label.textContent=type==="metano"?"Consumo (kg/100 km)":"Consumo (L/100 km)";
+  window.GiroFacileElectricVehicles?.renderHint(document.getElementById("mobileVehicleBonusHint"),mobileVehicleUsage,type,mobileEditingVehicle);
+}
+function mobileVehiclePayload(){
+  const fuel=mval("fFuelType")||"gasolio";
+  const primary=fuel==="elettrico"?0:Number(mval("fConsumo")||0);
+  const electric=fuel==="elettrico"||fuel.startsWith("ibrido_plugin")?Number(mval("fConsumoKwh")||0):0;
+  return {nome:mval("fNome"),targa:mval("fTarga")||null,toll_class:mval("fTollClass")||"B",
+    alimentazione:fuel,consumo_primario_100km:primary,consumo_l_100km:primary,consumo_kwh_100km:electric,
+    capacita_kg:parseFloat(mval("fKg"))||1000,capacita_colli:parseInt(mval("fColli"))||100,
+    ha_sponda:mcheck("fSponda"),accesso_ztl:mcheck("fZtl"),note:mval("fNote")||null};
+}
+function vehicleForm(v={}){
+ const fuel=v.alimentazione||"gasolio";
+ return `
+  <div class="form-group"><label for="fNome">Nome *</label><input id="fNome" value="${esc(v.nome||'')}"></div>
+  <div class="form-group"><label for="fTarga">Targa</label><input id="fTarga" value="${esc(v.targa||'')}"></div>
+  <div class="form-group"><label for="fTollClass">Classe pedaggio</label><select id="fTollClass">${["A","B","3","4","5"].map(c=>`<option value="${c}" ${(v.toll_class||"B")===c?"selected":""}>${c==="A"?"A · 2 assi fino a 1,3 m":c==="B"?"B · 2 assi oltre 1,3 m":c+" assi"}</option>`).join("")}</select></div>
+  <div class="form-group"><label for="fFuelType">Alimentazione</label><select id="fFuelType" onchange="updateMobileVehicleEnergyFields()">${Object.entries(GF_MOBILE_FUEL_LABELS).map(([key,label])=>`<option value="${key}" ${key===fuel?"selected":""}>${label}</option>`).join("")}</select>
+    <p id="mobileVehicleBonusHint" class="gf-electric-form-hint" role="status" aria-live="polite"></p>
   </div>
-  <div class="form-group"><label>Capacità (colli)</label><input id="fColli" type="number" value="${v.capacita_colli||100}"></div>
+  <div id="fPrimaryConsumptionWrap" class="form-group gf-mobile-primary-consumption ${fuel==="elettrico"?"hidden":""}"><label id="fPrimaryConsumptionLabel" for="fConsumo">${fuel==="metano"?"Consumo (kg/100 km)":"Consumo (L/100 km)"}</label><input id="fConsumo" type="number" min="0" step="0.1" value="${v.consumo_primario_100km??v.consumo_l_100km??8.5}"></div>
+  <div id="fElectricConsumptionWrap" class="form-group gf-mobile-electric-consumption ${fuel==="elettrico"||fuel.startsWith("ibrido_plugin")?"":"hidden"}"><label for="fConsumoKwh">Consumo elettrico (kWh/100 km)</label><input id="fConsumoKwh" type="number" min="0" step="0.1" value="${v.consumo_kwh_100km??0}"></div>
+  <div class="form-row">
+    <div class="form-group"><label for="fKg">Capacità (kg)</label><input id="fKg" type="number" value="${v.capacita_kg||1000}"></div>
+    <div class="form-group"><label for="fColli">Capacità (colli)</label><input id="fColli" type="number" value="${v.capacita_colli||100}"></div>
+  </div>
   <label class="check-row"><input id="fSponda" type="checkbox" ${v.ha_sponda?"checked":""}><span>Ha sponda</span></label>
   <label class="check-row"><input id="fZtl" type="checkbox" ${v.accesso_ztl?"checked":""}><span>Accesso ZTL</span></label>
-  <div class="form-group"><label>Note</label><textarea id="fNote" rows="3" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:9px;font-size:14px;background:var(--bg)">${esc(v.note||'')}</textarea></div>`;}
-
-function openAddVehicle(){openMModal("Nuovo mezzo",vehicleForm(),async()=>{
-  if(!mval("fNome")) return alert("Nome obbligatorio");
-  try{await api("/api/vehicles",{method:"POST",body:JSON.stringify({nome:mval("fNome"),targa:mval("fTarga")||null,toll_class:mval("fTollClass")||"B",consumo_l_100km:parseFloat(mval("fConsumo"))||8.5,capacita_kg:parseFloat(mval("fKg"))||1000,capacita_colli:parseInt(mval("fColli"))||100,ha_sponda:mcheck("fSponda"),accesso_ztl:mcheck("fZtl"),note:mval("fNote")||null})});
-  closeMModal();showSubView("mezzi");loadResources();}catch(e){alert(e.message);}});}
-
+  <div class="form-group"><label for="fNote">Note</label><textarea id="fNote" rows="3" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:9px;font-size:14px;background:var(--bg)">${esc(v.note||'')}</textarea></div>`;
+}
+async function openAddVehicle(){
+  await loadMobileVehicleUsage();mobileEditingVehicle=null;
+  openMModal("Nuovo mezzo",vehicleForm(),async()=>{
+    if(!mval("fNome"))return alert("Nome obbligatorio");
+    try{await api("/api/vehicles",{method:"POST",body:JSON.stringify(mobileVehiclePayload())});
+      closeMModal();showSubView("mezzi");loadResources();
+    }catch(e){alert(e.message);await loadMobileVehicleUsage();updateMobileVehicleEnergyFields();}
+  });
+  updateMobileVehicleEnergyFields();
+}
 async function openEditVehicle(id){
-  try{const rows=await api("/api/vehicles");const v=rows.find(x=>x.id===id);if(!v)return;
-  openMModal("Modifica mezzo",vehicleForm(v),async()=>{
-    if(!mval("fNome")) return alert("Nome obbligatorio");
-    try{await api(`/api/vehicles/${id}`,{method:"PUT",body:JSON.stringify({nome:mval("fNome"),targa:mval("fTarga")||null,toll_class:mval("fTollClass")||"B",consumo_l_100km:parseFloat(mval("fConsumo"))||8.5,capacita_kg:parseFloat(mval("fKg"))||1000,capacita_colli:parseInt(mval("fColli"))||100,ha_sponda:mcheck("fSponda"),accesso_ztl:mcheck("fZtl"),note:mval("fNote")||null})});
-    closeMModal();showSubView("mezzi");loadResources();}catch(e){alert(e.message);}
-  },true,async()=>{if(!confirm("Eliminare?"))return;try{await api(`/api/vehicles/${id}`,{method:"DELETE"});closeMModal();showSubView("mezzi");loadResources();}catch(e){alert(e.message);}});
+  try{
+    const [rows]=await Promise.all([api("/api/vehicles"),loadMobileVehicleUsage()]);
+    const v=rows.find(x=>x.id===id);if(!v)return;mobileEditingVehicle=v;
+    openMModal("Modifica mezzo",vehicleForm(v),async()=>{
+      if(!mval("fNome"))return alert("Nome obbligatorio");
+      try{await api(`/api/vehicles/${id}`,{method:"PUT",body:JSON.stringify(mobileVehiclePayload())});
+        closeMModal();showSubView("mezzi");loadResources();
+      }catch(e){alert(e.message);await loadMobileVehicleUsage();updateMobileVehicleEnergyFields();}
+    },true,async()=>{
+      if(!confirm("Eliminare?"))return;
+      try{await api(`/api/vehicles/${id}`,{method:"DELETE"});closeMModal();showSubView("mezzi");loadResources();}
+      catch(e){alert(e.message);}
+    });
+    updateMobileVehicleEnergyFields();
   }catch(e){alert(e.message);}
 }
 
