@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from typing import Optional, List, Literal
 
 
@@ -77,6 +77,11 @@ class CustomerIn(BaseModel):
     google_place_id: Optional[str] = None
 
 class VehicleIn(BaseModel):
+    @field_validator("alimentazione", mode="before")
+    @classmethod
+    def normalize_alimentazione(cls, value):
+        return value.strip().lower() if isinstance(value, str) else value
+
     nome: str | None = None
     targa: Optional[str] = None
     toll_class: Literal["A", "B", "3", "4", "5"] = "B"

@@ -8,7 +8,7 @@ from ..core.dependencies import is_admin_user, require_superadmin
 from ..database import get_db
 from ..core.utils import date_to_iso
 from ..models import Customer, RoutePlan, SupportTicket, User
-from ..services.plans import PLAN_LIMITS, get_user_plan_status
+from ..services.plans import PLAN_LIMITS, get_user_plan_status, vehicle_usage, lock_vehicle_owner
 from .admin_helpers import (
     PLAN_MRR,
     _activity,
@@ -150,6 +150,7 @@ def admin_update_plan(user_id: int, payload: dict, db: Session = Depends(get_db)
     user = db.get(User, user_id)
     if not user:
         raise HTTPException(404, "Utente non trovato")
+    user = lock_vehicle_owner(user, db)
     if user.stripe_subscription_id:
         raise HTTPException(409, "Account collegato a Stripe: usare sincronizzazione e gestione abbonamento")
     reason = (payload.get("reason") or "Assegnazione amministrativa dal pannello").strip()[:500]
@@ -167,7 +168,9 @@ def admin_update_plan(user_id: int, payload: dict, db: Session = Depends(get_db)
         except Exception:
             pass
     db.commit()
-    return {"ok": True, "plan": user.plan, "plan_status": user.plan_status}
+    fleet = vehicle_usage(user, db)
+    return {"ok": True, "plan": user.plan, "plan_status": user.plan_status,
+            "vehicle_usage": fleet, "warning": fleet["message"] if fleet["over_limit"] else None}
 
 
 @router.put("/users/{user_id}/disable")

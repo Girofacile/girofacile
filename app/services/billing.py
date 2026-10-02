@@ -231,12 +231,21 @@ def checkout(db, user, plan):
 
 
 def downgrade_excess(db, user, plan):
+    from .plans import vehicle_usage
     result = []
-    for model, key, label in ((Customer, "max_customers", "clienti"), (Vehicle, "max_vehicles", "mezzi"),
+    for model, key, label in ((Customer, "max_customers", "clienti"),
                               (Driver, "max_drivers", "autisti"), (Deposit, "max_deposits", "depositi")):
         count = db.query(model).filter(model.user_id == user.id, model.deleted_at.is_(None)).count()
-        if count > PLAN_LIMITS[plan][key]:
-            result.append(f"{label}: {count}/{PLAN_LIMITS[plan][key]}")
+        maximum = PLAN_LIMITS[plan][key]
+        if maximum is not None and count > maximum:
+            result.append(f"{label}: {count}/{maximum}")
+    fleet = vehicle_usage(user, db, plan=plan)
+    if fleet["over_limit"]:
+        result.append(
+            f"mezzi: {fleet['total_used']}/{fleet['total_limit']} totali; "
+            f"{fleet['non_electric_used']}/{fleet['standard_limit']} non elettrici "
+            f"({fleet['electric_bonus']} bonus elettrici)"
+        )
     return result
 
 
@@ -273,8 +282,9 @@ def change_plan(db, user, plan, preview):
     if current == plan:
         raise HTTPException(409, "Piano già attivo")
     if PLAN_PRICES[plan]["price_cents"] < PLAN_PRICES[current]["price_cents"]:
-        if downgrade_excess(db, user, plan):
-            raise HTTPException(409, "Le risorse superano i limiti del piano richiesto")
+        excess = downgrade_excess(db, user, plan)
+        if excess:
+            raise HTTPException(409, "Riduci prima le risorse: " + "; ".join(excess))
         if user.billing_pending_plan != plan or not user.billing_change_key:
             user.billing_change_key = uuid4().hex
         user.billing_pending_plan = plan

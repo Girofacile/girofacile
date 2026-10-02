@@ -4,7 +4,7 @@ from sqlalchemy import func
 from fastapi import HTTPException
 from ..core.utils import local_now
 from ..models import User, RouteUsage
-from .plans import get_plan_limits, require_active_plan
+from .plans import get_plan_limits, require_active_plan, vehicle_usage
 
 
 def backfill_started_routes(db):
@@ -35,9 +35,18 @@ def usage_summary(db, user):
         return {"used": int(used), "limit": maximum, "percent": round(100 * used / maximum, 1), "warning": used >= maximum * .8}
     from ..models import Customer, Vehicle, Driver, Deposit
     resources = {}
-    for model, key in ((Customer, "customers"), (Vehicle, "vehicles"), (Driver, "drivers"), (Deposit, "deposits")):
+    for model, key in ((Customer, "customers"), (Driver, "drivers"), (Deposit, "deposits")):
         count = db.query(model).filter(model.user_id == user.id, model.deleted_at.is_(None)).count()
         resources[key] = quota(count, limits["max_" + key])
+    fleet = vehicle_usage(user, db)
+    maximum = fleet["total_limit"]
+    resources["vehicles"] = {
+        **fleet, "used": fleet["total_used"], "limit": maximum,
+        "percent": round(100 * fleet["total_used"] / maximum, 1) if maximum else 0,
+        "warning": fleet["over_limit"] or (
+            maximum is not None and fleet["total_used"] >= maximum * .8
+        ),
+    }
     return {"month": month, "routes": quota(routes, limits["max_routes_per_month"]),
             "deliveries": quota(deliveries, limits["max_deliveries_per_month"]), "resources": resources}
 

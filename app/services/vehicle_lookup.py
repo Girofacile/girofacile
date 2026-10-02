@@ -54,22 +54,22 @@ def _fuel_to_internal(value: Any) -> str | None:
     if not value:
         return None
     raw = str(value).strip().lower()
+    # Classify hybrids before petrol/diesel/electric aliases: an HEV/PHEV never
+    # qualifies for the fully-electric fleet bonus.
+    if any(token in raw for token in ("hybrid", "ibrid", "phev", "hev")):
+        diesel = "diesel" in raw or "gasolio" in raw
+        plugin = any(token in raw for token in ("plug-in", "plug in", "plug_in", "phev"))
+        return ("ibrido_plugin_" if plugin else "ibrido_") + ("diesel" if diesel else "benzina")
     mapping = [
         (("diesel", "gasolio"), "gasolio"),
         (("petrol", "benzina", "gasoline"), "benzina"),
         (("lpg", "gpl"), "gpl"),
         (("methane", "metano", "cng"), "metano"),
         (("electric", "elettrico", "bev"), "elettrico"),
-        (("plug-in hybrid petrol", "plug in hybrid petrol", "phev petrol"), "ibrido_plugin_benzina"),
-        (("plug-in hybrid diesel", "plug in hybrid diesel", "phev diesel"), "ibrido_plugin_diesel"),
-        (("hybrid petrol", "ibrido benzina"), "ibrido_benzina"),
-        (("hybrid diesel", "ibrido diesel"), "ibrido_diesel"),
     ]
     for aliases, result in mapping:
         if any(alias in raw for alias in aliases):
             return result
-    if "hybrid" in raw or "ibrid" in raw:
-        return "ibrido_benzina"
     return None
 
 

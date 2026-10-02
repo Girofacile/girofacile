@@ -10,7 +10,7 @@ from ..models import Driver, DriverAccount, RoutePlan, User, Vehicle
 from ..services.fuel_prices import get_daily_prices
 from ..services.vehicle_lookup import VehicleLookupError, lookup_vehicle_by_plate, normalize_plate
 from ..schemas import DriverIn, VehicleIn
-from ..services.plans import check_vehicle_limit, check_driver_limit
+from ..services.plans import check_vehicle_limit, check_driver_limit, vehicle_usage, lock_vehicle_owner
 
 # ---- Shared helpers ----
 
@@ -140,6 +140,11 @@ def vehicle_to_dict(vehicle, db: Session) -> dict:
     }
 
 
+@vehicles_router.get("/usage")
+def vehicle_plan_usage(db: Session = Depends(get_db), user: User = Depends(current_user)):
+    return vehicle_usage(user, db)
+
+
 @vehicles_router.get("/fuel-prices/current")
 def current_fuel_prices(db: Session = Depends(get_db), user: User = Depends(current_user)):
     return get_daily_prices(db)
@@ -220,7 +225,7 @@ def list_vehicles(db: Session = Depends(get_db), user: User = Depends(current_us
 
 @vehicles_router.post("")
 def create_vehicle(data: VehicleIn, db: Session = Depends(get_db), user: User = Depends(current_user)):
-    check_vehicle_limit(user, db)
+    check_vehicle_limit(user, db, data.alimentazione)
     payload = data.model_dump()
     payload["consumo_l_100km"] = payload.get("consumo_primario_100km") or payload.get("consumo_l_100km") or 0
     payload["targa"] = normalize_vehicle_targa(payload.get("targa"))
@@ -239,6 +244,7 @@ def update_vehicle(item_id: int, data: VehicleIn, db: Session = Depends(get_db),
     item = owned(db.query(Vehicle), Vehicle, user).filter(Vehicle.id == item_id).first()
     if not item:
         raise HTTPException(404, "Mezzo non trovato")
+    check_vehicle_limit(user, db, data.alimentazione, vehicle=item)
     payload = data.model_dump()
     payload["consumo_l_100km"] = payload.get("consumo_primario_100km") or payload.get("consumo_l_100km") or 0
     payload["targa"] = normalize_vehicle_targa(payload.get("targa"))
@@ -254,6 +260,7 @@ def update_vehicle(item_id: int, data: VehicleIn, db: Session = Depends(get_db),
 
 @vehicles_router.delete("/{item_id}")
 def delete_vehicle(item_id: int, db: Session = Depends(get_db), user: User = Depends(current_user)):
+    user = lock_vehicle_owner(user, db)
     item = owned(db.query(Vehicle), Vehicle, user).filter(Vehicle.id == item_id).first()
     if not item:
         raise HTTPException(404, "Mezzo non trovato")
