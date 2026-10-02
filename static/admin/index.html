@@ -839,6 +839,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
           <div class="switch-row-v64"><div><strong>Errori sistema</strong><small>Avvisi per errori tecnici e API.</small></div><label class="switch-v64"><input id="profile-notify-errors" type="checkbox"><span></span></label></div>
           <div class="switch-row-v64"><div><strong>Ticket assistenza</strong><small>Avvisi per richieste utente.</small></div><label class="switch-v64"><input id="profile-notify-tickets" type="checkbox"><span></span></label></div>
           <div class="switch-row-v64"><div><strong>Nuove aziende</strong><small>Avvisi quando si registra un nuovo cliente.</small></div><label class="switch-v64"><input id="profile-notify-companies" type="checkbox"><span></span></label></div>
+          <div class="switch-row-v64"><div><strong>Nuovi clienti paganti</strong><small>Email al primo pagamento riuscito del cliente.</small></div><label class="switch-v64"><input id="profile-notify-payments" type="checkbox"><span></span></label></div>
           <div style="margin-top:18px;color:var(--muted);font-size:12px">Ultimo accesso: <span id="profile-last-access">—</span></div>
         </div>
       </div>
@@ -1581,6 +1582,7 @@ async function loadAdminProfile(){
     document.getElementById('profile-notify-errors').checked = !!data.notify_errors;
     document.getElementById('profile-notify-tickets').checked = !!data.notify_tickets;
     document.getElementById('profile-notify-companies').checked = !!data.notify_new_companies;
+    document.getElementById('profile-notify-payments').checked = !!data.notify_new_payments;
     document.getElementById('profile-last-access').textContent = fmtDateTime(data.last_access_at);
     document.getElementById('admin-name').textContent = data.display_name || data.username || 'Admin';
     document.getElementById('admin-avatar').textContent = data.avatar_initials || 'A';
@@ -1596,7 +1598,8 @@ async function saveAdminProfile(){
       phone: document.getElementById('profile-phone').value,
       notify_errors: document.getElementById('profile-notify-errors').checked,
       notify_tickets: document.getElementById('profile-notify-tickets').checked,
-      notify_new_companies: document.getElementById('profile-notify-companies').checked
+      notify_new_companies: document.getElementById('profile-notify-companies').checked,
+      notify_new_payments: document.getElementById('profile-notify-payments').checked
     })});
     document.getElementById('admin-name').textContent = data.display_name || 'Admin';
     document.getElementById('admin-avatar').textContent = data.avatar_initials || 'A';
