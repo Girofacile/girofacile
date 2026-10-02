@@ -158,6 +158,7 @@ class SuperAdminProfile(Base):
     notify_errors: Mapped[bool] = mapped_column(Boolean, default=True)
     notify_tickets: Mapped[bool] = mapped_column(Boolean, default=True)
     notify_new_companies: Mapped[bool] = mapped_column(Boolean, default=True)
+    notify_new_payments: Mapped[bool] = mapped_column(Boolean, default=True)
     last_access_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
