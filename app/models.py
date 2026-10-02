@@ -9,6 +9,7 @@ class User(Base):
     __tablename__ = "users"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     username: Mapped[str] = mapped_column(String(120), unique=True, index=True, nullable=False)
+    customer_number: Mapped[int | None] = mapped_column(Integer, unique=True, index=True, nullable=True)
     email: Mapped[str | None] = mapped_column(String(200), unique=True, index=True, nullable=True)
     company_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
     company_logo_url: Mapped[str | None] = mapped_column(Text, nullable=True)
