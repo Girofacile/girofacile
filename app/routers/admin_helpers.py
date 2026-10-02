@@ -225,6 +225,8 @@ def _service_key_status(db: Session) -> list[dict]:
 def user_to_dict(u: User, db: Session) -> dict:
     return {
         "id": u.id,
+        "customer_number": u.customer_number,
+        "customer_code": f"{u.customer_number:04d}" if u.customer_number is not None else "",
         "username": u.username,
         "email": u.email or "",
         "company_name": u.company_name or "",
