@@ -45,6 +45,9 @@ test('downgrade and inactive subscription remain visible without promising unava
   assert.match(ui.formHint(usage(),'gasolio',{alimentazione:'elettrico'}).text,/controllo avviene al salvataggio/);
   assert.equal(ui.formHint(usage({plan_active:false}),'elettrico').tone,'warning');
   assert.equal(ui.formHint(null,'elettrico').tone,'neutral');
+  const over=usage({over_limit:true,can_add_electric:false,can_add_non_electric:false,message:'Flotta oltre il limite'});
+  assert.equal(ui.formHint(over,'gasolio').text,'Flotta oltre il limite');
+
 });
 test('plan cards take configured bonus values from catalogue and expose a dedicated benefit',()=>{
   const context=vm.createContext({window:{GF_PLANS:{starter:{name:'Starter',price_eur:29,max_vehicles:3,max_drivers:3,

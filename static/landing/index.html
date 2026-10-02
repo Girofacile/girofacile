@@ -272,6 +272,17 @@ footer{background:#0f172a;color:#e2e8f0;padding:60px 6% 28px;}
   .btn-login{padding:8px;font-size:12px;}
   .btn-cta-nav{padding:8px 10px;font-size:12px;}
 }
+@media(max-width:960px){
+  .hero,.access-grid{grid-template-columns:minmax(0,1fr);}
+  .hero>*,.access-grid>*{min-width:0;}
+  .footer-links{flex-wrap:wrap;min-width:0;}
+}
+@media(max-width:480px){
+  .app-body,.lm-wrap{grid-template-columns:minmax(0,1fr);}
+  .app-sidebar,.lm-side{display:none;}
+  .app-main,.lm-form{min-width:0;}
+  .footer-top{grid-template-columns:minmax(0,1fr);gap:24px;}
+}
 </style>
 </head>
 <body>

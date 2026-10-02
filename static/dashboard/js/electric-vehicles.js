@@ -31,7 +31,7 @@
     }
     if(!editingVehicle && !usage.can_add_non_electric){
       const remaining=Number(usage.bonus_remaining||0);
-      return {tone:"warning",text:remaining>0?`Hai raggiunto il limite dei mezzi inclusi nel tuo piano. Hai ancora ${remaining} ${remaining===1?"slot bonus disponibile":"slot bonus disponibili"} per ${remaining===1?"un veicolo elettrico":"veicoli elettrici"}.`:usage.message||"Hai raggiunto il limite dei mezzi inclusi nel tuo piano."};
+      return {tone:"warning",text:remaining>0 && usage.can_add_electric?`Hai raggiunto il limite dei mezzi inclusi nel tuo piano. Hai ancora ${remaining} ${remaining===1?"slot bonus disponibile":"slot bonus disponibili"} per ${remaining===1?"un veicolo elettrico":"veicoli elettrici"}.`:usage.message||"Hai raggiunto il limite dei mezzi inclusi nel tuo piano."};
     }
     if(editingVehicle?.alimentazione==="elettrico") return {tone:"neutral",text:"Il cambio a un’alimentazione non elettrica è consentito solo se rispetta il limite degli slot standard; il controllo avviene al salvataggio."};
     return {tone:"neutral",text:"Solo l’alimentazione Elettrico può utilizzare gli slot bonus. I mezzi ibridi occupano slot standard."};

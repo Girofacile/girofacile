@@ -114,7 +114,12 @@ def check_pages(page, base, width, output, fit):
     fit(page, "#publicPricing .pricing-card")
     fit(page, ".electric-inner")
     fit(page, "#electricPlanBonuses .electric-plan-bonus")
-    assert page.evaluate("document.documentElement.scrollWidth <= innerWidth + 2")
+    page.screenshot(path=str(output / f"landing-overflow-check-{width}.png"), full_page=True)
+    assert page.evaluate("document.documentElement.scrollWidth <= innerWidth + 2"), page.evaluate("""() =>
+        [...document.querySelectorAll('body *')].filter(el => {
+          const box=el.getBoundingClientRect();return box.width && box.right > innerWidth + 2;
+        }).slice(0,25).map(el => ({tag:el.tagName,id:el.id,cls:el.className,
+          right:el.getBoundingClientRect().right,width:el.getBoundingClientRect().width}))""")
     title.scroll_into_view_if_needed()
     page.screenshot(path=str(output / f"landing-{width}.png"), full_page=True)
 
