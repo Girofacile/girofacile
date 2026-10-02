@@ -379,6 +379,9 @@ def migrate_database():
         add_column("chat_messages", "driver_id", sql_type(Integer()))
 
     if insp.has_table("users"):
+        add_column("users", "customer_number", sql_type(Integer()))
+        with engine.begin() as conn:
+            conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS uq_users_customer_number ON users (customer_number) WHERE customer_number IS NOT NULL"))
         add_column("users", "company_logo_url", sql_type(Text()))
         add_column("users", "company_email", sql_type(String(200)))
         add_column("users", "company_phone", sql_type(String(100)))
