@@ -53,6 +53,7 @@ def admin_update_profile(payload: dict, db: Session = Depends(get_db), superadmi
     profile.notify_errors = bool(payload.get("notify_errors", profile.notify_errors))
     profile.notify_tickets = bool(payload.get("notify_tickets", profile.notify_tickets))
     profile.notify_new_companies = bool(payload.get("notify_new_companies", profile.notify_new_companies))
+    profile.notify_new_payments = bool(payload.get("notify_new_payments", profile.notify_new_payments))
     profile.updated_at = datetime.utcnow()
     _activity(db, superadmin.get("username"), "superadmin_profile_updated", "Profilo Super Admin aggiornato")
     db.commit()
