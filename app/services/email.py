@@ -195,6 +195,36 @@ def send_route_reminder(
     return _send(to_email, subject, _base_template(content))
 
 
+def send_new_paying_customer(
+    to_email: str,
+    customer_code: str,
+    company_name: str,
+    account_email: str,
+    plan: str,
+    amount: float,
+    currency: str = "EUR",
+    is_test: bool = False,
+) -> bool:
+    """Avvisa il Super Admin al primo pagamento riuscito di un'azienda."""
+    import html
+    esc = lambda value: html.escape(str(value or "—"))
+    mode_label = "Pagamento sandbox/test" if is_test else "Pagamento confermato"
+    subject = f"💳 Nuovo cliente pagante GiroFacile — Cliente {customer_code}"
+    content = f"""
+    <p>Un'azienda ha effettuato il suo <strong>primo pagamento riuscito</strong> su GiroFacile.</p>
+    <div class="info-box">
+      <div class="info-row"><span class="info-label">Codice cliente:</span><strong>{esc(customer_code)}</strong></div>
+      <div class="info-row"><span class="info-label">Azienda:</span><strong>{esc(company_name)}</strong></div>
+      <div class="info-row"><span class="info-label">Email:</span><strong>{esc(account_email)}</strong></div>
+      <div class="info-row"><span class="info-label">Piano:</span><strong>{esc(plan)}</strong></div>
+      <div class="info-row"><span class="info-label">Importo:</span><strong>{amount:.2f} {esc(currency)}</strong></div>
+      <div class="info-row"><span class="info-label">Stato:</span><strong>{mode_label}</strong></div>
+    </div>
+    <a class="btn" href="{APP_BASE_URL.rstrip('/')}/admin">Apri Super Admin</a>
+    """
+    return _send(to_email, subject, _base_template(content))
+
+
 def send_new_company_registration(
     to_email: str,
     customer_code: str,
