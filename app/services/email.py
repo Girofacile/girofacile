@@ -195,6 +195,32 @@ def send_route_reminder(
     return _send(to_email, subject, _base_template(content))
 
 
+def send_new_company_registration(
+    to_email: str,
+    customer_code: str,
+    company_name: str,
+    account_email: str,
+    username: str,
+    plan: str,
+) -> bool:
+    """Avvisa il Super Admin quando si registra una nuova azienda."""
+    import html
+    esc = lambda value: html.escape(str(value or "—"))
+    subject = f"🆕 Nuova registrazione GiroFacile — Cliente {customer_code}"
+    content = f"""
+    <p>Una nuova azienda si è registrata su <strong>GiroFacile</strong>.</p>
+    <div class="info-box">
+      <div class="info-row"><span class="info-label">Codice cliente:</span><strong>{esc(customer_code)}</strong></div>
+      <div class="info-row"><span class="info-label">Azienda:</span><strong>{esc(company_name)}</strong></div>
+      <div class="info-row"><span class="info-label">Email:</span><strong>{esc(account_email)}</strong></div>
+      <div class="info-row"><span class="info-label">Username:</span><strong>{esc(username)}</strong></div>
+      <div class="info-row"><span class="info-label">Piano:</span><strong>{esc(plan)}</strong></div>
+    </div>
+    <a class="btn" href="{APP_BASE_URL.rstrip('/')}/admin">Apri Super Admin</a>
+    """
+    return _send(to_email, subject, _base_template(content))
+
+
 # -----------------------------------------------------------------------
 # Email benvenuto registrazione
 # -----------------------------------------------------------------------
