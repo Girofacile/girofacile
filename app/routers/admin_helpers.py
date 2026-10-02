@@ -135,6 +135,7 @@ def _get_or_create_superadmin_profile(db: Session, username: str = None) -> Supe
             notify_errors=True,
             notify_tickets=True,
             notify_new_companies=True,
+            notify_new_payments=True,
             last_access_at=datetime.utcnow(),
         )
         db.add(profile)
@@ -153,6 +154,7 @@ def _profile_to_dict(profile: SuperAdminProfile) -> dict:
         "notify_errors": bool(profile.notify_errors),
         "notify_tickets": bool(profile.notify_tickets),
         "notify_new_companies": bool(profile.notify_new_companies),
+        "notify_new_payments": bool(profile.notify_new_payments),
         "last_access_at": profile.last_access_at.isoformat() if profile.last_access_at else None,
         "updated_at": profile.updated_at.isoformat() if profile.updated_at else None,
     }
