@@ -3,15 +3,15 @@ import hashlib
 import secrets
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
-from sqlalchemy import func, or_
+from sqlalchemy import func, or_, text
 from sqlalchemy.orm import Session
 
-from ..core.config import APP_BASE_URL, APP_USER, SUPERADMIN_USERNAME, SUPERADMIN_PASSWORD, TRIAL_DAYS
+from ..core.config import APP_BASE_URL, APP_USER, SUPERADMIN_USERNAME, SUPERADMIN_PASSWORD, TRIAL_DAYS, ERROR_NOTIFICATIONS_EMAIL
 from ..core.http_security import cookie_options
 from ..core.dependencies import current_user, is_admin_user
 from ..core.security import hash_password, make_token, make_superadmin_token, make_superadmin_collaborator_token, password_needs_rehash, validate_password_strength, verify_password, verify_token, verify_superadmin_token
 from ..database import get_db
-from ..models import Agent, AgentAccount, Customer, Deposit, Driver, DriverAccount, PasswordResetToken, RoutePlan, User, Vehicle, SuperAdminCollaborator
+from ..models import Agent, AgentAccount, Customer, Deposit, Driver, DriverAccount, PasswordResetToken, RoutePlan, User, Vehicle, SuperAdminCollaborator, SuperAdminProfile
 from ..schemas import SignupIn
 from ..services.plans import user_plan_info
 from ..services.agents_feature import require_agents_enabled
@@ -51,8 +51,15 @@ def signup(data: SignupIn, response: Response, db: Session = Depends(get_db)):
     selected_plan = (getattr(data, "plan", None) or "starter").strip().lower()
     if selected_plan not in {"starter", "business", "pro"}:
         selected_plan = "starter"
+    # Numero cliente commerciale progressivo, separato dall'ID tecnico.
+    # PostgreSQL è il DB ufficiale: il lock serializza le registrazioni concorrenti.
+    if db.bind is not None and db.bind.dialect.name == "postgresql":
+        db.execute(text("LOCK TABLE users IN SHARE ROW EXCLUSIVE MODE"))
+    next_customer_number = (db.query(func.max(User.customer_number)).scalar() or 0) + 1
+
     user = User(
         username=username,
+        customer_number=next_customer_number,
         email=email,
         company_name=(data.company_name or "").strip() or None,
         company_phone=(data.company_phone or "").strip() or None,
@@ -90,20 +97,34 @@ def signup(data: SignupIn, response: Response, db: Session = Depends(get_db)):
         "session", make_token(user.id),
         **cookie_options(60 * 60 * 24 * 7),
     )
-    # Email di benvenuto
+    # Email di benvenuto al cliente. _send registra già gli eventuali errori SMTP.
     if email:
-        try:
-            from ..services.email import send_welcome
-            send_welcome(
-                to_email=email,
-                username=username,
-                company_name=data.company_name or username,
-                trial_days=TRIAL_DAYS,
-            )
-        except Exception:
-            pass
+        from ..services.email import send_welcome
+        send_welcome(
+            to_email=email,
+            username=username,
+            company_name=data.company_name or username,
+            trial_days=TRIAL_DAYS,
+        )
+
+    # Notifica al Super Admin: rispetta il toggle "Nuove aziende".
+    profile = db.query(SuperAdminProfile).filter(SuperAdminProfile.username == (SUPERADMIN_USERNAME or "admin")).first()
+    notify_new_companies = bool(profile.notify_new_companies) if profile else True
+    admin_email = ((profile.email if profile else None) or ERROR_NOTIFICATIONS_EMAIL or "").strip()
+    if notify_new_companies and admin_email:
+        from ..services.email import send_new_company_registration
+        send_new_company_registration(
+            to_email=admin_email,
+            customer_code=f"{user.customer_number:04d}",
+            company_name=user.company_name or user.username,
+            account_email=user.email or "",
+            username=user.username,
+            plan=user.plan or "starter",
+        )
+
     return {
         "ok": True,
+        "customer_code": f"{user.customer_number:04d}",
         "username": user.username,
         "company_name": user.company_name,
         "is_admin": is_admin_user(user),
