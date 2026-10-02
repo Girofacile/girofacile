@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from ..core.config import PLAN_PRICES, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET
 from ..core.dependencies import current_user
 from ..database import get_db
-from ..models import User, BillingInvoice, BillingPayment, BillingEvent
+from ..models import User, BillingInvoice, BillingPayment, BillingEvent, BillingNotice, SuperAdminProfile
 from ..services.plans import PLAN_LIMITS, get_user_plan_status, user_plan_info
 
 router = APIRouter(prefix="/api/billing", tags=["billing"])
@@ -339,13 +339,47 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
             user.billing_checkout_expires = None
     if user.stripe_subscription_id:
         reconcile(db, user, stripe)
+
+    paid_invoice = None
     if event_type.startswith("invoice."):
-        sync_invoice(db, user, stripe.Invoice.retrieve(data["id"]))
+        paid_invoice = assert_test(stripe.Invoice.retrieve(data["id"]))
+        sync_invoice(db, user, paid_invoice)
+
+    # La notifica commerciale è legata al primo invoice realmente pagato.
+    # BillingNotice rende l'evento unico anche se Stripe invia più webhook
+    # o se reconcile ha già sincronizzato la stessa fattura.
+    first_payment_notice = None
+    if paid_invoice and paid_invoice.get("status") == "paid" and (paid_invoice.get("amount_paid") or 0) > 0:
+        notice_key = "superadmin_first_payment"
+        first_payment_notice = db.query(BillingNotice).filter_by(user_id=user.id, notice_key=notice_key).first()
+        if not first_payment_notice:
+            first_payment_notice = BillingNotice(user_id=user.id, notice_key=notice_key)
+            db.add(first_payment_notice)
+
     db.add(BillingEvent(event_id=event["id"], event_type=event_type))
+    should_notify_first_payment = bool(first_payment_notice and first_payment_notice.id is None)
     try:
         db.commit()
     except IntegrityError:
         db.rollback()
         if not db.get(BillingEvent, event["id"]):
             raise
+        should_notify_first_payment = False
+
+    if should_notify_first_payment:
+        profile = db.query(SuperAdminProfile).filter(SuperAdminProfile.username == (config.SUPERADMIN_USERNAME or "admin")).first()
+        notify_enabled = bool(profile.notify_new_payments) if profile else True
+        admin_email = ((profile.email if profile else None) or config.ERROR_NOTIFICATIONS_EMAIL or "").strip()
+        if notify_enabled and admin_email:
+            from ..services.email import send_new_paying_customer
+            send_new_paying_customer(
+                to_email=admin_email,
+                customer_code=f"{user.customer_number:04d}" if user.customer_number is not None else str(user.id),
+                company_name=user.company_name or user.username,
+                account_email=user.company_email or user.email or "",
+                plan=user.plan or "starter",
+                amount=(paid_invoice.get("amount_paid") or 0) / 100,
+                currency=(paid_invoice.get("currency") or "eur").upper(),
+                is_test=True,
+            )
     return {"ok": True}
