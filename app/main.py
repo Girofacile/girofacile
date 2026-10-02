@@ -378,6 +378,9 @@ def migrate_database():
     if insp.has_table("chat_messages"):
         add_column("chat_messages", "driver_id", sql_type(Integer()))
 
+    if insp.has_table("superadmin_profiles"):
+        add_column("superadmin_profiles", "notify_new_payments", sql_type(Boolean()), "1" if dialect.name == "sqlite" else "true")
+
     if insp.has_table("users"):
         add_column("users", "customer_number", sql_type(Integer()))
         with engine.begin() as conn:
