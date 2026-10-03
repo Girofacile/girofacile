@@ -26,6 +26,7 @@
 <link href="/static/dashboard/css/settings.css?v=sidebar_stable_20261001" rel="stylesheet">
 <link rel="stylesheet" href="/static/dashboard/css/electric-vehicles.css?v=electric_style_20261003">
 <script src="/static/dashboard/js/electric-vehicles.js?v=electric_bonus_20261002"></script>
+<link rel="stylesheet" href="/static/dashboard/css/management.css?v=management_20261003">
 </head>
 <body>
 
@@ -267,7 +268,7 @@
     <button type="button" class="gf-mobile-icon-btn-v62" onclick="toggleMobileMoreMenuV62()" aria-label="Apri menu mobile">☰</button>
     <div class="gf-mobile-brand-v62"><span>Giro</span><strong>Facile</strong></div>
     <div class="gf-mobile-top-actions-v62">
-      <button type="button" class="gf-mobile-icon-btn-v62" onclick="toggleNotificationsDropdown()" aria-label="Notifiche">🔔<i id="gfMobileBellDotV62" class="gf-mobile-dot-v62 hidden"></i></button>
+      <button type="button" class="gf-mobile-icon-btn-v62" onclick="toggleNotificationsDropdown()" data-gf-notification-trigger aria-controls="notificationDropdown" aria-expanded="false" aria-label="Notifiche">🔔<i id="gfMobileBellDotV62" class="gf-mobile-dot-v62 hidden"></i></button>
       <button type="button" class="gf-mobile-avatar-v62" onclick="openProfilePanel()" aria-label="Profilo"><span id="gfMobileAvatarTextV62">A</span></button>
     </div>
   </div>
@@ -334,7 +335,7 @@
 
       <div class="top-actions">
         <div class="notification-center-v30">
-          <button id="notificationBellBtn" class="notification-bell-v30 hidden" onclick="toggleNotificationsDropdown()" title="Notifiche interne">
+          <button id="notificationBellBtn" class="notification-bell-v30 hidden" onclick="toggleNotificationsDropdown()" data-gf-notification-trigger aria-controls="notificationDropdown" aria-expanded="false" title="Notifiche interne">
             <span class="bell-icon-v30">🔔</span>
             <span id="notificationBadge" class="notification-badge-v30 hidden">0</span>
           </button>
@@ -546,7 +547,7 @@
       </section>
 
 
-      <section id="tab-dashboard-scheduled" class="tab hidden">
+      <section id="tab-dashboard-scheduled" class="tab hidden gf-page">
         <div class="dash-subpage-topbar">
           <button class="btn-light" onclick="showTab('dashboard')">← Torna alla Dashboard</button>
           <div class="dash-breadcrumb">Dashboard <span>›</span> Giri programmati</div>
@@ -563,7 +564,7 @@
         </div>
       </section>
 
-      <section id="tab-dashboard-completed" class="tab hidden">
+      <section id="tab-dashboard-completed" class="tab hidden gf-page">
         <div class="dash-subpage-topbar">
           <button class="btn-light" onclick="showTab('dashboard')">← Torna alla Dashboard</button>
           <div class="dash-breadcrumb">Dashboard <span>›</span> Giri completati</div>
@@ -581,7 +582,7 @@
       </section>
 
 
-      <section id="tab-dashboard-in-progress" class="tab hidden">
+      <section id="tab-dashboard-in-progress" class="tab hidden gf-page">
         <div class="dash-subpage-topbar">
           <button class="btn-light" onclick="showTab('dashboard')">← Torna alla Dashboard</button>
           <div class="dash-breadcrumb">Dashboard <span>›</span> Giri in corso</div>
@@ -602,7 +603,7 @@
       </section>
 
 
-      <section id="tab-chat-autisti" class="tab hidden">
+      <section id="tab-chat-autisti" class="tab hidden gf-page">
         <div class="page-title-row">
           <div>
             <h1>Chat autisti</h1>
@@ -639,7 +640,7 @@
         </div>
       </section>
 
-      <section id="tab-giro" class="tab hidden">
+      <section id="tab-giro" class="tab hidden gf-page">
         <div class="page-title-row">
           <div>
             <h1 data-gf-label="route_planning">Pianificazione giro</h1>
@@ -782,7 +783,7 @@
         </section>
       </section>
 
-      <section id="tab-route-preview" class="tab hidden">
+      <section id="tab-route-preview" class="tab hidden gf-page">
         <!-- v77: intestazione statica rimossa per evitare doppio titolo e doppio tasto.
              L'intestazione dell'anteprima viene generata dal risultato calcolato. -->
         <div id="routePreviewResult" class="route-preview-result-v76">
@@ -828,9 +829,9 @@
           <div class="customer-list-footer"><span id="customerCount" role="status"></span><nav id="customerPagination" aria-label="Pagine clienti"></nav></div>
         </section>
       </section>
-      <dialog id="customerDetailsDialog" class="customer-details-dialog" aria-labelledby="customerDetailsTitle"><div id="customerDetailsContent"></div><form method="dialog"><button class="btn-secondary">Chiudi</button></form></dialog>
+      <dialog id="customerDetailsDialog" class="customer-details-dialog gf-dialog" aria-labelledby="customerDetailsTitle"><div id="customerDetailsContent"></div><form method="dialog"><button class="btn-secondary">Chiudi</button></form></dialog>
 
-      <section id="tab-agenti" class="tab hidden">
+      <section id="tab-agenti" class="tab hidden gf-page">
         <div class="page-title-row">
           <div><h1>Agenti</h1><p>Anagrafica agenti collegabili ai clienti.</p></div>
         </div>
@@ -876,7 +877,7 @@
       </section>
 
 
-      <section id="tab-report" class="tab hidden">
+      <section id="tab-report" class="tab hidden gf-page">
         <div class="report-hero-row">
           <div>
             <h1>Report consegne</h1>
@@ -959,7 +960,7 @@
       </section>
 
 
-      <section id="tab-settings" class="tab hidden">
+      <section id="tab-settings" class="tab hidden gf-page">
         <div class="page-title-row"><div><h1>Impostazioni</h1><p>Configura le preferenze operative applicate al gestionale aziendale.</p></div></div>
         <section class="panel settings-panel" aria-label="Preferenze operative">
           <div class="settings-item"><div class="setting-row">
@@ -1040,10 +1041,11 @@
         </div>
       </section>
 
-      <section id="tab-mezzi" class="tab hidden">
+      <section id="tab-mezzi" class="tab hidden gf-page">
         <div class="page-title-row"><div><h1>Mezzi</h1><p>Configura consumi, capacità e accessori dei mezzi.</p></div></div>
         <div id="vehicleUsageSummary" aria-live="polite"></div>
-        <section class="panel">
+        <section class="panel gf-vehicle-form" aria-labelledby="vehicleFormTitle">
+          <div class="panel-header"><div><h2 id="vehicleFormTitle">Dati del mezzo</h2><p>Compila i dati del veicolo, i consumi e le capacità operative.</p></div></div>
           <input type="hidden" id="vId">
           <input type="hidden" id="vPhotoUrl">
           <div class="vehicle-plate-lookup-v896">
@@ -1065,33 +1067,36 @@
             </div>
           </div>
           <div class="form-grid vehicle-data-grid-v896">
-            <input id="vNome" placeholder="Nome mezzo">
-            <input id="vMarca" placeholder="Marca">
-            <input id="vModello" placeholder="Modello">
-            <input id="vAnnoImmatricolazione" type="number" min="1900" max="2100" placeholder="Anno immatricolazione">
-            <input id="vCarrozzeria" placeholder="Carrozzeria / tipo veicolo">
-            <input id="vCilindrata" type="number" min="0" placeholder="Cilindrata cc">
-            <input id="vPotenzaKw" type="number" min="0" step="0.1" placeholder="Potenza kW">
-            <input id="vClasseEuro" placeholder="Classe Euro">
-            <label for="vTollClass">Classe pedaggio</label><select id="vTollClass"><option value="A">A · 2 assi, altezza fino a 1,3 m all’asse anteriore</option><option value="B" selected>B · 2 assi, altezza oltre 1,3 m</option><option value="3">3 assi</option><option value="4">4 assi</option><option value="5">5 o più assi</option></select>
-            <select id="vFuelType" onchange="updateVehicleEnergyFieldsV895()">
+            <div class="gf-field"><label for="vNome">Nome mezzo</label><input id="vNome" placeholder="Nome mezzo"></div>
+            <div class="gf-field"><label for="vMarca">Marca</label><input id="vMarca" placeholder="Marca"></div>
+            <div class="gf-field"><label for="vModello">Modello</label><input id="vModello" placeholder="Modello"></div>
+            <div class="gf-field"><label for="vAnnoImmatricolazione">Anno immatricolazione</label><input id="vAnnoImmatricolazione" type="number" min="1900" max="2100" placeholder="Anno immatricolazione"></div>
+            <div class="gf-field"><label for="vCarrozzeria">Carrozzeria / tipo veicolo</label><input id="vCarrozzeria" placeholder="Carrozzeria / tipo veicolo"></div>
+            <div class="gf-field"><label for="vCilindrata">Cilindrata (cc)</label><input id="vCilindrata" type="number" min="0" placeholder="Cilindrata cc"></div>
+            <div class="gf-field"><label for="vPotenzaKw">Potenza (kW)</label><input id="vPotenzaKw" type="number" min="0" step="0.1" placeholder="Potenza kW"></div>
+            <div class="gf-field"><label for="vClasseEuro">Classe Euro</label><input id="vClasseEuro" placeholder="Classe Euro"></div>
+            <div class="gf-field"><label for="vTollClass">Classe pedaggio</label><select id="vTollClass"><option value="A">A · 2 assi, altezza fino a 1,3 m all’asse anteriore</option><option value="B" selected>B · 2 assi, altezza oltre 1,3 m</option><option value="3">3 assi</option><option value="4">4 assi</option><option value="5">5 o più assi</option></select></div>
+            <div class="gf-field"><label for="vFuelType">Alimentazione</label><select id="vFuelType" onchange="updateVehicleEnergyFieldsV895()">
               <option value="gasolio">Gasolio</option><option value="benzina">Benzina</option><option value="gpl">GPL</option><option value="metano">Metano</option><option value="elettrico">Elettrico</option><option value="ibrido_benzina">Ibrido benzina</option><option value="ibrido_diesel">Ibrido diesel</option><option value="ibrido_plugin_benzina">Ibrido plug-in benzina</option><option value="ibrido_plugin_diesel">Ibrido plug-in diesel</option>
-            </select>
-            <div id="vPrimaryConsumptionWrap"><label id="vPrimaryConsumptionLabel">Consumo L/100 km</label><input id="vConsumo" type="number" step="0.1" value="8.5"></div>
-            <div id="vElectricConsumptionWrap" class="hidden"><label>Consumo elettrico kWh/100 km</label><input id="vConsumoKwh" type="number" step="0.1" value="0"></div>
-            <input id="vKg" type="number" value="1000" placeholder="Capacità kg">
-            <input id="vColli" type="number" value="100" placeholder="Capacità colli">
-            <select data-gf-feature="tail_lift" id="vSponda"><option value="false">Sponda No</option><option value="true">Sponda Sì</option></select>
-            <select data-gf-feature="ztl" id="vZtl"><option value="false">ZTL No</option><option value="true">ZTL Sì</option></select>
+            </select></div>
+            <div class="gf-field" id="vPrimaryConsumptionWrap"><label id="vPrimaryConsumptionLabel">Consumo L/100 km</label><input id="vConsumo" type="number" step="0.1" value="8.5"></div>
+            <div id="vElectricConsumptionWrap" class="gf-field hidden"><label>Consumo elettrico kWh/100 km</label><input id="vConsumoKwh" type="number" step="0.1" value="0"></div>
+            <div class="gf-field"><label for="vKg">Capacità (kg)</label><input id="vKg" type="number" value="1000" placeholder="Capacità kg"></div>
+            <div class="gf-field"><label for="vColli">Capacità (colli)</label><input id="vColli" type="number" value="100" placeholder="Capacità colli"></div>
+            <div class="gf-field" data-gf-feature="tail_lift"><label for="vSponda">Sponda</label><select data-gf-feature="tail_lift" id="vSponda"><option value="false">Sponda No</option><option value="true">Sponda Sì</option></select></div>
+            <div class="gf-field" data-gf-feature="ztl"><label for="vZtl">Accesso ZTL</label><select data-gf-feature="ztl" id="vZtl"><option value="false">ZTL No</option><option value="true">ZTL Sì</option></select></div>
           </div>
           <p id="vehicleElectricBonusHint" class="gf-electric-form-hint" role="status" aria-live="polite"></p>
           <div class="actions-row"><button type="button" id="saveVehicleBtn" onclick="saveVehicle()" class="btn-primary">Salva mezzo</button><button type="button" onclick="resetVehicleForm()" class="btn-secondary">Nuovo</button></div>
+          </section>
+        <section class="panel gf-vehicle-list" aria-labelledby="vehicleListTitle">
+          <div class="panel-header"><div><h2 id="vehicleListTitle">Mezzi registrati</h2><p>Consulta la flotta e modifica i dati dei veicoli.</p></div></div>
           <div class="tableWrap"><table class="gf-vehicles-table-v892"><thead><tr><th>Mezzo</th><th>Targa</th><th>Consumo</th><th data-gf-feature="tail_lift">Sponda</th><th data-gf-feature="ztl">ZTL</th><th></th></tr></thead><tbody id="vehiclesBody"></tbody></table></div>
         </section>
       </section>
 
 
-      <section id="tab-autisti" class="tab hidden">
+      <section id="tab-autisti" class="tab hidden gf-page">
         <div class="page-title-row">
           <div><h1>Autisti</h1><p>Gestisci anagrafiche, contatti, patenti e assegnazioni operative.</p></div>
           <button class="btn-primary" onclick="openNewDriverModal()">+ Nuovo autista</button>
@@ -1115,7 +1120,7 @@
         </section>
       </section>
 
-      <section id="tab-storico" class="tab hidden history-page-v311">
+      <section id="tab-storico" class="tab hidden history-page-v311 gf-page">
         <div class="page-title-row history-title-v311"><div><h1>Storico giri</h1><p>Consulta i percorsi completati, i chilometri e i dati operativi dei tuoi giri.</p></div></div>
 
         <section id="historyEmptyState" class="history-empty-v311 hidden" aria-live="polite">
@@ -1148,7 +1153,7 @@
         </section>
       </section>
 
-      <section id="tab-plan-account" class="tab hidden plan-account-page-v875">
+      <section id="tab-plan-account" class="tab hidden plan-account-page-v875 gf-page">
         <div class="plan-page-top-v875">
           <div class="plan-title-block-v875">
             <button class="plan-back-v875" onclick="returnFromPlanAccount()">← Torna al profilo</button>
@@ -1197,7 +1202,7 @@
         </div>
       </section>
 
-      <section id="tab-billing-account" class="tab hidden billing-page-v876">
+      <section id="tab-billing-account" class="tab hidden billing-page-v876 gf-page">
         <div class="billing-page-top-v876">
           <div>
             <button class="billing-back-v876" onclick="returnFromBillingPageV876()">← Torna a Piani e abbonamento</button>
@@ -1307,7 +1312,7 @@
         </div>
       </section>
 
-      <section id="tab-admin-dashboard" class="tab hidden admin-tab">
+      <section id="tab-admin-dashboard" class="tab hidden admin-tab gf-page">
         <div class="page-title-row">
           <div>
             <h1>Dashboard admin</h1>
@@ -1334,7 +1339,7 @@
         </div>
       </section>
 
-      <section id="tab-admin-users" class="tab hidden admin-tab">
+      <section id="tab-admin-users" class="tab hidden admin-tab gf-page">
         <div class="page-title-row">
           <div><h1>Utenti</h1><p>Visualizza gli account registrati al gestionale e le informazioni principali.</p></div>
         </div>
@@ -1344,7 +1349,7 @@
         </section>
       </section>
 
-      <section id="tab-admin-tickets" class="tab hidden admin-tab">
+      <section id="tab-admin-tickets" class="tab hidden admin-tab gf-page">
         <div class="page-title-row">
           <div><h1>Ticket</h1><p>Gestisci richieste di recupero password e segnalazioni degli utenti.</p></div>
         </div>
@@ -1360,7 +1365,7 @@
         </section>
       </section>
 
-      <section id="tab-admin-settings" class="tab hidden admin-tab">
+      <section id="tab-admin-settings" class="tab hidden admin-tab gf-page">
         <div class="page-title-row">
           <div><h1>Impostazioni admin</h1><p>Configurazioni di piattaforma e strumenti amministrativi.</p></div>
         </div>
@@ -1385,7 +1390,7 @@
 </section>
 
 
-<div id="driverFormOverlay" class="modal-overlay hidden" onclick="closeDriverModal(event)">
+<div id="driverFormOverlay" class="modal-overlay hidden gf-dialog" onclick="closeDriverModal(event)">
   <div class="profile-modal driver-form-modal" onclick="event.stopPropagation()">
     <div class="modal-header driver-modal-header">
       <div>
@@ -1446,7 +1451,7 @@
 </div>
 
 
-<div id="customerOverlay" class="modal-overlay hidden" onclick="closeCustomerModal(event)">
+<div id="customerOverlay" class="modal-overlay hidden gf-dialog" onclick="closeCustomerModal(event)">
   <div class="profile-modal customer-modal-v8" onclick="event.stopPropagation()">
     <div class="modal-header">
       <div>
@@ -1521,7 +1526,7 @@
   </div>
 </div>
 
-<div id="customerImportOverlay" class="modal-overlay hidden" onclick="closeCustomerImportModal(event)">
+<div id="customerImportOverlay" class="modal-overlay hidden gf-dialog" onclick="closeCustomerImportModal(event)">
   <div class="profile-modal customer-import-modal-v8" onclick="event.stopPropagation()">
     <div class="modal-header">
       <div>
@@ -1546,7 +1551,7 @@
   </div>
 </div>
 
-<div id="deliveryDetailsOverlay" class="modal-overlay hidden" onclick="closeDeliveryDetailsModal(event)">
+<div id="deliveryDetailsOverlay" class="modal-overlay hidden gf-dialog" onclick="closeDeliveryDetailsModal(event)">
   <div class="profile-modal delivery-details-modal delivery-details-modal-v5" onclick="event.stopPropagation()">
     <div class="modal-header delivery-modal-header-v5">
       <div>
@@ -1632,7 +1637,7 @@
 </div>
 
 
-<div id="onboardingOverlay" class="modal-overlay hidden" onclick="closeOnboardingPanel(event)">
+<div id="onboardingOverlay" class="modal-overlay hidden gf-dialog" onclick="closeOnboardingPanel(event)">
   <div class="profile-modal onboarding-modal-v29" onclick="event.stopPropagation()">
     <div class="modal-head">
       <div>
@@ -1654,7 +1659,7 @@
   </div>
 </div>
 
-<div id="profileOverlay" class="modal-overlay hidden" onclick="closeProfilePanel(event)">
+<div id="profileOverlay" class="modal-overlay hidden gf-dialog" onclick="closeProfilePanel(event)">
   <div class="profile-modal" onclick="event.stopPropagation()">
     <div class="modal-header">
       <div>
@@ -1696,8 +1701,8 @@
       </div>
       <div id="planUsageRows" class="plan-usage-rowline-v40"></div>
       <div class="profile-plan-actions-v63">
-        <button id="btnPlanActive" class="btn-plan-active-v88" onclick="openPlanAccountPage()">Piano attivo</button>
-        <button class="btn-billing-v63" onclick="openBillingPanel()">Fatturazione</button>
+        <button id="btnPlanActive" class="btn-plan-active-v88 btn-primary" onclick="openPlanAccountPage()">Piano attivo</button>
+        <button class="btn-billing-v63 btn-secondary" onclick="openBillingPanel()">Fatturazione</button>
       </div>
     </div>
 
@@ -1724,7 +1729,7 @@
 
 <script src="/static/dashboard/js/reports.js?v=stability_1"></script>
 <script src="/static/dashboard/js/customers.js?v=customers_20260929"></script>
-<script src="/static/dashboard/js/core.js?v=electric_bonus_20261002"></script>
+<script src="/static/dashboard/js/core.js?v=management_20261003"></script>
 
 <script>
 function toggleLoginPassword(){

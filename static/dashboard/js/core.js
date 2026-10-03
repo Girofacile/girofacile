@@ -3894,7 +3894,7 @@ function renderDashboardInProgressSubpage(routes, selectedRoute){
       <main class="dash-sub-main">
         <section class="panel dash-sub-card">
           <div class="dash-sub-card-title"><div class="dash-sub-icon">📍</div><div><h2>Fermate del giro</h2><p>Confronto tra arrivo previsto e arrivo reale registrato dall'autista.</p></div></div>
-          ${window.GiroFacileRouting.summaryHtml(r, `refreshRouteTraffic(${Number(r.id)}, '${targetId}', '${context}')`)}
+          ${window.GiroFacileRouting.summaryHtml(r)}
     ${dashboardRouteSummaryCards(r, rows)}
           ${dashboardStopRowsUnified(r, 'live')}
         </section>
@@ -4362,6 +4362,7 @@ function renderNotificationsDropdownV30(unread){
 function showNotificationsDropdownV30(show){
   const dd = document.getElementById("notificationDropdown");
   if(dd) dd.classList.toggle("hidden", !show);
+  document.querySelectorAll('[data-gf-notification-trigger]').forEach(button=>button.setAttribute('aria-expanded', String(!!show)));
 }
 
 function toggleNotificationsDropdown(){
@@ -4393,8 +4394,11 @@ async function openNotificationActionV30(id, tab){
 }
 
 document.addEventListener("click", function(e){
-  const center = e.target.closest && e.target.closest(".notification-center-v30");
+  const center = e.target.closest && e.target.closest(".notification-center-v30, [data-gf-notification-trigger]");
   if(!center) showNotificationsDropdownV30(false);
+});
+document.addEventListener("keydown", function(e){
+  if(e.key === "Escape") showNotificationsDropdownV30(false);
 });
 
 window.toggleNotificationsDropdown = toggleNotificationsDropdown;
