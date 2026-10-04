@@ -1,9 +1,11 @@
 """Private S3 evidence storage. No client or network access at import time."""
 import hashlib
+import ipaddress
 import json
 import logging
 import os
 import re
+from urllib.parse import urlsplit
 from uuid import uuid4
 
 from fastapi import HTTPException
@@ -25,17 +27,52 @@ def unavailable():
     return StorageUnavailable(503, 'Archivio POD non disponibile. Firma e foto non salvate: conserva questa schermata e riprova.')
 
 
+def _is_local_development_host(hostname):
+    host = (hostname or '').strip().lower()
+    if host in ('localhost', 'minio', 'host.docker.internal'):
+        return True
+    try:
+        address = ipaddress.ip_address(host)
+        return bool(address.is_loopback or address.is_private or address.is_link_local)
+    except ValueError:
+        return host.endswith('.local')
+
+
+def _validate_endpoint(value, *, allow_local_http):
+    endpoint = urlsplit(value)
+    if (
+        not endpoint.netloc
+        or endpoint.username
+        or endpoint.password
+        or endpoint.query
+        or endpoint.fragment
+        or endpoint.path not in ('', '/')
+    ):
+        raise ValueError()
+    if endpoint.scheme == 'https':
+        return value.rstrip('/')
+    if endpoint.scheme == 'http' and allow_local_http and _is_local_development_host(endpoint.hostname):
+        return value.rstrip('/')
+    raise ValueError()
+
+
 def configuration():
     values = {name: os.getenv('OBJECT_STORAGE_' + name, '').strip() for name in
               ('ENDPOINT', 'REGION', 'BUCKET', 'ACCESS_KEY', 'SECRET_KEY')}
     try:
         seconds = int(os.getenv('OBJECT_STORAGE_SIGNED_URL_SECONDS', '900'))
+        app_env = os.getenv('APP_ENV', 'development').strip().lower()
+        allow_local_http = app_env in ('development', 'dev', 'test', 'testing')
         if not enabled() or not all(values.values()) or not 60 <= seconds <= 900:
             raise ValueError()
-        from urllib.parse import urlsplit
-        endpoint = urlsplit(values['ENDPOINT'])
-        if endpoint.scheme != 'https' or not endpoint.netloc or endpoint.username or endpoint.password or endpoint.query or endpoint.fragment:
-            raise ValueError()
+        values['ENDPOINT'] = _validate_endpoint(values['ENDPOINT'], allow_local_http=allow_local_http)
+        public_endpoint = os.getenv('OBJECT_STORAGE_PUBLIC_ENDPOINT', '').strip() or values['ENDPOINT']
+        values['PUBLIC_ENDPOINT'] = _validate_endpoint(public_endpoint, allow_local_http=allow_local_http)
+        values['LOCAL_DEVELOPMENT'] = (
+            allow_local_http
+            and urlsplit(values['ENDPOINT']).scheme == 'http'
+            and _is_local_development_host(urlsplit(values['ENDPOINT']).hostname)
+        )
     except ValueError:
         raise unavailable() from None
     return values, seconds
@@ -69,17 +106,37 @@ class ObjectStorage:
             from botocore.config import Config
             self.bucket = values['BUCKET']
             self._private_checked = False
-            self.client = boto3.client('s3', endpoint_url=values['ENDPOINT'],
-                region_name=values['REGION'], aws_access_key_id=values['ACCESS_KEY'],
+            self.local_development = bool(values.get('LOCAL_DEVELOPMENT'))
+            client_config = Config(
+                signature_version='s3v4',
+                s3={'addressing_style': 'path'},
+                connect_timeout=5,
+                read_timeout=20,
+                retries={'max_attempts': 2},
+            )
+            common = dict(
+                region_name=values['REGION'],
+                aws_access_key_id=values['ACCESS_KEY'],
                 aws_secret_access_key=values['SECRET_KEY'],
-                config=Config(signature_version='s3v4', s3={'addressing_style': 'path'},
-                              connect_timeout=5, read_timeout=20, retries={'max_attempts': 2}))
+                config=client_config,
+            )
+            self.client = boto3.client('s3', endpoint_url=values['ENDPOINT'], **common)
+            self.presign_client = (
+                self.client if values['PUBLIC_ENDPOINT'] == values['ENDPOINT']
+                else boto3.client('s3', endpoint_url=values['PUBLIC_ENDPOINT'], **common)
+            )
         except Exception:
             raise unavailable() from None
 
     def verify_configuration(self):
-        """Refuse public bucket ACLs/policies; never create or configure a bucket."""
+        """Refuse public buckets in production; local MinIO is checked for reachability."""
         try:
+            if self.local_development:
+                # Local MinIO is provisioned private by docker-compose. Some S3-compatible
+                # development servers do not implement ACL APIs, so only verify the bucket.
+                self.client.head_bucket(Bucket=self.bucket)
+                self._private_checked = True
+                return
             from botocore.exceptions import ClientError
             acl = self.client.get_bucket_acl(Bucket=self.bucket)
             for grant in acl.get('Grants', []):
@@ -110,9 +167,15 @@ class ObjectStorage:
         if not self._private_checked:
             self.verify_configuration()
         try:
-            self.client.put_object(Bucket=self.bucket, Key=key, Body=raw,
-                ContentType=content_type, ACL='private',
-                Metadata={'sha256': hashlib.sha256(raw).hexdigest()})
+            # Bucket privacy is verified separately. Omitting x-amz-acl also improves
+            # compatibility with MinIO and S3 providers that disable object ACLs.
+            self.client.put_object(
+                Bucket=self.bucket,
+                Key=key,
+                Body=raw,
+                ContentType=content_type,
+                Metadata={'sha256': hashlib.sha256(raw).hexdigest()},
+            )
         except Exception:
             raise unavailable() from None
 
@@ -134,7 +197,7 @@ class ObjectStorage:
         if not self._private_checked:
             self.verify_configuration()
         try:
-            return self.client.generate_presigned_url('get_object', Params={
+            return self.presign_client.generate_presigned_url('get_object', Params={
                 'Bucket': self.bucket, 'Key': key, 'ResponseContentType': content_type,
                 'ResponseContentDisposition': ('attachment' if download else 'inline') + '; filename="' + key.rsplit('/', 1)[1] + '"'},
                 ExpiresIn=self.seconds)
