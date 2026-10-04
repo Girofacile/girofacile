@@ -15,10 +15,10 @@ usare MinIO locale, mantenendo la stessa API S3-compatible prevista in produzion
 2. Su Windows fare doppio click su `start_minio_locale_windows.bat`, oppure eseguire:
 
    ```powershell
-   docker compose --profile local-storage up -d minio minio-init
+   docker compose -f docker-compose.minio.yml up -d minio minio-init
    ```
 
-   Il profilo `local-storage` non viene avviato dallo stack normale. Crea un bucket
+   Il file `docker-compose.minio.yml` è separato dallo stack principale, quindi non richiede la configurazione PostgreSQL. Crea un bucket
    privato persistente nel volume Docker `minio_data`.
 
 3. Configurare il backend locale:
