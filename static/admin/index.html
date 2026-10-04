@@ -757,8 +757,8 @@ textarea.form-control { resize: vertical; min-height: 80px; }
               <div class="maintenance-card-v69">
                 <h3>Impostazioni manutenzione</h3>
                 <div class="form-row-v64">
-                  <div><label class="form-label">Frequenza backup</label><select class="form-control" id="server-backup-frequency"><option value="manuale">Manuale</option><option value="giornaliero">Giornaliero</option><option value="settimanale">Settimanale</option></select></div>
-                  <div><label class="form-label">Storage backup</label><input class="form-control" id="server-backup-target" placeholder="locale"></div>
+                  <div><label class="form-label">Frequenza backup</label><select class="form-control" id="server-backup-frequency" disabled title="Automazione disponibile soltanto tramite scheduler di deploy"><option value="manuale">Manuale</option></select></div>
+                  <div><label class="form-label">Storage backup</label><input class="form-control" id="server-backup-target" value="locale" disabled title="La directory effettiva è configurata sul server con BACKUP_DIR"></div>
                 </div>
                 <div class="switch-row-v64" style="margin-top:12px"><div><strong>Modalità manutenzione</strong><span>Blocca/avvisa gli utenti durante attività tecniche.</span></div><label class="switch-v64"><input type="checkbox" id="server-maintenance-mode"><span></span></label></div>
                 <div class="server-actions-v69" style="margin-top:14px"><button class="btn btn-primary btn-sm" onclick="saveServerSettings()">Salva impostazioni</button><button class="btn btn-ghost btn-sm" onclick="requestAppRestart()">Riavvia app</button></div>
@@ -785,7 +785,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
                   <div><label class="form-label">OpenAI API Key</label><input class="form-control" id="server-key-openai" placeholder="Incolla nuova chiave"></div>
                 </div>
                 <div class="form-row-v64">
-                  <div><label class="form-label">Stripe Secret Key</label><input class="form-control" id="server-key-stripe" placeholder="In futuro"></div>
+                  <div><label class="form-label">Stripe Secret Key</label><input class="form-control" id="server-key-stripe" disabled placeholder="Configurata nell’ambiente del server"></div>
                   <div><label class="form-label">Shopify dominio shop</label><input class="form-control" id="server-key-shopify" placeholder="nome-shop.myshopify.com"></div>
                 </div>
                 <button class="btn btn-primary" onclick="saveServerKeys()">Salva chiavi</button>

@@ -209,7 +209,7 @@ function updateDashboardStats(){
     setText("summaryColli", colli);
     setText("statColli", colli);
     const sv=vehiclesCache.find(v=>String(v.id)===String(val("routeVehicle"))); const unit=(sv?.alimentazione==="metano")?"€/kg":(sv?.alimentazione==="elettrico"?"€/kWh":"€/L"); setText("statFuel", fuel ? fuel+" "+unit : unit);
-  }catch(e){}
+  }catch(e){ console.warn('GiroFacile: operazione non completata', e); }
 }
 
 async function api(path, options = {}) {
@@ -585,8 +585,8 @@ async function loadPlanInfo(){
 
     // Utilizzo risorse
     try{
-      const [customers, vehicleUsage, drivers, deposits] = await Promise.all([
-        api("/api/customers?limit=1000"),
+      const [planUsage, vehicleUsage, drivers, deposits] = await Promise.all([
+        api("/api/billing/my-plan"),
         api("/api/vehicles/usage"),
         api("/api/drivers"),
         api("/api/deposits"),
@@ -595,7 +595,7 @@ async function loadPlanInfo(){
       const usageRows = document.getElementById("planUsageRows");
       if(usageRows){
         const rows = [
-          {label:"Clienti", used: customers.length, max: limits.max_customers},
+          {label:"Clienti", used: planUsage.usage.resources.customers.used, max: limits.max_customers},
           {label:"Mezzi standard", used: vehicleUsage.standard_used, max: vehicleUsage.standard_limit},
           {label:"Bonus elettrici", used: vehicleUsage.bonus_used, max: vehicleUsage.electric_bonus},
           {label:"Autisti", used: drivers.length, max: limits.max_drivers},
@@ -607,7 +607,7 @@ async function loadPlanInfo(){
           return `<div class="plan-usage-chip-v40"><span class="plan-usage-chip-icon">${icons[r.label] || "•"}</span><span>${r.label}</span><strong>${maxLabel}</strong></div>`;
         }).join("");
       }
-    }catch(e){}
+    }catch(e){ console.warn('GiroFacile: operazione non completata', e); }
 
     // Cards upgrade
     const upgradeBox = document.getElementById("planUpgradeBox");
@@ -2097,7 +2097,7 @@ function renderVehicleUsage(usage){
 }
 async function loadVehicleUsage(){
   let usage=null;
-  try{usage=await api("/api/vehicles/usage");}catch(e){}
+  try{usage=await api("/api/vehicles/usage");}catch(e){ console.warn('GiroFacile: operazione non completata', e); }
   renderVehicleUsage(usage);
   return usage;
 }
@@ -3569,7 +3569,7 @@ async function loadDriverChatNotifications(){
       if(total > 0){ badge.textContent = total > 99 ? '99+' : String(total); badge.classList.remove('hidden'); }
       else badge.classList.add('hidden');
     }
-  }catch(e){}
+  }catch(e){ console.warn('GiroFacile: operazione non completata', e); }
 }
 
 async function loadDriverChatCenter(driverId=null){
@@ -3674,7 +3674,7 @@ async function loadDriverChatCenterListSilently(){
     const count = document.getElementById('driverChatCenterCount');
     if(count) count.textContent = `${driverChatThreadsCache.length} chat`;
     renderDriverChatThreadList();
-  }catch(e){}
+  }catch(e){ console.warn('GiroFacile: operazione non completata', e); }
 }
 
 async function sendDriverChatCenterMessage(){
@@ -3701,41 +3701,6 @@ async function sendDriverChatCenterMessage(){
 let dashboardScheduledSelectedId = null;
 let dashboardCompletedSelectedId = null;
 
-function showTab(name){
-  if(name === "agenti" && !agentsFeatureEnabled()) name = "settings";
-  if(showLockedOrProceed(name)) return;
-  document.querySelectorAll(".tab").forEach(x=>x.classList.add("hidden"));
-  const tab = document.getElementById("tab-"+name);
-  if(tab) tab.classList.remove("hidden");
-  document.querySelectorAll(".nav-item").forEach(x=>x.classList.remove("active"));
-  document.querySelectorAll(`.nav-item[data-tab="${name}"]`).forEach(x=>x.classList.add("active"));
-
-  if(name==="dashboard"){ loadDashboardHome(); loadNotificationsV30(false); if(!featureLockedForTab("chat-autisti")) loadDriverChatNotifications(); }
-  if(name==="company") { loadCompanyProfile(); loadOnboardingStatus(false); }
-  if(name==="dashboard-scheduled") loadDashboardScheduledPage();
-  if(name==="dashboard-in-progress") loadDashboardInProgressPage();
-  if(name==="dashboard-completed") loadDashboardCompletedPage();
-  if(name==="giro") loadDashboardRoutes();
-  if(name==="clienti"){ loadCustomers(); if(agentsFeatureEnabled()) loadAgents(); }
-  if(name==="agenti") loadAgents();
-  if(name==="report") loadReport();
-  if(name==="depositi") loadDeposits();
-  if(name==="mezzi") loadVehicles();
-  if(name==="autisti") loadDrivers();
-  if(name==="storico") loadRoutes();
-  if(name==="chat-autisti") loadDriverChatCenter();
-  if(name==="settings") loadSettingsV41();
-  if(name==="plan-account"){ renderUpgradeCards(); syncPlanPageHeaderV874(); }
-  if(name==="integrations") renderIntegrationsV52();
-  if(name==="transfer-portal") loadTransferPortalV78();
-  if(name==="transfer-bookings") loadTransferBookingsV79();
-  if(name==="transfer-planning") loadTransferPlanningV79();
-  if(name==="transfer-settings") loadTransferSettingsV79();
-
-  if(name==="admin-dashboard") loadAdminDashboard();
-  if(name==="admin-users") loadAdminUsers();
-  if(name==="admin-tickets") loadAdminTickets();
-}
 
 function dashRouteItem(r, type){
   const progress = routeProgressPercent(r);
@@ -4263,7 +4228,7 @@ function closeOnboardingPanel(ev){
   if(el) el.classList.add("hidden");
 }
 async function dismissOnboarding(){
-  try{ await api("/api/onboarding/dismiss", {method:"POST", body:"{}"}); }catch(e){}
+  try{ await api("/api/onboarding/dismiss", {method:"POST", body:"{}"}); }catch(e){ console.warn('GiroFacile: operazione non completata', e); }
   closeOnboardingPanel();
 }
 async function completeOnboarding(){
@@ -4387,7 +4352,7 @@ async function markAllNotificationsRead(){
 }
 
 async function openNotificationActionV30(id, tab){
-  try{ await api(`/api/notifications/${id}/read`, {method:"POST", body:"{}"}); }catch(e){}
+  try{ await api(`/api/notifications/${id}/read`, {method:"POST", body:"{}"}); }catch(e){ console.warn('GiroFacile: operazione non completata', e); }
   showNotificationsDropdownV30(false);
   showTab(tab);
   setTimeout(()=>loadNotificationsV30(false), 250);
@@ -4554,13 +4519,6 @@ function blockOperationalTabV49(name){
   toast("Area operativa non ancora configurata. Completa prima profilo azienda e impostazioni.");
   return true;
 }
-
-const gfOriginalShowTabV49 = window.showTab;
-window.showTab = function(name){
-  if(blockOperationalTabV49(name)) return;
-  gfOriginalShowTabV49(name);
-  if(name === "dashboard") applyWorkspaceStateV49(gfWorkspaceOperationalV49);
-};
 
 const gfOriginalRenderOnboardingStatusV49 = window.renderOnboardingStatus;
 window.renderOnboardingStatus = function(data){
@@ -5034,15 +4992,6 @@ function syncMobileShellV62(){
   }catch(e){ console.warn('syncMobileShellV62', e); }
 }
 (function initMobileShellV62(){
-  const originalShowTab=window.showTab;
-  if(typeof originalShowTab === 'function' && !window.__mobileShowTabWrappedV62){
-    window.showTab=function(name){
-      const result=originalShowTab.apply(this, arguments);
-      setTimeout(syncMobileShellV62, 40);
-      return result;
-    };
-    window.__mobileShowTabWrappedV62=true;
-  }
   window.addEventListener('resize', syncMobileShellV62);
   document.addEventListener('DOMContentLoaded', syncMobileShellV62);
   setTimeout(syncMobileShellV62, 500);
@@ -5276,14 +5225,6 @@ async function saveUniversalFeaturesV89(){
 window.applyUniversalFeaturesV891=applyUniversalFeaturesV891;
 window.loadUniversalFeaturesV89=loadUniversalFeaturesV89;
 window.saveUniversalFeaturesV89=saveUniversalFeaturesV89;
-
-const gfShowTabUniversalV89=window.showTab;
-window.showTab=function(name){
-  // Le vecchie pagine verticali restano nel codice solo per compatibilità, ma non sono navigabili.
-  if(['transfer-portal','transfer-bookings','transfer-planning','transfer-settings','integrations'].includes(name)){ name='dashboard'; }
-  gfShowTabUniversalV89(name);
-  if(name==='settings') loadUniversalFeaturesV89();
-};
 
 const gfApplyLogisticsLegacyV89=window.applyLogisticsWorkspaceV50;
 window.applyLogisticsWorkspaceV50=function(){

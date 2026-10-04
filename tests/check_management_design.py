@@ -6,6 +6,7 @@ The after run compares protected-page geometry and computed styles with before,
 and isolates the new stylesheet in the same browser for the pixel comparison.
 """
 import json
+import os
 import sys
 import threading
 import subprocess
@@ -98,7 +99,7 @@ def main():
                 "/api/driver/admin/chat-threads": [],
                 "/api/driver/admin/unread": dict(total=0, routes=[]),
                 "/api/reports/summary": dict(metrics={}, charts={}, insights=[], drivers=[], customers=[], agents=[]),
-                "/api/billing/my-plan": dict(ME, billing={}, usage={}),
+                "/api/billing/my-plan": dict(ME, billing={}, usage={"resources": {"customers": {"used": len(CUSTOMERS)}}}),
                 "/api/billing/overview": dict(plan=dict(name="Business", status="active"), company={}, invoices=[], payments=[]),
             }.get(path, {})
             for item in ROUTES:
@@ -121,7 +122,7 @@ def main():
 
     try:
         with sync_playwright() as pw:
-            browser = pw.chromium.launch(channel="chrome", headless=True)
+            browser = pw.chromium.launch(**({"channel": "chrome"} if os.name == "nt" else {}), headless=True)
             for width in (390, 768, 1440):
                 page = browser.new_page(viewport=dict(width=width, height=1000), device_scale_factor=1)
                 page.clock.set_fixed_time(datetime(2026, 10, 3, 10, tzinfo=timezone.utc))

@@ -26,7 +26,7 @@
 <link href="/static/dashboard/css/settings.css?v=sidebar_stable_20261001" rel="stylesheet">
 <link rel="stylesheet" href="/static/dashboard/css/electric-vehicles.css?v=electric_style_20261003">
 <script src="/static/dashboard/js/electric-vehicles.js?v=electric_bonus_20261002"></script>
-<link rel="stylesheet" href="/static/dashboard/css/management.css?v=management_20261003">
+<link rel="stylesheet" href="/static/dashboard/css/management.css?v=audit_20261004">
 </head>
 <body>
 
@@ -881,7 +881,7 @@
         <div class="report-hero-row">
           <div>
             <h1>Report consegne</h1>
-            <p>Analizza i giri completati. Km, consumi e costi energetici sono stime; le ore sono rilevate quando disponibili, altrimenti stimate. Costi del personale, pedaggi e manutenzione non sono inclusi.</p>
+            <p>Analizza i giri completati. Km, consumi e costi energetici sono stime; le ore sono rilevate quando disponibili, altrimenti stimate. Costi del personale, pedaggi e manutenzione non sono inclusi. Le fermate includono mancate e non gestite. Nei filtri cliente/agente, km, ore e costi sono ripartiti per numero di fermate; le ore storiche senza rilevazioni UTC affidabili restano stimate.</p>
           </div>
           <div class="report-actions">
             <button class="btn-secondary" onclick="generateReportAIv67()">Genera report AI</button>
@@ -915,7 +915,7 @@
 
         <div class="report-kpi-grid">
           <div class="report-kpi-card"><span class="report-kpi-icon blue">⇄</span><small>1. Giri effettuati</small><strong id="repGiri">0</strong></div>
-          <div class="report-kpi-card"><span class="report-kpi-icon green">▣</span><small>2. Consegne totali</small><strong id="repConsegne">0</strong></div>
+          <div class="report-kpi-card"><span class="report-kpi-icon green">▣</span><small>2. Fermate previste</small><strong id="repConsegne">0</strong></div>
           <div class="report-kpi-card"><span class="report-kpi-icon purple">⌖</span><small>3. Km pianificati</small><strong id="repKm">0 km</strong></div>
           <div class="report-kpi-card"><span class="report-kpi-icon orange">◷</span><small>4. Ore rilevate / stimate</small><strong id="repOre">0 h</strong></div>
           <div class="report-kpi-card"><span class="report-kpi-icon cyan">⛽</span><small>5. Litri stimati</small><strong id="repLitri">0 L</strong></div>
@@ -1727,9 +1727,10 @@
   </div>
 </div>
 
-<script src="/static/dashboard/js/reports.js?v=stability_1"></script>
+<script src="/static/dashboard/js/reports.js?v=audit_20261004"></script>
 <script src="/static/dashboard/js/customers.js?v=customers_20260929"></script>
-<script src="/static/dashboard/js/core.js?v=management_20261003"></script>
+<script src="/static/dashboard/js/navigation.js?v=audit_20261004"></script>
+<script src="/static/dashboard/js/core.js?v=audit_20261004"></script>
 
 <script>
 function toggleLoginPassword(){
