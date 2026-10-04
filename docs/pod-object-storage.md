@@ -6,6 +6,54 @@ soltanto per le firme legacy. Nessuna migrazione cancella le firme esistenti.
 Il PDF riporta firma e foto, quando disponibili, oltre ai dati della consegna.
 SHA-256 verifica l'integrità: non è una firma digitale qualificata o una certificazione legale.
 
+## Sviluppo locale con MinIO
+
+Per testare firma, foto e PDF POD non serve attivare Hetzner. In sviluppo si può
+usare MinIO locale, mantenendo la stessa API S3-compatible prevista in produzione.
+
+1. Avviare Docker Desktop.
+2. Su Windows fare doppio click su `start_minio_locale_windows.bat`, oppure eseguire:
+
+   ```powershell
+   docker compose --profile local-storage up -d minio minio-init
+   ```
+
+   Il profilo `local-storage` non viene avviato dallo stack normale. Crea un bucket
+   privato persistente nel volume Docker `minio_data`.
+
+3. Configurare il backend locale:
+
+   ```dotenv
+   APP_ENV=development
+   OBJECT_STORAGE_ENABLED=true
+   OBJECT_STORAGE_ENDPOINT=http://127.0.0.1:9000
+   OBJECT_STORAGE_PUBLIC_ENDPOINT=http://127.0.0.1:9000
+   OBJECT_STORAGE_REGION=us-east-1
+   OBJECT_STORAGE_BUCKET=girofacile-pod-local
+   OBJECT_STORAGE_ACCESS_KEY=girofacile-local
+   OBJECT_STORAGE_SECRET_KEY=girofacile-local-dev-only
+   OBJECT_STORAGE_SIGNED_URL_SECONDS=900
+   ```
+
+   Se il portale autista viene aperto da telefono sulla stessa rete Wi-Fi, impostare
+   `OBJECT_STORAGE_PUBLIC_ENDPOINT` con l'IP LAN del PC, per esempio
+   `http://192.168.1.8:9000`. L'endpoint interno resta `127.0.0.1:9000` perché è
+   usato dal backend Python sul PC.
+
+4. Verificare:
+
+   ```powershell
+   .venv\Scripts\python.exe -m app.services.object_storage
+   ```
+
+   Il risultato atteso è `Archivio POD configurato e bucket privato verificato`.
+
+HTTP è accettato soltanto in `development/dev/test` e solo per host locali,
+loopback o reti private. In produzione l'Object Storage continua a richiedere HTTPS.
+Le credenziali sopra sono esclusivamente locali e non devono essere riutilizzate su
+Hetzner. La console MinIO è disponibile solo dal PC su
+`http://127.0.0.1:9001`.
+
 ## Configurazione Hetzner
 
 1. Nella Hetzner Console selezionare il progetto dedicato a GiroFacile e aprire
