@@ -1,4 +1,5 @@
 """Road/traffic/toll architecture regressions. All provider calls are mocked."""
+from stop_fixture import verified_stop
 import ast
 import json
 from copy import deepcopy
@@ -75,7 +76,7 @@ def payload(ctx, *, two=False, day="2099-01-15"):
     rows = [dict(customer_id=customer.id, cliente_nome=customer.nome, indirizzo=customer.indirizzo,
                  tempo_scarico_min=20, scarico_mattina_da="09:00", scarico_mattina_a="10:00")]
     if two:
-        rows.append(dict(cliente_nome="Second", indirizzo="Second", lat=45.2, lon=9.2, tempo_scarico_min=15))
+        rows.append(verified_stop(ctx[2].id, cliente_nome="Second", indirizzo="Second", lat=45.2, lon=9.2, tempo_scarico_min=15))
     return dict(nome="Test", data_giro=day, orario_partenza="08:00", deposit_id=depot.id,
                 vehicle_id=vehicle.id, energy_price_primary=1.75, consegne=rows)
 
@@ -401,7 +402,7 @@ def test_segment_departures_include_unloading_and_window_waits(routing_env, monk
     monkeypatch.setenv("MAPBOX_MAX_COORDINATES", "10")
     ctx = routing_env
     data = payload(ctx)
-    data["consegne"] += [dict(cliente_nome=f"Stop {i}", indirizzo=f"Address {i}", lat=45 + i / 1000,
+    data["consegne"] += [verified_stop(ctx[2].id, cliente_nome=f"Stop {i}", indirizzo=f"Address {i}", lat=45 + i / 1000,
                              lon=9 + i / 1000, tempo_scarico_min=5) for i in range(2, 12)]
     draft = ctx[0].post("/api/routes/recalculate-manual", json=data)
     assert draft.status_code == 200, draft.text

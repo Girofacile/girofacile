@@ -1,4 +1,4 @@
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List, Literal
 
 
@@ -109,8 +109,13 @@ class DriverIn(BaseModel):
     note: Optional[str] = None
     photo_url: Optional[str] = None
 
+class StopAddressIn(BaseModel):
+    indirizzo: str = Field(min_length=4, max_length=500)
+
+
 class DeliveryIn(BaseModel):
     customer_id: Optional[int] = None
+    geocoding_token: Optional[str] = Field(default=None, max_length=128)
     cliente_nome: str
     indirizzo: str
     peso_kg: float = 0

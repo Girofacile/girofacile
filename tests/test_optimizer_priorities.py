@@ -1,4 +1,5 @@
 """Product priorities and additive public diagnostics, entirely offline."""
+from stop_fixture import verified_stop
 from copy import deepcopy
 from itertools import permutations
 from types import SimpleNamespace
@@ -100,7 +101,7 @@ def test_http_diagnostics_survive_save_and_reload(env, monkeypatch, endpoint):
     db.add(deposit); db.commit()
     monkeypatch.setattr(opt, "build_distance_matrix", lambda *a, **k: constant_matrix(1, 2, 40))
     data = dict(nome="Test", data_giro="2099-01-01", orario_partenza="08:00", deposit_id=deposit.id,
-                consegne=[dict(cliente_nome="Client", indirizzo="Test", lat=45.1,lon=9.1,
+                consegne=[verified_stop(user.id, cliente_nome="Client", indirizzo="Test", lat=45.1,lon=9.1,
                 scarico_mattina_da="09:00",scarico_mattina_a="09:10",tempo_scarico_min=15)])
     response = client.post('/api/routes/'+endpoint,json=data)
     assert response.status_code == 200, response.text

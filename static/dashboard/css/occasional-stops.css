@@ -1,0 +1,9 @@
+.occasional-dialog{width:min(720px,calc(100vw - 24px));max-height:90dvh;box-sizing:border-box;border:1px solid #dce5f4;border-radius:20px;padding:24px;color:#17243c;background:#fff;overflow:auto}
+.occasional-dialog::backdrop{background:rgba(15,23,42,.5)}
+.occasional-dialog .panel-header>button{width:44px;min-width:44px;min-height:44px;flex:0 0 44px;padding:8px}
+.occasional-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.occasional-fields label{display:grid;gap:6px;min-width:0}
+.occasional-fields input,.occasional-fields select,.occasional-fields textarea{width:100%;box-sizing:border-box;min-height:44px}
+.occasional-wide{grid-column:1/-1}
+.occasional-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:20px}
+@media(max-width:540px){.occasional-dialog{padding:16px}.occasional-fields{grid-template-columns:minmax(0,1fr)}.occasional-actions{flex-wrap:wrap}.occasional-actions button{flex:1;min-height:44px}}

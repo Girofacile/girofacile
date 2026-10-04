@@ -2802,6 +2802,10 @@ function resetDeliveryForm(){
 
 function updateDeliveryField(i, field, value){
   if(!deliveries[i]) return;
+  if(field === "indirizzo" && deliveries[i].customer_id == null && value !== deliveries[i].indirizzo){
+    deliveries[i].geocoding_token = null; deliveries[i].stato_geocodifica = "da_verificare";
+    deliveries[i].lat = null; deliveries[i].lon = null; deliveries[i].indirizzo_geocodificato = null;
+  }
   if(field === "tempo_scarico_min" || field === "colli"){
     deliveries[i][field] = parseInt(value || 0);
   }else if(field === "peso_kg"){
@@ -2837,7 +2841,7 @@ function deliveryGeoBadge(d){
 
 function deliverySpecsSummary(d){
   const pieces = [];
-  pieces.push(`${parseInt(d.tempo_scarico_min)||10} min scarico`);
+  pieces.push(`${parseInt(d.tempo_scarico_min ?? 10)} min scarico`);
   if(d.ztl) pieces.push("ZTL");
   if(d.sponda) pieces.push("Sponda");
   if(parseFloat(d.peso_kg)||0) pieces.push(`${parseFloat(d.peso_kg)} kg`);
@@ -2858,9 +2862,9 @@ function renderDeliveries(){
     return;
   }
   body.innerHTML = deliveries.map((d,i)=>`
-    <tr data-delivery-row="${i}" class="delivery-clean-row">
+    <tr data-delivery-row="${i}" class="delivery-clean-row" draggable="true" ondragstart="planningStopDragStart(event, ${i})" ondragend="planningStopDragEnd()" ondragover="event.preventDefault()" ondrop="planningStopDrop(event, ${i})">
       <td class="delivery-main-cell clean">
-        <strong>${esc(d.cliente_nome)}</strong>
+        <strong>${esc(d.cliente_nome)}</strong>${d.customer_id == null ? ' <span class="badge">Occasionale</span>' : ''}
         <small>${d.codice_cliente ? `Codice cliente: ${esc(d.codice_cliente)}` : `Fermata #${i+1}`}</small>
       </td>
       <td class="delivery-address-cell">
@@ -2869,7 +2873,7 @@ function renderDeliveries(){
       </td>
       <td>${deliveryGeoBadge(d)}</td>
       <td>
-        <button class="btn-secondary compact-btn" onclick="openDeliveryDetailsModal(${i})">Dettagli</button>
+        <button class="btn-secondary compact-btn" onclick="${d.customer_id == null ? 'openOccasionalStopModal' : 'openDeliveryDetailsModal'}(${i})">${d.customer_id == null ? 'Modifica' : 'Dettagli'}</button>
         <small class="delivery-specs-preview">${esc(deliverySpecsSummary(d) || "Specifiche non inserite")}</small>
       </td>
       <td class="row-actions compact">
@@ -2960,10 +2964,12 @@ function warningBadges(warning){
 function cleanDeliveryForPayload(d){
   return {
     customer_id: d.customer_id || null, cliente_nome: d.cliente_nome, indirizzo: d.indirizzo,
+    lat: d.lat ?? null, lon: d.lon ?? null, stato_geocodifica: d.stato_geocodifica || null,
+    indirizzo_geocodificato: d.indirizzo_geocodificato || null, geocoding_token: d.geocoding_token || null,
     peso_kg: parseFloat(d.peso_kg)||0, colli: parseInt(d.colli)||0,
     scarico_mattina_da: d.scarico_mattina_da || null, scarico_mattina_a: d.scarico_mattina_a || null,
     scarico_pomeriggio_da: d.scarico_pomeriggio_da || null, scarico_pomeriggio_a: d.scarico_pomeriggio_a || null,
-    tempo_scarico_min: parseInt(d.tempo_scarico_min)||10, ztl: !!d.ztl, sponda: !!d.sponda, note: d.note || null
+    tempo_scarico_min: parseInt(d.tempo_scarico_min ?? 10), ztl: !!d.ztl, sponda: !!d.sponda, note: d.note || null
   };
 }
 function routePayloadFromResult(){

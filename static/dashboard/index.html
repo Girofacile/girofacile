@@ -28,6 +28,7 @@
 <script src="/static/dashboard/js/electric-vehicles.js?v=electric_bonus_20261002"></script>
 <link rel="stylesheet" href="/static/dashboard/css/management.css?v=audit_20261004">
 <link rel="stylesheet" href="/static/pod.css?v=1">
+<link rel="stylesheet" href="/static/dashboard/css/occasional-stops.css?v=1">
 <script src="/static/pod.js?v=1"></script>
 </head>
 <body>
@@ -730,6 +731,7 @@
                   <h2><span>Seleziona </span><span data-gf-label="customers">clienti</span></h2>
                   <p class="panel-subtitle">Filtra la lista e aggiungi le fermate al giro. Le specifiche operative si modificano dal pulsante Dettagli.</p>
                 </div>
+                <button type="button" class="btn-primary compact-btn" onclick="openOccasionalStopModal()">+ Fermata occasionale</button>
                 <button class="btn-secondary compact-btn" onclick="closeCustomerPlanningStep()">Nascondi selezione</button>
               </div>
 
@@ -1554,6 +1556,30 @@
   </div>
 </div>
 
+
+<dialog id="occasionalStopDialog" class="occasional-dialog" aria-labelledby="occasionalStopTitle">
+  <form id="occasionalStopForm" onsubmit="event.preventDefault();saveOccasionalStop()">
+    <div class="panel-header"><h2 id="occasionalStopTitle">Fermata occasionale</h2><button type="button" class="btn-secondary" onclick="closeOccasionalStopModal()" aria-label="Chiudi">✕</button></div>
+    <p class="muted">Questa fermata sarà salvata soltanto nel giro.</p>
+    <div class="occasional-fields">
+      <label class="occasional-wide">Nome / descrizione fermata *<input id="osName" required maxlength="250" autocomplete="off"></label>
+      <label class="occasional-wide">Indirizzo *<input id="osAddress" required minlength="4" maxlength="500" placeholder="Via, numero civico, comune" oninput="invalidateOccasionalAddress()" autocomplete="off"></label>
+      <div class="occasional-wide"><button id="osVerify" type="button" class="btn-secondary" onclick="verifyOccasionalAddress()">Verifica indirizzo con Google</button><p id="osVerificationStatus" role="status" aria-live="polite">Indirizzo da verificare</p></div>
+      <label>Peso kg<input id="osWeight" type="number" min="0" step="0.01" value="0"></label>
+      <label>Colli<input id="osPackages" type="number" min="0" step="1" value="0"></label>
+      <label data-gf-feature="time_windows">Fascia mattina da<input id="osMorningFrom" type="time"></label>
+      <label data-gf-feature="time_windows">Fascia mattina a<input id="osMorningTo" type="time"></label>
+      <label data-gf-feature="time_windows">Fascia pomeriggio da<input id="osAfternoonFrom" type="time"></label>
+      <label data-gf-feature="time_windows">Fascia pomeriggio a<input id="osAfternoonTo" type="time"></label>
+      <label>Tempo scarico (min)<input id="osUnloading" type="number" min="0" step="1" value="10"></label>
+      <label data-gf-feature="ztl">ZTL<select id="osZtl"><option value="false">No</option><option value="true">Sì</option></select></label>
+      <label data-gf-feature="tail_lift">Sponda<select id="osTailLift"><option value="false">No</option><option value="true">Sì</option></select></label>
+      <label class="occasional-wide">Note<textarea id="osNotes" rows="3"></textarea></label>
+    </div>
+    <div class="occasional-actions"><button type="button" class="btn-secondary" onclick="closeOccasionalStopModal()">Annulla</button><button id="osSave" type="submit" class="btn-primary" disabled>Aggiungi fermata</button></div>
+  </form>
+</dialog>
+
 <div id="deliveryDetailsOverlay" class="modal-overlay hidden gf-dialog" onclick="closeDeliveryDetailsModal(event)">
   <div class="profile-modal delivery-details-modal delivery-details-modal-v5" onclick="event.stopPropagation()">
     <div class="modal-header delivery-modal-header-v5">
@@ -1733,7 +1759,8 @@
 <script src="/static/dashboard/js/reports.js?v=audit_20261004"></script>
 <script src="/static/dashboard/js/customers.js?v=customers_20260929"></script>
 <script src="/static/dashboard/js/navigation.js?v=audit_20261004"></script>
-<script src="/static/dashboard/js/core.js?v=verified_planning_20261004"></script>
+<script src="/static/dashboard/js/core.js?v=occasional_20261004"></script>
+<script src="/static/dashboard/js/occasional-stops.js?v=1"></script>
 
 <script>
 function toggleLoginPassword(){

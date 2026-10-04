@@ -1,3 +1,4 @@
+from ..services.occasional_stops import verify_stop_address, validate_occasional_stops, STOP_VERIFICATION_FIELDS
 from ..services.customer_planning import customer_is_plannable, PLANNING_ADDRESS_ERROR
 from ..services.delivery_pod import evidence_metadata, evidence_response
 from datetime import datetime, timedelta
@@ -11,7 +12,7 @@ from ..core.utils import local_now, local_today, local_today_iso, minutes_from_h
 from ..database import get_db
 from ..models import Customer, Delivery, DeliveryStatus, Deposit, Driver, RoutePlan, User, Vehicle, ChatMessage
 from ..optimizer import window_summary, enrich_saved_schedule, optimize_route, recalculate_manual_route, validate_vehicle_load
-from ..schemas import ManualRoutePlanIn, RoutePlanIn
+from ..schemas import ManualRoutePlanIn, RoutePlanIn, StopAddressIn
 from ..services.plans import check_daily_route_limit
 from ..services.error_monitor import log_exception
 from ..services.route_enrichment import initialize_snapshot, enrich_final_route, routing_metadata, json_data, TIMING_DETAILS
@@ -77,6 +78,7 @@ def _owned_customer_map(db, user: User, deliveries: list[dict]) -> dict[int, Cus
 
 def _enrich_owned_deliveries(db, user: User, deliveries: list[dict]) -> None:
     """Valida i clienti e aggiunge solo coordinate provenienti dal tenant corrente."""
+    validate_occasional_stops(user.id, deliveries)
     customer_map = _owned_customer_map(db, user, deliveries)
     for delivery in deliveries:
         customer_id = delivery.get("customer_id")
@@ -415,7 +417,7 @@ def serialize_route(plan):
     for row, delivery in zip(response["consegne"], consegne):
         if delivery.optimizer_details:
             details = json.loads(delivery.optimizer_details)
-            row.update({k: details[k] for k in TIMING_DETAILS if k in details})
+            row.update({k: details[k] for k in (*TIMING_DETAILS, *STOP_VERIFICATION_FIELDS) if k in details})
     response.update(window_summary(response["consegne"]))
     return response
 
@@ -430,6 +432,7 @@ def save_route_result(db, user, data, result, vehicle, route_id=None):
     # dimenticasse la validazione iniziale, una consegna non può mantenere il
     # riferimento a un cliente di un'altra azienda o non pianificabile.
     _owned_customer_map(db, user, list(result.get("ordered") or []))
+    validate_occasional_stops(user.id, list(result.get("ordered") or []))
     _require_owned_entity(db, Deposit, user, data.deposit_id, "Deposito")
     if data.vehicle_id is not None:
         _require_owned_entity(db, Vehicle, user, data.vehicle_id, "Mezzo")
@@ -496,8 +499,8 @@ def save_route_result(db, user, data, result, vehicle, route_id=None):
     for item in result["ordered"]:
         delivery_data = dict(item)
         delivery_data["optimizer_details"] = json.dumps({k: item[k] for k in
-            TIMING_DETAILS if k in item} | (item.get("coord") or {}))
-        for extra in ("coord", "lat", "lon", "stato_geocodifica", "indirizzo_geocodificato",
+            (*TIMING_DETAILS, *STOP_VERIFICATION_FIELDS) if k in item} | (item.get("coord") or {}))
+        for extra in ("geocoding_token", "coord", "lat", "lon", "stato_geocodifica", "indirizzo_geocodificato",
                       "arrivo_fisico", "inizio_servizio", "lateness_min", "time_window_violation"):
             delivery_data.pop(extra, None)
         for _f in ["scarico_mattina_da", "scarico_mattina_a", "scarico_pomeriggio_da", "scarico_pomeriggio_a", "arrivo_stimato", "partenza_stimata"]:
@@ -550,6 +553,13 @@ def resources_availability(
         })
 
     return {"vehicles": vehicles, "drivers": drivers}
+
+
+@router.post("/api/routes/verify-stop-address")
+def verify_occasional_stop_address(
+    data: StopAddressIn, db: Session = Depends(get_db), user: User = Depends(current_user),
+):
+    return verify_stop_address(db, user.id, data.indirizzo)
 
 
 @router.post("/api/routes/optimize")
