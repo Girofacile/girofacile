@@ -1,7 +1,7 @@
 /* Shared customer-link controls for company desktop and mobile portals. */
 function trackingButton(delivery, route) {
   if (!delivery?.id || route?.status === 'bozza') return '';
-  return `<button type="button" class="btn-secondary mini-btn" onclick="openCustomerTracking(${Number(delivery.id)})">Tracking cliente</button>`;
+  return `<button type="button" class="btn-secondary mini-btn customer-tracking-trigger" onclick="openCustomerTracking(${Number(delivery.id)})">Tracking cliente</button>`;
 }
 
 async function openCustomerTracking(deliveryId) {
@@ -10,18 +10,24 @@ async function openCustomerTracking(deliveryId) {
   dialog.id = 'customerTrackingDialog';
   dialog.className = 'customer-tracking-dialog';
   dialog.setAttribute('aria-labelledby', 'customerTrackingTitle');
-  dialog.innerHTML = `<h2 id="customerTrackingTitle">Tracking cliente</h2>
-    <p>Chi riceve il link può consultare solo lo stato e gli orari di questa consegna.</p>
-    <label for="customerTrackingUrl">Link della consegna</label>
-    <input id="customerTrackingUrl" readonly type="text" autocomplete="off">
-    <p id="customerTrackingExpiry"></p>
-    <p class="tracking-warning">Se ricalcoli il giro, i link precedenti non saranno più validi: condividi quelli nuovi.</p>
-    <p id="customerTrackingMessage" role="status" aria-live="polite">Caricamento…</p>
-    <div class="tracking-actions"><button type="button" data-action="copy" disabled>Copia link</button>
-    <button type="button" data-action="share" disabled>Condividi</button>
-    <button type="button" data-action="open" disabled>Apri pagina</button>
-    <button type="button" data-action="revoke" disabled>Revoca link</button>
-    <button type="button" data-action="close">Chiudi</button></div>`;
+  dialog.innerHTML = `<div class="tracking-dialog-header">
+    <span class="tracking-dialog-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-2 2M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l2-2"/></svg></span>
+    <div><p class="tracking-eyebrow">INFORMAZIONI DI CONSEGNA</p><h2 id="customerTrackingTitle">Tracking cliente</h2></div>
+    </div>
+    <div class="tracking-dialog-body">
+      <p class="tracking-intro">Tieni aggiornato il destinatario, con un solo link.</p>
+      <div class="tracking-privacy"><strong>Una pagina dedicata alla sua consegna</strong><p>Chi riceve il link può consultare solo lo stato e gli orari di questa consegna, senza accedere al gestionale.</p></div>
+      <label for="customerTrackingUrl">Link della consegna</label>
+      <input id="customerTrackingUrl" readonly type="text" autocomplete="off" placeholder="Preparazione del link…" aria-describedby="customerTrackingExpiry">
+      <p id="customerTrackingExpiry" class="tracking-expiry"></p>
+      <div class="tracking-actions"><button type="button" data-action="copy" disabled>Copia link</button>
+        <button type="button" data-action="share" disabled>Condividi</button>
+        <button type="button" data-action="open" disabled>Apri pagina</button></div>
+      <p class="tracking-warning"><strong>Hai ricalcolato il giro?</strong> I link precedenti non saranno più validi: condividi quelli nuovi.</p>
+      <p id="customerTrackingMessage" role="status" aria-live="polite">Caricamento…</p>
+    </div>
+    <div class="tracking-dialog-footer"><button type="button" data-action="revoke" disabled>Revoca link</button>
+      <button type="button" data-action="close" autofocus>Chiudi</button></div>`;
   document.body.appendChild(dialog);
   dialog.showModal();
   const field = dialog.querySelector('input');
@@ -51,7 +57,8 @@ async function openCustomerTracking(deliveryId) {
       if (action === 'revoke') {
         enable(false);
         await request('DELETE');
-        url = ''; field.value = '';
+        url = ''; field.value = ''; field.placeholder = 'Link revocato';
+        dialog.querySelector('#customerTrackingExpiry').textContent = '';
         message.textContent = 'Link revocato. Se la consegna è ancora aperta, chiudi e riapri Tracking cliente per generarne uno nuovo.';
       }
     } catch (error) {

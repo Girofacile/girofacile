@@ -1,1 +1,51 @@
-.customer-tracking-dialog{box-sizing:border-box;width:min(540px,calc(100% - 28px));max-height:calc(100dvh - 32px);overflow:auto;border:1px solid #dce7df;border-radius:20px;padding:26px;color:#183a32;background:#fff;font-family:inherit;box-shadow:0 20px 80px #102f3040}.customer-tracking-dialog::backdrop{background:#102f3070}.customer-tracking-dialog h2{margin-top:0}.customer-tracking-dialog p{line-height:1.5;font-size:14px}.customer-tracking-dialog label{display:block;font-size:13px;margin:18px 0 8px;font-weight:600}.customer-tracking-dialog input{box-sizing:border-box;width:100%;min-width:0;padding:12px;border:1px solid #becfc4;border-radius:10px;font-size:14px}.customer-tracking-dialog .tracking-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}.customer-tracking-dialog button{flex:1 1 130px;min-height:44px;padding:10px;border:1px solid #bfcec5;border-radius:10px;color:#183a32;background:#f3f8f5;font:inherit;font-size:14px;cursor:pointer}.customer-tracking-dialog button:disabled{opacity:.5}.customer-tracking-dialog :focus-visible{outline:3px solid #18845c;outline-offset:2px}.customer-tracking-dialog .tracking-warning{padding:10px;background:#fff8e6;border-radius:8px;color:#6b531b;font-size:13px}
+/* Shared tracking controls: dashboard palette, independent of portal CSS. */
+.customer-tracking-dialog{
+  --tracking-ink:#101b3d;--tracking-muted:#52688f;--tracking-line:#e8eef8;
+  box-sizing:border-box;width:min(580px,calc(100% - 32px));max-height:calc(100dvh - 32px);
+  margin:auto;overflow:auto;padding:0;border:1px solid var(--tracking-line);border-radius:18px;
+  color:var(--tracking-ink);background:#fff;font:14px/1.5 Arial,Helvetica,sans-serif;
+  box-shadow:0 24px 80px #101b3d33;
+}
+.customer-tracking-dialog *, .customer-tracking-dialog *::before{box-sizing:border-box}
+.customer-tracking-dialog::backdrop{background:#101b3d80;backdrop-filter:blur(4px)}
+.customer-tracking-dialog .tracking-dialog-header{display:flex;align-items:center;gap:16px;padding:26px 28px;border-bottom:1px solid var(--tracking-line);background:linear-gradient(120deg,#fff,#edf5ff)}
+.customer-tracking-dialog .tracking-dialog-icon{display:grid;place-items:center;flex:0 0 48px;height:48px;border:1px solid #dce7f7;border-radius:14px;color:#0b63f6;background:#edf5ff}
+.customer-tracking-dialog svg{width:23px;height:23px}
+.customer-tracking-dialog .tracking-eyebrow{margin:0 0 5px;font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--tracking-muted)}
+.customer-tracking-dialog h2{margin:0;font-size:25px;line-height:1.2;letter-spacing:-.7px;color:var(--tracking-ink)}
+.customer-tracking-dialog .tracking-dialog-body{padding:24px 28px}
+.customer-tracking-dialog p{font-size:13px;line-height:1.6;color:var(--tracking-muted)}
+.customer-tracking-dialog .tracking-intro{margin:0 0 18px;font-size:15px;color:var(--tracking-ink)}
+.customer-tracking-dialog .tracking-privacy{padding:15px 16px;border:1px solid var(--tracking-line);border-radius:12px;background:#f7f9fd}
+.customer-tracking-dialog .tracking-privacy strong{font-size:13px}
+.customer-tracking-dialog .tracking-privacy p{margin:5px 0 0}
+.customer-tracking-dialog label{display:block;margin:22px 0 8px;font-size:13px;font-weight:700;color:var(--tracking-ink)}
+.customer-tracking-dialog input{display:block;box-sizing:border-box;width:100%;min-width:0;height:46px;padding:12px 14px;border:1px solid #dce7f7;border-radius:11px;background:#fff;color:#344e77;font:14px Arial,Helvetica,sans-serif;box-shadow:inset 0 1px 2px #15234a03}
+.customer-tracking-dialog .tracking-expiry{margin:7px 0 0;font-size:12px;min-height:19px}
+.customer-tracking-dialog .tracking-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:18px 0}
+.customer-tracking-dialog button{display:inline-flex;align-items:center;justify-content:center;width:auto;min-height:44px;margin:0;padding:10px 14px;border:1px solid #dce7f7;border-radius:11px;background:#fff;color:#344e77;font:600 13px/1.4 Arial,Helvetica,sans-serif;cursor:pointer;box-shadow:none;transition:background .15s,border-color .15s}
+.customer-tracking-dialog button:hover:not(:disabled){background:#edf5ff;border-color:#b9d3fb}
+.customer-tracking-dialog button[data-action="copy"]{color:#fff;background:linear-gradient(180deg,#3188ff,#0761f5);border-color:#247bff;box-shadow:0 5px 14px #0b63f61a}
+.customer-tracking-dialog button[data-action="copy"]:hover:not(:disabled){background:#0754d5}
+.customer-tracking-dialog button[data-action="revoke"]{color:#b42338;background:#fff;border-color:#f1d5dc}
+.customer-tracking-dialog button[data-action="revoke"]:hover:not(:disabled){background:#fff1f3;border-color:#e6b0bc}
+.customer-tracking-dialog button:disabled{opacity:.5;cursor:not-allowed}
+.customer-tracking-dialog :focus-visible{outline:3px solid #0b63f6;outline-offset:3px}
+.customer-tracking-dialog .tracking-warning{padding:13px 15px;margin:20px 0 14px;border:1px solid #f0dfb6;background:#fffbf0;border-radius:11px;color:#78551c;font-size:12px}
+.customer-tracking-dialog .tracking-warning strong{display:block;margin-bottom:3px}
+.customer-tracking-dialog #customerTrackingMessage{margin:0;min-height:21px;overflow-wrap:anywhere}
+.customer-tracking-dialog .tracking-dialog-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 28px;border-top:1px solid var(--tracking-line);background:#f7f9fd}
+button.customer-tracking-trigger.btn-secondary.mini-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:36px;padding:7px 11px;border:1px solid #dce7f7;border-radius:10px;background:#edf5ff;color:#175bc0;font:600 12px/1.4 Arial,Helvetica,sans-serif;white-space:nowrap;box-shadow:none}
+button.customer-tracking-trigger.btn-secondary.mini-btn::before{content:'';width:13px;height:8px;border:1.5px solid currentColor;border-radius:5px;transform:rotate(-35deg)}
+button.customer-tracking-trigger.btn-secondary.mini-btn:hover{background:#deecff;border-color:#b9d3fb}
+button.customer-tracking-trigger:focus-visible{outline:3px solid #0b63f6;outline-offset:3px}
+@media(max-width:480px){
+  .customer-tracking-dialog .tracking-dialog-header{padding:20px;gap:12px}
+  .customer-tracking-dialog .tracking-dialog-body{padding:20px}
+  .customer-tracking-dialog .tracking-dialog-footer{padding:16px 20px}
+  .customer-tracking-dialog h2{font-size:23px}
+  .customer-tracking-dialog .tracking-actions{grid-template-columns:1fr 1fr}
+  .customer-tracking-dialog button[data-action="copy"]{grid-column:1/-1}
+  .customer-tracking-dialog input{font-size:16px}
+}
+@media(prefers-reduced-motion:reduce){.customer-tracking-dialog button{transition:none}}

@@ -6,14 +6,14 @@
   <meta name="referrer" content="no-referrer">
   <meta name="robots" content="noindex,nofollow,noarchive">
   <title>La tua consegna · GiroFacile</title>
-  <link rel="stylesheet" href="/static/tracking/style.css">
-  <script src="/static/tracking/app.js" defer></script>
+  <link rel="stylesheet" href="/static/tracking/style.css?v=20261004_design">
+  <script src="/static/tracking/app.js?v=20261004_design" defer></script>
 </head>
 <body>
   <main>
-    <header><span class="brand-mark" aria-hidden="true">G</span><strong>GiroFacile</strong><span class="eyebrow">Tracking consegna</span></header>
+    <header><span class="brand-mark" aria-hidden="true">G</span><strong>Giro<span>Facile</span></strong><span class="eyebrow">Tracking consegna</span></header>
     <section class="card" aria-labelledby="title">
-      <div class="parcel" aria-hidden="true">↗</div>
+      <div class="parcel" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 9 5-9 5-9-5 9-5ZM3 8v9l9 5 9-5V8M12 13v9M7.5 5.5l9 5"/></svg></div>
       <p class="eyebrow">UN AGGIORNAMENTO PER TE</p>
       <h1 id="title">La tua consegna</h1>
       <p id="message" role="status" aria-live="polite">Stiamo recuperando gli aggiornamenti…</p>
@@ -21,7 +21,7 @@
         <p id="status" class="badge"></p>
         <dl>
           <div><dt>Data prevista</dt><dd id="date"></dd></div>
-          <div class="arrival"><dt id="etaLabel">Arrivo previsto</dt><dd id="eta"></dd></div>
+          <div class="arrival"><dt id="etaLabel">Arrivo previsto</dt><dd><span id="eta"></span><span id="etaDate" class="eta-date"></span></dd></div>
         </dl>
         <p id="stops" class="stops" hidden></p>
         <p id="completed" hidden></p>
@@ -31,7 +31,7 @@
       <button id="refresh" type="button">Aggiorna</button>
       <noscript>Attiva JavaScript per visualizzare lo stato aggiornato della consegna.</noscript>
     </section>
-    <footer>Solo le informazioni sulla tua consegna.<br>Nessun account necessario.</footer>
+    <footer><strong>La tua consegna, in un unico posto.</strong><br>Solo le informazioni che ti servono. Nessun account necessario.</footer>
   </main>
 </body>
 </html>

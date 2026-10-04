@@ -23,11 +23,13 @@
     el('title').textContent = data.status === 'completata' ? 'Consegna completata' : 'La tua consegna';
     el('message').textContent = message;
     el('status').textContent = label;
+    el('status').dataset.state = data.status;
     // A calendar date must not shift when the recipient travels abroad.
     el('date').textContent = date(data.scheduled_date + 'T00:00:00Z', false, 'UTC');
     el('etaLabel').textContent = data.eta.source === 'execution' ? 'Arrivo stimato aggiornato' : 'Arrivo previsto';
     const terminal = data.refresh_after_seconds === 0;
-    el('eta').textContent = data.eta.at ? `${date(data.eta.at, true)} · ${date(data.eta.at)}` : terminal ? '—' : 'In aggiornamento';
+    el('eta').textContent = data.eta.at ? date(data.eta.at, true) : terminal ? '—' : 'In aggiornamento';
+    el('etaDate').textContent = data.eta.at ? date(data.eta.at) : '';
     el('stops').hidden = data.stops_before === null;
     el('stops').textContent = data.stops_before === 0 ? 'La tua è la prossima fermata prevista.'
       : `${data.stops_before} ${data.stops_before === 1 ? 'fermata prevista' : 'fermate previste'} prima della tua.`;
