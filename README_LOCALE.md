@@ -149,21 +149,30 @@ Da mobile sono accessibili dal menu **Altro** del pannello admin.
 Da v72 GiroFacile usa PostgreSQL come database ufficiale. Prima di avviare in locale eseguire `setup_postgres_locale.bat` e controllare `DATABASE_URL` nel file `.env`.
 
 
-## POD locale con MinIO
+## POD locale
 
-Per provare firma, foto e PDF della consegna senza attivare Hetzner:
+Per provare firma, foto e PDF della consegna senza attivare Hetzner non serve Docker.
 
-1. Avvia Docker Desktop.
-2. Fai doppio click su `start_minio_locale_windows.bat`.
-3. Inserisci nel file `.env` le variabili Object Storage descritte in
-   `docs/pod-object-storage.md`.
-4. Verifica con:
+Nel file `.env` configurare:
+
+```env
+OBJECT_STORAGE_ENABLED=true
+OBJECT_STORAGE_BACKEND=local
+OBJECT_STORAGE_LOCAL_PATH=data/pod_storage
+OBJECT_STORAGE_LOCAL_SECRET=una-stringa-locale-lunga-e-casuale
+OBJECT_STORAGE_SIGNED_URL_SECONDS=900
+```
+
+Poi verificare:
 
 ```powershell
 .venv\Scripts\python.exe -m app.services.object_storage
 ```
 
-Con portale autista aperto da telefono, `OBJECT_STORAGE_PUBLIC_ENDPOINT` deve
-usare l'IP LAN del PC e la porta 9000. Il backend locale continua invece a usare
-`OBJECT_STORAGE_ENDPOINT=http://127.0.0.1:9000`.
+Il risultato atteso è:
 
+```text
+Archivio POD configurato e verificato: local
+```
+
+Il telefono usa lo stesso indirizzo con cui apre GiroFacile; non serve configurare un secondo endpoint.
