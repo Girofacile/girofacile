@@ -176,9 +176,10 @@ function renderMobileRouteDetails(r, targetId="routeResult"){
   const stops=(r.consegne||[]).map((d,i)=>`
     <div class="stop-card">
       <div class="stop-header"><div class="stop-num">${i+1}</div><div><div class="stop-name">${esc(d.cliente_nome)}</div><div class="stop-addr">${esc(d.indirizzo)}</div></div></div>
+      ${trackingButton(d, r)}
       ${d.warning ? `<div class="warning-tag">${esc(d.warning)}</div>` : ""}
       <div class="stop-times">
-        <div class="stop-time"><span>Arrivo</span><strong>${esc(d.arrivo_fisico||d.arrivo_stimato||"—")}</strong></div>
+        <div class="stop-time"><span>Arrivo</span><strong>${esc(d.arrivo_stimato_aggiornato||d.arrivo_fisico||d.arrivo_stimato||"—")}</strong></div>
         <div class="stop-time"><span>Inizio scarico</span><strong>${esc(d.inizio_servizio||d.arrivo_stimato||"—")}</strong></div>
         <div class="stop-time"><span>Ripartenza</span><strong>${esc(d.partenza_stimata||"—")}</strong></div>
         <div class="stop-time"><span>Attesa</span><strong>${Number(d.attesa_min||0)} min</strong></div>

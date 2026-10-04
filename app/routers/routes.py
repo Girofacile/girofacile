@@ -1,3 +1,5 @@
+from ..services.route_schedule import live_route_schedule
+from ..models import DeliveryTrackingLink
 from ..services.occasional_stops import verify_stop_address, validate_occasional_stops, STOP_VERIFICATION_FIELDS
 from ..services.customer_planning import customer_is_plannable, PLANNING_ADDRESS_ERROR
 from ..services.delivery_pod import evidence_metadata, evidence_response
@@ -169,83 +171,6 @@ def route_status_label(status: str) -> str:
         "completato": "Completato",
         "annullato": "Annullato",
     }.get(status or "", "Programmato")
-
-
-def _hhmm_from_minutes(total: int | None) -> str | None:
-    if total is None:
-        return None
-    total = int(total) % (24 * 60)
-    return f"{total // 60:02d}:{total % 60:02d}"
-
-
-def _datetime_to_local_minutes(value) -> int | None:
-    if not value:
-        return None
-    try:
-        # Nel DB le date sono salvate senza timezone. Per il monitoraggio operativo
-        # usiamo ora/minuto locale percepito dall'utente.
-        return int(value.hour) * 60 + int(value.minute)
-    except Exception:
-        return None
-
-
-def live_route_schedule(plan: RoutePlan, status_map: dict[int, DeliveryStatus] | None = None) -> dict:
-    """Calcola orari aggiornati per le fermate e rientro.
-
-    Mostra solo l'orario operativo aggiornato: se il giro parte in ritardo
-    o una consegna viene chiusa più tardi, tutte le fermate successive
-    slittano automaticamente.
-    """
-    deliveries = sorted(plan.deliveries or [], key=lambda x: x.ordine or 0)
-    status_map = status_map or {}
-    start_min = minutes_from_hhmm(plan.orario_partenza) or 0
-    shift = 0
-    started_at = getattr(plan, "started_at", None)
-    if computed_route_status(plan) == "in_corso" and started_at:
-        real_start = _datetime_to_local_minutes(started_at)
-        if real_start is not None:
-            shift = real_start - start_min
-
-    # Se l'autista chiude una fermata più tardi rispetto alla partenza prevista
-    # della stessa fermata, lo scostamento diventa il nuovo slittamento globale.
-    for d in deliveries:
-        ds = status_map.get(d.id)
-        if not ds or ds.status not in ("completata", "mancata") or not ds.completata_il:
-            continue
-        real_done = _datetime_to_local_minutes(ds.completata_il)
-        planned_done = minutes_from_hhmm(d.partenza_stimata or d.arrivo_stimato)
-        if real_done is not None and planned_done is not None:
-            shift = real_done - planned_done
-
-    delivery_times = {}
-    running_shift = 0
-    if computed_route_status(plan) == "in_corso" and started_at:
-        real_start = _datetime_to_local_minutes(started_at)
-        if real_start is not None:
-            running_shift = real_start - start_min
-
-    for d in deliveries:
-        ds = status_map.get(d.id)
-        planned_arrival = minutes_from_hhmm(d.arrivo_stimato)
-        planned_departure = minutes_from_hhmm(d.partenza_stimata or d.arrivo_stimato)
-        if ds and ds.status in ("completata", "mancata") and ds.completata_il:
-            real_done = _datetime_to_local_minutes(ds.completata_il)
-            delivery_times[d.id] = _hhmm_from_minutes(real_done if real_done is not None else (planned_arrival or start_min) + running_shift)
-            if real_done is not None and planned_departure is not None:
-                running_shift = real_done - planned_departure
-        else:
-            delivery_times[d.id] = _hhmm_from_minutes((planned_arrival if planned_arrival is not None else start_min) + running_shift)
-
-    rientro_min = minutes_from_hhmm(plan.orario_rientro_stimato)
-    if rientro_min is None:
-        try:
-            rientro_min = start_min + int(float(plan.totale_minuti or 0))
-        except Exception:
-            rientro_min = start_min
-    return {
-        "delivery_times": delivery_times,
-        "rientro_stimato_aggiornato": _hhmm_from_minutes(rientro_min + running_shift),
-    }
 
 
 # -----------------------------------------------------------------------
@@ -451,7 +376,7 @@ def save_route_result(db, user, data, result, vehicle, route_id=None):
     costo_carburante = primary_qty * primary_price + electric_qty * electric_price
     litri = primary_qty
     unit = "kg" if fuel_type == "metano" else ("kWh" if electric_only else "L")
-    plan = owned(db.query(RoutePlan), RoutePlan, user).filter(RoutePlan.id == route_id).first() if route_id else None
+    plan = owned(db.query(RoutePlan), RoutePlan, user).filter(RoutePlan.id == route_id).with_for_update(of=RoutePlan).first() if route_id else None
     if route_id and not plan:
         raise HTTPException(404, "Giro non trovato")
     if plan and computed_route_status(plan) not in ("bozza", "programmato"):
@@ -460,6 +385,10 @@ def save_route_result(db, user, data, result, vehicle, route_id=None):
         plan = RoutePlan(user_id=user.id)
         db.add(plan)
     else:
+        # A recalculation replaces delivery identities: revoke capabilities in
+        # the same transaction, including legacy SQLite without FK enforcement.
+        ids = db.query(Delivery.id).filter(Delivery.route_plan_id == plan.id)
+        db.query(DeliveryTrackingLink).filter(DeliveryTrackingLink.delivery_id.in_(ids)).delete(synchronize_session=False)
         db.query(Delivery).filter(Delivery.route_plan_id == plan.id).delete(synchronize_session=False)
     plan.nome = (data.nome or "").strip() or "Giro consegne"
     plan.data_giro = parse_date_value(data.data_giro)

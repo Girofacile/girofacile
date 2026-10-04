@@ -1693,7 +1693,7 @@ function dashboardStopRows(r){
             <td>${esc(d.indirizzo || "-")}</td>
             <td>${esc(d.arrivo_stimato || "-")}</td>
             <td>${deliveryStatusPill(d.delivery_status)}${d.motivo_mancata?`<small class="delivery-reason">${esc(d.motivo_mancata)}</small>`:""}</td>
-            <td>${d.note_operatore?esc(d.note_operatore):warningBadges(d.warning)} ${deliverySignatureAction(d, r.driver_name)}</td>
+            <td>${d.note_operatore?esc(d.note_operatore):warningBadges(d.warning)} ${deliverySignatureAction(d, r.driver_name)} ${trackingButton(d, r)}</td>
           </tr>
         `).join("")}
       </tbody>
@@ -1815,7 +1815,7 @@ function dashboardDeliveryRowsForSubpage(r){
             <td><strong>${esc(d.cliente_nome || '-')}</strong></td>
             <td>${esc(d.indirizzo || '-')}</td>
             <td>${esc(d.manual_traffic || d.colli || d.pacchi || '-')}</td>
-            <td>${deliveryStatusPill(d.delivery_status)}${d.motivo_mancata?`<small class="delivery-reason">${esc(d.motivo_mancata)}</small>`:''} ${deliverySignatureAction(d, r.driver_name)}</td>
+            <td>${deliveryStatusPill(d.delivery_status)}${d.motivo_mancata?`<small class="delivery-reason">${esc(d.motivo_mancata)}</small>`:''} ${deliverySignatureAction(d, r.driver_name)} ${trackingButton(d, r)}</td>
             <td>${d.distanza_km ? fmtKm(d.distanza_km) : '-'}</td>
           </tr>
         `).join('')}
@@ -1834,7 +1834,7 @@ function dashboardStopsTimelineForSubpage(r){
       <div class="dash-stop-line ${esc(d.delivery_status || 'in_attesa')}">
         <div class="dash-stop-number">${d.ordine || ''}</div>
         <div><strong>${esc(d.cliente_nome || '-')}</strong><small>${esc(d.indirizzo || '-')}</small></div>
-        <div class="dash-stop-status">${deliveryStatusPill(d.delivery_status)}</div>
+        <div class="dash-stop-status">${deliveryStatusPill(d.delivery_status)} ${trackingButton(d, r)}</div>
       </div>
     `).join('')}
   </div>`;
@@ -3137,7 +3137,7 @@ function renderRouteResult(r, targetId="routeResult", fromHistory=false){
       <td>${Math.round(parseFloat(d.attesa_min)||0)} min</td>
       <td>${d.km_tappa ?? "-"}</td>
       <td>${warningBadges(d.warning)}</td>
-      <td class="preview-stop-actions"><details><summary aria-label="Azioni fermata ${idx+1}">›</summary><div class="row-actions compact"><a target="_blank" href="${mapsAddressUrl(d.indirizzo)}"><button title="Apri fermata su Maps">📍</button></a><button onclick="copyText('${esc(d.indirizzo).replace(/'/g,"\\'")}', 'Indirizzo copiato')" title="Copia indirizzo">⧉</button>${deliverySignatureAction(d, r.driver_name)}</div></details></td>
+      <td class="preview-stop-actions"><details><summary aria-label="Azioni fermata ${idx+1}">›</summary><div class="row-actions compact"><a target="_blank" href="${mapsAddressUrl(d.indirizzo)}"><button title="Apri fermata su Maps">📍</button></a><button onclick="copyText('${esc(d.indirizzo).replace(/'/g,"\\'")}', 'Indirizzo copiato')" title="Copia indirizzo">⧉</button>${deliverySignatureAction(d, r.driver_name)} ${trackingButton(d, r)}</div></details></td>
     </tr>`;
   });
   target.innerHTML = `<section class="result-pro route-preview-design">
@@ -3793,7 +3793,7 @@ function dashboardStopRowsUnified(r, mode='live'){
   return `<div class="dash-sub-table-wrap gf-unified-stop-wrap">
     <table class="dash-sub-table dash-stop-table-unified gf-unified-stop-table">
       <thead>
-        <tr><th>#</th><th>Cliente</th><th>Indirizzo</th><th>Arrivo previsto</th><th>Arrivo reale</th><th>Differenza</th><th>Stato</th><th>Firma</th><th>Note</th></tr>
+        <tr><th>#</th><th>Cliente</th><th>Indirizzo</th><th>Arrivo previsto</th><th>Arrivo reale</th><th>Differenza</th><th>Stato</th><th>Documenti e tracking</th><th>Note</th></tr>
       </thead>
       <tbody>
         ${rows.map(d=>{
@@ -3809,7 +3809,7 @@ function dashboardStopRowsUnified(r, mode='live'){
             <td>${real ? `<strong class="gf-real-arrival">${esc(real)}</strong>` : '<span class="muted">-</span>'}</td>
             <td>${gfDeltaBadge(planned, real)}</td>
             <td>${deliveryStatusPill(st)}${d.motivo_mancata?`<small class="delivery-reason">${esc(d.motivo_mancata)}</small>`:''}</td>
-            <td>${deliverySignatureAction(d, r.driver_name) || '<span class="muted">-</span>'}</td>
+            <td>${deliverySignatureAction(d, r.driver_name)} ${trackingButton(d, r)}</td>
             <td>${note ? `<button type="button" class="btn-mini note-mini-btn" data-note="${esc(String(note))}" onclick="alert(this.dataset.note)">Note</button>` : '<span class="muted">-</span>'}</td>
           </tr>`;
         }).join('')}

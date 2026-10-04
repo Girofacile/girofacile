@@ -6,6 +6,7 @@ from test_audit_postgres import pg
 def test_pod_migration_preserves_legacy_and_is_idempotent(pg):
     from app.migrations import run_migrations, LATEST
     with pg.begin() as conn:
+        conn.execute(text('CREATE TABLE deliveries (id INTEGER PRIMARY KEY)'))
         conn.execute(text('CREATE TABLE delivery_statuses (id INTEGER PRIMARY KEY, delivery_id INTEGER, route_plan_id INTEGER, signature_data TEXT, signature_note TEXT)'))
         conn.execute(text("INSERT INTO delivery_statuses VALUES (1,1,1,'legacy-signature','nota')"))
         conn.execute(text('CREATE TABLE schema_migrations (version VARCHAR(40) PRIMARY KEY, applied_at TIMESTAMP)'))

@@ -33,7 +33,7 @@ def test_migrations_are_serialized_repeatable_and_preserve_data(pg):
         list(pool.map(lambda _: run_migrations(pg), range(2)))
     require_current_schema(pg)
     with pg.begin() as conn:
-        assert conn.execute(text('SELECT COUNT(*) FROM schema_migrations')).scalar() == 3
+        assert conn.execute(text('SELECT COUNT(*) FROM schema_migrations')).scalar() == 4
         conn.execute(text("UPDATE users SET company_name='preserved'"))
         conn.execute(text('CREATE TABLE activity_events (id INTEGER)'))
         conn.execute(text('INSERT INTO activity_events VALUES (1)'))

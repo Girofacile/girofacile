@@ -752,3 +752,12 @@ class SystemErrorLog(Base):
     seen_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     resolved_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     admin_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+
+class DeliveryTrackingLink(Base):
+    __tablename__ = "delivery_tracking_links"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    delivery_id: Mapped[int] = mapped_column(ForeignKey("deliveries.id", ondelete="CASCADE"), nullable=False, unique=True)
+    selector: Mapped[str] = mapped_column(String(64), nullable=False, unique=True, index=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <title>La tua consegna · GiroFacile</title>
+  <link rel="stylesheet" href="/static/tracking/style.css">
+  <script src="/static/tracking/app.js" defer></script>
+</head>
+<body>
+  <main>
+    <header><span class="brand-mark" aria-hidden="true">G</span><strong>GiroFacile</strong><span class="eyebrow">Tracking consegna</span></header>
+    <section class="card" aria-labelledby="title">
+      <div class="parcel" aria-hidden="true">↗</div>
+      <p class="eyebrow">UN AGGIORNAMENTO PER TE</p>
+      <h1 id="title">La tua consegna</h1>
+      <p id="message" role="status" aria-live="polite">Stiamo recuperando gli aggiornamenti…</p>
+      <div id="details" hidden>
+        <p id="status" class="badge"></p>
+        <dl>
+          <div><dt>Data prevista</dt><dd id="date"></dd></div>
+          <div class="arrival"><dt id="etaLabel">Arrivo previsto</dt><dd id="eta"></dd></div>
+        </dl>
+        <p id="stops" class="stops" hidden></p>
+        <p id="completed" hidden></p>
+        <p id="updated" class="muted"></p>
+        <p id="estimateNote" class="muted">L’orario è una stima e può variare durante il giro.</p>
+      </div>
+      <button id="refresh" type="button">Aggiorna</button>
+      <noscript>Attiva JavaScript per visualizzare lo stato aggiornato della consegna.</noscript>
+    </section>
+    <footer>Solo le informazioni sulla tua consegna.<br>Nessun account necessario.</footer>
+  </main>
+</body>
+</html>

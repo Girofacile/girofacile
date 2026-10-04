@@ -9,6 +9,7 @@ function render(violation, overrides={}, fromHistory=false){
     mapsAddressUrl:()=>'',deliverySignatureAction:()=>'',currentSessionUser:null,setTimeout:()=>{}});
   context.window=context;
   vm.runInContext(fs.readFileSync('static/routing-summary.js','utf8'),context);
+  vm.runInContext(fs.readFileSync('static/tracking/company.js','utf8'),context);
   vm.runInContext(core.slice(core.indexOf('function warnTypeCounts('),core.indexOf('function cleanDeliveryForPayload(')),context);
   vm.runInContext(core.slice(core.indexOf('function renderRouteResult('),core.indexOf('async function loadRoadMapLibrary(')),context);
   context.route={id:1,status:'bozza',violations_count:violation?1:0,total_lateness_min:violation?5:0,
