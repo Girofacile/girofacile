@@ -30,7 +30,7 @@ def _seed_two_companies(db: Session):
     vehicle_a = Vehicle(user_id=a.id, nome="Furgone A")
     vehicle_b = Vehicle(user_id=b.id, nome="Furgone B")
     driver_a = Driver(user_id=a.id, nome="Mario")
-    customer_a = Customer(user_id=a.id, nome="Cliente A", indirizzo="Via Cliente A")
+    customer_a = Customer(user_id=a.id, nome="Cliente A", indirizzo="Via Cliente A", stato_geocodifica="verificato", lat=45, lon=9)
     customer_b = Customer(user_id=b.id, nome="Cliente B", indirizzo="Via Cliente B")
     db.add_all([dep_a, vehicle_a, vehicle_b, driver_a, customer_a, customer_b])
     db.commit()

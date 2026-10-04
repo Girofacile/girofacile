@@ -1,3 +1,4 @@
+from ..services.customer_planning import planning_customer_filters
 from datetime import datetime
 import time
 from pathlib import Path
@@ -97,10 +98,12 @@ def safe_geocode_customer(customer):
 def list_customers(
     q: str = "", provincia: str = "", comune: str = "",
     ztl: str = "", sponda: str = "", agent_id: str = "",
-    limit: int = 300, offset: int = 0,
+    limit: int = 300, offset: int = 0, planning_only: bool = False,
     db: Session = Depends(get_db), user: User = Depends(current_user),
 ):
     query = owned(db.query(Customer), Customer, user)
+    if planning_only:
+        query = query.filter(*planning_customer_filters())
     if q:
         like = f"%{q}%"
         query = query.filter(or_(

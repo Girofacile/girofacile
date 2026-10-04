@@ -1,3 +1,4 @@
+from ..services.customer_planning import customer_is_plannable, PLANNING_ADDRESS_ERROR
 from ..services.delivery_pod import evidence_metadata, evidence_response
 from datetime import datetime, timedelta
 import time
@@ -62,12 +63,15 @@ def _owned_customer_map(db, user: User, deliveries: list[dict]) -> dict[int, Cus
     customers = (
         owned(db.query(Customer), Customer, user)
         .filter(Customer.id.in_(customer_ids))
+        .populate_existing()
         .all()
     )
     customer_map = {int(customer.id): customer for customer in customers}
     if set(customer_map) != customer_ids:
         # Messaggio volutamente generico: non rivela se l'ID esiste in un altro tenant.
         raise HTTPException(status_code=400, detail="Uno o più clienti non sono disponibili per questa azienda")
+    if any(not customer_is_plannable(customer) for customer in customer_map.values()):
+        raise HTTPException(400, PLANNING_ADDRESS_ERROR)
     return customer_map
 
 
@@ -424,7 +428,7 @@ def save_route_result(db, user, data, result, vehicle, route_id=None):
             raise HTTPException(409, "Un giro già avviato non può essere riscritto: crea un nuovo giro")
     # Ultima barriera prima della persistenza: anche se un nuovo endpoint futuro
     # dimenticasse la validazione iniziale, una consegna non può mantenere il
-    # riferimento a un cliente appartenente a un'altra azienda.
+    # riferimento a un cliente di un'altra azienda o non pianificabile.
     _owned_customer_map(db, user, list(result.get("ordered") or []))
     _require_owned_entity(db, Deposit, user, data.deposit_id, "Deposito")
     if data.vehicle_id is not None:

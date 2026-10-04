@@ -2632,6 +2632,17 @@ async function importCustomers(){
   await loadCustomerPicker();
 }
 
+function customerIsPlannable(c){
+  return !!c && c.stato_geocodifica === 'verificato' &&
+    typeof c.lat === 'number' && Number.isFinite(c.lat) && c.lat >= -90 && c.lat <= 90 &&
+    typeof c.lon === 'number' && Number.isFinite(c.lon) && c.lon >= -180 && c.lon <= 180;
+}
+function requirePlannableCustomer(c){
+  if(customerIsPlannable(c)) return true;
+  alert("L'indirizzo del cliente deve essere verificato prima di poterlo inserire in un giro.");
+  return false;
+}
+
 async function loadCustomerPicker(){
   const box = document.getElementById("customerPickerList");
   if(!box) return;
@@ -2641,10 +2652,10 @@ async function loadCustomerPicker(){
     provincia: document.getElementById("pickProvincia")?.value || "",
     ztl: document.getElementById("pickZtl")?.value || "",
     sponda: document.getElementById("pickSponda")?.value || "",
-    limit: "50"
+    limit: "50", planning_only: "true"
   });
   const rows = await api("/api/customers?"+params.toString());
-  box.innerHTML = rows.map(c=>{
+  box.innerHTML = rows.filter(customerIsPlannable).map(c=>{
     const already = deliveries.some(d=>String(d.customer_id||"")===String(c.id));
     return `<div class="picker-customer-row ${already ? 'already-added' : ''}">
       <div><strong>${esc(c.codice_cliente||"")} ${esc(c.nome)}</strong><small>${esc(c.indirizzo)} · ${esc(c.comune||"")} ${esc(c.provincia||"")} · ${agentsFeatureEnabled() ? esc(c.agent_name||"Cliente interno") + " · " : ""}${fascia(c)}</small></div>
@@ -2690,10 +2701,10 @@ function addDeliveryObject(payload, message="Consegna aggiunta. Premi Calcola pe
 
 function quickAddCustomerToDelivery(id){
   const c = customersCache.find(x=>x.id===id);
-  if(c){ addDeliveryObject(deliveryFromCustomer(c)); return; }
-  api("/api/customers?limit=500").then(rows=>{
+  if(c){ if(requirePlannableCustomer(c)) addDeliveryObject(deliveryFromCustomer(c)); return; }
+  api("/api/customers?limit=500&planning_only=true").then(rows=>{
     const found = rows.find(x=>x.id===id);
-    if(found){ addDeliveryObject(deliveryFromCustomer(found)); }
+    if(found && requirePlannableCustomer(found)){ addDeliveryObject(deliveryFromCustomer(found)); }
   });
 }
 
@@ -2702,9 +2713,9 @@ async function searchCustomersForDelivery(){
   const q = val("customerSearch"), box = document.getElementById("customerSuggestions");
   if(!box) return;
   if(q.length < 2){ box.innerHTML=""; return; }
-  const rows = await api("/api/customers?q="+encodeURIComponent(q));
+  const rows = await api("/api/customers?planning_only=true&q="+encodeURIComponent(q));
   box.innerHTML = "";
-  rows.slice(0,10).forEach(c=>{
+  rows.filter(customerIsPlannable).slice(0,10).forEach(c=>{
     const div = document.createElement("div");
     div.className = "suggestion";
     div.innerHTML = `<b>${esc(c.codice_cliente||"")}</b> ${esc(c.nome)}<br><small>${esc(c.indirizzo)} - ${fascia(c)}</small>`;
@@ -2714,6 +2725,7 @@ async function searchCustomersForDelivery(){
 }
 
 function selectCustomer(c){
+  if(!requirePlannableCustomer(c)) return;
   selectedCustomer = c;
   const sug = document.getElementById("customerSuggestions");
   if(sug) sug.innerHTML = "";
@@ -2740,6 +2752,7 @@ function markRouteNeedsRecalculation(message="Le consegne sono state modificate.
 }
 
 function deliveryPayloadFromForm(){
+  if(selectedCustomer && !requirePlannableCustomer(selectedCustomer)) return null;
   const cliente = val("dCliente"), indirizzo = val("dIndirizzo");
   if(!cliente || !indirizzo){ alert("Inserisci cliente e indirizzo"); return null; }
   return {customer_id:selectedCustomer?.id || null, cliente_nome:cliente, indirizzo, peso_kg:parseFloat(val("dPeso")||0), colli:parseInt(val("dColli")||0),
