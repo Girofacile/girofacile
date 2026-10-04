@@ -191,33 +191,42 @@ def test_real_s3_adapter_uses_private_bucket_and_temporary_get(monkeypatch):
     assert 'X-Amz-Expires=900' in url and 'X-Amz-Signature=' in url
 
 
-def test_local_minio_http_and_separate_phone_endpoint(monkeypatch):
-    from app.services.object_storage import ObjectStorage
-    from botocore.stub import Stubber
+def test_local_filesystem_storage_and_expiring_link(monkeypatch, tmp_path):
+    from urllib.parse import parse_qs, urlsplit
+    from app.services.object_storage import LocalObjectStorage, serve_local_object
     monkeypatch.setenv('APP_ENV', 'development')
-    settings = {
-        'ENABLED':'true',
-        'ENDPOINT':'http://127.0.0.1:9000',
-        'PUBLIC_ENDPOINT':'http://192.168.1.8:9000',
-        'REGION':'us-east-1',
-        'BUCKET':'girofacile-pod-local',
-        'ACCESS_KEY':'girofacile-local',
-        'SECRET_KEY':'girofacile-local-dev-only',
-    }
-    for name, value in settings.items():
-        monkeypatch.setenv('OBJECT_STORAGE_' + name, value)
-    storage = ObjectStorage()
-    assert storage.local_development is True
-    with Stubber(storage.client) as stub:
-        stub.add_response('head_bucket', {}, {'Bucket':'girofacile-pod-local'})
-        storage.verify_configuration()
-    url = storage.signed_url('companies/1/routes/2/deliveries/3/signature-' + 'a'*32 + '.png', 'image/png')
-    assert url.startswith('http://192.168.1.8:9000/')
+    monkeypatch.setenv('OBJECT_STORAGE_ENABLED', 'true')
+    monkeypatch.setenv('OBJECT_STORAGE_BACKEND', 'local')
+    monkeypatch.setenv('OBJECT_STORAGE_LOCAL_PATH', str(tmp_path / 'pod'))
+    monkeypatch.setenv('OBJECT_STORAGE_LOCAL_SECRET', 'local-test-secret')
+    storage = LocalObjectStorage()
+    storage.verify_configuration()
+    key = 'companies/1/routes/2/deliveries/3/signature-' + 'a'*32 + '.png'
+    storage.upload(key, b'png-bytes', 'image/png')
+    assert storage.read(key) == b'png-bytes'
+    url = storage.signed_url(key, 'image/png')
+    assert url.startswith('/api/pod-local?')
+    params = {k:v[0] for k,v in parse_qs(urlsplit(url).query).items()}
+    response = serve_local_object(params['key'], params['exp'], params['dl'], params['sig'])
+    assert response.media_type == 'image/png'
+    assert str(response.path).endswith('.png')
 
 
-def test_http_object_storage_is_rejected_in_production(monkeypatch):
-    from app.services.object_storage import ObjectStorage
+def test_local_storage_is_rejected_in_production(monkeypatch, tmp_path):
+    from app.services.object_storage import get_storage
     monkeypatch.setenv('APP_ENV', 'production')
+    monkeypatch.setenv('OBJECT_STORAGE_ENABLED', 'true')
+    monkeypatch.setenv('OBJECT_STORAGE_BACKEND', 'local')
+    monkeypatch.setenv('OBJECT_STORAGE_LOCAL_PATH', str(tmp_path / 'pod'))
+    monkeypatch.setenv('OBJECT_STORAGE_LOCAL_SECRET', 'local-test-secret')
+    with pytest.raises(HTTPException) as exc:
+        get_storage()
+    assert exc.value.status_code == 503
+
+
+def test_http_s3_endpoint_is_rejected(monkeypatch):
+    from app.services.object_storage import ObjectStorage
+    monkeypatch.setenv('APP_ENV', 'development')
     for name, value in {
         'ENABLED':'true',
         'ENDPOINT':'http://127.0.0.1:9000',
