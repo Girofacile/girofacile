@@ -270,6 +270,7 @@ def test_pdf_text_and_long_notes(env, storage):
     owner.company_city = 'Torre Annunziata'
     owner.company_phone = '+39 081 1234567'
     owner.company_email = 'info@example.test'
+    owner.company_logo_url = image_data('PNG')
     from datetime import datetime
     state = SimpleNamespace(completata_il=datetime(2026,10,4,10,30), signed_by_name='Mario Rossi',
         signed_at=datetime(2026,10,4,10,29), note_operatore='merce ricevuta', signature_note='<script> & ' + 'Nota lunga ' * 150)
