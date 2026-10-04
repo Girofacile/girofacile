@@ -264,14 +264,24 @@ def test_pdf_text_and_long_notes(env, storage):
     from types import SimpleNamespace
     PdfReader = pytest.importorskip("pypdf").PdfReader
     _, db, owner, route, delivery, _ = setup_portals(env)
+    owner.company_name = 'PICCOLO'
+    owner.company_vat = '01234567890'
+    owner.company_address = 'Corso Umberto I 135'
+    owner.company_city = 'Torre Annunziata'
+    owner.company_phone = '+39 081 1234567'
+    owner.company_email = 'info@example.test'
     from datetime import datetime
     state = SimpleNamespace(completata_il=datetime(2026,10,4,10,30), signed_by_name='Mario Rossi',
         signed_at=datetime(2026,10,4,10,29), note_operatore='merce ricevuta', signature_note='<script> & ' + 'Nota lunga ' * 150)
     raw = generate_pod(route, delivery, state, owner, base64.b64decode(image_data().split(',')[1]),
                        base64.b64decode(image_data('JPEG').split(',')[1]))
-    text = '\n'.join(page.extract_text() for page in PdfReader(io.BytesIO(raw)).pages)
-    assert 'Consegna completata' in text and 'Mario Rossi' in text and 'merce ricevuta' in text
-    assert 'certificazione legale' in text
+    reader = PdfReader(io.BytesIO(raw))
+    assert len(reader.pages) == 1
+    text = '\n'.join(page.extract_text() for page in reader.pages)
+    assert 'Prova di consegna' in text and 'Consegna completata' in text
+    assert 'PICCOLO' in text and '01234567890' in text
+    assert 'Mario Rossi' in text and 'merce ricevuta' in text
+    assert 'Pagina 1 di 1' in text and 'certificazione legale' in text
 
 
 def test_signature_replacement_cleans_only_after_commit_and_retains_legacy(env, storage):
