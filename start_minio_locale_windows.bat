@@ -16,11 +16,11 @@ if errorlevel 1 (
 )
 
 echo Avvio MinIO e preparazione bucket locale...
-docker compose --profile local-storage up -d minio minio-init
+docker compose -f docker-compose.minio.yml up -d minio minio-init
 if errorlevel 1 (
   echo.
   echo ERRORE durante l'avvio di MinIO.
-  echo Controlla Docker Desktop e il file docker-compose.yml.
+  echo Controlla Docker Desktop e il file docker-compose.minio.yml.
   pause
   exit /b 1
 )
