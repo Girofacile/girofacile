@@ -171,9 +171,10 @@ def test_mime_mismatch_and_signature_dimensions():
         normalize_image(image_data(size=(6000, 5000)), 'signature')
 
 
-def test_real_s3_adapter_uses_private_acl_and_temporary_get(monkeypatch):
+def test_real_s3_adapter_uses_private_bucket_and_temporary_get(monkeypatch):
     from app.services.object_storage import ObjectStorage, object_key
     from botocore.stub import Stubber
+    monkeypatch.setenv('APP_ENV', 'production')
     for name, value in {'ENABLED':'true','ENDPOINT':'https://fsn1.your-objectstorage.com',
         'REGION':'fsn1','BUCKET':'test-pod','ACCESS_KEY':'test','SECRET_KEY':'test','SIGNED_URL_SECONDS':'900'}.items():
         monkeypatch.setenv('OBJECT_STORAGE_' + name, value)
@@ -184,10 +185,51 @@ def test_real_s3_adapter_uses_private_acl_and_temporary_get(monkeypatch):
         stub.add_response('get_bucket_acl', {'Grants': []}, {'Bucket':'test-pod'})
         stub.add_client_error('get_bucket_policy', service_error_code='NoSuchBucketPolicy', expected_params={'Bucket':'test-pod'})
         stub.add_response('put_object', {}, {'Bucket':'test-pod','Key':key,'Body':raw,
-            'ContentType':'image/png','ACL':'private','Metadata':{'sha256':hashlib.sha256(raw).hexdigest()}})
+            'ContentType':'image/png','Metadata':{'sha256':hashlib.sha256(raw).hexdigest()}})
         storage.upload(key, raw, 'image/png')
     url = storage.signed_url(key, 'image/png')
     assert 'X-Amz-Expires=900' in url and 'X-Amz-Signature=' in url
+
+
+def test_local_minio_http_and_separate_phone_endpoint(monkeypatch):
+    from app.services.object_storage import ObjectStorage
+    from botocore.stub import Stubber
+    monkeypatch.setenv('APP_ENV', 'development')
+    settings = {
+        'ENABLED':'true',
+        'ENDPOINT':'http://127.0.0.1:9000',
+        'PUBLIC_ENDPOINT':'http://192.168.1.8:9000',
+        'REGION':'us-east-1',
+        'BUCKET':'girofacile-pod-local',
+        'ACCESS_KEY':'girofacile-local',
+        'SECRET_KEY':'girofacile-local-dev-only',
+    }
+    for name, value in settings.items():
+        monkeypatch.setenv('OBJECT_STORAGE_' + name, value)
+    storage = ObjectStorage()
+    assert storage.local_development is True
+    with Stubber(storage.client) as stub:
+        stub.add_response('head_bucket', {}, {'Bucket':'girofacile-pod-local'})
+        storage.verify_configuration()
+    url = storage.signed_url('companies/1/routes/2/deliveries/3/signature-' + 'a'*32 + '.png', 'image/png')
+    assert url.startswith('http://192.168.1.8:9000/')
+
+
+def test_http_object_storage_is_rejected_in_production(monkeypatch):
+    from app.services.object_storage import ObjectStorage
+    monkeypatch.setenv('APP_ENV', 'production')
+    for name, value in {
+        'ENABLED':'true',
+        'ENDPOINT':'http://127.0.0.1:9000',
+        'REGION':'us-east-1',
+        'BUCKET':'girofacile-pod-local',
+        'ACCESS_KEY':'test',
+        'SECRET_KEY':'test',
+    }.items():
+        monkeypatch.setenv('OBJECT_STORAGE_' + name, value)
+    with pytest.raises(HTTPException) as exc:
+        ObjectStorage()
+    assert exc.value.status_code == 503
 
 
 def test_migration_adds_metadata_idempotently_preserves_legacy(env):
