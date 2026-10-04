@@ -120,7 +120,7 @@ def _pod_datetime(value):
     if not value:
         return "-"
     try:
-        return value.strftime("%d/%m/%Y · %H:%M")
+        return value.strftime("%d/%m/%Y - %H:%M")
     except Exception:
         return str(value)
 
@@ -191,9 +191,9 @@ def _draw_wrapped_pdf_text(pdf, text, x, y, width, *, font="Helvetica", size=8.4
     consumed = " ".join(lines)
     if ellipsis and consumed != value and lines:
         last = lines[-1]
-        while last and stringWidth(last + "…", font, size) > width:
+        while last and stringWidth(last + "...", font, size) > width:
             last = last[:-1]
-        lines[-1] = (last.rstrip() + "…") if last else "…"
+        lines[-1] = (last.rstrip() + "...") if last else "..."
 
     pdf.setFont(font, size)
     pdf.setFillColor(color or colors.HexColor("#0F172A"))
@@ -233,7 +233,7 @@ def _draw_contained_image(pdf, raw, x, y, width, height, *, padding=8, backgroun
 
 
 def generate_pod(route, delivery, status, owner, signature=None, photo=None):
-    """Generate a compact, branded, single-page A4 proof of delivery."""
+    """Generate a monochrome, print-friendly, single-page A4 proof of delivery."""
     from reportlab.lib import colors
     from reportlab.lib.pagesizes import A4
     from reportlab.lib.units import mm
@@ -243,252 +243,257 @@ def generate_pod(route, delivery, status, owner, signature=None, photo=None):
     pdf = canvas.Canvas(stream, pagesize=A4, pageCompression=1)
     page_w, page_h = A4
 
-    navy = colors.HexColor("#0F172A")
-    blue = colors.HexColor("#2563EB")
-    blue_dark = colors.HexColor("#1746A2")
-    blue_soft = colors.HexColor("#EFF6FF")
-    border = colors.HexColor("#D7E3F4")
-    muted = colors.HexColor("#64748B")
-    light = colors.HexColor("#F8FAFC")
-    green = colors.HexColor("#168B59")
-    green_soft = colors.HexColor("#EAF8F1")
-    line = colors.HexColor("#E2E8F0")
-    white = colors.white
+    black = colors.HexColor("#111111")
+    dark_grey = colors.HexColor("#4A4A4A")
+    mid_grey = colors.HexColor("#777777")
+    light_grey = colors.HexColor("#C9C9C9")
+    very_light = colors.HexColor("#E6E6E6")
 
-    left = 15 * mm
-    right = page_w - 15 * mm
+    left = 16 * mm
+    right = page_w - 16 * mm
     content_w = right - left
 
-    # --- Header / GiroFacile brand -------------------------------------------------
-    brand_y = page_h - 20 * mm
-    icon = 11 * mm
-    pdf.setFillColor(blue)
-    pdf.roundRect(left, brand_y - icon + 1.5 * mm, icon, icon, 3 * mm, fill=1, stroke=0)
-    pdf.setFillColor(white)
-    pdf.setFont("Helvetica-Bold", 17)
-    pdf.drawCentredString(left + icon / 2, brand_y - 4.2 * mm, "G")
+    def hline(y, x1=left, x2=right, width=0.45, dashed=False, color=light_grey):
+        pdf.setStrokeColor(color)
+        pdf.setLineWidth(width)
+        pdf.setDash(2, 2) if dashed else pdf.setDash()
+        pdf.line(x1, y, x2, y)
+        pdf.setDash()
 
-    word_x = left + icon + 4 * mm
-    pdf.setFillColor(navy)
-    pdf.setFont("Helvetica-Bold", 18)
-    pdf.drawString(word_x, brand_y - 1 * mm, "Giro")
-    giro_w = pdf.stringWidth("Giro", "Helvetica-Bold", 18)
-    pdf.setFillColor(blue)
-    pdf.drawString(word_x + giro_w, brand_y - 1 * mm, "Facile")
+    def section_title(text, y):
+        pdf.setFillColor(black)
+        pdf.setFont("Helvetica-Bold", 8.6)
+        pdf.drawString(left, y, text.upper())
+        hline(y - 2.5 * mm, width=0.55, color=black)
 
-    pdf.setFillColor(navy)
-    pdf.setFont("Helvetica-Bold", 23)
-    pdf.drawString(left, brand_y - 14 * mm, "Prova di consegna")
-    pdf.setFillColor(muted)
-    pdf.setFont("Helvetica", 9.5)
-    pdf.drawString(left, brand_y - 20 * mm, "Documento di avvenuta consegna")
+    def field(label, value, x, y, width, label_width=27 * mm, max_lines=2):
+        pdf.setFillColor(dark_grey)
+        pdf.setFont("Helvetica-Bold", 7.1)
+        pdf.drawString(x, y, str(label))
+        _draw_wrapped_pdf_text(
+            pdf, value, x + label_width, y,
+            width - label_width,
+            font="Helvetica", size=8.2, color=black,
+            leading=9.3, max_lines=max_lines,
+        )
 
-    # Company identity card, based on the company's saved profile.
-    company_w = 75 * mm
-    company_h = 29 * mm
-    company_x = right - company_w
-    company_y = page_h - 44 * mm
-    pdf.setFillColor(blue_soft)
-    pdf.roundRect(company_x, company_y, company_w, company_h, 4 * mm, fill=1, stroke=0)
-
-    logo_raw = _pod_logo_bytes(getattr(owner, "company_logo_url", None))
-    logo_box = 17 * mm
-    logo_x = company_x + 5 * mm
-    logo_y = company_y + company_h - logo_box - 5 * mm
-    if logo_raw:
-        _draw_contained_image(pdf, logo_raw, logo_x, logo_y, logo_box, logo_box, padding=2, background=False)
-    else:
-        initials = "".join(part[:1] for part in (getattr(owner, "company_name", None) or owner.username or "A").split()[:2]).upper() or "A"
-        pdf.setFillColor(colors.HexColor("#DBEAFE"))
-        pdf.circle(logo_x + logo_box / 2, logo_y + logo_box / 2, logo_box / 2, fill=1, stroke=0)
-        pdf.setFillColor(blue_dark)
-        pdf.setFont("Helvetica-Bold", 10)
-        pdf.drawCentredString(logo_x + logo_box / 2, logo_y + logo_box / 2 - 3, initials)
-
-    company_text_x = logo_x + logo_box + 4 * mm
-    company_text_w = company_x + company_w - company_text_x - 4 * mm
     company_name = getattr(owner, "company_name", None) or owner.username or "Azienda"
-    _draw_wrapped_pdf_text(pdf, company_name, company_text_x, company_y + company_h - 7 * mm,
-                           company_text_w, font="Helvetica-Bold", size=10.5, max_lines=1)
-    company_info_y = company_y + company_h - 13 * mm
     company_address = _pod_company_address(owner)
+    company_vat = (getattr(owner, "company_vat", None) or "").strip()
+    company_cf = (getattr(owner, "company_fiscal_code", None) or "").strip()
+    company_phone = (getattr(owner, "company_phone", None) or "").strip()
+    company_email = (getattr(owner, "company_email", None) or getattr(owner, "email", None) or "").strip()
+    company_pec = (getattr(owner, "company_pec", None) or "").strip()
+
+    # ------------------------------------------------------------------
+    # Letterhead: company identity first, GiroFacile remains in footer.
+    # ------------------------------------------------------------------
+    top = page_h - 16 * mm
+    logo_raw = _pod_logo_bytes(getattr(owner, "company_logo_url", None))
+    logo_w = 30 * mm
+    logo_h = 18 * mm
+
+    if logo_raw:
+        _draw_contained_image(pdf, logo_raw, left, top - logo_h, logo_w, logo_h, padding=0, background=False)
+        company_x = left + logo_w + 5 * mm
+    else:
+        company_x = left
+
+    company_text_w = 85 * mm - (company_x - left)
+    _draw_wrapped_pdf_text(
+        pdf, company_name, company_x, top - 2 * mm, company_text_w,
+        font="Helvetica-Bold", size=12.5, color=black, max_lines=1,
+    )
+    company_y = top - 8 * mm
     if company_address:
-        company_info_y = _draw_wrapped_pdf_text(pdf, company_address, company_text_x, company_info_y,
-                                                company_text_w, size=7.4, color=muted, max_lines=2)
-    vat = (getattr(owner, "company_vat", None) or "").strip()
-    if vat:
-        company_info_y = _draw_wrapped_pdf_text(pdf, f"P. IVA {vat}", company_text_x, company_info_y - 0.5 * mm,
-                                                company_text_w, size=7.4, color=muted, max_lines=1)
-    contact = " · ".join(filter(None, [
-        (getattr(owner, "company_phone", None) or "").strip(),
-        (getattr(owner, "company_email", None) or getattr(owner, "email", None) or "").strip(),
-    ]))
-    if contact:
-        _draw_wrapped_pdf_text(pdf, contact, company_text_x, company_info_y - 0.5 * mm,
-                               company_text_w, size=7.1, color=muted, max_lines=1)
+        company_y = _draw_wrapped_pdf_text(
+            pdf, company_address, company_x, company_y, company_text_w,
+            size=7.4, color=dark_grey, leading=8.6, max_lines=2,
+        )
 
-    # --- Status banner -------------------------------------------------------------
-    status_y = page_h - 67 * mm
-    status_h = 20 * mm
-    pdf.setFillColor(green_soft)
-    pdf.roundRect(left, status_y, content_w, status_h, 4 * mm, fill=1, stroke=0)
-    pdf.setFillColor(green)
-    pdf.circle(left + 8 * mm, status_y + status_h / 2, 5 * mm, fill=1, stroke=0)
-    pdf.setStrokeColor(white)
-    pdf.setLineWidth(1.8)
-    pdf.line(left + 5.5 * mm, status_y + 10 * mm, left + 7.4 * mm, status_y + 8.1 * mm)
-    pdf.line(left + 7.4 * mm, status_y + 8.1 * mm, left + 11 * mm, status_y + 12.2 * mm)
+    fiscal_bits = []
+    if company_vat:
+        fiscal_bits.append(f"P. IVA {company_vat}")
+    if company_cf:
+        fiscal_bits.append(f"C.F. {company_cf}")
+    if fiscal_bits:
+        company_y = _draw_wrapped_pdf_text(
+            pdf, " - ".join(fiscal_bits), company_x, company_y - 0.5 * mm,
+            company_text_w, size=7.2, color=dark_grey, max_lines=1,
+        )
 
-    pdf.setFillColor(green)
-    pdf.setFont("Helvetica-Bold", 12)
-    pdf.drawString(left + 16 * mm, status_y + 12 * mm, "Consegna completata")
-    pdf.setFillColor(muted)
+    contact_bits = [v for v in (company_phone, company_email) if v]
+    if contact_bits:
+        company_y = _draw_wrapped_pdf_text(
+            pdf, " - ".join(contact_bits), company_x, company_y - 0.5 * mm,
+            company_text_w, size=7.2, color=dark_grey, max_lines=1,
+        )
+    if company_pec:
+        _draw_wrapped_pdf_text(
+            pdf, f"PEC {company_pec}", company_x, company_y - 0.5 * mm,
+            company_text_w, size=7.2, color=dark_grey, max_lines=1,
+        )
+
+    title_x = page_w - 82 * mm
+    pdf.setFillColor(black)
+    pdf.setFont("Helvetica-Bold", 17)
+    pdf.drawRightString(right, top - 1 * mm, "PROVA DI CONSEGNA")
+    pdf.setFillColor(dark_grey)
+    pdf.setFont("Helvetica", 8.2)
+    pdf.drawRightString(right, top - 7 * mm, f"POD N. {delivery.id}")
+    pdf.drawRightString(right, top - 12 * mm, "Documento di avvenuta consegna")
+
+    header_rule_y = top - 24 * mm
+    hline(header_rule_y, width=0.8, color=black)
+
+    # ------------------------------------------------------------------
+    # Status + document metadata: no colored banner.
+    # ------------------------------------------------------------------
+    status_y = header_rule_y - 7 * mm
+    pdf.setFillColor(black)
+    pdf.setFont("Helvetica-Bold", 9.2)
+    pdf.drawString(left, status_y, "STATO: CONSEGNA COMPLETATA")
     pdf.setFont("Helvetica", 8)
-    pdf.drawString(left + 16 * mm, status_y + 6.5 * mm, "La consegna è stata registrata con successo.")
+    pdf.setFillColor(dark_grey)
+    pdf.drawRightString(right, status_y, f"Data consegna: {_pod_datetime(status.completata_il)}")
+    hline(status_y - 4 * mm, width=0.35, dashed=True, color=mid_grey)
 
-    divider_x = right - 64 * mm
-    pdf.setStrokeColor(colors.HexColor("#CFE9DC"))
-    pdf.line(divider_x, status_y + 4 * mm, divider_x, status_y + status_h - 4 * mm)
-    pdf.setFillColor(muted)
-    pdf.setFont("Helvetica", 7.5)
-    pdf.drawString(divider_x + 6 * mm, status_y + 12.5 * mm, "Data e ora consegna")
-    pdf.setFillColor(navy)
-    pdf.setFont("Helvetica-Bold", 9.5)
-    pdf.drawString(divider_x + 6 * mm, status_y + 7.2 * mm, _pod_datetime(status.completata_il))
-    pdf.setFillColor(muted)
-    pdf.setFont("Helvetica", 6.8)
-    pdf.drawString(divider_x + 6 * mm, status_y + 3.2 * mm, "Europe/Rome")
-
-    # --- Details -------------------------------------------------------------------
-    details_y = page_h - 146 * mm
-    details_h = 72 * mm
-    pdf.setFillColor(white)
-    pdf.setStrokeColor(border)
-    pdf.setLineWidth(0.7)
-    pdf.roundRect(left, details_y, content_w, details_h, 4 * mm, fill=1, stroke=1)
-
-    header_h = 13 * mm
-    pdf.setFillColor(blue_soft)
-    pdf.roundRect(left, details_y + details_h - header_h, content_w, header_h, 4 * mm, fill=1, stroke=0)
-    pdf.setFillColor(blue_dark)
-    pdf.setFont("Helvetica-Bold", 10)
-    pdf.drawString(left + 6 * mm, details_y + details_h - 8.5 * mm, "Dettagli consegna")
+    # ------------------------------------------------------------------
+    # Delivery details: classic two-column document layout.
+    # ------------------------------------------------------------------
+    details_title_y = status_y - 11 * mm
+    section_title("Dati consegna", details_title_y)
 
     driver = route.driver
     vehicle = route.vehicle
     driver_name = " ".join(filter(None, [getattr(driver, "nome", None), getattr(driver, "cognome", None)])) if driver else "-"
-    vehicle_name = f'{getattr(vehicle, "nome", "") or ""}'
+    vehicle_name = (getattr(vehicle, "nome", None) or "").strip() if vehicle else ""
     if vehicle and getattr(vehicle, "targa", None):
-        vehicle_name += f' / {vehicle.targa}'
+        vehicle_name = (vehicle_name + " / " + vehicle.targa).strip(" /")
     vehicle_name = vehicle_name or "-"
 
+    col_gap = 9 * mm
+    col_w = (content_w - col_gap) / 2
+    right_col_x = left + col_w + col_gap
+    data_top = details_title_y - 9 * mm
+    row_h = 10 * mm
+
     left_rows = [
-        ("Azienda", company_name),
-        ("Giro", f'{route.id} - {route.nome or "Giro consegne"}'),
-        ("Consegna", str(delivery.id)),
         ("Cliente", delivery.cliente_nome or "-"),
         ("Indirizzo", delivery.indirizzo or "-"),
+        ("Giro", f'{route.id} - {route.nome or "Giro consegne"}'),
+        ("Consegna", str(delivery.id)),
+        ("Data / ora", _pod_datetime(status.completata_il)),
     ]
     right_rows = [
         ("Autista", driver_name),
         ("Mezzo / targa", vehicle_name),
-        ("Colli / peso kg", f'{delivery.colli or 0} / {delivery.peso_kg or 0}'),
+        ("Colli / peso", f'{delivery.colli or 0} / {delivery.peso_kg or 0} kg'),
         ("Firmatario", status.signed_by_name or "-"),
         ("Data firma", _pod_datetime(status.signed_at)),
     ]
 
-    col_gap = 8 * mm
-    col_w = (content_w - col_gap) / 2
-    col2_x = left + col_w + col_gap
-    body_top = details_y + details_h - header_h - 4 * mm
-    row_h = 10.5 * mm
-    pdf.setStrokeColor(line)
-    pdf.line(left + col_w + col_gap / 2, details_y + 5 * mm, left + col_w + col_gap / 2, body_top + 1 * mm)
+    for idx, (label, value) in enumerate(left_rows):
+        y = data_top - idx * row_h
+        field(label, value, left, y, col_w, label_width=24 * mm, max_lines=2)
+        if idx < len(left_rows) - 1:
+            hline(y - 4.1 * mm, x1=left, x2=left + col_w, width=0.25, color=very_light)
 
-    def draw_detail_column(rows, x):
-        for idx, (label, value) in enumerate(rows):
-            ry = body_top - idx * row_h
-            if idx:
-                pdf.setStrokeColor(line)
-                pdf.line(x, ry + 2.5 * mm, x + col_w, ry + 2.5 * mm)
-            pdf.setFillColor(muted)
-            pdf.setFont("Helvetica-Bold", 7.2)
-            pdf.drawString(x, ry - 0.2 * mm, label)
-            _draw_wrapped_pdf_text(pdf, value, x + 31 * mm, ry - 0.2 * mm, col_w - 31 * mm,
-                                   size=8.2, color=navy, max_lines=2)
+    for idx, (label, value) in enumerate(right_rows):
+        y = data_top - idx * row_h
+        field(label, value, right_col_x, y, col_w, label_width=27 * mm, max_lines=2)
+        if idx < len(right_rows) - 1:
+            hline(y - 4.1 * mm, x1=right_col_x, x2=right_col_x + col_w, width=0.25, color=very_light)
 
-    draw_detail_column(left_rows, left + 6 * mm)
-    draw_detail_column(right_rows, col2_x + 2 * mm)
+    # Thin vertical separator only; no boxes.
+    pdf.setStrokeColor(very_light)
+    pdf.setLineWidth(0.35)
+    pdf.line(left + col_w + col_gap / 2, data_top + 2 * mm,
+             left + col_w + col_gap / 2, data_top - 4 * row_h - 5 * mm)
 
-    # --- Notes ---------------------------------------------------------------------
-    notes_y = page_h - 180 * mm
-    notes_h = 27 * mm
-    pdf.setFillColor(light)
-    pdf.setStrokeColor(border)
-    pdf.roundRect(left, notes_y, content_w, notes_h, 4 * mm, fill=1, stroke=1)
-    pdf.setFillColor(blue_dark)
-    pdf.setFont("Helvetica-Bold", 9.5)
-    pdf.drawString(left + 6 * mm, notes_y + notes_h - 7 * mm, "Note")
+    details_bottom = data_top - 5 * row_h + 2 * mm
+    hline(details_bottom, width=0.55, color=black)
 
-    note_col_w = (content_w - 14 * mm) / 2
-    pdf.setStrokeColor(line)
-    pdf.line(left + content_w / 2, notes_y + 5 * mm, left + content_w / 2, notes_y + notes_h - 5 * mm)
-    for x, label, value in [
-        (left + 6 * mm, "Note consegna", status.note_operatore or "-"),
-        (left + content_w / 2 + 6 * mm, "Note firma", status.signature_note or "-"),
-    ]:
-        pdf.setFillColor(navy)
-        pdf.setFont("Helvetica-Bold", 7.6)
-        pdf.drawString(x, notes_y + notes_h - 13 * mm, label)
-        _draw_wrapped_pdf_text(pdf, value, x, notes_y + notes_h - 19 * mm, note_col_w,
-                               size=7.2, color=navy, leading=8.5, max_lines=2)
+    # ------------------------------------------------------------------
+    # Notes: one clean section, no panel fills.
+    # ------------------------------------------------------------------
+    notes_title_y = details_bottom - 8 * mm
+    section_title("Note", notes_title_y)
 
-    # --- Evidence: signature + delivery photo -------------------------------------
-    evidence_y = 28 * mm
-    evidence_h = notes_y - evidence_y - 5 * mm
-    gap = 5 * mm
-    panel_w = (content_w - gap) / 2
+    notes_y = notes_title_y - 9 * mm
+    half = (content_w - 8 * mm) / 2
+    pdf.setFillColor(dark_grey)
+    pdf.setFont("Helvetica-Bold", 7.2)
+    pdf.drawString(left, notes_y, "Note consegna")
+    _draw_wrapped_pdf_text(
+        pdf, status.note_operatore or "-", left, notes_y - 5 * mm, half,
+        size=7.5, color=black, leading=8.6, max_lines=2,
+    )
+    pdf.drawString(left + half + 8 * mm, notes_y, "Note firma")
+    _draw_wrapped_pdf_text(
+        pdf, status.signature_note or "-", left + half + 8 * mm, notes_y - 5 * mm, half,
+        size=7.5, color=black, leading=8.6, max_lines=2,
+    )
 
-    def evidence_panel(x, title, raw, image_padding):
-        pdf.setFillColor(white)
-        pdf.setStrokeColor(border)
-        pdf.roundRect(x, evidence_y, panel_w, evidence_h, 4 * mm, fill=1, stroke=1)
-        title_h = 12 * mm
-        pdf.setFillColor(blue_soft)
-        pdf.roundRect(x, evidence_y + evidence_h - title_h, panel_w, title_h, 4 * mm, fill=1, stroke=0)
-        pdf.setFillColor(blue_dark)
-        pdf.setFont("Helvetica-Bold", 9.2)
-        pdf.drawString(x + 5 * mm, evidence_y + evidence_h - 7.8 * mm, title)
+    notes_bottom = notes_y - 14 * mm
+    hline(notes_bottom, width=0.35, dashed=True, color=mid_grey)
+
+    # ------------------------------------------------------------------
+    # Evidence: simple black labels and thin dashed frames.
+    # Keep the original photo colors because it is evidence.
+    # ------------------------------------------------------------------
+    evidence_title_y = notes_bottom - 8 * mm
+    section_title("Prova di consegna", evidence_title_y)
+
+    evidence_top = evidence_title_y - 7 * mm
+    footer_rule_y = 21 * mm
+    evidence_bottom = footer_rule_y + 9 * mm
+    evidence_h = evidence_top - evidence_bottom
+    panel_gap = 7 * mm
+    panel_w = (content_w - panel_gap) / 2
+    image_top_pad = 8 * mm
+
+    def evidence_area(x, title, raw, padding):
+        pdf.setFillColor(black)
+        pdf.setFont("Helvetica-Bold", 8)
+        pdf.drawString(x, evidence_top, title)
+        box_y = evidence_bottom
+        box_h = evidence_h - image_top_pad
+        pdf.setStrokeColor(mid_grey)
+        pdf.setLineWidth(0.45)
+        pdf.setDash(3, 2)
+        pdf.rect(x, box_y, panel_w, box_h, fill=0, stroke=1)
+        pdf.setDash()
         _draw_contained_image(
             pdf, raw,
-            x + 4 * mm, evidence_y + 4 * mm,
-            panel_w - 8 * mm, evidence_h - title_h - 7 * mm,
-            padding=image_padding, background=True,
+            x + 2.5 * mm, box_y + 2.5 * mm,
+            panel_w - 5 * mm, box_h - 5 * mm,
+            padding=padding, background=False,
         )
 
-    evidence_panel(left, "Firma cliente", signature, 5)
-    evidence_panel(left + panel_w + gap, "Foto della consegna", photo, 4)
+    evidence_area(left, "Firma cliente", signature, 4)
+    evidence_area(left + panel_w + panel_gap, "Foto della consegna", photo, 3)
 
-    # --- Footer --------------------------------------------------------------------
-    footer_y = 15 * mm
-    pdf.setStrokeColor(colors.HexColor("#CBD5E1"))
-    pdf.line(left, footer_y + 6 * mm, right, footer_y + 6 * mm)
-    pdf.setFillColor(navy)
-    pdf.setFont("Helvetica-Bold", 7.2)
+    # ------------------------------------------------------------------
+    # Footer: print-friendly and discreet.
+    # ------------------------------------------------------------------
+    hline(footer_rule_y, width=0.55, color=black)
+
+    footer_y = 14 * mm
+    pdf.setFillColor(black)
+    pdf.setFont("Helvetica-Bold", 6.8)
     pdf.drawString(left, footer_y, "GiroFacile")
-    footer_x = left + pdf.stringWidth("GiroFacile", "Helvetica-Bold", 7.2)
-    pdf.setFillColor(muted)
-    pdf.setFont("Helvetica", 7.2)
+    footer_x = left + pdf.stringWidth("GiroFacile", "Helvetica-Bold", 6.8)
+    pdf.setFont("Helvetica", 6.8)
+    pdf.setFillColor(dark_grey)
     pdf.drawString(footer_x, footer_y, f" | POD {delivery.id} | Pagina 1 di 1")
-
     generated = local_now().replace(tzinfo=None)
-    generated_label = f"Generato il {_pod_datetime(generated)}"
-    pdf.drawRightString(right, footer_y, generated_label)
+    pdf.drawRightString(right, footer_y, f"Generato il {_pod_datetime(generated)}")
 
-    pdf.setFillColor(colors.HexColor("#94A3B8"))
-    pdf.setFont("Helvetica", 5.7)
-    legal = "SHA-256: controllo di integrità dei file; non costituisce firma digitale qualificata o certificazione legale."
-    pdf.drawCentredString(page_w / 2, footer_y - 4.5 * mm, legal)
+    pdf.setFillColor(mid_grey)
+    pdf.setFont("Helvetica", 5.4)
+    legal = "SHA-256: controllo di integrita dei file; non costituisce firma digitale qualificata o certificazione legale."
+    pdf.drawCentredString(page_w / 2, 9.5 * mm, legal)
 
     pdf.setTitle(f"GiroFacile - POD {delivery.id}")
     pdf.setAuthor("GiroFacile")
