@@ -24,7 +24,7 @@ from .routers import (
 )
 from .routers.vehicles_drivers import drivers_router, vehicles_router
 from .services.geocoding import search_address_autocomplete
-from .services.object_storage import StorageUnavailable
+from .services.object_storage import StorageUnavailable, serve_local_object
 
 # -----------------------------------------------------------------------
 # App
@@ -94,6 +94,11 @@ async def system_error_monitor(request: Request, call_next):
 
 static_dir = Path(__file__).resolve().parent.parent / "static"
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
+@app.get("/api/pod-local", include_in_schema=False)
+def pod_local_file(key: str, exp: int, dl: int = 0, sig: str = ""):
+    return serve_local_object(key, exp, dl, sig)
+
 
 # -----------------------------------------------------------------------
 # Include router
