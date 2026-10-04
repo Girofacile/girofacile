@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, case
 
 from ..database import get_db
-from ..services.delivery_signature import apply_delivery_signature
+from ..services.delivery_pod import evidence_metadata, evidence_response, commit_delivery_update
 from ..core.dependencies import current_user, owned
 from ..core.http_security import cookie_options
 from ..core.security import hash_password as secure_hash_password, password_needs_rehash, validate_password_strength, verify_password
@@ -301,7 +301,7 @@ def get_driver_route_detail(route_id: int, da: DriverAccount = Depends(get_curre
             "tempo_scarico_effettivo": ds.tempo_scarico_effettivo if ds else None,
             "note_operatore": ds.note_operatore if ds else None,
             "completata_il": ds.completata_il.isoformat() if ds and ds.completata_il else None,
-            "signature_data": ds.signature_data if ds else None,
+            **evidence_metadata(ds),
             "signed_by_name": ds.signed_by_name if ds else None,
             "signed_at": ds.signed_at.isoformat() if ds and ds.signed_at else None,
             "signature_note": ds.signature_note if ds else None,
@@ -325,6 +325,7 @@ def get_driver_route_detail(route_id: int, da: DriverAccount = Depends(get_curre
             "percentuale": round((completate + mancate) / len(deliveries) * 100) if deliveries else 0,
         },
         "settings": {
+            "delivery_photo_required": bool(getattr(db.get(User, r.user_id), "needs_photo_proof", False)),
             "delivery_signature_enabled": bool(getattr(db.get(User, r.user_id), "delivery_signature_enabled", False)) if r.user_id else False,
         },
         "tempo_scarico_options": TEMPO_SCARICO_OPTIONS,
@@ -344,7 +345,7 @@ def save_delivery_signature(delivery_id: int, payload: dict, da: DriverAccount =
     if not route or route.driver_id != da.driver_id:
         raise HTTPException(404, 'Consegna non trovata')
     status = apply_delivery_update(db, delivery, payload, 'signature')
-    db.commit()
+    commit_delivery_update(db)
     return {'ok': True, 'status': status.status}
 
 @router.post("/delivery/{delivery_id}/complete")
@@ -354,7 +355,7 @@ def complete_delivery(delivery_id: int, payload: dict, da: DriverAccount = Depen
     if not route or route.driver_id != da.driver_id:
         raise HTTPException(404, 'Consegna non trovata')
     status = apply_delivery_update(db, delivery, payload, 'complete')
-    db.commit()
+    commit_delivery_update(db)
     return {'ok': True, 'status': status.status}
 
 @router.post("/delivery/{delivery_id}/missed")
@@ -364,7 +365,7 @@ def missed_delivery(delivery_id: int, payload: dict, da: DriverAccount = Depends
     if not route or route.driver_id != da.driver_id:
         raise HTTPException(404, 'Consegna non trovata')
     status = apply_delivery_update(db, delivery, payload, 'missed')
-    db.commit()
+    commit_delivery_update(db)
     return {'ok': True, 'status': status.status}
 
 @router.post("/delivery/{delivery_id}/note")
@@ -374,7 +375,7 @@ def add_note(delivery_id: int, payload: dict, da: DriverAccount = Depends(get_cu
     if not route or route.driver_id != da.driver_id:
         raise HTTPException(404, 'Consegna non trovata')
     status = apply_delivery_update(db, delivery, payload, 'note')
-    db.commit()
+    commit_delivery_update(db)
     return {'ok': True, 'status': status.status}
 
 
@@ -651,3 +652,13 @@ def update_driver_transfer_booking(booking_id:int, payload:dict, da: DriverAccou
         row.assignment_status='completed'
     db.commit()
     return {'ok':True,'message':'Corsa aggiornata'}
+
+
+@router.get('/delivery/{delivery_id}/evidence/{kind}')
+def driver_evidence(delivery_id: int, kind: str, da: DriverAccount = Depends(get_current_driver), db: Session = Depends(get_db)):
+    delivery = db.get(Delivery, delivery_id)
+    route = db.get(RoutePlan, delivery.route_plan_id) if delivery else None
+    driver = db.get(Driver, da.driver_id)
+    if not route or not driver or route.driver_id != driver.id or route.user_id != driver.user_id:
+        raise HTTPException(404, 'Consegna non trovata')
+    return evidence_response(db, route, delivery, kind)

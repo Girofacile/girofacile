@@ -2,7 +2,7 @@
 from datetime import datetime
 from sqlalchemy import inspect, text
 
-LATEST = '20261004_02'
+LATEST = '20261004_03'
 LOCK_ID = 7640152404
 
 
@@ -43,9 +43,22 @@ def run_migrations(engine):
                 legacy_schema.harden_tenant_schema()
                 with engine.begin() as conn:
                     conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261004_01', 'now': datetime.utcnow()})
-            if LATEST not in applied:
+            if '20261004_02' not in applied:
                 with engine.begin() as conn:
                     conn.execute(text('CREATE UNIQUE INDEX IF NOT EXISTS uq_delivery_status_event_idx ON delivery_statuses (delivery_id, route_plan_id)'))
+                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261004_02', 'now': datetime.utcnow()})
+            if LATEST not in applied:
+                from .models import DeliveryStatus
+                with engine.begin() as conn:
+                    table = DeliveryStatus.__table__
+                    columns = ('signature_object_key', 'signature_size', 'signature_sha256', 'signature_content_type',
+                               'delivery_photo_object_key', 'delivery_photo_size', 'delivery_photo_sha256',
+                               'delivery_photo_content_type', 'pod_object_key', 'pod_size', 'pod_sha256', 'pod_created_at')
+                    existing = {c['name'] for c in inspect(conn).get_columns(table.name)}
+                    for name in columns:
+                        if name not in existing:
+                            sql_type = table.c[name].type.compile(dialect=engine.dialect)
+                            conn.execute(text(f'ALTER TABLE {table.name} ADD COLUMN {name} {sql_type}'))
                     conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': LATEST, 'now': datetime.utcnow()})
         finally:
             if postgres:

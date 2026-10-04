@@ -24,6 +24,7 @@ from .routers import (
 )
 from .routers.vehicles_drivers import drivers_router, vehicles_router
 from .services.geocoding import search_address_autocomplete
+from .services.object_storage import StorageUnavailable
 
 # -----------------------------------------------------------------------
 # App
@@ -61,6 +62,14 @@ async def platform_maintenance(request: Request, call_next):
         if await run_in_threadpool(enabled):
             return JSONResponse(status_code=503, content={'detail': 'Servizio temporaneamente in manutenzione. Riprova più tardi.'}, headers={'Retry-After': '60'})
     return await call_next(request)
+
+
+@app.exception_handler(StorageUnavailable)
+async def pod_storage_error(request: Request, exc: StorageUnavailable):
+    from .services.error_monitor import log_exception
+    error_id = log_exception(request, exc, severity='high')
+    return JSONResponse(status_code=503, content={'detail': exc.detail, 'error_id': error_id},
+                        headers={'Cache-Control': 'no-store'})
 
 
 @app.middleware("http")

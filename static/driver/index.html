@@ -259,6 +259,8 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
 </style>
 <link rel="stylesheet" href="/static/routing-summary.css">
 <script src="/static/routing-summary.js"></script>
+<link rel="stylesheet" href="/static/pod.css?v=1">
+<script src="/static/pod.js?v=1"></script>
 </head>
 <body>
 
@@ -407,6 +409,7 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
         <button type="button" class="btn-signature-open" onclick="openSignatureModal()">Firma avvenuta consegna</button>
       </div>
 
+      <div class="pod-photo-input"><label for="podDeliveryPhoto">Foto merce consegnata (JPEG, PNG o WebP)</label><input id="podDeliveryPhoto" type="file" accept="image/jpeg,image/png,image/webp"><small>Puoi scattare una foto o sceglierla dalla galleria. Massimo 12 MB.</small></div>
       <button class="btn-confirm green" onclick="confirmDone()">Conferma consegna</button>
     </div>
   </div>
@@ -745,6 +748,7 @@ function renderExecution(data) {
       if(c.note) detailsHtml += `<div class="di-note-box">📝 ${esc(c.note)}</div>`;
       if(c.warning) detailsHtml += `<div class="di-warn-box">⚠️ ${esc(c.warning.split('|').join(' · '))}</div>`;
       if(isDone) {
+        detailsHtml += podEvidenceButtons(c, `/api/driver/delivery/${c.id}/evidence`);
         detailsHtml += `<div class="di-done-box">✅ Consegnato${c.tempo_scarico_effettivo?` in ${c.tempo_scarico_effettivo} min`:''}${c.note_operatore?` · "${esc(c.note_operatore)}"`:''}</div>`;
         if(c.signed_by_name || c.signed_at){
           detailsHtml += `<div class="di-signature-box">✍️ Firma raccolta${c.signed_by_name?`: ${esc(c.signed_by_name)}`:''}</div>`;
@@ -857,7 +861,7 @@ function updateSignatureRequestCard(){
   const status = document.getElementById('signatureRequestStatus');
   if(!card) return;
   card.classList.toggle('hidden', !sigEnabled);
-  const hasSignature = !!currentSignatureDraft?.signature_data;
+  const hasSignature = !!(currentSignatureDraft?.signature_data || currentSignatureDraft?.has_signature);
   card.classList.toggle('done', hasSignature);
   if(status){
     status.textContent = hasSignature
@@ -891,7 +895,8 @@ async function saveSignatureFromModal(){
     });
   }catch(e){
     // In caso di rete lenta manteniamo comunque la firma nella conferma: verrà inviata anche alla chiusura consegna.
-    console.warn('Salvataggio firma anticipato non riuscito:', e);
+    alert(e.message + ' La firma resta in questa schermata; riprova prima di uscire.');
+    return;
   }
   closeSignatureModal();
   updateSignatureRequestCard();
@@ -903,10 +908,11 @@ async function saveSignatureFromModal(){
 function openDone(id) {
   currentDeliveryId = id;
   selectedTempo = null;
+  document.getElementById('podDeliveryPhoto').value = '';
   signaturePadDirty = false;
   const existing = (currentRouteData?.consegne || []).find(x => Number(x.id) === Number(id));
-  currentSignatureDraft = existing?.signature_data ? {
-    signature_data: existing.signature_data,
+  currentSignatureDraft = existing?.has_signature ? {
+    has_signature: true,
     signed_by_name: existing.signed_by_name || '',
     signature_note: existing.signature_note || ''
   } : null;
@@ -931,7 +937,7 @@ async function confirmDone() {
     note:document.getElementById('noteDone').value
   };
   if(sigEnabled){
-    if(!currentSignatureDraft?.signature_data){
+    if(!(currentSignatureDraft?.signature_data || currentSignatureDraft?.has_signature)){
       alert('Devi prima acquisire la firma del cliente.');
       return;
     }
@@ -940,6 +946,7 @@ async function confirmDone() {
     payload.signature_note = currentSignatureDraft.signature_note || '';
   }
   try {
+    Object.assign(payload, await podPhotoPayload(!!currentRouteData?.settings?.delivery_photo_required));
     await api(`/api/driver/delivery/${currentDeliveryId}/complete`, {
       method:'POST', body:JSON.stringify(payload)
     });

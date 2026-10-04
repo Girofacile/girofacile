@@ -1651,15 +1651,7 @@ function signatureDateLabel(value){
   }catch(e){ return value; }
 }
 function deliverySignatureAction(d, driverName=''){
-  if(!d || !d.signature_data) return '';
-  const payload = encodeURIComponent(JSON.stringify({
-    data:d.signature_data,
-    name:d.signed_by_name || '',
-    signedAt:d.signed_at || '',
-    note:d.signature_note || '',
-    driver:driverName || d.driver_name || ''
-  }));
-  return `<button type="button" class="btn-mini signature-mini-btn" onclick="openDeliverySignature('${payload}')">✍️ Firma</button>`;
+  return d ? podEvidenceButtons(d, `/api/deliveries/${Number(d.id)}/evidence`) : '';
 }
 function openDeliverySignature(payload){
   let info = {};

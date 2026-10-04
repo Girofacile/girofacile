@@ -561,6 +561,19 @@ class DeliveryStatus(Base):
     note_operatore: Mapped[str | None] = mapped_column(String(500), nullable=True)
     completata_il: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
+    signature_object_key: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    signature_size: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    signature_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    signature_content_type: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    delivery_photo_object_key: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    delivery_photo_size: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    delivery_photo_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    delivery_photo_content_type: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    pod_object_key: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    pod_size: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    pod_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    pod_created_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
     # Firma cliente alla consegna
     signature_data: Mapped[str | None] = mapped_column(Text, nullable=True)
     signed_by_name: Mapped[str | None] = mapped_column(String(200), nullable=True)

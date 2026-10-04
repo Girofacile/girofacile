@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 from ..core.dependencies import current_user
 from ..core.utils import date_to_iso, time_to_hhmm
 from ..database import get_db
-from ..services.delivery_signature import apply_delivery_signature
+from ..services.delivery_pod import evidence_metadata, evidence_response, commit_delivery_update
 from ..models import (
     Customer, Delivery, DeliveryStatus, RoutePlan, RouteToken, User
 )
@@ -46,6 +46,7 @@ def get_route_by_token(token: str, db: Session) -> tuple[RouteToken, RoutePlan]:
 def delivery_to_operator_dict(delivery: Delivery, status: DeliveryStatus | None) -> dict:
     return {
         "id": delivery.id,
+        **evidence_metadata(status),
         "ordine": delivery.ordine,
         "customer_id": delivery.customer_id,
         "cliente_nome": delivery.cliente_nome,
@@ -193,6 +194,7 @@ def get_operator_route(token: str, db: Session = Depends(get_db)):
             "prossima_idx": prossima_idx,
             "percentuale": round((completate + mancate) / len(deliveries) * 100) if deliveries else 0,
         },
+        "delivery_photo_required": bool(getattr(db.get(User, plan.user_id), "needs_photo_proof", False)),
         "delivery_signature_enabled": bool(getattr(db.get(User, plan.user_id), "delivery_signature_enabled", False)),
         "tempo_scarico_options": TEMPO_SCARICO_OPTIONS,
         "motivi_mancata": MOTIVI_MANCATA,
@@ -206,7 +208,7 @@ def complete_delivery(token: str, delivery_id: int, payload: dict, db: Session =
     if not delivery:
         raise HTTPException(404, 'Consegna non trovata')
     status = apply_delivery_update(db, delivery, payload, 'complete')
-    db.commit()
+    commit_delivery_update(db)
     return {'ok': True, 'status': status.status}
 
 
@@ -217,7 +219,7 @@ def missed_delivery(token: str, delivery_id: int, payload: dict, db: Session = D
     if not delivery:
         raise HTTPException(404, 'Consegna non trovata')
     status = apply_delivery_update(db, delivery, payload, 'missed')
-    db.commit()
+    commit_delivery_update(db)
     return {'ok': True, 'status': status.status}
 
 
@@ -228,7 +230,7 @@ def add_delivery_note(token: str, delivery_id: int, payload: dict, db: Session =
     if not delivery:
         raise HTTPException(404, 'Consegna non trovata')
     status = apply_delivery_update(db, delivery, payload, 'note')
-    db.commit()
+    commit_delivery_update(db)
     return {'ok': True, 'status': status.status}
 
 
@@ -288,3 +290,12 @@ def route_live_status(
         "link_operatore": f"/giro/{rt.token}" if rt else None,
         "consegne": [delivery_to_operator_dict(d, statuses.get(d.id)) for d in deliveries],
     }
+
+
+@router.get('/api/operator/{token}/delivery/{delivery_id}/evidence/{kind}')
+def operator_evidence(token: str, delivery_id: int, kind: str, db: Session = Depends(get_db)):
+    _, route = get_route_by_token(token, db)
+    delivery = db.query(Delivery).filter_by(id=delivery_id, route_plan_id=route.id).first()
+    if not delivery:
+        raise HTTPException(404, 'Consegna non trovata')
+    return evidence_response(db, route, delivery, kind)

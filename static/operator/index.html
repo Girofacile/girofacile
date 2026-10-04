@@ -138,6 +138,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 </style>
 <link rel="stylesheet" href="/static/routing-summary.css">
 <script src="/static/routing-summary.js"></script>
+<link rel="stylesheet" href="/static/pod.css?v=1">
+<script src="/static/pod.js?v=1"></script>
 </head>
 <body>
 
@@ -214,6 +216,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
         <canvas id="operatorSignatureCanvas" width="600" height="200" aria-label="Riquadro firma cliente" style="width:100%;height:160px;background:white;border:1px solid #cbd5e1;touch-action:none"></canvas>
         <button type="button" class="btn-note" onclick="clearOperatorSignature()">Cancella firma</button>
       </div>
+      <div class="pod-photo-input"><label for="podDeliveryPhoto">Foto merce consegnata (JPEG, PNG o WebP)</label><input id="podDeliveryPhoto" type="file" accept="image/jpeg,image/png,image/webp"><small>Puoi scattare una foto o sceglierla dalla galleria. Massimo 12 MB.</small></div>
       <button class="btn-confirm green" onclick="confirmDone()">Conferma consegna</button>
     </div>
   </div>
@@ -382,7 +385,7 @@ function render() {
         html += `<div class="dc-warning">⚠️ ${esc(c.warning.split('|').join(' · '))}</div>`;
       }
       if (isDone) {
-        html += `<div class="dc-done-info">✅ Consegnato${c.tempo_scarico_effettivo ? ` in ${c.tempo_scarico_effettivo} min` : ''}${c.note_operatore ? ` · "${esc(c.note_operatore)}"` : ''}</div>`;
+        html += `<div class="dc-done-info">✅ Consegnato${c.tempo_scarico_effettivo ? ` in ${c.tempo_scarico_effettivo} min` : ''}${podEvidenceButtons(c, `/api/operator/${token}/delivery/${c.id}/evidence`)}${c.note_operatore ? ` · "${esc(c.note_operatore)}"` : ''}</div>`;
       }
       if (isMissed) {
         const motiviLabels = {assente:'Cliente assente',chiuso:'Attività chiusa',rifiutato:'Consegna rifiutata',altro:'Altro'};
@@ -433,6 +436,7 @@ function render() {
 function openDone(id) {
   currentDeliveryId = id;
   selectedTempo = null;
+  document.getElementById('podDeliveryPhoto').value = '';
   document.getElementById('noteDone').value = '';
   clearOperatorSignature();
   document.getElementById('operatorSignatureBox').classList.toggle('hidden', !routeData.delivery_signature_enabled);
@@ -452,7 +456,7 @@ async function confirmDone() {
   try {
     await api(`/api/operator/${token}/delivery/${currentDeliveryId}/complete`, {
       method: 'POST',
-      body: JSON.stringify({ tempo_scarico: selectedTempo, note: document.getElementById('noteDone').value, ...operatorSignaturePayload() })
+      body: JSON.stringify({ tempo_scarico: selectedTempo, note: document.getElementById('noteDone').value, ...operatorSignaturePayload(), ...await podPhotoPayload(!!routeData.delivery_photo_required) })
     });
     closeModals();
     await load();

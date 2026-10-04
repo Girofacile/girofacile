@@ -27,7 +27,7 @@ test('report export is implemented and unfinished features cannot be enabled in 
   const html=readFileSync('static/dashboard/index.html','utf8');
   assert.ok(html.indexOf('js/reports.js') < html.indexOf('js/core.js'));
   assert.match(html,/onclick="printReport\(\)"/);
-  for(const id of ['featurePhotoProofV89','featureRefrigeratedV89']){
+  for(const id of ['featureRefrigeratedV89']){
     assert.match(html,new RegExp(`<input[^>]*id="${id}"[^>]*disabled`));
   }
 });

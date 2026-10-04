@@ -27,6 +27,8 @@
 <link rel="stylesheet" href="/static/dashboard/css/electric-vehicles.css?v=electric_style_20261003">
 <script src="/static/dashboard/js/electric-vehicles.js?v=electric_bonus_20261002"></script>
 <link rel="stylesheet" href="/static/dashboard/css/management.css?v=audit_20261004">
+<link rel="stylesheet" href="/static/pod.css?v=1">
+<script src="/static/pod.js?v=1"></script>
 </head>
 <body>
 
@@ -983,10 +985,10 @@
           </div><p id="settingsDetail2" class="settings-detail hidden">Le fasce orarie dei clienti vengono considerate nella pianificazione dei giri.</p></div>
           <div class="settings-item"><div class="setting-row">
             <span class="settings-icon purple"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h4l2-3h6l2 3h4v14H3Z"/><circle cx="12" cy="13" r="4"/></svg></span>
-            <div class="setting-copy"><strong id="settingsTitle3">Foto prova consegna - In sviluppo</strong><span id="settingsDescription3">La raccolta di fotografie non è ancora disponibile. Questa opzione sarà attivabile al completamento della funzione.</span></div>
-            <label class="switch-toggle"><input id="featurePhotoProofV89" type="checkbox" role="switch" aria-labelledby="settingsTitle3" aria-describedby="settingsDescription3" disabled onchange="markSettingsDirtyV893()"><span class="switch-slider"></span></label>
-            <button type="button" class="settings-expand" aria-label="Dettagli: Foto prova consegna - In sviluppo" aria-expanded="false" aria-controls="settingsDetail3" onclick="toggleSettingsDetail(this)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button>
-          </div><p id="settingsDetail3" class="settings-detail hidden">Funzione in sviluppo: al momento non è possibile attivare la raccolta di fotografie.</p></div>
+            <div class="setting-copy"><strong id="settingsTitle3">Foto prova consegna</strong><span id="settingsDescription3">Se attiva, la foto della merce è obbligatoria prima di completare la consegna.</span></div>
+            <label class="switch-toggle"><input id="featurePhotoProofV89" type="checkbox" role="switch" aria-labelledby="settingsTitle3" aria-describedby="settingsDescription3" onchange="markSettingsDirtyV893()"><span class="switch-slider"></span></label>
+            <button type="button" class="settings-expand" aria-label="Dettagli: Foto prova consegna" aria-expanded="false" aria-controls="settingsDetail3" onclick="toggleSettingsDetail(this)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button>
+          </div><p id="settingsDetail3" class="settings-detail hidden">Firma, foto e POD vengono archiviati privatamente. Configurare lo storage prima di attivare questa opzione.</p></div>
           <div class="settings-item"><div class="setting-row">
             <span class="settings-icon pink"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 5 6-2 6 3 6-2v16l-6 2-6-3-6 2ZM9 3v16M15 6v16"/></svg></span>
             <div class="setting-copy"><strong id="settingsTitle4">ZTL e zone difficili</strong><span id="settingsDescription4">Usa i vincoli di accesso quando pianifichi clienti e mezzi.</span></div>
@@ -1730,7 +1732,7 @@
 <script src="/static/dashboard/js/reports.js?v=audit_20261004"></script>
 <script src="/static/dashboard/js/customers.js?v=customers_20260929"></script>
 <script src="/static/dashboard/js/navigation.js?v=audit_20261004"></script>
-<script src="/static/dashboard/js/core.js?v=audit_20261004"></script>
+<script src="/static/dashboard/js/core.js?v=pod_20261004"></script>
 
 <script>
 function toggleLoginPassword(){

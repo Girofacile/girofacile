@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field, ValidationError
 
 from ..core.utils import local_now, local_today
 from ..models import RoutePlan, DeliveryStatus, User, Customer
-from .delivery_signature import apply_delivery_signature
+from .delivery_pod import save_delivery_evidence, commit_delivery_update
 
 
 class DeliveryUpdate(BaseModel):
@@ -15,6 +15,7 @@ class DeliveryUpdate(BaseModel):
     motivo: Literal['assente', 'chiuso', 'rifiutato', 'altro'] = 'altro'
     note: str | None = Field(default=None, max_length=500)
     signature_data: str | None = Field(default=None, max_length=2_000_000)
+    delivery_photo_data: str | None = Field(default=None, max_length=16_000_100)
     signed_by_name: str | None = Field(default=None, max_length=200)
     signature_note: str | None = Field(default=None, max_length=2000)
 
@@ -52,11 +53,11 @@ def refresh_route_completion(route_plan_id, db):
         mark_completed(route)
 
 
-def apply_delivery_update(db, delivery, payload, action):
+def _apply_delivery_update(db, delivery, payload, action):
     try:
         data = DeliveryUpdate.model_validate(payload).model_dump()
     except ValidationError as exc:
-        raise HTTPException(422, str(exc))
+        raise HTTPException(422, exc.errors(include_input=False, include_url=False))
     route = db.query(RoutePlan).filter_by(id=delivery.route_plan_id).with_for_update().populate_existing().one()
     if route.status == 'annullato':
         raise HTTPException(409, 'Il giro è annullato')
@@ -72,7 +73,6 @@ def apply_delivery_update(db, delivery, payload, action):
     if action in ('complete', 'signature'):
         if action == 'signature' and not owner.delivery_signature_enabled:
             raise HTTPException(400, 'Firma cliente non attiva per questa azienda')
-        apply_delivery_signature(status, data, owner, required=True)
     from .usage_limits import start_route_usage
     start_route_usage(db, route)
     db.add(status)
@@ -91,4 +91,14 @@ def apply_delivery_update(db, delivery, payload, action):
         refresh_route_completion(route.id, db)
     elif action == 'note':
         status.note_operatore = (data['note'] or '').strip() or None
+    if action in ('complete', 'signature'):
+        save_delivery_evidence(db, route, delivery, status, data, owner, action)
     return status
+
+
+def apply_delivery_update(db, delivery, payload, action):
+    try:
+        return _apply_delivery_update(db, delivery, payload, action)
+    except Exception:
+        db.rollback()
+        raise

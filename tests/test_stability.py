@@ -27,7 +27,11 @@ def seed_route(env):
 
 
 @pytest.mark.parametrize('portal', ['operator', 'driver'])
-def test_signature_required_for_every_completion_portal(env, portal):
+def test_signature_required_for_every_completion_portal(env, portal, monkeypatch):
+    from pod_fake import FakeStorage
+    from app.services import object_storage
+    storage = FakeStorage()
+    monkeypatch.setattr(object_storage, "get_storage", lambda: storage)
     from app.routers import operator, driver
     from app.models import DeliveryStatus
     client, db, owner, *_ = env

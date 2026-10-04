@@ -1,3 +1,4 @@
+from ..services.delivery_pod import evidence_metadata, evidence_response
 from datetime import datetime, timedelta
 import time
 
@@ -399,7 +400,7 @@ def serialize_route(plan):
             "tempo_scarico_effettivo": (status_map.get(d.id).tempo_scarico_effettivo if status_map.get(d.id) else None),
             "note_operatore": (status_map.get(d.id).note_operatore if status_map.get(d.id) else None),
             "completata_il": (status_map.get(d.id).completata_il.isoformat() if status_map.get(d.id) and status_map.get(d.id).completata_il else None),
-            "signature_data": (status_map.get(d.id).signature_data if status_map.get(d.id) else None),
+            **evidence_metadata(status_map.get(d.id)),
             "signed_by_name": (status_map.get(d.id).signed_by_name if status_map.get(d.id) else None),
             "signed_at": (status_map.get(d.id).signed_at.isoformat() if status_map.get(d.id) and status_map.get(d.id).signed_at else None),
             "signature_note": (status_map.get(d.id).signature_note if status_map.get(d.id) else None),
@@ -955,3 +956,12 @@ def list_routes(db: Session = Depends(get_db), user: User = Depends(current_user
         "vehicle_name": ((r.vehicle.nome + (" · " + r.vehicle.targa if r.vehicle and r.vehicle.targa else "")) if r.vehicle else ""),
         "status": computed_route_status(r), "status_label": route_status_label(computed_route_status(r)),
     } for r in closed_rows]
+
+
+@router.get('/api/deliveries/{delivery_id}/evidence/{kind}')
+def company_evidence(delivery_id: int, kind: str, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    delivery = db.get(Delivery, delivery_id)
+    route = db.get(RoutePlan, delivery.route_plan_id) if delivery else None
+    if not route or route.user_id != user.id:
+        raise HTTPException(404, 'Consegna non trovata')
+    return evidence_response(db, route, delivery, kind)
