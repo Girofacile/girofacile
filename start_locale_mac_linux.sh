@@ -12,4 +12,5 @@ export COOKIE_SECURE=false
 export TRUST_PROXY_HEADERS=false
 export DATABASE_URL='postgresql+psycopg2://girofacile:girofacile_local@localhost:5432/girofacile'
 echo "Apri: http://127.0.0.1:8000/login"
+python -m app.migrations
 python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000

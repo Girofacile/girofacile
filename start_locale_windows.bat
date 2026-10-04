@@ -41,5 +41,7 @@ echo Avvio applicazione...
 echo Apri nel browser: http://127.0.0.1:8000/login
 echo Per fermare il server: CTRL+C
 echo.
+python -m app.migrations
+if errorlevel 1 exit /b 1
 python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 pause

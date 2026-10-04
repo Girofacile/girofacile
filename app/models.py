@@ -508,6 +508,8 @@ class RoutePlan(Base):
     status: Mapped[str] = mapped_column(String(30), default="programmato")
     started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    started_at_utc: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    completed_at_utc: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     cancelled_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     deposit = relationship("Deposit")
@@ -547,6 +549,7 @@ class Delivery(Base):
 class DeliveryStatus(Base):
     """Stato di ogni singola consegna durante l'esecuzione del giro."""
     __tablename__ = "delivery_statuses"
+    __table_args__ = (UniqueConstraint('delivery_id', 'route_plan_id', name='uq_delivery_status_event'),)
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     delivery_id: Mapped[int] = mapped_column(ForeignKey("deliveries.id", ondelete="CASCADE"), nullable=False, index=True)
     route_plan_id: Mapped[int] = mapped_column(ForeignKey("route_plans.id", ondelete="CASCADE"), nullable=False, index=True)
@@ -563,6 +566,12 @@ class DeliveryStatus(Base):
     signed_by_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
     signed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     signature_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+
+class RevokedSession(Base):
+    __tablename__ = "revoked_sessions"
+    token_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, index=True)
 
 
 class RouteToken(Base):

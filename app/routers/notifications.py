@@ -98,11 +98,13 @@ def sync_operational_notifications(db: Session, user: User) -> None:
     mancate.
     """
     user_id = user.id
+    db.query(User).filter(User.id == user_id).with_for_update().one()
     since = datetime.utcnow() - timedelta(days=14)
 
     # Chat libere o collegate a giri: notifica se ci sono messaggi autista non letti.
     unread_driver_msgs = (
-        db.query(ChatMessage)
+        db.query(ChatMessage).join(Driver, Driver.id == ChatMessage.driver_id)
+        .filter(Driver.user_id == user_id, Driver.deleted_at.is_(None))
         .filter(ChatMessage.sender_type == "driver", ChatMessage.read_at.is_(None))
         .order_by(ChatMessage.created_at.desc())
         .limit(200)
@@ -122,7 +124,7 @@ def sync_operational_notifications(db: Session, user: User) -> None:
         _ensure_notification(
             db,
             user_id,
-            f"chat_driver_unread:{driver.id}:{count}",
+            f"chat_driver_message:{driver.id}:{msg.id}",
             "chat",
             "Nuovo messaggio autista",
             f"{_driver_name(driver)} ha {count} messagg{'io' if count == 1 else 'i'} non lett{'o' if count == 1 else 'i'}.",
@@ -197,7 +199,8 @@ def sync_operational_notifications(db: Session, user: User) -> None:
 
     # Consegne mancate recenti.
     missed = (
-        db.query(DeliveryStatus)
+        db.query(DeliveryStatus).join(RoutePlan, RoutePlan.id == DeliveryStatus.route_plan_id)
+        .filter(RoutePlan.user_id == user_id)
         .filter(DeliveryStatus.status == "mancata")
         .order_by(DeliveryStatus.id.desc())
         .limit(100)

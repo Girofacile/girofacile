@@ -42,7 +42,7 @@ def test_deposit_timestamp_migration_keeps_legacy_dates_unknown_and_is_repeatabl
     db.close()
     with engine.begin() as conn:
         conn.execute(sqlalchemy.text('ALTER TABLE deposits DROP COLUMN updated_at'))
-    tree = ast.parse(Path('app/main.py').read_text())
+    tree = ast.parse(Path('app/legacy_schema.py').read_text())
     fn = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == 'migrate_database')
     namespace = {**vars(sqlalchemy), 'Base': Base, 'engine': engine}
     exec(compile(ast.Module(body=[fn], type_ignores=[]), '<migration>', 'exec'), namespace)

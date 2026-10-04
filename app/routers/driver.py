@@ -1,3 +1,5 @@
+from ..services.identity import ensure_login_email_available
+from ..services.route_execution import apply_delivery_update, get_or_create_delivery_status, update_customer_unload_time, refresh_route_completion
 from ..services.route_enrichment import routing_metadata, json_data, TIMING_DETAILS
 """
 Portale autista — autenticazione separata, giri assegnati, chat, monitoraggio.
@@ -7,8 +9,9 @@ import os
 import secrets
 from datetime import datetime, timedelta
 
-from fastapi import APIRouter, Cookie, Depends, HTTPException, Response
+from fastapi import Request, APIRouter, Cookie, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
+from sqlalchemy import func, case
 
 from ..database import get_db
 from ..services.delivery_signature import apply_delivery_signature
@@ -21,6 +24,9 @@ from ..models import (
     ChatMessage, Customer, Delivery, DeliveryStatus,
     Driver, DriverAccount, DriverSetupToken, RoutePlan, User
 )
+
+from ..services.sessions import read_session, active_identity, logout_sessions
+from ..core.security import make_account_token
 
 router = APIRouter(prefix="/api/driver", tags=["driver"])
 
@@ -46,23 +52,6 @@ MOTIVI_LABELS = {
     "altro": "Altro motivo"
 }
 
-def update_customer_unload_time(customer: Customer, tempo: int):
-    """Aggiorna il tempo scarico stimato usando una media progressiva.
-
-    L'autista inserisce il tempo reale della singola consegna; il profilo
-    cliente viene aggiornato senza sostituire brutalmente il dato storico.
-    """
-    try:
-        tempo = int(tempo)
-    except Exception:
-        return
-    if tempo <= 0:
-        return
-    count = int(getattr(customer, "tempo_scarico_rilevazioni", 0) or 0)
-    current = int(getattr(customer, "tempo_scarico_min", 10) or 10)
-    new_avg = round(((current * count) + tempo) / (count + 1))
-    customer.tempo_scarico_min = int(new_avg)
-    customer.tempo_scarico_rilevazioni = count + 1
 
 
 # -----------------------------------------------------------------------
@@ -77,66 +66,17 @@ def hash_password(password: str) -> str:
 def make_driver_token(driver_account_id: int) -> str:
     return hashlib.sha256(f"driver-{driver_account_id}-{secrets.token_hex(16)}".encode()).hexdigest()
 
-def get_current_driver(
-    driver_session: str | None = Cookie(default=None),
-    db: Session = Depends(get_db)
-) -> DriverAccount:
-    if not driver_session:
-        raise HTTPException(401, "Non autenticato")
-    # Token = sha256 of "driver-{id}-{secret}" stored as cookie
-    # We store token in a simple way: "id:hash"
-    try:
-        parts = driver_session.split(":", 1)
-        if len(parts) != 2:
-            raise HTTPException(401, "Sessione non valida")
-        da_id = int(parts[0])
-        token_hash = parts[1]
-        da = db.get(DriverAccount, da_id)
-        if not da or not da.is_active:
-            raise HTTPException(401, "Account non trovato")
-        expected = hashlib.sha256(f"driver-session-{da_id}-{da.password_hash}".encode()).hexdigest()
-        if token_hash != expected:
-            raise HTTPException(401, "Sessione scaduta")
-        return da
-    except (ValueError, AttributeError):
-        raise HTTPException(401, "Sessione non valida")
+def get_current_driver(driver_session: str | None = Cookie(default=None), db: Session = Depends(get_db)) -> DriverAccount:
+    account = read_session(driver_session, 'driver', db)
+    if not account:
+        raise HTTPException(401, "Sessione non valida o account disabilitato")
+    return account
 
-def make_session_token(da: DriverAccount) -> str:
-    token_hash = hashlib.sha256(f"driver-session-{da.id}-{da.password_hash}".encode()).hexdigest()
-    return f"{da.id}:{token_hash}"
-
-def get_or_create_delivery_status(delivery_id: int, route_plan_id: int, db: Session) -> DeliveryStatus:
-    ds = db.query(DeliveryStatus).filter(
-        DeliveryStatus.delivery_id == delivery_id,
-        DeliveryStatus.route_plan_id == route_plan_id
-    ).first()
-    if not ds:
-        ds = DeliveryStatus(delivery_id=delivery_id, route_plan_id=route_plan_id, status="in_attesa")
-        db.add(ds)
-        db.commit()
-        db.refresh(ds)
-    return ds
+def make_session_token(account: DriverAccount) -> str:
+    return make_account_token('driver', account.id, account.password_hash)
 
 
-def refresh_route_completion(route_plan_id: int, db: Session) -> None:
-    """Chiude automaticamente il giro quando tutte le consegne sono gestite."""
-    route = db.get(RoutePlan, route_plan_id)
-    if not route:
-        return
-    deliveries = list(route.deliveries or [])
-    if not deliveries:
-        return
-    statuses = {
-        ds.delivery_id: ds.status
-        for ds in db.query(DeliveryStatus).filter(DeliveryStatus.route_plan_id == route_plan_id).all()
-    }
-    all_closed = all(statuses.get(d.id) in ("completata", "mancata") for d in deliveries)
-    if all_closed and route.status != "completato":
-        route.status = "completato"
-        route.completed_at = datetime.utcnow()
-    elif not all_closed and route.status == "completato":
-        route.status = "in_corso"
-        route.completed_at = None
+
 
 
 # -----------------------------------------------------------------------
@@ -180,9 +120,10 @@ def complete_setup(token: str, payload: dict, response: Response, db: Session = 
         raise HTTPException(400, str(exc))
 
     driver = db.get(Driver, st.driver_id)
-    if not driver or not driver.email:
+    if not driver or not driver.email or not driver.is_active or driver.deleted_at is not None:
         raise HTTPException(400, "Email autista non configurata")
 
+    ensure_login_email_available(db, driver.email, "driver", driver.id)
     # Controlla se esiste già un account
     existing = db.query(DriverAccount).filter(DriverAccount.driver_id == driver.id).first()
     if existing:
@@ -219,7 +160,7 @@ def driver_login(payload: dict, response: Response, db: Session = Depends(get_db
     da = db.query(DriverAccount).filter(DriverAccount.email == email).first()
     if not da or not verify_password(password, da.password_hash):
         raise HTTPException(401, "Email o password non corretti")
-    if not da.is_active:
+    if not active_identity(da, db):
         raise HTTPException(403, "Account disabilitato")
     if password_needs_rehash(da.password_hash):
         da.password_hash = hash_password(password)
@@ -236,9 +177,9 @@ def driver_login(payload: dict, response: Response, db: Session = Depends(get_db
     }
 
 @router.post("/logout")
-def driver_logout(response: Response):
-    response.delete_cookie("driver_session")
-    return {"ok": True}
+def driver_logout(response: Response, request: Request, db: Session = Depends(get_db)):
+    logout_sessions(request, response, db, ('driver_session',))
+    return {'ok': True}
 
 @router.get("/me")
 def driver_me(da: DriverAccount = Depends(get_current_driver), db: Session = Depends(get_db)):
@@ -282,7 +223,7 @@ def get_driver_routes(da: DriverAccount = Depends(get_current_driver), db: Sessi
             try:
                 mins = minutes_from_hhmm(r.orario_partenza)
                 h, m = divmod(mins or 0, 60)
-                now = datetime.now()
+                now = local_now().replace(tzinfo=None)
                 scheduled = now.replace(hour=h, minute=m, second=0, microsecond=0)
                 before_time = now < scheduled
             except Exception:
@@ -311,26 +252,17 @@ def get_driver_routes(da: DriverAccount = Depends(get_current_driver), db: Sessi
 
 @router.post("/routes/{route_id}/start")
 def start_route(route_id: int, da: DriverAccount = Depends(get_current_driver), db: Session = Depends(get_db)):
-    """Avvia il giro (cambia status a in_corso)."""
-    r = db.query(RoutePlan).filter(
-        RoutePlan.id == route_id,
-        RoutePlan.driver_id == da.driver_id
-    ).first()
-    if not r:
-        raise HTTPException(404, "Giro non trovato")
-    if r.status not in ("completato", "annullato"):
-        from ..services.usage_limits import start_route_usage
-        start_route_usage(db, r)
-        r.status = "in_corso"
-        if not getattr(r, "started_at", None):
-            r.started_at = local_now().replace(tzinfo=None)
+    route = db.query(RoutePlan).filter_by(id=route_id, driver_id=da.driver_id).with_for_update().first()
+    if not route:
+        raise HTTPException(404, 'Giro non trovato')
+    if route.status in ('annullato', 'completato'):
+        raise HTTPException(409, 'Il giro è già chiuso')
+    if route.status != 'in_corso' and route.data_giro != local_today():
+        raise HTTPException(409, 'Puoi avviare il giro soltanto nel giorno programmato')
+    from ..services.usage_limits import start_route_usage
+    start_route_usage(db, route)
     db.commit()
-
-    # Inizializza DeliveryStatus per tutte le consegne
-    for d in (r.deliveries or []):
-        get_or_create_delivery_status(d.id, r.id, db)
-
-    return {"ok": True}
+    return {'ok': True}
 
 @router.get("/routes/{route_id}")
 def get_driver_route_detail(route_id: int, da: DriverAccount = Depends(get_current_driver), db: Session = Depends(get_db)):
@@ -347,13 +279,10 @@ def get_driver_route_detail(route_id: int, da: DriverAccount = Depends(get_curre
         ds.delivery_id: ds
         for ds in db.query(DeliveryStatus).filter(DeliveryStatus.route_plan_id == r.id).all()
     }
-    for d in deliveries:
-        if d.id not in statuses:
-            statuses[d.id] = get_or_create_delivery_status(d.id, r.id, db)
 
     completate = sum(1 for ds in statuses.values() if ds.status == "completata")
     mancate = sum(1 for ds in statuses.values() if ds.status == "mancata")
-    prossima_idx = next((i for i, d in enumerate(deliveries) if statuses.get(d.id) and statuses[d.id].status == "in_attesa"), None)
+    prossima_idx = next((i for i, d in enumerate(deliveries) if (not statuses.get(d.id) or statuses[d.id].status == "in_attesa")), None)
 
     def ds_dict(d):
         ds = statuses.get(d.id)
@@ -410,82 +339,43 @@ def get_driver_route_detail(route_id: int, da: DriverAccount = Depends(get_curre
 
 @router.post("/delivery/{delivery_id}/signature")
 def save_delivery_signature(delivery_id: int, payload: dict, da: DriverAccount = Depends(get_current_driver), db: Session = Depends(get_db)):
-    d = db.get(Delivery, delivery_id)
-    if not d:
-        raise HTTPException(404, "Consegna non trovata")
-    r = db.get(RoutePlan, d.route_plan_id)
-    if not r or r.driver_id != da.driver_id:
-        raise HTTPException(403, "Non autorizzato")
-    owner = db.get(User, r.user_id) if r and r.user_id else None
-    if not owner or not getattr(owner, "delivery_signature_enabled", False):
-        raise HTTPException(400, "Firma cliente non attiva per questa azienda")
-
-    from ..services.usage_limits import start_route_usage
-    start_route_usage(db, r)
-    ds = get_or_create_delivery_status(delivery_id, d.route_plan_id, db)
-    apply_delivery_signature(ds, payload, owner, required=True)
+    delivery = db.get(Delivery, delivery_id)
+    route = db.get(RoutePlan, delivery.route_plan_id) if delivery else None
+    if not route or route.driver_id != da.driver_id:
+        raise HTTPException(404, 'Consegna non trovata')
+    status = apply_delivery_update(db, delivery, payload, 'signature')
     db.commit()
-    return {"ok": True}
+    return {'ok': True, 'status': status.status}
 
 @router.post("/delivery/{delivery_id}/complete")
 def complete_delivery(delivery_id: int, payload: dict, da: DriverAccount = Depends(get_current_driver), db: Session = Depends(get_db)):
-    d = db.get(Delivery, delivery_id)
-    if not d:
-        raise HTTPException(404, "Consegna non trovata")
-    r = db.get(RoutePlan, d.route_plan_id)
-    if not r or r.driver_id != da.driver_id:
-        raise HTTPException(403, "Non autorizzato")
-    from ..services.usage_limits import start_route_usage
-    start_route_usage(db, r)
-    ds = get_or_create_delivery_status(delivery_id, d.route_plan_id, db)
-    owner = db.get(User, r.user_id) if r.user_id else None
-    apply_delivery_signature(ds, payload, owner, required=True)
-    ds.status = "completata"
-    ds.tempo_scarico_effettivo = payload.get("tempo_scarico")
-    ds.note_operatore = payload.get("note") or None
-    ds.completata_il = local_now().replace(tzinfo=None)
-
-    if payload.get("tempo_scarico") and d.customer_id:
-        customer = db.get(Customer, d.customer_id)
-        if customer:
-            update_customer_unload_time(customer, payload["tempo_scarico"])
-    refresh_route_completion(d.route_plan_id, db)
+    delivery = db.get(Delivery, delivery_id)
+    route = db.get(RoutePlan, delivery.route_plan_id) if delivery else None
+    if not route or route.driver_id != da.driver_id:
+        raise HTTPException(404, 'Consegna non trovata')
+    status = apply_delivery_update(db, delivery, payload, 'complete')
     db.commit()
-    return {"ok": True}
+    return {'ok': True, 'status': status.status}
 
 @router.post("/delivery/{delivery_id}/missed")
 def missed_delivery(delivery_id: int, payload: dict, da: DriverAccount = Depends(get_current_driver), db: Session = Depends(get_db)):
-    d = db.get(Delivery, delivery_id)
-    if not d:
-        raise HTTPException(404, "Consegna non trovata")
-    r = db.get(RoutePlan, d.route_plan_id)
-    if not r or r.driver_id != da.driver_id:
-        raise HTTPException(403, "Non autorizzato")
-    from ..services.usage_limits import start_route_usage
-    start_route_usage(db, r)
-    ds = get_or_create_delivery_status(delivery_id, d.route_plan_id, db)
-    ds.status = "mancata"
-    ds.motivo_mancata = payload.get("motivo") or "altro"
-    ds.note_operatore = payload.get("note") or None
-    ds.completata_il = local_now().replace(tzinfo=None)
-    refresh_route_completion(d.route_plan_id, db)
+    delivery = db.get(Delivery, delivery_id)
+    route = db.get(RoutePlan, delivery.route_plan_id) if delivery else None
+    if not route or route.driver_id != da.driver_id:
+        raise HTTPException(404, 'Consegna non trovata')
+    status = apply_delivery_update(db, delivery, payload, 'missed')
     db.commit()
-    return {"ok": True}
+    return {'ok': True, 'status': status.status}
 
 @router.post("/delivery/{delivery_id}/note")
 def add_note(delivery_id: int, payload: dict, da: DriverAccount = Depends(get_current_driver), db: Session = Depends(get_db)):
-    d = db.get(Delivery, delivery_id)
-    if not d:
-        raise HTTPException(404, "Consegna non trovata")
-    r = db.get(RoutePlan, d.route_plan_id)
-    if not r or r.driver_id != da.driver_id:
-        raise HTTPException(403, "Non autorizzato")
-    from ..services.usage_limits import start_route_usage
-    start_route_usage(db, r)
-    ds = get_or_create_delivery_status(delivery_id, d.route_plan_id, db)
-    ds.note_operatore = (payload.get("note") or "").strip() or None
+    delivery = db.get(Delivery, delivery_id)
+    route = db.get(RoutePlan, delivery.route_plan_id) if delivery else None
+    if not route or route.driver_id != da.driver_id:
+        raise HTTPException(404, 'Consegna non trovata')
+    status = apply_delivery_update(db, delivery, payload, 'note')
     db.commit()
-    return {"ok": True}
+    return {'ok': True, 'status': status.status}
 
 
 # -----------------------------------------------------------------------
@@ -580,18 +470,17 @@ def list_admin_chat_threads(db: Session = Depends(get_db), user: User = Depends(
     la conversazione diretta.
     """
     drivers = owned(db.query(Driver), Driver, user).order_by(Driver.nome.asc(), Driver.cognome.asc()).all()
+    ids = [driver.id for driver in drivers]
+    summary = {row.driver_id: row for row in db.query(
+        ChatMessage.driver_id, func.max(ChatMessage.id).label('last_id'),
+        func.sum(case(((ChatMessage.sender_type == 'driver') & ChatMessage.read_at.is_(None), 1), else_=0)).label('unread'),
+    ).filter(ChatMessage.route_plan_id == 0, ChatMessage.driver_id.in_(ids)).group_by(ChatMessage.driver_id).all()}
+    latest = {row.id: row for row in db.query(ChatMessage).filter(ChatMessage.id.in_([x.last_id for x in summary.values()])).all()}
     out = []
     for driver in drivers:
-        last = db.query(ChatMessage).filter(
-            ChatMessage.route_plan_id == 0,
-            ChatMessage.driver_id == driver.id
-        ).order_by(ChatMessage.created_at.desc()).first()
-        unread = db.query(ChatMessage).filter(
-            ChatMessage.route_plan_id == 0,
-            ChatMessage.driver_id == driver.id,
-            ChatMessage.sender_type == "driver",
-            ChatMessage.read_at == None
-        ).count()
+        aggregate = summary.get(driver.id)
+        last = latest.get(aggregate.last_id) if aggregate else None
+        unread = int(aggregate.unread or 0) if aggregate else 0
         out.append({
             "driver_id": driver.id,
             "route_id": None,
@@ -606,7 +495,8 @@ def list_admin_chat_threads(db: Session = Depends(get_db), user: User = Depends(
             "last_sender_type": (last.sender_type if last else None),
             "last_message_at": (last.created_at.isoformat() if last else None),
         })
-    out.sort(key=lambda x: (x["unread"] <= 0, x["last_message_at"] or "", x["driver_name"]), reverse=False)
+    out.sort(key=lambda x: (x["last_message_at"] or "", x["driver_name"]), reverse=True)
+    out.sort(key=lambda x: x["unread"] <= 0)
     return out
 
 @router.get("/admin/chat/{route_id}")

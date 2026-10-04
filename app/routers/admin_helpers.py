@@ -211,9 +211,9 @@ def _service_key_status(db: Session) -> list[dict]:
     smtp_host = os.getenv("SMTP_HOST", "").strip()
     smtp_user = os.getenv("SMTP_USER", "").strip()
     smtp_password = os.getenv("SMTP_PASSWORD", "").strip()
-    stripe_key = _setting_value(db, "stripe_secret_key", os.getenv("STRIPE_SECRET_KEY", ""))
+    stripe_key = os.getenv("STRIPE_SECRET_KEY", "")
     shopify_domain = _setting_value(db, "shopify_domain", "")
-    backup_target = _setting_value(db, "backup_storage_target", "locale")
+    backup_target = str(backup_directory())
     return [
         {"key":"google", "name":"Google Maps Platform", "configured": bool(google_key), "masked": _mask_secret(google_key), "details":"Geocoding, verifica indirizzi, Routes API", "last_error":"Controlla Errori sistema / Consumi API"},
         {"key":"openai", "name":"OpenAI / AI", "configured": bool(openai_key), "masked": _mask_secret(openai_key), "details":"Spiegazione giri, ticket, report AI", "last_error":"Controlla Consumi API e chiavi"},

@@ -3,12 +3,12 @@ import io
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import Response
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from ..core.dependencies import current_user, owned
 from ..core.utils import parse_date_value, date_to_iso, time_to_hhmm
 from ..database import get_db
-from ..models import RoutePlan, User, DeliveryStatus
+from ..models import RoutePlan, User, DeliveryStatus, Delivery, Customer
 from ..routers.routes import computed_route_status, route_status_label
 from ..services.plans import require_feature
 from ..services.agents_feature import agents_enabled
@@ -49,12 +49,12 @@ def _actual_route_minutes(route) -> float:
     """Durata reale del giro chiuso, quando disponibile.
 
     Per i report preferiamo sempre i dati finali raccolti durante
-    l'esecuzione: started_at/completed_at. Se il giro è vecchio o manca
-    uno dei due valori, usiamo il valore salvato come fallback.
+    l'esecuzione: started_at_utc/completed_at_utc. I timestamp legacy
+    senza convenzione certa non vengono reinterpretati: usiamo la stima.
     """
     try:
-        if route.started_at and route.completed_at:
-            diff = (route.completed_at - route.started_at).total_seconds() / 60
+        if getattr(route, "started_at_utc", None) and getattr(route, "completed_at_utc", None):
+            diff = (route.completed_at_utc - route.started_at_utc).total_seconds() / 60
             if diff >= 0:
                 return float(diff)
     except Exception:
@@ -112,7 +112,7 @@ def build_report_data(
     show_agents = agents_enabled(user)
     if not show_agents:
         agent_id = ""
-    query = owned(db.query(RoutePlan), RoutePlan, user)
+    query = owned(db.query(RoutePlan).options(selectinload(RoutePlan.deliveries).selectinload(Delivery.customer).selectinload(Customer.agent), selectinload(RoutePlan.driver), selectinload(RoutePlan.vehicle)), RoutePlan, user)
     if date_from:
         query = query.filter(RoutePlan.data_giro >= parse_date_value(date_from))
     if date_to:
@@ -150,6 +150,11 @@ def build_report_data(
         route_deliveries[route.id] = deliveries
 
     route_actuals = {}
+    selected_ids = [r.id for r in selected_routes]
+    statuses_by_route = {}
+    for entry in db.query(DeliveryStatus).filter(DeliveryStatus.route_plan_id.in_(selected_ids)).all():
+        statuses_by_route.setdefault(entry.route_plan_id, {})[entry.delivery_id] = entry
+    outcome_counts = {'completata': 0, 'mancata': 0, 'in_attesa': 0}
 
     def actuals_for(route, deliveries=None):
         if route.id not in route_actuals:
@@ -157,12 +162,13 @@ def build_report_data(
             minutes = _actual_route_minutes(route)
             liters = _actual_route_liters(route, km)
             cost = _actual_route_cost(route, liters)
-            route_actuals[route.id] = {"km": km, "min": minutes, "litri": liters, "costo": cost}
+            fraction = len(route_deliveries.get(route.id, [])) / len(route.deliveries) if route.deliveries else 1
+            route_actuals[route.id] = {k: v * fraction for k, v in {"km": km, "min": minutes, "litri": liters, "costo": cost}.items()}
         return route_actuals[route.id]
 
-    def add_metric(group, key, deliveries_count, route):
-        actual = actuals_for(route)
-        row = group.setdefault(key, {"nome": key, "giri": set(), "consegne": 0, "km": 0.0, "ore": 0.0, "litri": 0.0, "costo": 0.0})
+    def add_metric(group, key, label, deliveries_count, route, fraction=1):
+        actual = {k: v * fraction for k, v in actuals_for(route).items()}
+        row = group.setdefault(key, {"id": key, "nome": label, "giri": set(), "consegne": 0, "km": 0.0, "ore": 0.0, "litri": 0.0, "costo": 0.0})
         row["giri"].add(route.id)
         row["consegne"] += deliveries_count
         row["km"] += actual["km"]
@@ -176,10 +182,11 @@ def build_report_data(
 
     for route in selected_routes:
         deliveries = route_deliveries.get(route.id, [])
-        status_rows = db.query(DeliveryStatus).filter(DeliveryStatus.route_plan_id == route.id).all()
-        status_map = {x.delivery_id: x for x in status_rows}
-        handled_deliveries = [d for d in deliveries if (status_map.get(d.id).status if status_map.get(d.id) else None) in ("completata", "mancata")]
-        dc = len(handled_deliveries) if handled_deliveries else len(deliveries)
+        status_map = statuses_by_route.get(route.id, {})
+        dc = len(deliveries)
+        for delivery in deliveries:
+            outcome = status_map[delivery.id].status if delivery.id in status_map else 'in_attesa'
+            outcome_counts[outcome if outcome in outcome_counts else 'in_attesa'] += 1
         total_deliveries += dc
         st = "completato"
         status_counts[st] = status_counts.get(st, 0) + 1
@@ -191,20 +198,22 @@ def build_report_data(
         day_row["costo"] += actual["costo"]
         driver_name = ((route.driver.nome + (" " + route.driver.cognome if route.driver.cognome else "")) if route.driver else "Non assegnato")
         vehicle_name = ((route.vehicle.nome + (f" · {route.vehicle.targa}" if route.vehicle and route.vehicle.targa else "")) if route.vehicle else "Nessun mezzo")
-        add_metric(by_driver, driver_name, dc, route)
-        add_metric(by_vehicle, vehicle_name, dc, route)
-        seen_agents = set()
+        add_metric(by_driver, route.driver_id, driver_name, dc, route)
+        add_metric(by_vehicle, route.vehicle_id, vehicle_name, dc, route)
+        seen_agents = {}
         for d in deliveries:
             ag = _report_label_agent(d.customer)
             cust = d.cliente_nome or (d.customer.nome if d.customer else "Cliente")
-            c_row = by_customer.setdefault(cust, {"nome": cust, "consegne": 0, "giri": set(), "km": 0.0})
+            customer_key = d.customer_id if d.customer_id is not None else f"delivery:{d.id}"
+            c_row = by_customer.setdefault(customer_key, {"id": customer_key, "nome": cust, "consegne": 0, "giri": set(), "km": 0.0})
             c_row["consegne"] += 1
             c_row["giri"].add(route.id)
             c_row["km"] += float(d.km_tappa or 0)
-            seen_agents.add(ag)
-        for ag in seen_agents or {"Cliente interno"}:
-            count_agent = sum(1 for d in deliveries if _report_label_agent(d.customer) == ag)
-            add_metric(by_agent, ag, count_agent, route)
+            agent_key = d.customer.agent_id if d.customer else None
+            seen_agents[agent_key] = ag
+        for agent_key, ag in seen_agents.items():
+            count_agent = sum(1 for d in deliveries if (d.customer.agent_id if d.customer else None) == agent_key)
+            add_metric(by_agent, agent_key, ag, count_agent, route, count_agent / dc if dc else 0)
 
     total_routes = len(selected_routes)
     total_km = sum(actuals_for(r)["km"] for r in selected_routes)
@@ -217,7 +226,7 @@ def build_report_data(
         for row in group.values():
             giri_count = len(row.get("giri", []))
             rows.append({
-                "nome": row["nome"], "giri": giri_count, "consegne": int(row["consegne"]),
+                "id": row["id"], "nome": row["nome"], "giri": giri_count, "consegne": int(row["consegne"]),
                 "km": round(row["km"], 2), "ore": round(row["ore"], 2),
                 "litri": round(row["litri"], 2), "costo": round(row["costo"], 2),
                 "costo_medio_giro": round(row["costo"] / giri_count, 2) if giri_count else 0,
@@ -227,7 +236,7 @@ def build_report_data(
         return rows[:limit] if limit else rows
 
     top_customers = sorted([
-        {"nome": row["nome"], "consegne": row["consegne"], "giri": len(row["giri"]), "km_tappe": round(row["km"], 2)}
+        {"id": row["id"], "nome": row["nome"], "consegne": row["consegne"], "giri": len(row["giri"]), "km_tappe": round(row["km"], 2)}
         for row in by_customer.values()
     ], key=lambda x: x["consegne"], reverse=True)
 
@@ -253,6 +262,7 @@ def build_report_data(
         "filters": {"date_from": date_from, "date_to": date_to, "agent_id": agent_id, "customer_id": customer_id, "driver_id": driver_id, "vehicle_id": vehicle_id, "status": status},
         "metrics": {
             "giri_effettuati": total_routes, "consegne_totali": total_deliveries,
+            "consegnate": outcome_counts["completata"], "mancate": outcome_counts["mancata"], "in_attesa": outcome_counts["in_attesa"],
             "km_totali": round(total_km, 2), "ore_totali": round(total_min / 60, 2),
             "litri_stimati": round(total_litri, 2), "costo_carburante": round(total_cost, 2),
             "costo_medio_giro": round(total_cost / total_routes, 2) if total_routes else 0,
@@ -275,7 +285,9 @@ def build_report_data(
             "clienti": top_customers,
             "giri": detail_routes,
         },
+        "metric_policy": "Fermate previste nei giri chiusi, incluse mancate e non gestite. Km, ore e costi filtrati/per agente sono ripartiti in proporzione al numero di fermate. Ore storiche senza timestamp UTC affidabili: stima di pianificazione.",
         "insights": [
+            {"titolo": "Esiti fermate", "testo": f"{outcome_counts['completata']} consegnate, {outcome_counts['mancata']} mancate, {outcome_counts['in_attesa']} non gestite."},
             {"titolo": "Media consegne per giro", "testo": f"{round(total_deliveries / total_routes, 2) if total_routes else 0} consegne medie per giro nel periodo selezionato."},
             {"titolo": "Costo medio consegna", "testo": f"€ {round(total_cost / total_deliveries, 2) if total_deliveries else 0} di energia stimata per consegna (personale, pedaggi e manutenzione esclusi)."},
             {"titolo": "Utilizzo risorse", "testo": f"{len(by_driver)} autisti e {len(by_vehicle)} mezzi presenti nei giri completati filtrati."},
@@ -336,7 +348,7 @@ def reports_export(
     data = build_report_data(db, user, date_from, date_to, agent_id, customer_id, driver_id, vehicle_id, status)
     output = io.StringIO()
     writer = csv.writer(output, delimiter=";")
-    writer.writerow(["Data", "Giro", "Stato", "Autista", "Mezzo", "Consegne", "Km pianificati", "Ore rilevate o stimate", "Litri stimati", "Costo energetico stimato"])
+    writer.writerow(["Data", "Giro", "Stato", "Autista", "Mezzo", "Fermate previste", "Km pianificati ripartiti", "Ore rilevate o stimate", "Litri stimati", "Costo energetico stimato"])
     for row in data["tables"]["giri"]:
         writer.writerow([row["data_giro"], row["nome"], row["status_label"], row["driver_name"], row["vehicle_name"], row["consegne"], row["km"], row["ore"], row["litri"], row["costo"]])
     return Response(

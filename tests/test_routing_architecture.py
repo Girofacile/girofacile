@@ -372,10 +372,10 @@ def test_routing_migrations_are_additive_idempotent_and_preserve_saved_tours(rou
         for column in ("traffic_provider", "routing_snapshot_json", "toll_estimated_eur"):
             conn.execute(sqlalchemy.text("ALTER TABLE route_plans DROP COLUMN " + column))
         conn.execute(sqlalchemy.text("ALTER TABLE vehicles DROP COLUMN toll_class"))
-    module = ast.parse(Path("app/main.py").read_text(encoding="utf-8"))
+    module = ast.parse(Path("app/legacy_schema.py").read_text(encoding="utf-8"))
     function = next(n for n in module.body if isinstance(n, ast.FunctionDef) and n.name == "migrate_database")
     namespace = {**vars(sqlalchemy), "Base": Base, "engine": engine}
-    exec(compile(ast.Module(body=[function], type_ignores=[]), "app/main.py", "exec"), namespace)
+    exec(compile(ast.Module(body=[function], type_ignores=[]), "app/legacy_schema.py", "exec"), namespace)
     namespace["migrate_database"]()
     namespace["migrate_database"]()
     saved = db.get(RoutePlan, route_id)

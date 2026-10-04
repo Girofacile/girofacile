@@ -50,10 +50,10 @@ def _is_sensitive_db_column(column: str) -> bool:
     return any(pattern in c for pattern in SENSITIVE_DB_FIELD_PATTERNS)
 
 
-def _mask_db_value(column: str, value):
+def _mask_db_value(column: str, value, table_name="", row=None):
     if value is None:
         return None
-    if _is_sensitive_db_column(column):
+    if _is_sensitive_db_column(column) or (column == "value" and row is not None and _is_sensitive_db_column(str(row.get("key", "")))):
         text = str(value)
         if not text:
             return ""
@@ -146,7 +146,7 @@ def admin_database_table(
     where_sql = ""
     params = {}
     if q_text and column_names:
-        searchable = [c for c in column_names if not _is_sensitive_db_column(c)]
+        searchable = [c for c in column_names if not _is_sensitive_db_column(c) and not (c == 'value' and 'key' in column_names)]
         if searchable:
             clauses = []
             for i, col in enumerate(searchable):
@@ -165,7 +165,7 @@ def admin_database_table(
         for row in rows:
             item = {}
             for col in column_names:
-                item[col] = _mask_db_value(col, row.get(col))
+                item[col] = _mask_db_value(col, row.get(col), table_name, row)
             clean_rows.append(item)
     return {
         "table": table_name,
@@ -196,7 +196,7 @@ def admin_database_export(
     where_sql = ""
     params = {}
     if q_text and column_names:
-        searchable = [c for c in column_names if not _is_sensitive_db_column(c)]
+        searchable = [c for c in column_names if not _is_sensitive_db_column(c) and not (c == 'value' and 'key' in column_names)]
         if searchable:
             clauses = []
             for i, col in enumerate(searchable):
@@ -211,7 +211,7 @@ def admin_database_export(
     with engine.connect() as conn:
         rows = conn.execute(rows_sql, params).mappings().all()
         for row in rows:
-            writer.writerow([_mask_db_value(col, row.get(col)) for col in column_names])
+            writer.writerow([_mask_db_value(col, row.get(col), table_name, row) for col in column_names])
 
     _activity(db, superadmin.get("username"), "database_table_exported", f"Export CSV tabella {table_name}", "warning")
     db.commit()

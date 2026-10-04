@@ -7,7 +7,7 @@ class SignupIn(BaseModel):
     email: Optional[str] = None
     company_name: Optional[str] = None
     password: str
-    plan: Optional[str] = "starter"
+    plan: Optional[str] = None
 
     # v46 — registrazione azienda professionale
     company_phone: Optional[str] = None

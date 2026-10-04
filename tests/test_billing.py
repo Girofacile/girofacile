@@ -365,10 +365,10 @@ def test_existing_database_adds_billing_columns_without_changing_accounts(billin
             conn.execute(sqlalchemy.text(f'ALTER TABLE users DROP COLUMN {column}'))
         conn.execute(sqlalchemy.text('ALTER TABLE billing_invoices DROP COLUMN is_test'))
         conn.execute(sqlalchemy.text('ALTER TABLE billing_payments DROP COLUMN is_test'))
-    tree=ast.parse(Path('app/main.py').read_text(encoding='utf-8'))
+    tree=ast.parse(Path('app/legacy_schema.py').read_text(encoding='utf-8'))
     fn=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='migrate_database')
     namespace={**vars(sqlalchemy),'Base':Base,'engine':engine}
-    exec(compile(ast.Module(body=[fn],type_ignores=[]),'app/main.py','exec'),namespace)
+    exec(compile(ast.Module(body=[fn],type_ignores=[]),'app/legacy_schema.py','exec'),namespace)
     namespace['migrate_database']();namespace['migrate_database']()
     restored=db.get(User,user_id)
     assert restored.plan=='business' and restored.plan_status=='trial'

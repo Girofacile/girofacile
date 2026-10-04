@@ -160,10 +160,10 @@ def test_existing_database_migration_preserves_usage_and_runs_only_once(env):
     with engine.begin() as conn:
         conn.execute(sqlalchemy.text('ALTER TABLE users DROP COLUMN agents_enabled'))
     # Run the real migration function without importing main's startup side effects.
-    tree = ast.parse(Path('app/main.py').read_text(encoding='utf-8'))
+    tree = ast.parse(Path('app/legacy_schema.py').read_text(encoding='utf-8'))
     fn = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == 'migrate_database')
     namespace = {**vars(sqlalchemy), 'Base': Base, 'engine': engine}
-    exec(compile(ast.Module(body=[fn], type_ignores=[]), 'app/main.py', 'exec'), namespace)
+    exec(compile(ast.Module(body=[fn], type_ignores=[]), 'app/legacy_schema.py', 'exec'), namespace)
     namespace['migrate_database']()
     with engine.begin() as conn:
         values = dict(conn.execute(sqlalchemy.text('SELECT id, agents_enabled FROM users')).all())

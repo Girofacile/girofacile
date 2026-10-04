@@ -793,7 +793,7 @@ def program_route(
     # Token legacy per portale operatore condivisibile, mantenuto per compatibilità.
     db.query(RouteToken).filter(RouteToken.route_plan_id == route_id).delete()
     token = _secrets.token_urlsafe(32)
-    expires = local_now().replace(tzinfo=None) + timedelta(days=3)
+    expires = datetime.utcnow() + timedelta(days=3)
     rt = RouteToken(route_plan_id=route_id, token=token, expires_at=expires)
     db.add(rt)
     db.commit()
@@ -851,7 +851,7 @@ def refresh_route_traffic(route_id: int, db: Session = Depends(get_db), user: Us
 
 @router.post("/api/routes/{route_id}/cancel")
 def cancel_route(route_id: int, db: Session = Depends(get_db), user: User = Depends(current_user)):
-    plan = owned(db.query(RoutePlan), RoutePlan, user).filter(RoutePlan.id == route_id).first()
+    plan = owned(db.query(RoutePlan), RoutePlan, user).filter(RoutePlan.id == route_id).with_for_update().first()
     if not plan:
         raise HTTPException(404, "Giro non trovato")
     status = computed_route_status(plan)
@@ -866,13 +866,14 @@ def cancel_route(route_id: int, db: Session = Depends(get_db), user: User = Depe
 
 @router.post("/api/routes/{route_id}/complete")
 def complete_route(route_id: int, db: Session = Depends(get_db), user: User = Depends(current_user)):
-    plan = owned(db.query(RoutePlan), RoutePlan, user).filter(RoutePlan.id == route_id).first()
+    plan = owned(db.query(RoutePlan), RoutePlan, user).filter(RoutePlan.id == route_id).with_for_update().first()
     if not plan:
         raise HTTPException(404, "Giro non trovato")
     from ..services.usage_limits import start_route_usage
     start_route_usage(db, plan)
-    plan.status = "completato"
-    plan.completed_at = local_now().replace(tzinfo=None)
+    from ..services.route_execution import mark_completed
+    if plan.status != "completato":
+        mark_completed(plan)
     db.commit()
     return {"ok": True, "status": "completato", "status_label": "Completato"}
 

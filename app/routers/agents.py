@@ -1,3 +1,4 @@
+from ..services.identity import ensure_login_email_available
 import secrets
 from datetime import datetime, timedelta
 
@@ -29,6 +30,7 @@ def normalize_email(value):
 
 
 def ensure_agent_unique_fields(db: Session, user: User, email: str | None = None, codice_agente: str | None = None, exclude_id: int | None = None):
+    ensure_login_email_available(db, email, "agent", exclude_id)
     email = normalize_email(email)
     codice_agente = normalize_optional(codice_agente)
     if email:

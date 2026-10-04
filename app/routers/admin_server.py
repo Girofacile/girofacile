@@ -71,8 +71,8 @@ def admin_server_maintenance(db: Session = Depends(get_db), superadmin: dict = D
         },
         "settings": {
             "maintenance_mode": _str_to_bool(_setting_value(db, "maintenance_mode", "false")),
-            "backup_frequency": _setting_value(db, "backup_frequency", "manuale"),
-            "backup_storage_target": _setting_value(db, "backup_storage_target", "locale"),
+            "backup_frequency": "manuale",
+            "backup_storage_target": "locale",
             "server_console_url": _setting_value(db, "server_console_url", ""),
         },
         "services": _service_key_status(db),
@@ -83,8 +83,12 @@ def admin_server_maintenance(db: Session = Depends(get_db), superadmin: dict = D
 
 @router.put("/server-maintenance/settings")
 def admin_server_maintenance_settings(payload: dict, db: Session = Depends(get_db), superadmin: dict = Depends(require_superadmin)):
-    # Impostazioni generali server: richiedono permesso piattaforma/manutenzione.
     _require_perm(superadmin, "view_server_maintenance")
+    if payload.get("stripe_secret_key"):
+        raise HTTPException(400, "La chiave Stripe si configura nell’ambiente del server; il pannello non la modifica")
+    if payload.get("backup_frequency", "manuale") != "manuale" or payload.get("backup_storage_target", "locale") != "locale":
+        raise HTTPException(400, "Dal pannello sono disponibili soltanto backup manuali locali; automazione e storage remoto richiedono configurazione di deploy")
+    # Impostazioni generali server: richiedono permesso piattaforma/manutenzione.
     if "maintenance_mode" in payload:
         _require_perm(superadmin, "toggle_maintenance")
         _set_setting_value(db, "maintenance_mode", _bool_to_str(payload.get("maintenance_mode")))
@@ -105,7 +109,11 @@ def admin_server_maintenance_settings(payload: dict, db: Session = Depends(get_d
 @router.put("/server-maintenance/keys")
 def admin_server_maintenance_keys(payload: dict, db: Session = Depends(get_db), superadmin: dict = Depends(require_superadmin)):
     _require_perm(superadmin, "manage_service_keys")
-    allowed = {"google_maps_api_key", "openai_api_key", "stripe_secret_key", "shopify_domain"}
+    if payload.get("stripe_secret_key"):
+        raise HTTPException(400, "La chiave Stripe si configura nell’ambiente del server; il pannello non la modifica")
+    if payload.get("backup_frequency", "manuale") != "manuale" or payload.get("backup_storage_target", "locale") != "locale":
+        raise HTTPException(400, "Dal pannello sono disponibili soltanto backup manuali locali; automazione e storage remoto richiedono configurazione di deploy")
+    allowed = {"google_maps_api_key", "openai_api_key", "shopify_domain"}
     changed = []
     for key in allowed:
         if key in payload:

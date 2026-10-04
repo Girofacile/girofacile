@@ -23,4 +23,4 @@ COPY scripts ./scripts
 EXPOSE 8000
 
 # DATABASE_URL, APP_SECRET e credenziali devono essere fornite dall'ambiente.
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]
+CMD ["sh", "/app/scripts/start_app.sh"]

@@ -1,3 +1,4 @@
+from ..services.identity import ensure_login_email_available
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -46,6 +47,7 @@ def ensure_vehicle_targa_unique(db: Session, user: User, targa: str | None, excl
 
 
 def ensure_driver_email_unique(db: Session, user: User, email: str | None, exclude_id: int | None = None):
+    ensure_login_email_available(db, email, "driver", exclude_id)
     email = normalize_email(email)
     if not email:
         return

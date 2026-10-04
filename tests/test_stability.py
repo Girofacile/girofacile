@@ -37,10 +37,16 @@ def test_signature_required_for_every_completion_portal(env, portal):
     client.app.dependency_overrides[driver.get_current_driver] = lambda: account
     path = f'/api/operator/test-route/delivery/{delivery.id}/complete' if portal == 'operator' else f'/api/driver/delivery/{delivery.id}/complete'
     assert client.post(path, json={}).status_code == 400
-    state = db.query(DeliveryStatus).filter_by(delivery_id=delivery.id).one()
-    assert state.status == 'in_attesa'
+    assert db.query(DeliveryStatus).filter_by(delivery_id=delivery.id).first() is None
     assert client.post(path, json={'signature_data': 'data:image/png;base64,AA=='}).status_code == 400
-    assert client.post(path, json={'signature_data': 'data:image/png;base64,AA==', 'signed_by_name': 'Mario'}).status_code == 200
+    assert client.post(path, json={'signature_data': 'data:image/png;base64,AA==', 'signed_by_name': 'Mario'}).status_code == 400
+    import base64
+    from PIL import Image
+    png = io.BytesIO()
+    Image.new('RGB', (20, 20), 'black').save(png, format='PNG')
+    signature = 'data:image/png;base64,' + base64.b64encode(png.getvalue()).decode()
+    assert client.post(path, json={'signature_data': signature, 'signed_by_name': 'Mario'}).status_code == 200
+    state = db.query(DeliveryStatus).filter_by(delivery_id=delivery.id).one()
     assert state.status == 'completata' and state.signed_by_name == 'Mario'
     assert route.status == 'completato'
 

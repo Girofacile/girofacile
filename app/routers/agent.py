@@ -1,3 +1,4 @@
+from ..services.identity import ensure_login_email_available
 """Portale agente — login separato e gestione clienti associati all'agente."""
 import hashlib
 import secrets
@@ -5,7 +6,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 import pandas as pd
-from fastapi import APIRouter, Cookie, Depends, File, HTTPException, Response, UploadFile
+from fastapi import Request, APIRouter, Cookie, Depends, File, HTTPException, Response, UploadFile
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -21,6 +22,9 @@ from ..services.geocoding import geocode_customer
 from ..routers.customers import customer_to_dict
 from ..services.agents_feature import require_agents_enabled
 from ..services.plans import check_customer_limit
+
+from ..services.sessions import read_session, active_identity, logout_sessions
+from ..core.security import make_account_token
 
 router = APIRouter(prefix="/api/agent", tags=["agent"])
 
@@ -38,33 +42,19 @@ def agent_full_name(agent: Agent | None) -> str:
 
 
 def make_session_token(account: AgentAccount) -> str:
-    token_hash = hashlib.sha256(f"agent-session-{account.id}-{account.password_hash}".encode()).hexdigest()
-    return f"{account.id}:{token_hash}"
+    return make_account_token('agent', account.id, account.password_hash)
 
 
-def get_current_agent(
-    agent_session: str | None = Cookie(default=None),
-    db: Session = Depends(get_db),
-) -> AgentAccount:
-    if not agent_session:
-        raise HTTPException(401, "Non autenticato")
-    try:
-        raw_id, token_hash = agent_session.split(":", 1)
-        account_id = int(raw_id)
-    except Exception:
-        raise HTTPException(401, "Sessione non valida")
-    account = db.get(AgentAccount, account_id)
-    if not account or not account.is_active:
-        raise HTTPException(401, "Account agente non trovato")
-    expected = hashlib.sha256(f"agent-session-{account.id}-{account.password_hash}".encode()).hexdigest()
-    if token_hash != expected:
-        raise HTTPException(401, "Sessione scaduta")
+def get_current_agent(agent_session: str | None = Cookie(default=None), db: Session = Depends(get_db)) -> AgentAccount:
+    account = read_session(agent_session, 'agent', db)
+    if not account:
+        raise HTTPException(401, "Sessione non valida o account disabilitato")
     return account
 
 
 def ensure_agent_owner(account: AgentAccount, db: Session) -> tuple[Agent, User]:
     agent = db.get(Agent, account.agent_id)
-    if not agent or not agent.user_id:
+    if not agent or not agent.user_id or not agent.is_active or agent.deleted_at is not None:
         raise HTTPException(404, "Agente non trovato")
     user = db.get(User, agent.user_id)
     if not user:
@@ -110,9 +100,10 @@ def complete_setup(token: str, payload: dict, response: Response, db: Session = 
     except ValueError as exc:
         raise HTTPException(400, str(exc))
     agent = db.get(Agent, st.agent_id)
-    if not agent or not agent.email:
+    if not agent or not agent.email or not agent.is_active or agent.deleted_at is not None:
         raise HTTPException(400, "Email agente non configurata")
     require_agents_enabled(db.get(User, agent.user_id))
+    ensure_login_email_available(db, agent.email, "agent", agent.id)
     email = agent.email.strip().lower()
     existing = db.query(AgentAccount).filter(AgentAccount.agent_id == agent.id).first()
     if existing:
@@ -137,7 +128,7 @@ def agent_login(payload: dict, response: Response, db: Session = Depends(get_db)
     account = db.query(AgentAccount).filter(func.lower(AgentAccount.email) == email).first()
     if not account or not verify_password(password, account.password_hash):
         raise HTTPException(401, "Email o password non corretti")
-    if not account.is_active:
+    if not active_identity(account, db):
         raise HTTPException(403, "Account disabilitato")
     agent, user = ensure_agent_owner(account, db)
     if password_needs_rehash(account.password_hash):
@@ -149,9 +140,9 @@ def agent_login(payload: dict, response: Response, db: Session = Depends(get_db)
 
 
 @router.post("/logout")
-def agent_logout(response: Response):
-    response.delete_cookie("agent_session")
-    return {"ok": True}
+def agent_logout(response: Response, request: Request, db: Session = Depends(get_db)):
+    logout_sessions(request, response, db, ('agent_session',))
+    return {'ok': True}
 
 
 @router.get("/me")

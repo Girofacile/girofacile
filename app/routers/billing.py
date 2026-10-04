@@ -154,9 +154,10 @@ def update_billing_details(payload: dict, db: Session = Depends(get_db), user: U
 
 
 @router.get("/plans")
-def list_plans():
+def list_plans(db: Session = Depends(get_db)):
+    from ..services.platform_policy import trial_days
     return [{"id": key, "name": info["name"], "price_eur": PLAN_PRICES[key]["price_eur"],
-             "trial_days": 14, "limits": info, "features": info} for key, info in PLAN_LIMITS.items()]
+             "trial_days": trial_days(db), "limits": info, "features": info} for key, info in PLAN_LIMITS.items()]
 
 
 @router.get("/my-plan")

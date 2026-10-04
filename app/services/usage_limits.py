@@ -1,5 +1,5 @@
 """Calendar-month operational quotas, independent from invoices and draft routes."""
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import func
 from fastapi import HTTPException
 from ..core.utils import local_now
@@ -53,11 +53,11 @@ def usage_summary(db, user):
 
 def start_route_usage(db, route):
     owner = db.query(User).filter(User.id == route.user_id).with_for_update().populate_existing().one()
+    if route.status == "annullato":
+        raise HTTPException(409, "Il giro è annullato")
     if db.get(RouteUsage, route.id):
         return  # A running route can always be completed, even after expiry.
     legacy_started = bool(route.started_at or route.status in ("in_corso", "completato"))
-    if route.status == "annullato":
-        raise HTTPException(409, "Il giro è annullato")
     if not legacy_started:
         require_active_plan(owner)
         usage = usage_summary(db, owner)
@@ -66,6 +66,8 @@ def start_route_usage(db, route):
         if usage["deliveries"]["used"] + len(route.deliveries) > usage["deliveries"]["limit"]:
             raise HTTPException(403, "Il giro supera le consegne disponibili questo mese")
     started = route.started_at or local_now().replace(tzinfo=None)
+    if not route.started_at:
+        route.started_at_utc = datetime.now(timezone.utc).replace(tzinfo=None)
     db.add(RouteUsage(route_id=route.id, user_id=owner.id, month=started.strftime("%Y-%m"),
                       deliveries=len(route.deliveries), started_at=started))
     route.started_at = started

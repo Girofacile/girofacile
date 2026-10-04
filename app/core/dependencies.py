@@ -8,10 +8,8 @@ from .security import verify_token, verify_superadmin_token
 
 
 def current_user(request: Request, db: Session = Depends(get_db)) -> User:
-    user_id = verify_token(request.cookies.get("session"))
-    if not user_id:
-        raise HTTPException(status_code=401, detail="Non autenticato")
-    user = db.get(User, user_id)
+    from ..services.sessions import read_session
+    user = read_session(request.cookies.get('session'), 'user', db)
     if not user:
         raise HTTPException(status_code=401, detail="Sessione non valida")
     from ..services.usage_limits import guard_company_write
@@ -50,7 +48,8 @@ def owned(query, model, user: User):
 # -----------------------------------------------------------------------
 def current_superadmin(request: Request, db: Session = Depends(get_db)) -> dict:
     username = verify_superadmin_token(request.cookies.get("superadmin_session"))
-    if not username:
+    from ..services.sessions import revoked
+    if not username or revoked(request.cookies.get("superadmin_session"), db):
         raise HTTPException(status_code=401, detail="Accesso Super Admin richiesto")
     if str(username).startswith("collab:"):
         try:

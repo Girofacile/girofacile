@@ -165,10 +165,10 @@ def test_existing_database_adds_diagnostics_column_idempotently(env):
     db.close()
     with engine.begin() as conn:
         conn.execute(sqlalchemy.text("ALTER TABLE deliveries DROP COLUMN optimizer_details"))
-    tree = ast.parse(Path("app/main.py").read_text(encoding="utf-8"))
+    tree = ast.parse(Path("app/legacy_schema.py").read_text(encoding="utf-8"))
     fn = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "migrate_database")
     namespace = {**vars(sqlalchemy), "Base": Base, "engine": engine}
-    exec(compile(ast.Module(body=[fn], type_ignores=[]), "app/main.py", "exec"), namespace)
+    exec(compile(ast.Module(body=[fn], type_ignores=[]), "app/legacy_schema.py", "exec"), namespace)
     namespace["migrate_database"]()
     namespace["migrate_database"]()
     assert "optimizer_details" in {c["name"] for c in sqlalchemy.inspect(engine).get_columns("deliveries")}

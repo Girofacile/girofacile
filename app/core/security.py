@@ -2,6 +2,8 @@ import base64
 import hmac
 import os
 import time
+import json
+import secrets
 from hashlib import pbkdf2_hmac, sha256
 
 from .config import APP_SECRET, PASSWORD_PBKDF2_ITERATIONS, PASSWORD_PEPPER
@@ -141,39 +143,53 @@ def _sign(value: str) -> str:
     return hmac.new(APP_SECRET.encode(), value.encode(), sha256).hexdigest()
 
 
-def make_token(user_id: int) -> str:
-    raw = f"{user_id}:{int(time.time())}"
-    token = base64.urlsafe_b64encode(raw.encode()).decode()
-    return f"{token}.{_sign(token)}"
+def make_account_token(role: str, account_id: int, password_hash: str) -> str:
+    now = int(time.time())
+    data = {'v': 2, 'role': role, 'id': account_id, 'iat': now,
+            'exp': now + 86400 * (7 if role == 'user' else 30),
+            'nonce': secrets.token_hex(16),
+            'credential': _sign(f'{role}:{account_id}:{password_hash}')}
+    body = base64.urlsafe_b64encode(json.dumps(data).encode()).decode()
+    return f'{body}.{_sign(body)}'
+
+
+def read_account_token(token, role, password_hash=None):
+    try:
+        body, sig = token.rsplit('.', 1)
+        if not hmac.compare_digest(sig, _sign(body)):
+            return None
+        data = json.loads(base64.urlsafe_b64decode(body))
+        now = int(time.time())
+        if data['v'] != 2 or data['role'] != role or not data['iat'] <= now < data['exp']:
+            return None
+        if password_hash is not None and not hmac.compare_digest(
+                data['credential'], _sign(f"{role}:{data['id']}:{password_hash}")):
+            return None
+        return data
+    except (ValueError, TypeError, KeyError, AttributeError):
+        return None
+
+
+def make_token(user_id: int, password_hash: str) -> str:
+    return make_account_token('user', user_id, password_hash)
 
 
 def verify_token(token: str | None) -> int | None:
-    if not token or "." not in token:
-        return None
-    body, sig = token.rsplit(".", 1)
-    if not hmac.compare_digest(sig, _sign(body)):
-        return None
-    try:
-        raw = base64.urlsafe_b64decode(body.encode()).decode()
-        user_id, ts = raw.split(":")
-        if int(time.time()) - int(ts) > 60 * 60 * 24 * 7:
-            return None
-        return int(user_id)
-    except Exception:
-        return None
+    data = read_account_token(token, 'user')
+    return data['id'] if data else None
 
 
 # -----------------------------------------------------------------------
 # Token sessione Super Admin SaaS
 # -----------------------------------------------------------------------
 def make_superadmin_token(username: str) -> str:
-    raw = f"superadmin:{username}:{int(time.time())}"
+    raw = f"superadmin:{username}:{int(time.time())}:{secrets.token_hex(16)}"
     token = base64.urlsafe_b64encode(raw.encode()).decode()
     return f"{token}.{_sign(token)}"
 
 
 def make_superadmin_collaborator_token(collaborator_id: int) -> str:
-    raw = f"superadmin_collaborator:{int(collaborator_id)}:{int(time.time())}"
+    raw = f"superadmin_collaborator:{int(collaborator_id)}:{int(time.time())}:{secrets.token_hex(16)}"
     token = base64.urlsafe_b64encode(raw.encode()).decode()
     return f"{token}.{_sign(token)}"
 
@@ -186,10 +202,10 @@ def verify_superadmin_token(token: str | None) -> str | None:
         return None
     try:
         raw = base64.urlsafe_b64decode(body.encode()).decode()
-        kind, username, ts = raw.split(":", 2)
+        kind, username, ts, *_nonce = raw.split(":")
         if kind not in ("superadmin", "superadmin_collaborator"):
             return None
-        if int(time.time()) - int(ts) > 60 * 60 * 24 * 7:
+        if not 0 <= int(time.time()) - int(ts) < 60 * 60 * 24 * 7:
             return None
         if kind == "superadmin_collaborator":
             return f"collab:{username}"

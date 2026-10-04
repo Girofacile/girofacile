@@ -1,3 +1,4 @@
+from ..services.route_execution import apply_delivery_update, get_or_create_delivery_status, update_customer_unload_time, refresh_route_completion
 from ..services.route_enrichment import routing_metadata, json_data, TIMING_DETAILS
 """
 Router portale operatore.
@@ -10,6 +11,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from ..core.dependencies import current_user
+from ..core.utils import date_to_iso, time_to_hhmm
 from ..database import get_db
 from ..services.delivery_signature import apply_delivery_signature
 from ..models import (
@@ -21,18 +23,6 @@ router = APIRouter(tags=["operator"])
 TEMPO_SCARICO_OPTIONS = [10, 15, 20, 30, 45, 60, 90]
 MOTIVI_MANCATA = ["assente", "chiuso", "rifiutato", "altro"]
 
-def update_customer_unload_time(customer: Customer, tempo: int):
-    """Aggiorna il tempo scarico stimato usando una media progressiva."""
-    try:
-        tempo = int(tempo)
-    except Exception:
-        return
-    if tempo <= 0:
-        return
-    count = int(getattr(customer, "tempo_scarico_rilevazioni", 0) or 0)
-    current = int(getattr(customer, "tempo_scarico_min", 10) or 10)
-    customer.tempo_scarico_min = int(round(((current * count) + tempo) / (count + 1)))
-    customer.tempo_scarico_rilevazioni = count + 1
 
 
 # -----------------------------------------------------------------------
@@ -51,21 +41,6 @@ def get_route_by_token(token: str, db: Session) -> tuple[RouteToken, RoutePlan]:
     return rt, plan
 
 
-def get_or_create_delivery_status(delivery_id: int, route_plan_id: int, db: Session) -> DeliveryStatus:
-    ds = db.query(DeliveryStatus).filter(
-        DeliveryStatus.delivery_id == delivery_id,
-        DeliveryStatus.route_plan_id == route_plan_id
-    ).first()
-    if not ds:
-        ds = DeliveryStatus(
-            delivery_id=delivery_id,
-            route_plan_id=route_plan_id,
-            status="in_attesa"
-        )
-        db.add(ds)
-        db.commit()
-        db.refresh(ds)
-    return ds
 
 
 def delivery_to_operator_dict(delivery: Delivery, status: DeliveryStatus | None) -> dict:
@@ -172,11 +147,6 @@ def get_operator_route(token: str, db: Session = Depends(get_db)):
     """Restituisce i dati del giro per l'operatore."""
     rt, plan = get_route_by_token(token, db)
 
-    # Aggiorna used_at al primo accesso
-    if not rt.used_at:
-        rt.used_at = datetime.utcnow()
-        db.commit()
-
     deliveries = sorted(plan.deliveries or [], key=lambda x: x.ordine or 0)
     statuses = {
         ds.delivery_id: ds
@@ -185,19 +155,13 @@ def get_operator_route(token: str, db: Session = Depends(get_db)):
         ).all()
     }
 
-    # Inizializza stati mancanti
-    for d in deliveries:
-        if d.id not in statuses:
-            ds = get_or_create_delivery_status(d.id, plan.id, db)
-            statuses[d.id] = ds
-
     completate = sum(1 for ds in statuses.values() if ds.status == "completata")
     mancate = sum(1 for ds in statuses.values() if ds.status == "mancata")
 
     # Calcola prossima fermata
     prossima_idx = None
     for i, d in enumerate(deliveries):
-        if statuses.get(d.id) and statuses[d.id].status == "in_attesa":
+        if (not statuses.get(d.id) or statuses[d.id].status == "in_attesa"):
             prossima_idx = i
             break
 
@@ -236,101 +200,36 @@ def get_operator_route(token: str, db: Session = Depends(get_db)):
 
 
 @router.post("/api/operator/{token}/delivery/{delivery_id}/complete")
-def complete_delivery(
-    token: str,
-    delivery_id: int,
-    payload: dict,
-    db: Session = Depends(get_db),
-):
-    """Segna una consegna come completata."""
-    rt, plan = get_route_by_token(token, db)
-
-    delivery = db.query(Delivery).filter(
-        Delivery.id == delivery_id,
-        Delivery.route_plan_id == plan.id
-    ).first()
+def complete_delivery(token: str, delivery_id: int, payload: dict, db: Session = Depends(get_db)):
+    _, plan = get_route_by_token(token, db)
+    delivery = db.query(Delivery).filter_by(id=delivery_id, route_plan_id=plan.id).first()
     if not delivery:
-        raise HTTPException(404, "Consegna non trovata")
-
-    from ..services.usage_limits import start_route_usage
-    start_route_usage(db, plan)
-    ds = get_or_create_delivery_status(delivery_id, plan.id, db)
-    owner = db.get(User, plan.user_id)
-    apply_delivery_signature(ds, payload, owner, required=True)
-    ds.status = "completata"
-    ds.tempo_scarico_effettivo = payload.get("tempo_scarico")
-    ds.note_operatore = payload.get("note") or None
-    from ..core.utils import local_now
-    ds.completata_il = local_now().replace(tzinfo=None)
-
-    # Aggiorna tempo scarico nel profilo cliente con media progressiva
-    tempo = payload.get("tempo_scarico")
-    if tempo and delivery.customer_id:
-        customer = db.get(Customer, delivery.customer_id)
-        if customer:
-            update_customer_unload_time(customer, tempo)
-
-    from .driver import refresh_route_completion
-    refresh_route_completion(plan.id, db)
+        raise HTTPException(404, 'Consegna non trovata')
+    status = apply_delivery_update(db, delivery, payload, 'complete')
     db.commit()
-    return {"ok": True, "status": "completata"}
+    return {'ok': True, 'status': status.status}
 
 
 @router.post("/api/operator/{token}/delivery/{delivery_id}/missed")
-def missed_delivery(
-    token: str,
-    delivery_id: int,
-    payload: dict,
-    db: Session = Depends(get_db),
-):
-    """Segna una consegna come mancata."""
-    rt, plan = get_route_by_token(token, db)
-
-    delivery = db.query(Delivery).filter(
-        Delivery.id == delivery_id,
-        Delivery.route_plan_id == plan.id
-    ).first()
+def missed_delivery(token: str, delivery_id: int, payload: dict, db: Session = Depends(get_db)):
+    _, plan = get_route_by_token(token, db)
+    delivery = db.query(Delivery).filter_by(id=delivery_id, route_plan_id=plan.id).first()
     if not delivery:
-        raise HTTPException(404, "Consegna non trovata")
-
-    motivo = (payload.get("motivo") or "altro").strip()
-    if motivo not in MOTIVI_MANCATA:
-        motivo = "altro"
-
-    from ..services.usage_limits import start_route_usage
-    start_route_usage(db, plan)
-    ds = get_or_create_delivery_status(delivery_id, plan.id, db)
-    ds.status = "mancata"
-    ds.motivo_mancata = motivo
-    ds.note_operatore = payload.get("note") or None
-    from ..core.utils import local_now
-    ds.completata_il = local_now().replace(tzinfo=None)
+        raise HTTPException(404, 'Consegna non trovata')
+    status = apply_delivery_update(db, delivery, payload, 'missed')
     db.commit()
-    return {"ok": True, "status": "mancata"}
+    return {'ok': True, 'status': status.status}
 
 
 @router.post("/api/operator/{token}/delivery/{delivery_id}/note")
-def add_delivery_note(
-    token: str,
-    delivery_id: int,
-    payload: dict,
-    db: Session = Depends(get_db),
-):
-    """Aggiunge una nota a una consegna."""
-    rt, plan = get_route_by_token(token, db)
-    delivery = db.query(Delivery).filter(
-        Delivery.id == delivery_id,
-        Delivery.route_plan_id == plan.id
-    ).first()
+def add_delivery_note(token: str, delivery_id: int, payload: dict, db: Session = Depends(get_db)):
+    _, plan = get_route_by_token(token, db)
+    delivery = db.query(Delivery).filter_by(id=delivery_id, route_plan_id=plan.id).first()
     if not delivery:
-        raise HTTPException(404, "Consegna non trovata")
-
-    from ..services.usage_limits import start_route_usage
-    start_route_usage(db, plan)
-    ds = get_or_create_delivery_status(delivery_id, plan.id, db)
-    ds.note_operatore = (payload.get("note") or "").strip() or None
+        raise HTTPException(404, 'Consegna non trovata')
+    status = apply_delivery_update(db, delivery, payload, 'note')
     db.commit()
-    return {"ok": True}
+    return {'ok': True, 'status': status.status}
 
 
 # -----------------------------------------------------------------------

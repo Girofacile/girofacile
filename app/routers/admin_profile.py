@@ -15,6 +15,7 @@ from ..core.security import hash_password
 from .admin_helpers import (
     COLLABORATOR_PERMISSIONS,
     _activity,
+    _has_perm,
     _bool_to_str,
     _collaborator_permissions,
     _get_or_create_superadmin_profile,
@@ -95,20 +96,29 @@ def admin_platform_settings(db: Session = Depends(get_db), superadmin: dict = De
         "backup_frequency": "manuale",
         "server_console_url": "",
     }
-    return {key: _setting_value(db, key, value) for key, value in defaults.items()}
+    secret_keys = {"openai_api_key", "google_maps_api_key", "mapbox_access_token", "stripe_secret_key"}
+    environment_only = {"stripe_secret_key", "backup_frequency", "backup_storage_target"}
+    return {key: (value if key in environment_only else _setting_value(db, key, value)) for key, value in defaults.items()
+            if key not in secret_keys or _has_perm(superadmin, "manage_service_keys")}
 
 
 @router.put("/platform-settings")
 def admin_update_platform_settings(payload: dict, db: Session = Depends(get_db), superadmin: dict = Depends(require_superadmin)):
     _require_perm(superadmin, "manage_platform")
+    if payload.get("stripe_secret_key"):
+        raise HTTPException(400, "La chiave Stripe si configura nell’ambiente del server; il pannello non la modifica")
+    if payload.get("backup_frequency", "manuale") != "manuale" or payload.get("backup_storage_target", "locale") != "locale":
+        raise HTTPException(400, "Dal pannello sono disponibili soltanto backup manuali locali; automazione e storage remoto richiedono configurazione di deploy")
     allowed = {
         "platform_name", "support_email", "error_notification_email", "main_domain",
         "maintenance_mode", "registrations_enabled", "trial_days", "default_plan", "support_phone",
         "ai_enabled", "openai_api_key", "openai_model",
         "osrm_url", "osrm_cache_version", "osrm_table_max_coordinates", "osrm_allow_public_fallback",
         "traffic_provider", "mapbox_access_token", "mapbox_traffic_cost_eur", "toll_rates_json", "toll_dataset_path",
-        "google_maps_api_key", "google_geocoding_enabled", "google_routes_enabled", "stripe_secret_key", "shopify_domain", "backup_storage_target", "backup_frequency", "server_console_url"
+        "google_maps_api_key", "google_geocoding_enabled", "google_routes_enabled", "shopify_domain", "backup_storage_target", "backup_frequency", "server_console_url"
     }
+    if {"openai_api_key", "google_maps_api_key", "mapbox_access_token", "stripe_secret_key"}.intersection(payload):
+        _require_perm(superadmin, "manage_service_keys")
     for key in allowed:
         if key not in payload:
             continue

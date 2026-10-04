@@ -1,3 +1,7 @@
+from ..services.identity import ensure_login_email_available
+from ..services.platform_policy import require_registration, trial_days, default_plan
+from ..services.sessions import read_session, active_identity, logout_sessions, revoked
+from ..core.security import make_account_token
 from datetime import datetime, timedelta
 import hashlib
 import secrets
@@ -7,7 +11,7 @@ from sqlalchemy import func, or_, text
 from sqlalchemy.orm import Session
 
 from ..core.config import APP_BASE_URL, APP_USER, SUPERADMIN_USERNAME, SUPERADMIN_PASSWORD, TRIAL_DAYS, ERROR_NOTIFICATIONS_EMAIL
-from ..core.http_security import cookie_options
+from ..core.http_security import cookie_options, COOKIE_DOMAIN
 from ..core.dependencies import current_user, is_admin_user
 from ..core.security import hash_password, make_token, make_superadmin_token, make_superadmin_collaborator_token, password_needs_rehash, validate_password_strength, verify_password, verify_token, verify_superadmin_token
 from ..database import get_db
@@ -34,6 +38,7 @@ def _workspace_operational_for_user(user: User) -> bool:
 
 @router.post("/api/signup")
 def signup(data: SignupIn, response: Response, db: Session = Depends(get_db)):
+    require_registration(db)
     username = (data.username or "").strip()
     password = data.password or ""
     email = (data.email or "").strip().lower() or None
@@ -43,12 +48,14 @@ def signup(data: SignupIn, response: Response, db: Session = Depends(get_db)):
         validate_password_strength(password)
     except ValueError as exc:
         raise HTTPException(400, str(exc))
-    if db.query(User).filter(User.username == username).first():
+    if db.query(User).filter(func.lower(User.username) == username.lower()).first():
         raise HTTPException(400, "Nome utente già registrato")
     if email and db.query(User).filter(User.email == email).first():
         raise HTTPException(400, "Email già registrata")
-    trial_ends = datetime.utcnow() + timedelta(days=TRIAL_DAYS)
-    selected_plan = (getattr(data, "plan", None) or "starter").strip().lower()
+    ensure_login_email_available(db, email, "user")
+    configured_trial_days = trial_days(db)
+    trial_ends = datetime.utcnow() + timedelta(days=configured_trial_days)
+    selected_plan = (getattr(data, "plan", None) or default_plan(db)).strip().lower()
     if selected_plan not in {"starter", "business", "pro"}:
         selected_plan = "starter"
     # Numero cliente commerciale progressivo, separato dall'ID tecnico.
@@ -94,7 +101,7 @@ def signup(data: SignupIn, response: Response, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(user)
     response.set_cookie(
-        "session", make_token(user.id),
+        "session", make_token(user.id, user.password_hash),
         **cookie_options(60 * 60 * 24 * 7),
     )
     # Email di benvenuto al cliente. _send registra già gli eventuali errori SMTP.
@@ -104,7 +111,7 @@ def signup(data: SignupIn, response: Response, db: Session = Depends(get_db)):
             to_email=email,
             username=username,
             company_name=data.company_name or username,
-            trial_days=TRIAL_DAYS,
+            trial_days=configured_trial_days,
         )
 
     # Notifica al Super Admin: rispetta il toggle "Nuove aziende".
@@ -153,9 +160,9 @@ def superadmin_login(payload: dict, response: Response, db: Session = Depends(ge
     identifier_norm = identifier.lower()
     password = payload.get("password") or ""
     if _is_superadmin_credentials(identifier, password):
-        response.delete_cookie("session")
-        response.delete_cookie("driver_session")
-        response.delete_cookie("agent_session")
+        response.delete_cookie("session", path="/", domain=COOKIE_DOMAIN)
+        response.delete_cookie("driver_session", path="/", domain=COOKIE_DOMAIN)
+        response.delete_cookie("agent_session", path="/", domain=COOKIE_DOMAIN)
         response.set_cookie("superadmin_session", make_superadmin_token(SUPERADMIN_USERNAME), **cookie_options(60 * 60 * 24 * 7))
         return {"ok": True, "role": "superadmin", "redirect_url": "/admin"}
 
@@ -163,9 +170,9 @@ def superadmin_login(payload: dict, response: Response, db: Session = Depends(ge
     if collaborator and collaborator.is_active and verify_password(password, collaborator.password_hash):
         collaborator.last_access_at = datetime.utcnow()
         db.commit()
-        response.delete_cookie("session")
-        response.delete_cookie("driver_session")
-        response.delete_cookie("agent_session")
+        response.delete_cookie("session", path="/", domain=COOKIE_DOMAIN)
+        response.delete_cookie("driver_session", path="/", domain=COOKIE_DOMAIN)
+        response.delete_cookie("agent_session", path="/", domain=COOKIE_DOMAIN)
         response.set_cookie("superadmin_session", make_superadmin_collaborator_token(collaborator.id), **cookie_options(60 * 60 * 24 * 7))
         return {"ok": True, "role": "collaborator", "redirect_url": "/admin"}
 
@@ -173,15 +180,15 @@ def superadmin_login(payload: dict, response: Response, db: Session = Depends(ge
 
 
 @router.post("/api/admin/logout")
-def superadmin_logout(response: Response):
-    response.delete_cookie("superadmin_session")
-    return {"ok": True}
+def superadmin_logout(response: Response, request: Request, db: Session = Depends(get_db)):
+    logout_sessions(request, response, db, ('superadmin_session',))
+    return {'ok': True}
 
 
 @router.get("/api/admin/me")
 def superadmin_me(request: Request, db: Session = Depends(get_db)):
     username = verify_superadmin_token(request.cookies.get("superadmin_session"))
-    if not username:
+    if not username or revoked(request.cookies.get("superadmin_session"), db):
         return {"authenticated": False, "role": None}
     if str(username).startswith("collab:"):
         try:
@@ -223,9 +230,9 @@ async def login(payload: dict, response: Response, db: Session = Depends(get_db)
     # Super Admin SaaS: anche se viene inserito per errore nel login unico,
     # non viene mai trattato come profilo aziendale.
     if _is_superadmin_credentials(identifier, password):
-        response.delete_cookie("session")
-        response.delete_cookie("driver_session")
-        response.delete_cookie("agent_session")
+        response.delete_cookie("session", path="/", domain=COOKIE_DOMAIN)
+        response.delete_cookie("driver_session", path="/", domain=COOKIE_DOMAIN)
+        response.delete_cookie("agent_session", path="/", domain=COOKIE_DOMAIN)
         response.set_cookie("superadmin_session", make_superadmin_token(SUPERADMIN_USERNAME), **cookie_options(60 * 60 * 24 * 7))
         return {"ok": True, "role": "superadmin", "redirect_url": "/admin"}
 
@@ -267,7 +274,7 @@ async def login(payload: dict, response: Response, db: Session = Depends(get_db)
     # 2) Account autista
     driver_account = db.query(DriverAccount).filter(func.lower(DriverAccount.email) == identifier_norm).first()
     if driver_account and verify_password(password, driver_account.password_hash):
-        if not driver_account.is_active:
+        if not active_identity(driver_account, db):
             raise HTTPException(403, "Account autista disabilitato")
         if password_needs_rehash(driver_account.password_hash):
             driver_account.password_hash = hash_password(password)
@@ -289,7 +296,7 @@ async def login(payload: dict, response: Response, db: Session = Depends(get_db)
     if agent_account and verify_password(password, agent_account.password_hash):
         agent = db.get(Agent, agent_account.agent_id)
         require_agents_enabled(db.get(User, agent.user_id) if agent else None)
-        if not agent_account.is_active:
+        if not active_identity(agent_account, db):
             raise HTTPException(403, "Account agente disabilitato")
         if password_needs_rehash(agent_account.password_hash):
             agent_account.password_hash = hash_password(password)
@@ -310,45 +317,22 @@ async def login(payload: dict, response: Response, db: Session = Depends(get_db)
 
 
 @router.post("/api/logout")
-def logout(response: Response):
-    response.delete_cookie("session")
-    response.delete_cookie("driver_session")
-    response.delete_cookie("agent_session")
-    return {"ok": True}
+def logout(response: Response, request: Request, db: Session = Depends(get_db)):
+    logout_sessions(request, response, db)
+    return {'ok': True}
 
 
-def _read_driver_session(raw: str | None, db: Session) -> DriverAccount | None:
-    if not raw:
-        return None
-    try:
-        raw_id, token_hash = raw.split(":", 1)
-        account = db.get(DriverAccount, int(raw_id))
-    except Exception:
-        return None
-    if not account or not account.is_active:
-        return None
-    expected = hashlib.sha256(f"driver-session-{account.id}-{account.password_hash}".encode()).hexdigest()
-    return account if token_hash == expected else None
+def _read_driver_session(raw, db):
+    return read_session(raw, 'driver', db)
 
 
-def _read_agent_session(raw: str | None, db: Session) -> AgentAccount | None:
-    if not raw:
-        return None
-    try:
-        raw_id, token_hash = raw.split(":", 1)
-        account = db.get(AgentAccount, int(raw_id))
-    except Exception:
-        return None
-    if not account or not account.is_active:
-        return None
-    expected = hashlib.sha256(f"agent-session-{account.id}-{account.password_hash}".encode()).hexdigest()
-    return account if token_hash == expected else None
+def _read_agent_session(raw, db):
+    return read_session(raw, 'agent', db)
 
 
 @router.get("/api/me")
 def me(request: Request, db: Session = Depends(get_db)):
-    user_id = verify_token(request.cookies.get("session"))
-    user = db.get(User, user_id) if user_id else None
+    user = read_session(request.cookies.get("session"), "user", db)
     if user:
         return {
             "authenticated": True,
@@ -413,23 +397,21 @@ def _driver_hash_password(password: str) -> str:
     return hashlib.sha256(password.encode()).hexdigest()
 
 
-def _driver_session_token(account: DriverAccount) -> str:
-    token_hash = hashlib.sha256(f"driver-session-{account.id}-{account.password_hash}".encode()).hexdigest()
-    return f"{account.id}:{token_hash}"
+def _driver_session_token(account):
+    return make_account_token('driver', account.id, account.password_hash)
 
 
-def _agent_session_token(account: AgentAccount) -> str:
-    token_hash = hashlib.sha256(f"agent-session-{account.id}-{account.password_hash}".encode()).hexdigest()
-    return f"{account.id}:{token_hash}"
+def _agent_session_token(account):
+    return make_account_token('agent', account.id, account.password_hash)
 
 
 def _set_login_cookie_for_role(response: Response, role: str, account) -> None:
     # Cancella sempre le altre sessioni per evitare confusione tra ruoli.
-    response.delete_cookie("session")
-    response.delete_cookie("driver_session")
-    response.delete_cookie("agent_session")
+    response.delete_cookie("session", path="/", domain=COOKIE_DOMAIN)
+    response.delete_cookie("driver_session", path="/", domain=COOKIE_DOMAIN)
+    response.delete_cookie("agent_session", path="/", domain=COOKIE_DOMAIN)
     if role == "admin":
-        response.set_cookie("session", make_token(account.id), **cookie_options(60 * 60 * 24 * 7))
+        response.set_cookie("session", make_token(account.id, account.password_hash), **cookie_options(60 * 60 * 24 * 7))
     elif role == "driver":
         response.set_cookie("driver_session", _driver_session_token(account), **cookie_options(60 * 60 * 24 * 30))
     elif role == "agent":
@@ -479,10 +461,10 @@ def _find_reset_accounts(email: str, db: Session):
     if user:
         accounts.append(("user", user))
     driver_account = db.query(DriverAccount).filter(func.lower(DriverAccount.email) == email_norm).first()
-    if driver_account:
+    if driver_account and active_identity(driver_account, db):
         accounts.append(("driver", driver_account))
     agent_account = db.query(AgentAccount).filter(func.lower(AgentAccount.email) == email_norm).first()
-    if agent_account:
+    if agent_account and active_identity(agent_account, db):
         accounts.append(("agent", agent_account))
     return accounts
 
@@ -543,16 +525,14 @@ def confirm_password_reset(payload: dict, db: Session = Depends(get_db)):
         account.password_hash = hash_password(password)
     elif prt.account_type == "driver":
         account = db.get(DriverAccount, prt.account_id)
-        if not account:
-            raise HTTPException(404, "Account autista non trovato")
+        if not account or not active_identity(account, db):
+            raise HTTPException(404, "Account autista non attivo")
         account.password_hash = hash_password(password)
-        account.is_active = True
     elif prt.account_type == "agent":
         account = db.get(AgentAccount, prt.account_id)
-        if not account:
-            raise HTTPException(404, "Account agente non trovato")
+        if not account or not active_identity(account, db):
+            raise HTTPException(404, "Account agente non attivo")
         account.password_hash = hash_password(password)
-        account.is_active = True
     else:
         raise HTTPException(400, "Tipo account non supportato")
 
@@ -629,6 +609,7 @@ def update_account_profile(payload: dict, user: User = Depends(current_user), db
         raise HTTPException(400, "Nome account già utilizzato")
 
     if email:
+        ensure_login_email_available(db, email, "user", user.id)
         duplicate_user = db.query(User).filter(
             func.lower(User.email) == email,
             User.id != user.id,
