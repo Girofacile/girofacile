@@ -3868,6 +3868,18 @@ function renderDashboardInProgressSubpage(routes, selectedRoute){
         </div>
       </aside>
       <main class="dash-sub-main">
+        <section id="dashboardLiveGPS" class="panel dash-sub-card gf-live-gps" data-state="unavailable">
+          <div class="dash-sub-card-title"><div class="dash-sub-icon" aria-hidden="true">📍</div><div><h2>Posizione del mezzo</h2><p class="gf-live-state" data-gps-state role="status">In attesa della posizione</p></div></div>
+          <dl class="gf-live-meta">
+            <div><dt>Giro attivo</dt><dd data-gps-route>${esc(r.nome)}</dd></div>
+            <div><dt>Mezzo</dt><dd data-gps-vehicle>${esc(r.vehicle_name || 'Non assegnato')}</dd></div>
+            <div><dt>Prossima fermata</dt><dd data-gps-next>${esc(next?.cliente_nome || 'Fermate terminate')}</dd></div>
+            <div><dt>Avanzamento</dt><dd data-gps-progress>${progress}%</dd></div>
+          </dl>
+          <div class="gf-live-map-wrap"><div class="gf-live-map" data-gps-map aria-label="Mappa ultima posizione del mezzo"></div><div class="gf-live-empty" data-gps-empty>La posizione del mezzo apparirà qui.<br>Il giro resta monitorato tramite le conferme di consegna.</div></div>
+          <p class="gf-live-updated" data-gps-updated>La posizione viene aggiornata quando il portale autista è aperto.</p>
+          <p class="gf-live-updated">Durante la navigazione in Google Maps il GPS del portale può sospendersi. Una posizione non aggiornata non alimenta l’ETA live.</p>
+        </section>
         <section class="panel dash-sub-card">
           <div class="dash-sub-card-title"><div class="dash-sub-icon">📍</div><div><h2>Fermate del giro</h2><p>Confronto tra arrivo previsto e arrivo reale registrato dall'autista.</p></div></div>
           ${window.GiroFacileRouting.summaryHtml(r)}
@@ -3886,6 +3898,7 @@ function renderDashboardInProgressSubpage(routes, selectedRoute){
         </section>
       </main>
     </div>`;
+  GiroFacileLiveMap.mount(r.id);
   loadDashboardRouteChat(r.id, true);
 }
 

@@ -90,7 +90,7 @@ def public_projection(db, delivery, plan, now=None):
         status = {'programmato': 'programmata', 'in_corso': 'in_consegna',
                   'annullato': 'annullata'}.get(plan.status, 'non_disponibile')
     terminal = status in ('completata', 'mancata', 'annullata', 'non_disponibile')
-    schedule = route_schedule_datetimes(plan, statuses)
+    schedule = route_schedule_datetimes(plan, statuses, now=now)
     entry = schedule['deliveries'].get(delivery.id, {})
     eta = entry.get('arrival') if not terminal else None
     if eta and eta <= now:

@@ -7,7 +7,7 @@ Accessibile tramite token senza login — /giro/{token}
 import secrets
 from datetime import datetime, timedelta
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
 
 from ..core.dependencies import current_user
@@ -170,6 +170,7 @@ def get_operator_route(token: str, db: Session = Depends(get_db)):
         "route": {
             **routing_metadata(plan),
             "id": plan.id,
+            "status": plan.status,
             "nome": plan.nome,
             "data_giro": date_to_iso(plan.data_giro),
             "orario_partenza": time_to_hhmm(plan.orario_partenza),
@@ -299,3 +300,34 @@ def operator_evidence(token: str, delivery_id: int, kind: str, db: Session = Dep
     if not delivery:
         raise HTTPException(404, 'Consegna non trovata')
     return evidence_response(db, route, delivery, kind)
+
+
+from ..services.live_position import PositionInput, record_position
+
+
+@router.get('/api/operator/{token}/position')
+def operator_position_state(token: str, response: Response, db: Session = Depends(get_db)):
+    _, plan = get_route_by_token(token, db)
+    response.headers['Cache-Control'] = 'no-store'
+    return {'active': plan.status == 'in_corso'}
+
+
+@router.post('/api/operator/{token}/position')
+def upload_operator_position(token: str, payload: PositionInput, db: Session = Depends(get_db)):
+    _, plan = get_route_by_token(token, db)
+    return record_position(db, plan, payload)
+
+
+@router.post('/api/operator/{token}/start')
+def start_operator_route(token: str, db: Session = Depends(get_db)):
+    from ..core.utils import local_today
+    from ..services.usage_limits import start_route_usage
+    _, plan = get_route_by_token(token, db)
+    plan = db.query(RoutePlan).filter_by(id=plan.id).with_for_update().populate_existing().one()
+    if plan.status in ('completato', 'annullato'):
+        raise HTTPException(409, 'Il giro è già chiuso')
+    if plan.status != 'in_corso' and plan.data_giro != local_today():
+        raise HTTPException(409, 'Puoi avviare il giro soltanto nel giorno programmato')
+    start_route_usage(db, plan)
+    db.commit()
+    return {'ok': True}

@@ -63,10 +63,11 @@ Mantiene la data quando gli orari superano mezzanotte e non inventa un ETA quand
 l'orario pianificato manca. Il tracking sopprime una previsione già trascorsa.
 Le finestre di scarico non diventano una promessa di consegna.
 
-La risposta indica il fuso orario aziendale configurato e contiene `eta.at`, `eta.source` (`planned` o `execution`) e
+La risposta indica il fuso orario aziendale configurato e contiene `eta.at`, `eta.source` (`planned`, `execution` o `gps`) e
 `eta.updated_at` (ultimo evento operativo utilizzato, non l'ora del polling).
-In futuro una sorgente GPS potrà alimentare questa proiezione con un timestamp
-e una fonte dedicata. Non occorre cambiare credenziali o pagina pubblica.
+La sorgente GPS usa una posizione recente e un ETA OSRM condiviso, senza nuove
+chiamate di routing a ogni lettura cliente. Quando non è più valido torna alla
+proiezione operativa. Contratto, limiti e migrazione sono in [live-gps.md](live-gps.md).
 Le fermate sono una previsione relativa all'ordine salvato, non una posizione GPS.
 
 Per email/SMS/WhatsApp, riutilizzare il servizio di generazione dei link da un

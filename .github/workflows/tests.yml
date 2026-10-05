@@ -51,14 +51,17 @@ jobs:
           retention-days: 7
       - name: Verify customer tracking responsive interfaces
         run: |
-          npm install --no-save --package-lock=false playwright@1.55.0
+          npm install --no-save --package-lock=false playwright@1.55.0 leaflet@1.9.4
           node tests/check_tracking_responsive.js
+          node tests/check_gps_responsive.js
       - name: Preserve customer tracking screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: customer-tracking-responsive
-          path: test-results/tracking-browser/
+          path: |
+            test-results/tracking-browser/
+            test-results/gps-browser/
           if-no-files-found: ignore
           retention-days: 7
       - name: Verify management pages and interactions

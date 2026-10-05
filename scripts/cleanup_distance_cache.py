@@ -18,6 +18,7 @@ if str(ROOT) not in sys.path:
 
 from app.database import SessionLocal
 from app.services.distance_cache import cleanup_expired, cleanup_older_than, cache_ttl_days
+from app.services.live_position import cleanup_positions
 
 
 def main() -> int:
@@ -25,7 +26,9 @@ def main() -> int:
     with SessionLocal() as db:
         expired = cleanup_expired(db)
         old = cleanup_older_than(db, days=days)
+        positions = cleanup_positions(db)
     print(f"[CACHE] Pulizia completata: scadenza={days} giorni, righe_scadute={expired}, righe_vecchie={old}")
+    print(f"[GPS] Posizioni scadute o giri chiusi rimossi: {positions}")
     return 0
 
 

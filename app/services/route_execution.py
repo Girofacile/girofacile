@@ -38,6 +38,8 @@ def update_customer_unload_time(customer, tempo):
 
 
 def mark_completed(route):
+    from .live_position import clear_position
+    clear_position(route)
     route.status = 'completato'
     route.completed_at = local_now().replace(tzinfo=None)
     route.completed_at_utc = datetime.now(timezone.utc).replace(tzinfo=None)

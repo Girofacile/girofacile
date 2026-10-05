@@ -6,7 +6,7 @@ from ..services.delivery_pod import evidence_metadata, evidence_response
 from datetime import datetime, timedelta
 import time
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import Response, APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from ..core.dependencies import current_user, owned
@@ -801,6 +801,8 @@ def cancel_route(route_id: int, db: Session = Depends(get_db), user: User = Depe
     status = computed_route_status(plan)
     if status in ("completato", "annullato"):
         raise HTTPException(400, "Il giro è già chiuso.")
+    from ..services.live_position import clear_position
+    clear_position(plan)
     plan.status = "annullato"
     plan.cancelled_at = local_now().replace(tzinfo=None)
     db.commit()
@@ -908,3 +910,19 @@ def company_evidence(delivery_id: int, kind: str, user: User = Depends(current_u
     if not route or route.user_id != user.id:
         raise HTTPException(404, 'Consegna non trovata')
     return evidence_response(db, route, delivery, kind)
+
+
+@router.get('/api/routes/{route_id}/position')
+def get_live_position(route_id: int, response: Response, db: Session = Depends(get_db), user: User = Depends(current_user)):
+    from ..services.live_position import position_view, next_stop
+    plan = owned(db.query(RoutePlan), RoutePlan, user).filter_by(id=route_id).first()
+    if not plan:
+        raise HTTPException(404, 'Giro non trovato')
+    response.headers['Cache-Control'] = 'no-store'
+    statuses = {s.delivery_id: s for s in db.query(DeliveryStatus).filter_by(route_plan_id=plan.id)}
+    stop = next_stop(plan, statuses)
+    closed = sum(1 for d in plan.deliveries if statuses.get(d.id) and statuses[d.id].status in ('completata', 'mancata'))
+    return {**position_view(plan), 'route_status': plan.status, 'route_name': plan.nome,
+            'vehicle_name': plan.vehicle.nome if plan.vehicle else None,
+            'next_stop': stop.cliente_nome if stop else None,
+            'progress': round(100 * closed / len(plan.deliveries)) if plan.deliveries else 0}

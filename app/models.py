@@ -516,6 +516,23 @@ class RoutePlan(Base):
     vehicle = relationship("Vehicle")
     driver = relationship("Driver")
     deliveries = relationship("Delivery", cascade="all, delete-orphan", passive_deletes=True)
+    position = relationship("RoutePosition", uselist=False, cascade="all, delete-orphan", passive_deletes=True)
+
+
+class RoutePosition(Base):
+    """Only the current useful sample; removed when the route closes."""
+    __tablename__ = "route_positions"
+    route_plan_id: Mapped[int] = mapped_column(ForeignKey("route_plans.id", ondelete="CASCADE"), primary_key=True)
+    driver_id: Mapped[int | None] = mapped_column(ForeignKey("drivers.id", ondelete="CASCADE"), unique=True, nullable=True)
+    latitude: Mapped[float] = mapped_column(Float)
+    longitude: Mapped[float] = mapped_column(Float)
+    accuracy: Mapped[float] = mapped_column(Float)
+    captured_at: Mapped[datetime] = mapped_column(DateTime)
+    received_at: Mapped[datetime] = mapped_column(DateTime, index=True)
+    eta_attempted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    eta_calculated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    eta_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    eta_delivery_id: Mapped[int | None] = mapped_column(ForeignKey("deliveries.id", ondelete="SET NULL"), nullable=True)
 
 
 class Delivery(Base):

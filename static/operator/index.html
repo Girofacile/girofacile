@@ -20,6 +20,7 @@
   --safe-bottom:env(safe-area-inset-bottom,0px);
 }
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;-webkit-font-smoothing:antialiased;}
+.hidden{display:none!important;}
 
 /* HEADER */
 .header{background:var(--white);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
@@ -138,6 +139,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 </style>
 <link rel="stylesheet" href="/static/routing-summary.css">
 <script src="/static/routing-summary.js"></script>
+<link rel="stylesheet" href="/static/live-gps.css?v=20261005">
+<script src="/static/live-gps.js?v=20261005"></script>
 <link rel="stylesheet" href="/static/pod.css?v=1">
 <script src="/static/pod.js?v=1"></script>
 </head>
@@ -184,7 +187,15 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
   </div>
 
   <!-- CONTENT -->
-  <div id="operatorRoutingSummary"></div>
+  <button id="operatorStartGPS" class="btn-confirm" onclick="startOperatorGPS()" hidden>Avvia giro</button>
+<section class="gf-gps-status" data-gps-status data-state="idle" aria-label="Condivisione posizione">
+        <div class="gf-gps-heading"><span class="gf-gps-dot" aria-hidden="true"></span>Posizione durante il giro</div>
+        <p data-gps-message role="status">Il GPS si attiva quando avvii il giro.</p>
+        <p>Con Google Maps aperto, soprattutto su iPhone, gli aggiornamenti possono fermarsi. Riprendono quando torni al portale.</p>
+        <details><summary>Come viene usata la posizione</summary><p>Solo durante il giro: la tua azienda vede l’ultima posizione e l’ora del rilevamento. Ai clienti arriva solo la stima di consegna. Nessuno storico degli spostamenti; le coordinate vengono rimosse alla chiusura del giro.</p></details>
+        <button type="button" data-gps-retry hidden>Riprova GPS</button>
+      </section>
+<div id="operatorRoutingSummary"></div>
 <div class="content" id="deliveryList"></div>
 
   <!-- SCHERMATA COMPLETATA -->
@@ -270,6 +281,14 @@ async function api(url, opts = {}) {
   return d;
 }
 
+async function startOperatorGPS() {
+  const button = document.getElementById('operatorStartGPS');
+  button.disabled = true;
+  try { await api(`/api/operator/${token}/start`, {method:'POST'}); await load(); }
+  catch(e) { alert(e.message); }
+  finally { button.disabled = false; }
+}
+
 async function load() {
   try {
     routeData = await api(`/api/operator/${token}`);
@@ -285,6 +304,8 @@ async function load() {
 
 function render() {
   const { route, consegne, progress, tempo_scarico_options, motivi_mancata } = routeData;
+  document.getElementById('operatorStartGPS').hidden = !['programmato','bozza'].includes(route.status);
+  GiroFacileGPS.sync({status:route.status, statusUrl:`/api/operator/${token}/position`, uploadUrl:`/api/operator/${token}/position`});
   document.getElementById("operatorRoutingSummary").innerHTML = window.GiroFacileRouting.summaryHtml(route);
 
   // Header
@@ -514,7 +535,7 @@ function closeModals() {
 }
 
 // Auto-refresh ogni 30 secondi
-setInterval(load, 30000);
+setInterval(() => { if (!document.hidden) load(); }, 30000);
 load();
 </script>
 <script src="/static/operator/signature.js?v=stability_1"></script>

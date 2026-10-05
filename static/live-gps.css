@@ -1,0 +1,13 @@
+/* Portal palette and typography inherit from the surrounding driver/operator page. */
+.gf-gps-status{margin:12px;padding:14px 16px;border:1px solid var(--border,#e5e7eb);border-radius:14px;background:var(--white,#fff);color:var(--text,#111827);font:inherit;}
+#operatorStartGPS{margin:12px;width:calc(100% - 24px);}
+#operatorStartGPS[hidden]{display:none;}
+.gf-gps-status .gf-gps-heading{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;}
+.gf-gps-dot{width:8px;height:8px;flex:0 0 8px;border-radius:50%;background:var(--gray,#6b7280);}
+.gf-gps-status[data-state="active"] .gf-gps-dot{background:var(--green,#10b981);}
+.gf-gps-status[data-state="error"] .gf-gps-dot,.gf-gps-status[data-state="denied"] .gf-gps-dot{background:var(--orange,#f59e0b);}
+.gf-gps-status p{margin:7px 0 0;font-size:12px;line-height:1.55;color:var(--gray,#6b7280);overflow-wrap:anywhere;}
+.gf-gps-status details{margin-top:8px;font-size:12px;line-height:1.55;color:var(--gray,#6b7280);}
+.gf-gps-status summary{cursor:pointer;color:var(--blue,#2563eb);}
+.gf-gps-status button{margin-top:10px;min-height:44px;padding:9px 14px;border:1px solid var(--border,#e5e7eb);border-radius:9px;background:var(--blue-light,#eff6ff);color:var(--blue,#2563eb);font:inherit;font-size:13px;font-weight:600;cursor:pointer;}
+.gf-gps-status button[hidden]{display:none;}

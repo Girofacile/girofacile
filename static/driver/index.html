@@ -259,6 +259,8 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
 </style>
 <link rel="stylesheet" href="/static/routing-summary.css">
 <script src="/static/routing-summary.js"></script>
+<link rel="stylesheet" href="/static/live-gps.css?v=20261005">
+<script src="/static/live-gps.js?v=20261005"></script>
 <link rel="stylesheet" href="/static/pod.css?v=1">
 <script src="/static/pod.js?v=1"></script>
 </head>
@@ -338,7 +340,14 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
           <div class="ps-stat"><div class="ps-val blue" id="psRemaining">0</div><div class="ps-lbl">Rimanenti</div></div>
         </div>
       </div>
-      <div id="driverRoutingSummary"></div>
+      <section class="gf-gps-status" data-gps-status data-state="idle" aria-label="Condivisione posizione">
+        <div class="gf-gps-heading"><span class="gf-gps-dot" aria-hidden="true"></span>Posizione durante il giro</div>
+        <p data-gps-message role="status">Il GPS si attiva quando avvii il giro.</p>
+        <p>Con Google Maps aperto, soprattutto su iPhone, gli aggiornamenti possono fermarsi. Riprendono quando torni al portale.</p>
+        <details><summary>Come viene usata la posizione</summary><p>Solo durante il giro: la tua azienda vede l’ultima posizione e l’ora del rilevamento. Ai clienti arriva solo la stima di consegna. Nessuno storico degli spostamenti; le coordinate vengono rimosse alla chiusura del giro.</p></details>
+        <button type="button" data-gps-retry hidden>Riprova GPS</button>
+      </section>
+<div id="driverRoutingSummary"></div>
 <div class="delivery-list" id="deliveryList"></div>
       <div id="completedScreen" class="hidden">
         <div class="completed-wrap">
@@ -527,6 +536,7 @@ async function doLogin() {
 }
 
 async function doLogout() {
+  GiroFacileGPS.stop('Sessione terminata. GPS disattivato.');
   await api('/api/logout', {method:'POST', body:'{}'});
   window.location.href='/login';
 }
@@ -683,7 +693,7 @@ async function openExecution(routeId) {
   document.querySelectorAll('.bnav-btn').forEach(b => b.classList.remove('active'));
   await loadExecution();
   if(execPollInterval) clearInterval(execPollInterval);
-  execPollInterval = setInterval(loadExecution, 30000);
+  execPollInterval = setInterval(() => { if (!document.hidden) loadExecution(); }, 30000);
 }
 
 function exitExecution() {
@@ -704,6 +714,7 @@ async function loadExecution() {
 
 function renderExecution(data) {
   const { route, consegne, progress } = data;
+  GiroFacileGPS.sync({status:route.status, statusUrl:`/api/driver/routes/${route.id}/position`, uploadUrl:`/api/driver/routes/${route.id}/position`});
   document.getElementById("driverRoutingSummary").innerHTML = window.GiroFacileRouting.summaryHtml(route);
   document.getElementById('execTitle').textContent = route.nome;
   document.getElementById('execRouteName').textContent = route.nome;

@@ -662,3 +662,30 @@ def driver_evidence(delivery_id: int, kind: str, da: DriverAccount = Depends(get
     if not route or not driver or route.driver_id != driver.id or route.user_id != driver.user_id:
         raise HTTPException(404, 'Consegna non trovata')
     return evidence_response(db, route, delivery, kind)
+
+
+# This payload/API can also be used by an authenticated native GPS adapter.
+from ..services.live_position import PositionInput, record_position
+
+
+def _gps_driver_route(db, da, route_id):
+    driver = db.get(Driver, da.driver_id)
+    plan = db.query(RoutePlan).filter_by(id=route_id, driver_id=da.driver_id,
+                                        user_id=driver.user_id if driver else None).first()
+    if not plan or not driver or not driver.is_active or driver.deleted_at:
+        raise HTTPException(404, 'Giro non trovato')
+    return plan
+
+
+@router.get('/routes/{route_id}/position')
+def driver_position_state(route_id: int, response: Response,
+                          da: DriverAccount = Depends(get_current_driver), db: Session = Depends(get_db)):
+    response.headers['Cache-Control'] = 'no-store'
+    return {'active': _gps_driver_route(db, da, route_id).status == 'in_corso'}
+
+
+@router.post('/routes/{route_id}/position')
+def upload_driver_position(route_id: int, payload: PositionInput,
+                           da: DriverAccount = Depends(get_current_driver), db: Session = Depends(get_db)):
+    plan = _gps_driver_route(db, da, route_id)
+    return record_position(db, plan, payload)

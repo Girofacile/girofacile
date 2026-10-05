@@ -26,7 +26,7 @@
     el('status').dataset.state = data.status;
     // A calendar date must not shift when the recipient travels abroad.
     el('date').textContent = date(data.scheduled_date + 'T00:00:00Z', false, 'UTC');
-    el('etaLabel').textContent = data.eta.source === 'execution' ? 'Arrivo stimato aggiornato' : 'Arrivo previsto';
+    el('etaLabel').textContent = data.eta.source === 'gps' ? 'Arrivo stimato dalla posizione' : data.eta.source === 'execution' ? 'Arrivo stimato aggiornato' : 'Arrivo previsto';
     const terminal = data.refresh_after_seconds === 0;
     el('eta').textContent = data.eta.at ? date(data.eta.at, true) : terminal ? '—' : 'In aggiornamento';
     el('etaDate').textContent = data.eta.at ? date(data.eta.at) : '';

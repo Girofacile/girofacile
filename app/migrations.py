@@ -2,7 +2,7 @@
 from datetime import datetime
 from sqlalchemy import inspect, text
 
-LATEST = '20261004_04'
+LATEST = '20261005_01'
 LOCK_ID = 7640152404
 
 
@@ -60,10 +60,15 @@ def run_migrations(engine):
                             sql_type = table.c[name].type.compile(dialect=engine.dialect)
                             conn.execute(text(f'ALTER TABLE {table.name} ADD COLUMN {name} {sql_type}'))
                     conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261004_03', 'now': datetime.utcnow()})
-            if LATEST not in applied:
+            if '20261004_04' not in applied:
                 from .models import DeliveryTrackingLink
                 with engine.begin() as conn:
                     DeliveryTrackingLink.__table__.create(conn, checkfirst=True)
+                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261004_04', 'now': datetime.utcnow()})
+            if LATEST not in applied:
+                from .models import RoutePosition
+                with engine.begin() as conn:
+                    RoutePosition.__table__.create(conn, checkfirst=True)
                     conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': LATEST, 'now': datetime.utcnow()})
         finally:
             if postgres:
