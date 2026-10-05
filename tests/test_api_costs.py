@@ -11,6 +11,8 @@ def test_google_geocoding_free_tier_then_standard_cost():
     assert _tiered_cost(10_000, profile) == 0
     assert _tiered_cost(10_001, profile) == 0.005
     assert _tiered_cost(15_000, profile) == 25.0
+    assert _tiered_cost(600_000, profile) == 2350.0
+    assert _tiered_cost(2_000_000, profile) == 5050.0
 
 
 def test_mapbox_directions_uses_progressive_public_tiers():
