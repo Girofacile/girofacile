@@ -542,8 +542,7 @@ def api_cost_dashboard(db: Session, month: str = "") -> dict:
     history = []
     cursor = month_start
     for _ in range(6):
-        previous = cursor.replace(day=1) - timedelta(days=1)
-        hist_start, hist_end = _month_bounds(previous)
+        hist_start, hist_end = _month_bounds(cursor)
         hist_rows = (
             db.query(ApiUsageLog.service, func.sum(ApiUsageLog.request_count), func.sum(ApiUsageLog.estimated_cost_eur))
             .filter(ApiUsageLog.created_at >= hist_start, ApiUsageLog.created_at < hist_end)
@@ -565,7 +564,7 @@ def api_cost_dashboard(db: Session, month: str = "") -> dict:
                 currency = profiles[key].get("currency") or "EUR"
                 costs[currency] = round(costs.get(currency, 0) + price, 6)
         history.append({"month": hist_start.strftime("%Y-%m"), "calls": total_calls, "costs": costs})
-        cursor = hist_start
+        cursor = hist_start - timedelta(days=1)
     history.reverse()
 
     total_calls = sum(item["calls"] for item in usage.values())
