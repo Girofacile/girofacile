@@ -100,7 +100,7 @@ async function loadApiCosts(){
     document.getElementById('api-cost-settings-list').innerHTML = renderApiCostSettings(data.settings || {});
     const usagePeriod = document.getElementById('api-usage-period');
     if(usagePeriod) usagePeriod.value = data.is_current_month ? 'month' : 'previous_month';
-    if(typeof loadApiUsage === 'function') await loadApiUsage();
+    if(typeof loadApiUsage === 'function') await loadApiUsage(data.month);
   } catch(e) { showToast(e.message, 'error'); }
 }
 
