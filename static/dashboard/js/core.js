@@ -3757,17 +3757,45 @@ function gfMinutesFromHHMM(v){
   if(!m) return null;
   return Number(m[1]) * 60 + Number(m[2]);
 }
+function gfRealArrivalDate(d){
+  const value = d.arrivo_reale || d.arrived_at || d.completata_il || d.signed_at || '';
+  if(!value) return null;
+  try{
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }catch(e){ return null; }
+}
 function gfRealArrival(d){
   return gfTimeFromIso(d.arrivo_reale || d.arrived_at || d.completata_il || d.signed_at || '');
 }
 function gfPlannedArrival(d){
   return d.arrivo_stimato || d.arrivo_previsto || '-';
 }
+function gfPlannedArrivalDates(route, rows){
+  const routeDate = route && route.data_giro;
+  if(!routeDate) return rows.map(()=>null);
+  let dayOffset = 0;
+  let previousMinutes = gfMinutesFromHHMM(route.orario_partenza || '');
+  return rows.map(d=>{
+    const minutes = gfMinutesFromHHMM(gfPlannedArrival(d));
+    if(minutes === null) return null;
+    // A schedule can legitimately cross midnight: every clock-time wrap
+    // advances the planned date instead of resetting the delay calculation.
+    if(previousMinutes !== null && minutes < previousMinutes) dayOffset += 1;
+    previousMinutes = minutes;
+    const planned = new Date(`${routeDate}T00:00:00`);
+    if(Number.isNaN(planned.getTime())) return null;
+    planned.setDate(planned.getDate() + dayOffset);
+    planned.setHours(Math.floor(minutes / 60), minutes % 60, 0, 0);
+    return planned;
+  });
+}
 function gfDeltaBadge(planned, real){
-  const p = gfMinutesFromHHMM(planned);
-  const r = gfMinutesFromHHMM(real);
-  if(p === null || r === null) return '<span class="muted">-</span>';
-  const diff = r - p;
+  if(!(planned instanceof Date) || Number.isNaN(planned.getTime()) ||
+     !(real instanceof Date) || Number.isNaN(real.getTime())){
+    return '<span class="muted">-</span>';
+  }
+  const diff = Math.round((real.getTime() - planned.getTime()) / 60000);
   const cls = diff <= 0 ? 'early' : (diff <= 10 ? 'ok' : 'late');
   const label = diff === 0 ? 'In orario' : `${diff > 0 ? '+' : ''}${diff} min`;
   return `<span class="gf-delta-badge ${cls}">${esc(label)}</span>`;
@@ -3790,24 +3818,26 @@ function dashboardStopRowsUnified(r, mode='live'){
   if(!rows.length){
     return `<div class="dash-detail-empty small">Nessuna fermata collegata a questo giro.</div>`;
   }
+  const plannedDates = gfPlannedArrivalDates(r, rows);
   return `<div class="dash-sub-table-wrap gf-unified-stop-wrap">
     <table class="dash-sub-table dash-stop-table-unified gf-unified-stop-table">
       <thead>
         <tr><th>#</th><th>Cliente</th><th>Indirizzo</th><th>Arrivo previsto</th><th>Arrivo reale</th><th>Differenza</th><th>Stato</th><th>Documenti e tracking</th><th>Note</th></tr>
       </thead>
       <tbody>
-        ${rows.map(d=>{
+        ${rows.map((d, idx)=>{
           const st = d.delivery_status || d.status || 'in_attesa';
           const note = d.note_operatore || d.note_autista || d.note || '';
           const planned = gfPlannedArrival(d);
           const real = gfRealArrival(d);
+          const realDate = gfRealArrivalDate(d);
           return `<tr class="delivery-row-${esc(st)}">
             <td><span class="dash-stop-number mini">${d.ordine || ''}</span></td>
             <td><strong>${esc(d.cliente_nome || '-')}</strong></td>
             <td>${esc(d.indirizzo || '-')}</td>
             <td><strong>${esc(planned)}</strong></td>
             <td>${real ? `<strong class="gf-real-arrival">${esc(real)}</strong>` : '<span class="muted">-</span>'}</td>
-            <td>${gfDeltaBadge(planned, real)}</td>
+            <td>${gfDeltaBadge(plannedDates[idx], realDate)}</td>
             <td>${deliveryStatusPill(st)}${d.motivo_mancata?`<small class="delivery-reason">${esc(d.motivo_mancata)}</small>`:''}</td>
             <td>${deliverySignatureAction(d, r.driver_name)} ${trackingButton(d, r)}</td>
             <td>${note ? `<button type="button" class="btn-mini note-mini-btn" data-note="${esc(String(note))}" onclick="alert(this.dataset.note)">Note</button>` : '<span class="muted">-</span>'}</td>
