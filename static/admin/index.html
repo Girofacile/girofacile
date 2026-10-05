@@ -1536,11 +1536,22 @@ async function loadRevenue() {
   } catch(e) { showToast(e.message, 'error'); }
 }
 
-async function loadApiUsage(){
-  const period = document.getElementById('api-usage-period')?.value || 'today';
+async function loadApiUsage(monthOverride=''){
+  let period = document.getElementById('api-usage-period')?.value || 'today';
   const service = document.getElementById('api-usage-service')?.value || '';
+  let range = '';
+  if(monthOverride){
+    const parts=String(monthOverride).split('-').map(Number);
+    if(parts.length===2 && parts[0] && parts[1]){
+      const start=String(parts[0]).padStart(4,'0')+'-'+String(parts[1]).padStart(2,'0')+'-01T00:00:00';
+      const nextMonth=parts[1]===12 ? [parts[0]+1,1] : [parts[0],parts[1]+1];
+      const end=String(nextMonth[0]).padStart(4,'0')+'-'+String(nextMonth[1]).padStart(2,'0')+'-01T00:00:00';
+      period='custom';
+      range='&start='+encodeURIComponent(start)+'&end='+encodeURIComponent(end);
+    }
+  }
   try{
-    const data = await api(`/api/admin/api-usage?period=${encodeURIComponent(period)}&service=${encodeURIComponent(service)}`);
+    const data = await api(`/api/admin/api-usage?period=${encodeURIComponent(period)}&service=${encodeURIComponent(service)}${range}`);
     if(!data) return;
     const g = data.google || {};
     const statusBox = document.getElementById('api-usage-status');
