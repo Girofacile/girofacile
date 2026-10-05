@@ -260,6 +260,25 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 
 
 
+/* ---- API COST CONTROL CENTER v73 ---- */
+.api-cost-head-v73{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:18px;flex-wrap:wrap}
+.api-cost-head-v73 h2{font-size:20px;margin:0}.api-cost-head-v73 p{color:var(--muted);font-size:12px;margin-top:4px;max-width:760px}
+.api-cost-controls-v73{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.api-cost-kpis-v73{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}
+.api-cost-kpi-v73{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px}
+.api-cost-kpi-v73 small{display:block;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+.api-cost-kpi-v73 strong{display:block;font-size:25px;margin-top:6px;letter-spacing:-.5px}.api-cost-kpi-v73 span{display:block;color:var(--muted);font-size:11px;margin-top:4px}
+.api-cost-alerts-v73{display:grid;gap:8px;margin-bottom:16px}.api-cost-alert-v73{border:1px solid rgba(148,163,184,.16);border-radius:13px;padding:11px 13px;font-size:12px;background:rgba(15,23,42,.34)}
+.api-cost-alert-v73.warning,.api-cost-alert-v73.watch{border-color:rgba(245,158,11,.28);background:rgba(245,158,11,.08);color:#fde68a}.api-cost-alert-v73.danger{border-color:rgba(239,68,68,.28);background:rgba(239,68,68,.08);color:#fecaca}
+.api-cost-provider-v73 strong{display:block;font-size:13px}.api-cost-provider-v73 small{display:block;color:var(--muted);font-size:11px;margin-top:3px;max-width:320px}
+.api-cost-progress-v73{min-width:150px}.api-cost-track-v73{height:8px;background:rgba(148,163,184,.14);border-radius:999px;overflow:hidden;margin-bottom:5px}.api-cost-fill-v73{height:100%;border-radius:999px;background:#22c55e}.api-cost-fill-v73.watch{background:#f59e0b}.api-cost-fill-v73.warning{background:#f97316}.api-cost-fill-v73.paid{background:#ef4444}.api-cost-fill-v73.info{background:#3b82f6}
+.api-cost-meta-v73{font-size:11px;color:var(--muted)}.api-cost-money-v73{font-weight:800;white-space:nowrap}.api-cost-money-v73.zero{color:var(--success)}
+.api-cost-grid-v73{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}.api-cost-list-v73{display:grid;gap:9px}.api-cost-list-row-v73{display:flex;justify-content:space-between;gap:12px;align-items:center;border-bottom:1px solid rgba(148,163,184,.1);padding:10px 0}.api-cost-list-row-v73:last-child{border-bottom:0}.api-cost-list-row-v73 strong{font-size:13px}.api-cost-list-row-v73 small{display:block;color:var(--muted);font-size:11px;margin-top:2px}
+.api-cost-history-v73{display:grid;gap:9px}.api-cost-history-row-v73{display:grid;grid-template-columns:72px 1fr auto;gap:10px;align-items:center;font-size:12px}.api-cost-history-bar-v73{height:7px;border-radius:999px;background:rgba(148,163,184,.14);overflow:hidden}.api-cost-history-bar-v73 span{display:block;height:100%;background:#3b82f6;border-radius:999px}
+.api-cost-settings-v73{margin-top:16px}.api-cost-settings-grid-v73{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.api-cost-setting-v73{border:1px solid rgba(148,163,184,.14);border-radius:14px;padding:14px;background:rgba(15,23,42,.28)}.api-cost-setting-v73 h4{font-size:13px;margin:0 0 9px}.api-cost-setting-v73 .form-row-v64{grid-template-columns:1fr 1fr}.api-cost-note-v73{font-size:11px;color:var(--muted);line-height:1.45}
+@media(max-width:900px){.api-cost-kpis-v73{grid-template-columns:1fr 1fr}.api-cost-grid-v73,.api-cost-settings-grid-v73{grid-template-columns:1fr}}
+@media(max-width:560px){.api-cost-kpis-v73{grid-template-columns:1fr}.api-cost-controls-v73,.api-cost-controls-v73>*{width:100%}.api-cost-head-v73{align-items:stretch}#api-cost-table thead{display:none}#api-cost-table,#api-cost-table tbody,#api-cost-table tr,#api-cost-table td{display:block;width:100%;min-width:0}#api-cost-table tr{background:rgba(15,23,42,.34);border:1px solid rgba(148,163,184,.12);border-radius:16px;margin-bottom:10px;padding:10px}#api-cost-table td{border:0!important;padding:5px 2px!important;font-size:12px}#api-cost-table td::before{content:attr(data-label);display:block;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.45px;margin-bottom:2px}.api-cost-progress-v73{min-width:0}}
+
 /* ---- v69 SERVER / MANUTENZIONE ---- */
 .maintenance-grid-v69{display:grid;grid-template-columns:1.1fr .9fr;gap:18px;margin-bottom:18px}.maintenance-card-v69{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px}.maintenance-card-v69 h3{font-size:15px;margin-bottom:6px}.maintenance-card-v69 p{color:var(--muted);font-size:12px;line-height:1.5}.service-list-v69{display:grid;gap:10px}.service-card-v69{display:flex;align-items:center;justify-content:space-between;gap:12px;background:rgba(15,23,42,.38);border:1px solid rgba(148,163,184,.12);border-radius:14px;padding:13px}.service-card-v69 strong{font-size:13px}.service-card-v69 small{display:block;color:var(--muted);margin-top:3px;font-size:11px}.server-status-v69{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}.server-status-v69 .stat-card{background:rgba(15,23,42,.42);border:1px solid rgba(148,163,184,.12);border-radius:14px;padding:14px}.server-actions-v69{display:flex;gap:10px;flex-wrap:wrap}.backup-list-v69{display:grid;gap:10px}.backup-row-v69{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid rgba(148,163,184,.10);padding:10px 0}.backup-row-v69:last-child{border-bottom:0}.masked-key-v69{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;color:#dbeafe;font-size:12px}.advanced-access-v69{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.22)}@media(max-width:820px){.maintenance-grid-v69,.server-status-v69{grid-template-columns:1fr}.service-card-v69,.backup-row-v69{align-items:flex-start;flex-direction:column}.server-actions-v69 .btn{width:100%;justify-content:center}}
 /* Database Viewer v71 */
@@ -316,6 +335,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
   <div class="admin-mobile-more-head-v62"><strong>Menu admin</strong><button type="button" onclick="closeAdminMobileMoreV62()">×</button></div>
   <button onclick="adminMobileGoV62('errors')">⚠ Errori sistema</button>
   <button onclick="adminMobileGoV62('revenue')">€ Revenue</button>
+  <button onclick="adminMobileGoV62('api-costs')">▥ Costi API</button>
   <button onclick="adminMobileGoV62('platform')">⚙ Impostazioni SaaS</button>
   <button onclick="adminMobileGoV62('collaborators')">👥 Collaboratori</button>
   <button onclick="adminMobileGoV62('server')">🛠 Server / Manutenzione</button>
@@ -367,6 +387,10 @@ textarea.form-control { resize: vertical; min-height: 80px; }
     <div class="nav-item" onclick="navigate('revenue')">
       <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
       Revenue
+    </div>
+    <div class="nav-item" onclick="navigate('api-costs')">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19V5m4 14V9m4 10V3m4 16v-7m4 7V7"/></svg>
+      Costi API
     </div>
 
     <div class="nav-section">Piattaforma</div>
@@ -589,46 +613,77 @@ textarea.form-control { resize: vertical; min-height: 80px; }
           </div>
         </div>
 
-        <div class="panel" id="api-usage-panel-v66">
-          <div class="panel-header">
-            <span class="panel-title">Consumi API e chiavi</span>
-            <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <select id="api-usage-period" class="form-control" style="width:auto;min-width:140px" onchange="loadApiUsage()">
-                <option value="live">Live ultima ora</option>
-                <option value="today" selected>Oggi</option>
-                <option value="24h">Ultime 24 ore</option>
-                <option value="7d">Ultimi 7 giorni</option>
-                <option value="month">Mese corrente</option>
-                <option value="previous_month">Mese precedente</option>
-              </select>
-              <select id="api-usage-service" class="form-control" style="width:auto;min-width:180px" onchange="loadApiUsage()">
-                <option value="">Tutti i servizi</option>
-                <option value="google_geocoding">Geocoding Google</option>
-                <option value="mapbox_traffic">Mapbox traffico / ETA</option><option value="google_routes_matrix">Google Matrix (storico)</option>
-                <option value="google_maps_link">Link Google Maps</option><option value="openai_route_explanation">AI spiegazione giro</option><option value="openai_support_ticket_text">AI testo ticket</option><option value="openai_admin_error_analysis">AI analisi errori/ticket</option><option value="openai_report_summary">AI report aziendale</option>
-              </select>
-            </div>
+      </div>
+    </div>
+
+
+    <!-- ===== COSTI API ===== -->
+    <div class="section" id="section-api-costs">
+      <div class="api-cost-head-v73">
+        <div>
+          <h2>Costi API</h2>
+          <p>Controllo economico delle API esterne: utilizzo, quota gratuita residua, richieste fatturabili e proiezione a fine mese. OSRM self-hosted e GPS browser non generano costi API per richiesta.</p>
+        </div>
+        <div class="api-cost-controls-v73">
+          <input id="api-cost-month" type="month" class="form-control" style="width:auto" onchange="loadApiCosts()">
+          <button class="btn btn-ghost btn-sm" onclick="loadApiCosts()">↻ Aggiorna</button>
+        </div>
+      </div>
+
+      <div id="api-cost-alerts" class="api-cost-alerts-v73"></div>
+      <div id="api-cost-kpis" class="api-cost-kpis-v73"></div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div><span class="panel-title">Consumo e quota gratuita per servizio</span><div class="api-cost-meta-v73" id="api-cost-period-label"></div></div>
+        </div>
+        <div class="table-wrap">
+          <table id="api-cost-table">
+            <thead><tr><th>Servizio</th><th>Uso mese</th><th>Gratis</th><th>Residuo</th><th>Avanzamento quota</th><th>Fatturabile</th><th>Costo stimato</th><th>Proiezione</th></tr></thead>
+            <tbody id="api-cost-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="api-cost-grid-v73">
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">Aziende con più consumo</span></div>
+          <div class="panel-body"><div id="api-cost-companies" class="api-cost-list-v73"></div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">Andamento ultimi mesi</span></div>
+          <div class="panel-body"><div id="api-cost-history" class="api-cost-history-v73"></div></div>
+        </div>
+      </div>
+
+      <div class="panel api-cost-settings-v73">
+        <div class="panel-header">
+          <div><span class="panel-title">Parametri quote e tariffe</span><div class="api-cost-meta-v73">Valori iniziali aggiornati al 06/10/2026. Modificali se il contratto del provider applica condizioni differenti.</div></div>
+          <button class="btn btn-primary btn-sm" onclick="saveApiCostSettings()">Salva parametri</button>
+        </div>
+        <div class="panel-body"><div id="api-cost-settings-list" class="api-cost-settings-grid-v73"></div></div>
+      </div>
+
+      <div class="panel" id="api-usage-panel-v66" style="margin-top:16px">
+        <div class="panel-header">
+          <span class="panel-title">Registro chiamate API</span>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <select id="api-usage-period" class="form-control" style="width:auto;min-width:140px" onchange="loadApiUsage()">
+              <option value="live">Live ultima ora</option><option value="today">Oggi</option><option value="24h">Ultime 24 ore</option><option value="7d">Ultimi 7 giorni</option><option value="month" selected>Mese corrente</option><option value="previous_month">Mese precedente</option>
+            </select>
+            <select id="api-usage-service" class="form-control" style="width:auto;min-width:180px" onchange="loadApiUsage()">
+              <option value="">Tutti i servizi</option><option value="google_geocoding">Geocoding Google</option><option value="mapbox_traffic">Mapbox traffico / ETA</option><option value="mycarplate_vehicle">MyCarPlate targa</option><option value="openapi_vehicle">OpenAPI Automotive</option><option value="openai_route_explanation">AI spiegazione giro</option><option value="openai_support_ticket_text">AI testo ticket</option><option value="openai_admin_error_analysis">AI analisi errori/ticket</option><option value="openai_report_summary">AI report aziendale</option>
+            </select>
           </div>
-          <div class="panel-body">
-            <div id="api-usage-status" class="notice" style="margin-bottom:14px"></div>
-            <div class="grid-4 api-kpi-v66" id="api-usage-kpi"></div>
-            <div class="grid-2" style="margin-top:16px">
-              <div class="panel" style="background:rgba(15,23,42,.36)">
-                <div class="panel-header"><span class="panel-title">Consumo per servizio</span></div>
-                <div class="panel-body" id="api-usage-services"></div>
-              </div>
-              <div class="panel" style="background:rgba(15,23,42,.36)">
-                <div class="panel-header"><span class="panel-title">Aziende con più chiamate</span></div>
-                <div class="panel-body" id="api-usage-companies"></div>
-              </div>
-            </div>
-            <div class="table-wrap" style="margin-top:16px">
-              <table>
-                <thead><tr><th>Ora</th><th>Azienda</th><th>Servizio</th><th>Azione</th><th>Chiamate</th><th>Esito</th><th>Costo stimato</th><th>Messaggio</th></tr></thead>
-                <tbody id="api-usage-tbody"></tbody>
-              </table>
-            </div>
+        </div>
+        <div class="panel-body">
+          <div id="api-usage-status" class="notice" style="margin-bottom:14px"></div>
+          <div class="grid-4 api-kpi-v66" id="api-usage-kpi"></div>
+          <div class="grid-2" style="margin-top:16px">
+            <div class="panel" style="background:rgba(15,23,42,.36)"><div class="panel-header"><span class="panel-title">Consumo per servizio</span></div><div class="panel-body" id="api-usage-services"></div></div>
+            <div class="panel" style="background:rgba(15,23,42,.36)"><div class="panel-header"><span class="panel-title">Aziende con più chiamate</span></div><div class="panel-body" id="api-usage-companies"></div></div>
           </div>
+          <div class="table-wrap" style="margin-top:16px"><table><thead><tr><th>Ora</th><th>Azienda</th><th>Servizio</th><th>Azione</th><th>Chiamate</th><th>Esito</th><th>Costo log</th><th>Messaggio</th></tr></thead><tbody id="api-usage-tbody"></tbody></table></div>
         </div>
       </div>
     </div>
@@ -957,13 +1012,14 @@ function navigate(section) {
     if (el.getAttribute('onclick')?.includes(`'${section}'`)) el.classList.add('active');
   });
   document.getElementById(`section-${section}`).classList.add('active');
-  const titles = { overview: 'Overview', users: 'Gestione Utenti', tickets: 'Ticket di Supporto', errors: 'Errori Sistema', revenue: 'Revenue & Abbonamenti', platform: 'Impostazioni SaaS', collaborators: 'Collaboratori', profile: 'Profilo Admin', activity: 'Registro attività', server: 'Server / Manutenzione' };
+  const titles = { overview: 'Overview', users: 'Gestione Utenti', tickets: 'Ticket di Supporto', errors: 'Errori Sistema', revenue: 'Revenue & Abbonamenti', 'api-costs': 'Costi API', platform: 'Impostazioni SaaS', collaborators: 'Collaboratori', profile: 'Profilo Admin', activity: 'Registro attività', server: 'Server / Manutenzione' };
   document.getElementById('page-title').textContent = titles[section] || section;
   if (section === 'overview') loadOverview();
   if (section === 'users') loadUsers();
   if (section === 'tickets') loadTickets();
   if (section === 'errors') loadErrors();
   if (section === 'revenue') loadRevenue();
+  if (section === 'api-costs') loadApiCosts();
   if (section === 'platform') loadPlatformSettings();
   if (section === 'collaborators') loadCollaborators();
   if (section === 'profile') loadAdminProfile();
@@ -1477,7 +1533,6 @@ async function loadRevenue() {
 
     document.getElementById('revenue-loading').style.display = 'none';
     document.getElementById('revenue-content').style.display = 'block';
-    loadApiUsage();
   } catch(e) { showToast(e.message, 'error'); }
 }
 
@@ -1509,7 +1564,7 @@ async function loadApiUsage(){
       </tr>`).join('') : '<tr><td colspan="8"><div class="empty"><p>Nessuna chiamata API registrata nel periodo selezionato.</p></div></td></tr>';
   }catch(e){ showToast(e.message, 'error'); }
 }
-function serviceLabel(s){ return {google_geocoding:'Google Geocoding',google_routes_matrix:'Google Matrix (storico)',mapbox_traffic:'Mapbox traffico / ETA',google_maps_link:'Google Maps link',openai_route_explanation:'AI spiegazione giro',openai_support_ticket_text:'AI testo ticket',openai_admin_error_analysis:'AI analisi errori/ticket',openai_report_summary:'AI report aziendale'}[s] || s || 'API'; }
+function serviceLabel(s){ return {google_geocoding:'Google Geocoding',google_routes_matrix:'Google Matrix (storico)',mapbox_traffic:'Mapbox traffico / ETA',google_maps_link:'Google Maps link',mycarplate_vehicle:'MyCarPlate targa',openapi_vehicle:'OpenAPI Automotive',openai_route_explanation:'AI spiegazione giro',openai_support_ticket_text:'AI testo ticket',openai_admin_error_analysis:'AI analisi errori/ticket',openai_report_summary:'AI report aziendale'}[s] || s || 'API'; }
 
 
 // ---- PLATFORM SETTINGS / ADMIN PROFILE v64 ----
@@ -1955,5 +2010,6 @@ function syncAdminMobileNavV62(section){
   document.addEventListener('DOMContentLoaded',()=>syncAdminMobileNavV62('overview'));
 })();
 </script>
+<script src="/static/admin/api-costs.js"></script>
 </body>
 </html>
