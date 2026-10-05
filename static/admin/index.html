@@ -683,7 +683,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
             <div class="panel" style="background:rgba(15,23,42,.36)"><div class="panel-header"><span class="panel-title">Consumo per servizio</span></div><div class="panel-body" id="api-usage-services"></div></div>
             <div class="panel" style="background:rgba(15,23,42,.36)"><div class="panel-header"><span class="panel-title">Aziende con più chiamate</span></div><div class="panel-body" id="api-usage-companies"></div></div>
           </div>
-          <div class="table-wrap" style="margin-top:16px"><table><thead><tr><th>Ora</th><th>Azienda</th><th>Servizio</th><th>Azione</th><th>Chiamate</th><th>Esito</th><th>Costo log</th><th>Messaggio</th></tr></thead><tbody id="api-usage-tbody"></tbody></table></div>
+          <div class="table-wrap" style="margin-top:16px"><table><thead><tr><th>Ora</th><th>Azienda</th><th>Servizio</th><th>Azione</th><th>Chiamate</th><th>Esito</th><th>Log tecnico</th><th>Messaggio</th></tr></thead><tbody id="api-usage-tbody"></tbody></table></div>
         </div>
       </div>
     </div>
@@ -1564,14 +1564,14 @@ async function loadApiUsage(monthOverride=''){
       <div class="stat-card"><div class="stat-value">${data.total_calls||0}</div><div class="stat-label">Chiamate periodo</div></div>
       <div class="stat-card"><div class="stat-value api-status-ok">${data.success_calls||0}</div><div class="stat-label">Riuscite</div></div>
       <div class="stat-card"><div class="stat-value api-status-failed">${data.failed_calls||0}</div><div class="stat-label">Fallite</div></div>
-      <div class="stat-card"><div class="stat-value">€${Number(data.estimated_cost_eur||0).toFixed(3)}</div><div class="stat-label">Costo stimato</div></div>`;
+      <div class="stat-card"><div class="stat-value">${(data.by_service||[]).length}</div><div class="stat-label">Servizi registrati</div></div>`;
     document.getElementById('api-usage-services').innerHTML = (data.by_service||[]).length ? data.by_service.map(x=>`
-      <div class="api-row-v66"><div><strong>${serviceLabel(x.service)}</strong><small>${x.errors||0} errori</small></div><div style="text-align:right"><strong>${x.calls}</strong><small>€${Number(x.cost||0).toFixed(3)}</small></div></div>`).join('') : '<div class="empty"><p>Nessun consumo registrato.</p></div>';
+      <div class="api-row-v66"><div><strong>${serviceLabel(x.service)}</strong><small>${x.errors||0} errori</small></div><div style="text-align:right"><strong>${x.calls}</strong><small>chiamate</small></div></div>`).join('') : '<div class="empty"><p>Nessun consumo registrato.</p></div>';
     document.getElementById('api-usage-companies').innerHTML = (data.by_company||[]).length ? data.by_company.map(x=>`
-      <div class="api-row-v66"><div><strong>${escapeHtml(x.company_name)}</strong><small>${x.errors||0} errori</small></div><div style="text-align:right"><strong>${x.calls}</strong><small>€${Number(x.cost||0).toFixed(3)}</small></div></div>`).join('') : '<div class="empty"><p>Nessuna azienda nel periodo.</p></div>';
+      <div class="api-row-v66"><div><strong>${escapeHtml(x.company_name)}</strong><small>${x.errors||0} errori</small></div><div style="text-align:right"><strong>${x.calls}</strong><small>chiamate</small></div></div>`).join('') : '<div class="empty"><p>Nessuna azienda nel periodo.</p></div>';
     document.getElementById('api-usage-tbody').innerHTML = (data.recent||[]).length ? data.recent.map(r=>`
       <tr>
-        <td>${fmtDate(r.created_at)}</td><td>${escapeHtml(r.company_name||'Sistema')}</td><td>${escapeHtml(r.provider||'')} · ${escapeHtml(serviceLabel(r.service))}<br><small>${r.route_id ? 'Giro #'+Number(r.route_id)+' · ' : ''}${r.response_ms != null ? Number(r.response_ms)+' ms' : ''}</small></td><td>${escapeHtml(r.action||'—')}</td><td>${r.request_count||1}</td><td><span class="${r.status==='success'?'api-status-ok':'api-status-failed'}">${r.status==='success'?'Riuscita':'Fallita'}</span></td><td>€${Number(r.estimated_cost_eur||0).toFixed(3)}</td><td style="max-width:260px;white-space:normal">${escapeHtml(r.message||'')}</td>
+        <td>${fmtDate(r.created_at)}</td><td>${escapeHtml(r.company_name||'Sistema')}</td><td>${escapeHtml(r.provider||'')} · ${escapeHtml(serviceLabel(r.service))}<br><small>${r.route_id ? 'Giro #'+Number(r.route_id)+' · ' : ''}${r.response_ms != null ? Number(r.response_ms)+' ms' : ''}</small></td><td>${escapeHtml(r.action||'—')}</td><td>${r.request_count||1}</td><td><span class="${r.status==='success'?'api-status-ok':'api-status-failed'}">${r.status==='success'?'Riuscita':'Fallita'}</span></td><td><span class="api-cost-meta-v73">pre-quota</span></td><td style="max-width:260px;white-space:normal">${escapeHtml(r.message||'')}</td>
       </tr>`).join('') : '<tr><td colspan="8"><div class="empty"><p>Nessuna chiamata API registrata nel periodo selezionato.</p></div></td></tr>';
   }catch(e){ showToast(e.message, 'error'); }
 }
@@ -2021,6 +2021,6 @@ function syncAdminMobileNavV62(section){
   document.addEventListener('DOMContentLoaded',()=>syncAdminMobileNavV62('overview'));
 })();
 </script>
-<script src="/static/admin/api-costs.js"></script>
+<script src="/static/admin/api-costs.js?v=73"></script>
 </body>
 </html>
