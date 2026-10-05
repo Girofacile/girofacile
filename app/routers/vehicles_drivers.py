@@ -10,6 +10,7 @@ from ..database import get_db
 from ..models import Driver, DriverAccount, RoutePlan, User, Vehicle
 from ..services.fuel_prices import get_daily_prices
 from ..services.vehicle_lookup import VehicleLookupError, lookup_vehicle_by_plate, normalize_plate
+from ..services.api_usage import log_api_usage
 from ..schemas import DriverIn, VehicleIn
 from ..services.plans import check_vehicle_limit, check_driver_limit, vehicle_usage, lock_vehicle_owner
 
@@ -180,7 +181,21 @@ def lookup_plate(plate: str, db: Session = Depends(get_db), user: User = Depends
                 "message": "Dati recuperati dal registro targa interno di GiroFacile.",
             }
 
-        return lookup_vehicle_by_plate(normalized)
+        result = lookup_vehicle_by_plate(normalized)
+        provider = (result.get("provider") or "").lower()
+        if provider in ("mycarplate", "openapi"):
+            log_api_usage(
+                db,
+                user_id=user.id,
+                provider=provider,
+                service="mycarplate_vehicle" if provider == "mycarplate" else "openapi_vehicle",
+                action="Lookup targa",
+                endpoint="/vehicle",
+                status="success",
+                estimated_cost_eur=0.40 if provider == "openapi" else 0,
+                meta={"plate_country": "IT"},
+            )
+        return result
     except VehicleLookupError as exc:
         raise HTTPException(400, str(exc)) from exc
 
