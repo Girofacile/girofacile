@@ -21,6 +21,7 @@ def test_mapbox_directions_uses_progressive_public_tiers():
     assert _tiered_cost(100_001, profile) == 0.002
     # 400k at $2/1k + 100k at $1.60/1k.
     assert _tiered_cost(600_000, profile) == 960.0
+    assert _cost_for_profile(5_000_001, profile, 0) is None
 
 
 def test_subscription_provider_does_not_invent_payg_cost():
