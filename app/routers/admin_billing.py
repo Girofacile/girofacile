@@ -9,7 +9,7 @@ from ..core.dependencies import is_admin_user, require_superadmin
 from ..database import get_db
 from ..models import BillingPayment, User
 from ..services.plans import PLAN_LIMITS, get_user_plan_status
-from ..services.api_usage import api_usage_summary
+from ..services.api_usage import api_usage_summary, api_cost_dashboard, get_api_cost_profiles, save_api_cost_profiles
 from ..services.platform_settings import google_maps_api_key, google_geocoding_enabled, openai_api_key, openai_model, ai_enabled as platform_ai_enabled
 from .admin_helpers import (
     PLAN_MRR,
@@ -57,6 +57,41 @@ def admin_api_usage(
     data["traffic"] = {"provider": traffic_provider_name(db), "mapbox_configured": bool(mapbox_access_token(db)),
                        "services": [{"key": "mapbox_traffic", "label": "Mapbox traffic / ETA percorso definitivo"}]}
     return data
+
+
+@router.get("/api-costs")
+def admin_api_costs(
+    month: str = "",
+    db: Session = Depends(get_db),
+    superadmin: dict = Depends(require_superadmin),
+):
+    _require_perm(superadmin, "view_revenue")
+    return api_cost_dashboard(db, month=month)
+
+
+@router.get("/api-costs/settings")
+def admin_api_cost_settings(
+    db: Session = Depends(get_db),
+    superadmin: dict = Depends(require_superadmin),
+):
+    _require_perm(superadmin, "view_revenue")
+    return get_api_cost_profiles(db)
+
+
+@router.put("/api-costs/settings")
+def admin_update_api_cost_settings(
+    payload: dict,
+    db: Session = Depends(get_db),
+    superadmin: dict = Depends(require_superadmin),
+):
+    _require_perm(superadmin, "manage_platform")
+    try:
+        saved = save_api_cost_profiles(db, payload)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    _activity(db, superadmin.get("username"), "api_cost_settings_updated", "Aggiornate soglie e tariffe del monitor costi API")
+    db.commit()
+    return saved
 
 
 @router.get("/revenue")
