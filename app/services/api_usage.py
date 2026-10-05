@@ -186,9 +186,14 @@ API_COST_DEFAULTS = {
         "free_quota": 10000,
         "currency": "USD",
         "billing_model": "tiered",
-        # Conservative public-list estimate after the free allowance.
-        "tiers": [{"up_to": None, "price_per_1000": 5.0}],
-        "pricing_note": "10.000 richieste/mese gratuite; oltre quota stima standard $5/1.000.",
+        "tiers": [
+            {"up_to": 100000, "price_per_1000": 5.0},
+            {"up_to": 500000, "price_per_1000": 4.0},
+            {"up_to": 1000000, "price_per_1000": 3.0},
+            {"up_to": 5000000, "price_per_1000": 1.5},
+            {"up_to": None, "price_per_1000": 0.38},
+        ],
+        "pricing_note": "10.000 richieste/mese gratuite; poi $5/$4/$3/$1,50/$0,38 per 1.000 in base al volume.",
         "source_updated": "2026-10-06",
     },
     "mapbox_traffic": {
