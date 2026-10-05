@@ -208,9 +208,10 @@ API_COST_DEFAULTS = {
         "tiers": [
             {"up_to": 500000, "price_per_1000": 2.0},
             {"up_to": 1000000, "price_per_1000": 1.6},
-            {"up_to": None, "price_per_1000": 1.2},
+            {"up_to": 5000000, "price_per_1000": 1.2},
         ],
-        "pricing_note": "100.000 richieste/mese gratuite; scaglioni Mapbox Directions.",
+        "contact_sales_after": 5000000,
+        "pricing_note": "100.000 richieste/mese gratuite; $2/$1,60/$1,20 per 1.000 fino a 5M; oltre 5M contattare Mapbox.",
         "source_updated": "2026-10-06",
     },
     "openai": {
@@ -366,6 +367,9 @@ def _tiered_cost(total_units: int, profile: dict) -> float:
 
 
 def _cost_for_profile(total_units: int, profile: dict, logged_cost: float = 0.0) -> float | None:
+    contact_sales_after = profile.get("contact_sales_after")
+    if contact_sales_after and int(total_units or 0) > int(contact_sales_after):
+        return None
     model = profile.get("billing_model")
     if model == "logged_cost":
         return round(max(0.0, float(logged_cost or 0)), 6)
