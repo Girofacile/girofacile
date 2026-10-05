@@ -1,0 +1,39 @@
+name: Package latest GiroFacile
+on:
+  push:
+    branches:
+      - artifact-package
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout latest main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Create source archive
+        run: |
+          python - <<'PY'
+          import os, zipfile
+          skip_dirs={'.git','.venv','venv','__pycache__','.pytest_cache','test-results','.tracking-work'}
+          skip_names={'.env','.env.local','.env.production'}
+          out='/tmp/GiroFacile_ULTIMO_main.zip'
+          with zipfile.ZipFile(out,'w',zipfile.ZIP_DEFLATED) as z:
+              for root, dirs, files in os.walk('.'):
+                  dirs[:] = [d for d in dirs if d not in skip_dirs]
+                  for name in files:
+                      if name in skip_names or name.endswith(('.pyc','.pyo')):
+                          continue
+                      path=os.path.join(root,name)
+                      arc=path[2:] if path.startswith('./') else path
+                      z.write(path,arc)
+          print(out)
+          PY
+      - name: Upload latest project
+        uses: actions/upload-artifact@v4
+        with:
+          name: GiroFacile_ULTIMO_main
+          path: /tmp/GiroFacile_ULTIMO_main.zip
+          retention-days: 1
