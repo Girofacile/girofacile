@@ -91,7 +91,7 @@ def save_pairs(db: Session, user_id: int, entries: list[tuple[str, str, float, f
     db.commit()
 
 
-def invalidate_key(db: Session, key: str, user_id: int | None = None):
+def invalidate_key(db: Session, key: str, user_id: int | None = None, *, commit: bool = True):
     q = db.query(DistanceCache).filter(or_(
         DistanceCache.origin_key == key, DistanceCache.dest_key == key,
         DistanceCache.origin_key.startswith(key + "|", autoescape=True),
@@ -99,7 +99,8 @@ def invalidate_key(db: Session, key: str, user_id: int | None = None):
     if user_id is not None:
         q = q.filter(DistanceCache.user_id == user_id)
     q.delete(synchronize_session=False)
-    db.commit()
+    if commit:
+        db.commit()
 
 
 def cleanup_expired(db: Session, user_id: int | None = None) -> int:

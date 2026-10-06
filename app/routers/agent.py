@@ -15,7 +15,7 @@ from ..core.http_security import cookie_options
 from ..core.security import hash_password as secure_hash_password, password_needs_rehash, validate_password_strength, verify_password
 from ..core.utils import time_to_hhmm, parse_time_value
 from ..database import get_db
-from ..services.customer_import import read_customer_import, preflight_customer_import
+from ..services.customer_import import read_customer_import, preflight_customer_import, customer_address_key, invalidate_imported_address
 from ..models import Agent, AgentAccount, AgentSetupToken, Customer, User
 from ..schemas import CustomerIn
 from ..services.geocoding import geocode_customer
@@ -281,6 +281,7 @@ async def import_agent_customers(file: UploadFile = File(...), db: Session = Dep
             created += 1
         else:
             updated += 1
+        previous_address = customer_address_key(item)
         item.codice_cliente = codice or item.codice_cliente
         item.nome = nome
         item.indirizzo = indirizzo
@@ -302,5 +303,6 @@ async def import_agent_customers(file: UploadFile = File(...), db: Session = Dep
         item.transpallet = b(get(row, "transpallet", False))
         item.note = str(get(row, "note", "") or "")
         item.stato_geocodifica = item.stato_geocodifica or "da_verificare"
+        invalidate_imported_address(db, item, previous_address)
     db.commit()
     return {"ok": True, "created": created, "updated": updated}

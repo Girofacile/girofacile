@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from ..core.dependencies import current_user, owned
 from ..core.utils import time_to_hhmm, parse_time_value
 from ..database import get_db
-from ..services.customer_import import read_customer_import, preflight_customer_import
+from ..services.customer_import import read_customer_import, preflight_customer_import, customer_address_key, invalidate_imported_address
 from ..models import Agent, Customer, User
 from ..routers.agents import agent_full_name
 from ..schemas import CustomerIn
@@ -190,9 +190,9 @@ def update_customer(item_id: int, data: CustomerIn, db: Session = Depends(get_db
         item.fonte_geocodifica = None
         item.google_place_id = None
         item.geocodificato_il = None
+    normalize_customer_times(item)
     if old_key != new_key or old_coordinates != (item.lat, item.lon):
         dc.invalidate_key(db, dc.customer_key(item.id, user_id=user.id), user_id=user.id)
-    normalize_customer_times(item)
     db.commit()
     db.refresh(item)
     return customer_to_dict(item)
@@ -320,6 +320,7 @@ async def import_customers(
             created += 1
         else:
             updated += 1
+        previous_address = customer_address_key(item)
         item.codice_cliente = codice or None
         item.nome = nome
         item.indirizzo = indirizzo
@@ -341,5 +342,6 @@ async def import_customers(
         item.sponda = b(get(row, "sponda", False))
         item.transpallet = b(get(row, "transpallet", False))
         item.note = get(row, "note")
+        invalidate_imported_address(db, item, previous_address)
     db.commit()
     return {"created": created, "updated": updated}

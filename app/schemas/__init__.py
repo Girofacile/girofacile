@@ -1,5 +1,8 @@
-from pydantic import BaseModel, Field, field_validator
-from typing import Optional, List, Literal
+from pydantic import BaseModel, Field, StringConstraints, field_validator
+from typing import Annotated, Optional, List, Literal
+
+
+RequiredName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 
 
 class SignupIn(BaseModel):
@@ -33,14 +36,14 @@ class SignupIn(BaseModel):
     needs_tail_lift: bool = False
 
 class DepositIn(BaseModel):
-    nome: str | None = None
+    nome: RequiredName = Field(max_length=200)
     indirizzo: str
     predefinito: bool = False
     note: Optional[str] = None
 
 class AgentIn(BaseModel):
     codice_agente: Optional[str] = None
-    nome: str | None = None
+    nome: RequiredName = Field(max_length=150)
     cognome: Optional[str] = None
     telefono: Optional[str] = None
     email: Optional[str] = None
@@ -52,7 +55,7 @@ class AgentIn(BaseModel):
 class CustomerIn(BaseModel):
     agent_id: Optional[int] = None
     codice_cliente: Optional[str] = None
-    nome: str | None = None
+    nome: RequiredName = Field(max_length=250)
     indirizzo: str
     comune: Optional[str] = None
     provincia: Optional[str] = None
@@ -82,8 +85,16 @@ class VehicleIn(BaseModel):
     def normalize_alimentazione(cls, value):
         return value.strip().lower() if isinstance(value, str) else value
 
-    nome: str | None = None
+    nome: RequiredName = Field(max_length=150)
     targa: Optional[str] = None
+    marca: Optional[str] = Field(default=None, max_length=100)
+    modello: Optional[str] = Field(default=None, max_length=160)
+    anno_immatricolazione: Optional[int] = None
+    cilindrata_cc: Optional[int] = Field(default=None, ge=0)
+    potenza_kw: Optional[float] = Field(default=None, ge=0, allow_inf_nan=False)
+    classe_euro: Optional[str] = Field(default=None, max_length=60)
+    carrozzeria: Optional[str] = Field(default=None, max_length=100)
+    lookup_provider: Optional[str] = Field(default=None, max_length=60)
     toll_class: Literal["A", "B", "3", "4", "5"] = "B"
     consumo_l_100km: float = 8.5
     alimentazione: str = "gasolio"
@@ -97,7 +108,7 @@ class VehicleIn(BaseModel):
     photo_url: Optional[str] = None
 
 class DriverIn(BaseModel):
-    nome: str
+    nome: RequiredName = Field(max_length=150)
     cognome: Optional[str] = None
     telefono: Optional[str] = None
     email: Optional[str] = None

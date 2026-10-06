@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 
 from ..core.dependencies import current_user, owned
-from ..core.utils import local_today, parse_date_value
+from ..core.utils import parse_date_value
 from ..database import get_db
 from ..models import Driver, DriverAccount, RoutePlan, User, Vehicle
 from ..services.fuel_prices import get_daily_prices
@@ -77,7 +77,6 @@ def vehicle_status(vehicle, db: Session) -> str:
     dell'engine evita di lasciare la Session in stato aborted e quindi di far
     fallire l'intero endpoint /api/vehicles.
     """
-    today = local_today()
     vehicle_id = getattr(vehicle, "id", None)
     if not vehicle_id:
         return "Disponibile"
@@ -85,8 +84,8 @@ def vehicle_status(vehicle, db: Session) -> str:
         engine = db.get_bind()
         with engine.connect() as conn:
             rows = conn.execute(
-                text("SELECT status FROM route_plans WHERE vehicle_id = :vehicle_id AND data_giro = :today"),
-                {"vehicle_id": vehicle_id, "today": today},
+                text("SELECT status FROM route_plans WHERE vehicle_id = :vehicle_id AND status = 'in_corso'"),
+                {"vehicle_id": vehicle_id},
             ).fetchall()
         for row in rows:
             stored = ((row[0] if row else None) or "programmato").lower()
@@ -293,9 +292,8 @@ drivers_router = APIRouter(prefix="/api/drivers", tags=["drivers"])
 
 
 def driver_status(driver, db: Session) -> str:
-    today = local_today()
     routes = db.query(RoutePlan).filter(
-        RoutePlan.driver_id == driver.id, RoutePlan.data_giro == today
+        RoutePlan.driver_id == driver.id, RoutePlan.status == 'in_corso'
     ).all()
     for r in routes:
         if computed_route_status_simple(r) == "in_corso":

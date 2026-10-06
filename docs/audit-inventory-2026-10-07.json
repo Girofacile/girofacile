@@ -1,0 +1,2555 @@
+{
+  "python_files": [
+    "app\\__init__.py",
+    "app\\core\\__init__.py",
+    "app\\core\\config.py",
+    "app\\core\\dependencies.py",
+    "app\\core\\http_security.py",
+    "app\\core\\security.py",
+    "app\\core\\utils.py",
+    "app\\database.py",
+    "app\\legacy_schema.py",
+    "app\\main.py",
+    "app\\migrations.py",
+    "app\\models.py",
+    "app\\optimizer.py",
+    "app\\routers\\__init__.py",
+    "app\\routers\\admin.py",
+    "app\\routers\\admin_billing.py",
+    "app\\routers\\admin_database.py",
+    "app\\routers\\admin_helpers.py",
+    "app\\routers\\admin_profile.py",
+    "app\\routers\\admin_server.py",
+    "app\\routers\\admin_support.py",
+    "app\\routers\\admin_users.py",
+    "app\\routers\\agent.py",
+    "app\\routers\\agents.py",
+    "app\\routers\\auth.py",
+    "app\\routers\\billing.py",
+    "app\\routers\\customers.py",
+    "app\\routers\\deposits.py",
+    "app\\routers\\driver.py",
+    "app\\routers\\notifications.py",
+    "app\\routers\\operator.py",
+    "app\\routers\\reports.py",
+    "app\\routers\\routes.py",
+    "app\\routers\\settings.py",
+    "app\\routers\\support.py",
+    "app\\routers\\tracking.py",
+    "app\\routers\\vehicles_drivers.py",
+    "app\\schemas\\__init__.py",
+    "app\\services\\__init__.py",
+    "app\\services\\agents_feature.py",
+    "app\\services\\ai_assistant.py",
+    "app\\services\\api_usage.py",
+    "app\\services\\backups.py",
+    "app\\services\\billing.py",
+    "app\\services\\billing_notices.py",
+    "app\\services\\customer_import.py",
+    "app\\services\\customer_planning.py",
+    "app\\services\\delivery_pod.py",
+    "app\\services\\delivery_signature.py",
+    "app\\services\\delivery_tracking.py",
+    "app\\services\\distance_cache.py",
+    "app\\services\\email.py",
+    "app\\services\\error_monitor.py",
+    "app\\services\\fuel_prices.py",
+    "app\\services\\geocoding.py",
+    "app\\services\\identity.py",
+    "app\\services\\live_position.py",
+    "app\\services\\object_storage.py",
+    "app\\services\\occasional_stops.py",
+    "app\\services\\optimizer_search.py",
+    "app\\services\\plan_catalog.py",
+    "app\\services\\plans.py",
+    "app\\services\\platform_policy.py",
+    "app\\services\\platform_settings.py",
+    "app\\services\\road_routing.py",
+    "app\\services\\route_enrichment.py",
+    "app\\services\\route_execution.py",
+    "app\\services\\route_schedule.py",
+    "app\\services\\routing_health.py",
+    "app\\services\\sector_config.py",
+    "app\\services\\sessions.py",
+    "app\\services\\toll_provider.py",
+    "app\\services\\traffic_provider.py",
+    "app\\services\\usage_limits.py",
+    "app\\services\\vehicle_lookup.py"
+  ],
+  "endpoints": [
+    {
+      "file": "app\\main.py",
+      "line": 129,
+      "method": "GET",
+      "path": "/",
+      "function": "index",
+      "dependencies": []
+    },
+    {
+      "file": "app\\main.py",
+      "line": 140,
+      "method": "GET",
+      "path": "/favicon.ico",
+      "function": "favicon",
+      "dependencies": []
+    },
+    {
+      "file": "app\\main.py",
+      "line": 150,
+      "method": "GET",
+      "path": "/login",
+      "function": "unified_login",
+      "dependencies": []
+    },
+    {
+      "file": "app\\main.py",
+      "line": 158,
+      "method": "GET",
+      "path": "/dashboard",
+      "function": "dashboard",
+      "dependencies": []
+    },
+    {
+      "file": "app\\main.py",
+      "line": 166,
+      "method": "GET",
+      "path": "/mobile",
+      "function": "mobile",
+      "dependencies": []
+    },
+    {
+      "file": "app\\main.py",
+      "line": 174,
+      "method": "GET",
+      "path": "/reset-password/{token}",
+      "function": "reset_password_page",
+      "dependencies": []
+    },
+    {
+      "file": "app\\main.py",
+      "line": 183,
+      "method": "GET",
+      "path": "/privacy-policy",
+      "function": "privacy_policy_page",
+      "dependencies": []
+    },
+    {
+      "file": "app\\main.py",
+      "line": 188,
+      "method": "GET",
+      "path": "/cookie-policy",
+      "function": "cookie_policy_page",
+      "dependencies": []
+    },
+    {
+      "file": "app\\main.py",
+      "line": 193,
+      "method": "GET",
+      "path": "/termini-condizioni",
+      "function": "terms_page",
+      "dependencies": []
+    },
+    {
+      "file": "app\\main.py",
+      "line": 198,
+      "method": "GET",
+      "path": "/sicurezza",
+      "function": "security_page",
+      "dependencies": []
+    },
+    {
+      "file": "app\\main.py",
+      "line": 203,
+      "method": "GET",
+      "path": "/dpa-responsabile-trattamento",
+      "function": "dpa_page",
+      "dependencies": []
+    },
+    {
+      "file": "app\\main.py",
+      "line": 208,
+      "method": "GET",
+      "path": "/subprocessors",
+      "function": "subprocessors_page",
+      "dependencies": []
+    },
+    {
+      "file": "app\\main.py",
+      "line": 220,
+      "method": "GET",
+      "path": "/api/address/search",
+      "function": "address_search",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\main.py",
+      "line": 234,
+      "method": "GET",
+      "path": "/admin/login",
+      "function": "admin_login_page",
+      "dependencies": []
+    },
+    {
+      "file": "app\\main.py",
+      "line": 242,
+      "method": "GET",
+      "path": "/admin",
+      "function": "admin_panel",
+      "dependencies": []
+    },
+    {
+      "file": "app\\main.py",
+      "line": 250,
+      "method": "GET",
+      "path": "/giro/{token}",
+      "function": "operator_portal",
+      "dependencies": []
+    },
+    {
+      "file": "app\\main.py",
+      "line": 259,
+      "method": "GET",
+      "path": "/driver",
+      "function": "driver_portal",
+      "dependencies": []
+    },
+    {
+      "file": "app\\main.py",
+      "line": 259,
+      "method": "GET",
+      "path": "/driver/",
+      "function": "driver_portal",
+      "dependencies": []
+    },
+    {
+      "file": "app\\main.py",
+      "line": 267,
+      "method": "GET",
+      "path": "/driver/setup/{token}",
+      "function": "driver_setup",
+      "dependencies": []
+    },
+    {
+      "file": "app\\main.py",
+      "line": 276,
+      "method": "GET",
+      "path": "/agent",
+      "function": "agent_portal",
+      "dependencies": []
+    },
+    {
+      "file": "app\\main.py",
+      "line": 276,
+      "method": "GET",
+      "path": "/agent/",
+      "function": "agent_portal",
+      "dependencies": []
+    },
+    {
+      "file": "app\\main.py",
+      "line": 284,
+      "method": "GET",
+      "path": "/agent/setup/{token}",
+      "function": "agent_setup",
+      "dependencies": []
+    },
+    {
+      "file": "app\\routers\\admin_billing.py",
+      "line": 26,
+      "method": "GET",
+      "path": "/api/admin/api-usage",
+      "function": "admin_api_usage",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(require_superadmin)"
+      ]
+    },
+    {
+      "file": "app\\routers\\admin_billing.py",
+      "line": 63,
+      "method": "GET",
+      "path": "/api/admin/api-costs",
+      "function": "admin_api_costs",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(require_superadmin)"
+      ]
+    },
+    {
+      "file": "app\\routers\\admin_billing.py",
+      "line": 73,
+      "method": "GET",
+      "path": "/api/admin/api-costs/settings",
+      "function": "admin_api_cost_settings",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(require_superadmin)"
+      ]
+    },
+    {
+      "file": "app\\routers\\admin_billing.py",
+      "line": 82,
+      "method": "PUT",
+      "path": "/api/admin/api-costs/settings",
+      "function": "admin_update_api_cost_settings",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(require_superadmin)"
+      ]
+    },
+    {
+      "file": "app\\routers\\admin_billing.py",
+      "line": 98,
+      "method": "GET",
+      "path": "/api/admin/revenue",
+      "function": "admin_revenue",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(require_superadmin)"
+      ]
+    },
+    {
+      "file": "app\\routers\\admin_billing.py",
+      "line": 138,
+      "method": "POST",
+      "path": "/api/admin/users/{user_id}/billing-sync",
+      "function": "admin_billing_sync",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(require_superadmin)"
+      ]
+    },
+    {
+      "file": "app\\routers\\admin_database.py",
+      "line": 115,
+      "method": "GET",
+      "path": "/api/admin/database-viewer/tables",
+      "function": "admin_database_tables",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(require_superadmin)"
+      ]
+    },
+    {
+      "file": "app\\routers\\admin_database.py",
+      "line": 129,
+      "method": "GET",
+      "path": "/api/admin/database-viewer/table/{table_name}",
+      "function": "admin_database_table",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(require_superadmin)"
+      ]
+    },
+    {
+      "file": "app\\routers\\admin_database.py",
+      "line": 183,
+      "method": "GET",
+      "path": "/api/admin/database-viewer/table/{table_name}/export",
+      "function": "admin_database_export",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(require_superadmin)"
+      ]
+    },
+    {
+      "file": "app\\routers\\admin_profile.py",
+      "line": 36,
+      "method": "GET",
+      "path": "/api/admin/profile",
+      "function": "admin_profile",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(require_superadmin)"
+      ]
+    },
+    {
+      "file": "app\\routers\\admin_profile.py",
+      "line": 46,
+      "method": "PUT",
+      "path": "/api/admin/profile",
+      "function": "admin_update_profile",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(require_superadmin)"
+      ]
+    },
+    {
+      "file": "app\\routers\\admin_profile.py",
+      "line": 66,
+      "method": "GET",
+      "path": "/api/admin/platform-settings",
+      "function": "admin_platform_settings",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(require_superadmin)"
+      ]
+    },
+    {
+      "file": "app\\routers\\admin_profile.py",
+      "line": 106,
+      "method": "PUT",
+      "path": "/api/admin/platform-settings",
+      "function": "admin_update_platform_settings",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(require_superadmin)"
+      ]
+    },
+    {
+      "file": "app\\routers\\admin_profile.py",
+      "line": 159,
+      "method": "GET",
+      "path": "/api/admin/activity",
+      "function": "admin_activity",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(require_superadmin)"
+      ]
+    },
+    {
+      "file": "app\\routers\\admin_profile.py",
+      "line": 174,
+      "method": "GET",
+      "path": "/api/admin/collaborator-permissions",
+      "function": "admin_collaborator_permissions",
+      "dependencies": [
+        "Depends(require_superadmin)"
+      ]
+    },
+    {
+      "file": "app\\routers\\admin_profile.py",
+      "line": 180,
+      "method": "GET",
+      "path": "/api/admin/collaborators",
+      "function": "admin_collaborators",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(require_superadmin)"
+      ]
+    },
+    {
+      "file": "app\\routers\\admin_profile.py",
+      "line": 187,
+      "method": "POST",
+      "path": "/api/admin/collaborators",
+      "function": "admin_create_collaborator",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(require_superadmin)"
+      ]
+    },
+    {
+      "file": "app\\routers\\admin_profile.py",
+      "line": 230,
+      "method": "PUT",
+      "path": "/api/admin/collaborators/{collaborator_id}",
+      "function": "admin_update_collaborator",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(require_superadmin)"
+      ]
+    },
+    {
+      "file": "app\\routers\\admin_profile.py",
+      "line": 248,
+      "method": "POST",
+      "path": "/api/admin/collaborators/{collaborator_id}/resend",
+      "function": "admin_resend_collaborator",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(require_superadmin)"
+      ]
+    },
+    {
+      "file": "app\\routers\\admin_profile.py",
+      "line": 273,
+      "method": "DELETE",
+      "path": "/api/admin/collaborators/{collaborator_id}",
+      "function": "admin_delete_collaborator",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(require_superadmin)"
+      ]
+    },
+    {
+      "file": "app\\routers\\admin_server.py",
+      "line": 35,
+      "method": "GET",
+      "path": "/api/admin/routing-health",
+      "function": "admin_routing_health",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(require_superadmin)"
+      ]
+    },
+    {
+      "file": "app\\routers\\admin_server.py",
+      "line": 43,
+      "method": "GET",
+      "path": "/api/admin/server-maintenance",
+      "function": "admin_server_maintenance",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(require_superadmin)"
+      ]
+    },
+    {
+      "file": "app\\routers\\admin_server.py",
+      "line": 85,
+      "method": "PUT",
+      "path": "/api/admin/server-maintenance/settings",
+      "function": "admin_server_maintenance_settings",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(require_superadmin)"
+      ]
+    },
+    {
+      "file": "app\\routers\\admin_server.py",
+      "line": 110,
+      "method": "PUT",
+      "path": "/api/admin/server-maintenance/keys",
+      "function": "admin_server_maintenance_keys",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(require_superadmin)"
+      ]
+    },
+    {
+      "file": "app\\routers\\admin_server.py",
+      "line": 128,
+      "method": "POST",
+      "path": "/api/admin/server-maintenance/test-service",
+      "function": "admin_server_test_service",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(require_superadmin)"
+      ]
+    },
+    {
+      "file": "app\\routers\\admin_server.py",
+      "line": 145,
+      "method": "POST",
+      "path": "/api/admin/server-maintenance/backups",
+      "function": "admin_create_backup",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(require_superadmin)"
+      ]
+    },
+    {
+      "file": "app\\routers\\admin_server.py",
+      "line": 161,
+      "method": "GET",
+      "path": "/api/admin/server-maintenance/backups/{filename}",
+      "function": "admin_download_backup",
+      "dependencies": [
+        "Depends(require_superadmin)"
+      ]
+    },
+    {
+      "file": "app\\routers\\admin_server.py",
+      "line": 168,
+      "method": "POST",
+      "path": "/api/admin/server-maintenance/restart-app",
+      "function": "admin_restart_app",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(require_superadmin)"
+      ]
+    },
+    {
+      "file": "app\\routers\\admin_server.py",
+      "line": 176,
+      "method": "POST",
+      "path": "/api/admin/server-maintenance/advanced-access",
+      "function": "admin_advanced_server_access",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(require_superadmin)"
+      ]
+    },
+    {
+      "file": "app\\routers\\admin_support.py",
+      "line": 25,
+      "method": "GET",
+      "path": "/api/admin/tickets",
+      "function": "admin_tickets",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(require_superadmin)"
+      ]
+    },
+    {
+      "file": "app\\routers\\admin_support.py",
+      "line": 42,
+      "method": "PUT",
+      "path": "/api/admin/tickets/{ticket_id}",
+      "function": "admin_update_ticket",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(require_superadmin)"
+      ]
+    },
+    {
+      "file": "app\\routers\\admin_support.py",
+      "line": 93,
+      "method": "GET",
+      "path": "/api/admin/system-errors",
+      "function": "admin_system_errors",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(require_superadmin)"
+      ]
+    },
+    {
+      "file": "app\\routers\\admin_support.py",
+      "line": 112,
+      "method": "GET",
+      "path": "/api/admin/system-errors/summary",
+      "function": "admin_system_errors_summary",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(require_superadmin)"
+      ]
+    },
+    {
+      "file": "app\\routers\\admin_support.py",
+      "line": 133,
+      "method": "GET",
+      "path": "/api/admin/system-errors/{error_id}",
+      "function": "admin_system_error_detail",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(require_superadmin)"
+      ]
+    },
+    {
+      "file": "app\\routers\\admin_support.py",
+      "line": 147,
+      "method": "PUT",
+      "path": "/api/admin/system-errors/{error_id}",
+      "function": "admin_update_system_error",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(require_superadmin)"
+      ]
+    },
+    {
+      "file": "app\\routers\\admin_support.py",
+      "line": 180,
+      "method": "POST",
+      "path": "/api/admin/tickets/{ticket_id}/ai-analysis",
+      "function": "admin_ticket_ai_analysis",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(require_superadmin)"
+      ]
+    },
+    {
+      "file": "app\\routers\\admin_support.py",
+      "line": 209,
+      "method": "POST",
+      "path": "/api/admin/system-errors/{error_id}/ai-analysis",
+      "function": "admin_error_ai_analysis",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(require_superadmin)"
+      ]
+    },
+    {
+      "file": "app\\routers\\admin_users.py",
+      "line": 25,
+      "method": "GET",
+      "path": "/api/admin/overview",
+      "function": "admin_overview",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(require_superadmin)"
+      ]
+    },
+    {
+      "file": "app\\routers\\admin_users.py",
+      "line": 97,
+      "method": "GET",
+      "path": "/api/admin/users",
+      "function": "admin_users",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(require_superadmin)"
+      ]
+    },
+    {
+      "file": "app\\routers\\admin_users.py",
+      "line": 129,
+      "method": "GET",
+      "path": "/api/admin/users/{user_id}",
+      "function": "admin_user_detail",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(require_superadmin)"
+      ]
+    },
+    {
+      "file": "app\\routers\\admin_users.py",
+      "line": 148,
+      "method": "PUT",
+      "path": "/api/admin/users/{user_id}/plan",
+      "function": "admin_update_plan",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(require_superadmin)"
+      ]
+    },
+    {
+      "file": "app\\routers\\admin_users.py",
+      "line": 177,
+      "method": "PUT",
+      "path": "/api/admin/users/{user_id}/disable",
+      "function": "admin_toggle_user",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(require_superadmin)"
+      ]
+    },
+    {
+      "file": "app\\routers\\admin_users.py",
+      "line": 194,
+      "method": "DELETE",
+      "path": "/api/admin/users/{user_id}",
+      "function": "admin_delete_user",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(require_superadmin)"
+      ]
+    },
+    {
+      "file": "app\\routers\\agent.py",
+      "line": 67,
+      "method": "GET",
+      "path": "/api/agent/setup/{token}",
+      "function": "get_setup_info",
+      "dependencies": [
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\agent.py",
+      "line": 89,
+      "method": "POST",
+      "path": "/api/agent/setup/{token}",
+      "function": "complete_setup",
+      "dependencies": [
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\agent.py",
+      "line": 125,
+      "method": "POST",
+      "path": "/api/agent/login",
+      "function": "agent_login",
+      "dependencies": [
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\agent.py",
+      "line": 143,
+      "method": "POST",
+      "path": "/api/agent/logout",
+      "function": "agent_logout",
+      "dependencies": [
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\agent.py",
+      "line": 149,
+      "method": "GET",
+      "path": "/api/agent/me",
+      "function": "agent_me",
+      "dependencies": [
+        "Depends(get_current_agent)",
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\agent.py",
+      "line": 163,
+      "method": "GET",
+      "path": "/api/agent/customers",
+      "function": "list_agent_customers",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(get_current_agent)"
+      ]
+    },
+    {
+      "file": "app\\routers\\agent.py",
+      "line": 179,
+      "method": "POST",
+      "path": "/api/agent/customers",
+      "function": "create_agent_customer",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(get_current_agent)"
+      ]
+    },
+    {
+      "file": "app\\routers\\agent.py",
+      "line": 195,
+      "method": "PUT",
+      "path": "/api/agent/customers/{customer_id}",
+      "function": "update_agent_customer",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(get_current_agent)"
+      ]
+    },
+    {
+      "file": "app\\routers\\agent.py",
+      "line": 223,
+      "method": "DELETE",
+      "path": "/api/agent/customers/{customer_id}",
+      "function": "delete_agent_customer",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(get_current_agent)"
+      ]
+    },
+    {
+      "file": "app\\routers\\agent.py",
+      "line": 235,
+      "method": "POST",
+      "path": "/api/agent/customers/verify-address-preview",
+      "function": "verify_agent_customer_address_preview",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(get_current_agent)"
+      ]
+    },
+    {
+      "file": "app\\routers\\agent.py",
+      "line": 257,
+      "method": "POST",
+      "path": "/api/agent/customers/import",
+      "function": "import_agent_customers",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(get_current_agent)"
+      ]
+    },
+    {
+      "file": "app\\routers\\agents.py",
+      "line": 111,
+      "method": "GET",
+      "path": "/api/agents",
+      "function": "list_agents",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\agents.py",
+      "line": 133,
+      "method": "POST",
+      "path": "/api/agents",
+      "function": "create_agent",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\agents.py",
+      "line": 151,
+      "method": "PUT",
+      "path": "/api/agents/{item_id}",
+      "function": "update_agent",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\agents.py",
+      "line": 175,
+      "method": "POST",
+      "path": "/api/agents/{item_id}/invite",
+      "function": "invite_agent",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\agents.py",
+      "line": 187,
+      "method": "DELETE",
+      "path": "/api/agents/{item_id}",
+      "function": "delete_agent",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\auth.py",
+      "line": 40,
+      "method": "POST",
+      "path": "/api/signup",
+      "function": "signup",
+      "dependencies": [
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\auth.py",
+      "line": 158,
+      "method": "POST",
+      "path": "/api/admin/login",
+      "function": "superadmin_login",
+      "dependencies": [
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\auth.py",
+      "line": 183,
+      "method": "POST",
+      "path": "/api/admin/logout",
+      "function": "superadmin_logout",
+      "dependencies": [
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\auth.py",
+      "line": 189,
+      "method": "GET",
+      "path": "/api/admin/me",
+      "function": "superadmin_me",
+      "dependencies": [
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\auth.py",
+      "line": 219,
+      "method": "POST",
+      "path": "/api/login",
+      "function": "login",
+      "dependencies": [
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\auth.py",
+      "line": 320,
+      "method": "POST",
+      "path": "/api/logout",
+      "function": "logout",
+      "dependencies": [
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\auth.py",
+      "line": 334,
+      "method": "GET",
+      "path": "/api/me",
+      "function": "me",
+      "dependencies": [
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\auth.py",
+      "line": 473,
+      "method": "POST",
+      "path": "/api/password-reset/request",
+      "function": "request_password_reset",
+      "dependencies": [
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\auth.py",
+      "line": 497,
+      "method": "POST",
+      "path": "/api/support/password-reset-request",
+      "function": "legacy_password_reset_request",
+      "dependencies": [
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\auth.py",
+      "line": 502,
+      "method": "GET",
+      "path": "/api/password-reset/{token}",
+      "function": "get_password_reset_info",
+      "dependencies": [
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\auth.py",
+      "line": 510,
+      "method": "POST",
+      "path": "/api/password-reset/confirm",
+      "function": "confirm_password_reset",
+      "dependencies": [
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\auth.py",
+      "line": 582,
+      "method": "GET",
+      "path": "/api/account-profile",
+      "function": "get_account_profile",
+      "dependencies": [
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\auth.py",
+      "line": 596,
+      "method": "PUT",
+      "path": "/api/account-profile",
+      "function": "update_account_profile",
+      "dependencies": [
+        "Depends(current_user)",
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\auth.py",
+      "line": 644,
+      "method": "GET",
+      "path": "/api/sector-config",
+      "function": "get_sector_configuration",
+      "dependencies": [
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\auth.py",
+      "line": 652,
+      "method": "GET",
+      "path": "/api/company-profile",
+      "function": "get_company_profile",
+      "dependencies": [
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\auth.py",
+      "line": 657,
+      "method": "PUT",
+      "path": "/api/company-profile",
+      "function": "update_company_profile",
+      "dependencies": [
+        "Depends(current_user)",
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\auth.py",
+      "line": 692,
+      "method": "GET",
+      "path": "/api/onboarding/status",
+      "function": "onboarding_status",
+      "dependencies": [
+        "Depends(current_user)",
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\auth.py",
+      "line": 727,
+      "method": "POST",
+      "path": "/api/onboarding/complete",
+      "function": "complete_onboarding",
+      "dependencies": [
+        "Depends(current_user)",
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\auth.py",
+      "line": 736,
+      "method": "POST",
+      "path": "/api/onboarding/dismiss",
+      "function": "dismiss_onboarding",
+      "dependencies": [
+        "Depends(current_user)",
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\billing.py",
+      "line": 29,
+      "method": "GET",
+      "path": "/api/billing/catalog.js",
+      "function": "public_catalog_script",
+      "dependencies": []
+    },
+    {
+      "file": "app\\routers\\billing.py",
+      "line": 68,
+      "method": "GET",
+      "path": "/api/billing/overview",
+      "function": "billing_overview",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\billing.py",
+      "line": 138,
+      "method": "PUT",
+      "path": "/api/billing/billing-details",
+      "function": "update_billing_details",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\billing.py",
+      "line": 157,
+      "method": "GET",
+      "path": "/api/billing/plans",
+      "function": "list_plans",
+      "dependencies": [
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\billing.py",
+      "line": 164,
+      "method": "GET",
+      "path": "/api/billing/my-plan",
+      "function": "my_plan",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\billing.py",
+      "line": 170,
+      "method": "GET",
+      "path": "/api/billing/data-export",
+      "function": "export_company_data",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\billing.py",
+      "line": 206,
+      "method": "POST",
+      "path": "/api/billing/select-plan",
+      "function": "select_plan",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\billing.py",
+      "line": 211,
+      "method": "POST",
+      "path": "/api/billing/create-checkout-session",
+      "function": "create_checkout_session",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\billing.py",
+      "line": 217,
+      "method": "POST",
+      "path": "/api/billing/cancel-checkout",
+      "function": "cancel_checkout",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\billing.py",
+      "line": 235,
+      "method": "POST",
+      "path": "/api/billing/sync",
+      "function": "sync_billing",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\billing.py",
+      "line": 247,
+      "method": "POST",
+      "path": "/api/billing/change-preview",
+      "function": "preview_change",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\billing.py",
+      "line": 255,
+      "method": "POST",
+      "path": "/api/billing/change-plan",
+      "function": "update_subscription",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\billing.py",
+      "line": 261,
+      "method": "POST",
+      "path": "/api/billing/cancel",
+      "function": "cancel_subscription",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\billing.py",
+      "line": 267,
+      "method": "POST",
+      "path": "/api/billing/resume",
+      "function": "resume_subscription",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\billing.py",
+      "line": 273,
+      "method": "POST",
+      "path": "/api/billing/portal",
+      "function": "billing_portal",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\billing.py",
+      "line": 291,
+      "method": "GET",
+      "path": "/api/billing/invoices/{invoice_id}/download",
+      "function": "invoice_download",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\billing.py",
+      "line": 308,
+      "method": "POST",
+      "path": "/api/billing/webhook",
+      "function": "stripe_webhook",
+      "dependencies": [
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\customers.py",
+      "line": 98,
+      "method": "GET",
+      "path": "/api/customers",
+      "function": "list_customers",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\customers.py",
+      "line": 135,
+      "method": "POST",
+      "path": "/api/customers",
+      "function": "create_customer",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\customers.py",
+      "line": 159,
+      "method": "PUT",
+      "path": "/api/customers/{item_id}",
+      "function": "update_customer",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\customers.py",
+      "line": 202,
+      "method": "DELETE",
+      "path": "/api/customers/{item_id}",
+      "function": "delete_customer",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\customers.py",
+      "line": 214,
+      "method": "POST",
+      "path": "/api/customers/verify-address-preview",
+      "function": "verify_customer_address_preview",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\customers.py",
+      "line": 251,
+      "method": "POST",
+      "path": "/api/customers/{item_id}/verify-address",
+      "function": "verify_customer_address",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\customers.py",
+      "line": 265,
+      "method": "POST",
+      "path": "/api/customers/verify-pending",
+      "function": "verify_pending_addresses",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\customers.py",
+      "line": 287,
+      "method": "POST",
+      "path": "/api/customers/import",
+      "function": "import_customers",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\deposits.py",
+      "line": 16,
+      "method": "GET",
+      "path": "/api/deposits",
+      "function": "list_deposits",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\deposits.py",
+      "line": 23,
+      "method": "POST",
+      "path": "/api/deposits",
+      "function": "create_deposit",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\deposits.py",
+      "line": 35,
+      "method": "PUT",
+      "path": "/api/deposits/{item_id}",
+      "function": "update_deposit",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\deposits.py",
+      "line": 55,
+      "method": "DELETE",
+      "path": "/api/deposits/{item_id}",
+      "function": "delete_deposit",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\driver.py",
+      "line": 87,
+      "method": "GET",
+      "path": "/api/driver/setup/{token}",
+      "function": "get_setup_info",
+      "dependencies": [
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\driver.py",
+      "line": 106,
+      "method": "POST",
+      "path": "/api/driver/setup/{token}",
+      "function": "complete_setup",
+      "dependencies": [
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\driver.py",
+      "line": 157,
+      "method": "POST",
+      "path": "/api/driver/login",
+      "function": "driver_login",
+      "dependencies": [
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\driver.py",
+      "line": 180,
+      "method": "POST",
+      "path": "/api/driver/logout",
+      "function": "driver_logout",
+      "dependencies": [
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\driver.py",
+      "line": 185,
+      "method": "GET",
+      "path": "/api/driver/me",
+      "function": "driver_me",
+      "dependencies": [
+        "Depends(get_current_driver)",
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\driver.py",
+      "line": 202,
+      "method": "GET",
+      "path": "/api/driver/routes",
+      "function": "get_driver_routes",
+      "dependencies": [
+        "Depends(get_current_driver)",
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\driver.py",
+      "line": 254,
+      "method": "POST",
+      "path": "/api/driver/routes/{route_id}/start",
+      "function": "start_route",
+      "dependencies": [
+        "Depends(get_current_driver)",
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\driver.py",
+      "line": 271,
+      "method": "GET",
+      "path": "/api/driver/routes/{route_id}",
+      "function": "get_driver_route_detail",
+      "dependencies": [
+        "Depends(get_current_driver)",
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\driver.py",
+      "line": 345,
+      "method": "POST",
+      "path": "/api/driver/delivery/{delivery_id}/signature",
+      "function": "save_delivery_signature",
+      "dependencies": [
+        "Depends(get_current_driver)",
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\driver.py",
+      "line": 355,
+      "method": "POST",
+      "path": "/api/driver/delivery/{delivery_id}/complete",
+      "function": "complete_delivery",
+      "dependencies": [
+        "Depends(get_current_driver)",
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\driver.py",
+      "line": 365,
+      "method": "POST",
+      "path": "/api/driver/delivery/{delivery_id}/missed",
+      "function": "missed_delivery",
+      "dependencies": [
+        "Depends(get_current_driver)",
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\driver.py",
+      "line": 375,
+      "method": "POST",
+      "path": "/api/driver/delivery/{delivery_id}/note",
+      "function": "add_note",
+      "dependencies": [
+        "Depends(get_current_driver)",
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\driver.py",
+      "line": 390,
+      "method": "GET",
+      "path": "/api/driver/chat/direct",
+      "function": "get_driver_direct_chat",
+      "dependencies": [
+        "Depends(get_current_driver)",
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\driver.py",
+      "line": 407,
+      "method": "POST",
+      "path": "/api/driver/chat/direct",
+      "function": "send_driver_direct_message",
+      "dependencies": [
+        "Depends(get_current_driver)",
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\driver.py",
+      "line": 422,
+      "method": "GET",
+      "path": "/api/driver/chat/{route_id}",
+      "function": "get_driver_chat",
+      "dependencies": [
+        "Depends(get_current_driver)",
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\driver.py",
+      "line": 440,
+      "method": "POST",
+      "path": "/api/driver/chat/{route_id}",
+      "function": "send_driver_message",
+      "dependencies": [
+        "Depends(get_current_driver)",
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\driver.py",
+      "line": 467,
+      "method": "GET",
+      "path": "/api/driver/admin/chat-threads",
+      "function": "list_admin_chat_threads",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\driver.py",
+      "line": 507,
+      "method": "GET",
+      "path": "/api/driver/admin/chat/{route_id}",
+      "function": "get_admin_chat",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\driver.py",
+      "line": 531,
+      "method": "POST",
+      "path": "/api/driver/admin/chat/{route_id}",
+      "function": "send_admin_message",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\driver.py",
+      "line": 549,
+      "method": "GET",
+      "path": "/api/driver/admin/direct-chat/{driver_id}",
+      "function": "get_admin_direct_chat",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\driver.py",
+      "line": 575,
+      "method": "POST",
+      "path": "/api/driver/admin/direct-chat/{driver_id}",
+      "function": "send_admin_direct_message",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\driver.py",
+      "line": 610,
+      "method": "GET",
+      "path": "/api/driver/delivery/{delivery_id}/evidence/{kind}",
+      "function": "driver_evidence",
+      "dependencies": [
+        "Depends(get_current_driver)",
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\driver.py",
+      "line": 633,
+      "method": "GET",
+      "path": "/api/driver/routes/{route_id}/position",
+      "function": "driver_position_state",
+      "dependencies": [
+        "Depends(get_current_driver)",
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\driver.py",
+      "line": 640,
+      "method": "POST",
+      "path": "/api/driver/routes/{route_id}/position",
+      "function": "upload_driver_position",
+      "dependencies": [
+        "Depends(get_current_driver)",
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\notifications.py",
+      "line": 236,
+      "method": "GET",
+      "path": "/api/notifications",
+      "function": "list_notifications",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\notifications.py",
+      "line": 254,
+      "method": "GET",
+      "path": "/api/notifications/count",
+      "function": "notification_count",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\notifications.py",
+      "line": 264,
+      "method": "POST",
+      "path": "/api/notifications/{notification_id}/read",
+      "function": "mark_notification_read",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\notifications.py",
+      "line": 275,
+      "method": "POST",
+      "path": "/api/notifications/read-all",
+      "function": "mark_all_notifications_read",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\operator.py",
+      "line": 82,
+      "method": "POST",
+      "path": "/api/routes/{route_id}/generate-token",
+      "function": "generate_route_token",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\operator.py",
+      "line": 147,
+      "method": "GET",
+      "path": "/api/operator/{token}",
+      "function": "get_operator_route",
+      "dependencies": [
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\operator.py",
+      "line": 206,
+      "method": "POST",
+      "path": "/api/operator/{token}/delivery/{delivery_id}/complete",
+      "function": "complete_delivery",
+      "dependencies": [
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\operator.py",
+      "line": 217,
+      "method": "POST",
+      "path": "/api/operator/{token}/delivery/{delivery_id}/missed",
+      "function": "missed_delivery",
+      "dependencies": [
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\operator.py",
+      "line": 228,
+      "method": "POST",
+      "path": "/api/operator/{token}/delivery/{delivery_id}/note",
+      "function": "add_delivery_note",
+      "dependencies": [
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\operator.py",
+      "line": 243,
+      "method": "GET",
+      "path": "/api/routes/{route_id}/live",
+      "function": "route_live_status",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\operator.py",
+      "line": 297,
+      "method": "GET",
+      "path": "/api/operator/{token}/delivery/{delivery_id}/evidence/{kind}",
+      "function": "operator_evidence",
+      "dependencies": [
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\operator.py",
+      "line": 309,
+      "method": "GET",
+      "path": "/api/operator/{token}/position",
+      "function": "operator_position_state",
+      "dependencies": [
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\operator.py",
+      "line": 316,
+      "method": "POST",
+      "path": "/api/operator/{token}/position",
+      "function": "upload_operator_position",
+      "dependencies": [
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\operator.py",
+      "line": 322,
+      "method": "POST",
+      "path": "/api/operator/{token}/start",
+      "function": "start_operator_route",
+      "dependencies": [
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\reports.py",
+      "line": 299,
+      "method": "GET",
+      "path": "/api/reports/summary",
+      "function": "reports_summary",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\reports.py",
+      "line": 311,
+      "method": "GET",
+      "path": "/api/reports/ai-summary",
+      "function": "reports_ai_summary",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\reports.py",
+      "line": 341,
+      "method": "GET",
+      "path": "/api/reports/export",
+      "function": "reports_export",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\routes.py",
+      "line": 516,
+      "method": "GET",
+      "path": "/api/resources/availability",
+      "function": "resources_availability",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\routes.py",
+      "line": 555,
+      "method": "POST",
+      "path": "/api/routes/verify-stop-address",
+      "function": "verify_occasional_stop_address",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\routes.py",
+      "line": 562,
+      "method": "POST",
+      "path": "/api/routes/optimize",
+      "function": "create_and_optimize_route",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\routes.py",
+      "line": 604,
+      "method": "POST",
+      "path": "/api/routes/recalculate-manual",
+      "function": "recalc_manual_route",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\routes.py",
+      "line": 641,
+      "method": "POST",
+      "path": "/api/routes/{route_id}/ai-explanation",
+      "function": "route_ai_explanation",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\routes.py",
+      "line": 704,
+      "method": "GET",
+      "path": "/api/routes/operativi",
+      "function": "list_operational_routes",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\routes.py",
+      "line": 763,
+      "method": "POST",
+      "path": "/api/routes/{route_id}/program",
+      "function": "program_route",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\routes.py",
+      "line": 850,
+      "method": "POST",
+      "path": "/api/routes/{route_id}/refresh-traffic",
+      "function": "refresh_route_traffic",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\routes.py",
+      "line": 866,
+      "method": "POST",
+      "path": "/api/routes/{route_id}/cancel",
+      "function": "cancel_route",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\routes.py",
+      "line": 883,
+      "method": "POST",
+      "path": "/api/routes/{route_id}/complete",
+      "function": "complete_route",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\routes.py",
+      "line": 897,
+      "method": "GET",
+      "path": "/api/routes/{route_id}/map-data",
+      "function": "get_route_map_data",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\routes.py",
+      "line": 950,
+      "method": "GET",
+      "path": "/api/routes/{route_id}",
+      "function": "get_route",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\routes.py",
+      "line": 958,
+      "method": "GET",
+      "path": "/api/routes",
+      "function": "list_routes",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\routes.py",
+      "line": 976,
+      "method": "GET",
+      "path": "/api/deliveries/{delivery_id}/evidence/{kind}",
+      "function": "company_evidence",
+      "dependencies": [
+        "Depends(current_user)",
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\routes.py",
+      "line": 985,
+      "method": "GET",
+      "path": "/api/routes/{route_id}/position",
+      "function": "get_live_position",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\settings.py",
+      "line": 20,
+      "method": "GET",
+      "path": "/api/settings",
+      "function": "get_settings",
+      "dependencies": [
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\settings.py",
+      "line": 28,
+      "method": "PUT",
+      "path": "/api/settings",
+      "function": "update_settings",
+      "dependencies": [
+        "Depends(current_user)",
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\support.py",
+      "line": 47,
+      "method": "POST",
+      "path": "/api/support/tickets/assist-text",
+      "function": "support_ticket_assist_text",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\support.py",
+      "line": 87,
+      "method": "POST",
+      "path": "/api/support/tickets",
+      "function": "create_support_ticket",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\support.py",
+      "line": 142,
+      "method": "GET",
+      "path": "/api/support/tickets",
+      "function": "my_support_tickets",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\tracking.py",
+      "line": 40,
+      "method": "GET",
+      "path": "/tracking",
+      "function": "tracking_page",
+      "dependencies": []
+    },
+    {
+      "file": "app\\routers\\tracking.py",
+      "line": 48,
+      "method": "GET",
+      "path": "/api/public/tracking",
+      "function": "read_tracking",
+      "dependencies": [
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\tracking.py",
+      "line": 54,
+      "method": "POST",
+      "path": "/api/deliveries/{delivery_id}/tracking",
+      "function": "get_tracking_link",
+      "dependencies": [
+        "Depends(current_user)",
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\tracking.py",
+      "line": 64,
+      "method": "DELETE",
+      "path": "/api/deliveries/{delivery_id}/tracking",
+      "function": "revoke_tracking_link",
+      "dependencies": [
+        "Depends(current_user)",
+        "Depends(get_db)"
+      ]
+    },
+    {
+      "file": "app\\routers\\vehicles_drivers.py",
+      "line": 146,
+      "method": "GET",
+      "path": "/api/vehicles/usage",
+      "function": "vehicle_plan_usage",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\vehicles_drivers.py",
+      "line": 151,
+      "method": "GET",
+      "path": "/api/vehicles/fuel-prices/current",
+      "function": "current_fuel_prices",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\vehicles_drivers.py",
+      "line": 156,
+      "method": "GET",
+      "path": "/api/vehicles/lookup-plate/{plate}",
+      "function": "lookup_plate",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\vehicles_drivers.py",
+      "line": 203,
+      "method": "GET",
+      "path": "/api/vehicles",
+      "function": "list_vehicles",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\vehicles_drivers.py",
+      "line": 243,
+      "method": "POST",
+      "path": "/api/vehicles",
+      "function": "create_vehicle",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\vehicles_drivers.py",
+      "line": 259,
+      "method": "PUT",
+      "path": "/api/vehicles/{item_id}",
+      "function": "update_vehicle",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\vehicles_drivers.py",
+      "line": 278,
+      "method": "DELETE",
+      "path": "/api/vehicles/{item_id}",
+      "function": "delete_vehicle",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\vehicles_drivers.py",
+      "line": 328,
+      "method": "GET",
+      "path": "/api/drivers",
+      "function": "list_drivers",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\vehicles_drivers.py",
+      "line": 400,
+      "method": "POST",
+      "path": "/api/drivers",
+      "function": "create_driver",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\vehicles_drivers.py",
+      "line": 434,
+      "method": "PUT",
+      "path": "/api/drivers/{item_id}",
+      "function": "update_driver",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\vehicles_drivers.py",
+      "line": 470,
+      "method": "POST",
+      "path": "/api/drivers/{item_id}/invite",
+      "function": "invite_driver",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    },
+    {
+      "file": "app\\routers\\vehicles_drivers.py",
+      "line": 488,
+      "method": "DELETE",
+      "path": "/api/drivers/{item_id}",
+      "function": "delete_driver",
+      "dependencies": [
+        "Depends(get_db)",
+        "Depends(current_user)"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "file": "static\\admin\\index.html",
+      "ids": 149,
+      "duplicate_ids": [],
+      "assets": [
+        "/static/favicon.ico",
+        "/static/favicon.ico",
+        "/static/favicon-32x32.png",
+        "/static/favicon-16x16.png",
+        "/static/apple-touch-icon.png",
+        "/static/apple-touch-icon.png",
+        "/static/admin/api-costs.js"
+      ]
+    },
+    {
+      "file": "static\\admin\\login.html",
+      "ids": 5,
+      "duplicate_ids": [],
+      "assets": [
+        "/static/favicon.ico",
+        "/static/favicon.ico",
+        "/static/favicon-32x32.png",
+        "/static/favicon-16x16.png",
+        "/static/apple-touch-icon.png",
+        "/static/apple-touch-icon.png"
+      ]
+    },
+    {
+      "file": "static\\agent\\index.html",
+      "ids": 40,
+      "duplicate_ids": [],
+      "assets": [
+        "/static/favicon.ico",
+        "/static/favicon.ico",
+        "/static/favicon-32x32.png",
+        "/static/favicon-16x16.png",
+        "/static/apple-touch-icon.png",
+        "/static/apple-touch-icon.png"
+      ]
+    },
+    {
+      "file": "static\\agent\\setup.html",
+      "ids": 4,
+      "duplicate_ids": [],
+      "assets": [
+        "/static/favicon.ico",
+        "/static/favicon.ico",
+        "/static/favicon-32x32.png",
+        "/static/favicon-16x16.png",
+        "/static/apple-touch-icon.png",
+        "/static/apple-touch-icon.png"
+      ]
+    },
+    {
+      "file": "static\\dashboard\\index.html",
+      "ids": 499,
+      "duplicate_ids": [],
+      "assets": [
+        "/static/favicon.ico",
+        "/static/favicon.ico",
+        "/static/favicon-32x32.png",
+        "/static/favicon-16x16.png",
+        "/static/apple-touch-icon.png",
+        "/static/apple-touch-icon.png",
+        "/static/dashboard/css/core.css",
+        "/static/dashboard/css/account.css",
+        "/static/dashboard/js/billing.js",
+        "/static/dashboard/css/dashboard.css",
+        "/static/dashboard/css/company.css",
+        "/static/dashboard/css/planning.css",
+        "/static/dashboard/css/route-preview.css",
+        "/static/dashboard/css/scheduled.css",
+        "/static/dashboard/css/customers.css",
+        "/static/routing-summary.css",
+        "/static/routing-summary.js",
+        "/static/dashboard/css/live-gps.css",
+        "/static/dashboard/js/live-gps.js",
+        "/static/dashboard/css/deposits.css",
+        "/static/dashboard/css/settings.css",
+        "/static/dashboard/css/electric-vehicles.css",
+        "/static/dashboard/js/electric-vehicles.js",
+        "/static/dashboard/css/management.css",
+        "/static/dashboard/css/completed.css",
+        "/static/pod.css",
+        "/static/dashboard/css/occasional-stops.css",
+        "/static/pod.js",
+        "/static/tracking/company.css",
+        "/static/tracking/company.js",
+        "/static/girofacile-logo.png",
+        "/static/girofacile-logo.png",
+        "/static/girofacile-logo.png",
+        "/static/girofacile-logo.png",
+        "/static/dashboard/js/reports.js",
+        "/static/dashboard/js/customers.js",
+        "/static/dashboard/js/navigation.js",
+        "/static/dashboard/js/completed.js",
+        "/static/dashboard/js/preview-design.js",
+        "/static/dashboard/js/live-design.js",
+        "/static/dashboard/js/core.js",
+        "/static/dashboard/js/occasional-stops.js"
+      ]
+    },
+    {
+      "file": "static\\driver\\index.html",
+      "ids": 46,
+      "duplicate_ids": [],
+      "assets": [
+        "/static/favicon.ico",
+        "/static/favicon.ico",
+        "/static/favicon-32x32.png",
+        "/static/favicon-16x16.png",
+        "/static/apple-touch-icon.png",
+        "/static/apple-touch-icon.png",
+        "/static/routing-summary.css",
+        "/static/routing-summary.js",
+        "/static/live-gps.css",
+        "/static/live-gps.js",
+        "/static/pod.css",
+        "/static/pod.js"
+      ]
+    },
+    {
+      "file": "static\\driver\\setup.html",
+      "ids": 11,
+      "duplicate_ids": [],
+      "assets": [
+        "/static/favicon.ico",
+        "/static/favicon.ico",
+        "/static/favicon-32x32.png",
+        "/static/favicon-16x16.png",
+        "/static/apple-touch-icon.png",
+        "/static/apple-touch-icon.png"
+      ]
+    },
+    {
+      "file": "static\\landing\\index.html",
+      "ids": 6,
+      "duplicate_ids": [],
+      "assets": [
+        "/static/favicon.ico",
+        "/static/favicon.ico",
+        "/static/favicon-32x32.png",
+        "/static/favicon-16x16.png",
+        "/static/apple-touch-icon.png",
+        "/static/apple-touch-icon.png",
+        "/static/dashboard/js/billing.js"
+      ]
+    },
+    {
+      "file": "static\\legal\\cookie-policy.html",
+      "ids": 0,
+      "duplicate_ids": [],
+      "assets": [
+        "/static/favicon.ico",
+        "/static/favicon.ico",
+        "/static/favicon-32x32.png",
+        "/static/favicon-16x16.png",
+        "/static/apple-touch-icon.png",
+        "/static/apple-touch-icon.png"
+      ]
+    },
+    {
+      "file": "static\\legal\\dpa-responsabile-trattamento.html",
+      "ids": 0,
+      "duplicate_ids": [],
+      "assets": [
+        "/static/favicon.ico",
+        "/static/favicon.ico",
+        "/static/favicon-32x32.png",
+        "/static/favicon-16x16.png",
+        "/static/apple-touch-icon.png",
+        "/static/apple-touch-icon.png"
+      ]
+    },
+    {
+      "file": "static\\legal\\index.html",
+      "ids": 0,
+      "duplicate_ids": [],
+      "assets": [
+        "/static/favicon.ico",
+        "/static/favicon.ico",
+        "/static/favicon-32x32.png",
+        "/static/favicon-16x16.png",
+        "/static/apple-touch-icon.png",
+        "/static/apple-touch-icon.png"
+      ]
+    },
+    {
+      "file": "static\\legal\\privacy-policy.html",
+      "ids": 0,
+      "duplicate_ids": [],
+      "assets": [
+        "/static/favicon.ico",
+        "/static/favicon.ico",
+        "/static/favicon-32x32.png",
+        "/static/favicon-16x16.png",
+        "/static/apple-touch-icon.png",
+        "/static/apple-touch-icon.png"
+      ]
+    },
+    {
+      "file": "static\\legal\\sicurezza.html",
+      "ids": 0,
+      "duplicate_ids": [],
+      "assets": [
+        "/static/favicon.ico",
+        "/static/favicon.ico",
+        "/static/favicon-32x32.png",
+        "/static/favicon-16x16.png",
+        "/static/apple-touch-icon.png",
+        "/static/apple-touch-icon.png"
+      ]
+    },
+    {
+      "file": "static\\legal\\subprocessors.html",
+      "ids": 0,
+      "duplicate_ids": [],
+      "assets": [
+        "/static/favicon.ico",
+        "/static/favicon.ico",
+        "/static/favicon-32x32.png",
+        "/static/favicon-16x16.png",
+        "/static/apple-touch-icon.png",
+        "/static/apple-touch-icon.png"
+      ]
+    },
+    {
+      "file": "static\\legal\\termini-condizioni.html",
+      "ids": 0,
+      "duplicate_ids": [],
+      "assets": [
+        "/static/favicon.ico",
+        "/static/favicon.ico",
+        "/static/favicon-32x32.png",
+        "/static/favicon-16x16.png",
+        "/static/apple-touch-icon.png",
+        "/static/apple-touch-icon.png"
+      ]
+    },
+    {
+      "file": "static\\mobile\\index.html",
+      "ids": 65,
+      "duplicate_ids": [],
+      "assets": [
+        "/static/favicon.ico",
+        "/static/favicon.ico",
+        "/static/favicon-32x32.png",
+        "/static/favicon-16x16.png",
+        "/static/apple-touch-icon.png",
+        "/static/apple-touch-icon.png",
+        "/static/mobile/mobile.css",
+        "/static/routing-summary.css",
+        "/static/routing-summary.js",
+        "/static/dashboard/css/electric-vehicles.css",
+        "/static/dashboard/js/electric-vehicles.js",
+        "/static/tracking/company.css",
+        "/static/tracking/company.js",
+        "/static/mobile/mobile.js"
+      ]
+    },
+    {
+      "file": "static\\operator\\index.html",
+      "ids": 29,
+      "duplicate_ids": [],
+      "assets": [
+        "/static/favicon.ico",
+        "/static/favicon.ico",
+        "/static/favicon-32x32.png",
+        "/static/favicon-16x16.png",
+        "/static/apple-touch-icon.png",
+        "/static/apple-touch-icon.png",
+        "/static/routing-summary.css",
+        "/static/routing-summary.js",
+        "/static/live-gps.css",
+        "/static/live-gps.js",
+        "/static/pod.css",
+        "/static/pod.js",
+        "/static/operator/signature.js"
+      ]
+    },
+    {
+      "file": "static\\tracking\\index.html",
+      "ids": 13,
+      "duplicate_ids": [],
+      "assets": [
+        "/static/tracking/style.css",
+        "/static/tracking/app.js"
+      ]
+    }
+  ],
+  "javascript_files": [
+    "static\\admin\\api-costs.js",
+    "static\\dashboard\\js\\billing.js",
+    "static\\dashboard\\js\\completed.js",
+    "static\\dashboard\\js\\core.js",
+    "static\\dashboard\\js\\customers.js",
+    "static\\dashboard\\js\\electric-vehicles.js",
+    "static\\dashboard\\js\\live-design.js",
+    "static\\dashboard\\js\\live-gps.js",
+    "static\\dashboard\\js\\navigation.js",
+    "static\\dashboard\\js\\occasional-stops.js",
+    "static\\dashboard\\js\\preview-design.js",
+    "static\\dashboard\\js\\reports.js",
+    "static\\live-gps.js",
+    "static\\mobile\\mobile.js",
+    "static\\operator\\signature.js",
+    "static\\pod.js",
+    "static\\routing-summary.js",
+    "static\\tracking\\app.js",
+    "static\\tracking\\company.js"
+  ],
+  "issues": []
+}

@@ -24,5 +24,5 @@ test('API costs UI shows quota, cost, projection, company and settings surfaces'
 
 test('API costs table has mobile responsive card treatment',()=>{
   assert.match(html,/#api-cost-table thead\{display:none\}/);
-  assert.match(html,/data-label="Avanzamento"/);
+  assert.match(js,/data-label="Avanzamento"/);
 });

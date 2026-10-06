@@ -8,6 +8,7 @@ function render(violation, overrides={}, fromHistory=false){
   const context=vm.createContext({document:{getElementById:()=>node},esc:x=>String(x??'').replaceAll('<','&lt;'),
     mapsAddressUrl:()=>'',deliverySignatureAction:()=>'',currentSessionUser:null,setTimeout:()=>{}});
   context.window=context;
+  vm.runInContext(core.slice(core.indexOf('function gfRouteEnergyMetric('),core.indexOf('function updateDashboardStats(')),context);
   vm.runInContext(fs.readFileSync('static/routing-summary.js','utf8'),context);
   vm.runInContext(fs.readFileSync('static/tracking/company.js','utf8'),context);
   vm.runInContext(core.slice(core.indexOf('function warnTypeCounts('),core.indexOf('function cleanDeliveryForPayload(')),context);

@@ -300,8 +300,10 @@ def main():
                     page.evaluate("showTab('depositi')")
                     page.locator(".deposit-edit").first.click()
                     assert page.locator("#depNome").input_value() == DEPOSITS[0]["nome"]
+                    page.locator("#depositOverlay").get_by_role("button", name="Annulla", exact=True).click()
                     page.locator("#newDepositBtn").click()
                     assert page.locator("#depNome").input_value() == ""
+                    page.locator("#depositOverlay").get_by_role("button", name="Annulla", exact=True).click()
                     interactions.append(f"{width}: deposit edit and reset")
                     page.evaluate("showTab('clienti')")
                     page.locator("#customerFilterToggle").click()

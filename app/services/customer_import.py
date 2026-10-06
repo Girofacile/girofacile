@@ -6,6 +6,25 @@ from ..models import Customer
 from .plans import check_customer_limit
 
 
+def customer_address_key(customer):
+    return tuple(str(getattr(customer, field, None) or '').strip().casefold()
+                 for field in ('indirizzo', 'comune', 'provincia'))
+
+
+def invalidate_imported_address(db, customer, previous_address):
+    """Keep an import atomic; changed addresses require a new verification."""
+    if previous_address == customer_address_key(customer):
+        return
+    for field in ('lat', 'lon', 'indirizzo_geocodificato', 'affidabilita_geocodifica',
+                  'fonte_geocodifica', 'google_place_id', 'geocodificato_il'):
+        setattr(customer, field, None)
+    customer.stato_geocodifica = 'da_verificare'
+    if customer.id is not None:
+        from . import distance_cache as dc
+        dc.invalidate_key(db, dc.customer_key(customer.id, user_id=customer.user_id),
+                          user_id=customer.user_id, commit=False)
+
+
 async def read_customer_import(file):
     content = await file.read(10 * 1024 * 1024 + 1)
     if len(content) > 10 * 1024 * 1024:
