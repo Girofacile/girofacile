@@ -1,5 +1,6 @@
 // One navigation entry point; dependencies are provided by the feature modules.
 function showTab(name){
+  window.GFLiveDesign?.closeMap();
   if(['transfer-portal','transfer-bookings','transfer-planning','transfer-settings','integrations'].includes(name)) name='dashboard';
   if(blockOperationalTabV49(name)) return;
   if(name === "agenti" && !agentsFeatureEnabled()) name = "settings";

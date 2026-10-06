@@ -105,6 +105,8 @@ def main():
             for item in ROUTES:
                 if path == f"/api/routes/{item['id']}":
                     data = item
+                if path == f"/api/routes/{item['id']}/position":
+                    data = dict(route_name=item['nome'], vehicle_name=item['vehicle_name'], next_stop='Cliente Demo', progress=0, state='unavailable', route_status=item['status'], position=None)
             if "/chat/" in path:
                 data = dict(messages=[], items=[])
             route.fulfill(content_type="application/json", body=json.dumps(data))
@@ -144,6 +146,33 @@ def main():
                     if phase == "after" and name == "dashboard-in-progress":
                         page.locator("#dashboardInProgressPage .dash-sub-main").wait_for(state="visible")
                     capture(page, name, width)
+                    if name == 'dashboard-in-progress':
+                        live=page.locator('#dashboardInProgressPage')
+                        assert live.locator('.live-design-identity .live-design-card').count() == 5
+                        assert live.locator('.live-design-costs .live-design-card').count() == 6
+                        page.evaluate("window.testGPSHost=document.getElementById('dashboardLiveGPS')")
+                        live.get_by_role('button',name='Espandi mappa',exact=True).click()
+                        popup=page.locator('.live-map-dialog')
+                        assert popup.is_visible()
+                        assert page.evaluate("testGPSHost === document.querySelector('.live-map-dialog #dashboardLiveGPS')")
+                        assert popup.bounding_box()['width'] >= width*.9
+                        assert page.locator('[data-gps-map]').count() == 1
+                        page.screenshot(path=str(output/f'live-map-expanded-{width}.png'),animations='disabled')
+                        page.keyboard.press('Escape')
+                        popup.wait_for(state='detached')
+                        assert live.locator('#dashboardLiveGPS').is_visible()
+                        assert live.get_by_role('button',name='Espandi mappa',exact=True).evaluate('(el)=>el===document.activeElement')
+                        live.get_by_role('button',name='Espandi mappa',exact=True).click()
+                        page.get_by_role('button',name='Chiudi mappa',exact=True).click()
+                        page.locator('.live-map-dialog').wait_for(state='detached')
+                        live.locator('.live-chat-toggle').click()
+                        assert live.locator('.live-design-chat').is_visible()
+                        live.locator('.live-chat-toggle').click()
+                        live.locator('select[aria-label="Filtra fermate per stato"]').select_option('completata')
+                        assert live.locator('.gf-unified-stop-table tbody tr:visible').count() == 0
+                        live.locator('select[aria-label="Filtra fermate per stato"]').select_option('')
+                        assert live.locator('.gf-unified-stop-table tbody tr:visible').count() == 1
+                        interactions.append(f'{width}: live popup reuses map, Escape, close, focus, chat and filter')
                     if name == 'route-preview':
                         preview=page.locator('#routePreviewResult')
                         assert preview.locator('.gf-routing-costs > div').count() == 3

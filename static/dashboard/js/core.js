@@ -3946,6 +3946,7 @@ function renderDashboardInProgressSubpage(routes, selectedRoute){
         </section>
       </main>
     </div>`;
+  window.GFLiveDesign?.decorate(page, r, progress);
   GiroFacileLiveMap.mount(r.id);
   loadDashboardRouteChat(r.id, true);
 }
@@ -3987,6 +3988,7 @@ async function openDashboardInProgressPage(routeId=null){
 }
 
 async function loadDashboardInProgressPage(routeId=null){
+  window.GFLiveDesign?.closeMap();
   const page = document.getElementById('dashboardInProgressPage');
   if(page) page.innerHTML = `<div class="dash-detail-empty"><h2>Caricamento giri in corso...</h2><p>Sto recuperando avanzamento, fermate e chat.</p></div>`;
   try{

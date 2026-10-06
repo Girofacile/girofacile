@@ -16,3 +16,96 @@
 .gf-live-updated{margin:12px 0 0;font-size:12px;color:#64748b;line-height:1.6;}
 .gf-live-vehicle span{display:grid;place-items:center;width:38px;height:38px;border:3px solid white;border-radius:50%;background:#2563eb;color:white;box-shadow:0 2px 10px #0f172a33;font-size:23px;}
 @media(max-width:480px){.gf-live-map{height:230px;}.gf-live-meta{gap:12px;}.gf-live-meta dd{font-size:13px;}}
+
+/* Live control reference layout. */
+#app #tab-dashboard-in-progress .dash-subpage-topbar{justify-content:flex-start;margin:0 0 10px;gap:14px}
+#app #tab-dashboard-in-progress .dash-subpage-topbar>.btn-light{display:none}
+#app #tab-dashboard-in-progress .dash-subpage-title-row{min-height:65px;margin:0 0 17px}
+#app #tab-dashboard-in-progress .dash-subpage-title-row h1{font-size:36px;margin:0 0 6px;letter-spacing:-1px}
+#app #tab-dashboard-in-progress .dash-subpage-title-row p{font-size:14px}
+#app #tab-dashboard-in-progress .dash-date-chip{display:none}
+#app #tab-dashboard-in-progress .live-design-picker{display:flex;align-items:center;gap:12px;margin-bottom:12px;padding:6px;border:1px solid #e4edfa;border-radius:12px;background:#ffffffec}
+#app #tab-dashboard-in-progress .dash-sub-route-picker{width:400px;max-width:70%;margin:0;padding:0;border:0;background:none;box-shadow:none}
+#app #tab-dashboard-in-progress .dash-sub-route-picker label{display:none}
+#app #tab-dashboard-in-progress .dash-sub-route-picker select{height:44px;margin:0;border:1px solid #e5edfa;border-radius:8px;background:white;font-size:13px}
+#app #tab-dashboard-in-progress .live-design-date{display:flex;align-items:center;gap:12px;padding:3px 16px;border:1px solid #e4edfa;border-radius:8px;font-size:13px;font-weight:600}
+#app #tab-dashboard-in-progress .live-design-date .live-design-icon{width:24px;height:30px;flex-basis:24px;background:none}
+#app #tab-dashboard-in-progress .live-design-identity{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:10px}
+#app #tab-dashboard-in-progress .live-design-costs{display:grid;grid-template-columns:1.5fr 1.3fr 1fr 1.1fr .9fr .95fr;gap:9px;margin-bottom:16px}
+#app #tab-dashboard-in-progress .live-design-card{display:flex;align-items:center;gap:16px;min-width:0;padding:15px 14px;border:1px solid #e5edfa;border-radius:12px;background:#ffffffed;min-height:79px;color:#0c183f}
+#app #tab-dashboard-in-progress .live-design-card>div{min-width:0;overflow-wrap:anywhere}
+#app #tab-dashboard-in-progress .live-design-card span:not(.live-design-icon){display:block;font-size:12px;color:#526b99;margin-bottom:5px}
+#app #tab-dashboard-in-progress .live-design-card strong{display:block;font-size:18px;line-height:1.25;color:#0c163b}
+#app #tab-dashboard-in-progress .live-design-identity .live-design-card:nth-child(-n+2) strong{font-size:14px}
+#app #tab-dashboard-in-progress .live-design-card small{display:block;font-size:11px;line-height:1.4;color:#5c75a1;margin-top:4px}
+#app #tab-dashboard-in-progress .live-eta{background:#fff6f9;flex-wrap:nowrap;margin:0}
+#app #tab-dashboard-in-progress .live-eta strong{font-size:13px}
+#app #tab-dashboard-in-progress .live-design-costs>.live-design-card:nth-child(2){background:#f5fffb}
+#app #tab-dashboard-in-progress .live-design-costs>.live-design-card:nth-child(3){background:#faf6ff}
+#app #tab-dashboard-in-progress .live-design-costs>.live-design-card:nth-child(4){background:#fffdf5}
+.live-design-icon{display:inline-flex;align-items:center;justify-content:center;width:50px;height:50px;flex:0 0 50px;border-radius:50%;color:#0065ff;background:#edf5ff}
+.live-design-icon.green{color:#00b56c;background:#e6fbf0}.live-design-icon.purple{color:#9522ff;background:#f4eaff}.live-design-icon.red{color:#ff245c;background:#ffeaf2}.live-design-icon.orange{color:#ff9200;background:#fff6dd}
+.live-design-icon svg,.live-map-dialog svg,#tab-dashboard-in-progress .live-design-table-actions svg,#tab-dashboard-in-progress .live-design-actions svg,#tab-dashboard-in-progress .live-expand svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+#app #tab-dashboard-in-progress .live-design-content{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:13px;align-items:start}
+#app #tab-dashboard-in-progress .live-design-main{display:flex;flex-direction:column;gap:12px;min-width:0}
+#app #tab-dashboard-in-progress .live-design-main>.dash-sub-card{padding:14px;border:1px solid #e5edfa;border-radius:13px;box-shadow:none;margin:0;background:#fff}
+#app #tab-dashboard-in-progress .dash-sub-card-title{display:flex;align-items:center;gap:12px;margin:0 0 14px;flex-wrap:wrap}
+#app #tab-dashboard-in-progress .dash-sub-card-title h2{font-size:19px;margin:0;color:#0d163d}
+#app #tab-dashboard-in-progress .dash-sub-card-title p{font-size:12px;color:#59719c;margin:4px 0 0}
+#app #tab-dashboard-in-progress .dash-sub-icon{background:none;width:auto;height:auto;padding:0}
+#app #tab-dashboard-in-progress .dash-sub-icon .live-design-icon{border-radius:12px;width:42px;height:44px;flex-basis:42px}
+#app #tab-dashboard-in-progress .live-design-table-actions{margin-left:auto;display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+#app #tab-dashboard-in-progress .live-design-table-actions :is(button,select){display:flex;align-items:center;gap:9px;min-height:38px;border:1px solid #dfebff;border-radius:9px;background:white;color:#0064ff;padding:8px 12px;font-size:12px;width:auto}
+#app #tab-dashboard-in-progress .gf-unified-stop-wrap{max-width:100%;overflow:auto;border:1px solid #e7eef9;border-radius:12px}
+#app #tab-dashboard-in-progress .gf-unified-stop-table{min-width:940px;width:100%;border-collapse:collapse}
+#app #tab-dashboard-in-progress .gf-unified-stop-table th{font-size:10px;color:#405c8c;background:#f6f9ff;padding:13px 10px;white-space:nowrap}
+#app #tab-dashboard-in-progress .gf-unified-stop-table td{font-size:12px;color:#3c537e;padding:13px 10px;border-bottom:1px solid #eaf0fa;line-height:1.5;background:#fff}
+#app #tab-dashboard-in-progress .gf-unified-stop-table td strong{color:#0d183d}
+#app #tab-dashboard-in-progress .gf-unified-stop-table tr[hidden]{display:none!important}
+#app #tab-dashboard-in-progress .dash-stop-number{display:inline-grid;place-items:center;border-radius:50%;background:#0065ff;color:white;width:33px;height:33px}
+#app #tab-dashboard-in-progress .live-design-side{display:flex;flex-direction:column;gap:12px;min-width:0}
+#app #tab-dashboard-in-progress #dashboardLiveGPS,#app #tab-dashboard-in-progress .live-design-actions{padding:12px;border:1px solid #e5edfa;border-radius:13px;background:#fff;box-shadow:none;margin:0}
+#app #tab-dashboard-in-progress #dashboardLiveGPS .dash-sub-card-title{gap:8px;flex-wrap:nowrap;margin-bottom:10px}
+#app #tab-dashboard-in-progress #dashboardLiveGPS h2{font-size:14px}
+#app #tab-dashboard-in-progress #dashboardLiveGPS .dash-sub-icon .live-design-icon{width:30px;height:34px;flex-basis:30px}
+#app #tab-dashboard-in-progress .live-expand{margin-left:auto;border:1px solid #e2ebfa;border-radius:7px;display:grid;place-items:center;background:#f7faff;color:#0064ff;padding:6px;cursor:pointer}
+#app #tab-dashboard-in-progress .live-expand svg{width:17px;height:17px}
+#app #tab-dashboard-in-progress .gf-live-map{height:155px}
+#app #tab-dashboard-in-progress .gf-live-map-wrap{border-radius:9px}
+#app #tab-dashboard-in-progress .gf-live-empty{font-size:11px;padding:10px}
+#app #tab-dashboard-in-progress .gf-live-meta{display:block;margin:9px 0 0}
+#app #tab-dashboard-in-progress .gf-live-meta>div:not(:nth-child(3)){display:none}
+#app #tab-dashboard-in-progress .gf-live-meta dt{font-size:10px;margin-bottom:4px}
+#app #tab-dashboard-in-progress .gf-live-meta dd{font-size:13px;color:#0d183d}
+#app #tab-dashboard-in-progress .gf-live-updated{font-size:10px;line-height:1.4;margin-top:7px}
+#app #tab-dashboard-in-progress .live-design-actions h2{display:flex;align-items:center;gap:9px;font-size:16px;margin:0 0 8px}
+#app #tab-dashboard-in-progress .live-design-actions .live-design-icon{width:32px;height:32px;flex-basis:32px;border-radius:10px}
+#app #tab-dashboard-in-progress .live-design-actions> :is(button,a){display:flex;align-items:center;justify-content:center;gap:9px;border:1px solid #b9d5ff;border-radius:8px;background:white;color:#0064ff;min-height:34px;padding:6px 9px;width:100%;margin-top:6px;font-size:12px;text-decoration:none}
+#app #tab-dashboard-in-progress .live-design-actions .live-primary{background:#0064ff;color:white}
+#app #tab-dashboard-in-progress .live-design-actions button:disabled{opacity:.5;cursor:not-allowed}
+#app #tab-dashboard-in-progress .live-design-actions small{display:block;font-size:10px;color:#637899;margin-top:5px}
+#app #tab-dashboard-in-progress .live-design-chat[hidden]{display:none}
+#app #tab-dashboard-in-progress :is(button,select):focus-visible,.live-map-dialog button:focus-visible{outline:3px solid #96c1ff;outline-offset:2px}
+body.live-map-dialog-open{overflow:hidden}
+.live-map-dialog{box-sizing:border-box;width:96vw;max-width:1600px;height:92dvh;max-height:96dvh;margin:auto;border:1px solid #dce9fb;border-radius:18px;padding:18px;background:#f5f9ff;color:#101c3e;box-shadow:0 25px 100px #07173550;font-family:Arial,Helvetica,sans-serif}
+.live-map-dialog::backdrop{background:#08193299;backdrop-filter:blur(4px)}
+.live-map-dialog>header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.live-map-dialog>header h2{font-size:21px;margin:0}.live-map-dialog>header button{display:grid;place-items:center;width:40px;height:40px;border:1px solid #dce8fa;border-radius:9px;background:white;color:#195fc4;cursor:pointer}
+.live-map-dialog-body{height:calc(100% - 52px)}
+.live-map-dialog #dashboardLiveGPS{height:100%;box-sizing:border-box;display:flex;flex-direction:column;padding:16px;margin:0;border:1px solid #e2eafa;border-radius:12px;background:white}
+.live-map-dialog .dash-sub-card-title{display:flex;gap:12px;align-items:center;margin-bottom:10px}.live-map-dialog .dash-sub-card-title h2{margin:0;font-size:16px}.live-map-dialog .dash-sub-card-title p{margin:5px 0 0}.live-map-dialog .dash-sub-icon{display:none}.live-map-dialog .live-expand{display:none}
+.live-map-dialog .gf-live-map-wrap{flex:1;min-height:160px}.live-map-dialog .gf-live-map{height:100%;min-height:160px}
+.live-map-dialog .gf-live-meta{display:flex;gap:20px;flex-wrap:wrap;margin:10px 0 0}.live-map-dialog .gf-live-meta>div{flex:1;min-width:120px}.live-map-dialog .gf-live-updated{margin-top:5px;font-size:11px}
+@media(max-width:1300px){#app #tab-dashboard-in-progress .live-design-costs{grid-template-columns:repeat(3,minmax(0,1fr))}#app #tab-dashboard-in-progress .live-design-identity{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:1000px){#app #tab-dashboard-in-progress .live-design-content{grid-template-columns:minmax(0,1fr)}#app #tab-dashboard-in-progress .gf-live-map{height:240px}}
+@media(max-width:600px){#app #tab-dashboard-in-progress .live-design-identity,#app #tab-dashboard-in-progress .live-design-costs{grid-template-columns:repeat(2,minmax(0,1fr))}#app #tab-dashboard-in-progress .live-design-card{padding:12px 10px;gap:8px}#app #tab-dashboard-in-progress .live-design-icon{width:34px;height:38px;flex-basis:34px}#app #tab-dashboard-in-progress .live-design-card strong{font-size:16px}#app #tab-dashboard-in-progress .live-eta{grid-column:1/-1}#app #tab-dashboard-in-progress .live-design-picker{flex-wrap:wrap}#app #tab-dashboard-in-progress .dash-sub-route-picker{width:100%;max-width:100%}#app #tab-dashboard-in-progress .dash-subpage-topbar{display:none}#app #tab-dashboard-in-progress .dash-subpage-title-row h1{font-size:30px}.live-map-dialog{padding:10px;width:98vw;height:94dvh}.live-map-dialog .gf-live-meta{gap:8px}.live-map-dialog .gf-live-meta>div{min-width:100px}.live-map-dialog .gf-live-meta dd{font-size:12px}}
+
+#app #tab-dashboard-in-progress .live-stop-actions summary{list-style:none;cursor:pointer;font-size:26px;color:#0064ff;text-align:center;line-height:1}
+#app #tab-dashboard-in-progress .live-stop-actions summary::-webkit-details-marker{display:none}
+#app #tab-dashboard-in-progress .live-stop-actions a{display:block;min-width:90px;font-size:11px;color:#0064ff;padding:9px 0}
+
+#app #tab-dashboard-in-progress .live-design-costs .live-design-card{padding:13px 10px;gap:10px}
+#app #tab-dashboard-in-progress .live-design-costs .live-design-icon{width:40px;height:44px;flex-basis:40px}
+#app #tab-dashboard-in-progress .live-design-costs .live-design-card>div{overflow-wrap:normal}
+#app #tab-dashboard-in-progress .live-design-costs .live-design-card:nth-last-child(-n+2) strong{white-space:nowrap}
+@media(min-width:1301px) and (max-width:1500px){#app #tab-dashboard-in-progress .live-design-costs .live-design-card strong{font-size:15px}#app #tab-dashboard-in-progress .live-design-costs .live-design-icon{width:32px;height:38px;flex-basis:32px}#app #tab-dashboard-in-progress .live-design-costs .live-design-card{gap:8px}#app #tab-dashboard-in-progress .live-eta strong{font-size:12px}}

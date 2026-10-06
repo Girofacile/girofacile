@@ -32,7 +32,7 @@
             map = L.map(host.querySelector('[data-gps-map]')).setView([p.latitude,p.longitude],14);
             L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19,
               attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(map);
-            marker = L.marker([p.latitude,p.longitude], {icon:L.divIcon({className:'gf-live-vehicle',html:'<span aria-label="Mezzo">➤</span>',iconSize:[38,38]})}).addTo(map);
+            marker = L.marker([p.latitude,p.longitude], {icon:L.divIcon({className:'gf-live-vehicle',html:'<span aria-label="Mezzo"><svg viewBox="0 0 24 24" aria-hidden="true" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="m4 10 2-6h12l2 6M3 10h18v9H3zM5 19v2m14-2v2M6 14h2m8 0h2"/></svg></span>',iconSize:[38,38]})}).addTo(map);
           } else {
             marker.setLatLng([p.latitude,p.longitude]);
             if (!map.getBounds().contains(marker.getLatLng())) map.panTo(marker.getLatLng());
@@ -53,6 +53,7 @@
     if (version === generation) timer = setTimeout(() => refresh(routeId,version),30000);
   }
   window.GiroFacileLiveMap = {
+    resize() { if(map) { map.invalidateSize(); if(marker) map.panTo(marker.getLatLng()); } },
     mount(routeId) {
       generation++; clearTimeout(timer);
       if (map) map.remove(); map = marker = null;

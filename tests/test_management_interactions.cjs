@@ -44,6 +44,7 @@ test('live route detail renders stops, routing summary and chat without undeclar
     dashboardRouteSummaryCards: () => '<div>Metrics</div>',
     dashboardStopRowsUnified: () => '<table>Stops</table>',
     loadDashboardRouteChat: id => chats.push(id),
+    GiroFacileLiveMap:{mount(){}},
     window:{GiroFacileRouting:{summaryHtml: route => `<div>Routing ${route.id}</div>`}},
     route:{id:42,status:'in_corso',consegne:[{cliente_nome:'Demo',delivery_status:'in_attesa'}]},
   });
