@@ -326,8 +326,11 @@ def start_operator_route(token: str, db: Session = Depends(get_db)):
     plan = db.query(RoutePlan).filter_by(id=plan.id).with_for_update().populate_existing().one()
     if plan.status in ('completato', 'annullato'):
         raise HTTPException(409, 'Il giro è già chiuso')
-    if plan.status != 'in_corso' and plan.data_giro != local_today():
-        raise HTTPException(409, 'Puoi avviare il giro soltanto nel giorno programmato')
+    if plan.status != 'in_corso' and plan.data_giro > local_today():
+        raise HTTPException(409, 'Non puoi avviare un giro programmato per una data futura')
+    from ..services.route_execution import ensure_no_running_resource_conflict
+    if plan.status != 'in_corso':
+        ensure_no_running_resource_conflict(db, plan)
     start_route_usage(db, plan)
     db.commit()
     return {'ok': True}
