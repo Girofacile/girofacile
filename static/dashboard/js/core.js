@@ -2460,6 +2460,7 @@ function openCustomerModal(id=null){
   resetCustomerForm();
   const title = document.getElementById("customerModalTitle");
   if(title) title.textContent = id ? "Modifica cliente" : "Nuovo cliente";
+  document.getElementById("customerDeleteSection")?.classList.toggle("hidden", !id);
   document.getElementById("customerOverlay")?.classList.remove("hidden");
   ["cIndirizzo","cComune","cProvincia"].forEach(fieldId=>{
     const el = document.getElementById(fieldId);
@@ -2582,6 +2583,7 @@ function editCustomer(id, fromModal=false){
 function resetCustomerForm(){
   ["cId","cCodice","cNome","cIndirizzo","cComune","cProvincia","cTelefono","cEmail","cReferente","cAgent","cMattinaDa","cMattinaA","cPomeriggioDa","cPomeriggioA","cNote","cLat","cLon","cGeoStatus","cGeoProvider","cGeoConfidence","cGooglePlaceId","cGeocodedAddress"].forEach(id=>set(id,""));
   set("cScarico",10); set("cZtl","false"); set("cSponda","false");
+  document.getElementById("customerDeleteSection")?.classList.add("hidden");
   setCustomerAddressStatus("Indirizzo non ancora verificato.", "muted");
 }
 async function saveCustomer(){
@@ -2602,16 +2604,22 @@ async function saveCustomer(){
     toast(id ? "Cliente aggiornato." : "Cliente creato.");
   });
 }
-async function deleteCustomer(id){ if(confirm("Eliminare cliente?")){ await api(`/api/customers/${id}`, {method:"DELETE"}); loadCustomers(); loadCustomerPicker(); } }
-async function deleteAllCustomers(){
-  const msg = "ATTENZIONE!\n\nSei sicuro di voler eliminare tutti i clienti registrati?\nUna volta effettuata questa operazione, tutte le informazioni andranno perse.";
-  if(!confirm(msg)) return;
-  const check = prompt("Per confermare scrivi: ELIMINA");
-  if(check !== "ELIMINA") { alert("Operazione annullata"); return; }
-  const res = await api("/api/customers/all", {method:"DELETE"});
-  customersCache = [];
-  await loadCustomers(); await loadCustomerPicker();
-  toast(`Clienti eliminati: ${res.deleted}`);
+async function deleteCustomerFromModal(){
+  const id = val("cId");
+  if(!id) return;
+  const customer = customersCache.find(x=>String(x.id)===String(id));
+  const name = customer?.nome || val("cNome") || "questo cliente";
+  const confirmed = confirm(`Sei sicuro di voler eliminare "${name}"?\n\nQuesta operazione è irreversibile.`);
+  if(!confirmed) return;
+  return withButtonLoading("deleteCustomerBtn", "Eliminazione...", async()=>{
+    await api(`/api/customers/${id}`, {method:"DELETE"});
+    customerDirectory?.selected?.delete?.(Number(id));
+    closeCustomerModal();
+    resetCustomerForm();
+    await loadCustomers();
+    await loadCustomerPicker();
+    toast("Cliente eliminato.");
+  });
 }
 
 async function verifyCustomerAddress(id){
