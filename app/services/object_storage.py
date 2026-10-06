@@ -25,20 +25,32 @@ def unavailable():
     return StorageUnavailable(503, 'Archivio POD non disponibile. Firma e foto non salvate: conserva questa schermata e riprova.')
 
 
-def configuration():
+def _configuration_values():
     values = {name: os.getenv('OBJECT_STORAGE_' + name, '').strip() for name in
               ('ENDPOINT', 'REGION', 'BUCKET', 'ACCESS_KEY', 'SECRET_KEY')}
     try:
         seconds = int(os.getenv('OBJECT_STORAGE_SIGNED_URL_SECONDS', '900'))
         if not enabled() or not all(values.values()) or not 60 <= seconds <= 900:
-            raise ValueError()
+            return None
         from urllib.parse import urlsplit
         endpoint = urlsplit(values['ENDPOINT'])
         if endpoint.scheme != 'https' or not endpoint.netloc or endpoint.username or endpoint.password or endpoint.query or endpoint.fragment:
-            raise ValueError()
-    except ValueError:
-        raise unavailable() from None
+            return None
+    except (TypeError, ValueError):
+        return None
     return values, seconds
+
+
+def configured():
+    """True only when optional POD generation has a complete local configuration."""
+    return _configuration_values() is not None
+
+
+def configuration():
+    result = _configuration_values()
+    if result is None:
+        raise unavailable() from None
+    return result
 
 
 def scope(company_id, route_id, delivery_id):
