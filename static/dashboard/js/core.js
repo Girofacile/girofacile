@@ -4084,41 +4084,7 @@ async function loadDashboardCompletedPage(routeId=null){
 }
 
 function renderDashboardCompletedSubpage(routes, selectedRoute){
-  const page = document.getElementById('dashboardCompletedPage');
-  if(!page) return;
-  if(!routes.length){
-    page.innerHTML = `<div class="dash-empty-subpage"><div class="dash-empty-icon">✓</div><h2>Nessun giro completato</h2><p>Quando un autista completa tutte le consegne, il giro apparirà qui.</p></div>`;
-    return;
-  }
-  const r = selectedRoute || routes[0];
-  dashboardCompletedSelectedId = r.id;
-  const rows = r.consegne || [];
-  const completed = rows.filter(x=>x.delivery_status === 'completata').length;
-  const missed = rows.filter(x=>x.delivery_status === 'mancata').length;
-  page.innerHTML = `<div class="dash-sub-layout">
-    <aside class="dash-sub-sidebar">
-      ${dashboardRoutePicker(routes, r.id, 'openDashboardCompletedPage', 'Giro completato')}
-      <div class="dash-live-summary-card completed">
-        <div class="dash-live-header"><div class="dash-live-play done">✓</div><div><span>Giro completato</span><strong>${esc(r.nome || 'Giro consegne')}</strong><small>${esc(r.data_giro || '-')}</small></div></div>
-        <div class="dash-live-summary-body">
-          <div><span>Autista</span><strong>${esc(r.driver_name || 'Non assegnato')}</strong></div>
-          <div><span>Mezzo</span><strong>${esc(r.vehicle_name || '-')}</strong></div>
-          <div><span>Completate</span><strong>${completed} / ${rows.length}</strong></div>
-          <div><span>Mancate</span><strong>${missed}</strong></div>
-          <div><span>Rientro stimato finale</span><strong>${esc(r.rientro_stimato_aggiornato || r.orario_rientro_stimato || '-')}</strong></div>
-          <div><span>Km</span><strong>${esc(r.totale_km || 0)} km</strong></div>
-        </div>
-        <button class="btn-light full" onclick="showTab('storico')">Apri storico completo</button>
-      </div>
-    </aside>
-    <main class="dash-sub-main">
-      <section class="panel dash-sub-card">
-        <div class="dash-sub-card-title"><div class="dash-sub-icon">✓</div><div><h2>Fermate completate</h2><p>Stato finale con arrivo previsto, arrivo reale e differenza per ogni cliente.</p></div></div>
-        ${dashboardRouteSummaryCards(r, rows)}
-        ${dashboardStopRowsUnified(r, 'completed')}
-      </section>
-    </main>
-  </div>`;
+  window.GFCompleted.render(routes, selectedRoute);
 }
 
 

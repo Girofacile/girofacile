@@ -144,6 +144,30 @@ def main():
                     if phase == "after" and name == "dashboard-in-progress":
                         page.locator("#dashboardInProgressPage .dash-sub-main").wait_for(state="visible")
                     capture(page, name, width)
+                    if name == "dashboard-completed":
+                        page.locator('#completedSearch').wait_for(state='visible')
+                        page.evaluate("""r => {
+                            const demo={...r, consegne:Array.from({length:23},(_,i)=>({...r.consegne[0], id:100+i, ordine:i+1, cliente_nome:'Cliente '+(i+1), delivery_status:i%2?'mancata':'completata', motivo_mancata:i%2?'assente':null}))};
+                            renderDashboardCompletedSubpage([demo],demo);
+                        }""", ROUTES[2])
+                        assert page.locator('#completedTable tbody tr:visible').count() == 10
+                        page.get_by_role('button', name='Pagina successiva', exact=True).click()
+                        assert page.locator('#completedTable tbody tr:visible').first.inner_text().startswith('11')
+                        page.locator('#completedSize').select_option('25')
+                        assert page.locator('#completedTable tbody tr:visible').count() == 23
+                        page.locator('#completedStatus').select_option('mancata')
+                        assert page.locator('#completedTable tbody tr:visible').count() == 11
+                        page.locator('#completedSearch').fill('Cliente 22')
+                        assert page.locator('#completedTable tbody tr:visible').count() == 1
+                        with page.expect_download() as download:
+                            page.locator('#completedExport').click()
+                        content=Path(download.value.path()).read_text(encoding='utf-8-sig')
+                        assert 'Cliente 22' in content and 'Cliente 20' not in content
+                        page.locator('#completedSearch').fill('nessuna corrispondenza')
+                        assert page.locator('#completedTable tbody tr:visible').count() == 0
+                        assert page.locator('#completedNoMatches').is_visible()
+                        page.evaluate('r=>renderDashboardCompletedSubpage([r],r)',ROUTES[2])
+                        interactions.append(f'{width}: completed pagination, search, status and filtered CSV')
                     if name in PROTECTED:
                         styles = page.evaluate("""() => [...document.querySelectorAll('#app *')].filter(el=>el.getClientRects().length && getComputedStyle(el).visibility!=='hidden').map(el=>{
                           const s=getComputedStyle(el), r=el.getBoundingClientRect();
