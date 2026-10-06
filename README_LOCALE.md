@@ -92,17 +92,16 @@ Il settore scelto viene salvato nel profilo dell'azienda e servirà nelle prossi
 
 La v47 introduce la base multi-settore di GiroFacile. Il settore scelto in registrazione viene salvato sull'azienda e usato per adattare alcune etichette e funzioni consigliate del gestionale.
 
-Settori principali inclusi: Grossista/distribuzione, Cash & Carry, Ho.Re.Ca., Surgelati/refrigerato, Corriere locale, E-commerce, Delivery food, Farmaceutico, Beverage, Lavanderia, Ricambi auto, Servizio transfer e Altro.
+Settori principali inclusi: Grossista/distribuzione, Cash & Carry, Ho.Re.Ca., Surgelati/refrigerato, Corriere locale, E-commerce, Delivery food, Farmaceutico, Beverage, Lavanderia, Ricambi auto e Altro.
 
 ## Note v48 - Settori principali ottimizzati
 
-Da questa versione GiroFacile usa 6 settori principali + Altro:
+Da questa versione GiroFacile usa 5 settori principali + Altro:
 
 - Distribuzione / Cash & Carry
 - Logistica / Corrieri locali
 - E-commerce / Consegna ordini
 - Food delivery / Ristorazione
-- Servizio transfer
 - Farmaceutico / Sanitario
 - Altro
 
