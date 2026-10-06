@@ -12,8 +12,6 @@ async function refreshCustomerDirectory(){
     }
     customerDirectory.all = all;
     customersCache = all;
-    const ids = new Set(all.map(x=>x.id));
-    customerDirectory.selected.forEach(id=>{if(!ids.has(id)) customerDirectory.selected.delete(id);});
     const verified = all.filter(x=>x.stato_geocodifica === 'verificato').length;
     for(const [key,value] of Object.entries({Total:all.length,Verified:verified,Pending:all.length-verified,Active:all.length})){
       const el=document.getElementById('customerMetric'+key); if(el) el.textContent=value;
