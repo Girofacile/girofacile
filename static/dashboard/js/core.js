@@ -1951,9 +1951,11 @@ function depositStatus(id,message,error=false){
 }
 function renderDepositSummary(){
   const write=(id,value)=>{const node=document.getElementById(id);if(node)node.textContent=value;};
-  const count=depositsCache.length,defaults=depositsCache.filter(x=>x.predefinito).length;
+  const count=depositsCache.length;
+  const defaultDeposit=depositsCache.find(x=>x.predefinito);
   write('depositTotal',count);write('depositTotalCaption',count===1?'deposito configurato':'depositi configurati');
-  write('depositDefaultCount',defaults);write('depositDefaultCaption',defaults===1?'deposito impostato come predefinito':'depositi impostati come predefinito');
+  write('depositDefaultName',defaultDeposit?.nome||'Nessun deposito selezionato');
+  write('depositDefaultAddress',defaultDeposit?.indirizzo||'Imposta un deposito come predefinito per i nuovi giri');
   // The API stores UTC without an offset. Legacy deposits have no recorded date.
   const dates=depositsCache.map(x=>x.updated_at).filter(Boolean).map(value=>new Date(/(?:Z|[+-]\d{2}:\d{2})$/i.test(value)?value:value+'Z')).filter(date=>!Number.isNaN(date.getTime()));
   const latest=dates.length?new Date(Math.max(...dates.map(date=>date.getTime()))):null;
