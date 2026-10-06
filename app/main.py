@@ -20,7 +20,7 @@ from .models import Agent, Customer, Deposit, Driver, RoutePlan, User, Vehicle, 
 from .routers import (
     admin_billing, admin_database, admin_profile, admin_server, admin_support, admin_users,
     agents, auth, billing, customers, tracking,
-    deposits, reports, routes, operator, notifications, settings, support, transfer_portal, driver as driver_router_module, agent as agent_router_module,
+    deposits, reports, routes, operator, notifications, settings, support, driver as driver_router_module, agent as agent_router_module,
 )
 from .routers.vehicles_drivers import drivers_router, vehicles_router
 from .services.geocoding import search_address_autocomplete
@@ -118,7 +118,6 @@ app.include_router(operator.router)
 app.include_router(notifications.router)
 app.include_router(settings.router)
 app.include_router(support.router)
-app.include_router(transfer_portal.router)
 app.include_router(driver_router_module.router)
 app.include_router(agent_router_module.router)
 
@@ -178,13 +177,6 @@ def reset_password_page(token: str):
         headers={"Cache-Control": "no-cache, no-store, must-revalidate"},
     )
 
-
-@app.get("/prenota/{slug}")
-def transfer_booking_page(slug: str):
-    return FileResponse(
-        static_dir / "transfer_booking" / "index.html",
-        headers={"Cache-Control": "no-cache, no-store, must-revalidate"},
-    )
 
 
 @app.get("/privacy-policy")
