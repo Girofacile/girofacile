@@ -113,6 +113,26 @@ def test_missing_config_and_required_photo_fail_closed(env, monkeypatch):
     assert client.post(path, json={}).status_code == 200
 
 
+def test_optional_completion_ignores_incomplete_storage_configuration(env, monkeypatch):
+    from app.models import DeliveryStatus
+    from app.services import object_storage
+    client, db, owner, _, delivery, _ = setup_portals(env)
+    owner.delivery_signature_enabled = False
+    owner.needs_photo_proof = False
+    db.commit()
+    monkeypatch.setenv('OBJECT_STORAGE_ENABLED', 'true')
+    for name in ('ENDPOINT', 'REGION', 'BUCKET', 'ACCESS_KEY', 'SECRET_KEY'):
+        monkeypatch.delenv('OBJECT_STORAGE_' + name, raising=False)
+
+    assert object_storage.enabled() is True
+    assert object_storage.configured() is False
+    response = client.post(f'/api/driver/delivery/{delivery.id}/complete', json={})
+    assert response.status_code == 200
+    state = db.query(DeliveryStatus).filter_by(delivery_id=delivery.id).one()
+    assert state.status == 'completata'
+    assert state.pod_object_key is None
+
+
 def test_legacy_signature_read_without_storage_and_unchanged(env, monkeypatch):
     from app.models import DeliveryStatus
     client, db, _, route, delivery, _ = setup_portals(env)
