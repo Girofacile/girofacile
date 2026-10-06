@@ -70,9 +70,7 @@ def _local_fallback(task: str, context: dict[str, Any]) -> str:
         first = stops[0]["name"] if stops else "la prima tappa"
         tight = [s for s in stops if s.get("time_windows")]
         sector_word = "consegne"
-        if "transfer" in sector:
-            sector_word = "corse/prenotazioni"
-        elif "food" in sector:
+        if "food" in sector:
             sector_word = "ritiri e consegne food"
         elif "e-commerce" in sector or "ecommerce" in sector:
             sector_word = "ordini"
