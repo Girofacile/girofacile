@@ -1985,7 +1985,7 @@ async function loadDeposits(){
 function openDepositModal(){
   resetDepositForm();
   document.getElementById('depositOverlay')?.classList.remove('hidden');
-  setTimeout(()=>document.getElementById('depNome')?.focus(),0);
+  document.getElementById('depNome')?.focus();
 }
 function closeDepositModal(e){
   if(e && e.target && e.currentTarget && e.target!==e.currentTarget)return;
@@ -2002,7 +2002,7 @@ function editDeposit(id){
   document.getElementById('depositDeleteSection')?.classList.remove('hidden');
   depositStatus('depositFormStatus','');
   document.getElementById('depositOverlay')?.classList.remove('hidden');
-  setTimeout(()=>document.getElementById('depNome')?.focus(),0);
+  document.getElementById('depNome')?.focus();
 }
 function resetDepositForm(){
   set('depId','');set('depNome','');set('depIndirizzo','');
