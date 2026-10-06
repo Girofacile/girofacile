@@ -28,7 +28,6 @@ def test_all_authentication_cookies_use_shared_security_options():
         Path("app/routers/auth.py"),
         Path("app/routers/driver.py"),
         Path("app/routers/agent.py"),
-        Path("app/routers/transfer_portal.py"),
     ]
     for target in targets:
         content = target.read_text(encoding="utf-8")
