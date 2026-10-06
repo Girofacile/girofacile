@@ -1,4 +1,4 @@
-from ..services.route_schedule import live_route_schedule
+from ..services.route_schedule import live_route_schedule, route_schedule_datetimes
 from ..models import DeliveryTrackingLink
 from ..services.occasional_stops import verify_stop_address, validate_occasional_stops, STOP_VERIFICATION_FIELDS
 from ..services.customer_planning import customer_is_plannable, PLANNING_ADDRESS_ERROR
@@ -185,39 +185,102 @@ def _route_interval_minutes(plan: RoutePlan):
             duration = int(float(plan.totale_minuti or 0))
         except Exception:
             duration = 0
-        end = start + (duration if duration > 0 else 240)
-    if end < start:
-        end = start
+        end = start + (duration if duration > 0 else DEFAULT_AVAILABILITY_PREVIEW_MINUTES)
+    elif end < start:
+        # A route can legitimately return after midnight.
+        end += 24 * 60
     return start, end
+
+
+def _route_busy_interval(plan: RoutePlan, status_map=None):
+    """Return the real busy interval when running, planned interval otherwise."""
+    day = parse_date_value(plan.data_giro)
+    if not day:
+        return None, None
+    start_min, end_min = _route_interval_minutes(plan)
+    midnight = datetime.combine(day, datetime.min.time())
+    planned_start = midnight + timedelta(minutes=start_min)
+    planned_end = midnight + timedelta(minutes=end_min)
+    if computed_route_status(plan) != "in_corso":
+        return planned_start, planned_end
+
+    started = getattr(plan, "started_at", None)
+    actual_start = started if started is not None else planned_start
+    try:
+        projected_end = route_schedule_datetimes(plan, status_map or {})["return_at"].replace(tzinfo=None)
+    except Exception:
+        duration = max(int(float(plan.totale_minuti or 0)), DEFAULT_AVAILABILITY_PREVIEW_MINUTES)
+        projected_end = actual_start + timedelta(minutes=duration)
+
+    # An in-progress route is always occupying its resources right now, even
+    # when its old ETA has already elapsed.
+    now = local_now().replace(tzinfo=None)
+    if projected_end <= now:
+        projected_end = now + timedelta(minutes=1)
+    return actual_start, projected_end
 
 
 def _resource_busy_maps(db, user, data_giro, start_min, end_min=None, exclude_route_id=None):
     busy_drivers = {}
     busy_vehicles = {}
-    q = owned(db.query(RoutePlan), RoutePlan, user).filter(RoutePlan.data_giro == parse_date_value(data_giro))
+    target_day = parse_date_value(data_giro)
+    if not target_day:
+        return busy_drivers, busy_vehicles
+
+    midnight = datetime.combine(target_day, datetime.min.time())
+    requested_start = midnight + timedelta(minutes=start_min)
+    requested_end = None if end_min is None else midnight + timedelta(minutes=end_min)
+
+    # Same-day planned routes still use their planned date. Running routes are
+    # intentionally included regardless of their original date because a route
+    # scheduled yesterday may have actually started today.
+    q = owned(db.query(RoutePlan), RoutePlan, user).filter(
+        (RoutePlan.status == "in_corso")
+        | (RoutePlan.data_giro.in_((target_day, target_day - timedelta(days=1))))
+    )
     if exclude_route_id:
         q = q.filter(RoutePlan.id != exclude_route_id)
-    for plan in q.all():
-        st = (getattr(plan, "status", None) or "programmato").lower()
-        if st in ("completato", "annullato"):
-            continue
+    plans = q.all()
+
+    active_ids = [plan.id for plan in plans if computed_route_status(plan) == "in_corso"]
+    status_maps = {}
+    if active_ids:
+        for row in db.query(DeliveryStatus).filter(DeliveryStatus.route_plan_id.in_(active_ids)).all():
+            status_maps.setdefault(row.route_plan_id, {})[row.delivery_id] = row
+
+    def register(mapping, resource_id, payload):
+        if not resource_id:
+            return
+        current = mapping.get(resource_id)
+        if current is None or (payload["active"] and not current.get("active")):
+            mapping[resource_id] = payload
+
+    for plan in plans:
         p_status = computed_route_status(plan)
         if p_status in ("bozza", "completato", "annullato"):
             continue
-        p_start, p_end = _route_interval_minutes(plan)
-        overlaps = (p_start <= start_min <= p_end) if end_min is None else (start_min < p_end and end_min > p_start)
+        p_start, p_end = _route_busy_interval(plan, status_maps.get(plan.id))
+        if not p_start or not p_end:
+            continue
+        overlaps = (
+            p_start <= requested_start <= p_end
+            if requested_end is None
+            else requested_start < p_end and requested_end > p_start
+        )
         if not overlaps:
             continue
         payload = {
-            "route_id": plan.id, "route_name": plan.nome,
-            "busy_from": time_to_hhmm(plan.orario_partenza),
-            "busy_until": time_to_hhmm(plan.orario_rientro_stimato) or f"{p_end//60:02d}:{p_end%60:02d}",
+            "route_id": plan.id,
+            "route_name": plan.nome,
+            "busy_from": p_start.strftime("%H:%M"),
+            "busy_until": p_end.strftime("%H:%M"),
+            "busy_date_from": p_start.date().isoformat(),
+            "busy_date_until": p_end.date().isoformat(),
             "status": route_status_label(p_status),
+            "active": p_status == "in_corso",
         }
-        if plan.driver_id:
-            busy_drivers[plan.driver_id] = payload
-        if plan.vehicle_id:
-            busy_vehicles[plan.vehicle_id] = payload
+        register(busy_drivers, plan.driver_id, payload)
+        register(busy_vehicles, plan.vehicle_id, payload)
     return busy_drivers, busy_vehicles
 
 
@@ -227,9 +290,13 @@ def _check_resource_overlap(db, user, data, start_min, end_min, exclude_route_id
     )
     if data.driver_id and data.driver_id in busy_drivers:
         b = busy_drivers[data.driver_id]
+        if b.get("active"):
+            raise HTTPException(400, f"Autista non disponibile: è già in servizio sul giro '{b['route_name']}' fino alle {b['busy_until']}")
         raise HTTPException(400, f"Autista non disponibile: già assegnato a '{b['route_name']}' dalle {b['busy_from']} alle {b['busy_until']}")
     if data.vehicle_id and data.vehicle_id in busy_vehicles:
         b = busy_vehicles[data.vehicle_id]
+        if b.get("active"):
+            raise HTTPException(400, f"Mezzo non disponibile: è già in uso sul giro '{b['route_name']}' fino alle {b['busy_until']}")
         raise HTTPException(400, f"Mezzo non disponibile: già assegnato a '{b['route_name']}' dalle {b['busy_from']} alle {b['busy_until']}")
 
 
@@ -465,7 +532,7 @@ def resources_availability(
             "alimentazione": v.alimentazione or "gasolio", "consumo_primario_100km": v.consumo_primario_100km or v.consumo_l_100km or 0, "consumo_kwh_100km": v.consumo_kwh_100km or 0,
             "available": busy is None,
             "status": "Disponibile" if busy is None else "In uso",
-            "note": "" if busy is None else f"In uso su {busy['route_name']} fino alle {busy['busy_until']}",
+            "note": "" if busy is None else (f"In uso ora su {busy['route_name']} fino alle {busy['busy_until']}" if busy.get("active") else f"In uso su {busy['route_name']} fino alle {busy['busy_until']}"),
             "busy": busy,
         })
 
@@ -477,7 +544,7 @@ def resources_availability(
             "id": d.id, "nome": d.nome, "cognome": d.cognome, "full_name": full_name, "patente": d.patente,
             "available": busy is None,
             "status": "Disponibile" if busy is None else "In servizio",
-            "note": "" if busy is None else f"In servizio su {busy['route_name']} fino alle {busy['busy_until']}",
+            "note": "" if busy is None else (f"In servizio ora su {busy['route_name']} fino alle {busy['busy_until']}" if busy.get("active") else f"In servizio su {busy['route_name']} fino alle {busy['busy_until']}"),
             "busy": busy,
         })
 
@@ -713,6 +780,8 @@ def program_route(
     if status not in ("bozza", "programmato"):
         raise HTTPException(400, "Puoi programmare solo un giro non ancora avviato.")
     check_daily_route_limit(user, db, plan.data_giro, exclude_route_id=plan.id)
+    from ..services.route_execution import lock_route_resources
+    lock_route_resources(db, plan)
     _check_resource_overlap(db, user, plan, minutes_from_hhmm(plan.orario_partenza) or 0, (minutes_from_hhmm(plan.orario_partenza) or 0) + int(plan.totale_minuti or 0), exclude_route_id=plan.id)
     try:
         validate_vehicle_load([{"peso_kg": d.peso_kg, "colli": d.colli} for d in plan.deliveries], build_vehicle_dict(plan.vehicle))
