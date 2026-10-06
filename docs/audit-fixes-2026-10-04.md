@@ -79,10 +79,9 @@ Il cambio password invalida le sessioni precedenti, inclusa quella corrente.
 25. **Struttura:** estratti sessioni, identità, policy, esecuzione dei giri,
     migrazioni e navigazione. Un solo `showTab`, senza i tre wrapper precedenti.
     È un refactoring mirato: i moduli storici grandi non sono tutti riscritti.
-26. **Funzioni legacy:** mantenute le API transfer con i controlli di settore
-    esistenti. Non si equipara una pagina nascosta alla rimozione del servizio:
-    la dismissione richiede una decisione di compatibilità e resta fuori da
-    queste correzioni, per non eliminare funzionalità o dati utilizzati.
+26. **Funzioni legacy:** al momento di questo audit le verticalizzazioni storiche
+    erano state mantenute per compatibilità. La successiva dismissione definitiva
+    viene gestita con rimozione del codice e migrazione esplicita dei dati residui.
 27. **Query, errori e verifiche:** query chat aggregate e caricamenti report
     raggruppati; catch prima vuoti della dashboard resi diagnosticabili;
     regressioni di sicurezza, operazioni e concorrenza PostgreSQL aggiunte.
