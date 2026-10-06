@@ -194,6 +194,23 @@ function updatePremiumNavState(){
   });
 }
 
+function gfRouteEnergyMetric(route){
+  const r = route || {};
+  const electric = String(r.energy_type || "").toLowerCase() === "elettrico" || String(r.energy_unit || "").toLowerCase() === "kwh";
+  if(electric){
+    let qty = r.energy_quantity_electric;
+    if(qty == null && r.totale_km != null && r.energy_consumption_electric != null){
+      qty = Number(r.totale_km) * Number(r.energy_consumption_electric) / 100;
+    }
+    const value = qty == null || Number.isNaN(Number(qty)) ? "—" : Number(qty).toFixed(2);
+    return {electric:true,label:"Consumo energia",value:value+" kWh",costLabel:"Costo energia"};
+  }
+  const liters = r.litri_stimati;
+  const value = liters == null || Number.isNaN(Number(liters)) ? "—" : String(liters);
+  return {electric:false,label:"Litri stimati",value:value+" L",costLabel:"Costo carburante"};
+}
+window.gfRouteEnergyMetric = gfRouteEnergyMetric;
+
 function updateDashboardStats(){
   try{
     const stops = deliveries.length;
@@ -3152,8 +3169,8 @@ function renderRouteResult(r, targetId="routeResult", fromHistory=false){
           <div class="mini-card"><span class="mini-icon orange">${icon("return")}</span><div><small>Rientro stimato</small><strong>${esc(r.orario_rientro_stimato||"-")}</strong></div></div>
           <div class="mini-card"><span class="mini-icon green">${icon("distance")}</span><div><small>Km totali</small><strong>${r.totale_km ?? "-"} km</strong></div></div>
           <div class="mini-card"><span class="mini-icon purple">${icon("clock")}</span><div><small>Tempo totale</small><strong>${Math.round(r.totale_minuti||0)} min</strong></div></div>
-          <div class="mini-card"><span class="mini-icon blue">${icon("fuel")}</span><div><small>Litri stimati</small><strong>${r.litri_stimati ?? "-"} L</strong></div></div>
-          <div class="mini-card"><span class="mini-icon purple">${icon("euro")}</span><div><small>Costo carburante</small><strong>€ ${r.costo_carburante ?? "-"}</strong></div></div>
+          <div class="mini-card"><span class="mini-icon blue">${icon("fuel")}</span><div><small>${gfRouteEnergyMetric(r).label}</small><strong>${gfRouteEnergyMetric(r).value}</strong></div></div>
+          <div class="mini-card"><span class="mini-icon purple">${icon("euro")}</span><div><small>${gfRouteEnergyMetric(r).costLabel}</small><strong>€ ${r.costo_carburante ?? "-"}</strong></div></div>
         </div>
     <div class="result-layout">
       <div class="result-main">
@@ -3188,8 +3205,8 @@ function renderRouteResult(r, targetId="routeResult", fromHistory=false){
         <div class="summary-row"><span>Totale fermate</span><strong>${consegne.length}</strong></div>
         <div class="summary-row"><span>Km totali</span><strong>${r.totale_km ?? "-"} km</strong></div>
         <div class="summary-row"><span>Tempo totale</span><strong>${Math.round(r.totale_minuti||0)} min</strong></div>
-        <div class="summary-row"><span>Litri stimati</span><strong>${r.litri_stimati ?? "-"} L</strong></div>
-        <div class="summary-row"><span>Costo carburante</span><strong>€ ${r.costo_carburante ?? "-"}</strong></div>
+        <div class="summary-row"><span>${gfRouteEnergyMetric(r).label}</span><strong>${gfRouteEnergyMetric(r).value}</strong></div>
+        <div class="summary-row"><span>${gfRouteEnergyMetric(r).costLabel}</span><strong>€ ${r.costo_carburante ?? "-"}</strong></div>
         ${isProgrammable ? '<button class="btn-primary full preview-program" onclick="programCurrentRoute()"><span aria-hidden="true">▷</span>Programma giro</button>' : ''}
         <button class="btn-secondary full preview-back" onclick="showTab('giro')"><span aria-hidden="true">←</span>Torna alla pianificazione</button>
         <details class="preview-extra"><summary>Risorse e altre azioni</summary>
@@ -3808,7 +3825,7 @@ function dashboardRouteSummaryCards(r, rows){
     <div><span>Km previsti</span><strong>${esc(r.totale_km ?? '-')} km</strong></div>
     <div><span>Tempo previsto</span><strong>${Math.round(Number(r.totale_minuti||0)) || '-'} min</strong></div>
     <div><span>Consegne</span><strong>${completed}/${rows.length}</strong><small>${missed} mancate · ${pending} da fare</small></div>
-    <div><span>Litri stimati</span><strong>${esc(r.litri_stimati ?? '-')} L</strong></div>
+    <div><span>${esc(gfRouteEnergyMetric(r).label)}</span><strong>${esc(gfRouteEnergyMetric(r).value)}</strong></div>
     <div><span>Costo stimato</span><strong>€ ${esc(r.costo_carburante ?? '-')}</strong></div>
     <div><span>Rientro previsto</span><strong>${esc(r.orario_rientro_stimato || '-')}</strong></div>
   </div>`;
@@ -4035,7 +4052,7 @@ function renderDashboardScheduledSubpage(routes, selectedRoute){
     ['Km previsti', (r.totale_km ?? '-')+' km', 'road', 'blue'],
     ['Tempo previsto', Math.round(Number(r.totale_minuti||0))+' min', 'clock', 'pink'],
     ['Consegne', completed+'/'+rows.length, 'box', 'purple', missed+' mancate · '+pending+' da fare'],
-    ['Litri stimati', (r.litri_stimati ?? '-')+' L', 'fuel', 'green'],
+    [gfRouteEnergyMetric(r).label, gfRouteEnergyMetric(r).value, 'fuel', 'green'],
     ['Costo stimato', '€ '+(r.costo_carburante ?? '-'), 'euro', 'orange'],
     ['Rientro previsto', r.rientro_stimato_aggiornato || r.orario_rientro_stimato || '-', 'return', 'blue']
   ];
