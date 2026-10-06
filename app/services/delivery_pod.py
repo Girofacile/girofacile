@@ -178,7 +178,7 @@ def save_delivery_evidence(db, route, delivery, status, payload, owner, action):
     if action == 'complete' and owner.needs_photo_proof and not (photo_raw or status.delivery_photo_object_key):
         raise HTTPException(400, 'Foto della consegna obbligatoria')
     needs_storage = bool(signature_raw or photo_raw or (action == 'complete' and (
-        object_storage.enabled() or owner.delivery_signature_enabled or owner.needs_photo_proof or status.signature_object_key or status.delivery_photo_object_key)))
+        object_storage.configured() or owner.delivery_signature_enabled or owner.needs_photo_proof or status.signature_object_key or status.delivery_photo_object_key)))
     if not needs_storage:
         return
     storage = object_storage.get_storage()
