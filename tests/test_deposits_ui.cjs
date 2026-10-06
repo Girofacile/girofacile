@@ -8,7 +8,7 @@ function fixture(){
  const nodes=new Map(),calls=[];
  const node=id=>{
   if(!nodes.has(id)){
-   const classes=new Set(['hidden']);
+   const classes=new Set(['hidden']),attrs=new Map();
    nodes.set(id,{
     value:'',textContent:'',innerHTML:'',checked:false,disabled:false,
     classList:{
@@ -17,6 +17,8 @@ function fixture(){
      remove(...names){names.forEach(name=>classes.delete(name));},
      contains(name){return classes.has(name);}
     },
+    setAttribute(name,value){attrs.set(name,String(value));},
+    getAttribute(name){return attrs.get(name)??null;},
     focus(){},scrollIntoView(){},
     reportValidity(){return !!node('depNome').value&&!!node('depIndirizzo').value},
     querySelector(){return node('saveLabel')},
@@ -45,6 +47,13 @@ test('deposit page mirrors the customer directory layout and keeps delete inside
  assert.match(index,/id="depositDeleteSection" class="deposit-delete-section hidden"/);
 });
 
+test('deposit directory exposes list and grid view controls like customers',()=>{
+ assert.match(index,/id="depositListView"[^>]+onclick="setDepositView\('list'\)"/);
+ assert.match(index,/id="depositGridView"[^>]+onclick="setDepositView\('grid'\)"/);
+ assert.match(index,/id="depositTableWrap"/);
+ assert.match(index,/id="depositCards" class="deposit-cards hidden"/);
+});
+
 test('deposit overview uses real timestamps, counts defaults, escapes values and preserves route selection',async()=>{
  const f=fixture();f.node('routeDeposit').value='2';
  f.ctx.api=async()=>[{id:1,nome:'<script>',indirizzo:'Via "Roma"',predefinito:true,updated_at:'2026-09-22T12:32:00'},{id:2,nome:'Secondo',indirizzo:'Via Test',updated_at:null}];
@@ -56,6 +65,7 @@ test('deposit overview uses real timestamps, counts defaults, escapes values and
  assert.match(f.node('depositLastUpdate').textContent,/22 set 2026/);
  assert.equal(f.node('depositLastUpdateTime').textContent,'ore 14:32');
  assert.match(f.node('depositsBody').innerHTML,/&lt;script>/);
+ assert.match(f.node('depositCards').innerHTML,/&lt;script>/);
  assert.doesNotMatch(f.node('depositsBody').innerHTML,/deposit-delete/);
  assert.match(f.node('depositsBody').innerHTML,/deposit-edit/);
  f.ctx.api=async()=>[];await f.run('loadDeposits()');
@@ -63,6 +73,20 @@ test('deposit overview uses real timestamps, counts defaults, escapes values and
  assert.match(f.node('depositDefaultAddress').textContent,/Imposta un deposito/);
  assert.equal(f.node('depositLastUpdate').textContent,'—');
  assert.match(f.node('depositsBody').innerHTML,/Nessun deposito configurato/);
+ assert.match(f.node('depositCards').innerHTML,/Nessun deposito configurato/);
+});
+
+test('deposit view switches between table and cards',()=>{
+ const f=fixture();
+ f.run("depositsCache=[{id:1,nome:'Deposito A',indirizzo:'Via Roma',predefinito:true}];renderDepositDirectory()");
+ assert.equal(f.node('depositTableWrap').classList.contains('hidden'),false);
+ assert.equal(f.node('depositCards').classList.contains('hidden'),true);
+ assert.equal(f.node('depositListView').getAttribute('aria-pressed'),'true');
+ f.run("setDepositView('grid')");
+ assert.equal(f.node('depositTableWrap').classList.contains('hidden'),true);
+ assert.equal(f.node('depositCards').classList.contains('hidden'),false);
+ assert.equal(f.node('depositGridView').getAttribute('aria-pressed'),'true');
+ assert.match(f.node('depositCards').innerHTML,/Deposito A/);
 });
 
 test('new and edit deposit open the modal, while delete is exposed only in edit mode',()=>{
