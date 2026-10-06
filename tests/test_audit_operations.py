@@ -64,6 +64,44 @@ def test_future_start_rejected_and_get_does_not_create_states(env):
     assert db.query(DeliveryStatus).count() == 0
 
 
+def test_overdue_route_can_start_next_day(env):
+    from app.core.utils import local_today
+    client, db, route, _ = setup_route(env)
+    route.status = 'programmato'
+    route.data_giro = local_today() - timedelta(days=1)
+    db.commit()
+
+    response = client.post(f'/api/driver/routes/{route.id}/start')
+    assert response.status_code == 200
+    assert route.status == 'in_corso'
+    assert route.started_at is not None
+
+
+def test_second_route_cannot_start_with_same_running_driver(env):
+    from app.core.utils import local_today
+    from app.models import RoutePlan
+    client, db, route, _ = setup_route(env)
+    route.data_giro = local_today() - timedelta(days=1)
+    route.status = 'in_corso'
+    route.started_at = datetime.combine(local_today(), time(8, 0))
+    other = RoutePlan(
+        user_id=route.user_id,
+        driver_id=route.driver_id,
+        vehicle_id=route.vehicle_id,
+        nome='Secondo giro',
+        data_giro=local_today(),
+        orario_partenza=time(9, 0),
+        status='programmato',
+    )
+    db.add(other)
+    db.commit()
+
+    response = client.post(f'/api/driver/routes/{other.id}/start')
+    assert response.status_code == 409
+    assert 'impegnato' in response.json()['detail'].lower()
+    assert other.status == 'programmato'
+
+
 def test_duration_uses_utc_and_preserves_ambiguous_history():
     from app.routers.reports import _actual_route_minutes
     route = SimpleNamespace(started_at=datetime(2026, 10, 4, 10), completed_at=datetime(2026, 10, 4, 11),
