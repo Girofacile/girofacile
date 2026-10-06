@@ -606,57 +606,6 @@ def create_driver_setup_token(driver_id: int, db: Session) -> str:
     db.commit()
     return token
 
-# -----------------------------------------------------------------------
-# v79 — Corse Transfer assegnate all'autista
-# -----------------------------------------------------------------------
-@router.get('/transfer-bookings')
-def get_driver_transfer_bookings(da: DriverAccount = Depends(get_current_driver), db: Session = Depends(get_db)):
-    from ..models import TransferBookingRequest, Vehicle
-    driver = db.get(Driver, da.driver_id)
-    if not driver:
-        raise HTTPException(404, 'Autista non trovato')
-    rows = db.query(TransferBookingRequest).filter(
-        TransferBookingRequest.driver_id == driver.id,
-        TransferBookingRequest.status.notin_(['cancelled'])
-    ).order_by(TransferBookingRequest.pickup_date.asc(), TransferBookingRequest.pickup_time.asc()).all()
-    result=[]
-    for r in rows:
-        vehicle=db.get(Vehicle, r.vehicle_id) if r.vehicle_id else None
-        result.append({
-            'id':r.id,'customer_name':r.customer_name,'phone':r.phone,'email':r.email,
-            'pickup_address':r.pickup_address,'destination_address':r.destination_address,
-            'pickup_date':r.pickup_date,'pickup_time':r.pickup_time,'passengers':r.passengers,
-            'luggage':r.luggage,'service_type':r.service_type,'flight_train':r.flight_train,
-            'notes':r.notes,'status':r.status,'assignment_status':r.assignment_status,
-            'vehicle_name':vehicle.nome if vehicle else None,
-        })
-    return result
-
-
-@router.put('/transfer-bookings/{booking_id}')
-def update_driver_transfer_booking(booking_id:int, payload:dict, da: DriverAccount = Depends(get_current_driver), db: Session = Depends(get_db)):
-    from ..models import TransferBookingRequest
-    row=db.query(TransferBookingRequest).filter(
-        TransferBookingRequest.id==booking_id,
-        TransferBookingRequest.driver_id==da.driver_id
-    ).first()
-    if not row:
-        raise HTTPException(404,'Corsa non trovata')
-    status=str(payload.get('status') or '')
-    allowed={'accepted','rejected','arrived','passenger_on_board','in_progress','completed','no_show'}
-    if status not in allowed:
-        raise HTTPException(422,'Stato non valido')
-    row.status=status
-    if status=='accepted':
-        row.assignment_status='accepted'; row.accepted_at=datetime.utcnow()
-    elif status=='rejected':
-        row.assignment_status='rejected'; row.rejected_at=datetime.utcnow(); row.driver_id=None
-    elif status=='completed':
-        row.assignment_status='completed'
-    db.commit()
-    return {'ok':True,'message':'Corsa aggiornata'}
-
-
 @router.get('/delivery/{delivery_id}/evidence/{kind}')
 def driver_evidence(delivery_id: int, kind: str, da: DriverAccount = Depends(get_current_driver), db: Session = Depends(get_db)):
     delivery = db.get(Delivery, delivery_id)
