@@ -56,8 +56,11 @@ def test_delivery_retry_does_not_change_observations_or_evidence(env):
 
 def test_future_start_rejected_and_get_does_not_create_states(env):
     client, db, route, delivery = setup_route(env)
+    from app.core.utils import local_today
     from app.models import DeliveryStatus
-    route.status = 'programmato'; db.commit()
+    route.status = 'programmato'
+    route.data_giro = local_today() + timedelta(days=1)
+    db.commit()
     assert client.post(f'/api/driver/routes/{route.id}/start').status_code == 409
     assert client.get(f'/api/driver/routes/{route.id}').status_code == 200
     assert client.get('/api/operator/test-route').status_code == 200
