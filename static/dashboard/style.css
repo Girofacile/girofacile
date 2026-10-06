@@ -2,5 +2,4 @@
    Styles are split by responsibility to reduce regression risk during edits.
    Keep this file for legacy references; dashboard/index.html loads modules directly. */
 @import url('/static/dashboard/css/core.css?v=v88');
-@import url('/static/dashboard/css/transfer.css?v=v88');
 @import url('/static/dashboard/css/account.css?v=v88');
