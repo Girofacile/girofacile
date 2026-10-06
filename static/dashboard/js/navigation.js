@@ -1,7 +1,7 @@
 // One navigation entry point; dependencies are provided by the feature modules.
 function showTab(name){
   window.GFLiveDesign?.closeMap();
-  if(['transfer-portal','transfer-bookings','transfer-planning','transfer-settings','integrations'].includes(name)) name='dashboard';
+  if(name==='integrations') name='dashboard';
   if(blockOperationalTabV49(name)) return;
   if(name === "agenti" && !agentsFeatureEnabled()) name = "settings";
   if(showLockedOrProceed(name)) return;
@@ -28,10 +28,6 @@ function showTab(name){
   if(name==="settings"){ loadSettingsV41(); loadUniversalFeaturesV89(); }
   if(name==="plan-account"){ renderUpgradeCards(); syncPlanPageHeaderV874(); }
   if(name==="integrations") renderIntegrationsV52();
-  if(name==="transfer-portal") loadTransferPortalV78();
-  if(name==="transfer-bookings") loadTransferBookingsV79();
-  if(name==="transfer-planning") loadTransferPlanningV79();
-  if(name==="transfer-settings") loadTransferSettingsV79();
 
   if(name==="admin-dashboard") loadAdminDashboard();
   if(name==="admin-users") loadAdminUsers();
