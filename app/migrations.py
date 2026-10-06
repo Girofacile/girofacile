@@ -68,12 +68,18 @@ def run_migrations(engine):
             if '20261005_01' not in applied:
                 from .models import RoutePosition
                 with engine.begin() as conn:
-                    RoutePosition.__table__.create(conn, checkfirst=True)
+                    inspector = inspect(conn)
+                    required_tables = ('route_plans', 'drivers', 'deliveries')
+                    if all(inspector.has_table(name) for name in required_tables):
+                        RoutePosition.__table__.create(conn, checkfirst=True)
                     conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261005_01', 'now': datetime.utcnow()})
             if LATEST not in applied:
                 with engine.begin() as conn:
-                    if inspect(conn).has_table('users'):
-                        conn.execute(text("UPDATE users SET company_sector='other' WHERE company_sector IN ('transfer', 'transfer_service')"))
+                    inspector = inspect(conn)
+                    if inspector.has_table('users'):
+                        user_columns = {col['name'] for col in inspector.get_columns('users')}
+                        if 'company_sector' in user_columns:
+                            conn.execute(text("UPDATE users SET company_sector='other' WHERE company_sector IN ('transfer', 'transfer_service')"))
                     for table_name in (
                         'transfer_booking_events',
                         'transfer_booking_requests',
