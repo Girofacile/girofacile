@@ -4587,10 +4587,10 @@ window.checkLogin = async function(){
 
 // -----------------------------------------------------------------------------
 // v50/v51/v53/v54/v55 - Settori verticali operativi
-// Distribuzione mantiene la Dashboard originale; Logistica, E-commerce, Food delivery, Transfer
+// Distribuzione mantiene la Dashboard originale; Logistica, E-commerce, Food delivery
 // e Farmaceutico/Sanitario hanno una Dashboard dedicata. Gli altri settori restano ancora nella Dashboard pulita.
 // -----------------------------------------------------------------------------
-const GF_SECTOR_OPERATIONAL_KEYS_V50 = new Set(["distribution", "logistics", "ecommerce", "food_delivery", "transfer", "healthcare"]);
+const GF_SECTOR_OPERATIONAL_KEYS_V50 = new Set(["distribution", "logistics", "ecommerce", "food_delivery", "healthcare"]);
 const GF_VERTICAL_LABELS_V51 = {
   logistics: {
     bodyClass: "sector-logistics-v50",
@@ -4633,19 +4633,6 @@ const GF_VERTICAL_LABELS_V51 = {
     reports: "Report food delivery",
     chat: "Chat rider"
   },
-  transfer: {
-    bodyClass: "sector-transfer-v54",
-    dashboardTitle: "Dashboard transfer",
-    dashboardSubtitle: "Centro operativo per prenotazioni, corse, autisti, veicoli e tratte su appuntamento.",
-    newRoute: "+ Nuova corsa",
-    planning: "Pianificazione transfer",
-    customers: "Clienti / Passeggeri",
-    vehicles: "Veicoli",
-    drivers: "Autisti",
-    history: "Storico corse",
-    reports: "Report transfer",
-    chat: "Chat autisti"
-  },
   healthcare: {
     bodyClass: "sector-healthcare-v55",
     dashboardTitle: "Dashboard sanitario",
@@ -4680,85 +4667,18 @@ function setNavTextV50(tab, text){
 function gfVerticalLabelsV51(){
   return GF_VERTICAL_LABELS_V51[gfCurrentSectorKeyV50()] || null;
 }
-function applyTransferMenuCleanupV83(sectorNow){
-  const isTransfer = sectorNow === "transfer" && isWorkspaceOperationalV49();
-
-  // Nel settore Transfer queste pagine restano disponibili nel software, ma non
-  // occupano spazio nel menu principale perché sono raggiungibili dai flussi
-  // dedicati, dalla Dashboard o dal popup account.
-  const desktopTabsToHide = ["giro", "clienti", "depositi", "storico", "settings"];
-  desktopTabsToHide.forEach(tab => {
-    const el = document.querySelector(`.side-nav .nav-item[data-tab="${tab}"]`);
-    if(el) el.style.display = isTransfer ? "none" : "";
-  });
-
-
-  // Menu mobile “Altro”: stessa pulizia della sidebar desktop.
-  const mobileHiddenTargets = ["company-noop"]; // mantiene Azienda visibile
-  const hiddenOnclickParts = [
-    "mobileGoTabV62('giro')",
-    "mobileGoTabV62('clienti')",
-    "mobileGoTabV62('depositi')",
-    "mobileGoTabV62('storico')",
-    "mobileGoTabV62('settings')"
-  ];
-  document.querySelectorAll('#gfMobileMoreMenuV62 > button').forEach(btn => {
-    const handler = btn.getAttribute('onclick') || '';
-    const shouldHide = hiddenOnclickParts.some(part => handler.includes(part));
-    if(shouldHide) btn.style.display = isTransfer ? "none" : "";
-  });
-
-  // Navigazione inferiore mobile specifica per Transfer.
-  const bottom = document.getElementById('gfMobileBottomNavV62');
-  if(bottom){
-    const buttons = Array.from(bottom.querySelectorAll(':scope > button'));
-    if(buttons.length >= 5){
-      if(isTransfer){
-        buttons[0].setAttribute('onclick', "mobileGoTabV62('dashboard')");
-        buttons[0].innerHTML = '<span>▦</span><strong>Dashboard</strong>';
-        buttons[1].setAttribute('onclick', "mobileGoTabV62('transfer-bookings')");
-        buttons[1].innerHTML = '<span>▣</span><strong>Prenotazioni</strong>';
-        buttons[2].setAttribute('onclick', "openTransferBookingModalV79()");
-        buttons[2].innerHTML = '<span>+</span><strong>Nuova</strong>';
-        buttons[3].setAttribute('onclick', "mobileGoTabV62('transfer-planning')");
-        buttons[3].innerHTML = '<span>▤</span><strong>Planning</strong>';
-      }else{
-        buttons[0].setAttribute('onclick', "mobileGoTabV62('dashboard')");
-        buttons[0].innerHTML = '<span>▦</span><strong>Dashboard</strong>';
-        buttons[1].setAttribute('onclick', "mobileGoTabV62('dashboard-in-progress')");
-        buttons[1].innerHTML = '<span>▰</span><strong>Giri</strong>';
-        buttons[2].setAttribute('onclick', "mobileGoTabV62('giro')");
-        buttons[2].innerHTML = '<span>+</span><strong>Nuovo giro</strong>';
-        buttons[3].setAttribute('onclick', "mobileGoTabV62('storico')");
-        buttons[3].innerHTML = '<span>↺</span><strong>Storico</strong>';
-      }
-    }
-  }
-}
-
 function applyLogisticsWorkspaceV50(){
   const labels = gfVerticalLabelsV51();
   const sectorNow = gfCurrentSectorKeyV50();
   document.body.classList.toggle("sector-logistics-v50", sectorNow === "logistics");
   document.body.classList.toggle("sector-ecommerce-v51", sectorNow === "ecommerce");
   document.body.classList.toggle("sector-food-v53", sectorNow === "food_delivery");
-  document.body.classList.toggle("sector-transfer-v54", sectorNow === "transfer");
   document.body.classList.toggle("sector-healthcare-v55", sectorNow === "healthcare");
   document.querySelectorAll('[data-sector-only="ecommerce"]').forEach(el => {
     const show = sectorNow === "ecommerce" && isWorkspaceOperationalV49();
     el.classList.toggle("hidden", !show);
     el.style.display = show ? "" : "none";
   });
-  document.querySelectorAll('[data-sector-only="transfer"]').forEach(el => {
-    const show = sectorNow === "transfer" && isWorkspaceOperationalV49();
-    el.classList.toggle("hidden", !show);
-    el.style.display = show ? "" : "none";
-  });
-  ["gfMobileTransferPortalBtnV78","gfMobileTransferBookingsBtnV79","gfMobileTransferPlanningBtnV79","gfMobileTransferSettingsBtnV79"].forEach(id=>{
-    const el=document.getElementById(id); if(el) el.classList.toggle("hidden", !(sectorNow === "transfer" && isWorkspaceOperationalV49()));
-  });
-  refreshAdminDriverNavV79();
-  applyTransferMenuCleanupV83(sectorNow);
 
   const heroTitle = document.querySelector("#tab-dashboard .dash-hero-row h1");
   const heroSubtitle = document.querySelector("#tab-dashboard .dash-hero-row p");
@@ -4788,7 +4708,7 @@ function renderLogisticsDashboardV50(routes=[]){
   const host = document.getElementById("logisticsDashboardV50");
   if(!host) return;
   const sector = gfCurrentSectorKeyV50();
-  if(sector !== "logistics" && sector !== "ecommerce" && sector !== "food_delivery" && sector !== "transfer" && sector !== "healthcare"){
+  if(sector !== "logistics" && sector !== "ecommerce" && sector !== "food_delivery" && sector !== "healthcare"){
     host.classList.add("hidden");
     host.innerHTML = "";
     return;
@@ -4831,36 +4751,6 @@ function renderLogisticsDashboardV50(routes=[]){
         </div>
       </section>
     `;
-    return;
-  }
-
-  if(sector === "transfer"){
-    renderTransferDashboardV84();
-    host.innerHTML = `
-      <section class="vertical-dashboard-v51 transfer-dashboard-v54">
-        <div class="vertical-head-v51 transfer-head-v54">
-          <span>Modulo verticale</span>
-          <h2>Centro operativo transfer</h2>
-          <p>Interfaccia dedicata a NCC, navette hotel, transfer aeroportuali e servizi turistici: prenotazioni, passeggeri, tratte, autisti, veicoli e corse su appuntamento.</p>
-        </div>
-        <div class="vertical-kpi-grid-v51 transfer-kpi-grid-v54">
-          <div><small>Corse oggi</small><strong>${itemsToday}</strong><span>Passeggeri/tappe pianificate</span></div>
-          <div><small>Corse in corso</small><strong>${activeRoutes.length}</strong><span>Autisti operativi</span></div>
-          <div><small>Prenotate</small><strong>${scheduled.length}</strong><span>Da assegnare o avviare</span></div>
-          <div><small>Completate oggi</small><strong>${completed.length}</strong><span>Servizi chiusi</span></div>
-          <div><small>No-show / problemi</small><strong>${missed}</strong><span>Da verificare</span></div>
-          <div><small>Risorse in uso</small><strong>${driversBusy}/${vehiclesBusy}</strong><span>Autisti / veicoli</span></div>
-        </div>
-        <div class="vertical-modules-v51 transfer-modules-v54">
-          <button onclick="showTab('clienti')"><b>Passeggeri e clienti</b><span>Telefono, email, indirizzo ritiro, destinazione e note accoglienza.</span></button>
-          <button onclick="showTab('giro')"><b>Pianificazione corse</b><span>Assegna autista, veicolo, orario ritiro, tratta e priorità.</span></button>
-          <button onclick="openDashboardInProgressPage()"><b>Monitoraggio corse</b><span>Segui autisti in arrivo, clienti a bordo, ritardi e servizi completati.</span></button>
-          <button onclick="showTab('transfer-portal')"><b>Portale prenotazioni</b><span>Personalizza, pubblica e condividi il link per ricevere nuove richieste.</span></button>
-          <button onclick="showTab('storico')"><b>Storico corse</b><span>Consulta corse completate, no-show, ritardi e report transfer.</span></button>
-        </div>
-      </section>
-    `;
-    setTimeout(hydrateTransferDashboardV79, 0);
     return;
   }
 
@@ -5037,118 +4927,6 @@ function syncMobileShellV62(){
   setTimeout(syncMobileShellV62, 500);
 })();
 
-/* ------------------------------------------------------------------
-   v78 - Transfer booking portal visual builder
------------------------------------------------------------------- */
-let gfTransferPortalV78 = null;
-let gfTransferLogoV78 = "";
-let gfTransferHeroV78 = "";
-let gfTransferPreviewModeV78 = "desktop";
-const GF_TRANSFER_FIELDS_V78 = {
-  email:"Email", phone:"Telefono", passengers:"Numero passeggeri", luggage:"Bagagli",
-  flight_train:"Volo / treno", child_seat:"Seggiolino", pets:"Animali",
-  notes:"Note", round_trip:"Andata e ritorno"
-};
-
-function transferValV78(id){ return document.getElementById(id)?.value ?? ""; }
-function transferSetV78(id,value){ const el=document.getElementById(id); if(el) el.value=value ?? ""; }
-function transferCheckedV78(id){ return !!document.getElementById(id)?.checked; }
-function transferSetCheckedV78(id,value){ const el=document.getElementById(id); if(el) el.checked=!!value; }
-function transferEscV78(value){ return String(value ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-
-function renderTransferFieldControlsV78(fields={}){
-  const host=document.getElementById("tpFieldsV78"); if(!host) return;
-  host.innerHTML=Object.entries(GF_TRANSFER_FIELDS_V78).map(([key,label])=>`
-    <label class="transfer-field-row-v78"><span>${label}</span><select data-transfer-field="${key}" onchange="updateTransferPreviewV78()">
-      <option value="hidden" ${fields[key]==='hidden'?'selected':''}>Nascosto</option>
-      <option value="visible" ${(!fields[key]||fields[key]==='visible')?'selected':''}>Visibile</option>
-      <option value="required" ${fields[key]==='required'?'selected':''}>Obbligatorio</option>
-    </select></label>`).join("");
-}
-
-function collectTransferFieldsV78(){
-  const out={}; document.querySelectorAll("[data-transfer-field]").forEach(el=>out[el.dataset.transferField]=el.value); return out;
-}
-
-async function loadTransferPortalV78(force=false){
-  try{
-    const data=await api("/api/transfer/booking-portal");
-    gfTransferPortalV78=data; gfTransferLogoV78=data.logo_data_url||""; gfTransferHeroV78=data.hero_image_data_url||"";
-    transferSetV78("tpCompanyNameV78",data.company_name); transferSetV78("tpSlugV78",data.public_slug);
-    transferSetV78("tpThemeV78",data.theme); transferSetV78("tpPrimaryV78",data.primary_color);
-    transferSetV78("tpSecondaryV78",data.secondary_color); transferSetV78("tpButtonV78",data.button_color);
-    transferSetV78("tpTextV78",data.text_color); transferSetV78("tpBackgroundV78",data.background_color);
-    transferSetV78("tpTitleV78",data.title); transferSetV78("tpSubtitleV78",data.subtitle);
-    transferSetV78("tpIntroV78",data.intro_text); transferSetV78("tpConfirmationV78",data.confirmation_message);
-    transferSetV78("tpClosedV78",data.closed_message); transferSetV78("tpFooterV78",data.footer_text);
-    transferSetV78("tpPhoneV78",data.phone); transferSetV78("tpWhatsappV78",data.whatsapp);
-    transferSetV78("tpEmailV78",data.email); transferSetV78("tpWebsiteV78",data.website);
-    transferSetV78("tpAdvanceV78",data.min_advance_minutes); transferSetV78("tpStatusV78",data.portal_status);
-    transferSetCheckedV78("tpAcceptV78",data.accept_bookings); transferSetCheckedV78("tpBrandV78",data.show_girofacile_brand);
-    transferSetV78("tpServicesV78",(data.services||[]).join("\n"));
-    renderTransferFieldControlsV78(data.fields||{});
-    const logoState=document.getElementById("tpLogoStateV78"); if(logoState) logoState.textContent=gfTransferLogoV78?"Logo caricato":"Nessun logo caricato";
-    const heroState=document.getElementById("tpHeroStateV78"); if(heroState) heroState.textContent=gfTransferHeroV78?"Immagine caricata":"Nessuna immagine caricata";
-    updateTransferPreviewV78();
-    const state=document.getElementById("tpSaveStateV78"); if(state) state.textContent=force?"Modifiche ripristinate":"Configurazione caricata";
-  }catch(e){ toast(e.message||"Impossibile caricare il portale", "error"); }
-}
-
-function readTransferImageV78(input,type){
-  const file=input?.files?.[0]; if(!file) return;
-  if(file.size>2.5*1024*1024){ alert("L'immagine non può superare 2,5 MB."); input.value=""; return; }
-  const reader=new FileReader(); reader.onload=()=>{ if(type==='logo') gfTransferLogoV78=reader.result; else gfTransferHeroV78=reader.result;
-    const state=document.getElementById(type==='logo'?"tpLogoStateV78":"tpHeroStateV78"); if(state) state.textContent=file.name;
-    updateTransferPreviewV78();
-  }; reader.readAsDataURL(file);
-}
-function clearTransferImageV78(type){ if(type==='logo') gfTransferLogoV78=""; else gfTransferHeroV78=""; const input=document.getElementById(type==='logo'?"tpLogoFileV78":"tpHeroFileV78"); if(input) input.value=""; const state=document.getElementById(type==='logo'?"tpLogoStateV78":"tpHeroStateV78"); if(state) state.textContent=type==='logo'?"Nessun logo caricato":"Nessuna immagine caricata"; updateTransferPreviewV78(); }
-
-function transferPreviewDataV78(){
-  return {
-    company_name:transferValV78("tpCompanyNameV78")||"La tua azienda", public_slug:transferValV78("tpSlugV78")||"nome-azienda",
-    logo_data_url:gfTransferLogoV78, hero_image_data_url:gfTransferHeroV78, theme:transferValV78("tpThemeV78")||"modern",
-    primary_color:transferValV78("tpPrimaryV78")||"#0f766e", secondary_color:transferValV78("tpSecondaryV78")||"#ecfdf5",
-    button_color:transferValV78("tpButtonV78")||"#0f766e", text_color:transferValV78("tpTextV78")||"#102a2a",
-    background_color:transferValV78("tpBackgroundV78")||"#f4fbfa", title:transferValV78("tpTitleV78")||"Prenota il tuo transfer",
-    subtitle:transferValV78("tpSubtitleV78"), intro_text:transferValV78("tpIntroV78"), confirmation_message:transferValV78("tpConfirmationV78"),
-    closed_message:transferValV78("tpClosedV78"), footer_text:transferValV78("tpFooterV78"), phone:transferValV78("tpPhoneV78"),
-    whatsapp:transferValV78("tpWhatsappV78"), email:transferValV78("tpEmailV78"), website:transferValV78("tpWebsiteV78"),
-    min_advance_minutes:Number(transferValV78("tpAdvanceV78")||0), portal_status:transferValV78("tpStatusV78"),
-    accept_bookings:transferCheckedV78("tpAcceptV78"), show_girofacile_brand:transferCheckedV78("tpBrandV78"),
-    fields:collectTransferFieldsV78(), services:transferValV78("tpServicesV78").split(/\n|,/).map(x=>x.trim()).filter(Boolean)
-  };
-}
-
-function previewFieldV78(data,key,label,full=false){ const state=data.fields?.[key]||"visible"; if(state==='hidden') return ""; return `<div class="tp-preview-field-v78 ${full?'full':''}"><label>${label}${state==='required'?' *':''}</label><div></div></div>`; }
-function updateTransferPreviewV78(){
-  const data=transferPreviewDataV78(), host=document.getElementById("tpPreviewContentV78"), device=document.getElementById("tpPreviewDeviceV78"); if(!host||!device) return;
-  const url=document.getElementById("tpPreviewUrlV78"); if(url) url.textContent=`girofacile.it/prenota/${data.public_slug}`;
-  const publicLink=document.getElementById("tpPublicLinkV78"); if(publicLink) publicLink.textContent=`/prenota/${data.public_slug} · ${data.portal_status==='published'?'Pubblicato':data.portal_status==='closed'?'Chiuso':'Bozza'}`;
-  device.className=`transfer-preview-device-v78 ${gfTransferPreviewModeV78==='mobile'?'mobile':'desktop'}`;
-  if(gfTransferPreviewModeV78==='email'){
-    host.innerHTML=`<div class="tp-preview-email-v78" style="--tp-primary:${data.primary_color}"><div class="tp-email-card-v78"><div class="tp-email-head-v78">${data.logo_data_url?`<img src="${data.logo_data_url}">`:''}<strong>${transferEscV78(data.company_name)}</strong></div><div class="tp-email-body-v78"><h2>Richiesta di prenotazione ricevuta</h2><p>Gentile cliente,</p><p>${transferEscV78(data.confirmation_message||'La tua richiesta è stata ricevuta.')}</p><div class="tp-email-summary-v78"><strong>Riepilogo corsa</strong><br>Napoli Centro → Aeroporto di Napoli<br>15 luglio · 10:30 · 2 passeggeri</div><p>Ti contatteremo per la conferma definitiva.</p><p><strong>${transferEscV78(data.company_name)}</strong><br>${transferEscV78(data.phone)} ${transferEscV78(data.email)}</p></div></div></div>`;
-    return;
-  }
-  host.innerHTML=`<div class="tp-preview-page-v78 theme-${data.theme}" style="--tp-primary:${data.primary_color};--tp-button:${data.button_color};--tp-text:${data.text_color};--tp-bg:${data.background_color};--tp-hero:url('${String(data.hero_image_data_url||'').replace(/'/g,"\\'")}')"><div class="tp-preview-hero-v78 ${data.hero_image_data_url?'with-image':''}"><div class="tp-preview-brand-v78">${data.logo_data_url?`<img src="${data.logo_data_url}">`:''}<span>${transferEscV78(data.company_name)}</span></div><h2>${transferEscV78(data.title)}</h2><p>${transferEscV78(data.subtitle)}</p></div><div class="tp-preview-form-wrap-v78"><div class="tp-preview-form-v78"><p>${transferEscV78(data.intro_text)}</p><div class="tp-preview-grid-v78"><div class="tp-preview-field-v78"><label>Nome e cognome *</label><div></div></div>${previewFieldV78(data,'phone','Telefono')}${previewFieldV78(data,'email','Email')}<div class="tp-preview-field-v78 full"><label>Luogo di partenza *</label><div></div></div><div class="tp-preview-field-v78 full"><label>Destinazione *</label><div></div></div><div class="tp-preview-field-v78"><label>Data *</label><div></div></div><div class="tp-preview-field-v78"><label>Ora *</label><div></div></div>${previewFieldV78(data,'passengers','Passeggeri')}${previewFieldV78(data,'luggage','Bagagli')}<div class="tp-preview-field-v78"><label>Tipo di servizio</label><div></div></div>${previewFieldV78(data,'flight_train','Volo / treno')}<div class="tp-preview-submit-v78">Invia richiesta di prenotazione</div></div></div></div><div class="tp-preview-footer-v78">${transferEscV78(data.footer_text)}${data.show_girofacile_brand?' · Powered by GiroFacile':''}</div></div>`;
-  const state=document.getElementById("tpSaveStateV78"); if(state) state.textContent="Modifiche non salvate";
-  refreshTransferShareV85();
-}
-
-function setTransferPreviewModeV78(mode,button){ gfTransferPreviewModeV78=mode; document.querySelectorAll("[data-transfer-preview]").forEach(x=>x.classList.toggle("active",x.dataset.transferPreview===mode)); updateTransferPreviewV78(); }
-
-async function saveTransferPortalV78(statusOverride=null){
-  const payload=transferPreviewDataV78(); if(statusOverride) payload.portal_status=statusOverride;
-  try{ const res=await api("/api/transfer/booking-portal",{method:"PUT",body:JSON.stringify(payload)}); gfTransferPortalV78=res.settings; transferSetV78("tpSlugV78",res.settings.public_slug); transferSetV78("tpStatusV78",res.settings.portal_status); updateTransferPreviewV78(); const state=document.getElementById("tpSaveStateV78"); if(state) state.textContent="Salvato nel database"; toast(res.message||"Portale aggiornato"); }
-  catch(e){ alert(e.message||"Errore durante il salvataggio"); }
-}
-function openTransferPortalPublicV78(){ const slug=transferValV78("tpSlugV78")||gfTransferPortalV78?.public_slug; if(!slug){ alert("Salva prima il portale."); return; } window.open(`/prenota/${encodeURIComponent(slug)}`,"_blank"); }
-
-
-
-
-
-
 // v89.3 - salvataggio manuale della pagina Impostazioni
 let gfSettingsDirtyV893=false;
 function toggleSettingsDetail(button){
@@ -5269,10 +5047,8 @@ window.saveUniversalFeaturesV89=saveUniversalFeaturesV89;
 const gfApplyLogisticsLegacyV89=window.applyLogisticsWorkspaceV50;
 window.applyLogisticsWorkspaceV50=function(){
   // Neutralizza classi/etichette verticali legacy.
-  ['sector-logistics-v50','sector-ecommerce-v51','sector-food-v53','sector-transfer-v54','sector-healthcare-v55'].forEach(c=>document.body.classList.remove(c));
+  ['sector-logistics-v50','sector-ecommerce-v51','sector-food-v53','sector-healthcare-v55'].forEach(c=>document.body.classList.remove(c));
   document.querySelectorAll('[data-sector-only]').forEach(el=>{el.classList.add('hidden');el.style.display='none';});
-  ['gfMobileTransferPortalBtnV78','gfMobileTransferBookingsBtnV79','gfMobileTransferPlanningBtnV79','gfMobileTransferSettingsBtnV79','gfMobileTransferAdminDriverBtnV79'].forEach(id=>{const el=document.getElementById(id);if(el){el.classList.add('hidden');el.style.display='none';}});
-  const transferDash=document.getElementById('transferDashboardV84'); if(transferDash){transferDash.classList.add('hidden');transferDash.style.display='none';}
   const title=document.querySelector('#tab-dashboard .dash-hero-row h1'); if(title)title.textContent='Dashboard';
   const sub=document.querySelector('#tab-dashboard .dash-hero-row p'); if(sub)sub.textContent='Panoramica operativa delle consegne e dell’attività aziendale.';
   const btn=document.querySelector('#tab-dashboard .dash-hero-row .btn-primary'); if(btn)btn.textContent='+ Nuovo giro';
