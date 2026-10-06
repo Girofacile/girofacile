@@ -35,7 +35,6 @@ LOGIN_PATHS = {
     "/api/admin/login",
     "/api/driver/login",
     "/api/agent/login",
-    "/api/transfer/driver/login",
 }
 
 _attempts: dict[str, deque[float]] = defaultdict(deque)
