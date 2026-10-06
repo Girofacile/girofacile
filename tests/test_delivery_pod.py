@@ -171,9 +171,10 @@ def test_mime_mismatch_and_signature_dimensions():
         normalize_image(image_data(size=(6000, 5000)), 'signature')
 
 
-def test_real_s3_adapter_uses_private_acl_and_temporary_get(monkeypatch):
+def test_real_s3_adapter_uses_private_bucket_and_temporary_get(monkeypatch):
     from app.services.object_storage import ObjectStorage, object_key
     from botocore.stub import Stubber
+    monkeypatch.setenv('APP_ENV', 'production')
     for name, value in {'ENABLED':'true','ENDPOINT':'https://fsn1.your-objectstorage.com',
         'REGION':'fsn1','BUCKET':'test-pod','ACCESS_KEY':'test','SECRET_KEY':'test','SIGNED_URL_SECONDS':'900'}.items():
         monkeypatch.setenv('OBJECT_STORAGE_' + name, value)
@@ -184,10 +185,60 @@ def test_real_s3_adapter_uses_private_acl_and_temporary_get(monkeypatch):
         stub.add_response('get_bucket_acl', {'Grants': []}, {'Bucket':'test-pod'})
         stub.add_client_error('get_bucket_policy', service_error_code='NoSuchBucketPolicy', expected_params={'Bucket':'test-pod'})
         stub.add_response('put_object', {}, {'Bucket':'test-pod','Key':key,'Body':raw,
-            'ContentType':'image/png','ACL':'private','Metadata':{'sha256':hashlib.sha256(raw).hexdigest()}})
+            'ContentType':'image/png','Metadata':{'sha256':hashlib.sha256(raw).hexdigest()}})
         storage.upload(key, raw, 'image/png')
     url = storage.signed_url(key, 'image/png')
     assert 'X-Amz-Expires=900' in url and 'X-Amz-Signature=' in url
+
+
+def test_local_filesystem_storage_and_expiring_link(monkeypatch, tmp_path):
+    from urllib.parse import parse_qs, urlsplit
+    from app.services.object_storage import LocalObjectStorage, serve_local_object
+    monkeypatch.setenv('APP_ENV', 'development')
+    monkeypatch.setenv('OBJECT_STORAGE_ENABLED', 'true')
+    monkeypatch.setenv('OBJECT_STORAGE_BACKEND', 'local')
+    monkeypatch.setenv('OBJECT_STORAGE_LOCAL_PATH', str(tmp_path / 'pod'))
+    monkeypatch.setenv('OBJECT_STORAGE_LOCAL_SECRET', 'local-test-secret')
+    storage = LocalObjectStorage()
+    storage.verify_configuration()
+    key = 'companies/1/routes/2/deliveries/3/signature-' + 'a'*32 + '.png'
+    storage.upload(key, b'png-bytes', 'image/png')
+    assert storage.read(key) == b'png-bytes'
+    url = storage.signed_url(key, 'image/png')
+    assert url.startswith('/api/pod-local?')
+    params = {k:v[0] for k,v in parse_qs(urlsplit(url).query).items()}
+    response = serve_local_object(params['key'], params['exp'], params['dl'], params['sig'])
+    assert response.media_type == 'image/png'
+    assert str(response.path).endswith('.png')
+
+
+def test_local_storage_is_rejected_in_production(monkeypatch, tmp_path):
+    from app.services.object_storage import get_storage
+    monkeypatch.setenv('APP_ENV', 'production')
+    monkeypatch.setenv('OBJECT_STORAGE_ENABLED', 'true')
+    monkeypatch.setenv('OBJECT_STORAGE_BACKEND', 'local')
+    monkeypatch.setenv('OBJECT_STORAGE_LOCAL_PATH', str(tmp_path / 'pod'))
+    monkeypatch.setenv('OBJECT_STORAGE_LOCAL_SECRET', 'local-test-secret')
+    with pytest.raises(HTTPException) as exc:
+        get_storage()
+    assert exc.value.status_code == 503
+
+
+def test_http_s3_endpoint_is_rejected(monkeypatch):
+    from app.services.object_storage import ObjectStorage
+    monkeypatch.setenv('APP_ENV', 'development')
+    for name, value in {
+        'ENABLED':'true',
+        'ENDPOINT':'http://127.0.0.1:9000',
+        'REGION':'us-east-1',
+        'BUCKET':'girofacile-pod-local',
+        'ACCESS_KEY':'test',
+        'SECRET_KEY':'test',
+    }.items():
+        monkeypatch.setenv('OBJECT_STORAGE_' + name, value)
+    with pytest.raises(HTTPException) as exc:
+        ObjectStorage()
+    assert exc.value.status_code == 503
 
 
 def test_migration_adds_metadata_idempotently_preserves_legacy(env):
@@ -213,14 +264,25 @@ def test_pdf_text_and_long_notes(env, storage):
     from types import SimpleNamespace
     PdfReader = pytest.importorskip("pypdf").PdfReader
     _, db, owner, route, delivery, _ = setup_portals(env)
+    owner.company_name = 'PICCOLO'
+    owner.company_vat = '01234567890'
+    owner.company_address = 'Corso Umberto I 135'
+    owner.company_city = 'Torre Annunziata'
+    owner.company_phone = '+39 081 1234567'
+    owner.company_email = 'info@example.test'
+    owner.company_logo_url = image_data('PNG')
     from datetime import datetime
     state = SimpleNamespace(completata_il=datetime(2026,10,4,10,30), signed_by_name='Mario Rossi',
         signed_at=datetime(2026,10,4,10,29), note_operatore='merce ricevuta', signature_note='<script> & ' + 'Nota lunga ' * 150)
     raw = generate_pod(route, delivery, state, owner, base64.b64decode(image_data().split(',')[1]),
                        base64.b64decode(image_data('JPEG').split(',')[1]))
-    text = '\n'.join(page.extract_text() for page in PdfReader(io.BytesIO(raw)).pages)
-    assert 'Consegna completata' in text and 'Mario Rossi' in text and 'merce ricevuta' in text
-    assert 'certificazione legale' in text
+    reader = PdfReader(io.BytesIO(raw))
+    assert len(reader.pages) == 1
+    text = '\n'.join(page.extract_text() for page in reader.pages)
+    assert 'Prova di consegna' in text and 'Consegna completata' in text
+    assert 'PICCOLO' in text and '01234567890' in text
+    assert 'Mario Rossi' in text and 'merce ricevuta' in text
+    assert 'Pagina 1 di 1' in text and 'certificazione legale' in text
 
 
 def test_signature_replacement_cleans_only_after_commit_and_retains_legacy(env, storage):

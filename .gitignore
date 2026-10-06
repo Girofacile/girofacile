@@ -29,6 +29,7 @@ ENV/
 *.osm.pbf
 *.osrm*
 data/osrm/
+data/pod_storage/
 data/*.db
 data/*.sqlite*
 
