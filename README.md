@@ -20,3 +20,6 @@ non modifica il database e il server rifiuta uno schema non aggiornato.
 
 Le correzioni, i criteri dei report e le indicazioni di compatibilità sono in
 [Correzioni audit del 4 ottobre 2026](docs/audit-fixes-2026-10-04.md).
+
+La [roadmap di chiusura V1](docs/roadmap-v1.md) definisce priorità, attività,
+criteri di collaudo e condizioni per il primo rilascio ai clienti.
