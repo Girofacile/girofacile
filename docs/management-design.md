@@ -41,8 +41,8 @@ Anche i dialoghi aperti dalle pagine protette vengono uniformati, come richiesto
   notifiche e menu mobile.
 
 I quattro tab amministrativi legacy presenti nel template aderiscono alla base
-comune, ma non vengono riattivati. Le pagine transfer legacy sono esplicitamente
-reindirizzate alla Dashboard dal codice esistente. Non vengono ripristinate.
+comune, ma non vengono riattivati. Le verticalizzazioni dismesse non fanno più
+parte della navigazione o dei flussi operativi.
 Portali autista/agente/operatore, applicazione mobile separata, sito pubblico e
 console Super Admin sono applicazioni distinte dalla shell aziendale interessata.
 
