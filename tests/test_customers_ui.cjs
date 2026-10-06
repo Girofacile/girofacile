@@ -25,10 +25,11 @@ test('directory loads beyond one API batch and discards stale responses',async()
   let resolve;f.ctx.api=()=>new Promise(r=>resolve=r);
   const old=f.run('refreshCustomerDirectory()');f.ctx.api=async()=>[{id:2000}];await f.run('refreshCustomerDirectory()');resolve([{id:3}]);await old;assert.equal(f.ctx.customersCache[0].id,2000);
 });
-test('page selection affects only visible rows and refresh removes deleted selections',async()=>{
-  const f=fixture();f.run('customerDirectory.rows=Array.from({length:12},(_,id)=>({id}));customerDirectory.page=2;selectCustomerPage(true)');
-  assert.equal(f.run('customerDirectory.selected.size'),4);assert.equal(f.run('customerDirectory.selected.has(0)'),false);
-  f.ctx.api=async()=>[{id:10}];await f.run('refreshCustomerDirectory()');assert.equal(f.run('customerDirectory.selected.size'),1);
+test('customer directory has no row-selection controls',()=>{
+  const html=fs.readFileSync('static/dashboard/index.html','utf8');
+  const js=fs.readFileSync('static/dashboard/js/customers.js','utf8');
+  assert.doesNotMatch(html,/customerSelectAll|customerSelection|customer-checkbox/);
+  assert.doesNotMatch(js,/selectCustomerPage|selectDirectoryCustomer|clearCustomerSelection|type="checkbox"/);
 });
 
 
