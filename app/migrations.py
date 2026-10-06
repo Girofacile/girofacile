@@ -65,14 +65,17 @@ def run_migrations(engine):
                 with engine.begin() as conn:
                     DeliveryTrackingLink.__table__.create(conn, checkfirst=True)
                     conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261004_04', 'now': datetime.utcnow()})
-            if '20261005_01' not in applied:
+            if '20261005_01' not in applied and LATEST not in applied:
+                # Fresh installs can apply this structural step as part of the
+                # current schema without recording an otherwise redundant
+                # intermediate version. Existing upgraded databases keep their
+                # historical 20261005_01 marker untouched.
                 from .models import RoutePosition
                 with engine.begin() as conn:
                     inspector = inspect(conn)
                     required_tables = ('route_plans', 'drivers', 'deliveries')
                     if all(inspector.has_table(name) for name in required_tables):
                         RoutePosition.__table__.create(conn, checkfirst=True)
-                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261005_01', 'now': datetime.utcnow()})
             if LATEST not in applied:
                 with engine.begin() as conn:
                     inspector = inspect(conn)
