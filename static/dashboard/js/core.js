@@ -3204,6 +3204,7 @@ function renderRouteResult(r, targetId="routeResult", fromHistory=false){
       </aside>
     </div>
   </section>`;
+  window.GFPreview?.decorate(target);
   if(r.id){ setTimeout(()=>renderRouteGoogleMapV74(r.id, `routeGoogleMapV74_${r.id}`), 120); }
 }
 

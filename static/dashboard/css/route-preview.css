@@ -1,4 +1,4 @@
-/* Route preview: six metrics, stops and map, separate scheduling summary. */
+/* Route preview: costs, six metrics, full-width stops, map and quick actions. */
 .route-preview-design { font-family:Arial,Helvetica,sans-serif;color:#0d1538;min-width:0; }
 .route-preview-design .preview-breadcrumb { display:flex;align-items:center;gap:14px;color:#425d86;font-size:13px;margin:0 0 27px; }
 .route-preview-design .preview-breadcrumb button { padding:0;border:0;background:none;color:inherit;font:inherit;cursor:pointer; }
@@ -84,4 +84,86 @@
  .route-preview-design .preview-panel-heading,.route-preview-design .route-map-head-v74 { flex-wrap:wrap; }
  .route-preview-design .preview-breadcrumb { margin-bottom:18px; }
  .route-preview-design .result-header h2 { font-size:26px; }
+}
+
+/* Reference layout, October 2026. Scoped to the preview component. */
+#app #tab-route-preview .route-preview-design .preview-breadcrumb{margin:0 0 10px;max-width:100%;min-height:20px;font-size:13px;gap:15px}
+#app #tab-route-preview .route-preview-design .result-header{margin:0 0 20px;min-height:62px;padding:0}
+#app #tab-route-preview .route-preview-design .result-header h2{font-size:30px;line-height:1.2;letter-spacing:-.65px;margin:0 0 7px}
+#app #tab-route-preview .route-preview-design .result-header p{font-size:14px;color:#405c90;font-weight:500}
+#app #tab-route-preview .route-preview-design .gf-routing-summary{display:block;border:0;padding:0;background:none;box-shadow:none;margin:0 0 13px}
+#app #tab-route-preview .route-preview-design .gf-routing-costs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin:0}
+#app #tab-route-preview .route-preview-design .gf-routing-costs>div{display:flex;flex-direction:row;align-items:center;gap:22px;min-height:90px;padding:16px 20px;border:1px solid #e4edfa;border-radius:12px;background:#ffffffed;min-width:0}
+#app #tab-route-preview .route-preview-design .gf-routing-costs>div>div{min-width:0}
+#app #tab-route-preview .route-preview-design .gf-routing-costs span:not(.preview-cost-icon){font-size:12px;font-weight:600;color:#3e5688;display:block;margin-bottom:5px}
+#app #tab-route-preview .route-preview-design .gf-routing-costs strong{font-size:19px;font-weight:750;line-height:1.25;color:#0b1338;display:block}
+#app #tab-route-preview .route-preview-design .gf-routing-costs small{font-size:11px;line-height:1.4;color:#54709e;display:block;margin-top:4px}
+#app #tab-route-preview .route-preview-design .preview-cost-icon{display:grid;place-items:center;width:54px;height:54px;flex:0 0 54px;border-radius:50%}
+#app #tab-route-preview .route-preview-design .preview-cost-icon svg{width:27px;height:27px}
+#app #tab-route-preview .route-preview-design .preview-cost-icon.red{background:#fff0f3;color:#ff182b}
+#app #tab-route-preview .route-preview-design .preview-cost-icon.green{background:#e4f8ee;color:#00a858}
+#app #tab-route-preview .route-preview-design .preview-cost-icon.orange{background:#fff5e7;color:#ff8b00}
+#app #tab-route-preview .route-preview-design .result-cards{grid-template-columns:repeat(6,minmax(0,1fr));gap:13px;margin-bottom:14px}
+#app #tab-route-preview .route-preview-design .mini-card{min-height:79px;padding:13px 17px;gap:18px;border-radius:12px}
+#app #tab-route-preview .route-preview-design .mini-card>div{min-width:0}
+#app #tab-route-preview .route-preview-design .mini-card small{display:block;font-size:12px;font-weight:400;margin-bottom:6px}
+#app #tab-route-preview .route-preview-design .mini-card strong{font-size:20px;white-space:normal;overflow-wrap:anywhere}
+#app #tab-route-preview .route-preview-design .mini-card:nth-child(5) .mini-icon{background:#fff0f3;color:#ff182b}
+#app #tab-route-preview .route-preview-design .mini-icon.purple{background:#f5ecff;color:#9018ff}
+#app #tab-route-preview .route-preview-design .mini-icon.orange{background:#fff5e7;color:#ff8b00}
+#app #tab-route-preview .route-preview-design .mini-icon.green{background:#e9faf2;color:#00ab5f}
+#app #tab-route-preview .route-preview-design .stops-panel{padding:8px 12px 12px;margin:0 0 13px;border-radius:12px}
+#app #tab-route-preview .route-preview-design .preview-panel-heading{margin-bottom:6px;gap:12px;min-height:38px}
+#app #tab-route-preview .route-preview-design .preview-heading-copy{gap:12px}
+#app #tab-route-preview .route-preview-design .preview-section-icon{width:40px;height:40px;flex-basis:40px;border-radius:11px;color:#0065ff;background:#ebf5ff}
+#app #tab-route-preview .route-preview-design .preview-panel-heading .preview-heading-copy>div{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+#app #tab-route-preview .route-preview-design .preview-panel-heading p{margin:0;padding:5px 12px;border-radius:20px;background:#eaf4ff;color:#0064ff;font-size:12px;font-weight:600}
+#app #tab-route-preview .route-preview-design :is(.stops-panel,.route-map-panel-v74,.result-summary-card) h3{font-size:17px;line-height:1.25;letter-spacing:-.2px}
+#app #tab-route-preview .route-preview-design .tableWrap{border-radius:11px}
+#app #tab-route-preview .route-preview-design .result-table{min-width:850px}
+#app #tab-route-preview .route-preview-design .result-table th{padding:11px 13px;font-size:11px;font-weight:500;background:#f5f8fd}
+#app #tab-route-preview .route-preview-design .result-table td{padding:10px 13px;font-size:12px;line-height:1.4;background:#fff}
+#app #tab-route-preview .route-preview-design .result-table td:nth-child(2){width:16%}
+#app #tab-route-preview .route-preview-design .result-table td:nth-child(3){width:23%}
+#app #tab-route-preview .route-preview-design .result-table td small{font-size:11px}
+#app #tab-route-preview .route-preview-design .drag-handle{display:inline-grid;place-items:center;background:#f1f6fe;color:#7994bf;width:26px;height:27px;border-radius:8px;margin-right:9px;vertical-align:middle}
+#app #tab-route-preview .route-preview-design .drag-handle svg{width:18px;height:18px;stroke-width:1.5}
+#app #tab-route-preview .route-preview-design .stop-order{width:30px;height:30px;background:#edf5ff;font-size:14px;color:#0d183b}
+#app #tab-route-preview .route-preview-design .result-layout{display:grid;grid-template-columns:minmax(0,1fr) 285px;gap:13px;align-items:stretch}
+#app #tab-route-preview .route-preview-design .route-map-panel-v74{padding:8px 12px 12px;border-radius:12px}
+#app #tab-route-preview .route-preview-design .route-map-head-v74{margin-bottom:9px}
+#app #tab-route-preview .route-preview-design .route-map-head-v74 p{font-size:12px;margin-top:3px}
+#app #tab-route-preview .route-preview-design .route-google-map-v74{height:205px;min-height:205px;border-radius:10px}
+#app #tab-route-preview .route-preview-design .route-map-note-v74{font-size:10px;margin-top:5px}
+#app #tab-route-preview .route-preview-design .result-summary-card{position:static;padding:10px 12px;border-radius:12px;display:flex;flex-direction:column;gap:7px}
+#app #tab-route-preview .route-preview-design .result-summary-card>.preview-heading-copy{margin:0 0 2px;gap:10px}
+#app #tab-route-preview .route-preview-design .result-summary-card>.preview-heading-copy p{margin:3px 0 0;font-size:11px}
+#app #tab-route-preview .route-preview-design .result-summary-card>.preview-heading-copy .preview-section-icon{width:32px;height:37px;flex-basis:32px}
+#app #tab-route-preview .route-preview-design .result-summary-card>.btn-secondary,#app #tab-route-preview .route-preview-design .preview-program{display:flex;align-items:center;justify-content:flex-start;width:100%;gap:13px;min-height:39px;padding:8px 12px;margin:0;font-size:12px;border-radius:8px;font-weight:600;text-decoration:none}
+#app #tab-route-preview .route-preview-design .result-summary-card>.btn-secondary{color:#143f85}
+#app #tab-route-preview .route-preview-design .result-summary-card>a svg:last-child{margin-left:auto;width:17px;height:17px}
+#app #tab-route-preview .route-preview-design .preview-program{justify-content:center;background:linear-gradient(#1675ff,#005bff);color:white;min-height:43px;box-shadow:0 4px 9px #0064ff20}
+#app #tab-route-preview .route-preview-design .preview-program svg{width:25px;height:25px}
+#app #tab-route-preview .route-preview-design .preview-map-jump{min-height:37px;padding:7px 18px;border-radius:8px;color:#28457d}
+#app #tab-route-preview .route-preview-design .preview-extra{margin-top:3px;padding-top:6px}
+#app #tab-route-preview .route-preview-design .preview-extra summary{font-size:11px}
+#app #tab-route-preview .route-preview-design .gf-routing-eta{margin-top:12px;font-size:12px}
+#app #tab-route-preview .route-preview-design .alerts-panel{margin-bottom:13px}
+@media(max-width:1200px){
+ #app #tab-route-preview .route-preview-design .result-cards{grid-template-columns:repeat(3,minmax(0,1fr))}
+ #app #tab-route-preview .route-preview-design .gf-routing-costs>div{gap:12px;padding:14px}
+ #app #tab-route-preview .route-preview-design .gf-routing-costs strong{font-size:17px}
+}
+@media(max-width:850px){
+ #app #tab-route-preview .route-preview-design .result-layout{grid-template-columns:minmax(0,1fr)}
+ #app #tab-route-preview .route-preview-design .gf-routing-costs{grid-template-columns:1fr}
+ #app #tab-route-preview .route-preview-design .result-header h2{font-size:27px}
+}
+@media(max-width:600px){
+ #app #tab-route-preview .route-preview-design .result-cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ #app #tab-route-preview .route-preview-design .mini-card{padding:12px;gap:9px}
+ #app #tab-route-preview .route-preview-design .mini-card strong{font-size:18px}
+ #app #tab-route-preview .route-preview-design .preview-panel-heading .preview-heading-copy>div{gap:6px}
+ #app #tab-route-preview .route-preview-design .preview-panel-heading{flex-wrap:wrap}
+ #app #tab-route-preview .route-preview-design .route-google-map-v74{height:240px;min-height:240px}
 }
