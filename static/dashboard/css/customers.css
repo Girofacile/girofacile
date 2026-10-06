@@ -40,10 +40,8 @@
 #tab-clienti .customer-table td{padding:10px 13px;height:62px;box-sizing:border-box;border-bottom:1px solid #edf0f5;color:#344156;vertical-align:middle;background:transparent;font-size:13px;line-height:1.45}
 #tab-clienti .customer-table tr:last-child td{border-bottom:0}
 #tab-clienti .customer-table tr:hover{background:#f7faff}
-#tab-clienti .customer-table tr.is-selected{background:#eff6ff}
 #tab-clienti .customer-table td strong{display:block;font-size:13.5px;font-weight:750;color:#101c33;line-height:1.4}
 #tab-clienti .customer-table td small{display:block;font-size:12px;color:#697589;margin-top:4px;line-height:1.35}
-#tab-clienti .customer-table .customer-checkbox{width:44px;text-align:center;padding:8px 12px}
 #tab-clienti input[type="checkbox"]{width:16px;height:16px;margin:0;vertical-align:middle;accent-color:#0866ff;cursor:pointer}
 #tab-clienti .customer-unloading{white-space:nowrap;color:#7a8495}
 #tab-clienti .customer-status,.customer-details-dialog .customer-status{display:inline-flex;align-items:center;gap:7px;border-radius:999px;font-size:12px;font-weight:700;padding:6px 10px;white-space:nowrap}
@@ -60,8 +58,6 @@
 #tab-clienti #customerPagination button[aria-current="page"]{background:linear-gradient(135deg,#147cff,#0c60ee);color:#fff;border-color:#1871ef;box-shadow:0 2px 4px #1671ef22}
 #tab-clienti #customerPagination button:disabled{opacity:.45;cursor:default}
 #tab-clienti .customer-empty{text-align:center;padding:40px!important;color:#7a8495}
-#tab-clienti .customer-selection{padding:8px 0 14px;color:#2470ca;font-size:12px}
-#tab-clienti .customer-selection button{margin-left:10px;border:0;background:none;color:inherit;text-decoration:underline}
 #tab-clienti .customer-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
 #tab-clienti .customer-card{padding:16px;border:1px solid #e8ebf1;border-radius:10px;background:#fff;min-width:0}
 #tab-clienti .customer-card-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;color:#697589}
@@ -99,10 +95,11 @@
   #tab-clienti input[type="checkbox"]{border-radius:4px!important}
 }
 #tab-clienti .customer-row-actions button{margin:0}
-#tab-clienti .customer-table th:nth-child(3){width:22%}
-#tab-clienti .customer-table th:nth-child(4){width:30%}
-#tab-clienti .customer-table th:nth-child(5){width:9%}
-#tab-clienti .customer-table th:nth-child(6){width:13%}
+#tab-clienti .customer-table th:nth-child(1){width:8%}
+#tab-clienti .customer-table th:nth-child(2){width:23%}
+#tab-clienti .customer-table th:nth-child(3){width:33%}
+#tab-clienti .customer-table th:nth-child(4){width:10%}
+#tab-clienti .customer-table th:nth-child(5){width:13%}
 #tab-clienti .customer-table th:last-child{width:205px;text-align:right}
 #tab-clienti .customer-table td:last-child{text-align:right}
 @media(min-width:1101px){
