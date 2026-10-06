@@ -123,18 +123,6 @@ def migrate_database():
         add_column("route_plans", "completed_at", sql_type(DateTime()))
         add_column("route_plans", "cancelled_at", sql_type(DateTime()))
 
-    if insp.has_table("transfer_booking_requests"):
-        add_column("transfer_booking_requests", "driver_id", sql_type(Integer()))
-        add_column("transfer_booking_requests", "vehicle_id", sql_type(Integer()))
-        add_column("transfer_booking_requests", "assignment_status", sql_type(String(30)), "'unassigned'")
-        add_column("transfer_booking_requests", "assigned_at", sql_type(DateTime()))
-        add_column("transfer_booking_requests", "accepted_at", sql_type(DateTime()))
-        add_column("transfer_booking_requests", "rejected_at", sql_type(DateTime()))
-        add_column("transfer_booking_requests", "estimated_minutes", sql_type(Integer()))
-        add_column("transfer_booking_requests", "estimated_km", sql_type(Float()))
-        add_column("transfer_booking_requests", "admin_note", sql_type(Text()))
-        add_column("transfer_booking_requests", "booking_source", sql_type(String(120)))
-
     if insp.has_table("drivers"):
         add_column("drivers", "is_admin_driver", sql_type(Boolean()), "0" if dialect.name == "sqlite" else "false")
 
