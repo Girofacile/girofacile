@@ -1133,26 +1133,6 @@ async function startChatBadgePoll() {
 boot();
 
 
-async function loadTransferRunsV79(){
-  try{
-    const rows=await api('/api/driver/transfer-bookings');
-    const sec=document.getElementById('transferRunsSectionV79'), host=document.getElementById('transferRunsListV79'), count=document.getElementById('transferRunsCountV79');
-    if(!sec||!host)return;
-    sec.classList.toggle('hidden',!rows.length); if(count)count.textContent=`${rows.length} corse`;
-    host.innerHTML=rows.map(r=>`<div style="background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:14px;margin-bottom:10px;box-shadow:0 8px 20px rgba(15,23,42,.04)">
-      <div style="display:flex;justify-content:space-between;gap:10px"><div><b style="font-size:17px">${esc(r.pickup_time)} · ${esc(r.customer_name)}</b><div style="font-size:12px;color:#64748b;margin-top:3px">${esc(r.pickup_date)} · ${esc(r.status||'proposed')}</div></div><span style="font-size:12px;background:#eff6ff;color:#1d4ed8;padding:5px 8px;border-radius:999px;height:max-content">${esc(r.service_type||'Transfer')}</span></div>
-      <div style="margin:12px 0;font-size:14px"><b>${esc(r.pickup_address)}</b><div style="color:#94a3b8;margin:3px 0">↓</div><b>${esc(r.destination_address)}</b></div>
-      <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px"><span class="meta-pill">👥 ${r.passengers||1}</span>${r.phone?`<a class="meta-pill" href="tel:${esc(r.phone)}">☎ Chiama</a>`:''}${r.vehicle_name?`<span class="meta-pill">🚘 ${esc(r.vehicle_name)}</span>`:''}</div>
-      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:7px">
-        ${['proposed','new','pending'].includes(r.status)?`<button class="btn-confirm green" onclick="updateTransferRunV79(${r.id},'accepted')">Accetta</button><button class="btn-confirm" style="background:#fee2e2;color:#991b1b" onclick="updateTransferRunV79(${r.id},'rejected')">Rifiuta</button>`:''}
-        ${r.status==='accepted'?`<button class="btn-confirm" onclick="openTransferNavigationV79('${encodeURIComponent(r.pickup_address)}')">Naviga al cliente</button><button class="btn-confirm green" onclick="updateTransferRunV79(${r.id},'arrived')">Sono arrivato</button>`:''}
-        ${r.status==='arrived'?`<button class="btn-confirm green" onclick="updateTransferRunV79(${r.id},'passenger_on_board')">Passeggero a bordo</button>`:''}
-        ${['passenger_on_board','in_progress'].includes(r.status)?`<button class="btn-confirm" onclick="openTransferNavigationV79('${encodeURIComponent(r.destination_address)}')">Naviga a destinazione</button><button class="btn-confirm green" onclick="updateTransferRunV79(${r.id},'completed')">Termina corsa</button>`:''}
-      </div></div>`).join('');
-  }catch(e){console.warn('Corse Transfer',e);}
-}
-async function updateTransferRunV79(id,status){try{await api(`/api/driver/transfer-bookings/${id}`,{method:'PUT',body:JSON.stringify({status})});await loadTransferRunsV79();}catch(e){alert(e.message||e)}}
-function openTransferNavigationV79(address){window.open(`https://www.google.com/maps/dir/?api=1&destination=${address}`,'_blank')}
 
 </script>
 </body>
