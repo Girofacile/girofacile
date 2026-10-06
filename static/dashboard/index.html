@@ -816,7 +816,7 @@
 </div>
         <section class="panel customer-list-panel-v8">
           <div class="panel-header customer-list-head"><div><h2>Elenco <span data-gf-label="customers">Clienti</span></h2><p class="panel-subtitle">Cerca rapidamente oppure apri i filtri avanzati quando servono.</p></div>
-          <button class="btn-danger" onclick="deleteAllCustomers()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/></svg>Elimina tutti i clienti</button></div>
+          </div>
           <div class="customer-searchbar-v8">
             <label class="customer-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="customerListSearch" aria-label="Cerca clienti" placeholder="Cerca cliente, codice o indirizzo..." oninput="filterCustomerList()"></label>
             <button id="customerFilterToggle" class="btn-secondary" onclick="toggleCustomerFilters()" aria-expanded="false" aria-controls="customerAdvancedFilters"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18l-7 8v7l-4 2V12Z"/></svg>Filtra</button>
@@ -1528,6 +1528,13 @@
       <textarea id="cNote" rows="4" placeholder="Note consegna"></textarea>
     </section>
 
+    <div id="customerDeleteSection" class="customer-delete-section hidden">
+      <div>
+        <strong>Elimina cliente</strong>
+        <p>Rimuove il cliente dall'anagrafica e dalla pianificazione futura.</p>
+      </div>
+      <button type="button" id="deleteCustomerBtn" class="customer-delete-danger" onclick="deleteCustomerFromModal()">Elimina cliente</button>
+    </div>
     <div class="actions-row delivery-modal-actions-v5">
       <button type="button" class="btn-secondary" onclick="closeCustomerModal()">Annulla</button>
       <button type="button" id="saveCustomerBtn" class="btn-primary" onclick="saveCustomer()">Salva cliente</button>
