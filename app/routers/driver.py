@@ -217,9 +217,9 @@ def get_driver_routes(da: DriverAccount = Depends(get_current_driver), db: Sessi
 
         today = local_today()
         current_status = r.status or "programmato"
-        can_start = r.data_giro == today and current_status in ("programmato", "bozza")
+        can_start = r.data_giro <= today and current_status in ("programmato", "bozza")
         before_time = False
-        if can_start and r.orario_partenza:
+        if can_start and r.data_giro == today and r.orario_partenza:
             try:
                 mins = minutes_from_hhmm(r.orario_partenza)
                 h, m = divmod(mins or 0, 60)
@@ -257,9 +257,12 @@ def start_route(route_id: int, da: DriverAccount = Depends(get_current_driver), 
         raise HTTPException(404, 'Giro non trovato')
     if route.status in ('annullato', 'completato'):
         raise HTTPException(409, 'Il giro è già chiuso')
-    if route.status != 'in_corso' and route.data_giro != local_today():
-        raise HTTPException(409, 'Puoi avviare il giro soltanto nel giorno programmato')
+    if route.status != 'in_corso' and route.data_giro > local_today():
+        raise HTTPException(409, 'Non puoi avviare un giro programmato per una data futura')
+    from ..services.route_execution import ensure_no_running_resource_conflict
     from ..services.usage_limits import start_route_usage
+    if route.status != 'in_corso':
+        ensure_no_running_resource_conflict(db, route)
     start_route_usage(db, route)
     db.commit()
     return {'ok': True}
