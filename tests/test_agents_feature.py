@@ -10,6 +10,9 @@ import pytest
 def env(monkeypatch, tmp_path):
     monkeypatch.setenv("DATABASE_URL", "sqlite://")
     monkeypatch.setenv("ALLOW_SQLITE_LEGACY", "true")
+    # Tests must never inherit a developer/server POD storage configuration.
+    # POD-specific tests enable an explicit FakeStorage when needed.
+    monkeypatch.setenv("OBJECT_STORAGE_ENABLED", "false")
     from fastapi import FastAPI
     from fastapi.testclient import TestClient
     from sqlalchemy import create_engine
