@@ -198,18 +198,6 @@ def update_customer(item_id: int, data: CustomerIn, db: Session = Depends(get_db
     return customer_to_dict(item)
 
 
-@router.delete("/all")
-def delete_all_customers(db: Session = Depends(get_db), user: User = Depends(current_user)):
-    now = datetime.utcnow()
-    count = owned(db.query(Customer), Customer, user).update(
-        {"is_active": False, "deleted_at": now},
-        synchronize_session=False,
-    )
-    db.commit()
-    dc.invalidate_company(db, user_id=user.id)
-    return {"ok": True, "archived": count}
-
-
 @router.delete("/{item_id}")
 def delete_customer(item_id: int, db: Session = Depends(get_db), user: User = Depends(current_user)):
     item = owned(db.query(Customer), Customer, user).filter(Customer.id == item_id).first()
