@@ -54,7 +54,7 @@ function customerStatusMarkup(x){
 }
 function customerActionsMarkup(x){
   const id=Number(x.id);
-  return `<div class="customer-row-actions"><button onclick="openCustomerModal(${id})">${customerIcons.edit}Modifica</button><button onclick="showCustomerDetails(${id})">${customerIcons.details}Dettagli</button><button class="customer-delete" aria-label="Elimina ${esc(x.nome)}" title="Elimina cliente" onclick="deleteCustomer(${id})">${customerIcons.delete}</button></div>`;
+  return `<div class="customer-row-actions"><button onclick="openCustomerModal(${id})">${customerIcons.edit}Modifica</button><button onclick="showCustomerDetails(${id})">${customerIcons.details}Dettagli</button></div>`;
 }
 function renderCustomerDirectory(){
   const body=document.getElementById('customersBody');if(!body)return;
