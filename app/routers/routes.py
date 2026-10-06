@@ -689,7 +689,7 @@ nel giro calcolato, adattando il linguaggio al settore aziendale.
     }
     prompt = """Spiega in italiano perché GiroFacile ha proposto questa sequenza di giro.
 Deve essere un testo molto breve, semplice e non tecnico, massimo 5 righe.
-Adatta le parole al settore: consegne per distribuzione/e-commerce/logistica/sanitario/food, corse/prenotazioni per transfer.
+Adatta le parole al settore aziendale usando termini coerenti con consegne, ordini, spedizioni o servizi sanitari.
 Non dire che l'AI ha calcolato il percorso: il percorso è calcolato da GiroFacile e dai servizi di routing collegati.
 Non inventare dati, usa solo ordine tappe, km, orari e vincoli presenti nel JSON.
 """
