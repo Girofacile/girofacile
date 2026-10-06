@@ -24,7 +24,7 @@
 <script src="/static/routing-summary.js"></script>
 <link rel="stylesheet" href="/static/dashboard/css/live-gps.css?v=live_20261006">
 <script src="/static/dashboard/js/live-gps.js?v=live_20261006"></script>
-<link href="/static/dashboard/css/deposits.css?v=deposit_layout_20261007_1" rel="stylesheet">
+<link href="/static/dashboard/css/deposits.css?v=deposit_views_20261007_1" rel="stylesheet">
 <link href="/static/dashboard/css/settings.css?v=sidebar_stable_20261001" rel="stylesheet">
 <link rel="stylesheet" href="/static/dashboard/css/electric-vehicles.css?v=electric_style_20261003">
 <script src="/static/dashboard/js/electric-vehicles.js?v=electric_bonus_20261002"></script>
@@ -1035,8 +1035,13 @@
         <section class="panel deposit-list-panel" aria-labelledby="depositListTitle">
           <div class="panel-header deposit-list-head">
             <div><h2 id="depositListTitle">Elenco depositi</h2><p class="panel-subtitle">Visualizza e gestisci tutti i depositi configurati.</p></div>
+            <div class="deposit-view-controls" role="group" aria-label="Vista depositi">
+              <button id="depositListView" class="btn-secondary" type="button" aria-label="Vista elenco" aria-pressed="true" onclick="setDepositView('list')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h1M3 12h1M3 18h1"/></svg></button>
+              <button id="depositGridView" class="btn-secondary" type="button" aria-label="Vista griglia" aria-pressed="false" onclick="setDepositView('grid')"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="15" y="3" width="6" height="6" rx="1"/><rect x="3" y="15" width="6" height="6" rx="1"/><rect x="15" y="15" width="6" height="6" rx="1"/></svg></button>
+            </div>
           </div>
-          <div class="tableWrap"><table class="deposit-table"><thead><tr><th scope="col">Nome</th><th scope="col">Indirizzo</th><th scope="col">Predefinito</th><th scope="col">Azioni</th></tr></thead><tbody id="depositsBody"><tr><td colspan="4" class="deposit-empty">Caricamento depositi...</td></tr></tbody></table></div>
+          <div id="depositTableWrap" class="tableWrap"><table class="deposit-table"><thead><tr><th scope="col">Nome</th><th scope="col">Indirizzo</th><th scope="col">Predefinito</th><th scope="col">Azioni</th></tr></thead><tbody id="depositsBody"><tr><td colspan="4" class="deposit-empty">Caricamento depositi...</td></tr></tbody></table></div>
+          <div id="depositCards" class="deposit-cards hidden" aria-live="polite"></div>
           <p id="depositListStatus" class="deposit-form-status hidden" role="status"></p>
         </section>
       </section>
@@ -1797,7 +1802,7 @@
 <script src="/static/dashboard/js/completed.js?v=20261006"></script>
 <script src="/static/dashboard/js/preview-design.js?v=20261006"></script>
 <script src="/static/dashboard/js/live-design.js?v=20261006"></script>
-<script src="/static/dashboard/js/core.js?v=deposit_modal_20261007_1"></script>
+<script src="/static/dashboard/js/core.js?v=deposit_views_20261007_1"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=1"></script>
 
 <script>
