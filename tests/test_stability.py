@@ -55,6 +55,36 @@ def test_signature_required_for_every_completion_portal(env, portal, monkeypatch
     assert route.status == 'completato'
 
 
+def test_running_route_from_previous_day_blocks_driver_and_vehicle_today(env):
+    from app.core.utils import local_today
+    from app.models import Vehicle
+    from app.routers.routes import _resource_busy_maps
+
+    _, db, owner, *_ = env
+    route, _, _ = seed_route(env)
+    vehicle = Vehicle(user_id=owner.id, nome='Furgone test', targa='TEST01')
+    db.add(vehicle)
+    db.flush()
+
+    today = local_today()
+    route.data_giro = today - timedelta(days=1)
+    route.orario_partenza = time(8, 0)
+    route.orario_rientro_stimato = time(11, 0)
+    route.totale_minuti = 180
+    route.started_at = datetime.combine(today, time(9, 0))
+    route.status = 'in_corso'
+    route.vehicle_id = vehicle.id
+    db.commit()
+
+    busy_drivers, busy_vehicles = _resource_busy_maps(
+        db, owner, today, 10 * 60, 11 * 60
+    )
+    assert route.driver_id in busy_drivers
+    assert route.vehicle_id in busy_vehicles
+    assert busy_drivers[route.driver_id]['active'] is True
+    assert busy_drivers[route.driver_id]['busy_date_from'] == today.isoformat()
+
+
 def test_operator_signature_optional_when_company_disables_it(env):
     from app.routers import operator
     client, db, owner, *_ = env
