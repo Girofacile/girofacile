@@ -26,6 +26,22 @@
 #tab-depositi .deposit-list-head{display:flex;align-items:flex-start;justify-content:space-between;margin:0 0 14px;padding:0;border:0}
 #tab-depositi .deposit-list-head h2{font-size:20px;font-weight:750;letter-spacing:-.45px;margin:0 0 4px}
 #tab-depositi .deposit-list-head .panel-subtitle{font-size:12px;color:#778295;line-height:1.5;margin:0}
+#tab-depositi .deposit-view-controls{display:flex;align-items:center;gap:4px;flex:0 0 auto}
+#tab-depositi .deposit-view-controls button{display:grid;place-items:center;width:46px;height:38px;min-height:0;padding:0;border:1px solid #e4e7ed;border-radius:9px;background:#fff;color:#657389;box-shadow:none}
+#tab-depositi .deposit-view-controls button svg{width:18px;height:18px}
+#tab-depositi .deposit-view-controls button[aria-pressed="true"]{border-color:#82b2f4;color:#2674dc;box-shadow:inset 0 0 0 1px #cee1fc;background:#f9fbff}
+#tab-depositi .deposit-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+#tab-depositi .deposit-cards.hidden{display:none}
+#tab-depositi .deposit-card{display:flex;flex-direction:column;min-width:0;min-height:210px;padding:17px;border:1px solid #e8ebf1;border-radius:12px;background:#fff;box-shadow:0 2px 8px #203b6605}
+#tab-depositi .deposit-card-heading{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#tab-depositi .deposit-card-icon{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:#edf4ff;color:#1670e8;flex:0 0 40px}
+#tab-depositi .deposit-card-icon svg{width:21px;height:21px}
+#tab-depositi .deposit-card h3{font-size:16px;line-height:1.35;color:#101c33;margin:18px 0 13px;overflow-wrap:anywhere}
+#tab-depositi .deposit-card-label{display:block;font-size:11px;font-weight:700;color:#8792a4;text-transform:uppercase;letter-spacing:.045em;margin-bottom:5px}
+#tab-depositi .deposit-card p{font-size:12px;line-height:1.5;color:#667387;margin:0;overflow-wrap:anywhere}
+#tab-depositi .deposit-card-actions{display:flex;justify-content:flex-end;margin-top:auto;padding-top:18px}
+#tab-depositi .deposit-card .deposit-row-actions{width:100%;justify-content:flex-end}
+#tab-depositi .deposit-card .deposit-edit{min-width:104px}
 #tab-depositi .tableWrap{border:1px solid #e9edf3;border-radius:12px;overflow:auto;margin:0}
 #tab-depositi .deposit-table{width:100%;border-collapse:collapse;font-size:13px;table-layout:auto;margin:0;min-width:0}
 #tab-depositi .deposit-table th{text-align:left;background:#f9fafd;color:#515d70;font-size:12px;font-weight:700;padding:13px 14px;border-bottom:1px solid #edf0f5;white-space:nowrap;line-height:1.4}
@@ -95,11 +111,13 @@
   #tab-depositi .deposit-metric{padding:18px 15px;gap:14px}
   #tab-depositi .deposit-metric-icon{width:48px;height:48px;flex-basis:48px}
   #tab-depositi .deposit-table{min-width:620px}
+  #tab-depositi .deposit-cards{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media(max-width:850px){
   #tab-depositi .deposit-metrics{grid-template-columns:1fr}
   #tab-depositi .deposit-page-title{align-items:flex-start}
   #tab-depositi .deposit-page-title .page-actions{width:100%;justify-content:flex-start;margin-top:10px}
+  #tab-depositi .deposit-list-head{align-items:center}
 }
 @media(max-width:600px){
   #tab-depositi .deposit-page-title h1{font-size:30px}
@@ -108,6 +126,10 @@
   #tab-depositi .deposit-metric{min-height:96px;padding:16px 18px;gap:16px}
   #tab-depositi .deposit-metric-icon{width:50px;height:50px;flex-basis:50px}
   #tab-depositi .deposit-list-panel{padding:14px 12px}
+  #tab-depositi .deposit-list-head{align-items:flex-start;gap:12px}
+  #tab-depositi .deposit-view-controls button{width:42px;height:36px}
+  #tab-depositi .deposit-cards{grid-template-columns:1fr;gap:10px}
+  #tab-depositi .deposit-card{min-height:185px}
   #tab-depositi .deposit-table{min-width:560px}
   .deposit-modal-v9{width:calc(100vw - 18px);max-height:92vh;border-radius:16px}
   .deposit-modal-v9 .modal-header{padding:20px 18px 15px}
