@@ -30,3 +30,18 @@ test('page selection affects only visible rows and refresh removes deleted selec
   assert.equal(f.run('customerDirectory.selected.size'),4);assert.equal(f.run('customerDirectory.selected.has(0)'),false);
   f.ctx.api=async()=>[{id:10}];await f.run('refreshCustomerDirectory()');assert.equal(f.run('customerDirectory.selected.size'),1);
 });
+
+
+test('customer deletion is available only inside edit modal',()=>{
+ const html=fs.readFileSync('static/dashboard/index.html','utf8');
+ const js=fs.readFileSync('static/dashboard/js/customers.js','utf8');
+ const core=fs.readFileSync('static/dashboard/js/core.js','utf8');
+ assert.doesNotMatch(html,/deleteAllCustomers\s*\(/);
+ assert.doesNotMatch(html,/Elimina tutti i clienti/);
+ assert.doesNotMatch(js,/customer-delete[^\n]*deleteCustomer\s*\(/);
+ assert.match(html,/id="customerDeleteSection"[^>]*hidden/);
+ assert.match(html,/id="deleteCustomerBtn"/);
+ assert.match(core,/deleteCustomerFromModal/);
+ assert.match(core,/Questa operazione è irreversibile/);
+ assert.doesNotMatch(core,/async function deleteAllCustomers/);
+});
