@@ -6,7 +6,7 @@ from fastapi import HTTPException
 from pydantic import BaseModel, Field, ValidationError
 
 from ..core.utils import local_now, local_today
-from ..models import RoutePlan, DeliveryStatus, User, Customer
+from ..models import RoutePlan, DeliveryStatus, User, Customer, Driver, Vehicle
 from .delivery_pod import save_delivery_evidence, commit_delivery_update
 
 
@@ -18,6 +18,36 @@ class DeliveryUpdate(BaseModel):
     delivery_photo_data: str | None = Field(default=None, max_length=16_000_100)
     signed_by_name: str | None = Field(default=None, max_length=200)
     signature_note: str | None = Field(default=None, max_length=2000)
+
+
+def lock_route_resources(db, route):
+    """Serialize assignments/starts that touch the same driver or vehicle."""
+    if route.driver_id:
+        db.query(Driver).filter(
+            Driver.id == route.driver_id, Driver.user_id == route.user_id
+        ).with_for_update().one_or_none()
+    if route.vehicle_id:
+        db.query(Vehicle).filter(
+            Vehicle.id == route.vehicle_id, Vehicle.user_id == route.user_id
+        ).with_for_update().one_or_none()
+
+
+def ensure_no_running_resource_conflict(db, route):
+    """A driver/vehicle cannot start a second route while another is in progress."""
+    lock_route_resources(db, route)
+    base = db.query(RoutePlan).filter(
+        RoutePlan.user_id == route.user_id,
+        RoutePlan.id != route.id,
+        RoutePlan.status == 'in_corso',
+    )
+    if route.driver_id:
+        other = base.filter(RoutePlan.driver_id == route.driver_id).first()
+        if other:
+            raise HTTPException(409, f"Autista già impegnato nel giro '{other.nome}'")
+    if route.vehicle_id:
+        other = base.filter(RoutePlan.vehicle_id == route.vehicle_id).first()
+        if other:
+            raise HTTPException(409, f"Mezzo già impegnato nel giro '{other.nome}'")
 
 
 def get_or_create_delivery_status(delivery_id, route_plan_id, db):
