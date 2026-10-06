@@ -12,8 +12,8 @@ function fixture(){
 test('deposit overview uses real timestamps, counts defaults, escapes values and preserves route selection',async()=>{
  const f=fixture();f.node('routeDeposit').value='2';
  f.ctx.api=async()=>[{id:1,nome:'<script>',indirizzo:'Via "Roma"',predefinito:true,updated_at:'2026-09-22T12:32:00'},{id:2,nome:'Secondo',indirizzo:'Via Test',updated_at:null}];
- await f.run('loadDeposits()');assert.equal(f.node('routeDeposit').value,'2');assert.equal(f.node('depositTotal').textContent,2);assert.equal(f.node('depositDefaultCount').textContent,1);assert.match(f.node('depositLastUpdate').textContent,/22 set 2026/);assert.equal(f.node('depositLastUpdateTime').textContent,'ore 14:32');assert.match(f.node('depositsBody').innerHTML,/&lt;script>/);
- f.ctx.api=async()=>[];await f.run('loadDeposits()');assert.equal(f.node('depositLastUpdate').textContent,'—');assert.match(f.node('depositsBody').innerHTML,/Nessun deposito configurato/);
+ await f.run('loadDeposits()');assert.equal(f.node('routeDeposit').value,'2');assert.equal(f.node('depositTotal').textContent,2);assert.equal(f.node('depositDefaultName').textContent,'<script>');assert.equal(f.node('depositDefaultAddress').textContent,'Via "Roma"');assert.match(f.node('depositLastUpdate').textContent,/22 set 2026/);assert.equal(f.node('depositLastUpdateTime').textContent,'ore 14:32');assert.match(f.node('depositsBody').innerHTML,/&lt;script>/);
+ f.ctx.api=async()=>[];await f.run('loadDeposits()');assert.equal(f.node('depositDefaultName').textContent,'Nessun deposito selezionato');assert.match(f.node('depositDefaultAddress').textContent,/Imposta un deposito/);assert.equal(f.node('depositLastUpdate').textContent,'—');assert.match(f.node('depositsBody').innerHTML,/Nessun deposito configurato/);
 });
 test('editing preserves notes, uses PUT and resets only after saving',async()=>{
  const f=fixture();f.run("depositsCache=[{id:7,nome:'Test',indirizzo:'Via Test',note:'Nota esistente',predefinito:true}];editDeposit(7)");
