@@ -24,7 +24,7 @@
 <script src="/static/routing-summary.js"></script>
 <link rel="stylesheet" href="/static/dashboard/css/live-gps.css?v=live_20261006">
 <script src="/static/dashboard/js/live-gps.js?v=live_20261006"></script>
-<link href="/static/dashboard/css/deposits.css?v=sidebar_stable_20261001" rel="stylesheet">
+<link href="/static/dashboard/css/deposits.css?v=deposit_layout_20261007_1" rel="stylesheet">
 <link href="/static/dashboard/css/settings.css?v=sidebar_stable_20261001" rel="stylesheet">
 <link rel="stylesheet" href="/static/dashboard/css/electric-vehicles.css?v=electric_style_20261003">
 <script src="/static/dashboard/js/electric-vehicles.js?v=electric_bonus_20261002"></script>
@@ -1023,31 +1023,56 @@
       </section>
 
       <section id="tab-depositi" class="tab hidden">
-        <div class="page-title-row deposit-page-title"><div><h1>Depositi</h1><p>Gestisci gli indirizzi di partenza e rientro dei tuoi giri.</p></div></div>
+        <div class="page-title-row deposit-page-title">
+          <div><h1>Depositi</h1><p>Gestisci gli indirizzi di partenza e rientro dei tuoi giri.</p></div>
+          <div class="page-actions"><button type="button" id="newDepositBtn" class="btn-primary" onclick="openDepositModal()">+ Nuovo deposito</button></div>
+        </div>
         <div class="deposit-metrics" aria-label="Riepilogo depositi">
-<article class="deposit-metric blue"><span class="deposit-metric-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7M5 9v12h14V9M9 21v-8h6v8"/></svg></span><div><h2>Totale depositi</h2><strong id="depositTotal">—</strong><p id="depositTotalCaption">depositi configurati</p></div></article>
-<article class="deposit-metric green deposit-default-metric"><span class="deposit-metric-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.8 5.8 6.4.9-4.6 4.5 1.1 6.4-5.7-3-5.7 3 1.1-6.4-4.6-4.5 6.4-.9Z"/></svg></span><div class="deposit-default-copy"><h2>Deposito predefinito</h2><strong id="depositDefaultName">Nessun deposito selezionato</strong><p id="depositDefaultAddress">Imposta un deposito come predefinito per i nuovi giri</p></div></article>
-<article class="deposit-metric purple"><span class="deposit-metric-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l4 2"/></svg></span><div><h2>Ultimo aggiornamento</h2><strong id="depositLastUpdate">—</strong><p id="depositLastUpdateTime">Data non disponibile</p></div></article>
+          <article class="deposit-metric blue"><span class="deposit-metric-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7M5 9v12h14V9M9 21v-8h6v8"/></svg></span><div><h2>Totale depositi</h2><strong id="depositTotal">—</strong><p id="depositTotalCaption">depositi configurati</p></div></article>
+          <article class="deposit-metric green deposit-default-metric"><span class="deposit-metric-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.8 5.8 6.4.9-4.6 4.5 1.1 6.4-5.7-3-5.7 3 1.1-6.4-4.6-4.5 6.4-.9Z"/></svg></span><div class="deposit-default-copy"><h2>Deposito predefinito</h2><strong id="depositDefaultName">Nessun deposito selezionato</strong><p id="depositDefaultAddress">Imposta un deposito come predefinito per i nuovi giri</p></div></article>
+          <article class="deposit-metric purple"><span class="deposit-metric-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l4 2"/></svg></span><div><h2>Ultimo aggiornamento</h2><strong id="depositLastUpdate">—</strong><p id="depositLastUpdateTime">Data non disponibile</p></div></article>
         </div>
-        <div class="deposit-layout">
-          <section class="panel deposit-form-panel" aria-labelledby="depositFormTitle">
-            <div class="deposit-panel-heading"><span class="deposit-heading-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M7 12h10"/></svg></span><div><h2 id="depositFormTitle">Nuovo deposito</h2><p id="depositFormSubtitle">Aggiungi un nuovo deposito alla tua azienda.</p></div></div>
-            <form id="depositForm" onsubmit="event.preventDefault();saveDeposit()">
-              <input type="hidden" id="depId">
-              <div class="deposit-field"><label for="depNome">Nome deposito</label><input id="depNome" placeholder="Inserisci un nome per il deposito" required maxlength="200" autocomplete="off"></div>
-              <div class="deposit-field"><label for="depIndirizzo">Indirizzo completo</label><textarea id="depIndirizzo" placeholder="Inserisci l'indirizzo completo del deposito" required maxlength="500" rows="3" autocomplete="off"></textarea></div>
-              <label class="deposit-default-choice" for="depDefault"><input id="depDefault" type="checkbox"><span><strong>Deposito predefinito</strong><small>Imposta questo deposito come predefinito per i nuovi giri.</small></span></label>
-              <p id="depositFormStatus" class="deposit-form-status hidden" role="status" aria-live="polite"></p>
-              <div class="deposit-form-actions"><button type="submit" id="saveDepositBtn" class="btn-primary"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 3h13l4 4v14H3V3h1ZM7 3v6h10V3M7 21v-8h10v8M14 4v3"/></svg><span>Salva deposito</span></button><button type="button" id="newDepositBtn" class="btn-secondary" onclick="resetDepositForm();document.getElementById('depNome').focus()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Nuovo</button></div>
-            </form>
-          </section>
-          <section class="panel deposit-list-panel" aria-labelledby="depositListTitle">
-            <div class="deposit-panel-heading"><span class="deposit-heading-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="1"/><path d="M8 9h9M8 15h9M5 9h.1M5 15h.1"/></svg></span><div><h2 id="depositListTitle">Elenco depositi</h2><p>Visualizza e gestisci tutti i depositi configurati.</p></div></div>
-            <div class="tableWrap"><table class="deposit-table"><thead><tr><th scope="col">Nome</th><th scope="col">Indirizzo</th><th scope="col">Predefinito</th><th scope="col">Azioni</th></tr></thead><tbody id="depositsBody"><tr><td colspan="4" class="deposit-empty">Caricamento depositi...</td></tr></tbody></table></div>
-            <p id="depositListStatus" class="deposit-form-status hidden" role="status"></p>
-          </section>
-        </div>
+        <section class="panel deposit-list-panel" aria-labelledby="depositListTitle">
+          <div class="panel-header deposit-list-head">
+            <div><h2 id="depositListTitle">Elenco depositi</h2><p class="panel-subtitle">Visualizza e gestisci tutti i depositi configurati.</p></div>
+          </div>
+          <div class="tableWrap"><table class="deposit-table"><thead><tr><th scope="col">Nome</th><th scope="col">Indirizzo</th><th scope="col">Predefinito</th><th scope="col">Azioni</th></tr></thead><tbody id="depositsBody"><tr><td colspan="4" class="deposit-empty">Caricamento depositi...</td></tr></tbody></table></div>
+          <p id="depositListStatus" class="deposit-form-status hidden" role="status"></p>
+        </section>
       </section>
+
+      <div id="depositOverlay" class="modal-overlay hidden gf-dialog" onclick="closeDepositModal(event)">
+        <div class="profile-modal deposit-modal-v9" onclick="event.stopPropagation()">
+          <div class="modal-header">
+            <div>
+              <div class="modal-kicker">ANAGRAFICA DEPOSITO</div>
+              <h2 id="depositFormTitle">Nuovo deposito</h2>
+              <p id="depositFormSubtitle">Aggiungi un nuovo deposito alla tua azienda.</p>
+            </div>
+            <button type="button" class="modal-close" onclick="closeDepositModal()" aria-label="Chiudi">×</button>
+          </div>
+          <form id="depositForm" onsubmit="event.preventDefault();saveDeposit()">
+            <input type="hidden" id="depId">
+            <section class="deposit-modal-section">
+              <div class="deposit-modal-section-title"><span>01</span><div><h3>Dati deposito</h3><p>Inserisci nome e indirizzo usati come punto di partenza e rientro.</p></div></div>
+              <div class="deposit-modal-grid">
+                <div class="deposit-field"><label for="depNome">Nome deposito</label><input id="depNome" placeholder="Inserisci un nome per il deposito" required maxlength="200" autocomplete="off"></div>
+                <div class="deposit-field deposit-address-field"><label for="depIndirizzo">Indirizzo completo</label><textarea id="depIndirizzo" placeholder="Inserisci l'indirizzo completo del deposito" required maxlength="500" rows="3" autocomplete="off"></textarea></div>
+              </div>
+              <label class="deposit-default-choice" for="depDefault"><input id="depDefault" type="checkbox"><span><strong>Deposito predefinito</strong><small>Imposta questo deposito come predefinito per i nuovi giri.</small></span></label>
+            </section>
+            <div id="depositDeleteSection" class="deposit-delete-section hidden">
+              <div><strong>Elimina deposito</strong><p>Rimuove il deposito dall'azienda e dalla selezione dei nuovi giri.</p></div>
+              <button type="button" id="deleteDepositBtn" class="deposit-delete-danger" onclick="deleteDepositFromModal()">Elimina deposito</button>
+            </div>
+            <p id="depositFormStatus" class="deposit-form-status hidden" role="status" aria-live="polite"></p>
+            <div class="actions-row deposit-modal-actions">
+              <button type="button" class="btn-secondary" onclick="closeDepositModal()">Annulla</button>
+              <button type="submit" id="saveDepositBtn" class="btn-primary"><span>Salva deposito</span></button>
+            </div>
+          </form>
+        </div>
+      </div>
 
       <section id="tab-mezzi" class="tab hidden gf-page">
         <div class="page-title-row"><div><h1>Mezzi</h1><p>Configura consumi, capacità e accessori dei mezzi.</p></div></div>
