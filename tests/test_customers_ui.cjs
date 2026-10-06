@@ -18,6 +18,25 @@ test('directory searches, combines optional filters and sorts codes numerically'
   f.fields.customerFilterAgent.value='';f.run("setCustomerSort('codice_cliente:asc')");assert.equal(f.run('customerFilteredRows()[0].id'),2);
   f.run("toggleCustomerSort('codice_cliente')");assert.equal(f.run('customerFilteredRows()[0].id'),1);
 });
+
+test('customer KPI cards refresh after loading the directory',async()=>{
+  const f=fixture();
+  f.fields.customerMetricTotal={textContent:'—'};
+  f.fields.customerMetricVerified={textContent:'—'};
+  f.fields.customerMetricPending={textContent:'—'};
+  f.fields.customerMetricActive={textContent:'—'};
+  f.ctx.api=async()=>[
+    {id:1,stato_geocodifica:'verificato'},
+    {id:2,stato_geocodifica:'verificato'},
+    {id:3,stato_geocodifica:'da_verificare'}
+  ];
+  await f.run('refreshCustomerDirectory()');
+  assert.equal(f.fields.customerMetricTotal.textContent,3);
+  assert.equal(f.fields.customerMetricVerified.textContent,2);
+  assert.equal(f.fields.customerMetricPending.textContent,1);
+  assert.equal(f.fields.customerMetricActive.textContent,3);
+});
+
 test('directory loads beyond one API batch and discards stale responses',async()=>{
   const f=fixture(),calls=[];
   f.ctx.api=async url=>{calls.push(url);return url.endsWith('offset=0')?Array.from({length:1000},(_,id)=>({id})): [{id:1001}];};
