@@ -37,6 +37,7 @@ body{min-height:100vh;background:linear-gradient(135deg,#1e3a8a,#2563eb);display
 .success p{font-size:14px;color:#6b7280;}
 </style>
 
+<link rel="stylesheet" href="/static/password-strength.css?v=password_policy_20261008_1">
 <link rel="stylesheet" href="/static/design-system/tokens.css?v=ds_20261007">
 <link rel="stylesheet" href="/static/design-system/components.css?v=ds_20261007">
 <link rel="stylesheet" href="/static/design-system/layout.css?v=ds_20261007">
@@ -67,12 +68,12 @@ body{min-height:100vh;background:linear-gradient(135deg,#1e3a8a,#2563eb);display
     <p style="font-size:14px;color:#6b7280;margin-bottom:20px;text-align:center">Scegli una password per accedere al tuo portale autista</p>
     <div class="form-group">
       <label>Nuova password</label>
-      <input id="password" type="password" placeholder="Minimo 6 caratteri">
-      <div class="hint">Almeno 6 caratteri</div>
+      <input id="password" type="password" placeholder="Almeno 8 caratteri, maiuscola e simbolo" autocomplete="new-password">
+      <div id="passwordMeter" class="gf-password-meter" aria-live="polite"></div>
     </div>
     <div class="form-group">
       <label>Conferma password</label>
-      <input id="passwordConfirm" type="password" placeholder="Ripeti la password">
+      <input id="passwordConfirm" type="password" placeholder="Ripeti la password" autocomplete="new-password">
     </div>
     <button class="btn" id="setupBtn" onclick="submitSetup()">Accedi al portale →</button>
     <div class="error" id="setupError"></div>
@@ -87,8 +88,14 @@ body{min-height:100vh;background:linear-gradient(135deg,#1e3a8a,#2563eb);display
   </div>
 </div>
 
+<script src="/static/password-strength.js?v=password_policy_20261008_1"></script>
 <script>
 const token = location.pathname.split('/driver/setup/')[1] || '';
+let passwordContext = [];
+const passwordController = window.GiroFacilePasswordStrength.attach({
+  inputId:'password', meterId:'passwordMeter', confirmInputId:'passwordConfirm',
+  buttonId:'setupBtn', context:()=>passwordContext
+});
 
 async function api(url, opts={}) {
   const r = await fetch(url, {headers:{'Content-Type':'application/json'},...opts});
@@ -102,6 +109,8 @@ async function init() {
     const info = await api(`/api/driver/setup/${token}`);
     document.getElementById('driverName').textContent = info.driver_name;
     document.getElementById('driverEmail').textContent = info.email;
+    passwordContext = [info.driver_name || '', info.email || '', info.company_name || ''];
+    passwordController?.refresh();
     document.getElementById('loadingState').style.display = 'none';
     document.getElementById('setupForm').style.display = 'block';
   } catch(e) {
@@ -116,7 +125,8 @@ async function submitSetup() {
   const pw2 = document.getElementById('passwordConfirm').value;
   const err = document.getElementById('setupError');
   err.textContent = '';
-  if(pw.length < 6) { err.textContent = 'La password deve essere di almeno 6 caratteri'; return; }
+  const check = window.GiroFacilePasswordStrength.assess(pw,passwordContext);
+  if(!check.acceptable) { err.textContent = check.message; return; }
   if(pw !== pw2) { err.textContent = 'Le password non coincidono'; return; }
   const btn = document.getElementById('setupBtn');
   btn.disabled = true;

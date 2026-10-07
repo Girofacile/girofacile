@@ -927,6 +927,7 @@ function toggleProfilePasswordPanel(show){
   if(trigger) trigger.setAttribute("aria-expanded", visible ? "true" : "false");
   if(!visible){
     ["profileCurrentPassword","profileNewPassword","profileConfirmPassword"].forEach(id=>set(id,""));
+    passwordStrengthControllers.profile?.refresh();
   }else{
     setTimeout(()=>document.getElementById("profileCurrentPassword")?.focus(), 50);
   }
@@ -979,7 +980,8 @@ async function changeProfilePassword(){
   const newPassword=val("profileNewPassword");
   const confirmPassword=val("profileConfirmPassword");
   if(!currentPassword){ alert("Inserisci la password attuale."); return; }
-  if(newPassword.length < 8){ alert("La nuova password deve contenere almeno 8 caratteri."); return; }
+  const passwordCheck=passwordSecurityAssessment(newPassword,passwordContextForProfile());
+  if(!passwordCheck.acceptable){ alert(passwordCheck.message); return; }
   if(newPassword !== confirmPassword){ alert("La conferma non coincide con la nuova password."); return; }
 
   return withButtonLoading("profileChangePasswordBtn", "Aggiornamento...", async()=>{
@@ -1134,6 +1136,45 @@ function bindLoginRecoveryActions(){
   if(forgotSubmit) forgotSubmit.onclick = (e) => { e.preventDefault(); requestPasswordReset(); };
 }
 
+let passwordResetContext = [];
+let passwordStrengthControllers = {};
+
+function passwordContextForSignup(){
+  return [val("signupCompany"), val("signupUser"), val("signupEmail")];
+}
+function passwordContextForProfile(){
+  return [
+    val("profileName"),
+    val("profileEmail"),
+    currentSessionUser?.company_name || localStorage.getItem("girofacile_company_name") || ""
+  ];
+}
+function passwordSecurityAssessment(password, context){
+  const service=window.GiroFacilePasswordStrength;
+  if(service) return service.assess(password, context || []);
+  const fallbackOk=password.length>=8 && /[A-Z]/.test(password) && /[a-z]/.test(password) && /[^A-Za-z0-9\s]/.test(password);
+  return {acceptable:fallbackOk,message:"La password deve avere almeno 8 caratteri, una maiuscola, una minuscola e un carattere speciale"};
+}
+function initPasswordStrengthUi(){
+  const service=window.GiroFacilePasswordStrength;
+  if(!service) return;
+  passwordStrengthControllers.signup=service.attach({
+    inputId:"signupPass",meterId:"signupPasswordMeter",context:passwordContextForSignup,
+    watchIds:["signupCompany","signupUser","signupEmail"]
+  });
+  passwordStrengthControllers.reset=service.attach({
+    inputId:"resetPassword1",meterId:"resetPasswordMeter",confirmInputId:"resetPassword2",
+    buttonId:"resetPasswordSubmitBtn",context:()=>passwordResetContext
+  });
+  passwordStrengthControllers.profile=service.attach({
+    inputId:"profileNewPassword",meterId:"profilePasswordMeter",confirmInputId:"profileConfirmPassword",
+    buttonId:"profileChangePasswordBtn",context:passwordContextForProfile,
+    watchIds:["profileName","profileEmail"]
+  });
+}
+if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",initPasswordStrengthUi,{once:true});
+else initPasswordStrengthUi();
+
 let signupWizardCurrentStep = 1;
 
 function selectPlan(el){
@@ -1171,7 +1212,8 @@ function validateSignupStep(step){
     if(!val("signupCompany")){ alert("Inserisci il nome azienda."); return false; }
     if(!val("signupUser") || val("signupUser").length < 3){ alert("Inserisci un nome utente di almeno 3 caratteri."); return false; }
     if(!val("signupEmail")){ alert("Inserisci l'email dell'account."); return false; }
-    if(!val("signupPass") || val("signupPass").length < 6){ alert("La password deve contenere almeno 6 caratteri."); return false; }
+    const passwordCheck=passwordSecurityAssessment(val("signupPass"),passwordContextForSignup());
+    if(!passwordCheck.acceptable){ alert(passwordCheck.message); return false; }
   }
   if(step === 2){
     if(!val("signupVat")){
@@ -1218,6 +1260,8 @@ async function showResetPasswordPanel(){
   const token = resetTokenFromPath();
   try{
     const info = await api(`/api/password-reset/${encodeURIComponent(token)}`);
+    passwordResetContext = Array.isArray(info.password_context) ? info.password_context : [info.email || ""];
+    passwordStrengthControllers.reset?.refresh();
     const help = document.getElementById("resetPasswordHelp");
     if(help) help.textContent = `Stai reimpostando la password per ${info.email || "il tuo account"}.`;
   }catch(e){
@@ -1233,7 +1277,8 @@ async function confirmPasswordReset(){
     const token = resetTokenFromPath();
     const password = val("resetPassword1");
     const password2 = val("resetPassword2");
-    if(password.length < 6){ alert("La password deve contenere almeno 6 caratteri"); return; }
+    const passwordCheck=passwordSecurityAssessment(password,passwordResetContext);
+    if(!passwordCheck.acceptable){ alert(passwordCheck.message); return; }
     if(password !== password2){ alert("Le password non coincidono"); return; }
     const res = await api("/api/password-reset/confirm", {method:"POST", body:JSON.stringify({token, password})});
     toast(res.message || "Password aggiornata correttamente.");
