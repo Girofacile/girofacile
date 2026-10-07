@@ -2049,7 +2049,14 @@ function depositEditActionMarkup(x){
   return `<div class="deposit-row-actions"><button type="button" class="deposit-edit" onclick="editDeposit(${Number(x.id)})" aria-label="Modifica ${esc(x.nome)}">${depositActionIcon('edit')}Modifica</button></div>`;
 }
 function renderDepositDirectory(){
-  const rows=depositsCache||[];
+  const q=(document.getElementById('depositSearch')?.value||'').trim().toLocaleLowerCase('it');
+  const sort=document.getElementById('depositSort')?.value||'name';
+  const rows=(depositsCache||[]).filter(x=>!q||[x.nome,x.indirizzo].some(v=>String(v||'').toLocaleLowerCase('it').includes(q))).slice().sort((a,b)=>{
+    const names=String(a.nome||'').localeCompare(String(b.nome||''),'it',{sensitivity:'base'});
+    if(sort==='name_desc') return -names;
+    if(sort==='default') return Number(!!b.predefinito)-Number(!!a.predefinito)||names;
+    return names;
+  });
   const body=document.getElementById('depositsBody');
   const cards=document.getElementById('depositCards');
   const tableWrap=document.getElementById('depositTableWrap');
@@ -2492,37 +2499,82 @@ function renderAgentOptions(){
   });
 }
 
+let agentDirectoryView='table';
+try{
+  const saved=window.localStorage?.getItem('gfAgentView');
+  if(saved==='table'||saved==='cards') agentDirectoryView=saved;
+}catch(_error){}
+
+function agentDirectoryRows(){
+  const q=(document.getElementById("agentSearch")?.value||"").trim().toLocaleLowerCase("it");
+  const status=document.getElementById("agentStatusFilter")?.value||"";
+  const sort=document.getElementById("agentSort")?.value||"name";
+  return (agentsCache||[]).filter(a=>{
+    const matchText=!q||[a.codice_agente,agentDisplayName(a),a.nome,a.cognome,a.telefono,a.email,a.zona,a.note].some(v=>String(v||"").toLocaleLowerCase("it").includes(q));
+    const matchStatus=!status||(status==="attivi"?!!a.attivo:!a.attivo);
+    return matchText&&matchStatus;
+  }).slice().sort((a,b)=>{
+    const names=agentDisplayName(a).localeCompare(agentDisplayName(b),"it",{sensitivity:"base"});
+    if(sort==="name_desc") return -names;
+    if(sort==="clients") return Number(b.clienti_assegnati||0)-Number(a.clienti_assegnati||0)||names;
+    if(sort==="zone") return String(a.zona||"").localeCompare(String(b.zona||""),"it",{sensitivity:"base"})||names;
+    return names;
+  });
+}
+function agentStatusMarkup(a){
+  return `<span class="route-status-pill ${a.attivo?"completato":"annullato"}">${a.attivo?"Attivo":"Non attivo"}</span>`;
+}
+function agentActionsMarkup(a){
+  const id=Number(a.id);
+  return `<div class="row-actions gf-directory-row-actions"><button type="button" onclick="editAgent(${id})">Modifica</button>${a.email?`<button type="button" onclick="inviteAgent(${id})">${a.account_attivo?"Reinvita":"Invita"}</button>`:""}<button type="button" class="gf-directory-danger" onclick="deleteAgent(${id})">Elimina</button></div>`;
+}
+function setAgentView(view){
+  agentDirectoryView=view==="cards"?"cards":"table";
+  try{window.localStorage?.setItem("gfAgentView",agentDirectoryView);}catch(_error){}
+  renderAgentDirectory();
+}
+function renderAgentDirectory(){
+  const rows=agentDirectoryRows();
+  const write=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=value;};
+  write("agentMetricTotal",(agentsCache||[]).length);
+  write("agentMetricActive",(agentsCache||[]).filter(a=>a.attivo).length);
+  write("agentMetricClients",(agentsCache||[]).reduce((sum,a)=>sum+Number(a.clienti_assegnati||0),0));
+
+  const body=document.getElementById("agentsBody");
+  if(body){
+    body.innerHTML=rows.length?rows.map(a=>`<tr>
+      <td>${esc(a.codice_agente||"—")}</td>
+      <td><div class="entity-cell">${imageThumb(a.photo_url,"👤","agent-thumb")}<div><strong>${esc(agentDisplayName(a))}</strong>${a.note?`<small>${esc(a.note)}</small>`:""}</div></div></td>
+      <td>${esc(a.telefono||"—")}<br><small>${esc(a.email||"")}</small></td>
+      <td>${esc(a.zona||"—")}</td>
+      <td>${agentStatusMarkup(a)}</td>
+      <td>${Number(a.clienti_assegnati||0)}</td>
+      <td>${agentActionsMarkup(a)}</td>
+    </tr>`).join(""):`<tr><td colspan="7" class="gf-directory-empty">Nessun agente trovato.</td></tr>`;
+  }
+  const cards=document.getElementById("agentCards");
+  if(cards){
+    cards.innerHTML=rows.length?rows.map(a=>`<article class="agent-directory-card">
+      <div class="agent-directory-card-head"><div class="agent-directory-avatar">${imageThumb(a.photo_url,"👤","agent-thumb")}</div><div><h3>${esc(agentDisplayName(a))}</h3><span>${esc(a.codice_agente||"Codice non indicato")}</span></div>${agentStatusMarkup(a)}</div>
+      <div class="agent-directory-meta"><div><small>Contatti</small><strong>${esc(a.telefono||"—")}</strong><span>${esc(a.email||"")}</span></div><div><small>Zona</small><strong>${esc(a.zona||"—")}</strong></div><div><small>Clienti</small><strong>${Number(a.clienti_assegnati||0)}</strong></div></div>
+      ${agentActionsMarkup(a)}
+    </article>`).join(""):`<p class="gf-directory-empty">Nessun agente trovato.</p>`;
+  }
+  document.getElementById("agentTableWrap")?.classList.toggle("hidden",agentDirectoryView!=="table");
+  cards?.classList.toggle("hidden",agentDirectoryView!=="cards");
+  document.getElementById("agentListView")?.setAttribute("aria-pressed",String(agentDirectoryView==="table"));
+  document.getElementById("agentGridView")?.setAttribute("aria-pressed",String(agentDirectoryView==="cards"));
+}
+
 async function loadAgents(){
-  if(!agentsFeatureEnabled()){ agentsCache = []; renderAgentOptions(); return; }
+  if(!agentsFeatureEnabled()){ agentsCache=[]; renderAgentOptions(); renderAgentDirectory(); return; }
   try{
-    const params = new URLSearchParams({
-      q: document.getElementById("agentSearch")?.value || "",
-      stato: document.getElementById("agentStatusFilter")?.value || "",
-    });
-    agentsCache = await api("/api/agents?"+params.toString());
+    agentsCache=await api("/api/agents");
   }catch(e){
-    agentsCache = [];
+    agentsCache=[];
   }
-
   renderAgentOptions();
-
-  const body = document.getElementById("agentsBody");
-  if(!body) return;
-  if(!agentsCache.length){
-    body.innerHTML = `<tr><td colspan="7"><div class="empty-state-small">Nessun agente registrato.</div></td></tr>`;
-    return;
-  }
-  body.innerHTML = agentsCache.map(a=>`
-    <tr>
-      <td>${esc(a.codice_agente || "-")}</td>
-      <td><div class="entity-cell">${imageThumb(a.photo_url,'👤','agent-thumb')}<div><strong>${esc(agentDisplayName(a))}</strong>${a.note?`<br><small>${esc(a.note)}</small>`:""}</div></div></td>
-      <td>${esc(a.telefono || "-")}<br><small>${esc(a.email || "")}</small></td>
-      <td>${esc(a.zona || "-")}</td>
-      <td><span class="route-status-pill ${a.attivo ? "programmato" : "annullato"}">${a.attivo ? "Attivo" : "Non attivo"}</span></td>
-      <td>${a.clienti_assegnati || 0}</td>
-      <td class="row-actions"><button onclick="editAgent(${a.id})">Modifica</button>${a.email?`<button onclick="inviteAgent(${a.id})">${a.account_attivo?"Reinvita":"Invita"}</button>`:""}<button onclick="deleteAgent(${a.id})">Elimina</button></td>
-    </tr>
-  `).join("");
+  renderAgentDirectory();
 }
 
 function editAgent(id){
@@ -2537,11 +2589,27 @@ function editAgent(id){
   set("agAttivo", a.attivo ? "true" : "false");
   set("agNote", a.note);
   set("agPhotoUrl", a.photo_url || ""); clearFileInput("agPhotoFile"); setImagePreview("agentPhotoPreview","agPhotoUrl","👤");
+  const title=document.getElementById("agentModalTitle"); if(title) title.textContent="Modifica agente";
+  openAgentModal();
 }
 
 function resetAgentForm(){
   ["agId","agCodice","agNome","agCognome","agTelefono","agEmail","agZona","agNote","agPhotoUrl"].forEach(id=>set(id,""));
   set("agAttivo","true"); clearFileInput("agPhotoFile"); setImagePreview("agentPhotoPreview","agPhotoUrl","👤");
+  const title=document.getElementById("agentModalTitle"); if(title) title.textContent="Nuovo agente";
+}
+function openAgentModal(){
+  document.getElementById("agentOverlay")?.classList.remove("hidden");
+  setTimeout(()=>document.getElementById("agNome")?.focus(),60);
+}
+function closeAgentModal(event){
+  if(event && event.target && event.currentTarget && event.target!==event.currentTarget) return;
+  document.getElementById("agentOverlay")?.classList.add("hidden");
+}
+function openNewAgentModal(){
+  if(showLockedOrProceed("agenti")) return;
+  resetAgentForm();
+  openAgentModal();
 }
 
 async function saveAgent(){
@@ -2564,6 +2632,7 @@ async function saveAgent(){
       if(res.invite.email_sent) toast("Invito agente inviato via email");
       else alert("SMTP non configurato o invio non riuscito. Link primo accesso agente:\n" + (res.invite.invite_setup_url || ""));
     }
+    closeAgentModal();
     resetAgentForm();
     await loadAgents();
     await loadCustomers();
