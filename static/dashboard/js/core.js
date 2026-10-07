@@ -907,13 +907,27 @@ async function loadAccountProfileV81(){
   }
 }
 
+function toggleProfilePasswordPanel(show){
+  const panel=document.getElementById("profilePasswordChangePanel");
+  if(!panel) return;
+  const visible=typeof show==="boolean" ? show : panel.classList.contains("hidden");
+  panel.classList.toggle("hidden", !visible);
+  if(!visible){
+    ["profileCurrentPassword","profileNewPassword","profileConfirmPassword"].forEach(id=>set(id,""));
+  }else{
+    setTimeout(()=>document.getElementById("profileCurrentPassword")?.focus(), 50);
+  }
+}
+
 async function openProfilePanel(){
   await loadAccountProfileV81();
   loadPlanInfo();
+  toggleProfilePasswordPanel(false);
   const el=document.getElementById("profileOverlay"); if(el) el.classList.remove("hidden");
 }
 function closeProfilePanel(ev){
   const el=document.getElementById("profileOverlay"); if(el) el.classList.add("hidden");
+  toggleProfilePasswordPanel(false);
 }
 function previewProfilePhoto(event){
   const file = event.target.files && event.target.files[0];
@@ -930,8 +944,7 @@ async function saveProfilePanel(){
   try{
     const payload = {
       username: val("profileName") || "Admin",
-      email: val("profileEmail"),
-      new_password: val("profilePassword")
+      email: val("profileEmail")
     };
     const res = await api("/api/account-profile", {method:"PUT", body:JSON.stringify(payload)});
     const account = res.account || payload;
@@ -939,7 +952,6 @@ async function saveProfilePanel(){
     localStorage.setItem("girofacile_profile_email", account.email || "");
     localStorage.setItem("girofacile_profile_role", account.role || "Amministratore");
     if(profilePhotoData) localStorage.setItem("girofacile_profile_photo", profilePhotoData);
-    set("profilePassword", "");
     currentSessionUser = {...(currentSessionUser || {}), username:account.username, email:account.email};
     loadProfilePanel();
     closeProfilePanel();
@@ -947,6 +959,42 @@ async function saveProfilePanel(){
   }catch(e){
     alert(e.message || "Errore salvataggio profilo account");
   }
+}
+
+async function changeProfilePassword(){
+  const currentPassword=val("profileCurrentPassword");
+  const newPassword=val("profileNewPassword");
+  const confirmPassword=val("profileConfirmPassword");
+  if(!currentPassword){ alert("Inserisci la password attuale."); return; }
+  if(newPassword.length < 8){ alert("La nuova password deve contenere almeno 8 caratteri."); return; }
+  if(newPassword !== confirmPassword){ alert("La conferma non coincide con la nuova password."); return; }
+
+  return withButtonLoading("profileChangePasswordBtn", "Aggiornamento...", async()=>{
+    await api("/api/account-password/change", {
+      method:"POST",
+      body:JSON.stringify({
+        current_password:currentPassword,
+        new_password:newPassword,
+        confirm_password:confirmPassword
+      })
+    });
+    ["profileCurrentPassword","profileNewPassword","profileConfirmPassword"].forEach(id=>set(id,""));
+    toast("Password aggiornata. Accedi di nuovo con la nuova password.");
+    setTimeout(()=>{ window.location.href="/login"; }, 900);
+  });
+}
+
+async function requestProfilePasswordReset(){
+  return withButtonLoading("profilePasswordResetEmailBtn", "Invio link...", async()=>{
+    const account=await api("/api/account-profile");
+    const email=(account?.email || "").trim();
+    if(!email){
+      alert("Prima associa un indirizzo email all'account e salvalo.");
+      return;
+    }
+    await api("/api/password-reset/request", {method:"POST", body:JSON.stringify({email})});
+    toast("Link di reimpostazione inviato all'email dell'account.");
+  });
 }
 function printStopsTable(){
   if(!lastRouteResult){ alert("Nessun risultato giro da stampare"); return; }
