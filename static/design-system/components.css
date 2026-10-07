@@ -265,3 +265,48 @@ body[data-gf-surface] .gf-table [class*="row-actions"] .gf-button {
   #profileOverlay .profile-logout-btn,#profileOverlay .profile-modal-footer-main,#profileOverlay .profile-modal-footer-main button{width:100%}
   #profileOverlay .profile-modal-footer-main{display:grid;grid-template-columns:1fr 1fr}
 }
+
+
+/* Support legal resources moved out of the workspace footer. */
+.support-legal-v60{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px 22px;
+  border-top:1px solid var(--gf-color-border);
+  background:var(--gf-color-bg);
+  color:var(--gf-color-muted);
+  font-family:var(--gf-font-family);
+  font-size:var(--gf-font-xs);
+}
+.support-legal-v60>span{
+  font-weight:var(--gf-weight-semibold);
+  color:var(--gf-color-text);
+}
+.support-legal-v60>div{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:12px;
+  flex-wrap:wrap;
+}
+.support-legal-v60 a{
+  color:var(--gf-color-muted);
+  text-decoration:none;
+  font-weight:var(--gf-weight-medium);
+}
+.support-legal-v60 a:hover{
+  color:var(--gf-color-primary);
+}
+@media(max-width:640px){
+  .support-legal-v60{
+    align-items:flex-start;
+    flex-direction:column;
+    padding:12px 18px;
+  }
+  .support-legal-v60>div{
+    justify-content:flex-start;
+    gap:10px;
+  }
+}
