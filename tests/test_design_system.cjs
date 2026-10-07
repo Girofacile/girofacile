@@ -468,3 +468,22 @@ test('resource directories share the Clienti page structure, topbar header and c
   const driversJs=read('static/dashboard/js/drivers.js');
   assert.match(driversJs,/localStorage\?\.getItem\('gfDriverView'\)/);
 });
+
+
+test('all five directory KPI icons use the same neutral gray dashboard treatment',()=>{
+  const workspace=read(assets+'workspace.css');
+  const start=workspace.indexOf('/* Directory KPI icons: neutral, quiet and dashboard-aligned. */');
+  assert.ok(start>=0);
+  const block=workspace.slice(start);
+  assert.match(block,/#tab-clienti,#tab-depositi,#tab-mezzi,#tab-autisti,#tab-agenti/);
+  assert.match(block,/:is\(\.customer-metric-icon,\.deposit-metric-icon,\.gf-directory-metric-icon,\.stat-icon\)\{/);
+  assert.match(block,/width:48px!important/);
+  assert.match(block,/height:48px!important/);
+  assert.match(block,/border-radius:var\(--gf-radius-circle\)!important/);
+  assert.match(block,/background:var\(--gf-color-bg\)!important/);
+  assert.match(block,/color:var\(--gf-color-muted\)!important/);
+  assert.match(block,/width:22px!important/);
+  assert.match(block,/stroke:currentColor!important/);
+  assert.match(block,/fill:none!important/);
+  assert.doesNotMatch(block,/var\(--gf-color-(?:info|success|warning|danger)(?:-bg)?\)/);
+});

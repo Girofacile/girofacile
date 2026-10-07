@@ -780,3 +780,40 @@ body[data-gf-surface="workspace"] #app .gf-directory-empty{
     grid-template-columns:1fr;
   }
 }
+
+
+/* Directory KPI icons: neutral, quiet and dashboard-aligned. */
+body[data-gf-surface="workspace"] #app :is(#tab-clienti,#tab-depositi,#tab-mezzi,#tab-autisti,#tab-agenti)
+:is(.customer-metric-icon,.deposit-metric-icon,.gf-directory-metric-icon,.stat-icon){
+  display:grid!important;
+  place-items:center!important;
+  flex:0 0 48px!important;
+  width:48px!important;
+  height:48px!important;
+  border:1px solid var(--gf-color-border)!important;
+  border-radius:var(--gf-radius-circle)!important;
+  background:var(--gf-color-bg)!important;
+  color:var(--gf-color-muted)!important;
+  box-shadow:none!important;
+}
+body[data-gf-surface="workspace"] #app :is(#tab-clienti,#tab-depositi,#tab-mezzi,#tab-autisti,#tab-agenti)
+:is(.customer-metric-icon,.deposit-metric-icon,.gf-directory-metric-icon,.stat-icon) svg{
+  width:22px!important;
+  height:22px!important;
+  border-radius:0!important;
+  background:none!important;
+  fill:none!important;
+  stroke:currentColor!important;
+  stroke-width:1.75!important;
+  stroke-linecap:round!important;
+  stroke-linejoin:round!important;
+}
+body[data-gf-surface="workspace"] #app :is(#tab-clienti,#tab-depositi,#tab-mezzi,#tab-autisti,#tab-agenti)
+:is(.customer-metric-icon,.deposit-metric-icon,.gf-directory-metric-icon,.stat-icon) svg *{
+  fill:none!important;
+  stroke:currentColor!important;
+}
+body[data-gf-surface="workspace"] #app :is(#tab-clienti,#tab-depositi,#tab-mezzi,#tab-autisti,#tab-agenti)
+:is(.customer-metric,.deposit-metric,.gf-directory-metric,.driver-stat){
+  column-gap:16px;
+}
