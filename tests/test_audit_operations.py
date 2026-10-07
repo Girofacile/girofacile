@@ -54,6 +54,53 @@ def test_delivery_retry_does_not_change_observations_or_evidence(env):
     assert row.completata_il == when and row.tempo_scarico_effettivo == 20
 
 
+def test_account_password_change_requires_current_password_and_reauth(env):
+    from app.core.security import hash_password, verify_password
+    from app.routers import auth
+
+    client, db, owner, *_ = env
+    client.app.include_router(auth.router)
+    owner.password_hash = hash_password("Old-password-2026")
+    owner.email = "owner@example.test"
+    db.commit()
+
+    wrong = client.post("/api/account-password/change", json={
+        "current_password": "wrong-password",
+        "new_password": "New-password-2026",
+        "confirm_password": "New-password-2026",
+    })
+    assert wrong.status_code == 400
+    assert verify_password("Old-password-2026", owner.password_hash)
+
+    changed = client.post("/api/account-password/change", json={
+        "current_password": "Old-password-2026",
+        "new_password": "New-password-2026",
+        "confirm_password": "New-password-2026",
+    })
+    assert changed.status_code == 200
+    assert changed.json()["reauthenticate"] is True
+    assert verify_password("New-password-2026", owner.password_hash)
+    assert not verify_password("Old-password-2026", owner.password_hash)
+
+
+def test_account_profile_cannot_change_password_directly(env):
+    from app.core.security import hash_password, verify_password
+    from app.routers import auth
+
+    client, db, owner, *_ = env
+    client.app.include_router(auth.router)
+    owner.password_hash = hash_password("Old-password-2026")
+    db.commit()
+
+    response = client.put("/api/account-profile", json={
+        "username": owner.username,
+        "email": owner.email,
+        "new_password": "Bypass-password-2026",
+    })
+    assert response.status_code == 400
+    assert verify_password("Old-password-2026", owner.password_hash)
+
+
 def test_future_start_rejected_and_get_does_not_create_states(env):
     client, db, route, delivery = setup_route(env)
     from app.core.utils import local_today
