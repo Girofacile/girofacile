@@ -83,11 +83,12 @@ body[data-gf-surface="workspace"] #app .company-configured-badge-v40{border-radi
 body[data-gf-surface="workspace"] #app #tab-depositi :is(.deposit-metric,.deposit-card){min-height:0}
 body[data-gf-surface="workspace"] #app #tab-depositi .deposit-default-metric strong{font-size:var(--gf-font-lg)}
 body[data-gf-surface="workspace"] #app #tab-autisti .driver-directory-avatar{background:var(--gf-color-bg);color:var(--gf-color-muted)}
-body[data-gf-surface="workspace"] #app #tab-giro .plan-step{--step-color:var(--gf-color-primary);border:1px solid var(--gf-color-border);border-radius:var(--gf-radius-md);background:var(--gf-color-bg);box-shadow:none}
-body[data-gf-surface="workspace"] #app #tab-giro .plan-step-number,body[data-gf-surface="workspace"] #app #tab-giro .plan-step:not(:last-child)::after{background:var(--gf-color-info-bg);color:var(--gf-color-primary);box-shadow:none}
-body[data-gf-surface="workspace"] #app #tab-giro .planning-completion{border-color:var(--gf-color-border);border-radius:var(--gf-radius-md);background:var(--gf-color-bg)}
-body[data-gf-surface="workspace"] #app #tab-giro .planning-check-icon{background:var(--gf-color-warning);border-color:var(--gf-color-warning-bg)}
-body[data-gf-surface="workspace"] #app #tab-giro .planning-check.complete .planning-check-icon{background:var(--gf-color-success);border-color:var(--gf-color-success-bg)}
+body[data-gf-surface="workspace"] #app #tab-giro .plan-step{--step-color:var(--gf-color-nav);border:1px solid var(--gf-color-border);border-radius:var(--gf-radius-md);background:var(--gf-color-surface);box-shadow:none}
+body[data-gf-surface="workspace"] #app #tab-giro .plan-step-number{background:var(--gf-color-nav);color:var(--gf-color-on-primary);box-shadow:none}
+body[data-gf-surface="workspace"] #app #tab-giro .plan-step:not(:last-child)::after{content:none}
+body[data-gf-surface="workspace"] #app #tab-giro .planning-completion{border-color:var(--gf-color-border);border-radius:var(--gf-radius-md);background:var(--gf-color-surface)}
+body[data-gf-surface="workspace"] #app #tab-giro .planning-check-icon{background:var(--gf-color-warning);border:0}
+body[data-gf-surface="workspace"] #app #tab-giro .planning-check.complete .planning-check-icon{background:var(--gf-color-success);border:0}
 body[data-gf-surface="workspace"] #app #tab-dashboard-completed{background:none}
 body[data-gf-surface="workspace"] #app #tab-route-preview .route-preview-design :is(.mini-card,.gf-routing-costs>div,.stops-panel,.route-map-panel-v74,.result-summary-card),
 body[data-gf-surface="workspace"] #app #tab-dashboard-in-progress :is(.live-design-card,.live-design-picker,.live-design-main>.dash-sub-card,.live-design-actions){border-color:var(--gf-color-border);border-radius:var(--gf-radius-lg);background:var(--gf-color-surface);color:var(--gf-color-text);box-shadow:var(--gf-shadow-sm)}

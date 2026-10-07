@@ -494,3 +494,26 @@ test('vehicle photo fallback uses a neutral outline icon instead of the truck em
   assert.match(vehicleCss,/\.fleet-vehicle-placeholder-icon\{[^}]*width:29px[^}]*stroke:currentColor/);
   assert.match(vehicleCss,/\.fleet-table \.fleet-vehicle-placeholder-icon\{[^}]*width:21px/);
 });
+
+
+test('planning page uses the shared topbar and dashboard visual language',()=>{
+  const navigation=read('static/dashboard/js/navigation.js');
+  assert.match(navigation,/giro:\s*\{[\s\S]*title: "Pianificazione giro consegne"[\s\S]*subtitle: "Seleziona clienti, configura risorse e calcola il percorso prima della programmazione\."/);
+
+  const layout=read(assets+'layout.css');
+  assert.match(layout,/#app:has\(#tab-giro:not\(\.hidden\)\) \.topbar-dashboard-title\{display:block;min-width:0\}/);
+
+  const planning=read('static/dashboard/css/planning.css');
+  assert.match(planning,/body:has\(#tab-giro:not\(\.hidden\)\) \.main-area\{background:var\(--gf-color-bg/);
+  assert.match(planning,/#tab-giro \.stat-card\{[\s\S]*border:1px solid var\(--gf-color-border[\s\S]*border-radius:var\(--gf-radius-lg[\s\S]*background:var\(--gf-color-surface/);
+  assert.match(planning,/#tab-giro \.plan-step-heading\{[\s\S]*background:var\(--gf-color-surface-subtle/);
+  assert.match(planning,/#tab-giro \.plan-step-number\{[\s\S]*background:var\(--gf-color-nav/);
+  assert.match(planning,/#tab-giro \.plan-step-art\{[\s\S]*color:var\(--gf-color-muted/);
+  assert.match(planning,/#tab-giro #openCustomerStepBtn\{[\s\S]*background:var\(--gf-color-nav/);
+  assert.match(planning,/@media\(min-width:821px\)\{[\s\S]*#tab-giro>\.page-title-row\{display:none\}/);
+  assert.doesNotMatch(planning,/linear-gradient\(125deg|#8737ff|#0066ff|#12b67f/);
+
+  const workspace=read(assets+'workspace.css');
+  assert.match(workspace,/#tab-giro \.plan-step-number\{background:var\(--gf-color-nav\);color:var\(--gf-color-on-primary\)/);
+  assert.match(workspace,/#tab-giro \.plan-step:not\(:last-child\)::after\{content:none\}/);
+});

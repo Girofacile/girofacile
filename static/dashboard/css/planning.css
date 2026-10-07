@@ -1,112 +1,335 @@
-/* Planning reference layout. All rules are scoped to the planning page. */
-body:has(#tab-giro:not(.hidden)) .main-area { background-color:#eff6fc; }
-#tab-giro { font-family:Arial,Helvetica,sans-serif;color:#0b1435;--plan-line:#d5e2f5; }
-#tab-giro .page-title-row { margin-bottom:17px; }
-#tab-giro .page-title-row h1 { font-size:34px;line-height:1.15;letter-spacing:-1.2px;font-weight:750;color:#080e25; }
-#tab-giro .page-title-row p { font-size:14px;color:#50658d;line-height:1.5;margin-top:8px; }
-#tab-giro .stats-grid { grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:22px; }
-#tab-giro .stat-card { display:flex;align-items:center;gap:18px;min-width:0;min-height:154px;padding:22px 18px;border:1px solid #edf3fc;border-radius:16px;background:rgba(255,255,255,.96);box-shadow:0 8px 24px #36517a05; }
-#tab-giro .stat-icon { width:54px;height:54px;flex:0 0 54px;border-radius:16px; }
-#tab-giro .stat-icon svg { width:27px;height:27px; }
-#tab-giro .stat-icon.blue { color:#0665ff;background:#edf6ff; }
-#tab-giro .stat-icon.orange { color:#ff8709;background:#fff5e9; }
-#tab-giro .stat-icon.green { color:#009f4f;background:#e7fcf1; }
-#tab-giro .stat-icon.purple { color:#8735ff;background:#f4eeff; }
-#tab-giro .stat-card>div:last-child { min-width:0; }
-#tab-giro .stat-card span { color:#40577d;font-size:14px;font-weight:600;line-height:1.35; }
-#tab-giro .stat-card span span,#tab-giro .stat-card small span { display:inline;font:inherit;color:inherit; }
-#tab-giro .stat-card strong { font-size:26px;line-height:1.2;margin:6px 0;color:#090f27;font-weight:750;letter-spacing:-.7px; }
-#tab-giro .stat-card small { display:block;color:#50658d;font-size:13px;line-height:1.3; }
-#tab-giro .giro-layout { display:block; }
-#tab-giro .left-column { min-width:0; }
-#tab-giro .planning-setup-panel { padding:20px 18px 12px;border:1px solid #edf3fc;border-radius:20px;background:rgba(255,255,255,.97);box-shadow:0 10px 28px #45649306; }
-#tab-giro .planning-steps { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:30px; }
-#tab-giro .plan-step { position:relative;min-width:0;min-height:390px;padding:17px 20px;border-radius:16px;--step-color:#0066ff;background:linear-gradient(125deg,#eff8ff,#f2f9ff); }
-#tab-giro .plan-step-2 { --step-color:#12b67f;background:linear-gradient(125deg,#eefcf5,#f0fcf6); }
-#tab-giro .plan-step-3 { --step-color:#8737ff;background:linear-gradient(125deg,#f7f2ff,#f9f4ff); }
-#tab-giro .plan-step:not(:last-child)::after { content:'➜';position:absolute;z-index:1;right:-36px;top:46%;display:grid;place-items:center;width:42px;height:42px;border:6px solid white;border-radius:50%;background:#e8f5ff;color:#0066ff;font-size:20px; }
-#tab-giro .plan-step-heading { display:flex;align-items:center;gap:15px;flex-wrap:wrap; }
-#tab-giro .plan-step-number { width:44px;height:44px;flex:0 0 44px;display:grid;place-items:center;border-radius:50%;background:var(--step-color);color:white;font-size:22px;font-weight:700;box-shadow:inset 0 3px 7px #ffffff35,0 3px 8px #234f8110; }
-#tab-giro .plan-step-heading h2 { font-size:20px;letter-spacing:-.6px;line-height:1.2;margin:0;color:#061940; }
-#tab-giro .plan-step-2 h2 { color:#092825; }
-#tab-giro .plan-step-3 h2 { color:#570daf; }
-#tab-giro .plan-status { display:inline-flex;align-items:center;gap:6px;margin-left:auto;min-height:34px;padding:7px 12px;border:1px solid #ffe5c7;border-radius:999px;background:#fff7ec;color:#be5700;font-size:11px;font-weight:600;white-space:nowrap; }
-#tab-giro .plan-status::before { content:'';width:12px;height:12px;border-radius:50%;background:#ff8a0a; }
-#tab-giro .plan-status.complete { color:#008a43;background:#e3fcf0;border-color:#c8f6e2; }
-#tab-giro .plan-status.complete::before { background:#0bad61; }
-#tab-giro .plan-status.partial { color:#087d53;background:#e3fcf0;border-color:#c8f6e2; }
-#tab-giro .plan-status.partial::before { background:#12b67f; }
-#tab-giro .plan-step-description { margin:0 45px 0 59px;min-height:60px;font-size:13px;line-height:1.5;color:#51688f; }
-#tab-giro .plan-step-art { position:absolute;right:25px;top:76px;width:35px;height:35px;color:var(--step-color);opacity:.65;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round; }
-#tab-giro .plan-step-fields { display:grid;gap:16px;margin-top:4px; }
-#tab-giro .plan-step-2 .plan-step-fields { gap:10px; }
-#tab-giro .plan-step-fields>div { min-width:0; }
-#tab-giro label { font-size:13px;font-weight:600;color:#28436a;letter-spacing:-.1px;margin-bottom:6px; }
-#tab-giro .plan-step-fields :is(input,select),#tab-giro .energy-price-box-v895 input[type=number] { display:block;width:100%;min-width:0;min-height:42px;padding:10px 14px;border:1px solid var(--plan-line);border-radius:10px;background:#fff;color:#101b39;font:14px Arial,Helvetica,sans-serif;box-shadow:none;color-scheme:light; }
-#tab-giro .plan-step-fields select:disabled { background:#f1f6fb;color:#718cb3;opacity:1;cursor:not-allowed; }
-#tab-giro .plan-step-fields :is(input,select):focus-visible,#tab-giro button:focus-visible { outline:3px solid #9dc6ff;outline-offset:2px; }
-#tab-giro .availability-hint { display:block;margin:6px 0 0;font-size:12px;line-height:1.3;color:#566f94; }
-#tab-giro .availability-hint.ok { color:#087d43; }
-#tab-giro .availability-hint.warn { color:#a55508; }
-#tab-giro .energy-price-box-v895 { margin:20px 0 0;padding:18px 20px;background:#faf7ff;border:1px solid #e7def7;border-radius:14px; }
-#tab-giro .energy-price-box-v895>div:not(.energy-mode-row-v895) { max-width:560px; }
-#tab-giro .energy-mode-row-v895 { flex-wrap:wrap; }
-#tab-giro .planning-completion { display:flex;gap:24px;align-items:center;margin-top:20px;padding:16px 24px 14px;border:1px solid #d8e7ff;background:linear-gradient(110deg,#f6faff,#f8fbff);border-radius:15px; }
-#tab-giro .planning-completion-content { flex:1;min-width:0; }
-#tab-giro .planning-completion h2 { font-size:18px;line-height:1.2;letter-spacing:-.5px;margin:0 0 3px;color:#0a1330; }
-#tab-giro .planning-completion p { font-size:13px;line-height:1.4;color:#536c96;margin:0 0 12px; }
-#tab-giro .planning-checklist { display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px; }
-#tab-giro .planning-check { display:flex;align-items:center;gap:8px;padding:7px 9px;border:1px solid #ffe1bf;border-radius:13px;background:#fff8ef;color:#a74d00;min-width:0; }
-#tab-giro .planning-check.complete { background:#effcf6;border-color:#d0f4e2;color:#007e3e; }
-#tab-giro .planning-check-icon { flex:0 0 26px;width:26px;height:26px;display:grid;place-items:center;border:4px solid #fff3e2;border-radius:50%;background:#ff8909;color:#fff;font-size:13px;font-weight:700; }
-#tab-giro .planning-check.complete .planning-check-icon { background:#009f4f;border-color:#daf8e9; }
-#tab-giro .planning-check strong { display:block;font-size:11px;line-height:1.3;color:#132424; }
-#tab-giro .planning-check small { display:block;font-size:11px;line-height:1.3;margin-top:2px; }
-#tab-giro .planning-completion-action { align-self:stretch;display:flex;align-items:center;justify-content:center;border-left:1px solid #dce7f7;padding-left:28px; }
-#tab-giro #openCustomerStepBtn { min-height:48px;min-width:204px;font-size:14px;font-weight:600;border:0;border-radius:12px;background:linear-gradient(#4b91f6,#2c7df7);box-shadow:0 8px 18px #2678ef1a; }
-#tab-giro #openCustomerStepBtn::after { content:'›';font-size:25px;margin-left:10px;line-height:1; }
-#tab-giro .route-gate-hint { font-size:12px;font-weight:400;line-height:1.4;margin-top:9px; }
-/* The checklist already shows each missing field; retain the live text for screen readers. */
-#tab-giro .planning-completion .route-gate-hint { position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap; }
-#tab-giro .delivery-picker-panel { margin-top:20px; }
-@media(min-width:1101px) {
- body:has(#tab-giro:not(.hidden)) .content { padding:14px 30px 36px; }
+/* Planning page aligned to the GiroFacile dashboard visual language. */
+body:has(#tab-giro:not(.hidden)) .main-area{background:var(--gf-color-bg,#f8fafc)}
+body:has(#tab-giro:not(.hidden)) .topbar{
+  background:var(--gf-color-surface,#fff);
+  border-bottom:1px solid var(--gf-color-border,#e2e8f0);
+  -webkit-backdrop-filter:none;
+  backdrop-filter:none;
+  box-shadow:none;
 }
-@media(max-width:1450px) {
- #tab-giro .plan-step-heading { gap:10px; }
- #tab-giro .plan-status { margin-left:0; }
- #tab-giro .plan-step-description { margin:10px 35px 0 0;min-height:60px; }
- #tab-giro .plan-step-art { top:100px;right:16px; }
- #tab-giro .planning-completion { flex-wrap:wrap; }
- #tab-giro .planning-completion-content { flex-basis:100%; }
- #tab-giro .planning-completion-action { border:0;padding:0;margin-left:auto; }
+#tab-giro{
+  --plan-line:var(--gf-color-border,#e2e8f0);
+  font-family:var(--gf-font-family,Arial,Helvetica,sans-serif);
+  color:var(--gf-color-text,#1e293b);
 }
-@media(max-width:1100px) {
- #tab-giro .planning-steps { grid-template-columns:1fr;gap:20px; }
- #tab-giro .plan-step { min-height:0;padding:20px; }
- #tab-giro .plan-step:not(:last-child)::after { display:none; }
- #tab-giro .plan-status { margin-left:auto; }
- #tab-giro .plan-step-description { min-height:0;margin:10px 50px 22px 59px; }
- #tab-giro .plan-step-art { top:65px; }
- #tab-giro .stats-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
- #tab-giro .planning-checklist { grid-template-columns:repeat(3,minmax(0,1fr)); }
+#tab-giro>.page-title-row{margin:0 0 16px}
+#tab-giro>.page-title-row h1{margin:0 0 5px;color:var(--gf-color-text,#1e293b);font-size:30px;line-height:1.2;font-weight:var(--gf-weight-bold,700);letter-spacing:-.02em}
+#tab-giro>.page-title-row p{margin:0;color:var(--gf-color-muted,#64748b);font-size:14px;line-height:1.45}
+
+/* Dashboard-like summary cards. */
+#tab-giro .stats-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin:0 0 20px}
+#tab-giro .stat-card{
+  position:relative;
+  display:block;
+  min-width:0;
+  min-height:142px;
+  padding:20px 22px;
+  border:1px solid var(--gf-color-border,#e2e8f0);
+  border-radius:var(--gf-radius-lg,12px);
+  background:var(--gf-color-surface,#fff);
+  box-shadow:var(--gf-shadow-sm,0 1px 2px rgba(16,24,40,.05));
 }
-@media(max-width:600px) {
- #tab-giro .page-title-row h1 { font-size:28px; }
- #tab-giro .stats-grid { gap:10px; }
- #tab-giro .stat-card { min-height:140px;padding:14px;gap:10px;align-items:flex-start;flex-direction:column; }
- #tab-giro .stat-icon { width:38px;height:38px;flex-basis:38px;border-radius:11px; }
- #tab-giro .stat-card span { font-size:12px; }
- #tab-giro .stat-card strong { font-size:23px; }
- #tab-giro .planning-setup-panel { padding:12px!important; }
- #tab-giro .plan-step { padding:16px; }
- #tab-giro .plan-step-heading { gap:8px; }
- #tab-giro .plan-step-heading h2 { font-size:18px; }
- #tab-giro .plan-step-number { width:36px;height:36px;flex-basis:36px;font-size:20px; }
- #tab-giro .plan-status { font-size:10px;padding:6px 8px; }
- #tab-giro .plan-step-description { margin-left:0; }
- #tab-giro .plan-step-fields :is(input,select) { font-size:16px; }
- #tab-giro .planning-completion { padding:16px 12px; }
- #tab-giro .planning-checklist { grid-template-columns:repeat(2,minmax(0,1fr));gap:8px; }
- #tab-giro .planning-completion-action,#tab-giro #openCustomerStepBtn { width:100%; }
+#tab-giro .stat-card>div:last-child{display:flex;min-width:0;min-height:100px;padding-right:60px;flex-direction:column}
+#tab-giro .stat-card span{color:var(--gf-color-muted,#64748b);font-size:13px;font-weight:var(--gf-weight-medium,500);line-height:1.35}
+#tab-giro .stat-card span span,#tab-giro .stat-card small span{display:inline;font:inherit;color:inherit}
+#tab-giro .stat-card strong{display:block;margin:auto 0 0;color:var(--gf-color-text,#1e293b);font-size:28px;line-height:1.05;font-weight:var(--gf-weight-bold,700);letter-spacing:-.02em}
+#tab-giro .stat-card small{display:block;margin-top:7px;color:var(--gf-color-muted,#64748b);font-size:12px;line-height:1.35}
+#tab-giro .stat-icon{
+  position:absolute;
+  top:18px;
+  right:18px;
+  display:grid;
+  place-items:center;
+  width:44px;
+  height:44px;
+  border-radius:var(--gf-radius-circle,50%);
+  box-shadow:none;
+}
+#tab-giro .stat-icon svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#tab-giro .stat-icon.blue{color:var(--gf-color-info,#175cd3);background:var(--gf-color-info-bg,#edf4ff)}
+#tab-giro .stat-icon.orange{color:var(--gf-color-warning,#946200);background:var(--gf-color-warning-bg,#fff6df)}
+#tab-giro .stat-icon.green{color:var(--gf-color-success,#16734a);background:var(--gf-color-success-bg,#eaf6ef)}
+#tab-giro .stat-icon.purple{color:var(--gf-color-muted,#64748b);background:var(--gf-color-bg,#f8fafc);border:1px solid var(--gf-color-border,#e2e8f0)}
+
+#tab-giro .giro-layout{display:block}
+#tab-giro .left-column{min-width:0}
+#tab-giro .planning-setup-panel{
+  padding:16px;
+  border:1px solid var(--gf-color-border,#e2e8f0);
+  border-radius:var(--gf-radius-lg,12px);
+  background:var(--gf-color-surface,#fff);
+  box-shadow:var(--gf-shadow-sm,0 1px 2px rgba(16,24,40,.05));
+}
+#tab-giro .planning-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+#tab-giro .plan-step{
+  position:relative;
+  min-width:0;
+  min-height:360px;
+  padding:0 18px 18px;
+  overflow:hidden;
+  border:1px solid var(--gf-color-border,#e2e8f0);
+  border-radius:var(--gf-radius-md,10px);
+  background:var(--gf-color-surface,#fff);
+  box-shadow:none;
+  --step-color:var(--gf-color-nav,#0f172a);
+}
+#tab-giro .plan-step-2,#tab-giro .plan-step-3{--step-color:var(--gf-color-nav,#0f172a)}
+#tab-giro .plan-step:not(:last-child)::after{content:none}
+#tab-giro .plan-step-heading{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin:0 -18px 14px;
+  padding:14px 16px;
+  border-bottom:1px solid var(--gf-color-border,#e2e8f0);
+  background:var(--gf-color-surface-subtle,#f1f4f8);
+}
+#tab-giro .plan-step-number{
+  display:grid;
+  place-items:center;
+  flex:0 0 32px;
+  width:32px;
+  height:32px;
+  border-radius:var(--gf-radius-circle,50%);
+  background:var(--gf-color-nav,#0f172a);
+  color:#fff;
+  font-size:14px;
+  font-weight:var(--gf-weight-bold,700);
+  box-shadow:none;
+}
+#tab-giro .plan-step-heading h2,
+#tab-giro .plan-step-2 h2,
+#tab-giro .plan-step-3 h2{
+  margin:0;
+  color:var(--gf-color-text,#1e293b);
+  font-size:16px;
+  line-height:1.3;
+  font-weight:var(--gf-weight-bold,700);
+  letter-spacing:0;
+}
+#tab-giro .plan-status{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  margin-left:auto;
+  min-height:28px;
+  padding:5px 9px;
+  border:1px solid var(--gf-color-warning-bg,#fff6df);
+  border-radius:var(--gf-radius-pill,999px);
+  background:var(--gf-color-warning-bg,#fff6df);
+  color:var(--gf-color-warning,#946200);
+  font-size:10px;
+  font-weight:var(--gf-weight-semibold,600);
+  white-space:nowrap;
+}
+#tab-giro .plan-status::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--gf-color-warning,#946200)}
+#tab-giro .plan-status.complete,
+#tab-giro .plan-status.partial{color:var(--gf-color-success,#16734a);background:var(--gf-color-success-bg,#eaf6ef);border-color:var(--gf-color-success-bg,#eaf6ef)}
+#tab-giro .plan-status.complete::before,
+#tab-giro .plan-status.partial::before{background:var(--gf-color-success,#16734a)}
+#tab-giro .plan-step-description{
+  min-height:44px;
+  margin:0 36px 16px 0;
+  color:var(--gf-color-muted,#64748b);
+  font-size:12px;
+  line-height:1.5;
+}
+#tab-giro .plan-step-art{
+  position:absolute;
+  right:18px;
+  top:70px;
+  width:24px;
+  height:24px;
+  color:var(--gf-color-muted,#64748b);
+  opacity:.7;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.7;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+#tab-giro .plan-step-fields{display:grid;gap:14px;margin-top:0}
+#tab-giro .plan-step-2 .plan-step-fields{gap:10px}
+#tab-giro .plan-step-fields>div{min-width:0}
+#tab-giro label{display:block;margin:0 0 6px;color:var(--gf-color-text,#1e293b);font-size:12px;font-weight:var(--gf-weight-semibold,600);letter-spacing:0}
+#tab-giro .plan-step-fields :is(input,select),
+#tab-giro .energy-price-box-v895 input[type=number]{
+  display:block;
+  width:100%;
+  min-width:0;
+  min-height:40px;
+  padding:9px 12px;
+  border:1px solid var(--gf-color-border,#e2e8f0);
+  border-radius:var(--gf-radius-sm,6px);
+  background:var(--gf-color-surface,#fff);
+  color:var(--gf-color-text,#1e293b);
+  font-family:var(--gf-font-family,Arial,Helvetica,sans-serif);
+  font-size:13px;
+  box-shadow:none;
+  color-scheme:light;
+}
+#tab-giro .plan-step-fields :is(input,select):hover{border-color:#cbd5e1}
+#tab-giro .plan-step-fields select:disabled{background:var(--gf-color-bg,#f8fafc);color:var(--gf-color-muted,#64748b);opacity:1;cursor:not-allowed}
+#tab-giro .plan-step-fields :is(input,select):focus-visible,
+#tab-giro .energy-price-box-v895 input[type=number]:focus-visible,
+#tab-giro button:focus-visible{outline:0;box-shadow:var(--gf-focus-ring,0 0 0 3px rgba(37,99,235,.16))}
+#tab-giro .availability-hint{display:block;margin:6px 0 0;color:var(--gf-color-muted,#64748b);font-size:11px;line-height:1.35}
+#tab-giro .availability-hint.ok{color:var(--gf-color-success,#16734a)}
+#tab-giro .availability-hint.warn{color:var(--gf-color-warning,#946200)}
+
+#tab-giro .energy-price-box-v895{
+  margin:16px 0 0;
+  padding:16px 18px;
+  border:1px solid var(--gf-color-border,#e2e8f0);
+  border-radius:var(--gf-radius-md,10px);
+  background:var(--gf-color-bg,#f8fafc);
+}
+#tab-giro .energy-price-box-v895>div:not(.energy-mode-row-v895){max-width:560px}
+#tab-giro .energy-mode-row-v895{flex-wrap:wrap}
+
+#tab-giro .planning-completion{
+  display:flex;
+  align-items:center;
+  gap:22px;
+  margin-top:14px;
+  padding:16px 18px;
+  border:1px solid var(--gf-color-border,#e2e8f0);
+  border-radius:var(--gf-radius-md,10px);
+  background:var(--gf-color-surface,#fff);
+}
+#tab-giro .planning-completion-content{flex:1;min-width:0}
+#tab-giro .planning-completion h2{margin:0 0 3px;color:var(--gf-color-text,#1e293b);font-size:16px;line-height:1.3;font-weight:var(--gf-weight-bold,700);letter-spacing:0}
+#tab-giro .planning-completion p{margin:0 0 12px;color:var(--gf-color-muted,#64748b);font-size:12px;line-height:1.4}
+#tab-giro .planning-checklist{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+#tab-giro .planning-check{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  min-width:0;
+  padding:7px 9px;
+  border:1px solid var(--gf-color-warning-bg,#fff6df);
+  border-radius:var(--gf-radius-md,10px);
+  background:var(--gf-color-warning-bg,#fff6df);
+  color:var(--gf-color-warning,#946200);
+}
+#tab-giro .planning-check.complete{background:var(--gf-color-success-bg,#eaf6ef);border-color:var(--gf-color-success-bg,#eaf6ef);color:var(--gf-color-success,#16734a)}
+#tab-giro .planning-check-icon{
+  display:grid;
+  place-items:center;
+  flex:0 0 22px;
+  width:22px;
+  height:22px;
+  border:0;
+  border-radius:50%;
+  background:var(--gf-color-warning,#946200);
+  color:#fff;
+  font-size:11px;
+  font-weight:var(--gf-weight-bold,700);
+}
+#tab-giro .planning-check.complete .planning-check-icon{background:var(--gf-color-success,#16734a)}
+#tab-giro .planning-check strong{display:block;color:var(--gf-color-text,#1e293b);font-size:10px;line-height:1.3}
+#tab-giro .planning-check small{display:block;margin-top:2px;font-size:10px;line-height:1.3}
+#tab-giro .planning-completion-action{
+  align-self:stretch;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding-left:20px;
+  border-left:1px solid var(--gf-color-border,#e2e8f0);
+}
+#tab-giro #openCustomerStepBtn{
+  min-width:188px;
+  min-height:42px;
+  border:0;
+  border-radius:var(--gf-radius-sm,6px);
+  background:var(--gf-color-nav,#0f172a);
+  color:#fff;
+  font-size:12px;
+  font-weight:var(--gf-weight-bold,700);
+  box-shadow:none;
+}
+#tab-giro #openCustomerStepBtn::after{content:'›';margin-left:9px;font-size:18px;line-height:1}
+#tab-giro .route-gate-hint{margin-top:8px;font-size:11px;font-weight:400;line-height:1.4}
+#tab-giro .planning-completion .route-gate-hint{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+
+/* Later planning stages keep the same panel language as the dashboard. */
+#tab-giro .delivery-picker-panel,
+#tab-giro .delivery-workbench{
+  margin-top:18px;
+  padding:0 18px 18px;
+  overflow:hidden;
+  border:1px solid var(--gf-color-border,#e2e8f0);
+  border-radius:var(--gf-radius-lg,12px);
+  background:var(--gf-color-surface,#fff);
+  box-shadow:var(--gf-shadow-sm,0 1px 2px rgba(16,24,40,.05));
+}
+#tab-giro :is(.delivery-picker-panel,.delivery-workbench)>.panel-header{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin:0 -18px 16px;
+  padding:14px 18px;
+  border-bottom:1px solid var(--gf-color-border,#e2e8f0);
+  background:var(--gf-color-surface-subtle,#f1f4f8);
+}
+#tab-giro :is(.delivery-picker-panel,.delivery-workbench)>.panel-header>div:first-child{margin-right:auto}
+#tab-giro :is(.delivery-picker-panel,.delivery-workbench)>.panel-header h2{margin:0 0 3px;color:var(--gf-color-text,#1e293b);font-size:16px;line-height:1.3}
+#tab-giro :is(.delivery-picker-panel,.delivery-workbench)>.panel-header .panel-subtitle{margin:0;color:var(--gf-color-muted,#64748b);font-size:11px;line-height:1.4}
+#tab-giro .customer-picker-panel{
+  border:1px solid var(--gf-color-border,#e2e8f0);
+  border-radius:var(--gf-radius-md,10px);
+  background:var(--gf-color-surface,#fff);
+  box-shadow:none;
+}
+#tab-giro .picker-filters :is(input,select){
+  min-height:38px;
+  border:1px solid var(--gf-color-border,#e2e8f0);
+  border-radius:var(--gf-radius-sm,6px);
+  background:var(--gf-color-surface,#fff);
+  color:var(--gf-color-text,#1e293b);
+  box-shadow:none;
+}
+#tab-giro .editable-delivery-wrap{
+  border:1px solid var(--gf-color-border,#e2e8f0);
+  border-radius:var(--gf-radius-md,10px);
+  overflow:auto;
+}
+#tab-giro .editable-delivery-table thead th{background:#f9fafc;color:#536077}
+#tab-giro .delivery-footer-actions{border-color:var(--gf-color-border,#e2e8f0)}
+
+@media(min-width:821px){
+  #tab-giro>.page-title-row{display:none}
+}
+@media(min-width:1101px){
+  body:has(#tab-giro:not(.hidden)) .content{padding:20px 26px 28px}
+}
+@media(max-width:1450px){
+  #tab-giro .planning-completion{flex-wrap:wrap}
+  #tab-giro .planning-completion-content{flex-basis:100%}
+  #tab-giro .planning-completion-action{margin-left:auto;padding-left:0;border-left:0}
+}
+@media(max-width:1100px){
+  #tab-giro .stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #tab-giro .planning-steps{grid-template-columns:1fr;gap:12px}
+  #tab-giro .plan-step{min-height:0}
+  #tab-giro .planning-checklist{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:700px){
+  #tab-giro :is(.delivery-picker-panel,.delivery-workbench)>.panel-header{align-items:flex-start;flex-direction:column}
+}
+@media(max-width:600px){
+  #tab-giro>.page-title-row h1{font-size:28px}
+  #tab-giro .stats-grid{grid-template-columns:1fr;gap:10px}
+  #tab-giro .stat-card{min-height:116px;padding:16px 18px}
+  #tab-giro .stat-card>div:last-child{min-height:82px}
+  #tab-giro .stat-icon{top:15px;right:15px;width:40px;height:40px}
+  #tab-giro .planning-setup-panel{padding:10px}
+  #tab-giro .plan-step{padding:0 14px 16px}
+  #tab-giro .plan-step-heading{margin:0 -14px 14px;padding:12px 14px}
+  #tab-giro .plan-step-heading h2{font-size:15px}
+  #tab-giro .plan-status{margin-left:auto}
+  #tab-giro .plan-step-fields :is(input,select){font-size:16px}
+  #tab-giro .planning-completion{padding:14px 12px}
+  #tab-giro .planning-checklist{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+  #tab-giro .planning-completion-action,#tab-giro #openCustomerStepBtn{width:100%}
 }

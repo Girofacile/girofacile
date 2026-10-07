@@ -27,6 +27,10 @@ const WORKSPACE_TOPBAR_META = {
   agenti: {
     title: "Agenti",
     subtitle: "Anagrafica agenti collegabili ai clienti."
+  },
+  giro: {
+    title: "Pianificazione giro consegne",
+    subtitle: "Seleziona clienti, configura risorse e calcola il percorso prima della programmazione."
   }
 };
 
