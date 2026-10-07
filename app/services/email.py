@@ -386,6 +386,21 @@ def send_password_reset(
     return _send(to_email, subject, _base_template(content))
 
 
+def send_password_changed_notice(to_email: str, display_name: str) -> bool:
+    subject = "🔐 Password GiroFacile modificata"
+    safe_name = display_name or "utente"
+    content = f"""
+    <p>Ciao <strong>{safe_name}</strong>,</p>
+    <p>La password del tuo account GiroFacile è stata modificata correttamente.</p>
+    <div class="info-box">
+      <div class="info-row"><span class="info-label">Sicurezza:</span><strong>tutte le sessioni precedenti sono state invalidate</strong></div>
+    </div>
+    <div class="warn">Se non sei stato tu a modificare la password, vai subito alla pagina di accesso e usa “Password dimenticata?” per reimpostarla.</div>
+    <p>Accedi solo dal dominio ufficiale: <a href="{APP_BASE_URL}">{APP_BASE_URL}</a></p>
+    """
+    return _send(to_email, subject, _base_template(content))
+
+
 def send_agent_invitation(
     to_email: str,
     agent_name: str,
