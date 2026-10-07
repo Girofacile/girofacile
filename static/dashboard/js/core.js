@@ -4209,6 +4209,7 @@ function acceptCookieNotice(){
 
 window.addEventListener("DOMContentLoaded", () => {
   bindLoginRecoveryActions();
+  bindCompanyProfileDirtyTracking();
   setTimeout(showCookieNoticeIfNeeded, 900);
 });
 
@@ -4217,6 +4218,101 @@ window.addEventListener("DOMContentLoaded", () => {
    v29 - Profilo azienda + onboarding iniziale
 ------------------------------------------------------------------ */
 let onboardingStateV29 = null;
+let companyProfileBaselineV29 = "";
+let companyProfileDirtyV29 = false;
+
+function getCompanyProfilePayload(){
+  return {
+    company_name: val("companyNameInput"),
+    company_email: val("companyEmailInput"),
+    company_phone: val("companyPhoneInput"),
+    company_vat: val("companyVatInput"),
+    company_address: val("companyAddressInput"),
+    company_city: val("companyCityInput"),
+    company_zip: val("companyZipInput"),
+    company_country: val("companyCountryInput") || "Italia",
+    company_fiscal_code: val("companyFiscalCodeInput"),
+    company_pec: val("companyPecInput"),
+    company_sdi: val("companySdiInput"),
+    company_legal_address: val("companyLegalAddressInput"),
+    company_billing_address: val("companyBillingAddressInput"),
+    company_activity_type: val("companyActivityTypeInput"),
+    company_size: val("companySizeInput"),
+    daily_deliveries: val("companyDailyDeliveriesInput"),
+    company_logo_url: val("companyLogoUrl")
+  };
+}
+
+function companyProfileSignatureV29(){
+  return JSON.stringify(getCompanyProfilePayload());
+}
+
+function renderCompanyProfileDirtyStateV29(){
+  const bar = document.getElementById("companySaveBar");
+  if(bar) bar.classList.toggle("hidden", !companyProfileDirtyV29);
+  if(document.body) document.body.classList.toggle("gf-company-dirty", companyProfileDirtyV29);
+}
+
+function setCompanyProfileBaselineV29(){
+  companyProfileBaselineV29 = companyProfileSignatureV29();
+  companyProfileDirtyV29 = false;
+  renderCompanyProfileDirtyStateV29();
+}
+
+function updateCompanyProfileDirtyStateV29(){
+  if(!companyProfileBaselineV29) return;
+  companyProfileDirtyV29 = companyProfileSignatureV29() !== companyProfileBaselineV29;
+  renderCompanyProfileDirtyStateV29();
+}
+
+function companyProfileHasUnsavedChanges(){
+  return !!companyProfileDirtyV29;
+}
+
+function emphasizeCompanySaveBar(){
+  const bar = document.getElementById("companySaveBar");
+  if(!bar) return;
+  bar.classList.remove("attention");
+  void bar.offsetWidth;
+  bar.classList.add("attention");
+  setTimeout(()=>bar.classList.remove("attention"), 700);
+  const saveBtn = document.getElementById("companySaveChangesBtn");
+  if(saveBtn) saveBtn.focus({preventScroll:true});
+}
+
+function blockCompanyNavigationForUnsavedChanges(){
+  if(!companyProfileDirtyV29) return false;
+  emphasizeCompanySaveBar();
+  toast("Hai modifiche non salvate. Salva o annulla prima di cambiare sezione.");
+  return true;
+}
+
+async function cancelCompanyProfileChanges(){
+  if(!companyProfileDirtyV29) return;
+  const data = await loadCompanyProfile(false);
+  if(data){
+    toast("Modifiche annullate");
+  }else{
+    alert("Impossibile ripristinare i dati salvati. Riprova.");
+  }
+}
+
+function bindCompanyProfileDirtyTracking(){
+  const tab = document.getElementById("tab-company");
+  if(!tab || tab.dataset.dirtyTrackingReady === "true") return;
+  tab.dataset.dirtyTrackingReady = "true";
+  const onEdit = (event) => {
+    if(!event.target?.matches?.("input, select, textarea")) return;
+    updateCompanyProfileDirtyStateV29();
+  };
+  tab.addEventListener("input", onEdit);
+  tab.addEventListener("change", onEdit);
+  window.addEventListener("beforeunload", (event) => {
+    if(!companyProfileDirtyV29) return;
+    event.preventDefault();
+    event.returnValue = "";
+  });
+}
 
 function setCompanyLogoPreview(){
   const hidden = document.getElementById("companyLogoUrl");
@@ -4251,6 +4347,7 @@ async function loadCompanyProfile(showToast=false){
     fillSectorSelectV47("companySectorInput", data.company_sector || "");
     set("companyLogoUrl", data.company_logo_url || "");
     setCompanyLogoPreview();
+    setCompanyProfileBaselineV29();
     if(data.company_name) localStorage.setItem("girofacile_profile_name", data.company_name);
     // L'email aziendale è separata dall'email di accesso account e non deve sovrascriverla.
     if(data.company_logo_url) localStorage.setItem("girofacile_profile_photo", data.company_logo_url);
@@ -4264,32 +4361,29 @@ async function loadCompanyProfile(showToast=false){
 }
 
 async function saveCompanyProfile(){
+  if(!companyProfileDirtyV29) return;
+  const btn = document.getElementById("companySaveChangesBtn");
+  const original = btn?.textContent || "Salva modifiche";
+  if(btn){
+    if(btn.dataset.saving === "1") return;
+    btn.dataset.saving = "1";
+    btn.disabled = true;
+    btn.textContent = "Salvataggio...";
+  }
   try{
-    const payload = {
-      company_name: val("companyNameInput"),
-      company_email: val("companyEmailInput"),
-      company_phone: val("companyPhoneInput"),
-      company_vat: val("companyVatInput"),
-      company_address: val("companyAddressInput"),
-      company_city: val("companyCityInput"),
-      company_zip: val("companyZipInput"),
-      company_country: val("companyCountryInput") || "Italia",
-      company_fiscal_code: val("companyFiscalCodeInput"),
-      company_pec: val("companyPecInput"),
-      company_sdi: val("companySdiInput"),
-      company_legal_address: val("companyLegalAddressInput"),
-      company_billing_address: val("companyBillingAddressInput"),
-      company_activity_type: val("companyActivityTypeInput"),
-      company_size: val("companySizeInput"),
-      daily_deliveries: val("companyDailyDeliveriesInput"),
-      company_logo_url: val("companyLogoUrl")
-    };
-    const res = await api("/api/company-profile", {method:"PUT", body:JSON.stringify(payload)});
+    const payload = getCompanyProfilePayload();
+    await api("/api/company-profile", {method:"PUT", body:JSON.stringify(payload)});
     await loadCompanyProfile(false);
     await loadOnboardingStatus(false);
-    toast("Profilo azienda salvato");
+    toast("Modifiche azienda salvate");
   }catch(e){
     alert(e.message || "Errore salvataggio profilo azienda");
+  }finally{
+    if(btn){
+      btn.disabled = false;
+      btn.textContent = original;
+      btn.dataset.saving = "0";
+    }
   }
 }
 

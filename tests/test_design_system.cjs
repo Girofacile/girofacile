@@ -189,3 +189,30 @@ test('company profile uses the workspace topbar and keeps billing addresses alwa
   assert.doesNotMatch(innerSurface,/company-address-details/);
   assert.match(workspace,/#app \.company-configured-badge-v40/);
 });
+
+
+test('company edits are saved from the topbar and bottom save actions are removed',()=>{
+  const html=read('static/dashboard/index.html');
+  assert.match(html,/id="companySaveBar" class="company-save-bar hidden"/);
+  assert.match(html,/id="companySaveChangesBtn"[^>]*onclick="saveCompanyProfile\(\)"/);
+  assert.match(html,/id="companyDiscardChangesBtn"[^>]*onclick="cancelCompanyProfileChanges\(\)"/);
+  assert.doesNotMatch(html,/class="company-save-actions"/);
+  assert.doesNotMatch(html,/>Salva profilo azienda</);
+
+  const core=read('static/dashboard/js/core.js');
+  assert.match(core,/let companyProfileDirtyV29 = false/);
+  assert.match(core,/function getCompanyProfilePayload\(\)/);
+  assert.match(core,/function updateCompanyProfileDirtyStateV29\(\)/);
+  assert.match(core,/function blockCompanyNavigationForUnsavedChanges\(\)/);
+  assert.match(core,/window\.addEventListener\("beforeunload"/);
+  assert.match(core,/bindCompanyProfileDirtyTracking\(\)/);
+  assert.match(core,/setCompanyProfileBaselineV29\(\)/);
+
+  const navigation=read('static/dashboard/js/navigation.js');
+  assert.match(navigation,/name !== "company"[^\n]*blockCompanyNavigationForUnsavedChanges/);
+
+  const companyCss=read('static/dashboard/css/company.css');
+  assert.match(companyCss,/\.company-save-bar\s*\{[^}]*position: absolute[^}]*left: 50%[^}]*top: 50%/);
+  assert.match(companyCss,/\.company-save-bar\.hidden \{ display: none !important; \}/);
+  assert.doesNotMatch(companyCss,/company-save-actions/);
+});

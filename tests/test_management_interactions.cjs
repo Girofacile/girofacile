@@ -57,3 +57,33 @@ test('live route detail renders stops, routing summary and chat without undeclar
   vm.runInContext('renderDashboardInProgressSubpage([], null)', context);
   assert.match(node.innerHTML, /Nessun giro in corso/);
 });
+
+
+test('company dirty-state blocks navigation until save or cancel', () => {
+  const navigation = fs.readFileSync('static/dashboard/js/navigation.js', 'utf8');
+  const start = navigation.indexOf('function showTab(name)');
+  const end = navigation.length;
+  const classes = new Set();
+  let blockedCalls = 0;
+  const tabs = {
+    'tab-company': {classList:{add(){},remove(){}}},
+    'tab-dashboard': {classList:{add(){},remove(){}}},
+  };
+  const context = vm.createContext({
+    window:{GFLiveDesign:{closeMap(){}}},
+    document:{
+      querySelectorAll: selector => selector === '.tab' ? Object.values(tabs) : [],
+      getElementById: id => tabs[id] || null,
+      body:{classList:{toggle(){}}},
+    },
+    blockCompanyNavigationForUnsavedChanges: () => { blockedCalls += 1; return true; },
+    blockOperationalTabV49: () => false,
+    agentsFeatureEnabled: () => true,
+    showLockedOrProceed: () => false,
+    syncWorkspaceTopbar: () => {},
+    setTimeout: () => {},
+  });
+  vm.runInContext(navigation.slice(start,end), context);
+  vm.runInContext("showTab('dashboard')", context);
+  assert.equal(blockedCalls, 1);
+});

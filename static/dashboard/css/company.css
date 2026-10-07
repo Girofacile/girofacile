@@ -135,8 +135,44 @@ body.gf-company-page-active #showOnboardingBtn {
 #tab-company .company-field textarea { min-height: 94px; resize: vertical; }
 #tab-company .company-address-details { grid-column: 1 / -1; }
 #tab-company .company-address-details .company-section-heading { margin-bottom: 22px; }
-#tab-company .company-save-actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 12px; }
-#tab-company .company-save-actions button { min-height: 44px; font-size: 14px; }
+.company-save-bar {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 12;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 5px 6px 5px 12px;
+  border: 1px solid var(--gf-color-border, #e2e8f0);
+  border-radius: var(--gf-radius-lg, 14px);
+  background: var(--gf-color-surface, #fff);
+  box-shadow: var(--gf-shadow-md, 0 10px 24px rgba(15,23,42,.10));
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
+}
+.company-save-bar.hidden { display: none !important; }
+.company-save-state {
+  margin-right: 2px;
+  color: var(--gf-color-warning, #b76e00);
+  font-size: 12px;
+  font-weight: var(--gf-weight-semibold, 600);
+}
+.company-save-bar .btn-light,
+.company-save-bar .btn-primary {
+  min-height: 34px;
+  padding: 7px 12px;
+  border-radius: var(--gf-radius-sm, 8px);
+  font-size: 12px;
+  box-shadow: none !important;
+}
+.company-save-bar .btn-primary { background: var(--gf-color-primary, #2563eb) !important; }
+.company-save-bar.attention { animation: company-save-attention .55s ease; }
+@keyframes company-save-attention {
+  0%,100% { transform: translate(-50%, -50%) scale(1); }
+  35% { transform: translate(-50%, -50%) scale(1.035); box-shadow: 0 0 0 4px rgba(37,99,235,.12), var(--gf-shadow-md, 0 10px 24px rgba(15,23,42,.10)); }
+}
 #tab-company .onboarding-card-v29 { margin: 0; }
 @media (min-width: 1101px) {
   body:has(#tab-company:not(.hidden)) .content { padding: 28px 30px 36px; }
@@ -169,5 +205,9 @@ body.gf-company-page-active #showOnboardingBtn {
   #tab-company .company-field :is(input, select, textarea) { font-size: 16px; }
   #tab-company .company-logo-row-v29 { flex-direction: row; flex-wrap: wrap; align-items: center; }
   #tab-company .company-logo-preview-v29 { flex-basis: 72px; width: 72px; height: 72px; }
-  #tab-company .company-save-actions { flex-direction: column-reverse; }
+}
+
+@media (min-width: 821px) and (max-width: 1320px) {
+  .company-save-state { display: none; }
+  .company-save-bar { padding-left: 6px; }
 }

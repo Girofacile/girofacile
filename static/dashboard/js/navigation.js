@@ -13,6 +13,7 @@ function syncWorkspaceTopbar(name){
 function showTab(name){
   window.GFLiveDesign?.closeMap();
   if(name==='integrations') name='dashboard';
+  if(name !== "company" && typeof blockCompanyNavigationForUnsavedChanges === "function" && blockCompanyNavigationForUnsavedChanges()) return;
   if(blockOperationalTabV49(name)) return;
   if(name === "agenti" && !agentsFeatureEnabled()) name = "settings";
   if(showLockedOrProceed(name)) return;

@@ -15,7 +15,7 @@
 <script src="/api/billing/catalog.js"></script>
 <script src="/static/dashboard/js/billing.js?v=electric_bonus_20261002"></script>
 <link href="/static/dashboard/css/dashboard.css?v=20261007_reference" rel="stylesheet">
-<link href="/static/dashboard/css/company.css?v=company_header_20261007" rel="stylesheet">
+<link href="/static/dashboard/css/company.css?v=company_dirty_save_20261007" rel="stylesheet">
 <link href="/static/dashboard/css/planning.css?v=menu_fix_20261001_2" rel="stylesheet">
 <link href="/static/dashboard/css/route-preview.css?v=preview_20261006" rel="stylesheet">
 <link href="/static/dashboard/css/scheduled.css?v=sidebar_stable_20261001" rel="stylesheet">
@@ -355,6 +355,12 @@
     <header class="topbar">
       <div class="topbar-dashboard-title"><h1 id="workspacePageTitle">Dashboard</h1><p id="workspacePageSubtitle">Panoramica operativa delle consegne e dell’attività aziendale.</p></div><div class="topbar-spacer"></div>
 
+      <div id="companySaveBar" class="company-save-bar hidden" role="status" aria-live="polite">
+        <span class="company-save-state">Modifiche non salvate</span>
+        <button id="companyDiscardChangesBtn" type="button" class="btn-light" onclick="cancelCompanyProfileChanges()">Annulla</button>
+        <button id="companySaveChangesBtn" type="button" class="btn-primary" onclick="saveCompanyProfile()">Salva modifiche</button>
+      </div>
+
       <div class="top-actions">
         <button class="btn-primary topbar-new-route" onclick="showTab('giro')"><span data-gf-label="new_route">Nuovo giro</span></button>
         <div id="companyTopbarStatus" class="company-topbar-status" aria-live="polite">
@@ -461,10 +467,6 @@
               <div class="company-field"><label for="companyBillingAddressInput">Indirizzo di fatturazione</label><input id="companyBillingAddressInput" placeholder="Lascia vuoto se coincide con la sede legale"></div>
             </div>
           </section>
-          <div class="company-save-actions">
-            <button type="button" class="btn-light" onclick="loadCompanyProfile()">Annulla modifiche</button>
-            <button type="button" class="btn-primary" onclick="saveCompanyProfile()">Salva profilo azienda</button>
-          </div>
           </div>
 
           <div class="card onboarding-card-v29">
@@ -1837,11 +1839,11 @@
 
 <script src="/static/dashboard/js/reports.js?v=audit_20261004"></script>
 <script src="/static/dashboard/js/customers.js?v=customer_kpi_fix_20261006_6"></script>
-<script src="/static/dashboard/js/navigation.js?v=company_header_20261007"></script>
+<script src="/static/dashboard/js/navigation.js?v=company_dirty_save_20261007"></script>
 <script src="/static/dashboard/js/completed.js?v=20261006"></script>
 <script src="/static/dashboard/js/preview-design.js?v=20261006"></script>
 <script src="/static/dashboard/js/live-design.js?v=20261006"></script>
-<script src="/static/dashboard/js/core.js?v=dashboard_ref_20261007_2"></script>
+<script src="/static/dashboard/js/core.js?v=company_dirty_save_20261007"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=1"></script>
 
 <script>
