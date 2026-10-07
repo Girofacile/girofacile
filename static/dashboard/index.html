@@ -42,7 +42,7 @@
 
 <!-- Shared GiroFacile design system; legacy sheets retain feature layout. -->
 <link rel="stylesheet" href="/static/design-system/tokens.css?v=ds_20261007_reference_2">
-<link rel="stylesheet" href="/static/design-system/components.css?v=ds_20261007_reference_2">
+<link rel="stylesheet" href="/static/design-system/components.css?v=ds_20261007_profile_modal_3">
 <link rel="stylesheet" href="/static/design-system/layout.css?v=ds_20261007_topbar_actions_4">
 <link rel="stylesheet" href="/static/design-system/workspace.css?v=ds_20261007_company_header_6">
 <link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007_reference_2">
@@ -1770,62 +1770,93 @@
 </div>
 
 <div id="profileOverlay" class="modal-overlay hidden gf-dialog" onclick="closeProfilePanel(event)">
-  <div class="profile-modal" onclick="event.stopPropagation()">
-    <div class="modal-header">
-      <div>
+  <div class="profile-modal profile-modal-v2" onclick="event.stopPropagation()">
+    <div class="profile-modal-header">
+      <div class="profile-modal-heading">
         <h2>Profilo account</h2>
-        <p>Gestisci le informazioni del profilo collegato a GiroFacile.</p>
+        <p>Gestisci identità, accesso e piano collegati a GiroFacile.</p>
       </div>
-      <button class="modal-close" onclick="closeProfilePanel()">×</button>
+      <button class="profile-modal-close" type="button" onclick="closeProfilePanel()" aria-label="Chiudi profilo account">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"/></svg>
+      </button>
     </div>
 
-    <div class="profile-photo-row">
-      <div id="profilePreview" class="profile-preview">A</div>
-      <div>
-        <label>Fotografia profilo</label>
-        <input id="profilePhoto" type="file" accept="image/*" onchange="previewProfilePhoto(event)">
-        <small>La foto viene salvata localmente sul browser.</small>
-      </div>
-    </div>
-
-    <div class="form-grid profile-grid">
-      <div><label>Nome account</label><input id="profileName" placeholder="Admin"><small>Salvato nel database e sincronizzato su tutti i dispositivi.</small></div>
-      <div><label>Email account</label><input id="profileEmail" type="email" placeholder="nome@email.it"><small>Usata per accesso, recupero password e comunicazioni dell'account.</small></div>
-      <div><label>Ruolo</label><input id="profileRole" value="Amministratore" readonly></div>
-      <div><label>Nuova password</label><input id="profilePassword" type="password" placeholder="Lascia vuoto per non cambiarla"></div>
-    </div>
-
-
-    <!-- SEZIONE IL MIO PIANO (compatta) -->
-    <div style="margin-top:16px;border-top:1px solid #e5e7eb;padding-top:16px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <h3 style="font-size:14px;font-weight:700">Il mio piano</h3>
-        <span id="planBadge" class="plan-badge-ui">—</span>
-      </div>
-      <div id="planStatusBox" style="background:#eff6ff;border-radius:8px;padding:10px 12px;margin-bottom:10px;display:flex;align-items:center;gap:8px">
-        <span id="planStatusIcon" style="font-size:18px">⏳</span>
+    <section class="profile-modal-section profile-identity-section" aria-labelledby="profileIdentityHeading">
+      <div class="profile-section-heading">
         <div>
-          <div id="planStatusLabel" style="font-size:13px;font-weight:600">Caricamento...</div>
-          <div id="planStatusDesc" style="font-size:11px;color:#6b7280;margin-top:2px"></div>
+          <h3 id="profileIdentityHeading">Identità e accesso</h3>
+          <p>Dati personali dell’operatore e credenziali dell’account.</p>
         </div>
       </div>
-      <div id="planUsageRows" class="plan-usage-rowline-v40"></div>
-      <div class="profile-plan-actions-v63">
+
+      <div class="profile-photo-row profile-photo-row-v2">
+        <div id="profilePreview" class="profile-preview">A</div>
+        <div class="profile-photo-controls">
+          <label for="profilePhoto">Fotografia profilo</label>
+          <input id="profilePhoto" type="file" accept="image/*" onchange="previewProfilePhoto(event)">
+          <small>La foto resta associata a questo browser.</small>
+        </div>
+      </div>
+
+      <div class="profile-grid profile-grid-v2">
+        <div class="profile-field">
+          <label for="profileName">Nome account</label>
+          <input id="profileName" placeholder="Admin">
+          <small>Sincronizzato su tutti i dispositivi.</small>
+        </div>
+        <div class="profile-field">
+          <label for="profileEmail">Email account</label>
+          <input id="profileEmail" type="email" placeholder="nome@email.it">
+          <small>Usata per accesso, recupero password e comunicazioni.</small>
+        </div>
+        <div class="profile-field">
+          <label for="profileRole">Ruolo</label>
+          <input id="profileRole" value="Amministratore" readonly>
+        </div>
+        <div class="profile-field">
+          <label for="profilePassword">Nuova password</label>
+          <input id="profilePassword" type="password" placeholder="Lascia vuoto per non cambiarla">
+        </div>
+      </div>
+    </section>
+
+    <section class="profile-modal-section profile-plan-section" aria-labelledby="profilePlanHeading">
+      <div class="profile-section-heading profile-plan-heading">
+        <div>
+          <h3 id="profilePlanHeading">Il mio piano</h3>
+          <p>Stato dell’abbonamento e utilizzo delle risorse incluse.</p>
+        </div>
+        <span id="planBadge" class="plan-badge-ui">—</span>
+      </div>
+
+      <div id="planStatusBox" class="profile-plan-status is-loading">
+        <span id="planStatusIcon" class="profile-plan-status-icon" aria-hidden="true">…</span>
+        <div>
+          <div id="planStatusLabel" class="profile-plan-status-label">Caricamento...</div>
+          <div id="planStatusDesc" class="profile-plan-status-desc"></div>
+        </div>
+      </div>
+
+      <div id="planUsageRows" class="plan-usage-rowline-v40 profile-plan-usage"></div>
+
+      <div class="profile-plan-actions-v63 profile-plan-actions-v2">
         <button id="btnPlanActive" class="btn-plan-active-v88 btn-primary" onclick="openPlanAccountPage()">Piano attivo</button>
         <button class="btn-billing-v63 btn-secondary" onclick="openBillingPanel()">Fatturazione</button>
       </div>
-    </div>
+    </section>
 
-    <div class="actions-row profile-modal-actions" style="margin-top:16px">
-      <button id="logoutBtn" class="btn-danger hidden">Esci dall'account</button>
-      <div class="profile-modal-actions-main">
-        <button class="btn-secondary" onclick="closeProfilePanel()">Chiudi</button>
-        <button class="btn-primary" onclick="saveProfilePanel()">Salva profilo</button>
+    <div class="profile-modal-footer">
+      <button id="logoutBtn" class="profile-logout-btn hidden" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 5H5v14h5M14 8l4 4-4 4M18 12H9"/></svg>
+        <span>Esci dall'account</span>
+      </button>
+      <div class="profile-modal-footer-main">
+        <button class="btn-secondary" type="button" onclick="closeProfilePanel()">Chiudi</button>
+        <button class="btn-primary" type="button" onclick="saveProfilePanel()">Salva profilo</button>
       </div>
     </div>
   </div>
 </div>
-
 
 <!-- COOKIE NOTICE TECNICO -->
 <div id="cookieNotice" class="cookie-notice hidden" role="dialog" aria-live="polite" aria-label="Informativa cookie">
@@ -1846,7 +1877,7 @@
 <script src="/static/dashboard/js/completed.js?v=20261006"></script>
 <script src="/static/dashboard/js/preview-design.js?v=20261006"></script>
 <script src="/static/dashboard/js/live-design.js?v=20261006"></script>
-<script src="/static/dashboard/js/core.js?v=profile_identity_fix_20261007"></script>
+<script src="/static/dashboard/js/core.js?v=profile_modal_polish_20261007"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=1"></script>
 
 <script>
