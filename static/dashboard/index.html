@@ -43,7 +43,7 @@
 <!-- Shared GiroFacile design system; legacy sheets retain feature layout. -->
 <link rel="stylesheet" href="/static/design-system/tokens.css?v=ds_20261007_reference_2">
 <link rel="stylesheet" href="/static/design-system/components.css?v=ds_20261007_profile_modal_3">
-<link rel="stylesheet" href="/static/design-system/layout.css?v=ds_20261007_topbar_actions_4">
+<link rel="stylesheet" href="/static/design-system/layout.css?v=ds_20261007_footer_cleanup_5">
 <link rel="stylesheet" href="/static/design-system/workspace.css?v=ds_20261007_company_header_6">
 <link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007_reference_2">
 <script src="/static/design-system/design-system.js?v=ds_20261007_reference_2" defer></script>
@@ -310,6 +310,14 @@
     <button onclick="openSupportPanelV49(); closeMobileMoreMenuV62();">▱ Supporto</button>
     <button onclick="mobileGoTabV62('settings')">⚙ Impostazioni</button>
     <button class="danger" onclick="document.getElementById('logoutBtn')?.click(); closeMobileMoreMenuV62();">↩ Esci</button>
+    <div class="gf-mobile-legal-v62">
+      <span>© 2026 GiroFacile · v3.11.0</span>
+      <div>
+        <a href="/privacy-policy" target="_blank" rel="noopener">Privacy</a><span>·</span>
+        <a href="/termini-condizioni" target="_blank" rel="noopener">Termini</a><span>·</span>
+        <a href="/cookie-policy" target="_blank" rel="noopener">Cookie</a>
+      </div>
+    </div>
   </div>
 
   <nav class="gf-mobile-bottom-nav-v62" id="gfMobileBottomNavV62" aria-label="Navigazione mobile">
@@ -348,7 +356,15 @@
       <button data-tab="admin-settings" onclick="showTab('admin-settings')" class="nav-item admin-only"><span class="nav-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.5 12a7.4 7.4 0 0 0-.1-1.2l2-1.5-2-3.5-2.4 1a7.5 7.5 0 0 0-2-1.1L14.7 3h-5.4L9 5.7a7.5 7.5 0 0 0-2 1.1l-2.4-1-2 3.5 2 1.5a7.7 7.7 0 0 0 0 2.4l-2 1.5 2 3.5 2.4-1a7.5 7.5 0 0 0 2 1.1l.3 2.7h5.4l.3-2.7a7.5 7.5 0 0 0 2-1.1l2.4 1 2-3.5-2-1.5c.1-.4.1-.8.1-1.2z"/></svg></span> Impostazioni</button>
     </nav>
 
-    <div class="side-footer">© 2026 GiroFacile<br>v3.11.0<div class="side-legal-links"><a href="/privacy-policy" target="_blank">Privacy</a><span>·</span><a href="/termini-condizioni" target="_blank">Termini</a><span>·</span><a href="/cookie-policy" target="_blank">Cookie</a></div></div>
+    <div class="side-footer">
+      <span class="side-footer-copyright">© 2026 GiroFacile</span>
+      <span class="side-footer-version">v3.11.0</span>
+      <div class="side-legal-links">
+        <a href="/privacy-policy" target="_blank" rel="noopener">Privacy</a><span>·</span>
+        <a href="/termini-condizioni" target="_blank" rel="noopener">Termini</a><span>·</span>
+        <a href="/cookie-policy" target="_blank" rel="noopener">Cookie</a>
+      </div>
+    </div>
   </aside>
 
   <main class="main-area">
@@ -1456,15 +1472,6 @@
       </section>
 
     </div>
-    <footer class="dashboard-legal-footer">
-      <span>© 2026 GiroFacile</span>
-      <a href="/privacy-policy" target="_blank">Privacy Policy</a>
-      <a href="/cookie-policy" target="_blank">Cookie Policy</a>
-      <a href="/termini-condizioni" target="_blank">Termini e Condizioni</a>
-      <a href="/sicurezza" target="_blank">Sicurezza</a>
-      <a href="/dpa-responsabile-trattamento" target="_blank">DPA</a>
-      <a href="/subprocessors" target="_blank">Fornitori</a>
-    </footer>
   </main>
 </section>
 
@@ -1877,7 +1884,7 @@
 <script src="/static/dashboard/js/completed.js?v=20261006"></script>
 <script src="/static/dashboard/js/preview-design.js?v=20261006"></script>
 <script src="/static/dashboard/js/live-design.js?v=20261006"></script>
-<script src="/static/dashboard/js/core.js?v=profile_modal_polish_20261007"></script>
+<script src="/static/dashboard/js/core.js?v=legal_links_cleanup_20261007"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=1"></script>
 
 <script>
