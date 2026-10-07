@@ -381,8 +381,10 @@ test('company profile visually follows the dashboard panel language',()=>{
   const company=read('static/dashboard/css/company.css');
   assert.match(company,/\.company-card-v29\s*\{[\s\S]*border: 1px solid var\(--gf-color-border/);
   assert.doesNotMatch(company,/border-top:\s*3px solid/);
-  assert.match(company,/\.company-section-heading\s*\{[\s\S]*background: var\(--gf-color-surface-subtle/);
-  assert.match(company,/\.company-section-icon\s*\{[\s\S]*border: 1px solid var\(--gf-color-border[\s\S]*background: var\(--gf-color-bg[\s\S]*color: var\(--gf-color-muted/);
+  assert.match(company,/\.company-section-heading\s*\{[\s\S]*background: var\(--gf-color-nav/);
+  assert.match(company,/\.company-section-heading h2[^\{]*\{[\s\S]*color: var\(--gf-color-on-primary/);
+  assert.match(company,/\.company-section-heading p[^\{]*\{[\s\S]*color: var\(--gf-color-nav-text/);
+  assert.match(company,/\.company-section-icon\s*\{[\s\S]*border: 1px solid rgba\(255,255,255,\.18\)[\s\S]*background: rgba\(255,255,255,\.07\)[\s\S]*color: var\(--gf-color-nav-text/);
   assert.match(company,/\.company-logo-row-v29\s*\{[\s\S]*background: var\(--gf-color-surface/);
   assert.match(company,/\.company-profile-grid\s*\{[\s\S]*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\);[\s\S]*gap: 24px/);
   assert.match(company,/\.company-field input,[\s\S]*min-height: var\(--gf-control-height[\s\S]*border: 1px solid var\(--gf-color-border/);
@@ -390,7 +392,8 @@ test('company profile visually follows the dashboard panel language',()=>{
 
   const workspace=read(assets+'workspace.css');
   assert.match(workspace,/Company profile uses the same restrained panel language as the dashboard/);
-  assert.match(workspace,/#tab-company \.company-section-icon\{[\s\S]*background:var\(--gf-color-bg\);[\s\S]*color:var\(--gf-color-muted\)/);
+  assert.match(workspace,/#tab-company \.company-section-heading\{[\s\S]*background:var\(--gf-color-nav\)/);
+  assert.match(workspace,/#tab-company \.company-section-icon\{[\s\S]*background:rgba\(255,255,255,\.07\);[\s\S]*color:var\(--gf-color-nav-text\)/);
   assert.match(workspace,/#tab-company \.company-card-v29\{[\s\S]*border:1px solid var\(--gf-color-border\);/);
   assert.doesNotMatch(workspace,/#tab-company \.company-card-v29\{[\s\S]*border-top:3px solid/);
 });
