@@ -283,3 +283,39 @@ test('workspace sidebar uses the GiroFacile brand artwork',()=>{
   assert.match(brand,/class="reference-brand-name">GiroFacile<\/span>/);
   assert.doesNotMatch(brand,/reference-brand-icon/);
 });
+
+
+test('workspace legal links live in navigation and advanced legal docs live in support',()=>{
+  const html=read('static/dashboard/index.html');
+  const sidebar=html.slice(html.indexOf('<aside class="sidebar">'),html.indexOf('</aside>'));
+  assert.match(sidebar,/class="side-footer"/);
+  assert.match(sidebar,/class="side-footer-copyright">© 2026 GiroFacile/);
+  assert.match(sidebar,/class="side-footer-version">v3\.11\.0/);
+  assert.match(sidebar,/href="\/privacy-policy"[^>]*>Privacy<\/a>/);
+  assert.match(sidebar,/href="\/termini-condizioni"[^>]*>Termini<\/a>/);
+  assert.match(sidebar,/href="\/cookie-policy"[^>]*>Cookie<\/a>/);
+  assert.doesNotMatch(sidebar,/Sicurezza|DPA|Fornitori|>API</);
+  assert.doesNotMatch(html,/class="dashboard-legal-footer"/);
+
+  const mobile=html.slice(html.indexOf('id="gfMobileMoreMenuV62"'),html.indexOf('<nav class="gf-mobile-bottom-nav-v62"'));
+  assert.match(mobile,/class="gf-mobile-legal-v62"/);
+  assert.match(mobile,/Privacy/);
+  assert.match(mobile,/Termini/);
+  assert.match(mobile,/Cookie/);
+
+  const core=read('static/dashboard/js/core.js');
+  const support=core.slice(core.indexOf('function ensureSupportModalV60'),core.indexOf('function openSupportPanelV49'));
+  assert.match(support,/class="support-legal-v60"/);
+  assert.match(support,/href="\/sicurezza"/);
+  assert.match(support,/href="\/dpa-responsabile-trattamento"/);
+  assert.match(support,/href="\/subprocessors"/);
+
+  const layout=read(assets+'layout.css');
+  assert.match(layout,/Workspace legal navigation consolidation/);
+  assert.match(layout,/\.side-legal-links\{[^}]*justify-content:flex-start/);
+  assert.match(layout,/\.gf-mobile-legal-v62\{display:none\}/);
+
+  const components=read(assets+'components.css');
+  assert.match(components,/Support legal resources moved out of the workspace footer/);
+  assert.match(components,/\.support-legal-v60\{[^}]*background:var\(--gf-color-bg\)/);
+});
