@@ -31,3 +31,20 @@ test('report export is implemented and unfinished features cannot be enabled in 
     assert.match(html,new RegExp(`<input[^>]*id="${id}"[^>]*disabled`));
   }
 });
+
+
+test('account password change stays inline and separate from profile save', () => {
+  const html=readFileSync('static/dashboard/index.html','utf8');
+  const core=readFileSync('static/dashboard/js/core.js','utf8');
+  assert.match(html,/id="profilePasswordChangePanel"[^>]*hidden/);
+  assert.match(html,/id="profileCurrentPassword"/);
+  assert.match(html,/id="profileNewPassword"/);
+  assert.match(html,/id="profileConfirmPassword"/);
+  assert.match(html,/onclick="changeProfilePassword\(\)"/);
+  assert.match(html,/requestProfilePasswordReset\(\)/);
+  assert.doesNotMatch(html,/id="profilePassword"/);
+  assert.match(core,/\/api\/account-password\/change/);
+  const saveBlock=core.match(/async function saveProfilePanel\(\)[\s\S]*?\n}\n/);
+  assert.ok(saveBlock);
+  assert.doesNotMatch(saveBlock[0],/new_password|profileCurrentPassword|profileNewPassword/);
+});
