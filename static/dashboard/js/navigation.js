@@ -1,4 +1,15 @@
 // One navigation entry point; dependencies are provided by the feature modules.
+function syncWorkspaceTopbar(name){
+  const company = name === "company";
+  const title = document.getElementById("workspacePageTitle");
+  const subtitle = document.getElementById("workspacePageSubtitle");
+  if(title) title.textContent = company ? "Profilo azienda" : "Dashboard";
+  if(subtitle) subtitle.textContent = company
+    ? "Configura i dati principali della tua azienda e completa la prima configurazione di GiroFacile."
+    : "Panoramica operativa delle consegne e dell’attività aziendale.";
+  if(document.body) document.body.classList.toggle("gf-company-page-active", company);
+}
+
 function showTab(name){
   window.GFLiveDesign?.closeMap();
   if(name==='integrations') name='dashboard';
@@ -10,6 +21,7 @@ function showTab(name){
   if(tab) tab.classList.remove("hidden");
   document.querySelectorAll(".nav-item").forEach(x=>x.classList.remove("active"));
   document.querySelectorAll(`.nav-item[data-tab="${name}"]`).forEach(x=>x.classList.add("active"));
+  syncWorkspaceTopbar(name);
 
   if(name==="dashboard"){ loadDashboardHome(); loadNotificationsV30(false); if(!featureLockedForTab("chat-autisti")) loadDriverChatNotifications(); }
   if(name==="company") { loadCompanyProfile(); loadOnboardingStatus(false); }

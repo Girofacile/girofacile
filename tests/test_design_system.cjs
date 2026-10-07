@@ -152,3 +152,37 @@ test('dashboard reference view uses shared tokens and bounded overview previews'
   assert.equal((html.match(/class="dash-kpi-metric"/g)||[]).length,3);
   assert.match(html,/dash-kpi-card dash-kpi-resources/);
 });
+
+
+test('company profile uses the workspace topbar and keeps billing addresses always open',()=>{
+  const html=read('static/dashboard/index.html');
+  assert.match(html,/id="workspacePageTitle">Dashboard<\/h1>/);
+  assert.match(html,/id="workspacePageSubtitle"/);
+  assert.match(html,/id="companyTopbarStatus" class="company-topbar-status"/);
+  assert.equal((html.match(/id="companyConfiguredBadge"/g)||[]).length,1);
+  assert.equal((html.match(/id="showOnboardingBtn"/g)||[]).length,1);
+  const company=html.slice(html.indexOf('<section id="tab-company"'),html.indexOf('<section id="tab-dashboard"'));
+  assert.doesNotMatch(company,/<div class="dash-hero-row">/);
+  assert.doesNotMatch(company,/<details class="company-address-details"/);
+  assert.match(company,/<section class="card company-card-v29 company-address-details"[^>]*aria-labelledby="companyAddressesTitle"/);
+  assert.match(company,/id="companyLegalAddressInput"/);
+  assert.match(company,/id="companyBillingAddressInput"/);
+
+  const navigation=read('static/dashboard/js/navigation.js');
+  new vm.Script(navigation);
+  assert.match(navigation,/function syncWorkspaceTopbar\(name\)/);
+  assert.match(navigation,/company \? "Profilo azienda" : "Dashboard"/);
+  assert.match(navigation,/classList\.toggle\("gf-company-page-active", company\)/);
+  assert.match(navigation,/syncWorkspaceTopbar\(name\)/);
+
+  const companyCss=read('static/dashboard/css/company.css');
+  assert.match(companyCss,/body:has\(#tab-company:not\(\.hidden\)\) \.topbar\s*\{[^}]*background: var\(--gf-color-surface/);
+  assert.match(companyCss,/body\.gf-company-page-active \.topbar-new-route\s*\{\s*display: none !important/);
+  assert.match(companyCss,/\.company-topbar-status \{ display: none/);
+  assert.doesNotMatch(companyCss,/company-address-details summary/);
+
+  const workspace=read(assets+'workspace.css');
+  const innerSurface=workspace.slice(workspace.indexOf('.company-logo-row-v29'),workspace.indexOf('){',workspace.indexOf('.company-logo-row-v29')));
+  assert.doesNotMatch(innerSurface,/company-address-details/);
+  assert.match(workspace,/#app \.company-configured-badge-v40/);
+});

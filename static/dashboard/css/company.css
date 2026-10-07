@@ -1,37 +1,61 @@
 /* Company profile: styles scoped to this page and its active shell. */
 body:has(#tab-company:not(.hidden)) .main-area {
-  background: #eff6ff url('/static/dashboard/company-landscape.svg') right top / 1120px 245px no-repeat;
+  background: var(--gf-color-bg, #f8fafc);
+  background-image: none;
 }
 body:has(#tab-company:not(.hidden)) .topbar {
-  background: rgba(242, 248, 255, .7);
-  border-bottom: 0;
-  box-shadow: none;
+  background: var(--gf-color-surface, #fff);
+  border-bottom: 1px solid var(--gf-color-border, #e2e8f0);
+  box-shadow: 0 1px 0 rgba(16,24,40,.02);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
-#tab-company {
-  font-family: Arial, Helvetica, sans-serif;
-  color: #0b153b;
+body:has(#tab-company:not(.hidden)) .topbar-dashboard-title {
+  min-width: 0;
+}
+body:has(#tab-company:not(.hidden)) .topbar-dashboard-title h1 {
+  margin: 0;
+  color: var(--gf-color-text, #1e293b);
+  font-size: 20px;
+  line-height: 1.15;
+  font-weight: var(--gf-weight-bold, 700);
   letter-spacing: -.02em;
 }
-#tab-company .dash-hero-row { min-height: 76px; margin-bottom: 24px; }
-#tab-company .dash-hero-row h1 {
-  font-family: inherit;
-  font-size: 38px;
-  line-height: 1.15;
-  letter-spacing: -.045em;
-  font-weight: 750;
-  color: #080f32;
-  margin: 0 0 4px;
-}
-#tab-company .dash-hero-row p { font-size: 14px; line-height: 1.5; color: #48618f; }
-#tab-company .company-header-actions-v40 { flex-shrink: 0; }
-#tab-company .company-configured-badge-v40 {
-  padding: 9px 15px;
-  border-radius: 13px;
+body:has(#tab-company:not(.hidden)) .topbar-dashboard-title p {
+  margin: 4px 0 0;
+  color: var(--gf-color-muted, #64748b);
   font-size: 12px;
-  font-weight: 700;
-  background: #e0fae9;
-  border-color: #b4e9c6;
-  color: #087d37;
+  line-height: 1.35;
+}
+.company-topbar-status { display: none; align-items: center; gap: 10px; }
+body.gf-company-page-active .company-topbar-status { display: flex; }
+body.gf-company-page-active .topbar-new-route { display: none !important; }
+body.gf-company-page-active .company-configured-badge-v40 {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 32px;
+  padding: 6px 12px;
+  border: 1px solid var(--gf-color-success-bg, #eaf6ef);
+  border-radius: var(--gf-radius-pill, 999px);
+  background: var(--gf-color-success-bg, #eaf6ef);
+  color: var(--gf-color-success, #16734a);
+  font-size: 12px;
+  font-weight: var(--gf-weight-semibold, 600);
+  line-height: 1;
+  white-space: nowrap;
+}
+body.gf-company-page-active .company-configured-badge-v40.hidden { display: none; }
+body.gf-company-page-active #showOnboardingBtn {
+  min-height: 34px;
+  padding: 7px 12px;
+  border-radius: var(--gf-radius-md, 10px);
+  font-size: 12px;
+}
+#tab-company {
+  font-family: var(--gf-font-family, Arial, Helvetica, sans-serif);
+  color: var(--gf-color-text, #1e293b);
+  letter-spacing: -.02em;
 }
 #tab-company .company-layout-v29 { grid-template-columns: minmax(0, 1fr); gap: 20px; }
 #tab-company .company-profile-grid {
@@ -109,10 +133,8 @@ body:has(#tab-company:not(.hidden)) .topbar {
 #tab-company .company-operations .company-horizontal-fields .company-field { grid-template-columns: 185px minmax(0, 1fr); }
 #tab-company .company-description label { align-self: start; padding-top: 12px; }
 #tab-company .company-field textarea { min-height: 94px; resize: vertical; }
-#tab-company .company-address-details { grid-column: 1 / -1; padding: 18px 22px; border: 1px solid #dce7f9; border-radius: 14px; background: rgba(255, 255, 255, .8); }
-#tab-company .company-address-details summary { cursor: pointer; color: #3c527b; font-size: 14px; font-weight: 600; line-height: 1.5; }
-#tab-company .company-address-details summary span { margin-left: 12px; font-size: 13px; font-weight: 400; color: #667b9f; }
-#tab-company .company-address-details[open] summary { margin-bottom: 20px; }
+#tab-company .company-address-details { grid-column: 1 / -1; }
+#tab-company .company-address-details .company-section-heading { margin-bottom: 22px; }
 #tab-company .company-save-actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 12px; }
 #tab-company .company-save-actions button { min-height: 44px; font-size: 14px; }
 #tab-company .onboarding-card-v29 { margin: 0; }
@@ -147,6 +169,5 @@ body:has(#tab-company:not(.hidden)) .topbar {
   #tab-company .company-field :is(input, select, textarea) { font-size: 16px; }
   #tab-company .company-logo-row-v29 { flex-direction: row; flex-wrap: wrap; align-items: center; }
   #tab-company .company-logo-preview-v29 { flex-basis: 72px; width: 72px; height: 72px; }
-  #tab-company .company-address-details summary span { display: block; margin: 5px 0 0; }
   #tab-company .company-save-actions { flex-direction: column-reverse; }
 }
