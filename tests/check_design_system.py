@@ -80,6 +80,14 @@ def labels(page, selector, width):
         if not cell.is_visible() or (cell.get_attribute("colspan") or "1") != "1":
             continue
         assert (cell.get_attribute("data-label") or "").strip(), (selector, cell.inner_text())
+    # Address cells may wrap; operational actions must keep a readable label.
+    for button in table.locator('tbody tr:first-child [class*="row-actions"] button').all():
+        if not button.is_visible():
+            continue
+        assert button.evaluate("""(el) => {
+            const s=getComputedStyle(el), r=el.getBoundingClientRect();
+            return s.whiteSpace==='nowrap' && r.height<=60 && el.scrollWidth<=r.width+1;
+        }"""), (selector, width, button.inner_text(), button.bounding_box())
     if width < 640:
         assert table.locator("tbody tr").first.evaluate("(el) => ['block','grid','flex'].includes(getComputedStyle(el).display)"), selector
         assert table.locator("tbody tr").first.locator("button").count(), selector
@@ -240,6 +248,13 @@ def main():
                     nav = page.locator("#app .nav-item[data-tab]").evaluate_all("(els)=>els.map(el=>el.dataset.tab)")
                     for name in ("dashboard","clienti","giro","mezzi","autisti","depositi","storico","settings","report"):
                         assert name in nav,name
+                    sidebar_icon = styles(page.locator("#app .nav-item .nav-svg").first,("borderTopWidth","flexBasis","boxShadow"))
+                    assert sidebar_icon == dict(borderTopWidth="0px",flexBasis="20px",boxShadow="none"),sidebar_icon
+                    assert page.locator("#app .brand-title").evaluate("""el => {
+                        const probe=document.createElement('span');probe.style.color='var(--gf-color-nav-text)';
+                        el.append(probe);const match=getComputedStyle(el).color===getComputedStyle(probe).color;
+                        probe.remove();return match;
+                    }"""),"Sidebar brand must remain readable on its dark surface"
                     for name in ("dashboard","clienti"):
                         page.evaluate("name=>showTab(name)",name)
                         page.wait_for_timeout(100)

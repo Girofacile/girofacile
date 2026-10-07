@@ -15,7 +15,7 @@ body[data-gf-surface="workspace"] #app .sidebar {
   border-right: 1px solid var(--gf-color-nav-active); box-shadow: none !important;
 }
 body[data-gf-surface="workspace"] #app .brand { padding: 0 var(--gf-space-2) var(--gf-space-4); height: auto; min-height: 48px; border-bottom: 1px solid var(--gf-color-nav-active); }
-body[data-gf-surface="workspace"] #app .brand-title { font-size: var(--gf-font-xl); font-weight: var(--gf-weight-bold); letter-spacing: -.025em; }
+body[data-gf-surface="workspace"] #app .brand-title { color: var(--gf-color-nav-text); font-size: var(--gf-font-xl); font-weight: var(--gf-weight-bold); letter-spacing: -.025em; }
 body[data-gf-surface="workspace"] #app .brand-title span { color: var(--gf-color-nav-text); }
 body[data-gf-surface="workspace"] #app .brand-logo-img { width: 32px; height: 32px; border-radius: var(--gf-radius-sm); }
 body[data-gf-surface="workspace"] #app .side-nav { gap: var(--gf-space-1); padding-top: var(--gf-space-4); }
@@ -32,7 +32,7 @@ body[data-gf-surface="workspace"] #app .nav-item.active {
   border-left-color: var(--gf-color-primary); font-weight: var(--gf-weight-semibold);
   box-shadow: none !important;
 }
-body[data-gf-surface="workspace"] #app .nav-item > span.nav-svg { width: 20px; height: 20px; background: transparent; border-radius: 0; }
+body[data-gf-surface="workspace"] #app .nav-item > span.nav-svg { width: 20px; height: 20px; flex: 0 0 20px; background: transparent; border: 0; border-radius: 0; box-shadow: none; }
 body[data-gf-surface="workspace"] #app .nav-item .nav-svg svg { width: 20px; height: 20px; }
 body[data-gf-surface="workspace"] #app .side-footer { font-size: var(--gf-font-xs); color: var(--gf-color-nav-muted); padding: var(--gf-space-3) 0 0; }
 body[data-gf-surface="workspace"] #app .side-footer a { color: var(--gf-color-nav-muted); }

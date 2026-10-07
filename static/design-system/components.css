@@ -181,3 +181,14 @@ body[data-gf-surface] .gf-button[aria-pressed="true"] { background:var(--gf-colo
 /* Semantic actions retain readable contrast on hover. */
 body[data-gf-surface] .gf-button[data-variant="danger"]:hover:not(:disabled) { background:var(--gf-color-danger) !important; border-color:var(--gf-color-danger) !important; color:var(--gf-color-on-primary) !important; }
 body[data-gf-surface] .gf-button[data-status="success"]:hover:not(:disabled) { background:var(--gf-color-success) !important; border-color:var(--gf-color-success) !important; color:var(--gf-color-on-primary) !important; }
+
+/* A table may wrap addresses, but action labels remain readable as one control. */
+body[data-gf-surface] .gf-table [class*="row-actions"] .gf-button {
+  flex-shrink: 0; white-space: nowrap; overflow-wrap: normal; word-break: normal;
+  max-width: none;
+}
+@media (min-width: 641px) {
+  body[data-gf-surface] .gf-table td > [class*="row-actions"] {
+    flex-wrap: nowrap; min-width: max-content;
+  }
+}

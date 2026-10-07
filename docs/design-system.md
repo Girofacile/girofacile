@@ -137,7 +137,9 @@ controllo elettrico a 320 px.
 Si controllano stili calcolati dei veri pulsanti e campi contro lo UI kit,
 etichette/azioni mobile, navigazione, tastiera/focus, retry clienti,
 geometria e disegno locale della firma, filtri, modali, quote, mappe,
-paginazione e CSV dei completati. I test Mezzi aprono il drawer e il riepilogo
+paginazione e CSV dei completati. I controlli delle tabelle verificano anche che
+le etichette delle azioni restino su una riga; la sidebar mantiene icone
+senza cornici residue e contrasto del marchio sulla superficie scura. I test Mezzi aprono il drawer e il riepilogo
 quote attuali, invece di selezionare campi nascosti.
 
 Screenshot e report: `test-results/design-system/`,
