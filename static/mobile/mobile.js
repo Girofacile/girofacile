@@ -56,8 +56,23 @@ function mobileToggleSignup(show){
 }
 function mSelectPlan(el){document.querySelectorAll(".plan-card").forEach(x=>x.classList.remove("selected"));el.classList.add("selected");}
 function mGetSelectedPlan(){const s=document.querySelector(".plan-card.selected");return s?s.getAttribute("data-plan"):"business";}
+function mobileSignupPasswordContext(){return [mval("mSignupCompany"),mval("mSignupUser"),mval("mSignupEmail")];}
+let mobileSignupPasswordController=null;
+function initMobilePasswordStrength(){
+  const service=window.GiroFacilePasswordStrength;
+  if(!service)return;
+  mobileSignupPasswordController=service.attach({
+    inputId:"mSignupPass",meterId:"mSignupPasswordMeter",context:mobileSignupPasswordContext,
+    watchIds:["mSignupCompany","mSignupUser","mSignupEmail"]
+  });
+}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",initMobilePasswordStrength,{once:true});
+else initMobilePasswordStrength();
+
 async function mobileSignup(){
   const err=document.getElementById("signupError");err.textContent="";
+  const check=window.GiroFacilePasswordStrength?.assess(mval("mSignupPass"),mobileSignupPasswordContext());
+  if(check && !check.acceptable){err.textContent=check.message;return;}
   try{
     await api("/api/signup",{method:"POST",body:JSON.stringify({
       company_name:mval("mSignupCompany"),username:mval("mSignupUser"),

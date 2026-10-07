@@ -31,13 +31,17 @@ test('all password creation surfaces load the shared meter',()=>{
   const dashboard=fs.readFileSync('static/dashboard/index.html','utf8');
   const driver=fs.readFileSync('static/driver/setup.html','utf8');
   const agent=fs.readFileSync('static/agent/setup.html','utf8');
-  for(const source of [dashboard,driver,agent]){
+  const mobile=fs.readFileSync('static/mobile/index.html','utf8');
+  for(const source of [dashboard,driver,agent,mobile]){
     assert.match(source,/password-strength\.js/);
     assert.match(source,/password-strength\.css/);
   }
   for(const id of ['signupPasswordMeter','resetPasswordMeter','profilePasswordMeter']) assert.match(dashboard,new RegExp('id="'+id+'"'));
   assert.match(driver,/id="passwordMeter"/);
   assert.match(agent,/id="passwordMeter"/);
+  assert.match(mobile,/id="mSignupPasswordMeter"/);
   assert.doesNotMatch(driver,/Minimo 6|Almeno 6/);
   assert.doesNotMatch(agent,/minlength="6"|Minimo 6|Almeno 6/);
+  assert.doesNotMatch(mobile,/Minimo 6|Almeno 6/);
+  assert.match(fs.readFileSync('static/mobile/mobile.js','utf8'),/mobileSignupPasswordContext/);
 });

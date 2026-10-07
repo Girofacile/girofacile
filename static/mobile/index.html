@@ -12,6 +12,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <title>GiroFacile</title>
   <link rel="stylesheet" href="/static/mobile/mobile.css?v=5000">
+  <link rel="stylesheet" href="/static/password-strength.css?v=password_policy_20261008_1">
 <script src="/api/billing/catalog.js"></script>
 <script>document.addEventListener('DOMContentLoaded',()=>{
   document.querySelectorAll('.plan-card[data-plan]').forEach(el=>{
@@ -57,14 +58,14 @@
     <div class="form-group"><label>Nome azienda</label><input id="mSignupCompany" placeholder="Es. Trasporti Rossi S.r.l."></div>
     <div class="form-group"><label>Nome utente</label><input id="mSignupUser" placeholder="Scegli un nome utente"></div>
     <div class="form-group"><label>Email</label><input id="mSignupEmail" type="email" placeholder="La tua email"></div>
-    <div class="form-group"><label>Password</label><input id="mSignupPass" type="password" placeholder="Minimo 6 caratteri"></div>
+    <div class="form-group"><label>Password</label><input id="mSignupPass" type="password" autocomplete="new-password" placeholder="Almeno 8 caratteri, maiuscola e simbolo"><div id="mSignupPasswordMeter" class="gf-password-meter" aria-live="polite"></div></div>
     <div class="plan-label">Scegli il piano <span>· 14 giorni gratuiti</span></div>
     <div class="plan-grid">
       <div class="plan-card" data-plan="starter" onclick="mSelectPlan(this)"><div class="plan-name">Starter</div><div class="plan-price">€29<span>/mese</span></div><div class="plan-desc">150 clienti</div></div>
       <div class="plan-card selected" data-plan="business" onclick="mSelectPlan(this)"><div class="plan-badge">Top</div><div class="plan-name">Business</div><div class="plan-price">€59<span>/mese</span></div><div class="plan-desc">500 clienti</div></div>
       <div class="plan-card" data-plan="pro" onclick="mSelectPlan(this)"><div class="plan-name">Pro</div><div class="plan-price">€99<span>/mese</span></div><div class="plan-desc">5.000 clienti</div></div>
     </div>
-    <button class="btn-primary" onclick="mobileSignup()">Crea account →</button>
+    <button class="btn-primary" id="mSignupBtn" onclick="mobileSignup()">Crea account →</button>
     <div id="signupError" class="error-msg"></div>
     <div class="auth-switch">Hai già un account? <button onclick="mobileToggleSignup(false)">Accedi</button></div>
   </div>
@@ -259,6 +260,7 @@
   </div>
 </div>
 
-<script src="/static/mobile/mobile.js?v=tracking_20261004"></script>
+<script src="/static/password-strength.js?v=password_policy_20261008_1"></script>
+<script src="/static/mobile/mobile.js?v=password_policy_20261008_1"></script>
 </body>
 </html>
