@@ -487,3 +487,28 @@ test('all five directory KPI icons use the same neutral gray dashboard treatment
   assert.match(block,/fill:none!important/);
   assert.doesNotMatch(block,/var\(--gf-color-(?:info|success|warning|danger)(?:-bg)?\)/);
 });
+
+
+test('vehicle photo fallback uses a neutral outline icon instead of the truck emoji',()=>{
+  const vehicles=read('static/dashboard/js/vehicles.js');
+  assert.match(vehicles,/function vehiclePlaceholderSvg\(extraClass=''/);
+  assert.match(vehicles,/class="fleet-vehicle-placeholder-icon/);
+  assert.match(vehicles,/function setVehiclePhotoPreview\(\)/);
+  const fleetPhoto=vehicles.slice(vehicles.indexOf('function fleetPhoto'),vehicles.indexOf('function fleetStatus'));
+  assert.doesNotMatch(fleetPhoto,/🚚/);
+  assert.match(fleetPhoto,/fleet-photo-placeholder/);
+
+  const core=read('static/dashboard/js/core.js');
+  assert.match(core,/setVehiclePhotoPreview\(\)/);
+  assert.doesNotMatch(core,/setImagePreview\("vehiclePhotoPreview","vPhotoUrl","🚚"\)/);
+
+  const html=read('static/dashboard/index.html');
+  const preview=html.slice(html.indexOf('id="vehiclePhotoPreview"'),html.indexOf('id="vPhotoFile"'));
+  assert.match(preview,/fleet-vehicle-placeholder-icon is-preview/);
+  assert.doesNotMatch(preview,/🚚/);
+
+  const vehicleCss=read('static/dashboard/css/vehicles.css');
+  assert.match(vehicleCss,/Neutral vehicle image placeholder/);
+  assert.match(vehicleCss,/\.fleet-vehicle-placeholder-icon\{[^}]*width:29px[^}]*stroke:currentColor/);
+  assert.match(vehicleCss,/\.fleet-table \.fleet-vehicle-placeholder-icon\{[^}]*width:21px/);
+});

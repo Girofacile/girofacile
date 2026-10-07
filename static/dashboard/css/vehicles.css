@@ -63,3 +63,42 @@ body:has(#vehicleDrawer[open]){overflow:hidden}
 @media(max-width:1200px){#tab-mezzi .fleet-card-head{gap:12px;flex-wrap:wrap}#tab-mezzi .fleet-card-head>.fleet-status{margin:0 0 5px auto}#tab-mezzi .fleet-help{display:none}#tab-mezzi .fleet-specs>div{padding:0 8px;gap:6px}}
 @media(max-width:900px){#tab-mezzi .fleet-cards{grid-template-columns:1fr}#tab-mezzi .fleet-card-head{flex-wrap:nowrap}}
 @media(max-width:600px){#tab-mezzi .fleet-toolbar{flex-wrap:wrap;gap:12px}#tab-mezzi .fleet-create-actions{margin-left:auto}#tab-mezzi .fleet-views button,#tab-mezzi .fleet-create{padding:10px 13px}#tab-mezzi .fleet-filters{grid-template-columns:1fr;gap:10px}#tab-mezzi .fleet-card{padding:14px}#tab-mezzi .fleet-photo{width:58px;height:58px;flex-basis:58px;border-radius:14px}#tab-mezzi .fleet-card-head{flex-wrap:wrap}#tab-mezzi .fleet-card-head>.fleet-status{margin-left:auto}#tab-mezzi .fleet-specs>div{gap:6px;padding:0 8px}#tab-mezzi .fleet-specs svg{width:17px}#vehicleDrawer{padding:20px;border-radius:0}#app #tab-mezzi #vehicleDrawer .vehicle-data-grid-v896{grid-template-columns:1fr}#app #tab-mezzi #vehicleDrawer .actions-row{bottom:-20px}}
+
+
+/* Neutral vehicle image placeholder — shared between table, cards and editor preview. */
+#tab-mezzi .fleet-photo{
+  color:var(--gf-color-muted,#64748b);
+  background:var(--gf-color-bg,#f8fafc);
+}
+#tab-mezzi .fleet-photo-placeholder{
+  display:grid;
+  place-items:center;
+  width:100%;
+  height:100%;
+  color:var(--gf-color-muted,#64748b);
+}
+#tab-mezzi .fleet-photo-placeholder[hidden]{display:none}
+#tab-mezzi .fleet-vehicle-placeholder-icon{
+  width:29px;
+  height:29px;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.65;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+#tab-mezzi .fleet-table .fleet-vehicle-placeholder-icon{
+  width:21px;
+  height:21px;
+}
+#tab-mezzi .vehicle-photo-preview{
+  color:var(--gf-color-muted,#64748b);
+  background:var(--gf-color-bg,#f8fafc);
+}
+#tab-mezzi .vehicle-photo-preview .fleet-photo-placeholder{
+  min-height:100%;
+}
+#tab-mezzi .vehicle-photo-preview .fleet-vehicle-placeholder-icon.is-preview{
+  width:30px;
+  height:30px;
+}

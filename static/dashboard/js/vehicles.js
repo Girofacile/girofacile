@@ -21,10 +21,23 @@ function fleetFilteredVehicles(){
    return names;
  });
 }
+function vehiclePlaceholderSvg(extraClass=''){
+ return `<svg class="fleet-vehicle-placeholder-icon ${extraClass}" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5h10.5v8H3.5z"/><path d="M14 10.5h3.8l2.7 3v2H14"/><path d="M5.5 15.5h-2M20.5 15.5h-1.3"/><circle cx="7.5" cy="17.3" r="1.7"/><circle cx="17.2" cy="17.3" r="1.7"/></svg>`;
+}
 function fleetPhoto(x){
  const url=String(x.photo_url||'');
  const safe=/^(https?:\/\/|\/[^/]|data:image\/(png|jpe?g|webp|gif);base64,)/i.test(url);
- return `<div class="fleet-photo">${safe?`<img src="${esc(url)}" alt="${esc(x.nome||'Mezzo')}" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span hidden aria-hidden="true">🚚</span>`:'<span aria-hidden="true">🚚</span>'}</div>`;
+ const placeholder=vehiclePlaceholderSvg();
+ return `<div class="fleet-photo">${safe?`<img src="${esc(url)}" alt="${esc(x.nome||'Mezzo')}" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span class="fleet-photo-placeholder" hidden>${placeholder}</span>`:`<span class="fleet-photo-placeholder">${placeholder}</span>`}</div>`;
+}
+function setVehiclePhotoPreview(){
+ const preview=document.getElementById('vehiclePhotoPreview');
+ if(!preview) return;
+ const url=String(document.getElementById('vPhotoUrl')?.value||'');
+ const safe=/^(https?:\/\/|\/[^/]|data:image\/(png|jpe?g|webp|gif);base64,)/i.test(url);
+ preview.innerHTML=safe
+   ? `<img src="${esc(url)}" alt="Foto mezzo" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span class="fleet-photo-placeholder" hidden>${vehiclePlaceholderSvg('is-preview')}</span>`
+   : `<span class="fleet-photo-placeholder">${vehiclePlaceholderSvg('is-preview')}</span>`;
 }
 function fleetStatus(x){return `<span class="fleet-status ${fleetIsAvailable(x)?'available':'busy'}"><i aria-hidden="true"></i>${esc(x.stato||'Stato non disponibile')}</span>`;}
 function fleetActions(x){return `<div class="fleet-card-actions"><button type="button" class="fleet-edit" onclick="editVehicle(${Number(x.id)})" aria-label="Modifica ${esc(x.nome)}">${fleetIcon('edit')}Modifica</button><button type="button" class="fleet-delete" onclick="deleteVehicle(${Number(x.id)})" aria-label="Elimina ${esc(x.nome)}">${fleetIcon('trash')}Elimina</button></div>`;}
