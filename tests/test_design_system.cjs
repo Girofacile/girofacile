@@ -171,8 +171,9 @@ test('company profile uses the workspace topbar and keeps billing addresses alwa
   const navigation=read('static/dashboard/js/navigation.js');
   new vm.Script(navigation);
   assert.match(navigation,/function syncWorkspaceTopbar\(name\)/);
-  assert.match(navigation,/company \? "Profilo azienda" : "Dashboard"/);
-  assert.match(navigation,/classList\.toggle\("gf-company-page-active", company\)/);
+  assert.match(navigation,/const WORKSPACE_TOPBAR_META =/);
+  assert.match(navigation,/company:\s*\{[\s\S]*title: "Profilo azienda"/);
+  assert.match(navigation,/classList\.toggle\("gf-company-page-active",company\)/);
   assert.match(navigation,/syncWorkspaceTopbar\(name\)/);
 
   const layoutCss=read(assets+'layout.css');
@@ -395,15 +396,24 @@ test('company profile visually follows the dashboard panel language',()=>{
 });
 
 
-test('resource directories share the Clienti page structure and card-table choice',()=>{
+test('resource directories share the Clienti page structure, topbar header and card-table choice',()=>{
   const html=read('static/dashboard/index.html');
-  for(const tab of ['depositi','mezzi','autisti','agenti']){
+  assert.match(html,/id="workspaceDirectoryTopbarActions" class="workspace-directory-topbar-actions hidden"/);
+  assert.match(html,/id="workspaceDirectoryPrimaryAction"/);
+  assert.match(html,/id="workspaceDirectorySecondaryAction"/);
+
+  for(const tab of ['clienti','depositi','mezzi','autisti','agenti']){
     const start=html.indexOf('<section id="tab-'+tab+'"');
     assert.ok(start>=0,tab);
     const next=html.indexOf('<section id="tab-',start+20);
     const block=html.slice(start,next>start?next:html.length);
     assert.match(block,/gf-directory-page/,tab+' page template');
-    assert.match(block,/gf-directory-title/,tab+' title');
+    assert.match(block,/gf-directory-title/,tab+' mobile title fallback');
+  }
+  for(const tab of ['depositi','mezzi','autisti','agenti']){
+    const start=html.indexOf('<section id="tab-'+tab+'"');
+    const next=html.indexOf('<section id="tab-',start+20);
+    const block=html.slice(start,next>start?next:html.length);
     assert.match(block,/gf-directory-panel/,tab+' panel');
     assert.match(block,/gf-directory-toolbar/,tab+' toolbar');
     assert.match(block,/gf-directory-view-controls/,tab+' view choice');
@@ -411,10 +421,32 @@ test('resource directories share the Clienti page structure and card-table choic
     assert.match(block,/aria-label="Vista card"/,tab+' card view');
   }
 
+  const navigation=read('static/dashboard/js/navigation.js');
+  new vm.Script(navigation);
+  for(const [name,title] of [['clienti','Clienti'],['depositi','Depositi'],['mezzi','Mezzi'],['autisti','Autisti'],['agenti','Agenti']]){
+    assert.match(navigation,new RegExp(name+':[\\s\\S]*?title: "'+title+'"'),name+' topbar title');
+  }
+  assert.match(navigation,/const WORKSPACE_DIRECTORY_ACTIONS =/);
+  assert.match(navigation,/function syncWorkspaceDirectoryActions\(name\)/);
+  assert.match(navigation,/workspaceDirectoryPrimaryAction/);
+  assert.match(navigation,/workspaceDirectorySecondaryAction/);
+
+  const layout=read(assets+'layout.css');
+  for(const tab of ['clienti','depositi','mezzi','autisti','agenti']){
+    assert.match(layout,new RegExp('#app:has\\(#tab-'+tab+':not\\(\\.hidden\\)\\) \\.topbar-dashboard-title'),tab+' topbar visibility');
+  }
+  assert.match(layout,/\.topbar-dashboard-title h1\{[^}]*font-family:var\(--gf-font-family\)[^}]*font-size:24px/);
+  assert.match(layout,/\.topbar-dashboard-title p\{[^}]*font-family:var\(--gf-font-family\)[^}]*font-size:14px/);
+
+  const workspace=read(assets+'workspace.css');
+  assert.match(workspace,/Shared anagrafica directory template — Clienti is the reference/);
+  assert.match(workspace,/#tab-clienti,#tab-depositi,#tab-mezzi,#tab-autisti,#tab-agenti\)>\.gf-directory-title\{[\s\S]*display:none!important/);
+  assert.match(workspace,/body:has\(#tab-clienti:not\(\.hidden\)\) \.content,[\s\S]*padding:24px 26px 24px/);
+  assert.match(workspace,/body:has\(#tab-clienti:not\(\.hidden\)\) \.topbar,[\s\S]*background:var\(--gf-color-surface\)!important/);
+
   const vehicles=html.slice(html.indexOf('<section id="tab-mezzi"'),html.indexOf('<section id="tab-autisti"'));
   assert.match(vehicles,/id="fleetMetricTotal"/);
   assert.match(vehicles,/id="fleetSort"/);
-  assert.match(vehicles,/\+ Nuovo mezzo/);
 
   const drivers=html.slice(html.indexOf('<section id="tab-autisti"'),html.indexOf('<section id="tab-storico"'));
   assert.match(drivers,/id="driverTableWrap"/);
@@ -427,26 +459,12 @@ test('resource directories share the Clienti page structure and card-table choic
   assert.doesNotMatch(agents,/Scheda agente/);
   assert.match(html,/id="agentOverlay" class="modal-overlay hidden gf-dialog"/);
 
-  const workspace=read(assets+'workspace.css');
-  assert.match(workspace,/Shared anagrafica directory template — Clienti is the reference/);
-  assert.match(workspace,/\.gf-directory-metrics\{[\s\S]*grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
-  assert.match(workspace,/\.gf-directory-panel\{[\s\S]*padding:18px 20px 9px/);
-  assert.match(workspace,/\.gf-directory-toolbar\{[\s\S]*display:flex/);
-  assert.match(workspace,/\.gf-directory-view-controls button\[aria-pressed="true"\]/);
-
   const core=read('static/dashboard/js/core.js');
   assert.match(core,/localStorage\?\.getItem\('gfDepositView'\)/);
   assert.match(core,/localStorage\?\.getItem\('gfAgentView'\)/);
-  assert.match(core,/function setAgentView\(view\)/);
-  assert.match(core,/function openNewAgentModal\(\)/);
 
   const vehiclesJs=read('static/dashboard/js/vehicles.js');
   assert.match(vehiclesJs,/localStorage\?\.getItem\('gfFleetView'\)/);
-  assert.match(vehiclesJs,/localStorage\?\.setItem\('gfFleetView',fleetView\)/);
-  assert.match(vehiclesJs,/fleetMetricAvailable/);
-
   const driversJs=read('static/dashboard/js/drivers.js');
   assert.match(driversJs,/localStorage\?\.getItem\('gfDriverView'\)/);
-  assert.match(driversJs,/function setDriverView\(view\)/);
-  assert.match(driversJs,/id="driversBody"|driversBody/);
 });

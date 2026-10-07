@@ -707,12 +707,27 @@ body[data-gf-surface="workspace"] #app .gf-directory-empty{
   padding:18px 24px 22px;
 }
 
-@media(min-width:1101px){
+@media(min-width:821px){
+  body[data-gf-surface="workspace"] #app :is(#tab-clienti,#tab-depositi,#tab-mezzi,#tab-autisti,#tab-agenti)>.gf-directory-title{
+    display:none!important;
+  }
+  body:has(#tab-clienti:not(.hidden)) .content,
   body:has(#tab-depositi:not(.hidden)) .content,
   body:has(#tab-mezzi:not(.hidden)) .content,
   body:has(#tab-autisti:not(.hidden)) .content,
   body:has(#tab-agenti:not(.hidden)) .content{
-    padding:8px 26px 16px;
+    padding:24px 26px 24px;
+  }
+  body:has(#tab-clienti:not(.hidden)) .topbar,
+  body:has(#tab-depositi:not(.hidden)) .topbar,
+  body:has(#tab-mezzi:not(.hidden)) .topbar,
+  body:has(#tab-autisti:not(.hidden)) .topbar,
+  body:has(#tab-agenti:not(.hidden)) .topbar{
+    background:var(--gf-color-surface)!important;
+    border-bottom:1px solid var(--gf-color-border)!important;
+    -webkit-backdrop-filter:none!important;
+    backdrop-filter:none!important;
+    box-shadow:none!important;
   }
 }
 @media(max-width:1100px){

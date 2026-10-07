@@ -43,8 +43,8 @@
 <!-- Shared GiroFacile design system; legacy sheets retain feature layout. -->
 <link rel="stylesheet" href="/static/design-system/tokens.css?v=ds_20261007_reference_2">
 <link rel="stylesheet" href="/static/design-system/components.css?v=ds_20261007_legal_cleanup_4">
-<link rel="stylesheet" href="/static/design-system/layout.css?v=ds_20261007_footer_cleanup_5">
-<link rel="stylesheet" href="/static/design-system/workspace.css?v=ds_20261007_directory_template_10">
+<link rel="stylesheet" href="/static/design-system/layout.css?v=ds_20261007_directory_topbar_6">
+<link rel="stylesheet" href="/static/design-system/workspace.css?v=ds_20261007_directory_topbar_11">
 <link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007_reference_2">
 <script src="/static/design-system/design-system.js?v=ds_20261007_reference_2" defer></script>
 </head>
@@ -379,6 +379,10 @@
 
       <div class="top-actions">
         <button class="btn-primary topbar-new-route" onclick="showTab('giro')"><span data-gf-label="new_route">Nuovo giro</span></button>
+        <div id="workspaceDirectoryTopbarActions" class="workspace-directory-topbar-actions hidden">
+          <button id="workspaceDirectorySecondaryAction" type="button" class="btn-secondary hidden"></button>
+          <button id="workspaceDirectoryPrimaryAction" type="button" class="btn-primary"></button>
+        </div>
         <div id="companyTopbarStatus" class="company-topbar-status" aria-live="polite">
           <span id="companyConfiguredBadge" class="company-configured-badge-v40 hidden">✓ Profilo configurato</span>
           <button id="showOnboardingBtn" class="btn-secondary hidden" onclick="openOnboardingPanel()">Configurazione guidata</button>
@@ -859,8 +863,8 @@
         </div>
       </section>
 
-      <section id="tab-clienti" class="tab hidden">
-        <div class="page-title-row customer-page-title">
+      <section id="tab-clienti" class="tab hidden gf-directory-page">
+        <div class="page-title-row customer-page-title gf-directory-title">
           <div><h1 data-gf-label="customers">Clienti</h1><p>Anagrafica <span data-gf-label="customers">Clienti</span> e fasce orarie di scarico.</p></div>
           <div class="page-actions"><button class="btn-secondary" onclick="openCustomerImportModal()">Importa clienti CSV/Excel</button><button class="btn-primary" onclick="openCustomerModal()">+ Nuovo <span data-gf-label="customer">Cliente</span></button></div>
         </div>
@@ -1908,7 +1912,7 @@
 
 <script src="/static/dashboard/js/reports.js?v=audit_20261004"></script>
 <script src="/static/dashboard/js/customers.js?v=customer_kpi_fix_20261006_6"></script>
-<script src="/static/dashboard/js/navigation.js?v=company_dirty_save_20261007"></script>
+<script src="/static/dashboard/js/navigation.js?v=directory_topbar_20261007"></script>
 <script src="/static/dashboard/js/completed.js?v=20261006"></script>
 <script src="/static/dashboard/js/preview-design.js?v=20261006"></script>
 <script src="/static/dashboard/js/live-design.js?v=20261006"></script>
