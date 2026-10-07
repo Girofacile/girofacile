@@ -700,6 +700,42 @@ Non inventare dati, usa solo ordine tappe, km, orari e vincoli presenti nel JSON
         context=context,
     )
 
+def completed_deliveries_count_for_day(db: Session, user: User, day=None) -> int:
+    """Conta le consegne realmente completate in una giornata per l'azienda.
+
+    Il dato usa DeliveryStatus.completata_il, quindi include consegne concluse
+    durante giri ancora in corso e non dipende dalla data pianificata del giro.
+    Le consegne mancate sono escluse anche se hanno un timestamp di chiusura.
+    """
+    target_day = day or local_today()
+    start = datetime.combine(target_day, datetime.min.time())
+    end = start + timedelta(days=1)
+    return (
+        db.query(DeliveryStatus)
+        .join(RoutePlan, RoutePlan.id == DeliveryStatus.route_plan_id)
+        .filter(
+            RoutePlan.user_id == user.id,
+            DeliveryStatus.status == "completata",
+            DeliveryStatus.completata_il.isnot(None),
+            DeliveryStatus.completata_il >= start,
+            DeliveryStatus.completata_il < end,
+        )
+        .count()
+    )
+
+
+@router.get("/api/dashboard/completed-deliveries-today")
+def dashboard_completed_deliveries_today(
+    db: Session = Depends(get_db),
+    user: User = Depends(current_user),
+):
+    day = local_today()
+    return {
+        "date": day.isoformat(),
+        "count": completed_deliveries_count_for_day(db, user, day),
+    }
+
+
 @router.get("/api/routes/operativi")
 def list_operational_routes(db: Session = Depends(get_db), user: User = Depends(current_user)):
     from_date = (local_today() - timedelta(days=7))

@@ -1,4 +1,5 @@
 from types import SimpleNamespace
+from datetime import date, datetime, time, timedelta
 import os
 
 os.environ.setdefault("DATABASE_URL", "sqlite+pysqlite:///:memory:")
@@ -10,8 +11,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
 from app.database import Base
-from app.models import Customer, Deposit, Driver, User, Vehicle
-from app.routers.routes import _owned_customer_map, _validate_route_tenant_scope
+from app.models import Customer, Delivery, DeliveryStatus, Deposit, Driver, RoutePlan, User, Vehicle
+from app.routers.routes import _owned_customer_map, _validate_route_tenant_scope, completed_deliveries_count_for_day
 
 
 def _db():
@@ -67,5 +68,46 @@ def test_route_resources_and_customers_must_belong_to_same_company():
             _validate_route_tenant_scope(db, a, invalid_vehicle, deliveries)
         assert exc.value.status_code == 400
         assert exc.value.detail == "Mezzo non trovato"
+    finally:
+        db.close()
+
+
+def test_completed_deliveries_today_counts_actual_events_and_respects_tenant():
+    db = _db()
+    try:
+        company_a = User(username="azienda-a", password_hash="x")
+        company_b = User(username="azienda-b", password_hash="x")
+        db.add_all([company_a, company_b])
+        db.flush()
+
+        target_day = date(2026, 10, 7)
+        route_a = RoutePlan(user_id=company_a.id, nome="Giro A", data_giro=target_day,
+                            orario_partenza=time(8, 0), status="in_corso")
+        route_b = RoutePlan(user_id=company_b.id, nome="Giro B", data_giro=target_day,
+                            orario_partenza=time(8, 0), status="in_corso")
+        db.add_all([route_a, route_b])
+        db.flush()
+
+        a_today = Delivery(route_plan_id=route_a.id, cliente_nome="A oggi", indirizzo="Via A")
+        a_missed = Delivery(route_plan_id=route_a.id, cliente_nome="A mancata", indirizzo="Via B")
+        a_yesterday = Delivery(route_plan_id=route_a.id, cliente_nome="A ieri", indirizzo="Via C")
+        b_today = Delivery(route_plan_id=route_b.id, cliente_nome="B oggi", indirizzo="Via D")
+        db.add_all([a_today, a_missed, a_yesterday, b_today])
+        db.flush()
+
+        db.add_all([
+            DeliveryStatus(delivery_id=a_today.id, route_plan_id=route_a.id, status="completata",
+                           completata_il=datetime(2026, 10, 7, 10, 30)),
+            DeliveryStatus(delivery_id=a_missed.id, route_plan_id=route_a.id, status="mancata",
+                           completata_il=datetime(2026, 10, 7, 11, 0)),
+            DeliveryStatus(delivery_id=a_yesterday.id, route_plan_id=route_a.id, status="completata",
+                           completata_il=datetime(2026, 10, 6, 17, 45)),
+            DeliveryStatus(delivery_id=b_today.id, route_plan_id=route_b.id, status="completata",
+                           completata_il=datetime(2026, 10, 7, 9, 15)),
+        ])
+        db.commit()
+
+        assert completed_deliveries_count_for_day(db, company_a, target_day) == 1
+        assert completed_deliveries_count_for_day(db, company_b, target_day) == 1
     finally:
         db.close()

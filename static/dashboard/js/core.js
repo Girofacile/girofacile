@@ -1574,15 +1574,21 @@ async function loadDashboardHome(){
   const dash = document.getElementById("tab-dashboard");
   if(!dash) return;
   try{
-    const [routes, operational, vehicles, drivers] = await Promise.all([api("/api/routes"), api("/api/routes/operativi"), api("/api/vehicles"), api("/api/drivers")]);
+    const [routes, operational, vehicles, drivers, completedDeliveriesSummary] = await Promise.all([
+      api("/api/routes"),
+      api("/api/routes/operativi"),
+      api("/api/vehicles"),
+      api("/api/drivers"),
+      api("/api/dashboard/completed-deliveries-today")
+    ]);
     const today = todayIso();
     const todayScheduled = operational.filter(r=>r.status==='programmato' && r.data_giro===today);
     const inProgressRoutes = operational.filter(r=>r.status==='in_corso');
     const completedToday = routes.filter(r=>r.status==='completato' && r.data_giro===today);
 
-    // Le consegne completate oggi sono le fermate dei giri completati oggi.
-    // Non si usano più i vecchi totali generici, così il dato è chiaro e operativo.
-    const completedDeliveriesToday = completedToday.reduce((a,r)=>a+(Number(r.consegne_count)||0),0);
+    // KPI distinto dai "Giri completati oggi": conta gli eventi di consegna
+    // realmente completati oggi, anche quando il giro è ancora in corso.
+    const completedDeliveriesToday = Number(completedDeliveriesSummary?.count) || 0;
     const busyDrivers = drivers.filter(d=>(d.stato || "Disponibile")==="In servizio").length;
     const busyVehicles = vehicles.filter(v=>(v.stato || "Disponibile")==="In uso").length;
 

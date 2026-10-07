@@ -334,3 +334,22 @@ test('dashboard resource panels match route panel headers and use neutral action
   assert.match(workspace,/\.dash-resource-action\{[^}]*background:var\(--gf-color-surface\)[^}]*color:var\(--gf-color-text\)/);
   assert.match(workspace,/\.dash-resource-action:hover\{[^}]*background:var\(--gf-color-bg\)/);
 });
+
+
+test('dashboard completed-deliveries KPI has fixed copy and uses actual completion events',()=>{
+  const html=read('static/dashboard/index.html');
+  const dashboard=html.slice(html.indexOf('<section id="tab-dashboard"'),html.indexOf('<section id="tab-dashboard-scheduled"'));
+  assert.match(dashboard,/class="dash-kpi-title">Consegne completate oggi<\/span>/);
+  assert.match(dashboard,/id="dashTodayCompletedDeliveries">0<\/strong><small>completate dagli autisti oggi<\/small>/);
+  assert.doesNotMatch(dashboard,/Consegne<\/span> merce/);
+
+  const core=read('static/dashboard/js/core.js');
+  assert.match(core,/api\("\/api\/dashboard\/completed-deliveries-today"\)/);
+  assert.match(core,/const completedDeliveriesToday = Number\(completedDeliveriesSummary\?\.count\) \|\| 0/);
+
+  const routes=read('app/routers/routes.py');
+  assert.match(routes,/@router\.get\("\/api\/dashboard\/completed-deliveries-today"\)/);
+  assert.match(routes,/DeliveryStatus\.status == "completata"/);
+  assert.match(routes,/DeliveryStatus\.completata_il >= start/);
+  assert.match(routes,/RoutePlan\.user_id == user\.id/);
+});
