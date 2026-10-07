@@ -41,7 +41,9 @@ test('account password change stays inline and separate from profile save', () =
   assert.match(html,/id="profileNewPassword"/);
   assert.match(html,/id="profileConfirmPassword"/);
   assert.match(html,/onclick="changeProfilePassword\(\)"/);
-  assert.match(html,/requestProfilePasswordReset\(\)/);
+  assert.match(html,/id="profileSecurityOpenBtn"[^>]*aria-expanded="false"[^>]*>Modifica<\/button>/);
+  assert.doesNotMatch(html,/requestProfilePasswordReset\(\)/);
+  assert.doesNotMatch(html,/Credenziali protette|profile-password-help|profile-reset-link/);
   assert.doesNotMatch(html,/id="profilePassword"/);
   assert.match(core,/\/api\/account-password\/change/);
   const saveBlock=core.match(/async function saveProfilePanel\(\)[\s\S]*?\n}\n/);

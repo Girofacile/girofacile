@@ -11,7 +11,7 @@
 <title>GiroFacile</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link href="/static/dashboard/css/core.css?v=menu_fix_20261001_2" rel="stylesheet">
-<link href="/static/dashboard/css/account.css?v=password_security_20261007_1" rel="stylesheet">
+<link href="/static/dashboard/css/account.css?v=password_security_ui_20261007_2" rel="stylesheet">
 <script src="/api/billing/catalog.js"></script>
 <script src="/static/dashboard/js/billing.js?v=electric_bonus_20261002"></script>
 <link href="/static/dashboard/css/dashboard.css?v=20261007_reference" rel="stylesheet">
@@ -1821,42 +1821,30 @@
           <input id="profileRole" value="Amministratore" readonly>
         </div>
         <div class="profile-field profile-security-entry">
-          <label>Password</label>
-          <div class="profile-security-summary">
-            <div>
-              <strong>Credenziali protette</strong>
-              <small>La password si modifica separatamente dagli altri dati del profilo.</small>
-            </div>
-            <button type="button" class="btn-secondary profile-security-open" onclick="toggleProfilePasswordPanel(true)">Cambia password</button>
+          <div class="profile-security-row">
+            <span class="profile-security-label">Cambio password</span>
+            <button type="button" id="profileSecurityOpenBtn" class="btn-secondary profile-security-open" aria-controls="profilePasswordChangePanel" aria-expanded="false" onclick="toggleProfilePasswordPanel(true)">Modifica</button>
           </div>
-          <button type="button" id="profilePasswordResetEmailBtn" class="profile-reset-link" onclick="requestProfilePasswordReset()">Password dimenticata? Invia link via email</button>
         </div>
       </div>
 
       <div id="profilePasswordChangePanel" class="profile-password-panel hidden" aria-labelledby="profilePasswordChangeTitle">
         <div class="profile-password-panel-head">
-          <div>
-            <h4 id="profilePasswordChangeTitle">Cambia password</h4>
-            <p>Per sicurezza, conferma prima la password attuale.</p>
-          </div>
-          <button type="button" class="profile-password-collapse" onclick="toggleProfilePasswordPanel(false)" aria-label="Chiudi cambio password">×</button>
+          <h4 id="profilePasswordChangeTitle">Cambio password</h4>
         </div>
         <div class="profile-password-grid">
           <div class="profile-field">
             <label for="profileCurrentPassword">Password attuale</label>
-            <input id="profileCurrentPassword" type="password" autocomplete="current-password" placeholder="Inserisci la password attuale">
+            <input id="profileCurrentPassword" type="password" autocomplete="current-password" placeholder="Password attuale">
           </div>
           <div class="profile-field">
             <label for="profileNewPassword">Nuova password</label>
             <input id="profileNewPassword" type="password" autocomplete="new-password" placeholder="Minimo 8 caratteri">
           </div>
           <div class="profile-field">
-            <label for="profileConfirmPassword">Conferma nuova password</label>
-            <input id="profileConfirmPassword" type="password" autocomplete="new-password" placeholder="Ripeti la nuova password">
+            <label for="profileConfirmPassword">Conferma password</label>
+            <input id="profileConfirmPassword" type="password" autocomplete="new-password" placeholder="Ripeti la password">
           </div>
-        </div>
-        <div class="profile-password-help">
-          Dopo l'aggiornamento verrai disconnesso e dovrai accedere di nuovo con la nuova password.
         </div>
         <div class="profile-password-actions">
           <button type="button" class="btn-secondary" onclick="toggleProfilePasswordPanel(false)">Annulla</button>
@@ -1922,7 +1910,7 @@
 <script src="/static/dashboard/js/completed.js?v=20261006"></script>
 <script src="/static/dashboard/js/preview-design.js?v=20261006"></script>
 <script src="/static/dashboard/js/live-design.js?v=20261006"></script>
-<script src="/static/dashboard/js/core.js?v=password_security_20261007_1"></script>
+<script src="/static/dashboard/js/core.js?v=password_security_ui_20261007_2"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=1"></script>
 
 <script>

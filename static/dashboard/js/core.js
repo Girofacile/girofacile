@@ -912,6 +912,8 @@ function toggleProfilePasswordPanel(show){
   if(!panel) return;
   const visible=typeof show==="boolean" ? show : panel.classList.contains("hidden");
   panel.classList.toggle("hidden", !visible);
+  const trigger=document.getElementById("profileSecurityOpenBtn");
+  if(trigger) trigger.setAttribute("aria-expanded", visible ? "true" : "false");
   if(!visible){
     ["profileCurrentPassword","profileNewPassword","profileConfirmPassword"].forEach(id=>set(id,""));
   }else{

@@ -353,3 +353,24 @@ test('dashboard completed-deliveries KPI has fixed copy and uses actual completi
   assert.match(routes,/DeliveryStatus\.completata_il >= start/);
   assert.match(routes,/RoutePlan\.user_id == user\.id/);
 });
+
+
+test('account password UI stays compact and uses shared visual tokens',()=>{
+  const html=read('static/dashboard/index.html');
+  const profile=html.slice(html.indexOf('<div id="profileOverlay"'),html.indexOf('<!-- COOKIE NOTICE'));
+  assert.match(profile,/class="profile-security-row"/);
+  assert.match(profile,/class="profile-security-label">Cambio password<\/span>/);
+  assert.match(profile,/id="profileSecurityOpenBtn"[^>]*>Modifica<\/button>/);
+  assert.match(profile,/id="profilePasswordChangePanel" class="profile-password-panel hidden"/);
+  assert.doesNotMatch(profile,/Credenziali protette|Password dimenticata|profile-password-help|profile-password-collapse/);
+
+  const account=read('static/dashboard/css/account.css');
+  const passwordCss=account.slice(account.indexOf('/* Account password security — compact workspace-aligned treatment */'));
+  assert.match(passwordCss,/\.profile-security-row\{[\s\S]*background:var\(--gf-color-surface\)/);
+  assert.match(passwordCss,/\.profile-password-panel\{[\s\S]*background:var\(--gf-color-bg\)[\s\S]*box-shadow:none/);
+  assert.doesNotMatch(passwordCss,/linear-gradient|#cfe0ff|#fff7ed|#9a5a16/);
+
+  const core=read('static/dashboard/js/core.js');
+  assert.match(core,/profileSecurityOpenBtn/);
+  assert.match(core,/setAttribute\("aria-expanded", visible \? "true" : "false"\)/);
+});
