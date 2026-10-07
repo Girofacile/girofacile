@@ -57,11 +57,11 @@ body.gf-company-page-active #showOnboardingBtn {
   color: var(--gf-color-text, #1e293b);
   letter-spacing: -.02em;
 }
-#tab-company .company-layout-v29 { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+#tab-company .company-layout-v29 { grid-template-columns: minmax(0, 1fr); gap: 24px; }
 #tab-company .company-profile-grid {
   display: grid;
-  grid-template-columns: minmax(0, .96fr) minmax(0, 1.04fr);
-  gap: 20px 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
   min-width: 0;
 }
 #tab-company .company-card-v29 {
@@ -71,7 +71,6 @@ body.gf-company-page-active #showOnboardingBtn {
   margin: 0;
   padding: var(--company-card-pad-y) var(--company-card-pad-x);
   border: 1px solid var(--gf-color-border, #e2e8f0);
-  border-top: 3px solid var(--gf-color-muted, #64748b);
   border-radius: var(--gf-radius-lg, 12px);
   background: var(--gf-color-surface, #fff);
   box-shadow: var(--gf-shadow-sm, 0 1px 2px rgba(15,23,42,.05));
@@ -82,24 +81,25 @@ body.gf-company-page-active #showOnboardingBtn {
   align-items: center;
   gap: 12px;
   margin: calc(-1 * var(--company-card-pad-y)) calc(-1 * var(--company-card-pad-x)) 20px;
-  padding: 16px var(--company-card-pad-x);
+  padding: 18px var(--company-card-pad-x);
   border-bottom: 1px solid var(--gf-color-border, #e2e8f0);
   background: var(--gf-color-surface-subtle, #f1f4f8);
 }
 #tab-company .company-section-icon {
   display: grid;
   place-items: center;
-  flex: 0 0 28px;
-  width: 28px;
-  height: 28px;
-  border-radius: 0;
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--gf-color-border, #e2e8f0);
+  border-radius: var(--gf-radius-circle, 999px);
   color: var(--gf-color-muted, #64748b);
-  background: transparent;
+  background: var(--gf-color-bg, #f8fafc);
 }
 #tab-company svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-#tab-company .company-section-icon svg { width: 20px; height: 20px; }
-#tab-company .company-section-heading h2 { margin: 0 0 3px; color: var(--gf-color-text, #1e293b); font-size: 16px; line-height: 1.3; letter-spacing: 0; font-weight: var(--gf-weight-bold, 700); }
-#tab-company .company-section-heading p { margin: 0; color: var(--gf-color-muted, #64748b); font-size: 12px; line-height: 1.4; }
+#tab-company .company-section-icon svg { width: 17px; height: 17px; stroke-width: 1.7; }
+#tab-company .company-section-heading h2 { margin: 0 0 2px; color: var(--gf-color-text, #1e293b); font-size: 16px; line-height: 1.3; letter-spacing: 0; font-weight: var(--gf-weight-bold, 700); }
+#tab-company .company-section-heading p { margin: 0; color: var(--gf-color-muted, #64748b); font-size: 11px; line-height: 1.4; }
 #tab-company .company-logo-row-v29 {
   margin: 0 0 20px;
   padding: 14px 16px;
@@ -107,7 +107,7 @@ body.gf-company-page-active #showOnboardingBtn {
   gap: 20px;
   border: 1px solid var(--gf-color-border, #e2e8f0);
   border-radius: var(--gf-radius-md, 10px);
-  background: var(--gf-color-bg, #f8fafc);
+  background: var(--gf-color-surface, #fff);
 }
 #tab-company .company-logo-preview-v29 {
   flex: 0 0 76px;
@@ -170,6 +170,7 @@ body.gf-company-page-active #showOnboardingBtn {
 }
 #tab-company .company-field input::placeholder,
 #tab-company .company-field textarea::placeholder { color: var(--gf-color-muted, #64748b); opacity: .72; }
+#tab-company .company-field :is(input, select, textarea):hover { border-color: #cbd5e1; }
 #tab-company .company-field :is(input, select, textarea):focus { outline: 0; border-color: var(--gf-color-primary, #2563eb); box-shadow: var(--gf-focus-ring); }
 #tab-company .company-horizontal-fields { display: grid; gap: 15px; }
 #tab-company .company-horizontal-fields .company-field { display: grid; grid-template-columns: 128px minmax(0, 1fr); gap: 15px; align-items: center; }
@@ -179,6 +180,13 @@ body.gf-company-page-active #showOnboardingBtn {
 #tab-company .company-field textarea { min-height: 94px; resize: vertical; }
 #tab-company .company-address-details { grid-column: 1 / -1; }
 #tab-company .company-address-details .company-section-heading { margin-bottom: 20px; }
+#tab-company .company-identity,
+#tab-company .company-contacts,
+#tab-company .company-fiscal,
+#tab-company .company-operations,
+#tab-company .company-address-details { align-self: stretch; }
+#tab-company .company-card-v29 > :last-child { margin-bottom: 0; }
+#tab-company .company-horizontal-fields { gap: 12px; }
 .company-save-bar {
   position: absolute;
   left: 50%;
