@@ -319,3 +319,18 @@ test('workspace legal links live in navigation and advanced legal docs live in s
   assert.match(components,/Support legal resources moved out of the workspace footer/);
   assert.match(components,/\.support-legal-v60\{[^}]*background:var\(--gf-color-bg\)/);
 });
+
+
+test('dashboard resource panels match route panel headers and use neutral actions',()=>{
+  const html=read('static/dashboard/index.html');
+  const dashboard=html.slice(html.indexOf('<section id="tab-dashboard"'),html.indexOf('<section id="tab-dashboard-scheduled"'));
+  assert.equal((dashboard.match(/class="dash-resource-action"/g)||[]).length,2);
+  assert.match(dashboard,/class="dash-resource-action" onclick="showTab\('mezzi'\)"><span>Tutti i <\/span>/);
+  assert.match(dashboard,/class="dash-resource-action" onclick="showTab\('autisti'\)"><span>Tutti gli <\/span>/);
+  assert.doesNotMatch(dashboard,/dash-link-inline/);
+
+  const workspace=read(assets+'workspace.css');
+  assert.match(workspace,/\.dash-panel-title\{[^}]*background:var\(--gf-color-surface-subtle\)/);
+  assert.match(workspace,/\.dash-resource-action\{[^}]*background:var\(--gf-color-surface\)[^}]*color:var\(--gf-color-text\)/);
+  assert.match(workspace,/\.dash-resource-action:hover\{[^}]*background:var\(--gf-color-bg\)/);
+});

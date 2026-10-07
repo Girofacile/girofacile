@@ -197,7 +197,11 @@ body[data-gf-surface="workspace"] #app #tab-dashboard .dash-empty-illustrated im
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-empty-illustrated strong{color:var(--gf-color-text)}
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-resource-row{gap:24px}
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-vehicles-panel{padding:0}
-body[data-gf-surface="workspace"] #app #tab-dashboard .dash-panel-title{padding:20px;margin:0;border-bottom:1px solid var(--gf-color-border)}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-panel-title{padding:20px;margin:0;border-bottom:1px solid var(--gf-color-border);background:var(--gf-color-surface-subtle)}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-panel-title h2{font-size:16px;letter-spacing:0}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-resource-action{display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:7px 12px;border:1px solid var(--gf-color-border);border-radius:var(--gf-radius-sm);background:var(--gf-color-surface);color:var(--gf-color-text);font-family:var(--gf-font-family);font-size:12px;font-weight:600;line-height:1.2;white-space:nowrap;cursor:pointer;box-shadow:none;transition:background var(--gf-motion-duration),border-color var(--gf-motion-duration),color var(--gf-motion-duration)}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-resource-action:hover{background:var(--gf-color-bg);border-color:var(--gf-color-border-strong);color:var(--gf-color-text)}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-resource-action:focus-visible{outline:0;box-shadow:var(--gf-focus-ring)}
 body[data-gf-surface="workspace"] #app #tab-dashboard :is(.dash-vehicle-grid,.dash-driver-grid){padding:20px;gap:16px}
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-vehicle-card{background:var(--gf-color-surface);border:1px solid var(--gf-color-border);border-radius:var(--gf-radius-sm);min-height:94px}
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-vehicle-card:has(.free) small:last-child{color:var(--gf-color-success)}
@@ -213,7 +217,8 @@ body[data-gf-surface="workspace"] #app #tab-dashboard .dash-list-card:last-child
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-grid{gap:12px}
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-card{align-items:flex-start!important}
 body[data-gf-surface="workspace"] #app #tab-dashboard :is(.dash-vehicle-grid,.dash-driver-grid){padding:16px}
-body[data-gf-surface="workspace"] #app #tab-dashboard .dash-panel-title{align-items:flex-start;text-align:left}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-panel-title{align-items:center;text-align:left}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-resource-action{min-height:32px;padding:6px 10px;font-size:11px}
 }
 @media(max-width:520px){
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-grid{grid-template-columns:1fr!important}
