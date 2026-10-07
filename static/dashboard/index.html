@@ -37,6 +37,8 @@
 <script src="/static/tracking/company.js?v=20261004_design"></script>
 <link href="/static/dashboard/css/vehicles.css?v=fleet_20261007" rel="stylesheet">
 <script src="/static/dashboard/js/vehicles.js?v=fleet_20261007"></script>
+<link href="/static/dashboard/css/drivers.css?v=drivers_20261007" rel="stylesheet">
+<script src="/static/dashboard/js/drivers.js?v=drivers_20261007"></script>
 </head>
 <body>
 
@@ -1147,21 +1149,19 @@
         </div>
 
         <div class="driver-stats-grid">
-          <div class="stat-card driver-stat"><div class="stat-icon blue"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 19.5c.8-3.4 3.2-5.1 6.5-5.1s5.7 1.7 6.5 5.1"/><path d="M18.2 7.2h2.3"/></svg></div><div><span>Autisti registrati</span><strong id="driversTotal">0</strong><small>Anagrafica aziendale</small></div></div>
-          <div class="stat-card driver-stat"><div class="stat-icon green"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7.8"/><path d="m8.6 12.3 2.2 2.2 4.8-5"/></svg></div><div><span>Disponibili</span><strong id="driversAvailable">0</strong><small>Nessun giro in corso</small></div></div>
+          <div class="stat-card driver-stat"><div class="stat-icon blue"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 19.5c.8-3.4 3.2-5.1 6.5-5.1s5.7 1.7 6.5 5.1"/><path d="M18.2 7.2h2.3"/></svg></div><div><span>Totale autisti</span><strong id="driversTotal">0</strong><small>Anagrafica aziendale</small></div></div>
+          <div class="stat-card driver-stat"><div class="stat-icon green"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7.8"/><path d="m8.6 12.3 2.2 2.2 4.8-5"/></svg></div><div><span>Disponibili</span><strong id="driversAvailable">0</strong><small>Pronti per nuovi giri</small></div></div>
           <div class="stat-card driver-stat"><div class="stat-icon orange"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.8 14.2h8.5v-4.7H5.7z"/><path d="M12.3 11.8h3.2l2.7 2.7v1.3h-5.9"/><circle cx="7.1" cy="16.6" r="1.6"/><circle cx="16.6" cy="16.6" r="1.6"/></svg></div><div><span>In servizio</span><strong id="driversWorking">0</strong><small>Giro attivo oggi</small></div></div>
         </div>
 
-        <section class="panel drivers-list-panel drivers-list-panel-full">
-          <div class="panel-header drivers-list-header">
-            <div><h2>Elenco autisti</h2><p>Consulta stato, contatti, patente e accesso al portale autista.</p></div>
-          </div>
-          <div class="driver-toolbar">
-            <input id="driverSearch" placeholder="Cerca autista, telefono, email o patente" oninput="renderDrivers()">
-            <select id="driverStatusFilter" onchange="renderDrivers()"><option value="">Tutti gli stati</option><option value="Disponibile">Disponibili</option><option value="In servizio">In servizio</option></select>
-          </div>
-          <div id="driversCards" class="drivers-cards"></div>
-        </section>
+        <div class="driver-toolbar">
+          <label class="driver-search-box"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/></svg><input id="driverSearch" aria-label="Cerca autisti" placeholder="Cerca per nome, telefono, email o patente..." oninput="renderDrivers()"></label>
+          <select id="driverStatusFilter" aria-label="Filtra stato autisti" onchange="renderDrivers()"><option value="">Tutti gli stati</option><option value="Disponibile">Disponibili</option><option value="In servizio">In servizio</option><option value="In riposo">In riposo</option></select>
+          <select id="driverSort" aria-label="Ordina autisti" onchange="renderDrivers()"><option value="name">Ordina per</option><option value="name_desc">Nome: Z–A</option><option value="routes">Giri assegnati</option><option value="expiry">Scadenza patente</option></select>
+        </div>
+        <p id="driverDirectoryError" class="hidden" role="status"></p>
+        <div id="driversCards" class="drivers-cards"></div>
+        <dialog id="driverDetailsDialog" aria-labelledby="driverDetailsTitle"><div id="driverDetailsContent"></div><form method="dialog"><button class="btn-secondary">Chiudi</button></form></dialog>
       </section>
 
       <section id="tab-storico" class="tab hidden history-page-v311 gf-page">
@@ -1808,7 +1808,7 @@
 <script src="/static/dashboard/js/completed.js?v=20261006"></script>
 <script src="/static/dashboard/js/preview-design.js?v=20261006"></script>
 <script src="/static/dashboard/js/live-design.js?v=20261006"></script>
-<script src="/static/dashboard/js/core.js?v=fleet_20261007"></script>
+<script src="/static/dashboard/js/core.js?v=drivers_20261007"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=1"></script>
 
 <script>

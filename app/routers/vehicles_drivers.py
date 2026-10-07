@@ -2,7 +2,7 @@ from ..services.identity import ensure_login_email_available
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from sqlalchemy import text
+from sqlalchemy import text, func
 
 from ..core.dependencies import current_user, owned
 from ..core.utils import parse_date_value
@@ -305,7 +305,15 @@ def driver_status(driver, db: Session) -> str:
 
 
 def driver_to_dict(driver, db: Session) -> dict:
-    total_routes = db.query(RoutePlan).filter(RoutePlan.driver_id == driver.id).count()
+    total_routes = db.query(RoutePlan).filter(RoutePlan.driver_id == driver.id, RoutePlan.user_id == driver.user_id).count()
+    usual = (db.query(Vehicle.id, Vehicle.nome, Vehicle.targa)
+             .join(RoutePlan, RoutePlan.vehicle_id == Vehicle.id)
+             .filter(RoutePlan.driver_id == driver.id, RoutePlan.user_id == driver.user_id,
+                     Vehicle.user_id == driver.user_id, Vehicle.deleted_at.is_(None),
+                     RoutePlan.status.in_(["programmato", "in_corso", "completato"]))
+             .group_by(Vehicle.id, Vehicle.nome, Vehicle.targa)
+             .order_by(func.count(RoutePlan.id).desc(), func.max(RoutePlan.data_giro).desc(), Vehicle.id.asc())
+             .first())
     account = db.query(DriverAccount).filter(DriverAccount.driver_id == driver.id).first()
     return {
         "id": driver.id,
@@ -322,6 +330,7 @@ def driver_to_dict(driver, db: Session) -> dict:
         "photo_url": driver.photo_url,
         "stato": driver_status(driver, db),
         "giri_assegnati": total_routes,
+        "mezzo_abituale": {"id": usual.id, "nome": usual.nome, "targa": usual.targa} if usual else None,
         "account_attivo": bool(account and account.is_active),
         "account_email": account.email if account else None,
     }

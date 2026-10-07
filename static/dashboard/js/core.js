@@ -2308,7 +2308,12 @@ async function deleteVehicle(id){ if(confirm("Eliminare mezzo?")){ try{await api
 async function loadDrivers(){
   try{
     driversCache = await api("/api/drivers");
-  }catch(e){ driversCache = []; }
+    document.getElementById('driverDirectoryError')?.classList.add('hidden');
+  }catch(e){
+    const status=document.getElementById('driverDirectoryError');
+    if(status){status.textContent='Impossibile aggiornare gli autisti. Riapri la sezione per riprovare.';status.classList.remove('hidden');}
+    return;
+  }
   renderResourceSelects();
   renderDrivers();
 }
@@ -2322,39 +2327,7 @@ function updateDriverPreview(){
   const info = document.getElementById("driverPreviewInfo"); if(info) info.textContent = d.patente ? `Patente ${d.patente}` : "Patente e contatti operativi";
 }
 function renderDrivers(){
-  const box = document.getElementById("driversCards");
-  if(!box) return;
-  const q = (document.getElementById("driverSearch")?.value || "").toLowerCase();
-  const status = document.getElementById("driverStatusFilter")?.value || "";
-  let rows = driversCache.filter(d=>{
-    const hay = [d.nome,d.cognome,d.telefono,d.email,d.patente,d.note].join(" ").toLowerCase();
-    return (!q || hay.includes(q)) && (!status || d.stato === status);
-  });
-  const total = driversCache.length;
-  const available = driversCache.filter(d=>d.stato === "Disponibile").length;
-  const working = driversCache.filter(d=>d.stato === "In servizio").length;
-  const setText=(id,v)=>{ const el=document.getElementById(id); if(el) el.textContent=v; };
-  setText("driversTotal", total); setText("driversAvailable", available); setText("driversWorking", working);
-  if(!rows.length){ box.innerHTML = `<div class="empty-picker">Nessun autista trovato</div>`; return; }
-  box.innerHTML = rows.map(d=>{
-    const statusClass = d.stato === "In servizio" ? "working" : "available";
-    return `<article class="driver-card">
-      <div class="driver-card-top">
-        <div class="driver-avatar">${d.photo_url ? `<img src="${d.photo_url}" alt="Foto autista">` : driverInitials(d)}</div>
-        <div><h3>${esc(driverFullName(d))}</h3><span class="driver-status ${statusClass}">${esc(d.stato || "Disponibile")}</span></div>
-      </div>
-      <div class="driver-info-grid">
-        <div><small>Cellulare</small><strong>${esc(d.telefono || "-")}</strong></div>
-        <div><small>Email</small><strong>${esc(d.email || "-")}</strong></div>
-        <div><small>Patente</small><strong>${esc(d.patente || "-")}</strong></div>
-        <div><small>Scadenza</small><strong>${esc(d.scadenza_patente || "-")}</strong></div>
-        <div><small>Giri assegnati</small><strong>${d.giri_assegnati || 0}</strong></div>
-        <div><small>Portale</small><strong>${d.account_attivo ? "Attivo" : (d.email ? "Da invitare" : "No email")}</strong></div>
-      </div>
-      ${d.note ? `<p class="driver-note">${esc(d.note)}</p>` : ""}
-      <div class="row-actions driver-actions"><button onclick="editDriver(${d.id})">Modifica</button>${d.email ? `<button onclick="inviteDriver(${d.id})">${d.account_attivo ? "Reinvita" : "Invita"}</button>` : ""}<button onclick="deleteDriver(${d.id})">Elimina</button></div>
-    </article>`;
-  }).join("");
+  renderDriverDirectory();
 }
 function resetDriverForm(){
   ["drId","drNome","drCognome","drTelefono","drEmail","drPatente","drScadenzaPatente","drNote","drPhotoUrl"].forEach(id=>set(id,""));
