@@ -2174,6 +2174,7 @@ function updateVehicleBonusHint(){
 }
 function renderVehicleUsage(usage){
   vehicleUsageCache=usage;
+  if(typeof renderFleetPlanNotice==='function') renderFleetPlanNotice(usage);
   const host=document.getElementById("vehicleUsageSummary");
   if(host)host.innerHTML=window.GiroFacileElectricVehicles?.summaryHtml(vehicleUsageCache)||"";
   updateVehicleBonusHint();
@@ -2185,16 +2186,18 @@ async function loadVehicleUsage(){
   return usage;
 }
 async function loadVehicles(){
-  vehiclesCache = await api("/api/vehicles");
-  await loadVehicleUsage();
-  const body = document.getElementById("vehiclesBody");
-  if(body){
-    body.innerHTML = "";
-    vehiclesCache.forEach(x=>{
-      body.innerHTML += `<tr><td><div class="entity-cell">${imageThumb(x.photo_url,'🚚','vehicle-thumb')}<div><strong>${esc(x.nome)}</strong><br><small>${esc(x.note||'')}</small></div></div></td><td>${esc(x.targa||"")}</td><td>${energyConsumptionLabelV895(x)}</td><td>${x.ha_sponda?"Sì":"No"}</td><td>${x.accesso_ztl?"Sì":"No"}</td><td><button onclick="editVehicle(${x.id})">Modifica</button><button onclick="deleteVehicle(${x.id})">Elimina</button></td></tr>`;
-    });
+  try{
+    vehiclesCache = await api("/api/vehicles");
+    renderFleetDirectory();
+    renderResourceSelects();
+    await loadVehicleUsage();
+    const state=document.getElementById('fleetLoadStatus');
+    if(state){state.textContent='';state.classList.add('hidden');}
+  }catch(error){
+    const state=document.getElementById('fleetLoadStatus');
+    if(state){state.textContent='Impossibile aggiornare i mezzi. Riapri la sezione per riprovare.';state.classList.remove('hidden');}
+    throw error;
   }
-  renderResourceSelects();
 }
 const VEHICLE_LOOKUP_FIELDS_V8966=["vMarca","vModello","vAnnoImmatricolazione","vCarrozzeria","vCilindrata","vPotenzaKw","vClasseEuro","vFuelType"];
 function clearVehicleLookupHighlightsV8966(){
@@ -2282,6 +2285,7 @@ function editVehicle(id){
   setVehiclePlateLookupStateV896(x.lookup_provider?`Dati targa già acquisiti · Fonte ${String(x.lookup_provider).toUpperCase()}`:"Puoi aggiornare i dati del mezzo effettuando una nuova ricerca targa.",x.lookup_provider?"ok":"");
   clearVehicleLookupHighlightsV8966(); if(x.lookup_provider) markVehicleLookupResultV8966({...x,provider:x.lookup_provider});
   set("vSponda",x.ha_sponda?"true":"false"); set("vZtl",x.accesso_ztl?"true":"false"); set("vPhotoUrl", x.photo_url || ""); clearFileInput("vPhotoFile"); setImagePreview("vehiclePhotoPreview","vPhotoUrl","🚚");
+  if(typeof openVehicleDrawer==='function') openVehicleDrawer(true);
 }
 function resetVehicleForm(){ clearVehicleLookupHighlightsV8966(); ["vId","vNome","vTarga","vMarca","vModello","vAnnoImmatricolazione","vCarrozzeria","vCilindrata","vPotenzaKw","vClasseEuro","vPhotoUrl"].forEach(id=>set(id,"")); const t=document.getElementById("vTarga"); if(t){t.dataset.lookupProvider="";t.dataset.lookupPlate="";t.dataset.lookupAt="";t.dataset.lookupToken="";} setVehiclePlateLookupStateV896("Inserisci la targa per compilare automaticamente i dati disponibili."); set("vTollClass","B"); set("vFuelType","gasolio"); set("vConsumo",8.5); set("vConsumoKwh",0); updateVehicleEnergyFieldsV895(); set("vKg",1000); set("vColli",100); set("vSponda","false"); set("vZtl","false"); clearFileInput("vPhotoFile"); setImagePreview("vehiclePhotoPreview","vPhotoUrl","🚚"); }
 async function saveVehicle(){
@@ -2293,6 +2297,7 @@ async function saveVehicle(){
     const id = val("vId");
     await api(id?`/api/vehicles/${id}`:"/api/vehicles", {method:id?"PUT":"POST", body:JSON.stringify(payload)});
     resetVehicleForm();
+    if(typeof closeVehicleDrawer==='function') closeVehicleDrawer(true);
     await loadVehicles();
     await loadDashboardHome?.();
     toast(id ? "Mezzo aggiornato." : "Mezzo creato.");

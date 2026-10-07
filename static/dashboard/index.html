@@ -35,6 +35,8 @@
 <script src="/static/pod.js?v=1"></script>
 <link rel="stylesheet" href="/static/tracking/company.css?v=20261004_design">
 <script src="/static/tracking/company.js?v=20261004_design"></script>
+<link href="/static/dashboard/css/vehicles.css?v=fleet_20261007" rel="stylesheet">
+<script src="/static/dashboard/js/vehicles.js?v=fleet_20261007"></script>
 </head>
 <body>
 
@@ -1080,10 +1082,17 @@
       </div>
 
       <section id="tab-mezzi" class="tab hidden gf-page">
-        <div class="page-title-row"><div><h1>Mezzi</h1><p>Configura consumi, capacità e accessori dei mezzi.</p></div></div>
-        <div id="vehicleUsageSummary" aria-live="polite"></div>
+        <div class="page-title-row"><div><h1>Mezzi</h1><p>Gestisci i tuoi mezzi aziendali e le relative caratteristiche.</p></div></div>
+        <div class="fleet-toolbar"><div class="fleet-views" role="group" aria-label="Vista mezzi"><button id="fleetCardsButton" type="button" aria-pressed="true" onclick="setFleetView('cards')"><span aria-hidden="true">⊞</span> Vista card</button><button id="fleetTableButton" type="button" aria-pressed="false" onclick="setFleetView('table')"><span aria-hidden="true">☷</span> Vista tabella</button></div><div class="fleet-create-actions"><p class="fleet-help"><span aria-hidden="true">ⓘ</span><span>Clicca su “Crea mezzo” per aggiungere<br>un nuovo veicolo. Il modulo si aprirà in un drawer.</span></p><button type="button" class="fleet-create" onclick="createFleetVehicle()"><span aria-hidden="true">＋</span> Crea mezzo</button></div></div>
+        <div class="fleet-filters"><label class="fleet-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/></svg><input id="fleetSearch" aria-label="Cerca mezzi" placeholder="Cerca per nome, targa o modello..." oninput="renderFleetDirectory()"></label><select id="fleetStatusFilter" aria-label="Filtra disponibilità veicoli" onchange="renderFleetDirectory()"><option value="">Tutti i veicoli</option><option value="available">Disponibili</option><option value="busy">In uso</option></select></div>
+        <p id="fleetPlanNotice" class="fleet-notice hidden" role="status"></p>
+        <div id="fleetCards" class="fleet-cards"></div>
+        <div id="fleetTable" class="tableWrap hidden"><table class="fleet-table"><thead><tr><th>Mezzo</th><th>Targa</th><th>Tipo veicolo</th><th>Alimentazione</th><th>Consumo</th><th>Stato</th><th data-gf-feature="tail_lift">Sponda</th><th data-gf-feature="ztl">ZTL</th><th>Azioni</th></tr></thead><tbody id="vehiclesBody"></tbody></table></div>
+        <p id="fleetEmpty" class="fleet-empty hidden" role="status">Nessun mezzo trovato.</p>
+        <p id="fleetLoadStatus" class="fleet-notice hidden" role="status"></p>
+        <dialog id="vehicleDrawer" aria-labelledby="vehicleFormTitle" oncancel="if(document.getElementById('saveVehicleBtn').disabled)event.preventDefault()">
         <section class="panel gf-vehicle-form" aria-labelledby="vehicleFormTitle">
-          <div class="panel-header"><div><h2 id="vehicleFormTitle">Dati del mezzo</h2><p>Compila i dati del veicolo, i consumi e le capacità operative.</p></div></div>
+          <div class="panel-header"><div><h2 id="vehicleFormTitle">Crea mezzo</h2><p>Compila i dati del veicolo, i consumi e le capacità operative.</p></div><button type="button" class="fleet-close" onclick="closeVehicleDrawer()" aria-label="Chiudi pannello mezzo">×</button></div>
           <input type="hidden" id="vId">
           <input type="hidden" id="vPhotoUrl">
           <div class="vehicle-plate-lookup-v896">
@@ -1125,14 +1134,11 @@
             <div class="gf-field" data-gf-feature="ztl"><label for="vZtl">Accesso ZTL</label><select data-gf-feature="ztl" id="vZtl"><option value="false">ZTL No</option><option value="true">ZTL Sì</option></select></div>
           </div>
           <p id="vehicleElectricBonusHint" class="gf-electric-form-hint" role="status" aria-live="polite"></p>
-          <div class="actions-row"><button type="button" id="saveVehicleBtn" onclick="saveVehicle()" class="btn-primary">Salva mezzo</button><button type="button" onclick="resetVehicleForm()" class="btn-secondary">Nuovo</button></div>
+          <div class="actions-row"><button type="button" id="saveVehicleBtn" onclick="saveVehicle()" class="btn-primary">Salva mezzo</button><button type="button" onclick="createFleetVehicle()" class="btn-secondary">Nuovo</button></div>
           </section>
-        <section class="panel gf-vehicle-list" aria-labelledby="vehicleListTitle">
-          <div class="panel-header"><div><h2 id="vehicleListTitle">Mezzi registrati</h2><p>Consulta la flotta e modifica i dati dei veicoli.</p></div></div>
-          <div class="tableWrap"><table class="gf-vehicles-table-v892"><thead><tr><th>Mezzo</th><th>Targa</th><th>Consumo</th><th data-gf-feature="tail_lift">Sponda</th><th data-gf-feature="ztl">ZTL</th><th></th></tr></thead><tbody id="vehiclesBody"></tbody></table></div>
-        </section>
+          <details class="fleet-usage"><summary>Limiti del piano e bonus elettrici</summary><div id="vehicleUsageSummary" aria-live="polite"></div></details>
+        </dialog>
       </section>
-
 
       <section id="tab-autisti" class="tab hidden gf-page">
         <div class="page-title-row">
@@ -1802,7 +1808,7 @@
 <script src="/static/dashboard/js/completed.js?v=20261006"></script>
 <script src="/static/dashboard/js/preview-design.js?v=20261006"></script>
 <script src="/static/dashboard/js/live-design.js?v=20261006"></script>
-<script src="/static/dashboard/js/core.js?v=deposit_views_20261007_1"></script>
+<script src="/static/dashboard/js/core.js?v=fleet_20261007"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=1"></script>
 
 <script>
