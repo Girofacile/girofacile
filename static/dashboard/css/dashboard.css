@@ -1,10 +1,10 @@
 /* Dashboard visual refresh. Keep all overrides within the home dashboard. */
 #tab-dashboard {
-  --dash-ink:#101b3d;
-  --dash-muted:#657a9f;
-  --dash-line:#e8eef8;
+  --dash-ink:var(--gf-color-text,#1e293b);
+  --dash-muted:var(--gf-color-muted,#64748b);
+  --dash-line:var(--gf-color-border,#e2e8f0);
   color:var(--dash-ink);
-  font-family:Arial,Helvetica,sans-serif;
+  font-family:var(--gf-font-family,Arial,Helvetica,sans-serif);
 }
 #tab-dashboard h1,#tab-dashboard h2,#tab-dashboard strong {font-family:inherit;font-weight:700}
 #tab-dashboard button {font-family:inherit}
@@ -60,7 +60,7 @@
 #tab-dashboard .dash-vehicle-card strong {font-size:14px;overflow-wrap:anywhere}
 #tab-dashboard .dash-vehicle-card small {font-size:12px;color:var(--dash-muted)}
 #tab-dashboard .dash-vehicle-grid>.dash-empty,#tab-dashboard .dash-driver-grid>.dash-empty {grid-column:1/-1;background:#f8fbff;border:1px dashed #d9e5f6;border-radius:13px;font-size:14px;font-weight:500}
-#tab-dashboard button:focus-visible,#tab-dashboard [tabindex]:focus-visible {outline:3px solid #76aaff;outline-offset:3px}
+#tab-dashboard button:focus-visible,#tab-dashboard [tabindex]:focus-visible {outline:2px solid var(--gf-color-primary,#2563eb);outline-offset:3px}
 @media(max-width:1250px){
  #tab-dashboard .dash-kpi-grid {grid-template-columns:repeat(2,minmax(0,1fr))}
  #tab-dashboard .dash-board-columns {grid-template-columns:repeat(2,minmax(0,1fr))!important}

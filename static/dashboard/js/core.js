@@ -1586,9 +1586,9 @@ async function loadDashboardHome(){
     const progressBox=document.getElementById("dashProgressList");
     const completedBox=document.getElementById("dashCompletedList");
     renderLogisticsDashboardV50([...(operational || []), ...(routes || [])]);
-    if(scheduledBox) scheduledBox.innerHTML = scheduled.map(r=>dashRouteItem(r,'scheduled')).join("") || renderEmptyDashList("Nessun giro programmato.", "scheduled");
-    if(progressBox) progressBox.innerHTML = progress.map(r=>dashRouteItem(r,'progress')).join("") || renderEmptyDashList("Nessun giro in corso.", "progress");
-    if(completedBox) completedBox.innerHTML = completedToday.map(r=>dashRouteItem(r,'completed')).join("") || renderEmptyDashList("Nessun giro completato oggi.", "completed");
+    if(scheduledBox) scheduledBox.innerHTML = scheduled.slice(0,3).map(r=>dashRouteItem(r,'scheduled')).join("") || renderEmptyDashList("Nessun giro programmato.", "scheduled");
+    if(progressBox) progressBox.innerHTML = progress.slice(0,1).map(r=>dashRouteItem(r,'progress')).join("") || renderEmptyDashList("Nessun giro in corso.", "progress");
+    if(completedBox) completedBox.innerHTML = completedToday.slice(0,3).map(r=>dashRouteItem(r,'completed')).join("") || renderEmptyDashList("Nessun giro completato oggi.", "completed");
 
     const vehBox = document.getElementById("dashVehicleStatus");
     if(vehBox){

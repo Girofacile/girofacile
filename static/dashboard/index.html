@@ -14,7 +14,7 @@
 <link href="/static/dashboard/css/account.css?v=v89" rel="stylesheet">
 <script src="/api/billing/catalog.js"></script>
 <script src="/static/dashboard/js/billing.js?v=electric_bonus_20261002"></script>
-<link href="/static/dashboard/css/dashboard.css?v=20260928_1" rel="stylesheet">
+<link href="/static/dashboard/css/dashboard.css?v=20261007_reference" rel="stylesheet">
 <link href="/static/dashboard/css/company.css?v=sidebar_stable_20261001" rel="stylesheet">
 <link href="/static/dashboard/css/planning.css?v=menu_fix_20261001_2" rel="stylesheet">
 <link href="/static/dashboard/css/route-preview.css?v=preview_20261006" rel="stylesheet">
@@ -41,12 +41,12 @@
 <script src="/static/dashboard/js/drivers.js?v=drivers_20261007"></script>
 
 <!-- Shared GiroFacile design system; legacy sheets retain feature layout. -->
-<link rel="stylesheet" href="/static/design-system/tokens.css?v=ds_20261007_redesign">
-<link rel="stylesheet" href="/static/design-system/components.css?v=ds_20261007_redesign">
-<link rel="stylesheet" href="/static/design-system/layout.css?v=ds_20261007_redesign">
-<link rel="stylesheet" href="/static/design-system/workspace.css?v=ds_20261007_redesign">
-<link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007_redesign">
-<script src="/static/design-system/design-system.js?v=ds_20261007_redesign" defer></script>
+<link rel="stylesheet" href="/static/design-system/tokens.css?v=ds_20261007_reference">
+<link rel="stylesheet" href="/static/design-system/components.css?v=ds_20261007_reference">
+<link rel="stylesheet" href="/static/design-system/layout.css?v=ds_20261007_reference">
+<link rel="stylesheet" href="/static/design-system/workspace.css?v=ds_20261007_reference">
+<link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007_reference">
+<script src="/static/design-system/design-system.js?v=ds_20261007_reference" defer></script>
 </head>
 <body data-gf-surface="workspace">
 
@@ -522,10 +522,10 @@
         </div>
 
         <div class="dash-kpi-grid">
-          <div class="dash-kpi-card dash-kpi-click" onclick="openDashboardScheduledPage()" role="button" tabindex="0"><div class="dash-kpi-icon blue"><svg viewBox="0 0 24 24"><path d="M7 3.8v3M17 3.8v3"/><rect x="4" y="5.7" width="16" height="14.3" rx="3"/><path d="M8 12.2h3M13.5 12.2H16M8 16h7"/></svg></div><div><span><span data-gf-label="scheduled_routes">Giri programmati</span> oggi</span><strong id="dashTodayScheduled">0</strong><small>oggi</small></div></div>
-          <div class="dash-kpi-card dash-kpi-click" onclick="openDashboardInProgressPage()"><div class="dash-kpi-icon green"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l10-6.5-10-6.5z"/></svg></div><div><span data-gf-label="active_routes">Giri in corso</span><strong id="dashTodayProgress">0</strong><small>attivi adesso</small></div></div>
-          <div class="dash-kpi-card"><div class="dash-kpi-icon purple"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="m8.2 12.4 2.5 2.5 5.2-5.6"/></svg></div><div><span><span data-gf-label="deliveries">Consegne</span> completate oggi</span><strong id="dashTodayCompletedDeliveries">0</strong><small>fermate dei giri completati</small></div></div>
-          <div class="dash-kpi-card"><div class="dash-kpi-icon red"><svg viewBox="0 0 24 24"><path d="M16 18.5c0-2.2-1.8-4-4-4s-4 1.8-4 4"/><circle cx="12" cy="9" r="3"/><path d="M19 16.5h2M20 15.5v2"/></svg></div><div><span>Risorse impegnate</span><div class="dash-busy-split"><div><strong id="dashBusyDrivers">0/0</strong><small>Autisti</small></div><div><strong id="dashBusyVehicles">0/0</strong><small>Mezzi</small></div></div></div></div>
+          <div class="dash-kpi-card dash-kpi-click" onclick="openDashboardScheduledPage()" role="button" tabindex="0"><div class="dash-kpi-icon orange"><svg viewBox="0 0 24 24"><path d="M7 3.8v3M17 3.8v3"/><rect x="4" y="5.7" width="16" height="14.3" rx="3"/><path d="M8 12.2h3M13.5 12.2H16M8 16h7"/></svg></div><div><span><span data-gf-label="scheduled_routes">Giri programmati</span> oggi</span><strong id="dashTodayScheduled">0</strong><small>oggi</small></div></div>
+          <div class="dash-kpi-card dash-kpi-click" onclick="openDashboardInProgressPage()"><div class="dash-kpi-icon blue"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l10-6.5-10-6.5z"/></svg></div><div><span data-gf-label="active_routes">Giri in corso</span><strong id="dashTodayProgress">0</strong><small>attivi adesso</small></div></div>
+          <div class="dash-kpi-card"><div class="dash-kpi-icon green"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="m8.2 12.4 2.5 2.5 5.2-5.6"/></svg></div><div><span><span data-gf-label="deliveries">Consegne</span> completate oggi</span><strong id="dashTodayCompletedDeliveries">0</strong><small>fermate dei giri completati</small></div></div>
+          <div class="dash-kpi-card dash-kpi-resources"><div class="dash-kpi-icon purple"><svg viewBox="0 0 24 24"><path d="M16 18.5c0-2.2-1.8-4-4-4s-4 1.8-4 4"/><circle cx="12" cy="9" r="3"/><path d="M19 16.5h2M20 15.5v2"/></svg></div><div><span>Risorse impegnate</span><div class="dash-busy-split"><div><strong id="dashBusyDrivers">0/0</strong><small>Autisti</small></div><div><strong id="dashBusyVehicles">0/0</strong><small>Mezzi</small></div></div></div></div>
         </div>
 
         <div class="dash-board-columns">
@@ -1819,7 +1819,7 @@
 <script src="/static/dashboard/js/completed.js?v=20261006"></script>
 <script src="/static/dashboard/js/preview-design.js?v=20261006"></script>
 <script src="/static/dashboard/js/live-design.js?v=20261006"></script>
-<script src="/static/dashboard/js/core.js?v=drivers_20261007"></script>
+<script src="/static/dashboard/js/core.js?v=dashboard_ref_20261007"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=1"></script>
 
 <script>

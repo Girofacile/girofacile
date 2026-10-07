@@ -107,3 +107,31 @@ test('derived operational badges follow real portal classes and state transition
     }
   }
 });
+
+
+test('dashboard reference view uses shared tokens and bounded overview previews',()=>{
+  const tokens=read(assets+'tokens.css');
+  assert.match(tokens,/--gf-focus-ring\s*:\s*0 0 0 3px rgba\(37,99,235,\.16\)/i);
+  assert.doesNotMatch(tokens,/--gf-focus-ring[^;]*11,99,246/i);
+
+  const dashboard=read('static/dashboard/css/dashboard.css');
+  assert.match(dashboard,/--dash-ink:var\(--gf-color-text/);
+  assert.match(dashboard,/font-family:var\(--gf-font-family/);
+  assert.match(dashboard,/outline:2px solid var\(--gf-color-primary/);
+
+  const workspace=read(assets+'workspace.css');
+  const home=workspace.slice(workspace.indexOf('/* Home dashboard follows'));
+  assert.match(home,/\.dash-kpi-resources/);
+  assert.match(home,/\.dash-list-card\{min-height:390px/);
+  assert.doesNotMatch(home,/\.dash-route-list\{[^}]*overflow:auto/);
+
+  const core=read('static/dashboard/js/core.js');
+  assert.match(core,/scheduled\.slice\(0,3\)\.map/);
+  assert.match(core,/progress\.slice\(0,1\)\.map/);
+  assert.match(core,/completedToday\.slice\(0,3\)\.map/);
+
+  const html=read('static/dashboard/index.html');
+  for(const iconClass of ['orange','blue','green','purple'])
+    assert.match(html,new RegExp('dash-kpi-icon '+iconClass));
+  assert.match(html,/dash-kpi-card dash-kpi-resources/);
+});
