@@ -88,7 +88,7 @@ def main():
         with sync_playwright() as playwright:
             browser = playwright.chromium.launch()
             try:
-                for width in (320, 768, 1440):
+                for width in (320, 390, 768, 1024, 1440):
                     page = browser.new_page(viewport={"width": width, "height": 1000})
                     page.route("**/*", handle)
                     # Filled below with the committed component IDs.
@@ -130,8 +130,13 @@ def check_pages(page, base, width, output, fit):
         document.getElementById("tab-mezzi").classList.remove("hidden");
         await loadVehicles();
         resetVehicleForm();
+        createFleetVehicle();
     }""")
     panel = page.locator("#tab-mezzi")
+    page.locator("#vehicleDrawer").wait_for(state="visible")
+    usage = panel.locator("details.fleet-usage")
+    if usage.count() and not usage.evaluate("(el) => el.open"):
+        usage.locator("summary").click()
     assert panel.get_by_text("Mezzi inclusi nel piano", exact=False).count()
     assert panel.get_by_text("Bonus mobilità elettrica", exact=False).count()
     assert panel.get_by_text(re.compile(r"10\s*/\s*10")).count()

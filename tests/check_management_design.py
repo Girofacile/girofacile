@@ -1,9 +1,8 @@
-"""Local visual audit; no production services are contacted.
-
-Run with Playwright installed: python tests/check_management_design.py before|after
-Screenshots and audit results are saved under test-results/management-design.
-The after run compares protected-page geometry and computed styles with before,
-and isolates the new stylesheet in the same browser for the pixel comparison.
+"""Management interaction and layout audit; no production services are contacted.
+Run before|after; screenshots and computed styles go to test-results/management-design.
+The complete Design System migration intentionally restyles the former reference
+pages. Functional interactions and root overflow remain regression checks.
+Shared component consistency is verified separately by check_design_system.py.
 """
 import json
 import os
@@ -19,10 +18,9 @@ from urllib.parse import urlparse
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "test-results" / "ui-tools"))
 from playwright.sync_api import sync_playwright
-from PIL import Image, ImageChops
 
-PROTECTED = ["dashboard", "clienti", "company", "depositi"]
-PAGES = PROTECTED + ["giro", "route-preview", "dashboard-scheduled", "dashboard-in-progress",
+REFERENCE = ["dashboard", "clienti", "company", "depositi"]
+PAGES = REFERENCE + ["giro", "route-preview", "dashboard-scheduled", "dashboard-in-progress",
                      "dashboard-completed", "report", "mezzi", "autisti", "storico",
                      "chat-autisti", "settings", "agenti", "plan-account", "billing-account"]
 LIMITS = dict(max_customers=500, max_vehicles=10, max_drivers=10, max_deposits=5,
@@ -71,7 +69,7 @@ def main():
     server = ThreadingHTTPServer(("127.0.0.1", 0), partial(QuietHandler, directory=str(ROOT)))
     threading.Thread(target=server.serve_forever, daemon=True).start()
     base = f"http://127.0.0.1:{server.server_port}"
-    mutations, errors, overflow, comparisons, interactions = [], [], [], [], []
+    mutations, errors, overflow, interactions = [], [], [], []
 
     def handle(route):
         path = urlparse(route.request.url).path
@@ -125,7 +123,7 @@ def main():
     try:
         with sync_playwright() as pw:
             browser = pw.chromium.launch(**({"channel": "chrome"} if os.name == "nt" else {}), headless=True)
-            for width in (390, 768, 1440):
+            for width in (390, 768, 1024, 1440):
                 page = browser.new_page(viewport=dict(width=width, height=1000), device_scale_factor=1)
                 page.clock.set_fixed_time(datetime(2026, 10, 3, 10, tzinfo=timezone.utc))
                 page.route("**/*", handle)
@@ -216,7 +214,7 @@ def main():
                         assert page.locator('#completedNoMatches').is_visible()
                         page.evaluate('r=>renderDashboardCompletedSubpage([r],r)',ROUTES[2])
                         interactions.append(f'{width}: completed pagination, search, status and filtered CSV')
-                    if name in PROTECTED:
+                    if name in REFERENCE:
                         styles = page.evaluate("""() => [...document.querySelectorAll('#app *')].filter(el=>el.getClientRects().length && getComputedStyle(el).visibility!=='hidden').map(el=>{
                           const s=getComputedStyle(el), r=el.getBoundingClientRect();
                           return {tag:el.tagName,id:el.id,box:[r.x,r.y,r.width,r.height],styles:Object.fromEntries([...s].filter(k=>!k.startsWith('--')).map(k=>[k,s.getPropertyValue(k)]))};
@@ -225,28 +223,6 @@ def main():
                     excess = page.evaluate("document.documentElement.scrollWidth - innerWidth")
                     if excess > 2:
                         overflow.append(dict(page=name, width=width, excess=excess))
-                    if phase == "after" and name in PROTECTED:
-                        old = output.parent / "before" / f"{name}-{width}.png"
-                        previous = Image.open(old).convert("RGB")
-                        current = Image.open(output / f"{name}-{width}.png").convert("RGB")
-                        # Chromium can differ by one channel level in gradient rasterization.
-                        delta = max(hi for lo, hi in ImageChops.difference(previous, current).getextrema()) if previous.size == current.size else 255
-                        old_styles = output.parent / "before" / f"{name}-{width}.json"
-                        import re
-                        normalize = lambda value: re.sub(r"http://127\.0\.0\.1:\d+", "http://local.test", value)
-                        exact_styles = old_styles.exists() and normalize(old_styles.read_text(encoding="utf-8")) == normalize((output / f"{name}-{width}.json").read_text(encoding="utf-8"))
-                        # Isolate the new stylesheet within the same render session:
-                        # WebP scaling can vary slightly between Chrome processes.
-                        # The original computed-style snapshot also guards markup
-                        # geometry, typography, backgrounds and the shared shell.
-                        page.evaluate("document.querySelector('link[href*=\"management.css\"]').disabled=true")
-                        isolated_path = output / f"{name}-{width}-without-management.png"
-                        page.screenshot(path=str(isolated_path), full_page=True, animations="disabled")
-                        isolated = Image.open(isolated_path).convert("RGB")
-                        isolated_delta = max(hi for lo, hi in ImageChops.difference(current, isolated).getextrema()) if current.size == isolated.size else 255
-                        page.evaluate("document.querySelector('link[href*=\"management.css\"]').disabled=false")
-                        comparisons.append(dict(page=name, width=width, identical=isolated_delta <= 1 and exact_styles,
-                                                max_pixel_delta=delta, isolated_pixel_delta=isolated_delta, exact_styles=exact_styles))
                 # Exercise menus from protected pages. All requests remain mocked.
                 page.evaluate("showTab('dashboard')")
                 page.evaluate("openProfilePanel()")
@@ -265,7 +241,9 @@ def main():
                 page.evaluate("closeDriverModal(); showTab('dashboard'); toggleNotificationsDropdown()")
                 if phase == "after":
                     page.evaluate("showNotificationsDropdownV30(false)")
-                    trigger = page.locator('.gf-mobile-top-actions-v62 [aria-label="Notifiche"]') if width < 821 else page.locator('#notificationBellBtn')
+                    trigger = page.locator('#notificationBellBtn')
+                    if not trigger.is_visible():
+                        trigger = page.locator('.gf-mobile-top-actions-v62 [aria-label="Notifiche"]')
                     trigger.click()
                     page.locator("#notificationDropdown").wait_for(state="visible")
                     assert trigger.get_attribute("aria-expanded") == "true"
@@ -281,8 +259,9 @@ def main():
                     page.locator("#tab-dashboard .dash-kpi-card").last.click()
                     assert not page.locator("#notificationDropdown").is_visible()
                     interactions.append(f"{width}: notifications open, Escape and outside close")
-                if width < 821:
-                    page.get_by_role("button", name="Apri menu mobile").click()
+                mobile_menu_button = page.get_by_role("button", name="Apri menu mobile")
+                if mobile_menu_button.is_visible():
+                    mobile_menu_button.click()
                     page.locator("#gfMobileMoreMenuV62").wait_for(state="visible")
                     page.screenshot(path=str(output / f"mobile-menu-{width}.png"), animations="disabled")
                     page.locator("#gfMobileMoreMenuV62").get_by_role("button", name="Depositi").click()
@@ -322,11 +301,15 @@ def main():
                     page.locator("#customerListView").click()
                     interactions.append(f"{width}: customer filters, list/grid, details and edit dialog")
                     page.evaluate("showTab('mezzi')")
+                    page.locator("#tab-mezzi .fleet-create").click()
+                    page.locator("#vehicleDrawer").wait_for(state="visible")
                     page.locator("#vFuelType").select_option("elettrico")
                     assert page.locator("#vElectricConsumptionWrap").is_visible()
                     assert not page.locator("#vPrimaryConsumptionWrap").is_visible()
-                    page.locator("#tab-mezzi").get_by_role("button", name="Nuovo", exact=True).click()
+                    page.evaluate("resetVehicleForm()")
                     assert page.locator("#vFuelType").input_value() == "gasolio"
+                    page.keyboard.press("Escape")
+                    page.locator("#vehicleDrawer").wait_for(state="hidden")
                     interactions.append(f"{width}: vehicle energy fields and reset")
                     page.evaluate("showTab('report')")
                     page.locator("#reportFilterToggleBtn").click()
@@ -343,12 +326,13 @@ def main():
     finally:
         server.shutdown()
         server.server_close()
-        results = dict(errors=errors, overflow=overflow, protected=comparisons, mutations=mutations, interactions=interactions)
+        results = dict(errors=errors, overflow=overflow, reference_pages=REFERENCE,
+                       widths=[390, 768, 1024, 1440], mutations=mutations, interactions=interactions)
         (output / "audit.json").write_text(json.dumps(results, indent=2), encoding="utf-8")
         print(json.dumps(results, indent=2))
     if phase == "after":
-        assert all(item["identical"] for item in comparisons), "Protected page visual regression"
-        assert not [item for item in overflow if item["page"] not in PROTECTED], "Page overflow"
+        assert not overflow, "Page overflow"
+        assert not mutations, "Unexpected API mutations in presentation checks"
         assert not errors, "Browser script errors"
 
 

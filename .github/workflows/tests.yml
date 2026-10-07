@@ -67,14 +67,16 @@ jobs:
       - name: Verify management pages and interactions
         run: |
           pip install pillow
-          python tests/check_management_design.py before
+          python tests/check_design_system.py
           python tests/check_management_design.py after
       - name: Preserve management screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: management-responsive
-          path: test-results/management-design/
+          path: |
+            test-results/management-design/
+            test-results/design-system/
           if-no-files-found: ignore
           retention-days: 7
       - name: Validate OSRM infrastructure and synthetic dataset

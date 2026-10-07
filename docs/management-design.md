@@ -1,3 +1,9 @@
+> Documento storico del restyling precedente. Il riferimento attuale è
+> [Design System GiroFacile](design-system.md). La richiesta di restyling completo
+> include ora Dashboard, Clienti, Azienda e Depositi: la precedente politica di
+> uguaglianza dei pixel è superata. I controlli funzionali restano attivi e sono
+> estesi alla coerenza dei componenti e alle quattro larghezze richieste.
+
 # Stile del gestionale
 
 ## Riferimento e perimetro

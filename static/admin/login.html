@@ -20,8 +20,14 @@ body{min-height:100vh;background:radial-gradient(circle at top left,rgba(59,130,
 label{display:block;font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin:14px 0 7px}input{width:100%;padding:13px 14px;border-radius:12px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:15px;outline:none}input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,.16)}
 button{width:100%;margin-top:18px;padding:13px 16px;border-radius:12px;border:0;background:var(--accent);color:white;font-weight:800;font-size:15px;cursor:pointer}button:hover{background:#2563eb}button:disabled{opacity:.65;cursor:not-allowed}.msg{margin-top:14px;font-size:13px;line-height:1.45}.msg.error{color:#fecaca}.msg.ok{color:#bbf7d0}.links{display:flex;justify-content:space-between;gap:12px;margin-top:18px;font-size:13px}.links a{color:var(--muted);text-decoration:none}.links a:hover{color:var(--text)}
 </style>
+
+<link rel="stylesheet" href="/static/design-system/tokens.css?v=ds_20261007">
+<link rel="stylesheet" href="/static/design-system/components.css?v=ds_20261007">
+<link rel="stylesheet" href="/static/design-system/layout.css?v=ds_20261007">
+<link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007">
+<script src="/static/design-system/design-system.js?v=ds_20261007" defer></script>
 </head>
-<body>
+<body data-gf-surface="auth" data-gf-portal>
   <main class="card">
     <div class="brand">
       <div class="logo">GF</div>
