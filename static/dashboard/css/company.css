@@ -65,68 +65,112 @@ body.gf-company-page-active #showOnboardingBtn {
   min-width: 0;
 }
 #tab-company .company-card-v29 {
+  --company-card-pad-x: 22px;
+  --company-card-pad-y: 22px;
   min-width: 0;
   margin: 0;
-  padding: 22px;
-  border: 1px solid rgba(216, 229, 250, .65);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, .97);
-  box-shadow: 0 8px 26px rgba(64, 110, 176, .035);
+  padding: var(--company-card-pad-y) var(--company-card-pad-x);
+  border: 1px solid var(--gf-color-border, #e2e8f0);
+  border-top: 3px solid var(--gf-color-muted, #64748b);
+  border-radius: var(--gf-radius-lg, 12px);
+  background: var(--gf-color-surface, #fff);
+  box-shadow: var(--gf-shadow-sm, 0 1px 2px rgba(15,23,42,.05));
+  overflow: hidden;
 }
-#tab-company .company-section-heading { display: flex; align-items: center; gap: 20px; margin-bottom: 24px; }
-#tab-company .company-section-icon {
+#tab-company .company-section-heading {
   display: flex;
   align-items: center;
-  justify-content: center;
-  flex: 0 0 49px;
-  width: 49px;
-  height: 49px;
-  border-radius: 15px;
-  color: #0665ff;
-  background: #eaf2ff;
+  gap: 12px;
+  margin: calc(-1 * var(--company-card-pad-y)) calc(-1 * var(--company-card-pad-x)) 20px;
+  padding: 16px var(--company-card-pad-x);
+  border-bottom: 1px solid var(--gf-color-border, #e2e8f0);
+  background: var(--gf-color-surface-subtle, #f1f4f8);
+}
+#tab-company .company-section-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  border-radius: 0;
+  color: var(--gf-color-muted, #64748b);
+  background: transparent;
 }
 #tab-company svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-#tab-company .company-section-heading h2 { margin: 0 0 5px; color: #0a1034; font-size: 20px; line-height: 1.2; letter-spacing: -.035em; font-weight: 700; }
-#tab-company .company-section-heading p { margin: 0; color: #506895; font-size: 14px; line-height: 1.45; }
+#tab-company .company-section-icon svg { width: 20px; height: 20px; }
+#tab-company .company-section-heading h2 { margin: 0 0 3px; color: var(--gf-color-text, #1e293b); font-size: 16px; line-height: 1.3; letter-spacing: 0; font-weight: var(--gf-weight-bold, 700); }
+#tab-company .company-section-heading p { margin: 0; color: var(--gf-color-muted, #64748b); font-size: 12px; line-height: 1.4; }
 #tab-company .company-logo-row-v29 {
-  margin: 0 0 23px;
-  padding: 16px 18px;
-  min-height: 126px;
-  gap: 28px;
-  border: 1px solid #d4e2ff;
-  border-radius: 15px;
-  background: linear-gradient(115deg, #f7faff, #f0f5ff);
+  margin: 0 0 20px;
+  padding: 14px 16px;
+  min-height: 106px;
+  gap: 20px;
+  border: 1px solid var(--gf-color-border, #e2e8f0);
+  border-radius: var(--gf-radius-md, 10px);
+  background: var(--gf-color-bg, #f8fafc);
 }
-#tab-company .company-logo-preview-v29 { flex: 0 0 90px; width: 90px; height: 90px; border-radius: 18px; font-size: 34px; color: #0665ff; box-shadow: 0 6px 16px rgba(66, 110, 192, .07); }
+#tab-company .company-logo-preview-v29 {
+  flex: 0 0 76px;
+  width: 76px;
+  height: 76px;
+  border: 1px solid var(--gf-color-border, #e2e8f0);
+  border-radius: var(--gf-radius-md, 10px);
+  background: var(--gf-color-surface, #fff);
+  color: var(--gf-color-text, #1e293b);
+  box-shadow: none;
+  font-size: 28px;
+}
 #tab-company .company-logo-preview-v29 img { object-fit: contain; }
-#tab-company .file-btn { width: max-content; max-width: 100%; min-height: 44px; padding: 10px 17px; margin: 0; gap: 10px; color: #0665ff; font-size: 14px; font-weight: 700; border: 1px solid #d4e2ff; }
-#tab-company .file-btn:focus-within { outline: 3px solid #a8c9ff; outline-offset: 3px; }
-#tab-company .muted-small { color: #687fa9; font-size: 13px; line-height: 1.5; margin-top: 11px; }
-#tab-company .company-contact-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 16px; }
+#tab-company .file-btn {
+  width: max-content;
+  max-width: 100%;
+  min-height: 38px;
+  padding: 8px 12px;
+  margin: 0;
+  gap: 8px;
+  color: var(--gf-color-text, #1e293b);
+  background: var(--gf-color-surface, #fff);
+  font-size: 12px;
+  font-weight: var(--gf-weight-semibold, 600);
+  border: 1px solid var(--gf-color-border, #e2e8f0);
+  border-radius: var(--gf-radius-sm, 6px);
+  box-shadow: none;
+}
+#tab-company .file-btn svg { width: 18px; height: 18px; color: var(--gf-color-muted, #64748b); }
+#tab-company .file-btn:focus-within { outline: 0; box-shadow: var(--gf-focus-ring); }
+#tab-company .muted-small { color: var(--gf-color-muted, #64748b); font-size: 12px; line-height: 1.45; margin-top: 9px; }
+#tab-company .company-contact-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 #tab-company .company-field { min-width: 0; }
-#tab-company .company-field label { margin: 0 0 8px; color: #3c527b; font-size: 14px; font-weight: 600; line-height: 1.25; letter-spacing: -.02em; }
+#tab-company .company-field label {
+  margin: 0 0 7px;
+  color: var(--gf-color-text, #1e293b);
+  font-size: 12px;
+  font-weight: var(--gf-weight-semibold, 600);
+  line-height: 1.3;
+  letter-spacing: 0;
+}
 #tab-company .company-field input,
 #tab-company .company-field select,
 #tab-company .company-field textarea {
   display: block;
   width: 100%;
   min-width: 0;
-  min-height: 44px;
-  padding: 11px 14px;
-  border: 1px solid #d2dff6;
-  border-radius: 10px;
-  background: #fff;
-  box-shadow: inset 0 1px 2px rgba(43, 76, 129, .015);
-  color: #142047;
+  min-height: var(--gf-control-height, 40px);
+  padding: 9px 12px;
+  border: 1px solid var(--gf-color-border, #e2e8f0);
+  border-radius: var(--gf-radius-sm, 6px);
+  background: var(--gf-color-surface, #fff);
+  box-shadow: none;
+  color: var(--gf-color-text, #1e293b);
   font-family: inherit;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 400;
   line-height: 1.4;
-  letter-spacing: -.01em;
+  letter-spacing: 0;
 }
 #tab-company .company-field input::placeholder,
-#tab-company .company-field textarea::placeholder { color: #8a99b7; opacity: 1; }
-#tab-company .company-field :is(input, select, textarea):focus { outline: 0; border-color: #659dff; box-shadow: 0 0 0 3px rgba(11, 99, 246, .12); }
+#tab-company .company-field textarea::placeholder { color: var(--gf-color-muted, #64748b); opacity: .72; }
+#tab-company .company-field :is(input, select, textarea):focus { outline: 0; border-color: var(--gf-color-primary, #2563eb); box-shadow: var(--gf-focus-ring); }
 #tab-company .company-horizontal-fields { display: grid; gap: 15px; }
 #tab-company .company-horizontal-fields .company-field { display: grid; grid-template-columns: 128px minmax(0, 1fr); gap: 15px; align-items: center; }
 #tab-company .company-horizontal-fields label { margin: 0; }
@@ -134,7 +178,7 @@ body.gf-company-page-active #showOnboardingBtn {
 #tab-company .company-description label { align-self: start; padding-top: 12px; }
 #tab-company .company-field textarea { min-height: 94px; resize: vertical; }
 #tab-company .company-address-details { grid-column: 1 / -1; }
-#tab-company .company-address-details .company-section-heading { margin-bottom: 22px; }
+#tab-company .company-address-details .company-section-heading { margin-bottom: 20px; }
 .company-save-bar {
   position: absolute;
   left: 50%;
@@ -182,10 +226,14 @@ body.gf-company-page-active #showOnboardingBtn {
   #tab-company .company-fiscal, #tab-company .company-operations { min-height: 340px; }
 }
 @media (max-width: 1399px) {
-  #tab-company .company-card-v29 { padding: 20px; }
-  #tab-company .company-section-heading { gap: 14px; }
+  #tab-company .company-card-v29 {
+    --company-card-pad-x: 20px;
+    --company-card-pad-y: 20px;
+    padding: var(--company-card-pad-y) var(--company-card-pad-x);
+  }
+  #tab-company .company-section-heading { gap: 12px; }
   #tab-company .company-operations .company-horizontal-fields .company-field { grid-template-columns: 140px minmax(0, 1fr); }
-  #tab-company .company-logo-row-v29 { gap: 18px; padding: 16px; }
+  #tab-company .company-logo-row-v29 { gap: 18px; padding: 14px; }
 }
 @media (max-width: 1100px) {
   #tab-company .company-profile-grid { grid-template-columns: minmax(0, 1fr); }
@@ -194,17 +242,21 @@ body.gf-company-page-active #showOnboardingBtn {
 @media (max-width: 600px) {
   #tab-company .dash-hero-row h1 { font-size: 31px; }
   #tab-company .dash-hero-row { min-height: 0; gap: 14px; }
-  #tab-company .company-card-v29 { padding: 20px 18px; }
-  #tab-company .company-section-heading { gap: 14px; margin-bottom: 22px; }
-  #tab-company .company-section-heading h2 { font-size: 19px; }
-  #tab-company .company-section-heading p { font-size: 13px; }
-  #tab-company .company-contact-grid { grid-template-columns: minmax(0, 1fr); gap: 17px; }
+  #tab-company .company-card-v29 {
+    --company-card-pad-x: 18px;
+    --company-card-pad-y: 20px;
+    padding: var(--company-card-pad-y) var(--company-card-pad-x);
+  }
+  #tab-company .company-section-heading { gap: 10px; margin-bottom: 18px; padding-top: 14px; padding-bottom: 14px; }
+  #tab-company .company-section-heading h2 { font-size: 16px; }
+  #tab-company .company-section-heading p { font-size: 12px; }
+  #tab-company .company-contact-grid { grid-template-columns: minmax(0, 1fr); gap: 15px; }
   #tab-company .company-horizontal-fields .company-field,
   #tab-company .company-operations .company-horizontal-fields .company-field { grid-template-columns: minmax(0, 1fr); gap: 8px; }
   #tab-company .company-description label { padding-top: 0; }
   #tab-company .company-field :is(input, select, textarea) { font-size: 16px; }
   #tab-company .company-logo-row-v29 { flex-direction: row; flex-wrap: wrap; align-items: center; }
-  #tab-company .company-logo-preview-v29 { flex-basis: 72px; width: 72px; height: 72px; }
+  #tab-company .company-logo-preview-v29 { flex-basis: 68px; width: 68px; height: 68px; }
 }
 
 @media (min-width: 821px) and (max-width: 1320px) {

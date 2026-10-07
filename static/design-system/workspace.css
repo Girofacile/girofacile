@@ -228,3 +228,41 @@ body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-standard .dash-k
 }
 @media(min-width:821px){body[data-gf-surface="workspace"] #app #tab-dashboard>.dash-hero-row{display:none!important}}
 
+
+
+/* Company profile uses the same restrained panel language as the dashboard. */
+body[data-gf-surface="workspace"] #app #tab-company .company-card-v29{
+  border:1px solid var(--gf-color-border);
+  border-top:3px solid var(--gf-color-muted);
+  border-radius:var(--gf-radius-lg);
+  background:var(--gf-color-surface);
+  box-shadow:var(--gf-shadow-sm);
+}
+body[data-gf-surface="workspace"] #app #tab-company .company-section-heading{
+  border-bottom:1px solid var(--gf-color-border);
+  background:var(--gf-color-surface-subtle);
+}
+body[data-gf-surface="workspace"] #app #tab-company .company-section-icon{
+  width:28px;
+  height:28px;
+  flex-basis:28px;
+  border-radius:0;
+  background:transparent;
+  color:var(--gf-color-muted);
+  box-shadow:none;
+}
+body[data-gf-surface="workspace"] #app #tab-company .company-section-icon svg{
+  width:20px;
+  height:20px;
+}
+body[data-gf-surface="workspace"] #app #tab-company .company-logo-row-v29{
+  border-color:var(--gf-color-border);
+  background:var(--gf-color-bg);
+  box-shadow:none;
+}
+body[data-gf-surface="workspace"] #app #tab-company .company-logo-preview-v29{
+  border-color:var(--gf-color-border);
+  background:var(--gf-color-surface);
+  color:var(--gf-color-text);
+  box-shadow:none;
+}
