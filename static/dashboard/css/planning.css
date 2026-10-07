@@ -46,10 +46,16 @@ body:has(#tab-giro:not(.hidden)) .topbar{
   box-shadow:none;
 }
 #tab-giro .stat-icon svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-#tab-giro .stat-icon.blue{color:var(--gf-color-info,#175cd3);background:var(--gf-color-info-bg,#edf4ff)}
-#tab-giro .stat-icon.orange{color:var(--gf-color-warning,#946200);background:var(--gf-color-warning-bg,#fff6df)}
-#tab-giro .stat-icon.green{color:var(--gf-color-success,#16734a);background:var(--gf-color-success-bg,#eaf6ef)}
-#tab-giro .stat-icon.purple{color:var(--gf-color-muted,#64748b);background:var(--gf-color-bg,#f8fafc);border:1px solid var(--gf-color-border,#e2e8f0)}
+#tab-giro .stat-icon,
+#tab-giro .stat-icon.blue,
+#tab-giro .stat-icon.orange,
+#tab-giro .stat-icon.green,
+#tab-giro .stat-icon.purple{
+  border:1px solid var(--gf-color-border,#e2e8f0);
+  border-radius:var(--gf-radius-circle,50%);
+  background:var(--gf-color-bg,#f8fafc);
+  color:var(--gf-color-muted,#64748b);
+}
 
 #tab-giro .giro-layout{display:block}
 #tab-giro .left-column{min-width:0}
@@ -65,7 +71,7 @@ body:has(#tab-giro:not(.hidden)) .topbar{
   position:relative;
   min-width:0;
   min-height:360px;
-  padding:0 18px 18px;
+  padding:0 18px 18px!important;
   overflow:hidden;
   border:1px solid var(--gf-color-border,#e2e8f0);
   border-radius:var(--gf-radius-md,10px);
@@ -79,9 +85,11 @@ body:has(#tab-giro:not(.hidden)) .topbar{
   display:flex;
   align-items:center;
   gap:10px;
-  margin:0 -18px 14px;
-  padding:14px 16px;
+  min-height:62px;
+  margin:-1px -19px 14px!important;
+  padding:15px 17px;
   border-bottom:1px solid var(--gf-color-border,#e2e8f0);
+  border-radius:var(--gf-radius-md,10px) var(--gf-radius-md,10px) 0 0;
   background:var(--gf-color-surface-subtle,#f1f4f8);
 }
 #tab-giro .plan-step-number{
@@ -298,7 +306,7 @@ body:has(#tab-giro:not(.hidden)) .topbar{
 #tab-giro .delivery-footer-actions{border-color:var(--gf-color-border,#e2e8f0)}
 
 @media(min-width:821px){
-  #tab-giro>.page-title-row{display:none}
+  body[data-gf-surface="workspace"] #app #tab-giro>.page-title-row{display:none!important}
 }
 @media(min-width:1101px){
   body:has(#tab-giro:not(.hidden)) .content{padding:20px 26px 28px}
@@ -324,8 +332,8 @@ body:has(#tab-giro:not(.hidden)) .topbar{
   #tab-giro .stat-card>div:last-child{min-height:82px}
   #tab-giro .stat-icon{top:15px;right:15px;width:40px;height:40px}
   #tab-giro .planning-setup-panel{padding:10px}
-  #tab-giro .plan-step{padding:0 14px 16px}
-  #tab-giro .plan-step-heading{margin:0 -14px 14px;padding:12px 14px}
+  #tab-giro .plan-step{padding:0 14px 16px!important}
+  #tab-giro .plan-step-heading{min-height:56px;margin:-1px -15px 14px!important;padding:12px 14px}
   #tab-giro .plan-step-heading h2{font-size:15px}
   #tab-giro .plan-status{margin-left:auto}
   #tab-giro .plan-step-fields :is(input,select){font-size:16px}

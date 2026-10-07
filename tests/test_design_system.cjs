@@ -510,10 +510,19 @@ test('planning page uses the shared topbar and dashboard visual language',()=>{
   assert.match(planning,/#tab-giro \.plan-step-number\{[\s\S]*background:var\(--gf-color-nav/);
   assert.match(planning,/#tab-giro \.plan-step-art\{[\s\S]*color:var\(--gf-color-muted/);
   assert.match(planning,/#tab-giro #openCustomerStepBtn\{[\s\S]*background:var\(--gf-color-nav/);
-  assert.match(planning,/@media\(min-width:821px\)\{[\s\S]*#tab-giro>\.page-title-row\{display:none\}/);
+  assert.match(planning,/@media\(min-width:821px\)\{[\s\S]*#tab-giro>\.page-title-row\{display:none!important\}/);
+  assert.match(planning,/#tab-giro \.plan-step-heading\{[\s\S]*min-height:62px[\s\S]*margin:-1px -19px 14px!important/);
+  assert.match(planning,/#tab-giro \.stat-icon\.blue,[\s\S]*background:var\(--gf-color-bg[\s\S]*color:var\(--gf-color-muted/);
   assert.doesNotMatch(planning,/linear-gradient\(125deg|#8737ff|#0066ff|#12b67f/);
+
+  const html=read('static/dashboard/index.html');
+  const planningHtml=html.slice(html.indexOf('<section id="tab-giro"'),html.indexOf('<section id="tab-route-preview"'));
+  assert.match(planningHtml,/<span>Consegne pianificate<\/span>/);
+  assert.doesNotMatch(planningHtml,/Consegne<\/span> pianificate/);
 
   const workspace=read(assets+'workspace.css');
   assert.match(workspace,/#tab-giro \.plan-step-number\{background:var\(--gf-color-nav\);color:var\(--gf-color-on-primary\)/);
   assert.match(workspace,/#tab-giro \.plan-step:not\(:last-child\)::after\{content:none\}/);
+  assert.match(workspace,/#tab-giro :is\(\.stat-icon,\.stat-icon\.blue,\.stat-icon\.orange,\.stat-icon\.green,\.stat-icon\.purple\)\{[\s\S]*background:var\(--gf-color-bg\);[\s\S]*color:var\(--gf-color-muted\)/);
+  assert.match(workspace,/@media\(min-width:821px\)\{[\s\S]*#tab-giro>\.page-title-row\{display:none!important\}/);
 });

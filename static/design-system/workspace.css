@@ -86,6 +86,22 @@ body[data-gf-surface="workspace"] #app #tab-autisti .driver-directory-avatar{bac
 body[data-gf-surface="workspace"] #app #tab-giro .plan-step{--step-color:var(--gf-color-nav);border:1px solid var(--gf-color-border);border-radius:var(--gf-radius-md);background:var(--gf-color-surface);box-shadow:none}
 body[data-gf-surface="workspace"] #app #tab-giro .plan-step-number{background:var(--gf-color-nav);color:var(--gf-color-on-primary);box-shadow:none}
 body[data-gf-surface="workspace"] #app #tab-giro .plan-step:not(:last-child)::after{content:none}
+body[data-gf-surface="workspace"] #app #tab-giro :is(.stat-icon,.stat-icon.blue,.stat-icon.orange,.stat-icon.green,.stat-icon.purple){
+  border:1px solid var(--gf-color-border);
+  border-radius:var(--gf-radius-circle);
+  background:var(--gf-color-bg);
+  color:var(--gf-color-muted);
+  box-shadow:none;
+}
+body[data-gf-surface="workspace"] #app #tab-giro .plan-step{padding-top:0!important}
+body[data-gf-surface="workspace"] #app #tab-giro .plan-step-heading{
+  min-height:62px;
+  margin-top:-1px!important;
+  background:var(--gf-color-surface-subtle);
+}
+@media(min-width:821px){
+  body[data-gf-surface="workspace"] #app #tab-giro>.page-title-row{display:none!important}
+}
 body[data-gf-surface="workspace"] #app #tab-giro .planning-completion{border-color:var(--gf-color-border);border-radius:var(--gf-radius-md);background:var(--gf-color-surface)}
 body[data-gf-surface="workspace"] #app #tab-giro .planning-check-icon{background:var(--gf-color-warning);border:0}
 body[data-gf-surface="workspace"] #app #tab-giro .planning-check.complete .planning-check-icon{background:var(--gf-color-success);border:0}
