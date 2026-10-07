@@ -104,3 +104,32 @@
   .billing-table-head-v876{display:none}.billing-list-v876 .billing-row-v63{grid-template-columns:1fr!important;align-items:flex-start}.billing-list-v876 .billing-row-v63 b{text-align:left}.billing-list-v876 .billing-row-v63 button{width:100%}
   .billing-footer-help-v876{flex-direction:column;align-items:flex-start}.billing-footer-help-v876 button{width:100%}
 }
+
+
+/* Account password security — inline inside the existing profile popup */
+#profileOverlay .profile-security-entry{min-width:0}
+#profileOverlay .profile-security-summary{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:42px;padding:9px 10px;border:1px solid #dbe4ef;border-radius:11px;background:#f8fafc}
+#profileOverlay .profile-security-summary>div{min-width:0}
+#profileOverlay .profile-security-summary strong{display:block;color:#0f172a;font-size:12px;font-weight:850;margin-bottom:2px}
+#profileOverlay .profile-security-summary small{display:block;color:#64748b;font-size:10.5px;line-height:1.35}
+#profileOverlay .profile-security-open{flex:0 0 auto;min-height:34px;padding:0 12px;font-size:11px;border-radius:9px}
+#profileOverlay .profile-reset-link{display:inline-flex;align-items:center;margin-top:6px;padding:0;border:0;background:transparent;color:#2563eb;font-size:10.5px;font-weight:750;cursor:pointer}
+#profileOverlay .profile-reset-link:hover{text-decoration:underline}
+#profileOverlay .profile-password-panel{margin-top:14px;padding:15px;border:1px solid #cfe0ff;border-radius:14px;background:linear-gradient(180deg,#f8fbff,#fff);box-shadow:0 6px 18px rgba(37,99,235,.05)}
+#profileOverlay .profile-password-panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:12px}
+#profileOverlay .profile-password-panel-head h4{margin:0;color:#0f172a;font-size:14px;font-weight:850}
+#profileOverlay .profile-password-panel-head p{margin:3px 0 0;color:#64748b;font-size:11px;line-height:1.4}
+#profileOverlay .profile-password-collapse{width:30px;height:30px;flex:0 0 30px;border:0;border-radius:9px;background:#eef2f7;color:#64748b;font-size:19px;line-height:1;cursor:pointer}
+#profileOverlay .profile-password-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+#profileOverlay .profile-password-grid .profile-field{min-width:0}
+#profileOverlay .profile-password-grid input{width:100%;box-sizing:border-box}
+#profileOverlay .profile-password-help{margin-top:10px;padding:9px 10px;border-radius:10px;background:#fff7ed;color:#9a5a16;font-size:10.5px;line-height:1.4}
+#profileOverlay .profile-password-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:12px}
+#profileOverlay .profile-password-actions .btn-primary,
+#profileOverlay .profile-password-actions .btn-secondary{min-height:36px;padding:0 13px;font-size:11px;border-radius:9px}
+@media(max-width:760px){
+  #profileOverlay .profile-security-summary{align-items:flex-start;flex-direction:column}
+  #profileOverlay .profile-security-open{width:100%}
+  #profileOverlay .profile-password-grid{grid-template-columns:1fr}
+  #profileOverlay .profile-password-actions{display:grid;grid-template-columns:1fr 1.2fr}
+}
