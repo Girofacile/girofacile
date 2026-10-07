@@ -193,8 +193,18 @@ body[data-gf-surface="workspace"] #app:has(#tab-dashboard:not(.hidden)) .topbar-
 body[data-gf-surface="workspace"] #app .topbar-dashboard-title h1{font-size:24px;line-height:1.3;margin:0 0 4px}
 body[data-gf-surface="workspace"] #app .topbar-dashboard-title p{font-size:14px;color:var(--gf-color-muted);margin:0}
 body[data-gf-surface="workspace"] #app .topbar{gap:24px}
-body[data-gf-surface="workspace"] #app #logoutBtn{order:3}
-body[data-gf-surface="workspace"] #app .profile-button{flex-direction:row-reverse;text-align:right}
+body[data-gf-surface="workspace"] #app .notification-center-v30{padding-left:16px;border-left:1px solid var(--gf-color-border)}
+body[data-gf-surface="workspace"] #app .notification-bell-v30{width:40px;height:40px;border:0;border-radius:var(--gf-radius-sm);background:transparent;box-shadow:none;color:var(--gf-color-muted)}
+body[data-gf-surface="workspace"] #app .notification-bell-v30:hover{background:var(--gf-color-surface-subtle);color:var(--gf-color-text);transform:none;box-shadow:none}
+body[data-gf-surface="workspace"] #app .bell-icon-v30{display:grid;place-items:center;width:20px;height:20px;font-size:0;line-height:0}
+body[data-gf-surface="workspace"] #app .bell-icon-v30 svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+body[data-gf-surface="workspace"] #app .profile-button{flex-direction:row-reverse;text-align:right;border:1px solid var(--gf-color-border);padding:6px 10px;border-radius:var(--gf-radius-sm)}
+body[data-gf-surface="workspace"] #app .profile-button-copy{min-width:0}
+body[data-gf-surface="workspace"] #app .profile-button-chevron{display:grid;place-items:center;width:16px;height:16px;color:var(--gf-color-muted)}
+body[data-gf-surface="workspace"] #app .profile-button-chevron svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+body[data-gf-surface="workspace"] #app .profile-modal-actions{display:flex;align-items:center;justify-content:space-between;gap:12px}
+body[data-gf-surface="workspace"] #app .profile-modal-actions-main{display:flex;align-items:center;gap:10px;margin-left:auto}
+body[data-gf-surface="workspace"] #app .profile-modal-actions #logoutBtn{margin-right:auto}
 @media(min-width:821px){body[data-gf-surface="workspace"] #app #tab-dashboard>.dash-hero-row{display:none}}
 @media(min-width:821px) and (max-width:1200px){body[data-gf-surface="workspace"] #app .topbar-dashboard-title p{display:none}body[data-gf-surface="workspace"] #app .nav-item{font-size:14px;padding-inline:10px}}
 body[data-gf-surface="workspace"] #app .reference-brand-icon{display:grid;place-items:center;width:32px;height:32px;border-radius:8px;background:#3b82f6;flex-shrink:0}
@@ -206,3 +216,9 @@ body[data-gf-surface="workspace"] #app .topbar-new-route::before{content:none}
 
 body[data-gf-surface="workspace"] #app .brand-title{display:flex;align-items:center;gap:12px;white-space:nowrap}
 body[data-gf-surface="workspace"] #app .brand-title .reference-brand-name{font:inherit;letter-spacing:inherit}
+
+@media(min-width:821px) and (max-width:1100px){
+  body[data-gf-surface="workspace"] #app .notification-center-v30{padding-left:10px}
+  body[data-gf-surface="workspace"] #app .profile-button-copy{max-width:130px;overflow:hidden}
+  body[data-gf-surface="workspace"] #app .profile-button-copy strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+}

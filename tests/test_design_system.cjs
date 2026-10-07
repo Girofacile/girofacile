@@ -230,3 +230,23 @@ test('company name and account username use separate identity storage',()=>{
   const loadCompany=core.slice(core.indexOf('async function loadCompanyProfile'),core.indexOf('async function saveCompanyProfile'));
   assert.doesNotMatch(loadCompany,/girofacile_profile_photo/);
 });
+
+
+test('workspace topbar keeps modern notification and account actions',()=>{
+  const html=read('static/dashboard/index.html');
+  const topbar=html.slice(html.indexOf('<div class="top-actions">'),html.indexOf('</header>'));
+  assert.match(topbar,/class="bell-icon-v30"[^>]*><svg/);
+  assert.doesNotMatch(topbar,/>🔔</);
+  assert.doesNotMatch(topbar,/id="logoutBtn"/);
+  assert.match(topbar,/class="profile-button-chevron"/);
+
+  const profile=html.slice(html.indexOf('<div id="profileOverlay"'),html.indexOf('<!-- COOKIE NOTICE'));
+  assert.match(profile,/id="logoutBtn" class="btn-danger hidden">Esci dall'account/);
+  assert.match(profile,/class="actions-row profile-modal-actions"/);
+  assert.equal((html.match(/id="logoutBtn"/g)||[]).length,1);
+
+  const layout=read(assets+'layout.css');
+  assert.match(layout,/\.notification-bell-v30\{[^}]*border:0[^}]*background:transparent[^}]*box-shadow:none/);
+  assert.match(layout,/\.bell-icon-v30 svg\{[^}]*stroke:currentColor/);
+  assert.match(layout,/\.profile-modal-actions #logoutBtn\{margin-right:auto\}/);
+});
