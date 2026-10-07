@@ -596,7 +596,9 @@ def get_account_profile(user: User = Depends(current_user)):
 def update_account_profile(payload: dict, user: User = Depends(current_user), db: Session = Depends(get_db)):
     username = (payload.get("username") or user.username or "").strip()
     email = (payload.get("email") or "").strip().lower() or None
-    new_password = (payload.get("new_password") or "").strip()
+
+    if payload.get("new_password"):
+        raise HTTPException(400, "Per cambiare la password usa la sezione Sicurezza del profilo.")
 
     if len(username) < 3:
         raise HTTPException(400, "Il nome account deve contenere almeno 3 caratteri")
@@ -619,13 +621,6 @@ def update_account_profile(payload: dict, user: User = Depends(current_user), db
         if duplicate_user or duplicate_driver or duplicate_agent:
             raise HTTPException(400, "Email già associata a un altro account")
 
-    if new_password:
-        try:
-            validate_password_strength(new_password)
-        except ValueError as exc:
-            raise HTTPException(400, str(exc))
-        user.password_hash = hash_password(new_password)
-
     user.username = username
     user.email = email
     db.commit()
@@ -637,6 +632,57 @@ def update_account_profile(payload: dict, user: User = Depends(current_user), db
             "email": user.email or "",
             "role": "Amministratore",
         },
+    }
+
+
+@router.post("/api/account-password/change")
+def change_account_password(
+    payload: dict,
+    response: Response,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    current_password = payload.get("current_password") or ""
+    new_password = payload.get("new_password") or ""
+    confirm_password = payload.get("confirm_password") or ""
+
+    if not current_password:
+        raise HTTPException(400, "Inserisci la password attuale.")
+    if not verify_password(current_password, user.password_hash):
+        raise HTTPException(400, "La password attuale non è corretta.")
+    if new_password != confirm_password:
+        raise HTTPException(400, "La conferma non coincide con la nuova password.")
+    if verify_password(new_password, user.password_hash):
+        raise HTTPException(400, "La nuova password deve essere diversa da quella attuale.")
+    try:
+        validate_password_strength(new_password)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
+
+    user.password_hash = hash_password(new_password)
+    now = datetime.utcnow()
+    db.query(PasswordResetToken).filter(
+        PasswordResetToken.account_type == "user",
+        PasswordResetToken.account_id == user.id,
+        PasswordResetToken.used_at.is_(None),
+    ).update({"used_at": now}, synchronize_session=False)
+    db.commit()
+
+    # Le sessioni sono legate all'hash della credenziale: cambiando password,
+    # tutte le sessioni precedenti diventano automaticamente non valide.
+    response.delete_cookie("session", path="/", domain=COOKIE_DOMAIN)
+
+    if user.email:
+        try:
+            from ..services.email import send_password_changed_notice
+            send_password_changed_notice(user.email, user.username or user.company_name or "utente")
+        except Exception as exc:
+            print(f"[PASSWORD_CHANGE] Errore invio notifica a {user.email}: {exc}")
+
+    return {
+        "ok": True,
+        "message": "Password aggiornata correttamente. Accedi di nuovo con la nuova password.",
+        "reauthenticate": True,
     }
 
 
