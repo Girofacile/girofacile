@@ -526,3 +526,21 @@ test('planning page uses the shared topbar and dashboard visual language',()=>{
   assert.match(workspace,/#tab-giro :is\(\.stat-icon,\.stat-icon\.blue,\.stat-icon\.orange,\.stat-icon\.green,\.stat-icon\.purple\)\{[\s\S]*background:var\(--gf-color-bg\);[\s\S]*color:var\(--gf-color-muted\)/);
   assert.match(workspace,/@media\(min-width:821px\)\{[\s\S]*#tab-giro>\.page-title-row\{display:none!important\}/);
 });
+
+
+test('planning fuel KPI stays empty until a vehicle is selected',()=>{
+  const html=read('static/dashboard/index.html');
+  const planning=html.slice(html.indexOf('<section id="tab-giro"'),html.indexOf('<section id="tab-route-preview"'));
+  assert.match(planning,/id="statFuel"><\/strong>/);
+  assert.match(planning,/id="statFuelHint">Seleziona un mezzo<\/small>/);
+  assert.doesNotMatch(planning,/id="statFuel">€ \/ L/);
+
+  const core=read('static/dashboard/js/core.js');
+  const start=core.indexOf('function updateDashboardStats()');
+  const end=core.indexOf('\n}\n\nasync function api',start)+2;
+  const block=core.slice(start,end);
+  assert.match(block,/if\(!sv\)\{[\s\S]*setText\("statFuel", ""\)[\s\S]*setText\("statFuelHint", "Seleziona un mezzo"\)/);
+  assert.match(block,/const price=electric \? \(document\.getElementById\("electricityPrice"\)/);
+  assert.match(block,/setText\("statFuel", price \? price\+" "\+unit : ""\)/);
+  assert.match(block,/setText\("statFuelHint", price \? "Prezzo impostato" : "Prezzo da impostare"\)/);
+});

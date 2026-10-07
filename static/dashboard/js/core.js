@@ -217,7 +217,6 @@ function updateDashboardStats(){
     const kg = deliveries.reduce((a,d)=>a+(parseFloat(d.peso_kg)||0),0);
     const colli = deliveries.reduce((a,d)=>a+(parseInt(d.colli)||0),0);
     const warnings = deliveries.filter(d=>d.ztl || d.sponda).length;
-    const fuel = document.getElementById("fuelPrice")?.value || "";
     const setText = (id,val)=>{ const el=document.getElementById(id); if(el) el.textContent=val; };
     setText("statDeliveries", stops);
     setText("statWarnings", warnings);
@@ -225,7 +224,19 @@ function updateDashboardStats(){
     setText("summaryKg", kg.toFixed(0)+" kg");
     setText("summaryColli", colli);
     setText("statColli", colli);
-    const sv=vehiclesCache.find(v=>String(v.id)===String(val("routeVehicle"))); const unit=(sv?.alimentazione==="metano")?"€/kg":(sv?.alimentazione==="elettrico"?"€/kWh":"€/L"); setText("statFuel", fuel ? fuel+" "+unit : unit);
+
+    const sv=vehiclesCache.find(v=>String(v.id)===String(val("routeVehicle")));
+    if(!sv){
+      setText("statFuel", "");
+      setText("statFuelHint", "Seleziona un mezzo");
+      return;
+    }
+
+    const electric=String(sv.alimentazione||"").toLowerCase()==="elettrico";
+    const unit=String(sv.alimentazione||"").toLowerCase()==="metano" ? "€/kg" : (electric ? "€/kWh" : "€/L");
+    const price=electric ? (document.getElementById("electricityPrice")?.value || "") : (document.getElementById("fuelPrice")?.value || "");
+    setText("statFuel", price ? price+" "+unit : "");
+    setText("statFuelHint", price ? "Prezzo impostato" : "Prezzo da impostare");
   }catch(e){ console.warn('GiroFacile: operazione non completata', e); }
 }
 
