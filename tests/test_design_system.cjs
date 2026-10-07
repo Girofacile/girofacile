@@ -273,3 +273,13 @@ test('account profile modal follows the workspace design system',()=>{
   assert.match(components,/#profileOverlay \.profile-plan-usage\{[^}]*grid-template-columns:repeat\(5,minmax\(0,1fr\)\)/);
   assert.match(components,/#profileOverlay \.profile-field input:focus\{[^}]*box-shadow:var\(--gf-focus-ring\)/);
 });
+
+
+test('workspace sidebar uses the GiroFacile brand artwork',()=>{
+  const html=read('static/dashboard/index.html');
+  const brand=html.slice(html.indexOf('<div class="brand">'),html.indexOf('<nav class="side-nav">'));
+  assert.match(brand,/class="brand-logo-img"/);
+  assert.match(brand,/src="\/static\/girofacile-logo\.png\?v=20261007_sidebar"/);
+  assert.match(brand,/class="reference-brand-name">GiroFacile<\/span>/);
+  assert.doesNotMatch(brand,/reference-brand-icon/);
+});
