@@ -222,3 +222,64 @@ body[data-gf-surface="workspace"] #app .brand-title .reference-brand-name{font:i
   body[data-gf-surface="workspace"] #app .profile-button-copy{max-width:130px;overflow:hidden}
   body[data-gf-surface="workspace"] #app .profile-button-copy strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 }
+
+
+/* Workspace legal navigation consolidation. */
+body[data-gf-surface="workspace"] #app .side-footer{
+  margin-top:auto;
+  padding:16px 20px 18px;
+  border-top:1px solid var(--gf-color-nav-active);
+  color:var(--gf-color-nav-muted);
+  text-align:left;
+  line-height:1.35;
+}
+body[data-gf-surface="workspace"] #app .side-footer-copyright{
+  display:block;
+  color:var(--gf-color-nav-text);
+  font-size:11px;
+  font-weight:var(--gf-weight-medium);
+}
+body[data-gf-surface="workspace"] #app .side-footer-version{
+  display:block;
+  margin-top:2px;
+  color:var(--gf-color-nav-muted);
+  font-size:10px;
+}
+body[data-gf-surface="workspace"] #app .side-legal-links{
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  flex-wrap:wrap;
+  gap:5px;
+  margin-top:8px;
+  font-size:10px;
+  line-height:1.25;
+}
+body[data-gf-surface="workspace"] #app .side-legal-links a{
+  color:var(--gf-color-nav-muted);
+  text-decoration:none;
+  font-weight:var(--gf-weight-medium);
+}
+body[data-gf-surface="workspace"] #app .side-legal-links a:hover{
+  color:var(--gf-color-nav-text);
+  text-decoration:none;
+}
+body[data-gf-surface="workspace"] #app .side-legal-links span{
+  color:var(--gf-color-nav-active);
+}
+body[data-gf-surface="workspace"] .gf-mobile-legal-v62{display:none}
+@media(max-width:820px){
+  body[data-gf-surface="workspace"] .gf-mobile-legal-v62{
+    display:block;
+    margin:8px 4px 2px;
+    padding:12px 10px 4px;
+    border-top:1px solid var(--gf-color-border);
+    color:var(--gf-color-muted);
+    font-size:11px;
+    line-height:1.4;
+    text-align:center;
+  }
+  body[data-gf-surface="workspace"] .gf-mobile-legal-v62>span{display:block;margin-bottom:5px}
+  body[data-gf-surface="workspace"] .gf-mobile-legal-v62>div{display:flex;align-items:center;justify-content:center;gap:6px}
+  body[data-gf-surface="workspace"] .gf-mobile-legal-v62 a{color:var(--gf-color-muted);text-decoration:none;font-weight:var(--gf-weight-medium)}
+}
