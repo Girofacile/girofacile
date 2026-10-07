@@ -1524,7 +1524,7 @@ function renderEmptyDashList(text, illustration){
     progress: 'Segui qui i giri avviati e lo stato delle consegne.',
     completed: 'I giri completati oggi appariranno qui.'
   };
-  return `<div class="dash-empty dash-empty-illustrated"><img src="/static/dashboard/illustrations/${illustration}.svg" alt="" width="200" height="125"><strong>${esc(text)}</strong><p>${descriptions[illustration]}</p></div>`;
+  return `<div class="dash-empty dash-empty-illustrated"><img src="/static/design-system/icons/empty.svg" alt="" width="200" height="125"><strong>${esc(text)}</strong><p>${descriptions[illustration]}</p></div>`;
 }
 function renderDashTrend(routes){
   const el = document.getElementById("dashTrendChart");
@@ -1572,8 +1572,8 @@ async function loadDashboardHome(){
     // Deve combaciare con il pannello “Giri in corso” sotto: conta tutti i giri operativi attualmente in corso.
     setText("dashTodayProgress", inProgressRoutes.length);
     setText("dashTodayCompletedDeliveries", completedDeliveriesToday);
-    setText("dashTodayBusyResources", `${busyDrivers}/${drivers.length} · ${busyVehicles}/${vehicles.length}`);
-    setText("dashTodayBusyResourcesSub", "autisti · mezzi impegnati");
+    setText("dashBusyDrivers", `${busyDrivers}/${drivers.length}`);
+    setText("dashBusyVehicles", `${busyVehicles}/${vehicles.length}`);
 
     // Dashboard semplificata: grafici e attività recenti rimossi per ridurre confusione.
 
@@ -1586,15 +1586,15 @@ async function loadDashboardHome(){
     const progressBox=document.getElementById("dashProgressList");
     const completedBox=document.getElementById("dashCompletedList");
     renderLogisticsDashboardV50([...(operational || []), ...(routes || [])]);
-    if(scheduledBox) scheduledBox.innerHTML = scheduled.slice(0,3).map(r=>dashRouteItem(r,'scheduled')).join("") || renderEmptyDashList("Nessun giro programmato.", "scheduled");
-    if(progressBox) progressBox.innerHTML = progress.slice(0,3).map(r=>dashRouteItem(r,'progress')).join("") || renderEmptyDashList("Nessun giro in corso.", "progress");
-    if(completedBox) completedBox.innerHTML = completedToday.slice(0,3).map(r=>dashRouteItem(r,'completed')).join("") || renderEmptyDashList("Nessun giro completato oggi.", "completed");
+    if(scheduledBox) scheduledBox.innerHTML = scheduled.map(r=>dashRouteItem(r,'scheduled')).join("") || renderEmptyDashList("Nessun giro programmato.", "scheduled");
+    if(progressBox) progressBox.innerHTML = progress.map(r=>dashRouteItem(r,'progress')).join("") || renderEmptyDashList("Nessun giro in corso.", "progress");
+    if(completedBox) completedBox.innerHTML = completedToday.map(r=>dashRouteItem(r,'completed')).join("") || renderEmptyDashList("Nessun giro completato oggi.", "completed");
 
     const vehBox = document.getElementById("dashVehicleStatus");
     if(vehBox){
       vehBox.innerHTML = vehicles.slice(0,4).map(v=>{
         const inUse = (v.stato || "Disponibile") === "In uso";
-        return `<div class="dash-vehicle-card"><div><span class="vehicle-dot ${inUse?'busy':'free'}"></span><strong>${esc(v.nome||'Mezzo')}</strong><small>${esc(v.targa||'')}</small><small>${esc(v.stato || (inUse?'In uso':'Disponibile'))}</small></div>${imageThumb(v.photo_url,'🚚','vehicle-thumb')}</div>`;
+        return `<div class="dash-vehicle-card"><div><span class="vehicle-dot ${inUse?'busy':'free'}"></span><strong>${esc(v.nome||'Mezzo')}</strong><small>${esc(v.targa||'')}</small><small>${esc(v.stato || (inUse?'In uso':'Disponibile'))}</small></div>${v.photo_url ? imageThumb(v.photo_url,'','vehicle-thumb') : '<span class="dashboard-resource-icon"><img src="/static/design-system/icons/mezzi.svg" alt=""></span>'}</div>`;
       }).join("") || renderEmptyDashList("Nessun mezzo registrato.");
     }
 
@@ -1603,7 +1603,7 @@ async function loadDashboardHome(){
       driverBox.innerHTML = drivers.slice(0,4).map(d=>{
         const busy = (d.stato || "Disponibile") === "In servizio";
         const name = `${d.nome||""} ${d.cognome||""}`.trim() || "Autista";
-        return `<div class="dash-vehicle-card dash-driver-card"><div><span class="vehicle-dot ${busy?'busy':'free'}"></span><strong>${esc(name)}</strong><small>${esc(d.patente||'')}</small><small>${esc(d.stato || "Disponibile")}</small></div>${imageThumb(d.photo_url,'👤','driver-thumb')}</div>`;
+        return `<div class="dash-vehicle-card dash-driver-card"><div><span class="vehicle-dot ${busy?'busy':'free'}"></span><strong>${esc(name)}</strong><small>${esc(d.patente||'')}</small><small>${esc(d.stato || "Disponibile")}</small></div>${d.photo_url ? imageThumb(d.photo_url,'','driver-thumb') : '<span class="dashboard-resource-icon"><img src="/static/design-system/icons/agenti.svg" alt=""></span>'}</div>`;
       }).join("") || renderEmptyDashList("Nessun autista registrato.");
     }
   }catch(e){ console.warn(e); }
@@ -3803,7 +3803,9 @@ let dashboardCompletedSelectedId = null;
 
 
 function dashRouteItem(r, type){
-  const progress = routeProgressPercent(r);
+  const total = Math.max(1, Number(r.consegne_count) || 0, Number(r.completed_count || 0) + Number(r.missed_count || 0) + Number(r.remaining_count || 0));
+  const completedPercent = Math.min(100, Math.max(0, Number(r.completed_count || 0)) / total * 100);
+  const missedPercent = Math.min(100 - completedPercent, Math.max(0, Number(r.missed_count || 0)) / total * 100);
   const meta = `${esc(r.data_giro||"-")} · ${r.consegne_count||0} consegne${r.totale_km?` · ${r.totale_km} km`:""}`;
   const pill = routeStatusBadge(r.status, r.status_label);
   const unread = Number(r.unread_driver_messages||0);
@@ -3813,18 +3815,18 @@ function dashRouteItem(r, type){
   if(type === 'scheduled') click = `openDashboardScheduledPage(${r.id})`;
   if(type === 'progress') click = `openDashboardInProgressPage(${r.id})`;
   if(type === 'completed') click = `openDashboardCompletedPage(${r.id})`;
-  return `<div class="dash-route-item ${isProgress?'dash-route-item-live':''}" onclick="${click}">
+  return `<div class="dash-route-item ${isProgress?'dash-route-item-live':''}" role="button" tabindex="0" onkeydown="if(event.target===this &amp;&amp; (event.key==='Enter' || event.key===' ')){event.preventDefault();this.click()}" onclick="${click}">
     <div class="dash-route-main">
       <strong>${esc(r.nome||"Giro consegne")}</strong>
       <small>${meta}</small>
       ${isProgress?`
-        <div class="dash-progress"><span style="width:${progress}%"></span></div>
+        <div class="dash-progress" aria-label="Esito consegne"><span style="width:${completedPercent}%"></span><span class="dash-progress-missed" style="width:${missedPercent}%"></span></div>
         <div class="dash-live-grid">
           <span><b>${r.completed_count||0}</b> completate</span>
           <span><b>${r.missed_count||0}</b> mancate</span>
           <span><b>${r.remaining_count ?? 0}</b> da fare</span>
         </div>
-        ${next?`<small class="dash-next-stop">Prossima: ${esc(next)}</small>`:""}
+        ${next?`<small class="dash-next-stop"><span>Prossima fermata</span>${esc(next)}</small>`:""}
         ${unread?`<div class="dash-chat-alert">💬 ${unread} messagg${unread===1?'io':'i'} autista non lett${unread===1?'o':'i'}</div>`:""}
       `:""}
     </div>

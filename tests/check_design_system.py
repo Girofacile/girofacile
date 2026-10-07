@@ -190,7 +190,7 @@ def main():
             page.evaluate("window.scrollTo(0,0)")
             preview = page.screenshot(type="jpeg",quality=70,full_page=False,animations="disabled")
             print("GF_DESIGN_PREVIEW:" + name + ":" + str(width) + ":" + base64.b64encode(preview).decode("ascii"),flush=True)
-        assert page.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--gf-color-primary').trim().toLowerCase()") == "#0b63f6"
+        assert page.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--gf-color-primary').trim().toLowerCase()") == "#2563eb"
         checked.append(dict(page=name,width=width))
 
     try:
@@ -251,7 +251,7 @@ def main():
                     sidebar_icon = styles(page.locator("#app .nav-item .nav-svg").first,("borderTopWidth","flexBasis","boxShadow"))
                     assert sidebar_icon == dict(borderTopWidth="0px",flexBasis="20px",boxShadow="none"),sidebar_icon
                     assert page.locator("#app .brand-title").evaluate("""el => {
-                        const probe=document.createElement('span');probe.style.color='var(--gf-color-nav-text)';
+                        const probe=document.createElement('span');probe.style.color='var(--gf-color-on-primary)';
                         el.append(probe);const match=getComputedStyle(el).color===getComputedStyle(probe).color;
                         probe.remove();return match;
                     }"""),"Sidebar brand must remain readable on its dark surface"

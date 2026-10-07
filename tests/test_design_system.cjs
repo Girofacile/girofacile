@@ -39,7 +39,7 @@ test('tokens centrally define palette, geometry, spacing, typography and breakpo
   const css=read(assets+'tokens.css');
   for(const token of ['color-primary','color-bg','color-surface','color-text','color-muted','color-border','color-success','color-success-bg','color-warning','color-warning-bg','color-danger','color-danger-bg','color-info','color-info-bg','radius-sm','radius-md','radius-lg','shadow-sm','control-height','touch-height','font-size-base','font-size-header','breakpoint-sm','breakpoint-md','breakpoint-lg','breakpoint-xl','space-1','space-2','space-3','space-4','space-6','space-8'])
     assert.match(css,new RegExp('--gf-'+token+'\\s*:'));
-  assert.match(css,/--gf-color-primary\s*:\s*#0b63f6/i);
+  assert.match(css,/--gf-color-primary\s*:\s*#2563eb/i);
   const defined=new Set([...css.matchAll(/(--gf-[\w-]+)\s*:/g)].map(match=>match[1]));
   for(const file of ['components.css','layout.css','workspace.css','portals.css']){
     for(const match of read(assets+file).matchAll(/var\((--gf-[\w-]+)/g))

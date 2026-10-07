@@ -256,7 +256,8 @@ def main():
                     assert not page.locator("#notificationDropdown").is_visible()
                     assert trigger.get_attribute("aria-expanded") == "false"
                     trigger.click()
-                    page.locator("#tab-dashboard .dash-kpi-card").last.click()
+                    # The notifications menu overlaps the right-hand KPI in the new header.
+                    page.locator("#tab-dashboard .dash-list-head h2").first.click()
                     assert not page.locator("#notificationDropdown").is_visible()
                     interactions.append(f"{width}: notifications open, Escape and outside close")
                 mobile_menu_button = page.get_by_role("button", name="Apri menu mobile")

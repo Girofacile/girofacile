@@ -172,3 +172,36 @@ body[data-gf-surface="admin"] :is(.db-sensitive-v71,.advanced-access-v69) { back
   body[data-gf-surface="admin"] .content { padding: var(--gf-space-5) var(--gf-space-4); }
   body[data-gf-surface="admin"] :is(.grid-2,.grid-3,.grid-4,.settings-grid-v64,.form-row-v64,.db-viewer-layout-v71) { grid-template-columns: minmax(0,1fr); }
 }
+
+/* Dashboard reference: desktop navigation and header. */
+body[data-gf-surface="workspace"] #app .sidebar{padding:0}
+body[data-gf-surface="workspace"] #app .brand{height:80px;min-height:80px;padding:0 24px;display:flex;align-items:center}
+body[data-gf-surface="workspace"] #app .brand-title{color:#fff;font-size:22px;gap:12px}
+body[data-gf-surface="workspace"] #app .brand-title span{color:#fff}
+body[data-gf-surface="workspace"] #app .side-nav{padding:24px 16px;gap:4px}
+body[data-gf-surface="workspace"] #app .nav-item{font-size:16px;font-weight:400;min-height:44px;padding:10px 16px;border-radius:8px;gap:12px}
+body[data-gf-surface="workspace"] #app .nav-item.active{background:var(--gf-color-primary)!important;border-color:transparent;font-weight:500}
+body[data-gf-surface="workspace"] #app .nav-item.active::before{display:none}
+body[data-gf-surface="workspace"] #app .nav-item .reference-nav-icon{fill:currentColor;stroke:none;stroke-width:0;width:18px;height:18px}
+body[data-gf-surface="workspace"] #app .nav-section-label{padding:20px 16px 8px;color:var(--gf-color-nav-muted);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+body[data-gf-surface="workspace"] #app .side-footer{margin:0;padding:16px 12px;border-top:1px solid var(--gf-color-nav-active)}
+body[data-gf-surface="workspace"] #app .topbar-dashboard-title,body[data-gf-surface="workspace"] #app .topbar-new-route{display:none}
+body[data-gf-surface="workspace"] #app:has(#tab-dashboard:not(.hidden)) .topbar-dashboard-title{display:block;min-width:0}
+body[data-gf-surface="workspace"] #app:has(#tab-dashboard:not(.hidden)) .topbar-new-route{display:inline-flex;white-space:nowrap}
+body[data-gf-surface="workspace"] #app:has(#tab-dashboard:not(.hidden)) .topbar-spacer{display:none}
+body[data-gf-surface="workspace"] #app .topbar-dashboard-title h1{font-size:24px;line-height:1.3;margin:0 0 4px}
+body[data-gf-surface="workspace"] #app .topbar-dashboard-title p{font-size:14px;color:var(--gf-color-muted);margin:0}
+body[data-gf-surface="workspace"] #app .topbar{gap:24px}
+body[data-gf-surface="workspace"] #app #logoutBtn{order:3}
+body[data-gf-surface="workspace"] #app .profile-button{flex-direction:row-reverse;text-align:right}
+@media(min-width:821px){body[data-gf-surface="workspace"] #app #tab-dashboard>.dash-hero-row{display:none}}
+@media(min-width:821px) and (max-width:1200px){body[data-gf-surface="workspace"] #app .topbar-dashboard-title p{display:none}body[data-gf-surface="workspace"] #app .nav-item{font-size:14px;padding-inline:10px}}
+body[data-gf-surface="workspace"] #app .reference-brand-icon{display:grid;place-items:center;width:32px;height:32px;border-radius:8px;background:#3b82f6;flex-shrink:0}
+body[data-gf-surface="workspace"] #app .reference-brand-icon svg{width:18px;height:18px;fill:white}
+body[data-gf-surface="workspace"] #app .nav-item>span.nav-svg{color:inherit!important}
+body[data-gf-surface="workspace"] #app .nav-item .reference-nav-icon,body[data-gf-surface="workspace"] #app .nav-item .reference-nav-icon path{fill:currentColor!important;stroke:none!important;color:inherit!important}
+body[data-gf-surface="workspace"] #app .topbar-new-route{background:var(--gf-color-primary)!important;box-shadow:none!important;border-radius:8px!important}
+body[data-gf-surface="workspace"] #app .topbar-new-route::before{content:none}
+
+body[data-gf-surface="workspace"] #app .brand-title{display:flex;align-items:center;gap:12px;white-space:nowrap}
+body[data-gf-surface="workspace"] #app .brand-title .reference-brand-name{font:inherit;letter-spacing:inherit}

@@ -3,15 +3,15 @@
    the documented values because custom properties are not valid in media queries. */
 :root {
   color-scheme: light;
-  --gf-color-primary: #0b63f6;
-  --gf-color-primary-hover: #0953cf;
+  --gf-color-primary: #2563eb;
+  --gf-color-primary-hover: #1d4ed8;
   --gf-color-on-primary: #ffffff;
-  --gf-color-bg: #f6f8fb;
+  --gf-color-bg: #f8fafc;
   --gf-color-surface: #ffffff;
   --gf-color-surface-subtle: #f1f4f8;
-  --gf-color-text: #17243b;
-  --gf-color-muted: #607086;
-  --gf-color-border: #dde4ee;
+  --gf-color-text: #1e293b;
+  --gf-color-muted: #64748b;
+  --gf-color-border: #e2e8f0;
   --gf-color-success: #16734a;
   --gf-color-success-bg: #eaf6ef;
   --gf-color-warning: #946200;
@@ -21,10 +21,10 @@
   --gf-color-info: #175cd3;
   --gf-color-info-bg: #edf4ff;
   --gf-color-overlay: rgba(23,36,59,.45);
-  --gf-color-nav: #10233e;
-  --gf-color-nav-text: #dce6f4;
-  --gf-color-nav-muted: #a8b8ce;
-  --gf-color-nav-active: #213c60;
+  --gf-color-nav: #0f172a;
+  --gf-color-nav-text: #cbd5e1;
+  --gf-color-nav-muted: #94a3b8;
+  --gf-color-nav-active: #1e293b;
   --gf-radius-sm: 6px;
   --gf-radius-md: 10px;
   --gf-radius-lg: 12px;
@@ -60,8 +60,8 @@
   --gf-control-touch: 44px;
   --gf-control-check: 18px;
   --gf-icon-size: 18px;
-  --gf-sidebar-width: 240px;
-  --gf-topbar-height: 64px;
+  --gf-sidebar-width: 256px;
+  --gf-topbar-height: 80px;
   --gf-content-width: 1200px;
   --gf-content-narrow: 760px;
   --gf-dialog-width: 640px;

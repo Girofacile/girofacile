@@ -145,3 +145,58 @@ body[data-gf-surface="workspace"] #app #tab-mezzi .fleet-specs>div,body[data-gf-
 body[data-gf-surface="workspace"] #app #tab-autisti .driver-view{grid-column:auto;margin:0}
 body[data-gf-surface="workspace"] .gf-dialog :is(.modal,.profile-modal){border-radius:var(--gf-radius-lg)!important}
 }
+
+/* Home dashboard follows the supplied operational overview reference. */
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-grid{gap:24px;margin:8px 0 32px}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-card{min-height:128px!important;align-items:center!important}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-icon{width:48px!important;height:48px!important;flex-basis:48px!important;border-radius:50%!important}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-card span{font-weight:500;color:var(--gf-color-muted)}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-card:nth-child(4){position:relative;padding-top:48px!important}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-card:nth-child(4) .dash-kpi-icon{position:absolute;top:16px;left:20px;width:32px!important;height:32px!important;color:#a855f7;background:#faf5ff}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-card:nth-child(4)>div:last-child{width:100%}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-card:nth-child(4)>div:last-child>span{position:absolute;top:23px;left:64px}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-busy-split{display:flex;justify-content:space-between;gap:16px;width:100%;margin-top:8px}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-busy-split>div+div{border-left:1px solid var(--gf-color-border);padding-left:20px;text-align:right}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-busy-split strong{font-size:20px!important}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-busy-split small{text-transform:uppercase;font-size:10px!important;letter-spacing:.03em}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-board-columns{gap:24px!important;margin-bottom:32px}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-list-card{height:400px;display:flex;flex-direction:column}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-list-head{flex-shrink:0;background:#f8fafc80;padding:20px;border-bottom-color:#f1f5f9}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-list-head h2{font-size:16px;letter-spacing:0}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-route-list{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:16px;padding:20px}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-route-item{flex-shrink:0;align-items:flex-start;padding:16px;border-color:#f1f5f9;border-radius:8px}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-route-item-live{position:relative;display:block;background:#f8fbff;border:2px solid #dbeafe;padding:20px;border-radius:12px}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-route-item-live .dash-route-main>strong{padding-right:85px;font-size:18px}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-route-item-live .dash-route-side{position:absolute;right:14px;top:18px}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-arrow{display:none}
+body[data-gf-surface="workspace"] #app #tab-dashboard .route-status-pill{border-radius:6px;font-size:11px;white-space:nowrap}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-progress{display:flex;background:#e2e8f0;height:10px;margin:16px 0 12px}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-progress span{background:#10b981;border-radius:0}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-progress .dash-progress-missed{background:#ef4444}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-live-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-live-grid span{background:#fff;border:1px solid #f1f5f9;border-radius:8px;font-size:10px;text-transform:uppercase;padding:6px 2px}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-live-grid span:first-child,body[data-gf-surface="workspace"] #app #tab-dashboard .dash-live-grid span:first-child b{color:#059669;border-color:#d1fae5}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-live-grid span:nth-child(2),body[data-gf-surface="workspace"] #app #tab-dashboard .dash-live-grid span:nth-child(2) b{color:#ef4444;border-color:#fee2e2}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-next-stop{margin-top:20px;padding:12px;border:1px solid #f1f5f9;border-radius:8px;background:white;color:var(--gf-color-text)}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-next-stop>span{display:block;text-transform:uppercase;color:var(--gf-color-primary);font-size:10px;font-weight:700;margin-bottom:5px}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-link-btn{flex-shrink:0;margin:16px!important;width:calc(100% - 32px);background:white;border-color:transparent;color:#475569;border-radius:8px;font-weight:500}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-list-card:nth-child(2)>.dash-link-btn{background:#0f172a;color:white}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-empty-illustrated{margin:auto;display:flex;align-items:center;justify-content:center}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-empty-illustrated img{width:64px;height:64px;opacity:.18;padding:18px;border-radius:50%;background:#e2e8f0}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-empty-illustrated strong{color:var(--gf-color-text)}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-resource-row{gap:24px}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-vehicles-panel{padding:0}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-panel-title{padding:20px;margin:0;border-bottom:1px solid #f1f5f9}
+body[data-gf-surface="workspace"] #app #tab-dashboard :is(.dash-vehicle-grid,.dash-driver-grid){padding:20px;gap:16px}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-vehicle-card{background:white;border:1px solid #f1f5f9;border-radius:8px;min-height:94px}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-vehicle-card:has(.free) small:last-child{color:#059669}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-vehicle-card:has(.busy) small:last-child{color:#b45309}
+@media(min-width:1280px){body[data-gf-surface="workspace"] #app #tab-dashboard .dash-board-columns{grid-template-columns:repeat(3,minmax(0,1fr))!important}body[data-gf-surface="workspace"] #app #tab-dashboard .dash-list-card:last-child{grid-column:auto!important}}
+@media(max-width:820px){body[data-gf-surface="workspace"] #app #tab-dashboard .dash-list-card{height:400px}body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-grid{gap:12px}body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-card{align-items:flex-start!important}body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-card:nth-child(4)>div:last-child>span{position:static;display:block}body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-card:nth-child(4){padding-top:60px!important}body[data-gf-surface="workspace"] #app #tab-dashboard :is(.dash-vehicle-grid,.dash-driver-grid){padding:16px}body[data-gf-surface="workspace"] #app #tab-dashboard .dash-busy-split{gap:8px}body[data-gf-surface="workspace"] #app #tab-dashboard .dash-busy-split>div+div{padding-left:8px}}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-vehicle-card strong{display:inline}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dashboard-resource-icon{display:grid;place-items:center;flex:0 0 40px;height:40px;border-radius:8px;background:#f8fafc}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dashboard-resource-icon img{width:20px;height:20px;opacity:.4}
+@media(max-width:820px){body[data-gf-surface="workspace"] #app #tab-dashboard .dash-list-card{height:auto;max-height:440px}body[data-gf-surface="workspace"] #app #tab-dashboard .dash-route-list{max-height:280px;flex:0 1 auto}body[data-gf-surface="workspace"] #app #tab-dashboard .dash-panel-title{align-items:flex-start;text-align:left}}
+@media(min-width:821px){body[data-gf-surface="workspace"] #app #tab-dashboard>.dash-hero-row{display:none!important}}
+
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-list-card:nth-child(2)>.dash-link-btn{background:#0f172a!important;border-color:#0f172a!important;color:white!important}
