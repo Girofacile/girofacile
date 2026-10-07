@@ -4671,6 +4671,14 @@ function ensureSupportModalV60(){
         <button type="button" id="supportTicketAiBtnV67" class="btn-secondary hidden" onclick="generateSupportTicketTextAIv67()">Genera testo assistito AI</button>
         <small id="supportTicketAiHintV67" class="hidden" style="color:var(--muted)">Disponibile solo per ticket collegati a un errore sistema e piano Pro.</small>
       </div>
+      <div class="support-legal-v60">
+        <span>Informazioni legali</span>
+        <div>
+          <a href="/sicurezza" target="_blank" rel="noopener">Sicurezza</a>
+          <a href="/dpa-responsabile-trattamento" target="_blank" rel="noopener">DPA</a>
+          <a href="/subprocessors" target="_blank" rel="noopener">Fornitori</a>
+        </div>
+      </div>
       <div class="support-actions-v60">
         <button type="button" class="btn-secondary" onclick="closeSupportTicketModalV60()">Annulla</button>
         <button type="button" class="btn-primary" onclick="submitSupportTicketV60()">Invia ticket</button>
