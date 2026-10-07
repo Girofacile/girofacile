@@ -99,6 +99,7 @@ def get_setup_info(token: str, db: Session = Depends(get_db)):
     return {
         "driver_name": f"{driver.nome} {driver.cognome or ''}".strip(),
         "email": driver.email,
+        "company_name": (db.get(User, driver.user_id).company_name if driver.user_id and db.get(User, driver.user_id) else None),
         "token_valid": True
     }
 
@@ -113,15 +114,19 @@ def complete_setup(token: str, payload: dict, response: Response, db: Session = 
     if st.used_at:
         raise HTTPException(409, "Link già utilizzato")
 
-    password = (payload.get("password") or "").strip()
-    try:
-        validate_password_strength(password)
-    except ValueError as exc:
-        raise HTTPException(400, str(exc))
-
+    password = payload.get("password") or ""
     driver = db.get(Driver, st.driver_id)
     if not driver or not driver.email or not driver.is_active or driver.deleted_at is not None:
         raise HTTPException(400, "Email autista non configurata")
+    owner = db.get(User, driver.user_id) if driver.user_id else None
+    driver_name = f"{driver.nome} {driver.cognome or ''}".strip()
+    try:
+        validate_password_strength(
+            password,
+            context_values=(driver_name, driver.email, owner.company_name if owner else None),
+        )
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
 
     ensure_login_email_available(db, driver.email, "driver", driver.id)
     # Controlla se esiste già un account

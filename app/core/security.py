@@ -4,6 +4,8 @@ import os
 import time
 import json
 import secrets
+import re
+import unicodedata
 from hashlib import pbkdf2_hmac, sha256
 
 from .config import APP_SECRET, PASSWORD_PBKDF2_ITERATIONS, PASSWORD_PEPPER
@@ -114,20 +116,138 @@ def password_needs_rehash(stored: str | None) -> bool:
     return True
 
 
-def validate_password_strength(password: str) -> None:
-    """Policy minima per nuove password e reset.
+COMMON_PASSWORDS = {
+    "password", "password1", "password123", "password2026",
+    "admin", "admin123", "admin2026", "administrator",
+    "girofacile", "girofacile123", "girofacile2026",
+    "12345678", "123456789", "1234567890", "qwerty", "qwerty123",
+    "abcdefghi", "letmein", "welcome", "benvenuto", "changeme",
+}
+RISKY_PASSWORD_SEQUENCES = (
+    "123456", "654321", "abcdef", "fedcba", "qwerty", "asdfgh", "zxcvbn", "qazwsx",
+)
 
-    Non blocca gli account esistenti: vale solo quando una password viene
-    creata o reimpostata.
+
+def _password_compact(value: str | None) -> str:
+    normalized = unicodedata.normalize("NFKD", str(value or ""))
+    return "".join(ch.lower() for ch in normalized if ch.isalnum())
+
+
+def _password_context_terms(context_values=None) -> set[str]:
+    terms: set[str] = set()
+    for value in context_values or ():
+        raw = str(value or "").strip()
+        if not raw:
+            continue
+        compact = _password_compact(raw)
+        if len(compact) >= 6:
+            terms.add(compact)
+        for token in re.split(r"[^A-Za-zÀ-ÖØ-öø-ÿ0-9]+", raw):
+            token = _password_compact(token)
+            if len(token) >= 4:
+                terms.add(token)
+    return terms
+
+
+def password_strength(password: str, context_values=None) -> dict:
+    """Valuta la password con la stessa policy usata da registrazione e reset.
+
+    La lunghezza minima e i requisiti di composizione sono vincoli espliciti
+    del prodotto. Il punteggio aggiunge un controllo contro password formalmente
+    valide ma prevedibili o basate sui dati dell'account/azienda.
     """
     password = password or ""
-    if len(password) < 8:
-        raise ValueError("La password deve contenere almeno 8 caratteri")
-    if password.strip() != password:
-        raise ValueError("La password non può iniziare o terminare con spazi")
-    if password.lower() in {"password", "password123", "girofacile", "girofacile123", "admin123", "12345678"}:
-        raise ValueError("Scegli una password meno prevedibile")
+    compact = _password_compact(password)
+    checks = {
+        "length": len(password) >= 8,
+        "uppercase": any(ch.isupper() for ch in password),
+        "lowercase": any(ch.islower() for ch in password),
+        "special": any(not ch.isalnum() and not ch.isspace() for ch in password),
+        "no_outer_spaces": password.strip() == password,
+    }
 
+    risks: list[str] = []
+    common_pattern = re.fullmatch(r"(?:password|admin|utente|user|azienda)\d{0,6}", compact or "")
+    if compact in COMMON_PASSWORDS or common_pattern or "girofacile" in compact or "qwerty" in compact:
+        risks.append("common")
+    if any(sequence in compact for sequence in RISKY_PASSWORD_SEQUENCES):
+        risks.append("sequence")
+    if re.search(r"(.)\1{3,}", password, flags=re.IGNORECASE) or re.search(r"(.{2,4})\1{2,}", password, flags=re.IGNORECASE):
+        risks.append("repeated")
+
+    context_terms = _password_context_terms(context_values)
+    if compact and any(term in compact for term in context_terms):
+        risks.append("context")
+
+    points = 0
+    if checks["length"]:
+        points += 1
+    if checks["uppercase"] and checks["lowercase"]:
+        points += 1
+    if checks["special"]:
+        points += 1
+    if any(ch.isdigit() for ch in password):
+        points += 1
+    if len(password) >= 12:
+        points += 1
+    if len(password) >= 16:
+        points += 1
+    if len(set(password.casefold())) >= 5:
+        points += 1
+
+    hard_ok = all(checks.values())
+    if risks:
+        points = min(points, 1)
+
+    if risks:
+        level, label = "very_weak", "Molto debole"
+    elif not hard_ok or points < 4:
+        level, label = "weak", "Debole"
+    elif points >= 6:
+        level, label = "strong", "Forte"
+    else:
+        level, label = "good", "Buona"
+
+    acceptable = hard_ok and not risks and points >= 4
+
+    if not checks["length"]:
+        message = "La password deve contenere almeno 8 caratteri"
+    elif not checks["uppercase"]:
+        message = "La password deve contenere almeno una lettera maiuscola"
+    elif not checks["lowercase"]:
+        message = "La password deve contenere almeno una lettera minuscola"
+    elif not checks["special"]:
+        message = "La password deve contenere almeno un carattere speciale"
+    elif not checks["no_outer_spaces"]:
+        message = "La password non può iniziare o terminare con spazi"
+    elif "context" in risks:
+        message = "La password non deve contenere nome azienda, nome utente, email o altri dati dell'account"
+    elif "common" in risks:
+        message = "Questa password è troppo comune o prevedibile"
+    elif "sequence" in risks:
+        message = "Evita sequenze prevedibili come 123456, abcdef o qwerty"
+    elif "repeated" in risks:
+        message = "Evita caratteri o gruppi ripetuti troppe volte"
+    elif not acceptable:
+        message = "La password è ancora troppo debole: rendila meno prevedibile"
+    else:
+        message = "Password accettabile"
+
+    return {
+        "acceptable": acceptable,
+        "level": level,
+        "label": label,
+        "score": points,
+        "checks": checks,
+        "risks": risks,
+        "message": message,
+    }
+
+
+def validate_password_strength(password: str, context_values=None) -> None:
+    result = password_strength(password, context_values=context_values)
+    if not result["acceptable"]:
+        raise ValueError(result["message"])
 
 def mask_sensitive_value(value: str | None, visible_start: int = 4, visible_end: int = 4) -> str:
     """Maschera chiavi, token e hash prima di mostrarli in interfacce admin."""

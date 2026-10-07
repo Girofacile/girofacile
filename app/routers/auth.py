@@ -45,7 +45,7 @@ def signup(data: SignupIn, response: Response, db: Session = Depends(get_db)):
     if len(username) < 3:
         raise HTTPException(400, "Inserisci un nome utente di almeno 3 caratteri")
     try:
-        validate_password_strength(password)
+        validate_password_strength(password, context_values=(username, email, data.company_name))
     except ValueError as exc:
         raise HTTPException(400, str(exc))
     if db.query(User).filter(func.lower(User.username) == username.lower()).first():
@@ -440,6 +440,22 @@ def _reset_display_for_account(account_type: str, account, db: Session) -> tuple
     return (account.email, "Account GiroFacile")
 
 
+def _password_context_for_account(account_type: str, account, db: Session) -> list[str]:
+    if account_type == "user":
+        return [account.username or "", account.email or "", account.company_name or ""]
+    if account_type == "driver":
+        driver = db.get(Driver, account.driver_id)
+        owner = db.get(User, driver.user_id) if driver and driver.user_id else None
+        driver_name = f"{driver.nome} {driver.cognome or ''}".strip() if driver else ""
+        return [driver_name, account.email or "", owner.company_name if owner else ""]
+    if account_type == "agent":
+        agent = db.get(Agent, account.agent_id)
+        owner = db.get(User, agent.user_id) if agent and agent.user_id else None
+        agent_name = f"{agent.nome} {agent.cognome or ''}".strip() if agent else ""
+        return [agent_name, account.email or "", owner.company_name if owner else ""]
+    return [getattr(account, "email", "") or ""]
+
+
 def _create_reset_token(db: Session, account_type: str, account_id: int, email: str) -> PasswordResetToken:
     token = secrets.token_urlsafe(48)
     prt = PasswordResetToken(
@@ -503,17 +519,22 @@ def get_password_reset_info(token: str, db: Session = Depends(get_db)):
     prt = db.query(PasswordResetToken).filter(PasswordResetToken.token == token).first()
     if not prt or prt.used_at or datetime.utcnow() > prt.expires_at:
         raise HTTPException(404, "Link non valido o scaduto")
-    return {"ok": True, "email": prt.email, "account_type": prt.account_type}
+    model = {"user": User, "driver": DriverAccount, "agent": AgentAccount}.get(prt.account_type)
+    account = db.get(model, prt.account_id) if model else None
+    if not account:
+        raise HTTPException(404, "Account non trovato")
+    return {
+        "ok": True,
+        "email": prt.email,
+        "account_type": prt.account_type,
+        "password_context": _password_context_for_account(prt.account_type, account, db),
+    }
 
 
 @router.post("/api/password-reset/confirm")
 def confirm_password_reset(payload: dict, db: Session = Depends(get_db)):
     token = (payload.get("token") or "").strip()
-    password = (payload.get("password") or "").strip()
-    try:
-        validate_password_strength(password)
-    except ValueError as exc:
-        raise HTTPException(400, str(exc))
+    password = payload.get("password") or ""
     prt = db.query(PasswordResetToken).filter(PasswordResetToken.token == token).first()
     if not prt or prt.used_at or datetime.utcnow() > prt.expires_at:
         raise HTTPException(400, "Link non valido o scaduto")
@@ -522,20 +543,26 @@ def confirm_password_reset(payload: dict, db: Session = Depends(get_db)):
         account = db.get(User, prt.account_id)
         if not account:
             raise HTTPException(404, "Account non trovato")
-        account.password_hash = hash_password(password)
     elif prt.account_type == "driver":
         account = db.get(DriverAccount, prt.account_id)
         if not account or not active_identity(account, db):
             raise HTTPException(404, "Account autista non attivo")
-        account.password_hash = hash_password(password)
     elif prt.account_type == "agent":
         account = db.get(AgentAccount, prt.account_id)
         if not account or not active_identity(account, db):
             raise HTTPException(404, "Account agente non attivo")
-        account.password_hash = hash_password(password)
     else:
         raise HTTPException(400, "Tipo account non supportato")
 
+    try:
+        validate_password_strength(
+            password,
+            context_values=_password_context_for_account(prt.account_type, account, db),
+        )
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
+
+    account.password_hash = hash_password(password)
     prt.used_at = datetime.utcnow()
     db.commit()
     return {"ok": True, "message": "Password aggiornata correttamente. Ora puoi accedere con la nuova password."}
@@ -655,7 +682,10 @@ def change_account_password(
     if verify_password(new_password, user.password_hash):
         raise HTTPException(400, "La nuova password deve essere diversa da quella attuale.")
     try:
-        validate_password_strength(new_password)
+        validate_password_strength(
+            new_password,
+            context_values=(user.username, user.email, user.company_name),
+        )
     except ValueError as exc:
         raise HTTPException(400, str(exc))
 

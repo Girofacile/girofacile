@@ -94,15 +94,19 @@ def complete_setup(token: str, payload: dict, response: Response, db: Session = 
         raise HTTPException(409, "Link già utilizzato")
     if datetime.utcnow() > st.expires_at:
         raise HTTPException(410, "Link scaduto")
-    password = (payload.get("password") or "").strip()
-    try:
-        validate_password_strength(password)
-    except ValueError as exc:
-        raise HTTPException(400, str(exc))
+    password = payload.get("password") or ""
     agent = db.get(Agent, st.agent_id)
     if not agent or not agent.email or not agent.is_active or agent.deleted_at is not None:
         raise HTTPException(400, "Email agente non configurata")
-    require_agents_enabled(db.get(User, agent.user_id))
+    owner = db.get(User, agent.user_id)
+    require_agents_enabled(owner)
+    try:
+        validate_password_strength(
+            password,
+            context_values=(agent_full_name(agent), agent.email, owner.company_name if owner else None),
+        )
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
     ensure_login_email_available(db, agent.email, "agent", agent.id)
     email = agent.email.strip().lower()
     existing = db.query(AgentAccount).filter(AgentAccount.agent_id == agent.id).first()
