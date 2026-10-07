@@ -2219,6 +2219,9 @@ function normalizeVehiclePlateInputV896(){
   const el=document.getElementById("vTarga");
   if(!el) return;
   el.value=(el.value||"").toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,10);
+  if(el.dataset.lookupPlate !== el.value){
+    el.dataset.lookupProvider=""; el.dataset.lookupAt=""; el.dataset.lookupToken="";
+  }
   const state=document.getElementById("vehiclePlateLookupStateV896");
   if(state){state.className="";state.textContent="Inserisci la targa per compilare automaticamente i dati disponibili.";}
   clearVehicleLookupHighlightsV8966();
@@ -2230,13 +2233,21 @@ function setVehiclePlateLookupStateV896(message,type=""){
 async function lookupVehiclePlateV896(){
   normalizeVehiclePlateInputV896();
   const plate=val("vTarga");
+  const vehicleId=val("vId");
   if(!plate){setVehiclePlateLookupStateV896("Inserisci prima la targa.","error");return;}
   const btn=document.getElementById("vehiclePlateLookupBtnV896");
   if(btn){btn.disabled=true;btn.textContent="Ricerca in corso...";}
   setVehiclePlateLookupStateV896("Ricerca dati veicolo in corso...");
   try{
     const data=await api(`/api/vehicles/lookup-plate/${encodeURIComponent(plate)}`);
+    if(val("vTarga") !== plate || val("vId") !== vehicleId) return;
     set("vTarga",data.targa||plate);
+    const lookupField=document.getElementById("vTarga");
+    if(lookupField){
+      lookupField.dataset.lookupPlate=data.targa||plate;
+      lookupField.dataset.lookupAt=data.manual_required?"":(data.lookup_at||"");
+      lookupField.dataset.lookupToken=data.manual_required?"":(data.lookup_token||"");
+    }
     set("vMarca",data.marca||""); set("vModello",data.modello||data.descrizione||"");
     set("vAnnoImmatricolazione",data.anno_immatricolazione||""); set("vCarrozzeria",data.carrozzeria||"");
     set("vCilindrata",data.cilindrata_cc||""); set("vPotenzaKw",data.potenza_kw||""); set("vClasseEuro",data.classe_euro||"");
@@ -2267,17 +2278,17 @@ async function lookupVehiclePlateV896(){
 function editVehicle(id){
   const x = vehiclesCache.find(v=>v.id===id); if(!x) return;
   set("vId",x.id); set("vNome",x.nome); set("vTarga",x.targa); set("vMarca",x.marca||""); set("vModello",x.modello||""); set("vAnnoImmatricolazione",x.anno_immatricolazione||""); set("vCarrozzeria",x.carrozzeria||""); set("vCilindrata",x.cilindrata_cc||""); set("vPotenzaKw",x.potenza_kw||""); set("vClasseEuro",x.classe_euro||""); set("vTollClass",x.toll_class||"B"); set("vFuelType",x.alimentazione||"gasolio"); set("vConsumo",x.consumo_primario_100km ?? x.consumo_l_100km ?? 0); set("vConsumoKwh",x.consumo_kwh_100km||0); set("vKg",x.capacita_kg); set("vColli",x.capacita_colli); updateVehicleEnergyFieldsV895();
-  const t=document.getElementById("vTarga"); if(t)t.dataset.lookupProvider=x.lookup_provider||"";
+  const t=document.getElementById("vTarga"); if(t){t.dataset.lookupProvider=x.lookup_provider||"";t.dataset.lookupPlate=x.targa||"";t.dataset.lookupAt="";t.dataset.lookupToken="";}
   setVehiclePlateLookupStateV896(x.lookup_provider?`Dati targa già acquisiti · Fonte ${String(x.lookup_provider).toUpperCase()}`:"Puoi aggiornare i dati del mezzo effettuando una nuova ricerca targa.",x.lookup_provider?"ok":"");
   clearVehicleLookupHighlightsV8966(); if(x.lookup_provider) markVehicleLookupResultV8966({...x,provider:x.lookup_provider});
   set("vSponda",x.ha_sponda?"true":"false"); set("vZtl",x.accesso_ztl?"true":"false"); set("vPhotoUrl", x.photo_url || ""); clearFileInput("vPhotoFile"); setImagePreview("vehiclePhotoPreview","vPhotoUrl","🚚");
 }
-function resetVehicleForm(){ clearVehicleLookupHighlightsV8966(); ["vId","vNome","vTarga","vMarca","vModello","vAnnoImmatricolazione","vCarrozzeria","vCilindrata","vPotenzaKw","vClasseEuro","vPhotoUrl"].forEach(id=>set(id,"")); const t=document.getElementById("vTarga"); if(t)t.dataset.lookupProvider=""; setVehiclePlateLookupStateV896("Inserisci la targa per compilare automaticamente i dati disponibili."); set("vTollClass","B"); set("vFuelType","gasolio"); set("vConsumo",8.5); set("vConsumoKwh",0); updateVehicleEnergyFieldsV895(); set("vKg",1000); set("vColli",100); set("vSponda","false"); set("vZtl","false"); clearFileInput("vPhotoFile"); setImagePreview("vehiclePhotoPreview","vPhotoUrl","🚚"); }
+function resetVehicleForm(){ clearVehicleLookupHighlightsV8966(); ["vId","vNome","vTarga","vMarca","vModello","vAnnoImmatricolazione","vCarrozzeria","vCilindrata","vPotenzaKw","vClasseEuro","vPhotoUrl"].forEach(id=>set(id,"")); const t=document.getElementById("vTarga"); if(t){t.dataset.lookupProvider="";t.dataset.lookupPlate="";t.dataset.lookupAt="";t.dataset.lookupToken="";} setVehiclePlateLookupStateV896("Inserisci la targa per compilare automaticamente i dati disponibili."); set("vTollClass","B"); set("vFuelType","gasolio"); set("vConsumo",8.5); set("vConsumoKwh",0); updateVehicleEnergyFieldsV895(); set("vKg",1000); set("vColli",100); set("vSponda","false"); set("vZtl","false"); clearFileInput("vPhotoFile"); setImagePreview("vehiclePhotoPreview","vPhotoUrl","🚚"); }
 async function saveVehicle(){
   return withButtonLoading("saveVehicleBtn", "Salvataggio...", async()=>{
     normalizeVehiclePlateInputV896();
     const plateEl=document.getElementById("vTarga");
-    const payload = {nome:val("vNome"), targa:val("vTarga"), toll_class:val("vTollClass")||"B", marca:val("vMarca")||null, modello:val("vModello")||null, anno_immatricolazione:val("vAnnoImmatricolazione")?parseInt(val("vAnnoImmatricolazione")):null, cilindrata_cc:val("vCilindrata")?parseInt(val("vCilindrata")):null, potenza_kw:val("vPotenzaKw")?parseFloat(val("vPotenzaKw")):null, classe_euro:val("vClasseEuro")||null, carrozzeria:val("vCarrozzeria")||null, lookup_provider:plateEl?.dataset?.lookupProvider||null, alimentazione:val("vFuelType")||"gasolio", consumo_primario_100km:parseFloat(val("vConsumo")||0), consumo_kwh_100km:parseFloat(val("vConsumoKwh")||0), consumo_l_100km:parseFloat(val("vConsumo")||0), capacita_kg:parseFloat(val("vKg")||1000), capacita_colli:parseInt(val("vColli")||100), ha_sponda:boolVal("vSponda"), accesso_ztl:boolVal("vZtl"), photo_url:val("vPhotoUrl") || null};
+    const payload = {nome:val("vNome"), targa:val("vTarga"), toll_class:val("vTollClass")||"B", marca:val("vMarca")||null, modello:val("vModello")||null, anno_immatricolazione:val("vAnnoImmatricolazione")?parseInt(val("vAnnoImmatricolazione")):null, cilindrata_cc:val("vCilindrata")?parseInt(val("vCilindrata")):null, potenza_kw:val("vPotenzaKw")?parseFloat(val("vPotenzaKw")):null, classe_euro:val("vClasseEuro")||null, carrozzeria:val("vCarrozzeria")||null, lookup_provider:plateEl?.dataset?.lookupProvider||null, lookup_at:plateEl?.dataset?.lookupAt||null, lookup_token:plateEl?.dataset?.lookupToken||null, alimentazione:val("vFuelType")||"gasolio", consumo_primario_100km:parseFloat(val("vConsumo")||0), consumo_kwh_100km:parseFloat(val("vConsumoKwh")||0), consumo_l_100km:parseFloat(val("vConsumo")||0), capacita_kg:parseFloat(val("vKg")||1000), capacita_colli:parseInt(val("vColli")||100), ha_sponda:boolVal("vSponda"), accesso_ztl:boolVal("vZtl"), photo_url:val("vPhotoUrl") || null};
     if(!payload.nome){ alert("Inserisci il nome del mezzo"); return; }
     const id = val("vId");
     await api(id?`/api/vehicles/${id}`:"/api/vehicles", {method:id?"PUT":"POST", body:JSON.stringify(payload)});

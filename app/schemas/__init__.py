@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field, StringConstraints, field_validator
 from typing import Annotated, Optional, List, Literal
+from datetime import datetime
 
 
 RequiredName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
@@ -95,6 +96,8 @@ class VehicleIn(BaseModel):
     classe_euro: Optional[str] = Field(default=None, max_length=60)
     carrozzeria: Optional[str] = Field(default=None, max_length=100)
     lookup_provider: Optional[str] = Field(default=None, max_length=60)
+    lookup_at: Optional[datetime] = None
+    lookup_token: Optional[str] = Field(default=None, max_length=64)
     toll_class: Literal["A", "B", "3", "4", "5"] = "B"
     consumo_l_100km: float = 8.5
     alimentazione: str = "gasolio"

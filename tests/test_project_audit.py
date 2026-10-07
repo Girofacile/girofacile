@@ -64,7 +64,7 @@ def test_vehicle_technical_details_survive_save_and_reload(env):
     saved = client.get('/api/vehicles').json()[0]
     for key, value in details.items():
         assert saved[key] == value
-    assert saved['lookup_at']
+    assert saved['lookup_at'] is None  # Manual entry is not a plate verification.
 
 
 @pytest.mark.parametrize('portal', ['company', 'agent'])

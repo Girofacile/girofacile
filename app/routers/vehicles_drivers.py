@@ -10,6 +10,7 @@ from ..database import get_db
 from ..models import Driver, DriverAccount, RoutePlan, User, Vehicle
 from ..services.fuel_prices import get_daily_prices
 from ..services.vehicle_lookup import VehicleLookupError, lookup_vehicle_by_plate, normalize_plate
+from ..services.vehicle_lookup_receipt import lookup_receipt, apply_lookup_receipt
 from ..services.api_usage import log_api_usage
 from ..schemas import DriverIn, VehicleIn
 from ..services.plans import check_vehicle_limit, check_driver_limit, vehicle_usage, lock_vehicle_owner
@@ -175,7 +176,9 @@ def lookup_plate(plate: str, db: Session = Depends(get_db), user: User = Depends
                 "potenza_kw": existing.potenza_kw,
                 "classe_euro": existing.classe_euro,
                 "carrozzeria": existing.carrozzeria,
-                "provider": "girofacile",
+                "provider": existing.lookup_provider or "girofacile",
+                **(lookup_receipt(user.id, normalized, existing.lookup_provider, existing.lookup_at)
+                   if existing.lookup_provider and existing.lookup_at else {}),
                 "manual_required": False,
                 "message": "Dati recuperati dal registro targa interno di GiroFacile.",
             }
@@ -194,6 +197,8 @@ def lookup_plate(plate: str, db: Session = Depends(get_db), user: User = Depends
                 estimated_cost_eur=0.40 if provider == "openapi" else 0,
                 meta={"plate_country": "IT"},
             )
+        if provider and not result.get("manual_required"):
+            result.update(lookup_receipt(user.id, normalized, result["provider"]))
         return result
     except VehicleLookupError as exc:
         raise HTTPException(400, str(exc)) from exc
@@ -246,8 +251,7 @@ def create_vehicle(data: VehicleIn, db: Session = Depends(get_db), user: User = 
     payload["consumo_l_100km"] = payload.get("consumo_primario_100km") or payload.get("consumo_l_100km") or 0
     payload["targa"] = normalize_vehicle_targa(payload.get("targa"))
     ensure_vehicle_targa_unique(db, user, payload.get("targa"))
-    if payload.get("lookup_provider"):
-        payload["lookup_at"] = datetime.utcnow()
+    apply_lookup_receipt(payload, user.id)
     item = Vehicle(**payload, user_id=user.id)
     db.add(item)
     db.commit()
@@ -265,8 +269,7 @@ def update_vehicle(item_id: int, data: VehicleIn, db: Session = Depends(get_db),
     payload["consumo_l_100km"] = payload.get("consumo_primario_100km") or payload.get("consumo_l_100km") or 0
     payload["targa"] = normalize_vehicle_targa(payload.get("targa"))
     ensure_vehicle_targa_unique(db, user, payload.get("targa"), exclude_id=item.id)
-    if payload.get("lookup_provider"):
-        payload["lookup_at"] = datetime.utcnow()
+    apply_lookup_receipt(payload, user.id, existing=item)
     for k, v in payload.items():
         setattr(item, k, v)
     db.commit()
