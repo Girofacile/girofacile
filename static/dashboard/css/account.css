@@ -107,6 +107,7 @@
 
 
 /* Account password security — inline inside the existing profile popup */
+#profileOverlay .profile-modal-v2{max-height:calc(100vh - 40px);overflow-y:auto;overscroll-behavior:contain}
 #profileOverlay .profile-security-entry{min-width:0}
 #profileOverlay .profile-security-summary{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:42px;padding:9px 10px;border:1px solid #dbe4ef;border-radius:11px;background:#f8fafc}
 #profileOverlay .profile-security-summary>div{min-width:0}
