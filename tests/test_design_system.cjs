@@ -241,12 +241,35 @@ test('workspace topbar keeps modern notification and account actions',()=>{
   assert.match(topbar,/class="profile-button-chevron"/);
 
   const profile=html.slice(html.indexOf('<div id="profileOverlay"'),html.indexOf('<!-- COOKIE NOTICE'));
-  assert.match(profile,/id="logoutBtn" class="btn-danger hidden">Esci dall'account/);
-  assert.match(profile,/class="actions-row profile-modal-actions"/);
+  assert.match(profile,/id="logoutBtn" class="profile-logout-btn hidden"/);
+  assert.match(profile,/class="profile-modal-footer"/);
+  assert.doesNotMatch(profile,/btn-danger/);
   assert.equal((html.match(/id="logoutBtn"/g)||[]).length,1);
 
   const layout=read(assets+'layout.css');
   assert.match(layout,/\.notification-bell-v30\{[^}]*border:0[^}]*background:transparent[^}]*box-shadow:none/);
   assert.match(layout,/\.bell-icon-v30 svg\{[^}]*stroke:currentColor/);
-  assert.match(layout,/\.profile-modal-actions #logoutBtn\{margin-right:auto\}/);
+});
+
+test('account profile modal follows the workspace design system',()=>{
+  const html=read('static/dashboard/index.html');
+  const profile=html.slice(html.indexOf('<div id="profileOverlay"'),html.indexOf('<!-- COOKIE NOTICE'));
+  assert.match(profile,/class="profile-modal profile-modal-v2"/);
+  assert.match(profile,/class="profile-modal-section profile-identity-section"/);
+  assert.match(profile,/class="profile-modal-section profile-plan-section"/);
+  assert.match(profile,/id="planStatusBox" class="profile-plan-status is-loading"/);
+  assert.match(profile,/class="profile-plan-actions-v63 profile-plan-actions-v2"/);
+
+  const core=read('static/dashboard/js/core.js');
+  assert.match(core,/const setPlanStatusTone = \(tone, icon\)/);
+  assert.match(core,/setPlanStatusTone\("is-success", "✓"\)/);
+  assert.doesNotMatch(core,/statusBox\.style\.background/);
+  assert.match(core,/plan-usage-chip-icon" aria-hidden="true"/);
+
+  const components=read(assets+'components.css');
+  assert.match(components,/Account profile dialog — GiroFacile workspace reference/);
+  assert.match(components,/#profileOverlay \.profile-modal-v2\{[^}]*max-width:760px[^}]*box-shadow:var\(--gf-shadow-dialog\)/);
+  assert.match(components,/#profileOverlay \.profile-logout-btn\{[^}]*background:var\(--gf-color-surface-subtle\)[^}]*color:var\(--gf-color-muted\)/);
+  assert.match(components,/#profileOverlay \.profile-plan-usage\{[^}]*grid-template-columns:repeat\(5,minmax\(0,1fr\)\)/);
+  assert.match(components,/#profileOverlay \.profile-field input:focus\{[^}]*box-shadow:var\(--gf-focus-ring\)/);
 });
