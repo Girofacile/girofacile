@@ -1,0 +1,99 @@
+/* GiroFacile design system: the only source of visual decisions.
+   Breakpoints are exposed to JS through these tokens; CSS media queries repeat
+   the documented values because custom properties are not valid in media queries. */
+:root {
+  color-scheme: light;
+  --gf-color-primary: #0b63f6;
+  --gf-color-primary-hover: #0953cf;
+  --gf-color-on-primary: #ffffff;
+  --gf-color-bg: #f6f8fb;
+  --gf-color-surface: #ffffff;
+  --gf-color-surface-subtle: #f1f4f8;
+  --gf-color-text: #17243b;
+  --gf-color-muted: #607086;
+  --gf-color-border: #dde4ee;
+  --gf-color-success: #16734a;
+  --gf-color-success-bg: #eaf6ef;
+  --gf-color-warning: #946200;
+  --gf-color-warning-bg: #fff6df;
+  --gf-color-danger: #b42335;
+  --gf-color-danger-bg: #fff0f2;
+  --gf-color-info: #175cd3;
+  --gf-color-info-bg: #edf4ff;
+  --gf-color-overlay: rgba(23,36,59,.45);
+  --gf-color-nav: #10233e;
+  --gf-color-nav-text: #dce6f4;
+  --gf-color-nav-muted: #a8b8ce;
+  --gf-color-nav-active: #213c60;
+  --gf-radius-sm: 6px;
+  --gf-radius-md: 10px;
+  --gf-radius-lg: 12px;
+  --gf-radius-pill: 999px;
+  --gf-radius-circle: 50%;
+  --gf-shadow-sm: 0 1px 2px rgba(16,24,40,.05);
+  --gf-shadow-md: 0 6px 18px rgba(16,24,40,.08);
+  --gf-shadow-dialog: 0 16px 48px rgba(16,24,40,.16);
+  --gf-space-1: 4px;
+  --gf-space-2: 8px;
+  --gf-space-3: 12px;
+  --gf-space-4: 16px;
+  --gf-space-5: 20px;
+  --gf-space-6: 24px;
+  --gf-space-8: 32px;
+  --gf-space-10: 40px;
+  --gf-font-family: Arial, Helvetica, sans-serif;
+  --gf-font-xs: 12px;
+  --gf-font-sm: 13px;
+  --gf-font-md: 14px;
+  --gf-font-lg: 16px;
+  --gf-font-xl: 20px;
+  --gf-font-2xl: 28px;
+  --gf-font-3xl: 36px;
+  --gf-font-size-base: var(--gf-font-md);
+  --gf-font-size-header: var(--gf-font-2xl);
+  --gf-weight-normal: 400;
+  --gf-weight-medium: 500;
+  --gf-weight-semibold: 600;
+  --gf-weight-bold: 700;
+  --gf-line-height: 1.5;
+  --gf-control-height: 40px;
+  --gf-control-touch: 44px;
+  --gf-control-check: 18px;
+  --gf-icon-size: 18px;
+  --gf-sidebar-width: 240px;
+  --gf-topbar-height: 64px;
+  --gf-content-width: 1200px;
+  --gf-content-narrow: 760px;
+  --gf-dialog-width: 640px;
+  --gf-auth-width: 440px;
+  --gf-focus-ring: 0 0 0 3px rgba(11,99,246,.16);
+  --gf-breakpoint-sm: 640px;
+  --gf-breakpoint-md: 768px;
+  --gf-breakpoint-lg: 1024px;
+  --gf-breakpoint-xl: 1440px;
+  --gf-motion-duration: 140ms;
+  --gf-z-menu: 40;
+  --gf-z-dialog: 100;
+  /* Compatibility names are aliases, not a second palette. */
+  --bg: var(--gf-color-bg);
+  --panel: var(--gf-color-surface);
+  --text: var(--gf-color-text);
+  --muted: var(--gf-color-muted);
+  --line: var(--gf-color-border);
+  --primary: var(--gf-color-primary);
+  --primary-dark: var(--gf-color-primary-hover);
+  --side: var(--gf-color-nav);
+  --green: var(--gf-color-success);
+  --orange: var(--gf-color-warning);
+  --purple: var(--gf-color-info);
+  --danger: var(--gf-color-danger);
+  --shadow: var(--gf-shadow-sm);
+  --primary-soft: var(--gf-color-info-bg);
+  --shadow-soft: var(--gf-shadow-sm);
+  --radius-xl: var(--gf-radius-lg);
+  --radius-lg: var(--gf-radius-lg);
+}
+
+:root { --gf-width-content:var(--gf-content-width); --gf-width-auth:var(--gf-auth-width); }
+
+:root { --gf-touch-height:var(--gf-control-touch); }
