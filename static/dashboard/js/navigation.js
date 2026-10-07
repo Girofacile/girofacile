@@ -30,49 +30,6 @@ const WORKSPACE_TOPBAR_META = {
   }
 };
 
-const WORKSPACE_DIRECTORY_ACTIONS = {
-  clienti: {
-    secondaryLabel: "Importa clienti CSV/Excel",
-    secondaryAction: () => openCustomerImportModal(),
-    primaryLabel: "+ Nuovo Cliente",
-    primaryAction: () => openCustomerModal()
-  },
-  depositi: {
-    primaryLabel: "+ Nuovo deposito",
-    primaryAction: () => openDepositModal()
-  },
-  mezzi: {
-    primaryLabel: "+ Nuovo mezzo",
-    primaryAction: () => createFleetVehicle()
-  },
-  autisti: {
-    primaryLabel: "+ Nuovo autista",
-    primaryAction: () => openNewDriverModal()
-  },
-  agenti: {
-    primaryLabel: "+ Nuovo agente",
-    primaryAction: () => openNewAgentModal()
-  }
-};
-
-function syncWorkspaceDirectoryActions(name){
-  const container=document.getElementById("workspaceDirectoryTopbarActions");
-  const primary=document.getElementById("workspaceDirectoryPrimaryAction");
-  const secondary=document.getElementById("workspaceDirectorySecondaryAction");
-  const config=WORKSPACE_DIRECTORY_ACTIONS[name] || null;
-  container?.classList.toggle("hidden", !config);
-  if(primary){
-    primary.classList.toggle("hidden", !config?.primaryLabel);
-    primary.textContent=config?.primaryLabel || "";
-    primary.onclick=config?.primaryAction || null;
-  }
-  if(secondary){
-    secondary.classList.toggle("hidden", !config?.secondaryLabel);
-    secondary.textContent=config?.secondaryLabel || "";
-    secondary.onclick=config?.secondaryAction || null;
-  }
-}
-
 function syncWorkspaceTopbar(name){
   const company=name==="company";
   const meta=WORKSPACE_TOPBAR_META[name] || WORKSPACE_TOPBAR_META.dashboard;
@@ -80,10 +37,8 @@ function syncWorkspaceTopbar(name){
   const subtitle=document.getElementById("workspacePageSubtitle");
   if(title) title.textContent=meta.title;
   if(subtitle) subtitle.textContent=meta.subtitle;
-  syncWorkspaceDirectoryActions(name);
   if(document.body){
     document.body.classList.toggle("gf-company-page-active",company);
-    document.body.classList.toggle("gf-directory-page-active",!!WORKSPACE_DIRECTORY_ACTIONS[name]);
   }
 }
 

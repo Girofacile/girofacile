@@ -396,11 +396,9 @@ test('company profile visually follows the dashboard panel language',()=>{
 });
 
 
-test('resource directories share the Clienti page structure, topbar header and card-table choice',()=>{
+test('resource directories keep titles in the topbar and create actions inside the list panel',()=>{
   const html=read('static/dashboard/index.html');
-  assert.match(html,/id="workspaceDirectoryTopbarActions" class="workspace-directory-topbar-actions hidden"/);
-  assert.match(html,/id="workspaceDirectoryPrimaryAction"/);
-  assert.match(html,/id="workspaceDirectorySecondaryAction"/);
+  assert.doesNotMatch(html,/workspaceDirectoryTopbarActions|workspaceDirectoryPrimaryAction|workspaceDirectorySecondaryAction/);
 
   for(const tab of ['clienti','depositi','mezzi','autisti','agenti']){
     const start=html.indexOf('<section id="tab-'+tab+'"');
@@ -409,64 +407,45 @@ test('resource directories share the Clienti page structure, topbar header and c
     const block=html.slice(start,next>start?next:html.length);
     assert.match(block,/gf-directory-page/,tab+' page template');
     assert.match(block,/gf-directory-title/,tab+' mobile title fallback');
+    assert.match(block,/gf-directory-head-actions/,tab+' panel actions');
   }
-  for(const tab of ['depositi','mezzi','autisti','agenti']){
-    const start=html.indexOf('<section id="tab-'+tab+'"');
-    const next=html.indexOf('<section id="tab-',start+20);
-    const block=html.slice(start,next>start?next:html.length);
-    assert.match(block,/gf-directory-panel/,tab+' panel');
-    assert.match(block,/gf-directory-toolbar/,tab+' toolbar');
-    assert.match(block,/gf-directory-view-controls/,tab+' view choice');
-    assert.match(block,/aria-label="Vista tabella"/,tab+' table view');
-    assert.match(block,/aria-label="Vista card"/,tab+' card view');
-  }
+
+  const customers=html.slice(html.indexOf('<section id="tab-clienti"'),html.indexOf('<section id="tab-depositi"'));
+  assert.match(customers,/gf-directory-head-actions[^]*Importa clienti CSV\/Excel[^]*\+ Nuovo/);
+  const deposits=html.slice(html.indexOf('<section id="tab-depositi"'),html.indexOf('id="depositOverlay"'));
+  assert.match(deposits,/gf-directory-head-actions[^]*\+ Nuovo deposito/);
+  const vehicles=html.slice(html.indexOf('<section id="tab-mezzi"'),html.indexOf('<section id="tab-autisti"'));
+  assert.match(vehicles,/gf-directory-head-actions[^]*\+ Nuovo mezzo/);
+  const drivers=html.slice(html.indexOf('<section id="tab-autisti"'),html.indexOf('<section id="tab-storico"'));
+  assert.match(drivers,/gf-directory-head-actions[^]*\+ Nuovo autista/);
+  const agents=html.slice(html.indexOf('<section id="tab-agenti"'),html.indexOf('<section id="tab-report"'));
+  assert.match(agents,/gf-directory-head-actions[^]*\+ Nuovo agente/);
 
   const navigation=read('static/dashboard/js/navigation.js');
   new vm.Script(navigation);
   for(const [name,title] of [['clienti','Clienti'],['depositi','Depositi'],['mezzi','Mezzi'],['autisti','Autisti'],['agenti','Agenti']]){
     assert.match(navigation,new RegExp(name+':[\\s\\S]*?title: "'+title+'"'),name+' topbar title');
   }
-  assert.match(navigation,/const WORKSPACE_DIRECTORY_ACTIONS =/);
-  assert.match(navigation,/function syncWorkspaceDirectoryActions\(name\)/);
-  assert.match(navigation,/workspaceDirectoryPrimaryAction/);
-  assert.match(navigation,/workspaceDirectorySecondaryAction/);
+  assert.doesNotMatch(navigation,/WORKSPACE_DIRECTORY_ACTIONS|syncWorkspaceDirectoryActions|workspaceDirectoryPrimaryAction/);
 
   const layout=read(assets+'layout.css');
   for(const tab of ['clienti','depositi','mezzi','autisti','agenti']){
     assert.match(layout,new RegExp('#app:has\\(#tab-'+tab+':not\\(\\.hidden\\)\\) \\.topbar-dashboard-title'),tab+' topbar visibility');
   }
-  assert.match(layout,/\.topbar-dashboard-title h1\{[^}]*font-family:var\(--gf-font-family\)[^}]*font-size:24px/);
-  assert.match(layout,/\.topbar-dashboard-title p\{[^}]*font-family:var\(--gf-font-family\)[^}]*font-size:14px/);
+  assert.doesNotMatch(layout,/workspace-directory-topbar-actions/);
 
   const workspace=read(assets+'workspace.css');
-  assert.match(workspace,/Shared anagrafica directory template — Clienti is the reference/);
-  assert.match(workspace,/#tab-clienti,#tab-depositi,#tab-mezzi,#tab-autisti,#tab-agenti\)>\.gf-directory-title\{[\s\S]*display:none!important/);
-  assert.match(workspace,/body:has\(#tab-clienti:not\(\.hidden\)\) \.content,[\s\S]*padding:24px 26px 24px/);
-  assert.match(workspace,/body:has\(#tab-clienti:not\(\.hidden\)\) \.topbar,[\s\S]*background:var\(--gf-color-surface\)!important/);
+  assert.match(workspace,/Directory create\/import actions live inside the list panel/);
+  assert.match(workspace,/\.gf-directory-head-actions\{[\s\S]*justify-content:flex-end/);
+  assert.match(workspace,/\.gf-directory-head-actions :is\(\.btn-primary,\.btn-secondary\)\{[\s\S]*min-height:36px/);
 
-  const vehicles=html.slice(html.indexOf('<section id="tab-mezzi"'),html.indexOf('<section id="tab-autisti"'));
   assert.match(vehicles,/id="fleetMetricTotal"/);
-  assert.match(vehicles,/id="fleetSort"/);
-
-  const drivers=html.slice(html.indexOf('<section id="tab-autisti"'),html.indexOf('<section id="tab-storico"'));
   assert.match(drivers,/id="driverTableWrap"/);
-  assert.match(drivers,/id="driversBody"/);
-
-  const agents=html.slice(html.indexOf('<section id="tab-agenti"'),html.indexOf('<section id="tab-report"'));
-  assert.match(agents,/id="agentMetricTotal"/);
-  assert.match(agents,/id="agentTableWrap"/);
   assert.match(agents,/id="agentCards"/);
-  assert.doesNotMatch(agents,/Scheda agente/);
-  assert.match(html,/id="agentOverlay" class="modal-overlay hidden gf-dialog"/);
 
   const core=read('static/dashboard/js/core.js');
   assert.match(core,/localStorage\?\.getItem\('gfDepositView'\)/);
   assert.match(core,/localStorage\?\.getItem\('gfAgentView'\)/);
-
-  const vehiclesJs=read('static/dashboard/js/vehicles.js');
-  assert.match(vehiclesJs,/localStorage\?\.getItem\('gfFleetView'\)/);
-  const driversJs=read('static/dashboard/js/drivers.js');
-  assert.match(driversJs,/localStorage\?\.getItem\('gfDriverView'\)/);
 });
 
 

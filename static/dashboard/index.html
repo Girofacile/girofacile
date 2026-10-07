@@ -43,8 +43,8 @@
 <!-- Shared GiroFacile design system; legacy sheets retain feature layout. -->
 <link rel="stylesheet" href="/static/design-system/tokens.css?v=ds_20261007_reference_2">
 <link rel="stylesheet" href="/static/design-system/components.css?v=ds_20261007_legal_cleanup_4">
-<link rel="stylesheet" href="/static/design-system/layout.css?v=ds_20261007_directory_topbar_6">
-<link rel="stylesheet" href="/static/design-system/workspace.css?v=ds_20261007_directory_icons_12">
+<link rel="stylesheet" href="/static/design-system/layout.css?v=ds_20261007_directory_panel_actions_7">
+<link rel="stylesheet" href="/static/design-system/workspace.css?v=ds_20261007_directory_panel_actions_13">
 <link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007_reference_2">
 <script src="/static/design-system/design-system.js?v=ds_20261007_reference_2" defer></script>
 </head>
@@ -379,10 +379,6 @@
 
       <div class="top-actions">
         <button class="btn-primary topbar-new-route" onclick="showTab('giro')"><span data-gf-label="new_route">Nuovo giro</span></button>
-        <div id="workspaceDirectoryTopbarActions" class="workspace-directory-topbar-actions hidden">
-          <button id="workspaceDirectorySecondaryAction" type="button" class="btn-secondary hidden"></button>
-          <button id="workspaceDirectoryPrimaryAction" type="button" class="btn-primary"></button>
-        </div>
         <div id="companyTopbarStatus" class="company-topbar-status" aria-live="polite">
           <span id="companyConfiguredBadge" class="company-configured-badge-v40 hidden">✓ Profilo configurato</span>
           <button id="showOnboardingBtn" class="btn-secondary hidden" onclick="openOnboardingPanel()">Configurazione guidata</button>
@@ -866,7 +862,6 @@
       <section id="tab-clienti" class="tab hidden gf-directory-page">
         <div class="page-title-row customer-page-title gf-directory-title">
           <div><h1 data-gf-label="customers">Clienti</h1><p>Anagrafica <span data-gf-label="customers">Clienti</span> e fasce orarie di scarico.</p></div>
-          <div class="page-actions"><button class="btn-secondary" onclick="openCustomerImportModal()">Importa clienti CSV/Excel</button><button class="btn-primary" onclick="openCustomerModal()">+ Nuovo <span data-gf-label="customer">Cliente</span></button></div>
         </div>
         <div class="customer-metrics" aria-label="Riepilogo clienti"><article class="customer-metric"><span class="customer-metric-icon blue"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2m20 0v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/><circle cx="9" cy="7" r="4"/></svg></span><div><h2>Totale clienti</h2><strong id="customerMetricTotal">—</strong><p>Tutti i clienti registrati</p></div></article>
 <article class="customer-metric"><span class="customer-metric-icon green"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg></span><div><h2>Indirizzi verificati</h2><strong id="customerMetricVerified">—</strong><p>Indirizzi con verifica completata</p></div></article>
@@ -875,6 +870,7 @@
 </div>
         <section class="panel customer-list-panel-v8">
           <div class="panel-header customer-list-head"><div><h2>Elenco <span data-gf-label="customers">Clienti</span></h2><p class="panel-subtitle">Cerca rapidamente oppure apri i filtri avanzati quando servono.</p></div>
+            <div class="gf-directory-head-actions"><button class="btn-secondary" onclick="openCustomerImportModal()">Importa clienti CSV/Excel</button><button class="btn-primary" onclick="openCustomerModal()">+ Nuovo <span data-gf-label="customer">Cliente</span></button></div>
           </div>
           <div class="customer-searchbar-v8">
             <label class="customer-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="customerListSearch" aria-label="Cerca clienti" placeholder="Cerca cliente, codice o indirizzo..." oninput="filterCustomerList()"></label>
@@ -899,14 +895,14 @@
       <dialog id="customerDetailsDialog" class="customer-details-dialog gf-dialog" aria-labelledby="customerDetailsTitle"><div id="customerDetailsContent"></div><form method="dialog"><button class="btn-secondary">Chiudi</button></form></dialog>
 
       <section id="tab-agenti" class="tab hidden gf-page gf-directory-page">
-        <div class="page-title-row gf-directory-title"><div><h1>Agenti</h1><p>Anagrafica agenti collegabili ai clienti.</p></div><div class="page-actions"><button type="button" class="btn-primary" onclick="openNewAgentModal()">+ Nuovo agente</button></div></div>
+        <div class="page-title-row gf-directory-title"><div><h1>Agenti</h1><p>Anagrafica agenti collegabili ai clienti.</p></div></div>
         <div class="gf-directory-metrics" aria-label="Riepilogo agenti">
           <article class="gf-directory-metric blue"><span class="gf-directory-metric-icon blue"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg></span><div><h2>Totale agenti</h2><strong id="agentMetricTotal">0</strong><p>Anagrafica commerciale</p></div></article>
           <article class="gf-directory-metric green"><span class="gf-directory-metric-icon green"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg></span><div><h2>Attivi</h2><strong id="agentMetricActive">0</strong><p>Disponibili per i clienti</p></div></article>
           <article class="gf-directory-metric orange"><span class="gf-directory-metric-icon orange"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span><div><h2>Clienti assegnati</h2><strong id="agentMetricClients">0</strong><p>Collegamenti complessivi</p></div></article>
         </div>
         <section class="panel gf-directory-panel agent-directory-panel" aria-labelledby="agentDirectoryTitle">
-          <div class="panel-header gf-directory-head"><div><h2 id="agentDirectoryTitle">Elenco agenti</h2><p class="panel-subtitle">Cerca, filtra e scegli se visualizzare gli agenti a tabella o a card.</p></div></div>
+          <div class="panel-header gf-directory-head"><div><h2 id="agentDirectoryTitle">Elenco agenti</h2><p class="panel-subtitle">Cerca, filtra e scegli se visualizzare gli agenti a tabella o a card.</p></div><div class="gf-directory-head-actions"><button type="button" class="btn-primary" onclick="openNewAgentModal()">+ Nuovo agente</button></div></div>
           <div class="gf-directory-toolbar">
             <label class="gf-directory-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="agentSearch" aria-label="Cerca agenti" placeholder="Cerca agente, codice, zona o contatti..." oninput="renderAgentDirectory()"></label>
             <select id="agentStatusFilter" onchange="renderAgentDirectory()" aria-label="Filtra stato agenti"><option value="">Tutti gli stati</option><option value="attivi">Attivi</option><option value="non_attivi">Non attivi</option></select>
@@ -1070,7 +1066,6 @@
       <section id="tab-depositi" class="tab hidden gf-page gf-directory-page">
         <div class="page-title-row deposit-page-title gf-directory-title">
           <div><h1>Depositi</h1><p>Gestisci gli indirizzi di partenza e rientro dei tuoi giri.</p></div>
-          <div class="page-actions"><button type="button" id="newDepositBtn" class="btn-primary" onclick="openDepositModal()">+ Nuovo deposito</button></div>
         </div>
         <div class="deposit-metrics gf-directory-metrics" aria-label="Riepilogo depositi">
           <article class="deposit-metric gf-directory-metric blue"><span class="deposit-metric-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7M5 9v12h14V9M9 21v-8h6v8"/></svg></span><div><h2>Totale depositi</h2><strong id="depositTotal">—</strong><p id="depositTotalCaption">depositi configurati</p></div></article>
@@ -1078,7 +1073,7 @@
           <article class="deposit-metric gf-directory-metric purple"><span class="deposit-metric-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l4 2"/></svg></span><div><h2>Ultimo aggiornamento</h2><strong id="depositLastUpdate">—</strong><p id="depositLastUpdateTime">Data non disponibile</p></div></article>
         </div>
         <section class="panel deposit-list-panel gf-directory-panel" aria-labelledby="depositListTitle">
-          <div class="panel-header deposit-list-head gf-directory-head"><div><h2 id="depositListTitle">Elenco depositi</h2><p class="panel-subtitle">Cerca rapidamente oppure cambia visualizzazione quando serve.</p></div></div>
+          <div class="panel-header deposit-list-head gf-directory-head"><div><h2 id="depositListTitle">Elenco depositi</h2><p class="panel-subtitle">Cerca rapidamente oppure cambia visualizzazione quando serve.</p></div><div class="gf-directory-head-actions"><button type="button" id="newDepositBtn" class="btn-primary" onclick="openDepositModal()">+ Nuovo deposito</button></div></div>
           <div class="gf-directory-toolbar deposit-directory-toolbar">
             <label class="gf-directory-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="depositSearch" aria-label="Cerca depositi" placeholder="Cerca deposito o indirizzo..." oninput="renderDepositDirectory()"></label>
             <select id="depositSort" aria-label="Ordina depositi" onchange="renderDepositDirectory()"><option value="name">Ordina per</option><option value="name_desc">Nome: Z–A</option><option value="default">Predefinito prima</option></select>
@@ -1127,14 +1122,14 @@
       </div>
 
       <section id="tab-mezzi" class="tab hidden gf-page gf-directory-page">
-        <div class="page-title-row gf-directory-title"><div><h1>Mezzi</h1><p>Gestisci i tuoi mezzi aziendali e le relative caratteristiche.</p></div><div class="page-actions"><button type="button" class="btn-primary" onclick="createFleetVehicle()">+ Nuovo mezzo</button></div></div>
+        <div class="page-title-row gf-directory-title"><div><h1>Mezzi</h1><p>Gestisci i tuoi mezzi aziendali e le relative caratteristiche.</p></div></div>
         <div class="gf-directory-metrics fleet-directory-metrics" aria-label="Riepilogo mezzi">
           <article class="gf-directory-metric blue"><span class="gf-directory-metric-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h12v10H3zM15 10h4l2 3v4h-6"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg></span><div><h2>Totale mezzi</h2><strong id="fleetMetricTotal">0</strong><p>Veicoli registrati</p></div></article>
           <article class="gf-directory-metric green"><span class="gf-directory-metric-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg></span><div><h2>Disponibili</h2><strong id="fleetMetricAvailable">0</strong><p>Pronti per nuovi giri</p></div></article>
           <article class="gf-directory-metric orange"><span class="gf-directory-metric-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h10v8H4zM14 10h4l2 3v3h-6"/><circle cx="7" cy="17" r="1.5"/><circle cx="18" cy="17" r="1.5"/></svg></span><div><h2>In uso</h2><strong id="fleetMetricBusy">0</strong><p>Impegnati nei giri</p></div></article>
         </div>
         <section class="panel gf-directory-panel fleet-directory-panel" aria-labelledby="fleetDirectoryTitle">
-          <div class="panel-header gf-directory-head"><div><h2 id="fleetDirectoryTitle">Elenco mezzi</h2><p class="panel-subtitle">Cerca, filtra e scegli se visualizzare i mezzi a tabella o a card.</p></div></div>
+          <div class="panel-header gf-directory-head"><div><h2 id="fleetDirectoryTitle">Elenco mezzi</h2><p class="panel-subtitle">Cerca, filtra e scegli se visualizzare i mezzi a tabella o a card.</p></div><div class="gf-directory-head-actions"><button type="button" class="btn-primary" onclick="createFleetVehicle()">+ Nuovo mezzo</button></div></div>
           <div class="gf-directory-toolbar fleet-directory-toolbar">
             <label class="fleet-search gf-directory-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/></svg><input id="fleetSearch" aria-label="Cerca mezzi" placeholder="Cerca per nome, targa o modello..." oninput="renderFleetDirectory()"></label>
             <select id="fleetStatusFilter" aria-label="Filtra disponibilità veicoli" onchange="renderFleetDirectory()"><option value="">Tutti gli stati</option><option value="available">Disponibili</option><option value="busy">In uso</option></select>
@@ -1200,14 +1195,14 @@
       </section>
 
       <section id="tab-autisti" class="tab hidden gf-page gf-directory-page">
-        <div class="page-title-row gf-directory-title"><div><h1>Autisti</h1><p>Gestisci anagrafiche, contatti, patenti e assegnazioni operative.</p></div><div class="page-actions"><button class="btn-primary" onclick="openNewDriverModal()">+ Nuovo autista</button></div></div>
+        <div class="page-title-row gf-directory-title"><div><h1>Autisti</h1><p>Gestisci anagrafiche, contatti, patenti e assegnazioni operative.</p></div></div>
         <div class="driver-stats-grid gf-directory-metrics" aria-label="Riepilogo autisti">
           <article class="stat-card driver-stat gf-directory-metric blue"><div class="stat-icon gf-directory-metric-icon blue"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 19.5c.8-3.4 3.2-5.1 6.5-5.1s5.7 1.7 6.5 5.1"/><path d="M18.2 7.2h2.3"/></svg></div><div><h2>Totale autisti</h2><strong id="driversTotal">0</strong><p>Anagrafica aziendale</p></div></article>
           <article class="stat-card driver-stat gf-directory-metric green"><div class="stat-icon gf-directory-metric-icon green"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7.8"/><path d="m8.6 12.3 2.2 2.2 4.8-5"/></svg></div><div><h2>Disponibili</h2><strong id="driversAvailable">0</strong><p>Pronti per nuovi giri</p></div></article>
           <article class="stat-card driver-stat gf-directory-metric orange"><div class="stat-icon gf-directory-metric-icon orange"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.8 14.2h8.5v-4.7H5.7z"/><path d="M12.3 11.8h3.2l2.7 2.7v1.3h-5.9"/><circle cx="7.1" cy="16.6" r="1.6"/><circle cx="16.6" cy="16.6" r="1.6"/></svg></div><div><h2>In servizio</h2><strong id="driversWorking">0</strong><p>Giro attivo oggi</p></div></article>
         </div>
         <section class="panel gf-directory-panel driver-directory-panel" aria-labelledby="driverDirectoryTitle">
-          <div class="panel-header gf-directory-head"><div><h2 id="driverDirectoryTitle">Elenco autisti</h2><p class="panel-subtitle">Cerca rapidamente oppure cambia visualizzazione quando serve.</p></div></div>
+          <div class="panel-header gf-directory-head"><div><h2 id="driverDirectoryTitle">Elenco autisti</h2><p class="panel-subtitle">Cerca rapidamente oppure cambia visualizzazione quando serve.</p></div><div class="gf-directory-head-actions"><button class="btn-primary" onclick="openNewDriverModal()">+ Nuovo autista</button></div></div>
           <div class="driver-toolbar gf-directory-toolbar">
             <label class="driver-search-box gf-directory-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/></svg><input id="driverSearch" aria-label="Cerca autisti" placeholder="Cerca per nome, telefono, email o patente..." oninput="renderDrivers()"></label>
             <select id="driverStatusFilter" aria-label="Filtra stato autisti" onchange="renderDrivers()"><option value="">Tutti gli stati</option><option value="Disponibile">Disponibili</option><option value="In servizio">In servizio</option><option value="In riposo">In riposo</option></select>
@@ -1912,7 +1907,7 @@
 
 <script src="/static/dashboard/js/reports.js?v=audit_20261004"></script>
 <script src="/static/dashboard/js/customers.js?v=customer_kpi_fix_20261006_6"></script>
-<script src="/static/dashboard/js/navigation.js?v=directory_topbar_20261007"></script>
+<script src="/static/dashboard/js/navigation.js?v=directory_panel_actions_20261007"></script>
 <script src="/static/dashboard/js/completed.js?v=20261006"></script>
 <script src="/static/dashboard/js/preview-design.js?v=20261006"></script>
 <script src="/static/dashboard/js/live-design.js?v=20261006"></script>

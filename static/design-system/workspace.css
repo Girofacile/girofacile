@@ -817,3 +817,47 @@ body[data-gf-surface="workspace"] #app :is(#tab-clienti,#tab-depositi,#tab-mezzi
 :is(.customer-metric,.deposit-metric,.gf-directory-metric,.driver-stat){
   column-gap:16px;
 }
+
+
+/* Directory create/import actions live inside the list panel, above toolbar and view controls. */
+body[data-gf-surface="workspace"] #app :is(#tab-clienti,#tab-depositi,#tab-mezzi,#tab-autisti,#tab-agenti) .gf-directory-head-actions{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:8px;
+  margin-left:auto;
+  flex-wrap:wrap;
+}
+body[data-gf-surface="workspace"] #app :is(#tab-clienti,#tab-depositi,#tab-mezzi,#tab-autisti,#tab-agenti) .gf-directory-head-actions :is(.btn-primary,.btn-secondary){
+  min-height:36px;
+  margin:0;
+  padding:8px 13px;
+  border-radius:var(--gf-radius-sm);
+  font-family:var(--gf-font-family);
+  font-size:12px;
+  font-weight:var(--gf-weight-semibold);
+  line-height:1.2;
+  box-shadow:none;
+  white-space:nowrap;
+}
+body[data-gf-surface="workspace"] #app :is(#tab-clienti,#tab-depositi,#tab-mezzi,#tab-autisti,#tab-agenti) .gf-directory-head-actions .btn-primary{
+  background:var(--gf-color-primary);
+  border-color:var(--gf-color-primary);
+  color:#fff;
+}
+body[data-gf-surface="workspace"] #app :is(#tab-clienti,#tab-depositi,#tab-mezzi,#tab-autisti,#tab-agenti) .gf-directory-head-actions .btn-secondary{
+  background:var(--gf-color-surface);
+  border-color:var(--gf-color-border);
+  color:var(--gf-color-text);
+}
+@media(max-width:700px){
+  body[data-gf-surface="workspace"] #app :is(#tab-clienti,#tab-depositi,#tab-mezzi,#tab-autisti,#tab-agenti) :is(.customer-list-head,.gf-directory-head){
+    align-items:flex-start;
+    flex-direction:column;
+  }
+  body[data-gf-surface="workspace"] #app :is(#tab-clienti,#tab-depositi,#tab-mezzi,#tab-autisti,#tab-agenti) .gf-directory-head-actions{
+    width:100%;
+    margin-left:0;
+    justify-content:flex-start;
+  }
+}
