@@ -124,10 +124,17 @@ test('dashboard reference view uses shared tokens and bounded overview previews'
   assert.match(home,/\.dash-kpi-resources/);
   assert.match(home,/\.dash-list-card\{min-height:390px/);
   assert.doesNotMatch(home,/\.dash-route-list\{[^}]*overflow:auto/);
+  assert.match(home,/\.dash-link-btn\{[^}]*background:var\(--gf-color-nav\)!important/);
+  assert.doesNotMatch(home,/nth-child\(2\)>\.dash-link-btn/);
 
   const core=read('static/dashboard/js/core.js');
   assert.match(core,/scheduled\.slice\(0,3\)\.map/);
-  assert.match(core,/progress\.slice\(0,1\)\.map/);
+  assert.match(core,/progress\.slice\(0,3\)\.map/);
+  const routeItem=core.slice(core.indexOf('function dashRouteItem'),core.indexOf('function gfTimeFromIso'));
+  assert.match(routeItem,/dash-route-context/);
+  assert.match(routeItem,/dash-route-progress-line/);
+  assert.match(routeItem,/dash-route-issues/);
+  assert.doesNotMatch(routeItem,/dash-live-grid|dash-next-stop/);
   assert.match(core,/completedToday\.slice\(0,3\)\.map/);
 
   const html=read('static/dashboard/index.html');

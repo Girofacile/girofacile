@@ -1587,7 +1587,7 @@ async function loadDashboardHome(){
     const completedBox=document.getElementById("dashCompletedList");
     renderLogisticsDashboardV50([...(operational || []), ...(routes || [])]);
     if(scheduledBox) scheduledBox.innerHTML = scheduled.slice(0,3).map(r=>dashRouteItem(r,'scheduled')).join("") || renderEmptyDashList("Nessun giro programmato.", "scheduled");
-    if(progressBox) progressBox.innerHTML = progress.slice(0,1).map(r=>dashRouteItem(r,'progress')).join("") || renderEmptyDashList("Nessun giro in corso.", "progress");
+    if(progressBox) progressBox.innerHTML = progress.slice(0,3).map(r=>dashRouteItem(r,'progress')).join("") || renderEmptyDashList("Nessun giro in corso.", "progress");
     if(completedBox) completedBox.innerHTML = completedToday.slice(0,3).map(r=>dashRouteItem(r,'completed')).join("") || renderEmptyDashList("Nessun giro completato oggi.", "completed");
 
     const vehBox = document.getElementById("dashVehicleStatus");
@@ -3803,14 +3803,21 @@ let dashboardCompletedSelectedId = null;
 
 
 function dashRouteItem(r, type){
-  const total = Math.max(1, Number(r.consegne_count) || 0, Number(r.completed_count || 0) + Number(r.missed_count || 0) + Number(r.remaining_count || 0));
-  const completedPercent = Math.min(100, Math.max(0, Number(r.completed_count || 0)) / total * 100);
-  const missedPercent = Math.min(100 - completedPercent, Math.max(0, Number(r.missed_count || 0)) / total * 100);
+  const completed = Math.max(0, Number(r.completed_count || 0));
+  const missed = Math.max(0, Number(r.missed_count || 0));
+  const remaining = Math.max(0, Number(r.remaining_count || 0));
+  const total = Math.max(0, Number(r.consegne_count) || 0, completed + missed + remaining);
+  const progressBase = Math.max(1, total);
+  const completedPercent = Math.min(100, completed / progressBase * 100);
+  const missedPercent = Math.min(100 - completedPercent, missed / progressBase * 100);
   const meta = `${esc(r.data_giro||"-")} · ${r.consegne_count||0} consegne${r.totale_km?` · ${r.totale_km} km`:""}`;
   const pill = routeStatusBadge(r.status, r.status_label);
-  const unread = Number(r.unread_driver_messages||0);
+  const unread = Math.max(0, Number(r.unread_driver_messages||0));
   const isProgress = type === 'progress';
-  const next = r.next_delivery ? `${r.next_delivery.cliente_nome || 'Prossima consegna'}${r.next_delivery.indirizzo ? ' · ' + r.next_delivery.indirizzo : ''}` : '';
+  const context = [r.driver_name, r.vehicle_name].filter(Boolean).map(esc).join(' · ') || 'Autista e mezzo non assegnati';
+  const issues = [];
+  if(missed) issues.push(`<span class="dash-route-issue danger">${missed} mancat${missed===1?'a':'e'}</span>`);
+  if(unread) issues.push(`<span class="dash-route-issue info">${unread} messagg${unread===1?'io':'i'} non lett${unread===1?'o':'i'}</span>`);
   let click = `openDashboardRoute(${r.id})`;
   if(type === 'scheduled') click = `openDashboardScheduledPage(${r.id})`;
   if(type === 'progress') click = `openDashboardInProgressPage(${r.id})`;
@@ -3818,17 +3825,17 @@ function dashRouteItem(r, type){
   return `<div class="dash-route-item ${isProgress?'dash-route-item-live':''}" role="button" tabindex="0" onkeydown="if(event.target===this &amp;&amp; (event.key==='Enter' || event.key===' ')){event.preventDefault();this.click()}" onclick="${click}">
     <div class="dash-route-main">
       <strong>${esc(r.nome||"Giro consegne")}</strong>
-      <small>${meta}</small>
       ${isProgress?`
-        <div class="dash-progress" aria-label="Esito consegne"><span style="width:${completedPercent}%"></span><span class="dash-progress-missed" style="width:${missedPercent}%"></span></div>
-        <div class="dash-live-grid">
-          <span><b>${r.completed_count||0}</b> completate</span>
-          <span><b>${r.missed_count||0}</b> mancate</span>
-          <span><b>${r.remaining_count ?? 0}</b> da fare</span>
+        <small class="dash-route-context">${context}</small>
+        <div class="dash-route-progress-line">
+          <span><b>${completed}/${total}</b> completate</span>
+          <span>${remaining} da fare</span>
         </div>
-        ${next?`<small class="dash-next-stop"><span>Prossima fermata</span>${esc(next)}</small>`:""}
-        ${unread?`<div class="dash-chat-alert">💬 ${unread} messagg${unread===1?'io':'i'} autista non lett${unread===1?'o':'i'}</div>`:""}
-      `:""}
+        <div class="dash-progress" aria-label="${completed} consegne completate su ${total}">
+          <span style="width:${completedPercent}%"></span><span class="dash-progress-missed" style="width:${missedPercent}%"></span>
+        </div>
+        ${issues.length?`<div class="dash-route-issues">${issues.join('')}</div>`:""}
+      `:`<small>${meta}</small>`}
     </div>
     <div class="dash-route-side">${pill}<span class="dash-arrow">›</span></div>
   </div>`;
