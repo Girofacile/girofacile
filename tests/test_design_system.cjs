@@ -393,3 +393,60 @@ test('company profile visually follows the dashboard panel language',()=>{
   assert.match(workspace,/#tab-company \.company-card-v29\{[\s\S]*border:1px solid var\(--gf-color-border\);/);
   assert.doesNotMatch(workspace,/#tab-company \.company-card-v29\{[\s\S]*border-top:3px solid/);
 });
+
+
+test('resource directories share the Clienti page structure and card-table choice',()=>{
+  const html=read('static/dashboard/index.html');
+  for(const tab of ['depositi','mezzi','autisti','agenti']){
+    const start=html.indexOf('<section id="tab-'+tab+'"');
+    assert.ok(start>=0,tab);
+    const next=html.indexOf('<section id="tab-',start+20);
+    const block=html.slice(start,next>start?next:html.length);
+    assert.match(block,/gf-directory-page/,tab+' page template');
+    assert.match(block,/gf-directory-title/,tab+' title');
+    assert.match(block,/gf-directory-panel/,tab+' panel');
+    assert.match(block,/gf-directory-toolbar/,tab+' toolbar');
+    assert.match(block,/gf-directory-view-controls/,tab+' view choice');
+    assert.match(block,/aria-label="Vista tabella"/,tab+' table view');
+    assert.match(block,/aria-label="Vista card"/,tab+' card view');
+  }
+
+  const vehicles=html.slice(html.indexOf('<section id="tab-mezzi"'),html.indexOf('<section id="tab-autisti"'));
+  assert.match(vehicles,/id="fleetMetricTotal"/);
+  assert.match(vehicles,/id="fleetSort"/);
+  assert.match(vehicles,/\+ Nuovo mezzo/);
+
+  const drivers=html.slice(html.indexOf('<section id="tab-autisti"'),html.indexOf('<section id="tab-storico"'));
+  assert.match(drivers,/id="driverTableWrap"/);
+  assert.match(drivers,/id="driversBody"/);
+
+  const agents=html.slice(html.indexOf('<section id="tab-agenti"'),html.indexOf('<section id="tab-report"'));
+  assert.match(agents,/id="agentMetricTotal"/);
+  assert.match(agents,/id="agentTableWrap"/);
+  assert.match(agents,/id="agentCards"/);
+  assert.doesNotMatch(agents,/Scheda agente/);
+  assert.match(html,/id="agentOverlay" class="modal-overlay hidden gf-dialog"/);
+
+  const workspace=read(assets+'workspace.css');
+  assert.match(workspace,/Shared anagrafica directory template — Clienti is the reference/);
+  assert.match(workspace,/\.gf-directory-metrics\{[\s\S]*grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
+  assert.match(workspace,/\.gf-directory-panel\{[\s\S]*padding:18px 20px 9px/);
+  assert.match(workspace,/\.gf-directory-toolbar\{[\s\S]*display:flex/);
+  assert.match(workspace,/\.gf-directory-view-controls button\[aria-pressed="true"\]/);
+
+  const core=read('static/dashboard/js/core.js');
+  assert.match(core,/localStorage\?\.getItem\('gfDepositView'\)/);
+  assert.match(core,/localStorage\?\.getItem\('gfAgentView'\)/);
+  assert.match(core,/function setAgentView\(view\)/);
+  assert.match(core,/function openNewAgentModal\(\)/);
+
+  const vehiclesJs=read('static/dashboard/js/vehicles.js');
+  assert.match(vehiclesJs,/localStorage\?\.getItem\('gfFleetView'\)/);
+  assert.match(vehiclesJs,/localStorage\?\.setItem\('gfFleetView',fleetView\)/);
+  assert.match(vehiclesJs,/fleetMetricAvailable/);
+
+  const driversJs=read('static/dashboard/js/drivers.js');
+  assert.match(driversJs,/localStorage\?\.getItem\('gfDriverView'\)/);
+  assert.match(driversJs,/function setDriverView\(view\)/);
+  assert.match(driversJs,/id="driversBody"|driversBody/);
+});
