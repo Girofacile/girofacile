@@ -1,4 +1,8 @@
 let fleetView='cards';
+try{
+ const saved=window.localStorage?.getItem('gfFleetView');
+ if(saved==='cards'||saved==='table') fleetView=saved;
+}catch(_error){}
 function fleetIcon(kind){
  const paths={car:'<path d="m4 10 2-6h12l2 6M3 10h18v9H3ZM5 19v2m14-2v2M6 14h2m8 0h2"/>',fuel:'<path d="M4 21V3h10v18M4 10h10M2 21h14M14 8h3l3 4v6a2 2 0 0 1-4 0v-4m2-8 3 3v4"/>',gauge:'<path d="M4 19a9 9 0 1 1 16 0M12 13l5-5M5 12h1m6-7v1m7 6h1"/><circle cx="12" cy="14" r="1"/>',edit:'<path d="m15 4 5 5M4 20l5-1L21 7a2 2 0 0 0-5-5L4 14Z"/>',trash:'<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/>'};
  return `<svg viewBox="0 0 24 24" aria-hidden="true">${paths[kind]||paths.car}</svg>`;
@@ -7,8 +11,15 @@ function fleetIsAvailable(vehicle){return String(vehicle.stato||'').toLocaleLowe
 function fleetFilteredVehicles(){
  const q=(document.getElementById('fleetSearch')?.value||'').trim().toLocaleLowerCase('it');
  const filter=document.getElementById('fleetStatusFilter')?.value||'';
+ const sort=document.getElementById('fleetSort')?.value||'name';
  const plateQuery=q.replace(/\s/g,'');
- return vehiclesCache.filter(x=>(!q||[x.nome,x.marca,x.modello,x.targa].some(v=>String(v||'').toLocaleLowerCase('it').includes(q))||String(x.targa||'').toLowerCase().replace(/\s/g,'').includes(plateQuery))&&(!filter||(filter==='available'?fleetIsAvailable(x):String(x.stato||'').toLowerCase()==='in uso')));
+ return vehiclesCache.filter(x=>(!q||[x.nome,x.marca,x.modello,x.targa].some(v=>String(v||'').toLocaleLowerCase('it').includes(q))||String(x.targa||'').toLowerCase().replace(/\s/g,'').includes(plateQuery))&&(!filter||(filter==='available'?fleetIsAvailable(x):String(x.stato||'').toLowerCase()==='in uso'))).slice().sort((a,b)=>{
+   const names=String(a.nome||'').localeCompare(String(b.nome||''),'it',{sensitivity:'base'});
+   if(sort==='name_desc') return -names;
+   if(sort==='plate') return String(a.targa||'').localeCompare(String(b.targa||''),'it',{sensitivity:'base'})||names;
+   if(sort==='status') return String(a.stato||'').localeCompare(String(b.stato||''),'it',{sensitivity:'base'})||names;
+   return names;
+ });
 }
 function fleetPhoto(x){
  const url=String(x.photo_url||'');
@@ -17,9 +28,17 @@ function fleetPhoto(x){
 }
 function fleetStatus(x){return `<span class="fleet-status ${fleetIsAvailable(x)?'available':'busy'}"><i aria-hidden="true"></i>${esc(x.stato||'Stato non disponibile')}</span>`;}
 function fleetActions(x){return `<div class="fleet-card-actions"><button type="button" class="fleet-edit" onclick="editVehicle(${Number(x.id)})" aria-label="Modifica ${esc(x.nome)}">${fleetIcon('edit')}Modifica</button><button type="button" class="fleet-delete" onclick="deleteVehicle(${Number(x.id)})" aria-label="Elimina ${esc(x.nome)}">${fleetIcon('trash')}Elimina</button></div>`;}
-function setFleetView(view){fleetView=view==='table'?'table':'cards';renderFleetDirectory();}
+function setFleetView(view){
+ fleetView=view==='table'?'table':'cards';
+ try{window.localStorage?.setItem('gfFleetView',fleetView);}catch(_error){}
+ renderFleetDirectory();
+}
 function renderFleetDirectory(){
  const cards=document.getElementById('fleetCards'),body=document.getElementById('vehiclesBody');if(!cards||!body)return;
+ const write=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=value;};
+ write('fleetMetricTotal',vehiclesCache.length);
+ write('fleetMetricAvailable',vehiclesCache.filter(fleetIsAvailable).length);
+ write('fleetMetricBusy',vehiclesCache.filter(x=>!fleetIsAvailable(x)).length);
  const rows=fleetFilteredVehicles();
  cards.innerHTML=rows.map(x=>`<article class="fleet-card"><div class="fleet-card-head">${fleetPhoto(x)}<div class="fleet-identity"><h2>${esc(x.nome||'Mezzo')}</h2><span class="fleet-plate">${esc(x.targa||'Targa non indicata')}</span></div>${fleetStatus(x)}</div><div class="fleet-specs">${[['car','Tipo veicolo',x.carrozzeria||'Non specificato'],['fuel','Alimentazione',GF_FUEL_LABELS_V895[x.alimentazione]||x.alimentazione||'Non specificata'],['gauge','Consumo',energyConsumptionLabelV895(x)]].map(([icon,label,value])=>`<div>${fleetIcon(icon)}<div><span>${label}</span><strong>${esc(value)}</strong></div></div>`).join('')}</div>${fleetActions(x)}</article>`).join('');
  body.innerHTML=rows.map(x=>`<tr><td><div class="fleet-table-name">${fleetPhoto(x)}<strong>${esc(x.nome||'Mezzo')}</strong></div></td><td>${esc(x.targa||'—')}</td><td>${esc(x.carrozzeria||'Non specificato')}</td><td>${esc(GF_FUEL_LABELS_V895[x.alimentazione]||x.alimentazione||'—')}</td><td>${esc(energyConsumptionLabelV895(x))}</td><td>${fleetStatus(x)}</td><td data-gf-feature="tail_lift">${x.ha_sponda?'Sì':'No'}</td><td data-gf-feature="ztl">${x.accesso_ztl?'Sì':'No'}</td><td>${fleetActions(x)}</td></tr>`).join('');
