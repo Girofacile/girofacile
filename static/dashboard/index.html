@@ -36,15 +36,15 @@
 <link rel="stylesheet" href="/static/tracking/company.css?v=20261004_design">
 <script src="/static/tracking/company.js?v=20261004_design"></script>
 <link href="/static/dashboard/css/vehicles.css?v=fleet_20261007" rel="stylesheet">
-<script src="/static/dashboard/js/vehicles.js?v=fleet_20261007"></script>
+<script src="/static/dashboard/js/vehicles.js?v=directory_template_20261007"></script>
 <link href="/static/dashboard/css/drivers.css?v=drivers_20261007" rel="stylesheet">
-<script src="/static/dashboard/js/drivers.js?v=drivers_20261007"></script>
+<script src="/static/dashboard/js/drivers.js?v=directory_template_20261007"></script>
 
 <!-- Shared GiroFacile design system; legacy sheets retain feature layout. -->
 <link rel="stylesheet" href="/static/design-system/tokens.css?v=ds_20261007_reference_2">
 <link rel="stylesheet" href="/static/design-system/components.css?v=ds_20261007_legal_cleanup_4">
 <link rel="stylesheet" href="/static/design-system/layout.css?v=ds_20261007_footer_cleanup_5">
-<link rel="stylesheet" href="/static/design-system/workspace.css?v=ds_20261007_company_match_9">
+<link rel="stylesheet" href="/static/design-system/workspace.css?v=ds_20261007_directory_template_10">
 <link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007_reference_2">
 <script src="/static/design-system/design-system.js?v=ds_20261007_reference_2" defer></script>
 </head>
@@ -894,51 +894,37 @@
       </section>
       <dialog id="customerDetailsDialog" class="customer-details-dialog gf-dialog" aria-labelledby="customerDetailsTitle"><div id="customerDetailsContent"></div><form method="dialog"><button class="btn-secondary">Chiudi</button></form></dialog>
 
-      <section id="tab-agenti" class="tab hidden gf-page">
-        <div class="page-title-row">
-          <div><h1>Agenti</h1><p>Anagrafica agenti collegabili ai clienti.</p></div>
+      <section id="tab-agenti" class="tab hidden gf-page gf-directory-page">
+        <div class="page-title-row gf-directory-title"><div><h1>Agenti</h1><p>Anagrafica agenti collegabili ai clienti.</p></div><div class="page-actions"><button type="button" class="btn-primary" onclick="openNewAgentModal()">+ Nuovo agente</button></div></div>
+        <div class="gf-directory-metrics" aria-label="Riepilogo agenti">
+          <article class="gf-directory-metric blue"><span class="gf-directory-metric-icon blue"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg></span><div><h2>Totale agenti</h2><strong id="agentMetricTotal">0</strong><p>Anagrafica commerciale</p></div></article>
+          <article class="gf-directory-metric green"><span class="gf-directory-metric-icon green"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg></span><div><h2>Attivi</h2><strong id="agentMetricActive">0</strong><p>Disponibili per i clienti</p></div></article>
+          <article class="gf-directory-metric orange"><span class="gf-directory-metric-icon orange"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span><div><h2>Clienti assegnati</h2><strong id="agentMetricClients">0</strong><p>Collegamenti complessivi</p></div></article>
         </div>
-
-        <section class="panel">
-          <div class="panel-header"><h2>Scheda agente</h2><p>Inserisci i dati dell'agente. I clienti senza agente restano come “Cliente interno”.</p></div>
-          <input type="hidden" id="agId">
-          <input type="hidden" id="agPhotoUrl">
-          <div class="asset-photo-row">
-            <div id="agentPhotoPreview" class="asset-photo-preview agent-photo-preview">👤</div>
-            <div>
-              <strong>Foto agente</strong>
-              <small>Carica una foto profilo. Se manca, resta l'icona standard.</small>
-              <input id="agPhotoFile" type="file" accept="image/*" onchange="handleImageUpload(event,'agPhotoUrl','agentPhotoPreview','👤')">
-            </div>
+        <section class="panel gf-directory-panel agent-directory-panel" aria-labelledby="agentDirectoryTitle">
+          <div class="panel-header gf-directory-head"><div><h2 id="agentDirectoryTitle">Elenco agenti</h2><p class="panel-subtitle">Cerca, filtra e scegli se visualizzare gli agenti a tabella o a card.</p></div></div>
+          <div class="gf-directory-toolbar">
+            <label class="gf-directory-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="agentSearch" aria-label="Cerca agenti" placeholder="Cerca agente, codice, zona o contatti..." oninput="renderAgentDirectory()"></label>
+            <select id="agentStatusFilter" onchange="renderAgentDirectory()" aria-label="Filtra stato agenti"><option value="">Tutti gli stati</option><option value="attivi">Attivi</option><option value="non_attivi">Non attivi</option></select>
+            <select id="agentSort" onchange="renderAgentDirectory()" aria-label="Ordina agenti"><option value="name">Ordina per</option><option value="name_desc">Nome: Z–A</option><option value="clients">Clienti assegnati</option><option value="zone">Zona</option></select>
+            <div class="gf-directory-view-controls" role="group" aria-label="Vista agenti"><button id="agentListView" class="btn-secondary" type="button" aria-label="Vista tabella" aria-pressed="true" onclick="setAgentView('table')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h1M3 12h1M3 18h1"/></svg></button><button id="agentGridView" class="btn-secondary" type="button" aria-label="Vista card" aria-pressed="false" onclick="setAgentView('cards')"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="15" y="3" width="6" height="6" rx="1"/><rect x="3" y="15" width="6" height="6" rx="1"/><rect x="15" y="15" width="6" height="6" rx="1"/></svg></button></div>
           </div>
-          <div class="form-grid">
-            <input id="agCodice" placeholder="Codice agente">
-            <input id="agNome" placeholder="Nome">
-            <input id="agCognome" placeholder="Cognome">
-            <input id="agTelefono" placeholder="Telefono">
-            <input id="agEmail" type="email" placeholder="Email">
-            <input id="agZona" placeholder="Zona / area">
-            <select id="agAttivo"><option value="true">Attivo</option><option value="false">Non attivo</option></select>
-          </div>
-          <textarea id="agNote" rows="2" placeholder="Note agente"></textarea>
-          <div class="actions-row"><button type="button" id="saveAgentBtn" onclick="saveAgent()" class="btn-primary">Salva agente</button><button type="button" onclick="resetAgentForm()" class="btn-secondary">Nuovo</button></div>
-        </section>
-
-        <section class="panel">
-          <div class="panel-header"><h2>Elenco agenti</h2></div>
-          <div class="customer-filters">
-            <input id="agentSearch" placeholder="Cerca agente, codice, zona o contatti" oninput="loadAgents()">
-            <select id="agentStatusFilter" onchange="loadAgents()"><option value="">Tutti</option><option value="attivi">Solo attivi</option><option value="non_attivi">Non attivi</option></select>
-          </div>
-          <div class="tableWrap">
-            <table>
-              <thead><tr><th>Codice</th><th>Agente</th><th>Contatti</th><th>Zona</th><th>Stato</th><th>Clienti</th><th></th></tr></thead>
-              <tbody id="agentsBody"></tbody>
-            </table>
-          </div>
+          <div id="agentTableWrap" class="tableWrap gf-directory-table"><table><thead><tr><th>Codice</th><th>Agente</th><th>Contatti</th><th>Zona</th><th>Stato</th><th>Clienti</th><th>Azioni</th></tr></thead><tbody id="agentsBody"></tbody></table></div>
+          <div id="agentCards" class="agent-cards gf-directory-cards hidden" aria-live="polite"></div>
         </section>
       </section>
 
+      <div id="agentOverlay" class="modal-overlay hidden gf-dialog" onclick="closeAgentModal(event)">
+        <div class="profile-modal agent-form-modal" onclick="event.stopPropagation()">
+          <div class="modal-header"><div><div class="modal-kicker">ANAGRAFICA AGENTE</div><h2 id="agentModalTitle">Nuovo agente</h2><p>Inserisci dati, contatti e area commerciale dell'agente.</p></div><button class="modal-close" type="button" onclick="closeAgentModal()" aria-label="Chiudi">×</button></div>
+          <input type="hidden" id="agId"><input type="hidden" id="agPhotoUrl">
+          <div class="asset-photo-row"><div id="agentPhotoPreview" class="asset-photo-preview agent-photo-preview">👤</div><div><strong>Foto agente</strong><small>Carica una foto profilo. Se manca, resta l'icona standard.</small><input id="agPhotoFile" type="file" accept="image/*" onchange="handleImageUpload(event,'agPhotoUrl','agentPhotoPreview','👤')"></div></div>
+          <div class="form-grid agent-form-grid">
+            <div class="gf-field"><label for="agCodice">Codice agente</label><input id="agCodice" placeholder="Codice agente"></div><div class="gf-field"><label for="agNome">Nome</label><input id="agNome" placeholder="Nome"></div><div class="gf-field"><label for="agCognome">Cognome</label><input id="agCognome" placeholder="Cognome"></div><div class="gf-field"><label for="agTelefono">Telefono</label><input id="agTelefono" placeholder="Telefono"></div><div class="gf-field"><label for="agEmail">Email</label><input id="agEmail" type="email" placeholder="Email"></div><div class="gf-field"><label for="agZona">Zona / area</label><input id="agZona" placeholder="Zona / area"></div><div class="gf-field"><label for="agAttivo">Stato</label><select id="agAttivo"><option value="true">Attivo</option><option value="false">Non attivo</option></select></div><div class="gf-field agent-form-notes"><label for="agNote">Note agente</label><textarea id="agNote" rows="3" placeholder="Note agente"></textarea></div>
+          </div>
+          <div class="actions-row agent-modal-actions"><button type="button" class="btn-secondary" onclick="closeAgentModal()">Annulla</button><button type="button" id="saveAgentBtn" onclick="saveAgent()" class="btn-primary">Salva agente</button></div>
+        </div>
+      </div>
 
       <section id="tab-report" class="tab hidden gf-page">
         <div class="report-hero-row">
@@ -1077,26 +1063,28 @@
         </div>
       </section>
 
-      <section id="tab-depositi" class="tab hidden">
-        <div class="page-title-row deposit-page-title">
+      <section id="tab-depositi" class="tab hidden gf-page gf-directory-page">
+        <div class="page-title-row deposit-page-title gf-directory-title">
           <div><h1>Depositi</h1><p>Gestisci gli indirizzi di partenza e rientro dei tuoi giri.</p></div>
           <div class="page-actions"><button type="button" id="newDepositBtn" class="btn-primary" onclick="openDepositModal()">+ Nuovo deposito</button></div>
         </div>
-        <div class="deposit-metrics" aria-label="Riepilogo depositi">
-          <article class="deposit-metric blue"><span class="deposit-metric-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7M5 9v12h14V9M9 21v-8h6v8"/></svg></span><div><h2>Totale depositi</h2><strong id="depositTotal">—</strong><p id="depositTotalCaption">depositi configurati</p></div></article>
-          <article class="deposit-metric green deposit-default-metric"><span class="deposit-metric-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.8 5.8 6.4.9-4.6 4.5 1.1 6.4-5.7-3-5.7 3 1.1-6.4-4.6-4.5 6.4-.9Z"/></svg></span><div class="deposit-default-copy"><h2>Deposito predefinito</h2><strong id="depositDefaultName">Nessun deposito selezionato</strong><p id="depositDefaultAddress">Imposta un deposito come predefinito per i nuovi giri</p></div></article>
-          <article class="deposit-metric purple"><span class="deposit-metric-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l4 2"/></svg></span><div><h2>Ultimo aggiornamento</h2><strong id="depositLastUpdate">—</strong><p id="depositLastUpdateTime">Data non disponibile</p></div></article>
+        <div class="deposit-metrics gf-directory-metrics" aria-label="Riepilogo depositi">
+          <article class="deposit-metric gf-directory-metric blue"><span class="deposit-metric-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7M5 9v12h14V9M9 21v-8h6v8"/></svg></span><div><h2>Totale depositi</h2><strong id="depositTotal">—</strong><p id="depositTotalCaption">depositi configurati</p></div></article>
+          <article class="deposit-metric gf-directory-metric green deposit-default-metric"><span class="deposit-metric-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.8 5.8 6.4.9-4.6 4.5 1.1 6.4-5.7-3-5.7 3 1.1-6.4-4.6-4.5 6.4-.9Z"/></svg></span><div class="deposit-default-copy"><h2>Deposito predefinito</h2><strong id="depositDefaultName">Nessun deposito selezionato</strong><p id="depositDefaultAddress">Imposta un deposito come predefinito per i nuovi giri</p></div></article>
+          <article class="deposit-metric gf-directory-metric purple"><span class="deposit-metric-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l4 2"/></svg></span><div><h2>Ultimo aggiornamento</h2><strong id="depositLastUpdate">—</strong><p id="depositLastUpdateTime">Data non disponibile</p></div></article>
         </div>
-        <section class="panel deposit-list-panel" aria-labelledby="depositListTitle">
-          <div class="panel-header deposit-list-head">
-            <div><h2 id="depositListTitle">Elenco depositi</h2><p class="panel-subtitle">Visualizza e gestisci tutti i depositi configurati.</p></div>
-            <div class="deposit-view-controls" role="group" aria-label="Vista depositi">
-              <button id="depositListView" class="btn-secondary" type="button" aria-label="Vista elenco" aria-pressed="true" onclick="setDepositView('list')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h1M3 12h1M3 18h1"/></svg></button>
-              <button id="depositGridView" class="btn-secondary" type="button" aria-label="Vista griglia" aria-pressed="false" onclick="setDepositView('grid')"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="15" y="3" width="6" height="6" rx="1"/><rect x="3" y="15" width="6" height="6" rx="1"/><rect x="15" y="15" width="6" height="6" rx="1"/></svg></button>
+        <section class="panel deposit-list-panel gf-directory-panel" aria-labelledby="depositListTitle">
+          <div class="panel-header deposit-list-head gf-directory-head"><div><h2 id="depositListTitle">Elenco depositi</h2><p class="panel-subtitle">Cerca rapidamente oppure cambia visualizzazione quando serve.</p></div></div>
+          <div class="gf-directory-toolbar deposit-directory-toolbar">
+            <label class="gf-directory-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="depositSearch" aria-label="Cerca depositi" placeholder="Cerca deposito o indirizzo..." oninput="renderDepositDirectory()"></label>
+            <select id="depositSort" aria-label="Ordina depositi" onchange="renderDepositDirectory()"><option value="name">Ordina per</option><option value="name_desc">Nome: Z–A</option><option value="default">Predefinito prima</option></select>
+            <div class="deposit-view-controls gf-directory-view-controls" role="group" aria-label="Vista depositi">
+              <button id="depositListView" class="btn-secondary" type="button" aria-label="Vista tabella" aria-pressed="true" onclick="setDepositView('list')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h1M3 12h1M3 18h1"/></svg></button>
+              <button id="depositGridView" class="btn-secondary" type="button" aria-label="Vista card" aria-pressed="false" onclick="setDepositView('grid')"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="15" y="3" width="6" height="6" rx="1"/><rect x="3" y="15" width="6" height="6" rx="1"/><rect x="15" y="15" width="6" height="6" rx="1"/></svg></button>
             </div>
           </div>
-          <div id="depositTableWrap" class="tableWrap"><table class="deposit-table"><thead><tr><th scope="col">Nome</th><th scope="col">Indirizzo</th><th scope="col">Predefinito</th><th scope="col">Azioni</th></tr></thead><tbody id="depositsBody"><tr><td colspan="4" class="deposit-empty">Caricamento depositi...</td></tr></tbody></table></div>
-          <div id="depositCards" class="deposit-cards hidden" aria-live="polite"></div>
+          <div id="depositTableWrap" class="tableWrap gf-directory-table"><table class="deposit-table"><thead><tr><th scope="col">Nome</th><th scope="col">Indirizzo</th><th scope="col">Predefinito</th><th scope="col">Azioni</th></tr></thead><tbody id="depositsBody"><tr><td colspan="4" class="deposit-empty">Caricamento depositi...</td></tr></tbody></table></div>
+          <div id="depositCards" class="deposit-cards gf-directory-cards hidden" aria-live="polite"></div>
           <p id="depositListStatus" class="deposit-form-status hidden" role="status"></p>
         </section>
       </section>
@@ -1134,15 +1122,29 @@
         </div>
       </div>
 
-      <section id="tab-mezzi" class="tab hidden gf-page">
-        <div class="page-title-row"><div><h1>Mezzi</h1><p>Gestisci i tuoi mezzi aziendali e le relative caratteristiche.</p></div></div>
-        <div class="fleet-toolbar"><div class="fleet-views" role="group" aria-label="Vista mezzi"><button id="fleetCardsButton" type="button" aria-pressed="true" onclick="setFleetView('cards')"><span aria-hidden="true">⊞</span> Vista card</button><button id="fleetTableButton" type="button" aria-pressed="false" onclick="setFleetView('table')"><span aria-hidden="true">☷</span> Vista tabella</button></div><div class="fleet-create-actions"><p class="fleet-help"><span aria-hidden="true">ⓘ</span><span>Clicca su “Crea mezzo” per aggiungere<br>un nuovo veicolo. Il modulo si aprirà in un drawer.</span></p><button type="button" class="fleet-create" onclick="createFleetVehicle()"><span aria-hidden="true">＋</span> Crea mezzo</button></div></div>
-        <div class="fleet-filters"><label class="fleet-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/></svg><input id="fleetSearch" aria-label="Cerca mezzi" placeholder="Cerca per nome, targa o modello..." oninput="renderFleetDirectory()"></label><select id="fleetStatusFilter" aria-label="Filtra disponibilità veicoli" onchange="renderFleetDirectory()"><option value="">Tutti i veicoli</option><option value="available">Disponibili</option><option value="busy">In uso</option></select></div>
-        <p id="fleetPlanNotice" class="fleet-notice hidden" role="status"></p>
-        <div id="fleetCards" class="fleet-cards"></div>
-        <div id="fleetTable" class="tableWrap hidden"><table class="fleet-table"><thead><tr><th>Mezzo</th><th>Targa</th><th>Tipo veicolo</th><th>Alimentazione</th><th>Consumo</th><th>Stato</th><th data-gf-feature="tail_lift">Sponda</th><th data-gf-feature="ztl">ZTL</th><th>Azioni</th></tr></thead><tbody id="vehiclesBody"></tbody></table></div>
-        <p id="fleetEmpty" class="fleet-empty hidden" role="status">Nessun mezzo trovato.</p>
-        <p id="fleetLoadStatus" class="fleet-notice hidden" role="status"></p>
+      <section id="tab-mezzi" class="tab hidden gf-page gf-directory-page">
+        <div class="page-title-row gf-directory-title"><div><h1>Mezzi</h1><p>Gestisci i tuoi mezzi aziendali e le relative caratteristiche.</p></div><div class="page-actions"><button type="button" class="btn-primary" onclick="createFleetVehicle()">+ Nuovo mezzo</button></div></div>
+        <div class="gf-directory-metrics fleet-directory-metrics" aria-label="Riepilogo mezzi">
+          <article class="gf-directory-metric blue"><span class="gf-directory-metric-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h12v10H3zM15 10h4l2 3v4h-6"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg></span><div><h2>Totale mezzi</h2><strong id="fleetMetricTotal">0</strong><p>Veicoli registrati</p></div></article>
+          <article class="gf-directory-metric green"><span class="gf-directory-metric-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg></span><div><h2>Disponibili</h2><strong id="fleetMetricAvailable">0</strong><p>Pronti per nuovi giri</p></div></article>
+          <article class="gf-directory-metric orange"><span class="gf-directory-metric-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h10v8H4zM14 10h4l2 3v3h-6"/><circle cx="7" cy="17" r="1.5"/><circle cx="18" cy="17" r="1.5"/></svg></span><div><h2>In uso</h2><strong id="fleetMetricBusy">0</strong><p>Impegnati nei giri</p></div></article>
+        </div>
+        <section class="panel gf-directory-panel fleet-directory-panel" aria-labelledby="fleetDirectoryTitle">
+          <div class="panel-header gf-directory-head"><div><h2 id="fleetDirectoryTitle">Elenco mezzi</h2><p class="panel-subtitle">Cerca, filtra e scegli se visualizzare i mezzi a tabella o a card.</p></div></div>
+          <div class="gf-directory-toolbar fleet-directory-toolbar">
+            <label class="fleet-search gf-directory-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/></svg><input id="fleetSearch" aria-label="Cerca mezzi" placeholder="Cerca per nome, targa o modello..." oninput="renderFleetDirectory()"></label>
+            <select id="fleetStatusFilter" aria-label="Filtra disponibilità veicoli" onchange="renderFleetDirectory()"><option value="">Tutti gli stati</option><option value="available">Disponibili</option><option value="busy">In uso</option></select>
+            <select id="fleetSort" aria-label="Ordina mezzi" onchange="renderFleetDirectory()"><option value="name">Ordina per</option><option value="name_desc">Nome: Z–A</option><option value="plate">Targa</option><option value="status">Stato</option></select>
+            <div class="fleet-views gf-directory-view-controls" role="group" aria-label="Vista mezzi">
+              <button id="fleetTableButton" class="btn-secondary" type="button" aria-label="Vista tabella" aria-pressed="false" onclick="setFleetView('table')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h1M3 12h1M3 18h1"/></svg></button>
+              <button id="fleetCardsButton" class="btn-secondary" type="button" aria-label="Vista card" aria-pressed="true" onclick="setFleetView('cards')"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="15" y="3" width="6" height="6" rx="1"/><rect x="3" y="15" width="6" height="6" rx="1"/><rect x="15" y="15" width="6" height="6" rx="1"/></svg></button>
+            </div>
+          </div>
+          <p id="fleetPlanNotice" class="fleet-notice hidden" role="status"></p>
+          <div id="fleetCards" class="fleet-cards gf-directory-cards"></div>
+          <div id="fleetTable" class="tableWrap gf-directory-table hidden"><table class="fleet-table"><thead><tr><th>Mezzo</th><th>Targa</th><th>Tipo veicolo</th><th>Alimentazione</th><th>Consumo</th><th>Stato</th><th data-gf-feature="tail_lift">Sponda</th><th data-gf-feature="ztl">ZTL</th><th>Azioni</th></tr></thead><tbody id="vehiclesBody"></tbody></table></div>
+          <p id="fleetEmpty" class="fleet-empty hidden" role="status">Nessun mezzo trovato.</p><p id="fleetLoadStatus" class="fleet-notice hidden" role="status"></p>
+        </section>
         <dialog id="vehicleDrawer" aria-labelledby="vehicleFormTitle" oncancel="if(document.getElementById('saveVehicleBtn').disabled)event.preventDefault()">
         <section class="panel gf-vehicle-form" aria-labelledby="vehicleFormTitle">
           <div class="panel-header"><div><h2 id="vehicleFormTitle">Crea mezzo</h2><p>Compila i dati del veicolo, i consumi e le capacità operative.</p></div><button type="button" class="fleet-close" onclick="closeVehicleDrawer()" aria-label="Chiudi pannello mezzo">×</button></div>
@@ -1193,25 +1195,25 @@
         </dialog>
       </section>
 
-      <section id="tab-autisti" class="tab hidden gf-page">
-        <div class="page-title-row">
-          <div><h1>Autisti</h1><p>Gestisci anagrafiche, contatti, patenti e assegnazioni operative.</p></div>
-          <button class="btn-primary" onclick="openNewDriverModal()">+ Nuovo autista</button>
+      <section id="tab-autisti" class="tab hidden gf-page gf-directory-page">
+        <div class="page-title-row gf-directory-title"><div><h1>Autisti</h1><p>Gestisci anagrafiche, contatti, patenti e assegnazioni operative.</p></div><div class="page-actions"><button class="btn-primary" onclick="openNewDriverModal()">+ Nuovo autista</button></div></div>
+        <div class="driver-stats-grid gf-directory-metrics" aria-label="Riepilogo autisti">
+          <article class="stat-card driver-stat gf-directory-metric blue"><div class="stat-icon gf-directory-metric-icon blue"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 19.5c.8-3.4 3.2-5.1 6.5-5.1s5.7 1.7 6.5 5.1"/><path d="M18.2 7.2h2.3"/></svg></div><div><h2>Totale autisti</h2><strong id="driversTotal">0</strong><p>Anagrafica aziendale</p></div></article>
+          <article class="stat-card driver-stat gf-directory-metric green"><div class="stat-icon gf-directory-metric-icon green"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7.8"/><path d="m8.6 12.3 2.2 2.2 4.8-5"/></svg></div><div><h2>Disponibili</h2><strong id="driversAvailable">0</strong><p>Pronti per nuovi giri</p></div></article>
+          <article class="stat-card driver-stat gf-directory-metric orange"><div class="stat-icon gf-directory-metric-icon orange"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.8 14.2h8.5v-4.7H5.7z"/><path d="M12.3 11.8h3.2l2.7 2.7v1.3h-5.9"/><circle cx="7.1" cy="16.6" r="1.6"/><circle cx="16.6" cy="16.6" r="1.6"/></svg></div><div><h2>In servizio</h2><strong id="driversWorking">0</strong><p>Giro attivo oggi</p></div></article>
         </div>
-
-        <div class="driver-stats-grid">
-          <div class="stat-card driver-stat"><div class="stat-icon blue"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 19.5c.8-3.4 3.2-5.1 6.5-5.1s5.7 1.7 6.5 5.1"/><path d="M18.2 7.2h2.3"/></svg></div><div><span>Totale autisti</span><strong id="driversTotal">0</strong><small>Anagrafica aziendale</small></div></div>
-          <div class="stat-card driver-stat"><div class="stat-icon green"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7.8"/><path d="m8.6 12.3 2.2 2.2 4.8-5"/></svg></div><div><span>Disponibili</span><strong id="driversAvailable">0</strong><small>Pronti per nuovi giri</small></div></div>
-          <div class="stat-card driver-stat"><div class="stat-icon orange"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.8 14.2h8.5v-4.7H5.7z"/><path d="M12.3 11.8h3.2l2.7 2.7v1.3h-5.9"/><circle cx="7.1" cy="16.6" r="1.6"/><circle cx="16.6" cy="16.6" r="1.6"/></svg></div><div><span>In servizio</span><strong id="driversWorking">0</strong><small>Giro attivo oggi</small></div></div>
-        </div>
-
-        <div class="driver-toolbar">
-          <label class="driver-search-box"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/></svg><input id="driverSearch" aria-label="Cerca autisti" placeholder="Cerca per nome, telefono, email o patente..." oninput="renderDrivers()"></label>
-          <select id="driverStatusFilter" aria-label="Filtra stato autisti" onchange="renderDrivers()"><option value="">Tutti gli stati</option><option value="Disponibile">Disponibili</option><option value="In servizio">In servizio</option><option value="In riposo">In riposo</option></select>
-          <select id="driverSort" aria-label="Ordina autisti" onchange="renderDrivers()"><option value="name">Ordina per</option><option value="name_desc">Nome: Z–A</option><option value="routes">Giri assegnati</option><option value="expiry">Scadenza patente</option></select>
-        </div>
-        <p id="driverDirectoryError" class="hidden" role="status"></p>
-        <div id="driversCards" class="drivers-cards"></div>
+        <section class="panel gf-directory-panel driver-directory-panel" aria-labelledby="driverDirectoryTitle">
+          <div class="panel-header gf-directory-head"><div><h2 id="driverDirectoryTitle">Elenco autisti</h2><p class="panel-subtitle">Cerca rapidamente oppure cambia visualizzazione quando serve.</p></div></div>
+          <div class="driver-toolbar gf-directory-toolbar">
+            <label class="driver-search-box gf-directory-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/></svg><input id="driverSearch" aria-label="Cerca autisti" placeholder="Cerca per nome, telefono, email o patente..." oninput="renderDrivers()"></label>
+            <select id="driverStatusFilter" aria-label="Filtra stato autisti" onchange="renderDrivers()"><option value="">Tutti gli stati</option><option value="Disponibile">Disponibili</option><option value="In servizio">In servizio</option><option value="In riposo">In riposo</option></select>
+            <select id="driverSort" aria-label="Ordina autisti" onchange="renderDrivers()"><option value="name">Ordina per</option><option value="name_desc">Nome: Z–A</option><option value="routes">Giri assegnati</option><option value="expiry">Scadenza patente</option></select>
+            <div class="gf-directory-view-controls" role="group" aria-label="Vista autisti"><button id="driverListView" class="btn-secondary" type="button" aria-label="Vista tabella" aria-pressed="false" onclick="setDriverView('table')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h1M3 12h1M3 18h1"/></svg></button><button id="driverGridView" class="btn-secondary" type="button" aria-label="Vista card" aria-pressed="true" onclick="setDriverView('cards')"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="15" y="3" width="6" height="6" rx="1"/><rect x="3" y="15" width="6" height="6" rx="1"/><rect x="15" y="15" width="6" height="6" rx="1"/></svg></button></div>
+          </div>
+          <p id="driverDirectoryError" class="hidden" role="status"></p>
+          <div id="driversCards" class="drivers-cards gf-directory-cards"></div>
+          <div id="driverTableWrap" class="tableWrap gf-directory-table hidden"><table class="driver-directory-table"><thead><tr><th>Autista</th><th>Contatti</th><th>Patente</th><th>Giri</th><th>Mezzo abituale</th><th>Stato</th><th>Azioni</th></tr></thead><tbody id="driversBody"></tbody></table></div>
+        </section>
         <dialog id="driverDetailsDialog" aria-labelledby="driverDetailsTitle"><div id="driverDetailsContent"></div><form method="dialog"><button class="btn-secondary">Chiudi</button></form></dialog>
       </section>
 
@@ -1910,7 +1912,7 @@
 <script src="/static/dashboard/js/completed.js?v=20261006"></script>
 <script src="/static/dashboard/js/preview-design.js?v=20261006"></script>
 <script src="/static/dashboard/js/live-design.js?v=20261006"></script>
-<script src="/static/dashboard/js/core.js?v=password_security_ui_20261007_2"></script>
+<script src="/static/dashboard/js/core.js?v=directory_template_20261007"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=1"></script>
 
 <script>
