@@ -149,16 +149,25 @@ body[data-gf-surface="workspace"] .gf-dialog :is(.modal,.profile-modal){border-r
 /* Home dashboard follows the supplied operational overview reference.
    It is the visual baseline for the rest of the workspace: shared tokens,
    bounded previews and no nested scrolling inside overview cards. */
-body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-grid{gap:24px;margin:8px 0 32px}
-body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-card{min-height:128px!important;align-items:center!important}
-body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-icon{width:48px!important;height:48px!important;flex-basis:48px!important;border-radius:50%!important}
-body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-card span{font-weight:500;color:var(--gf-color-muted)}
-body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-resources>div:last-child{width:100%;min-width:0}
-body[data-gf-surface="workspace"] #app #tab-dashboard .dash-busy-split{position:relative;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;width:100%;margin-top:12px}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-grid{gap:24px;margin:8px 0 32px;align-items:stretch}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-card{position:relative;display:block!important;min-height:168px!important;padding:24px 28px!important}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-content{width:100%;min-width:0;min-height:120px;display:flex;flex-direction:column;align-items:stretch}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-title{display:block!important;max-width:calc(100% - 76px);margin:0!important;color:var(--gf-color-muted)!important;font-size:var(--gf-font-lg)!important;font-weight:var(--gf-weight-medium)!important;line-height:1.35!important}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-title>span{display:inline!important;margin:0!important;color:inherit!important;font-size:inherit!important;font-weight:inherit!important}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-standard .dash-kpi-icon{position:absolute;top:24px;right:24px;width:48px!important;height:48px!important;display:flex;align-items:center;justify-content:center;flex:none!important;border-radius:var(--gf-radius-circle)!important}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-standard .dash-kpi-icon svg{width:24px;height:24px}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-metric{margin-top:auto;display:flex;flex-direction:column;align-items:flex-start}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-metric strong{font-size:var(--gf-font-3xl)!important;line-height:1!important;letter-spacing:-.035em}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-metric small{display:block;margin-top:8px!important;color:var(--gf-color-muted);font-size:var(--gf-font-md)!important;line-height:1.35}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-resources .dash-kpi-title{max-width:100%}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-busy-split{position:relative;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;width:100%;min-height:64px;margin-top:auto}
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-busy-split>div{position:relative;min-width:0;display:flex;align-items:center;justify-content:center;padding:0 10px 0 54px}
-body[data-gf-surface="workspace"] #app #tab-dashboard .dash-busy-split::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--gf-color-border);transform:translateX(-50%)}
-body[data-gf-surface="workspace"] #app #tab-dashboard .dash-busy-split strong{font-size:20px!important}
-body[data-gf-surface="workspace"] #app #tab-dashboard .dash-busy-split small{font-size:var(--gf-font-xs)!important;letter-spacing:0;text-transform:none}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-busy-split::before{content:"";position:absolute;left:50%;top:3px;bottom:3px;width:1px;background:var(--gf-color-border);transform:translateX(-50%)}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-busy-split strong{font-size:var(--gf-font-xl)!important;line-height:1.1!important}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-busy-split small{display:block;margin-top:5px!important;color:var(--gf-color-muted);font-size:var(--gf-font-md)!important;line-height:1.2;letter-spacing:0;text-transform:none}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-busy-split>div>div{text-align:left;min-width:0}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-resource-symbol{position:absolute;left:8px;top:50%;display:grid;place-items:center;width:40px;height:40px;border-radius:var(--gf-radius-circle);background:var(--gf-color-bg);color:var(--gf-color-muted);transform:translateY(-50%)}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-resource-symbol svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-board-columns{gap:24px!important;margin-bottom:32px;align-items:stretch}
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-list-card{min-height:390px;display:flex;flex-direction:column}
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-list-head{flex-shrink:0;background:var(--gf-color-surface-subtle);padding:20px;border-bottom-color:var(--gf-color-border)}
@@ -208,11 +217,9 @@ body[data-gf-surface="workspace"] #app #tab-dashboard .dash-panel-title{align-it
 }
 @media(max-width:520px){
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-grid{grid-template-columns:1fr!important}
-body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-card{flex-direction:row!important}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-card{min-height:156px!important;padding:22px 24px!important}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-content{min-height:112px}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-standard .dash-kpi-icon{top:22px;right:22px}
 }
 @media(min-width:821px){body[data-gf-surface="workspace"] #app #tab-dashboard>.dash-hero-row{display:none!important}}
 
-body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-resources>div>span{display:block;text-align:center}
-body[data-gf-surface="workspace"] #app #tab-dashboard .dash-resource-symbol{position:absolute;left:8px;top:50%;display:grid;place-items:center;width:36px;height:36px;border-radius:50%;background:var(--gf-color-bg);color:var(--gf-color-muted);transform:translateY(-50%)}
-body[data-gf-surface="workspace"] #app #tab-dashboard .dash-resource-symbol svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-body[data-gf-surface="workspace"] #app #tab-dashboard .dash-busy-split>div>div{text-align:center;min-width:0}

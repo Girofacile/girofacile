@@ -126,8 +126,12 @@ test('dashboard reference view uses shared tokens and bounded overview previews'
   assert.doesNotMatch(home,/\.dash-route-list\{[^}]*overflow:auto/);
   assert.match(home,/\.dash-link-btn\{[^}]*background:var\(--gf-color-nav\)!important/);
   assert.doesNotMatch(home,/nth-child\(2\)>\.dash-link-btn/);
+  assert.match(home,/\.dash-kpi-card\{[^}]*display:block!important[^}]*min-height:168px!important[^}]*padding:24px 28px!important/);
+  assert.match(home,/\.dash-kpi-title\{[^}]*max-width:calc\(100% - 76px\)[^}]*font-size:var\(--gf-font-lg\)!important/);
+  assert.match(home,/\.dash-kpi-standard \.dash-kpi-icon\{[^}]*position:absolute[^}]*top:24px[^}]*right:24px/);
+  assert.match(home,/\.dash-kpi-metric\{[^}]*margin-top:auto/);
   assert.match(home,/\.dash-busy-split>div\{[^}]*position:relative[^}]*padding:0 10px 0 54px/);
-  assert.match(home,/\.dash-resource-symbol\{[^}]*position:absolute[^}]*left:8px[^}]*transform:translateY\(-50%\)/);
+  assert.match(home,/\.dash-resource-symbol\{[^}]*position:absolute[^}]*left:8px[^}]*width:40px[^}]*transform:translateY\(-50%\)/);
 
   const core=read('static/dashboard/js/core.js');
   assert.match(core,/scheduled\.slice\(0,3\)\.map/);
@@ -142,5 +146,9 @@ test('dashboard reference view uses shared tokens and bounded overview previews'
   const html=read('static/dashboard/index.html');
   for(const iconClass of ['orange','blue','green','purple'])
     assert.match(html,new RegExp('dash-kpi-icon '+iconClass));
+  assert.equal((html.match(/dash-kpi-card dash-kpi-standard/g)||[]).length,3);
+  assert.equal((html.match(/class="dash-kpi-content"/g)||[]).length,4);
+  assert.equal((html.match(/class="dash-kpi-title/g)||[]).length,4);
+  assert.equal((html.match(/class="dash-kpi-metric"/g)||[]).length,3);
   assert.match(html,/dash-kpi-card dash-kpi-resources/);
 });
