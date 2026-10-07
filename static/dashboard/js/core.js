@@ -585,26 +585,30 @@ async function loadPlanInfo(){
     const statusLabel = document.getElementById("planStatusLabel");
     const statusDesc = document.getElementById("planStatusDesc");
 
+    const setPlanStatusTone = (tone, icon) => {
+      if(statusBox) statusBox.className = `profile-plan-status ${tone}`;
+      if(statusIcon) statusIcon.textContent = icon;
+    };
     if(status === "trial"){
       const trialEnd = me.trial_ends_at ? new Date(me.trial_ends_at) : null;
       const daysLeft = trialEnd ? Math.max(0, Math.ceil((trialEnd - new Date()) / (1000*60*60*24))) : 0;
-      if(statusBox) statusBox.style.background = daysLeft <= 3 ? "#fef3c7" : "#eff6ff";
-      if(statusIcon) statusIcon.textContent = daysLeft <= 3 ? "⚠️" : "⏳";
+      setPlanStatusTone(daysLeft <= 3 ? "is-warning" : "is-info", daysLeft <= 3 ? "!" : "i");
       if(statusLabel) statusLabel.textContent = `Prova gratuita — ${daysLeft} giorni rimanenti`;
       if(statusDesc) statusDesc.textContent = `La tua prova scade il ${trialEnd ? trialEnd.toLocaleDateString("it-IT") : "—"}. Effettua l'upgrade per continuare senza interruzioni.`;
     } else if(status === "active"){
-      if(statusBox) statusBox.style.background = "#d1fae5";
-      if(statusIcon) statusIcon.textContent = "✅";
+      setPlanStatusTone("is-success", "✓");
       if(statusLabel) statusLabel.textContent = `Piano ${planNames[plan]} attivo`;
       if(statusDesc) statusDesc.textContent = "Il tuo abbonamento è attivo. Grazie per usare GiroFacile!";
     } else if(status === "past_due"){
+      setPlanStatusTone("is-warning", "!");
       if(statusLabel) statusLabel.textContent = "Pagamento da completare — tolleranza di 7 giorni";
       if(statusDesc) statusDesc.textContent = "Aggiorna il metodo di pagamento nella sezione abbonamento.";
     } else if(status === "expired" || status === "cancelled" || status === "incomplete"){
-      if(statusBox) statusBox.style.background = "#fee2e2";
-      if(statusIcon) statusIcon.textContent = "❌";
+      setPlanStatusTone("is-danger", "×");
       if(statusLabel) statusLabel.textContent = "Piano scaduto";
       if(statusDesc) statusDesc.textContent = "Il tuo piano è scaduto. Effettua l'upgrade per riprendere ad usare GiroFacile.";
+    } else {
+      setPlanStatusTone("is-info", "i");
     }
 
     // Utilizzo risorse
@@ -625,10 +629,16 @@ async function loadPlanInfo(){
           {label:"Autisti", used: drivers.length, max: limits.max_drivers},
           {label:"Depositi", used: deposits.length, max: limits.max_deposits},
         ];
-        const icons = {Clienti:"👥", "Mezzi standard":"🚚", "Bonus elettrici":"⚡", Autisti:"👤", Depositi:"🏢"};
+        const icons = {
+          Clienti:'<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M4 19c.5-3.1 2.3-4.8 5-4.8s4.5 1.7 5 4.8"/><circle cx="17" cy="9" r="2.2"/><path d="M15.5 14.5c.5-.4 1.1-.6 1.8-.6 1.9 0 3.2 1.3 3.5 3.8"/></svg>',
+          "Mezzi standard":'<svg viewBox="0 0 24 24"><path d="M3 6h11v11H3zM14 10h4l3 4v3h-7"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg>',
+          "Bonus elettrici":'<svg viewBox="0 0 24 24"><path d="m13 2-7 11h5l-1 9 8-12h-5z"/></svg>',
+          Autisti:'<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg>',
+          Depositi:'<svg viewBox="0 0 24 24"><path d="M3 10 12 4l9 6v10H3z"/><path d="M7 20v-7h10v7M8 15h8"/></svg>'
+        };
         usageRows.innerHTML = rows.map(r => {
           const maxLabel = r.max != null ? `${r.used} / ${r.max}` : `${r.used} / ∞`;
-          return `<div class="plan-usage-chip-v40"><span class="plan-usage-chip-icon">${icons[r.label] || "•"}</span><span>${r.label}</span><strong>${maxLabel}</strong></div>`;
+          return `<div class="plan-usage-chip-v40"><span class="plan-usage-chip-icon" aria-hidden="true">${icons[r.label] || ""}</span><span>${r.label}</span><strong>${maxLabel}</strong></div>`;
         }).join("");
       }
     }catch(e){ console.warn('GiroFacile: operazione non completata', e); }
