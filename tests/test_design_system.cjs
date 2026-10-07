@@ -549,7 +549,7 @@ test('planning fuel KPI stays empty until a vehicle is selected',()=>{
 test('login page matches the dashboard visual language and redesigned sidebar',()=>{
   const html=read('static/dashboard/index.html');
   const login=html.slice(html.indexOf('<section id="loginCard"'),html.indexOf('<section id="app"'));
-  assert.match(html,/\/static\/dashboard\/css\/login\.css\?v=login_preview_fidelity_20261007/);
+  assert.match(html,/\/static\/dashboard\/css\/login\.css\?v=login_preview_exact_20261007/);
   assert.match(login,/class="login-brand-logo"[^>]*girofacile-logo\.png/);
   assert.match(login,/<strong>Monitora<\/strong>/);
   assert.match(login,/class="login-route-art"/);
@@ -558,13 +558,18 @@ test('login page matches the dashboard visual language and redesigned sidebar',(
   assert.match(login,/class="login-submit-arrow"[^>]*>→<\/span>/);
 
   const css=read('static/dashboard/css/login.css');
-  assert.match(css,/#loginCard\.gf-login-page\{[\s\S]*grid-template-columns:minmax\(430px,31\.5vw\) 1fr/);
+  assert.match(css,/#loginCard\.gf-login-page\{[\s\S]*grid-template-columns:31\.5% 68\.5%/);
   assert.match(css,/#loginCard \.login-side\{[\s\S]*var\(--gf-color-nav\)/);
   assert.match(css,/#loginCard \.login-feature-icon\{[\s\S]*width:74px!important[\s\S]*box-shadow:none!important/);
   assert.match(css,/#loginCard #loginPanel\{[\s\S]*min-height:704px[\s\S]*padding:52px 58px 42px/);
   assert.match(css,/#loginCard #loginPanel \.login-submit\{[\s\S]*background:var\(--gf-color-primary\)!important/);
   assert.match(css,/#loginCard \.login-side-footer nav\{[\s\S]*display:flex/);
-  assert.match(css,/#loginCard \.login-route-art\{[\s\S]*height:390px[\s\S]*opacity:\.72/);
+  assert.match(css,/#loginCard \.login-route-art\{[\s\S]*height:430px[\s\S]*opacity:\.92/);
+  assert.match(css,/animation:gfLoginRouteFlow 2\.8s linear infinite/);
+  assert.match(css,/@keyframes gfLoginPinPulse/);
+  assert.match(css,/#loginCard \.login-feature-icon\{[\s\S]*color:#70a5f3!important/);
+  assert.match(css,/#loginCard \.login-card-pro\{[\s\S]*width:50%;[\s\S]*min-width:548px;[\s\S]*max-width:660px/);
+  assert.doesNotMatch(css,/@media\(max-height:860px\)/);
   assert.match(css,/#loginCard #loginPanel \.login-card-brand img\{[\s\S]*width:76px!important/);
   assert.match(css,/#loginCard #loginPanel \.login-card-title h2\{[\s\S]*font-size:34px!important/);
   assert.doesNotMatch(css,/linear-gradient\(180deg,#06152e|0 0 24px rgba\(18,101,255/);
