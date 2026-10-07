@@ -175,6 +175,9 @@ test('company profile uses the workspace topbar and keeps billing addresses alwa
   assert.match(navigation,/classList\.toggle\("gf-company-page-active", company\)/);
   assert.match(navigation,/syncWorkspaceTopbar\(name\)/);
 
+  const layoutCss=read(assets+'layout.css');
+  assert.match(layoutCss,/#app:has\(#tab-company:not\(\.hidden\)\) \.topbar-dashboard-title\{display:block;min-width:0\}/);
+
   const companyCss=read('static/dashboard/css/company.css');
   assert.match(companyCss,/body:has\(#tab-company:not\(\.hidden\)\) \.topbar\s*\{[^}]*background: var\(--gf-color-surface/);
   assert.match(companyCss,/body\.gf-company-page-active \.topbar-new-route\s*\{\s*display: none !important/);
