@@ -31,6 +31,10 @@ const WORKSPACE_TOPBAR_META = {
   giro: {
     title: "Pianificazione giro consegne",
     subtitle: "Seleziona clienti, configura risorse e calcola il percorso prima della programmazione."
+  },
+  "chat-autisti": {
+    title: "Chat autisti",
+    subtitle: "Centro comunicazioni con gli autisti: conversazioni collegate ai giri e messaggi non letti."
   }
 };
 

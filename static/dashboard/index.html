@@ -10,7 +10,7 @@
 <meta charset="utf-8">
 <title>GiroFacile</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link href="/static/dashboard/css/core.css?v=menu_fix_20261001_2" rel="stylesheet">
+<link href="/static/dashboard/css/core.css?v=chat_restyle_20261008_1" rel="stylesheet">
 <link href="/static/dashboard/css/account.css?v=password_security_ui_20261007_2" rel="stylesheet">
 <script src="/api/billing/catalog.js"></script>
 <script src="/static/dashboard/js/billing.js?v=electric_bonus_20261002"></script>
@@ -43,7 +43,7 @@
 <!-- Shared GiroFacile design system; legacy sheets retain feature layout. -->
 <link rel="stylesheet" href="/static/design-system/tokens.css?v=ds_20261007_reference_2">
 <link rel="stylesheet" href="/static/design-system/components.css?v=ds_20261007_legal_cleanup_4">
-<link rel="stylesheet" href="/static/design-system/layout.css?v=ds_20261007_planning_topbar_8">
+<link rel="stylesheet" href="/static/design-system/layout.css?v=chat_topbar_20261008_1">
 <link rel="stylesheet" href="/static/design-system/workspace.css?v=ds_20261007_planning_alignment_16">
 <link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007_reference_2">
 <link rel="stylesheet" href="/static/dashboard/css/login.css?v=login_preview_exact_20261007">
@@ -715,13 +715,17 @@
             <h1>Chat autisti</h1>
             <p>Centro comunicazioni con gli autisti: conversazioni collegate ai giri e notifiche dei messaggi non letti.</p>
           </div>
-          <button class="btn-light" onclick="loadDriverChatCenter()">Aggiorna</button>
         </div>
         <div class="driver-chat-center">
           <aside class="driver-chat-list-card">
             <div class="driver-chat-list-head">
               <strong>Conversazioni</strong>
-              <small id="driverChatCenterCount">0 chat</small>
+              <div class="driver-chat-list-head-actions">
+                <small id="driverChatCenterCount">0 chat</small>
+                <button type="button" class="driver-chat-refresh" onclick="loadDriverChatCenter()" aria-label="Aggiorna conversazioni" title="Aggiorna conversazioni">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6v5h-5"/><path d="M19 11a7.5 7.5 0 1 0 1 5"/></svg>
+                </button>
+              </div>
             </div>
             <div id="driverChatThreadList" class="driver-chat-thread-list">
               <div class="dash-empty">Caricamento conversazioni...</div>
@@ -1951,7 +1955,7 @@
 
 <script src="/static/dashboard/js/reports.js?v=audit_20261004"></script>
 <script src="/static/dashboard/js/customers.js?v=customer_kpi_fix_20261006_6"></script>
-<script src="/static/dashboard/js/navigation.js?v=planning_topbar_20261007"></script>
+<script src="/static/dashboard/js/navigation.js?v=chat_topbar_20261008_1"></script>
 <script src="/static/dashboard/js/completed.js?v=20261006"></script>
 <script src="/static/dashboard/js/preview-design.js?v=20261006"></script>
 <script src="/static/dashboard/js/live-design.js?v=20261006"></script>

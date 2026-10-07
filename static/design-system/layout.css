@@ -193,6 +193,7 @@ body[data-gf-surface="workspace"] #app:has(#tab-depositi:not(.hidden)) .topbar-d
 body[data-gf-surface="workspace"] #app:has(#tab-mezzi:not(.hidden)) .topbar-dashboard-title,
 body[data-gf-surface="workspace"] #app:has(#tab-autisti:not(.hidden)) .topbar-dashboard-title,
 body[data-gf-surface="workspace"] #app:has(#tab-agenti:not(.hidden)) .topbar-dashboard-title,
+body[data-gf-surface="workspace"] #app:has(#tab-chat-autisti:not(.hidden)) .topbar-dashboard-title,
 body[data-gf-surface="workspace"] #app:has(#tab-giro:not(.hidden)) .topbar-dashboard-title{display:block;min-width:0}
 body[data-gf-surface="workspace"] #app:has(#tab-dashboard:not(.hidden)) .topbar-new-route{display:inline-flex;white-space:nowrap}
 body[data-gf-surface="workspace"] #app:has(#tab-dashboard:not(.hidden)) .topbar-spacer{display:none}
