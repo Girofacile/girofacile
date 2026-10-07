@@ -87,3 +87,34 @@ test('company dirty-state blocks navigation until save or cancel', () => {
   vm.runInContext("showTab('dashboard')", context);
   assert.equal(blockedCalls, 1);
 });
+
+
+test('opening account profile cannot replace the company label in the topbar', () => {
+  const start = core.indexOf('function loadProfilePanel()');
+  const end = core.indexOf('async function loadPlanInfo()', start);
+  const values = new Map([
+    ['girofacile_account_name','PICCOLO'],
+    ['girofacile_company_name','ALIMENTARI IORIO'],
+    ['girofacile_profile_email','account@example.com'],
+    ['girofacile_profile_role','Amministratore'],
+  ]);
+  const nodes = {
+    topProfileName:{textContent:''},
+    topProfileRole:{textContent:''},
+    topProfileAvatar:{innerHTML:''},
+    profilePreview:{innerHTML:''},
+    profileName:{value:''},
+    profileEmail:{value:''},
+    profileRole:{value:''},
+  };
+  const context = vm.createContext({
+    localStorage:{getItem:key=>values.get(key) || null},
+    currentSessionUser:null,
+    document:{getElementById:id=>nodes[id] || null},
+    set:(id,value)=>{ if(nodes[id]) nodes[id].value=value; },
+  });
+  vm.runInContext(core.slice(start,end), context);
+  vm.runInContext('loadProfilePanel()', context);
+  assert.equal(nodes.topProfileName.textContent, 'ALIMENTARI IORIO');
+  assert.equal(nodes.profileName.value, 'PICCOLO');
+});

@@ -216,3 +216,17 @@ test('company edits are saved from the topbar and bottom save actions are remove
   assert.match(companyCss,/\.company-save-bar\.hidden \{ display: none !important; \}/);
   assert.doesNotMatch(companyCss,/company-save-actions/);
 });
+
+
+test('company name and account username use separate identity storage',()=>{
+  const core=read('static/dashboard/js/core.js');
+  assert.match(core,/const accountName = localStorage\.getItem\("girofacile_account_name"\)/);
+  assert.match(core,/const companyName = localStorage\.getItem\("girofacile_company_name"\)/);
+  assert.match(core,/setText\("topProfileName", companyName\)/);
+  assert.match(core,/set\("profileName", accountName\)/);
+  assert.match(core,/localStorage\.setItem\("girofacile_account_name", data\.username/);
+  assert.match(core,/localStorage\.setItem\("girofacile_company_name", data\.company_name/);
+  assert.doesNotMatch(core,/localStorage\.setItem\("girofacile_profile_name"/);
+  const loadCompany=core.slice(core.indexOf('async function loadCompanyProfile'),core.indexOf('async function saveCompanyProfile'));
+  assert.doesNotMatch(loadCompany,/girofacile_profile_photo/);
+});

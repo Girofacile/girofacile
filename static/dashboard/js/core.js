@@ -520,13 +520,20 @@ function toast(msg){
 }
 
 function loadProfilePanel(){
-  const name = localStorage.getItem("girofacile_profile_name") || "Admin";
-  const email = localStorage.getItem("girofacile_profile_email") || "";
-  const role = localStorage.getItem("girofacile_profile_role") || "Amministratore";
+  const accountName = localStorage.getItem("girofacile_account_name")
+    || currentSessionUser?.username
+    || localStorage.getItem("girofacile_profile_name")
+    || "Admin";
+  const companyName = localStorage.getItem("girofacile_company_name")
+    || currentSessionUser?.company_name
+    || accountName;
+  const email = localStorage.getItem("girofacile_profile_email") || currentSessionUser?.email || "";
+  const role = localStorage.getItem("girofacile_profile_role") || currentSessionUser?.role || "Amministratore";
   const photo = localStorage.getItem("girofacile_profile_photo") || "";
-  const initials = (name || "Admin").trim().charAt(0).toUpperCase() || "A";
+  const initials = (accountName || "Admin").trim().charAt(0).toUpperCase() || "A";
   const setText = (id,val)=>{ const el=document.getElementById(id); if(el) el.textContent=val; };
-  setText("topProfileName", name);
+  // La testata identifica l'azienda; il modal modifica invece l'account dell'operatore.
+  setText("topProfileName", companyName);
   setText("topProfileRole", role);
   const topAvatar = document.getElementById("topProfileAvatar");
   if(topAvatar){
@@ -534,7 +541,7 @@ function loadProfilePanel(){
   }
   const preview = document.getElementById("profilePreview");
   if(preview){ preview.innerHTML = photo ? `<img src="${photo}" alt="Profilo">` : initials; }
-  set("profileName", name); set("profileEmail", email); set("profileRole", role);
+  set("profileName", accountName); set("profileEmail", email); set("profileRole", role);
 }
 async function loadPlanInfo(){
   try{
@@ -877,9 +884,10 @@ async function loadAccountProfileV81(){
     set("profileName", data.username || "");
     set("profileEmail", data.email || "");
     set("profileRole", data.role || "Amministratore");
-    localStorage.setItem("girofacile_profile_name", data.username || "Admin");
+    localStorage.setItem("girofacile_account_name", data.username || "Admin");
     localStorage.setItem("girofacile_profile_email", data.email || "");
     localStorage.setItem("girofacile_profile_role", data.role || "Amministratore");
+    currentSessionUser = {...(currentSessionUser || {}), username:data.username || "Admin", email:data.email || "", role:data.role || currentSessionUser?.role};
     loadProfilePanel();
     return data;
   }catch(e){
@@ -917,7 +925,7 @@ async function saveProfilePanel(){
     };
     const res = await api("/api/account-profile", {method:"PUT", body:JSON.stringify(payload)});
     const account = res.account || payload;
-    localStorage.setItem("girofacile_profile_name", account.username || "Admin");
+    localStorage.setItem("girofacile_account_name", account.username || "Admin");
     localStorage.setItem("girofacile_profile_email", account.email || "");
     localStorage.setItem("girofacile_profile_role", account.role || "Amministratore");
     if(profilePhotoData) localStorage.setItem("girofacile_profile_photo", profilePhotoData);
@@ -982,7 +990,8 @@ async function checkLogin(){
       updatePremiumNavState();
       document.getElementById("logoutBtn").classList.remove("hidden");
       document.getElementById("notificationBellBtn")?.classList.remove("hidden");
-      if(me.username) localStorage.setItem("girofacile_profile_name", me.company_name || me.username);
+      if(me.username) localStorage.setItem("girofacile_account_name", me.username);
+      if(me.company_name || me.username) localStorage.setItem("girofacile_company_name", me.company_name || me.username);
       if(me.email) localStorage.setItem("girofacile_profile_email", me.email);
       await initApp();
     }
@@ -4319,7 +4328,7 @@ function setCompanyLogoPreview(){
   const preview = document.getElementById("companyLogoPreview");
   if(!preview) return;
   const logo = hidden?.value || "";
-  const name = val("companyNameInput") || localStorage.getItem("girofacile_profile_name") || "GF";
+  const name = val("companyNameInput") || localStorage.getItem("girofacile_company_name") || "GF";
   const initials = (name || "GF").trim().split(/\s+/).slice(0,2).map(x=>x[0]).join("").toUpperCase() || "GF";
   preview.innerHTML = logo ? `<img src="${logo}" alt="Logo azienda">` : initials;
 }
@@ -4348,9 +4357,10 @@ async function loadCompanyProfile(showToast=false){
     set("companyLogoUrl", data.company_logo_url || "");
     setCompanyLogoPreview();
     setCompanyProfileBaselineV29();
-    if(data.company_name) localStorage.setItem("girofacile_profile_name", data.company_name);
-    // L'email aziendale è separata dall'email di accesso account e non deve sovrascriverla.
-    if(data.company_logo_url) localStorage.setItem("girofacile_profile_photo", data.company_logo_url);
+    localStorage.setItem("girofacile_company_name", data.company_name || currentSessionUser?.company_name || "");
+    currentSessionUser = {...(currentSessionUser || {}), company_name: data.company_name || currentSessionUser?.company_name || ""};
+    // Nome/logo aziendale e identità dell'account sono due domini distinti:
+    // il profilo operatore non deve essere sovrascritto dai dati aziendali.
     loadProfilePanel();
     if(showToast) toast("Profilo azienda aggiornato");
     return data;
