@@ -46,6 +46,7 @@
 <link rel="stylesheet" href="/static/design-system/layout.css?v=ds_20261007_planning_topbar_8">
 <link rel="stylesheet" href="/static/design-system/workspace.css?v=ds_20261007_planning_alignment_16">
 <link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007_reference_2">
+<link rel="stylesheet" href="/static/dashboard/css/login.css?v=login_dashboard_20261007">
 <script src="/static/design-system/design-system.js?v=ds_20261007_reference_2" defer></script>
 </head>
 <body data-gf-surface="workspace">
@@ -54,20 +55,18 @@
   <aside class="login-side">
     <div class="login-side-inner">
       <div class="login-brand-large">
-        <h1>Giro<span>Facile</span></h1>
-        <p>Gestione percorsi e consegne</p>
+        <img class="login-brand-logo" src="/static/girofacile-logo.png?v=login_dashboard_20261007" alt="Logo GiroFacile">
+        <div>
+          <h1>Giro<span>Facile</span></h1>
+          <p>Gestione percorsi e consegne</p>
+        </div>
       </div>
 
-      <div class="login-accent-line"></div>
+      <div class="login-side-divider"></div>
 
       <div class="login-features">
         <div class="login-feature">
-          <div class="login-feature-icon icon-route"><svg viewBox="0 0 64 64" aria-hidden="true">
-  <path d="M18 45c10-14 20-20 33-25" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
-  <circle cx="16" cy="46" r="7" fill="none" stroke="currentColor" stroke-width="5"/>
-  <path d="M50 9c-7 0-12 5-12 12 0 9 12 21 12 21s12-12 12-21c0-7-5-12-12-12z" fill="currentColor"/>
-  <circle cx="50" cy="21" r="4" fill="#06152e"/>
-</svg></div>
+          <div class="login-feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 9h16"/><path d="M8 13h3M8 16h6"/></svg></div>
           <div>
             <strong>Pianifica</strong>
             <span>Organizza i percorsi<br>in modo efficiente</span>
@@ -75,25 +74,15 @@
         </div>
 
         <div class="login-feature">
-          <div class="login-feature-icon icon-box"><svg viewBox="0 0 64 64" aria-hidden="true">
-  <path d="M32 8 54 20 32 32 10 20 32 8z" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
-  <path d="M10 20v24l22 12 22-12V20" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
-  <path d="M32 32v24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
-  <path d="M21 14 43 26" fill="none" stroke="currentColor" stroke-width="3" opacity=".65"/>
-</svg></div>
+          <div class="login-feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h11v9H3z"/><path d="M14 10h4l3 3v3h-7"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg></div>
           <div>
-            <strong>Gestisci</strong>
-            <span>Monitora consegne<br>e stati in tempo reale</span>
+            <strong>Monitora</strong>
+            <span>Segui consegne e stati<br>in tempo reale</span>
           </div>
         </div>
 
         <div class="login-feature">
-          <div class="login-feature-icon icon-chart"><svg viewBox="0 0 64 64" aria-hidden="true">
-  <path d="M12 52h40" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" opacity=".55"/>
-  <rect x="16" y="35" width="9" height="17" rx="2" fill="currentColor"/>
-  <rect x="29" y="25" width="9" height="27" rx="2" fill="currentColor" opacity=".86"/>
-  <rect x="42" y="13" width="9" height="39" rx="2" fill="currentColor"/>
-</svg></div>
+          <div class="login-feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16"/><rect x="6" y="12" width="3" height="5" rx=".5"/><rect x="11" y="8" width="3" height="9" rx=".5"/><rect x="16" y="4" width="3" height="13" rx=".5"/></svg></div>
           <div>
             <strong>Analizza</strong>
             <span>Report dettagliati per<br>decisioni migliori</span>
@@ -101,9 +90,33 @@
         </div>
       </div>
 
+      <div class="login-route-art" aria-hidden="true">
+        <svg viewBox="0 0 420 330">
+          <path class="login-map-line" d="M-25 210 72 178l67 32 76-72 84 27 58-53 90 35"/>
+          <path class="login-map-line" d="M18 286 91 232l66 18 75-45 75 31 115-73"/>
+          <path class="login-route-line" d="M88 246c39 4 48 38 86 33 45-6 47-71 91-72 37-1 47-44 81-65"/>
+          <circle class="login-route-dot muted" cx="88" cy="246" r="10"/>
+          <circle class="login-route-dot muted" cx="174" cy="279" r="8"/>
+          <circle class="login-route-dot active" cx="265" cy="207" r="12"/>
+          <circle class="login-route-dot active" cx="346" cy="142" r="10"/>
+          <g class="login-route-vehicle" transform="translate(205 220)">
+            <rect x="0" y="0" width="46" height="38" rx="8"/>
+            <path d="M9 12h19v13H9zM28 16h7l6 6v3H28"/>
+            <circle cx="15" cy="28" r="3"/><circle cx="35" cy="28" r="3"/>
+          </g>
+        </svg>
+      </div>
+
       <div class="login-side-footer">
-        <span>© 2026 GiroFacile</span>
-        <small>Tutti i diritti riservati</small>
+        <div>
+          <span>© 2026 GiroFacile</span>
+          <small>Tutti i diritti riservati</small>
+        </div>
+        <nav aria-label="Informazioni legali">
+          <a href="/privacy-policy" target="_blank">Privacy</a>
+          <a href="/termini-condizioni" target="_blank">Termini</a>
+          <a href="/cookie-policy" target="_blank">Cookie</a>
+        </nav>
       </div>
     </div>
   </aside>
@@ -134,11 +147,12 @@
         <input id="loginPass" type="password" placeholder="Inserisci la tua password" value="">
         <button type="button" class="password-eye password-eye-pro" onclick="toggleLoginPassword()" aria-label="Mostra o nascondi password"><svg viewBox="0 0 24 24"><path d="M2.8 12s3.3-5.7 9.2-5.7 9.2 5.7 9.2 5.7-3.3 5.7-9.2 5.7S2.8 12 2.8 12Z"/><circle cx="12" cy="12" r="2.7"/></svg></button>
       </div>
-      <button onclick="login()" class="btn-primary login-submit">Accedi a GiroFacile</button>
+      <button onclick="login()" class="btn-primary login-submit"><span>Accedi a GiroFacile</span><span class="login-submit-arrow" aria-hidden="true">→</span></button>
       <div class="login-switch">
         <span>Non hai un account?</span>
         <button type="button" onclick="toggleSignup(true)">Registrati gratis</button>
       </div>
+      <div class="login-link-divider" aria-hidden="true"><span>oppure</span></div>
       <button type="button" id="forgotPasswordBtn" class="forgot-link" onclick="toggleForgotPassword(true)">Password dimenticata?</button>
       <div id="forgotBox" class="signup-box hidden">
         <h3>Recupero password</h3>

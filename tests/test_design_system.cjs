@@ -544,3 +544,25 @@ test('planning fuel KPI stays empty until a vehicle is selected',()=>{
   assert.match(block,/setText\("statFuel", price \? price\+" "\+unit : ""\)/);
   assert.match(block,/setText\("statFuelHint", price \? "Prezzo impostato" : "Prezzo da impostare"\)/);
 });
+
+
+test('login page matches the dashboard visual language and redesigned sidebar',()=>{
+  const html=read('static/dashboard/index.html');
+  const login=html.slice(html.indexOf('<section id="loginCard"'),html.indexOf('<section id="app"'));
+  assert.match(html,/\/static\/dashboard\/css\/login\.css\?v=login_dashboard_20261007/);
+  assert.match(login,/class="login-brand-logo"[^>]*girofacile-logo\.png/);
+  assert.match(login,/<strong>Monitora<\/strong>/);
+  assert.match(login,/class="login-route-art"/);
+  assert.match(login,/aria-label="Informazioni legali"/);
+  assert.match(login,/class="login-link-divider"[^>]*><span>oppure<\/span>/);
+  assert.match(login,/class="login-submit-arrow"[^>]*>→<\/span>/);
+
+  const css=read('static/dashboard/css/login.css');
+  assert.match(css,/#loginCard\.gf-login-page\{[\s\S]*grid-template-columns:minmax\(360px,31\.5vw\) 1fr/);
+  assert.match(css,/#loginCard \.login-side\{[\s\S]*background:var\(--gf-color-nav\)/);
+  assert.match(css,/#loginCard \.login-feature-icon\{[\s\S]*box-shadow:none!important/);
+  assert.match(css,/#loginCard #loginPanel\{[\s\S]*padding:34px 38px 32px/);
+  assert.match(css,/#loginCard #loginPanel \.login-submit\{[\s\S]*background:var\(--gf-color-primary\)!important/);
+  assert.match(css,/#loginCard \.login-side-footer nav\{[\s\S]*display:flex/);
+  assert.doesNotMatch(css,/linear-gradient\(180deg,#06152e|0 0 24px rgba\(18,101,255/);
+});
