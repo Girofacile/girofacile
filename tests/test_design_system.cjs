@@ -126,6 +126,8 @@ test('dashboard reference view uses shared tokens and bounded overview previews'
   assert.doesNotMatch(home,/\.dash-route-list\{[^}]*overflow:auto/);
   assert.match(home,/\.dash-link-btn\{[^}]*background:var\(--gf-color-nav\)!important/);
   assert.doesNotMatch(home,/nth-child\(2\)>\.dash-link-btn/);
+  assert.match(home,/\.dash-busy-split>div\{[^}]*position:relative[^}]*padding:0 10px 0 54px/);
+  assert.match(home,/\.dash-resource-symbol\{[^}]*position:absolute[^}]*left:8px[^}]*transform:translateY\(-50%\)/);
 
   const core=read('static/dashboard/js/core.js');
   assert.match(core,/scheduled\.slice\(0,3\)\.map/);

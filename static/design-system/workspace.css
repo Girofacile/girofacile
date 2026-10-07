@@ -155,7 +155,7 @@ body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-icon{width:48px!
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-card span{font-weight:500;color:var(--gf-color-muted)}
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-resources>div:last-child{width:100%;min-width:0}
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-busy-split{position:relative;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;width:100%;margin-top:12px}
-body[data-gf-surface="workspace"] #app #tab-dashboard .dash-busy-split>div{min-width:0;display:flex;align-items:center;justify-content:center;gap:10px;padding:0 8px}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-busy-split>div{position:relative;min-width:0;display:flex;align-items:center;justify-content:center;padding:0 10px 0 54px}
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-busy-split::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--gf-color-border);transform:translateX(-50%)}
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-busy-split strong{font-size:20px!important}
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-busy-split small{font-size:var(--gf-font-xs)!important;letter-spacing:0;text-transform:none}
@@ -213,5 +213,6 @@ body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-card{flex-direct
 @media(min-width:821px){body[data-gf-surface="workspace"] #app #tab-dashboard>.dash-hero-row{display:none!important}}
 
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-resources>div>span{display:block;text-align:center}
-body[data-gf-surface="workspace"] #app #tab-dashboard .dash-resource-symbol{display:grid;place-items:center;flex:0 0 36px;height:36px;border-radius:50%;background:var(--gf-color-bg);color:var(--gf-color-muted)}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-resource-symbol{position:absolute;left:8px;top:50%;display:grid;place-items:center;width:36px;height:36px;border-radius:50%;background:var(--gf-color-bg);color:var(--gf-color-muted);transform:translateY(-50%)}
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-resource-symbol svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-busy-split>div>div{text-align:center;min-width:0}
