@@ -44,7 +44,7 @@
 <link rel="stylesheet" href="/static/design-system/tokens.css?v=ds_20261007_reference_2">
 <link rel="stylesheet" href="/static/design-system/components.css?v=ds_20261007_reference_2">
 <link rel="stylesheet" href="/static/design-system/layout.css?v=ds_20261007_reference_2">
-<link rel="stylesheet" href="/static/design-system/workspace.css?v=ds_20261007_reference_2">
+<link rel="stylesheet" href="/static/design-system/workspace.css?v=ds_20261007_resources_3">
 <link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007_reference_2">
 <script src="/static/design-system/design-system.js?v=ds_20261007_reference_2" defer></script>
 </head>
@@ -525,7 +525,15 @@
           <div class="dash-kpi-card dash-kpi-click" onclick="openDashboardScheduledPage()" role="button" tabindex="0"><div class="dash-kpi-icon orange"><svg viewBox="0 0 24 24"><path d="M7 3.8v3M17 3.8v3"/><rect x="4" y="5.7" width="16" height="14.3" rx="3"/><path d="M8 12.2h3M13.5 12.2H16M8 16h7"/></svg></div><div><span><span data-gf-label="scheduled_routes">Giri programmati</span> oggi</span><strong id="dashTodayScheduled">0</strong><small>oggi</small></div></div>
           <div class="dash-kpi-card dash-kpi-click" onclick="openDashboardInProgressPage()"><div class="dash-kpi-icon blue"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l10-6.5-10-6.5z"/></svg></div><div><span data-gf-label="active_routes">Giri in corso</span><strong id="dashTodayProgress">0</strong><small>attivi adesso</small></div></div>
           <div class="dash-kpi-card"><div class="dash-kpi-icon green"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="m8.2 12.4 2.5 2.5 5.2-5.6"/></svg></div><div><span><span data-gf-label="deliveries">Consegne</span> completate oggi</span><strong id="dashTodayCompletedDeliveries">0</strong><small>fermate dei giri completati</small></div></div>
-          <div class="dash-kpi-card dash-kpi-resources"><div class="dash-kpi-icon purple"><svg viewBox="0 0 24 24"><path d="M16 18.5c0-2.2-1.8-4-4-4s-4 1.8-4 4"/><circle cx="12" cy="9" r="3"/><path d="M19 16.5h2M20 15.5v2"/></svg></div><div><span>Risorse impegnate</span><div class="dash-busy-split"><div><strong id="dashBusyDrivers">0/0</strong><small>Autisti</small></div><div><strong id="dashBusyVehicles">0/0</strong><small>Mezzi</small></div></div></div></div>
+          <div class="dash-kpi-card dash-kpi-resources">
+            <div>
+              <span>Risorse impegnate</span>
+              <div class="dash-busy-split">
+                <div><i class="dash-resource-symbol" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg></i><div><strong id="dashBusyDrivers">0/0</strong><small>Autisti</small></div></div>
+                <div><i class="dash-resource-symbol" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 6h11v11H3zM14 10h4l3 4v3h-7"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg></i><div><strong id="dashBusyVehicles">0/0</strong><small>Mezzi</small></div></div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="dash-board-columns">

@@ -154,9 +154,9 @@ body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-card{min-height:
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-icon{width:48px!important;height:48px!important;flex-basis:48px!important;border-radius:50%!important}
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-card span{font-weight:500;color:var(--gf-color-muted)}
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-resources>div:last-child{width:100%;min-width:0}
-body[data-gf-surface="workspace"] #app #tab-dashboard .dash-busy-split{display:flex;justify-content:space-between;gap:16px;width:100%;margin-top:8px}
-body[data-gf-surface="workspace"] #app #tab-dashboard .dash-busy-split>div{min-width:0;flex:1}
-body[data-gf-surface="workspace"] #app #tab-dashboard .dash-busy-split>div+div{border-left:1px solid var(--gf-color-border);padding-left:20px}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-busy-split{position:relative;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;width:100%;margin-top:12px}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-busy-split>div{min-width:0;display:flex;align-items:center;justify-content:center;gap:10px;padding:0 8px}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-busy-split::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--gf-color-border);transform:translateX(-50%)}
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-busy-split strong{font-size:20px!important}
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-busy-split small{font-size:var(--gf-font-xs)!important;letter-spacing:0;text-transform:none}
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-board-columns{gap:24px!important;margin-bottom:32px;align-items:stretch}
@@ -204,8 +204,6 @@ body[data-gf-surface="workspace"] #app #tab-dashboard .dash-list-card:last-child
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-grid{gap:12px}
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-card{align-items:flex-start!important}
 body[data-gf-surface="workspace"] #app #tab-dashboard :is(.dash-vehicle-grid,.dash-driver-grid){padding:16px}
-body[data-gf-surface="workspace"] #app #tab-dashboard .dash-busy-split{gap:8px}
-body[data-gf-surface="workspace"] #app #tab-dashboard .dash-busy-split>div+div{padding-left:8px}
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-panel-title{align-items:flex-start;text-align:left}
 }
 @media(max-width:520px){
@@ -213,3 +211,7 @@ body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-grid{grid-templa
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-card{flex-direction:row!important}
 }
 @media(min-width:821px){body[data-gf-surface="workspace"] #app #tab-dashboard>.dash-hero-row{display:none!important}}
+
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-resources>div>span{display:block;text-align:center}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-resource-symbol{display:grid;place-items:center;flex:0 0 36px;height:36px;border-radius:50%;background:var(--gf-color-bg);color:var(--gf-color-muted)}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-resource-symbol svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
