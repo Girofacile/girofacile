@@ -90,3 +90,20 @@ test('developer UI kit remains outside static hosting and deployable image',()=>
   assert.match(kit,/<dialog[^>]*class="gf-dialog"/);assert.match(kit,/role="tablist"/);assert.match(kit,/role="switch"/);assert.match(kit,/data-gf-responsive="cards"/);
   for(const [,source]of kit.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g))new vm.Script(source);
 });
+
+test('derived operational badges follow real portal classes and state transitions',()=>{
+  const{api}=runtime();
+  for(const[names,status]of[
+    ['rc-badge rb-cancel','danger'],['rc-badge rb-prog','warning'],
+    ['rc-badge rb-done','success'],['rc-badge rb-corso','info'],
+    ['fleet-status available','success'],['customer-status pending','warning']
+  ]){
+    const badge=element('span');badge.classList.add(...names.split(' '));
+    const root={querySelectorAll:selector=>selector.includes('.rc-badge')?[badge]:[]};
+    api.enhance(root);assert.equal(badge.dataset.status,status,names);
+    if(names==='rc-badge rb-prog'){
+      badge.classList.remove('rb-prog');badge.classList.add('rb-corso');
+      api.enhance(root);assert.equal(badge.dataset.status,'info','Update derived state after rendering');
+    }
+  }
+});

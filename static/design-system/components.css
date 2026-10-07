@@ -177,3 +177,7 @@ body[data-gf-surface] :is(.gf-input,.gf-select) { min-height:var(--gf-control-he
 
 body[data-gf-surface] :is(.customer-search,.driver-search-box,.fleet-search) .gf-input { padding-left:var(--gf-space-10) !important; }
 body[data-gf-surface] .gf-button[aria-pressed="true"] { background:var(--gf-color-info-bg) !important; color:var(--gf-color-primary) !important; border-color:var(--gf-color-primary) !important; }
+
+/* Semantic actions retain readable contrast on hover. */
+body[data-gf-surface] .gf-button[data-variant="danger"]:hover:not(:disabled) { background:var(--gf-color-danger) !important; border-color:var(--gf-color-danger) !important; color:var(--gf-color-on-primary) !important; }
+body[data-gf-surface] .gf-button[data-status="success"]:hover:not(:disabled) { background:var(--gf-color-success) !important; border-color:var(--gf-color-success) !important; color:var(--gf-color-on-primary) !important; }

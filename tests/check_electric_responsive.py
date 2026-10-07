@@ -99,7 +99,7 @@ def main():
     finally:
         server.shutdown()
         server.server_close()
-    print("Electric mobility browser layouts passed at 320, 768 and 1440 pixels.")
+    print("Electric mobility browser layouts passed at 320, 390, 768, 1024 and 1440 pixels.")
 
 
 def check_pages(page, base, width, output, fit):

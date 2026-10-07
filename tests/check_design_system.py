@@ -5,6 +5,8 @@ request is allowed. Screenshots are review artifacts, not historical pixel locks
 Run: python tests/check_design_system.py
 """
 import json
+import base64
+import os
 import sys
 import threading
 from datetime import datetime, timezone
@@ -88,6 +90,7 @@ def labels(page, selector, width):
 
 
 def draw_signature(page, selector):
+    page.locator(selector).scroll_into_view_if_needed()
     box = fit(page, selector, minimum_width=220, minimum_height=100)
     page.mouse.move(box["x"] + 20, box["y"] + 30)
     page.mouse.down()
@@ -175,6 +178,10 @@ def main():
         page.evaluate("document.fonts.ready")
         page.screenshot(path=str(output/f"{name.replace('/','-')}-{width}.png"),full_page=True,animations="disabled")
         root_fit(page,name)
+        if os.getenv("GF_DESIGN_PREVIEW") == "1" and name in ("workspace-dashboard","workspace-clienti") and width in (390,1440):
+            page.evaluate("window.scrollTo(0,0)")
+            preview = page.screenshot(type="jpeg",quality=70,full_page=False,animations="disabled")
+            print("GF_DESIGN_PREVIEW:" + name + ":" + str(width) + ":" + base64.b64encode(preview).decode("ascii"),flush=True)
         assert page.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--gf-color-primary').trim().toLowerCase()") == "#0b63f6"
         checked.append(dict(page=name,width=width))
 
@@ -192,6 +199,12 @@ def main():
                     page.wait_for_function("!!window.GFDesignSystem")
                     primary = styles(page.get_by_role("button",name="Crea giro",exact=True),BUTTON_PROPERTIES)
                     field = styles(page.locator("#kitName"),INPUT_PROPERTIES)
+                    for action_name in ("Elimina", "Conferma consegna"):
+                        action = page.get_by_role("button",name=action_name,exact=True)
+                        before_hover = styles(action,("backgroundColor","color"))
+                        action.hover()
+                        assert styles(action,("backgroundColor","color")) == before_hover,(action_name,width)
+                    page.mouse.move(0,0)
                     assert page.evaluate("GFDesignSystem.breakpoints()") == dict(sm=640,md=768,lg=1024,xl=1440)
                     page.locator("#kitSwitch").focus()
                     page.keyboard.press("Space")

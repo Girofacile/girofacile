@@ -67,7 +67,7 @@ jobs:
       - name: Verify management pages and interactions
         run: |
           pip install pillow
-          python tests/check_design_system.py
+          GF_DESIGN_PREVIEW=1 python tests/check_design_system.py
           python tests/check_management_design.py after
       - name: Preserve management screenshots
         if: always()

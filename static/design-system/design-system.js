@@ -28,7 +28,7 @@
     const raw = String(el.dataset.state || '').toLowerCase();
     const state = names + ' ' + raw;
     const status = /(?:^|[\s-])(completed|completato|completata|consegnato|consegnata|verificato|verified|configured|complete|available|default|done|ok|success|active|attivo|paid)(?:$|[\s-])/.test(state)
-      ? 'success' : /(?:^|[\s-])(mancata|failed|error|danger|cancelled|annullato|annullata|non_trovato|ztl|unpaid|expired)(?:$|[\s-])/.test(state)
+      ? 'success' : /(?:^|[\s-])(mancata|failed|error|danger|cancel|cancelled|annullato|annullata|non_trovato|ztl|unpaid|expired)(?:$|[\s-])/.test(state)
       ? 'danger' : /(?:^|[\s-])(programmato|scheduled|pending|da_verificare|da_completare|sponda|partial|rest|warn|warning|trial|prog)(?:$|[\s-])/.test(state)
       ? 'warning' : /(?:^|[\s-])(in_corso|in_attesa|working|busy|time|corso|progress|info|running|in-progress)(?:$|[\s-])/.test(state) ? 'info' : 'neutral';
     el.dataset.status = status; el.dataset.gfDerivedStatus = 'true';
@@ -60,7 +60,7 @@
       .forEach(el => { if(!el.closest('.leaflet-control')) mark(el,'gf-input'); });
     nodes(root,'select').forEach(el => mark(el,'gf-select'));
     nodes(root,'textarea').forEach(el => mark(el,'gf-textarea'));
-    nodes(root,'.badge,.rc-badge,.di-badge,.dc-badge,.badge-count,.customer-status,.route-status-pill,.delivery-status-pill,.deposit-default-badge,.fleet-status,.driver-state,.company-configured-badge-v40')
+    nodes(root,'.badge,.rc-badge,.di-badge,.dc-badge,.badge-count,.customer-status,.route-status-pill,.delivery-status-pill,.deposit-default-badge,.fleet-status,.driver-status,.driver-state,.company-configured-badge-v40')
       .forEach(el => { mark(el,'gf-badge'); classifyBadge(el); });
     nodes(root,'table:not(.leaflet-control table)').forEach(el => mark(el,'gf-table'));
     nodes(root,LABEL_TABLES).forEach(labelTable);
