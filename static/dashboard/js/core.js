@@ -934,6 +934,7 @@ function toggleProfilePasswordPanel(show){
 }
 
 async function openProfilePanel(){
+  document.getElementById("logoutBtn")?.classList.remove("hidden");
   await loadAccountProfileV81();
   loadPlanInfo();
   toggleProfilePasswordPanel(false);
@@ -4703,6 +4704,8 @@ async function loadNotificationsV30(openDropdown=false){
 }
 
 function renderNotificationBadgeV30(unread){
+  const bell = document.getElementById("notificationBellBtn");
+  if(bell) bell.setAttribute("aria-label", unread > 0 ? `Notifiche: ${unread} da leggere` : "Notifiche: nessuna da leggere");
   const badge = document.getElementById("notificationBadge");
   if(!badge) return;
   if(unread > 0){

@@ -205,9 +205,9 @@ body[data-gf-surface="workspace"] #app .notification-bell-v30{width:40px;height:
 body[data-gf-surface="workspace"] #app .notification-bell-v30:hover{background:var(--gf-color-surface-subtle);color:var(--gf-color-text);transform:none;box-shadow:none}
 body[data-gf-surface="workspace"] #app .bell-icon-v30{display:grid;place-items:center;width:20px;height:20px;font-size:0;line-height:0}
 body[data-gf-surface="workspace"] #app .bell-icon-v30 svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-body[data-gf-surface="workspace"] #app .profile-button{flex-direction:row-reverse;text-align:right;border:1px solid var(--gf-color-border);padding:6px 10px;border-radius:var(--gf-radius-sm)}
-body[data-gf-surface="workspace"] #app .profile-button-copy{min-width:0}
-body[data-gf-surface="workspace"] #app .profile-button-chevron{display:grid;place-items:center;width:16px;height:16px;color:var(--gf-color-muted)}
+body[data-gf-surface="workspace"] #app .profile-button{flex-direction:row;text-align:right;border:1px solid transparent;padding:6px;gap:12px;border-radius:var(--gf-radius-sm)}
+body[data-gf-surface="workspace"] #app .profile-button-copy{order:0;min-width:0;max-width:160px}
+body[data-gf-surface="workspace"] #app .profile-button-chevron{order:2;flex-shrink:0;display:grid;place-items:center;width:16px;height:16px;color:var(--gf-color-muted)}
 body[data-gf-surface="workspace"] #app .profile-button-chevron svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 body[data-gf-surface="workspace"] #app .profile-modal-actions{display:flex;align-items:center;justify-content:space-between;gap:12px}
 body[data-gf-surface="workspace"] #app .profile-modal-actions-main{display:flex;align-items:center;gap:10px;margin-left:auto}
@@ -290,3 +290,10 @@ body[data-gf-surface="workspace"] .gf-mobile-legal-v62{display:none}
   body[data-gf-surface="workspace"] .gf-mobile-legal-v62>div{display:flex;align-items:center;justify-content:center;gap:6px}
   body[data-gf-surface="workspace"] .gf-mobile-legal-v62 a{color:var(--gf-color-muted);text-decoration:none;font-weight:var(--gf-weight-medium)}
 }
+
+/* Reference header: restrained notification dot and account identity. */
+body[data-gf-surface="workspace"] #app .profile-button:hover{background:var(--gf-color-bg);border-color:var(--gf-color-border)}
+body[data-gf-surface="workspace"] #app .profile-button-copy strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body[data-gf-surface="workspace"] #app #topProfileAvatar{order:1;flex:0 0 40px;width:40px;height:40px;border:1px solid var(--gf-color-border);border-radius:50%;background:#eff6ff;color:var(--gf-color-primary);box-shadow:none;font-weight:400;overflow:hidden}
+body[data-gf-surface="workspace"] #app #notificationBellBtn{color:#94a3b8;border-radius:50%}
+body[data-gf-surface="workspace"] #app #notificationBadge{top:4px;right:5px;width:9px;height:9px;min-width:0;padding:0;border:2px solid white;border-radius:50%;background:#ef4444;box-shadow:none;font-size:0}
