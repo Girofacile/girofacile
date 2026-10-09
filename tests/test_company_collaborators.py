@@ -9,6 +9,8 @@ def company(monkeypatch):
     monkeypatch.setenv("DATABASE_URL", "sqlite://")
     monkeypatch.setenv("ALLOW_SQLITE_LEGACY", "true")
     monkeypatch.setenv("OBJECT_STORAGE_ENABLED", "false")
+    # No test can send a real invitation through SMTP.
+    monkeypatch.setattr("app.services.email.send_collaborator_invitation", lambda *args, **kwargs: True)
     from fastapi import FastAPI
     from fastapi.testclient import TestClient
     from sqlalchemy import create_engine
@@ -46,7 +48,7 @@ def company(monkeypatch):
 def test_owner_can_create_edit_and_isolate_company_accounts(company):
     client,db,owner,other,actor,_,_,login_owner,login_actor=company
     login_owner()
-    data={'full_name':'Planner','email':'planner@example.test','password':'Orbit!River47Cedar#','permissions':['routes.program']}
+    data={'full_name':'Planner','email':'planner@example.test','permissions':['routes.program']}
     result=client.post('/api/collaborators',json=data)
     assert result.status_code==200,result.text
     saved=result.json()

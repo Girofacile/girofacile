@@ -304,6 +304,38 @@ def send_trial_expiring(
     return _send(to_email, subject, _base_template(content))
 
 
+
+def send_collaborator_invitation(
+    to_email: str,
+    collaborator_name: str,
+    company_name: str,
+    setup_url: str,
+) -> bool:
+    """Send the personal activation link; no password is generated or emailed."""
+    from html import escape
+
+    safe_name = escape(collaborator_name or "collaboratore")
+    safe_company = escape(company_name or "la tua azienda")
+    safe_url = escape(setup_url, quote=True)
+    # Company labels are user input: keep them out of MIME header line breaks.
+    subject_company = " ".join((company_name or "la tua azienda").split())
+    subject = f"Invito a collaborare con {subject_company} su GiroFacile"
+    content = f"""
+    <p>Ciao <strong>{safe_name}</strong>,</p>
+    <p><strong>{safe_company}</strong> ti ha invitato a collaborare su GiroFacile.</p>
+    <p>Scegli personalmente la tua password per attivare il profilo.
+    Potrai poi accedere con la tua email e utilizzare le funzioni assegnate dall'azienda.</p>
+    <a class="btn" href="{safe_url}">Scegli la password e attiva il profilo</a>
+    <div class="info-box">
+      <div class="info-row"><span class="info-label">Accesso:</span><strong>{escape(to_email)}</strong></div>
+      <div class="info-row"><span class="info-label">Invito:</span><strong>link personale, temporaneo e utilizzabile una sola volta</strong></div>
+    </div>
+    <div class="warn">Non condividere questo link. Se è scaduto, chiedi all'azienda di inviarti un nuovo invito.</div>
+    <p>Se non ti aspettavi questo invito, puoi ignorare l'email.</p>
+    """
+    return _send(to_email, subject, _base_template(content))
+
+
 def send_driver_invitation(
     to_email: str,
     driver_name: str,

@@ -2,7 +2,7 @@
 from datetime import datetime
 from sqlalchemy import inspect, text
 
-LATEST = '20261009_01'
+LATEST = '20261009_02'
 LOCK_ID = 7640152404
 
 
@@ -91,10 +91,19 @@ def run_migrations(engine):
                     ):
                         conn.execute(text(f'DROP TABLE IF EXISTS {table_name}'))
                     conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261006_01', 'now': datetime.utcnow()})
-            if LATEST not in applied:
+            if '20261009_01' not in applied:
                 from .models import CompanyCollaborator
                 with engine.begin() as conn:
                     CompanyCollaborator.__table__.create(conn, checkfirst=True)
+                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261009_01', 'now': datetime.utcnow()})
+            if LATEST not in applied:
+                from .models import CollaboratorInvitation
+                with engine.begin() as conn:
+                    existing = {col['name'] for col in inspect(conn).get_columns('company_collaborators')}
+                    if 'password_setup_required' not in existing:
+                        # Existing password-based accounts remain initialized.
+                        conn.execute(text('ALTER TABLE company_collaborators ADD COLUMN password_setup_required BOOLEAN NOT NULL DEFAULT FALSE'))
+                    CollaboratorInvitation.__table__.create(conn, checkfirst=True)
                     conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': LATEST, 'now': datetime.utcnow()})
         finally:
             if postgres:

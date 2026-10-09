@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import Boolean, Float, Integer, String, Text, DateTime, Date, Time, ForeignKey, UniqueConstraint, Index
+from sqlalchemy import Boolean, Float, Integer, String, Text, DateTime, Date, Time, ForeignKey, UniqueConstraint, Index, false
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .database import Base
@@ -12,11 +12,24 @@ class CompanyCollaborator(Base):
     full_name: Mapped[str] = mapped_column(String(160), nullable=False)
     email: Mapped[str] = mapped_column(String(200), unique=True, index=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(String(300), nullable=False)
+    password_setup_required: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false(), nullable=False)
     permissions_json: Mapped[str] = mapped_column(Text, default="[]", nullable=False)
     session_version: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     last_login: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+
+class CollaboratorInvitation(Base):
+    __tablename__ = "collaborator_invitations"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    collaborator_id: Mapped[int] = mapped_column(ForeignKey("company_collaborators.id", ondelete="CASCADE"), index=True, nullable=False)
+    email: Mapped[str] = mapped_column(String(200), nullable=False)
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    sent_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    used_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
 
 class User(Base):

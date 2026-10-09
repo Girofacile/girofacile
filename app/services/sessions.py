@@ -8,7 +8,7 @@ from ..models import User, Driver, DriverAccount, Agent, AgentAccount, RevokedSe
 
 def active_identity(account, db):
     if isinstance(account, CompanyCollaborator):
-        return bool(account.is_active and db.get(User, account.user_id))
+        return bool(account.is_active and not account.password_setup_required and db.get(User, account.user_id))
     if isinstance(account, User):
         return True
     if not account or not account.is_active:

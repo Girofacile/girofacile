@@ -255,6 +255,20 @@ def operator_portal(token: str):
     )
 
 
+@app.get("/collaborator/setup", include_in_schema=False)
+def collaborator_setup():
+    # The invitation secret lives in the URL fragment and is submitted via POST.
+    return FileResponse(
+        static_dir / "collaborator" / "setup.html",
+        headers={
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Referrer-Policy": "no-referrer",
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
+
+
 @app.get("/driver")
 @app.get("/driver/")
 def driver_portal():
