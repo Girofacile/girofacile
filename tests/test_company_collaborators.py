@@ -210,3 +210,133 @@ def test_expired_company_can_revoke_access_but_collaborator_cannot_write(company
     result=client.put(f'/api/collaborators/{actor.id}',json={'full_name':actor.full_name,'email':actor.email,'permissions':[],'is_active':False})
     assert result.status_code==200,result.text
     assert not actor.is_active
+
+
+def test_presets_are_explicit_dependency_complete_and_do_not_grant_future_keys(monkeypatch):
+    from app.services import company_permissions as policy
+    presets = policy.permission_presets()
+    assert [item["key"] for item in presets] == ["operator", "planner", "read_only"]
+    operator = next(item for item in presets if item["key"] == "operator")
+    assert set(operator["permissions"]) == policy.VALID
+    for item in presets:
+        assert item["permissions"] == policy.normalize_permissions(item["permissions"])
+        assert len(item["permissions"]) == len(set(item["permissions"]))
+        assert not any(key.startswith(("billing.", "collaborators.", "subscription.", "admin."))
+                       for key in item["permissions"])
+    monkeypatch.setattr(policy, "VALID", policy.VALID | {"future.read"})
+    monkeypatch.setattr(policy, "CATALOG", policy.CATALOG + [
+        {"key": "future.read", "group": "Nuova funzione", "label": "Visualizza"}])
+    assert "future.read" not in next(
+        item for item in policy.permission_presets() if item["key"] == "operator")["permissions"]
+    operator["permissions"].clear()
+    assert policy.permission_presets()[0]["permissions"]
+
+
+def test_operator_preset_authorizes_every_current_delegable_operation():
+    from types import SimpleNamespace
+    from starlette.requests import Request
+    from app.services.company_permissions import RULES, authorize, permission_presets
+    grants = next(item["permissions"] for item in permission_presets() if item["key"] == "operator")
+    actor = SimpleNamespace(permissions_json=json.dumps(grants))
+    for (method, template), required in RULES.items():
+        request = Request({"type": "http", "method": method, "path": template,
+                           "route": SimpleNamespace(path=template), "headers": []})
+        authorize(request, actor)
+
+
+def test_preset_metadata_is_owner_only_and_does_not_change_existing_accounts(company):
+    client, db, _, _, actor, _, _, login_owner, login_actor = company
+    from app.services.company_permissions import permission_presets
+    before = actor.permissions_json
+    login_owner()
+    response = client.get("/api/collaborators/permissions")
+    assert response.status_code == 200, response.text
+    assert response.json()["presets"] == permission_presets()
+    assert actor.permissions_json == before
+    login_actor(permission_presets()[0]["permissions"])
+    assert client.get("/api/collaborators/permissions").status_code == 403
+
+
+def test_operator_can_edit_company_settings_but_cannot_cross_company(company):
+    client, db, owner, other, _, first, foreign, _, login_actor = company
+    from app.services.company_permissions import permission_presets
+    login_actor(permission_presets()[0]["permissions"])
+    for path in ("/api/customers", "/api/deposits", "/api/vehicles", "/api/drivers",
+                 "/api/settings", "/api/company-profile"):
+        response = client.get(path)
+        assert response.status_code == 200, (path, response.text)
+    other_name = other.company_name
+    other_signature = other.delivery_signature_enabled
+    result = client.put("/api/company-profile", json={"company_name": "Azienda aggiornata"})
+    assert result.status_code == 200, result.text
+    assert owner.company_name == "Azienda aggiornata"
+    assert other.company_name == other_name
+    result = client.put("/api/settings", json={"delivery_signature_enabled": True})
+    assert result.status_code == 200, result.text
+    assert owner.delivery_signature_enabled is True
+    assert other.delivery_signature_enabled == other_signature
+    result = client.put(f"/api/customers/{first.id}",
+                        json={"nome": "Cliente aggiornato", "indirizzo": "Via Uno", "codice_cliente": "A1"})
+    assert result.status_code == 200, result.text
+    assert first.nome == "Cliente aggiornato"
+    result = client.put(f"/api/customers/{foreign.id}",
+                        json={"nome": "Accesso vietato", "indirizzo": "Via Due", "codice_cliente": "B1"})
+    assert result.status_code == 404, result.text
+    assert foreign.nome == "Foreign"
+    assert client.delete(f"/api/customers/{foreign.id}").status_code == 404
+    assert foreign.deleted_at is None
+
+
+def test_operator_cannot_access_owner_billing_subscription_or_collaborators(company):
+    client, _, _, _, actor, _, _, _, login_actor = company
+    from app.services.company_permissions import permission_presets
+    login_actor(permission_presets()[0]["permissions"])
+    for path in ("/api/billing/overview", "/api/billing/my-plan", "/api/billing/data-export",
+                 "/api/billing/invoices/999/download", "/api/collaborators",
+                 "/api/collaborators/permissions", "/api/account-profile", "/api/onboarding/status"):
+        response = client.get(path)
+        assert response.status_code == 403, (path, response.text)
+    for action in ("select-plan", "create-checkout-session", "cancel-checkout", "sync",
+                   "change-preview", "change-plan", "cancel", "resume", "portal"):
+        response = client.post(f"/api/billing/{action}", json={"plan": "pro"})
+        assert response.status_code == 403, (action, response.text)
+    assert client.put("/api/billing/billing-details", json={"company_name": "Forbidden"}).status_code == 403
+    payload = {"full_name": actor.full_name, "email": actor.email, "permissions": []}
+    assert client.post("/api/collaborators", json=payload).status_code == 403
+    assert client.put(f"/api/collaborators/{actor.id}", json=payload).status_code == 403
+
+
+def test_owner_can_replace_a_preset_with_manual_permissions_without_role_escalation(company):
+    client, db, _, _, actor, _, _, login_owner, login_actor = company
+    from app.services.company_permissions import normalize_permissions, permission_presets
+    login_owner()
+    payload = {"full_name": actor.full_name, "email": actor.email,
+               "permissions": permission_presets()[0]["permissions"]}
+    assert client.put(f"/api/collaborators/{actor.id}", json=payload).status_code == 200
+    payload["permissions"] = ["customers.read"]
+    result = client.put(f"/api/collaborators/{actor.id}", json=payload)
+    assert result.status_code == 200, result.text
+    expected = normalize_permissions(["customers.read"])
+    assert result.json()["permissions"] == expected
+    assert json.loads(actor.permissions_json) == expected
+    assert client.put(f"/api/collaborators/{actor.id}",
+                      json=dict(payload, permissions=["operator"])).status_code == 422
+    assert client.put(f"/api/collaborators/{actor.id}",
+                      json=dict(payload, role="operator")).status_code == 422
+    login_actor(expected)
+    assert client.get("/api/customers").status_code == 200
+    assert client.delete(f"/api/customers/{actor.id}").status_code == 403
+    assert client.put("/api/company-profile", json={"company_name": "Forbidden"}).status_code == 403
+    assert client.put("/api/settings", json={}).status_code == 403
+
+
+@pytest.mark.parametrize("preset_key", ["planner", "read_only"])
+def test_other_presets_do_not_modify_anagraphics_or_company_settings(company, preset_key):
+    client, _, _, _, _, first, _, _, login_actor = company
+    from app.services.company_permissions import permission_presets
+    grants = next(item["permissions"] for item in permission_presets() if item["key"] == preset_key)
+    login_actor(grants)
+    assert client.get("/api/customers").status_code == 200
+    assert client.delete(f"/api/customers/{first.id}").status_code == 403
+    assert client.put("/api/company-profile", json={"company_name": "Forbidden"}).status_code == 403
+    assert client.put("/api/settings", json={}).status_code == 403

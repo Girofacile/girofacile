@@ -27,3 +27,17 @@ dialog.collaborators-dialog::backdrop{background:var(--gf-color-overlay)}
 .collaborators-dialog footer{display:flex;justify-content:flex-end;gap:12px;padding-top:16px;border-top:1px solid var(--gf-color-border)}
 #collaboratorError{color:var(--gf-color-danger)}
 @media(max-width:640px){.collaborator-fields,.collaborator-permissions{grid-template-columns:1fr}#tab-collaboratori .collaborator-metrics{gap:8px}#tab-collaboratori .collaborator-metrics>div{padding:12px}#tab-collaboratori .collaborators-toolbar>*{width:100%}}
+
+/* Presets simplify authoring; the existing permission checkboxes remain editable. */
+.collaborator-preset{display:grid;gap:var(--gf-space-2);padding:var(--gf-space-4);margin:var(--gf-space-5) 0;border:1px solid var(--gf-color-border);border-radius:var(--gf-radius-md);background:var(--gf-color-surface-subtle)}
+.collaborator-preset>label{font-weight:var(--gf-weight-semibold)}
+.collaborator-preset select{width:100%;min-width:0}
+.collaborator-preset .collaborators-note{margin:0;font-size:var(--gf-font-sm)}
+.collaborator-permissions-details{margin:var(--gf-space-5) 0;border:1px solid var(--gf-color-border);border-radius:var(--gf-radius-md);background:var(--gf-color-surface)}
+.collaborator-permissions-details>summary{padding:var(--gf-space-3) var(--gf-space-4);cursor:pointer;font-weight:var(--gf-weight-semibold)}
+.collaborator-permissions-details>summary:focus-visible{outline:2px solid var(--gf-color-primary);outline-offset:2px;border-radius:var(--gf-radius-sm)}
+.collaborator-permissions-details>summary span{display:inline-block;margin-inline-start:var(--gf-space-2);color:var(--gf-color-muted);font-size:var(--gf-font-sm);font-weight:var(--gf-weight-normal)}
+.collaborator-permissions-details[open]>summary{border-bottom:1px solid var(--gf-color-border)}
+.collaborator-permissions-details>.collaborators-note{margin:var(--gf-space-4);font-size:var(--gf-font-sm)}
+.collaborator-permissions-details>.collaborator-permissions{padding:0 var(--gf-space-4);margin:var(--gf-space-4) 0}
+@media(max-width:640px){.collaborator-preset{padding:var(--gf-space-3)}.collaborator-permissions-details>summary{padding:var(--gf-space-3)}.collaborator-permissions-details>summary span{display:block;margin-inline-start:var(--gf-space-5);margin-top:var(--gf-space-1)}.collaborator-permissions-details>.collaborator-permissions{padding:0 var(--gf-space-3)}}

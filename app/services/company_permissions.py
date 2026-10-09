@@ -67,6 +67,53 @@ def permissions_for(actor):
         return set()
 
 
+# Presets are editable starting points, not authentication roles. Keep each
+# permission explicit: adding a new catalogue key must not silently widen a
+# preset or an existing collaborator's stored grants.
+_PRESET_DEFINITIONS = (
+    ("operator", "Operatore",
+     "Tutte le funzioni aziendali, inclusi dati aziendali e impostazioni. "
+     "Piano, fatturazione e gestione collaboratori restano riservati al titolare.",
+     (
+         "customers.read", "customers.create", "customers.update", "customers.delete",
+         "deposits.read", "deposits.create", "deposits.update", "deposits.delete",
+         "vehicles.read", "vehicles.create", "vehicles.update", "vehicles.delete",
+         "drivers.read", "drivers.create", "drivers.update", "drivers.delete",
+         "agents.read", "agents.create", "agents.update", "agents.delete",
+         "routes.read", "routes.plan", "routes.program", "routes.manage", "routes.tracking",
+         "dashboard.read", "reports.read", "chat.read", "chat.write",
+         "company.read", "company.update", "settings.update",
+         "support.read", "support.write", "notifications.read",
+     )),
+    ("planner", "Pianificatore",
+     "Consulta le risorse, pianifica e gestisce i giri, usa report, chat e assistenza. "
+     "Non modifica anagrafiche, dati aziendali o impostazioni.",
+     (
+         "customers.read", "deposits.read", "vehicles.read", "drivers.read", "agents.read",
+         "routes.read", "routes.plan", "routes.program", "routes.manage", "routes.tracking",
+         "dashboard.read", "reports.read", "chat.read", "chat.write",
+         "support.read", "support.write", "notifications.read",
+     )),
+    ("read_only", "Sola lettura",
+     "Consulta risorse, giri, report, chat, dati aziendali e assistenza. "
+     "Non modifica i dati operativi.",
+     (
+         "customers.read", "deposits.read", "vehicles.read", "drivers.read", "agents.read",
+         "routes.read", "dashboard.read", "reports.read", "chat.read",
+         "company.read", "support.read", "notifications.read",
+     )),
+)
+
+
+def permission_presets():
+    """Return fresh metadata; the owner still saves an explicit permissions list."""
+    return [
+        {"key": key, "label": label, "description": description,
+         "permissions": sorted(grants)}
+        for key, label, description, grants in _PRESET_DEFINITIONS
+    ]
+
+
 # Exact FastAPI route templates, not prefixes controlled by the client.
 RULES = {}
 for resource in RESOURCE_LABELS:

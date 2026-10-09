@@ -144,6 +144,10 @@ function premiumPlanCard(plan, title, price, badge, features){
 function renderFeatureLockedTab(name, cfg){
   const tab = document.getElementById("tab-" + name);
   if(!tab || !cfg) return;
+  if(window.GFCompanyAccess?.isCollaborator()){
+    tab.innerHTML = '<div class="feature-lock-page"><section class="feature-lock-card"><div class="feature-lock-icon">🔒</div><h1>'+esc(cfg.title)+'</h1><p>Funzionalità non disponibile per questa azienda. Contatta il titolare.</p></section></div>';
+    return;
+  }
   tab.innerHTML = `<div class="feature-lock-page">
     <div class="feature-lock-layout">
       <section class="feature-lock-card">
@@ -189,7 +193,7 @@ function updatePremiumNavState(){
     const cfg = featureLockedForTab(name);
     document.querySelectorAll(`.nav-item[data-tab="${name}"]`).forEach(btn=>{
       btn.classList.toggle("is-premium-locked", !!cfg);
-      btn.title = cfg ? `${cfg.title}: disponibile dal piano Business` : "";
+      btn.title = cfg ? (window.GFCompanyAccess?.isCollaborator() ? `${cfg.title}: funzionalità non disponibile per questa azienda` : `${cfg.title}: disponibile dal piano Business`) : "";
     });
   });
 }
@@ -687,6 +691,7 @@ function billingStatusLabelV63(status){
 }
 let _billingReturnTabV876 = "plan-account";
 async function openBillingPanel(){
+  if(window.GFCompanyAccess?.isCollaborator()) return;
   const current = getVisibleTabV874();
   if(current !== "billing-account") _billingReturnTabV876 = current || "plan-account";
   closeProfilePanel();
@@ -820,6 +825,7 @@ function syncPlanPageHeaderV874(){
   if(status) status.textContent = "Gestisci il tuo abbonamento e confrontalo con gli altri piani disponibili.";
 }
 function openPlanAccountPage(plan){
+  if(window.GFCompanyAccess?.isCollaborator()) return;
   const current = getVisibleTabV874();
   if(current !== "plan-account") _planReturnTabV874 = current;
   closeProfilePanel();
@@ -835,9 +841,10 @@ function returnFromPlanAccount(){
   setTimeout(()=>openProfilePanel(), 40);
 }
 function openUpgradePanel(){ openPlanAccountPage(); }
-function openUpgradePanelFor(plan){ openPlanAccountPage(plan || "business"); }
+function openUpgradePanelFor(plan){ if(window.GFCompanyAccess?.isCollaborator()) return; openPlanAccountPage(plan || "business"); }
 function closeUpgradePanel(){ returnFromPlanAccount(); }
 function renderUpgradeCards(){
+  if(window.GFCompanyAccess?.isCollaborator()) return;
   const plans = ["starter","business","pro"];
   const descriptions = {
     starter:"Per iniziare con le funzioni essenziali di pianificazione.",
@@ -4579,7 +4586,7 @@ async function saveCompanyProfile(){
     const payload = getCompanyProfilePayload();
     await api("/api/company-profile", {method:"PUT", body:JSON.stringify(payload)});
     await loadCompanyProfile(false);
-    await loadOnboardingStatus(false);
+    if(!window.GFCompanyAccess?.isCollaborator()) await loadOnboardingStatus(false);
     toast("Modifiche azienda salvate");
   }catch(e){
     alert(e.message || "Errore salvataggio profilo azienda");

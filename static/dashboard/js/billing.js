@@ -16,6 +16,7 @@ function planFeatures(plan) {
 }
 
 function renderSubscriptionControls(data) {
+  if(window.GFCompanyAccess?.isCollaborator()) return;
   let box = document.getElementById('subscriptionControls');
   const host = document.getElementById('upgradePlanCards');
   if (!host) return;
@@ -43,6 +44,7 @@ function renderSubscriptionControls(data) {
 }
 
 async function subscriptionAction(action) {
+  if(window.GFCompanyAccess?.isCollaborator()) return;
   if (['cancel','resume'].includes(action) && !confirm(action==='cancel' ?
     'Disdire il rinnovo? Il periodo già pagato resta disponibile.' : 'Ripristinare il rinnovo automatico?')) return;
   try {
@@ -54,6 +56,7 @@ async function subscriptionAction(action) {
 }
 
 async function checkoutOrChangePlan() {
+  if(window.GFCompanyAccess?.isCollaborator()) return;
   const plan = _selectedUpgradePlan || _currentPlan;
   const button = document.getElementById('btnConfirmUpgrade');
   if (button) button.disabled = true;

@@ -7,6 +7,37 @@ automaticamente: la password iniziale va comunicata tramite un canale riservato.
 Il collaboratore usa la normale pagina Login e può cambiare la propria password
 dal profilo o utilizzare il recupero via email già configurato nel gestionale.
 
+## Profili preimpostati e personalizzazione
+
+Il form propone **Operatore** per un nuovo collaboratore:
+tutte le funzioni aziendali attuali, inclusi dati aziendali e impostazioni.
+**Piano/abbonamento, fatturazione e gestione dei collaboratori** restano
+riservati al titolare; anche le API negano queste operazioni.
+
+Sono disponibili anche **Pianificatore** (risorse in consultazione, gestione
+giri, report, chat e assistenza) e **Sola lettura** (consultazione senza
+modifiche operative). I profili rispettano sempre le funzioni previste dal
+piano aziendale: un ruolo non sblocca servizi assenti dall'abbonamento.
+
+Aprire **Personalizza le funzioni** per aggiungere o togliere singole
+autorizzazioni. Una modifica manuale identifica la selezione come
+**Personalizzato**. Selezionare un altro profilo sostituisce la selezione
+corrente; scegliere Personalizzato la conserva. Le dipendenze necessarie
+restano evidenti e vengono applicate dal server come prima.
+
+I preset sono definiti centralmente e forniti dal catalogo API. Si salvano
+sempre permessi espliciti, non un ruolo di autenticazione. Gli account
+esistenti mantengono le autorizzazioni assegnate; aprire la scheda non
+le sostituisce con quelle di un preset. Le nuove funzioni future richiedono
+una revisione esplicita del catalogo dei profili.
+
+Le schermate bloccate dal piano mostrano al collaboratore un messaggio
+per contattare il titolare, senza prezzi o pulsanti upgrade. La guida di
+configurazione iniziale dell'account rimane riservata al titolare; la normale
+pagina Azienda e le impostazioni sono modificabili dall'Operatore.
+
+Non è necessaria una nuova migrazione per i preset.
+
 ## Funzioni e dipendenze
 
 - Clienti, depositi, mezzi, autisti e agenti: visualizzazione, creazione,
@@ -63,6 +94,10 @@ isolati; non è stata applicata manualmente una migrazione al database in uso.
 `tests/test_company_collaborators.py` copre isolamento aziendale, diniego delle
 operazioni non assegnate, login/logout, revoche, password, migrazione ripetibile,
 coerenza dei percorsi API, ricalcolo dei giri programmati e piano scaduto.
-`tests/check_collaborators_ui.py` verifica in Chrome/Playwright desktop e mobile
-la creazione, le dipendenze, la ricerca e il profilo limitato con API simulate.
-Non invia email né modifica dati reali.
+`tests/check_collaborators_ui.py` usa Chromium di Playwright ed è integrato nella
+CI a 390/768/1024/1440 px. Verifica preset, permessi manuali, dipendenze, modifica,
+ricerca, retry, navigazione mobile, esclusioni del titolare e profilo personale
+con API simulate. Screenshot e report sono conservati come artefatti CI.
+I controlli backend mantengono i casi negativi, l'isolamento aziendale e le prove
+PostgreSQL di migrazione e concorrenza. I test non inviano email né effettuano
+pagamenti reali.

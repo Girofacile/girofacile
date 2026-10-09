@@ -11,7 +11,7 @@ from ..models import CompanyCollaborator, User, PasswordResetToken
 from ..core.dependencies import current_user
 from ..core.security import hash_password, verify_password, validate_password_strength
 from ..core.http_security import COOKIE_DOMAIN
-from ..services.company_permissions import CATALOG, DEPENDENCIES, normalize_permissions, permissions_for
+from ..services.company_permissions import CATALOG, DEPENDENCIES, normalize_permissions, permissions_for, permission_presets
 from ..services.identity import ensure_login_email_available
 from ..services.sessions import read_session
 from ..services.plans import user_plan_info
@@ -54,7 +54,8 @@ def actor_account(request: Request, db: Session = Depends(get_db)):
 
 @router.get("/api/collaborators/permissions")
 def catalog(owner: User = Depends(current_user)):
-    return {"permissions": CATALOG, "dependencies": {key: sorted(value) for key, value in DEPENDENCIES.items()}}
+    return {"permissions": CATALOG, "dependencies": {key: sorted(value) for key, value in DEPENDENCIES.items()},
+            "presets": permission_presets()}
 
 
 @router.get("/api/collaborators")
