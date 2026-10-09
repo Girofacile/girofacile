@@ -229,8 +229,14 @@ def main():
                     assert page.evaluate("GFCompanyAccess.can('company.update') && GFCompanyAccess.can('settings.update')")
                     forbidden_areas()
                     page.evaluate("showTab('company')")
-                    page.wait_for_load_state("networkidle")
+                    # showTab starts the profile GET without awaiting its render.
+                    # Networkidle may already belong to the previous page state.
+                    page.wait_for_function("""name =>
+                        document.getElementById('companyNameInput').value === name &&
+                        companyProfileBaselineV29 === companyProfileSignatureV29()
+                    """, arg=state["company"]["company_name"])
                     page.locator("#companyNameInput").fill("Demo operatore")
+                    assert page.locator("#companyNameInput").input_value() == "Demo operatore"
                     state["requests"].clear()
                     state["allow_company_save"] = True
                     page.locator("#companySaveBar").wait_for(state="visible")
