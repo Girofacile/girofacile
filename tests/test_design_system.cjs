@@ -6,6 +6,13 @@ const vm = require('node:vm');
 const root = path.resolve(__dirname, '..');
 const read = name => fs.readFileSync(path.join(root, name), 'utf8');
 const assets = 'static/design-system/';
+function ruleDeclarations(css,selector){
+  const normalize=value=>value.trim().replace(/\s+/g,' ');
+  const rules=[...css.replace(/\/\*[\s\S]*?\*\//g,'').matchAll(/([^{}]+)\{([^{}]*)\}/g)];
+  const rule=rules.find(match=>match[1].split(',').some(value=>normalize(value)===normalize(selector)));
+  assert.ok(rule,'Missing CSS selector: '+selector);
+  return rule[2];
+}
 function element(tag) {
   const classes = new Set();
   const node = {
@@ -37,7 +44,7 @@ function runtime(){
 }
 test('tokens centrally define palette, geometry, spacing, typography and breakpoints',()=>{
   const css=read(assets+'tokens.css');
-  for(const token of ['color-primary','color-bg','color-surface','color-text','color-muted','color-border','color-success','color-success-bg','color-warning','color-warning-bg','color-danger','color-danger-bg','color-info','color-info-bg','radius-sm','radius-md','radius-lg','shadow-sm','control-height','touch-height','font-size-base','font-size-header','breakpoint-sm','breakpoint-md','breakpoint-lg','breakpoint-xl','space-1','space-2','space-3','space-4','space-6','space-8'])
+  for(const token of ['color-primary','color-bg','color-surface','color-text','color-muted','color-border','color-border-strong','color-success','color-success-bg','color-warning','color-warning-bg','color-danger','color-danger-bg','color-info','color-info-bg','radius-sm','radius-md','radius-lg','shadow-sm','control-height','touch-height','font-size-base','font-size-header','breakpoint-sm','breakpoint-md','breakpoint-lg','breakpoint-xl','space-1','space-2','space-3','space-4','space-6','space-8'])
     assert.match(css,new RegExp('--gf-'+token+'\\s*:'));
   assert.match(css,/--gf-color-primary\s*:\s*#2563eb/i);
   const defined=new Set([...css.matchAll(/(--gf-[\w-]+)\s*:/g)].map(match=>match[1]));
@@ -177,7 +184,9 @@ test('company profile uses the workspace topbar and keeps billing addresses alwa
   assert.match(navigation,/syncWorkspaceTopbar\(name\)/);
 
   const layoutCss=read(assets+'layout.css');
-  assert.match(layoutCss,/#app:has\(#tab-company:not\(\.hidden\)\) \.topbar-dashboard-title\{display:block;min-width:0\}/);
+  const companyHeader=ruleDeclarations(layoutCss,'body[data-gf-surface="workspace"] #app:has(#tab-company:not(.hidden)) .topbar-dashboard-title');
+  assert.match(companyHeader,/\bdisplay\s*:\s*block\b/);
+  assert.match(companyHeader,/\bmin-width\s*:\s*0\b/);
 
   const companyCss=read('static/dashboard/css/company.css');
   assert.match(companyCss,/body:has\(#tab-company:not\(\.hidden\)\) \.topbar\s*\{[^}]*background: var\(--gf-color-surface/);
@@ -288,7 +297,11 @@ test('workspace sidebar uses the GiroFacile brand artwork',()=>{
 
 test('workspace legal links live in navigation and advanced legal docs live in support',()=>{
   const html=read('static/dashboard/index.html');
-  const sidebar=html.slice(html.indexOf('<aside class="sidebar">'),html.indexOf('</aside>'));
+  const sidebarTag=[...html.matchAll(/<aside\b[^>]*>/g)].find(match=>(match[0].match(/\bclass="([^"]*)"/)?.[1] || '').split(/\s+/).includes('sidebar'));
+  assert.ok(sidebarTag,'Workspace sidebar');
+  const sidebarEnd=html.indexOf('</aside>',sidebarTag.index);
+  assert.ok(sidebarEnd>sidebarTag.index,'Sidebar closing tag');
+  const sidebar=html.slice(sidebarTag.index,sidebarEnd);
   assert.match(sidebar,/class="side-footer"/);
   assert.match(sidebar,/class="side-footer-copyright">© 2026 GiroFacile/);
   assert.match(sidebar,/class="side-footer-version">v3\.11\.0/);
@@ -549,7 +562,7 @@ test('planning fuel KPI stays empty until a vehicle is selected',()=>{
 test('login page matches the dashboard visual language and redesigned sidebar',()=>{
   const html=read('static/dashboard/index.html');
   const login=html.slice(html.indexOf('<section id="loginCard"'),html.indexOf('<section id="app"'));
-  assert.match(html,/\/static\/dashboard\/css\/login\.css\?v=login_preview_exact_20261007/);
+  assert.match(html,/\/static\/dashboard\/css\/login\.css\?v=[^"&\s]+/);
   assert.match(login,/class="login-brand-logo"[^>]*girofacile-logo\.png/);
   assert.match(login,/<strong>Monitora<\/strong>/);
   assert.match(login,/class="login-route-art"/);
@@ -559,8 +572,14 @@ test('login page matches the dashboard visual language and redesigned sidebar',(
 
   const css=read('static/dashboard/css/login.css');
   assert.match(css,/#loginCard\.gf-login-page\{[\s\S]*grid-template-columns:31\.5% 68\.5%/);
-  assert.match(css,/#loginCard \.login-side\{[\s\S]*var\(--gf-color-nav\)/);
-  assert.match(css,/#loginCard \.login-feature-icon\{[\s\S]*width:74px!important[\s\S]*box-shadow:none!important/);
+  const loginSide=ruleDeclarations(css,'#loginCard .login-side');
+  assert.match(loginSide,/\bbackground\s*:/);
+  assert.match(loginSide,/\bcolor\s*:\s*var\(--gf-color-on-primary\)/);
+  const loginIcon=ruleDeclarations(css,'#loginCard .login-feature-icon');
+  assert.match(loginIcon,/\bwidth\s*:\s*74px!important/);
+  const iconShadow=loginIcon.match(/\bbox-shadow\s*:\s*([^;}]*)/)?.[1];
+  assert.ok(iconShadow,'Login icon shadow');
+  assert.match(iconShadow,/^(?:none|inset\b)/,'Keep outer shadows absent');
   assert.match(css,/#loginCard #loginPanel\{[\s\S]*min-height:704px[\s\S]*padding:52px 58px 42px/);
   assert.match(css,/#loginCard #loginPanel \.login-submit\{[\s\S]*background:var\(--gf-color-primary\)!important/);
   assert.match(css,/#loginCard \.login-side-footer nav\{[\s\S]*display:flex/);
@@ -573,4 +592,15 @@ test('login page matches the dashboard visual language and redesigned sidebar',(
   assert.match(css,/#loginCard #loginPanel \.login-card-brand img\{[\s\S]*width:76px!important/);
   assert.match(css,/#loginCard #loginPanel \.login-card-title h2\{[\s\S]*font-size:34px!important/);
   assert.doesNotMatch(css,/linear-gradient\(180deg,#06152e|0 0 24px rgba\(18,101,255/);
+});
+
+test('every stylesheet resolves its referenced custom properties',()=>{
+  const files=fs.readdirSync(path.join(root,'static'),{recursive:true}).filter(name=>name.endsWith('.css'));
+  assert.ok(files.length>0,'Application stylesheets');
+  const sheets=files.map(name=>({name,css:read(path.join('static',name))}));
+  const defined=new Set(sheets.flatMap(({css})=>[...css.matchAll(/(--[\w-]+)\s*:/g)].map(match=>match[1])));
+  for(const {name,css} of sheets){
+    for(const match of css.matchAll(/var\(\s*(--[\w-]+)/g))
+      assert.ok(defined.has(match[1]),name+': undefined '+match[1]);
+  }
 });

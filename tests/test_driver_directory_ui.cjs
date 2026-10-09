@@ -1,4 +1,16 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
-function fixture(){const nodes={};const node=id=>nodes[id]??={value:'',innerHTML:'',textContent:''};const ctx=vm.createContext({document:{getElementById:node},driversCache:[],driverFullName:d=>[d.nome,d.cognome].filter(Boolean).join(' '),driverInitials:d=>(d.nome||'A')[0],esc:v=>String(v??'').replaceAll('<','&lt;').replaceAll('"','&quot;')});vm.runInContext(fs.readFileSync('static/dashboard/js/drivers.js','utf8'),ctx);return {ctx,node,run:s=>vm.runInContext(s,ctx)}}
+function fixture(){
+  const nodes={};
+  const node=id=>{
+    if(nodes[id]) return nodes[id];
+    const classes=new Set(),attributes={};
+    return nodes[id]={value:'',innerHTML:'',textContent:'',
+      classList:{toggle(name,force){const enabled=force===undefined?!classes.has(name):!!force;if(enabled)classes.add(name);else classes.delete(name);return enabled;},contains:name=>classes.has(name)},
+      setAttribute(name,value){attributes[name]=String(value);},getAttribute:name=>attributes[name]??null};
+  };
+  const ctx=vm.createContext({document:{getElementById:node},driversCache:[],driverFullName:d=>[d.nome,d.cognome].filter(Boolean).join(' '),driverInitials:d=>(d.nome||'A')[0],esc:v=>String(v??'').replaceAll('<','&lt;').replaceAll('"','&quot;')});
+  vm.runInContext(fs.readFileSync('static/dashboard/js/drivers.js','utf8'),ctx);
+  return {ctx,node,run:s=>vm.runInContext(s,ctx)};
+}
 test('driver filters and ordering keep global counters and missing expiry last',()=>{const f=fixture();f.ctx.driversCache=[{id:1,nome:'Anna',stato:'Disponibile',giri_assegnati:2},{id:2,nome:'Luca',stato:'In servizio',giri_assegnati:8,scadenza_patente:'2027-01-01'}];f.node('driverSort').value='expiry';assert.equal(f.run('driverDirectoryRows()[0].id'),2);f.node('driverStatusFilter').value='Disponibile';f.run('renderDriverDirectory()');assert.equal(f.node('driversTotal').textContent,2);assert.equal(f.node('driversWorking').textContent,1);assert.doesNotMatch(f.node('driversCards').innerHTML,/Luca/);f.node('driverSearch').value='absent';f.run('renderDriverDirectory()');assert.match(f.node('driversCards').innerHTML,/Nessun autista/)});
 test('cards escape contact data and preserve details, invitation and zero routes',()=>{const f=fixture();f.ctx.driversCache=[{id:1,nome:'<Test>',email:'a@example.test',stato:'In riposo',giri_assegnati:0,mezzo_abituale:{nome:'Van',targa:'AA'}}];f.run('renderDriverDirectory()');const html=f.node('driversCards').innerHTML;for(const text of ['&lt;Test>','In riposo','Van','AA','<strong>0</strong>','showDriverDetails(1)','inviteDriver(1)','deleteDriver(1)'])assert.ok(html.includes(text),text);assert.doesNotMatch(f.run("driverDirectoryAvatar({photo_url:'javascript:alert(1)'})"),/<img/)});

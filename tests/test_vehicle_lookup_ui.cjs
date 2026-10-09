@@ -11,7 +11,7 @@ function fixture(){
     val:id=>node(id).value,set:(id,v)=>{node(id).value=String(v??'');},
     vehiclesCache:[{id:1,nome:'Peugeot',targa:'AB123CD',lookup_provider:'openapi',capacita_colli:100}],
     clearVehicleLookupHighlightsV8966:noop,markVehicleLookupResultV8966:noop,
-    updateVehicleEnergyFieldsV895:noop,clearFileInput:noop,setImagePreview:noop,
+    updateVehicleEnergyFieldsV895:noop,clearFileInput:noop,setVehiclePhotoPreview:noop,
     boolVal:()=>false,withButtonLoading:(_id,_label,fn)=>fn(),toast:noop,alert:noop,
     loadVehicles:async()=>{},loadDashboardHome:async()=>{},
     api:async(path,options)=>{requests.push({path,options});return ctx.result;}});

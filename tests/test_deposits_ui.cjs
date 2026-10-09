@@ -4,6 +4,17 @@ const fs=require('node:fs'),vm=require('node:vm');
 const core=fs.readFileSync('static/dashboard/js/core.js','utf8');
 const index=fs.readFileSync('static/dashboard/index.html','utf8');
 
+function hasClasses(html,...required){
+ return [...html.matchAll(/\bclass="([^"]*)"/g)].some(([,value])=>{
+  const classes=new Set(value.split(/\s+/));return required.every(name=>classes.has(name));
+ });
+}
+function assertClassesById(id,...required){
+ const tag=index.match(new RegExp('<[^>]+\\bid="'+id+'"[^>]*>'))?.[0];
+ assert.ok(tag,'Missing element: '+id);
+ const classes=new Set((tag.match(/\bclass="([^"]*)"/)?.[1] || '').split(/\s+/));
+ for(const name of required)assert.ok(classes.has(name),id+' class: '+name);
+}
 function fixture(){
  const nodes=new Map(),calls=[];
  const node=id=>{
@@ -41,17 +52,17 @@ function fixture(){
 
 test('deposit page mirrors the customer directory layout and keeps delete inside edit modal',()=>{
  assert.match(index,/id="newDepositBtn"[^>]+onclick="openDepositModal\(\)"/);
- assert.match(index,/class="panel deposit-list-panel"/);
- assert.doesNotMatch(index,/class="panel deposit-form-panel"/);
- assert.match(index,/id="depositOverlay" class="modal-overlay hidden gf-dialog"/);
- assert.match(index,/id="depositDeleteSection" class="deposit-delete-section hidden"/);
+ assert.ok(hasClasses(index,'panel','deposit-list-panel'));
+ assert.equal(hasClasses(index,'panel','deposit-form-panel'),false);
+ assertClassesById('depositOverlay','modal-overlay','hidden','gf-dialog');
+ assertClassesById('depositDeleteSection','deposit-delete-section','hidden');
 });
 
 test('deposit directory exposes list and grid view controls like customers',()=>{
  assert.match(index,/id="depositListView"[^>]+onclick="setDepositView\('list'\)"/);
  assert.match(index,/id="depositGridView"[^>]+onclick="setDepositView\('grid'\)"/);
  assert.match(index,/id="depositTableWrap"/);
- assert.match(index,/id="depositCards" class="deposit-cards hidden"/);
+ assertClassesById('depositCards','deposit-cards','hidden');
 });
 
 test('deposit overview uses real timestamps, counts defaults, escapes values and preserves route selection',async()=>{

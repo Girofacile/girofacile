@@ -208,6 +208,8 @@ def main():
                     assert not page.locator('#collaboratorPermissions input[value="customers.delete"]').is_checked()
                     page.locator("#collaboratorSave").click()
                     page.locator("#collaboratorDialog").wait_for(state="hidden")
+                    page.locator("#collaboratorsBody").get_by_role("button", name="Gestisci").wait_for(state="visible")
+                    page.wait_for_load_state("networkidle")
                     assert set(state["records"][0]["permissions"]) == expected
                     page.locator("#collaboratorSearch").fill("does not exist")
                     assert "Nessun collaboratore" in page.locator("#collaboratorsBody").inner_text()

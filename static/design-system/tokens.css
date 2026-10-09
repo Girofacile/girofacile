@@ -12,6 +12,7 @@
   --gf-color-text: #1e293b;
   --gf-color-muted: #64748b;
   --gf-color-border: #e2e8f0;
+  --gf-color-border-strong: var(--gf-color-nav-text);
   --gf-color-success: #16734a;
   --gf-color-success-bg: #eaf6ef;
   --gf-color-warning: #946200;
