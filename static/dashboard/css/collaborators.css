@@ -1,5 +1,5 @@
 .collaborator-denied{display:none!important}
-#tab-collaboratori .collaborator-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;margin-bottom:24px}
+#tab-collaboratori .collaborator-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px;margin-bottom:24px}
 #tab-collaboratori .collaborator-metrics>div{background:var(--gf-color-surface);border:1px solid var(--gf-color-border);border-radius:12px;padding:20px}
 #tab-collaboratori .collaborator-metrics span{display:block;color:var(--gf-color-muted)}
 #tab-collaboratori .collaborator-metrics strong{font-size:28px}
@@ -41,3 +41,12 @@ dialog.collaborators-dialog::backdrop{background:var(--gf-color-overlay)}
 .collaborator-permissions-details>.collaborators-note{margin:var(--gf-space-4);font-size:var(--gf-font-sm)}
 .collaborator-permissions-details>.collaborator-permissions{padding:0 var(--gf-space-4);margin:var(--gf-space-4) 0}
 @media(max-width:640px){.collaborator-preset{padding:var(--gf-space-3)}.collaborator-permissions-details>summary{padding:var(--gf-space-3)}.collaborator-permissions-details>summary span{display:block;margin-inline-start:var(--gf-space-5);margin-top:var(--gf-space-1)}.collaborator-permissions-details>.collaborator-permissions{padding:0 var(--gf-space-3)}}
+
+/* Invitations remain visible as pending until the collaborator chooses a password. */
+.collaborator-invitation-info{display:grid;gap:var(--gf-space-3);margin:var(--gf-space-4) 0;padding:var(--gf-space-4);background:var(--gf-color-surface-subtle);border:1px solid var(--gf-color-border);border-radius:var(--gf-radius-md)}
+.collaborator-invitation-info .collaborators-note{margin:0}
+.collaborator-invitation-info>button{justify-self:start}
+.collaborator-invitation-info>small{font-size:var(--gf-font-xs);color:var(--gf-color-muted);line-height:var(--gf-line-height)}
+#tab-collaboratori .collaborator-invitation-warning{color:var(--gf-color-warning)}
+.collaborators-dialog [hidden]{display:none!important}
+@media(max-width:640px){#tab-collaboratori .collaborator-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.collaborator-invitation-info{padding:var(--gf-space-3)}.collaborator-invitation-info>button{width:100%;justify-self:stretch}.collaborators-dialog footer{flex-wrap:wrap}}

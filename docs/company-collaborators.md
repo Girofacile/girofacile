@@ -1,11 +1,47 @@
 # Collaboratori aziendali
 
 Il titolare trova **Collaboratori** nella sidebar e nel menu mobile. Può creare
-un accesso personale con nome, email e password iniziale, scegliere le funzioni
-assegnate, modificarle e disattivare l'accesso. Non vengono spedite credenziali
-automaticamente: la password iniziale va comunicata tramite un canale riservato.
-Il collaboratore usa la normale pagina Login e può cambiare la propria password
+un accesso personale con nome ed email, scegliere le funzioni assegnate,
+modificarle e disattivare l'accesso. Il titolare non sceglie la password:
+**Invia invito** spedisce automaticamente al destinatario un link personale.
+Il collaboratore apre il link, sceglie e conferma la propria password, quindi
+accede dalla normale pagina Login. Dopo l'attivazione può cambiare la password
 dal profilo o utilizzare il recupero via email già configurato nel gestionale.
+
+## Invito e attivazione
+
+La scheda resta **Invito in attesa** finché il destinatario non imposta una
+password conforme alle regole del gestionale. Prima dell'attivazione non sono
+consentiti login, sessioni o recupero password ordinario. Nome, email, azienda e
+autorizzazioni restano quelli assegnati dal titolare.
+
+Il link scade dopo **7 giorni**, funziona una sola volta e serve esclusivamente
+a inizializzare la password del collaboratore. Aprire la pagina non consuma
+l'invito. Il token è conservato nel database solo come hash; nel link è nel
+fragment, rimosso dalla pagina prima delle richieste API, senza query string,
+storage del browser o cookie di autenticazione. La scelta della password non
+crea automaticamente una sessione: il destinatario accede esplicitamente.
+
+**Invia nuovo invito** sostituisce e revoca il link precedente. Se l'email non viene
+inviata, il collaboratore già creato resta visibile, senza accesso: la pagina
+mostra l'errore e permette il reinvio sulla stessa scheda. Non bisogna creare un
+secondo account. Un invio già in corso viene protetto dai tentativi ravvicinati;
+il completamento di un vecchio invio non ripristina link sostituiti.
+
+Cambiare l'email revoca sessioni, inviti e recuperi precedenti e richiede una
+nuova attivazione all'indirizzo aggiornato, anche per un account già attivo.
+Disattivare revoca i link; riattivare un account ancora in attesa invia un nuovo
+invito. Modificare nome o autorizzazioni non reinvia email e non cambia password.
+Gli account esistenti già attivati conservano credenziali e autorizzazioni.
+Le richieste di cambio/reset password del collaboratore rileggono identità e
+token sotto lock: una richiesta avviata prima del cambio email non può
+sovrascrivere la password impostata dal nuovo destinatario.
+
+L'invio riutilizza il servizio email e le impostazioni SMTP amministrative
+esistenti. Configurare **APP_BASE_URL** con il dominio pubblico corretto;
+in produzione (`APP_ENV=production` o `prod`) è richiesto HTTPS. Non inserire
+credenziali, query o fragment nell'URL configurato. Il titolare non riceve il
+token né un link da copiare nelle risposte API.
 
 ## Profili preimpostati e personalizzazione
 
@@ -86,7 +122,11 @@ aziendali, incluse quelle archiviate.
 ## Aggiornamento
 
 Migrazione **20261009_01**: crea `company_collaborators` senza modificare i dati
-operativi esistenti. Gli avvii standard locali e Docker eseguono già le migrazioni.
+operativi esistenti. La migrazione **20261009_02** aggiunge
+`password_setup_required` con default falso e la tabella
+`collaborator_invitations` (token hash univoco, scadenza, invio e consumo).
+È additiva e ripetibile: non reinizializza le password già presenti.
+Gli avvii standard locali e Docker eseguono già le migrazioni.
 Per un avvio personalizzato, con la configurazione del database corretta:
 
 ```sh
@@ -108,3 +148,12 @@ con API simulate. Screenshot e report sono conservati come artefatti CI.
 I controlli backend mantengono i casi negativi, l'isolamento aziendale e le prove
 PostgreSQL di migrazione e concorrenza. I test non inviano email né effettuano
 pagamenti reali.
+
+I test degli inviti sono in `tests/test_collaborator_invitations.py`,
+`tests/test_collaborator_invitations_postgres.py` e
+`tests/test_collaborator_invitation_security.py`. Verificano password scelte
+solo dal destinatario, invii simulati, scadenza, revoca, isolamento, cambio email,
+recupero ordinario e compatibilità degli account esistenti. Le prove di
+concorrenza e migrazione usano PostgreSQL isolato, non SQLite.
+`tests/check_collaborator_invitation_ui.py` verifica il form pubblico a
+390/768/1024/1440 px, token privato, conferma password, errori e retry.

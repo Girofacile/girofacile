@@ -118,6 +118,15 @@
   window.GFCompanyAccess={isCollaborator,can,allowedTab,initialize,apply,rewrite};
 
   let records=[], catalog=[], presets=[], dependencies={}, editId=null;
+  const setupRequired=record=>record.password_setup_required===true;
+  const accessState=record=>!record.is_active?'inactive':(setupRequired(record)?'pending':'active');
+  function invitationDescription(record){
+    if(!record.is_active) return 'Accesso disattivato. Gli eventuali link di invito precedenti non sono utilizzabili.';
+    if(!setupRequired(record)) return 'Il collaboratore ha già scelto la password. Può modificarla dal proprio profilo o recuperarla dalla pagina Login.';
+    if(record.invitation_status==='failed') return 'Collaboratore salvato, ma l’email di invito non è stata inviata. Puoi riprovare con Invia nuovo invito.';
+    if(record.invitation_status==='expired') return 'Invito scaduto. Invia un nuovo invito per consentire al collaboratore di scegliere la password.';
+    return 'In attesa che il collaboratore scelga la propria password tramite il link personale ricevuto via email.';
+  }
   const root=()=>document.getElementById('collaboratorsBody');
   const escape=value=>esc(String(value ?? ''));
   async function load(){
@@ -131,11 +140,17 @@
   function render(){
     const term=(document.getElementById('collaboratorSearch').value || '').trim().toLocaleLowerCase();
     const state=document.getElementById('collaboratorStatus').value;
-    const rows=records.filter(r=>(`${r.full_name} ${r.email}`).toLocaleLowerCase().includes(term) && (!state || r.is_active===(state==='active')));
+    const rows=records.filter(r=>(`${r.full_name} ${r.email}`).toLocaleLowerCase().includes(term) && (!state || accessState(r)===state));
     document.getElementById('collaboratorsTotal').textContent=records.length;
-    document.getElementById('collaboratorsActive').textContent=records.filter(r=>r.is_active).length;
+    document.getElementById('collaboratorsActive').textContent=records.filter(r=>accessState(r)==='active').length;
+    document.getElementById('collaboratorsPending').textContent=records.filter(r=>accessState(r)==='pending').length;
     document.getElementById('collaboratorsInactive').textContent=records.filter(r=>!r.is_active).length;
-    root().innerHTML=rows.map(r=>`<tr><td data-label="Collaboratore"><strong>${escape(r.full_name)}</strong><small>${escape(r.email)}</small></td><td data-label="Accesso"><span class="gf-badge" data-status="${r.is_active?'success':'neutral'}">${r.is_active?'Attivo':'Disattivato'}</span></td><td data-label="Funzioni">${escape([...new Set(catalog.filter(p=>r.permissions.includes(p.key)).map(p=>p.group))].join(', ') || 'Nessuna funzione assegnata')}</td><td data-label="Ultimo accesso">${r.last_login?escape(new Date(r.last_login+'Z').toLocaleString('it-IT')):'Mai effettuato'}</td><td data-label="Azioni"><button class="btn-secondary" onclick="GFCollaborators.edit(${Number(r.id)})">Gestisci</button></td></tr>`).join('') || '<tr><td colspan="5" class="collaborators-empty">Nessun collaboratore trovato. Crea un accesso e scegli le funzioni da assegnare.</td></tr>';
+    root().innerHTML=rows.map(r=>{
+      const status=accessState(r);
+      const label=status==='pending'?'Invito in attesa':(status==='active'?'Attivo':'Disattivato');
+      const detail=status==='pending' && r.invitation_status==='failed'?'Email non inviata':(status==='pending' && r.invitation_status==='expired'?'Invito scaduto':'');
+      return `<tr><td data-label="Collaboratore"><strong>${escape(r.full_name)}</strong><small>${escape(r.email)}</small></td><td data-label="Accesso"><span class="gf-badge" data-status="${status==='pending'?'warning':(status==='active'?'success':'neutral')}">${label}</span>${detail?'<small class="collaborator-invitation-warning">'+escape(detail)+'</small>':''}</td><td data-label="Funzioni">${escape([...new Set(catalog.filter(p=>(r.permissions || []).includes(p.key)).map(p=>p.group))].join(', ') || 'Nessuna funzione assegnata')}</td><td data-label="Ultimo accesso">${r.last_login?escape(new Date(/[zZ]|[+-]\d{2}:?\d{2}$/.test(r.last_login)?r.last_login:r.last_login+'Z').toLocaleString('it-IT')):'Mai effettuato'}</td><td data-label="Azioni"><button class="btn-secondary" onclick="GFCollaborators.edit(${Number(r.id)})">Gestisci</button></td></tr>`;
+    }).join('') || '<tr><td colspan="5" class="collaborators-empty">Nessun collaboratore trovato. Invita un collaboratore e scegli le funzioni da assegnare.</td></tr>';
   }
   function selectedPermissions(){
     return [...document.querySelectorAll('#collaboratorPermissions input:checked')].map(el=>el.value);
@@ -170,12 +185,13 @@
     if(!catalog.length){toast('Attendi il caricamento dei permessi.');return;}
     const record=records.find(r=>r.id===id);editId=record?.id || null;
     document.getElementById('collaboratorForm').reset();
-    document.getElementById('collaboratorFormTitle').textContent=record?'Gestisci collaboratore':'Nuovo collaboratore';
+    document.getElementById('collaboratorFormTitle').textContent=record?'Gestisci collaboratore':'Invita collaboratore';
+    document.getElementById('collaboratorSave').textContent=record?'Salva modifiche':'Invia invito';
     document.getElementById('collaboratorName').value=record?.full_name || '';
     document.getElementById('collaboratorEmail').value=record?.email || '';
     document.getElementById('collaboratorActive').checked=record?record.is_active:true;
-    const password=document.getElementById('collaboratorPassword');password.required=!record;
-    password.placeholder=record?'Lascia vuoto per mantenere la password':'Imposta una password sicura';
+    document.getElementById('collaboratorInvitationNote').textContent=record?invitationDescription(record):'L’azienda non sceglie e non riceve la password. Quando l’accesso è abilitato inviamo automaticamente un’email con un link personale: il collaboratore sceglie la propria password prima di accedere.';
+    document.getElementById('collaboratorResendInvite').hidden=!(record && record.is_active && setupRequired(record));
     document.getElementById('collaboratorError').textContent='';
     const groups=[...new Set(catalog.map(p=>p.group))];
     document.getElementById('collaboratorPermissions').innerHTML=groups.map(group=>`<fieldset><legend>${escape(group)}</legend>${catalog.filter(p=>p.group===group).map(p=>`<label><input type="checkbox" value="${escape(p.key)}" ${record?.permissions.includes(p.key)?'checked':''}> <span>${escape(p.label)}</span></label>`).join('')}</fieldset>`).join('');
@@ -196,11 +212,40 @@
     try{
       expand();const payload={full_name:document.getElementById('collaboratorName').value,email:document.getElementById('collaboratorEmail').value,
         is_active:document.getElementById('collaboratorActive').checked,permissions:[...document.querySelectorAll('#collaboratorPermissions input:checked')].map(el=>el.value)};
-      const password=document.getElementById('collaboratorPassword').value;if(password)payload.password=password;
-      await api('/api/collaborators'+(editId?'/'+editId:''),{method:editId?'PUT':'POST',body:JSON.stringify(payload)});
-      document.getElementById('collaboratorDialog').close();await load();toast('Accesso collaboratore salvato');
+      const result=await api('/api/collaborators'+(editId?'/'+editId:''),{method:editId?'PUT':'POST',body:JSON.stringify(payload)});
+      await load();
+      if(result.is_active && setupRequired(result) && result.invitation_sent===false){
+        // The account exists even when email delivery fails: keep editing it so retry cannot create a duplicate.
+        edit(result.id);
+        document.getElementById('collaboratorError').textContent=result.message || 'Collaboratore salvato, ma l’email di invito non è stata inviata. Puoi riprovare con Invia nuovo invito.';
+      }else{
+        document.getElementById('collaboratorDialog').close();
+        toast(result.invitation_sent===true?'Invito inviato. Il collaboratore sceglierà la propria password.':'Accesso collaboratore salvato');
+      }
     }catch(e){document.getElementById('collaboratorError').textContent=e.message;}
     finally{button.disabled=false;}
   }
-  window.GFCollaborators={load,render,edit,save,expand,selectPreset,customize};
+  async function invite(){
+    const record=records.find(item=>item.id===editId);
+    if(!record || !record.is_active || !setupRequired(record)) return;
+    const selected=new Set(selectedPermissions());
+    if(document.getElementById('collaboratorName').value!==record.full_name || document.getElementById('collaboratorEmail').value!==record.email || document.getElementById('collaboratorActive').checked!==record.is_active || selected.size!==record.permissions.length || record.permissions.some(key=>!selected.has(key))){
+      document.getElementById('collaboratorError').textContent='Salva prima le modifiche al collaboratore, poi invia un nuovo invito.';
+      return;
+    }
+    const button=document.getElementById('collaboratorResendInvite');
+    const saveButton=document.getElementById('collaboratorSave');
+    button.disabled=true;saveButton.disabled=true;
+    document.getElementById('collaboratorError').textContent='';
+    try{
+      const result=await api('/api/collaborators/'+record.id+'/invite',{method:'POST'});
+      await load();edit(record.id);
+      if(result.invitation_sent===true){
+        document.getElementById('collaboratorInvitationNote').textContent=result.message || 'Nuovo invito inviato. Il link precedente non è più valido.';
+        toast('Nuovo invito inviato');
+      }else document.getElementById('collaboratorError').textContent=result.message || 'L’email di invito non è stata inviata. Riprova più tardi.';
+    }catch(e){document.getElementById('collaboratorError').textContent=e.message;}
+    finally{button.disabled=false;saveButton.disabled=false;}
+  }
+  window.GFCollaborators={load,render,edit,save,invite,expand,selectPreset,customize};
 })();

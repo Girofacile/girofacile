@@ -49,7 +49,7 @@
 <link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007_reference_2">
 <link rel="stylesheet" href="/static/dashboard/css/login.css?v=login_preview_exact_20261007">
 <script src="/static/design-system/design-system.js?v=ds_20261007_reference_2" defer></script>
-<link rel="stylesheet" href="/static/dashboard/css/collaborators.css?v=presets_20261009">
+<link rel="stylesheet" href="/static/dashboard/css/collaborators.css?v=invitations_20261009">
 </head>
 <body data-gf-surface="workspace">
 
@@ -461,11 +461,11 @@
     <div class="content">
 
       <section id="tab-collaboratori" class="tab hidden gf-page">
-        <div class="dash-hero-row"><div><h1>Collaboratori</h1><p>Accessi personali al gestionale, con le funzioni che decidi di assegnare.</p></div><button class="btn-primary" onclick="GFCollaborators.edit()">+ Nuovo collaboratore</button></div>
-        <div class="collaborator-metrics"><div><span>Collaboratori</span><strong id="collaboratorsTotal">0</strong></div><div><span>Attivi</span><strong id="collaboratorsActive">0</strong></div><div><span>Disattivati</span><strong id="collaboratorsInactive">0</strong></div></div>
-        <section class="panel"><div class="collaborators-toolbar"><input id="collaboratorSearch" type="search" placeholder="Cerca per nome o email" aria-label="Cerca collaboratori" oninput="GFCollaborators.render()"><select id="collaboratorStatus" aria-label="Filtra stato accesso" onchange="GFCollaborators.render()"><option value="">Tutti gli accessi</option><option value="active">Attivi</option><option value="inactive">Disattivati</option></select></div>
+        <div class="dash-hero-row"><div><h1>Collaboratori</h1><p>Accessi personali al gestionale, con le funzioni che decidi di assegnare.</p></div><button class="btn-primary" onclick="GFCollaborators.edit()">+ Invita collaboratore</button></div>
+        <div class="collaborator-metrics"><div><span>Collaboratori</span><strong id="collaboratorsTotal">0</strong></div><div><span>Attivi</span><strong id="collaboratorsActive">0</strong></div><div><span>Inviti in attesa</span><strong id="collaboratorsPending">0</strong></div><div><span>Disattivati</span><strong id="collaboratorsInactive">0</strong></div></div>
+        <section class="panel"><div class="collaborators-toolbar"><input id="collaboratorSearch" type="search" placeholder="Cerca per nome o email" aria-label="Cerca collaboratori" oninput="GFCollaborators.render()"><select id="collaboratorStatus" aria-label="Filtra stato accesso" onchange="GFCollaborators.render()"><option value="">Tutti gli accessi</option><option value="active">Attivi</option><option value="pending">Inviti in attesa</option><option value="inactive">Disattivati</option></select></div>
         <div class="tableWrap"><table data-gf-responsive="cards"><thead><tr><th>Collaboratore</th><th>Accesso</th><th>Funzioni assegnate</th><th>Ultimo accesso</th><th>Azioni</th></tr></thead><tbody id="collaboratorsBody"></tbody></table></div>
-        <p class="collaborators-note">Ogni collaboratore accede da Login con la propria email e password. Puoi cambiare le funzioni o disattivare l’accesso in qualsiasi momento. Piano, fatturazione e gestione dei collaboratori restano riservati al titolare.</p></section>
+        <p class="collaborators-note">Il collaboratore riceve un invito via email e sceglie autonomamente la password. Dopo l’attivazione accede da Login con le proprie credenziali. Puoi cambiare le funzioni o disattivare l’accesso in qualsiasi momento. Piano, fatturazione e gestione dei collaboratori restano riservati al titolare.</p></section>
       </section>
       <section id="tab-collaborator-home" class="tab hidden gf-page"><div class="panel"><h1>Il tuo accesso aziendale</h1><p>Non hai ancora funzioni operative assegnate. Contatta il titolare dell’azienda.</p><button class="btn-secondary" onclick="openProfilePanel()">Apri il tuo profilo</button></div></section>
       <section id="tab-company" class="tab hidden">
@@ -1840,14 +1840,13 @@
 
 <dialog id="collaboratorDialog" class="collaborators-dialog" aria-labelledby="collaboratorFormTitle">
   <form id="collaboratorForm" onsubmit="GFCollaborators.save(event)">
-    <header><h2 id="collaboratorFormTitle">Nuovo collaboratore</h2><button type="button" class="btn-light" aria-label="Chiudi gestione collaboratore" onclick="document.getElementById('collaboratorDialog').close()">×</button></header>
+    <header><h2 id="collaboratorFormTitle">Invita collaboratore</h2><button type="button" class="btn-light" aria-label="Chiudi gestione collaboratore" onclick="document.getElementById('collaboratorDialog').close()">×</button></header>
     <div class="collaborator-fields">
       <label>Nome e cognome<input id="collaboratorName" required minlength="2" maxlength="160" autocomplete="off"></label>
-      <label>Email di accesso<input id="collaboratorEmail" type="email" required maxlength="200" autocomplete="off"></label>
-      <label>Password<input id="collaboratorPassword" type="password" autocomplete="new-password" maxlength="256"></label>
-      <label class="collaborator-active"><input id="collaboratorActive" type="checkbox" checked> Accesso attivo</label>
+      <label>Email di accesso<input id="collaboratorEmail" type="email" required maxlength="200" autocomplete="off" aria-describedby="collaboratorEmailHint"><small id="collaboratorEmailHint" class="collaborators-note">Se cambi l’email, il collaboratore riceverà un nuovo invito e dovrà scegliere una nuova password.</small></label>
+      <label class="collaborator-active"><input id="collaboratorActive" type="checkbox" checked> Accesso abilitato</label>
     </div>
-    <p class="collaborators-note">Comunica la password iniziale al collaboratore tramite un canale riservato. Potrà cambiarla dal proprio profilo o recuperarla dalla pagina Login.</p>
+    <div class="collaborator-invitation-info"><p id="collaboratorInvitationNote" class="collaborators-note" aria-live="polite"></p><button id="collaboratorResendInvite" type="button" class="btn-secondary" onclick="GFCollaborators.invite()" hidden>Invia nuovo invito</button><small>Un nuovo invito sostituisce il link precedente. Salva eventuali modifiche al collaboratore prima di inviarlo di nuovo.</small></div>
     <div class="collaborator-preset">
       <label for="collaboratorPreset">Profilo di accesso</label>
       <select id="collaboratorPreset" aria-describedby="collaboratorPresetDescription" onchange="GFCollaborators.selectPreset()"></select>
@@ -1859,7 +1858,7 @@
       <div id="collaboratorPermissions" class="collaborator-permissions" onchange="GFCollaborators.customize()"></div>
     </details>
     <p id="collaboratorError" role="alert"></p>
-    <footer><button type="button" class="btn-secondary" onclick="document.getElementById('collaboratorDialog').close()">Annulla</button><button id="collaboratorSave" type="submit" class="btn-primary">Salva accesso</button></footer>
+    <footer><button type="button" class="btn-secondary" onclick="document.getElementById('collaboratorDialog').close()">Annulla</button><button id="collaboratorSave" type="submit" class="btn-primary">Invia invito</button></footer>
   </form>
 </dialog>
 <div id="profileOverlay" class="modal-overlay hidden gf-dialog" onclick="closeProfilePanel(event)">
@@ -1998,7 +1997,7 @@
 <script src="/static/dashboard/js/preview-design.js?v=20261006"></script>
 <script src="/static/dashboard/js/live-design.js?v=20261006"></script>
 <script src="/static/password-strength.js?v=password_policy_20261008_1"></script>
-<script src="/static/dashboard/js/collaborators.js?v=presets_20261009"></script>
+<script src="/static/dashboard/js/collaborators.js?v=invitations_20261009"></script>
 <script src="/static/dashboard/js/core.js?v=collaborator_presets_20261009"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=1"></script>
 

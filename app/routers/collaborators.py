@@ -13,7 +13,7 @@ from ..core.security import hash_password, verify_password, validate_password_st
 from ..core.http_security import COOKIE_DOMAIN
 from ..services.company_permissions import CATALOG, DEPENDENCIES, normalize_permissions, permissions_for, permission_presets
 from ..services.identity import ensure_login_email_available
-from ..services.sessions import read_session
+from ..services.sessions import active_identity, credential, read_session
 from ..services.plans import user_plan_info
 from ..services.collaborator_invitations import (PRIVATE_HEADERS, confirm_invitation, invitation_fields,
     invitation_info, issue_invitation, latest_invitation, revoke_invitations)
@@ -188,6 +188,12 @@ def update_account(payload: dict, actor=Depends(actor_account), db: Session = De
 
 @router.post("/api/collaborator/password")
 def password(payload: dict, response: Response, actor=Depends(actor_account), db: Session = Depends(get_db)):
+    # Do not let a request authenticated before an email change overwrite the
+    # password subsequently chosen by the new invitation recipient.
+    expected_credential = credential(actor)
+    actor = db.query(CompanyCollaborator).filter_by(id=actor.id).with_for_update().populate_existing().first()
+    if not actor or not active_identity(actor, db) or credential(actor) != expected_credential:
+        raise HTTPException(401, "Sessione collaboratore non valida. Accedi di nuovo.")
     if any(not isinstance(payload.get(key), str) or len(payload[key]) > 256 for key in ('current_password', 'new_password', 'confirm_password')):
         raise HTTPException(422, "Campi password non validi")
     old, new = payload.get("current_password", ""), payload.get("new_password", "")

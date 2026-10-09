@@ -89,6 +89,16 @@ jobs:
           path: test-results/collaborators-ui/
           if-no-files-found: ignore
           retention-days: 7
+      - name: Verify collaborator password invitation interfaces
+        run: GF_INVITE_PREVIEW=1 python tests/check_collaborator_invitation_ui.py
+      - name: Preserve collaborator invitation screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: collaborator-invitations-responsive
+          path: test-results/collaborator-invitation-ui/
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Validate OSRM infrastructure and synthetic dataset
         shell: bash
         run: |

@@ -551,6 +551,11 @@ def get_password_reset_info(token: str, db: Session = Depends(get_db)):
     account = db.get(model, prt.account_id) if model else None
     if not account:
         raise HTTPException(404, "Account non trovato")
+    if prt.account_type == "collaborator" and (
+        not active_identity(account, db)
+        or (prt.email or "").strip().lower() != account.email.strip().lower()
+    ):
+        raise HTTPException(404, "Link non valido o scaduto")
     return {
         "ok": True,
         "email": prt.email,
@@ -580,9 +585,16 @@ def confirm_password_reset(payload: dict, db: Session = Depends(get_db)):
         if not account or not active_identity(account, db):
             raise HTTPException(404, "Account agente non attivo")
     elif prt.account_type == "collaborator":
-        account = db.get(CompanyCollaborator, prt.account_id)
+        # Use the same actor-first locking order as invitations and owner edits.
+        # A reset already in flight cannot overwrite a new recipient's password.
+        account = db.query(CompanyCollaborator).filter_by(id=prt.account_id).with_for_update().populate_existing().first()
+        prt = db.query(PasswordResetToken).filter_by(id=prt.id).with_for_update().populate_existing().first()
+        if not prt or prt.used_at or datetime.utcnow() > prt.expires_at:
+            raise HTTPException(400, "Link non valido o scaduto")
         if not account or not active_identity(account, db):
             raise HTTPException(404, "Account collaboratore non attivo")
+        if (prt.email or "").strip().lower() != account.email.strip().lower():
+            raise HTTPException(400, "Link non valido o scaduto")
     else:
         raise HTTPException(400, "Tipo account non supportato")
 

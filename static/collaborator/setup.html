@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="referrer" content="no-referrer">
+  <title>Attiva il tuo accesso · GiroFacile</title>
+  <link rel="icon" href="/favicon.ico?v=8968" sizes="any">
+  <link rel="stylesheet" href="/static/design-system/tokens.css?v=ds_border_20261009">
+  <link rel="stylesheet" href="/static/design-system/components.css?v=ds_20261007_legal_cleanup_4">
+  <link rel="stylesheet" href="/static/password-strength.css?v=password_policy_20261008_1">
+  <link rel="stylesheet" href="/static/collaborator/setup.css?v=invitations_20261009">
+  <script src="/static/password-strength.js?v=password_policy_20261008_1" defer></script>
+  <script src="/static/collaborator/setup.js?v=invitations_20261009" defer></script>
+</head>
+<body data-gf-surface="auth">
+  <main class="invite-layout">
+    <section class="gf-card invite-card" aria-labelledby="inviteTitle">
+      <div class="invite-brand"><img src="/static/girofacile-logo.png" alt="" width="40" height="40"><span>GiroFacile</span></div>
+      <h1 id="inviteTitle">Attiva il tuo accesso</h1>
+      <p class="invite-intro">Scegli una password personale per accedere al gestionale della tua azienda. La password resta riservata a te.</p>
+      <p id="inviteLoading" role="status">Verifica del tuo invito…</p>
+      <div id="inviteErrorState" hidden>
+        <p id="inviteError" class="gf-alert" data-status="danger" role="alert"></p>
+        <button id="inviteRetry" type="button" class="gf-button" hidden>Riprova</button>
+      </div>
+      <form id="inviteForm" hidden>
+        <div class="invite-identity"><strong id="inviteName"></strong><span id="inviteCompany"></span></div>
+        <div class="invite-field"><label for="inviteEmail">Email di accesso</label><input id="inviteEmail" class="gf-input" type="email" readonly autocomplete="username"></div>
+        <div class="invite-field"><label for="invitePassword">Scegli la password</label><input id="invitePassword" class="gf-input" type="password" required minlength="8" maxlength="256" autocomplete="new-password" aria-describedby="invitePasswordMeter"><div id="invitePasswordMeter" class="gf-password-meter" aria-live="polite"></div></div>
+        <div class="invite-field"><label for="inviteConfirmPassword">Conferma la password</label><input id="inviteConfirmPassword" class="gf-input" type="password" required minlength="8" maxlength="256" autocomplete="new-password"></div>
+        <p id="inviteFormError" class="invite-form-error" role="alert"></p>
+        <button id="inviteSubmit" class="gf-button" data-variant="primary" type="submit" disabled>Imposta la password</button>
+        <p class="invite-hint">Il link è personale e utilizzabile una sola volta. Dopo l’attivazione accedi con la tua email e la password scelta.</p>
+      </form>
+      <div id="inviteSuccess" hidden role="status">
+        <p class="gf-alert" data-status="success">Password impostata. Il tuo accesso è pronto.</p>
+        <p>Accedi con la tua email e la password che hai appena scelto.</p>
+        <a id="inviteLogin" class="gf-button" data-variant="primary" href="/dashboard">Vai al Login</a>
+      </div>
+      <p class="invite-footer">Problemi con l’invito? Contatta il titolare della tua azienda.</p>
+    </section>
+  </main>
+</body>
+</html>

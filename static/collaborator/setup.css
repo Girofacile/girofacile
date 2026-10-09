@@ -1,0 +1,21 @@
+/* The public collaborator setup uses GiroFacile primitives and visual tokens. */
+body[data-gf-surface="auth"]{margin:0;min-height:100dvh}
+.invite-layout{display:grid;place-items:center;min-height:100dvh;padding:var(--gf-space-6) var(--gf-space-4)}
+.invite-card{width:min(var(--gf-auth-width),100%);padding:var(--gf-space-8)}
+.invite-brand{display:flex;align-items:center;gap:var(--gf-space-3);margin-bottom:var(--gf-space-6);color:var(--gf-color-primary);font-size:var(--gf-font-xl);font-weight:var(--gf-weight-bold)}
+.invite-brand img{width:var(--gf-control-height);height:var(--gf-control-height);object-fit:contain}
+.invite-card h1{font-size:var(--gf-font-2xl);line-height:1.2;margin:0 0 var(--gf-space-3)}
+.invite-intro,.invite-hint,.invite-footer{color:var(--gf-color-muted);line-height:var(--gf-line-height)}
+.invite-intro{margin:0 0 var(--gf-space-6)}
+.invite-identity{display:grid;gap:var(--gf-space-1);padding:var(--gf-space-3);margin-bottom:var(--gf-space-5);border:1px solid var(--gf-color-border);border-radius:var(--gf-radius-sm);background:var(--gf-color-surface-subtle);overflow-wrap:anywhere}
+.invite-identity span{color:var(--gf-color-muted);font-size:var(--gf-font-sm)}
+.invite-field{display:grid;gap:var(--gf-space-2);margin-bottom:var(--gf-space-4)}
+.invite-field label{font-weight:var(--gf-weight-semibold)}
+.invite-form-error{color:var(--gf-color-danger);margin:var(--gf-space-3) 0;overflow-wrap:anywhere}
+.invite-card .gf-input{min-height:var(--gf-control-touch)}
+.invite-card .gf-button{width:100%;min-height:var(--gf-control-touch)}
+.invite-hint,.invite-footer{font-size:var(--gf-font-xs)}
+.invite-hint{margin-top:var(--gf-space-4)}
+.invite-footer{border-top:1px solid var(--gf-color-border);padding-top:var(--gf-space-4);margin:var(--gf-space-6) 0 0}
+.invite-card [hidden]{display:none!important}
+@media(max-width:640px){.invite-layout{align-items:start;padding:var(--gf-space-4)}.invite-card{padding:var(--gf-space-5)}.invite-card h1{font-size:var(--gf-font-xl)}}

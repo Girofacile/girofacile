@@ -38,7 +38,7 @@ def assert_fits(page, selector=None):
 def main():
     output = ROOT / "test-results" / "collaborators-ui"
     output.mkdir(parents=True, exist_ok=True)
-    errors, unexpected_writes, checks, writes, company_writes, dialogs = [], [], [], [], [], []
+    errors, unexpected_writes, checks, writes, company_writes, dialogs, invitation_writes = [], [], [], [], [], [], []
     try:
         with sync_playwright() as pw:
             browser = pw.chromium.launch(headless=True)
@@ -50,7 +50,8 @@ def main():
                     page.on("pageerror", lambda error: errors.append(str(error)))
                     page.on("dialog", lambda dialog: (dialogs.append(dialog.message), dialog.dismiss()))
                     state = dict(records=[], requests=[], fail_list=False, actor=False,
-                                 company=dict(OWNER, company_email="owner@example.test"), allow_company_save=False)
+                                 company=dict(OWNER, company_email="owner@example.test"), allow_company_save=False,
+                                 fail_invite=True)
 
                     def handle(route):
                         parsed = urlparse(route.request.url)
@@ -89,12 +90,28 @@ def main():
                             return
                         if (path == "/api/collaborators" and method == "POST") or (path == "/api/collaborators/1" and method == "PUT"):
                             payload = route.request.post_data_json
-                            # Backend authorization is exercised by TestClient tests.
-                            row = dict(payload, id=1, permissions=normalize_permissions(payload["permissions"]), last_login=None)
-                            row.pop("password", None)
+                            # The owner never supplies a collaborator password.
+                            assert "password" not in payload, payload
+                            previous = state["records"][0] if state["records"] else {}
+                            row = dict(payload, id=1, permissions=normalize_permissions(payload["permissions"]), last_login=None,
+                                       password_setup_required=True, invitation_status=previous.get("invitation_status", "failed"))
                             state["records"][:] = [row]
                             writes.append(dict(width=width, method=method, path=path, permissions=row["permissions"]))
-                            route.fulfill(json=row)
+                            result = dict(row)
+                            if method == "POST":
+                                result.update(invitation_sent=False, message="Collaboratore salvato, ma l’email di invito non è stata inviata.")
+                            route.fulfill(json=result)
+                            return
+                        if path == "/api/collaborators/1/invite" and method == "POST":
+                            assert route.request.post_data is None, "Invitation retries never contain passwords or a public token"
+                            row = state["records"][0]
+                            assert row["password_setup_required"] and row["is_active"]
+                            sent = not state["fail_invite"]
+                            state["fail_invite"] = False
+                            row["invitation_status"] = "pending" if sent else "failed"
+                            invitation_writes.append(dict(width=width, method=method, path=path, sent=sent))
+                            route.fulfill(json=dict(row, invitation_sent=sent,
+                                                    message="Nuovo invito inviato. Il link precedente non è più valido." if sent else "L’email di invito non è stata inviata. Riprova più tardi."))
                             return
                         if path == "/api/company-profile" and method == "PUT" and state["actor"] and state["allow_company_save"]:
                             state["allow_company_save"] = False
@@ -174,7 +191,8 @@ def main():
                     page.locator("#tab-collaboratori button.btn-primary").first.click()
                     page.locator("#collaboratorName").fill("Collaboratore Demo")
                     page.locator("#collaboratorEmail").fill("demo@example.test")
-                    page.locator("#collaboratorPassword").fill("Orbit!River47Cedar#")
+                    assert page.locator("#collaboratorPassword").count() == 0
+                    assert page.locator("#collaboratorSave").inner_text() == "Invia invito"
                     assert page.locator("#collaboratorPreset").input_value() == "operator"
                     assert checked_permissions(page) == set(PRESETS["operator"]["permissions"])
                     assert checked_permissions(page) == {item["key"] for item in CATALOG}
@@ -190,6 +208,22 @@ def main():
                     page.locator("#collaboratorSave").click()
                     page.wait_for_function("document.getElementById('collaboratorsTotal').textContent==='1'")
                     assert set(state["records"][0]["permissions"]) == expected
+                    page.locator("#collaboratorError").filter(has_text="email di invito non è stata inviata").wait_for(state="visible")
+                    assert page.locator("#collaboratorDialog").is_visible()
+                    assert page.locator("#collaboratorsPending").inner_text() == "1"
+                    assert page.locator("#collaboratorsActive").inner_text() == "0"
+                    assert page.locator("#collaboratorSave").inner_text() == "Salva modifiche"
+                    # Saving succeeded even when email delivery failed. Retry uses the existing account.
+                    page.locator("#collaboratorResendInvite").click()
+                    page.locator("#collaboratorError").filter(has_text="Riprova più tardi").wait_for(state="visible")
+                    assert page.locator("#collaboratorDialog").is_visible()
+                    assert len([item for item in writes if item["width"] == width]) == 1
+                    page.locator("#collaboratorResendInvite").click()
+                    page.locator("#collaboratorInvitationNote").filter(has_text="Nuovo invito inviato").wait_for(state="visible")
+                    assert state["records"][0]["invitation_status"] == "pending"
+                    assert checked_permissions(page) == expected
+                    capture("pending-invitation")
+                    page.locator("#collaboratorDialog").get_by_role("button", name="Annulla", exact=True).click()
 
                     page.locator("#collaboratorsBody button").first.click()
                     assert page.locator("#collaboratorPreset").input_value() == "custom"
@@ -215,6 +249,31 @@ def main():
                     assert "Nessun collaboratore" in page.locator("#collaboratorsBody").inner_text()
                     page.locator("#collaboratorSearch").fill("Demo")
                     capture("owner-list")
+                    page.locator("#collaboratorStatus").select_option("pending")
+                    assert "Invito in attesa" in page.locator("#collaboratorsBody").inner_text()
+                    page.locator("#collaboratorStatus").select_option("active")
+                    assert "Nessun collaboratore" in page.locator("#collaboratorsBody").inner_text()
+                    page.locator("#collaboratorStatus").select_option("")
+                    # Legacy and accepted accounts retain their passwords and need no further invitation.
+                    state["records"][0].update(password_setup_required=False, invitation_status="accepted")
+                    page.evaluate("GFCollaborators.load()")
+                    page.wait_for_function("document.getElementById('collaboratorsActive').textContent==='1'")
+                    assert page.locator("#collaboratorsPending").inner_text() == "0"
+                    page.locator("#collaboratorsBody button").first.click()
+                    assert page.locator("#collaboratorResendInvite").is_hidden()
+                    assert "ha già scelto" in page.locator("#collaboratorInvitationNote").inner_text()
+                    page.locator("#collaboratorDialog").get_by_role("button", name="Annulla", exact=True).click()
+                    state["records"][0].update(is_active=False, password_setup_required=True, invitation_status="disabled")
+                    page.evaluate("GFCollaborators.load()")
+                    page.wait_for_function("document.getElementById('collaboratorsInactive').textContent==='1'")
+                    page.locator("#collaboratorStatus").select_option("inactive")
+                    assert "Disattivato" in page.locator("#collaboratorsBody").inner_text()
+                    page.locator("#collaboratorsBody button").first.click()
+                    assert page.locator("#collaboratorResendInvite").is_hidden()
+                    assert "disattivato" in page.locator("#collaboratorInvitationNote").inner_text()
+                    page.locator("#collaboratorDialog").get_by_role("button", name="Annulla", exact=True).click()
+                    page.locator("#collaboratorStatus").select_option("")
+
 
                     # Error handling and retry stay available instead of hiding failures.
                     state["fail_list"] = True
@@ -329,14 +388,15 @@ def main():
                     assert_fits(page)
                     page.evaluate("closeProfilePanel()")
                     checks.append(dict(width=width, presets=list(PRESETS), manual_save=True, dependency_expansion=True,
-                                       retry=True, operator_company_settings=True, forbidden_areas=True,
+                                       retry=True, invitation_retry=True, password_owner_removed=True, pending_counts=True,
+                                       operator_company_settings=True, forbidden_areas=True,
                                        read_only=True, restored_controls=True, own_profile=True))
                     context.close()
             finally:
                 browser.close()
     finally:
         report = dict(widths=list(WIDTHS), checks=checks, errors=errors, unexpected_writes=unexpected_writes,
-                      writes=writes, company_writes=company_writes, dialogs=dialogs)
+                      writes=writes, invitation_writes=invitation_writes, company_writes=company_writes, dialogs=dialogs)
         (output / "audit.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
         print(json.dumps(report, indent=2))
     assert len(checks) == len(WIDTHS), "Not every responsive width completed"
@@ -344,8 +404,9 @@ def main():
     assert not unexpected_writes, unexpected_writes
     assert len(writes) == 2 * len(WIDTHS), writes
     assert len(company_writes) == len(WIDTHS), company_writes
+    assert len(invitation_writes) == 2 * len(WIDTHS), invitation_writes
     assert not dialogs, dialogs
-    print("Collaborator UI passed: presets, manual grants, dependencies, mobile navigation, exclusions, retry and own profile at 390/768/1024/1440.")
+    print("Collaborator UI passed: presets, manual grants, dependencies, mobile navigation, exclusions, invitation failure/retry, pending counts and own profile at 390/768/1024/1440.")
 
 
 if __name__ == "__main__":
