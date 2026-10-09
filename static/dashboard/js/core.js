@@ -1660,8 +1660,7 @@ function renderEmptyDashList(text, illustration){
     progress: 'Segui qui i giri avviati e lo stato delle consegne.',
     completed: 'I giri completati oggi appariranno qui.'
   };
-  const icon = Object.prototype.hasOwnProperty.call(descriptions, illustration) ? `dashboard-${illustration}.svg` : "empty.svg";
-  return `<div class="dash-empty dash-empty-illustrated"><img src="/static/design-system/icons/${icon}" alt="" width="200" height="125"><strong>${esc(text)}</strong><p>${descriptions[illustration]}</p></div>`;
+  return `<div class="dash-empty dash-empty-illustrated"><img src="/static/design-system/icons/empty.svg" alt="" width="200" height="125"><strong>${esc(text)}</strong><p>${descriptions[illustration]}</p></div>`;
 }
 function renderDashTrend(routes){
   const el = document.getElementById("dashTrendChart");
