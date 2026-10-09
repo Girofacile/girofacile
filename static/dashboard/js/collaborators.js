@@ -11,9 +11,20 @@
   const can = key => !isCollaborator() || key === 'session' || (currentSessionUser.permissions || []).includes(key);
   const allowedTab = name => !isCollaborator() || (!!tabs[name] && can(tabs[name]));
   let observer;
+  const companyDisabled=new WeakMap();
   function apply(){
     const collaborator=isCollaborator();
     document.body.classList.toggle('company-collaborator-session',collaborator);
+    // Read-only company forms must not create an unsavable dirty draft.
+    document.querySelectorAll('#tab-company .company-card-v29 input,#tab-company .company-card-v29 select,#tab-company .company-card-v29 textarea').forEach(el=>{
+      if(collaborator && !can('company.update')){
+        if(!companyDisabled.has(el)) companyDisabled.set(el,el.disabled);
+        el.disabled=true;
+      }else if(companyDisabled.has(el)){
+        el.disabled=companyDisabled.get(el); companyDisabled.delete(el);
+      }
+      if(el.type==='file') el.closest('.file-btn')?.setAttribute('aria-disabled',String(el.disabled));
+    });
     const email=document.getElementById('profileEmail'); if(email) email.readOnly=collaborator;
     if(!collaborator){
       document.querySelectorAll('.collaborator-denied').forEach(el=>el.classList.remove('collaborator-denied'));
@@ -44,7 +55,7 @@
       [/cancelDashboardRoute|completeDashboardRoute/,'routes.manage'],
       [/generateOperator|generate.*Token|TrackingLink|openCustomerTracking/,'routes.tracking'],
       [/send.*Chat|sendDriverMessage/,'chat.write'],
-      [/openSupportPanel/,'support.read'],
+      [/openSupportPanel|submitSupportTicketV60|generateSupportTicketTextAIv67/,'support.write'],
     ];
     document.querySelectorAll('[onclick]').forEach(el=>{
       const code=el.getAttribute('onclick') || '';

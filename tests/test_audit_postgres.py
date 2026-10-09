@@ -28,17 +28,19 @@ def pg():
 
 
 def test_migrations_are_serialized_repeatable_and_preserve_data(pg):
-    from app.migrations import run_migrations, require_current_schema
+    from app.migrations import run_migrations, require_current_schema, LATEST
     with ThreadPoolExecutor(max_workers=2) as pool:
         list(pool.map(lambda _: run_migrations(pg), range(2)))
     require_current_schema(pg)
     with pg.begin() as conn:
-        assert conn.execute(text('SELECT COUNT(*) FROM schema_migrations')).scalar() == 5
+        markers = set(conn.execute(text('SELECT version FROM schema_migrations')).scalars())
+        assert markers == {'20261004_01', '20261004_02', '20261004_03', '20261004_04', '20261006_01', LATEST}
         conn.execute(text("UPDATE users SET company_name='preserved'"))
         conn.execute(text('CREATE TABLE activity_events (id INTEGER)'))
         conn.execute(text('INSERT INTO activity_events VALUES (1)'))
     run_migrations(pg)
     with pg.connect() as conn:
+        assert set(conn.execute(text('SELECT version FROM schema_migrations')).scalars()) == markers
         assert conn.execute(text('SELECT company_name FROM users')).scalar() == 'preserved'
         assert conn.execute(text('SELECT COUNT(*) FROM activity_events')).scalar() == 1
 

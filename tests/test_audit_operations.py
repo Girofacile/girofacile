@@ -234,7 +234,11 @@ def test_registration_policy_and_trial_catalog(env, monkeypatch):
     set_platform_setting(db, 'registrations_enabled', 'true')
     set_platform_setting(db, 'trial_days', '7')
     set_platform_setting(db, 'default_plan', 'business'); db.commit()
-    result = signup(SignupIn(username='audit-new', password='Audit-password-2026'), Response(), db)
+    # Enabled registration still rejects passwords based on the account identity.
+    with pytest.raises(HTTPException) as error:
+        signup(SignupIn(username='audit-new', password='Audit-password-2026'), Response(), db)
+    assert error.value.status_code == 400
+    result = signup(SignupIn(username='audit-new', password='Orbit!River47Cedar#'), Response(), db)
     from app.models import User
     created = db.query(User).filter_by(username='audit-new').one()
     assert created.plan == 'business'

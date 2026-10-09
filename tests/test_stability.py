@@ -129,6 +129,7 @@ def test_import_updates_at_quota_and_counts_repeated_codes_once(env, monkeypatch
 
 
 def test_route_quota_also_guards_manual_creation_and_allows_existing_edit(env, monkeypatch):
+    from starlette.requests import Request
     from app.services.plans import PLAN_LIMITS, check_daily_route_limit
     from app.routers import routes
     from app.schemas import ManualRoutePlanIn
@@ -141,8 +142,9 @@ def test_route_quota_also_guards_manual_creation_and_allows_existing_edit(env, m
     db.add(dep); db.commit()
     data = ManualRoutePlanIn(data_giro=route.data_giro.isoformat(), deposit_id=dep.id, consegne=[])
     monkeypatch.setattr(routes, 'recalculate_manual_route', lambda *a,**k: pytest.fail('Google must not be called at quota'))
+    request = Request({'type': 'http', 'method': 'POST', 'path': '/api/routes/recalculate-manual', 'headers': []})
     with pytest.raises(HTTPException) as exc:
-        routes.recalc_manual_route(data, None, db, owner)
+        routes.recalc_manual_route(data, request, db, owner)
     assert exc.value.status_code == 403
 
 

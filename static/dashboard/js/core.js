@@ -4882,6 +4882,7 @@ function ensureSupportModalV60(){
 }
 
 function openSupportPanelV49(errorId=null, suggestedMessage=""){
+  if(window.GFCompanyAccess?.isCollaborator() && !GFCompanyAccess.can('support.write')) return;
   ensureSupportModalV60();
   const modal = document.getElementById("supportTicketModalV60");
   const subject = document.getElementById("supportTicketSubjectV60");
@@ -4912,6 +4913,7 @@ function closeSupportTicketModalV60(){
 }
 
 async function generateSupportTicketTextAIv67(){
+  if(window.GFCompanyAccess?.isCollaborator() && !GFCompanyAccess.can('support.write')) return;
   const errorIdRaw = document.getElementById("supportTicketErrorIdV60")?.value || "";
   if(!errorIdRaw){ alert("Testo assistito disponibile solo per ticket collegati a un errore sistema."); return; }
   const btn = document.getElementById("supportTicketAiBtnV67");
@@ -4929,6 +4931,7 @@ async function generateSupportTicketTextAIv67(){
 }
 
 async function submitSupportTicketV60(){
+  if(window.GFCompanyAccess?.isCollaborator() && !GFCompanyAccess.can('support.write')) return;
   const subject = document.getElementById("supportTicketSubjectV60")?.value?.trim() || "Richiesta assistenza";
   const message = document.getElementById("supportTicketMessageV60")?.value?.trim() || "";
   const errorIdRaw = document.getElementById("supportTicketErrorIdV60")?.value || "";

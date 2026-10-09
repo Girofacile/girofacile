@@ -36,6 +36,9 @@ per contattare il titolare, senza prezzi o pulsanti upgrade. La guida di
 configurazione iniziale dell'account rimane riservata al titolare; la normale
 pagina Azienda e le impostazioni sono modificabili dall'Operatore.
 
+I campi aziendali in sola lettura non attivano bozze non salvabili. La creazione
+richieste di assistenza richiede il permesso corrispondente di scrittura.
+
 Non è necessaria una nuova migrazione per i preset.
 
 ## Funzioni e dipendenze
