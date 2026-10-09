@@ -19,7 +19,7 @@ from .database import Base, engine, get_db
 from .models import Agent, Customer, Deposit, Driver, RoutePlan, User, Vehicle, PasswordResetToken, DistanceCache
 from .routers import (
     admin_billing, admin_database, admin_profile, admin_server, admin_support, admin_users,
-    agents, auth, billing, customers, tracking,
+    agents, auth, billing, customers, tracking, collaborators,
     deposits, reports, routes, operator, notifications, settings, support, driver as driver_router_module, agent as agent_router_module,
 )
 from .routers.vehicles_drivers import drivers_router, vehicles_router
@@ -99,6 +99,7 @@ app.mount("/static", StaticFiles(directory=static_dir), name="static")
 # Include router
 # -----------------------------------------------------------------------
 app.include_router(auth.router)
+app.include_router(collaborators.router)
 app.include_router(deposits.router)
 app.include_router(agents.router)
 app.include_router(customers.router)

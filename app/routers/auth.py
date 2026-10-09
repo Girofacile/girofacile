@@ -1,6 +1,6 @@
 from ..services.identity import ensure_login_email_available
 from ..services.platform_policy import require_registration, trial_days, default_plan
-from ..services.sessions import read_session, active_identity, logout_sessions, revoked
+from ..services.sessions import read_session, active_identity, logout_sessions, revoked, credential
 from ..core.security import make_account_token
 from datetime import datetime, timedelta
 import hashlib
@@ -15,7 +15,7 @@ from ..core.http_security import cookie_options, COOKIE_DOMAIN
 from ..core.dependencies import current_user, is_admin_user
 from ..core.security import hash_password, make_token, make_superadmin_token, make_superadmin_collaborator_token, password_needs_rehash, validate_password_strength, verify_password, verify_token, verify_superadmin_token
 from ..database import get_db
-from ..models import Agent, AgentAccount, Customer, Deposit, Driver, DriverAccount, PasswordResetToken, RoutePlan, User, Vehicle, SuperAdminCollaborator, SuperAdminProfile
+from ..models import CompanyCollaborator, Agent, AgentAccount, Customer, Deposit, Driver, DriverAccount, PasswordResetToken, RoutePlan, User, Vehicle, SuperAdminCollaborator, SuperAdminProfile
 from ..schemas import SignupIn
 from ..services.plans import user_plan_info
 from ..services.agents_feature import require_agents_enabled
@@ -271,6 +271,19 @@ async def login(payload: dict, response: Response, db: Session = Depends(get_db)
             **user_plan_info(user),
         }
 
+    # Company collaborator credentials never become owner credentials.
+    collaborator = db.query(CompanyCollaborator).filter(func.lower(CompanyCollaborator.email) == identifier_norm).first()
+    if collaborator and verify_password(password, collaborator.password_hash):
+        if not active_identity(collaborator, db):
+            raise HTTPException(403, "Account collaboratore disabilitato")
+        collaborator.last_login = datetime.utcnow()
+        if password_needs_rehash(collaborator.password_hash):
+            collaborator.password_hash = hash_password(password)
+        db.commit()
+        _set_login_cookie_for_role(response, "collaborator", collaborator)
+        from .collaborators import collaborator_session
+        return collaborator_session(collaborator, db.get(User, collaborator.user_id))
+
     # 2) Account autista
     driver_account = db.query(DriverAccount).filter(func.lower(DriverAccount.email) == identifier_norm).first()
     if driver_account and verify_password(password, driver_account.password_hash):
@@ -360,6 +373,11 @@ def me(request: Request, db: Session = Depends(get_db)):
             **user_plan_info(user),
         }
 
+    collaborator = read_session(request.cookies.get("session"), "collaborator", db)
+    if collaborator:
+        from .collaborators import collaborator_session
+        return collaborator_session(collaborator, db.get(User, collaborator.user_id))
+
     driver_account = _read_driver_session(request.cookies.get("driver_session"), db)
     if driver_account:
         driver = db.get(Driver, driver_account.driver_id)
@@ -410,7 +428,9 @@ def _set_login_cookie_for_role(response: Response, role: str, account) -> None:
     response.delete_cookie("session", path="/", domain=COOKIE_DOMAIN)
     response.delete_cookie("driver_session", path="/", domain=COOKIE_DOMAIN)
     response.delete_cookie("agent_session", path="/", domain=COOKIE_DOMAIN)
-    if role == "admin":
+    if role == "collaborator":
+        response.set_cookie("session", make_account_token("collaborator", account.id, credential(account)), **cookie_options(60 * 60 * 24 * 7))
+    elif role == "admin":
         response.set_cookie("session", make_token(account.id, account.password_hash), **cookie_options(60 * 60 * 24 * 7))
     elif role == "driver":
         response.set_cookie("driver_session", _driver_session_token(account), **cookie_options(60 * 60 * 24 * 30))
@@ -437,10 +457,15 @@ def _reset_display_for_account(account_type: str, account, db: Session) -> tuple
         agent = db.get(Agent, account.agent_id)
         name = f"{agent.nome} {agent.cognome or ''}".strip() if agent else account.email
         return (name or "Agente", "Portale agente")
+    if account_type == "collaborator":
+        return (account.full_name, "Collaboratore aziendale")
     return (account.email, "Account GiroFacile")
 
 
 def _password_context_for_account(account_type: str, account, db: Session) -> list[str]:
+    if account_type == "collaborator":
+        owner = db.get(User, account.user_id)
+        return [account.full_name or "", account.email or "", owner.company_name if owner else ""]
     if account_type == "user":
         return [account.username or "", account.email or "", account.company_name or ""]
     if account_type == "driver":
@@ -482,6 +507,9 @@ def _find_reset_accounts(email: str, db: Session):
     agent_account = db.query(AgentAccount).filter(func.lower(AgentAccount.email) == email_norm).first()
     if agent_account and active_identity(agent_account, db):
         accounts.append(("agent", agent_account))
+    collaborator = db.query(CompanyCollaborator).filter(func.lower(CompanyCollaborator.email) == email_norm).first()
+    if collaborator and active_identity(collaborator, db):
+        accounts.append(("collaborator", collaborator))
     return accounts
 
 
@@ -519,7 +547,7 @@ def get_password_reset_info(token: str, db: Session = Depends(get_db)):
     prt = db.query(PasswordResetToken).filter(PasswordResetToken.token == token).first()
     if not prt or prt.used_at or datetime.utcnow() > prt.expires_at:
         raise HTTPException(404, "Link non valido o scaduto")
-    model = {"user": User, "driver": DriverAccount, "agent": AgentAccount}.get(prt.account_type)
+    model = {"user": User, "driver": DriverAccount, "agent": AgentAccount, "collaborator": CompanyCollaborator}.get(prt.account_type)
     account = db.get(model, prt.account_id) if model else None
     if not account:
         raise HTTPException(404, "Account non trovato")
@@ -551,6 +579,10 @@ def confirm_password_reset(payload: dict, db: Session = Depends(get_db)):
         account = db.get(AgentAccount, prt.account_id)
         if not account or not active_identity(account, db):
             raise HTTPException(404, "Account agente non attivo")
+    elif prt.account_type == "collaborator":
+        account = db.get(CompanyCollaborator, prt.account_id)
+        if not account or not active_identity(account, db):
+            raise HTTPException(404, "Account collaboratore non attivo")
     else:
         raise HTTPException(400, "Tipo account non supportato")
 

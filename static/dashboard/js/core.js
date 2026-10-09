@@ -241,6 +241,7 @@ function updateDashboardStats(){
 }
 
 async function api(path, options = {}) {
+  path = window.GFCompanyAccess?.rewrite(path) || path;
   const headers = options.body instanceof FormData ? (options.headers || {}) : {"Content-Type":"application/json", ...(options.headers || {})};
   const res = await fetch(path, {...options, headers});
   if (!res.ok) {
@@ -555,6 +556,7 @@ function loadProfilePanel(){
   set("profileName", accountName); set("profileEmail", email); set("profileRole", role);
 }
 async function loadPlanInfo(){
+  if(window.GFCompanyAccess?.isCollaborator()){GFCompanyAccess.apply();return;}
   try{
     const checkoutResult = new URLSearchParams(window.location.search).get('checkout');
     if(checkoutResult && !window.billingReturnHandled){
@@ -1344,6 +1346,7 @@ document.getElementById("logoutBtn").onclick = async () => { await api("/api/log
 
 
 async function initApp(){
+  if(window.GFCompanyAccess?.isCollaborator()) return GFCompanyAccess.initialize();
   const routeDateInput = document.getElementById("routeDate");
   if(routeDateInput){
     const today = todayIso();
@@ -5397,7 +5400,7 @@ function applyUniversalFeaturesV891(){
 }
 async function loadUniversalFeaturesV89(){
   try{
-    const c=await api('/api/company-profile');
+    const c=await api(window.GFCompanyAccess?.isCollaborator() && !GFCompanyAccess.can('company.read') ? '/api/collaborator/context' : '/api/company-profile');
     gfUniversalFeaturesV891={
       has_time_windows:c.has_time_windows !== false,
       needs_photo_proof:!!c.needs_photo_proof,

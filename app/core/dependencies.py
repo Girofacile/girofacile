@@ -11,6 +11,13 @@ def current_user(request: Request, db: Session = Depends(get_db)) -> User:
     from ..services.sessions import read_session
     user = read_session(request.cookies.get('session'), 'user', db)
     if not user:
+        actor = read_session(request.cookies.get('session'), 'collaborator', db)
+        if actor:
+            from ..services.company_permissions import authorize
+            authorize(request, actor)
+            request.state.company_collaborator = actor
+            user = db.get(User, actor.user_id)
+    if not user:
         raise HTTPException(status_code=401, detail="Sessione non valida")
     from ..services.usage_limits import guard_company_write
     guard_company_write(request, user)

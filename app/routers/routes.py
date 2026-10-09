@@ -606,6 +606,12 @@ def recalc_manual_route(
     request: Request,
     db: Session = Depends(get_db), user: User = Depends(current_user),
 ):
+    actor = getattr(request.state, 'company_collaborator', None)
+    if actor and data.route_id:
+        from ..services.company_permissions import permissions_for
+        existing = owned(db.query(RoutePlan), RoutePlan, user).filter(RoutePlan.id == data.route_id).first()
+        if existing and computed_route_status(existing) != 'bozza' and 'routes.program' not in permissions_for(actor):
+            raise HTTPException(403, 'Per modificare un giro programmato serve il permesso di programmazione')
     ensure_not_past_route_date(data.data_giro)
     deliveries = [c.model_dump() for c in data.consegne]
     deposit, vehicle, _driver = _validate_route_tenant_scope(db, user, data, deliveries)

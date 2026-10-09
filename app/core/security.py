@@ -266,7 +266,7 @@ def _sign(value: str) -> str:
 def make_account_token(role: str, account_id: int, password_hash: str) -> str:
     now = int(time.time())
     data = {'v': 2, 'role': role, 'id': account_id, 'iat': now,
-            'exp': now + 86400 * (7 if role == 'user' else 30),
+            'exp': now + 86400 * (7 if role in ('user', 'collaborator') else 30),
             'nonce': secrets.token_hex(16),
             'credential': _sign(f'{role}:{account_id}:{password_hash}')}
     body = base64.urlsafe_b64encode(json.dumps(data).encode()).decode()

@@ -81,6 +81,10 @@ def guard_company_write(request, user):
     if request.method in ("GET", "HEAD", "OPTIONS"):
         return
     path = request.url.path
+    if request.method == 'PUT' and path.startswith('/api/collaborators/'):
+        # Only the owner can reach these routes; access revocation must remain
+        # available when the company's subscription has expired.
+        return
     if path.startswith(("/api/billing/", "/api/support", "/api/password-reset", "/api/logout")):
         return
     if path.startswith("/api/routes/") and path.endswith(("/complete", "/cancel")):

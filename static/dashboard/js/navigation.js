@@ -1,5 +1,6 @@
 // One navigation entry point; dependencies are provided by the feature modules.
 const WORKSPACE_TOPBAR_META = {
+  collaboratori: {title:"Collaboratori",subtitle:"Gestisci accessi personali e funzioni assegnate."},
   dashboard: {
     title: "Dashboard",
     subtitle: "Panoramica operativa delle consegne e dell’attività aziendale."
@@ -51,6 +52,7 @@ function syncWorkspaceTopbar(name){
 }
 
 function showTab(name){
+  if(window.GFCompanyAccess && !GFCompanyAccess.allowedTab(name)){toast("Funzione non assegnata al tuo account");return;}
   window.GFLiveDesign?.closeMap();
   if(name==='integrations') name='dashboard';
   if(name !== "company" && typeof blockCompanyNavigationForUnsavedChanges === "function" && blockCompanyNavigationForUnsavedChanges()) return;
@@ -64,8 +66,9 @@ function showTab(name){
   document.querySelectorAll(`.nav-item[data-tab="${name}"]`).forEach(x=>x.classList.add("active"));
   syncWorkspaceTopbar(name);
 
-  if(name==="dashboard"){ loadDashboardHome(); loadNotificationsV30(false); if(!featureLockedForTab("chat-autisti")) loadDriverChatNotifications(); }
-  if(name==="company") { loadCompanyProfile(); loadOnboardingStatus(false); }
+  if(name==="dashboard"){ loadDashboardHome(); if(!window.GFCompanyAccess || GFCompanyAccess.can("notifications.read")) loadNotificationsV30(false); if(!featureLockedForTab("chat-autisti") && (!window.GFCompanyAccess || GFCompanyAccess.can("chat.read"))) loadDriverChatNotifications(); }
+  if(name==="company") { loadCompanyProfile(); if(!window.GFCompanyAccess?.isCollaborator()) loadOnboardingStatus(false); }
+  if(name==="collaboratori") GFCollaborators.load();
   if(name==="dashboard-scheduled") loadDashboardScheduledPage();
   if(name==="dashboard-in-progress") loadDashboardInProgressPage();
   if(name==="dashboard-completed") loadDashboardCompletedPage();
@@ -86,5 +89,5 @@ function showTab(name){
   if(name==="admin-users") loadAdminUsers();
   if(name==="admin-tickets") loadAdminTickets();
   if(name === 'dashboard') applyWorkspaceStateV49(gfWorkspaceOperationalV49);
-  setTimeout(syncMobileShellV62, 40);
+  setTimeout(()=>{syncMobileShellV62();window.GFCompanyAccess?.apply();}, 40);
 }

@@ -2,7 +2,7 @@
 from datetime import datetime
 from sqlalchemy import inspect, text
 
-LATEST = '20261006_01'
+LATEST = '20261009_01'
 LOCK_ID = 7640152404
 
 
@@ -65,7 +65,7 @@ def run_migrations(engine):
                 with engine.begin() as conn:
                     DeliveryTrackingLink.__table__.create(conn, checkfirst=True)
                     conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261004_04', 'now': datetime.utcnow()})
-            if '20261005_01' not in applied and LATEST not in applied:
+            if '20261005_01' not in applied and '20261006_01' not in applied:
                 # Fresh installs can apply this structural step as part of the
                 # current schema without recording an otherwise redundant
                 # intermediate version. Existing upgraded databases keep their
@@ -76,7 +76,7 @@ def run_migrations(engine):
                     required_tables = ('route_plans', 'drivers', 'deliveries')
                     if all(inspector.has_table(name) for name in required_tables):
                         RoutePosition.__table__.create(conn, checkfirst=True)
-            if LATEST not in applied:
+            if '20261006_01' not in applied:
                 with engine.begin() as conn:
                     inspector = inspect(conn)
                     if inspector.has_table('users'):
@@ -90,6 +90,11 @@ def run_migrations(engine):
                         'transfer_booking_portal_settings',
                     ):
                         conn.execute(text(f'DROP TABLE IF EXISTS {table_name}'))
+                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261006_01', 'now': datetime.utcnow()})
+            if LATEST not in applied:
+                from .models import CompanyCollaborator
+                with engine.begin() as conn:
+                    CompanyCollaborator.__table__.create(conn, checkfirst=True)
                     conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': LATEST, 'now': datetime.utcnow()})
         finally:
             if postgres:

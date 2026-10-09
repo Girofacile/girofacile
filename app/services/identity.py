@@ -2,7 +2,7 @@
 from hashlib import sha256
 from fastapi import HTTPException
 from sqlalchemy import func, text
-from ..models import User, Driver, DriverAccount, Agent, AgentAccount
+from ..models import User, Driver, DriverAccount, Agent, AgentAccount, CompanyCollaborator
 
 
 def ensure_login_email_available(db, email, role, identity_id=None):
@@ -16,6 +16,7 @@ def ensure_login_email_available(db, email, role, identity_id=None):
         (User, 'user', User.id), (Driver, 'driver', Driver.id),
         (DriverAccount, 'driver', DriverAccount.driver_id),
         (Agent, 'agent', Agent.id), (AgentAccount, 'agent', AgentAccount.agent_id),
+        (CompanyCollaborator, 'collaborator', CompanyCollaborator.id),
     ):
         query = db.query(model).filter(func.lower(model.email) == email)
         if role == kind and identity_id is not None:
