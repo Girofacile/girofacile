@@ -12,8 +12,9 @@ body[data-gf-surface="auth"]{margin:0;min-height:100dvh}
 .invite-field{display:grid;gap:var(--gf-space-2);margin-bottom:var(--gf-space-4)}
 .invite-field label{font-weight:var(--gf-weight-semibold)}
 .invite-form-error{color:var(--gf-color-danger);margin:var(--gf-space-3) 0;overflow-wrap:anywhere}
-.invite-card .gf-input{min-height:var(--gf-control-touch)}
-.invite-card .gf-button{width:100%;min-height:var(--gf-control-touch)}
+/* Auth controls use the touch token at every viewport, above shared legacy dimensions. */
+body[data-gf-surface="auth"] .invite-card :is(.gf-input,.gf-button){min-height:var(--gf-control-touch)!important}
+.invite-card .gf-button{width:100%}
 .invite-hint,.invite-footer{font-size:var(--gf-font-xs)}
 .invite-hint{margin-top:var(--gf-space-4)}
 .invite-footer{border-top:1px solid var(--gf-color-border);padding-top:var(--gf-space-4);margin:var(--gf-space-6) 0 0}
