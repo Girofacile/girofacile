@@ -271,3 +271,67 @@ body.gf-company-page-active #showOnboardingBtn {
   .company-save-state { display: none; }
   .company-save-bar { padding-left: 6px; }
 }
+
+/* Keep the existing company Save/Discard controls reachable in the mobile shell. */
+@media (max-width: 820px) {
+  body.app-logged-in.gf-company-page-active.gf-company-dirty[data-gf-surface="workspace"] #app .topbar {
+    display: flex !important;
+    position: fixed;
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: calc(72px + var(--gf-space-2) + env(safe-area-inset-bottom, 0px));
+    width: auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    padding: var(--gf-space-2) var(--gf-space-4) !important;
+    margin: 0;
+    gap: 0 !important;
+    z-index: 921;
+    border-top: 1px solid var(--gf-color-border);
+    border-bottom: 0 !important;
+    background: var(--gf-color-surface) !important;
+    box-shadow: var(--gf-shadow-sm) !important;
+  }
+  body.app-logged-in.gf-company-page-active.gf-company-dirty[data-gf-surface="workspace"] #app .topbar > :not(#companySaveBar) {
+    display: none !important;
+  }
+  body.app-logged-in.gf-company-page-active.gf-company-dirty[data-gf-surface="workspace"] #app #companySaveBar {
+    position: static;
+    width: 100%;
+    min-width: 0;
+    min-height: var(--gf-control-touch);
+    padding: 0;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    transform: none !important;
+    animation: none !important;
+    flex-wrap: wrap;
+    gap: var(--gf-space-2);
+    white-space: normal;
+  }
+  body.app-logged-in.gf-company-page-active.gf-company-dirty[data-gf-surface="workspace"] #app #companySaveBar .company-save-state {
+    flex: 1 1 auto;
+    margin: 0;
+    line-height: 1.4;
+  }
+  body.app-logged-in.gf-company-page-active.gf-company-dirty[data-gf-surface="workspace"] #app #companySaveBar :is(.btn-light, .btn-primary) {
+    min-height: var(--gf-control-touch) !important;
+    min-width: 0;
+    flex: 0 0 auto;
+  }
+  body.app-logged-in.gf-company-page-active.gf-company-dirty[data-gf-surface="workspace"] #app .content {
+    padding-bottom: calc(112px + var(--gf-control-touch) + var(--gf-space-6) + env(safe-area-inset-bottom, 0px)) !important;
+  }
+}
+@media (max-width: 640px) {
+  body.app-logged-in.gf-company-page-active.gf-company-dirty[data-gf-surface="workspace"] #app #companySaveBar .company-save-state {
+    flex-basis: 100%;
+    font-size: var(--gf-font-xs);
+  }
+  body.app-logged-in.gf-company-page-active.gf-company-dirty[data-gf-surface="workspace"] #app #companySaveBar :is(.btn-light, .btn-primary) {
+    flex: 1 1 0;
+  }
+}

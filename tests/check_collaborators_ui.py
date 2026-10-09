@@ -136,7 +136,7 @@ def main():
                     def capture(name):
                         assert_fits(page)
                         page.screenshot(path=str(output / f"{name}-{width}.png"), full_page=True, animations="disabled")
-                        if os.getenv("GF_COLLABORATORS_PREVIEW") == "1" and name == "preset-operator" and width in (390, 1440):
+                        if os.getenv("GF_COLLABORATORS_PREVIEW") == "1" and name in ("preset-operator", "operator-company-dirty") and width in (390, 1440):
                             preview = page.screenshot(type="jpeg", quality=70, full_page=False, animations="disabled")
                             print(f"GF_COLLABORATORS_PREVIEW:{name}:{width}:" + base64.b64encode(preview).decode("ascii"), flush=True)
 
@@ -233,7 +233,19 @@ def main():
                     page.locator("#companyNameInput").fill("Demo operatore")
                     state["requests"].clear()
                     state["allow_company_save"] = True
-                    page.evaluate("saveCompanyProfile()")
+                    page.locator("#companySaveBar").wait_for(state="visible")
+                    assert_fits(page, "#companySaveBar")
+                    if width <= 768:
+                        bar_box = page.locator("#companySaveBar").bounding_box()
+                        nav_box = page.locator(".gf-mobile-bottom-nav-v62").bounding_box()
+                        assert nav_box and bar_box["y"] + bar_box["height"] <= nav_box["y"] - 7, (bar_box, nav_box)
+                        for control in ("#companySaveChangesBtn", "#companyDiscardChangesBtn"):
+                            assert page.locator(control).bounding_box()["height"] >= 44
+                    capture("operator-company-dirty")
+                    page.locator("#companySaveChangesBtn").click()
+                    page.wait_for_function("!companyProfileDirtyV29")
+                    page.wait_for_load_state("networkidle")
+                    assert page.locator("#companySaveBar").is_hidden()
                     assert not state["allow_company_save"], "Company update was not saved"
                     assert state["company"]["company_name"] == "Demo operatore"
                     assert not any(r["path"].startswith("/api/onboarding/") for r in state["requests"]), state["requests"]

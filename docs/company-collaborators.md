@@ -39,6 +39,10 @@ pagina Azienda e le impostazioni sono modificabili dall'Operatore.
 I campi aziendali in sola lettura non attivano bozze non salvabili. La creazione
 richieste di assistenza richiede il permesso corrispondente di scrittura.
 
+Salva e Annulla del profilo aziendale sono raggiungibili anche su smartphone,
+con una barra sopra la navigazione mobile quando ci sono modifiche non salvate.
+I test usano i pulsanti reali, verificandone dimensioni e assenza di sovrapposizioni.
+
 Non è necessaria una nuova migrazione per i preset.
 
 ## Funzioni e dipendenze
