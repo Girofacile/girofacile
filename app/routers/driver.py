@@ -307,7 +307,7 @@ def get_driver_route_detail(route_id: int, da: DriverAccount = Depends(get_curre
             "tempo_scarico_min": d.tempo_scarico_min, "ztl": d.ztl, "sponda": d.sponda,
             "note": d.note, "arrivo_stimato": time_to_hhmm(d.arrivo_stimato), "partenza_stimata": time_to_hhmm(d.partenza_stimata),
             "km_tappa": d.km_tappa, "warning": d.warning,
-            **{k: v for k, v in json_data(d.optimizer_details).items() if k in TIMING_DETAILS},
+            **{k: v for k, v in json_data(d.optimizer_details).items() if k in (*TIMING_DETAILS, "order_numbers", "order_operational")},
             "status": ds.status if ds else "in_attesa",
             "motivo_mancata": ds.motivo_mancata if ds else None,
             "tempo_scarico_effettivo": ds.tempo_scarico_effettivo if ds else None,

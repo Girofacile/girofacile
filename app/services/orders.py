@@ -59,6 +59,8 @@ def create_order(db, user_id, data, actor):
     for index, item in enumerate(original['items'], 1):
         db.add(OrderItem(order_id=order.id, line_number=index, data=item))
     record(db, order, actor, 'created', {'source': 'manual'})
+    from .order_customers import auto_link
+    auto_link(db, order, actor)
     return order
 
 
@@ -72,6 +74,10 @@ def update_order(db, order, data, actor):
     if 'delivery_address' in changes:
         order.address_verification = None
     project(order, values)
+    if order.customer_resolution == 'automatic' and {'recipient_name','delivery_address'} & changes.keys():
+        order.customer_id = None; order.customer_resolution = 'pending'
+    from .order_customers import auto_link
+    auto_link(db, order, actor)
     order.verification_status = 'pending'
     order.status = 'da_verificare'
     touch(order)
@@ -81,27 +87,29 @@ def update_order(db, order, data, actor):
 
 def verify_address(db, order, version, actor):
     editable(db, order, version)
-    if not order.delivery_address:
+    from .order_customers import effective
+    address = effective(db, order)[0].get('delivery_address')
+    if not address:
         raise HTTPException(422, 'Inserisci un indirizzo di consegna completo.')
-    user_id, order_id, address = order.user_id, order.id, order.delivery_address
+    user_id, order_id = order.user_id, order.id
     verified = verify_stop_address(db, user_id, address)
     # Geocoding usage logging may commit. Reacquire and recheck after the call.
     order = get_order(db, user_id, order_id, lock=True)
     editable(db, order, version)
-    order.address_verification = {**verified, 'input_address': order.delivery_address}
+    if effective(db, order)[0].get('delivery_address') != address:
+        raise HTTPException(409, 'Indirizzo cambiato: ripeti la verifica.')
+    order.address_verification = {**verified, 'input_address': address}
     touch(order)
-    record(db, order, actor, 'address_verified', {'address': order.delivery_address})
+    record(db, order, actor, 'address_verified', {'address': address})
     return order
 
 
 def transition(db, order, data, actor):
     editable(db, order, data.version)
     if data.status == 'pronto':
-        if not order.recipient_name or not order.delivery_address:
-            raise HTTPException(422, 'Completa destinatario e indirizzo prima di confermare l’ordine.')
-        verification = order.address_verification or {}
-        if verification.get('input_address') != order.delivery_address or verification.get('stato_geocodifica') != 'verificato':
-            raise HTTPException(422, 'Verifica l’indirizzo prima di rendere pronto l’ordine.')
+        from .order_customers import anomalies
+        problems = [a['message'] for a in anomalies(db,order)[0] if a['blocking']]
+        if problems: raise HTTPException(422, ' '.join(problems))
     before = order.status
     order.status = data.status
     if data.status != 'annullato':
@@ -119,11 +127,14 @@ def summary(order, source_name):
 
 
 def detail(db, order):
+    from .order_customers import anomalies
+    issues, effective_values, inherited = anomalies(db, order)
     source = db.get(OrderSource, order.source_id)
     assignments = db.query(RouteOrderAssignment).filter_by(user_id=order.user_id, order_id=order.id).all()
     events = db.query(OrderEvent).filter_by(order_id=order.id).order_by(OrderEvent.id.desc()).limit(100).all()
     return summary(order, source.name) | {
         'external_id': order.external_id, 'external_customer_id': order.external_customer_id,
+        'customer_resolution': order.customer_resolution, 'anomalies': issues, 'effective_data': effective_values, 'inherited_fields': inherited,
         'customer_id': order.customer_id, 'operational_data': order.operational_data,
         'original_payload': order.original_payload, 'address_verification': order.address_verification,
         'acquisition_status': order.acquisition_status, 'verification_status': order.verification_status,

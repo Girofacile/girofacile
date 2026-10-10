@@ -142,6 +142,8 @@ def rule(method, paths, *grants):
         RULES[method, path] = set(grants)
 
 
+rule("GET", ["/api/orders/{order_id}/customers"], "orders.match")
+rule("POST", ["/api/orders/{order_id}/customer"], "orders.match")
 rule("GET", ["/api/order-planning/selection"], "orders.plan")
 rule("PUT", ["/api/order-planning/selection", "/api/order-planning/snapshot"], "orders.plan")
 rule("POST", ["/api/order-planning/preview"], "orders.plan")

@@ -133,7 +133,7 @@ class OrderReference(BaseModel):
 
 
 class DeliveryIn(BaseModel):
-    order_refs: list[OrderReference] = Field(default_factory=list, max_length=1)
+    order_refs: list[OrderReference] = Field(default_factory=list, max_length=1000)
     order_stop_key: str | None = Field(default=None, max_length=36)
     customer_id: Optional[int] = None
     geocoding_token: Optional[str] = Field(default=None, max_length=128)

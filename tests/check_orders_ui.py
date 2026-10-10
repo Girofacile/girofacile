@@ -16,7 +16,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 from app.database import Base,get_db
-from app.models import User, Deposit, Vehicle, Driver
+from app.models import User, Deposit, Vehicle, Driver, Customer
 from app.core.dependencies import current_user
 from app.routers.orders import router
 from app.routers.order_planning import router as planning_router
@@ -87,6 +87,13 @@ def main():
                     page.locator('#orderField-packages').fill('5')
                     page.locator('#orderSave').click()
                     page.wait_for_function("document.getElementById('orderDetail').textContent.includes('Correzione')")
+                    from app.order_models import Order
+                    candidate=Customer(user_id=user.id,nome='Destinatario <script>test</script>',indirizzo='Via Alternativa 2, Milano')
+                    db.add(candidate);db.commit()
+                    page.evaluate('GFOrders.open('+str(db.query(Order).one().id)+')')
+                    page.get_by_role('button',name='Sì, associa',exact=True).click()
+                    page.wait_for_function("document.getElementById('orderCustomerMessage')?.textContent==='Cliente già collegato.'")
+                    assert page.locator('#orderCustomerPanel script').count()==0
                     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 2')
                     page.screenshot(path=str(output/f'detail-{width}.png'),full_page=True)
                     page.locator('#tab-ordine-dettaglio > button').click()
@@ -101,9 +108,13 @@ def main():
                     from app.services.occasional_stops import sign_stop_address
                     order.address_verification={'input_address':order.delivery_address,'indirizzo':order.delivery_address,'stato_geocodifica':'verificato','lat':45.47,'lon':9.2,'geocoding_token':sign_stop_address(user.id,order.delivery_address,45.47,9.2)}
                     db.commit()
+                    created=client.post('/api/orders',json={**order.original_payload,'number':'ORD-002','packages':3}).json()
+                    response=client.post(f"/api/orders/{created['id']}/customer",json={'version':created['version'],'action':'link','customer_id':candidate.id})
+                    assert response.status_code==200,response.text
+                    second=db.get(Order,created['id']);second.status='pronto';second.address_verification=order.address_verification;db.commit()
                     page.evaluate('GFOrders.load()')
-                    page.locator('.order-select').check()
-                    page.wait_for_function("document.getElementById('ordersSelectionCount').textContent.startsWith('1 ordini')")
+                    page.get_by_role('button',name='Seleziona pronti di questa pagina',exact=True).click()
+                    page.wait_for_function("document.getElementById('ordersSelectionCount').textContent.startsWith('2 ordini')")
                     page.locator('#ordersGoPlanning').click()
                     page.locator('#orderPlanningBanner').wait_for(state='visible')
                     assert page.locator('#openCustomerStepBtn').inner_text()=='Prosegui'
@@ -118,8 +129,11 @@ def main():
                     page.locator('#routeDriver').select_option('1')
                     page.evaluate('updateRouteEnergyPricingV895()')
                     page.locator('#openCustomerStepBtn').click()
-                    page.wait_for_function("deliveries.length===1")
-                    assert page.evaluate("deliveries[0].order_refs.length===1 && deliveries[0].colli===5")
+                    page.wait_for_function("deliveries.length===2")
+                    page.once('dialog',lambda dialog:dialog.accept())
+                    page.locator('#orderGroupOrders').check()
+                    page.wait_for_function("deliveries.length===1 && deliveries[0].order_refs.length===2")
+                    assert page.evaluate("deliveries[0].colli===8")
                     assert page.locator('#deliveryWorkbenchStep').is_visible()
                     assert page.locator('#customerPlanningStep').is_hidden()
                     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 2')
@@ -134,6 +148,6 @@ def main():
                     context.close()
             engine.dispose()
         browser.close()
-    print('Orders: create, edit, escaping, filters, persisted selection, prefilled planning stops and layout passed at 390/768/1024/1440px')
+    print('Orders: create, edit, escaping, filters, customer confirmation, persisted selection, grouped planning stops and layout passed at 390/768/1024/1440px')
 
 if __name__=='__main__':main()

@@ -41,7 +41,7 @@
     }catch(e){el('ordersMessage').textContent=e.message;await loadSelection().catch(()=>{});}
     finally{busy=false;controls();GFOrders.refreshSelection?.();}
   }
-  function config(){return {nome:val('routeName'),data_giro:val('routeDate'),orario_partenza:val('routeStart'),deposit_id:Number(val('routeDeposit'))||null,vehicle_id:Number(val('routeVehicle'))||null,driver_id:Number(val('routeDriver'))||null,rientro_deposito:boolVal('returnDepot'),energy_price_mode:document.querySelector('input[name="energyPriceMode"]:checked')?.value||'manual',energy_price_primary:Number(val('fuelPrice'))||0,energy_price_electric:Number(val('electricityPrice'))||0};}
+  function config(){return {group_orders:!!el('orderGroupOrders')?.checked,nome:val('routeName'),data_giro:val('routeDate'),orario_partenza:val('routeStart'),deposit_id:Number(val('routeDeposit'))||null,vehicle_id:Number(val('routeVehicle'))||null,driver_id:Number(val('routeDriver'))||null,rientro_deposito:boolVal('returnDepot'),energy_price_mode:document.querySelector('input[name="energyPriceMode"]:checked')?.value||'manual',energy_price_primary:Number(val('fuelPrice'))||0,energy_price_electric:Number(val('electricityPrice'))||0};}
   function gate(){
     const banner=el('orderPlanningBanner');if(banner)banner.hidden=!enabled;
     if(!enabled)return;
@@ -55,6 +55,7 @@
       if(!state.order_ids.length || state.routes.length)return;
       if(deliveries.length && !enabled && !confirm('Sostituire le fermate aperte nel pianificatore con questa selezione? I giri già salvati restano disponibili nello storico.'))return;
       const saved=state.configuration;
+      if(el('orderGroupOrders'))el('orderGroupOrders').checked=!!saved.group_orders;
       clearRouteWorkspace();enabled=true;loadedStops=false;dirty=false;
       showTab('giro');
       if(saved.data_giro){
@@ -66,11 +67,11 @@
       updateRoutePlanningGateV68();gate();message(`${state.order_ids.length} ordini salvati. Completa la configurazione del giro.`);
     }catch(e){alert(e.message);}
   }
-  async function proceed(){
+  async function proceed(regenerate=false){
     if(!routePlanningDetailsCompleteV68()){updateRoutePlanningGateV68();message('Completa data, orario, deposito, mezzo, autista e costi energetici.');return;}
     try{
       await flush();
-      state=await api('/api/order-planning/preview',{method:'POST',body:JSON.stringify({version:state.version,configuration:config(),stops:loadedStops?deliveries:state.stops})});
+      state=await api('/api/order-planning/preview',{method:'POST',body:JSON.stringify({version:state.version,configuration:config(),stops:regenerate?null:(loadedStops?deliveries:state.stops)})});
       deliveries=state.stops;loadedStops=true;dirty=false;customerPlanningStepOpenedV68=true;
       updateRoutePlanningGateV68();renderDeliveries();gate();
       message(state.warnings.length?state.warnings.join('\n'):'Fermate caricate. Puoi modificarle o rimuoverle senza cambiare gli ordini originali. Il giro non è ancora calcolato né programmato.');
@@ -101,11 +102,12 @@
     if(values.pallets!=null)parts.push('Pallet: '+values.pallets);
     if(values.volume_m3!=null)parts.push('Volume: '+values.volume_m3+' m³');
     if(values.requirements)parts.push(values.requirements);
-    return `<small>Ordine ${esc((row.order_numbers||row.order_refs.map(r=>'#'+r.id)).join(', '))}</small>${parts.length?'<small>'+esc(parts.join(' · '))+'</small>':''}`;
+    return `<details><summary>${row.order_refs.length} ${row.order_refs.length===1?'ordine':'ordini'} · ${esc(row.colli??0)} colli</summary><p>${esc((row.order_numbers||row.order_refs.map(r=>'#'+r.id)).join(', '))}</p></details>${parts.length?'<small>'+esc(parts.join(' · '))+'</small>':''}`;
   }
   document.addEventListener('change',e=>{if(ids.includes(e.target.id)||e.target.name==='energyPriceMode')changed();});
   window.addEventListener('beforeunload',e=>{if(enabled&&(dirty||saving)){e.preventDefault();e.returnValue='';}});
   window.GFOrderPlanning={loadSelection,checkbox,controls,metadata,describe,active:()=>enabled,gate,go,proceed,changed,flush,beforeCalculate,leave,
+    regroup(){if(loadedStops && !confirm('Rigenerare le fermate dai dati degli ordini? Le modifiche alle sole fermate verranno sostituite.')){el('orderGroupOrders').checked=!el('orderGroupOrders').checked;return;}changed();proceed(true);},
     save:()=>flush().catch(e=>message(e.message)),
     select:(id,checked)=>change(checked?'add':'remove',[id]),
     selectPage:checked=>change(checked?'add':'remove',GFOrders.currentItems().filter(o=>checked?o.status==='pronto':state.order_ids.includes(o.id)).map(o=>o.id)),

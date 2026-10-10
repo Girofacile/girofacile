@@ -801,7 +801,7 @@ function renderExecution(data) {
       <div class="di-head">
         <div class="di-num ${numClass}">${i+1}</div>
         <div class="di-info">
-          <div class="di-name">${esc(c.cliente_nome)}</div>
+          <div class="di-name">${esc(c.cliente_nome)}</div>${c.order_numbers?.length?`<details><summary>${c.order_numbers.length} ordini · ${esc(c.colli??0)} colli</summary><p>${c.order_numbers.map(esc).join(', ')}</p></details>`:''}
           <div class="di-addr">📍 ${esc(c.indirizzo)}</div>
           <div class="di-badges">
             ${c.ztl?'<span class="di-badge db-ztl">⚠ ZTL</span>':''}

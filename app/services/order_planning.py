@@ -97,16 +97,18 @@ def snapshot(db, user_id, actor, data):
 
 
 def to_stop(order):
-    values = order.operational_data
+    from sqlalchemy.orm import object_session
+    from .order_customers import effective
+    values, _ = effective(object_session(order), order)
     verified = order.address_verification or {}
-    if not order.recipient_name or not order.delivery_address or verified.get('input_address') != order.delivery_address or not has_verified_coordinates(verified.get('stato_geocodifica'), verified.get('lat'), verified.get('lon')):
+    if not values.get('recipient_name') or not values.get('delivery_address') or verified.get('input_address') != values['delivery_address'] or not has_verified_coordinates(verified.get('stato_geocodifica'), verified.get('lat'), verified.get('lon')):
         raise HTTPException(409, f'Ordine {order.number}: completa e verifica il destinatario prima di pianificare.')
-    return dict(customer_id=None, cliente_nome=order.recipient_name, indirizzo=verified['indirizzo'],
+    return dict(customer_id=None, cliente_nome=values['recipient_name'], indirizzo=verified['indirizzo'],
                 lat=verified['lat'], lon=verified['lon'], geocoding_token=verified['geocoding_token'],
                 stato_geocodifica='verificato', indirizzo_geocodificato=verified['indirizzo'],
                 peso_kg=values.get('weight_kg') or 0, colli=values.get('packages') or 0,
-                scarico_mattina_da=values.get('time_from'), scarico_mattina_a=values.get('time_to'),
-                scarico_pomeriggio_da=None, scarico_pomeriggio_a=None, tempo_scarico_min=10,
+                scarico_mattina_da=values.get('time_from') or values.get('scarico_mattina_da'), scarico_mattina_a=values.get('time_to') or values.get('scarico_mattina_a'),
+                scarico_pomeriggio_da=values.get('scarico_pomeriggio_da'), scarico_pomeriggio_a=values.get('scarico_pomeriggio_a'), tempo_scarico_min=values.get('tempo_scarico_min') or 10,
                 sponda=values.get('tail_lift') is True, ztl=values.get('ztl') is True,
                 note=values.get('notes'), order_refs=[{'id':order.id,'version':order.version}],
                 order_stop_key=stop_key(order.user_id, order.id), order_numbers=[order.number],
@@ -140,16 +142,16 @@ def preview(db, user, actor, data):
             warnings.append(f'Ordine {order.number}: peso o colli non indicati; verifica il carico prima del calcolo.')
         if any(order.operational_data.get(k) for k in ('pallet_truck','pallets','volume_m3','requirements')):
             warnings.append(f'Ordine {order.number}: verifica anche transpallet, pallet, volume e requisiti operativi; le capacità automatiche sono controllate su peso e colli.')
-    stops = row.stops if row.stops is not None else [to_stop(o) for o in orders]
-    # Metadata is server-derived even on restored/edited snapshots.
-    by_id = {o.id:o for o in orders}
-    for stop in stops:
-        for ref in stop.get('order_refs', []):
-            if by_id[ref['id']].version != ref['version']:
-                raise HTTPException(409, 'Un ordine è cambiato. Rimuovilo e selezionalo nuovamente per aggiornare i dati.')
-            source = to_stop(by_id[ref['id']])
-            for key in ORDER_FIELDS:
-                if key not in ('order_refs',): stop[key] = source[key]
+    from .order_grouping import group_stops
+    if row.stops is None:
+        stops = [to_stop(o) for o in orders]
+        if config.get('group_orders'): stops = group_stops(user.id,stops)
+    else:
+        stops = row.stops
+        from .route_orders import validate_references
+        validate_references(db,user.id,stops,route_date=config['data_giro'])
+    if config.get('group_orders'):
+        warnings.append(f"{len(orders)} ordini preparati in {len(stops)} fermate. Apri il dettaglio per vedere gli ordini inclusi.")
     try: validate_vehicle_load(stops, build_vehicle_dict(vehicle))
     except ValueError as exc:
         warnings.append(str(exc) + ' Modifica la selezione o il mezzo, oppure prepara più giri.')

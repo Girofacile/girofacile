@@ -49,3 +49,47 @@ def test_concurrent_selections_and_reservations(pg):
         assert db.query(RouteOrderAssignment).count()==1
         assert db.query(RoutePlan).count()==1
         assert db.get(Order,oid).status=='assegnato'
+
+
+def test_customer_resolution_migration_preserves_archive(pg):
+    from sqlalchemy import text, inspect
+    from app.migrations import run_migrations, LATEST
+    run_migrations(pg)
+    with pg.begin() as conn:
+        conn.execute(text('ALTER TABLE orders DROP COLUMN customer_resolution'))
+        conn.execute(text('DELETE FROM schema_migrations WHERE version=:v'),{'v':LATEST})
+    run_migrations(pg);run_migrations(pg)
+    assert 'customer_resolution' in {c['name'] for c in inspect(pg).get_columns('orders')}
+    with pg.connect() as conn:
+        assert conn.execute(text('SELECT COUNT(*) FROM schema_migrations WHERE version=:v'),{'v':LATEST}).scalar()==1
+
+
+def test_concurrent_customer_mapping_conflict_is_atomic(pg):
+    from app.database import Base
+    from app.models import User, Customer
+    from app.order_models import Order, CustomerSourceMapping
+    from app.services.orders import create_order, get_order
+    from app.services.order_customers import resolve
+    from app.services.route_orders import lock_company
+    from app.schemas.orders import OrderCreate, CustomerResolution
+    Base.metadata.create_all(pg)
+    with Session(pg) as db:
+        owner=User(username='mapping-race',password_hash='test');db.add(owner);db.flush()
+        customers=[Customer(user_id=owner.id,nome=str(i),indirizzo='Address') for i in range(2)]
+        db.add_all(customers);db.flush()
+        orders=[create_order(db,owner.id,OrderCreate(number=str(i)),'test') for i in range(2)]
+        for order in orders: order.external_customer_id='SAME-CODE'
+        db.commit();uid=owner.id;pairs=[(o.id,c.id) for o,c in zip(orders,customers)]
+    def assign(pair):
+        with Session(pg) as db:
+            try:
+                lock_company(db,uid)
+                resolve(db,db.get(User,uid),get_order(db,uid,pair[0],lock=True),CustomerResolution(version=1,action='link',customer_id=pair[1]),'test')
+                db.commit();return 200
+            except HTTPException as error:
+                db.rollback();return error.status_code
+    with ThreadPoolExecutor(max_workers=2) as pool:results=list(pool.map(assign,pairs))
+    assert sorted(results)==[200,409]
+    with Session(pg) as db:
+        assert db.query(CustomerSourceMapping).count()==1
+        assert db.query(Order).filter(Order.customer_id.isnot(None)).count()==1

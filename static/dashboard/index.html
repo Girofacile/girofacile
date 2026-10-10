@@ -767,7 +767,7 @@
       </section>
 
       <section id="tab-giro" class="tab hidden gf-page">
-        <section id="orderPlanningBanner" class="panel" hidden><strong>Ordini selezionati</strong><p id="orderPlanningMessage" role="status" style="white-space:pre-wrap"></p><button class="btn-secondary" onclick="GFOrderPlanning.save()">Salva configurazione</button><button class="btn-secondary" onclick="showTab('ordini')">Torna agli ordini</button><p>La selezione resta salvata finché la svuoti. Le fermate rimosse restano nell’archivio Ordini.</p></section>
+        <section id="orderPlanningBanner" class="panel" hidden><strong>Ordini selezionati</strong><label><input type="checkbox" id="orderGroupOrders" onchange="GFOrderPlanning.regroup()"> Raggruppa ordini con stessa destinazione e vincoli compatibili</label><p id="orderPlanningMessage" role="status" style="white-space:pre-wrap"></p><button class="btn-secondary" onclick="GFOrderPlanning.save()">Salva configurazione</button><button class="btn-secondary" onclick="showTab('ordini')">Torna agli ordini</button><p>La selezione resta salvata finché la svuoti. Le fermate rimosse restano nell’archivio Ordini.</p></section>
         <div class="page-title-row">
           <div>
             <h1 data-gf-label="route_planning">Pianificazione giro</h1>
@@ -2019,10 +2019,11 @@
 <script src="/static/dashboard/js/live-design.js?v=20261006"></script>
 <script src="/static/password-strength.js?v=password_policy_20261008_1"></script>
 <script src="/static/dashboard/js/collaborators.js?v=orders_20261010"></script>
-<script src="/static/dashboard/js/orders.js?v=20261010_2"></script>
+<script src="/static/dashboard/js/orders.js?v=20261011_3"></script>
+<script src="/static/dashboard/js/order-customers.js?v=20261011_3"></script>
 <script src="/static/dashboard/js/core.js?v=orders_planning_20261010_2"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=orders_2"></script>
-<script src="/static/dashboard/js/order-planning.js?v=20261010_2"></script>
+<script src="/static/dashboard/js/order-planning.js?v=20261011_3"></script>
 
 <script>
 function toggleLoginPassword(){

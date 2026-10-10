@@ -26,6 +26,7 @@ class SelectionChange(BaseModel):
 
 class PlanningConfiguration(BaseModel):
     model_config = ConfigDict(extra='forbid')
+    group_orders: bool = False
     nome: str = Field(default='', max_length=200)
     data_giro: str = Field(default='', max_length=10)
     orario_partenza: str = Field(default='', max_length=8)

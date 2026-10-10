@@ -2,7 +2,7 @@
 from datetime import datetime
 from sqlalchemy import inspect, text
 
-LATEST = '20261010_02'
+LATEST = '20261011_01'
 LOCK_ID = 7640152404
 
 
@@ -111,10 +111,15 @@ def run_migrations(engine):
                     for table in ORDER_TABLES:
                         table.create(conn, checkfirst=True)
                     conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261010_01', 'now': datetime.utcnow()})
-            if LATEST not in applied:
+            if '20261010_02' not in applied:
                 from .order_models import OrderPlanningSelection
                 with engine.begin() as conn:
                     OrderPlanningSelection.__table__.create(conn, checkfirst=True)
+                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261010_02', 'now': datetime.utcnow()})
+            if LATEST not in applied:
+                with engine.begin() as conn:
+                    if 'customer_resolution' not in {c['name'] for c in inspect(conn).get_columns('orders')}:
+                        conn.execute(text("ALTER TABLE orders ADD COLUMN customer_resolution VARCHAR(30) NOT NULL DEFAULT 'pending'"))
                     conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': LATEST, 'now': datetime.utcnow()})
         finally:
             if postgres:

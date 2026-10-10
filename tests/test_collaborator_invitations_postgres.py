@@ -164,7 +164,7 @@ def test_additive_invitation_migration_preserves_legacy_passwords_and_tenant_fk(
         assert row.password_hash == "legacy-password-hash"
         assert row.password_setup_required is False
         assert row.permissions_json == '["customers.read"]'
-        assert set(conn.execute(text("SELECT version FROM schema_migrations")).scalars()) == set(versions) | {"20261009_02", "20261010_01", LATEST}
+        assert set(conn.execute(text("SELECT version FROM schema_migrations")).scalars()) == set(versions) | {"20261009_02", "20261010_01", "20261010_02", LATEST}
         assert conn.execute(text("SELECT COUNT(*) FROM collaborator_invitations")).scalar() == 0
     fks = inspect(pg).get_foreign_keys("collaborator_invitations")
     assert any(fk["referred_table"] == "company_collaborators"

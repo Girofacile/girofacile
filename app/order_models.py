@@ -38,6 +38,7 @@ class Order(Base):
     number: Mapped[str] = mapped_column(String(160), nullable=False)
     external_customer_id: Mapped[str | None] = mapped_column(String(160))
     customer_id: Mapped[int | None] = mapped_column(ForeignKey('customers.id'))
+    customer_resolution: Mapped[str] = mapped_column(String(30), default="pending", server_default="pending", nullable=False)
     recipient_name: Mapped[str | None] = mapped_column(String(200))
     delivery_address: Mapped[str | None] = mapped_column(String(500))
     requested_date: Mapped[date | None] = mapped_column(Date)

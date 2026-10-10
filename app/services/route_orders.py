@@ -3,7 +3,8 @@ import json
 from fastapi import HTTPException
 from ..order_models import Order, RouteOrderAssignment
 from .orders import record, touch
-from .order_planning import ORDER_FIELDS, stop_key
+from .order_planning import ORDER_FIELDS, to_stop
+from .order_grouping import group_key, compatible, merge
 
 
 def require_planning_permission(request, rows, db=None, route_id=None):
@@ -25,6 +26,7 @@ def lock_company(db, user_id):
 def validate_references(db, user_id, rows, route_id=None, route_date=None, lock=False):
     refs = [ref for row in rows for ref in row.get('order_refs', [])]
     ids = [r['id'] for r in refs]
+    if len(ids) > 1000: raise HTTPException(422, 'Prepara al massimo 1000 ordini per giro.')
     if len(ids) != len(set(ids)):
         raise HTTPException(422, 'Lo stesso ordine compare in più fermate.')
     query = db.query(Order).filter(Order.user_id == user_id, Order.id.in_(ids)).order_by(Order.id)
@@ -36,26 +38,35 @@ def validate_references(db, user_id, rows, route_id=None, route_date=None, lock=
         if not row.get('order_refs'):
             for key in ORDER_FIELDS: row.pop(key, None)
             continue
-        ref = row['order_refs'][0]
-        order = orders[ref['id']]
-        existing = assigned.get(order.id)
-        if existing and existing.route_plan_id != route_id:
-            raise HTTPException(409, f'Ordine {order.number} già riservato a un altro giro. Rimuovilo dalla selezione.')
-        if not existing and order.status != 'pronto':
-            raise HTTPException(409, f'Ordine {order.number} non più pronto per la pianificazione.')
-        if existing and order.status not in ('pronto', 'assegnato'):
-            raise HTTPException(409, 'Ordine già avviato o chiuso: non può essere ripianificato.')
-        if order.version != ref['version']:
-            raise HTTPException(409, f'Ordine {order.number} aggiornato: ricarica la selezione o il giro.')
-        if route_date and order.requested_date and order.requested_date.isoformat() != str(route_date):
-            raise HTTPException(422, f'Ordine {order.number}: data del giro diversa dalla data richiesta.')
+        for ref in row['order_refs']:
+            order = orders[ref['id']]
+            existing = assigned.get(order.id)
+            if existing and existing.route_plan_id != route_id:
+                raise HTTPException(409, f'Ordine {order.number} già riservato a un altro giro. Rimuovilo dalla selezione.')
+            if not existing and order.status != 'pronto':
+                raise HTTPException(409, f'Ordine {order.number} non più pronto per la pianificazione.')
+            if existing and order.status not in ('pronto', 'assegnato'):
+                raise HTTPException(409, 'Ordine già avviato o chiuso: non può essere ripianificato.')
+            if order.version != ref['version']:
+                raise HTTPException(409, f'Ordine {order.number} aggiornato: ricarica la selezione o il giro.')
+            if route_date and order.requested_date and order.requested_date.isoformat() != str(route_date):
+                raise HTTPException(422, f'Ordine {order.number}: data del giro diversa dalla data richiesta.')
         if row.get('customer_id') is not None:
-            raise HTTPException(422, 'La fermata di un ordine usa il suo indirizzo verificato, senza sostituire l’anagrafica cliente.')
-        expected = stop_key(user_id, order.id)
+            raise HTTPException(422, 'La fermata usa l’indirizzo dell’ordine senza sostituire l’anagrafica cliente.')
+        expected = group_key(user_id,[ref['id'] for ref in row['order_refs']])
         if row.get('order_stop_key') != expected:
             raise HTTPException(422, 'Riferimento della fermata ordine non valido.')
-        row['order_numbers'] = [order.number]
-        row['order_operational'] = {key:order.operational_data.get(key) for key in ('pallet_truck','pallets','volume_m3','requirements')}
+        members = [orders[ref['id']] for ref in row['order_refs']]
+        if len(members)>1:
+            stops = [to_stop(order) for order in members]
+            if not compatible(stops): raise HTTPException(422,'Gli ordini della fermata hanno destinazioni, orari o requisiti incompatibili. Separali.')
+            metadata = merge(user_id,stops)
+            row['order_operational'] = metadata['order_operational']
+        else:
+            from .order_customers import effective
+            values,_ = effective(db,members[0])
+            row['order_operational'] = {key:values.get(key) for key in ('pallet_truck','pallets','volume_m3','requirements')}
+        row['order_numbers'] = [order.number for order in members]
     return orders
 
 
@@ -82,6 +93,8 @@ def reserve_orders(db, plan, rows):
                 db.add(RouteOrderAssignment(user_id=plan.user_id, order_id=order.id, route_plan_id=plan.id, stop_key=row['order_stop_key']))
                 order.status = 'assegnato'
                 order.delivery_status = 'draft' if plan.status == 'bozza' else 'scheduled'
+            if order.id in previous_map:
+                previous_map[order.id].stop_key = row['order_stop_key']
             touch(order)
             record(db, order, 'route:'+str(plan.id), 'route_snapshot', {
                 'route_id':plan.id,'stop_key':row['order_stop_key'],
@@ -126,7 +139,8 @@ def refresh_references(plan, rows):
     if db is None: return
     pairs = db.query(RouteOrderAssignment, Order).join(Order, Order.id == RouteOrderAssignment.order_id).filter(
         RouteOrderAssignment.user_id == plan.user_id, RouteOrderAssignment.route_plan_id == plan.id).all()
-    current = {a.stop_key:{'id':o.id,'version':o.version} for a,o in pairs}
+    current = {}
+    for a,o in pairs: current.setdefault(a.stop_key,[]).append({'id':o.id,'version':o.version})
     for row in rows:
         key = row.get('order_stop_key')
-        if key in current: row['order_refs'] = [current[key]]
+        if key in current: row['order_refs'] = sorted(current[key],key=lambda r:r['id'])

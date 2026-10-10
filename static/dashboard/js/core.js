@@ -1028,7 +1028,7 @@ function printStopsTable(){
   const rows = consegne.map(d => `
     <tr>
       <td>${esc(d.ordine)}</td>
-      <td>${esc(d.cliente_nome)}</td>
+      <td>${esc(d.cliente_nome)}${globalThis.GFOrderPlanning?.describe(d)||""}</td>
       <td>${esc(d.indirizzo)}</td>
       <td>${esc(d.arrivo_stimato || "-")}</td>
       <td>${esc(d.partenza_stimata || "-")}</td>

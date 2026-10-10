@@ -64,7 +64,7 @@ def delivery_to_operator_dict(delivery: Delivery, status: DeliveryStatus | None)
         "arrivo_stimato": time_to_hhmm(delivery.arrivo_stimato),
         "partenza_stimata": time_to_hhmm(delivery.partenza_stimata),
         "km_tappa": delivery.km_tappa,
-        **{k: v for k, v in json_data(delivery.optimizer_details).items() if k in TIMING_DETAILS},
+        **{k: v for k, v in json_data(delivery.optimizer_details).items() if k in (*TIMING_DETAILS, "order_numbers", "order_operational")},
         "warning": delivery.warning,
         "status": status.status if status else "in_attesa",
         "motivo_mancata": status.motivo_mancata if status else None,

@@ -8,7 +8,7 @@ from ..core.dependencies import current_user
 from ..database import get_db
 from ..models import User
 from ..order_models import Order, OrderSource
-from ..schemas.orders import OrderCreate, OrderUpdate, OrderAction, OrderVersion
+from ..schemas.orders import OrderCreate, OrderUpdate, OrderAction, OrderVersion, CustomerResolution
 from ..services import orders as service
 
 router = APIRouter(prefix='/api/orders', tags=['orders'])
@@ -85,3 +85,29 @@ def verify_address(order_id: int, data: OrderVersion, request: Request, db: Sess
     service.verify_address(db, order, data.version, actor_key(request, user))
     db.commit()
     return service.detail(db, order)
+
+
+@router.get('/{order_id}/customers')
+def customer_candidates(order_id: int, q: str | None = Query(None, max_length=200), db: Session = Depends(get_db), user: User = Depends(current_user)):
+    from ..services.order_customers import recognize, search
+    order = service.get_order(db,user.id,order_id)
+    return {'kind':'search','candidates':search(db,user.id,q)} if q is not None else recognize(db,order)
+
+
+@router.post('/{order_id}/customer')
+def resolve_customer(order_id: int, data: CustomerResolution,
+                     request: Request, db: Session = Depends(get_db), user: User = Depends(current_user)):
+    from ..services.order_customers import resolve
+    from ..services.route_orders import lock_company
+    from ..services.company_permissions import permissions_for
+    actor = getattr(request.state,'company_collaborator',None)
+    if data.action == 'create' and actor is not None and 'customers.create' not in permissions_for(actor):
+        raise HTTPException(403,'Per creare una nuova anagrafica serve il permesso Crea clienti.')
+    try:
+        lock_company(db,user.id)
+        order = service.get_order(db,user.id,order_id,lock=True)
+        resolve(db,user,order,data,actor_key(request,user))
+        db.commit()
+        return service.detail(db,order)
+    except Exception:
+        db.rollback(); raise
