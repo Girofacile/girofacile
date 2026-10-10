@@ -127,7 +127,14 @@ class StopAddressIn(BaseModel):
     indirizzo: str = Field(min_length=4, max_length=500)
 
 
+class OrderReference(BaseModel):
+    id: int = Field(gt=0)
+    version: int = Field(ge=1)
+
+
 class DeliveryIn(BaseModel):
+    order_refs: list[OrderReference] = Field(default_factory=list, max_length=1)
+    order_stop_key: str | None = Field(default=None, max_length=36)
     customer_id: Optional[int] = None
     geocoding_token: Optional[str] = Field(default=None, max_length=128)
     cliente_nome: str

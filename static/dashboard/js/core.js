@@ -1561,6 +1561,7 @@ function renderPlanningCompletion(missing){
 }
 
 function advanceRoutePlanning(){
+  if(globalThis.GFOrderPlanning?.active()){GFOrderPlanning.proceed();return;}
   const missing = routePlanningMissingFieldsV68();
   if(!missing.length){ openCustomerPlanningStep(); return; }
   const fields = {data:"routeDate", "orario partenza":"routeStart", deposito:"routeDeposit", mezzo:"routeVehicle", autista:"routeDriver", "prezzo carburante":"fuelPrice", "prezzo energia":"electricityPrice"};
@@ -1594,6 +1595,7 @@ function updateRoutePlanningGateV68(){
     picker?.classList.remove("hidden");
     workbench?.classList.remove("hidden");
   }
+  globalThis.GFOrderPlanning?.gate();
 }
 
 function openCustomerPlanningStep(){
@@ -3037,6 +3039,7 @@ function selectCustomer(c){
 }
 
 function markRouteNeedsRecalculation(message="Le consegne sono state modificate. Premi Calcola percorso per aggiornare il risultato."){
+  globalThis.GFOrderPlanning?.changed();
   if(!lastRouteResult) return;
   lastRouteResult = null;
   lastMapsUrl = "";
@@ -3163,7 +3166,7 @@ function renderDeliveries(){
   body.innerHTML = deliveries.map((d,i)=>`
     <tr data-delivery-row="${i}" class="delivery-clean-row" draggable="true" ondragstart="planningStopDragStart(event, ${i})" ondragend="planningStopDragEnd()" ondragover="event.preventDefault()" ondrop="planningStopDrop(event, ${i})">
       <td class="delivery-main-cell clean">
-        <strong>${esc(d.cliente_nome)}</strong>${d.customer_id == null ? ' <span class="badge">Occasionale</span>' : ''}
+        <strong>${esc(d.cliente_nome)}</strong>${globalThis.GFOrderPlanning?.describe(d)||""}${d.customer_id == null ? ' <span class="badge">Occasionale</span>' : ''}
         <small>${d.codice_cliente ? `Codice cliente: ${esc(d.codice_cliente)}` : `Fermata #${i+1}`}</small>
       </td>
       <td class="delivery-address-cell">
@@ -3262,6 +3265,7 @@ function warningBadges(warning){
 
 function cleanDeliveryForPayload(d){
   return {
+    ...(globalThis.GFOrderPlanning?.metadata(d)||{}),
     customer_id: d.customer_id || null, cliente_nome: d.cliente_nome, indirizzo: d.indirizzo,
     lat: d.lat ?? null, lon: d.lon ?? null, stato_geocodifica: d.stato_geocodifica || null,
     indirizzo_geocodificato: d.indirizzo_geocodificato || null, geocoding_token: d.geocoding_token || null,
@@ -3324,6 +3328,7 @@ function addExtraStopAfterResult(){
 
 
 function clearRouteWorkspace(){
+  globalThis.GFOrderPlanning?.leave();
   deliveries = [];
   lastRouteResult = null;
   lastMapsUrl = "";
@@ -3368,6 +3373,7 @@ async function programCurrentRoute(){
 }
 
 async function openProgrammedRouteForEdit(id, goToPlanning=false){
+  globalThis.GFOrderPlanning?.leave();
   try{
     const r = await api(`/api/routes/${id}`);
     const st = r.status || "programmato";
@@ -3389,6 +3395,7 @@ async function openProgrammedRouteForEdit(id, goToPlanning=false){
     updateRoutePlanningGateV68();
     renderDeliveries();
     lastRouteResult = r;
+    globalThis.GFOrderPlanning?.opened(r);
     lastMapsUrl = r.google_maps_url || "";
     if(goToPlanning && (st === "programmato" || st === "bozza")){
       document.getElementById("tab-giro")?.scrollIntoView({behavior:"smooth", block:"start"});
@@ -3633,6 +3640,7 @@ async function explainRouteSequenceAIv67(routeId){
 }
 
 async function optimizeRoute(){
+  if(globalThis.GFOrderPlanning && !await GFOrderPlanning.beforeCalculate())return;
   if(!routePlanningDetailsCompleteV68()){
     updateRoutePlanningGateV68();
     alert("Completa prima tutti i dati del giro: data, orario, deposito, mezzo, autista e prezzo carburante.");
@@ -3648,7 +3656,10 @@ async function optimizeRoute(){
   if(box) box.innerHTML = `<section class="panel"><div class="resultBox">Calcolo anteprima giro in corso...</div></section>`;
   showTab("route-preview");
   try{
-    const r = await api("/api/routes/optimize", {method:"POST", body:JSON.stringify(payload)});
+    const editingOrderRoute=globalThis.GFOrderPlanning?.routeId() || (lastRouteResult?.id && deliveries.some(d=>d.order_refs?.length) ? lastRouteResult.id : null);
+    if(editingOrderRoute)payload.route_id=editingOrderRoute;
+    const r = await api(editingOrderRoute?"/api/routes/recalculate-manual":"/api/routes/optimize", {method:"POST", body:JSON.stringify(payload)});
+    globalThis.GFOrderPlanning?.calculated(r);
     deliveries = (r.consegne || []).map(cleanDeliveryForPayload);
     customerPlanningStepOpenedV68 = true;
     updateRoutePlanningGateV68();

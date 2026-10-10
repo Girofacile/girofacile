@@ -73,6 +73,10 @@ def mark_completed(route):
     route.status = 'completato'
     route.completed_at = local_now().replace(tzinfo=None)
     route.completed_at_utc = datetime.now(timezone.utc).replace(tzinfo=None)
+    from sqlalchemy.orm import object_session
+    from .route_orders import sync_route_orders
+    db = object_session(route)
+    if db is not None: sync_route_orders(db, route, "completed")
 
 
 def refresh_route_completion(route_plan_id, db):
@@ -90,7 +94,14 @@ def _apply_delivery_update(db, delivery, payload, action):
         data = DeliveryUpdate.model_validate(payload).model_dump()
     except ValidationError as exc:
         raise HTTPException(422, exc.errors(include_input=False, include_url=False))
+    from .route_orders import lock_company
+    from ..models import Delivery
+    user_id = db.query(RoutePlan.user_id).filter_by(id=delivery.route_plan_id).scalar()
+    if user_id is None: raise HTTPException(409, 'Il giro non è più disponibile')
+    lock_company(db, user_id)
     route = db.query(RoutePlan).filter_by(id=delivery.route_plan_id).with_for_update().populate_existing().one()
+    if db.query(Delivery.id).filter_by(id=delivery.id, route_plan_id=route.id).first() is None:
+        raise HTTPException(409, 'Le fermate sono cambiate: ricarica il giro')
     if route.status == 'annullato':
         raise HTTPException(409, 'Il giro è annullato')
     status = db.query(DeliveryStatus).filter_by(delivery_id=delivery.id, route_plan_id=route.id).first()
@@ -120,6 +131,8 @@ def _apply_delivery_update(db, delivery, payload, action):
                 update_customer_unload_time(customer, data['tempo_scarico'])
         else:
             status.motivo_mancata = data['motivo']
+        from .route_orders import sync_route_orders
+        sync_route_orders(db, route, "delivered" if action == "complete" else "missed", delivery)
         refresh_route_completion(route.id, db)
     elif action == 'note':
         status.note_operatore = (data['note'] or '').strip() or None

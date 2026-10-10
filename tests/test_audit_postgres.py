@@ -34,7 +34,7 @@ def test_migrations_are_serialized_repeatable_and_preserve_data(pg):
     require_current_schema(pg)
     with pg.begin() as conn:
         markers = set(conn.execute(text('SELECT version FROM schema_migrations')).scalars())
-        assert markers == {'20261004_01', '20261004_02', '20261004_03', '20261004_04', '20261006_01', '20261009_01', '20261009_02', LATEST}
+        assert markers == {'20261004_01', '20261004_02', '20261004_03', '20261004_04', '20261006_01', '20261009_01', '20261009_02', '20261010_01', LATEST}
         conn.execute(text("UPDATE users SET company_name='preserved'"))
         conn.execute(text('CREATE TABLE activity_events (id INTEGER)'))
         conn.execute(text('INSERT INTO activity_events VALUES (1)'))

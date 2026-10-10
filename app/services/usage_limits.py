@@ -73,6 +73,8 @@ def start_route_usage(db, route):
     route.started_at = started
     if route.status != "completato":
         route.status = "in_corso"
+    from .route_orders import sync_route_orders
+    sync_route_orders(db, route, "started")
     db.flush()
 
 

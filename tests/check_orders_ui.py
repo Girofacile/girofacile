@@ -16,9 +16,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 from app.database import Base,get_db
-from app.models import User
+from app.models import User, Deposit, Vehicle, Driver
 from app.core.dependencies import current_user
 from app.routers.orders import router
+from app.routers.order_planning import router as planning_router
 from check_management_design import ME,LIMITS,VEHICLES,DRIVERS,DEPOSITS,USAGE
 
 
@@ -31,7 +32,8 @@ def main():
             Base.metadata.create_all(engine)
             with Session(engine) as db:
                 user=User(username='browser-test',password_hash='test',plan_status='active');db.add(user);db.commit()
-                app=FastAPI();app.include_router(router)
+                db.add_all([Deposit(user_id=user.id,nome='Depot',indirizzo='Via Roma 1',lat=45.46,lon=9.19),Vehicle(user_id=user.id,nome='Van'),Driver(user_id=user.id,nome='Driver')]);db.commit()
+                app=FastAPI();app.include_router(router);app.include_router(planning_router)
                 app.dependency_overrides[get_db]=lambda:db
                 app.dependency_overrides[current_user]=lambda:user
                 with TestClient(app) as client:
@@ -41,7 +43,7 @@ def main():
                     def handle(route):
                         parsed=urlparse(route.request.url);path=parsed.path
                         if parsed.hostname!='orders.test':route.abort();return
-                        if path.startswith('/api/orders'):
+                        if path.startswith(('/api/orders','/api/order-planning')):
                             response=client.request(route.request.method,path+('?' + parsed.query if parsed.query else ''),content=route.request.post_data,headers={'Content-Type':'application/json'})
                             route.fulfill(status=response.status_code,body=response.text,content_type='application/json');return
                         if path=='/api/billing/catalog.js':
@@ -93,6 +95,37 @@ def main():
                     assert page.locator('#ordersResults article').count()==1
                     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 2')
                     page.screenshot(path=str(output/f'list-{width}.png'),full_page=True)
+                    # A ready order can be selected, persisted and reopened at every viewport.
+                    from app.order_models import Order
+                    order=db.query(Order).one();order.status='pronto'
+                    from app.services.occasional_stops import sign_stop_address
+                    order.address_verification={'input_address':order.delivery_address,'indirizzo':order.delivery_address,'stato_geocodifica':'verificato','lat':45.47,'lon':9.2,'geocoding_token':sign_stop_address(user.id,order.delivery_address,45.47,9.2)}
+                    db.commit()
+                    page.evaluate('GFOrders.load()')
+                    page.locator('.order-select').check()
+                    page.wait_for_function("document.getElementById('ordersSelectionCount').textContent.startsWith('1 ordini')")
+                    page.locator('#ordersGoPlanning').click()
+                    page.locator('#orderPlanningBanner').wait_for(state='visible')
+                    assert page.locator('#openCustomerStepBtn').inner_text()=='Prosegui'
+                    assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 2')
+                    page.evaluate("fixtures=>{vehiclesCache=fixtures.vehicles;driversCache=fixtures.drivers;document.getElementById('routeDeposit').innerHTML='<option value=1>Depot</option>';}",{'vehicles':VEHICLES,'drivers':DRIVERS})
+                    page.locator('#routeDate').fill('2099-01-15')
+                    page.locator('#routeStart').fill('08:00')
+                    page.locator('#routeStart').blur()
+                    page.evaluate('refreshResourceAvailability()')
+                    page.wait_for_function("document.getElementById('routeVehicle').options.length > 1")
+                    page.locator('#routeVehicle').select_option('1')
+                    page.locator('#routeDriver').select_option('1')
+                    page.evaluate('updateRouteEnergyPricingV895()')
+                    page.locator('#openCustomerStepBtn').click()
+                    page.wait_for_function("deliveries.length===1")
+                    assert page.evaluate("deliveries[0].order_refs.length===1 && deliveries[0].colli===5")
+                    assert page.locator('#deliveryWorkbenchStep').is_visible()
+                    assert page.locator('#customerPlanningStep').is_hidden()
+                    assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 2')
+                    page.screenshot(path=str(output/f'planning-{width}.png'),full_page=True)
+                    page.evaluate("showTab('ordini')")
+                    page.wait_for_function("document.querySelector('.order-select')?.checked")
                     page.locator('#ordersSearch').fill('inesistente')
                     page.wait_for_function("document.getElementById('ordersMessage').textContent.includes('Nessun ordine')")
                     page.locator('#tab-ordini').get_by_role('button',name='Collega i tuoi ordini').click()
@@ -101,6 +134,6 @@ def main():
                     context.close()
             engine.dispose()
         browser.close()
-    print('Orders: create, edit, escaping, filters, empty states and layout passed at 390/768/1024/1440px')
+    print('Orders: create, edit, escaping, filters, persisted selection, prefilled planning stops and layout passed at 390/768/1024/1440px')
 
 if __name__=='__main__':main()

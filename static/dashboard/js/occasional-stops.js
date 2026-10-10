@@ -72,7 +72,7 @@ function saveOccasionalStop(){
   if(!occasionalProofMatches(occasionalAddressProof,address)){
     invalidateOccasionalAddress(); return;
   }
-  const f = gfUniversalFeaturesV891;
+  const f = deliveries[occasionalStopIndex]?.order_refs?.length ? {...gfUniversalFeaturesV891,has_time_windows:true,has_ztl:true,needs_tail_lift:true} : gfUniversalFeaturesV891;
   const windowValue = id => f.has_time_windows ? val(id)||null : null;
   const d = {customer_id:null,cliente_nome:val('osName'),indirizzo:address,
     lat:occasionalAddressProof.lat,lon:occasionalAddressProof.lon,
@@ -85,6 +85,7 @@ function saveOccasionalStop(){
   if(occasionalStopIndex === null) addDeliveryObject(d);
   else{
     if(!deliveries[occasionalStopIndex] || deliveries[occasionalStopIndex].customer_id != null) return;
+    Object.assign(d,globalThis.GFOrderPlanning?.metadata(deliveries[occasionalStopIndex])||{});
     deliveries[occasionalStopIndex] = d;
     renderDeliveries();
     markRouteNeedsRecalculation();

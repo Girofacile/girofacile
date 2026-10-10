@@ -2,7 +2,7 @@
 from datetime import datetime
 from sqlalchemy import inspect, text
 
-LATEST = '20261010_01'
+LATEST = '20261010_02'
 LOCK_ID = 7640152404
 
 
@@ -105,11 +105,16 @@ def run_migrations(engine):
                         conn.execute(text('ALTER TABLE company_collaborators ADD COLUMN password_setup_required BOOLEAN NOT NULL DEFAULT FALSE'))
                     CollaboratorInvitation.__table__.create(conn, checkfirst=True)
                     conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261009_02', 'now': datetime.utcnow()})
-            if LATEST not in applied:
+            if '20261010_01' not in applied:
                 from .order_models import ORDER_TABLES
                 with engine.begin() as conn:
                     for table in ORDER_TABLES:
                         table.create(conn, checkfirst=True)
+                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261010_01', 'now': datetime.utcnow()})
+            if LATEST not in applied:
+                from .order_models import OrderPlanningSelection
+                with engine.begin() as conn:
+                    OrderPlanningSelection.__table__.create(conn, checkfirst=True)
                     conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': LATEST, 'now': datetime.utcnow()})
         finally:
             if postgres:

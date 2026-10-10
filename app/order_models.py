@@ -113,3 +113,17 @@ class RouteOrderAssignment(Base):
 
 ORDER_TABLES = [OrderSource.__table__, Order.__table__, OrderItem.__table__, OrderEvent.__table__,
                 OrderImportRun.__table__, CustomerSourceMapping.__table__, RouteOrderAssignment.__table__]
+
+
+class OrderPlanningSelection(Base):
+    """One resumable selection per company actor; no browser-only ownership."""
+    __tablename__ = 'order_planning_selections'
+    __table_args__ = (UniqueConstraint('user_id', 'actor'),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'), nullable=False)
+    actor: Mapped[str] = mapped_column(String(80), nullable=False)
+    order_ids: Mapped[list] = mapped_column(JSON, default=list, nullable=False)
+    configuration: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
+    stops: Mapped[list | None] = mapped_column(JSON)
+    version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)

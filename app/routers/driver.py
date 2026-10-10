@@ -257,7 +257,11 @@ def get_driver_routes(da: DriverAccount = Depends(get_current_driver), db: Sessi
 
 @router.post("/routes/{route_id}/start")
 def start_route(route_id: int, da: DriverAccount = Depends(get_current_driver), db: Session = Depends(get_db)):
-    route = db.query(RoutePlan).filter_by(id=route_id, driver_id=da.driver_id).with_for_update().first()
+    from ..services.route_orders import lock_company
+    owner_id = db.query(RoutePlan.user_id).filter_by(id=route_id, driver_id=da.driver_id).scalar()
+    if owner_id is None: raise HTTPException(404, 'Giro non trovato')
+    lock_company(db, owner_id)
+    route = db.query(RoutePlan).filter_by(id=route_id, driver_id=da.driver_id).with_for_update().populate_existing().first()
     if not route:
         raise HTTPException(404, 'Giro non trovato')
     if route.status in ('annullato', 'completato'):

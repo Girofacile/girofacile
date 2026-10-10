@@ -1,3 +1,5 @@
+from ..services import route_orders
+from ..services.order_planning import ORDER_FIELDS
 from ..services.route_schedule import live_route_schedule, route_schedule_datetimes
 from ..models import DeliveryTrackingLink
 from ..services.occasional_stops import verify_stop_address, validate_occasional_stops, STOP_VERIFICATION_FIELDS
@@ -102,6 +104,7 @@ def _validate_route_tenant_scope(db, user: User, data, deliveries: list[dict]):
     deposit = _require_owned_entity(db, Deposit, user, data.deposit_id, "Deposito")
     vehicle = _require_owned_entity(db, Vehicle, user, data.vehicle_id, "Mezzo", optional=True)
     driver = _require_owned_entity(db, Driver, user, data.driver_id, "Autista", optional=True)
+    route_orders.validate_references(db, user.id, deliveries, getattr(data, "route_id", None), getattr(data, "data_giro", None))
     _enrich_owned_deliveries(db, user, deliveries)
     return deposit, vehicle, driver
 
@@ -112,15 +115,18 @@ def _apply_route_preferences(user, deliveries):
     # In questo modo riattivando la funzione i dati storici tornano disponibili.
     if not bool(getattr(user, "has_time_windows", True)):
         for delivery in deliveries:
+            if delivery.get("order_refs"): continue  # Explicit order requirements take precedence.
             delivery["scarico_mattina_da"] = None
             delivery["scarico_mattina_a"] = None
             delivery["scarico_pomeriggio_da"] = None
             delivery["scarico_pomeriggio_a"] = None
     if not bool(getattr(user, "has_ztl", False)):
         for delivery in deliveries:
+            if delivery.get("order_refs"): continue  # Explicit order requirements take precedence.
             delivery["ztl"] = False
     if not bool(getattr(user, "needs_tail_lift", False)):
         for delivery in deliveries:
+            if delivery.get("order_refs"): continue  # Explicit order requirements take precedence.
             delivery["sponda"] = False
 
 
@@ -323,6 +329,7 @@ def build_vehicle_dict(vehicle):
 # -----------------------------------------------------------------------
 
 def route_response(plan, result):
+    route_orders.refresh_references(plan, result["ordered"])
     live_sched = live_route_schedule(plan, {})
     return {
         "id": plan.id, "nome": plan.nome, "data_giro": date_to_iso(plan.data_giro),
@@ -409,7 +416,8 @@ def serialize_route(plan):
     for row, delivery in zip(response["consegne"], consegne):
         if delivery.optimizer_details:
             details = json.loads(delivery.optimizer_details)
-            row.update({k: details[k] for k in (*TIMING_DETAILS, *STOP_VERIFICATION_FIELDS) if k in details})
+            row.update({k: details[k] for k in (*TIMING_DETAILS, *STOP_VERIFICATION_FIELDS, *ORDER_FIELDS) if k in details})
+    route_orders.refresh_references(plan, response["consegne"])
     response.update(window_summary(response["consegne"]))
     return response
 
@@ -492,11 +500,12 @@ def save_route_result(db, user, data, result, vehicle, route_id=None):
     plan.cancelled_at = None
     db.flush()
     initialize_snapshot(plan, result)
+    route_orders.reserve_orders(db, plan, result["ordered"])
     for item in result["ordered"]:
         delivery_data = dict(item)
         delivery_data["optimizer_details"] = json.dumps({k: item[k] for k in
-            (*TIMING_DETAILS, *STOP_VERIFICATION_FIELDS) if k in item} | (item.get("coord") or {}))
-        for extra in ("geocoding_token", "coord", "lat", "lon", "stato_geocodifica", "indirizzo_geocodificato",
+            (*TIMING_DETAILS, *STOP_VERIFICATION_FIELDS, *ORDER_FIELDS) if k in item} | (item.get("coord") or {}))
+        for extra in (*ORDER_FIELDS, "geocoding_token", "coord", "lat", "lon", "stato_geocodifica", "indirizzo_geocodificato",
                       "arrivo_fisico", "inizio_servizio", "lateness_min", "time_window_violation"):
             delivery_data.pop(extra, None)
         for _f in ["scarico_mattina_da", "scarico_mattina_a", "scarico_pomeriggio_da", "scarico_pomeriggio_a", "arrivo_stimato", "partenza_stimata"]:
@@ -567,6 +576,7 @@ def create_and_optimize_route(
     ensure_not_past_route_date(data.data_giro)
     check_daily_route_limit(user, db, data.data_giro)
     deliveries = [c.model_dump() for c in data.consegne]
+    route_orders.require_planning_permission(request, deliveries, db, getattr(data, "route_id", None))
     deposit, vehicle, _driver = _validate_route_tenant_scope(db, user, data, deliveries)
     _apply_route_preferences(user, deliveries)
     try:
@@ -614,6 +624,7 @@ def recalc_manual_route(
             raise HTTPException(403, 'Per modificare un giro programmato serve il permesso di programmazione')
     ensure_not_past_route_date(data.data_giro)
     deliveries = [c.model_dump() for c in data.consegne]
+    route_orders.require_planning_permission(request, deliveries, db, getattr(data, "route_id", None))
     deposit, vehicle, _driver = _validate_route_tenant_scope(db, user, data, deliveries)
     check_daily_route_limit(user, db, data.data_giro, exclude_route_id=data.route_id)
     _apply_route_preferences(user, deliveries)
@@ -814,6 +825,7 @@ def program_route(
     from ..models import RouteToken
     from ..services.email import send_driver_route_assigned
 
+    route_orders.lock_company(db, user.id)
     plan = owned(db.query(RoutePlan), RoutePlan, user).filter(RoutePlan.id == route_id).with_for_update().first()
     if not plan:
         raise HTTPException(404, "Giro non trovato")
@@ -841,6 +853,7 @@ def program_route(
         # Save the computed result/logs even when the longer ETA conflicts with a booking.
         db.commit()
         raise
+    route_orders.sync_route_orders(db, plan, "scheduled")
     plan.status = "programmato"
     plan.completed_at = None
     plan.cancelled_at = None
@@ -906,6 +919,7 @@ def refresh_route_traffic(route_id: int, db: Session = Depends(get_db), user: Us
 
 @router.post("/api/routes/{route_id}/cancel")
 def cancel_route(route_id: int, db: Session = Depends(get_db), user: User = Depends(current_user)):
+    route_orders.lock_company(db, user.id)
     plan = owned(db.query(RoutePlan), RoutePlan, user).filter(RoutePlan.id == route_id).with_for_update().first()
     if not plan:
         raise HTTPException(404, "Giro non trovato")
@@ -914,6 +928,7 @@ def cancel_route(route_id: int, db: Session = Depends(get_db), user: User = Depe
         raise HTTPException(400, "Il giro è già chiuso.")
     from ..services.live_position import clear_position
     clear_position(plan)
+    route_orders.sync_route_orders(db, plan, "cancelled")
     plan.status = "annullato"
     plan.cancelled_at = local_now().replace(tzinfo=None)
     db.commit()
@@ -923,6 +938,7 @@ def cancel_route(route_id: int, db: Session = Depends(get_db), user: User = Depe
 
 @router.post("/api/routes/{route_id}/complete")
 def complete_route(route_id: int, db: Session = Depends(get_db), user: User = Depends(current_user)):
+    route_orders.lock_company(db, user.id)
     plan = owned(db.query(RoutePlan), RoutePlan, user).filter(RoutePlan.id == route_id).with_for_update().first()
     if not plan:
         raise HTTPException(404, "Giro non trovato")

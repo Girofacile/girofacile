@@ -102,7 +102,7 @@ _PRESET_DEFINITIONS = (
      "Consulta le risorse, pianifica e gestisce i giri, usa report, chat e assistenza. "
      "Non modifica anagrafiche, dati aziendali o impostazioni.",
      (
-         "orders.read",
+         "orders.read", "orders.plan",
          "customers.read", "deposits.read", "vehicles.read", "drivers.read", "agents.read",
          "routes.read", "routes.plan", "routes.program", "routes.manage", "routes.tracking",
          "dashboard.read", "reports.read", "chat.read", "chat.write",
@@ -142,6 +142,9 @@ def rule(method, paths, *grants):
         RULES[method, path] = set(grants)
 
 
+rule("GET", ["/api/order-planning/selection"], "orders.plan")
+rule("PUT", ["/api/order-planning/selection", "/api/order-planning/snapshot"], "orders.plan")
+rule("POST", ["/api/order-planning/preview"], "orders.plan")
 rule("GET", ["/api/orders", "/api/orders/{order_id}"], "orders.read")
 rule("POST", ["/api/orders"], "orders.create")
 rule("PUT", ["/api/orders/{order_id}"], "orders.update")

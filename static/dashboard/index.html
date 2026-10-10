@@ -767,6 +767,7 @@
       </section>
 
       <section id="tab-giro" class="tab hidden gf-page">
+        <section id="orderPlanningBanner" class="panel" hidden><strong>Ordini selezionati</strong><p id="orderPlanningMessage" role="status" style="white-space:pre-wrap"></p><button class="btn-secondary" onclick="GFOrderPlanning.save()">Salva configurazione</button><button class="btn-secondary" onclick="showTab('ordini')">Torna agli ordini</button><p>La selezione resta salvata finché la svuoti. Le fermate rimosse restano nell’archivio Ordini.</p></section>
         <div class="page-title-row">
           <div>
             <h1 data-gf-label="route_planning">Pianificazione giro</h1>
@@ -935,7 +936,7 @@
           <label>Direzione<select id="ordersDirection" onchange="GFOrders.load(true)"><option value="desc">Decrescente</option><option value="asc">Crescente</option></select></label>
           </div></details><button id="ordersView-table" class="btn-secondary" aria-pressed="true" onclick="GFOrders.view('table')">Tabella</button><button id="ordersView-cards" class="btn-secondary" aria-pressed="false" onclick="GFOrders.view('cards')">Schede</button>
         </div><p id="ordersMessage" role="status"></p><div id="ordersResults"></div><div class="orders-pagination"><button id="ordersPrevious" class="btn-secondary" onclick="GFOrders.page(-1)">Precedente</button><span id="ordersPage"></span><button id="ordersNext" class="btn-secondary" onclick="GFOrders.page(1)">Successiva</button></div></section>
-        <p>La selezione multipla e il trasferimento alla pianificazione saranno disponibili nel prossimo intervento.</p>
+        <section id="ordersSelection" class="panel" hidden><p id="ordersSelectionCount" role="status"></p><div class="page-actions"><button class="btn-secondary order-selection-action" onclick="GFOrderPlanning.selectPage(true)">Seleziona pronti di questa pagina</button><button class="btn-secondary order-selection-action" onclick="GFOrderPlanning.selectPage(false)">Deseleziona questa pagina</button><button class="btn-secondary order-selection-action" onclick="GFOrderPlanning.allFiltered()">Seleziona tutti i pronti corrispondenti ai filtri</button><button class="btn-secondary order-selection-action" onclick="GFOrderPlanning.clear()">Svuota selezione</button><button id="ordersGoPlanning" class="btn-primary" onclick="GFOrderPlanning.go()">Vai alla pianificazione</button></div><div id="ordersSelectionRoutes" class="page-actions"></div></section>
       </section>
       <section id="tab-ordine-dettaglio" class="tab hidden gf-page orders-page"><button class="btn-secondary" onclick="showTab('ordini')">← Ordini</button><section id="orderDetail" class="panel"></section></section>
       <section id="tab-ordine-modifica" class="tab hidden gf-page orders-page"><button class="btn-secondary" onclick="showTab('ordini')">← Ordini</button><section class="panel"><h1 id="orderEditorTitle">Nuovo ordine</h1><p>Lascia vuote le informazioni non disponibili. Le correzioni conservano i dati originali e vengono registrate nello storico.</p><form onsubmit="GFOrders.save(event)"><div id="orderFormFields" class="orders-form-grid"></div><p id="orderEditorError" class="orders-error" role="alert"></p><button id="orderSave" class="btn-primary" type="submit">Salva ordine</button></form></section></section>
@@ -2018,9 +2019,10 @@
 <script src="/static/dashboard/js/live-design.js?v=20261006"></script>
 <script src="/static/password-strength.js?v=password_policy_20261008_1"></script>
 <script src="/static/dashboard/js/collaborators.js?v=orders_20261010"></script>
-<script src="/static/dashboard/js/orders.js?v=20261010"></script>
-<script src="/static/dashboard/js/core.js?v=collaborator_presets_20261009"></script>
-<script src="/static/dashboard/js/occasional-stops.js?v=1"></script>
+<script src="/static/dashboard/js/orders.js?v=20261010_2"></script>
+<script src="/static/dashboard/js/core.js?v=orders_planning_20261010_2"></script>
+<script src="/static/dashboard/js/occasional-stops.js?v=orders_2"></script>
+<script src="/static/dashboard/js/order-planning.js?v=20261010_2"></script>
 
 <script>
 function toggleLoginPassword(){

@@ -323,6 +323,8 @@ def start_operator_route(token: str, db: Session = Depends(get_db)):
     from ..core.utils import local_today
     from ..services.usage_limits import start_route_usage
     _, plan = get_route_by_token(token, db)
+    from ..services.route_orders import lock_company
+    lock_company(db, plan.user_id)
     plan = db.query(RoutePlan).filter_by(id=plan.id).with_for_update().populate_existing().one()
     if plan.status in ('completato', 'annullato'):
         raise HTTPException(409, 'Il giro è già chiuso')
