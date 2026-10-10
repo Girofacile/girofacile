@@ -1,5 +1,9 @@
 // One navigation entry point; dependencies are provided by the feature modules.
 const WORKSPACE_TOPBAR_META = {
+  ordini: {title:"Ordini",subtitle:"Gestisci gli ordini ricevuti e prepara le tue consegne."},
+  "ordine-dettaglio": {title:"Dettaglio ordine",subtitle:"Dati operativi e storico delle correzioni."},
+  "ordine-modifica": {title:"Modifica ordine",subtitle:"Completa le informazioni disponibili."},
+  "ordini-collegamenti": {title:"Collega i tuoi ordini",subtitle:"Fonti di acquisizione degli ordini."},
   collaboratori: {title:"Collaboratori",subtitle:"Gestisci accessi personali e funzioni assegnate."},
   dashboard: {
     title: "Dashboard",
@@ -68,6 +72,7 @@ function showTab(name){
 
   if(name==="dashboard"){ loadDashboardHome(); if(!window.GFCompanyAccess || GFCompanyAccess.can("notifications.read")) loadNotificationsV30(false); if(!featureLockedForTab("chat-autisti") && (!window.GFCompanyAccess || GFCompanyAccess.can("chat.read"))) loadDriverChatNotifications(); }
   if(name==="company") { loadCompanyProfile(); if(!window.GFCompanyAccess?.isCollaborator()) loadOnboardingStatus(false); }
+  if(name==="ordini") GFOrders.load();
   if(name==="collaboratori") GFCollaborators.load();
   if(name==="dashboard-scheduled") loadDashboardScheduledPage();
   if(name==="dashboard-in-progress") loadDashboardInProgressPage();

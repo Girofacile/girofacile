@@ -1,7 +1,7 @@
 /* Company collaborators. Server checks are authoritative; this module adapts UI. */
 (function(){
   'use strict';
-  const tabs = {dashboard:'dashboard.read',giro:'routes.plan','route-preview':'routes.plan',
+  const tabs = {ordini:'orders.read','ordine-dettaglio':'orders.read','ordine-modifica':'orders.read','ordini-collegamenti':'orders.read',dashboard:'dashboard.read',giro:'routes.plan','route-preview':'routes.plan',
     'dashboard-scheduled':'routes.read','dashboard-in-progress':'routes.read',
     'dashboard-completed':'routes.read',storico:'routes.read',clienti:'customers.read',
     depositi:'deposits.read',mezzi:'vehicles.read',autisti:'drivers.read',agenti:'agents.read',

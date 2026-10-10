@@ -717,3 +717,6 @@ class DeliveryTrackingLink(Base):
     selector: Mapped[str] = mapped_column(String(64), nullable=False, unique=True, index=True)
     expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+
+# Register the additive order archive on the shared metadata.
+from .order_models import Order, OrderSource, OrderItem, OrderEvent, OrderImportRun, CustomerSourceMapping, RouteOrderAssignment

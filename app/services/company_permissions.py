@@ -14,6 +14,13 @@ CATALOG = [
     for action, title in (("read", "Visualizza"), ("create", "Crea"), ("update", "Modifica"), ("delete", "Elimina"))
 ] + [
     {"key": key, "group": group, "label": label} for key, group, label in (
+        ("orders.read", "Ordini", "Visualizza ordini"),
+        ("orders.create", "Ordini", "Crea ordini"),
+        ("orders.update", "Ordini", "Correggi e verifica ordini"),
+        ("orders.import", "Ordini", "Importa ordini"),
+        ("orders.match", "Ordini", "Associa clienti agli ordini"),
+        ("orders.integrations", "Ordini", "Gestisci fonti e credenziali"),
+        ("orders.plan", "Ordini", "Trasferisci ordini alla pianificazione"),
         ("routes.read", "Giri", "Visualizza giri, storico e posizione del mezzo"),
         ("routes.plan", "Giri", "Pianifica e calcola percorsi"),
         ("routes.program", "Giri", "Programma e assegna giri"),
@@ -44,6 +51,10 @@ DEPENDENCIES = {
 for resource in RESOURCE_LABELS:
     for action in ("create", "update", "delete"):
         DEPENDENCIES[f"{resource}.{action}"] = {f"{resource}.read"}
+for action in ('create', 'update', 'import', 'match', 'integrations', 'plan'):
+    DEPENDENCIES[f'orders.{action}'] = {'orders.read'}
+DEPENDENCIES['orders.plan'].add('routes.plan')
+DEPENDENCIES['orders.match'].add('customers.read')
 DEPENDENCIES["customers.read"] = {"agents.read"}
 
 
@@ -83,12 +94,15 @@ _PRESET_DEFINITIONS = (
          "routes.read", "routes.plan", "routes.program", "routes.manage", "routes.tracking",
          "dashboard.read", "reports.read", "chat.read", "chat.write",
          "company.read", "company.update", "settings.update",
+         "orders.read", "orders.create", "orders.update", "orders.import",
+         "orders.match", "orders.integrations", "orders.plan",
          "support.read", "support.write", "notifications.read",
      )),
     ("planner", "Pianificatore",
      "Consulta le risorse, pianifica e gestisce i giri, usa report, chat e assistenza. "
      "Non modifica anagrafiche, dati aziendali o impostazioni.",
      (
+         "orders.read",
          "customers.read", "deposits.read", "vehicles.read", "drivers.read", "agents.read",
          "routes.read", "routes.plan", "routes.program", "routes.manage", "routes.tracking",
          "dashboard.read", "reports.read", "chat.read", "chat.write",
@@ -98,6 +112,7 @@ _PRESET_DEFINITIONS = (
      "Consulta risorse, giri, report, chat, dati aziendali e assistenza. "
      "Non modifica i dati operativi.",
      (
+         "orders.read",
          "customers.read", "deposits.read", "vehicles.read", "drivers.read", "agents.read",
          "routes.read", "dashboard.read", "reports.read", "chat.read",
          "company.read", "support.read", "notifications.read",
@@ -127,6 +142,10 @@ def rule(method, paths, *grants):
         RULES[method, path] = set(grants)
 
 
+rule("GET", ["/api/orders", "/api/orders/{order_id}"], "orders.read")
+rule("POST", ["/api/orders"], "orders.create")
+rule("PUT", ["/api/orders/{order_id}"], "orders.update")
+rule("POST", ["/api/orders/{order_id}/status", "/api/orders/{order_id}/verify-address"], "orders.update")
 rule("GET", ["/api/settings", "/api/sector-config"], "session")
 rule("GET", ["/api/company-profile"], "company.read")
 rule("PUT", ["/api/company-profile"], "company.update")

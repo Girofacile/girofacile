@@ -41,6 +41,16 @@ jobs:
           pip install playwright==1.55.0
           python -m playwright install --with-deps chromium
           python tests/check_electric_responsive.py
+      - name: Verify orders against isolated API at desktop and mobile widths
+        run: python tests/check_orders_ui.py
+      - name: Preserve orders responsive screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: orders-responsive
+          path: test-results/orders-responsive/
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Preserve electric mobility responsive screenshots
         if: always()
         uses: actions/upload-artifact@v4

@@ -50,6 +50,7 @@
 <link rel="stylesheet" href="/static/dashboard/css/login.css?v=login_preview_exact_20261007">
 <script src="/static/design-system/design-system.js?v=ds_20261007_reference_2" defer></script>
 <link rel="stylesheet" href="/static/dashboard/css/collaborators.css?v=invitations_20261009">
+<link rel="stylesheet" href="/static/dashboard/css/orders.css?v=20261010">
 </head>
 <body data-gf-surface="workspace">
 
@@ -345,6 +346,7 @@
     <div class="gf-mobile-more-head-v62"><strong>Menu</strong><button type="button" onclick="closeMobileMoreMenuV62()">×</button></div>
     <button onclick="mobileGoTabV62('company')">⌂ Azienda</button>
     <button onclick="mobileGoTabV62('giro')">▣ Pianificazione</button>
+    <button onclick="mobileGoTabV62('ordini')">▤ Ordini</button>
     <button onclick="mobileGoTabV62('clienti')">♙ Clienti</button>
     <button onclick="mobileGoTabV62('agenti')">◇ Agenti</button>
     <button class="company-owner-only" onclick="mobileGoTabV62('collaboratori')">♙ Collaboratori</button>
@@ -386,6 +388,7 @@
       <button data-tab="company" data-workspace-common="1" onclick="showTab('company')" class="nav-item user-only"><span class="nav-svg"><svg aria-hidden="true" class="reference-nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="M48 0C21.5 0 0 21.5 0 48V464c0 26.5 21.5 48 48 48h96V432c0-26.5 21.5-48 48-48s48 21.5 48 48v80h96c26.5 0 48-21.5 48-48V48c0-26.5-21.5-48-48-48H48zM64 240c0-8.8 7.2-16 16-16h32c8.8 0 16 7.2 16 16v32c0 8.8-7.2 16-16 16H80c-8.8 0-16-7.2-16-16V240zm112-16h32c8.8 0 16 7.2 16 16v32c0 8.8-7.2 16-16 16H176c-8.8 0-16-7.2-16-16V240c0-8.8 7.2-16 16-16zm80 16c0-8.8 7.2-16 16-16h32c8.8 0 16 7.2 16 16v32c0 8.8-7.2 16-16 16H272c-8.8 0-16-7.2-16-16V240zM80 96h32c8.8 0 16 7.2 16 16v32c0 8.8-7.2 16-16 16H80c-8.8 0-16-7.2-16-16V112c0-8.8 7.2-16 16-16zm80 16c0-8.8 7.2-16 16-16h32c8.8 0 16 7.2 16 16v32c0 8.8-7.2 16-16 16H176c-8.8 0-16-7.2-16-16V112zM272 96h32c8.8 0 16 7.2 16 16v32c0 8.8-7.2 16-16 16H272c-8.8 0-16-7.2-16-16V112c0-8.8 7.2-16 16-16z"/></svg></span> Azienda</button>
       <button data-tab="giro" data-workspace-operational="1" onclick="showTab('giro')" class="nav-item user-only"><span class="nav-svg"><svg aria-hidden="true" class="reference-nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M152 24c0-13.3-10.7-24-24-24s-24 10.7-24 24V64H64C28.7 64 0 92.7 0 128v16 48V448c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V192 144 128c0-35.3-28.7-64-64-64H344V24c0-13.3-10.7-24-24-24s-24 10.7-24 24V64H152V24zM48 192H400V448c0 8.8-7.2 16-16 16H64c-8.8 0-16-7.2-16-16V192z"/></svg></span> Pianificazione</button>
       <button data-tab="dashboard-scheduled" data-workspace-common="1" onclick="openDashboardScheduledPage()" class="nav-item user-only scheduled-nav-entry"><span class="nav-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="3"/><path d="M8 3v4m8-4v4M4 11h16m-11 4h2m3 0h2"/></svg></span> Giri programmati</button>
+      <button data-tab="ordini" data-workspace-operational="1" onclick="showTab('ordini')" class="nav-item user-only"><span class="nav-svg" aria-hidden="true">▤</span> Ordini</button>
       <button data-tab="clienti" data-workspace-operational="1" onclick="showTab('clienti')" class="nav-item user-only"><span class="nav-svg"><svg aria-hidden="true" class="reference-nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><path d="M144 0a80 80 0 1 1 0 160A80 80 0 1 1 144 0zM512 0a80 80 0 1 1 0 160A80 80 0 1 1 512 0zM0 298.7C0 239.8 47.8 192 106.7 192h42.7c15.9 0 31 3.5 44.6 9.7c-1.3 7.2-1.9 14.7-1.9 22.3c0 38.2 16.8 72.5 43.3 96c-.2 0-.4 0-.7 0H21.3C9.6 320 0 310.4 0 298.7zM405.3 320c-.2 0-.4 0-.7 0c26.6-23.5 43.3-57.8 43.3-96c0-7.6-.7-15-1.9-22.3c13.6-6.3 28.7-9.7 44.6-9.7h42.7C592.2 192 640 239.8 640 298.7c0 11.8-9.6 21.3-21.3 21.3H405.3zM224 224a96 96 0 1 1 192 0 96 96 0 1 1 -192 0zM128 485.3C128 411.7 187.7 352 261.3 352H378.7C452.3 352 512 411.7 512 485.3c0 14.7-11.9 26.7-26.7 26.7H154.7c-14.7 0-26.7-11.9-26.7-26.7z"/></svg></span> Clienti</button>
       <button data-tab="agenti" data-workspace-operational="1" onclick="showTab('agenti')" class="nav-item user-only"><span class="nav-svg"><svg aria-hidden="true" class="reference-nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M224 256A128 128 0 1 1 224 0a128 128 0 1 1 0 256zM209.1 359.2l-18.6-31c-6.4-10.7 1.3-24.2 13.7-24.2H224h19.7c12.4 0 20.1 13.6 13.7 24.2l-18.6 31 33.4 123.9 36-146.9c2-8.1 9.8-13.4 17.9-11.3c70.1 17.6 121.9 81 121.9 156.4c0 17-13.8 30.7-30.7 30.7H285.5c-2.1 0-4-.4-5.8-1.1l.3 1.1H168l.3-1.1c-1.8 .7-3.8 1.1-5.8 1.1H30.7C13.8 512 0 498.2 0 481.3c0-75.5 51.9-138.9 121.9-156.4c8.1-2 15.9 3.3 17.9 11.3l36 146.9 33.4-123.9z"/></svg></span> Agenti</button>
       <button data-tab="collaboratori" onclick="showTab('collaboratori')" class="nav-item user-only company-owner-only"><span class="nav-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="7" r="3"/><path d="M3 21v-3a6 6 0 0 1 12 0v3M16 4a3 3 0 0 1 0 6M18 14a5 5 0 0 1 3 5v2"/></svg></span> Collaboratori</button>
@@ -920,6 +923,23 @@
         </div>
       </section>
 
+      <section id="tab-ordini" class="tab hidden gf-page orders-page">
+        <div class="page-title-row gf-directory-title"><div><h1>Ordini</h1><p>Gestisci gli ordini ricevuti e prepara le tue consegne.</p></div><div class="page-actions"><button id="ordersNew" class="btn-primary" onclick="GFOrders.newOrder()">Nuovo ordine</button><button class="btn-secondary" disabled title="Disponibile nel quarto intervento: importazione CSV/XLSX">Importa file</button><button class="btn-secondary" onclick="showTab('ordini-collegamenti')">Collega i tuoi ordini</button></div></div>
+        <div id="ordersMetrics" class="orders-metrics" aria-label="Indicatori ordini"></div>
+        <section class="panel"><div class="orders-toolbar">
+          <label>Cerca<input id="ordersSearch" type="search" maxlength="200" placeholder="Numero, destinatario, indirizzo" oninput="GFOrders.search()"></label>
+          <details class="orders-filters"><summary>Filtri e ordinamento</summary><div class="orders-toolbar"><label>Stato<select id="ordersStatus" onchange="GFOrders.load(true)"><option value="">Tutti gli stati</option><option value="nuovo">Nuovo</option><option value="da_verificare">Da verificare</option><option value="pronto">Pronto</option><option value="assegnato">Assegnato</option><option value="in_consegna">In consegna</option><option value="consegnato">Consegnato</option><option value="non_consegnato">Non consegnato</option><option value="annullato">Annullato</option></select></label>
+          <label>Fonte<select id="ordersSource" onchange="GFOrders.load(true)"><option value="">Tutte le fonti</option></select></label>
+          <label>Data richiesta dal<input id="ordersFrom" type="date" onchange="GFOrders.load(true)"></label><label>Al<input id="ordersTo" type="date" onchange="GFOrders.load(true)"></label>
+          <label>Ordina per<select id="ordersSort" onchange="GFOrders.load(true)"><option value="received_at">Ricezione</option><option value="requested_date">Data richiesta</option><option value="number">Numero ordine</option></select></label>
+          <label>Direzione<select id="ordersDirection" onchange="GFOrders.load(true)"><option value="desc">Decrescente</option><option value="asc">Crescente</option></select></label>
+          </div></details><button id="ordersView-table" class="btn-secondary" aria-pressed="true" onclick="GFOrders.view('table')">Tabella</button><button id="ordersView-cards" class="btn-secondary" aria-pressed="false" onclick="GFOrders.view('cards')">Schede</button>
+        </div><p id="ordersMessage" role="status"></p><div id="ordersResults"></div><div class="orders-pagination"><button id="ordersPrevious" class="btn-secondary" onclick="GFOrders.page(-1)">Precedente</button><span id="ordersPage"></span><button id="ordersNext" class="btn-secondary" onclick="GFOrders.page(1)">Successiva</button></div></section>
+        <p>La selezione multipla e il trasferimento alla pianificazione saranno disponibili nel prossimo intervento.</p>
+      </section>
+      <section id="tab-ordine-dettaglio" class="tab hidden gf-page orders-page"><button class="btn-secondary" onclick="showTab('ordini')">← Ordini</button><section id="orderDetail" class="panel"></section></section>
+      <section id="tab-ordine-modifica" class="tab hidden gf-page orders-page"><button class="btn-secondary" onclick="showTab('ordini')">← Ordini</button><section class="panel"><h1 id="orderEditorTitle">Nuovo ordine</h1><p>Lascia vuote le informazioni non disponibili. Le correzioni conservano i dati originali e vengono registrate nello storico.</p><form onsubmit="GFOrders.save(event)"><div id="orderFormFields" class="orders-form-grid"></div><p id="orderEditorError" class="orders-error" role="alert"></p><button id="orderSave" class="btn-primary" type="submit">Salva ordine</button></form></section></section>
+      <section id="tab-ordini-collegamenti" class="tab hidden gf-page orders-page"><button class="btn-secondary" onclick="showTab('ordini')">← Ordini</button><div class="page-title-row"><div><h1>Collega i tuoi ordini</h1><p>Scegli da dove ricevi gli ordini. Ti guideremo nella configurazione.</p></div></div><section class="panel"><h2>Collegamenti in preparazione</h2><p>In questo primo intervento puoi inserire e gestire gli ordini manualmente. Nessuna sincronizzazione esterna è attiva.</p><div class="orders-grid"><article><h3>Gestionale aziendale</h3><p>Importazione file e API standard previste nel quarto intervento. I collegamenti personalizzati richiederanno una verifica tecnica.</p></article><article><h3>File Excel o CSV</h3><p>Anteprima, associazione colonne e importazione saranno disponibili nel quarto intervento.</p></article><article><h3>E-commerce</h3><p>Richiede un connettore e una configurazione aggiuntiva. Non attivo.</p></article><article><h3>Email</h3><p>È previsto un inoltro dedicato degli ordini. Non attivo.</p></article></div></section></section>
       <section id="tab-clienti" class="tab hidden gf-directory-page">
         <div class="page-title-row customer-page-title gf-directory-title">
           <div><h1 data-gf-label="customers">Clienti</h1><p>Anagrafica <span data-gf-label="customers">Clienti</span> e fasce orarie di scarico.</p></div>
@@ -1992,12 +2012,13 @@
 
 <script src="/static/dashboard/js/reports.js?v=audit_20261004"></script>
 <script src="/static/dashboard/js/customers.js?v=customer_kpi_fix_20261006_6"></script>
-<script src="/static/dashboard/js/navigation.js?v=collaborators_20261009"></script>
+<script src="/static/dashboard/js/navigation.js?v=orders_20261010"></script>
 <script src="/static/dashboard/js/completed.js?v=20261006"></script>
 <script src="/static/dashboard/js/preview-design.js?v=20261006"></script>
 <script src="/static/dashboard/js/live-design.js?v=20261006"></script>
 <script src="/static/password-strength.js?v=password_policy_20261008_1"></script>
-<script src="/static/dashboard/js/collaborators.js?v=invitations_20261009"></script>
+<script src="/static/dashboard/js/collaborators.js?v=orders_20261010"></script>
+<script src="/static/dashboard/js/orders.js?v=20261010"></script>
 <script src="/static/dashboard/js/core.js?v=collaborator_presets_20261009"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=1"></script>
 

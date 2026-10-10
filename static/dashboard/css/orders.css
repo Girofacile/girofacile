@@ -1,0 +1,25 @@
+/* Orders reuse the dashboard panels, controls and typography. */
+.orders-page .orders-toolbar,.orders-page .page-actions,.orders-page .orders-pagination{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.orders-page .orders-toolbar{margin-bottom:18px;align-items:end}
+.orders-page .orders-toolbar label{flex:1;min-width:140px}
+.orders-page .orders-toolbar input,.orders-page .orders-toolbar select{width:100%}
+.orders-page .orders-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}
+.orders-page .orders-metrics .panel{margin:0;padding:18px}
+.orders-page .orders-metrics strong{display:block;font-size:26px;margin-top:8px}
+.orders-page .orders-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.orders-page .orders-grid article{min-width:0;overflow-wrap:anywhere}
+.orders-page .orders-pagination{justify-content:flex-end;margin-top:16px}
+.orders-page .orders-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.orders-page label{display:block;font-size:13px;font-weight:600}
+.orders-page label input,.orders-page label select,.orders-page label textarea{display:block;width:100%;margin-top:6px}
+.orders-page .orders-error{color:#ac2133;white-space:pre-wrap}
+.orders-page pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px}
+.orders-page button{min-height:44px}
+.orders-page td{overflow-wrap:anywhere;max-width:340px}
+.orders-page .orders-detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.orders-page .orders-detail-grid dd{margin:4px 0 12px;overflow-wrap:anywhere}
+.orders-page .orders-detail-grid dt{color:#687589;font-size:12px}
+@media(max-width:1000px){.orders-page .orders-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.orders-page .orders-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.orders-page .orders-grid,.orders-page .orders-form-grid,.orders-page .orders-detail-grid{grid-template-columns:1fr}.orders-page .page-actions{width:100%}.orders-page .page-actions button{flex:1}.orders-page .orders-toolbar label{min-width:100%;}.orders-page .orders-metrics .panel{padding:12px}.orders-page .tableWrap{overflow-x:auto}}
+
+.orders-page .orders-filters{flex-basis:100%}.orders-page .orders-filters summary{cursor:pointer;min-height:44px;padding:12px 0;font-weight:600}.orders-page .orders-filters .orders-toolbar{margin-top:12px}

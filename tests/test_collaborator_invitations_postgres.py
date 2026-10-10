@@ -135,6 +135,8 @@ def test_additive_invitation_migration_preserves_legacy_passwords_and_tenant_fk(
     with pg.begin() as conn:
         conn.execute(text("CREATE TABLE users (id INTEGER PRIMARY KEY, username TEXT)"))
         conn.execute(text("INSERT INTO users VALUES (1, 'existing-owner')"))
+        conn.execute(text("CREATE TABLE customers (id INTEGER PRIMARY KEY)"))
+        conn.execute(text("CREATE TABLE route_plans (id INTEGER PRIMARY KEY)"))
         conn.execute(text("""
             CREATE TABLE company_collaborators (
               id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id),
@@ -162,7 +164,7 @@ def test_additive_invitation_migration_preserves_legacy_passwords_and_tenant_fk(
         assert row.password_hash == "legacy-password-hash"
         assert row.password_setup_required is False
         assert row.permissions_json == '["customers.read"]'
-        assert set(conn.execute(text("SELECT version FROM schema_migrations")).scalars()) == set(versions) | {LATEST}
+        assert set(conn.execute(text("SELECT version FROM schema_migrations")).scalars()) == set(versions) | {"20261009_02", LATEST}
         assert conn.execute(text("SELECT COUNT(*) FROM collaborator_invitations")).scalar() == 0
     fks = inspect(pg).get_foreign_keys("collaborator_invitations")
     assert any(fk["referred_table"] == "company_collaborators"
