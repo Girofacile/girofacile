@@ -50,7 +50,7 @@
 <link rel="stylesheet" href="/static/dashboard/css/login.css?v=login_preview_exact_20261007">
 <script src="/static/design-system/design-system.js?v=ds_20261007_reference_2" defer></script>
 <link rel="stylesheet" href="/static/dashboard/css/collaborators.css?v=invitations_20261009">
-<link rel="stylesheet" href="/static/dashboard/css/orders.css?v=orders_layout_ref_20261011_2">
+<link rel="stylesheet" href="/static/dashboard/css/orders.css?v=order_modal_20261011_1">
 </head>
 <body data-gf-surface="workspace">
 
@@ -995,8 +995,9 @@
           </div>
         </section>
       </section>
-      <section id="tab-ordine-dettaglio" class="tab hidden gf-page orders-page"><button class="btn-secondary" onclick="showTab('ordini')">← Ordini</button><section id="orderDetail" class="panel"></section></section>
-      <section id="tab-ordine-modifica" class="tab hidden gf-page orders-page"><button class="btn-secondary" onclick="showTab('ordini')">← Ordini</button><section class="panel"><h1 id="orderEditorTitle">Nuovo ordine</h1><p>Lascia vuote le informazioni non disponibili. Le correzioni conservano i dati originali e vengono registrate nello storico.</p><form onsubmit="GFOrders.save(event)"><div id="orderFormFields" class="orders-form-grid"></div><p id="orderEditorError" class="orders-error" role="alert"></p><button id="orderSave" class="btn-primary" type="submit">Salva ordine</button></form></section></section>
+      <dialog id="orderModal" class="gf-dialog order-modal" aria-labelledby="orderModalTitle">
+        <div id="orderModalContent" class="order-modal-content"></div>
+      </dialog>
       <section id="tab-ordini-collegamenti" class="tab hidden gf-page orders-page">
         <div class="orders-connections-mobile-head">
           <button class="btn-secondary" onclick="showTab('ordini')" aria-label="Torna agli ordini"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/><path d="M9 12h10"/></svg></button>
@@ -2123,10 +2124,10 @@
 <script src="/static/dashboard/js/live-design.js?v=20261006"></script>
 <script src="/static/password-strength.js?v=password_policy_20261008_1"></script>
 <script src="/static/dashboard/js/collaborators.js?v=20261011_fields1"></script>
-<script src="/static/dashboard/js/orders.js?v=orders_layout_ref_20261011_2"></script>
+<script src="/static/dashboard/js/orders.js?v=order_modal_20261011_1"></script>
 <script src="/static/dashboard/js/order-import.js?v=20261011_fields1"></script>
 <script src="/static/dashboard/js/order-sources.js?v=20261011_fields1"></script>
-<script src="/static/dashboard/js/order-customers.js?v=20261011_3"></script>
+<script src="/static/dashboard/js/order-customers.js?v=order_modal_20261011_1"></script>
 <script src="/static/dashboard/js/core.js?v=orders_planning_20261010_2"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=orders_2"></script>
 <script src="/static/dashboard/js/order-planning.js?v=orders_layout_ref_20261011_2"></script>
