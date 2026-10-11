@@ -55,6 +55,24 @@ class OrderAction(BaseModel):
     status: Literal['nuovo', 'da_verificare', 'pronto', 'annullato']
 
 
+class OrderBulkVerify(BaseModel):
+    """One bounded chunk of the filtered address verification queue."""
+    model_config = ConfigDict(extra='forbid')
+    after_id: int = Field(default=0, ge=0)
+    limit: int = Field(default=10, ge=1, le=10)
+    q: str = Field(default='', max_length=200)
+    source_id: int | None = Field(default=None, gt=0)
+    status: Literal['nuovo', 'da_verificare', 'pronto', 'assegnato', 'in_consegna', 'consegnato', 'non_consegnato', 'annullato'] | None = None
+    date_from: date | None = None
+    date_to: date | None = None
+
+    @model_validator(mode='after')
+    def dates_in_order(self):
+        if self.date_from and self.date_to and self.date_from > self.date_to:
+            raise ValueError('La data iniziale deve precedere la data finale')
+        return self
+
+
 class OrderVersion(BaseModel):
     model_config = ConfigDict(extra='forbid')
     version: int = Field(ge=1)
