@@ -98,7 +98,7 @@ def main():
                     page.evaluate('GFOrders.open('+str(db.query(Order).one().id)+')')
                     page.locator('#orderCustomerPanel .order-customer-optional summary').click()
                     page.get_by_role('button',name='Sì, associa',exact=True).click()
-                    page.wait_for_function("document.getElementById('orderCustomerMessage')?.textContent==='Cliente già collegato.'")
+                    page.wait_for_function("document.getElementById('orderCustomerPanel')?.textContent.includes('Cliente riconosciuto')")
                     assert page.locator('#orderCustomerPanel script').count()==0
                     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 2')
                     page.screenshot(path=str(output/f'detail-{width}.png'),full_page=True)
