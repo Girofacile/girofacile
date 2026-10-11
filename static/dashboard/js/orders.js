@@ -145,14 +145,30 @@
     const timeRange=data.time_from||data.time_to?`${esc(data.time_from||'—')} – ${esc(data.time_to||'—')}`:'Non indicata';
     const boolValue=value=>value===true?'Sì':value===false?'No':'N/D';
     const sourceChip=`<span class="order-modal-source-chip">${esc(o.source_name)}</span>`;
-    const editButton=allowed?'<button class="btn-secondary order-modal-edit-button" onclick="GFOrders.edit()">Modifica dati</button>':'';
-    const readyButton=allowed&&o.status!=='pronto'?'<button class="btn-primary order-modal-ready-button" onclick="GFOrders.action(\'status\',\'pronto\')">✓&nbsp; Conferma pronto</button>':'';
-    const more=allowed?`<details class="order-modal-more"><summary aria-label="Altre azioni">•••</summary><div class="order-modal-more-menu"><button onclick="GFOrders.action('verify-address')">Verifica indirizzo</button><button onclick="GFOrders.action('status','da_verificare')">Segna da verificare</button><button class="is-danger" onclick="GFOrders.cancel()">Annulla ordine</button></div></details>`:'';
     const items=o.items?.length?o.items.map((item,index)=>`<div class="order-modal-item-row"><span>${esc(item.description||item.name||`Articolo ${index+1}`)}</span><strong>${esc(display(item.quantity))}</strong></div>`).join(''):'<p class="order-modal-empty">Nessun articolo indicato.</p>';
-    const notes=data.notes? `<p class="order-modal-note-text">“${esc(data.notes)}”</p>`:'<p class="order-modal-empty">Nessuna nota ordine.</p>';
-    const events=(o.events||[]).map(e=>`<div class="order-modal-event"><span class="order-modal-event-dot" aria-hidden="true"></span><div><time>${esc(date(e.created_at))}</time><strong>${esc(eventLabel(e.kind))}</strong><small>${esc(e.actor)}</small>${changes(e)}</div></div>`).join('')||'<p class="order-modal-empty">Nessun evento disponibile.</p>';
-    const routeInfo=o.assignments?.length?o.assignments.map(a=>can('routes.read')?`<button class="btn-secondary order-modal-route-btn" onclick="GFOrders.close();GFOrderPlanning.openRoute(${a.route_id})">Apri giro #${a.route_id}</button>`:`Giro #${a.route_id}`).join(' '):'Non assegnato';
-    const actionCard=!verified?`<section class="order-modal-alert"><div class="order-modal-alert-title"><span aria-hidden="true">!</span><strong>Azione richiesta</strong></div><p>Verifica l’indirizzo effettivo di consegna. I dati originali restano conservati.</p>${allowed?'<button onclick="GFOrders.action(\'verify-address\')">Verifica indirizzo</button>':''}</section>`:`<section class="order-modal-alert is-ok"><div class="order-modal-alert-title"><span aria-hidden="true">✓</span><strong>Indirizzo verificato</strong></div><p>La destinazione è pronta per essere utilizzata nella pianificazione.</p></section>`;
+    const notes=data.notes?`<p class="order-modal-note-text">“${esc(data.notes)}”</p>`:'<p class="order-modal-empty">Nessuna nota ordine.</p>';
+    const addressText=esc(display(data.delivery_address));
+    const actionCard=!verified
+      ?`<section class="order-modal-alert">
+          <div class="order-modal-alert-band">Azione necessaria</div>
+          <div class="order-modal-alert-body">
+            <span class="order-modal-alert-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21s6-5.3 6-11a6 6 0 1 0-12 0c0 5.7 6 11 6 11Z"/><circle cx="12" cy="10" r="2"/></svg></span>
+            <strong>Indirizzo da confermare</strong>
+            <p>Il sistema richiede una conferma manuale per l’indirizzo “${addressText}” prima di poterlo pianificare.</p>
+            ${allowed?'<button onclick="GFOrders.action(\'verify-address\')">Verifica indirizzo ora</button>':''}
+          </div>
+        </section>`
+      :`<section class="order-modal-alert is-ok">
+          <div class="order-modal-alert-band">Verifica completata</div>
+          <div class="order-modal-alert-body">
+            <span class="order-modal-alert-icon" aria-hidden="true">✓</span>
+            <strong>Indirizzo verificato</strong>
+            <p>La destinazione è pronta per essere utilizzata nella pianificazione.</p>
+          </div>
+        </section>`;
+    const readyButton=allowed&&o.status!=='pronto'?'<button class="btn-secondary order-modal-footer-ready" onclick="GFOrders.action(\'status\',\'pronto\')">Conferma pronto</button>':'';
+    const editButton=allowed?'<button class="btn-primary order-modal-footer-edit" onclick="GFOrders.edit()">Modifica dati</button>':'';
+    const cancelButton=allowed?'<button class="order-modal-cancel-link" onclick="GFOrders.cancel()">Annulla ordine</button>':'';
 
     el('orderModalContent').innerHTML=`
       <header class="order-modal-header order-modal-detail-header">
@@ -160,7 +176,7 @@
           <div class="order-modal-title-row"><h2 id="orderModalTitle">${esc(o.number)}</h2>${statusBadge(o.status)}${sourceChip}</div>
           <p>Acquisito il ${esc(date(o.received_at))}</p>
         </div>
-        <div class="order-modal-header-actions">${editButton}${more}${readyButton}<button class="order-modal-close" type="button" onclick="GFOrders.close()" aria-label="Chiudi"><svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+        <button class="order-modal-close" type="button" onclick="GFOrders.close()" aria-label="Chiudi"><svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
       </header>
       <p id="orderActionMessage" class="order-modal-action-message" role="status"></p>
       <div class="order-modal-body">
@@ -169,7 +185,7 @@
             <div class="order-modal-card-head"><span aria-hidden="true">●</span><h3>Dati di consegna</h3></div>
             <div class="order-modal-delivery-grid">
               <div><span>Destinatario</span><strong>${esc(display(data.recipient_name))}</strong></div>
-              <div><span>Indirizzo di consegna</span><strong>${esc(display(data.delivery_address))}</strong></div>
+              <div><span>Indirizzo di consegna</span><strong>${addressText}</strong></div>
               <div><span>Data richiesta</span><strong>${requested}</strong></div>
               <div><span>Fascia oraria</span><strong>${timeRange}</strong></div>
             </div>
@@ -199,28 +215,21 @@
               <div class="order-modal-note-body">${notes}</div>
             </section>
           </div>
-
-          <details class="order-modal-technical">
-            <summary>Dati tecnici e originali</summary>
-            <div class="order-modal-technical-grid">
-              <div><span>ID interno / esterno</span><strong>${o.id} / ${esc(o.external_id)}</strong></div>
-              <div><span>Cliente registrato</span><strong>${o.customer_id??'Destinatario solo per questo ordine'}</strong></div>
-              <div><span>Giro</span><strong>${routeInfo}</strong></div>
-              <div><span>Stato acquisizione</span><strong>${esc(o.acquisition_status)}</strong></div>
-            </div>
-            <pre>${Object.entries(fields).map(([key,label])=>`${label}: ${esc(display(o.original_payload?.[key]))}`).join("\n")}</pre>
-          </details>
         </main>
 
         <aside class="order-modal-side">
           ${actionCard}
           <section id="orderCustomerPanel" class="order-modal-card order-modal-customer"></section>
-          <section class="order-modal-card order-modal-log">
-            <div class="order-modal-card-head"><span aria-hidden="true">↶</span><h3>Log eventi</h3><small>Ultimi ${Math.min(100,o.events?.length||0)}</small></div>
-            <div class="order-modal-events">${events}</div>
-          </section>
         </aside>
-      </div>`;
+      </div>
+      <footer class="order-modal-footer">
+        <div class="order-modal-footer-left">${cancelButton}</div>
+        <div class="order-modal-footer-actions">
+          <button class="btn-secondary" type="button" onclick="GFOrders.close()">Chiudi</button>
+          ${readyButton}
+          ${editButton}
+        </div>
+      </footer>`;
     window.GFOrderCustomers?.render(o);
   }
   function edit(){if(!current)return;renderEditor(current.operational_data||{},false);}
