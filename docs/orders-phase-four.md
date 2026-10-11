@@ -64,3 +64,14 @@ Contratto completo ed esempio: [API acquisizione ordini](order-ingestion-api.md)
 Prima del rilascio: backup e ripristino verificato, prova su staging, migrazione `python -m app.migrations` ripetuta e controllo di ordini/giri preesistenti. `scripts/start_app.sh` applica migrazioni all'avvio: il riavvio operativo deve rientrare nel rilascio controllato. HTTPS e limiti al proxy, credenziali salvate nel gestore segreti del fornitore, prova `dry_run` e primo lotto controllato. In rollback conservare colonne, indici e marcatori: nessuna cancellazione distruttiva degli import acquisiti. Procedura di recupero generale in `orders-phase-one.md`.
 
 Commit e push vengono effettuati direttamente su `origin/main`, includendo solo i file del quarto intervento. Le directory locali preesistenti `.tracking-work/` e `data/pod_storage/` non fanno parte della consegna.
+
+
+## Correzione dell'avvio da database precedente al modulo Ordini
+
+Il log segnalato dopo il rilascio mostrava `order_sources.user_id: Can't generate DDL for NullType()`. La causa era il caricamento condizionale dei modelli: se tutte le migrazioni anteriori agli ordini erano già registrate, un processo nuovo importava solo `order_models`, senza registrare la tabella `users` e le altre tabelle referenziate nel metadata SQLAlchemy. Il tipo della chiave esterna rimaneva quindi irrisolto. I precedenti test nello stesso processo avevano già importato tutti i modelli e mascheravano il problema.
+
+`run_migrations` ora registra sempre i modelli prima delle operazioni sul database. Nessuna nuova versione di schema o cancellazione di marcatori: le migrazioni mantengono transazioni, lock e possibilità di ripetizione. Il test `tests/test_migrations_cold_start_postgres.py` ricrea un database precedente agli ordini in uno schema PostgreSQL temporaneo, avvia due volte la CLI in sottoprocessi nuovi e controlla conservazione degli utenti e vincolo verso `users`. Prima della correzione riproduce esattamente il `NullType` del log.
+
+Dopo l'aggiornamento del codice, ripetere il consueto avvio che esegue `python -m app.migrations`. Non eliminare tabelle, dati o record di `schema_migrations` per risolvere questo errore. Nessuna migrazione è stata applicata al database operativo durante la diagnosi; per gli ambienti di produzione resta necessaria la procedura di rilascio controllata.
+
+Verifica della correzione: **10 test passati** (avvio CLI a freddo, audit/migrazioni PostgreSQL, acquisizione concorrente, pianificazione e import completo applicazione). `git diff --check` superato.

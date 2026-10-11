@@ -24,6 +24,11 @@ def _preflight(engine):
 
 
 def run_migrations(engine):
+    # Register every referenced table even when older migrations are already applied.
+    # A fresh CLI process otherwise loads order_models without users/customers/routes,
+    # leaving inferred foreign-key column types unresolved (NullType).
+    from . import models  # noqa: F401
+
     # A dedicated session lock serializes complete upgrades across deployments/workers.
     with engine.connect() as lock:
         postgres = engine.dialect.name == 'postgresql'
