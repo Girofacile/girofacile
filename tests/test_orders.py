@@ -191,6 +191,12 @@ def test_bulk_verification_is_bounded_scoped_and_reuses_identical_addresses(orde
     filtered=client.post('/api/orders/verify-addresses',json={'q':'DOES-NOT-EXIST'})
     assert filtered.status_code==200 and filtered.json()['processed']==0
     assert client.post('/api/orders/verify-addresses',json={'limit':100}).status_code==422
+    # A future order at the same destination reuses a signed proof, even in a new batch.
+    future=create(client,number='B-4')
+    cached=client.post('/api/orders/verify-addresses',json={'q':'B-4'})
+    assert cached.status_code==200 and cached.json()['verified']==1
+    assert client.get(f"/api/orders/{future['id']}").json()['status']=='pronto'
+    assert len(calls)==1
 
     client.app.dependency_overrides[current_user]=lambda:other
     alien=client.post('/api/orders/verify-addresses',json={})
