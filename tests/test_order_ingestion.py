@@ -242,3 +242,33 @@ def test_numeric_file_codes_and_api_preview_validate_optional_fields(ingestion):
     result=client.post(f"/api/order-sources/{src['id']}/runs/{sample['run_id']}/preview")
     assert result.status_code==200 and result.json()['status']=='preview_invalid'
     assert db.query(Order).count()==0
+
+
+def test_draft_api_key_generation_before_activation(ingestion):
+    """The owner can generate/copy the key first, but ingestion stays blocked until activation."""
+    client, db, owner, other = ingestion
+    src = client.post('/api/order-sources', json={'name': 'Gestionale demo', 'kind': 'api'}).json()
+    result = client.post(f"/api/order-sources/{src['id']}/action",
+                         json={'version': src['version'], 'action': 'rotate'})
+    assert result.status_code == 200, result.text
+    generated = result.json()
+    secret = generated['credential']
+    assert generated['status'] == 'draft' and secret.startswith('gf_orders_')
+    assert secret not in client.get('/api/order-sources').text
+    payload = {'batch_id': 'test-key-first', 'orders': [{'external_id': 'TEST-01', 'number': 'TEST-01'}]}
+    headers = {'Authorization': 'Bearer ' + secret}
+    assert client.post('/api/order-ingestion', headers=headers, json=payload).status_code == 403
+    sample = client.post(f"/api/order-sources/{src['id']}/sample",
+                         json={'orders': payload['orders']}).json()
+    rid = sample['run_id']
+    configured = client.put(f"/api/order-sources/{src['id']}",
+                            json={'version': generated['version'],
+                                  'mapping': {'external_id': 'external_id', 'number': 'number'}})
+    assert configured.status_code == 200, configured.text
+    current = configured.json()
+    preview = client.post(f"/api/order-sources/{src['id']}/runs/{rid}/preview")
+    assert preview.status_code == 200 and preview.json()['status'] == 'preview_ready'
+    activated = client.post(f"/api/order-sources/{src['id']}/action",
+                            json={'version': current['version'], 'action': 'activate', 'run_id': rid})
+    assert activated.status_code == 200 and activated.json()['has_credential'] is True
+    assert client.post('/api/order-ingestion', headers=headers, json=payload).status_code == 200

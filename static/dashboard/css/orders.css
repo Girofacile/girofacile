@@ -1025,3 +1025,38 @@ body[data-gf-surface="workspace"] #app:has(#tab-ordine-fonte:not(.hidden)) .orde
   #tab-ordine-fonte .source-advanced>summary{padding:12px}
   #tab-ordine-fonte .source-new-token .btn-primary{width:100%}
 }
+
+
+/* Clear hierarchy for API source setup: key first, support tasks second. */
+#tab-ordine-fonte .gf-key-first-hero{margin-bottom:22px;padding:26px;background:linear-gradient(110deg,#fff 55%,#f2f6ff);border:1px solid #b9d1f6;border-radius:13px;box-shadow:var(--gf-shadow-sm,0 1px 2px rgba(16,24,40,.05))}
+#tab-ordine-fonte .gf-key-first-heading{display:flex;gap:16px;align-items:flex-start;margin-bottom:21px}
+#tab-ordine-fonte .gf-key-first-mark{width:48px;height:48px;display:grid;place-items:center;flex-shrink:0;border-radius:12px;background:#eaf1ff;font-size:25px}
+#tab-ordine-fonte .gf-key-first-kicker{display:block;margin:2px 0 7px;color:#2563eb;font-size:10px;letter-spacing:.08em;font-weight:800}
+#tab-ordine-fonte .gf-key-first-heading h2{margin:0 0 7px;color:#172033;font-size:24px;line-height:1.25}
+#tab-ordine-fonte .gf-key-first-heading p{max-width:750px;margin:0;color:#52637b;font-size:14px;line-height:1.6}
+#tab-ordine-fonte .gf-key-first-body{padding:20px;border:1px solid #c9d9f1;border-radius:10px;background:#fff}
+#tab-ordine-fonte .gf-key-first-body .source-credential-state{max-width:750px;margin-bottom:18px}
+#tab-ordine-fonte .gf-key-first-body .source-credential-state strong{font-size:13px}
+#tab-ordine-fonte .gf-key-first-body .source-credential-actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:0}
+#tab-ordine-fonte .gf-key-first-body .gf-key-first-generate{min-height:48px;padding:0 24px;border-radius:8px;background:var(--gf-color-primary,#2563eb);color:#fff;font-size:14px;font-weight:750;white-space:normal}
+#tab-ordine-fonte .gf-key-first-body .gf-key-first-revoke{min-height:42px;padding:0 15px;border:1px solid #f0c3c3;background:#fff;color:#b42335;font-size:12px}
+#tab-ordine-fonte .gf-key-first-tip{margin:12px 0 0;color:#64748b;font-size:12px;line-height:1.6}
+#tab-ordine-fonte .gf-key-first-footnote{margin:14px 2px 0;color:#52637b;font-size:12px;line-height:1.55}
+#tab-ordine-fonte .gf-key-first-body #sourceCredential{margin-top:18px;max-width:800px}
+#tab-ordine-fonte .gf-key-first-body #sourceToken{width:100%;min-height:74px;font-size:13px}
+#tab-ordine-fonte .gf-key-first-body .source-new-token{padding:17px;border:1px solid #a5d7b7;border-radius:9px;background:#f0fff7}
+#tab-ordine-fonte .gf-key-first-body .source-new-token strong{display:block;font-size:16px;color:#066342}
+#tab-ordine-fonte .gf-key-first-body .source-new-token .btn-primary{min-height:45px;padding:0 20px;font-size:13px;font-weight:750}
+#tab-ordine-fonte .gf-key-first-secondary{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+#tab-ordine-fonte .gf-key-first-secondary .source-guide{min-height:0}
+#tab-ordine-fonte .gf-key-first-secondary .source-guide p{line-height:1.65}
+#tab-ordine-fonte .gf-key-first-local{margin:12px 0 0;padding:12px;border:1px solid #f3d8a8;border-radius:8px;background:#fff9ed;color:#8a561d;font-size:12px;line-height:1.55}
+@media(max-width:1050px){#tab-ordine-fonte .gf-key-first-secondary{grid-template-columns:1fr}}
+@media(max-width:620px){
+ #tab-ordine-fonte .gf-key-first-hero{padding:16px}
+ #tab-ordine-fonte .gf-key-first-heading h2{font-size:21px}
+ #tab-ordine-fonte .gf-key-first-heading{gap:10px}
+ #tab-ordine-fonte .gf-key-first-mark{width:38px;height:38px;font-size:21px}
+ #tab-ordine-fonte .gf-key-first-body{padding:14px}
+ #tab-ordine-fonte .gf-key-first-body .gf-key-first-generate{width:100%}
+}

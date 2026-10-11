@@ -74,7 +74,7 @@ def source_action(source_id:int,data:SourceAction,request:Request,response:Respo
     elif data.action=='remove': src.status='removed';src.credential_hash=None
     elif data.action=='revoke': src.credential_hash=None;src.status='paused'
     elif data.action=='rotate':
-        if src.kind!='api' or src.status!='active': raise HTTPException(409,'Attiva e verifica prima la fonte API.')
+        if src.kind!='api' or src.status not in ('draft','active'): raise HTTPException(409,'La fonte API deve essere in configurazione o attiva per generare una chiave.')
         secret=issue(src)
     src.version+=1
     db.add(OrderImportRun(user_id=user.id,source_id=src.id,status='source_'+data.action,report={'actor':actor_key(request,user),'action':data.action}))

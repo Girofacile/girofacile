@@ -46,7 +46,7 @@
     el('sourceWizard').scrollIntoView({block:'start'});
   }
   function create(event){event.preventDefault();if(el('sourceKind').value==='custom'){el('sourceMessage').textContent='Collegamento personalizzato da predisporre con il fornitore: comunica nome e versione del software, esempio anonimo del tracciato, identificativi stabili e frequenza degli invii. Le modalità operative disponibili sono file o API standard: selezionane una per proseguire.';return;}return task(async()=>{current=await request('',post({name:el('sourceName').value,kind:el('sourceKind').value,software:el('sourceSoftware').value}));staged=verified=null;if(current.kind==='api'){await refresh();current=sources.find(s=>s.id===current.id)||current;showTab('ordine-fonte');detailPage();window.scrollTo({top:0,behavior:'auto'});}else{editor();await refresh();}});}
-  function sourceSubtitle(s){return s.kind==='api'?'Gestione fonte API e validazione campioni JSON.':'Gestione fonte file e validazione degli ordini importati.';}
+  function sourceSubtitle(s){return s.kind==='api'?'Genera la chiave API e collega gli ordini.':'Gestione fonte file e validazione degli ordini importati.';}
   function sourceTopActions(s,mobile=false){
     if(!manage())return '';
     const toggle=s.status==='active'
@@ -65,6 +65,72 @@
     if(badge){badge.hidden=false;badge.textContent=statuses[current.status]||current.status;badge.className='order-source-topbar-badge '+sourceStatusClass(current.status);}
     if(actions)actions.innerHTML=sourceTopActions(current);
   }
+
+  // Key-first source setup: the credential is visible before optional technical checks.
+  function prioritizeApiKey(s){
+    if(s.kind!=='api')return;
+    const root=el('orderSourceDetail'), grid=root.querySelector('.order-source-detail-grid');
+    if(!grid)return;
+    const left=grid.querySelector('section.order-source-panel');
+    const right=grid.querySelector('aside.order-source-panel');
+    const body=right?.querySelector('.source-delivery-body');
+    if(!body)return;
+
+    const hero=document.createElement('section');
+    hero.className='gf-key-first-hero';
+    hero.innerHTML='<div class="gf-key-first-heading"><span class="gf-key-first-mark" aria-hidden="true">🔑</span><div><span class="gf-key-first-kicker">PASSO 1 · COLLEGAMENTO API</span><h2>Genera la tua chiave API</h2><p>Questa chiave permette al tuo gestionale di inviare ordini a GiroFacile. Generala, copiala e comunicala al tecnico che gestisce il software.</p></div></div><div class="gf-key-first-body"></div><p class="gf-key-first-footnote">La chiave viene mostrata solo quando la generi. Se l’hai persa, puoi generarne una nuova: la precedente smetterà subito di funzionare.</p>';
+    const target=hero.querySelector('.gf-key-first-body');
+    const state=body.querySelector('.source-credential-state');
+    const actions=body.querySelector('.source-credential-actions');
+    const credential=body.querySelector('#sourceCredential');
+    if(state)target.appendChild(state);
+    const owner=!window.GFCompanyAccess?.isCollaborator();
+    const canManage=!window.GFCompanyAccess||GFCompanyAccess.can('orders.integrations');
+    if(actions){
+      const primary=actions.querySelector('.btn-secondary');
+      if(primary){primary.classList.remove('btn-secondary');primary.classList.add('btn-primary','gf-key-first-generate');}
+      const revoke=actions.querySelector('.source-danger-outline');
+      if(revoke)revoke.classList.add('gf-key-first-revoke');
+      target.appendChild(actions);
+    }else if(s.status==='draft'&&owner&&canManage){
+      const button=document.createElement('button');
+      button.type='button';
+      button.className='btn-primary gf-key-first-generate';
+      button.textContent=s.has_credential?'Genera una nuova chiave':'Genera chiave API';
+      button.addEventListener('click',()=>window.GFOrderSources.action('rotate'));
+      target.appendChild(button);
+    }else{
+      const tip=document.createElement('p');
+      tip.className='gf-key-first-tip';
+      tip.textContent=s.status==='paused'?'La fonte è in pausa: riattivala dal comando in alto per gestire la chiave.':owner?'La fonte non consente nuove chiavi in questo stato.':'Solo il titolare può creare o sostituire una chiave.';
+      target.appendChild(tip);
+    }
+    if(credential)target.appendChild(credential);
+    if(s.has_credential&&!el('sourceToken')){
+      const info=document.createElement('p');
+      info.className='gf-key-first-tip';
+      info.textContent='Chiave già creata: non è recuperabile per motivi di sicurezza. Per copiarne una nuova usa il pulsante qui sopra.';
+      target.appendChild(info);
+    }
+    root.prepend(hero);
+    const guideLeft=left.querySelector('.source-guide');
+    if(guideLeft)guideLeft.innerHTML='<span class="source-guide-kicker">PASSO 3 · PROVA FACOLTATIVA</span><h3>Verifica un ordine di esempio</h3><p>GiroFacile ha già preparato un ordine di prova. Premi il pulsante qui sotto per controllarne il formato, poi verifica e attiva la fonte. Non devi scrivere codice.</p>';
+    const guideRight=right.querySelector('.source-guide');
+    if(guideRight)guideRight.innerHTML='<span class="source-guide-kicker">PASSO 2 · ISTRUZIONI</span><h3>Invia le istruzioni al tuo fornitore</h3><p>Scarica la guida e inviala al tecnico. Comunica la chiave separatamente, in modo sicuro. La ricezione degli ordini partirà soltanto dopo l’attivazione.</p>';
+    const duplicate=Array.from(body.querySelectorAll('.source-delivery-label')).find(x=>x.textContent.includes('Chiave API generata'));
+    if(duplicate)duplicate.remove();
+    Array.from(body.querySelectorAll('.source-delivery-help')).filter(x=>x.textContent.includes('Attiva o riattiva la fonte prima')).forEach(x=>x.remove());
+    grid.classList.add('gf-key-first-secondary');
+    const code=left.querySelector('#sourceTechnicalSample');
+    if(code)code.open=false;
+    if(/^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname)){
+      const local=document.createElement('p');
+      local.className='gf-key-first-local';
+      local.textContent='Stai usando GiroFacile in locale: 127.0.0.1 non è raggiungibile dal gestionale su un altro computer. Per un collegamento remoto serve un indirizzo pubblico HTTPS.';
+      right.querySelector('.source-doc-actions')?.after(local);
+    }
+  }
+
   function detailPage(){
     hideSecret();const s=current;if(!s)return;
     syncSourceTopbar();
@@ -80,6 +146,7 @@
       ?`<div class="source-delivery-body"><div class="source-guide"><span class="source-guide-kicker">PASSO 2 · COLLEGAMENTO</span><h3>Come ricevere automaticamente gli ordini</h3><p>Non devi recuperare una chiave dal tuo gestionale: <strong>la chiave è generata da GiroFacile</strong> per autorizzare l'invio.</p><ol><li>Scarica le istruzioni da inviare al tecnico o fornitore software.</li><li>Genera una chiave e copiala subito: viene mostrata una sola volta.</li><li>Fai inviare un ordine di prova e controlla la prima ricezione riuscita.</li></ol></div><details class="source-advanced"><summary>Indirizzo API e dettagli tecnici <span>Per il tecnico</span></summary><span class="source-delivery-label">API Endpoint</span><div class="source-endpoint"><span class="source-endpoint-method">POST</span><code>/api/order-ingestion</code></div><p class="source-delivery-help">Aggiungi un <code>batch_id</code> univoco e invia ordini completi, non modifiche parziali.</p></details><div class="source-doc-actions"><button class="btn-secondary" onclick="GFOrderSources.downloadInstructions()">↓ Scarica istruzioni per il tuo gestionale</button></div><div class="source-delivery-divider"></div><span class="source-delivery-label">Stato ricezione ordini</span><div class="source-sync-state"><strong>${s.last_success?'Ultimo invio riuscito':'In attesa del primo ordine'}</strong><p>${s.last_success?esc(new Date(s.last_success+'Z').toLocaleString('it-IT')):'La fonte può essere attiva anche se il gestionale non ha ancora inviato ordini.'}</p><p>Stato fonte: ${esc(statuses[s.status]||s.status)} · Ordini acquisiti: ${s.order_count}</p></div><div class="source-delivery-divider"></div><span class="source-delivery-label">Chiave API generata da GiroFacile</span><div class="source-credential-state ${s.has_credential?'is-ready':'is-missing'}"><span class="source-credential-icon">${s.has_credential?'●':'!'}</span><div><strong>${s.has_credential?'Chiave già generata':'Chiave mancante'}</strong><span>${s.has_credential?'La chiave esistente non può essere riletta: puoi generarne una nuova.':'Genera una chiave per autorizzare il gestionale.'}</span></div></div>${manage()&&owner()&&s.status==='active'?`<div class="source-credential-actions"><button class="btn-secondary" onclick="GFOrderSources.action('rotate')">${s.has_credential?'Genera una nuova chiave':'Genera chiave API'}</button>${s.has_credential?'<button class="source-danger-outline" onclick="GFOrderSources.action(\'revoke\')">Disattiva chiave</button>':''}</div>`:'<p class="source-delivery-help">'+(!owner()?'Solo il titolare può gestire le chiavi.':'Attiva o riattiva la fonte prima di generare una chiave.')+'</p>'}<div id="sourceCredential"></div></div>`
       :`<div class="source-delivery-body"><span class="source-delivery-label">Importazione file</span><p>Carica un campione CSV o XLSX, associa le colonne e verifica l’anteprima. Gli ordini vengono inseriti solo dopo la conferma finale.</p><div class="source-delivery-divider"></div><span class="source-delivery-label">Stato fonte</span><div class="source-credential-state ${s.status==='active'?'is-ready':'is-missing'}"><span class="source-credential-icon">●</span><div><strong>${esc(statuses[s.status]||s.status)}</strong><span>${s.status==='active'?'Pronta per nuove importazioni.':'Riattiva la fonte per acquisire nuovi file.'}</span></div></div></div>`;
     el('orderSourceDetail').innerHTML=`<div class="order-source-detail-grid"><section class="order-source-panel"><div class="order-source-panel-head"><h2><svg viewBox="0 0 24 24"><path d="m8 9-3 3 3 3M16 9l3 3-3 3M14 5l-4 14"/></svg>${s.kind==='api'?'Verifica un ordine di prova':'Carica un campione'}</h2><p>Massimo 2 MB e 1000 ordini. L’anteprima è disponibile per 24 ore.</p></div>${sample}${sampleFooter}</section><aside class="order-source-panel"><div class="order-source-panel-head"><h2><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="5" rx="1"/><rect x="4" y="14" width="16" height="5" rx="1"/></svg>${s.kind==='api'?'Invio dal gestionale':'Acquisizione file'}</h2><p>${s.kind==='api'?'Configura il tuo gestionale per inviare gli ordini a questo endpoint.':'Controlla lo stato e prepara una nuova importazione.'}</p></div>${apiBody}</aside><div class="source-detail-workflow"><div id="sourceMapping"></div><div id="sourceReport"></div><div id="sourceConfirm" class="page-actions"></div></div></div>`;
+    prioritizeApiKey(s);
   }
   function open(id){
     if(busy)return;
@@ -133,7 +200,7 @@
   function commit(){return task(async()=>{verified=await request(`/${current.id}/runs/${staged.run_id}/commit`,post({confirm:true}));renderReport(verified,'sourceReport',current.id);confirmation();await refresh();});}
   function action(action){
     if(busy)return;
-    const warnings={remove:'Rimuovere questa fonte? Gli ordini restano disponibili; la fonte non sarà riattivabile.',rotate:'Generare una NUOVA chiave API? La precedente cesserà immediatamente di funzionare. Il gestionale non potrà più inviare ordini finché non gli verrà comunicata la nuova chiave. Confermi?',revoke:'Disattivare la chiave e sospendere gli invii? Gli ordini già acquisiti resteranno disponibili. Per riprendere occorrerà riattivare la fonte e generare una nuova chiave.',pause:'Sospendere gli invii da questa fonte?'};
+    const warnings={remove:'Rimuovere questa fonte? Gli ordini restano disponibili; la fonte non sarà riattivabile.',rotate:current?.has_credential?'Generare una NUOVA chiave API? La precedente cesserà immediatamente di funzionare. Il gestionale non potrà più inviare ordini finché non gli verrà comunicata la nuova chiave. Confermi?':'Generare la tua prima chiave API? Copiala subito e conservala. Gli ordini potranno essere ricevuti solo dopo aver verificato e attivato la fonte.',revoke:'Disattivare la chiave e sospendere gli invii? Gli ordini già acquisiti resteranno disponibili. Per riprendere occorrerà riattivare la fonte e generare una nuova chiave.',pause:'Sospendere gli invii da questa fonte?'};
     if(warnings[action]&&!confirm(warnings[action]))return;
     const detailOpen=!el('tab-ordine-fonte').classList.contains('hidden');
     return task(async()=>{
