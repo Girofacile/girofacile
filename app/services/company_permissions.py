@@ -142,6 +142,11 @@ def rule(method, paths, *grants):
         RULES[method, path] = set(grants)
 
 
+rule("GET", ["/api/order-sources", "/api/order-sources/{source_id}/runs", "/api/order-sources/{source_id}/runs/{run_id}"], "orders.import", "orders.integrations")
+rule("POST", ["/api/order-sources", "/api/order-sources/{source_id}/action", "/api/order-sources/{source_id}/sample"], "orders.integrations")
+rule("PUT", ["/api/order-sources/{source_id}"], "orders.integrations")
+rule("POST", ["/api/order-sources/{source_id}/upload", "/api/order-sources/{source_id}/runs/{run_id}/preview"], "orders.import", "orders.integrations")
+rule("POST", ["/api/order-sources/{source_id}/runs/{run_id}/commit"], "orders.import")
 rule("GET", ["/api/orders/{order_id}/customers"], "orders.match")
 rule("POST", ["/api/orders/{order_id}/customer"], "orders.match")
 rule("GET", ["/api/order-planning/selection"], "orders.plan")

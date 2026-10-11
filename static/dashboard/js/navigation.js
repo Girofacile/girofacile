@@ -72,6 +72,8 @@ function showTab(name){
 
   if(name==="dashboard"){ loadDashboardHome(); if(!window.GFCompanyAccess || GFCompanyAccess.can("notifications.read")) loadNotificationsV30(false); if(!featureLockedForTab("chat-autisti") && (!window.GFCompanyAccess || GFCompanyAccess.can("chat.read"))) loadDriverChatNotifications(); }
   if(name==="company") { loadCompanyProfile(); if(!window.GFCompanyAccess?.isCollaborator()) loadOnboardingStatus(false); }
+  if(name!=="ordini-collegamenti") window.GFOrderSources?.hideSecret();
+  if(name==="ordini-collegamenti") window.GFOrderSources?.load();
   if(name==="ordini") GFOrders.load();
   if(name==="collaboratori") GFCollaborators.load();
   if(name==="dashboard-scheduled") loadDashboardScheduledPage();

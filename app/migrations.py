@@ -2,7 +2,7 @@
 from datetime import datetime
 from sqlalchemy import inspect, text
 
-LATEST = '20261011_01'
+LATEST = '20261011_02'
 LOCK_ID = 7640152404
 
 
@@ -116,10 +116,21 @@ def run_migrations(engine):
                 with engine.begin() as conn:
                     OrderPlanningSelection.__table__.create(conn, checkfirst=True)
                     conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261010_02', 'now': datetime.utcnow()})
-            if LATEST not in applied:
+            if '20261011_01' not in applied:
                 with engine.begin() as conn:
                     if 'customer_resolution' not in {c['name'] for c in inspect(conn).get_columns('orders')}:
                         conn.execute(text("ALTER TABLE orders ADD COLUMN customer_resolution VARCHAR(30) NOT NULL DEFAULT 'pending'"))
+                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261011_01', 'now': datetime.utcnow()})
+            if LATEST not in applied:
+                with engine.begin() as conn:
+                    additions = {'order_sources': {'version': "INTEGER NOT NULL DEFAULT 1"},
+                                 'orders': {'ingested_payload': 'JSON'},
+                                 'order_import_runs': {'idempotency_key': 'VARCHAR(160)', 'payload_hash': 'VARCHAR(64)', 'payload': 'JSON', 'expires_at': 'TIMESTAMP', 'source_version': 'INTEGER'}}
+                    for table, columns in additions.items():
+                        existing = {c['name'] for c in inspect(conn).get_columns(table)}
+                        for name, ddl in columns.items():
+                            if name not in existing: conn.execute(text(f'ALTER TABLE {table} ADD COLUMN {name} {ddl}'))
+                    conn.execute(text('CREATE UNIQUE INDEX IF NOT EXISTS uq_order_import_request ON order_import_runs (source_id, idempotency_key)'))
                     conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': LATEST, 'now': datetime.utcnow()})
         finally:
             if postgres:

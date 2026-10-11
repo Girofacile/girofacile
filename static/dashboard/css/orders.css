@@ -23,3 +23,5 @@
 @media(max-width:600px){.orders-page .orders-grid,.orders-page .orders-form-grid,.orders-page .orders-detail-grid{grid-template-columns:1fr}.orders-page .page-actions{width:100%}.orders-page .page-actions button{flex:1}.orders-page .orders-toolbar label{min-width:100%;}.orders-page .orders-metrics .panel{padding:12px}.orders-page .tableWrap{overflow-x:auto}}
 
 .orders-page .orders-filters{flex-basis:100%}.orders-page .orders-filters summary{cursor:pointer;min-height:44px;padding:12px 0;font-weight:600}.orders-page .orders-filters .orders-toolbar{margin-top:12px}
+
+#sourceWizard,#sourceHistory{margin-top:20px;min-width:0}#sourceWizard .tableWrap{max-width:100%;overflow-x:auto}#sourceWizard table{min-width:540px}#sourceWizard textarea{max-width:100%}#sourceWizard .orders-form-grid{margin:18px 0}#sourceReport li,#sourceHistoryReport li{overflow-wrap:anywhere;margin:8px 0}

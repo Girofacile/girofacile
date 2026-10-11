@@ -16,6 +16,7 @@ class OrderSource(Base):
     kind: Mapped[str] = mapped_column(String(30), nullable=False)
     status: Mapped[str] = mapped_column(String(30), default='not_configured', nullable=False)
     configuration: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
+    version: Mapped[int] = mapped_column(Integer, default=1, server_default='1', nullable=False)
     credential_hash: Mapped[str | None] = mapped_column(String(64))
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
@@ -42,6 +43,7 @@ class Order(Base):
     recipient_name: Mapped[str | None] = mapped_column(String(200))
     delivery_address: Mapped[str | None] = mapped_column(String(500))
     requested_date: Mapped[date | None] = mapped_column(Date)
+    ingested_payload: Mapped[dict | None] = mapped_column(JSON)
     original_payload: Mapped[dict] = mapped_column(JSON, nullable=False)
     operational_data: Mapped[dict] = mapped_column(JSON, nullable=False)
     acquisition_status: Mapped[str] = mapped_column(String(30), default='received', nullable=False)
@@ -75,7 +77,12 @@ class OrderEvent(Base):
 
 class OrderImportRun(Base):
     __tablename__ = 'order_import_runs'
-    __table_args__ = (ForeignKeyConstraint(['user_id', 'source_id'], ['order_sources.user_id', 'order_sources.id']),)
+    idempotency_key: Mapped[str | None] = mapped_column(String(160))
+    payload_hash: Mapped[str | None] = mapped_column(String(64))
+    payload: Mapped[dict | None] = mapped_column(JSON)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime)
+    source_version: Mapped[int | None] = mapped_column(Integer)
+    __table_args__ = (UniqueConstraint('source_id', 'idempotency_key', name='uq_order_import_request'), ForeignKeyConstraint(['user_id', 'source_id'], ['order_sources.user_id', 'order_sources.id']),)
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey('users.id'), index=True, nullable=False)
     source_id: Mapped[int] = mapped_column(Integer, nullable=False)

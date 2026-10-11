@@ -136,7 +136,7 @@ def detail(db, order):
         'external_id': order.external_id, 'external_customer_id': order.external_customer_id,
         'customer_resolution': order.customer_resolution, 'anomalies': issues, 'effective_data': effective_values, 'inherited_fields': inherited,
         'customer_id': order.customer_id, 'operational_data': order.operational_data,
-        'original_payload': order.original_payload, 'address_verification': order.address_verification,
+        'original_payload': order.original_payload, 'latest_received_payload': order.ingested_payload, 'address_verification': order.address_verification,
         'acquisition_status': order.acquisition_status, 'verification_status': order.verification_status,
         'delivery_status': order.delivery_status,
         'items': [item.data for item in db.query(OrderItem).filter_by(order_id=order.id).order_by(OrderItem.line_number)],

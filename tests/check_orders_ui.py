@@ -20,6 +20,7 @@ from app.models import User, Deposit, Vehicle, Driver, Customer
 from app.core.dependencies import current_user
 from app.routers.orders import router
 from app.routers.order_planning import router as planning_router
+from app.routers.order_sources import router as sources_router
 from check_management_design import ME,LIMITS,VEHICLES,DRIVERS,DEPOSITS,USAGE
 
 
@@ -33,7 +34,7 @@ def main():
             with Session(engine) as db:
                 user=User(username='browser-test',password_hash='test',plan_status='active');db.add(user);db.commit()
                 db.add_all([Deposit(user_id=user.id,nome='Depot',indirizzo='Via Roma 1',lat=45.46,lon=9.19),Vehicle(user_id=user.id,nome='Van'),Driver(user_id=user.id,nome='Driver')]);db.commit()
-                app=FastAPI();app.include_router(router);app.include_router(planning_router)
+                app=FastAPI();app.include_router(router);app.include_router(planning_router);app.include_router(sources_router)
                 app.dependency_overrides[get_db]=lambda:db
                 app.dependency_overrides[current_user]=lambda:user
                 with TestClient(app) as client:
@@ -43,8 +44,8 @@ def main():
                     def handle(route):
                         parsed=urlparse(route.request.url);path=parsed.path
                         if parsed.hostname!='orders.test':route.abort();return
-                        if path.startswith(('/api/orders','/api/order-planning')):
-                            response=client.request(route.request.method,path+('?' + parsed.query if parsed.query else ''),content=route.request.post_data,headers={'Content-Type':'application/json'})
+                        if path.startswith(('/api/orders','/api/order-planning','/api/order-sources')):
+                            response=client.request(route.request.method,path+('?' + parsed.query if parsed.query else ''),content=route.request.post_data_buffer,headers={'Content-Type':route.request.headers.get('content-type','application/json')})
                             route.fulfill(status=response.status_code,body=response.text,content_type='application/json');return
                         if path=='/api/billing/catalog.js':
                             route.fulfill(content_type='application/javascript',body='window.GF_PLANS='+json.dumps({k:dict(LIMITS,name=k,price_eur=29) for k in ('starter','business','pro')}));return
@@ -144,10 +145,40 @@ def main():
                     page.wait_for_function("document.getElementById('ordersMessage').textContent.includes('Nessun ordine')")
                     page.locator('#tab-ordini').get_by_role('button',name='Collega i tuoi ordini').click()
                     assert page.locator('#tab-ordini-collegamenti').is_visible()
+                    page.get_by_role('button',name='Nuova fonte file',exact=True).click()
+                    page.locator('#sourceName').fill('Magazzino <script>test</script>')
+                    page.get_by_role('button',name='Crea fonte e prosegui',exact=True).click()
+                    page.locator('#sourceFile').set_input_files({'name':'ordini.csv','mimeType':'text/csv','buffer':b'NOrdine;RagioneSociale;IndSped;Pedana;NColli\nIMPORT-001;Destinatario;Via Roma 1;No;3\n'})
+                    page.get_by_role('button',name='Carica campione',exact=True).click()
+                    page.get_by_role('button',name='Verifica anteprima',exact=True).click()
+                    page.get_by_role('button',name='Attiva fonte verificata',exact=True).click()
+                    page.get_by_role('button',name='Conferma importazione',exact=True).click()
+                    page.wait_for_function("document.getElementById('sourceReport').textContent.includes('Acquisizione completata')")
+                    assert db.query(Order).filter_by(external_id='IMPORT-001').count()==1
+                    assert page.locator('#sourceWizard script').count()==0
+                    assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 2')
+                    page.screenshot(path=str(output/f'sources-{width}.png'),full_page=True)
+                    page.once('dialog',lambda dialog:dialog.accept())
+                    page.get_by_role('button',name='Metti in pausa',exact=True).click()
+                    page.wait_for_function("document.getElementById('sourceWizard').textContent.includes('In pausa')")
+                    assert db.query(Order).filter_by(external_id='IMPORT-001').count()==1
+                    page.get_by_role('button',name='Configura gestionale',exact=True).click()
+                    page.locator('#sourceName').fill('API gestionale')
+                    page.get_by_role('button',name='Crea fonte e prosegui',exact=True).click()
+                    page.get_by_role('button',name='Carica campione',exact=True).click()
+                    page.get_by_role('button',name='Verifica anteprima',exact=True).click()
+                    page.get_by_role('button',name='Attiva fonte verificata',exact=True).click()
+                    page.once('dialog',lambda dialog:dialog.accept())
+                    page.get_by_role('button',name='Genera credenziale',exact=True).click()
+                    page.locator('#sourceToken').wait_for(state='visible')
+                    assert page.locator('#sourceToken').input_value().startswith('gf_orders_')
+                    page.evaluate("showTab('ordini')")
+                    assert page.locator('#sourceToken').count()==0
+                    assert db.query(Order).count()==3  # API samples never create orders
                     assert not errors,errors
                     context.close()
             engine.dispose()
         browser.close()
-    print('Orders: create, edit, escaping, filters, customer confirmation, persisted selection, grouped planning stops and layout passed at 390/768/1024/1440px')
+    print('Orders: create, edit, escaping, filters, customer confirmation, persisted selection, grouped planning stops, CSV wizard, source pause, API setup, credential clearing and layout passed at 390/768/1024/1440px')
 
 if __name__=='__main__':main()

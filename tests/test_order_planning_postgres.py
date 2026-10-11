@@ -57,7 +57,7 @@ def test_customer_resolution_migration_preserves_archive(pg):
     run_migrations(pg)
     with pg.begin() as conn:
         conn.execute(text('ALTER TABLE orders DROP COLUMN customer_resolution'))
-        conn.execute(text('DELETE FROM schema_migrations WHERE version=:v'),{'v':LATEST})
+        conn.execute(text('DELETE FROM schema_migrations WHERE version=:v'),{'v':'20261011_01'})
     run_migrations(pg);run_migrations(pg)
     assert 'customer_resolution' in {c['name'] for c in inspect(pg).get_columns('orders')}
     with pg.connect() as conn:
