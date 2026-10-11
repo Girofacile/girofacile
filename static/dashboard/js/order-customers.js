@@ -8,10 +8,16 @@
     order=value;const request=++sequence;
     const host=panel();if(!host)return;
     const issues=value.anomalies||[];
-    host.innerHTML=`<h2>Verifiche e cliente</h2>${issues.length?'<ul>'+issues.map(a=>`<li>${a.blocking?'Da risolvere: ':'Da controllare: '}${esc(a.message)}</li>`).join('')+'</ul>':'<p>Nessuna anomalia rilevata.</p>'}<p>L’indirizzo e gli orari specificati nell’ordine prevalgono sull’anagrafica. I dati originali restano conservati.</p>`;
-    if(value.inherited_fields?.includes('time_windows'))host.innerHTML+=`<p>Fasce dal cliente: ${['scarico_mattina_da','scarico_mattina_a','scarico_pomeriggio_da','scarico_pomeriggio_a'].map(k=>esc(value.effective_data[k]||'—')).join(' · ')}</p>`;
+    const linked=!!value.customer_id;
+    const statusText=linked
+      ?'Cliente già associato a questo ordine. I dati di consegna dell’ordine restano prioritari.'
+      :'Nessun cliente in anagrafica riconosciuto. L’indirizzo e gli orari dell’ordine prevarranno.';
+    host.innerHTML=`<div class="order-customer-head"><span aria-hidden="true">♣</span><h3>Associazione cliente</h3></div><div class="order-customer-body"><div class="order-customer-state"><span aria-hidden="true">i</span><p>${esc(statusText)}</p></div></div>`;
+    const body=host.querySelector('.order-customer-body');
+    if(issues.length)body.insertAdjacentHTML('beforeend','<ul class="order-customer-issues">'+issues.map(a=>`<li>${a.blocking?'Da risolvere: ':'Da controllare: '}${esc(a.message)}</li>`).join('')+'</ul>');
+    if(value.inherited_fields?.includes('time_windows'))body.insertAdjacentHTML('beforeend',`<p class="order-customer-inherited">Fasce dal cliente: ${['scarico_mattina_da','scarico_mattina_a','scarico_pomeriggio_da','scarico_pomeriggio_a'].map(k=>esc(value.effective_data[k]||'—')).join(' · ')}</p>`);
     if(!can('orders.match') || !['nuovo','da_verificare','pronto'].includes(value.status) || value.assignments.length)return;
-    host.innerHTML+=`<div class="page-actions"><button class="btn-secondary" onclick="GFOrderCustomers.action('recognize')">Riconosci cliente</button><button class="btn-secondary" onclick="GFOrderCustomers.action('separate')">No, mantieni separati</button>${can('customers.create')?'<button class="btn-secondary" onclick="GFOrderCustomers.create()">Crea nuova anagrafica cliente</button>':''}</div><label for="orderCustomerSearch">Cerca un altro cliente</label><div class="page-actions"><input id="orderCustomerSearch" maxlength="200" placeholder="Nome o indirizzo"><button class="btn-secondary" onclick="GFOrderCustomers.search()">Cerca</button></div><p id="orderCustomerMessage" role="status"></p><div id="orderCustomerCandidates"></div>`;
+    body.insertAdjacentHTML('beforeend',`<div class="order-customer-controls"><div class="page-actions"><button class="btn-secondary" onclick="GFOrderCustomers.action('recognize')">Riconosci cliente</button><button class="btn-secondary" onclick="GFOrderCustomers.action('separate')">Mantieni separato</button>${can('customers.create')?'<button class="btn-secondary" onclick="GFOrderCustomers.create()">Crea nuova anagrafica</button>':''}</div><label for="orderCustomerSearch">Cerca anagrafica esistente</label><div class="order-customer-search"><input id="orderCustomerSearch" maxlength="200" placeholder="Nome o indirizzo"><button class="btn-secondary" onclick="GFOrderCustomers.search()">Cerca</button></div><p id="orderCustomerMessage" role="status"></p><div id="orderCustomerCandidates"></div></div>`);
     GFOrders.request(`/api/orders/${value.id}/customers`).then(result=>{if(request===sequence)show(result);}).catch(e=>{if(request===sequence)message(e.message);});
   }
   function message(text){const target=document.getElementById('orderCustomerMessage');if(target)target.textContent=text;}
