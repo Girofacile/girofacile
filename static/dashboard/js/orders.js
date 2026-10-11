@@ -298,7 +298,7 @@
     if(!can('orders.update'))return;
     if(!confirm('Verificare gli indirizzi degli ordini nei filtri attuali? Il sistema riutilizza le verifiche già valide, ma i nuovi indirizzi possono consumare crediti API di geocodifica. Gli ordini validi diventeranno subito pianificabili.'))return;
     const button=el('ordersVerifyAll'),note=el('ordersMessage'),filters=verifyFilters();
-    let after=0,processed=0,verified=0,already=0,failed=0,issues=[];
+    let after=0,processed=0,verified=0,already=0,failed=0,skipped=0,issues=[];
     bulkVerifying=true;stopBulkVerification=false;
     if(button){button.textContent='Interrompi verifica';button.setAttribute('aria-busy','true');}
     try{
@@ -310,6 +310,7 @@
         verified+=result.verified;
         already+=result.already_verified;
         failed+=result.failed;
+        skipped+=result.skipped||0;
         issues.push(...(result.issues||[]));
         if(note)note.textContent='Verifica indirizzi: '+processed+' esaminati, '+verified+' pronti, '+failed+' da correggere.';
         if(!result.has_more||!result.processed)break;
@@ -318,7 +319,7 @@
       }
       const interrupted=stopBulkVerification;
       await load();
-      let status=(interrupted?'Verifica interrotta. ':'Verifica completata. ')+verified+' ordini pronti, '+already+' già verificati, '+failed+' da correggere.';
+      let status=(interrupted?'Verifica interrotta. ':'Verifica completata. ')+verified+' ordini pronti, '+already+' già verificati, '+failed+' da correggere.'+(skipped?' '+skipped+' ordini non più disponibili ignorati.':'');
       if(issues.length)status+=' Apri gli ordini problematici: '+issues.slice(0,3).map(i=>'#'+i.order_id+' ('+i.reason+')').join('; ')+'.';
       if(note)note.textContent=status;
     }catch(err){
