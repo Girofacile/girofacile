@@ -94,7 +94,7 @@ def anomalies(db, order, match=None):
         add('verification','Verifica l’indirizzo effettivo di consegna.',True)
     match = match or recognize(db,order)
     if match['kind'] in ('probable','invalid'):
-        add('customer','Conferma il cliente oppure scegli di mantenere separato il destinatario.',True)
+        add('customer','Associazione anagrafica facoltativa: il destinatario resta utilizzabile anche senza collegamento.',False)
     for field,label in [('weight_kg','peso'),('packages','colli')]:
         if values.get(field) is None: add(field,f'Indica {label}, se disponibili, per verificare il carico.')
     return result, values, inherited
@@ -129,8 +129,11 @@ def resolve(db, user, order, data, actor):
             if mapping is None:
                 db.add(CustomerSourceMapping(user_id=user.id,source_id=order.source_id,external_customer_id=order.external_customer_id,customer_id=customer.id))
         order.customer_id = customer.id; order.customer_resolution = 'confirmed'
-    order.status = 'da_verificare'; order.verification_status = 'pending'
+    from .orders import auto_verify_linked_customer, address_is_verified
+    if not address_is_verified(db, order):
+        order.status = 'da_verificare'; order.verification_status = 'pending'
     touch(order)
+    auto_verify_linked_customer(db, order, actor)
     record(db,order,actor,'customer_resolution',{'before':previous,'after':order.customer_id,'action':data.action})
 
 
