@@ -10,7 +10,7 @@
   };
   const fields={number:'Numero ordine',recipient_name:'Destinatario',delivery_address:'Indirizzo di consegna',requested_date:'Data richiesta',time_from:'Fascia oraria: dalle',time_to:'Alle',weight_kg:'Peso (kg)',packages:'Colli',pallets:'Pallet',volume_m3:'Volume (m³)',tail_lift:'Sponda',pallet_truck:'Transpallet',ztl:'ZTL',requirements:'Requisiti operativi',notes:'Note'};
   const numeric=['weight_kg','packages','pallets','volume_m3'], bools=['tail_lift','pallet_truck','ztl'];
-  let page=1, sequence=0, detailSequence=0, view='table', current=null, last=null, timer, modalScrollY=0;
+  let page=1, sequence=0, detailSequence=0, view='table', current=null, last=null, timer, modalScrollY=0, bulkVerifying=false, stopBulkVerification=false;
   const el=id=>document.getElementById(id);
   const can=key=>!window.GFCompanyAccess || GFCompanyAccess.can(key);
   const display=value=>value===null || value===undefined || value===''?'Non indicato':value===true?'Sì':value===false?'No':String(value);
@@ -43,6 +43,7 @@
     el('ordersResults').setAttribute('aria-busy','true');
     el('ordersNew').hidden=!can('orders.create');
     el('ordersImport').hidden=!(can('orders.import')||can('orders.integrations'));
+    const verifyAll=el('ordersVerifyAll');if(verifyAll)verifyAll.hidden=!can('orders.update');
     try{
       const data=await orderApi('/api/orders?'+params);
       if(request!==sequence)return;
@@ -154,7 +155,7 @@
           <div class="order-modal-alert-body">
             <span class="order-modal-alert-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21s6-5.3 6-11a6 6 0 1 0-12 0c0 5.7 6 11 6 11Z"/><circle cx="12" cy="10" r="2"/></svg></span>
             <strong>Indirizzo da confermare</strong>
-            <p>Il sistema richiede una conferma manuale per l’indirizzo “${addressText}” prima di poterlo pianificare.</p>
+            <p>Verifica l’indirizzo “${addressText}”. Se è valido, l’ordine diventa subito pianificabile.</p>
             ${allowed?'<button onclick="GFOrders.action(\'verify-address\')">Verifica indirizzo ora</button>':''}
           </div>
         </section>`
@@ -166,7 +167,7 @@
             <p>La destinazione è pronta per essere utilizzata nella pianificazione.</p>
           </div>
         </section>`;
-    const readyButton=allowed&&o.status!=='pronto'?'<button class="btn-secondary order-modal-footer-ready" onclick="GFOrders.action(\'status\',\'pronto\')">Conferma pronto</button>':'';
+    const readyButton=''; // Verification makes the order ready without confirmation.
     const editButton=allowed?'<button class="btn-primary order-modal-footer-edit" onclick="GFOrders.edit()">Modifica dati</button>':'';
     const cancelButton=allowed?'<button class="order-modal-cancel-link" onclick="GFOrders.cancel()">Annulla ordine</button>':'';
 
@@ -260,6 +261,57 @@
       buttons.forEach(b=>b.disabled=false);
     }
   }
+
+  function verifyFilters(){
+    const result={};
+    for(const [input,key] of [['ordersSearch','q'],['ordersStatus','status'],
+      ['ordersSource','source_id'],['ordersFrom','date_from'],['ordersTo','date_to']]){
+      const value=el(input)?.value;
+      if(value)result[key]=key==='source_id'?Number(value):value;
+    }
+    return result;
+  }
+  async function bulkVerify(){
+    if(bulkVerifying){
+      stopBulkVerification=true;
+      const note=el('ordersMessage');if(note)note.textContent='Interruzione richiesta: attendo la verifica in corso…';
+      return;
+    }
+    if(!can('orders.update'))return;
+    if(!confirm('Verificare gli indirizzi degli ordini nei filtri attuali? Il sistema riutilizza le verifiche già valide, ma i nuovi indirizzi possono consumare crediti API di geocodifica. Gli ordini validi diventeranno subito pianificabili.'))return;
+    const button=el('ordersVerifyAll'),note=el('ordersMessage'),filters=verifyFilters();
+    let after=0,processed=0,verified=0,already=0,failed=0,issues=[];
+    bulkVerifying=true;stopBulkVerification=false;
+    if(button){button.textContent='Interrompi verifica';button.setAttribute('aria-busy','true');}
+    try{
+      for(let batch=0;batch<1000&&!stopBulkVerification;batch++){
+        const result=await orderApi('/api/orders/verify-addresses',{
+          method:'POST',body:JSON.stringify({...filters,after_id:after,limit:10})
+        });
+        processed+=result.processed;
+        verified+=result.verified;
+        already+=result.already_verified;
+        failed+=result.failed;
+        issues.push(...(result.issues||[]));
+        if(note)note.textContent='Verifica indirizzi: '+processed+' esaminati, '+verified+' pronti, '+failed+' da correggere.';
+        if(!result.has_more||!result.processed)break;
+        if(result.next_after<=after)throw new Error('Impossibile avanzare con la verifica: riprova.');
+        after=result.next_after;
+      }
+      const interrupted=stopBulkVerification;
+      await load();
+      let status=(interrupted?'Verifica interrotta. ':'Verifica completata. ')+verified+' ordini pronti, '+already+' già verificati, '+failed+' da correggere.';
+      if(issues.length)status+=' Apri gli ordini problematici: '+issues.slice(0,3).map(i=>'#'+i.order_id+' ('+i.reason+')').join('; ')+'.';
+      if(note)note.textContent=status;
+    }catch(err){
+      await load().catch(()=>{});
+      if(note)note.textContent='Verifica interrotta dopo '+processed+' ordini: '+(err.message||String(err))+'. '+verified+' verificati.';
+    }finally{
+      bulkVerifying=false;stopBulkVerification=false;
+      if(button){button.textContent='Verifica indirizzi';button.removeAttribute('aria-busy');}
+    }
+  }
+
   function toggleFilters(force){
     const drawer=el('ordersFilterDrawer'),button=el('ordersFilterToggle');
     if(!drawer||!button)return;
@@ -274,5 +326,5 @@
     orderDialog.addEventListener('cancel',event=>{event.preventDefault();closeModal();});
   }
   window.addEventListener('resize',syncActionPlacement);
-  window.GFOrders={request:orderApi,apply(value){current=value;detail();load();},currentItems:()=>last?.items||[],refreshSelection:render,load,open,newOrder,edit,cancelEdit,close:closeModal,save,action,cancel(){if(confirm('Annullare questo ordine? L’originale e lo storico saranno conservati.'))action('status','annullato');},search(){clearTimeout(timer);timer=setTimeout(()=>load(true),300);},page(delta){page+=delta;load();},view(mode){view=mode;render();},toggleFilters,syncActions:syncActionPlacement};
+  window.GFOrders={request:orderApi,bulkVerify,apply(value){current=value;detail();load();},currentItems:()=>last?.items||[],refreshSelection:render,load,open,newOrder,edit,cancelEdit,close:closeModal,save,action,cancel(){if(confirm('Annullare questo ordine? L’originale e lo storico saranno conservati.'))action('status','annullato');},search(){clearTimeout(timer);timer=setTimeout(()=>load(true),300);},page(delta){page+=delta;load();},view(mode){view=mode;render();},toggleFilters,syncActions:syncActionPlacement};
 })();
