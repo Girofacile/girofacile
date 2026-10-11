@@ -431,9 +431,14 @@ body[data-gf-surface="workspace"] #app:has(#tab-ordini-collegamenti:not(.hidden)
   --source-muted:var(--gf-color-muted,#64748b);
   --source-ink:var(--gf-color-text,#1e293b);
 }
+#tab-ordini-collegamenti{
+  width:100%;
+  max-width:none;
+}
 #tab-ordini-collegamenti .orders-connections-content{
-  width:min(1180px,100%);
-  margin:0 auto;
+  width:100%;
+  max-width:none;
+  margin:0;
 }
 #tab-ordini-collegamenti>.orders-connections-mobile-head{
   display:flex;
@@ -470,13 +475,14 @@ body[data-gf-surface="workspace"] #app:has(#tab-ordini-collegamenti:not(.hidden)
 #tab-ordini-collegamenti .orders-source-options{
   display:grid;
   grid-template-columns:repeat(4,minmax(0,1fr));
-  gap:18px;
-  margin:0 0 38px;
+  gap:16px;
+  width:100%;
+  margin:0 0 30px;
 }
 #tab-ordini-collegamenti .orders-source-options[hidden]{display:none!important}
 #tab-ordini-collegamenti .orders-source-option{
   min-width:0;
-  min-height:236px;
+  min-height:220px;
   margin:0;
   padding:20px;
   display:flex;
@@ -541,7 +547,10 @@ body[data-gf-surface="workspace"] #app:has(#tab-ordini-collegamenti:not(.hidden)
 }
 #tab-ordini-collegamenti .orders-source-option .btn-secondary:hover{background:#f8fafc;border-color:#b8c5d5}
 
-#tab-ordini-collegamenti .orders-sources-directory{margin-top:0}
+#tab-ordini-collegamenti .orders-sources-directory{
+  width:100%;
+  margin-top:0;
+}
 #tab-ordini-collegamenti .orders-sources-directory>h2{
   margin:0 0 20px;
   color:#0f172a;
@@ -552,11 +561,12 @@ body[data-gf-surface="workspace"] #app:has(#tab-ordini-collegamenti:not(.hidden)
 #tab-ordini-collegamenti .orders-source-list-grid{
   display:grid;
   grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:18px;
+  gap:16px;
+  width:100%;
 }
 #tab-ordini-collegamenti .orders-source-card{
   min-width:0;
-  min-height:188px;
+  min-height:174px;
   margin:0;
   padding:20px;
   border:1px solid var(--source-line);
