@@ -176,3 +176,23 @@ def test_invalid_mapping_can_be_repaired_by_explicit_confirmation(planning):
     assert result.status_code==200,result.text
     assert db.query(CustomerSourceMapping).one().customer_id==replacement.id
     assert result.json()['customer_id']==replacement.id
+
+
+def test_verified_existing_customer_makes_matching_order_ready_without_geocoding(planning, monkeypatch):
+    ctx,_=planning
+    from app.services.order_planning import to_stop
+    def forbidden(*args,**kwargs):
+        raise AssertionError('Already verified registry destinations must not call geocoding')
+    monkeypatch.setattr('app.services.orders.verify_stop_address',forbidden)
+    known=customer(ctx,lat=45.2,lon=9.2,stato_geocodifica='verificato',
+                   indirizzo_geocodificato='Order address')
+    order=create(ctx)
+    assert order['customer_id']==known.id
+    assert order['customer_resolution']=='automatic'
+    assert order['status']=='pronto'
+    assert order['verification_status']=='verified'
+    assert order['address_verification']['input_address']=='Order address'
+    stop=to_stop(ctx[1].get(Order,order['id']))
+    assert stop['lat']==45.2 and stop['lon']==9.2
+    assert stop['cliente_nome']=='Recipient'
+
