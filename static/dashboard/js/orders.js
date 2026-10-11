@@ -5,8 +5,8 @@
   const metricMeta={
     nuovo:{label:'Nuovi ordini',icon:'<path d="M5 8h14l-1 11H6L5 8Z"/><path d="M8 8a4 4 0 0 1 8 0"/>',cls:'nuovo'},
     da_verificare:{label:'Da verificare',icon:'<circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/>',cls:'da_verificare'},
-    pronto:{label:'Pronti per la pianificazione',icon:'<circle cx="12" cy="12" r="8"/><path d="m8.5 12 2.2 2.2 4.8-5"/>',cls:'pronto'},
-    assegnato:{label:'Già assegnati a un giro',icon:'<path d="M3 7h11v9H3z"/><path d="M14 10h4l3 3v3h-7"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/>',cls:'assegnato'}
+    pronto:{label:'Pronti per piano',icon:'<circle cx="12" cy="12" r="8"/><path d="m8.5 12 2.2 2.2 4.8-5"/>',cls:'pronto'},
+    assegnato:{label:'Già assegnati',icon:'<path d="M3 7h11v9H3z"/><path d="M14 10h4l3 3v3h-7"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/>',cls:'assegnato'}
   };
   const fields={number:'Numero ordine',recipient_name:'Destinatario',delivery_address:'Indirizzo di consegna',requested_date:'Data richiesta',time_from:'Fascia oraria: dalle',time_to:'Alle',weight_kg:'Peso (kg)',packages:'Colli',pallets:'Pallet',volume_m3:'Volume (m³)',tail_lift:'Sponda',pallet_truck:'Transpallet',ztl:'ZTL',requirements:'Requisiti operativi',notes:'Note'};
   const numeric=['weight_kg','packages','pallets','volume_m3'], bools=['tail_lift','pallet_truck','ztl'];
@@ -59,9 +59,10 @@
     if(!last)return;
     const open=o=>`<button class="btn-secondary orders-open-button" onclick="GFOrders.open(${o.id})" aria-label="Apri ordine ${esc(o.number)}">Apri</button>`;
     if(view==='cards'){
-      el('ordersResults').innerHTML='<div class="orders-grid">'+last.items.map(o=>`<article class="panel orders-order-card"><div class="orders-order-card-head"><span>${window.GFOrderPlanning?.checkbox(o)||""}</span>${statusBadge(o.status)}</div><h2>${esc(o.number)}</h2><p><strong>${esc(display(o.recipient_name))}</strong></p><p>${esc(display(o.delivery_address))}</p><p>${esc(o.source_name)} · ${esc(display(o.requested_date))}</p><p>${esc(display(o.packages))} colli · ${esc(display(o.weight_kg))} kg</p>${open(o)}</article>`).join('')+'</div>';
+      el('ordersResults').innerHTML='<div class="orders-grid">'+last.items.map(o=>`<article class="panel orders-order-card ${window.GFOrderPlanning?.isSelected(o.id)?'is-selected':''}"><div class="orders-order-card-head"><span>${window.GFOrderPlanning?.checkbox(o)||""}</span>${statusBadge(o.status)}</div><h2>${esc(o.number)}</h2><p><strong>${esc(display(o.recipient_name))}</strong></p><p>${esc(display(o.delivery_address))}</p><p>${esc(o.source_name)} · ${esc(display(o.requested_date))}</p><p>${esc(display(o.packages))} colli · ${esc(display(o.weight_kg))} kg</p>${open(o)}</article>`).join('')+'</div>';
     }else{
-      el('ordersResults').innerHTML='<div class="orders-table-shell tableWrap"><table class="orders-table" data-gf-responsive="cards"><thead><tr><th scope="col" class="orders-select-col" aria-label="Seleziona"></th><th scope="col">Numero ordine</th><th scope="col">Ricevuto</th><th scope="col">Cliente / destinatario</th><th scope="col">Indirizzo</th><th scope="col">Data richiesta</th><th scope="col">Colli / kg</th><th scope="col">Provenienza</th><th scope="col">Stato</th><th scope="col">Azioni</th></tr></thead><tbody>'+last.items.map(o=>`<tr><td class="orders-select-cell">${window.GFOrderPlanning?.checkbox(o)||""}</td><td class="orders-number-cell">${esc(o.number)}</td><td>${esc(date(o.received_at))}</td><td class="orders-recipient-cell"><strong>${esc(display(o.recipient_name))}</strong></td><td class="orders-address-cell">${esc(display(o.delivery_address))}</td><td>${esc(display(o.requested_date))}</td><td>${esc(display(o.packages))} / ${esc(display(o.weight_kg))}</td><td class="orders-source-cell">${esc(o.source_name)}</td><td>${statusBadge(o.status)}</td><td>${open(o)}</td></tr>`).join('')+'</tbody></table></div>';
+      const selectAll=window.GFOrderPlanning?.headerCheckbox(last.items)||'';
+      el('ordersResults').innerHTML='<div class="orders-table-shell tableWrap"><table class="orders-table" data-gf-responsive="cards"><thead><tr><th scope="col" class="orders-select-col" aria-label="Seleziona">'+selectAll+'</th><th scope="col">Numero ordine</th><th scope="col">Ricevuto</th><th scope="col">Cliente / destinatario</th><th scope="col">Indirizzo</th><th scope="col">Stato</th><th scope="col">Azioni</th></tr></thead><tbody>'+last.items.map(o=>`<tr class="${window.GFOrderPlanning?.isSelected(o.id)?'is-selected':''}"><td class="orders-select-cell">${window.GFOrderPlanning?.checkbox(o)||""}</td><td class="orders-number-cell">${esc(o.number)}</td><td>${esc(date(o.received_at))}</td><td class="orders-recipient-cell"><strong>${esc(display(o.recipient_name))}</strong></td><td class="orders-address-cell">${esc(display(o.delivery_address))}</td><td>${statusBadge(o.status)}</td><td>${open(o)}</td></tr>`).join('')+'</tbody></table></div>';
     }
     el('ordersPage').textContent=`Pagina ${page} di ${Math.max(1,Math.ceil(last.total/25))}`;
     el('ordersPrevious').disabled=page<=1;el('ordersNext').disabled=page*25>=last.total;
@@ -114,6 +115,14 @@
     try{current=await orderApi(`/api/orders/${current.id}/${action}`,{method:'POST',body:JSON.stringify({version:current.version,...(status?{status}:{})})});detail();el('orderActionMessage').textContent='Ordine aggiornato.';}
     catch(err){error('orderActionMessage',err);}finally{buttons.forEach(b=>b.disabled=false);}
   }
+  function toggleFilters(force){
+    const drawer=el('ordersFilterDrawer'),button=el('ordersFilterToggle');
+    if(!drawer||!button)return;
+    const open=typeof force==='boolean'?force:drawer.classList.contains('hidden');
+    drawer.classList.toggle('hidden',!open);
+    button.setAttribute('aria-expanded',String(open));
+    button.classList.toggle('is-active',open);
+  }
   window.addEventListener('resize',syncActionPlacement);
-  window.GFOrders={request:orderApi,apply(value){current=value;detail();},currentItems:()=>last?.items||[],refreshSelection:render,load,open,newOrder,edit,save,action,cancel(){if(confirm('Annullare questo ordine? L’originale e lo storico saranno conservati.'))action('status','annullato');},search(){clearTimeout(timer);timer=setTimeout(()=>load(true),300);},page(delta){page+=delta;load();},view(mode){view=mode;render();},syncActions:syncActionPlacement};
+  window.GFOrders={request:orderApi,apply(value){current=value;detail();},currentItems:()=>last?.items||[],refreshSelection:render,load,open,newOrder,edit,save,action,cancel(){if(confirm('Annullare questo ordine? L’originale e lo storico saranno conservati.'))action('status','annullato');},search(){clearTimeout(timer);timer=setTimeout(()=>load(true),300);},page(delta){page+=delta;load();},view(mode){view=mode;render();},toggleFilters,syncActions:syncActionPlacement};
 })();
