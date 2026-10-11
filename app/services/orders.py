@@ -1,5 +1,6 @@
 """Company-scoped orders and auditable, versioned operational corrections."""
 from datetime import datetime, date
+import hmac
 from uuid import uuid4
 from fastapi import HTTPException
 from sqlalchemy import func, or_
@@ -114,6 +115,28 @@ def _trusted_customer_proof(db, order, address):
             'geocoding_token': sign_stop_address(order.user_id, canonical, customer.lat, customer.lon)}
 
 
+
+def _existing_order_proof(db, order, address):
+    """Reuse signed verification for an identical destination belonging to the same company."""
+    if not address or order.delivery_address != address:
+        return None
+    examples = (db.query(Order.address_verification)
+        .filter(Order.user_id == order.user_id, Order.delivery_address == address,
+                Order.id != order.id, Order.address_verification.isnot(None))
+        .order_by(Order.id.desc()).limit(100).all())
+    for (proof,) in examples:
+        if not isinstance(proof, dict) or proof.get('input_address') != address:
+            continue
+        if not has_verified_coordinates(proof.get('stato_geocodifica'), proof.get('lat'), proof.get('lon')):
+            continue
+        if not isinstance(proof.get('indirizzo'), str) or not isinstance(proof.get('geocoding_token'), str):
+            continue
+        expected = sign_stop_address(order.user_id, proof['indirizzo'], proof['lat'], proof['lon'])
+        if hmac.compare_digest(proof['geocoding_token'], expected):
+            return dict(proof)
+    return None
+
+
 def _mark_verified(db, order, proof, address, actor, method):
     if not has_verified_coordinates(proof.get('stato_geocodifica'), proof.get('lat'), proof.get('lon')):
         raise HTTPException(422, 'Impossibile confermare le coordinate della consegna.')
@@ -162,6 +185,10 @@ def verify_address(db, order, version, actor, reusable=None):
         return order  # The previous verification remains valid; no new API request.
     proof = _trusted_customer_proof(db, order, address)
     method = 'verified_customer' if proof else 'geocoding'
+    if proof is None:
+        proof = _existing_order_proof(db, order, address)
+        if proof:
+            method = 'verified_order'
     if proof is None and reusable and reusable.get('input_address') == address:
         if (has_verified_coordinates(reusable.get('stato_geocodifica'), reusable.get('lat'), reusable.get('lon'))
                 and reusable.get('geocoding_token') == sign_stop_address(
