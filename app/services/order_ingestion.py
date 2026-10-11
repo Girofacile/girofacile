@@ -150,6 +150,8 @@ def apply_orders(db,src,parsed,actor,report):
             db.query(OrderItem).filter_by(order_id=order.id).delete(synchronize_session=False)
         for index,line in enumerate(data['items'],1): db.add(OrderItem(order_id=order.id,line_number=index,data=line))
         auto_link(db,order,actor)
+        from .orders import auto_verify_linked_customer
+        auto_verify_linked_customer(db,order,actor)
     db.flush()
 
 
