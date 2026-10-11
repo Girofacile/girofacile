@@ -88,7 +88,7 @@ def test_geocoding_commit_rechecks_concurrent_edit(pg,monkeypatch):
     Base.metadata.create_all(pg)
     with Session(pg) as db:
         user=User(username='geocode-race',password_hash='test');db.add(user);db.flush()
-        order=create_order(db,user.id,OrderCreate(number='A',delivery_address='Old address'),'test');db.commit()
+        order=create_order(db,user.id,OrderCreate(number='A',recipient_name='Receiver',delivery_address='Old address'),'test');db.commit()
         uid,oid=user.id,order.id
         def geocode(session,user_id,address):
             session.commit()  # Mirrors existing API usage logging.
