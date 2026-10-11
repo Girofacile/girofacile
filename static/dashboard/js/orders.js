@@ -10,7 +10,7 @@
   };
   const fields={number:'Numero ordine',recipient_name:'Destinatario',delivery_address:'Indirizzo di consegna',requested_date:'Data richiesta',time_from:'Fascia oraria: dalle',time_to:'Alle',weight_kg:'Peso (kg)',packages:'Colli',pallets:'Pallet',volume_m3:'Volume (m³)',tail_lift:'Sponda',pallet_truck:'Transpallet',ztl:'ZTL',requirements:'Requisiti operativi',notes:'Note'};
   const numeric=['weight_kg','packages','pallets','volume_m3'], bools=['tail_lift','pallet_truck','ztl'];
-  let page=1, sequence=0, detailSequence=0, view='table', current=null, last=null, timer;
+  let page=1, sequence=0, detailSequence=0, view='table', current=null, last=null, timer, modalScrollY=0;
   const el=id=>document.getElementById(id);
   const can=key=>!window.GFCompanyAccess || GFCompanyAccess.can(key);
   const display=value=>value===null || value===undefined || value===''?'Non indicato':value===true?'Sì':value===false?'No':String(value);
@@ -73,48 +73,182 @@
     el('orderFormFields').innerHTML=Object.entries(fields).map(([key,label])=>{
       const value=data[key], id='orderField-'+key;
       if(bools.includes(key))return `<label for="${id}">${label}<select id="${id}" name="${key}"><option value="">Non indicato</option><option value="true" ${value===true?'selected':''}>Sì</option><option value="false" ${value===false?'selected':''}>No</option></select></label>`;
-      if(['notes','requirements'].includes(key))return `<label for="${id}">${label}<textarea id="${id}" name="${key}" maxlength="${key==='notes'?5000:2000}">${esc(value||'')}</textarea></label>`;
+      if(['notes','requirements'].includes(key))return `<label for="${id}" class="order-modal-form-wide">${label}<textarea id="${id}" name="${key}" maxlength="${key==='notes'?5000:2000}">${esc(value||'')}</textarea></label>`;
       const type=numeric.includes(key)?'number':key==='requested_date'?'date':key.startsWith('time_')?'time':'text';
       return `<label for="${id}">${label}<input id="${id}" name="${key}" type="${type}" value="${esc(value??'')}" ${key==='number'?'required maxlength="160"':key==='recipient_name'?'maxlength="200"':key==='delivery_address'?'maxlength="500"':''} ${type==='number'?`min="0" max="${key==='packages'?1000000:100000000}" step="${key==='packages'?1:'any'}"`:''}></label>`;
     }).join('');
   }
-  function newOrder(){++detailSequence;current=null;el('orderEditorTitle').textContent='Nuovo ordine';form();el('orderEditorError').textContent='';showTab('ordine-modifica');}
+  function modal(){return el('orderModal');}
+  function showOrderModal(){
+    const dialog=modal();if(!dialog)return;
+    if(!dialog.open){
+      modalScrollY=window.scrollY;
+      dialog.showModal();
+      document.documentElement.classList.add('order-modal-open');
+    }
+  }
+  function closeModal(){
+    const dialog=modal();
+    if(dialog?.open)dialog.close();
+    document.documentElement.classList.remove('order-modal-open');
+    requestAnimationFrame(()=>window.scrollTo({top:modalScrollY,left:0,behavior:'auto'}));
+    current=null;
+  }
+  function renderEditor(data={},creating=false){
+    const title=creating?'Nuovo ordine':`Modifica ${esc(current?.number||'ordine')}`;
+    el('orderModalContent').innerHTML=`<div class="order-modal-editor">
+      <header class="order-modal-header">
+        <div><h2 id="orderModalTitle">${title}</h2><p>${creating?'Inserisci i dati disponibili per creare un nuovo ordine.':'Aggiorna i dati operativi. I dati originali ricevuti restano conservati nello storico.'}</p></div>
+        <button class="order-modal-close" type="button" onclick="GFOrders.close()" aria-label="Chiudi"><svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+      </header>
+      <form class="order-modal-edit-form" onsubmit="GFOrders.save(event)">
+        <div id="orderFormFields" class="orders-form-grid"></div>
+        <p id="orderEditorError" class="orders-error" role="alert"></p>
+        <div class="order-modal-editor-actions">
+          <button class="btn-secondary" type="button" onclick="GFOrders.cancelEdit()">Annulla</button>
+          <button id="orderSave" class="btn-primary" type="submit">${creating?'Crea ordine':'Salva modifiche'}</button>
+        </div>
+      </form>
+    </div>`;
+    showOrderModal();form(data);el('orderEditorError').textContent='';
+  }
+  function newOrder(){++detailSequence;current=null;renderEditor({},true);}
   async function open(id){
     const request=++detailSequence;
-    showTab('ordine-dettaglio');el('orderDetail').textContent='Caricamento ordine…';
-    try{const result=await orderApi('/api/orders/'+id);if(request!==detailSequence)return;current=result;detail();}catch(err){if(request===detailSequence)error('orderDetail',err);}
+    el('orderModalContent').innerHTML='<div class="order-modal-loading"><span></span><p>Caricamento ordine…</p></div>';
+    showOrderModal();
+    try{const result=await orderApi('/api/orders/'+id);if(request!==detailSequence)return;current=result;detail();}
+    catch(err){if(request===detailSequence)el('orderModalContent').innerHTML=`<div class="order-modal-error"><p>${esc(err.message||String(err))}</p><button class="btn-secondary" onclick="GFOrders.close()">Chiudi</button></div>`;}
   }
   function changes(event){
     if(['customer_linked','customer_resolution'].includes(event.kind))return `<p>Associazione cliente: ${esc(event.changes.after??event.changes.customer_id??'Destinatario separato')}</p>`;
     if(event.kind==='corrected')return Object.entries(event.changes).map(([key,value])=>`<p>${fields[key]||esc(key)}: ${esc(display(value.before))} → ${esc(display(value.after))}</p>`).join('');
-    if(event.kind==='status_changed')return `<p>${labels[event.changes.before]} → ${labels[event.changes.after]}</p>`;
+    if(event.kind==='status_changed')return `<p>${labels[event.changes.before]||event.changes.before} → ${labels[event.changes.after]||event.changes.after}</p>`;
     if(event.kind==='address_verified')return `<p>${esc(event.changes.address)}</p>`;
-    if(event.kind==='route_status')return `<p>Giro #${esc(event.changes.route_id)}: ${esc(labels[event.changes.before])} → ${esc(labels[event.changes.after])}</p>`;
+    if(event.kind==='route_status')return `<p>Giro #${esc(event.changes.route_id)}: ${esc(labels[event.changes.before]||event.changes.before)} → ${esc(labels[event.changes.after]||event.changes.after)}</p>`;
     if(event.kind==='route_released')return `<p>Ordine rimosso dal giro #${esc(event.changes.route_id)} e nuovamente disponibile.</p>`;
     if(event.kind==='route_snapshot')return `<p>Dati della fermata salvati nel giro #${esc(event.changes.route_id)}.</p>`;
     if(event.kind==='received')return '<p>Ordine ricevuto dalla fonte collegata.</p>';
     if(event.kind==='source_updated')return `<p>Aggiornamento dalla fonte. Correzioni manuali conservate: ${esc((event.changes.preserved_corrections||[]).map(k=>fields[k]||k).join(', ')||'nessuna')}.</p>`;
     return '<p>Inserimento manuale</p>';
   }
+  function eventLabel(kind){
+    return ({received:'Acquisizione ordine',source_updated:'Aggiornamento dalla fonte',customer_linked:'Cliente riconosciuto',customer_resolution:'Associazione cliente',route_status:'Stato consegna',route_released:'Rimosso dal giro',route_snapshot:'Fermata salvata',created:'Creazione ordine',corrected:'Modifica dati',address_verified:'Indirizzo verificato',status_changed:'Cambio stato'})[kind]||kind;
+  }
   function detail(){
-    const o=current, allowed=can('orders.update') && ['nuovo','da_verificare','pronto'].includes(o.status) && !o.assignments.length;
-    el('orderDetail').innerHTML=`<div class="page-title-row"><div><h1>Ordine ${esc(o.number)}</h1><p>${labels[o.status]} · ${esc(o.source_name)}</p></div></div><div class="page-actions">${allowed?'<button class="btn-primary" onclick="GFOrders.edit()">Correggi dati operativi</button><button class="btn-secondary" onclick="GFOrders.action(\'verify-address\')">Verifica indirizzo</button><button class="btn-secondary" onclick="GFOrders.action(\'status\',\'pronto\')">Conferma pronto</button><button class="btn-secondary" onclick="GFOrders.action(\'status\',\'da_verificare\')">Da verificare</button><button class="btn-secondary" onclick="GFOrders.cancel()">Annulla ordine</button>':''}</div><p id="orderActionMessage" role="status"></p><section id="orderCustomerPanel" class="panel"></section><dl class="orders-detail-grid">${Object.entries(fields).map(([key,label])=>`<div><dt>${label}</dt><dd>${esc(display((o.effective_data||o.operational_data)[key]))}${o.inherited_fields?.includes(key)?' <small>(dal cliente)</small>':''}</dd></div>`).join('')}<div><dt>Identificativo interno / esterno</dt><dd>${o.id} / ${esc(o.external_id)}</dd></div><div><dt>Cliente registrato</dt><dd>${o.customer_id??'Destinatario solo per questo ordine'}</dd></div><div><dt>Verifica indirizzo</dt><dd>${o.address_verification&&!o.anomalies?.some(a=>a.code==='verification')?'Verificato':'Da verificare'}</dd></div><div><dt>Acquisizione / verifica / consegna</dt><dd>${esc(({received:'Ricevuto'})[o.acquisition_status]||o.acquisition_status)} / ${esc(({pending:'Da verificare',verified:'Verificato'})[o.verification_status]||o.verification_status)} / ${esc(({not_assigned:'Non assegnato',draft:'In bozza',scheduled:'Programmato',in_progress:'In consegna',delivered:'Consegnato',not_delivered:'Non consegnato'})[o.delivery_status]||o.delivery_status)}</dd></div><div><dt>Giro</dt><dd>${o.assignments.length?o.assignments.map(a=>can('routes.read')?`<button class="btn-secondary" onclick="GFOrderPlanning.openRoute(${a.route_id})">Apri giro #${a.route_id}</button>`:`Giro #${a.route_id}`).join(', '):'Non assegnato'}</dd></div></dl><h2>Articoli</h2>${o.items.length?o.items.map(i=>`<p>${esc(i.description)} — ${esc(i.quantity)}</p>`).join(''):'<p>Non indicati</p>'}<details><summary>Dati originali ricevuti</summary><pre>${Object.entries(fields).map(([key,label])=>`${label}: ${esc(display(o.original_payload[key]))}`).join("\n")}</pre></details>${o.latest_received_payload?`<details><summary>Ultimi dati ricevuti dalla fonte</summary><pre>${esc(JSON.stringify(o.latest_received_payload,null,2))}</pre></details>`:""}<h2>Ultimi aggiornamenti (massimo 100)</h2>${o.events.map(e=>`<details><summary>${esc(date(e.created_at))} · ${esc(({received:'Acquisizione',source_updated:'Aggiornamento dalla fonte',customer_linked:'Cliente riconosciuto',customer_resolution:'Associazione cliente',route_status:'Stato consegna',route_released:'Rimosso dal giro',route_snapshot:'Fermata salvata',created:'Creazione',corrected:'Correzione',address_verified:'Indirizzo verificato',status_changed:'Cambio stato'})[e.kind]||e.kind)} · ${esc(e.actor)}</summary>${changes(e)}</details>`).join('')}`;
+    const o=current;if(!o)return;
+    const data=o.effective_data||o.operational_data||{};
+    const allowed=can('orders.update') && ['nuovo','da_verificare','pronto'].includes(o.status) && !o.assignments.length;
+    const verified=!!o.address_verification&&!o.anomalies?.some(a=>a.code==='verification');
+    const requested=data.requested_date?esc(data.requested_date):'Non indicata';
+    const timeRange=data.time_from||data.time_to?`${esc(data.time_from||'—')} – ${esc(data.time_to||'—')}`:'Non indicata';
+    const boolValue=value=>value===true?'Sì':value===false?'No':'N/D';
+    const sourceChip=`<span class="order-modal-source-chip">${esc(o.source_name)}</span>`;
+    const editButton=allowed?'<button class="btn-secondary order-modal-edit-button" onclick="GFOrders.edit()">Modifica dati</button>':'';
+    const readyButton=allowed&&o.status!=='pronto'?'<button class="btn-primary order-modal-ready-button" onclick="GFOrders.action(\'status\',\'pronto\')">✓&nbsp; Conferma pronto</button>':'';
+    const more=allowed?`<details class="order-modal-more"><summary aria-label="Altre azioni">•••</summary><div class="order-modal-more-menu"><button onclick="GFOrders.action('verify-address')">Verifica indirizzo</button><button onclick="GFOrders.action('status','da_verificare')">Segna da verificare</button><button class="is-danger" onclick="GFOrders.cancel()">Annulla ordine</button></div></details>`:'';
+    const items=o.items?.length?o.items.map((item,index)=>`<div class="order-modal-item-row"><span>${esc(item.description||item.name||`Articolo ${index+1}`)}</span><strong>${esc(display(item.quantity))}</strong></div>`).join(''):'<p class="order-modal-empty">Nessun articolo indicato.</p>';
+    const notes=data.notes? `<p class="order-modal-note-text">“${esc(data.notes)}”</p>`:'<p class="order-modal-empty">Nessuna nota ordine.</p>';
+    const events=(o.events||[]).map(e=>`<div class="order-modal-event"><span class="order-modal-event-dot" aria-hidden="true"></span><div><time>${esc(date(e.created_at))}</time><strong>${esc(eventLabel(e.kind))}</strong><small>${esc(e.actor)}</small>${changes(e)}</div></div>`).join('')||'<p class="order-modal-empty">Nessun evento disponibile.</p>';
+    const routeInfo=o.assignments?.length?o.assignments.map(a=>can('routes.read')?`<button class="btn-secondary order-modal-route-btn" onclick="GFOrders.close();GFOrderPlanning.openRoute(${a.route_id})">Apri giro #${a.route_id}</button>`:`Giro #${a.route_id}`).join(' '):'Non assegnato';
+    const actionCard=!verified?`<section class="order-modal-alert"><div class="order-modal-alert-title"><span aria-hidden="true">!</span><strong>Azione richiesta</strong></div><p>Verifica l’indirizzo effettivo di consegna. I dati originali restano conservati.</p>${allowed?'<button onclick="GFOrders.action(\'verify-address\')">Verifica indirizzo</button>':''}</section>`:`<section class="order-modal-alert is-ok"><div class="order-modal-alert-title"><span aria-hidden="true">✓</span><strong>Indirizzo verificato</strong></div><p>La destinazione è pronta per essere utilizzata nella pianificazione.</p></section>`;
+
+    el('orderModalContent').innerHTML=`
+      <header class="order-modal-header order-modal-detail-header">
+        <div class="order-modal-heading">
+          <div class="order-modal-title-row"><h2 id="orderModalTitle">${esc(o.number)}</h2>${statusBadge(o.status)}${sourceChip}</div>
+          <p>Acquisito il ${esc(date(o.received_at))}</p>
+        </div>
+        <div class="order-modal-header-actions">${editButton}${more}${readyButton}<button class="order-modal-close" type="button" onclick="GFOrders.close()" aria-label="Chiudi"><svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+      </header>
+      <p id="orderActionMessage" class="order-modal-action-message" role="status"></p>
+      <div class="order-modal-body">
+        <main class="order-modal-main">
+          <section class="order-modal-card">
+            <div class="order-modal-card-head"><span aria-hidden="true">●</span><h3>Dati di consegna</h3></div>
+            <div class="order-modal-delivery-grid">
+              <div><span>Destinatario</span><strong>${esc(display(data.recipient_name))}</strong></div>
+              <div><span>Indirizzo di consegna</span><strong>${esc(display(data.delivery_address))}</strong></div>
+              <div><span>Data richiesta</span><strong>${requested}</strong></div>
+              <div><span>Fascia oraria</span><strong>${timeRange}</strong></div>
+            </div>
+          </section>
+
+          <section class="order-modal-card">
+            <div class="order-modal-card-head"><span aria-hidden="true">◆</span><h3>Specifiche merce e logistica</h3></div>
+            <div class="order-modal-logistics-grid">
+              <div><span>Peso (kg)</span><strong>${esc(display(data.weight_kg))}</strong></div>
+              <div><span>Colli</span><strong>${esc(display(data.packages))}</strong></div>
+              <div><span>Pallet</span><strong>${esc(display(data.pallets))}</strong></div>
+              <div><span>Volume (m³)</span><strong>${esc(display(data.volume_m3))}</strong></div>
+              <div><span>Sponda idraulica</span><strong>${boolValue(data.tail_lift)}</strong></div>
+              <div><span>Transpallet</span><strong>${boolValue(data.pallet_truck)}</strong></div>
+              <div><span>Permesso ZTL</span><strong>${boolValue(data.ztl)}</strong></div>
+              <div><span>Req. operativi</span><strong>${esc(display(data.requirements))}</strong></div>
+            </div>
+          </section>
+
+          <div class="order-modal-split">
+            <section class="order-modal-card">
+              <div class="order-modal-card-head"><span aria-hidden="true">≡</span><h3>Distinta articoli</h3><small>${o.items?.length||0} righe</small></div>
+              <div class="order-modal-items">${items}</div>
+            </section>
+            <section class="order-modal-card order-modal-notes">
+              <div class="order-modal-card-head"><span aria-hidden="true">□</span><h3>Note ordine</h3></div>
+              <div class="order-modal-note-body">${notes}</div>
+            </section>
+          </div>
+
+          <details class="order-modal-technical">
+            <summary>Dati tecnici e originali</summary>
+            <div class="order-modal-technical-grid">
+              <div><span>ID interno / esterno</span><strong>${o.id} / ${esc(o.external_id)}</strong></div>
+              <div><span>Cliente registrato</span><strong>${o.customer_id??'Destinatario solo per questo ordine'}</strong></div>
+              <div><span>Giro</span><strong>${routeInfo}</strong></div>
+              <div><span>Stato acquisizione</span><strong>${esc(o.acquisition_status)}</strong></div>
+            </div>
+            <pre>${Object.entries(fields).map(([key,label])=>`${label}: ${esc(display(o.original_payload?.[key]))}`).join("\n")}</pre>
+          </details>
+        </main>
+
+        <aside class="order-modal-side">
+          ${actionCard}
+          <section id="orderCustomerPanel" class="order-modal-card order-modal-customer"></section>
+          <section class="order-modal-card order-modal-log">
+            <div class="order-modal-card-head"><span aria-hidden="true">↶</span><h3>Log eventi</h3><small>Ultimi ${Math.min(100,o.events?.length||0)}</small></div>
+            <div class="order-modal-events">${events}</div>
+          </section>
+        </aside>
+      </div>`;
     window.GFOrderCustomers?.render(o);
   }
-  function edit(){el('orderEditorTitle').textContent='Correggi ordine '+current.number;form(current.operational_data);el('orderEditorError').textContent='';showTab('ordine-modifica');}
+  function edit(){if(!current)return;renderEditor(current.operational_data||{},false);}
+  function cancelEdit(){current?detail():closeModal();}
   async function save(event){
     event.preventDefault();const data={};
     for(const [key,value] of new FormData(event.target))data[key]=value===''?null:numeric.includes(key)?Number(value):bools.includes(key)?value==='true':value;
-    if(current)data.version=current.version;
+    const editing=!!current;if(editing)data.version=current.version;
     el('orderSave').disabled=true;el('orderEditorError').textContent='';
-    try{current=await orderApi('/api/orders'+(current?'/'+current.id:''),{method:current?'PUT':'POST',body:JSON.stringify(data)});showTab('ordine-dettaglio');detail();}
-    catch(err){error('orderEditorError',err);}finally{el('orderSave').disabled=false;}
+    try{
+      current=await orderApi('/api/orders'+(editing?'/'+current.id:''),{method:editing?'PUT':'POST',body:JSON.stringify(data)});
+      detail();
+      load();
+    }catch(err){error('orderEditorError',err);}
+    finally{if(el('orderSave'))el('orderSave').disabled=false;}
   }
   async function action(action,status){
-    const buttons=el('orderDetail').querySelectorAll('button');buttons.forEach(b=>b.disabled=true);
-    el('orderActionMessage').textContent='Operazione in corso…';
-    try{current=await orderApi(`/api/orders/${current.id}/${action}`,{method:'POST',body:JSON.stringify({version:current.version,...(status?{status}:{})})});detail();el('orderActionMessage').textContent='Ordine aggiornato.';}
-    catch(err){error('orderActionMessage',err);}finally{buttons.forEach(b=>b.disabled=false);}
+    if(!current)return;
+    const root=el('orderModalContent'),buttons=root.querySelectorAll('button');buttons.forEach(b=>b.disabled=true);
+    const message=el('orderActionMessage');if(message)message.textContent='Operazione in corso…';
+    try{
+      current=await orderApi(`/api/orders/${current.id}/${action}`,{method:'POST',body:JSON.stringify({version:current.version,...(status?{status}:{})})});
+      detail();
+      const updated=el('orderActionMessage');if(updated)updated.textContent='Ordine aggiornato.';
+      load();
+    }catch(err){
+      const target=el('orderActionMessage');if(target)target.textContent=err.message||String(err);
+      buttons.forEach(b=>b.disabled=false);
+    }
   }
   function toggleFilters(force){
     const drawer=el('ordersFilterDrawer'),button=el('ordersFilterToggle');
@@ -124,6 +258,11 @@
     button.setAttribute('aria-expanded',String(open));
     button.classList.toggle('is-active',open);
   }
+  const orderDialog=modal();
+  if(orderDialog){
+    orderDialog.addEventListener('click',event=>{if(event.target===orderDialog)closeModal();});
+    orderDialog.addEventListener('cancel',event=>{event.preventDefault();closeModal();});
+  }
   window.addEventListener('resize',syncActionPlacement);
-  window.GFOrders={request:orderApi,apply(value){current=value;detail();},currentItems:()=>last?.items||[],refreshSelection:render,load,open,newOrder,edit,save,action,cancel(){if(confirm('Annullare questo ordine? L’originale e lo storico saranno conservati.'))action('status','annullato');},search(){clearTimeout(timer);timer=setTimeout(()=>load(true),300);},page(delta){page+=delta;load();},view(mode){view=mode;render();},toggleFilters,syncActions:syncActionPlacement};
+  window.GFOrders={request:orderApi,apply(value){current=value;detail();load();},currentItems:()=>last?.items||[],refreshSelection:render,load,open,newOrder,edit,cancelEdit,close:closeModal,save,action,cancel(){if(confirm('Annullare questo ordine? L’originale e lo storico saranno conservati.'))action('status','annullato');},search(){clearTimeout(timer);timer=setTimeout(()=>load(true),300);},page(delta){page+=delta;load();},view(mode){view=mode;render();},toggleFilters,syncActions:syncActionPlacement};
 })();
