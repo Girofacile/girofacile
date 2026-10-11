@@ -8,7 +8,7 @@ from ..core.dependencies import current_user
 from ..database import get_db
 from ..models import User
 from ..order_models import Order, OrderSource
-from ..schemas.orders import OrderCreate, OrderUpdate, OrderAction, OrderVersion, CustomerResolution
+from ..schemas.orders import OrderCreate, OrderUpdate, OrderAction, OrderVersion, OrderBulkVerify, CustomerResolution
 from ..services import orders as service
 
 router = APIRouter(prefix='/api/orders', tags=['orders'])
@@ -56,6 +56,15 @@ def create_order(data: OrderCreate, request: Request, db: Session = Depends(get_
     order = service.create_order(db, user.id, data, actor_key(request, user))
     db.commit()
     return service.detail(db, order)
+
+
+@router.post('/verify-addresses')
+def verify_addresses(data: OrderBulkVerify, request: Request,
+                     db: Session = Depends(get_db), user: User = Depends(current_user)):
+    """Verify pending delivery addresses in resumable chunks, never entire data sets in one request."""
+    return service.verify_multiple(db, user.id, actor_key(request,user),
+        after_id=data.after_id, limit=data.limit, q=data.q, source_id=data.source_id,
+        status=data.status, date_from=data.date_from, date_to=data.date_to)
 
 
 @router.get('/{order_id}')
