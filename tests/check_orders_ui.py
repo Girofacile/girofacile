@@ -82,12 +82,13 @@ def main():
                     assert page.locator('#orderField-number').input_value()=='ORD-001'
                     page.locator('#orderField-time_to').fill('15:00')
                     page.locator('#orderSave').click()
-                    page.wait_for_function("document.getElementById('orderDetail').textContent.includes('ORD-001')")
-                    assert page.locator('#orderDetail script').count()==0
-                    page.get_by_role('button',name='Correggi dati operativi').click()
+                    page.wait_for_function("document.getElementById('orderModalContent').textContent.includes('ORD-001')")
+                    assert page.locator('#orderModal').is_visible()
+                    assert page.locator('#orderModalContent script').count()==0
+                    page.get_by_role('button',name='Modifica dati',exact=True).click()
                     page.locator('#orderField-packages').fill('5')
                     page.locator('#orderSave').click()
-                    page.wait_for_function("document.getElementById('orderDetail').textContent.includes('Correzione')")
+                    page.wait_for_function("document.getElementById('orderModalContent').textContent.includes('Modifica dati')")
                     from app.order_models import Order
                     candidate=Customer(user_id=user.id,nome='Destinatario <script>test</script>',indirizzo='Via Alternativa 2, Milano')
                     db.add(candidate);db.commit()
@@ -97,7 +98,8 @@ def main():
                     assert page.locator('#orderCustomerPanel script').count()==0
                     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 2')
                     page.screenshot(path=str(output/f'detail-{width}.png'),full_page=True)
-                    page.locator('#tab-ordine-dettaglio > button').click()
+                    page.locator('#orderModal .order-modal-close').click()
+                    page.locator('#orderModal').wait_for(state='hidden')
                     page.wait_for_function("document.getElementById('ordersResults').textContent.includes('ORD-001')")
                     page.locator('#ordersView-cards').click()
                     assert page.locator('#ordersResults article').count()==1
@@ -114,7 +116,7 @@ def main():
                     assert response.status_code==200,response.text
                     second=db.get(Order,created['id']);second.status='pronto';second.address_verification=order.address_verification;db.commit()
                     page.evaluate('GFOrders.load()')
-                    page.get_by_role('button',name='Seleziona pronti di questa pagina',exact=True).click()
+                    page.get_by_role('checkbox',name='Seleziona ordini pronti di questa pagina',exact=True).check()
                     page.wait_for_function("document.getElementById('ordersSelectionCount').textContent.startsWith('2 ordini')")
                     page.locator('#ordersGoPlanning').click()
                     page.locator('#orderPlanningBanner').wait_for(state='visible')
@@ -182,7 +184,7 @@ def main():
                     imported=db.query(Order).filter_by(external_id='IMPORT-001').one()
                     imported.status='pronto';imported.address_verification={'input_address':imported.delivery_address,'indirizzo':imported.delivery_address,'stato_geocodifica':'verificato','lat':45.47,'lon':9.2,'geocoding_token':sign_stop_address(user.id,imported.delivery_address,45.47,9.2)}
                     db.commit()
-                    page.get_by_role('button',name='Svuota selezione',exact=True).click()
+                    page.get_by_role('button',name='Deseleziona',exact=True).click()
                     page.wait_for_function("document.getElementById('ordersSelectionCount').textContent.startsWith('0 ordini')")
                     page.get_by_role('button',name='Seleziona pronti di questa pagina',exact=True).click()
                     page.wait_for_function("document.getElementById('ordersSelectionCount').textContent.startsWith('1 ordini')")
