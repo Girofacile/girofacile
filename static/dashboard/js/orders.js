@@ -89,6 +89,7 @@
   }
   function closeModal(){
     const dialog=modal();
+    ++detailSequence;
     if(dialog?.open)dialog.close();
     document.documentElement.classList.remove('order-modal-open');
     requestAnimationFrame(()=>window.scrollTo({top:modalScrollY,left:0,behavior:'auto'}));
