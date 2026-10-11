@@ -130,8 +130,17 @@ def _mark_verified(db, order, proof, address, actor, method):
 def auto_verify_linked_customer(db, order, actor):
     """No geocoding API call for a destination already verified in the customer registry."""
     from .order_customers import effective
-    if order.status not in EDITABLE or (address_is_verified(db, order) and order.status == 'pronto'):
+    if order.status not in EDITABLE:
         return False
+    if address_is_verified(db, order):
+        if order.status == 'pronto':
+            return False
+        before = order.status
+        order.status = 'pronto'
+        order.verification_status = 'verified'
+        touch(order)
+        record(db, order, actor, 'status_changed', {'before': before, 'after': 'pronto', 'method': 'retained_verification'})
+        return True
     values, _ = effective(db, order)
     address = values.get('delivery_address')
     if not values.get('recipient_name') or not address:
@@ -191,7 +200,7 @@ def verify_multiple(db, user_id, actor, *, after_id=0, limit=10, q='', source_id
     limit = max(1, min(10, limit))
     query = db.query(Order.id).filter(Order.user_id == user_id, Order.id > after_id,
         Order.status.in_(('nuovo', 'da_verificare', 'pronto')),
-        ~Order.id.in_(db.query(RouteOrderAssignment.order_id)))
+        ~Order.id.in_(db.query(RouteOrderAssignment.order_id).filter(RouteOrderAssignment.user_id == user_id)))
     if q.strip():
         escaped = q.strip().replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_')
         query = query.filter(or_(Order.number.ilike('%' + escaped + '%', escape='\\'),
