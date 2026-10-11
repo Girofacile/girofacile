@@ -78,6 +78,24 @@
       const type=numeric.includes(key)?'number':key==='requested_date'?'date':key.startsWith('time_')?'time':'text';
       return `<label for="${id}">${label}<input id="${id}" name="${key}" type="${type}" value="${esc(value??'')}" ${key==='number'?'required maxlength="160"':key==='recipient_name'?'maxlength="200"':key==='delivery_address'?'maxlength="500"':''} ${type==='number'?`min="0" max="${key==='packages'?1000000:100000000}" step="${key==='packages'?1:'any'}"`:''}></label>`;
     }).join('');
+    // Keep the everyday workflow compact; optional logistics remain available on demand.
+    const container=el('orderFormFields');
+    const basic=document.createElement('div');
+    basic.className='order-form-primary';
+    const optional=document.createElement('details');
+    optional.className='order-form-optional';
+    const title=document.createElement('summary');
+    title.textContent='Altre informazioni (facoltative)';
+    const otherFields=document.createElement('div');
+    otherFields.className='orders-form-grid';
+    const essential=new Set(['number','recipient_name','delivery_address']);
+    for(const label of Array.from(container.children)){
+      const input=label.querySelector('input,select,textarea');
+      if(essential.has(input?.name))basic.appendChild(label);
+      else otherFields.appendChild(label);
+    }
+    optional.append(title,otherFields);
+    container.replaceChildren(basic,optional);
   }
   function modal(){return el('orderModal');}
   function showOrderModal(){
