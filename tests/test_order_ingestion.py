@@ -162,6 +162,24 @@ def test_stale_preview_expiry_and_activation_guard(ingestion):
     assert client.post(f"/api/order-sources/{src['id']}/upload",files={'file':('orders.csv',CSV.encode())}).status_code==409
 
 
+def test_delete_source_removes_connection_and_preserves_acquired_orders(ingestion):
+    client,db,*_=ingestion;src,rid=setup(ingestion)
+    result=client.post(f"/api/order-sources/{src['id']}/runs/{rid}/commit",json={'confirm':True})
+    assert result.status_code==200,result.text
+    order=db.query(Order).one();old_source_id=order.source_id
+    response=client.delete(f"/api/order-sources/{src['id']}?version={src['version']}")
+    assert response.status_code==200 and response.json()['deleted'] is True,response.text
+    assert db.get(OrderSource,old_source_id) is None
+    db.refresh(order)
+    archive=db.get(OrderSource,order.source_id)
+    assert archive is not None and archive.kind=='archive' and archive.name=='ERP export'
+    assert archive.credential_hash is None and archive.configuration=={'archived':True}
+    assert db.query(OrderImportRun).filter_by(source_id=old_source_id).count()==0
+    assert client.get('/api/order-sources').json()['total']==0
+    assert client.post(f"/api/order-sources/{old_source_id}/upload",files={'file':('orders.csv',CSV.encode())}).status_code==404
+    assert client.get(f"/api/orders/{order.id}").json()['source_name']=='ERP export'
+
+
 def test_source_ids_and_tenants_are_independent(ingestion):
     client,db,owner,other=ingestion
     first,h1=api_source(ingestion);second,h2=api_source(ingestion)
@@ -208,7 +226,7 @@ def test_collaborator_permissions_and_owner_only_tokens(ingestion):
         return authorize(req,actor)
     check('POST','/api/order-sources/{source_id}/upload',importer)
     check('POST','/api/order-sources/{source_id}/runs/{run_id}/commit',importer)
-    for method,path in [('POST','/api/order-sources'),('PUT','/api/order-sources/{source_id}'),('POST','/api/order-sources/{source_id}/action')]:
+    for method,path in [('POST','/api/order-sources'),('PUT','/api/order-sources/{source_id}'),('DELETE','/api/order-sources/{source_id}'),('POST','/api/order-sources/{source_id}/action')]:
         with pytest.raises(HTTPException) as error:check(method,path,importer)
         assert error.value.status_code==403
         check(method,path,integrator)
