@@ -8,6 +8,10 @@ def test_pod_migration_preserves_legacy_and_is_idempotent(pg):
     with pg.begin() as conn:
         conn.execute(text('CREATE TABLE users (id INTEGER PRIMARY KEY, username TEXT)'))
         conn.execute(text("INSERT INTO users VALUES (1,'legacy-owner')"))
+        # This is an already-upgraded legacy database, not a schema with only POD tables.
+        # New order migrations refer to existing customer and route tables by foreign key.
+        conn.execute(text('CREATE TABLE customers (id INTEGER PRIMARY KEY, user_id INTEGER)'))
+        conn.execute(text('CREATE TABLE route_plans (id INTEGER PRIMARY KEY, user_id INTEGER)'))
         conn.execute(text('CREATE TABLE deliveries (id INTEGER PRIMARY KEY)'))
         conn.execute(text('CREATE TABLE delivery_statuses (id INTEGER PRIMARY KEY, delivery_id INTEGER, route_plan_id INTEGER, signature_data TEXT, signature_note TEXT)'))
         conn.execute(text("INSERT INTO delivery_statuses VALUES (1,1,1,'legacy-signature','nota')"))
