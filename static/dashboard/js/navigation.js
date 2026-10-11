@@ -3,7 +3,7 @@ const WORKSPACE_TOPBAR_META = {
   ordini: {title:"Ordini",subtitle:"Gestisci gli ordini ricevuti e prepara le tue consegne."},
   "ordine-dettaglio": {title:"Dettaglio ordine",subtitle:"Dati operativi e storico delle correzioni."},
   "ordine-modifica": {title:"Modifica ordine",subtitle:"Completa le informazioni disponibili."},
-  "ordini-collegamenti": {title:"Collega i tuoi ordini",subtitle:"Fonti di acquisizione degli ordini."},
+  "ordini-collegamenti": {title:"Collega i tuoi ordini",subtitle:"Importa un file o prepara l’invio dal tuo gestionale. Controlla sempre l’anteprima prima di attivare una fonte."},
   collaboratori: {title:"Collaboratori",subtitle:"Gestisci accessi personali e funzioni assegnate."},
   dashboard: {
     title: "Dashboard",
