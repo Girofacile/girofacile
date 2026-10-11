@@ -71,10 +71,12 @@ def main():
                     else:
                         page.locator('button.nav-item[data-tab="ordini"]').click()
                     page.wait_for_function("document.getElementById('ordersMessage').textContent.includes('Nessun ordine')")
+                    assert page.locator('#ordersVerifyAll').is_visible()
                     page.locator('#ordersNew').click()
                     page.locator('#orderField-number').fill('ORD-001')
                     page.locator('#orderField-recipient_name').fill('Destinatario <script>test</script>')
                     page.locator('#orderField-delivery_address').fill('Via Roma 10, Milano')
+                    page.locator('#orderFormFields .order-form-optional summary').click()
                     page.locator('#orderField-tail_lift').select_option('false')
                     page.locator('#orderField-time_from').fill('14:00')
                     page.locator('#orderSave').click()
@@ -86,6 +88,7 @@ def main():
                     assert page.locator('#orderModal').is_visible()
                     assert page.locator('#orderModalContent script').count()==0
                     page.get_by_role('button',name='Modifica dati',exact=True).click()
+                    page.locator('#orderFormFields .order-form-optional summary').click()
                     page.locator('#orderField-packages').fill('5')
                     page.locator('#orderSave').click()
                     page.wait_for_function("document.getElementById('orderModalContent').textContent.includes('Modifica dati')")
@@ -93,6 +96,7 @@ def main():
                     candidate=Customer(user_id=user.id,nome='Destinatario <script>test</script>',indirizzo='Via Alternativa 2, Milano')
                     db.add(candidate);db.commit()
                     page.evaluate('GFOrders.open('+str(db.query(Order).one().id)+')')
+                    page.locator('#orderCustomerPanel .order-customer-optional summary').click()
                     page.get_by_role('button',name='Sì, associa',exact=True).click()
                     page.wait_for_function("document.getElementById('orderCustomerMessage')?.textContent==='Cliente già collegato.'")
                     assert page.locator('#orderCustomerPanel script').count()==0
