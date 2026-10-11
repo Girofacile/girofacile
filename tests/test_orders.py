@@ -129,3 +129,70 @@ def test_external_uniqueness_is_scoped_to_company_and_source(orders):
     with pytest.raises(IntegrityError):
         db.add(row(owner.id,source.id));db.commit()
     db.rollback()
+
+
+def test_verification_makes_orders_ready_without_confirmation_and_keeps_proof(orders, monkeypatch):
+    client, db, owner, other = orders
+    from app.services.occasional_stops import sign_stop_address
+
+    requests = []
+    def geocode(session, uid, address):
+        requests.append(address)
+        return {'stato_geocodifica':'verificato','lat':41.9,'lon':12.5,
+                'indirizzo':address,'geocoding_token':sign_stop_address(uid,address,41.9,12.5)}
+    monkeypatch.setattr('app.services.orders.verify_stop_address', geocode)
+    row=create(client,number='R-1',packages=None,weight_kg=None)
+    url=f"/api/orders/{row['id']}"
+
+    verified=client.post(url+'/verify-address',json={'version':row['version']})
+    assert verified.status_code==200,verified.text
+    result=verified.json()
+    assert result['status']=='pronto' and result['verification_status']=='verified'
+    assert len(requests)==1 and result['address_verification']['input_address']==row['delivery_address']
+
+    repeated=client.post(url+'/verify-address',json={'version':result['version']})
+    assert repeated.status_code==200 and repeated.json()['version']==result['version']
+    assert len(requests)==1  # No duplicate paid geocoding request.
+
+    # Editing a note must not invalidate an otherwise unchanged delivery address.
+    edited=client.put(url,json={**row['operational_data'],'version':result['version'],'notes':'Scala B'})
+    assert edited.status_code==200,edited.text
+    assert edited.json()['status']=='pronto'
+    assert len(requests)==1
+    assert db.query(__import__('app.order_models',fromlist=['Order']).Order).count()==1
+
+
+def test_bulk_verification_is_bounded_scoped_and_reuses_identical_addresses(orders, monkeypatch):
+    client, db, owner, other = orders
+    from app.services.occasional_stops import sign_stop_address
+    from app.core.dependencies import current_user
+
+    first=create(client,number='B-1')
+    second=create(client,number='B-2')
+    third=create(client,number='B-3',recipient_name=None)
+    calls=[]
+    def geocode(session, uid, address):
+        calls.append((uid,address))
+        return {'stato_geocodifica':'verificato','lat':41.9,'lon':12.5,
+                'indirizzo':address,'geocoding_token':sign_stop_address(uid,address,41.9,12.5)}
+    monkeypatch.setattr('app.services.orders.verify_stop_address', geocode)
+    result=client.post('/api/orders/verify-addresses',json={'limit':10})
+    assert result.status_code==200,result.text
+    report=result.json()
+    assert report['processed']==3 and report['verified']==2 and report['failed']==1
+    assert len(calls)==1  # The same verified destination is reused in the same batch.
+    assert all(client.get(f'/api/orders/{i}').json()['status']=='pronto' for i in (first['id'],second['id']))
+    assert client.get(f"/api/orders/{third['id']}").json()['status']!='pronto'
+
+    again=client.post('/api/orders/verify-addresses',json={})
+    assert again.status_code==200 and again.json()['already_verified']==2
+    assert len(calls)==1
+    # Filtering never tries unrelated destinations.
+    filtered=client.post('/api/orders/verify-addresses',json={'q':'DOES-NOT-EXIST'})
+    assert filtered.status_code==200 and filtered.json()['processed']==0
+    assert client.post('/api/orders/verify-addresses',json={'limit':100}).status_code==422
+
+    client.app.dependency_overrides[current_user]=lambda:other
+    alien=client.post('/api/orders/verify-addresses',json={})
+    assert alien.status_code==200 and alien.json()['processed']==0
+
