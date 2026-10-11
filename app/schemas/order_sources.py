@@ -16,6 +16,11 @@ class SourceCreate(BaseModel):
     kind: Literal['file','api']
     software: str = Field(default='',max_length=160)
 
+class SourceFields(BaseModel):
+    model_config=ConfigDict(extra='forbid')
+    version: int = Field(ge=1)
+    excluded_fields: list[str] = Field(max_length=30)
+
 class SourceUpdate(BaseModel):
     model_config=ConfigDict(extra='forbid')
     version: int = Field(ge=1)

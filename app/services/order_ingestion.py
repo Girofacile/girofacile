@@ -41,6 +41,7 @@ def public_source(db,row):
     success=db.query(func.max(OrderImportRun.created_at)).filter_by(source_id=row.id,status='completed').scalar()
     return {'id':row.id,'name':row.name,'kind':row.kind,'status':row.status,'version':row.version,
             'software':row.configuration.get('software',''),'mapping':row.configuration.get('mapping',{}),
+            'excluded_fields':row.configuration.get('excluded_fields',[]),'fields_configured':'excluded_fields' in row.configuration,
             'has_credential':bool(row.credential_hash),'last_success':success,
             'order_count':db.query(Order).filter_by(user_id=row.user_id,source_id=row.id).count(),
             'last_run':{'id':recent.id,'status':recent.status,'summary':{k:v for k,v in recent.report.items() if k!='rows'}} if recent else None}
@@ -74,7 +75,9 @@ def preflight(db,src,rows,mapping,expected=None):
         try:
             if src.kind=='api' and not set(raw)<=set(FIELDS)|set(mapping.values()):
                 raise ImportIssue('Campi API non riconosciuti: usa il formato standard o completa le associazioni della fonte.')
-            data=mapped(raw,mapping)
+            data=mapped(raw,{k:v for k,v in mapping.items() if k not in src.configuration.get('excluded_fields',[])})
+            if 'excluded_fields' in src.configuration and (not data.get('recipient_name') or not data.get('delivery_address')):
+                raise ImportIssue('Nome destinatario e indirizzo sono obbligatori: completa il file o le associazioni.')
             eid=data['external_id'];entry['external_id']=eid
             if eid in seen: raise ImportIssue('Identificativo ordine ripetuto nello stesso invio.')
             seen.add(eid)
@@ -93,7 +96,7 @@ def preflight(db,src,rows,mapping,expected=None):
                         recipient_name=data.get('recipient_name'),delivery_address=data.get('delivery_address'),customer_resolution='pending')
             match=recognize(db,probe)['kind'];entry['customer_match']=match
             if match not in ('certain','linked'): report['unmatched']+=1
-            entry['warnings']=[label for key,label in [('recipient_name','Destinatario mancante'),('delivery_address','Indirizzo mancante'),('weight_kg','Peso non indicato')] if data.get(key) is None or data.get(key)=='']
+            entry['warnings']=[label for key,label in [('recipient_name','Destinatario mancante'),('delivery_address','Indirizzo mancante'),('weight_kg','Peso non indicato')] if key not in src.configuration.get('excluded_fields',[]) and (data.get(key) is None or data.get(key)=='')]
             entry['action']=action;report[action]+=1
         except ImportIssue as exc:
             entry['error']=str(exc)
@@ -111,7 +114,7 @@ def preview(db,src,item):
     if src.status not in ('draft','active'): raise HTTPException(409,'La fonte è in pausa o rimossa.')
     mapping=src.configuration.get('mapping',{})
     if not {'external_id','number'}<=mapping.keys(): raise HTTPException(422,'Associa identificativo esterno e numero ordine.')
-    if not set(mapping.values())<=set(item.payload['headers']): raise HTTPException(422,'Le colonne del file non corrispondono alla configurazione. Correggi le associazioni.')
+    if not {v for k,v in mapping.items() if k not in src.configuration.get('excluded_fields',[])}<=set(item.payload['headers']): raise HTTPException(422,'Le colonne del file non corrispondono alla configurazione. Correggi le associazioni.')
     effective_mapping={**{key:key for key in FIELDS},**mapping} if src.kind=='api' else mapping
     report,parsed=preflight(db,src,item.payload['rows'],effective_mapping)
     item.report=report;item.status='preview_invalid' if report['invalid'] else 'preview_ready'

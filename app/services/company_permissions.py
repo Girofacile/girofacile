@@ -144,7 +144,7 @@ def rule(method, paths, *grants):
 
 rule("GET", ["/api/order-sources", "/api/order-sources/{source_id}/runs", "/api/order-sources/{source_id}/runs/{run_id}"], "orders.import", "orders.integrations")
 rule("POST", ["/api/order-sources", "/api/order-sources/{source_id}/action", "/api/order-sources/{source_id}/sample"], "orders.integrations")
-rule("PUT", ["/api/order-sources/{source_id}"], "orders.integrations")
+rule("PUT", ["/api/order-sources/{source_id}", "/api/order-sources/{source_id}/fields"], "orders.integrations")
 rule("DELETE", ["/api/order-sources/{source_id}"], "orders.integrations")
 rule("POST", ["/api/order-sources/{source_id}/upload", "/api/order-sources/{source_id}/runs/{run_id}/preview"], "orders.import", "orders.integrations")
 rule("POST", ["/api/order-sources/{source_id}/runs/{run_id}/commit"], "orders.import")

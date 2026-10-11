@@ -10,7 +10,7 @@ from ..core.dependencies import current_user
 from ..database import get_db
 from ..models import User
 from ..order_models import OrderSource,OrderImportRun,Order,CustomerSourceMapping
-from ..schemas.order_sources import SourceCreate,SourceUpdate,SourceAction,RunConfirm,Acquisition,MAX_BYTES,MAX_ROWS
+from ..schemas.order_sources import SourceCreate,SourceUpdate,SourceFields,SourceAction,RunConfirm,Acquisition,MAX_BYTES,MAX_ROWS
 from ..services import order_ingestion as service
 from ..services.order_files import read_file,suggestions,FIELDS,validate_rows
 from ..services.order_source_security import issue,credential,authenticated,throttle_ip
@@ -51,6 +51,22 @@ def configure(source_id:int,data:SourceUpdate,db:Session=Depends(get_db),user:Us
         raise HTTPException(422,'Associa almeno identificativo esterno e numero ordine a colonne valide.')
     src.configuration={**src.configuration,'mapping':data.mapping,'validated':False}
     src.version+=1;src.status='draft';db.commit();return service.public_source(db,src)
+
+
+@router.put('/api/order-sources/{source_id}/fields')
+def configure_fields(source_id:int,data:SourceFields,request:Request,db:Session=Depends(get_db),user:User=Depends(current_user)):
+    src=service.source(db,user.id,source_id,lock=True)
+    if src.version!=data.version: raise HTTPException(409,'Fonte modificata: ricarica la pagina.')
+    if src.status=='removed': raise HTTPException(409,'La fonte è stata rimossa.')
+    excluded=set(data.excluded_fields)
+    if not excluded<=set(FIELDS)-{'external_id','number','recipient_name','delivery_address'}:
+        raise HTTPException(422,'Nome destinatario, indirizzo e identificativi ordine sono obbligatori.')
+    if excluded & {'time_from','time_to'}: excluded.update({'time_from','time_to'})
+    src.configuration={**src.configuration,'excluded_fields':sorted(excluded)}
+    src.version+=1
+    db.add(OrderImportRun(user_id=user.id,source_id=src.id,status='source_fields_updated',report={'actor':actor_key(request,user),'excluded_fields':sorted(excluded)}))
+    db.commit()
+    return service.public_source(db,src)
 
 
 @router.post('/api/order-sources/{source_id}/action')

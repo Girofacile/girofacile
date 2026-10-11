@@ -226,7 +226,7 @@ def test_collaborator_permissions_and_owner_only_tokens(ingestion):
         return authorize(req,actor)
     check('POST','/api/order-sources/{source_id}/upload',importer)
     check('POST','/api/order-sources/{source_id}/runs/{run_id}/commit',importer)
-    for method,path in [('POST','/api/order-sources'),('PUT','/api/order-sources/{source_id}'),('DELETE','/api/order-sources/{source_id}'),('POST','/api/order-sources/{source_id}/action')]:
+    for method,path in [('POST','/api/order-sources'),('PUT','/api/order-sources/{source_id}'),('PUT','/api/order-sources/{source_id}/fields'),('DELETE','/api/order-sources/{source_id}'),('POST','/api/order-sources/{source_id}/action')]:
         with pytest.raises(HTTPException) as error:check(method,path,importer)
         assert error.value.status_code==403
         check(method,path,integrator)
@@ -272,3 +272,54 @@ def test_draft_api_key_generation_before_activation(ingestion):
                             json={'version': current['version'], 'action': 'activate', 'run_id': rid})
     assert activated.status_code == 200 and activated.json()['has_credential'] is True
     assert client.post('/api/order-ingestion', headers=headers, json=payload).status_code == 200
+
+
+def test_selected_fields_ignore_invalid_values_and_require_recipient(ingestion):
+    client,db,*_=ingestion;src,headers=api_source(ingestion)
+    path=f"/api/order-sources/{src['id']}/fields"
+    assert client.put(path,json={'version':src['version'],'excluded_fields':['delivery_address']}).status_code==422
+    response=client.put(path,json={'version':src['version'],'excluded_fields':['requested_date','weight_kg','time_from']})
+    assert response.status_code==200,response.text
+    configured=response.json()
+    assert configured['status']=='active' and configured['has_credential']
+    assert 'time_to' in configured['excluded_fields']
+    assert client.put(path,json={'version':src['version'],'excluded_fields':[]}).status_code==409
+    row={'external_id':'SELECT','number':'SELECT','recipient_name':'Recipient','delivery_address':'Via Roma 1','requested_date':'invalid','weight_kg':'bad','time_to':'bad','tail_lift':False}
+    response=client.post('/api/order-ingestion',headers=headers,json={'batch_id':'selected','orders':[row]})
+    assert response.status_code==200,response.text
+    order=db.query(Order).one()
+    assert order.requested_date is None and order.operational_data['weight_kg'] is None
+    assert order.operational_data['tail_lift'] is False
+    response=client.post('/api/order-ingestion',headers=headers,json={'batch_id':'missing-recipient','orders':[{'external_id':'MISSING','number':'MISSING'}]})
+    assert response.status_code==422 and db.query(Order).count()==1
+    assert client.get('/api/order-sources').json()['items'][0]['excluded_fields']==configured['excluded_fields']
+
+
+def test_file_preferences_invalidate_preview_and_allow_missing_excluded_column(ingestion):
+    client,db,*_=ingestion;src,rid=setup(ingestion)
+    mapping={**src['mapping'],'requested_date':'AbsentDate'}
+    src=client.put(f"/api/order-sources/{src['id']}",json={'version':src['version'],'mapping':mapping}).json()
+    src=client.put(f"/api/order-sources/{src['id']}/fields",json={'version':src['version'],'excluded_fields':['requested_date']}).json()
+    path=f"/api/order-sources/{src['id']}/runs/{rid}"
+    assert client.post(path+'/preview').json()['status']=='preview_ready'
+    src=client.post(f"/api/order-sources/{src['id']}/action",json={'version':src['version'],'action':'activate','run_id':rid}).json()
+    src=client.put(f"/api/order-sources/{src['id']}/fields",json={'version':src['version'],'excluded_fields':['requested_date','packages']}).json()
+    assert client.post(path+'/commit',json={'confirm':True}).status_code==409
+    assert client.post(path+'/preview').json()['status']=='preview_ready'
+    assert client.post(path+'/commit',json={'confirm':True}).status_code==200
+    assert db.query(Order).one().operational_data['packages'] is None
+
+
+def test_excluding_date_on_reimport_clears_constraint_preserves_original(ingestion):
+    client,db,*_=ingestion;src,headers=api_source(ingestion)
+    row={'external_id':'DATE','number':'DATE','recipient_name':'Name','delivery_address':'Via Roma 1','requested_date':'2099-01-16'}
+    assert client.post('/api/order-ingestion',headers=headers,json={'batch_id':'before-choice','orders':[row]}).status_code==200
+    original=deepcopy(db.query(Order).one().original_payload)
+    src=client.put(f"/api/order-sources/{src['id']}/fields",json={'version':src['version'],'excluded_fields':['requested_date']}).json()
+    assert db.query(Order).one().requested_date is not None
+    assert client.post('/api/order-ingestion',headers=headers,json={'batch_id':'after-choice','orders':[row]}).status_code==200
+    order=db.query(Order).one()
+    assert order.requested_date is None and order.original_payload==original
+    src=client.put(f"/api/order-sources/{src['id']}/fields",json={'version':src['version'],'excluded_fields':[]}).json()
+    row['requested_date']='invalid'
+    assert client.post('/api/order-ingestion',headers=headers,json={'batch_id':'enabled-again','orders':[row]}).status_code==422

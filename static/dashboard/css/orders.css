@@ -1438,3 +1438,7 @@ body[data-gf-surface="workspace"] #app:has(#tab-ordine-fonte:not(.hidden)) .orde
 #orderPlanningProceedMessage{white-space:pre-wrap;margin:0 0 12px;padding:12px;border-radius:10px;background:#fff7ed;color:#9a3412;text-align:left}
 #orderPlanningProceedMessage[data-state="loading"]{background:#eff6ff;color:#1d4ed8}
 @media(max-width:600px){.order-import-wrap{padding:12px}#orderImportWizard{padding:16px}.order-import-steps{gap:10px}.order-import-steps li{font-size:12px;gap:4px}.order-import-counts{gap:14px}}
+
+.order-field-options { margin: 16px 0; padding: 16px; border: 1px solid var(--line); border-radius: 12px; }
+.orders-page .order-field-choice { display: flex; align-items: center; gap: 8px; }
+.orders-page .order-field-choice input { display: inline-block; width: auto; flex: 0 0 auto; }

@@ -153,6 +153,17 @@ def main():
                     page.get_by_role('button',name='Continua',exact=True).click()
                     page.locator('#orderImportCommit').wait_for(state='visible')
                     assert not page.locator('#orderImportMapping').evaluate('(n)=>n.open')
+                    date_choice=page.locator('[data-choice="import"][value="requested_date"]')
+                    assert page.locator('[data-choice="import"][value="recipient_name"]').is_disabled()
+                    date_choice.uncheck()
+                    assert page.locator('#orderImportCommit').count()==0
+                    page.get_by_role('button',name='Aggiorna anteprima',exact=True).first.click()
+                    page.locator('#orderImportCommit').wait_for(state='visible')
+                    assert 'Data consegna' not in page.locator('#orderImportPreview').inner_text()
+                    date_choice.check()
+                    page.get_by_role('button',name='Aggiorna anteprima',exact=True).first.click()
+                    page.locator('#orderImportCommit').wait_for(state='visible')
+
                     assert page.locator('#orderImportWizard script').count()==0
                     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 2')
                     page.screenshot(path=str(output/f'import-review-{width}.png'),full_page=True)
@@ -207,6 +218,9 @@ def main():
                     page.locator('#sourceName').fill('API gestionale')
                     page.get_by_role('button',name='Crea fonte e prosegui',exact=True).click()
                     page.locator('#tab-ordine-fonte').wait_for(state='visible')
+                    page.locator('[data-choice="api"][value="requested_date"]').uncheck()
+                    page.get_by_role('button',name='Salva dati da importare',exact=True).click()
+                    page.wait_for_function("document.getElementById('sourceFieldsMessage').textContent.includes('Scelte salvate')")
                     page.get_by_role('button',name='Esegui test',exact=False).click()
                     page.wait_for_function("document.getElementById('sourceConnectionResult').textContent.includes('verificato')")
                     page.once('dialog',lambda dialog:dialog.accept())
