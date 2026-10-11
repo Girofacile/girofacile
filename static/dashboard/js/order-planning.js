@@ -16,12 +16,15 @@
   const metadata=row=>Object.fromEntries(['order_refs','order_stop_key','order_numbers','order_operational'].filter(k=>row?.[k]!==undefined).map(k=>[k,row[k]]));
   function controls(){
     const panel=el('ordersSelection');if(!panel)return;
-    panel.hidden=!allowed();
-    el('ordersSelectionCount').textContent=`${state.order_ids.length} ordini selezionati. La selezione è salvata per il tuo account, anche se cambi pagina o esci.`;
-    el('ordersGoPlanning').textContent=`Vai alla pianificazione (${state.order_ids.length} ordini)`;
-    el('ordersGoPlanning').disabled=busy || !state.order_ids.length || !!state.routes.length;
+    const count=state.order_ids.length;
+    panel.hidden=!allowed() || (!count && !state.routes.length);
+    const countLabel=count===1?'1 ordine selezionato':`${count} ordini selezionati`;
+    el('ordersSelectionCount').textContent=countLabel;
+    const dot=panel.querySelector('.orders-selection-count-dot');if(dot)dot.textContent=String(count);
+    el('ordersGoPlanning').textContent=`Vai alla pianificazione (${count})`;
+    el('ordersGoPlanning').disabled=busy || !count || !!state.routes.length;
     el('ordersSelectionRoutes').innerHTML=state.routes.map(r=>`<button class="btn-secondary" onclick="GFOrderPlanning.openRoute(${r.id})">Apri ${r.status==='bozza'?'bozza':'giro'} #${r.id} · ${esc(r.name||'Giro consegne')}</button>`).join('');
-    if(state.routes.length)el('ordersSelectionCount').textContent+=' Alcuni ordini sono già riservati: apri il giro oppure svuota la selezione per prepararne un’altra.';
+    if(state.routes.length)el('ordersSelectionCount').textContent=countLabel+' · alcuni ordini sono già riservati';
     panel.querySelectorAll('.order-selection-action').forEach(button=>button.disabled=busy);
   }
   async function loadSelection(){
@@ -29,10 +32,17 @@
     await flush();
     state=await api('/api/order-planning/selection');controls();
   }
+  function isSelected(id){return state.order_ids.includes(id);}
   function checkbox(order){
     if(!allowed())return '';
-    const checked=state.order_ids.includes(order.id);
+    const checked=isSelected(order.id);
     return `<input class="order-select" type="checkbox" aria-label="Seleziona ordine ${esc(order.number)}" ${checked?'checked':''} ${busy || (order.status!=='pronto'&&!checked)?'disabled':''} onchange="GFOrderPlanning.select(${order.id},this.checked)">`;
+  }
+  function headerCheckbox(items=[]){
+    if(!allowed())return '';
+    const eligible=items.filter(order=>order.status==='pronto'||isSelected(order.id));
+    const checked=eligible.length>0&&eligible.every(order=>isSelected(order.id));
+    return `<input class="order-select order-select-all" type="checkbox" aria-label="Seleziona ordini pronti di questa pagina" ${checked?'checked':''} ${busy||!eligible.length?'disabled':''} onchange="GFOrderPlanning.selectPage(this.checked)">`;
   }
   function filters(){return Object.fromEntries([['ordersSearch','q'],['ordersStatus','status'],['ordersSource','source_id'],['ordersFrom','date_from'],['ordersTo','date_to']].map(([id,key])=>[key,el(id).value?(key==='source_id'?Number(el(id).value):el(id).value):null]).filter(([,value])=>value!==null));}
   async function change(action,order_ids=[]){
@@ -53,6 +63,30 @@
     const button=el('openCustomerStepBtn');if(button){button.textContent=proceeding?'Caricamento fermate…':'Prosegui';button.disabled=proceeding;}
     if(el('customerPlanningStep'))el('customerPlanningStep').classList.add('hidden');
     if(el('routePlanningGateHint')&&routePlanningDetailsCompleteV68())el('routePlanningGateHint').textContent=loadedStops?'Fermate degli ordini caricate. Verifica i dati e premi Calcola percorso.':'Completa la configurazione e premi Prosegui per caricare gli ordini selezionati.';
+  }
+  async function cancelSelected(){
+    if(busy||!allowed()||!state.order_ids.length)return;
+    const ids=[...state.order_ids];
+    const label=ids.length===1?'l’ordine selezionato':`${ids.length} ordini selezionati`;
+    if(!confirm(`Eliminare ${label}? Verranno annullati e resteranno disponibili nello storico per garantire la tracciabilità.`))return;
+    busy=true;controls();
+    let cancelled=0,skipped=0;
+    try{
+      for(const id of ids){
+        try{
+          const order=await GFOrders.request('/api/orders/'+id);
+          if(!['nuovo','da_verificare','pronto'].includes(order.status)||order.assignments?.length){skipped++;continue;}
+          await GFOrders.request(`/api/orders/${id}/status`,{method:'POST',body:JSON.stringify({version:order.version,status:'annullato'})});
+          cancelled++;
+        }catch(error){skipped++;}
+      }
+      await flush();
+      state=await api('/api/order-planning/selection',{method:'PUT',body:JSON.stringify({version:state.version,action:'clear',order_ids:[],filters:{}})});
+      enabled=false;loadedStops=false;dirty=false;gate();
+      await GFOrders.load();
+      el('ordersMessage').textContent=skipped?`${cancelled} ordini annullati. ${skipped} non erano eliminabili perché già assegnati o non modificabili.`:`${cancelled} ordini annullati.`;
+    }catch(e){el('ordersMessage').textContent=e.message||'Non è stato possibile eliminare gli ordini selezionati.';}
+    finally{busy=false;controls();GFOrders.refreshSelection?.();}
   }
   async function go(){
     try{
@@ -116,7 +150,7 @@
   }
   document.addEventListener('change',e=>{if(ids.includes(e.target.id)||e.target.name==='energyPriceMode')changed();});
   window.addEventListener('beforeunload',e=>{if(enabled&&(dirty||saving)){e.preventDefault();e.returnValue='';}});
-  window.GFOrderPlanning={loadSelection,checkbox,controls,metadata,describe,active:()=>enabled,gate,go,proceed,changed,flush,beforeCalculate,leave,
+  window.GFOrderPlanning={loadSelection,checkbox,headerCheckbox,isSelected,controls,metadata,describe,active:()=>enabled,gate,go,proceed,changed,flush,beforeCalculate,leave,cancelSelected,
     regroup(){if(loadedStops && !confirm('Rigenerare le fermate dai dati degli ordini? Le modifiche alle sole fermate verranno sostituite.')){el('orderGroupOrders').checked=!el('orderGroupOrders').checked;return;}changed();proceed(true);},
     save:()=>flush().catch(e=>message(e.message)),
     select:(id,checked)=>change(checked?'add':'remove',[id]),
