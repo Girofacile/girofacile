@@ -50,3 +50,26 @@ test('account password change stays inline and separate from profile save', () =
   assert.ok(saveBlock);
   assert.doesNotMatch(saveBlock[0],/new_password|profileCurrentPassword|profileNewPassword/);
 });
+
+
+test('order source onboarding explains samples and protects regenerated API keys', () => {
+  const path='static/dashboard/js/order-sources.js';
+  const src=readFileSync(path,'utf8');
+  new vm.Script(src,{filename:path});
+  assert.match(src,/Da dove arrivano i dati di prova/);
+  assert.match(src,/il tuo fornitore dovrà configurare/);
+  assert.match(src,/source-advanced/);
+  assert.match(src,/Scarica istruzioni per il tuo gestionale/);
+  assert.match(src,/function downloadInstructions\(\)/);
+  assert.match(src,/function copyToken\(\)/);
+  assert.match(src,/navigator\.clipboard\.writeText/);
+  assert.match(src,/Genera una nuova chiave/);
+  assert.match(src,/Disattiva chiave/);
+  assert.match(src,/In attesa del primo ordine/);
+  assert.match(src,/La chiave esistente non può essere riletta/);
+  assert.match(src,/s\.status==='active'/);
+  const docs=src.match(/function downloadInstructions\(\)\{([\s\S]*?)\n  \}\n  async function copyToken/);
+  assert.ok(docs,'Technician instructions must be downloadable independently from the secret');
+  assert.match(docs[1],/Authorization: Bearer \[INCOLLARE_QUI_LA_CHIAVE/);
+  assert.doesNotMatch(docs[1],/sourceToken|credentialBox|clipboard\.writeText/);
+});
