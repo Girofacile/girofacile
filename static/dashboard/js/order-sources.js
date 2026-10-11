@@ -144,6 +144,9 @@
     const keyButton=canManage&&ownerUser
       ?`<button class="btn-secondary source-api-key-generate" onclick="GFOrderSources.action('rotate')">${s.has_credential?'Genera nuova chiave':'Genera chiave API'}</button>`
       :'';
+    const revokeButton=canManage&&ownerUser&&s.has_credential&&s.status==='active'
+      ?'<button class="source-danger-outline" type="button" onclick="GFOrderSources.action(\'revoke\')">Disattiva chiave</button>'
+      :'';
     const keyState=s.has_credential
       ?'<div class="source-api-key-configured"><span class="source-api-key-status-icon" aria-hidden="true">✓</span><div><strong>Chiave API configurata</strong><p>Per sicurezza la chiave esistente non può essere visualizzata. Generane una nuova solo se devi sostituirla.</p></div></div>'
       :'<div class="source-api-key-configured is-missing"><span class="source-api-key-status-icon" aria-hidden="true">!</span><div><strong>Nessuna chiave generata</strong><p>Genera una chiave e copiala subito: verrà mostrata una sola volta.</p></div></div>';
@@ -159,7 +162,7 @@
           <section class="source-api-card source-api-key-card">
             <div class="source-api-card-head">
               <div class="source-api-card-title"><span class="source-api-card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="8" cy="15" r="3"/><path d="m10.5 12.5 7-7M15 5h4v4M11 14l2 2"/></svg></span><h2>Chiave API</h2></div>
-              ${keyButton}
+              ${keyButton}${revokeButton}
             </div>
             <div class="source-api-card-body">
               ${keyState}
@@ -172,7 +175,7 @@
               <div class="source-api-card-title"><span class="source-api-card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m8 9-3 3 3 3M16 9l3 3-3 3M14 5l-4 14"/></svg></span><h2>Verifica connessione</h2></div>
             </div>
             <div class="source-api-test-body">
-              <div><strong>Verifica con un ordine di esempio</strong><p>GiroFacile ha già preparato un payload di prova. Esegui il test per controllare la formattazione e attivare definitivamente la fonte senza dover scrivere codice.</p><div id="sourceConnectionResult"></div></div>
+              <div><strong>Verifica con un ordine di esempio</strong><p>GiroFacile ha già preparato un payload di prova. Esegui il test per controllare la formattazione e attivare definitivamente la fonte senza dover scrivere codice.</p><div id="sourceConnectionResult"></div><button class="btn-secondary" type="button" onclick="GFOrderSources.downloadInstructions()">Scarica istruzioni per il tuo gestionale</button></div>
               <button class="btn-primary source-api-test-button" onclick="GFOrderSources.testConnection()"><span aria-hidden="true">➤</span> Esegui test</button>
             </div>
           </section>
