@@ -6,7 +6,7 @@
   const names={external_id:'Identificativo esterno *',number:'Numero ordine *',external_customer_id:'Codice cliente',recipient_name:'Destinatario',delivery_address:'Indirizzo consegna',requested_date:'Data richiesta',time_from:'Dalle',time_to:'Alle',weight_kg:'Peso (kg)',packages:'Colli',pallets:'Pallet',volume_m3:'Volume (m³)',tail_lift:'Sponda',pallet_truck:'Transpallet',ztl:'ZTL',requirements:'Requisiti',notes:'Note',items:'Articoli (JSON)'};
   const statuses={draft:'Da configurare',active:'Attiva',paused:'In pausa',removed:'Rimossa',uploaded:'Campione caricato',preview_ready:'Anteprima valida',preview_invalid:'Anteprima con errori',completed:'Acquisizione completata',failed:'Acquisizione fallita',source_activate:'Fonte attivata',source_pause:'Fonte sospesa',source_resume:'Fonte riattivata',source_remove:'Fonte rimossa',source_rotate:'Credenziale generata',source_revoke:'Credenziale revocata'};
   const actions={new:'Nuovo',updated:'Da aggiornare',unchanged:'Invariato'};
-  const sourceStatusClass=status=>status==='active'?'is-active':status==='paused'?'is-paused':status==='removed'?'is-removed':'';
+  const sourceStatusClass=status=>status==='active'?'is-active':status==='paused'?'is-paused':status==='draft'?'is-draft':status==='removed'?'is-removed':'';
   const sourceStatusBadge=status=>`<span class="orders-source-status ${sourceStatusClass(status)}">${esc(statuses[status]||status)}</span>`;
   let sources=[],fields=[],offset=0,current=null,staged=null,verified=null,busy=false;
   const example={orders:[{external_id:'ORD-001',number:'ORD-001',external_customer_id:'CLI-001',recipient_name:'Esempio cliente',delivery_address:'Via Roma 1, Milano',packages:3,weight_kg:12.5,tail_lift:false}]};
@@ -46,7 +46,7 @@
     el('sourceWizard').scrollIntoView({block:'start'});
   }
   function create(event){event.preventDefault();if(el('sourceKind').value==='custom'){el('sourceMessage').textContent='Collegamento personalizzato da predisporre con il fornitore: comunica nome e versione del software, esempio anonimo del tracciato, identificativi stabili e frequenza degli invii. Le modalità operative disponibili sono file o API standard: selezionane una per proseguire.';return;}return task(async()=>{current=await request('',post({name:el('sourceName').value,kind:el('sourceKind').value,software:el('sourceSoftware').value}));staged=verified=null;if(current.kind==='api'){await refresh();current=sources.find(s=>s.id===current.id)||current;showTab('ordine-fonte');detailPage();window.scrollTo({top:0,behavior:'auto'});}else{editor();await refresh();}});}
-  function sourceSubtitle(s){return s.kind==='api'?'Genera la chiave API e collega gli ordini.':'Gestione fonte file e validazione degli ordini importati.';}
+  function sourceSubtitle(s){return s.kind==='api'?'Genera la chiave API e verifica il collegamento per attivare la fonte.':'Gestione fonte file e validazione degli ordini importati.';}
   function sourceTopActions(s,mobile=false){
     if(!manage())return '';
     const toggle=s.status==='active'
@@ -131,22 +131,99 @@
     }
   }
 
+  function apiConnectionSample(){
+    const base=example.orders[0], row={...base};
+    for(const [field,external] of Object.entries(current?.mapping||{})){
+      if(field in base && external)row[external]=base[field];
+    }
+    return {orders:[row]};
+  }
+  function apiDetailPage(s){
+    const ownerUser=owner(), canManage=manage();
+    const keyButton=canManage&&ownerUser
+      ?`<button class="btn-secondary source-api-key-generate" onclick="GFOrderSources.action('rotate')">${s.has_credential?'Genera nuova chiave':'Genera chiave API'}</button>`
+      :'';
+    const keyState=s.has_credential
+      ?'<div class="source-api-key-configured"><span class="source-api-key-status-icon" aria-hidden="true">✓</span><div><strong>Chiave API configurata</strong><p>Per sicurezza la chiave esistente non può essere visualizzata. Generane una nuova solo se devi sostituirla.</p></div></div>'
+      :'<div class="source-api-key-configured is-missing"><span class="source-api-key-status-icon" aria-hidden="true">!</span><div><strong>Nessuna chiave generata</strong><p>Genera una chiave e copiala subito: verrà mostrata una sola volta.</p></div></div>';
+    const waiting=!s.last_success;
+    const receptionTitle=waiting?'In attesa del primo ordine':'Ricezione attiva';
+    const receptionCopy=waiting
+      ?(s.status==='active'?'La fonte è pronta: compariranno qui i dati non appena arriverà il primo ordine valido.':'La fonte si attiverà dopo la verifica del collegamento.')
+      :`Ultima acquisizione riuscita: ${esc(new Date(s.last_success+'Z').toLocaleString('it-IT'))}.`;
+    el('orderSourceDetail').innerHTML=`
+      <div class="source-api-settings-layout">
+        <div class="source-api-settings-main">
+          <section class="source-api-card source-api-key-card">
+            <div class="source-api-card-head">
+              <div class="source-api-card-title"><span class="source-api-card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="8" cy="15" r="3"/><path d="m10.5 12.5 7-7M15 5h4v4M11 14l2 2"/></svg></span><h2>Chiave API</h2></div>
+              ${keyButton}
+            </div>
+            <div class="source-api-card-body">
+              ${keyState}
+              <div id="sourceCredential"></div>
+            </div>
+          </section>
+
+          <section class="source-api-card source-api-test-card">
+            <div class="source-api-card-head">
+              <div class="source-api-card-title"><span class="source-api-card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m8 9-3 3 3 3M16 9l3 3-3 3M14 5l-4 14"/></svg></span><h2>Verifica connessione</h2></div>
+            </div>
+            <div class="source-api-test-body">
+              <div><strong>Verifica con un ordine di esempio</strong><p>GiroFacile ha già preparato un payload di prova. Esegui il test per controllare la formattazione e attivare definitivamente la fonte senza dover scrivere codice.</p><div id="sourceConnectionResult"></div></div>
+              <button class="btn-primary source-api-test-button" onclick="GFOrderSources.testConnection()"><span aria-hidden="true">➤</span> Esegui test</button>
+            </div>
+          </section>
+        </div>
+
+        <aside class="source-api-card source-api-reception-card">
+          <div class="source-api-card-head">
+            <div class="source-api-card-title"><span class="source-api-card-icon is-muted" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19V14M9 19V10M14 19V7M19 19V4"/></svg></span><h2>Stato ricezione</h2></div>
+          </div>
+          <div class="source-api-reception-body">
+            <div class="source-api-reception-symbol ${waiting?'is-waiting':'is-ready'}" aria-hidden="true">${waiting?'<svg viewBox="0 0 24 24"><path d="M7 3h10M7 21h10M8 3c0 5 8 5 8 9s-8 4-8 9M16 3c0 5-8 5-8 9s8 4 8 9"/></svg>':'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="m8.5 12 2.3 2.3 4.8-5"/></svg>'}<i></i></div>
+            <strong class="source-api-reception-title">${receptionTitle}</strong>
+            <p>${receptionCopy}</p>
+            <div class="source-api-order-count"><span>Ordini acquisiti</span><strong>${Number(s.order_count||0)}</strong></div>
+          </div>
+        </aside>
+      </div>`;
+  }
   function detailPage(){
     hideSecret();const s=current;if(!s)return;
     syncSourceTopbar();
     const mobile=el('orderSourceMobileHead');
     if(mobile)mobile.innerHTML=`<div class="order-source-mobile-copy"><button class="btn-secondary" onclick="GFOrderSources.back()" aria-label="Torna alle fonti">←</button><h1>${esc(s.name)} ${sourceStatusBadge(s.status)}</h1><p>${esc(sourceSubtitle(s))}</p></div>${sourceTopActions(s,true)}`;
-    const sample=s.kind==='api'
-      ?`<div class="source-guide"><span class="source-guide-kicker">PASSO 1 · ORDINE DI PROVA</span><h3>Da dove arrivano i dati di prova?</h3><p>Il riquadro qui sotto contiene <strong>un esempio già preparato da GiroFacile</strong>: non devi cercarlo né copiarlo dal tuo gestionale.</p><ol><li>Premi <strong>Carica esempio per la verifica</strong>.</li><li>Controlla i campi riconosciuti e premi <strong>Verifica anteprima</strong>.</li><li>Per ricevere ordini veri, il tuo fornitore dovrà configurare l'invio alla nostra API con la chiave generata qui accanto.</li></ol><p>Se il tuo software non supporta le API, torna alle fonti e scegli <strong>File Excel o CSV</strong>.</p></div><details class="source-advanced" id="sourceTechnicalSample"><summary>Mostra o modifica il campione JSON <span>Configurazione avanzata</span></summary><p>Solo per chi conosce JSON: puoi sostituire l'esempio con i dati preparati dal tecnico del gestionale. Questa prova non importa ordini.</p><div class="source-code-editor"><div class="source-code-toolbar"><i></i><i></i><i></i><span>campione.json</span></div><textarea id="sourceSample" rows="14" spellcheck="false" aria-label="Campione JSON">${esc(JSON.stringify(example,null,2))}</textarea></div></details>`
-      :`<div class="source-file-drop"><label>File CSV o XLSX<input id="sourceFile" type="file" accept=".csv,.xlsx"></label><p>Un solo foglio, senza formule. Mantieni i codici con zeri iniziali come testo.</p></div>`;
+    if(s.kind==='api'){apiDetailPage(s);return;}
+    const sample=`<div class="source-file-drop"><label>File CSV o XLSX<input id="sourceFile" type="file" accept=".csv,.xlsx"></label><p>Un solo foglio, senza formule. Mantieni i codici con zeri iniziali come testo.</p></div>`;
     const sampleFooter=s.status==='paused'
       ?'<div class="source-paused-notice">La fonte è in pausa. Riattivala per caricare e verificare nuovi campioni.</div>'
-      :`<div class="source-sample-footer"><span class="source-sample-note"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>Il campione verifica la compatibilità: non importa ordini.</span><button class="btn-primary" onclick="GFOrderSources.upload()">${s.kind==='api'?'Carica esempio per la verifica':'Carica campione'}</button></div>`;
-    const apiBody=s.kind==='api'
-      ?`<div class="source-delivery-body"><div class="source-guide"><span class="source-guide-kicker">PASSO 2 · COLLEGAMENTO</span><h3>Come ricevere automaticamente gli ordini</h3><p>Non devi recuperare una chiave dal tuo gestionale: <strong>la chiave è generata da GiroFacile</strong> per autorizzare l'invio.</p><ol><li>Scarica le istruzioni da inviare al tecnico o fornitore software.</li><li>Genera una chiave e copiala subito: viene mostrata una sola volta.</li><li>Fai inviare un ordine di prova e controlla la prima ricezione riuscita.</li></ol></div><details class="source-advanced"><summary>Indirizzo API e dettagli tecnici <span>Per il tecnico</span></summary><span class="source-delivery-label">API Endpoint</span><div class="source-endpoint"><span class="source-endpoint-method">POST</span><code>/api/order-ingestion</code></div><p class="source-delivery-help">Aggiungi un <code>batch_id</code> univoco e invia ordini completi, non modifiche parziali.</p></details><div class="source-doc-actions"><button class="btn-secondary" onclick="GFOrderSources.downloadInstructions()">↓ Scarica istruzioni per il tuo gestionale</button></div><div class="source-delivery-divider"></div><span class="source-delivery-label">Stato ricezione ordini</span><div class="source-sync-state"><strong>${s.last_success?'Ultimo invio riuscito':'In attesa del primo ordine'}</strong><p>${s.last_success?esc(new Date(s.last_success+'Z').toLocaleString('it-IT')):'La fonte può essere attiva anche se il gestionale non ha ancora inviato ordini.'}</p><p>Stato fonte: ${esc(statuses[s.status]||s.status)} · Ordini acquisiti: ${s.order_count}</p></div><div class="source-delivery-divider"></div><span class="source-delivery-label">Chiave API generata da GiroFacile</span><div class="source-credential-state ${s.has_credential?'is-ready':'is-missing'}"><span class="source-credential-icon">${s.has_credential?'●':'!'}</span><div><strong>${s.has_credential?'Chiave già generata':'Chiave mancante'}</strong><span>${s.has_credential?'La chiave esistente non può essere riletta: puoi generarne una nuova.':'Genera una chiave per autorizzare il gestionale.'}</span></div></div>${manage()&&owner()&&s.status==='active'?`<div class="source-credential-actions"><button class="btn-secondary" onclick="GFOrderSources.action('rotate')">${s.has_credential?'Genera una nuova chiave':'Genera chiave API'}</button>${s.has_credential?'<button class="source-danger-outline" onclick="GFOrderSources.action(\'revoke\')">Disattiva chiave</button>':''}</div>`:'<p class="source-delivery-help">'+(!owner()?'Solo il titolare può gestire le chiavi.':'Attiva o riattiva la fonte prima di generare una chiave.')+'</p>'}<div id="sourceCredential"></div></div>`
-      :`<div class="source-delivery-body"><span class="source-delivery-label">Importazione file</span><p>Carica un campione CSV o XLSX, associa le colonne e verifica l’anteprima. Gli ordini vengono inseriti solo dopo la conferma finale.</p><div class="source-delivery-divider"></div><span class="source-delivery-label">Stato fonte</span><div class="source-credential-state ${s.status==='active'?'is-ready':'is-missing'}"><span class="source-credential-icon">●</span><div><strong>${esc(statuses[s.status]||s.status)}</strong><span>${s.status==='active'?'Pronta per nuove importazioni.':'Riattiva la fonte per acquisire nuovi file.'}</span></div></div></div>`;
-    el('orderSourceDetail').innerHTML=`<div class="order-source-detail-grid"><section class="order-source-panel"><div class="order-source-panel-head"><h2><svg viewBox="0 0 24 24"><path d="m8 9-3 3 3 3M16 9l3 3-3 3M14 5l-4 14"/></svg>${s.kind==='api'?'Verifica un ordine di prova':'Carica un campione'}</h2><p>Massimo 2 MB e 1000 ordini. L’anteprima è disponibile per 24 ore.</p></div>${sample}${sampleFooter}</section><aside class="order-source-panel"><div class="order-source-panel-head"><h2><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="5" rx="1"/><rect x="4" y="14" width="16" height="5" rx="1"/></svg>${s.kind==='api'?'Invio dal gestionale':'Acquisizione file'}</h2><p>${s.kind==='api'?'Configura il tuo gestionale per inviare gli ordini a questo endpoint.':'Controlla lo stato e prepara una nuova importazione.'}</p></div>${apiBody}</aside><div class="source-detail-workflow"><div id="sourceMapping"></div><div id="sourceReport"></div><div id="sourceConfirm" class="page-actions"></div></div></div>`;
-    prioritizeApiKey(s);
+      :'<div class="source-sample-footer"><span class="source-sample-note"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>Il campione verifica la compatibilità: non importa ordini.</span><button class="btn-primary" onclick="GFOrderSources.upload()">Carica campione</button></div>';
+    const fileBody=`<div class="source-delivery-body"><span class="source-delivery-label">Importazione file</span><p>Carica un campione CSV o XLSX, associa le colonne e verifica l’anteprima. Gli ordini vengono inseriti solo dopo la conferma finale.</p><div class="source-delivery-divider"></div><span class="source-delivery-label">Stato fonte</span><div class="source-credential-state ${s.status==='active'?'is-ready':'is-missing'}"><span class="source-credential-icon">●</span><div><strong>${esc(statuses[s.status]||s.status)}</strong><span>${s.status==='active'?'Pronta per nuove importazioni.':'Riattiva la fonte per acquisire nuovi file.'}</span></div></div></div>`;
+    el('orderSourceDetail').innerHTML=`<div class="order-source-detail-grid"><section class="order-source-panel"><div class="order-source-panel-head"><h2><svg viewBox="0 0 24 24"><path d="m8 9-3 3 3 3M16 9l3 3-3 3M14 5l-4 14"/></svg>Carica un campione</h2><p>Massimo 2 MB e 1000 ordini. L’anteprima è disponibile per 24 ore.</p></div>${sample}${sampleFooter}</section><aside class="order-source-panel"><div class="order-source-panel-head"><h2><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="5" rx="1"/><rect x="4" y="14" width="16" height="5" rx="1"/></svg>Acquisizione file</h2><p>Controlla lo stato e prepara una nuova importazione.</p></div>${fileBody}</aside><div class="source-detail-workflow"><div id="sourceMapping"></div><div id="sourceReport"></div><div id="sourceConfirm" class="page-actions"></div></div></div>`;
+  }
+  function testConnection(){
+    if(busy||!current||current.kind!=='api')return;
+    return task(async()=>{
+      staged=await request('/'+current.id+'/sample',post(apiConnectionSample()));
+      const usableCurrent=current.mapping&&Object.keys(current.mapping).length&&Object.values(current.mapping).every(value=>staged.headers.includes(value));
+      const selected=usableCurrent?current.mapping:staged.suggested_mapping;
+      if(JSON.stringify(Object.entries(selected).sort())!==JSON.stringify(Object.entries(current.mapping||{}).sort())){
+        current=await request('/'+current.id,{method:'PUT',body:JSON.stringify({version:current.version,mapping:selected})});
+      }
+      verified=await request(`/${current.id}/runs/${staged.run_id}/preview`,post({}));
+      if(verified.status!=='preview_ready')throw new Error('Il test ha rilevato dati non validi. Controlla la configurazione della fonte e riprova.');
+      if(current.status!=='active'){
+        const activated=await request('/'+current.id+'/action',post({version:current.version,action:'activate',run_id:staged.run_id}));
+        current=activated;
+      }
+      await refresh();
+      current=sources.find(item=>item.id===current.id)||current;
+      staged=verified=null;
+      detailPage();
+      const result=el('sourceConnectionResult');
+      if(result)result.innerHTML='<div class="source-api-test-success"><span aria-hidden="true">✓</span><div><strong>Collegamento verificato</strong><p>Il formato è valido e la fonte è pronta a ricevere ordini dal gestionale.</p></div></div>';
+    });
   }
   function open(id){
     if(busy)return;
@@ -211,7 +288,7 @@
       else{staged=verified=null;editor();}
       if(secret){
         const credentialBox=el('sourceCredential');
-        if(credentialBox){credentialBox.innerHTML='<div class="source-new-token" role="region" aria-label="Nuova chiave API"><strong>Nuova chiave generata</strong><p>Copia la chiave adesso e conservala in modo sicuro: non sarà più mostrata. La chiave precedente è disattivata.</p><label>Chiave riservata<textarea id="sourceToken" readonly rows="3" autocomplete="off" spellcheck="false"></textarea></label><button class="btn-primary" type="button" onclick="GFOrderSources.copyToken()">Copia la chiave</button><p id="sourceTokenMessage" role="status"></p></div>';el('sourceToken').value=secret;}
+        if(credentialBox){credentialBox.innerHTML='<div class="source-new-token" role="region" aria-label="Nuova chiave API"><div class="source-new-token-heading"><span aria-hidden="true">✓</span><div><strong>Nuova chiave generata con successo</strong><p>Copia la chiave adesso e conservala in modo sicuro. Non sarà più mostrata.</p></div></div><div class="source-token-row"><input id="sourceToken" readonly autocomplete="off" spellcheck="false" aria-label="Chiave API generata"><button class="btn-primary" type="button" onclick="GFOrderSources.copyToken()">▣&nbsp; Copia</button></div><p id="sourceTokenMessage" role="status"></p></div>';el('sourceToken').value=secret;}
       }
       await refresh();
     });
@@ -273,5 +350,5 @@
     el('sourceHistory').innerHTML='<h2>Storico della fonte</h2>'+data.items.map(r=>`<p>${esc(new Date(r.created_at+'Z').toLocaleString('it-IT'))} · ${statuses[r.status]||esc(r.status)} ${button('Report #'+r.id,`report(${id},${r.id},0,'sourceHistoryReport')`)}</p>`).join('')+`<div class="page-actions">${next?button('Precedenti',`history(${id},${next-20})`):''}${next+20<data.total?button('Successivi',`history(${id},${next+20})`):''}</div><div id="sourceHistoryReport"></div>`;el('sourceHistory').scrollIntoView({block:'start'});
   });}
   function report(sid,rid,next,target){return task(async()=>renderReport(await request(`/${sid}/runs/${rid}?offset=${next}`),target,sid));}
-  window.GFOrderSources={load,hideSecret,downloadInstructions,copyToken,unavailable,invalidate,createForm,create,open,back,deleteSource,upload,preview,commit,action,history,report,page(delta){offset=Math.max(0,offset+delta*50);load();}};
+  window.GFOrderSources={load,hideSecret,downloadInstructions,copyToken,unavailable,invalidate,createForm,create,open,back,deleteSource,testConnection,upload,preview,commit,action,history,report,page(delta){offset=Math.max(0,offset+delta*50);load();}};
 })();
