@@ -4,6 +4,7 @@ const WORKSPACE_TOPBAR_META = {
   "ordine-dettaglio": {title:"Dettaglio ordine",subtitle:"Dati operativi e storico delle correzioni."},
   "ordine-modifica": {title:"Modifica ordine",subtitle:"Completa le informazioni disponibili."},
   "ordini-collegamenti": {title:"Collega i tuoi ordini",subtitle:"Importa un file o prepara l’invio dal tuo gestionale. Controlla sempre l’anteprima prima di attivare una fonte."},
+  "ordine-fonte": {title:"Fonte ordini",subtitle:"Gestione fonte e validazione dei dati in ingresso."},
   collaboratori: {title:"Collaboratori",subtitle:"Gestisci accessi personali e funzioni assegnate."},
   dashboard: {
     title: "Dashboard",
@@ -50,6 +51,8 @@ function syncWorkspaceTopbar(name){
   const subtitle=document.getElementById("workspacePageSubtitle");
   if(title) title.textContent=meta.title;
   if(subtitle) subtitle.textContent=meta.subtitle;
+  const badge=document.getElementById("workspacePageBadge");
+  if(badge){badge.hidden=true;badge.textContent="";badge.className="order-source-topbar-badge";}
   if(document.body){
     document.body.classList.toggle("gf-company-page-active",company);
   }
@@ -67,7 +70,8 @@ function showTab(name){
   const tab = document.getElementById("tab-"+name);
   if(tab) tab.classList.remove("hidden");
   document.querySelectorAll(".nav-item").forEach(x=>x.classList.remove("active"));
-  document.querySelectorAll(`.nav-item[data-tab="${name}"]`).forEach(x=>x.classList.add("active"));
+  const navTab=["ordine-fonte","ordine-dettaglio","ordine-modifica","ordini-collegamenti"].includes(name)?"ordini":name;
+  document.querySelectorAll(`.nav-item[data-tab="${navTab}"]`).forEach(x=>x.classList.add("active"));
   syncWorkspaceTopbar(name);
 
   if(name==="dashboard"){ loadDashboardHome(); if(!window.GFCompanyAccess || GFCompanyAccess.can("notifications.read")) loadNotificationsV30(false); if(!featureLockedForTab("chat-autisti") && (!window.GFCompanyAccess || GFCompanyAccess.can("chat.read"))) loadDriverChatNotifications(); }
