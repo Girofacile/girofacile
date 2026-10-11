@@ -130,7 +130,7 @@ def _mark_verified(db, order, proof, address, actor, method):
 def auto_verify_linked_customer(db, order, actor):
     """No geocoding API call for a destination already verified in the customer registry."""
     from .order_customers import effective
-    if order.status not in EDITABLE or address_is_verified(db, order):
+    if order.status not in EDITABLE or (address_is_verified(db, order) and order.status == 'pronto'):
         return False
     values, _ = effective(db, order)
     address = values.get('delivery_address')
@@ -186,7 +186,7 @@ def transition(db, order, data, actor):
 
 
 
-def verify_multiple(db, user_id, actor, *, after_id=0, limit=10, q='', source_id=None, date_from=None, date_to=None):
+def verify_multiple(db, user_id, actor, *, after_id=0, limit=10, q='', source_id=None, status=None, date_from=None, date_to=None):
     """Small resumable chunks prevent long web requests and keep geocoding usage bounded."""
     limit = max(1, min(10, limit))
     query = db.query(Order.id).filter(Order.user_id == user_id, Order.id > after_id,
@@ -199,6 +199,8 @@ def verify_multiple(db, user_id, actor, *, after_id=0, limit=10, q='', source_id
             Order.delivery_address.ilike('%' + escaped + '%', escape='\\')))
     if source_id is not None:
         query = query.filter(Order.source_id == source_id)
+    if status is not None:
+        query = query.filter(Order.status == status)
     if date_from:
         query = query.filter(Order.requested_date >= date_from)
     if date_to:
