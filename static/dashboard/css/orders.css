@@ -1756,8 +1756,11 @@ body[data-gf-surface="workspace"] #app:has(#tab-ordine-fonte:not(.hidden)) .orde
 }
 #tab-ordini .orders-number-cell{
   max-width:210px;
+  overflow:hidden;
   color:#4e6b91!important;
   font-size:9.5px!important;
+  text-overflow:ellipsis;
+  white-space:nowrap;
 }
 #tab-ordini .orders-recipient-cell strong{
   color:#0f172a;
