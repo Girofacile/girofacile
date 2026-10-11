@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from ..core.dependencies import current_user
 from ..database import get_db
 from ..models import User
-from ..order_models import OrderSource,OrderImportRun
+from ..order_models import OrderSource,OrderImportRun,Order,CustomerSourceMapping
 from ..schemas.order_sources import SourceCreate,SourceUpdate,SourceAction,RunConfirm,Acquisition,MAX_BYTES,MAX_ROWS
 from ..services import order_ingestion as service
 from ..services.order_files import read_file,suggestions,FIELDS,validate_rows
@@ -37,7 +37,7 @@ def list_sources(offset:int=Query(0,ge=0),db:Session=Depends(get_db),user:User=D
 @router.post('/api/order-sources',status_code=201)
 def create_source(data:SourceCreate,db:Session=Depends(get_db),user:User=Depends(current_user)):
     db.query(User).filter_by(id=user.id).with_for_update().one()
-    if db.query(OrderSource).filter_by(user_id=user.id).count()>=100: raise HTTPException(422,'Limite tecnico: massimo 100 fonti per azienda.')
+    if db.query(OrderSource).filter(OrderSource.user_id==user.id,OrderSource.kind.in_(('file','api'))).count()>=100: raise HTTPException(422,'Limite tecnico: massimo 100 fonti per azienda.')
     src=OrderSource(user_id=user.id,key='source-'+str(uuid4()),name=data.name,kind=data.kind,status='draft',configuration={'software':data.software,'mapping':{}})
     db.add(src);db.commit();return service.public_source(db,src)
 
@@ -81,6 +81,24 @@ def source_action(source_id:int,data:SourceAction,request:Request,response:Respo
     db.commit()
     response.headers['Cache-Control']='no-store'
     return service.public_source(db,src)|({'credential':secret} if secret else {})
+
+
+@router.delete('/api/order-sources/{source_id}')
+def delete_source(source_id:int,version:int=Query(...,ge=1),db:Session=Depends(get_db),user:User=Depends(current_user)):
+    """Delete the connected source configuration while preserving already acquired orders."""
+    src=service.source(db,user.id,source_id,lock=True)
+    if src.version!=version: raise HTTPException(409,'Fonte modificata: ricarica la pagina.')
+    orders=db.query(Order).filter_by(user_id=user.id,source_id=src.id)
+    if orders.first() is not None:
+        archive=OrderSource(user_id=user.id,key='archive-'+str(uuid4()),name=src.name,kind='archive',status='removed',
+                            configuration={'archived':True},credential_hash=None)
+        db.add(archive);db.flush()
+        orders.update({'source_id':archive.id},synchronize_session=False)
+    db.query(CustomerSourceMapping).filter_by(user_id=user.id,source_id=src.id).delete(synchronize_session=False)
+    db.query(OrderImportRun).filter_by(user_id=user.id,source_id=src.id).delete(synchronize_session=False)
+    db.delete(src)
+    db.commit()
+    return {'deleted':True,'id':source_id}
 
 
 @router.post('/api/order-sources/{source_id}/upload')
