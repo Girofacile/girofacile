@@ -243,12 +243,17 @@ def verify_multiple(db, user_id, actor, *, after_id=0, limit=10, q='', source_id
         query = query.filter(Order.requested_date <= date_to)
     identifiers = [id_ for (id_,) in query.order_by(Order.id).limit(limit).all()]
     result = {'processed': len(identifiers), 'verified': 0, 'already_verified': 0,
-        'failed': 0, 'issues': [], 'next_after': identifiers[-1] if identifiers else after_id,
+        'failed': 0, 'skipped': 0, 'issues': [], 'next_after': identifiers[-1] if identifiers else after_id,
         'has_more': len(identifiers) == limit}
     proofs = {}
     for oid in identifiers:
         try:
             order = get_order(db, user_id, oid, lock=True)
+            # An order may be assigned or cancelled while this batch is running.
+            if (order.status not in EDITABLE or db.query(RouteOrderAssignment.id)
+                    .filter_by(user_id=user_id, order_id=oid).first()):
+                result['skipped'] += 1
+                continue
             if address_is_verified(db, order):
                 if order.status != 'pronto':
                     order.status = 'pronto'
