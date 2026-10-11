@@ -2,6 +2,12 @@
 (function(){
   'use strict';
   const labels={nuovo:'Nuovo',da_verificare:'Da verificare',pronto:'Pronto',assegnato:'Assegnato',in_consegna:'In consegna',consegnato:'Consegnato',non_consegnato:'Non consegnato',annullato:'Annullato'};
+  const metricMeta={
+    nuovo:{label:'Nuovi ordini',icon:'<path d="M5 8h14l-1 11H6L5 8Z"/><path d="M8 8a4 4 0 0 1 8 0"/>',cls:'nuovo'},
+    da_verificare:{label:'Da verificare',icon:'<circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/>',cls:'da_verificare'},
+    pronto:{label:'Pronti per la pianificazione',icon:'<circle cx="12" cy="12" r="8"/><path d="m8.5 12 2.2 2.2 4.8-5"/>',cls:'pronto'},
+    assegnato:{label:'Già assegnati a un giro',icon:'<path d="M3 7h11v9H3z"/><path d="M14 10h4l3 3v3h-7"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/>',cls:'assegnato'}
+  };
   const fields={number:'Numero ordine',recipient_name:'Destinatario',delivery_address:'Indirizzo di consegna',requested_date:'Data richiesta',time_from:'Fascia oraria: dalle',time_to:'Alle',weight_kg:'Peso (kg)',packages:'Colli',pallets:'Pallet',volume_m3:'Volume (m³)',tail_lift:'Sponda',pallet_truck:'Transpallet',ztl:'ZTL',requirements:'Requisiti operativi',notes:'Note'};
   const numeric=['weight_kg','packages','pallets','volume_m3'], bools=['tail_lift','pallet_truck','ztl'];
   let page=1, sequence=0, detailSequence=0, view='table', current=null, last=null, timer;
@@ -9,6 +15,13 @@
   const can=key=>!window.GFCompanyAccess || GFCompanyAccess.can(key);
   const display=value=>value===null || value===undefined || value===''?'Non indicato':value===true?'Sì':value===false?'No':String(value);
   const date=value=>value?new Date(value+'Z').toLocaleString('it-IT'):'Non indicata';
+  const statusBadge=status=>`<span class="orders-status orders-status-${esc(status)}"><i aria-hidden="true"></i>${esc(labels[status]||status)}</span>`;
+  function syncActionPlacement(){
+    const actions=el('ordersPageActions'), inline=el('ordersInlineActionsHost'), topbar=el('ordersTopbarActionsHost');
+    if(!actions||!inline||!topbar)return;
+    const target=window.matchMedia('(min-width: 821px)').matches?topbar:inline;
+    if(actions.parentNode!==target)target.appendChild(actions);
+  }
   function error(id,err){el(id).textContent=err.message || String(err);}
   async function orderApi(path,options={}){
     const response=await fetch(path,{...options,headers:{'Content-Type':'application/json',...(options.headers||{})}});
@@ -21,6 +34,7 @@
     return data;
   }
   async function load(reset=false){
+    syncActionPlacement();
     if(reset)page=1;
     const request=++sequence, params=new URLSearchParams({page,page_size:25,sort:el('ordersSort').value,direction:el('ordersDirection').value});
     for(const [id,key] of [['ordersSearch','q'],['ordersStatus','status'],['ordersSource','source_id'],['ordersFrom','date_from'],['ordersTo','date_to']])if(el(id).value)params.set(key,el(id).value);
@@ -34,7 +48,7 @@
       if(window.GFOrderPlanning)await GFOrderPlanning.loadSelection();
       if(request!==sequence)return;
       last=data;
-      el('ordersMetrics').innerHTML=Object.entries({nuovo:'Nuovi ordini',da_verificare:'Da verificare',pronto:'Pronti per la pianificazione',assegnato:'Già assegnati a un giro'}).map(([key,label])=>`<div class="panel"><span>${label}</span><strong>${data.metrics[key]}</strong></div>`).join('');
+      el('ordersMetrics').innerHTML=Object.entries(metricMeta).map(([key,meta])=>`<article class="orders-metric-card"><div class="orders-metric-copy"><span class="orders-metric-label">${meta.label}</span><strong class="orders-metric-value">${Number(data.metrics[key]||0)}</strong></div><span class="orders-metric-icon is-${meta.cls}" aria-hidden="true"><svg viewBox="0 0 24 24">${meta.icon}</svg></span></article>`).join('');
       const selected=el('ordersSource').value;
       el('ordersSource').innerHTML='<option value="">Tutte le fonti</option>'+data.sources.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');el('ordersSource').value=selected;
       render();el('ordersMessage').textContent=data.total?`${data.total} ordini trovati`:'Nessun ordine trovato. Crea un ordine oppure modifica i filtri.';
@@ -43,9 +57,12 @@
   }
   function render(){
     if(!last)return;
-    const open=o=>`<button class="btn-secondary" onclick="GFOrders.open(${o.id})" aria-label="Apri ordine ${esc(o.number)}">Apri</button>`;
-    if(view==='cards')el('ordersResults').innerHTML='<div class="orders-grid">'+last.items.map(o=>`<article class="panel">${window.GFOrderPlanning?.checkbox(o)||""}<h2>${esc(o.number)}</h2><p>${esc(display(o.recipient_name))}</p><p>${esc(display(o.delivery_address))}</p><p>${labels[o.status]} · ${esc(o.source_name)}</p><p>Data richiesta: ${esc(display(o.requested_date))}</p><p>${esc(display(o.packages))} colli · ${esc(display(o.weight_kg))} kg</p>${open(o)}</article>`).join('')+'</div>';
-    else el('ordersResults').innerHTML='<div class="tableWrap"><table data-gf-responsive="cards"><thead><tr>'+['Seleziona','Numero ordine','Ricevuto','Cliente / destinatario','Indirizzo','Data richiesta','Colli / kg','Provenienza','Stato','Azioni'].map(x=>`<th scope="col">${x}</th>`).join('')+'</tr></thead><tbody>'+last.items.map(o=>`<tr><td>${window.GFOrderPlanning?.checkbox(o)||""}</td><td>${esc(o.number)}</td><td>${esc(date(o.received_at))}</td><td>${esc(display(o.recipient_name))}</td><td>${esc(display(o.delivery_address))}</td><td>${esc(display(o.requested_date))}</td><td>${esc(display(o.packages))} / ${esc(display(o.weight_kg))}</td><td>${esc(o.source_name)}</td><td>${labels[o.status]}</td><td>${open(o)}</td></tr>`).join('')+'</tbody></table></div>';
+    const open=o=>`<button class="btn-secondary orders-open-button" onclick="GFOrders.open(${o.id})" aria-label="Apri ordine ${esc(o.number)}">Apri</button>`;
+    if(view==='cards'){
+      el('ordersResults').innerHTML='<div class="orders-grid">'+last.items.map(o=>`<article class="panel orders-order-card"><div class="orders-order-card-head"><span>${window.GFOrderPlanning?.checkbox(o)||""}</span>${statusBadge(o.status)}</div><h2>${esc(o.number)}</h2><p><strong>${esc(display(o.recipient_name))}</strong></p><p>${esc(display(o.delivery_address))}</p><p>${esc(o.source_name)} · ${esc(display(o.requested_date))}</p><p>${esc(display(o.packages))} colli · ${esc(display(o.weight_kg))} kg</p>${open(o)}</article>`).join('')+'</div>';
+    }else{
+      el('ordersResults').innerHTML='<div class="orders-table-shell tableWrap"><table class="orders-table" data-gf-responsive="cards"><thead><tr><th scope="col" class="orders-select-col" aria-label="Seleziona"></th><th scope="col">Numero ordine</th><th scope="col">Ricevuto</th><th scope="col">Cliente / destinatario</th><th scope="col">Indirizzo</th><th scope="col">Data richiesta</th><th scope="col">Colli / kg</th><th scope="col">Provenienza</th><th scope="col">Stato</th><th scope="col">Azioni</th></tr></thead><tbody>'+last.items.map(o=>`<tr><td class="orders-select-cell">${window.GFOrderPlanning?.checkbox(o)||""}</td><td class="orders-number-cell">${esc(o.number)}</td><td>${esc(date(o.received_at))}</td><td class="orders-recipient-cell"><strong>${esc(display(o.recipient_name))}</strong></td><td class="orders-address-cell">${esc(display(o.delivery_address))}</td><td>${esc(display(o.requested_date))}</td><td>${esc(display(o.packages))} / ${esc(display(o.weight_kg))}</td><td class="orders-source-cell">${esc(o.source_name)}</td><td>${statusBadge(o.status)}</td><td>${open(o)}</td></tr>`).join('')+'</tbody></table></div>';
+    }
     el('ordersPage').textContent=`Pagina ${page} di ${Math.max(1,Math.ceil(last.total/25))}`;
     el('ordersPrevious').disabled=page<=1;el('ordersNext').disabled=page*25>=last.total;
     for(const mode of ['table','cards'])el('ordersView-'+mode).setAttribute('aria-pressed',String(mode===view));
@@ -97,5 +114,6 @@
     try{current=await orderApi(`/api/orders/${current.id}/${action}`,{method:'POST',body:JSON.stringify({version:current.version,...(status?{status}:{})})});detail();el('orderActionMessage').textContent='Ordine aggiornato.';}
     catch(err){error('orderActionMessage',err);}finally{buttons.forEach(b=>b.disabled=false);}
   }
-  window.GFOrders={request:orderApi,apply(value){current=value;detail();},currentItems:()=>last?.items||[],refreshSelection:render,load,open,newOrder,edit,save,action,cancel(){if(confirm('Annullare questo ordine? L’originale e lo storico saranno conservati.'))action('status','annullato');},search(){clearTimeout(timer);timer=setTimeout(()=>load(true),300);},page(delta){page+=delta;load();},view(mode){view=mode;render();}};
+  window.addEventListener('resize',syncActionPlacement);
+  window.GFOrders={request:orderApi,apply(value){current=value;detail();},currentItems:()=>last?.items||[],refreshSelection:render,load,open,newOrder,edit,save,action,cancel(){if(confirm('Annullare questo ordine? L’originale e lo storico saranno conservati.'))action('status','annullato');},search(){clearTimeout(timer);timer=setTimeout(()=>load(true),300);},page(delta){page+=delta;load();},view(mode){view=mode;render();},syncActions:syncActionPlacement};
 })();

@@ -1,27 +1,399 @@
-/* Orders reuse the dashboard panels, controls and typography. */
-.orders-page .orders-toolbar,.orders-page .page-actions,.orders-page .orders-pagination{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-.orders-page .orders-toolbar{margin-bottom:18px;align-items:end}
-.orders-page .orders-toolbar label{flex:1;min-width:140px}
-.orders-page .orders-toolbar input,.orders-page .orders-toolbar select{width:100%}
-.orders-page .orders-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}
-.orders-page .orders-metrics .panel{margin:0;padding:18px}
-.orders-page .orders-metrics strong{display:block;font-size:26px;margin-top:8px}
+/* Orders: directory-style interface aligned with the GiroFacile workspace. */
+.orders-page{
+  --orders-ink:var(--gf-color-text,#1e293b);
+  --orders-muted:var(--gf-color-muted,#64748b);
+  --orders-line:var(--gf-color-border,#e2e8f0);
+  --orders-bg:var(--gf-color-bg,#f8fafc);
+  --orders-surface:var(--gf-color-surface,#fff);
+  min-width:0;
+}
+.orders-page .page-actions,.orders-page .orders-pagination{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.orders-page>.page-title-row{margin-bottom:24px}
+.orders-page>.page-title-row>div:first-child{min-width:0}
+.orders-page label{display:block;color:#334155;font-size:12px;font-weight:600}
+.orders-page label input,.orders-page label select,.orders-page label textarea{display:block;width:100%;margin-top:7px}
+.orders-page input,.orders-page select,.orders-page textarea{
+  border:1px solid #d8e1ec;
+  border-radius:8px;
+  background:#fff;
+  color:var(--orders-ink);
+  box-shadow:none;
+}
+.orders-page input:focus,.orders-page select:focus,.orders-page textarea:focus{
+  border-color:#94a3b8;
+  outline:none;
+  box-shadow:0 0 0 3px rgba(15,23,42,.05);
+}
+
+/* The same action node is moved here on desktop, preserving the IDs used by the UI. */
+.orders-topbar-actions-host{display:none}
+body[data-gf-surface="workspace"] #app:has(#tab-ordini:not(.hidden)) .orders-topbar-actions-host{
+  display:flex;
+  align-items:center;
+  flex:0 0 auto;
+}
+.orders-topbar-actions-host .page-actions{display:flex;align-items:center;gap:10px;flex-wrap:nowrap}
+.orders-topbar-actions-host .btn-primary,
+.orders-topbar-actions-host .btn-secondary{
+  min-height:38px;
+  padding:0 14px;
+  border-radius:8px;
+  font-size:13px;
+  white-space:nowrap;
+  box-shadow:none;
+}
+.orders-topbar-actions-host .btn-secondary{
+  border:1px solid #d8e1ec;
+  background:#fff;
+  color:#334155;
+}
+.orders-topbar-actions-host .btn-secondary:hover{background:#f8fafc;border-color:#cbd5e1}
+.orders-topbar-actions-host .btn-primary{background:var(--gf-color-primary,#2563eb);color:#fff}
+
+/* KPI cards */
+.orders-page .orders-metrics{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:16px;
+  margin:0 0 24px;
+}
+.orders-page .orders-metric-card{
+  min-width:0;
+  min-height:124px;
+  margin:0;
+  padding:20px;
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+  border:1px solid var(--orders-line);
+  border-radius:12px;
+  background:var(--orders-surface);
+  box-shadow:var(--gf-shadow-sm,0 1px 2px rgba(16,24,40,.05));
+}
+.orders-page .orders-metric-copy{min-width:0}
+.orders-page .orders-metric-label{
+  display:block;
+  color:#52637b;
+  font-size:13px;
+  font-weight:500;
+  line-height:1.35;
+}
+.orders-page .orders-metric-value{
+  display:block;
+  margin-top:28px;
+  color:#0f172a;
+  font-size:29px;
+  font-weight:750;
+  line-height:1;
+  letter-spacing:-.03em;
+  font-variant-numeric:tabular-nums;
+}
+.orders-page .orders-metric-icon{
+  width:38px;
+  height:38px;
+  flex:0 0 38px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+}
+.orders-page .orders-metric-icon svg{
+  width:18px;
+  height:18px;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.8;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+.orders-page .orders-metric-icon.is-nuovo{background:#eef4ff;color:#2563eb}
+.orders-page .orders-metric-icon.is-da_verificare{background:#fff7e8;color:#d97706}
+.orders-page .orders-metric-icon.is-pronto{background:#ecfdf5;color:#059669}
+.orders-page .orders-metric-icon.is-assegnato{background:#f6efff;color:#9333ea}
+
+/* Search and filters */
+.orders-page .orders-filter-panel{
+  margin:0 0 20px;
+  padding:0;
+  overflow:hidden;
+  border:1px solid var(--orders-line);
+  border-radius:12px;
+  background:#fff;
+  box-shadow:var(--gf-shadow-sm,0 1px 2px rgba(16,24,40,.05));
+}
+.orders-page .orders-search-block{
+  padding:18px 18px 16px;
+  border-bottom:1px solid #edf1f6;
+}
+.orders-page .orders-search-block label{font-size:12px}
+.orders-page .orders-search-input-wrap{position:relative;margin-top:7px}
+.orders-page .orders-search-input-wrap svg{
+  position:absolute;
+  left:12px;
+  top:50%;
+  width:17px;
+  height:17px;
+  transform:translateY(-50%);
+  fill:none;
+  stroke:#94a3b8;
+  stroke-width:2;
+  stroke-linecap:round;
+  pointer-events:none;
+}
+.orders-page .orders-search-input-wrap input{
+  height:38px;
+  margin:0;
+  padding:0 12px 0 38px;
+  background:#fbfcfe;
+  font-size:13px;
+}
+.orders-page .orders-filters{width:100%}
+.orders-page .orders-filters summary{
+  min-height:46px;
+  padding:14px 18px 8px;
+  display:flex;
+  align-items:center;
+  gap:7px;
+  color:#172033;
+  cursor:pointer;
+  font-size:13px;
+  font-weight:650;
+  list-style:none;
+  user-select:none;
+}
+.orders-page .orders-filters summary::-webkit-details-marker{display:none}
+.orders-page .orders-filters summary::before{
+  content:"";
+  width:0;
+  height:0;
+  border-left:5px solid transparent;
+  border-right:5px solid transparent;
+  border-top:6px solid #334155;
+  transition:transform .15s ease;
+}
+.orders-page .orders-filters:not([open]) summary::before{transform:rotate(-90deg)}
+.orders-page .orders-filter-grid{
+  display:grid;
+  grid-template-columns:repeat(6,minmax(0,1fr));
+  gap:12px;
+  padding:0 18px 18px;
+}
+.orders-page .orders-filter-grid input,
+.orders-page .orders-filter-grid select{
+  height:36px;
+  padding:0 11px;
+  background:#fbfcfe;
+  font-size:12px;
+}
+
+/* List header + view switch */
+.orders-page .orders-list-toolbar{
+  min-height:38px;
+  margin:0 0 12px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+}
+.orders-page .orders-view-switch{
+  display:inline-flex;
+  align-items:center;
+  padding:3px;
+  border:1px solid #dbe3ee;
+  border-radius:8px;
+  background:#eef2f7;
+}
+.orders-page .orders-view-switch .btn-secondary{
+  min-height:30px;
+  padding:0 13px;
+  border:0;
+  border-radius:6px;
+  background:transparent;
+  color:#64748b;
+  font-size:12px;
+  font-weight:600;
+  box-shadow:none;
+}
+.orders-page .orders-view-switch .btn-secondary[aria-pressed="true"]{
+  background:#fff;
+  color:#2563eb;
+  box-shadow:0 1px 2px rgba(15,23,42,.08);
+}
+.orders-page #ordersMessage{
+  margin:0 0 0 auto;
+  color:#52637b;
+  font-size:12px;
+  font-weight:600;
+  text-align:right;
+}
+
+/* Table */
+.orders-page .orders-table-shell{
+  max-width:100%;
+  overflow:auto;
+  border:1px solid var(--orders-line);
+  border-radius:12px;
+  background:#fff;
+  box-shadow:var(--gf-shadow-sm,0 1px 2px rgba(16,24,40,.05));
+}
+.orders-page .orders-table{
+  width:100%;
+  min-width:1080px;
+  border-collapse:collapse;
+  background:#fff;
+  table-layout:auto;
+}
+.orders-page .orders-table th{
+  height:46px;
+  padding:0 14px;
+  border:0;
+  border-bottom:1px solid var(--orders-line);
+  background:#fbfcfe;
+  color:#60728b;
+  font-size:10.5px;
+  font-weight:700;
+  letter-spacing:.035em;
+  text-align:left;
+  text-transform:uppercase;
+  white-space:nowrap;
+}
+.orders-page .orders-table td{
+  max-width:340px;
+  padding:13px 14px;
+  border:0;
+  border-bottom:1px solid #edf1f6;
+  color:#1e293b;
+  font-size:12px;
+  line-height:1.35;
+  vertical-align:middle;
+  overflow-wrap:anywhere;
+}
+.orders-page .orders-table tbody tr:last-child td{border-bottom:0}
+.orders-page .orders-table tbody tr:hover td{background:#fbfcfe}
+.orders-page .orders-select-col,.orders-page .orders-select-cell{width:46px;text-align:center}
+.orders-page .orders-number-cell{
+  max-width:220px;
+  color:#526a89!important;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;
+  font-size:10.5px!important;
+  white-space:nowrap;
+}
+.orders-page .orders-recipient-cell strong{color:#0f172a;font-size:12px;font-weight:650}
+.orders-page .orders-address-cell{color:#60728b!important}
+.orders-page .orders-source-cell{color:#60728b!important}
+.orders-page .orders-status{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  min-height:24px;
+  padding:3px 9px;
+  border:1px solid #dbe3ee;
+  border-radius:999px;
+  background:#f8fafc;
+  color:#52637b;
+  font-size:11px;
+  font-weight:650;
+  white-space:nowrap;
+}
+.orders-page .orders-status i{
+  width:5px;
+  height:5px;
+  flex:0 0 5px;
+  border-radius:50%;
+  background:currentColor;
+}
+.orders-page .orders-status-da_verificare{border-color:#f4d36c;background:#fffaf0;color:#b76a00}
+.orders-page .orders-status-pronto{border-color:#a7e6ca;background:#f1fbf6;color:#087f5b}
+.orders-page .orders-status-nuovo{border-color:#cbdcf9;background:#f5f8ff;color:#2563eb}
+.orders-page .orders-status-assegnato,
+.orders-page .orders-status-in_consegna{border-color:#dac6f3;background:#faf7ff;color:#7e22ce}
+.orders-page .orders-status-consegnato{border-color:#a7e6ca;background:#f1fbf6;color:#087f5b}
+.orders-page .orders-status-non_consegnato,
+.orders-page .orders-status-annullato{border-color:#fecaca;background:#fff5f5;color:#b42335}
+.orders-page .orders-open-button{
+  min-height:30px;
+  padding:0 11px;
+  border:1px solid #cfd9e6;
+  border-radius:6px;
+  background:#fff;
+  color:#334155;
+  font-size:11px;
+  box-shadow:none;
+}
+.orders-page .orders-open-button:hover{background:#f8fafc;border-color:#b8c5d5}
+
+/* Card view */
 .orders-page .orders-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
-.orders-page .orders-grid article{min-width:0;overflow-wrap:anywhere}
-.orders-page .orders-pagination{justify-content:flex-end;margin-top:16px}
+.orders-page .orders-order-card{min-width:0;padding:18px;overflow-wrap:anywhere}
+.orders-page .orders-order-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.orders-page .orders-order-card h2{margin:0 0 8px;color:#0f172a;font-size:15px;overflow-wrap:anywhere}
+.orders-page .orders-order-card p{margin:5px 0;color:#64748b;font-size:12px;line-height:1.45}
+.orders-page .orders-order-card .orders-open-button{margin-top:12px}
+
+/* Pagination, selection and forms */
+.orders-page .orders-pagination{
+  justify-content:flex-end;
+  margin-top:14px;
+  color:#64748b;
+  font-size:12px;
+}
+.orders-page .orders-pagination .btn-secondary{min-height:34px;padding:0 12px;border-radius:7px}
+.orders-page #ordersSelection{margin-top:18px;padding:16px}
+.orders-page #ordersSelectionCount{margin:0 0 10px;color:#334155;font-weight:650}
 .orders-page .orders-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
-.orders-page label{display:block;font-size:13px;font-weight:600}
-.orders-page label input,.orders-page label select,.orders-page label textarea{display:block;width:100%;margin-top:6px}
 .orders-page .orders-error{color:#ac2133;white-space:pre-wrap}
 .orders-page pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px}
-.orders-page button{min-height:44px}
 .orders-page td{overflow-wrap:anywhere;max-width:340px}
 .orders-page .orders-detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .orders-page .orders-detail-grid dd{margin:4px 0 12px;overflow-wrap:anywhere}
 .orders-page .orders-detail-grid dt{color:#687589;font-size:12px}
-@media(max-width:1000px){.orders-page .orders-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.orders-page .orders-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:600px){.orders-page .orders-grid,.orders-page .orders-form-grid,.orders-page .orders-detail-grid{grid-template-columns:1fr}.orders-page .page-actions{width:100%}.orders-page .page-actions button{flex:1}.orders-page .orders-toolbar label{min-width:100%;}.orders-page .orders-metrics .panel{padding:12px}.orders-page .tableWrap{overflow-x:auto}}
+.orders-page .orders-toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:end;margin-bottom:18px}
+.orders-page .orders-toolbar label{flex:1;min-width:140px}
+.orders-page .orders-toolbar input,.orders-page .orders-toolbar select{width:100%}
 
-.orders-page .orders-filters{flex-basis:100%}.orders-page .orders-filters summary{cursor:pointer;min-height:44px;padding:12px 0;font-weight:600}.orders-page .orders-filters .orders-toolbar{margin-top:12px}
+#sourceWizard,#sourceHistory{margin-top:20px;min-width:0}
+#sourceWizard .tableWrap{max-width:100%;overflow-x:auto}
+#sourceWizard table{min-width:540px}
+#sourceWizard textarea{max-width:100%}
+#sourceWizard .orders-form-grid{margin:18px 0}
+#sourceReport li,#sourceHistoryReport li{overflow-wrap:anywhere;margin:8px 0}
 
-#sourceWizard,#sourceHistory{margin-top:20px;min-width:0}#sourceWizard .tableWrap{max-width:100%;overflow-x:auto}#sourceWizard table{min-width:540px}#sourceWizard textarea{max-width:100%}#sourceWizard .orders-form-grid{margin:18px 0}#sourceReport li,#sourceHistoryReport li{overflow-wrap:anywhere;margin:8px 0}
+@media(min-width:821px){
+  #tab-ordini>.page-title-row{display:none!important}
+}
+@media(max-width:1180px){
+  .orders-page .orders-filter-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:1050px){
+  .orders-page .orders-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .orders-page .orders-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .orders-topbar-actions-host .page-actions{gap:7px}
+  .orders-topbar-actions-host .btn-primary,.orders-topbar-actions-host .btn-secondary{padding-inline:10px;font-size:12px}
+}
+@media(max-width:820px){
+  .orders-page>.page-title-row{display:flex;flex-direction:column;gap:14px;margin-bottom:18px}
+  .orders-page #ordersInlineActionsHost{width:100%}
+  .orders-page #ordersPageActions{width:100%}
+  .orders-page #ordersPageActions .btn-primary,.orders-page #ordersPageActions .btn-secondary{flex:1;justify-content:center;min-width:0}
+  .orders-page .orders-metrics{gap:10px;margin-bottom:16px}
+  .orders-page .orders-metric-card{min-height:108px;padding:15px}
+  .orders-page .orders-metric-value{margin-top:20px;font-size:25px}
+  .orders-page .orders-filter-panel{margin-bottom:14px}
+  .orders-page .orders-list-toolbar{margin-bottom:10px}
+  .orders-page .orders-table-shell{overflow-x:auto}
+  .orders-page .orders-pagination{justify-content:center}
+}
+@media(max-width:650px){
+  .orders-page .orders-filter-grid{grid-template-columns:1fr}
+  .orders-page .orders-grid,.orders-page .orders-form-grid,.orders-page .orders-detail-grid{grid-template-columns:1fr}
+  .orders-page .page-actions{width:100%}
+  .orders-page .orders-metrics{grid-template-columns:1fr}
+  .orders-page .orders-metric-card{min-height:96px}
+  .orders-page .orders-metric-value{margin-top:14px}
+  .orders-page .orders-search-block{padding:15px}
+  .orders-page .orders-filters summary{padding-inline:15px}
+  .orders-page .orders-filter-grid{padding:0 15px 15px}
+  .orders-page .orders-list-toolbar{align-items:stretch;flex-direction:column}
+  .orders-page #ordersMessage{margin:0;text-align:left}
+  .orders-page .orders-view-switch{align-self:flex-start}
+}
