@@ -44,13 +44,13 @@
 <!-- Shared GiroFacile design system; legacy sheets retain feature layout. -->
 <link rel="stylesheet" href="/static/design-system/tokens.css?v=ds_border_20261009">
 <link rel="stylesheet" href="/static/design-system/components.css?v=ds_20261007_legal_cleanup_4">
-<link rel="stylesheet" href="/static/design-system/layout.css?v=orders_topbar_20261011_1">
+<link rel="stylesheet" href="/static/design-system/layout.css?v=orders_sources_topbar_20261011_2">
 <link rel="stylesheet" href="/static/design-system/workspace.css?v=ds_20261007_planning_alignment_16">
 <link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007_reference_2">
 <link rel="stylesheet" href="/static/dashboard/css/login.css?v=login_preview_exact_20261007">
 <script src="/static/design-system/design-system.js?v=ds_20261007_reference_2" defer></script>
 <link rel="stylesheet" href="/static/dashboard/css/collaborators.css?v=invitations_20261009">
-<link rel="stylesheet" href="/static/dashboard/css/orders.css?v=orders_restyle_20261011_1">
+<link rel="stylesheet" href="/static/dashboard/css/orders.css?v=orders_sources_restyle_20261011_2">
 </head>
 <body data-gf-surface="workspace">
 
@@ -421,6 +421,7 @@
 
   <main class="main-area">
     <header class="topbar">
+      <button type="button" class="orders-connections-back-topbar" onclick="showTab('ordini')" aria-label="Torna agli ordini" title="Torna agli ordini"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/><path d="M9 12h10"/></svg></button>
       <div class="topbar-dashboard-title"><h1 id="workspacePageTitle">Dashboard</h1><p id="workspacePageSubtitle">Panoramica operativa delle consegne e dell’attività aziendale.</p></div><div class="topbar-spacer"></div>
 
       <div id="companySaveBar" class="company-save-bar hidden" role="status" aria-live="polite">
@@ -975,19 +976,46 @@
       <section id="tab-ordine-dettaglio" class="tab hidden gf-page orders-page"><button class="btn-secondary" onclick="showTab('ordini')">← Ordini</button><section id="orderDetail" class="panel"></section></section>
       <section id="tab-ordine-modifica" class="tab hidden gf-page orders-page"><button class="btn-secondary" onclick="showTab('ordini')">← Ordini</button><section class="panel"><h1 id="orderEditorTitle">Nuovo ordine</h1><p>Lascia vuote le informazioni non disponibili. Le correzioni conservano i dati originali e vengono registrate nello storico.</p><form onsubmit="GFOrders.save(event)"><div id="orderFormFields" class="orders-form-grid"></div><p id="orderEditorError" class="orders-error" role="alert"></p><button id="orderSave" class="btn-primary" type="submit">Salva ordine</button></form></section></section>
       <section id="tab-ordini-collegamenti" class="tab hidden gf-page orders-page">
-        <button class="btn-secondary" onclick="showTab('ordini')">← Ordini</button>
-        <div class="page-title-row"><div><h1>Collega i tuoi ordini</h1><p>Importa un file o prepara l'invio dal tuo gestionale. Controlla sempre l'anteprima prima di attivare una fonte.</p></div></div>
-        <p id="sourceMessage" role="status" class="orders-error"></p>
-        <div id="sourceCategories" class="orders-grid">
-          <article class="panel"><h2><span aria-hidden="true">▣</span> Gestionale aziendale</h2><p>File esportato o API standard. Un gestionale personalizzato richiede un adattatore tecnico.</p><button class="btn-primary" onclick="GFOrderSources.createForm('api')">Configura gestionale</button></article>
-          <article class="panel"><h2><span aria-hidden="true">▤</span> File Excel o CSV</h2><p>Carica, associa le colonne e verifica. Nessun ordine viene inserito senza conferma.</p><button class="btn-primary" onclick="GFOrderSources.createForm('file')">Nuova fonte file</button></article>
-          <article class="panel"><h2><span aria-hidden="true">▱</span> E-commerce</h2><p>Ricevi ordini dal tuo negozio online. Connettore dedicato non attivo.</p><button class="btn-secondary" onclick="GFOrderSources.unavailable('ecommerce')">Vedi le alternative</button></article>
-          <article class="panel"><h2><span aria-hidden="true">✉</span> Email</h2><p>Ricevi ordini tramite posta elettronica. Acquisizione email non attiva.</p><button class="btn-secondary" onclick="GFOrderSources.unavailable('email')">Vedi le alternative</button></article>
+        <div class="orders-connections-mobile-head">
+          <button class="btn-secondary" onclick="showTab('ordini')" aria-label="Torna agli ordini"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/><path d="M9 12h10"/></svg></button>
+          <div class="orders-connections-mobile-title"><h1>Collega i tuoi ordini</h1><p>Importa un file o prepara l'invio dal tuo gestionale. Controlla sempre l'anteprima prima di attivare una fonte.</p></div>
         </div>
-        <section id="sourceWizard" class="panel" hidden></section>
-        <h2>Le tue fonti</h2><div id="sourceList"></div>
-        <div class="page-actions"><button id="sourcePrevious" class="btn-secondary" onclick="GFOrderSources.page(-1)">Precedenti</button><span id="sourcePage"></span><button id="sourceNext" class="btn-secondary" onclick="GFOrderSources.page(1)">Successive</button></div>
-        <section id="sourceHistory" class="panel" hidden></section>
+        <div class="orders-connections-content">
+          <p id="sourceMessage" role="status" class="orders-error"></p>
+          <div id="sourceCategories" class="orders-source-options">
+            <article class="orders-source-option">
+              <span class="orders-source-option-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="5" rx="1"/><rect x="4" y="14" width="16" height="5" rx="1"/><path d="M8 7.5h.01M8 16.5h.01M16 7.5h2M16 16.5h2"/></svg></span>
+              <h2>Gestionale aziendale</h2>
+              <p>File esportato o API standard. Un gestionale personalizzato richiede un adattatore tecnico.</p>
+              <button class="btn-primary" onclick="GFOrderSources.createForm('api')">Configura gestionale</button>
+            </article>
+            <article class="orders-source-option">
+              <span class="orders-source-option-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v5h5"/><path d="M8.5 15h7M8.5 18h5"/></svg></span>
+              <h2>File Excel o CSV</h2>
+              <p>Carica, associa le colonne e verifica. Nessun ordine viene inserito senza conferma.</p>
+              <button class="btn-primary" onclick="GFOrderSources.createForm('file')">Nuova fonte file</button>
+            </article>
+            <article class="orders-source-option">
+              <span class="orders-source-option-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 5h2l2 11h10l2-8H6"/><circle cx="9" cy="19" r="1"/><circle cx="17" cy="19" r="1"/></svg></span>
+              <h2>E-commerce</h2>
+              <p>Ricevi ordini dal tuo negozio online. Connettore dedicato non attivo.</p>
+              <button class="btn-secondary" onclick="GFOrderSources.unavailable('ecommerce')">Vedi le alternative</button>
+            </article>
+            <article class="orders-source-option">
+              <span class="orders-source-option-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></svg></span>
+              <h2>Email</h2>
+              <p>Ricevi ordini tramite posta elettronica. Acquisizione email non attiva.</p>
+              <button class="btn-secondary" onclick="GFOrderSources.unavailable('email')">Vedi le alternative</button>
+            </article>
+          </div>
+          <section id="sourceWizard" class="panel" hidden></section>
+          <section class="orders-sources-directory" aria-labelledby="ordersSourcesTitle">
+            <h2 id="ordersSourcesTitle">Le tue fonti</h2>
+            <div id="sourceList"></div>
+            <div id="sourcePagination" class="page-actions orders-source-pagination"><button id="sourcePrevious" class="btn-secondary" onclick="GFOrderSources.page(-1)">Precedenti</button><span id="sourcePage"></span><button id="sourceNext" class="btn-secondary" onclick="GFOrderSources.page(1)">Successive</button></div>
+          </section>
+          <section id="sourceHistory" class="panel" hidden></section>
+        </div>
       </section>
       <section id="tab-clienti" class="tab hidden gf-directory-page">
         <div class="page-title-row customer-page-title gf-directory-title">
@@ -2068,7 +2096,7 @@
 <script src="/static/password-strength.js?v=password_policy_20261008_1"></script>
 <script src="/static/dashboard/js/collaborators.js?v=orders_20261010"></script>
 <script src="/static/dashboard/js/orders.js?v=orders_restyle_20261011_1"></script>
-<script src="/static/dashboard/js/order-sources.js?v=20261011_4"></script>
+<script src="/static/dashboard/js/order-sources.js?v=orders_sources_restyle_20261011_2"></script>
 <script src="/static/dashboard/js/order-customers.js?v=20261011_3"></script>
 <script src="/static/dashboard/js/core.js?v=orders_planning_20261010_2"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=orders_2"></script>

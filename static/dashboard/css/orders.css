@@ -397,3 +397,282 @@ body[data-gf-surface="workspace"] #app:has(#tab-ordini:not(.hidden)) .orders-top
   .orders-page #ordersMessage{margin:0;text-align:left}
   .orders-page .orders-view-switch{align-self:flex-start}
 }
+
+
+/* Orders connections: source setup page matching the orders workspace language. */
+.orders-connections-back-topbar{
+  display:none;
+  width:38px;
+  height:38px;
+  flex:0 0 38px;
+  place-items:center;
+  padding:0;
+  border:1px solid #dbe3ee;
+  border-radius:50%;
+  background:#fff;
+  color:#64748b;
+  cursor:pointer;
+  box-shadow:none;
+}
+.orders-connections-back-topbar svg{
+  width:18px;
+  height:18px;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.8;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+.orders-connections-back-topbar:hover{background:#f8fafc;color:#334155;border-color:#cbd5e1}
+body[data-gf-surface="workspace"] #app:has(#tab-ordini-collegamenti:not(.hidden)) .orders-connections-back-topbar{display:grid}
+
+#tab-ordini-collegamenti{
+  --source-line:var(--gf-color-border,#e2e8f0);
+  --source-muted:var(--gf-color-muted,#64748b);
+  --source-ink:var(--gf-color-text,#1e293b);
+}
+#tab-ordini-collegamenti .orders-connections-content{
+  width:min(1180px,100%);
+  margin:0 auto;
+}
+#tab-ordini-collegamenti>.orders-connections-mobile-head{
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+  margin-bottom:20px;
+}
+#tab-ordini-collegamenti>.orders-connections-mobile-head>.btn-secondary{
+  flex:0 0 auto;
+  width:38px;
+  height:38px;
+  min-height:38px;
+  display:grid;
+  place-items:center;
+  padding:0;
+  border-radius:50%;
+}
+#tab-ordini-collegamenti>.orders-connections-mobile-head>.btn-secondary svg{
+  width:18px;
+  height:18px;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.8;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+#tab-ordini-collegamenti .orders-connections-mobile-title h1{margin:0 0 4px}
+#tab-ordini-collegamenti .orders-connections-mobile-title p{margin:0;color:var(--source-muted);font-size:13px;line-height:1.45}
+#tab-ordini-collegamenti #sourceMessage{
+  margin:0 0 14px;
+  font-size:12px;
+}
+
+#tab-ordini-collegamenti .orders-source-options{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:18px;
+  margin:0 0 38px;
+}
+#tab-ordini-collegamenti .orders-source-options[hidden]{display:none!important}
+#tab-ordini-collegamenti .orders-source-option{
+  min-width:0;
+  min-height:236px;
+  margin:0;
+  padding:20px;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  border:1px solid var(--source-line);
+  border-radius:12px;
+  background:#fff;
+  box-shadow:var(--gf-shadow-sm,0 1px 2px rgba(16,24,40,.05));
+}
+#tab-ordini-collegamenti .orders-source-option-icon{
+  width:42px;
+  height:42px;
+  flex:0 0 42px;
+  display:grid;
+  place-items:center;
+  margin-bottom:16px;
+  border-radius:8px;
+  background:#eff5ff;
+  color:#2563eb;
+}
+#tab-ordini-collegamenti .orders-source-option:nth-child(n+3) .orders-source-option-icon{
+  background:#f1f5f9;
+  color:#475569;
+}
+#tab-ordini-collegamenti .orders-source-option-icon svg{
+  width:20px;
+  height:20px;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.8;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+#tab-ordini-collegamenti .orders-source-option h2{
+  margin:0 0 10px;
+  color:#0f172a;
+  font-size:16px;
+  font-weight:700;
+  line-height:1.25;
+  letter-spacing:-.015em;
+}
+#tab-ordini-collegamenti .orders-source-option p{
+  margin:0 0 18px;
+  color:#61728a;
+  font-size:12.5px;
+  line-height:1.5;
+}
+#tab-ordini-collegamenti .orders-source-option .btn-primary,
+#tab-ordini-collegamenti .orders-source-option .btn-secondary{
+  min-height:36px;
+  margin-top:auto;
+  padding:0 15px;
+  border-radius:7px;
+  font-size:12px;
+  box-shadow:none;
+}
+#tab-ordini-collegamenti .orders-source-option .btn-secondary{
+  border:1px solid #ccd7e5;
+  background:#fff;
+  color:#334155;
+}
+#tab-ordini-collegamenti .orders-source-option .btn-secondary:hover{background:#f8fafc;border-color:#b8c5d5}
+
+#tab-ordini-collegamenti .orders-sources-directory{margin-top:0}
+#tab-ordini-collegamenti .orders-sources-directory>h2{
+  margin:0 0 20px;
+  color:#0f172a;
+  font-size:18px;
+  font-weight:700;
+  letter-spacing:-.02em;
+}
+#tab-ordini-collegamenti .orders-source-list-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:18px;
+}
+#tab-ordini-collegamenti .orders-source-card{
+  min-width:0;
+  min-height:188px;
+  margin:0;
+  padding:20px;
+  border:1px solid var(--source-line);
+  border-radius:12px;
+  background:#fff;
+  box-shadow:var(--gf-shadow-sm,0 1px 2px rgba(16,24,40,.05));
+}
+#tab-ordini-collegamenti .orders-source-card h3{
+  margin:0 0 7px;
+  color:#0f172a;
+  font-size:16px;
+  font-weight:700;
+}
+#tab-ordini-collegamenti .orders-source-meta{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:7px;
+  margin-bottom:15px;
+  color:#64748b;
+  font-size:10.5px;
+  font-weight:700;
+  letter-spacing:.035em;
+  text-transform:uppercase;
+}
+#tab-ordini-collegamenti .orders-source-status{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  min-height:20px;
+  padding:2px 8px;
+  border:1px solid #dbe3ee;
+  border-radius:999px;
+  background:#f8fafc;
+  color:#64748b;
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:0;
+  text-transform:none;
+}
+#tab-ordini-collegamenti .orders-source-status::before{
+  content:"";
+  width:5px;
+  height:5px;
+  border-radius:50%;
+  background:currentColor;
+}
+#tab-ordini-collegamenti .orders-source-status.is-active{border-color:#bbefd6;background:#ecfdf5;color:#079669}
+#tab-ordini-collegamenti .orders-source-status.is-paused{border-color:#f6ddb0;background:#fff8eb;color:#b36b00}
+#tab-ordini-collegamenti .orders-source-status.is-removed{border-color:#dbe3ee;background:#f1f5f9;color:#64748b}
+#tab-ordini-collegamenti .orders-source-card p{
+  margin:0 0 12px;
+  color:#5f7088;
+  font-size:12.5px;
+  line-height:1.5;
+}
+#tab-ordini-collegamenti .orders-source-card p strong{color:#0f172a}
+#tab-ordini-collegamenti .orders-source-card .page-actions{margin-top:18px}
+#tab-ordini-collegamenti .orders-source-card .btn-secondary{
+  min-height:34px;
+  padding:0 13px;
+  border:1px solid #ccd7e5;
+  border-radius:7px;
+  background:#fff;
+  color:#334155;
+  font-size:12px;
+  box-shadow:none;
+}
+#tab-ordini-collegamenti .orders-source-card .btn-secondary:hover{background:#f8fafc;border-color:#b8c5d5}
+#tab-ordini-collegamenti .orders-sources-empty{
+  padding:28px;
+  border:1px dashed #cbd5e1;
+  border-radius:12px;
+  background:#fff;
+  color:#64748b;
+  text-align:center;
+}
+#tab-ordini-collegamenti .orders-source-pagination{
+  justify-content:flex-end;
+  margin-top:14px;
+  color:#64748b;
+  font-size:12px;
+}
+#tab-ordini-collegamenti .orders-source-pagination[hidden]{display:none!important}
+
+/* Keep setup/history surfaces aligned with the same page after opening a source. */
+#tab-ordini-collegamenti #sourceWizard,
+#tab-ordini-collegamenti #sourceHistory{
+  margin:22px 0 28px;
+  padding:22px;
+  border:1px solid var(--source-line);
+  border-radius:12px;
+  background:#fff;
+  box-shadow:var(--gf-shadow-sm,0 1px 2px rgba(16,24,40,.05));
+}
+#tab-ordini-collegamenti #sourceWizard h2,
+#tab-ordini-collegamenti #sourceHistory h2{margin-top:0;color:#0f172a;font-size:18px}
+#tab-ordini-collegamenti #sourceWizard h3,
+#tab-ordini-collegamenti #sourceHistory h3{color:#1e293b;font-size:14px}
+#tab-ordini-collegamenti #sourceWizard p,
+#tab-ordini-collegamenti #sourceHistory p{color:#64748b;font-size:12.5px;line-height:1.55}
+
+@media(min-width:821px){
+  #tab-ordini-collegamenti>.orders-connections-mobile-head{display:none!important}
+}
+@media(max-width:1100px){
+  #tab-ordini-collegamenti .orders-source-options{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:820px){
+  .orders-connections-back-topbar{display:none!important}
+  #tab-ordini-collegamenti .orders-connections-content{width:100%}
+  #tab-ordini-collegamenti .orders-source-options{margin-bottom:28px}
+}
+@media(max-width:680px){
+  #tab-ordini-collegamenti .orders-source-options,
+  #tab-ordini-collegamenti .orders-source-list-grid{grid-template-columns:1fr}
+  #tab-ordini-collegamenti .orders-source-option{min-height:210px}
+  #tab-ordini-collegamenti .orders-source-card{min-height:0}
+}
