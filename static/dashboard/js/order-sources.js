@@ -46,7 +46,60 @@
     el('sourceWizard').scrollIntoView({block:'start'});
   }
   function create(event){event.preventDefault();if(el('sourceKind').value==='custom'){el('sourceMessage').textContent='Collegamento personalizzato da predisporre con il fornitore: comunica nome e versione del software, esempio anonimo del tracciato, identificativi stabili e frequenza degli invii. Le modalità operative disponibili sono file o API standard: selezionane una per proseguire.';return;}return task(async()=>{current=await request('',post({name:el('sourceName').value,kind:el('sourceKind').value,software:el('sourceSoftware').value}));staged=verified=null;editor();await refresh();});}
-  function open(id){if(busy)return;current=sources.find(s=>s.id===id);staged=verified=null;editor();el('sourceWizard').scrollIntoView({block:'start'});}
+  function sourceSubtitle(s){return s.kind==='api'?'Gestione fonte API e validazione campioni JSON.':'Gestione fonte file e validazione degli ordini importati.';}
+  function sourceTopActions(s,mobile=false){
+    if(!manage())return '';
+    const toggle=s.status==='active'
+      ?'<button class="order-source-pause-btn" onclick="GFOrderSources.action(\'pause\')">Ⅱ&nbsp; Metti in pausa</button>'
+      :s.status==='paused'
+        ?'<button class="order-source-resume-btn" onclick="GFOrderSources.action(\'resume\')">Riattiva fonte</button>'
+        :'';
+    const remove='<button class="order-source-delete-btn" onclick="GFOrderSources.deleteSource()">⌫&nbsp; Elimina fonte</button>';
+    return `<div class="${mobile?'order-source-mobile-actions':'order-source-topbar-actions'}">${toggle}${remove}</div>`;
+  }
+  function syncSourceTopbar(){
+    if(!current)return;
+    const title=el('workspacePageTitle'),subtitle=el('workspacePageSubtitle'),badge=el('workspacePageBadge'),actions=el('orderSourceTopbarActionsHost');
+    if(title)title.textContent=current.name;
+    if(subtitle)subtitle.textContent=sourceSubtitle(current);
+    if(badge){badge.hidden=false;badge.textContent=statuses[current.status]||current.status;badge.className='order-source-topbar-badge '+sourceStatusClass(current.status);}
+    if(actions)actions.innerHTML=sourceTopActions(current);
+  }
+  function detailPage(){
+    hideSecret();const s=current;if(!s)return;
+    syncSourceTopbar();
+    const mobile=el('orderSourceMobileHead');
+    if(mobile)mobile.innerHTML=`<div class="order-source-mobile-copy"><button class="btn-secondary" onclick="GFOrderSources.back()" aria-label="Torna alle fonti">←</button><h1>${esc(s.name)} ${sourceStatusBadge(s.status)}</h1><p>${esc(sourceSubtitle(s))}</p></div>${sourceTopActions(s,true)}`;
+    const sample=s.kind==='api'
+      ?`<div class="source-code-editor"><div class="source-code-toolbar"><i></i><i></i><i></i><span>campione.json</span></div><textarea id="sourceSample" rows="14" spellcheck="false" aria-label="Campione JSON">${esc(JSON.stringify(example,null,2))}</textarea></div>`
+      :`<div class="source-file-drop"><label>File CSV o XLSX<input id="sourceFile" type="file" accept=".csv,.xlsx"></label><p>Un solo foglio, senza formule. Mantieni i codici con zeri iniziali come testo.</p></div>`;
+    const sampleFooter=s.status==='paused'
+      ?'<div class="source-paused-notice">La fonte è in pausa. Riattivala per caricare e verificare nuovi campioni.</div>'
+      :`<div class="source-sample-footer"><span class="source-sample-note"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>Il campione verifica i dati ma non importa ordini.</span><button class="btn-primary" onclick="GFOrderSources.upload()">Carica campione</button></div>`;
+    const apiBody=s.kind==='api'
+      ?`<div class="source-delivery-body"><span class="source-delivery-label">API Endpoint</span><div class="source-endpoint"><span class="source-endpoint-method">POST</span><code>/api/order-ingestion</code></div><p class="source-delivery-help">Aggiungi un <code>batch_id</code> univoco e invia ordini completi, non modifiche parziali.</p><div class="source-delivery-divider"></div><span class="source-delivery-label">Autenticazione Bearer</span><div class="source-credential-state ${s.has_credential?'is-ready':'is-missing'}"><span class="source-credential-icon">${s.has_credential?'●':'!'}</span><div><strong>${s.has_credential?'Credenziale presente':'Credenziale mancante'}</strong><span>${s.has_credential?'Pronta per l’autenticazione':'Genera una credenziale per autorizzare gli invii.'}</span></div></div>${manage()&&owner()?`<div class="source-credential-actions"><button class="btn-secondary" onclick="GFOrderSources.action('rotate')">${s.has_credential?'↻ Ruota':'Genera credenziale'}</button>${s.has_credential?'<button class="source-danger-outline" onclick="GFOrderSources.action(\'revoke\')">⊘ Revoca</button>':''}</div>`:'<p class="source-delivery-help">Le credenziali sono gestite dal titolare.</p>'}<div id="sourceCredential"></div></div>`
+      :`<div class="source-delivery-body"><span class="source-delivery-label">Importazione file</span><p>Carica un campione CSV o XLSX, associa le colonne e verifica l’anteprima. Gli ordini vengono inseriti solo dopo la conferma finale.</p><div class="source-delivery-divider"></div><span class="source-delivery-label">Stato fonte</span><div class="source-credential-state ${s.status==='active'?'is-ready':'is-missing'}"><span class="source-credential-icon">●</span><div><strong>${esc(statuses[s.status]||s.status)}</strong><span>${s.status==='active'?'Pronta per nuove importazioni.':'Riattiva la fonte per acquisire nuovi file.'}</span></div></div></div>`;
+    el('orderSourceDetail').innerHTML=`<div class="order-source-detail-grid"><section class="order-source-panel"><div class="order-source-panel-head"><h2><svg viewBox="0 0 24 24"><path d="m8 9-3 3 3 3M16 9l3 3-3 3M14 5l-4 14"/></svg>Carica un campione</h2><p>Massimo 2 MB e 1000 ordini. L’anteprima è disponibile per 24 ore.</p></div>${sample}${sampleFooter}</section><aside class="order-source-panel"><div class="order-source-panel-head"><h2><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="5" rx="1"/><rect x="4" y="14" width="16" height="5" rx="1"/></svg>${s.kind==='api'?'Invio dal gestionale':'Acquisizione file'}</h2><p>${s.kind==='api'?'Configura il tuo gestionale per inviare gli ordini a questo endpoint.':'Controlla lo stato e prepara una nuova importazione.'}</p></div>${apiBody}</aside><div class="source-detail-workflow"><div id="sourceMapping"></div><div id="sourceReport"></div><div id="sourceConfirm" class="page-actions"></div></div></div>`;
+  }
+  function open(id){
+    if(busy)return;
+    current=sources.find(s=>s.id===id);if(!current)return;
+    staged=verified=null;showTab('ordine-fonte');detailPage();window.scrollTo({top:0,behavior:'auto'});
+  }
+  function back(){
+    staged=verified=null;hideSecret();showTab('ordini-collegamenti');load();
+  }
+  async function deleteSource(){
+    if(busy||!current||!manage())return;
+    if(!confirm(`Eliminare definitivamente la fonte "${current.name}"? La connessione, le credenziali e lo storico tecnico della fonte saranno rimossi. Gli ordini già acquisiti resteranno disponibili.`))return;
+    busy=true;const message=el('orderSourceMessage');if(message)message.textContent='Eliminazione fonte in corso…';
+    try{
+      await request('/'+current.id+'?version='+encodeURIComponent(current.version),{method:'DELETE'});
+      current=staged=verified=null;if(message)message.textContent='';
+      showTab('ordini-collegamenti');await refresh();
+    }catch(err){if(message)message.textContent=err.message||String(err);}
+    finally{busy=false;}
+  }
   function editor(){
     hideSecret();const s=current;el('sourceWizard').hidden=false;
     el('sourceWizard').innerHTML=`<h2>${esc(s.name)} · ${statuses[s.status]}</h2><div class="page-actions">${manage()&&s.status==='active'?button('Metti in pausa',"action('pause')"):''}${manage()&&s.status==='paused'?button('Riattiva',"action('resume')"):''}${manage()&&s.status!=='removed'?button('Rimuovi fonte',"action('remove')"):''}</div>${s.status==='paused'||s.status==='removed'?'<p>La fonte non riceve ordini. Gli ordini acquisiti restano disponibili.</p>':`<h3>2. Carica un campione</h3><p>Massimo 2 MB e 1000 ordini. L'anteprima è disponibile per 24 ore.</p>${s.kind==='file'?'<label>File CSV o XLSX<input id="sourceFile" type="file" accept=".csv,.xlsx"></label><p>Un solo foglio, senza formule. Mantieni i codici con zeri iniziali come testo.</p>':`<label>Campione JSON<textarea id="sourceSample" rows="10" spellcheck="false">${esc(JSON.stringify(example,null,2))}</textarea></label><p>Il campione verifica i dati ma non importa ordini.</p>`}${button('Carica campione','upload()')}<div id="sourceMapping"></div><div id="sourceReport"></div><div id="sourceConfirm" class="page-actions"></div>`}${s.kind==='api'&&s.status==='active'?`<h3>Invio dal gestionale</h3><p>Endpoint: <code>POST /api/order-ingestion</code>. Autenticazione Bearer. Aggiungi un batch_id univoco e invia ordini completi, non modifiche parziali.</p><p>${s.has_credential?'Credenziale presente.':'Credenziale mancante: generala per autorizzare gli invii.'}</p>${manage()&&owner()?`<div class="page-actions">${button(s.has_credential?'Ruota credenziale':'Genera credenziale',"action('rotate')")}${s.has_credential?button('Revoca credenziale',"action('revoke')"):''}</div>`:'<p>Le credenziali sono gestite dal titolare.</p>'}<div id="sourceCredential"></div>`:''}`;
@@ -82,12 +135,17 @@
     if(busy)return;
     const warnings={remove:'Rimuovere questa fonte? Gli ordini restano disponibili; la fonte non sarà riattivabile.',rotate:'Generare una nuova credenziale? Quella precedente smetterà subito di funzionare.',revoke:'Revocare la credenziale e sospendere gli invii?',pause:'Sospendere gli invii da questa fonte?'};
     if(warnings[action]&&!confirm(warnings[action]))return;
+    const detailOpen=!el('tab-ordine-fonte').classList.contains('hidden');
     return task(async()=>{
       const result=await request('/'+current.id+'/action',post({version:current.version,action,...(action==='activate'?{run_id:staged.run_id}:{})}));
       const secret=result.credential;delete result.credential;current=result;
-      if(action==='activate'){editor();if(staged){mapping();renderReport(verified,'sourceReport',current.id);confirmation();}}
+      if(detailOpen){staged=verified=null;detailPage();}
+      else if(action==='activate'){editor();if(staged){mapping();renderReport(verified,'sourceReport',current.id);confirmation();}}
       else{staged=verified=null;editor();}
-      if(secret&&!el('tab-ordini-collegamenti').classList.contains('hidden')){el('sourceCredential').innerHTML='<p>Copia ora la credenziale e conservala nel gestore segreti del gestionale. Non sarà mostrata di nuovo.</p><label>Credenziale riservata<textarea id="sourceToken" readonly rows="3" autocomplete="off" spellcheck="false"></textarea></label>';el('sourceToken').value=secret;}
+      if(secret){
+        const credentialBox=el('sourceCredential');
+        if(credentialBox){credentialBox.innerHTML='<p>Copia ora la credenziale e conservala nel gestore segreti del gestionale. Non sarà mostrata di nuovo.</p><label>Credenziale riservata<textarea id="sourceToken" readonly rows="3" autocomplete="off" spellcheck="false"></textarea></label>';el('sourceToken').value=secret;}
+      }
       await refresh();
     });
   }
@@ -96,5 +154,5 @@
     el('sourceHistory').innerHTML='<h2>Storico della fonte</h2>'+data.items.map(r=>`<p>${esc(new Date(r.created_at+'Z').toLocaleString('it-IT'))} · ${statuses[r.status]||esc(r.status)} ${button('Report #'+r.id,`report(${id},${r.id},0,'sourceHistoryReport')`)}</p>`).join('')+`<div class="page-actions">${next?button('Precedenti',`history(${id},${next-20})`):''}${next+20<data.total?button('Successivi',`history(${id},${next+20})`):''}</div><div id="sourceHistoryReport"></div>`;el('sourceHistory').scrollIntoView({block:'start'});
   });}
   function report(sid,rid,next,target){return task(async()=>renderReport(await request(`/${sid}/runs/${rid}?offset=${next}`),target,sid));}
-  window.GFOrderSources={load,hideSecret,unavailable,invalidate,createForm,create,open,upload,preview,commit,action,history,report,page(delta){offset=Math.max(0,offset+delta*50);load();}};
+  window.GFOrderSources={load,hideSecret,unavailable,invalidate,createForm,create,open,back,deleteSource,upload,preview,commit,action,history,report,page(delta){offset=Math.max(0,offset+delta*50);load();}};
 })();
