@@ -120,6 +120,7 @@ def main():
                     assert response.status_code==200,response.text
                     second=db.get(Order,created['id']);second.status='pronto';second.address_verification=order.address_verification;db.commit()
                     page.evaluate('GFOrders.load()')
+                    page.locator('#ordersView-table').click()
                     page.get_by_role('checkbox',name='Seleziona ordini pronti di questa pagina',exact=True).check()
                     page.wait_for_function("document.getElementById('ordersSelectionCount').textContent.startsWith('2 ordini')")
                     page.locator('#ordersGoPlanning').click()
