@@ -980,7 +980,7 @@ body[data-gf-surface="workspace"] #app:has(#tab-ordine-fonte:not(.hidden)) .orde
 }
 #tab-ordine-fonte .source-guide h3{margin:0 0 8px;font-size:15px;color:var(--gf-color-text,#172033);line-height:1.35}
 #tab-ordine-fonte .source-guide p,
-#tab-ordine-fonte .source-guide li{font-size:12.5px;line-height:1.6;color:var(--gf-color-text-secondary,#475569)}
+#tab-ordine-fonte .source-guide li{font-size:12.5px;line-height:1.6;color:var(--gf-color-muted,#475569)}
 #tab-ordine-fonte .source-guide p{margin:8px 0}
 #tab-ordine-fonte .source-guide ol{padding-left:21px;margin:11px 0}
 #tab-ordine-fonte .source-guide li+li{margin-top:6px}
