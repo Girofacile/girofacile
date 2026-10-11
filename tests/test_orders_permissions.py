@@ -13,11 +13,13 @@ def test_order_permissions_are_explicit_and_rechecked(company):
     assert client.get('/api/orders').status_code==403
     login_actor(['orders.read'])
     assert client.get('/api/orders').status_code==200
+    assert client.post('/api/orders/verify-addresses',json={}).status_code==403
     assert client.post('/api/orders',json={'number':'B'}).status_code==403
     assert client.put('/api/orders/'+str(order['id']),json={**order['operational_data'],'version':1}).status_code==403
     login_actor(['orders.read','orders.create'])
     assert client.post('/api/orders',json={'number':'B'}).status_code==201
     login_actor(['orders.read','orders.update'])
+    assert client.post('/api/orders/verify-addresses',json={'q':'non-existent'}).status_code==200
     assert client.put('/api/orders/'+str(order['id']),json={**order['operational_data'],'version':1,'notes':'Correzione'}).status_code==200
     events=client.get('/api/orders/'+str(order['id'])).json()['events']
     assert events[0]['actor']==f'collaborator:{actor.id}'
