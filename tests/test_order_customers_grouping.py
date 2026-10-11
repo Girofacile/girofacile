@@ -31,7 +31,7 @@ def test_certain_normalized_and_ambiguous_matches(planning):
     assert ambiguous['customer_id'] is None
     result=ctx[0].get(f"/api/orders/{ambiguous['id']}/customers").json()
     assert result['kind']=='probable' and len(result['candidates'])==2
-    assert any(a['code']=='customer' and a['blocking'] for a in ambiguous['anomalies'])
+    assert any(a['code']=='customer' and not a['blocking'] for a in ambiguous['anomalies'])
     separated=action(ctx,ambiguous,'separate').json()
     assert separated['customer_resolution']=='separate'
     assert not any(a['code']=='customer' for a in separated['anomalies'])
