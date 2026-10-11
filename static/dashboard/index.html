@@ -50,7 +50,7 @@
 <link rel="stylesheet" href="/static/dashboard/css/login.css?v=login_preview_exact_20261007">
 <script src="/static/design-system/design-system.js?v=ds_20261007_reference_2" defer></script>
 <link rel="stylesheet" href="/static/dashboard/css/collaborators.css?v=invitations_20261009">
-<link rel="stylesheet" href="/static/dashboard/css/orders.css?v=order_source_settings_20261011_3">
+<link rel="stylesheet" href="/static/dashboard/css/orders.css?v=20261011_ux2">
 </head>
 <body data-gf-surface="workspace">
 
@@ -849,7 +849,7 @@
 
  <section id="routePlanningGatePanel" class="planning-completion" aria-labelledby="planningCompletionTitle">
  <div class="planning-completion-content"><h2 id="planningCompletionTitle">Cosa manca?</h2><p>Completa tutte le informazioni del giro per selezionare i clienti e preparare le fermate.</p><div id="planningChecklist" class="planning-checklist"></div><small id="routePlanningGateHint" class="route-gate-hint" role="status"></small></div>
- <div class="planning-completion-action"><button id="openCustomerStepBtn" class="btn-primary large" onclick="advanceRoutePlanning()">Completa dati giro</button></div>
+ <div class="planning-completion-action"><p id="orderPlanningProceedMessage" role="alert" tabindex="-1" hidden></p><button id="openCustomerStepBtn" class="btn-primary large" onclick="advanceRoutePlanning()">Completa dati giro</button></div>
  </section>
  </section>
 
@@ -934,7 +934,7 @@
           <div id="ordersInlineActionsHost">
             <div id="ordersPageActions" class="page-actions">
               <button class="btn-secondary" onclick="showTab('ordini-collegamenti')">Collega i tuoi ordini</button>
-              <button id="ordersImport" class="btn-secondary" onclick="showTab('ordini-collegamenti')">Importa file</button>
+              <button id="ordersImport" class="btn-secondary" onclick="GFOrderImport.start()">Importa file</button>
               <button id="ordersNew" class="btn-primary" onclick="GFOrders.newOrder()">Nuovo ordine</button>
             </div>
           </div>
@@ -994,8 +994,8 @@
             <article class="orders-source-option">
               <span class="orders-source-option-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v5h5"/><path d="M8.5 15h7M8.5 18h5"/></svg></span>
               <h2>File Excel o CSV</h2>
-              <p>Carica, associa le colonne e verifica. Nessun ordine viene inserito senza conferma.</p>
-              <button class="btn-primary" onclick="GFOrderSources.createForm('file')">Nuova fonte file</button>
+              <p>Scegli il file e controlla l’anteprima. Riconosciamo le colonne per te.</p>
+              <button class="btn-primary" onclick="GFOrderImport.start()">Carica un file</button>
             </article>
             <article class="orders-source-option">
               <span class="orders-source-option-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 5h2l2 11h10l2-8H6"/><circle cx="9" cy="19" r="1"/><circle cx="17" cy="19" r="1"/></svg></span>
@@ -1019,6 +1019,7 @@
           <section id="sourceHistory" class="panel" hidden></section>
         </div>
       </section>
+      <section id="tab-ordini-importa" class="tab hidden gf-page orders-page"><div class="order-import-wrap"><button class="btn-secondary" onclick="showTab('ordini')">← Ordini</button><p id="orderImportMessage" role="alert" tabindex="-1" class="orders-error"></p><section id="orderImportWizard" class="panel"></section></div></section>
       <section id="tab-ordine-fonte" class="tab hidden gf-page orders-page order-source-detail-page">
         <div id="orderSourceMobileHead" class="order-source-mobile-head"></div>
         <p id="orderSourceMessage" class="orders-error order-source-message" role="status"></p>
@@ -2096,18 +2097,19 @@
 
 <script src="/static/dashboard/js/reports.js?v=audit_20261004"></script>
 <script src="/static/dashboard/js/customers.js?v=customer_kpi_fix_20261006_6"></script>
-<script src="/static/dashboard/js/navigation.js?v=order_source_detail_20261011_4"></script>
+<script src="/static/dashboard/js/navigation.js?v=20261011_ux2"></script>
 <script src="/static/dashboard/js/completed.js?v=20261006"></script>
 <script src="/static/dashboard/js/preview-design.js?v=20261006"></script>
 <script src="/static/dashboard/js/live-design.js?v=20261006"></script>
 <script src="/static/password-strength.js?v=password_policy_20261008_1"></script>
-<script src="/static/dashboard/js/collaborators.js?v=orders_20261010"></script>
+<script src="/static/dashboard/js/collaborators.js?v=20261011_ux2"></script>
 <script src="/static/dashboard/js/orders.js?v=orders_restyle_20261011_1"></script>
-<script src="/static/dashboard/js/order-sources.js?v=order_source_settings_20261011_3"></script>
+<script src="/static/dashboard/js/order-import.js?v=20261011_ux2"></script>
+<script src="/static/dashboard/js/order-sources.js?v=20261011_ux2"></script>
 <script src="/static/dashboard/js/order-customers.js?v=20261011_3"></script>
 <script src="/static/dashboard/js/core.js?v=orders_planning_20261010_2"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=orders_2"></script>
-<script src="/static/dashboard/js/order-planning.js?v=20261011_3"></script>
+<script src="/static/dashboard/js/order-planning.js?v=20261011_ux2"></script>
 
 <script>
 function toggleLoginPassword(){

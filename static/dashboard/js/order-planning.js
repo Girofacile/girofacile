@@ -2,12 +2,17 @@
 (function(){
   'use strict';
   let state={version:0,order_ids:[],configuration:{},stops:null,routes:[]};
-  let editingRouteId=null;
+  let editingRouteId=null,proceeding=false;
   let enabled=false,loadedStops=false,busy=false,dirty=false,saving=null,timer;
   const ids=['routeName','routeDate','routeStart','routeDeposit','routeVehicle','routeDriver','returnDepot','fuelPrice','electricityPrice'];
   const el=id=>document.getElementById(id);
   const allowed=()=>!window.GFCompanyAccess || GFCompanyAccess.can('orders.plan');
   const message=text=>{if(el('orderPlanningMessage'))el('orderPlanningMessage').textContent=text;};
+  function feedback(text,state='error'){
+    const box=el('orderPlanningProceedMessage');if(!box)return;
+    box.textContent=text;box.hidden=!text;box.dataset.state=state;
+    if(text&&state==='error'){box.scrollIntoView({behavior:'smooth',block:'center'});box.focus({preventScroll:true});}
+  }
   const metadata=row=>Object.fromEntries(['order_refs','order_stop_key','order_numbers','order_operational'].filter(k=>row?.[k]!==undefined).map(k=>[k,row[k]]));
   function controls(){
     const panel=el('ordersSelection');if(!panel)return;
@@ -45,9 +50,9 @@
   function gate(){
     const banner=el('orderPlanningBanner');if(banner)banner.hidden=!enabled;
     if(!enabled)return;
-    const button=el('openCustomerStepBtn');if(button)button.textContent='Prosegui';
+    const button=el('openCustomerStepBtn');if(button){button.textContent=proceeding?'Caricamento fermate…':'Prosegui';button.disabled=proceeding;}
     if(el('customerPlanningStep'))el('customerPlanningStep').classList.add('hidden');
-    if(el('routePlanningGateHint'))el('routePlanningGateHint').textContent=loadedStops?'Fermate degli ordini caricate. Verifica i dati e premi Calcola percorso.':'Completa la configurazione e premi Prosegui per caricare gli ordini selezionati.';
+    if(el('routePlanningGateHint')&&routePlanningDetailsCompleteV68())el('routePlanningGateHint').textContent=loadedStops?'Fermate degli ordini caricate. Verifica i dati e premi Calcola percorso.':'Completa la configurazione e premi Prosegui per caricare gli ordini selezionati.';
   }
   async function go(){
     try{
@@ -64,19 +69,24 @@
         const mode=document.querySelector(`input[name="energyPriceMode"][value="${saved.energy_price_mode||'manual'}"]`);if(mode)mode.checked=true;
         await updateRouteEnergyPricingV895();
       }
-      updateRoutePlanningGateV68();gate();message(`${state.order_ids.length} ordini salvati. Completa la configurazione del giro.`);
+      if(!saved.data_giro&&state.requested_dates?.length===1)set('routeDate',state.requested_dates[0]);
+      feedback('');updateRoutePlanningGateV68();gate();message(`${state.order_ids.length} ordini selezionati.${state.requested_dates?.length?' Date richieste: '+state.requested_dates.join(', ')+'.':''} Completa la configurazione del giro.`);
     }catch(e){alert(e.message);}
   }
   async function proceed(regenerate=false){
-    if(!routePlanningDetailsCompleteV68()){updateRoutePlanningGateV68();message('Completa data, orario, deposito, mezzo, autista e costi energetici.');return;}
+    if(proceeding)return;
+    const missing=routePlanningMissingFieldsV68();
+    if(missing.length){updateRoutePlanningGateV68();feedback('Per proseguire completa: '+missing.join(', ')+'.');return;}
+    proceeding=true;gate();feedback('Sto preparando le fermate degli ordini…','loading');
     try{
       await flush();
       state=await api('/api/order-planning/preview',{method:'POST',body:JSON.stringify({version:state.version,configuration:config(),stops:regenerate?null:(loadedStops?deliveries:state.stops)})});
       deliveries=state.stops;loadedStops=true;dirty=false;customerPlanningStepOpenedV68=true;
-      updateRoutePlanningGateV68();renderDeliveries();gate();
-      message(state.warnings.length?state.warnings.join('\n'):'Fermate caricate. Puoi modificarle o rimuoverle senza cambiare gli ordini originali. Il giro non è ancora calcolato né programmato.');
+      updateRoutePlanningGateV68();renderDeliveries();gate();feedback('');
+      message(state.warnings?.length?state.warnings.join('\n'):'Fermate caricate. Controlla le consegne e calcola il percorso.');
       el('deliveryWorkbenchStep').scrollIntoView({behavior:'smooth',block:'start'});
-    }catch(e){message(e.message);}
+    }catch(e){feedback(e.message||'Non è stato possibile caricare le fermate. Riprova.');}
+    finally{proceeding=false;gate();}
   }
   function changed(){
     if(!enabled || lastRouteResult?.id)return;
@@ -94,7 +104,7 @@
     if(dirty)await flush();
   }
   async function beforeCalculate(){try{await flush();return true;}catch(e){message(e.message);alert('Salva la selezione prima del calcolo: '+e.message);return false;}}
-  function leave(){editingRouteId=null;enabled=false;loadedStops=false;dirty=false;clearTimeout(timer);gate();}
+  function leave(){feedback('');editingRouteId=null;enabled=false;loadedStops=false;dirty=false;clearTimeout(timer);gate();}
   function describe(row){
     if(!row.order_refs?.length)return '';
     const values=row.order_operational||{},parts=[];

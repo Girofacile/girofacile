@@ -22,10 +22,12 @@ def selection(db, user_id, actor, lock=False):
 
 def selection_response(db, row):
     if row is None:
-        return {'version': 0, 'order_ids': [], 'configuration': {}, 'stops': None, 'routes': []}
+        return {'version': 0, 'order_ids': [], 'configuration': {}, 'stops': None, 'routes': [], 'requested_dates': []}
     routes = db.query(RoutePlan).join(RouteOrderAssignment, RouteOrderAssignment.route_plan_id == RoutePlan.id).filter(
         RouteOrderAssignment.user_id == row.user_id, RouteOrderAssignment.order_id.in_(row.order_ids)).distinct().all()
+    dates = db.query(Order.requested_date).filter(Order.user_id == row.user_id, Order.id.in_(row.order_ids), Order.requested_date.isnot(None)).distinct().order_by(Order.requested_date).all()
     return {'version': row.version, 'order_ids': row.order_ids, 'configuration': row.configuration,
+            'requested_dates': [value.isoformat() for (value,) in dates],
             'stops': row.stops, 'updated_at': row.updated_at,
             'routes': [{'id': r.id, 'name': r.nome, 'status': r.status} for r in routes]}
 

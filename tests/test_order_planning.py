@@ -164,3 +164,13 @@ def test_order_permission_required_even_when_removing_all_references(planning,mo
     with pytest.raises(HTTPException) as error:
         require_planning_permission(request,[],db,route['id'])
     assert error.value.status_code==403
+
+
+def test_selection_reports_distinct_requested_dates(planning):
+    ctx,_=planning;client,db,owner,*_=ctx
+    row=ready(ctx,requested_date='2099-01-16')
+    second=ready(ctx,number='SECOND',requested_date='2099-01-17')
+    result=client.put('/api/order-planning/selection',json={'version':0,'action':'add','order_ids':[row.id,second.id]})
+    assert result.status_code==200,result.text
+    assert result.json()['requested_dates']==['2099-01-16','2099-01-17']
+    assert client.get('/api/order-planning/selection').json()['requested_dates']==['2099-01-16','2099-01-17']

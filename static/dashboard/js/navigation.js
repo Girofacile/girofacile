@@ -4,6 +4,7 @@ const WORKSPACE_TOPBAR_META = {
   "ordine-dettaglio": {title:"Dettaglio ordine",subtitle:"Dati operativi e storico delle correzioni."},
   "ordine-modifica": {title:"Modifica ordine",subtitle:"Completa le informazioni disponibili."},
   "ordini-collegamenti": {title:"Collega i tuoi ordini",subtitle:"Importa un file o prepara l’invio dal tuo gestionale. Controlla sempre l’anteprima prima di attivare una fonte."},
+  "ordini-importa": {title:"Importa ordini",subtitle:"Carica il file, controlla i dati e conferma."},
   "ordine-fonte": {title:"Fonte ordini",subtitle:"Gestione fonte e validazione dei dati in ingresso."},
   collaboratori: {title:"Collaboratori",subtitle:"Gestisci accessi personali e funzioni assegnate."},
   dashboard: {
@@ -70,7 +71,7 @@ function showTab(name){
   const tab = document.getElementById("tab-"+name);
   if(tab) tab.classList.remove("hidden");
   document.querySelectorAll(".nav-item").forEach(x=>x.classList.remove("active"));
-  const navTab=["ordine-fonte","ordine-dettaglio","ordine-modifica","ordini-collegamenti"].includes(name)?"ordini":name;
+  const navTab=["ordini-importa","ordine-fonte","ordine-dettaglio","ordine-modifica","ordini-collegamenti"].includes(name)?"ordini":name;
   document.querySelectorAll(`.nav-item[data-tab="${navTab}"]`).forEach(x=>x.classList.add("active"));
   syncWorkspaceTopbar(name);
 
