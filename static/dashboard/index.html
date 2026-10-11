@@ -933,6 +933,7 @@
           <div><h1>Ordini</h1><p>Gestisci gli ordini ricevuti e prepara le tue consegne.</p></div>
           <div id="ordersInlineActionsHost">
             <div id="ordersPageActions" class="page-actions">
+              <button id="ordersVerifyAll" class="btn-secondary" type="button" onclick="GFOrders.bulkVerify()" title="Verifica gli indirizzi degli ordini secondo i filtri attuali. Potrebbero essere utilizzati crediti API."><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" style="vertical-align:middle"><path d="M12 2a8 8 0 0 0-8 8c0 5 8 12 8 12s8-7 8-12a8 8 0 0 0-8-8Zm-3 8 2 2 4-4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg> Verifica indirizzi</button>
               <button class="btn-secondary" onclick="showTab('ordini-collegamenti')">Collega i tuoi ordini</button>
               <button id="ordersImport" class="btn-secondary" onclick="GFOrderImport.start()">Importa file</button>
               <button id="ordersNew" class="btn-primary" onclick="GFOrders.newOrder()"><span aria-hidden="true">＋</span> Nuovo ordine</button>
@@ -2124,7 +2125,7 @@
 <script src="/static/dashboard/js/live-design.js?v=20261006"></script>
 <script src="/static/password-strength.js?v=password_policy_20261008_1"></script>
 <script src="/static/dashboard/js/collaborators.js?v=20261011_fields1"></script>
-<script src="/static/dashboard/js/orders.js?v=order_modal_style_20261011_3"></script>
+<script src="/static/dashboard/js/orders.js?v=orders_bulk_verify_20261011"></script>
 <script src="/static/dashboard/js/order-import.js?v=20261011_fields1"></script>
 <script src="/static/dashboard/js/order-sources.js?v=20261011_fields1"></script>
 <script src="/static/dashboard/js/order-customers.js?v=order_modal_style_20261011_3"></script>
