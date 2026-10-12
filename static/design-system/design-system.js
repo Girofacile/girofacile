@@ -133,7 +133,6 @@
   }
   global.GFDesignSystem = Object.freeze({enhance,breakpoints,announce,createButton,createBadge,createEmptyState,createLoading,pageHeader});
   if(!doc) return;
-
   function start(){
     enhance(doc);
     let pending = false;
