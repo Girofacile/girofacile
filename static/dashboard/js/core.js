@@ -549,6 +549,10 @@ function loadProfilePanel(){
   const initials = (accountName || "Admin").trim().charAt(0).toUpperCase() || "A";
   const setText = (id,val)=>{ const el=document.getElementById(id); if(el) el.textContent=val; };
   // La testata identifica l'azienda; il modal modifica invece l'account dell'operatore.
+  // Aggiorna subito il saluto se il nome dell'account viene modificato.
+  if(!document.getElementById("tab-dashboard")?.classList.contains("hidden")){
+    setText("workspacePageTitle", dashboardGreetingTitle());
+  }
   setText("topProfileName", companyName);
   setText("topProfileRole", role);
   const topAvatar = document.getElementById("topProfileAvatar");
@@ -1847,8 +1851,7 @@ async function loadDashboardHome(){
     const title=document.getElementById("workspacePageTitle");
     const subtitle=document.getElementById("workspacePageSubtitle");
     if(!dash.classList.contains("hidden")){
-      const companyName=(localStorage.getItem("girofacile_company_name")||"").trim();
-      if(title)title.textContent=companyName?`Buongiorno, ${companyName}`:"Buongiorno";
+      if(title)title.textContent=dashboardGreetingTitle();
       if(subtitle){
         const day=new Intl.DateTimeFormat("it-IT",{weekday:"long",day:"numeric",month:"long"}).format(new Date());
         subtitle.textContent=`${day.charAt(0).toUpperCase()+day.slice(1)}: lo stato delle consegne e delle risorse di oggi`;
