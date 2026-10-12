@@ -46,7 +46,9 @@ test('tokens centrally define palette, geometry, spacing, typography and breakpo
   const css=read(assets+'tokens.css');
   for(const token of ['color-primary','color-bg','color-surface','color-text','color-muted','color-border','color-border-strong','color-success','color-success-bg','color-warning','color-warning-bg','color-danger','color-danger-bg','color-info','color-info-bg','radius-sm','radius-md','radius-lg','shadow-sm','control-height','touch-height','font-size-base','font-size-header','breakpoint-sm','breakpoint-md','breakpoint-lg','breakpoint-xl','space-1','space-2','space-3','space-4','space-6','space-8'])
     assert.match(css,new RegExp('--gf-'+token+'\\s*:'));
-  assert.match(css,/--gf-color-primary\s*:\s*#2563eb/i);
+  assert.match(css,/--gf-color-primary\s*:\s*#1665ff/i);
+  assert.match(css,/--gf-font-display\s*:\s*"Bricolage Grotesque"/);
+  assert.match(css,/--gf-font-family\s*:\s*"IBM Plex Sans"/);
   const defined=new Set([...css.matchAll(/(--gf-[\w-]+)\s*:/g)].map(match=>match[1]));
   for(const file of ['components.css','layout.css','workspace.css','portals.css']){
     for(const match of read(assets+file).matchAll(/var\((--gf-[\w-]+)/g))
@@ -116,50 +118,37 @@ test('derived operational badges follow real portal classes and state transition
 });
 
 
-test('dashboard reference view uses shared tokens and bounded overview previews',()=>{
+test('dashboard reference view shares tokens and retains live API connections',()=>{
   const tokens=read(assets+'tokens.css');
-  assert.match(tokens,/--gf-focus-ring\s*:\s*0 0 0 3px rgba\(37,99,235,\.16\)/i);
-  assert.doesNotMatch(tokens,/--gf-focus-ring[^;]*11,99,246/i);
-
-  const dashboard=read('static/dashboard/css/dashboard.css');
-  assert.match(dashboard,/--dash-ink:var\(--gf-color-text/);
-  assert.match(dashboard,/font-family:var\(--gf-font-family/);
-  assert.match(dashboard,/outline:2px solid var\(--gf-color-primary/);
-
-  const workspace=read(assets+'workspace.css');
-  const home=workspace.slice(workspace.indexOf('/* Home dashboard follows'));
-  assert.match(home,/\.dash-kpi-resources/);
-  assert.match(home,/\.dash-list-card\{min-height:390px/);
-  assert.doesNotMatch(home,/\.dash-route-list\{[^}]*overflow:auto/);
-  assert.match(home,/\.dash-link-btn\{[^}]*background:var\(--gf-color-nav\)!important/);
-  assert.doesNotMatch(home,/nth-child\(2\)>\.dash-link-btn/);
-  assert.match(home,/\.dash-kpi-card\{[^}]*display:block!important[^}]*min-height:168px!important[^}]*padding:24px 28px!important/);
-  assert.match(home,/\.dash-kpi-title\{[^}]*max-width:calc\(100% - 76px\)[^}]*font-size:var\(--gf-font-lg\)!important/);
-  assert.match(home,/\.dash-kpi-standard \.dash-kpi-icon\{[^}]*position:absolute[^}]*top:24px[^}]*right:24px/);
-  assert.match(home,/\.dash-kpi-metric\{[^}]*margin-top:auto/);
-  assert.match(home,/\.dash-busy-split>div\{[^}]*position:relative[^}]*padding:0 10px 0 54px/);
-  assert.match(home,/\.dash-resource-symbol\{[^}]*position:absolute[^}]*left:8px[^}]*width:40px[^}]*transform:translateY\(-50%\)/);
-
+  assert.match(tokens,/--gf-focus-ring\s*:\s*0 0 0 3px rgba\(22,101,255,\.17\)/i);
+  assert.match(tokens,/--gf-sidebar-width\s*:\s*244px/);
+  const theme=read(assets+'reference-theme.css');
+  for(const selector of ['.gf-ref-day-strip','.gf-ref-hero-wrapper','.gf-ref-hero','.gf-ref-columns','.gf-ref-resource-entry','.gf-ref-truck','.gf-ref-legend']){
+    assert.ok(theme.includes(selector),'Missing dashboard reference style '+selector);
+  }
+  assert.match(theme,/prefers-reduced-motion:no-preference/);
+  assert.match(theme,/\.gf-ref-hero\{[^}]*grid-template-columns:/);
+  const html=read('static/dashboard/index.html');
+  const dashboard=html.slice(html.indexOf('<section id="tab-dashboard"'),html.indexOf('<section id="tab-dashboard-scheduled"'));
+  for(const id of ['dashTodayScheduled','dashTodayProgress','dashTodayCompletedDeliveries','dashBusyDrivers','dashBusyVehicles','dashScheduledBadge','dashInProgressBadge','dashCompletedBadge','dashScheduledList','dashCompletedList','dashVehicleStatus','dashDriverStatus','gfRefRouteDrawing','gfRefStopList']){
+    assert.equal((dashboard.match(new RegExp('id="'+id+'"','g'))||[]).length,1,'Missing or duplicate dashboard '+id);
+  }
+  for(const phrase of ['gf-ref-day-strip','gf-ref-hero-wrapper','gf-ref-columns','gf-ref-resource-table-head'])
+    assert.match(dashboard,new RegExp(phrase));
+  assert.match(dashboard,/onclick="openDashboardInProgressPage\(\)"/);
+  assert.match(html,/\/static\/design-system\/reference-theme\.css/);
   const core=read('static/dashboard/js/core.js');
+  assert.match(core,/function renderGFReferenceDashboardHero\(summary\)/);
+  assert.match(core,/api\(`\/api\/routes\/\$\{routeId\}`\)/);
   assert.match(core,/scheduled\.slice\(0,3\)\.map/);
-  assert.match(core,/progress\.slice\(0,3\)\.map/);
+  assert.match(core,/completedToday\.slice\(0,3\)\.map/);
+  assert.match(core,/progress\.slice\(1,3\)\.map/);
   const routeItem=core.slice(core.indexOf('function dashRouteItem'),core.indexOf('function gfTimeFromIso'));
   assert.match(routeItem,/dash-route-context/);
   assert.match(routeItem,/dash-route-progress-line/);
   assert.match(routeItem,/dash-route-issues/);
-  assert.doesNotMatch(routeItem,/dash-live-grid|dash-next-stop/);
-  assert.match(core,/completedToday\.slice\(0,3\)\.map/);
-
-  const html=read('static/dashboard/index.html');
-  for(const iconClass of ['orange','blue','green','purple'])
-    assert.match(html,new RegExp('dash-kpi-icon '+iconClass));
-  assert.equal((html.match(/dash-kpi-card dash-kpi-standard/g)||[]).length,3);
-  assert.equal((html.match(/class="dash-kpi-content"/g)||[]).length,4);
-  assert.equal((html.match(/class="dash-kpi-title/g)||[]).length,4);
-  assert.equal((html.match(/class="dash-kpi-metric"/g)||[]).length,3);
-  assert.match(html,/dash-kpi-card dash-kpi-resources/);
+  new vm.Script(core);
 });
-
 
 test('company profile uses the workspace topbar and keeps billing addresses always open',()=>{
   const html=read('static/dashboard/index.html');
@@ -335,26 +324,28 @@ test('workspace legal links live in navigation and advanced legal docs live in s
 });
 
 
-test('dashboard resource panels match route panel headers and use neutral actions',()=>{
+test('dashboard resources use reference rows and keep both navigation actions',()=>{
   const html=read('static/dashboard/index.html');
   const dashboard=html.slice(html.indexOf('<section id="tab-dashboard"'),html.indexOf('<section id="tab-dashboard-scheduled"'));
-  assert.equal((dashboard.match(/class="dash-resource-action"/g)||[]).length,2);
-  assert.match(dashboard,/class="dash-resource-action" onclick="showTab\('mezzi'\)"><span>Tutti i <\/span>/);
-  assert.match(dashboard,/class="dash-resource-action" onclick="showTab\('autisti'\)"><span>Tutti gli <\/span>/);
-  assert.doesNotMatch(dashboard,/dash-link-inline/);
-
-  const workspace=read(assets+'workspace.css');
-  assert.match(workspace,/\.dash-panel-title\{[^}]*background:var\(--gf-color-surface-subtle\)/);
-  assert.match(workspace,/\.dash-resource-action\{[^}]*background:var\(--gf-color-surface\)[^}]*color:var\(--gf-color-text\)/);
-  assert.match(workspace,/\.dash-resource-action:hover\{[^}]*background:var\(--gf-color-bg\)/);
+  assert.match(dashboard,/class="gf-ref-text-action" onclick="showTab\('mezzi'\)">Tutti i mezzi/);
+  assert.match(dashboard,/class="gf-ref-text-action" onclick="showTab\('autisti'\)">Tutti gli autisti/);
+  assert.match(dashboard,/id="dashVehicleStatus"/);
+  assert.match(dashboard,/id="dashDriverStatus"/);
+  assert.equal((dashboard.match(/class="gf-ref-resource-table-head"/g)||[]).length,2);
+  const css=read(assets+'reference-theme.css');
+  assert.match(css,/\.gf-ref-resource-entry/);
+  assert.match(css,/\.gf-ref-plate/);
+  assert.match(css,/\.gf-ref-license/);
+  const core=read('static/dashboard/js/core.js');
+  assert.match(core,/vehicles\.slice\(0,4\)\.map/);
+  assert.match(core,/drivers\.slice\(0,4\)\.map/);
 });
-
 
 test('dashboard completed-deliveries KPI has fixed copy and uses actual completion events',()=>{
   const html=read('static/dashboard/index.html');
   const dashboard=html.slice(html.indexOf('<section id="tab-dashboard"'),html.indexOf('<section id="tab-dashboard-scheduled"'));
-  assert.match(dashboard,/class="dash-kpi-title">Consegne completate oggi<\/span>/);
-  assert.match(dashboard,/id="dashTodayCompletedDeliveries">0<\/strong><small>completate dagli autisti oggi<\/small>/);
+  assert.match(dashboard,/<span>Consegne completate<\/span><strong id="dashTodayCompletedDeliveries">0<\/strong>/);
+  assert.match(dashboard,/id="dashTodayCompletedDeliveries">0<\/strong><small>dagli autisti oggi<\/small>/);
   assert.doesNotMatch(dashboard,/Consegne<\/span> merce/);
 
   const core=read('static/dashboard/js/core.js');
