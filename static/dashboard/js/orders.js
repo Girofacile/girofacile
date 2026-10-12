@@ -184,11 +184,11 @@
           </div>
         </section>`
       :`<section class="order-modal-alert is-ok">
-          <div class="order-modal-alert-band">Verifica completata</div>
+          
           <div class="order-modal-alert-body">
             <span class="order-modal-alert-icon" aria-hidden="true">✓</span>
-            <strong>Indirizzo verificato</strong>
-            <p>La destinazione è pronta per essere utilizzata nella pianificazione.</p>
+            <strong>Verifica completata</strong>
+            <p>L’indirizzo di consegna è stato verificato ed è pronto per la pianificazione.</p>
           </div>
         </section>`;
     const readyButton=''; // Verification makes the order ready without confirmation.
@@ -197,6 +197,7 @@
 
     el('orderModalContent').innerHTML=`
       <header class="order-modal-header order-modal-detail-header">
+        <span class="order-modal-package-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="m12 2 9 5-9 5-9-5 9-5Zm-9 5v10l9 5 9-5V7M12 12v10"/></svg></span>
         <div class="order-modal-heading">
           <div class="order-modal-title-row"><h2 id="orderModalTitle">${esc(o.number)}</h2>${statusBadge(o.status)}${sourceChip}</div>
           <p>Acquisito il ${esc(date(o.received_at))}</p>
@@ -207,7 +208,7 @@
       <div class="order-modal-body">
         <main class="order-modal-main">
           <section class="order-modal-card">
-            <div class="order-modal-card-head"><span aria-hidden="true">●</span><h3>Dati di consegna</h3></div>
+            <div class="order-modal-card-head"><span class="order-modal-section-icon" aria-hidden="true">⌖</span><h3>Dati di consegna</h3></div>
             <div class="order-modal-delivery-grid">
               <div><span>Destinatario</span><strong>${esc(display(data.recipient_name))}</strong></div>
               <div><span>Indirizzo di consegna</span><strong>${addressText}</strong></div>
@@ -217,7 +218,7 @@
           </section>
 
           <section class="order-modal-card">
-            <div class="order-modal-card-head"><span aria-hidden="true">◆</span><h3>Specifiche merce e logistica</h3></div>
+            <div class="order-modal-card-head"><span class="order-modal-section-icon" aria-hidden="true">▣</span><h3>Specifiche merce e logistica</h3></div>
             <div class="order-modal-logistics-grid">
               <div><span>Peso (kg)</span><strong>${esc(display(data.weight_kg))}</strong></div>
               <div><span>Colli</span><strong>${esc(display(data.packages))}</strong></div>
@@ -244,7 +245,7 @@
 
         <aside class="order-modal-side">
           ${actionCard}
-          <section id="orderCustomerPanel" class="order-modal-card order-modal-customer"></section>
+          
         </aside>
       </div>
       <footer class="order-modal-footer">
@@ -255,7 +256,6 @@
           ${editButton}
         </div>
       </footer>`;
-    window.GFOrderCustomers?.render(o);
   }
   function edit(){if(!current)return;renderEditor(current.operational_data||{},false);}
   function cancelEdit(){current?detail():closeModal();}
