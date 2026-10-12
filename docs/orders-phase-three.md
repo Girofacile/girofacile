@@ -1,3 +1,9 @@
+> **Documento storico (funzionalità ritirata il 12 ottobre 2026).**
+> Il sistema di associazione tra Ordini e Clienti qui descritto non è più attivo.
+> Ora ogni ordine è indipendente: nessun riconoscimento, proposta di collegamento
+> o ereditarietà dei dati. Valgono le regole aggiornate in
+> `docs/order-ingestion-api.md`.
+>
 # Ordini: terzo intervento
 
 ## Funzioni operative
