@@ -18,7 +18,6 @@ CATALOG = [
         ("orders.create", "Ordini", "Crea ordini"),
         ("orders.update", "Ordini", "Correggi e verifica ordini"),
         ("orders.import", "Ordini", "Importa ordini"),
-        ("orders.match", "Ordini", "Associa clienti agli ordini"),
         ("orders.integrations", "Ordini", "Gestisci fonti e credenziali"),
         ("orders.plan", "Ordini", "Trasferisci ordini alla pianificazione"),
         ("routes.read", "Giri", "Visualizza giri, storico e posizione del mezzo"),
@@ -51,10 +50,9 @@ DEPENDENCIES = {
 for resource in RESOURCE_LABELS:
     for action in ("create", "update", "delete"):
         DEPENDENCIES[f"{resource}.{action}"] = {f"{resource}.read"}
-for action in ('create', 'update', 'import', 'match', 'integrations', 'plan'):
+for action in ('create', 'update', 'import', 'integrations', 'plan'):
     DEPENDENCIES[f'orders.{action}'] = {'orders.read'}
 DEPENDENCIES['orders.plan'].add('routes.plan')
-DEPENDENCIES['orders.match'].add('customers.read')
 DEPENDENCIES["customers.read"] = {"agents.read"}
 
 
@@ -95,7 +93,7 @@ _PRESET_DEFINITIONS = (
          "dashboard.read", "reports.read", "chat.read", "chat.write",
          "company.read", "company.update", "settings.update",
          "orders.read", "orders.create", "orders.update", "orders.import",
-         "orders.match", "orders.integrations", "orders.plan",
+         "orders.integrations", "orders.plan",
          "support.read", "support.write", "notifications.read",
      )),
     ("planner", "Pianificatore",
@@ -148,8 +146,6 @@ rule("PUT", ["/api/order-sources/{source_id}", "/api/order-sources/{source_id}/f
 rule("DELETE", ["/api/order-sources/{source_id}"], "orders.integrations")
 rule("POST", ["/api/order-sources/{source_id}/upload", "/api/order-sources/{source_id}/runs/{run_id}/preview"], "orders.import", "orders.integrations")
 rule("POST", ["/api/order-sources/{source_id}/runs/{run_id}/commit"], "orders.import")
-rule("GET", ["/api/orders/{order_id}/customers"], "orders.match")
-rule("POST", ["/api/orders/{order_id}/customer"], "orders.match")
 rule("GET", ["/api/order-planning/selection"], "orders.plan")
 rule("PUT", ["/api/order-planning/selection", "/api/order-planning/snapshot"], "orders.plan")
 rule("POST", ["/api/order-planning/preview"], "orders.plan")
