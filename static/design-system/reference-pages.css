@@ -1,0 +1,545 @@
+/* GiroFacile | Estensione del riferimento dashboard.html alle altre pagine
+ * La dashboard #tab-dashboard e il suo hero NON sono modificati.
+ * Ogni valore visivo nasce dai token globali importati prima di questo foglio.
+ * Nessun comportamento, API o gestione degli stati viene ridefinito qui.
+ */
+
+/* 1. Radice: tipografia, geometrie e ritmo condivisi nelle pagine interne. */
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard){
+  --gf-blue:var(--gf-color-primary);
+  --gf-ink:var(--gf-color-text);
+  --gf-muted:var(--gf-color-muted);
+  --gf-line:var(--gf-color-border);
+  --gf-tint:var(--gf-color-info-bg);
+  --gf-surface:var(--gf-color-surface);
+  --gf-control-radius:var(--gf-radius-md);
+  --dash-ink:var(--gf-color-text);
+  --dash-muted:var(--gf-color-muted);
+  --dash-line:var(--gf-color-border);
+  color:var(--gf-color-text);
+  font:400 14px/1.5 var(--gf-font-family);
+  min-width:0;
+}
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(h1,h2,h3,h4){
+  color:var(--gf-color-text);
+  font-family:var(--gf-font-display)!important;
+  letter-spacing:-.01em;
+}
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+  .page-title-row,.report-hero-row,.dash-subpage-title-row,.orders-page-title,
+  .plan-page-top-v875,.billing-page-top-v876,.orders-connections-mobile-head
+){
+  min-width:0;
+  gap:16px 24px;
+  margin-bottom:22px;
+}
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+  .page-title-row,.report-hero-row,.dash-subpage-title-row,
+  .plan-page-top-v875,.billing-page-top-v876
+) h1{
+  margin:0 0 5px!important;
+  font:700 28px/1.12 var(--gf-font-display)!important;
+  letter-spacing:-.02em!important;
+}
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+  .page-title-row,.report-hero-row,.dash-subpage-title-row,
+  .plan-page-top-v875,.billing-page-top-v876
+) p{
+  margin:3px 0 0!important;
+  font:400 14px/1.5 var(--gf-font-family)!important;
+  color:var(--gf-color-muted)!important;
+}
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+  .panel-header,.customer-list-head,.deposit-list-head,.gf-directory-head,
+  .orders-list-head,.orders-sources-directory-head,.report-chart-head,
+  .billing-section-head-v876,.settings-section-head
+){
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-width:0;
+  padding:16px 20px;
+  border-color:var(--gf-color-border)!important;
+  background:var(--gf-color-surface)!important;
+}
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+  .panel-header,.customer-list-head,.deposit-list-head,.gf-directory-head,
+  .orders-list-head,.orders-sources-directory-head,.report-chart-head,
+  .billing-section-head-v876
+) h2{
+  margin:0;
+  color:var(--gf-color-text)!important;
+  font:700 16px/1.2 var(--gf-font-display)!important;
+  letter-spacing:-.005em!important;
+}
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+  .panel-subtitle,.customer-list-head p,.deposit-list-head p,.gf-directory-head p,
+  .muted,.muted-small
+){
+  color:var(--gf-color-muted)!important;
+  font-family:var(--gf-font-family);
+}
+
+/* 2. Superfici: una sola grammatica visiva per pagine gestionali. */
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+  .panel,.card,.gf-card,.gf-directory-panel,.customer-list-panel-v8,
+  .deposit-list-panel,.orders-list-panel,.orders-filter-panel,.orders-source-panel,
+  .orders-source-card,.orders-order-card,.driver-directory-card,.fleet-card,
+  .customer-card,.deposit-card,.company-card-v29,.onboarding-card-v29,
+  .settings-panel,.report-chart-card,.report-table-card,.report-kpi-card,
+  .driver-chat-list-card,.driver-chat-room-card,.dash-sub-card,.dash-sub-route-picker,
+  .scheduled-overview,.scheduled-stops,.scheduled-summary,.completed-picker,
+  .completed-stops,.completed-summary,.live-design-card,.live-design-picker,
+  .route-map-panel-v74,.planning-setup-panel,.billing-section-v876,
+  .billing-summary-card-v876,.plan-current-hero-v875,.plan-current-side-v875,
+  .plan-page-features-v875,.plan-help-card-v875,.plan-comparison-v875,
+  .up-card-v875,.feature-lock-card,.feature-plan-card,.history-data-panel-v311
+){
+  border:1px solid var(--gf-color-border)!important;
+  border-radius:16px!important;
+  background:var(--gf-color-surface)!important;
+  color:var(--gf-color-text);
+  box-shadow:var(--gf-shadow-sm)!important;
+  min-width:0;
+}
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+  .fleet-card,.driver-directory-card,.customer-card,.deposit-card,.orders-order-card,
+  .orders-source-card,.up-card-v875
+):hover{
+  border-color:#c2d0e7!important;
+  box-shadow:0 4px 18px rgba(15,34,80,.09)!important;
+}
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+  .company-section-heading,.driver-directory-top,.fleet-card-head,
+  .deposit-card-heading,.customer-card-heading,.order-source-panel-head,
+  .driver-chat-list-head,.driver-chat-room-head
+){
+  border-color:var(--gf-color-border)!important;
+}
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+  .company-section-heading,.company-section-heading h2,.settings-item h3,
+  .orders-source-card h3,.fleet-identity strong,.driver-directory-identity strong
+){
+  color:var(--gf-color-text);
+}
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+  .company-section-icon,.settings-icon,.deposit-card-icon,.gf-directory-metric-icon,
+  .report-kpi-icon,.driver-directory-avatar,.fleet-photo-placeholder,
+  .history-empty-icon-v311,.billing-summary-icon-v876
+){
+  border-radius:10px!important;
+  background:var(--gf-color-info-bg)!important;
+  color:var(--gf-color-info)!important;
+  box-shadow:none!important;
+}
+
+/* 3. KPI: stesso ordine tipografico dello strip della dashboard. */
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+  .stat-card,.customer-metric,.deposit-metric,.gf-directory-metric,
+  .driver-stat,.orders-metric-card,.report-kpi-card,.billing-summary-card-v876,
+  .collaborator-metrics>div,.gf-stat,.scheduled-metric,.completed-card
+){
+  min-width:0;
+  padding:18px 20px!important;
+  border:1px solid var(--gf-color-border)!important;
+  border-radius:16px!important;
+  background:var(--gf-color-surface)!important;
+  box-shadow:var(--gf-shadow-sm)!important;
+}
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+  .stat-card,.customer-metric,.deposit-metric,.gf-directory-metric,
+  .driver-stat,.orders-metric-card,.report-kpi-card,.billing-summary-card-v876,
+  .collaborator-metrics>div,.gf-stat,.scheduled-metric
+) :is(strong,.stat-value,.customer-metric-value,.orders-metric-value,.deposit-metric-value){
+  color:var(--gf-color-primary)!important;
+  font:700 30px/1.1 var(--gf-font-display)!important;
+  letter-spacing:-.02em!important;
+  font-variant-numeric:tabular-nums;
+}
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+  .stat-card,.customer-metric,.deposit-metric,.gf-directory-metric,
+  .driver-stat,.orders-metric-card,.report-kpi-card,.billing-summary-card-v876,
+  .collaborator-metrics>div,.gf-stat,.scheduled-metric
+) :is(small,.stat-label,.orders-metric-label,.customer-metric-label,.deposit-metric-label){
+  font:400 13px/1.4 var(--gf-font-family)!important;
+  color:var(--gf-color-muted)!important;
+}
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+  .orders-metrics,.gf-directory-metrics,.customer-metrics,.deposit-metrics,
+  .driver-stats-grid,.collaborator-metrics,.stats-grid,.report-kpi-grid,
+  .billing-summary-grid-v876,.scheduled-metrics
+){
+  gap:16px!important;
+  margin-bottom:22px;
+}
+
+/* 4. Pulsanti: stile piatto della dashboard (no gradienti, effetti glow o salti). */
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+  .btn-primary,.gf-button[data-variant="primary"],.fleet-create,
+  .orders-open-button,.order-selection-action.primary
+),
+body[data-gf-surface="workspace"] :is(
+  .modal-overlay,.gf-dialog,#profileOverlay,#supportTicketModalV60,
+  #notificationDropdown,#orderModal
+) :is(.btn-primary,.gf-button[data-variant="primary"]){
+  min-height:40px;
+  padding:9px 16px;
+  border:1px solid var(--gf-color-primary)!important;
+  border-radius:10px!important;
+  background:var(--gf-color-primary)!important;
+  color:#fff!important;
+  font:600 14px/1.4 var(--gf-font-family)!important;
+  box-shadow:none!important;
+  transform:none!important;
+  text-shadow:none!important;
+}
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+  .btn-primary,.gf-button[data-variant="primary"],.fleet-create,
+  .orders-open-button,.order-selection-action.primary
+):hover:not(:disabled),
+body[data-gf-surface="workspace"] :is(
+  .modal-overlay,.gf-dialog,#profileOverlay,#supportTicketModalV60,
+  #notificationDropdown,#orderModal
+) :is(.btn-primary,.gf-button[data-variant="primary"]):hover:not(:disabled){
+  background:var(--gf-color-primary-hover)!important;
+  border-color:var(--gf-color-primary-hover)!important;
+  box-shadow:none!important;
+  filter:none!important;
+  transform:none!important;
+}
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+  .btn-secondary,.btn-light,.gf-button[data-variant="secondary"],.fleet-edit,
+  .driver-view,.orders-view-switch button,.customer-view-controls button,
+  .deposit-view-controls button,.fleet-views button
+),
+body[data-gf-surface="workspace"] :is(
+  .modal-overlay,.gf-dialog,#profileOverlay,#supportTicketModalV60,#orderModal
+) :is(.btn-secondary,.btn-light,.gf-button[data-variant="secondary"]){
+  min-height:40px;
+  padding:9px 14px;
+  border:1px solid var(--gf-color-border)!important;
+  border-radius:10px!important;
+  background:var(--gf-color-surface)!important;
+  color:var(--gf-color-text)!important;
+  font:600 14px/1.4 var(--gf-font-family)!important;
+  box-shadow:none!important;
+  transform:none!important;
+}
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+  .btn-secondary,.btn-light,.gf-button[data-variant="secondary"],.fleet-edit,
+  .driver-view
+):hover:not(:disabled),
+body[data-gf-surface="workspace"] :is(
+  .modal-overlay,.gf-dialog,#profileOverlay,#supportTicketModalV60,#orderModal
+) :is(.btn-secondary,.btn-light,.gf-button[data-variant="secondary"]):hover:not(:disabled){
+  border-color:#c2d0e7!important;
+  background:var(--gf-color-surface-subtle)!important;
+}
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+  .gf-button[data-variant="danger"],.btn-danger,.fleet-delete,.driver-delete,
+  .deposit-delete-danger,.customer-delete-danger
+),
+body[data-gf-surface="workspace"] :is(.modal-overlay,.gf-dialog,#orderModal) :is(
+  .gf-button[data-variant="danger"],.btn-danger,.deposit-delete-danger,.customer-delete-danger
+){
+  border-color:var(--gf-color-danger)!important;
+  background:var(--gf-color-danger)!important;
+  color:#fff!important;
+  border-radius:10px!important;
+  box-shadow:none!important;
+}
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+  .gf-button[data-variant="ghost"],.btn-ghost
+),
+body[data-gf-surface="workspace"] :is(.modal-overlay,.gf-dialog,#profileOverlay) :is(
+  .gf-button[data-variant="ghost"],.btn-ghost
+){
+  background:transparent!important;border-color:transparent!important;
+  color:var(--gf-color-primary)!important;box-shadow:none!important;
+}
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(button,a):focus-visible,
+body[data-gf-surface="workspace"] :is(.modal-overlay,.gf-dialog,#profileOverlay,#supportTicketModalV60,#orderModal) :is(button,a):focus-visible{
+  outline:2px solid var(--gf-color-primary);
+  outline-offset:2px;
+}
+
+/* 5. Barre strumenti e controlli scheda/tabella. */
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+  .orders-list-toolbar,.orders-toolbar,.customer-searchbar-v8,
+  .deposit-searchbar,.deposit-list-toolbar,.fleet-toolbar,.driver-toolbar,
+  .collaborators-toolbar,.gf-directory-toolbar,.history-toolbar-v311,
+  .report-toolbar,.report-filter-row,.orders-filters,.picker-filters
+){
+  gap:12px!important;
+  border-color:var(--gf-color-border)!important;
+  background:transparent;
+}
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+  .orders-view-switch,.customer-view-controls,.deposit-view-controls,.fleet-views,
+  .gf-directory-view-switch,.gf-tabs
+){
+  display:inline-flex;
+  align-items:center;
+  gap:3px!important;
+  padding:4px!important;
+  border:1px solid var(--gf-color-border)!important;
+  border-radius:10px!important;
+  background:var(--gf-color-surface-subtle)!important;
+  box-shadow:none!important;
+}
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+  .orders-view-switch,.customer-view-controls,.deposit-view-controls,.fleet-views,
+  .gf-directory-view-switch
+)>button{
+  min-height:34px!important;
+  padding:7px 12px!important;
+  border:0!important;
+  border-radius:7px!important;
+  box-shadow:none!important;
+  background:transparent!important;
+  color:var(--gf-color-muted)!important;
+  font:600 13px var(--gf-font-family)!important;
+}
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+  .orders-view-switch,.customer-view-controls,.deposit-view-controls,.fleet-views,
+  .gf-directory-view-switch
+)>button:is(.active,[aria-pressed="true"],[data-active="true"]){
+  background:var(--gf-color-surface)!important;
+  color:var(--gf-color-primary)!important;
+  box-shadow:var(--gf-shadow-sm)!important;
+}
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+  .customer-search,.driver-search-box,.fleet-search,.collaborator-search,
+  .orders-search-input-wrap,.gf-directory-search,.deposit-search,.report-table-search
+){
+  position:relative;
+  min-width:0;
+  border-color:var(--gf-color-border)!important;
+  border-radius:10px!important;
+  background:var(--gf-color-surface)!important;
+  box-shadow:none!important;
+}
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+  .customer-search,.driver-search-box,.fleet-search,.collaborator-search,
+  .orders-search-input-wrap,.gf-directory-search,.deposit-search,.report-table-search
+)>svg{
+  position:absolute;
+  width:18px;height:18px;
+  left:13px;top:50%;transform:translateY(-50%);
+  color:var(--gf-color-muted);
+  pointer-events:none;
+}
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+  .customer-search,.driver-search-box,.fleet-search,.collaborator-search,
+  .orders-search-input-wrap,.gf-directory-search,.deposit-search,.report-table-search
+):has(>svg)>input{
+  padding-left:42px!important;
+}
+
+/* 6. Dati tabellari: header, righe, bordi e densità del riferimento. */
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+  .tableWrap,.orders-table-shell,.gf-table-wrap
+){
+  border-color:var(--gf-color-border)!important;
+  border-radius:12px!important;
+  box-shadow:none!important;
+  max-width:100%;
+}
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+  .gf-table,.customer-table,.deposit-table,.fleet-table,.orders-table,
+  .report-data-table,.plan-table-v875,.result-table
+){
+  font:400 14px/1.5 var(--gf-font-family)!important;
+  color:var(--gf-color-text);
+  border-collapse:collapse;
+  width:100%;
+}
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) table:not(.leaflet-control table) th{
+  background:var(--gf-color-surface-subtle)!important;
+  color:var(--gf-color-muted)!important;
+  border-bottom:1px solid var(--gf-color-border)!important;
+  padding:10px 18px;
+  font:500 12.5px/1.4 var(--gf-font-family)!important;
+  letter-spacing:0!important;
+  text-transform:none!important;
+}
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) table:not(.leaflet-control table) td{
+  padding:12px 18px;
+  border-bottom:1px solid var(--gf-color-border)!important;
+  color:var(--gf-color-text);
+  font-size:13.5px;
+  vertical-align:middle;
+}
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) table:not(.leaflet-control table) tr:last-child>td{
+  border-bottom:0!important;
+}
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) table:not(.leaflet-control table) tbody tr:hover{
+  background:var(--gf-color-surface-subtle);
+}
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+  .fleet-plate,.gf-plate,.vehicle-plate,.deposit-card-label
+){
+  border-color:var(--gf-color-text);
+  color:var(--gf-color-text);
+}
+
+/* 7. Campi: manteniamo gli stati validazione, file, mappa e i custom input. */
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+  .gf-input,.gf-select,.gf-textarea,
+  .company-field input,.company-field select,.company-field textarea,
+  .gf-field input,.gf-field select,.gf-field textarea,
+  .deposit-field input,.deposit-field textarea,
+  .orders-filter-grid input,.orders-filter-grid select,
+  .orders-form-grid input,.orders-form-grid select,.orders-form-grid textarea
+):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]),
+body[data-gf-surface="workspace"] :is(
+  .modal-overlay,.gf-dialog,#profileOverlay,#supportTicketModalV60,#orderModal
+) :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]),select,textarea){
+  min-height:40px;
+  border:1px solid var(--gf-color-border)!important;
+  border-radius:10px!important;
+  background:var(--gf-color-surface)!important;
+  color:var(--gf-color-text)!important;
+  font:400 14px/1.5 var(--gf-font-family)!important;
+  box-shadow:none!important;
+}
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+  .gf-input,.gf-select,.gf-textarea,
+  .company-field input,.company-field select,.company-field textarea,
+  .gf-field input,.gf-field select,.gf-field textarea
+):focus,
+body[data-gf-surface="workspace"] :is(
+  .modal-overlay,.gf-dialog,#profileOverlay,#supportTicketModalV60,#orderModal
+) :is(input,select,textarea):focus{
+  border-color:var(--gf-color-primary)!important;
+  outline:0;
+  box-shadow:var(--gf-focus-ring)!important;
+}
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+  .company-field label,.gf-field label,.deposit-field label,
+  .orders-form-grid label,.driver-modal-grid label
+){
+  color:var(--gf-color-text);
+  font:600 13px/1.45 var(--gf-font-family);
+  letter-spacing:0;
+}
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+  input[type=checkbox],input[type=radio]
+){
+  accent-color:var(--gf-color-primary);
+}
+
+/* 8. Etichette, icone di stato e segnali: stessa palette senza riscrivere il significato. */
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+  .gf-badge,.orders-status,.customer-status,.fleet-status,.driver-status,
+  .deposit-default-badge,.scheduled-status,.route-status-pill,
+  .company-configured-badge-v40
+){
+  font:600 12px/1.3 var(--gf-font-family)!important;
+  border-radius:99px!important;
+  box-shadow:none!important;
+}
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+  .orders-status,.route-status-pill,.driver-status,.fleet-status
+)[data-status="success"],
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+  .customer-status.verified,.deposit-default-badge,.orders-status-consegnato
+){
+  background:var(--gf-color-success-bg)!important;color:var(--gf-color-success)!important;
+}
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+  .orders-status,.route-status-pill,.driver-status,.fleet-status
+)[data-status="warning"]{
+  background:var(--gf-color-warning-bg)!important;color:var(--gf-color-warning)!important;
+}
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+  .orders-status,.route-status-pill,.driver-status,.fleet-status
+)[data-status="danger"]{
+  background:var(--gf-color-danger-bg)!important;color:var(--gf-color-danger)!important;
+}
+
+/* 9. Sezioni con layout specifico: ordine delle aree invariato. */
+body[data-gf-surface="workspace"] #app #tab-ordini :is(.orders-list-panel,.orders-filter-panel){
+  overflow:visible;
+}
+body[data-gf-surface="workspace"] #app #tab-ordini :is(.orders-list-toolbar,.orders-list-head){
+  border-color:var(--gf-color-border)!important;
+}
+body[data-gf-surface="workspace"] #app #tab-ordini :is(.orders-metric-card,.orders-source-option){
+  border-radius:16px!important;
+}
+body[data-gf-surface="workspace"] #app #tab-company .company-profile-grid{
+  gap:22px!important;
+}
+body[data-gf-surface="workspace"] #app #tab-company .company-card-v29{
+  padding:20px!important;
+}
+body[data-gf-surface="workspace"] #app #tab-company .company-section-heading h2{
+  font:700 16px/1.2 var(--gf-font-display)!important;
+}
+body[data-gf-surface="workspace"] #app #tab-giro .plan-step,
+body[data-gf-surface="workspace"] #app #tab-settings .settings-item,
+body[data-gf-surface="workspace"] #app #tab-ordini-collegamenti .orders-source-option{
+  border-color:var(--gf-color-border)!important;
+  border-radius:12px!important;
+  background:var(--gf-color-surface)!important;
+  box-shadow:none!important;
+}
+body[data-gf-surface="workspace"] #app #tab-settings .settings-item+.settings-item{
+  border-top-color:var(--gf-color-border)!important;
+}
+body[data-gf-surface="workspace"] #app #tab-report .report-chart-card :is(h2,h3),
+body[data-gf-surface="workspace"] #app #tab-storico :is(h2,h3){
+  font-family:var(--gf-font-display)!important;
+}
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+  .gf-empty,.customer-empty,.deposit-empty,.fleet-empty,.driver-directory-empty,
+  .orders-empty,.history-empty-v311,.dash-detail-empty
+){
+  color:var(--gf-color-muted);
+}
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+  .gf-empty h2,.customer-empty h2,.deposit-empty h2,.fleet-empty h2,
+  .driver-directory-empty h2,.history-empty-v311 h2
+){
+  font:700 16px/1.3 var(--gf-font-display)!important;
+  color:var(--gf-color-text)!important;
+}
+
+/* 10. Responsive: larghezze elastiche, senza cambiare logica di navigazione. */
+@media(max-width:1180px){
+  body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+    .orders-metrics,.customer-metrics,.deposit-metrics,.gf-directory-metrics,
+    .driver-stats-grid,.collaborator-metrics
+  ){grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+@media(max-width:820px){
+  body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+    .page-title-row,.report-hero-row,.dash-subpage-title-row
+  ) h1{font-size:24px!important}
+  body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+    .panel-header,.customer-list-head,.deposit-list-head,.gf-directory-head,
+    .orders-list-head,.report-chart-head
+  ){padding:14px 16px}
+  body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) table:not(.leaflet-control table) :is(th,td){
+    padding:10px 12px;
+  }
+}
+@media(max-width:520px){
+  body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+    .orders-metrics,.customer-metrics,.deposit-metrics,.gf-directory-metrics,
+    .driver-stats-grid,.collaborator-metrics
+  ){gap:10px!important}
+  body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+    .stat-card,.customer-metric,.deposit-metric,.gf-directory-metric,
+    .driver-stat,.orders-metric-card,.collaborator-metrics>div
+  ){padding:14px!important}
+  body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+    .stat-card,.customer-metric,.deposit-metric,.gf-directory-metric,
+    .driver-stat,.orders-metric-card,.collaborator-metrics>div
+  ) :is(strong,.orders-metric-value){font-size:24px!important}
+  body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
+    .panel-header,.customer-list-head,.deposit-list-head,.gf-directory-head,
+    .orders-list-head
+  ){flex-wrap:wrap}
+}
