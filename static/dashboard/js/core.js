@@ -550,7 +550,7 @@ function loadProfilePanel(){
   const setText = (id,val)=>{ const el=document.getElementById(id); if(el) el.textContent=val; };
   // La testata identifica l'azienda; il modal modifica invece l'account dell'operatore.
   // Mantiene il saluto aziendale sincronizzato con l'intestazione.
-  if(!document.getElementById("tab-dashboard")?.classList.contains("hidden")){
+  if(typeof dashboardGreetingTitle==="function" && !document.getElementById("tab-dashboard")?.classList.contains("hidden")){
     setText("workspacePageTitle", dashboardGreetingTitle());
   }
   setText("topProfileName", companyName);
