@@ -46,10 +46,11 @@
         <h3>${esc(s.name)}</h3>
         <div class='orders-source-meta'><span>${type}</span>${sourceStatusBadge(s.status)}</div>
         <p class='orders-source-stat'><strong>${count} ${count===1?'ordine':'ordini'}</strong><span aria-hidden='true'> · </span>Ultima acquisizione: ${last}</p>
-        ${description?`<p class='orders-source-info ${isRemoved?'is-removed':''}'>${description}</p>`:''}
+        ${description&&!isRemoved?`<p class='orders-source-info'>${description}</p>`:''}
         ${hasIssue?`<p class='orders-source-issue'>Ultima verifica o acquisizione con errori. Consulta lo storico.</p>`:''}
       </div>
       <div class='page-actions orders-source-card-actions'>${importBtn}${openBtn}${historyBtn}${removeBtn}</div>
+      ${isRemoved?`<p class='orders-source-removed-note'>${description}</p>`:''}
     </article>`;
   }
   async function refresh(){
