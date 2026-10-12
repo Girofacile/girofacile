@@ -7,6 +7,10 @@ const WORKSPACE_TOPBAR_META = {
   "ordini-importa": {title:"Importa ordini",subtitle:"Carica il file, controlla i dati e conferma."},
   "ordine-fonte": {title:"Fonte ordini",subtitle:"Gestione fonte e validazione dei dati in ingresso."},
   collaboratori: {title:"Collaboratori",subtitle:"Gestisci accessi personali e funzioni assegnate."},
+  "dashboard-in-progress": {
+    title: "Giri in corso",
+    subtitle: "Avanzamento delle consegne, stato delle fermate e posizione GPS degli autisti."
+  },
   dashboard: {
     title: "Dashboard",
     subtitle: "Panoramica operativa delle consegne e dell’attività aziendale."
