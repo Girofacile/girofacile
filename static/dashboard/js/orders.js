@@ -147,7 +147,6 @@
     catch(err){if(request===detailSequence)el('orderModalContent').innerHTML=`<div class="order-modal-error"><p>${esc(err.message||String(err))}</p><button class="btn-secondary" onclick="GFOrders.close()">Chiudi</button></div>`;}
   }
   function changes(event){
-    if(['customer_linked','customer_resolution'].includes(event.kind))return `<p>Associazione cliente: ${esc(event.changes.after??event.changes.customer_id??'Destinatario separato')}</p>`;
     if(event.kind==='corrected')return Object.entries(event.changes).map(([key,value])=>`<p>${fields[key]||esc(key)}: ${esc(display(value.before))} → ${esc(display(value.after))}</p>`).join('');
     if(event.kind==='status_changed')return `<p>${labels[event.changes.before]||event.changes.before} → ${labels[event.changes.after]||event.changes.after}</p>`;
     if(event.kind==='address_verified')return `<p>${esc(event.changes.address)}</p>`;
@@ -159,11 +158,11 @@
     return '<p>Inserimento manuale</p>';
   }
   function eventLabel(kind){
-    return ({received:'Acquisizione ordine',source_updated:'Aggiornamento dalla fonte',customer_linked:'Cliente riconosciuto',customer_resolution:'Associazione cliente',route_status:'Stato consegna',route_released:'Rimosso dal giro',route_snapshot:'Fermata salvata',created:'Creazione ordine',corrected:'Modifica dati',address_verified:'Indirizzo verificato',status_changed:'Cambio stato'})[kind]||kind;
+    return ({received:'Acquisizione ordine',source_updated:'Aggiornamento dalla fonte',route_status:'Stato consegna',route_released:'Rimosso dal giro',route_snapshot:'Fermata salvata',created:'Creazione ordine',corrected:'Modifica dati',address_verified:'Indirizzo verificato',status_changed:'Cambio stato'})[kind]||kind;
   }
   function detail(){
     const o=current;if(!o)return;
-    const data=o.effective_data||o.operational_data||{};
+    const data=o.operational_data||{};
     const allowed=can('orders.update') && ['nuovo','da_verificare','pronto'].includes(o.status) && !o.assignments.length;
     const verified=!!o.address_verification&&!o.anomalies?.some(a=>a.code==='verification');
     const requested=data.requested_date?esc(data.requested_date):'Non indicata';
