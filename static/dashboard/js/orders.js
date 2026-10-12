@@ -52,7 +52,11 @@
       el('ordersMetrics').innerHTML=Object.entries(metricMeta).map(([key,meta])=>`<article class="orders-metric-card"><span class="orders-metric-icon is-${meta.cls}" aria-hidden="true"><svg viewBox="0 0 24 24">${meta.icon}</svg></span><div class="orders-metric-copy"><span class="orders-metric-label">${meta.label}</span><strong class="orders-metric-value">${Number(data.metrics[key]||0)}</strong><p class="orders-metric-description">${meta.description}</p></div></article>`).join('');
       const selected=el('ordersSource').value;
       el('ordersSource').innerHTML='<option value="">Tutte le fonti</option>'+data.sources.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');el('ordersSource').value=selected;
-      render();el('ordersMessage').textContent=data.total?`${data.total} ordini trovati`:'Nessun ordine trovato. Crea un ordine oppure modifica i filtri.';
+      render();
+      if(data.total){
+        const first=(page-1)*25+1,end=Math.min(page*25,data.total);
+        el('ordersMessage').textContent=`Vista ${first}–${end} di ${data.total} ordini`;
+      }else el('ordersMessage').textContent='Nessun ordine trovato. Crea un ordine oppure modifica i filtri.';
     }catch(err){if(request===sequence){el('ordersResults').replaceChildren();error('ordersMessage',err);}}
     finally{if(request===sequence)el('ordersResults').setAttribute('aria-busy','false');}
   }
@@ -65,7 +69,10 @@
       const selectAll=window.GFOrderPlanning?.headerCheckbox(last.items)||'';
       el('ordersResults').innerHTML='<div class="orders-table-shell tableWrap"><table class="orders-table" data-gf-responsive="cards"><thead><tr><th scope="col" class="orders-select-col" aria-label="Seleziona">'+selectAll+'</th><th scope="col">Numero ordine</th><th scope="col">Ricevuto</th><th scope="col">Cliente / destinatario</th><th scope="col">Indirizzo</th><th scope="col">Stato</th><th scope="col">Azioni</th></tr></thead><tbody>'+last.items.map(o=>`<tr class="${window.GFOrderPlanning?.isSelected(o.id)?'is-selected':''}"><td class="orders-select-cell">${window.GFOrderPlanning?.checkbox(o)||""}</td><td class="orders-number-cell">${esc(o.number)}</td><td>${esc(receivedDate(o.received_at))}</td><td class="orders-recipient-cell"><strong>${esc(display(o.recipient_name))}</strong></td><td class="orders-address-cell">${esc(display(o.delivery_address))}</td><td>${statusBadge(o.status)}</td><td>${open(o)}</td></tr>`).join('')+'</tbody></table></div>';
     }
-    el('ordersPage').textContent=`Pagina ${page} di ${Math.max(1,Math.ceil(last.total/25))}`;
+    const totalPages=Math.max(1,Math.ceil(last.total/25));
+    el('ordersPage').textContent=String(page);
+    el('ordersPage').setAttribute('aria-label',`Pagina ${page} di ${totalPages}`);
+    el('ordersPage').title=`Pagina ${page} di ${totalPages}`;
     el('ordersPrevious').disabled=page<=1;el('ordersNext').disabled=page*25>=last.total;
     for(const mode of ['table','cards'])el('ordersView-'+mode).setAttribute('aria-pressed',String(mode===view));
   }
