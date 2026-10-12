@@ -133,7 +133,46 @@
   }
   global.GFDesignSystem = Object.freeze({enhance,breakpoints,announce,createButton,createBadge,createEmptyState,createLoading,pageHeader});
   if(!doc) return;
+
+  // Icone lineari coerenti con la sidebar del riferimento HTML.
+  // Intervento esclusivamente grafico sui pulsanti di navigazione esistenti.
+  const outlineIcons = {
+    dashboard:"M3 3h7v7H3z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7H3z",
+    company:"M4 21V4a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v17 M15 9h4a1 1 0 0 1 1 1v11 M3 21h18 M8 7h3 M8 11h3 M8 15h3",
+    giro:"M5 5h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z M16 3v4 M8 3v4 M4 11h16",
+    "dashboard-scheduled":"M5 5h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z M16 3v4 M8 3v4 M4 11h16",
+    ordini:"M9 4h6v3H9z M7 5H6a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1h-1 M9 12h6 M9 16h6",
+    clienti:"M16 20v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1 M9.5 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z M21 20v-1a4 4 0 0 0-3-3.9 M16 4.1a3.5 3.5 0 0 1 0 6.8",
+    collaboratori:"M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M4 21a8 8 0 0 1 16 0",
+    agenti:"M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M4 21a8 8 0 0 1 16 0",
+    report:"M3 3v18h18 M7 15l4-4 3 3 5-6",
+    depositi:"M3 10l9-6 9 6v10H3z M8 20v-6h8v6",
+    mezzi:"M2 6h11v10H2z M13 9h5l3 3v4h-8z M6.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z M17.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z",
+    autisti:"M3 5h18a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z M5 16h4 M14 10h5 M14 14h5 M7 11.5a1.5 1.5 0 1 0 0-.01",
+    storico:"M3 12a9 9 0 1 0 3-6.7 M3 4v5h5 M12 7v5l3 2",
+    "chat-autisti":"M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z",
+    supporto:"M4 14v-2a8 8 0 0 1 16 0v2 M4 14h3v5H5a1 1 0 0 1-1-1z M20 14h-3v5h2a1 1 0 0 0 1-1z",
+    settings:"M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M12 2v3 M12 19v3 M2 12h3 M19 12h3 M4.9 4.9l2.1 2.1 M17 17l2.1 2.1 M4.9 19.1L7 17 M17 7l2.1-2.1"
+  };
+  function syncReferenceSidebarIcons(){
+    doc.querySelectorAll('body[data-gf-surface="workspace"] #app .nav-item[data-tab]').forEach(item=>{
+      const d=outlineIcons[item.dataset.tab];
+      const svg=item.querySelector('.nav-svg svg');
+      if(!d || !svg || svg.dataset.gfRefIcon==='true') return;
+      svg.setAttribute('viewBox','0 0 24 24');
+      svg.setAttribute('aria-hidden','true');
+      svg.style.fill='none';
+      svg.style.stroke='currentColor';
+      svg.style.strokeWidth='1.8';
+      svg.style.strokeLinecap='round';
+      svg.style.strokeLinejoin='round';
+      svg.innerHTML='<path d="'+d+'"/>';
+      svg.dataset.gfRefIcon='true';
+    });
+  }
+
   function start(){
+    syncReferenceSidebarIcons();
     enhance(doc);
     let pending = false;
     if(global.MutationObserver){
