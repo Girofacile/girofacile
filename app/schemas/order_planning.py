@@ -3,6 +3,7 @@ from datetime import date, time
 from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from . import DeliveryIn
+from .fleet_planning import FleetResource
 
 MAX_SELECTION = 1000
 
@@ -27,6 +28,9 @@ class SelectionChange(BaseModel):
 class PlanningConfiguration(BaseModel):
     model_config = ConfigDict(extra='forbid')
     group_orders: bool = False
+    planning_mode: Literal['single','fleet'] = 'single'
+    fleet_strategy: Literal['efficient','balanced'] = 'efficient'
+    fleet_resources: list[FleetResource] = Field(default_factory=list,max_length=10)
     nome: str = Field(default='', max_length=200)
     data_giro: str = Field(default='', max_length=10)
     orario_partenza: str = Field(default='', max_length=8)

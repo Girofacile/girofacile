@@ -126,8 +126,16 @@ def preview(db, user, actor, data):
         raise HTTPException(422, 'Completa data e orario di partenza.')
     ensure_not_past_route_date(config['data_giro'])
     _require_owned_entity(db, Deposit, user, config['deposit_id'], 'Deposito')
-    vehicle = _require_owned_entity(db, Vehicle, user, config['vehicle_id'], 'Mezzo')
-    _require_owned_entity(db, Driver, user, config['driver_id'], 'Autista')
+    if config.get('planning_mode')=='fleet':
+        resources=config.get('fleet_resources',[])
+        if len(resources)<2: raise HTTPException(422,'Seleziona almeno due coppie mezzo e autista.')
+        for resource in resources:
+            _require_owned_entity(db,Vehicle,user,resource['vehicle_id'],'Mezzo')
+            _require_owned_entity(db,Driver,user,resource['driver_id'],'Autista')
+        vehicle=None
+    else:
+        vehicle = _require_owned_entity(db, Vehicle, user, config['vehicle_id'], 'Mezzo')
+        _require_owned_entity(db, Driver, user, config['driver_id'], 'Autista')
     if not row.order_ids: raise HTTPException(422, 'Seleziona almeno un ordine pronto.')
     orders = db.query(Order).filter(Order.user_id == user.id, Order.id.in_(row.order_ids)).order_by(Order.id).all()
     if len(orders) != len(row.order_ids) or any(o.status != 'pronto' for o in orders):

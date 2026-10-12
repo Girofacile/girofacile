@@ -808,16 +808,26 @@
  </section>
 <section class="plan-step plan-step-2" aria-labelledby="planStepTitle2">
  <header class="plan-step-heading"><span class="plan-step-number">2</span><h2 id="planStepTitle2">Risorse</h2><span id="planStepStatus2" class="plan-status" role="status"></span></header>
- <p class="plan-step-description">Seleziona il mezzo e l’autista che verranno utilizzati per il giro.</p><svg class="plan-step-art" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h11v12H3zM14 10h4l3 4v4h-7"/><circle cx="7" cy="19" r="2"/><circle cx="18" cy="19" r="2"/></svg>
+ <p class="plan-step-description">Scegli se utilizzare un solo mezzo o suddividere le consegne tra più autisti.</p><svg class="plan-step-art" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h11v12H3zM14 10h4l3 4v4h-7"/><circle cx="7" cy="19" r="2"/><circle cx="18" cy="19" r="2"/></svg>
+ <div class="fleet-mode"><label for="planningMode">Come vuoi organizzare le consegne?</label><select id="planningMode"><option value="single">Un solo mezzo</option><option value="fleet">Suddivisione automatica su più mezzi</option></select></div>
  <div class="plan-step-fields"><div><label for="routeDeposit">Deposito</label><select id="routeDeposit"></select></div>
-<div><label for="routeVehicle" data-gf-label="vehicle">Mezzo</label><select id="routeVehicle" disabled></select><small id="vehicleAvailabilityHint" class="availability-hint">Seleziona prima data e orario di partenza</small></div>
-<div><label for="routeDriver" data-gf-label="driver">Autista</label><select id="routeDriver" disabled></select><small id="driverAvailabilityHint" class="availability-hint">Seleziona prima data e orario di partenza</small></div></div>
+<div id="singleVehicleField"><label for="routeVehicle" data-gf-label="vehicle">Mezzo</label><select id="routeVehicle" disabled></select><small id="vehicleAvailabilityHint" class="availability-hint">Seleziona prima data e orario di partenza</small></div>
+<div id="singleDriverField"><label for="routeDriver" data-gf-label="driver">Autista</label><select id="routeDriver" disabled></select><small id="driverAvailabilityHint" class="availability-hint">Seleziona prima data e orario di partenza</small></div></div>
+
+
  </section>
 <section class="plan-step plan-step-3" aria-labelledby="planStepTitle3">
  <header class="plan-step-heading"><span class="plan-step-number">3</span><h2 id="planStepTitle3">Rientro</h2><span id="planStepStatus3" class="plan-status" role="status"></span></header>
  <p class="plan-step-description">Definisci se è previsto il rientro al deposito a fine giro.</p><svg class="plan-step-art" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8a9 9 0 1 1-1 7M5 3v5h5"/></svg>
  <div class="plan-step-fields"><div><label for="returnDepot">Rientro deposito</label><select id="returnDepot"><option value="true">Sì, rientro previsto</option><option value="false">No</option></select></div></div>
  </section></div>
+ <section id="fleetSetup" hidden aria-labelledby="fleetSetupTitle"><h2 id="fleetSetupTitle">Mezzi e autisti disponibili</h2>
+ <p class="plan-step-description">Aggiungi solo i mezzi e gli autisti disponibili. La partenza e il deposito saranno gli stessi per tutti.</p>
+ <div id="fleetResources"></div>
+ <button type="button" class="btn-secondary" id="fleetAdd">Aggiungi mezzo e autista</button>
+ <label for="fleetStrategy">Come distribuiamo il lavoro?</label><select id="fleetStrategy"><option value="efficient">Usa meno mezzi, se possibile</option><option value="balanced">Distribuisci il lavoro tra tutti i mezzi</option></select>
+ <small>Consideriamo durata dei giri, peso, colli, orari di consegna e attrezzature. Potrai spostare le consegne prima di confermare.</small>
+ </section>
                  <div id="routeEnergyPriceBoxV895" class="energy-price-box-v895 hidden">
                   <label id="routeEnergyPriceTitleV895">Costo del giro</label>
                   <div id="routeEnergyVehicleInfo" class="energy-vehicle-info-v895">Seleziona un mezzo</div>
@@ -2122,9 +2132,11 @@
 <script src="/static/dashboard/js/order-sources.js?v=email_development_20261012"></script>
 <script src="/static/dashboard/js/dashboard-real-map.js?v=gf_realmap_clean_20261012_2"></script>
 <script src="/static/dashboard/js/in-progress-reference.js?v=gf_inprogress_ref_20261013_1"></script>
-<script src="/static/dashboard/js/core.js?v=gf_inprogress_ref_20261013_1"></script>
+<script src="/static/dashboard/js/core.js?v=fleet_20261013_1"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=orders_2"></script>
-<script src="/static/dashboard/js/order-planning.js?v=orders_layout_ref_20261011_2"></script>
+<link rel="stylesheet" href="/static/dashboard/css/fleet-planning.css?v=20261013_1">
+<script src="/static/dashboard/js/fleet-planning.js?v=20261013_1"></script>
+<script src="/static/dashboard/js/order-planning.js?v=fleet_20261013_1"></script>
 
 <script>
 function toggleLoginPassword(){

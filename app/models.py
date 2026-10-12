@@ -720,3 +720,5 @@ class DeliveryTrackingLink(Base):
 
 # Register the additive order archive on the shared metadata.
 from .order_models import Order, OrderSource, OrderItem, OrderEvent, OrderImportRun, CustomerSourceMapping, RouteOrderAssignment
+
+from .fleet_models import FleetPlan

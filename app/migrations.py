@@ -2,7 +2,7 @@
 from datetime import datetime
 from sqlalchemy import inspect, text
 
-LATEST = '20261011_02'
+LATEST = '20261013_01'
 LOCK_ID = 7640152404
 
 
@@ -126,7 +126,7 @@ def run_migrations(engine):
                     if 'customer_resolution' not in {c['name'] for c in inspect(conn).get_columns('orders')}:
                         conn.execute(text("ALTER TABLE orders ADD COLUMN customer_resolution VARCHAR(30) NOT NULL DEFAULT 'pending'"))
                     conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261011_01', 'now': datetime.utcnow()})
-            if LATEST not in applied:
+            if '20261011_02' not in applied:
                 with engine.begin() as conn:
                     additions = {'order_sources': {'version': "INTEGER NOT NULL DEFAULT 1"},
                                  'orders': {'ingested_payload': 'JSON'},
@@ -136,6 +136,11 @@ def run_migrations(engine):
                         for name, ddl in columns.items():
                             if name not in existing: conn.execute(text(f'ALTER TABLE {table} ADD COLUMN {name} {ddl}'))
                     conn.execute(text('CREATE UNIQUE INDEX IF NOT EXISTS uq_order_import_request ON order_import_runs (source_id, idempotency_key)'))
+                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261011_02', 'now': datetime.utcnow()})
+            if '20261013_01' not in applied:
+                from .fleet_models import FleetPlan
+                with engine.begin() as conn:
+                    FleetPlan.__table__.create(conn, checkfirst=True)
                     conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': LATEST, 'now': datetime.utcnow()})
         finally:
             if postgres:

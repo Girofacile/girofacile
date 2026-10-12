@@ -229,6 +229,9 @@ function updateDashboardStats(){
     setText("summaryColli", colli);
     setText("statColli", colli);
 
+    if(globalThis.GFFleetPlanning?.active()){
+      setText("statFuel", "Per mezzo");setText("statFuelHint", "Prezzi nei dettagli delle risorse");return;
+    }
     const sv=vehiclesCache.find(v=>String(v.id)===String(val("routeVehicle")));
     if(!sv){
       setText("statFuel", "");
@@ -1490,13 +1493,14 @@ async function refreshResourceAvailability(){
   setAvailabilityHint("driverAvailabilityHint", "Controllo disponibilità autisti...", "muted");
 
   try{
-    resourcesAvailabilityCache = await api(`/api/resources/availability?data_giro=${encodeURIComponent(val("routeDate"))}&orario=${encodeURIComponent(val("routeStart"))}`);
+    resourcesAvailabilityCache = await api(`/api/resources/availability?data_giro=${encodeURIComponent(val("routeDate"))}&orario=${encodeURIComponent(val("routeStart"))}${globalThis.GFFleetPlanning?.active()?"&preview_minutes=1":""}`);
   }catch(e){
     resourcesAvailabilityCache = {vehicles: vehiclesCache.map(v=>({...v, available:true, status:"Disponibile"})), drivers: driversCache.map(d=>({...d, full_name: driverFullName(d), available:true, status:"Disponibile"}))};
     setAvailabilityHint("vehicleAvailabilityHint", "Disponibilità non verificata", "warn");
     setAvailabilityHint("driverAvailabilityHint", "Disponibilità non verificata", "warn");
   }
   renderResourceSelects();
+  globalThis.GFFleetPlanning?.refresh();
   updateRoutePlanningGateV68();
 }
 
@@ -1519,6 +1523,7 @@ function routePlanningMissingFieldsV68(){
   if(!val("routeDate") || !routeDateIsValid()) missing.push("data");
   if(!val("routeStart")) missing.push("orario partenza");
   if(!val("routeDeposit")) missing.push("deposito");
+  if(globalThis.GFFleetPlanning?.active()) return missing.concat(GFFleetPlanning.missing());
   if(!val("routeVehicle")) missing.push("mezzo");
   if(!val("routeDriver")) missing.push("autista");
   const vehicle = vehiclesCache.find(v=>String(v.id)===String(val("routeVehicle")));
@@ -1546,12 +1551,13 @@ function renderPlanningCompletion(missing){
   if(missing.includes("deposito")) items.push(["Deposito", false]);
   if(missing.includes("prezzo carburante")) items.push(["Carburante", false]);
   if(missing.includes("prezzo energia")) items.push(["Energia", false]);
+  if(globalThis.GFFleetPlanning?.active())items.push(["Durata dei giri", !missing.includes("durata massima dei giri (entro la giornata)")]);
   const checklist = document.getElementById("planningChecklist");
   if(checklist) checklist.innerHTML = items.map(([label, done, detail]) =>
     `<div class="planning-check ${done ? 'complete' : ''}"><span class="planning-check-icon" aria-hidden="true">${done ? '✓' : '!'}</span><div><strong>${label}</strong><small>${detail || (done ? 'Completato' : 'Da completare')}</small></div></div>`
   ).join("");
   const basicDone = [!missing.includes("data"), !missing.includes("orario partenza")];
-  const resourceDone = ["deposito", "mezzo", "autista", "prezzo carburante", "prezzo energia"].every(field=>!missing.includes(field));
+  const resourceDone = ["deposito", "mezzo", "autista", "prezzo carburante", "prezzo energia", "durata massima dei giri (entro la giornata)"].every(field=>!missing.includes(field));
   const states = [basicDone.every(Boolean) ? "complete" : basicDone.some(Boolean) ? "partial" : "", resourceDone ? "complete" : "", "complete"];
   states.forEach((state, i)=>{
     const badge = document.getElementById(`planStepStatus${i+1}`);
@@ -1570,7 +1576,9 @@ function advanceRoutePlanning(){
   if(!missing.length){ openCustomerPlanningStep(); return; }
   const fields = {data:"routeDate", "orario partenza":"routeStart", deposito:"routeDeposit", mezzo:"routeVehicle", autista:"routeDriver", "prezzo carburante":"fuelPrice", "prezzo energia":"electricityPrice"};
   updateRoutePlanningGateV68();
+  if(globalThis.GFFleetPlanning?.active())Object.assign(fields,{mezzo:"fleetVehicle0",autista:"fleetDriver0","prezzo carburante":"fleetFuel0","prezzo energia":"fleetElectric0","durata massima dei giri (entro la giornata)":"fleetDuration0"});
   const target = document.getElementById(fields[missing[0]]);
+  if(target?.closest('details'))target.closest('details').open=true;
   target?.scrollIntoView({behavior:"smooth", block:"center"});
   target?.focus({preventScroll:true});
 }
@@ -3441,6 +3449,7 @@ function addExtraStopAfterResult(){
 
 
 function clearRouteWorkspace(){
+  globalThis.GFFleetPlanning?.reset();
   globalThis.GFOrderPlanning?.leave();
   deliveries = [];
   lastRouteResult = null;
@@ -3490,6 +3499,7 @@ async function openProgrammedRouteForEdit(id, goToPlanning=false){
   try{
     const r = await api(`/api/routes/${id}`);
     const st = r.status || "programmato";
+    globalThis.GFFleetPlanning?.reset();
     showTab("giro");
     set("routeName", r.nome || "Giro consegne");
     set("routeDate", r.data_giro || todayIso());
@@ -3754,6 +3764,7 @@ async function explainRouteSequenceAIv67(routeId){
 
 async function optimizeRoute(){
   if(globalThis.GFOrderPlanning && !await GFOrderPlanning.beforeCalculate())return;
+  if(globalThis.GFFleetPlanning?.active())return GFFleetPlanning.calculate();
   if(!routePlanningDetailsCompleteV68()){
     updateRoutePlanningGateV68();
     alert("Completa prima tutti i dati del giro: data, orario, deposito, mezzo, autista e prezzo carburante.");

@@ -192,3 +192,7 @@ def authorize(request, actor):
         return
     if not required or not (permissions_for(actor) & required):
         raise HTTPException(403, "Il tuo account non è autorizzato a questa operazione")
+
+rule('GET',['/api/fleet-planning/{plan_id}'],'routes.plan')
+rule('POST',['/api/fleet-planning/preview','/api/fleet-planning/{plan_id}/revise','/api/fleet-planning/{plan_id}/confirm'],'routes.plan')
+rule('POST',['/api/fleet-planning/{plan_id}/program'],'routes.program')

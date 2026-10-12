@@ -8,7 +8,7 @@ from ..services.delivery_pod import evidence_metadata, evidence_response
 from datetime import datetime, timedelta
 import time
 
-from fastapi import Response, APIRouter, Depends, HTTPException, Request
+from fastapi import Response, APIRouter, Depends, HTTPException, Request, Query
 from sqlalchemy.orm import Session
 
 from ..core.dependencies import current_user, owned
@@ -422,7 +422,7 @@ def serialize_route(plan):
     return response
 
 
-def save_route_result(db, user, data, result, vehicle, route_id=None):
+def save_route_result(db, user, data, result, vehicle, route_id=None, *, commit=True):
     check_daily_route_limit(user, db, data.data_giro, exclude_route_id=route_id)
     if route_id:
         existing = owned(db.query(RoutePlan), RoutePlan, user).filter(RoutePlan.id == route_id).first()
@@ -512,8 +512,11 @@ def save_route_result(db, user, data, result, vehicle, route_id=None):
             if _f in delivery_data:
                 delivery_data[_f] = parse_time_value(delivery_data.get(_f))
         db.add(Delivery(route_plan_id=plan.id, **delivery_data))
-    db.commit()
-    db.refresh(plan)
+    if commit:
+        db.commit()
+        db.refresh(plan)
+    else:
+        db.flush()
     return plan
 
 
@@ -524,13 +527,14 @@ def save_route_result(db, user, data, result, vehicle, route_id=None):
 @router.get("/api/resources/availability")
 def resources_availability(
     data_giro: str, orario: str,
+    preview_minutes: int = Query(DEFAULT_AVAILABILITY_PREVIEW_MINUTES, ge=1, le=1440),
     db: Session = Depends(get_db), user: User = Depends(current_user),
 ):
     start_min = minutes_from_hhmm(orario)
     if not data_giro or start_min is None:
         raise HTTPException(400, "Seleziona data e orario di partenza")
     ensure_not_past_route_date(data_giro)
-    preview_end_min = start_min + DEFAULT_AVAILABILITY_PREVIEW_MINUTES
+    preview_end_min = start_min + preview_minutes
     busy_drivers, busy_vehicles = _resource_busy_maps(db, user, data_giro, start_min, preview_end_min)
 
     vehicles = []
