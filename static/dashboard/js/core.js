@@ -549,7 +549,7 @@ function loadProfilePanel(){
   const initials = (accountName || "Admin").trim().charAt(0).toUpperCase() || "A";
   const setText = (id,val)=>{ const el=document.getElementById(id); if(el) el.textContent=val; };
   // La testata identifica l'azienda; il modal modifica invece l'account dell'operatore.
-  // Aggiorna subito il saluto se il nome dell'account viene modificato.
+  // Mantiene il saluto aziendale sincronizzato con l'intestazione.
   if(!document.getElementById("tab-dashboard")?.classList.contains("hidden")){
     setText("workspacePageTitle", dashboardGreetingTitle());
   }
