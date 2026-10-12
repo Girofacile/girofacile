@@ -64,32 +64,34 @@ def test_customer_resolution_migration_preserves_archive(pg):
         assert conn.execute(text('SELECT COUNT(*) FROM schema_migrations WHERE version=:v'),{'v':LATEST}).scalar()==1
 
 
-def test_concurrent_customer_mapping_conflict_is_atomic(pg):
+def test_concurrent_orders_with_same_external_customer_code_remain_independent(pg):
+    """An external customer reference never creates an order-to-customer mapping."""
     from app.database import Base
     from app.models import User, Customer
     from app.order_models import Order, CustomerSourceMapping
-    from app.services.orders import create_order, get_order
-    from app.services.order_customers import resolve
-    from app.services.route_orders import lock_company
-    from app.schemas.orders import OrderCreate, CustomerResolution
+    from app.services.orders import create_order
+    from app.schemas.orders import OrderCreate
     Base.metadata.create_all(pg)
     with Session(pg) as db:
-        owner=User(username='mapping-race',password_hash='test');db.add(owner);db.flush()
-        customers=[Customer(user_id=owner.id,nome=str(i),indirizzo='Address') for i in range(2)]
-        db.add_all(customers);db.flush()
-        orders=[create_order(db,owner.id,OrderCreate(number=str(i)),'test') for i in range(2)]
-        for order in orders: order.external_customer_id='SAME-CODE'
-        db.commit();uid=owner.id;pairs=[(o.id,c.id) for o,c in zip(orders,customers)]
-    def assign(pair):
+        owner=User(username='independent-orders-race',password_hash='test')
+        db.add(owner);db.flush()
+        db.add(Customer(user_id=owner.id,nome='Recipient',indirizzo='Order address',
+                        sponda=True,transpallet=True))
+        db.commit();uid=owner.id
+    def acquire(index):
         with Session(pg) as db:
-            try:
-                lock_company(db,uid)
-                resolve(db,db.get(User,uid),get_order(db,uid,pair[0],lock=True),CustomerResolution(version=1,action='link',customer_id=pair[1]),'test')
-                db.commit();return 200
-            except HTTPException as error:
-                db.rollback();return error.status_code
-    with ThreadPoolExecutor(max_workers=2) as pool:results=list(pool.map(assign,pairs))
-    assert sorted(results)==[200,409]
+            row=create_order(db,uid,OrderCreate(number=f'ORD-{index}',
+                recipient_name='Recipient',delivery_address='Order address'),'test')
+            row.external_customer_id='EXTERNAL-SAME-CODE'
+            db.commit()
+            return row.id
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        ids=list(pool.map(acquire,range(2)))
+    assert len(set(ids))==2
     with Session(pg) as db:
-        assert db.query(CustomerSourceMapping).count()==1
-        assert db.query(Order).filter(Order.customer_id.isnot(None)).count()==1
+        rows=db.query(Order).order_by(Order.id).all()
+        assert len(rows)==2
+        assert all(o.customer_id is None for o in rows)
+        assert all(o.status=='nuovo' for o in rows)
+        assert all(o.external_customer_id=='EXTERNAL-SAME-CODE' for o in rows)
+        assert db.query(CustomerSourceMapping).count()==0
