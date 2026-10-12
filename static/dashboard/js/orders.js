@@ -3,10 +3,10 @@
   'use strict';
   const labels={nuovo:'Nuovo',da_verificare:'Da verificare',pronto:'Pronto',assegnato:'Assegnato',in_consegna:'In consegna',consegnato:'Consegnato',non_consegnato:'Non consegnato',annullato:'Annullato'};
   const metricMeta={
-    nuovo:{label:'Nuovi ordini',icon:'<path d="M5 8h14l-1 11H6L5 8Z"/><path d="M8 8a4 4 0 0 1 8 0"/>',cls:'nuovo'},
-    da_verificare:{label:'Da verificare',icon:'<circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/>',cls:'da_verificare'},
-    pronto:{label:'Pronti per piano',icon:'<circle cx="12" cy="12" r="8"/><path d="m8.5 12 2.2 2.2 4.8-5"/>',cls:'pronto'},
-    assegnato:{label:'Già assegnati',icon:'<path d="M3 7h11v9H3z"/><path d="M14 10h4l3 3v3h-7"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/>',cls:'assegnato'}
+    nuovo:{label:'Nuovi ordini',description:'Ordini appena ricevuti',icon:'<path d="M5 8h14l-1 11H6L5 8Z"/><path d="M8 8a4 4 0 0 1 8 0"/>',cls:'nuovo'},
+    da_verificare:{label:'Da verificare',description:'Controllo dati o indirizzo',icon:'<circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/>',cls:'da_verificare'},
+    pronto:{label:'Pronti per piano',description:'Pronti per la pianificazione',icon:'<circle cx="12" cy="12" r="8"/><path d="m8.5 12 2.2 2.2 4.8-5"/>',cls:'pronto'},
+    assegnato:{label:'Già assegnati',description:'Ordini inseriti in un giro',icon:'<path d="M3 7h11v9H3z"/><path d="M14 10h4l3 3v3h-7"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/>',cls:'assegnato'}
   };
   const fields={number:'Numero ordine',recipient_name:'Destinatario',delivery_address:'Indirizzo di consegna',requested_date:'Data richiesta',time_from:'Fascia oraria: dalle',time_to:'Alle',weight_kg:'Peso (kg)',packages:'Colli',pallets:'Pallet',volume_m3:'Volume (m³)',tail_lift:'Sponda',pallet_truck:'Transpallet',ztl:'ZTL',requirements:'Requisiti operativi',notes:'Note'};
   const numeric=['weight_kg','packages','pallets','volume_m3'], bools=['tail_lift','pallet_truck','ztl'];
@@ -18,10 +18,9 @@
   const receivedDate=value=>value?new Date(value+'Z').toLocaleString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}):'Non indicata';
   const statusBadge=status=>`<span class="orders-status orders-status-${esc(status)}"><i aria-hidden="true"></i>${esc(labels[status]||status)}</span>`;
   function syncActionPlacement(){
-    const actions=el('ordersPageActions'), inline=el('ordersInlineActionsHost'), topbar=el('ordersTopbarActionsHost');
-    if(!actions||!inline||!topbar)return;
-    const target=window.matchMedia('(min-width: 821px)').matches?topbar:inline;
-    if(actions.parentNode!==target)target.appendChild(actions);
+    const actions=el('ordersPageActions'), inline=el('ordersInlineActionsHost');
+    if(!actions||!inline)return;
+    if(actions.parentNode!==inline)inline.appendChild(actions);
   }
   function error(id,err){el(id).textContent=err.message || String(err);}
   async function orderApi(path,options={}){
@@ -50,7 +49,7 @@
       if(window.GFOrderPlanning)await GFOrderPlanning.loadSelection();
       if(request!==sequence)return;
       last=data;
-      el('ordersMetrics').innerHTML=Object.entries(metricMeta).map(([key,meta])=>`<article class="orders-metric-card"><div class="orders-metric-copy"><span class="orders-metric-label">${meta.label}</span><strong class="orders-metric-value">${Number(data.metrics[key]||0)}</strong></div><span class="orders-metric-icon is-${meta.cls}" aria-hidden="true"><svg viewBox="0 0 24 24">${meta.icon}</svg></span></article>`).join('');
+      el('ordersMetrics').innerHTML=Object.entries(metricMeta).map(([key,meta])=>`<article class="orders-metric-card"><span class="orders-metric-icon is-${meta.cls}" aria-hidden="true"><svg viewBox="0 0 24 24">${meta.icon}</svg></span><div class="orders-metric-copy"><span class="orders-metric-label">${meta.label}</span><strong class="orders-metric-value">${Number(data.metrics[key]||0)}</strong><p class="orders-metric-description">${meta.description}</p></div></article>`).join('');
       const selected=el('ordersSource').value;
       el('ordersSource').innerHTML='<option value="">Tutte le fonti</option>'+data.sources.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');el('ordersSource').value=selected;
       render();el('ordersMessage').textContent=data.total?`${data.total} ordini trovati`:'Nessun ordine trovato. Crea un ordine oppure modifica i filtri.';
