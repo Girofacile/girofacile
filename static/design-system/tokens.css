@@ -1,38 +1,41 @@
+/* Font ufficiali della dashboard di riferimento: un solo import per tutte le superfici. */
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+
 /* GiroFacile design system: the only source of visual decisions.
    Breakpoints are exposed to JS through these tokens; CSS media queries repeat
    the documented values because custom properties are not valid in media queries. */
 :root {
   color-scheme: light;
-  --gf-color-primary: #2563eb;
-  --gf-color-primary-hover: #1d4ed8;
+  --gf-color-primary: #1665ff;
+  --gf-color-primary-hover: #0c55db;
   --gf-color-on-primary: #ffffff;
-  --gf-color-bg: #f8fafc;
+  --gf-color-bg: #edf0f6;
   --gf-color-surface: #ffffff;
-  --gf-color-surface-subtle: #f1f4f8;
-  --gf-color-text: #1e293b;
-  --gf-color-muted: #64748b;
-  --gf-color-border: #e2e8f0;
+  --gf-color-surface-subtle: #f6f8fc;
+  --gf-color-text: #16213a;
+  --gf-color-muted: #5a6680;
+  --gf-color-border: #dce1eb;
   --gf-color-border-strong: var(--gf-color-nav-text);
-  --gf-color-success: #16734a;
-  --gf-color-success-bg: #eaf6ef;
-  --gf-color-warning: #946200;
-  --gf-color-warning-bg: #fff6df;
-  --gf-color-danger: #b42335;
-  --gf-color-danger-bg: #fff0f2;
-  --gf-color-info: #175cd3;
-  --gf-color-info-bg: #edf4ff;
+  --gf-color-success: #127a52;
+  --gf-color-success-bg: #ddf3e8;
+  --gf-color-warning: #b7791f;
+  --gf-color-warning-bg: #fdf1d8;
+  --gf-color-danger: #c7283f;
+  --gf-color-danger-bg: #fbe3e7;
+  --gf-color-info: #0b3a99;
+  --gf-color-info-bg: #e4f0ff;
   --gf-color-overlay: rgba(23,36,59,.45);
-  --gf-color-nav: #0f172a;
-  --gf-color-nav-text: #cbd5e1;
-  --gf-color-nav-muted: #94a3b8;
-  --gf-color-nav-active: #1e293b;
-  --gf-radius-sm: 6px;
+  --gf-color-nav: #0f2250;
+  --gf-color-nav-text: #c9d4f0;
+  --gf-color-nav-muted: #7f93c6;
+  --gf-color-nav-active: #273961;
+  --gf-radius-sm: 9px;
   --gf-radius-md: 10px;
-  --gf-radius-lg: 12px;
+  --gf-radius-lg: 16px;
   --gf-radius-pill: 999px;
   --gf-radius-circle: 50%;
-  --gf-shadow-sm: 0 1px 2px rgba(16,24,40,.05);
-  --gf-shadow-md: 0 6px 18px rgba(16,24,40,.08);
+  --gf-shadow-sm: 0 1px 2px rgba(15,34,80,.06), 0 8px 24px -12px rgba(15,34,80,.18);
+  --gf-shadow-md: 0 8px 24px rgba(15,34,80,.12);
   --gf-shadow-dialog: 0 16px 48px rgba(16,24,40,.16);
   --gf-space-1: 4px;
   --gf-space-2: 8px;
@@ -42,7 +45,8 @@
   --gf-space-6: 24px;
   --gf-space-8: 32px;
   --gf-space-10: 40px;
-  --gf-font-family: Arial, Helvetica, sans-serif;
+  --gf-font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --gf-font-family: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
   --gf-font-xs: 12px;
   --gf-font-sm: 13px;
   --gf-font-md: 14px;
@@ -61,13 +65,13 @@
   --gf-control-touch: 44px;
   --gf-control-check: 18px;
   --gf-icon-size: 18px;
-  --gf-sidebar-width: 256px;
+  --gf-sidebar-width: 244px;
   --gf-topbar-height: 80px;
   --gf-content-width: 1200px;
   --gf-content-narrow: 760px;
   --gf-dialog-width: 640px;
   --gf-auth-width: 440px;
-  --gf-focus-ring: 0 0 0 3px rgba(37,99,235,.16);
+  --gf-focus-ring: 0 0 0 3px rgba(22,101,255,.17);
   --gf-breakpoint-sm: 640px;
   --gf-breakpoint-md: 768px;
   --gf-breakpoint-lg: 1024px;
