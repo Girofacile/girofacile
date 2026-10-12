@@ -3397,3 +3397,57 @@ html.order-modal-open{overflow:hidden}
 #tab-ordini .orders-search-input-wrap>input{
   padding-left:44px!important;
 }
+
+
+/* Order details: clean GiroFacile modal, without customer association (2026-10-12). */
+#orderModal .order-modal-detail-header{display:flex;align-items:center;gap:16px;padding:18px 22px;background:#fff;border-bottom:1px solid #e8edf4}
+#orderModal .order-modal-package-icon{width:46px;height:46px;flex:0 0 46px;display:grid;place-items:center;border-radius:50%;color:#2563eb;background:#eaf2ff}
+#orderModal .order-modal-package-icon svg{width:25px;height:25px}
+#orderModal .order-modal-detail-header .order-modal-heading{flex:1;min-width:0}
+#orderModal .order-modal-title-row{gap:10px;flex-wrap:wrap}
+#orderModal .order-modal-title-row h2{font-size:17px;letter-spacing:-.3px;color:#162540}
+#orderModal .order-modal-detail-header .order-modal-heading>p{margin-top:6px;color:#8090a6}
+#orderModal .order-modal-detail-header .order-modal-close{margin-left:auto;flex-shrink:0;border-radius:50%;background:#f3f6fa}
+#orderModal .order-modal-body{grid-template-columns:minmax(0,1.9fr) minmax(230px,1fr);align-items:start;gap:16px;padding:16px 18px;background:#f8fafd}
+#orderModal .order-modal-main{min-width:0;display:flex;flex-direction:column;gap:12px}
+#orderModal .order-modal-side{display:flex;flex-direction:column;gap:12px;min-width:0}
+#orderModal .order-modal-card{overflow:hidden;border:1px solid #e3eaf3;border-radius:11px;background:#fff;box-shadow:0 1px 2px #10234004}
+#orderModal .order-modal-card-head{min-height:43px;padding:11px 15px;border-bottom:1px solid #edf1f6;background:#fff;gap:9px}
+#orderModal .order-modal-card-head h3{font-size:12px;color:#1a2942;font-weight:750}
+#orderModal .order-modal-section-icon{color:#2563eb;font-size:18px;font-weight:750}
+#orderModal .order-modal-delivery-grid{padding:14px 17px;gap:15px 22px}
+#orderModal .order-modal-delivery-grid span,#orderModal .order-modal-logistics-grid span{color:#7889a1;font-size:10.5px;letter-spacing:0;text-transform:none}
+#orderModal .order-modal-delivery-grid strong,#orderModal .order-modal-logistics-grid strong{color:#1b2a43;font-size:12px;font-weight:700;line-height:1.45}
+#orderModal .order-modal-logistics-grid{grid-template-columns:repeat(2,minmax(0,1fr));padding:7px 14px;gap:0 20px}
+#orderModal .order-modal-logistics-grid>div{min-height:40px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border:0;border-bottom:1px solid #eef2f6}
+#orderModal .order-modal-logistics-grid>div span{margin:0}
+#orderModal .order-modal-logistics-grid>div strong{text-align:right}
+#orderModal .order-modal-split{gap:12px}
+#orderModal .order-modal-item-row{min-height:36px;padding:8px 14px;font-size:11px}
+#orderModal .order-modal-item-row strong{font-size:11px;border-radius:7px;background:#edf2f8}
+#orderModal .order-modal-notes{background:#fffdf8;border-color:#f2e5ca}
+#orderModal .order-modal-notes .order-modal-card-head{background:#fffdf8}
+#orderModal .order-modal-note-body{min-height:98px;padding:15px}
+#orderModal .order-modal-alert{border:1px solid #f3d395;border-radius:11px;background:#fffaf0;overflow:hidden}
+#orderModal .order-modal-alert.is-ok{border-color:#a9e6d1;background:linear-gradient(135deg,#eefbf5,#f7fffb)}
+#orderModal .order-modal-alert-band:empty{display:none}
+#orderModal .order-modal-alert-body{padding:23px 17px;gap:10px}
+#orderModal .order-modal-alert-icon{width:58px;height:58px;margin:0;border-radius:50%;background:#d1f5e4;color:#09a46b;font-size:32px;font-weight:800}
+#orderModal .order-modal-alert-body strong{color:#08765d;font-size:16px;line-height:1.35}
+#orderModal .order-modal-alert-body p{max-width:240px;margin:0 auto;color:#39677a;font-size:12px;line-height:1.6}
+#orderModal .order-modal-footer{background:#fff;border-top:1px solid #e9edf4;padding:12px 18px}
+#orderModal .order-modal-footer-actions{gap:10px}
+#orderModal .order-modal-footer-actions button{min-height:40px;border-radius:8px;padding:9px 15px;font-size:12px;font-weight:700}
+#orderModal .order-modal-footer-edit{background:#2563eb;border-color:#2563eb;color:#fff}
+@media(max-width:760px){
+  #orderModal .order-modal-body{grid-template-columns:1fr;gap:12px;padding:12px}
+  #orderModal .order-modal-side{grid-template-columns:1fr}
+  #orderModal .order-modal-detail-header{gap:10px;padding:14px}
+  #orderModal .order-modal-package-icon{width:38px;height:38px;flex-basis:38px}
+  #orderModal .order-modal-package-icon svg{width:21px;height:21px}
+}
+@media(max-width:520px){
+  #orderModal .order-modal-title-row h2{font-size:13px;overflow-wrap:anywhere}
+  #orderModal .order-modal-logistics-grid{grid-template-columns:1fr}
+  #orderModal .order-modal-split{grid-template-columns:1fr}
+}
