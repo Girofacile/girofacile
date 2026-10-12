@@ -38,7 +38,8 @@ def create(client, **values):
 def test_create_update_original_history_and_missing_false(orders):
     client,db,owner,other=orders
     row=create(client,tail_lift=False,items=[{'description':'Articolo','quantity':2}])
-    assert row['customer_id'] is None
+    assert 'customer_id' not in row
+    assert 'customer_resolution' not in row
     assert row['operational_data']['tail_lift'] is False
     assert row['operational_data']['pallet_truck'] is None
     assert row['items'][0]['quantity']==2
