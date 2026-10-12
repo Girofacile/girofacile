@@ -45,11 +45,14 @@ const WORKSPACE_TOPBAR_META = {
   }
 };
 
-// Il titolo della home saluta l'account autenticato, non la ragione sociale.
+// Il titolo della home saluta l'azienda, non il nome dell'account personale.
 function dashboardGreetingTitle(){
-  const userName=(typeof currentSessionUser!=="undefined" && currentSessionUser?.username)
+  const companyName=(typeof currentSessionUser!=="undefined" && currentSessionUser?.company_name) || "";
+  const savedCompanyName=localStorage.getItem("girofacile_company_name") || "";
+  const accountName=(typeof currentSessionUser!=="undefined" && currentSessionUser?.username)
     || localStorage.getItem("girofacile_account_name") || "";
-  const name=String(userName).trim();
+  // Le vecchie sessioni salvavano talvolta lo username nel campo nome azienda.
+  const name=String(companyName || (savedCompanyName !== accountName ? savedCompanyName : "")).trim();
   return name?`Buongiorno, ${name}`:"Buongiorno";
 }
 
