@@ -219,6 +219,23 @@ test('company edits are saved from the topbar and bottom save actions are remove
 });
 
 
+test('dashboard salutation uses company name and never silently substitutes username',()=>{
+  const navigation=read('static/dashboard/js/navigation.js');
+  const greeting=(user,companyCache='')=>vm.runInNewContext(
+    navigation+';dashboardGreetingTitle()',
+    {
+      currentSessionUser:user,
+      localStorage:{getItem:key=>key==='girofacile_company_name'?companyCache:
+        key==='girofacile_account_name'?'Mario':null}
+    }
+  );
+  assert.equal(greeting({username:'Mario',company_name:'Trasporti Rossi SRL'},'Mario'),'Buongiorno, Trasporti Rossi SRL');
+  assert.equal(greeting({username:'Mario',company_name:''},'Logistica Firenze'),'Buongiorno, Logistica Firenze');
+  assert.equal(greeting({username:'Mario',company_name:''},'Mario'),'Buongiorno');
+  assert.match(navigation,/currentSessionUser\\?\\.company_name/);
+  assert.match(read('static/dashboard/index.html'),/navigation\\.js\\?v=company_greeting_20261012/);
+});
+
 test('company name and account username use separate identity storage',()=>{
   const core=read('static/dashboard/js/core.js');
   assert.match(core,/const accountName = localStorage\.getItem\("girofacile_account_name"\)/);
