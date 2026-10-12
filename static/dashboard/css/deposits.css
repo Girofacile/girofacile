@@ -139,3 +139,22 @@
   .deposit-modal-v9 .deposit-modal-actions{display:grid;grid-template-columns:1fr 1fr}
   .deposit-modal-v9 .deposit-modal-actions button{min-width:0;width:100%}
 }
+
+
+/* Search icon alignment fix — 2026-10-12. */
+#tab-depositi .gf-directory-search{
+  position:relative!important;
+}
+#tab-depositi .gf-directory-search>svg{
+  position:absolute!important;
+  left:14px!important;
+  top:50%!important;
+  z-index:2;
+  width:18px!important;
+  height:18px!important;
+  transform:translateY(-50%)!important;
+  pointer-events:none;
+}
+#tab-depositi .gf-directory-search>input{
+  padding-left:44px!important;
+}
