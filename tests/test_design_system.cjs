@@ -152,7 +152,7 @@ test('dashboard reference view shares tokens and retains live API connections',(
 
 test('company profile uses the workspace topbar and keeps billing addresses always open',()=>{
   const html=read('static/dashboard/index.html');
-  assert.match(html,/id="workspacePageTitle">Dashboard<\/h1>/);
+  assert.match(html,/id="workspacePageTitle">Buongiorno<\/h1>/);
   assert.match(html,/id="workspacePageSubtitle"/);
   assert.match(html,/id="companyTopbarStatus" class="company-topbar-status"/);
   assert.equal((html.match(/id="companyConfiguredBadge"/g)||[]).length,1);
@@ -167,6 +167,8 @@ test('company profile uses the workspace topbar and keeps billing addresses alwa
   const navigation=read('static/dashboard/js/navigation.js');
   new vm.Script(navigation);
   assert.match(navigation,/function syncWorkspaceTopbar\(name\)/);
+  assert.match(navigation,/function dashboardGreetingTitle\(\)/);
+  assert.match(navigation,/name==="dashboard"\?dashboardGreetingTitle\(\):meta\.title/);
   assert.match(navigation,/const WORKSPACE_TOPBAR_META =/);
   assert.match(navigation,/company:\s*\{[\s\S]*title: "Profilo azienda"/);
   assert.match(navigation,/classList\.toggle\("gf-company-page-active",company\)/);
