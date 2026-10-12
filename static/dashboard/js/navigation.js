@@ -73,6 +73,7 @@ function syncWorkspaceTopbar(name){
 function showTab(name){
   if(window.GFCompanyAccess && !GFCompanyAccess.allowedTab(name)){toast("Funzione non assegnata al tuo account");return;}
   window.GFLiveDesign?.closeMap();
+  if(name!=="dashboard-in-progress")window.GFInProgressReference?.suspend();
   if(name==='integrations') name='dashboard';
   if(name !== "company" && typeof blockCompanyNavigationForUnsavedChanges === "function" && blockCompanyNavigationForUnsavedChanges()) return;
   if(blockOperationalTabV49(name)) return;
