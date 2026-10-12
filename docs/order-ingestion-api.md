@@ -1,3 +1,13 @@
+> **Politica aggiornata (12 ottobre 2026):** gli ordini importati sono entità
+> autonome e non vengono mai associati ai Clienti di GiroFacile, nemmeno con
+> nome e indirizzo identici. Il campo `external_customer_id` resta un
+> riferimento originario del gestionale, non crea alcuna relazione anagrafica.
+> Non vengono ereditati indirizzi, orari, sponda, transpallet, note o
+> verifiche geografiche da Clienti. Per pianificare è necessaria la verifica
+> dell'indirizzo contenuto nell'ordine; le informazioni aggiuntive sono
+> facoltative. Le tabelle storiche di mapping restano conservate per
+> compatibilità con i database esistenti, ma non vengono più utilizzate.
+>
 # Invio ordini a GiroFacile
 
 ## Configurazione iniziale
