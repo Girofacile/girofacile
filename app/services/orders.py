@@ -61,9 +61,7 @@ def create_order(db, user_id, data, actor):
     for index, item in enumerate(original['items'], 1):
         db.add(OrderItem(order_id=order.id, line_number=index, data=item))
     record(db, order, actor, 'created', {'source': 'manual'})
-    from .order_customers import auto_link
-    auto_link(db, order, actor)
-    auto_verify_linked_customer(db, order, actor)
+    # Orders are independent from the permanent customer registry.
     return order
 
 
@@ -77,14 +75,12 @@ def update_order(db, order, data, actor):
     if 'delivery_address' in changes:
         order.address_verification = None
     project(order, values)
-    if order.customer_resolution == 'automatic' and {'recipient_name','delivery_address'} & changes.keys():
-        order.customer_id = None; order.customer_resolution = 'pending'
-    from .order_customers import auto_link
-    auto_link(db, order, actor)
     order.verification_status = 'pending'
     order.status = 'da_verificare'
     touch(order)
-    auto_verify_linked_customer(db, order, actor)
+    if address_is_verified(db, order):
+        order.status = 'pronto'
+        order.verification_status = 'verified'
     record(db, order, actor, 'corrected', changes)
     return order
 
@@ -92,28 +88,12 @@ def update_order(db, order, data, actor):
 
 def address_is_verified(db, order):
     """Only a valid proof for the current effective destination permits planning."""
-    from .order_customers import effective
-    values, _ = effective(db, order)
+    values = order.operational_data or {}
     proof = order.address_verification or {}
     return (bool(values.get('recipient_name')) and bool(values.get('delivery_address'))
             and proof.get('input_address') == values['delivery_address']
             and has_verified_coordinates(proof.get('stato_geocodifica'), proof.get('lat'), proof.get('lon'))
             and bool(proof.get('geocoding_token')))
-
-
-def _trusted_customer_proof(db, order, address):
-    """Reuse previously verified coordinates only for the exact same customer destination."""
-    from .order_customers import linked, normalize
-    customer = linked(db, order)
-    if not customer or normalize(customer.indirizzo) != normalize(address):
-        return None
-    if not has_verified_coordinates(customer.stato_geocodifica, customer.lat, customer.lon):
-        return None
-    canonical = customer.indirizzo_geocodificato or customer.indirizzo
-    return {'indirizzo': canonical, 'indirizzo_geocodificato': canonical,
-            'lat': customer.lat, 'lon': customer.lon, 'stato_geocodifica': 'verificato',
-            'geocoding_token': sign_stop_address(order.user_id, canonical, customer.lat, customer.lon)}
-
 
 
 def _existing_order_proof(db, order, address):
@@ -150,45 +130,16 @@ def _mark_verified(db, order, proof, address, actor, method):
         record(db, order, actor, 'status_changed', {'before': before, 'after': 'pronto', 'method': 'automatic'})
 
 
-def auto_verify_linked_customer(db, order, actor):
-    """No geocoding API call for a destination already verified in the customer registry."""
-    from .order_customers import effective
-    if order.status not in EDITABLE:
-        return False
-    if address_is_verified(db, order):
-        if order.status == 'pronto':
-            return False
-        before = order.status
-        order.status = 'pronto'
-        order.verification_status = 'verified'
-        touch(order)
-        record(db, order, actor, 'status_changed', {'before': before, 'after': 'pronto', 'method': 'retained_verification'})
-        return True
-    values, _ = effective(db, order)
-    address = values.get('delivery_address')
-    if not values.get('recipient_name') or not address:
-        return False
-    proof = _trusted_customer_proof(db, order, address)
-    if not proof:
-        return False
-    _mark_verified(db, order, proof, address, actor, 'verified_customer')
-    return True
-
 def verify_address(db, order, version, actor, reusable=None):
     editable(db, order, version)
-    from .order_customers import effective
-    values, _ = effective(db, order)
+    values = order.operational_data or {}
     address = values.get('delivery_address')
     if not values.get('recipient_name') or not address:
         raise HTTPException(422, 'Per verificare inserisci destinatario e indirizzo completi.')
     if address_is_verified(db, order) and order.status == 'pronto':
         return order  # The previous verification remains valid; no new API request.
-    proof = _trusted_customer_proof(db, order, address)
-    method = 'verified_customer' if proof else 'geocoding'
-    if proof is None:
-        proof = _existing_order_proof(db, order, address)
-        if proof:
-            method = 'verified_order'
+    proof = _existing_order_proof(db, order, address)
+    method = 'verified_order' if proof else 'geocoding'
     if proof is None and reusable and reusable.get('input_address') == address:
         if (has_verified_coordinates(reusable.get('stato_geocodifica'), reusable.get('lat'), reusable.get('lon'))
                 and reusable.get('geocoding_token') == sign_stop_address(
@@ -200,7 +151,7 @@ def verify_address(db, order, version, actor, reusable=None):
     # Geocoding usage logging may commit. Reacquire and recheck after the call.
     order = get_order(db, order.user_id, order.id, lock=True)
     editable(db, order, version)
-    if effective(db, order)[0].get('delivery_address') != address:
+    if (order.operational_data or {}).get('delivery_address') != address:
         raise HTTPException(409, 'Indirizzo cambiato: ripeti la verifica.')
     _mark_verified(db, order, proof, address, actor, method)
     return order
@@ -209,9 +160,8 @@ def verify_address(db, order, version, actor, reusable=None):
 def transition(db, order, data, actor):
     editable(db, order, data.version)
     if data.status == 'pronto':
-        from .order_customers import anomalies
-        problems = [a['message'] for a in anomalies(db,order)[0] if a['blocking']]
-        if problems: raise HTTPException(422, ' '.join(problems))
+        if not address_is_verified(db, order):
+            raise HTTPException(422, 'Verifica destinatario e indirizzo dell’ordine prima di pianificare.')
     before = order.status
     order.status = data.status
     if data.status != 'annullato':
@@ -265,8 +215,7 @@ def verify_multiple(db, user_id, actor, *, after_id=0, limit=10, q='', source_id
                 else:
                     result['already_verified'] += 1
                 continue
-            from .order_customers import effective
-            address = effective(db, order)[0].get('delivery_address')
+            address = (order.operational_data or {}).get('delivery_address')
             proof = proofs.get(address)
             updated = verify_address(db, order, order.version, actor, reusable=proof)
             db.commit()
@@ -293,15 +242,21 @@ def summary(order, source_name):
 
 
 def detail(db, order):
-    from .order_customers import anomalies
-    issues, effective_values, inherited = anomalies(db, order)
+    values = dict(order.operational_data or {})
+    issues = []
+    if not values.get('recipient_name'):
+        issues.append({'code':'recipient','message':'Completa il destinatario.','blocking':True})
+    if not values.get('delivery_address'):
+        issues.append({'code':'address','message':'Completa l’indirizzo di consegna.','blocking':True})
+    if not address_is_verified(db, order):
+        issues.append({'code':'verification','message':'Verifica l’indirizzo dell’ordine.','blocking':True})
     source = db.get(OrderSource, order.source_id)
     assignments = db.query(RouteOrderAssignment).filter_by(user_id=order.user_id, order_id=order.id).all()
     events = db.query(OrderEvent).filter_by(order_id=order.id).order_by(OrderEvent.id.desc()).limit(100).all()
     return summary(order, source.name) | {
         'external_id': order.external_id, 'external_customer_id': order.external_customer_id,
-        'customer_resolution': order.customer_resolution, 'anomalies': issues, 'effective_data': effective_values, 'inherited_fields': inherited,
-        'customer_id': order.customer_id, 'operational_data': order.operational_data,
+        'anomalies': issues, 'effective_data': values,
+        'operational_data': order.operational_data,
         'original_payload': order.original_payload, 'latest_received_payload': order.ingested_payload, 'address_verification': order.address_verification,
         'acquisition_status': order.acquisition_status, 'verification_status': order.verification_status,
         'delivery_status': order.delivery_status,
