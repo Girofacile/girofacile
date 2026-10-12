@@ -122,7 +122,8 @@ body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-day-strip{
   padding:6px 0;margin-bottom:22px;overflow:hidden;
 }
 body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-day-cell{
-  min-width:0;display:flex;flex-direction:column;align-items:flex-start;
+  min-width:0;display:grid;grid-template-columns:max-content minmax(0,1fr);column-gap:6px;
+  align-content:center;align-items:end;
   padding:14px 22px;border:0;border-left:1px solid var(--gf-color-border);
   background:transparent;text-align:left;color:var(--gf-color-text);
   line-height:1.2;font-family:var(--gf-font-family);font-weight:400;
@@ -131,14 +132,14 @@ body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-day-cell:first-chi
 body[data-gf-surface="workspace"] #app #tab-dashboard button.gf-ref-day-cell{cursor:pointer}
 body[data-gf-surface="workspace"] #app #tab-dashboard button.gf-ref-day-cell:hover{background:var(--gf-color-surface-subtle)}
 body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-day-cell>span{
-  font-size:13px;line-height:1.4;color:var(--gf-color-muted);
+  grid-column:1/-1;font-size:13px;line-height:1.4;color:var(--gf-color-muted);
 }
 body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-day-cell strong{
   color:var(--gf-color-primary);font:700 30px/1.1 var(--gf-font-display);
   letter-spacing:-.02em;margin:4px 0 0;white-space:nowrap;
 }
 body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-day-cell small{
-  margin-top:3px;color:var(--gf-color-muted);font-size:12px;
+  align-self:end;margin-bottom:4px;color:var(--gf-color-muted);font-size:13px;
 }
 /* Tir animato: all'avvio trascina il pannello; disattivato senza un giro o con reduced motion. */
 body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-hero-wrapper{
