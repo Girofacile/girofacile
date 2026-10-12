@@ -79,12 +79,15 @@ jobs:
           pip install pillow
           GF_DESIGN_PREVIEW=1 python tests/check_design_system.py
           python tests/check_management_design.py after
+      - name: Verify automatic order connectors
+        run: python tests/check_order_connectors_ui.py
       - name: Preserve management screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: management-responsive
           path: |
+            test-results/connectors-responsive/
             test-results/management-design/
             test-results/design-system/
           if-no-files-found: ignore

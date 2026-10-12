@@ -47,6 +47,7 @@ def configure(source_id:int,data:SourceUpdate,db:Session=Depends(get_db),user:Us
     src=service.source(db,user.id,source_id,lock=True)
     if src.version!=data.version: raise HTTPException(409,'Fonte modificata: ricarica la pagina.')
     if src.status=='removed': raise HTTPException(409,'La fonte è stata rimossa.')
+    if src.configuration.get('connector'): raise HTTPException(422,'Le associazioni del connettore sono automatiche.')
     if not {'external_id','number'}<=data.mapping.keys() or not set(data.mapping)<=set(FIELDS) or any(not v or len(v)>160 for v in data.mapping.values()):
         raise HTTPException(422,'Associa almeno identificativo esterno e numero ordine a colonne valide.')
     src.configuration={**src.configuration,'mapping':data.mapping,'validated':False}
@@ -74,6 +75,8 @@ def source_action(source_id:int,data:SourceAction,request:Request,response:Respo
     src=service.source(db,user.id,source_id,lock=True)
     if src.version!=data.version: raise HTTPException(409,'Fonte modificata: ricarica la pagina.')
     if src.status=='removed': raise HTTPException(409,'La fonte è rimossa; gli ordini restano disponibili.')
+    if src.configuration.get('connector') and data.action in ('activate','rotate','revoke'):
+        raise HTTPException(422,'Usa pausa o rimozione per questo collegamento automatico.')
     secret=None
     if data.action in ('rotate','revoke') and getattr(request.state,'company_collaborator',None):
         raise HTTPException(403,'Le credenziali riservate sono gestite dal titolare dell’azienda.')
@@ -183,3 +186,7 @@ async def ingest(request:Request,db:Session=Depends(get_db)):
         return JSONResponse(jsonable_encoder(service.public_run(item)),status_code=422 if item.status in ('failed','preview_invalid') else 200,headers={'Cache-Control':'no-store'})
     except Exception:
         db.rollback();raise
+
+
+from .order_connectors import router as connectors_router
+router.include_router(connectors_router)

@@ -36,6 +36,7 @@ def run(db,uid,sid,rid):
 
 
 def public_source(db,row):
+    from .order_connectors import connector_public
     recent=db.query(OrderImportRun).filter_by(source_id=row.id).order_by(OrderImportRun.id.desc()).first()
     success=db.query(func.max(OrderImportRun.created_at)).filter_by(source_id=row.id,status='completed').scalar()
     return {'id':row.id,'name':row.name,'kind':row.kind,'status':row.status,'version':row.version,
@@ -43,7 +44,7 @@ def public_source(db,row):
             'excluded_fields':row.configuration.get('excluded_fields',[]),'fields_configured':'excluded_fields' in row.configuration,
             'has_credential':bool(row.credential_hash),'last_success':success,
             'order_count':db.query(Order).filter_by(user_id=row.user_id,source_id=row.id).count(),
-            'last_run':{'id':recent.id,'status':recent.status,'summary':{k:v for k,v in recent.report.items() if k!='rows'}} if recent else None}
+            'last_run':{'id':recent.id,'status':recent.status,'summary':{k:v for k,v in recent.report.items() if k!='rows'}} if recent else None, **connector_public(row)}
 
 
 def public_run(row,offset=0):

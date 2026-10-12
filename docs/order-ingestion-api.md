@@ -1,3 +1,5 @@
+> Aggiornamento 12 ottobre 2026: per Shopify, WooCommerce e inoltro email vedere [collegamenti automatici](order-connectors.md), con requisiti di attivazione e limiti.
+
 > **Politica aggiornata (12 ottobre 2026):** gli ordini importati sono entità
 > autonome e non vengono mai associati ai Clienti di GiroFacile, nemmeno con
 > nome e indirizzo identici. Il campo `external_customer_id` resta un

@@ -1,3 +1,5 @@
+> Aggiornamento 12 ottobre 2026: per Shopify, WooCommerce e inoltro email vedere [collegamenti automatici](order-connectors.md), con requisiti di attivazione e limiti.
+
 # Ordini — quarto intervento
 
 ## Funzioni operative
