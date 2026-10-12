@@ -1,0 +1,120 @@
+/* Solo la mappa centrale della nuova dashboard. Sidebar e resto del tema invariati. */
+body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-route-drawing.gf-ref-map-ready{
+  height:315px;
+  min-height:315px;
+  isolation:isolate;
+  background:#eaf1f7;
+}
+body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-canvas{
+  position:absolute;
+  inset:0;
+  height:100%;
+  width:100%;
+  background:#eaf1f7;
+}
+body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-canvas.leaflet-container{
+  font-family:var(--gf-font-family);
+  font-size:13px;
+}
+body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-canvas .leaflet-tile-pane{
+  filter:saturate(.84);
+}
+/* L'antico grafico SVG aveva un rapporto fisso: non applicarlo alle polilinee Leaflet. */
+body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-ready .leaflet-overlay-pane svg{
+  width:auto!important;
+  height:auto!important;
+  aspect-ratio:auto!important;
+}
+body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-marker{
+  border:none;
+  background:transparent;
+}
+body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-pin{
+  display:grid;
+  width:34px;
+  height:34px;
+  place-items:center;
+  border:2px solid #6c7893;
+  border-radius:50%;
+  background:#fff;
+  box-shadow:0 2px 7px rgba(15,34,80,.22);
+  color:#233659;
+  font:700 12px/1 var(--gf-font-family);
+  transition:box-shadow .15s ease,transform .15s ease;
+}
+body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-pin.is-done{
+  color:#fff;
+  background:var(--gf-color-primary);
+  border-color:var(--gf-color-primary);
+}
+body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-pin.is-miss{
+  color:var(--gf-color-danger);
+  background:var(--gf-color-danger-bg);
+  border-color:var(--gf-color-danger);
+}
+body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-pin.depot{
+  background:var(--gf-color-nav);
+  color:#fff;
+  border-color:#fff;
+  font-size:13px;
+}
+body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-pin.hl,
+body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-marker:focus-visible .gf-ref-map-pin{
+  transform:scale(1.12);
+  box-shadow:0 0 0 5px rgba(22,101,255,.17),0 2px 8px rgba(15,34,80,.25);
+}
+body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-stops li[data-gf-ref-stop]{
+  cursor:pointer;
+}
+body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-stops li[data-gf-ref-stop]:focus-visible{
+  outline:2px solid var(--gf-color-primary);
+  outline-offset:-2px;
+}
+body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-notice{
+  position:absolute;
+  bottom:12px;
+  left:12px;
+  right:45px;
+  z-index:550;
+  width:max-content;
+  max-width:calc(100% - 60px);
+  padding:7px 10px;
+  border:1px solid rgba(100,116,139,.2);
+  border-radius:8px;
+  background:rgba(255,255,255,.95);
+  box-shadow:0 2px 9px rgba(15,34,80,.1);
+  color:var(--gf-color-text);
+  font-size:11.5px;
+  line-height:1.45;
+  pointer-events:none;
+}
+body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-popup strong{
+  display:block;
+  margin-bottom:3px;
+  color:var(--gf-color-text);
+}
+body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-popup small{
+  display:block;
+  margin-top:4px;
+  color:var(--gf-color-muted);
+}
+body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-canvas .leaflet-control-zoom{
+  border:1px solid var(--gf-color-border);
+  border-radius:9px;
+  overflow:hidden;
+  box-shadow:0 2px 10px rgba(15,34,80,.09);
+}
+body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-canvas .leaflet-control-zoom a{
+  color:var(--gf-color-text);
+}
+@media(max-width:560px){
+  body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-route-drawing.gf-ref-map-ready{
+    min-height:265px;
+    height:265px;
+  }
+  body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-notice{
+    left:8px;
+    bottom:8px;
+    max-width:calc(100% - 50px);
+  }
+}
