@@ -1,7 +1,13 @@
 """Explicit grouping by verified destination and compatible operational constraints."""
 from copy import deepcopy
 from uuid import uuid5, NAMESPACE_URL
-from .order_customers import normalize
+import re
+import unicodedata
+
+def normalize(value):
+    """Compare order destinations without querying customer records."""
+    value = unicodedata.normalize('NFKD', value or '').casefold()
+    return ' '.join(re.sub(r'[^\w\s]', ' ', ''.join(c for c in value if not unicodedata.combining(c))).split()
 
 
 def group_key(user_id, ids):
