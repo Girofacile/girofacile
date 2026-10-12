@@ -323,3 +323,30 @@ def test_excluding_date_on_reimport_clears_constraint_preserves_original(ingesti
     src=client.put(f"/api/order-sources/{src['id']}/fields",json={'version':src['version'],'excluded_fields':[]}).json()
     row['requested_date']='invalid'
     assert client.post('/api/order-ingestion',headers=headers,json={'batch_id':'enabled-again','orders':[row]}).status_code==422
+
+
+def test_incoming_order_never_matches_known_customer(ingestion):
+    from app.models import Customer
+    from app.order_models import CustomerSourceMapping
+    client,db,owner,other=ingestion
+    known=Customer(user_id=owner.id,nome='Recipient',indirizzo='Via Roma 1',
+                   sponda=True,transpallet=True,ztl=True,note='Solo anagrafica')
+    db.add(known);db.commit()
+    src,headers=api_source(ingestion)
+    body={'batch_id':'isolated-order-01','orders':[{'external_id':'ISOLATED-01',
+          'number':'ISOLATED-01','external_customer_id':'EXT-CUSTOMER',
+          'recipient_name':'Recipient','delivery_address':'Via Roma 1',
+          'tail_lift':False}]}
+    response=client.post('/api/order-ingestion',json=body,headers=headers)
+    assert response.status_code==200,response.text
+    order=db.query(Order).filter_by(external_id='ISOLATED-01').one()
+    assert order.customer_id is None and order.status=='da_verificare'
+    assert db.query(CustomerSourceMapping).count()==0
+    detail=client.get(f'/api/orders/{order.id}').json()
+    assert 'customer_id' not in detail and 'customer_resolution' not in detail
+    assert detail['external_customer_id']=='EXT-CUSTOMER'
+    assert detail['effective_data']['tail_lift'] is False
+    assert detail['effective_data']['pallet_truck'] is None
+    assert detail['effective_data']['ztl'] is None
+    assert detail['effective_data']['notes'] is None
+    assert detail['address_verification'] is None
