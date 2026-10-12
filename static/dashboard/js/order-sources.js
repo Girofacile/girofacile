@@ -24,13 +24,60 @@
     finally{busy=false;}
   }
   function hideSecret(){const box=el('sourceCredential');if(box)box.replaceChildren();}
+  function sourceCard(s){
+    const isRemoved=s.status==='removed';
+    const isApi=s.kind==='api';
+    const count=Number(s.order_count)||0;
+    const last=s.last_success?esc(new Date(s.last_success+'Z').toLocaleString('it-IT')):'nessuna';
+    const type=isApi?'API STANDARD':'FILE CSV / XLSX';
+    const description=isRemoved
+      ?'Questa fonte è stata rimossa. Puoi consultare lo storico degli ordini importati.'
+      :isApi&&s.status==='active'
+        ?(s.has_credential?'Pronta a ricevere richieste autenticate. Il gestionale deve essere configurato per inviarle.':'Credenziale da generare: nessun invio autorizzato.')
+        :s.status==='paused'?'Fonte in pausa. Puoi riattivarla dalle impostazioni.':'';
+    const hasIssue=s.last_run?.status==='failed'||s.last_run?.status==='preview_invalid';
+    const importBtn=!isRemoved&&s.kind==='file'&&['active','draft'].includes(s.status)
+      ?`<button type='button' class='btn-primary orders-source-import-btn' onclick='GFOrderImport.start(${s.id})'>Importa file</button>`:'';
+    const openBtn=!isRemoved?`<button type='button' class='btn-secondary orders-source-open-btn' onclick='GFOrderSources.open(${s.id})'>Apri</button>`:'';
+    const historyBtn=`<button type='button' class='btn-secondary orders-source-history-btn' onclick='GFOrderSources.history(${s.id},0)'>Storico <span aria-hidden='true'>›</span></button>`;
+    const removeBtn=isRemoved&&manage()?`<button type='button' class='orders-source-remove-btn' onclick='GFOrderSources.deleteFromList(${s.id})'><span aria-hidden='true'>⌫</span> Rimuovi</button>`:'';
+    return `<article class='orders-source-card ${isRemoved?'is-removed':''}'>
+      <div class='orders-source-card-copy'>
+        <h3>${esc(s.name)}</h3>
+        <div class='orders-source-meta'><span>${type}</span>${sourceStatusBadge(s.status)}</div>
+        <p class='orders-source-stat'><strong>${count} ${count===1?'ordine':'ordini'}</strong><span aria-hidden='true'> · </span>Ultima acquisizione: ${last}</p>
+        ${description?`<p class='orders-source-info ${isRemoved?'is-removed':''}'>${description}</p>`:''}
+        ${hasIssue?`<p class='orders-source-issue'>Ultima verifica o acquisizione con errori. Consulta lo storico.</p>`:''}
+      </div>
+      <div class='page-actions orders-source-card-actions'>${importBtn}${openBtn}${historyBtn}${removeBtn}</div>
+    </article>`;
+  }
   async function refresh(){
-    const data=await request('?offset='+offset);sources=data.items;fields=['external_id','number',...data.fields.filter(k=>!['external_id','number'].includes(k))];
+    const data=await request('?offset='+offset);
+    sources=data.items;
+    fields=['external_id','number',...data.fields.filter(k=>!['external_id','number'].includes(k))];
     el('sourceCategories').hidden=!manage();
-    el('sourceList').innerHTML=sources.length?'<div class="orders-source-list-grid">'+sources.map(s=>`<article class="orders-source-card"><h3>${esc(s.name)}</h3><div class="orders-source-meta"><span>${s.kind==='api'?'API standard':'File CSV / XLSX'}</span>${sourceStatusBadge(s.status)}</div><p><strong>${s.order_count} ordini</strong> · Ultima acquisizione: ${s.last_success?esc(new Date(s.last_success+'Z').toLocaleString('it-IT')):'nessuna'}</p>${s.kind==='api'&&s.status==='active'?`<p>${s.has_credential?'Pronta a ricevere richieste autenticate. Il gestionale deve essere configurato per inviarle.':'Credenziale da generare: nessun invio autorizzato.'}</p>`:''}${s.last_run?.status==='failed'||s.last_run?.status==='preview_invalid'?'<p class="orders-error">Ultima verifica o acquisizione con errori. Consulta lo storico.</p>':''}<div class="page-actions">${s.kind==='file'&&['active','draft'].includes(s.status)?`<button class="btn-primary" onclick="GFOrderImport.start(${s.id})">Importa file</button>`:''}${s.status!=='removed'?button('Apri',`open(${s.id})`):''}${button('Storico',`history(${s.id},0)`)}</div></article>`).join('')+'</div>':'<div class="orders-sources-empty">Nessuna fonte configurata.</div>';
+    const createTopButton=el('ordersConnectionsNewSource');
+    if(createTopButton)createTopButton.hidden=!manage();
+    const count=el('sourceCount');
+    if(count)count.textContent=`${data.total} ${data.total===1?'fonte':'fonti'}`;
+    el('sourceList').innerHTML=sources.length
+      ?'<div class="orders-source-list-grid">'+sources.map(sourceCard).join('')+'</div>'
+      :'<div class="orders-sources-empty">Nessuna fonte configurata.</div>';
     const pagination=el('sourcePagination');
     if(pagination)pagination.hidden=data.total<=50;
-    el('sourcePage').textContent=`${data.total} fonti`;el('sourcePrevious').disabled=offset===0;el('sourceNext').disabled=offset+50>=data.total;
+    el('sourcePage').textContent=`${data.total} fonti`;
+    el('sourcePrevious').disabled=offset===0;
+    el('sourceNext').disabled=offset+50>=data.total;
+  }
+  function deleteFromList(id){
+    const source=sources.find(s=>s.id===id);
+    if(!source||source.status!=='removed'||!manage()||busy)return;
+    if(!confirm(`Eliminare definitivamente la fonte "${source.name}"? La configurazione e lo storico tecnico saranno eliminati, ma gli ordini già acquisiti saranno conservati.`))return;
+    return task(async()=>{
+      await request('/'+source.id+'?version='+encodeURIComponent(source.version),{method:'DELETE'});
+      await refresh();
+    });
   }
   function load(){hideSecret();return task(refresh);}
   function unavailable(kind){
@@ -359,5 +406,5 @@
     el('sourceHistory').innerHTML='<h2>Storico della fonte</h2>'+data.items.map(r=>`<p>${esc(new Date(r.created_at+'Z').toLocaleString('it-IT'))} · ${statuses[r.status]||esc(r.status)} ${button('Report #'+r.id,`report(${id},${r.id},0,'sourceHistoryReport')`)}</p>`).join('')+`<div class="page-actions">${next?button('Precedenti',`history(${id},${next-20})`):''}${next+20<data.total?button('Successivi',`history(${id},${next+20})`):''}</div><div id="sourceHistoryReport"></div>`;el('sourceHistory').scrollIntoView({block:'start'});
   });}
   function report(sid,rid,next,target){return task(async()=>renderReport(await request(`/${sid}/runs/${rid}?offset=${next}`),target,sid));}
-  window.GFOrderSources={saveFields,load,hideSecret,downloadInstructions,copyToken,unavailable,invalidate,createForm,create,open,back,deleteSource,testConnection,upload,preview,commit,action,history,report,page(delta){offset=Math.max(0,offset+delta*50);load();}};
+  window.GFOrderSources={deleteFromList,saveFields,load,hideSecret,downloadInstructions,copyToken,unavailable,invalidate,createForm,create,open,back,deleteSource,testConnection,upload,preview,commit,action,history,report,page(delta){offset=Math.max(0,offset+delta*50);load();}};
 })();
