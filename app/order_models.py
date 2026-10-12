@@ -38,6 +38,7 @@ class Order(Base):
     external_id: Mapped[str] = mapped_column(String(160), nullable=False)
     number: Mapped[str] = mapped_column(String(160), nullable=False)
     external_customer_id: Mapped[str | None] = mapped_column(String(160))
+    # Legacy field kept for schema compatibility; all order workflows ignore this relationship.
     customer_id: Mapped[int | None] = mapped_column(ForeignKey('customers.id'))
     customer_resolution: Mapped[str] = mapped_column(String(30), default="pending", server_default="pending", nullable=False)
     recipient_name: Mapped[str | None] = mapped_column(String(200))
@@ -91,6 +92,7 @@ class OrderImportRun(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
 
+# Historical table retained without deletion; no order workflow reads or writes it.
 class CustomerSourceMapping(Base):
     __tablename__ = 'customer_source_mappings'
     __table_args__ = (
