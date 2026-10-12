@@ -45,12 +45,20 @@ const WORKSPACE_TOPBAR_META = {
   }
 };
 
+// Il titolo della home saluta l'account autenticato, non la ragione sociale.
+function dashboardGreetingTitle(){
+  const userName=(typeof currentSessionUser!=="undefined" && currentSessionUser?.username)
+    || localStorage.getItem("girofacile_account_name") || "";
+  const name=String(userName).trim();
+  return name?`Buongiorno, ${name}`:"Buongiorno";
+}
+
 function syncWorkspaceTopbar(name){
   const company=name==="company";
   const meta=WORKSPACE_TOPBAR_META[name] || WORKSPACE_TOPBAR_META.dashboard;
   const title=document.getElementById("workspacePageTitle");
   const subtitle=document.getElementById("workspacePageSubtitle");
-  if(title) title.textContent=meta.title;
+  if(title) title.textContent=name==="dashboard"?dashboardGreetingTitle():meta.title;
   if(subtitle) subtitle.textContent=meta.subtitle;
   const badge=document.getElementById("workspacePageBadge");
   if(badge){badge.hidden=true;badge.textContent="";badge.className="order-source-topbar-badge";}
