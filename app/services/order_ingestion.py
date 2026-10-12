@@ -9,7 +9,6 @@ from sqlalchemy import func
 from ..models import User
 from ..order_models import Order,OrderSource,OrderImportRun,OrderItem,RouteOrderAssignment
 from .orders import project,record,touch,EDITABLE
-from .order_customers import auto_link,recognize
 from .order_files import mapped,FIELDS
 
 
@@ -68,7 +67,7 @@ def check_payload(item):
 
 
 def preflight(db,src,rows,mapping,expected=None):
-    report={'total':len(rows),'new':0,'updated':0,'unchanged':0,'invalid':0,'unmatched':0,'rows':[]}
+    report={'total':len(rows),'new':0,'updated':0,'unchanged':0,'invalid':0,'rows':[]}
     parsed=[];seen=set()
     for index,raw in enumerate(rows,1):
         entry={'row':index};data=None
@@ -92,10 +91,6 @@ def preflight(db,src,rows,mapping,expected=None):
                     raise ImportIssue('Ordine già assegnato, avviato, chiuso o annullato: aggiornamento bloccato.')
                 action='updated'
             else: action='new'
-            probe=Order(user_id=src.user_id,source_id=src.id,external_customer_id=data.get('external_customer_id'),
-                        recipient_name=data.get('recipient_name'),delivery_address=data.get('delivery_address'),customer_resolution='pending')
-            match=recognize(db,probe)['kind'];entry['customer_match']=match
-            if match not in ('certain','linked'): report['unmatched']+=1
             entry['warnings']=[label for key,label in [('recipient_name','Destinatario mancante'),('delivery_address','Indirizzo mancante'),('weight_kg','Peso non indicato')] if key not in src.configuration.get('excluded_fields',[]) and (data.get(key) is None or data.get(key)=='')]
             entry['action']=action;report[action]+=1
         except ImportIssue as exc:
@@ -139,19 +134,18 @@ def apply_orders(db,src,parsed,actor,report):
                 if operative.get(key)==previous.get(key): operative[key]=value
                 else: preserved.append(key)
             old_address=order.delivery_address
-            old_identity=(order.recipient_name,order.external_customer_id)
             project(order,operative)
             order.external_customer_id=data.get('external_customer_id')
             if old_address!=order.delivery_address: order.address_verification=None
-            if order.customer_resolution=='automatic' and (old_address!=order.delivery_address or old_identity!=(order.recipient_name,order.external_customer_id)):
-                order.customer_id=None;order.customer_resolution='pending'
-            order.ingested_payload=data;order.status='da_verificare';order.verification_status='pending';touch(order)
+            order.ingested_payload=data
+            from .orders import address_is_verified
+            verified=address_is_verified(db,order)
+            order.status='pronto' if verified else 'da_verificare'
+            order.verification_status='verified' if verified else 'pending'
+            touch(order)
             record(db,order,actor,'source_updated',{'source_id':src.id,'received':data,'preserved_corrections':preserved})
             db.query(OrderItem).filter_by(order_id=order.id).delete(synchronize_session=False)
         for index,line in enumerate(data['items'],1): db.add(OrderItem(order_id=order.id,line_number=index,data=line))
-        auto_link(db,order,actor)
-        from .orders import auto_verify_linked_customer
-        auto_verify_linked_customer(db,order,actor)
     db.flush()
 
 
