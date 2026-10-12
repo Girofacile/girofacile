@@ -1571,7 +1571,50 @@ body[data-gf-surface="workspace"] #app:has(#tab-ordine-fonte:not(.hidden)) .orde
   flex:0 0 auto;
   display:flex;
   align-items:center;
-  gap:14px;
+  gap:10px;
+}
+#tab-ordini .orders-verify-all{
+  min-height:34px;
+  padding:0 11px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  border:1px solid #059669;
+  border-radius:7px;
+  background:#059669;
+  color:#fff;
+  font-family:inherit;
+  font-size:10.5px;
+  font-weight:700;
+  line-height:1;
+  white-space:nowrap;
+  cursor:pointer;
+  box-shadow:none;
+  transition:background .15s ease,border-color .15s ease,opacity .15s ease;
+}
+#tab-ordini .orders-verify-all:hover{
+  border-color:#047857;
+  background:#047857;
+}
+#tab-ordini .orders-verify-all:focus-visible{
+  outline:3px solid rgba(5,150,105,.18);
+  outline-offset:2px;
+}
+#tab-ordini .orders-verify-all[aria-busy="true"]{
+  border-color:#059669;
+  background:#059669;
+  opacity:.82;
+}
+#tab-ordini .orders-verify-all svg{
+  width:14px;
+  height:14px;
+  flex:0 0 14px;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.8;
+  stroke-linecap:round;
+  stroke-linejoin:round;
 }
 #tab-ordini #ordersMessage{
   margin:0;
@@ -1831,8 +1874,15 @@ body[data-gf-surface="workspace"] #app:has(#tab-ordine-fonte:not(.hidden)) .orde
   #tab-ordini .orders-metrics{grid-template-columns:1fr}
   #tab-ordini .orders-list-search{align-items:stretch;flex-direction:column}
   #tab-ordini .orders-filter-toggle{justify-content:center}
-  #tab-ordini .orders-list-toolbar-right{align-items:flex-start;flex-direction:column}
-  #tab-ordini #ordersMessage{white-space:normal;text-align:left}
+  #tab-ordini .orders-list-toolbar-right{
+    width:100%;
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    align-items:center;
+    gap:8px;
+  }
+  #tab-ordini #ordersMessage{grid-column:1/-1;white-space:normal;text-align:left}
+  #tab-ordini .orders-verify-all{justify-self:start}
   #tab-ordini .orders-filter-grid{grid-template-columns:1fr}
   #tab-ordini .orders-selection-actions{align-items:stretch;flex-direction:column}
   #tab-ordini .orders-selection-actions>*{width:100%;justify-content:center}
