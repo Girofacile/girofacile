@@ -50,7 +50,7 @@
 <link rel="stylesheet" href="/static/dashboard/css/login.css?v=login_preview_exact_20261007">
 <script src="/static/design-system/design-system.js?v=ds_20261007_reference_2" defer></script>
 <link rel="stylesheet" href="/static/dashboard/css/collaborators.css?v=invitations_20261009">
-<link rel="stylesheet" href="/static/dashboard/css/orders.css?v=orders_quick_flow_20261011">
+<link rel="stylesheet" href="/static/dashboard/css/orders.css?v=orders_verify_toolbar_20261012_1">
 </head>
 <body data-gf-surface="workspace">
 
@@ -933,7 +933,6 @@
           <div><h1>Ordini</h1><p>Gestisci gli ordini ricevuti e prepara le tue consegne.</p></div>
           <div id="ordersInlineActionsHost">
             <div id="ordersPageActions" class="page-actions">
-              <button id="ordersVerifyAll" class="btn-secondary" type="button" onclick="GFOrders.bulkVerify()" title="Verifica gli indirizzi degli ordini secondo i filtri attuali. Potrebbero essere utilizzati crediti API."><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" style="vertical-align:middle"><path d="M12 2a8 8 0 0 0-8 8c0 5 8 12 8 12s8-7 8-12a8 8 0 0 0-8-8Zm-3 8 2 2 4-4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg> Verifica indirizzi</button>
               <button class="btn-secondary" onclick="showTab('ordini-collegamenti')">Collega i tuoi ordini</button>
               <button id="ordersImport" class="btn-secondary" onclick="GFOrderImport.start()">Importa file</button>
               <button id="ordersNew" class="btn-primary" onclick="GFOrders.newOrder()"><span aria-hidden="true">＋</span> Nuovo ordine</button>
@@ -957,6 +956,10 @@
             </div>
             <div class="orders-list-toolbar-right">
               <p id="ordersMessage" role="status"></p>
+              <button id="ordersVerifyAll" class="orders-verify-all" type="button" onclick="GFOrders.bulkVerify()" title="Verifica gli indirizzi degli ordini secondo i filtri attuali. Potrebbero essere utilizzati crediti API.">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a8 8 0 0 0-8 8c0 5 8 12 8 12s8-7 8-12a8 8 0 0 0-8-8Z"/><path d="m9 10 2 2 4-4"/></svg>
+                <span id="ordersVerifyAllLabel">Verifica indirizzi</span>
+              </button>
               <div class="orders-view-switch" role="group" aria-label="Vista ordini">
                 <button id="ordersView-table" class="btn-secondary" aria-pressed="true" onclick="GFOrders.view('table')">Tabella</button>
                 <button id="ordersView-cards" class="btn-secondary" aria-pressed="false" onclick="GFOrders.view('cards')">Schede</button>
@@ -2125,7 +2128,7 @@
 <script src="/static/dashboard/js/live-design.js?v=20261006"></script>
 <script src="/static/password-strength.js?v=password_policy_20261008_1"></script>
 <script src="/static/dashboard/js/collaborators.js?v=20261011_fields1"></script>
-<script src="/static/dashboard/js/orders.js?v=orders_quick_flow_20261011_final"></script>
+<script src="/static/dashboard/js/orders.js?v=orders_verify_toolbar_20261012_1"></script>
 <script src="/static/dashboard/js/order-import.js?v=20261011_fields1"></script>
 <script src="/static/dashboard/js/order-sources.js?v=20261011_fields1"></script>
 <script src="/static/dashboard/js/order-customers.js?v=orders_optional_matching_20261011"></script>
