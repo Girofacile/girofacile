@@ -27,56 +27,24 @@ body[data-gf-portal] :is(.card,.section-card,.modal,.popup-card,.login-card){
 body[data-gf-surface] :is(.gf-input,.gf-select,.gf-textarea,input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),select,textarea){
   font-family:var(--gf-font-family);
 }
+/* Ripristino esclusivo sidebar: geometria, palette e font precedenti.
+   La home, i popup e tutte le altre pagine mantengono il tema aggiornato. */
+body[data-gf-surface="workspace"]{
+  --gf-sidebar-width:256px;
+}
 body[data-gf-surface="workspace"] #app .sidebar{
-  padding:20px 14px 16px!important;
-  border-right:0!important;
-  background:var(--gf-color-nav)!important;
+  --gf-color-nav:#0f172a;
+  --gf-color-nav-text:#cbd5e1;
+  --gf-color-nav-muted:#94a3b8;
+  --gf-color-nav-active:#1e293b;
+  --gf-color-primary:#2563eb;
+  --gf-radius-sm:6px;
+  font-family:Arial,Helvetica,sans-serif!important;
 }
-body[data-gf-surface="workspace"] #app .brand{
-  border-bottom:0!important;
-  min-height:52px;
-  padding:0 8px 18px!important;
-}
-body[data-gf-surface="workspace"] #app .brand-title{
-  color:#fff;
-  font:700 21px/1 var(--gf-font-display);
-  letter-spacing:-.01em;
-}
-body[data-gf-surface="workspace"] #app .brand-title span{color:#fff}
-body[data-gf-surface="workspace"] #app .brand-logo-img{
-  width:36px;height:36px;border-radius:10px;
-}
-body[data-gf-surface="workspace"] #app .side-nav{
-  padding-top:10px;gap:1px;
-}
-body[data-gf-surface="workspace"] #app .nav-item{
-  min-height:40px;
-  border:0!important;border-radius:9px;
-  padding:9px 12px;
-  font-size:14px;line-height:1.35;font-weight:500;
-  color:var(--gf-color-nav-text);
-  gap:12px;
-}
-body[data-gf-surface="workspace"] #app .nav-item:hover{
-  background:rgba(255,255,255,.07)!important;color:#fff!important;
-}
-body[data-gf-surface="workspace"] #app .nav-item.active{
-  background:rgba(255,255,255,.10)!important;
-  border:0!important;color:#fff!important;font-weight:500!important;
-  position:relative;
-}
-body[data-gf-surface="workspace"] #app .nav-item.active::before{
-  content:"";position:absolute;left:-14px;top:8px;bottom:8px;width:4px;
-  border-radius:0 4px 4px 0;background:var(--gf-color-primary);
-}
-body[data-gf-surface="workspace"] #app .nav-item > span.nav-svg,
-body[data-gf-surface="workspace"] #app .nav-item .nav-svg svg{
-  width:18px!important;height:18px!important;flex-basis:18px!important;
-}
-body[data-gf-surface="workspace"] #app .side-footer{
-  border-top:1px solid #1d3470;
-  margin-top:auto;padding:16px 10px 0;
-  font-size:11.5px;text-align:left;
+body[data-gf-surface="workspace"] #app .sidebar :is(
+  .brand-title,.nav-item,.nav-section-label,.side-footer
+){
+  font-family:Arial,Helvetica,sans-serif!important;
 }
 body[data-gf-surface="workspace"] #app .topbar{
   min-height:86px;height:auto;padding:22px 32px 18px!important;
