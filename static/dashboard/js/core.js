@@ -1797,8 +1797,10 @@ async function loadDashboardHome(){
     // Deve combaciare con il pannello “Giri in corso” sotto: conta tutti i giri operativi attualmente in corso.
     setText("dashTodayProgress", inProgressRoutes.length);
     setText("dashTodayCompletedDeliveries", completedDeliveriesToday);
-    setText("dashBusyDrivers", `${busyDrivers}/${drivers.length}`);
-    setText("dashBusyVehicles", `${busyVehicles}/${vehicles.length}`);
+    setText("dashBusyDrivers", busyDrivers);
+    setText("gfRefDriverCountMeta", `su ${drivers.length}`);
+    setText("dashBusyVehicles", busyVehicles);
+    setText("gfRefVehicleCountMeta", `su ${vehicles.length}`);
 
     // Dashboard semplificata: grafici e attività recenti rimossi per ridurre confusione.
 
