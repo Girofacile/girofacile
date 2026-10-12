@@ -25,7 +25,7 @@
 <script src="/static/routing-summary.js"></script>
 <link rel="stylesheet" href="/static/dashboard/css/live-gps.css?v=live_20261006">
 <script src="/static/dashboard/js/live-gps.js?v=live_20261006"></script>
-<link href="/static/dashboard/css/deposits.css?v=deposit_views_20261007_1" rel="stylesheet">
+<link href="/static/dashboard/css/deposits.css?v=search_icon_fix_20261012_1" rel="stylesheet">
 <link href="/static/dashboard/css/settings.css?v=sidebar_stable_20261001" rel="stylesheet">
 <link rel="stylesheet" href="/static/dashboard/css/electric-vehicles.css?v=electric_style_20261003">
 <script src="/static/dashboard/js/electric-vehicles.js?v=electric_bonus_20261002"></script>
@@ -49,8 +49,8 @@
 <link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007_reference_2">
 <link rel="stylesheet" href="/static/dashboard/css/login.css?v=login_preview_exact_20261007">
 <script src="/static/design-system/design-system.js?v=ds_20261007_reference_2" defer></script>
-<link rel="stylesheet" href="/static/dashboard/css/collaborators.css?v=invitations_20261009">
-<link rel="stylesheet" href="/static/dashboard/css/orders.css?v=orders_clients_alignment_20261012_2">
+<link rel="stylesheet" href="/static/dashboard/css/collaborators.css?v=search_icon_fix_20261012_1">
+<link rel="stylesheet" href="/static/dashboard/css/orders.css?v=search_icon_fix_20261012_1">
 </head>
 <body data-gf-surface="workspace">
 
@@ -470,7 +470,7 @@
       <section id="tab-collaboratori" class="tab hidden gf-page">
         <div class="dash-hero-row"><div><h1>Collaboratori</h1><p>Accessi personali al gestionale, con le funzioni che decidi di assegnare.</p></div><button class="btn-primary" onclick="GFCollaborators.edit()">+ Invita collaboratore</button></div>
         <div class="collaborator-metrics"><div><span>Collaboratori</span><strong id="collaboratorsTotal">0</strong></div><div><span>Attivi</span><strong id="collaboratorsActive">0</strong></div><div><span>Inviti in attesa</span><strong id="collaboratorsPending">0</strong></div><div><span>Disattivati</span><strong id="collaboratorsInactive">0</strong></div></div>
-        <section class="panel"><div class="collaborators-toolbar"><input id="collaboratorSearch" type="search" placeholder="Cerca per nome o email" aria-label="Cerca collaboratori" oninput="GFCollaborators.render()"><select id="collaboratorStatus" aria-label="Filtra stato accesso" onchange="GFCollaborators.render()"><option value="">Tutti gli accessi</option><option value="active">Attivi</option><option value="pending">Inviti in attesa</option><option value="inactive">Disattivati</option></select></div>
+        <section class="panel"><div class="collaborators-toolbar"><label class="collaborator-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="collaboratorSearch" type="search" placeholder="Cerca per nome o email" aria-label="Cerca collaboratori" oninput="GFCollaborators.render()"></label><select id="collaboratorStatus" aria-label="Filtra stato accesso" onchange="GFCollaborators.render()"><option value="">Tutti gli accessi</option><option value="active">Attivi</option><option value="pending">Inviti in attesa</option><option value="inactive">Disattivati</option></select></div>
         <div class="tableWrap"><table data-gf-responsive="cards"><thead><tr><th>Collaboratore</th><th>Accesso</th><th>Funzioni assegnate</th><th>Ultimo accesso</th><th>Azioni</th></tr></thead><tbody id="collaboratorsBody"></tbody></table></div>
         <p class="collaborators-note">Il collaboratore riceve un invito via email e sceglie autonomamente la password. Dopo l’attivazione accede da Login con le proprie credenziali. Puoi cambiare le funzioni o disattivare l’accesso in qualsiasi momento. Piano, fatturazione e gestione dei collaboratori restano riservati al titolare.</p></section>
       </section>
