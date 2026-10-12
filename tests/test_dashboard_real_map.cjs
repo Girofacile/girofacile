@@ -7,7 +7,7 @@ const root = path.resolve(__dirname,'..');
 const read = name => fs.readFileSync(path.join(root,name),'utf8');
 
 function harness(payload){
-  const calls = {requests:[],maps:[],lines:[],markers:[]};
+  const calls = {requests:[],maps:[],lines:[],markers:[],prefixes:[],tiles:[],viewport:null};
   const classList = () => {
     const values = new Set();
     return {add:x=>values.add(x),remove:x=>values.delete(x),
@@ -31,12 +31,16 @@ function harness(payload){
   const fakeMap = () => ({
     removed:false,
     remove(){this.removed=true;},
-    fitBounds(){},invalidateSize(){},panTo(){},
+    attributionControl:{setPrefix:prefix=>calls.prefixes.push(prefix)},
+    fitBounds(bounds,options){calls.viewport=options;},invalidateSize(){},panTo(){},
   });
   const L = {
     divIcon:spec=>spec,
     map:() => {const map=fakeMap();calls.maps.push(map);return map;},
-    tileLayer:() => ({addTo(){return this;}}),
+    tileLayer:(url,options) => {
+      calls.tiles.push({url,options});
+      return {addTo(){return this;}};
+    },
     latLngBounds:() => ({extend(){},isValid(){return true;}}),
     polyline:(points) => {
       calls.lines.push(points);
@@ -80,6 +84,11 @@ test('central map reuses saved OSRM road geometry, depot and real numbered stops
   assert.equal(calls.maps.length,1);
   assert.equal(calls.lines.length,1);
   assert.equal(calls.markers.length,3);
+  assert.deepEqual(calls.prefixes,['']);
+  assert.match(calls.tiles[0].url,/tile\.openstreetmap\.org/);
+  assert.match(calls.tiles[0].options.attribution,/OpenStreetMap contributors/);
+  assert.equal(calls.viewport.padding[0],18);
+  assert.equal(calls.viewport.maxZoom,13);
   assert.match(calls.markers[0].options.icon.html,/depot/);
   assert.match(calls.markers[1].options.icon.html,/is-done/);
   assert.match(calls.markers[2].options.icon.html,/is-miss/);
@@ -126,6 +135,10 @@ test('switching routes disposes old map and does not change any sidebar styling'
   const html=read('static/dashboard/index.html');
   assert.match(core,/GiroFacileDashboardMap\?\.render\(routeId,rows,drawing\)/);
   assert.doesNotMatch(core,/Schema non geografico delle prime/);
-  assert.match(html,/dashboard-real-map\.js\?v=gf_realmap_20261012_1/);
+  assert.match(html,/dashboard-real-map\.js\?v=gf_realmap_clean_20261012_2/);
   assert.match(html,/design-system\.js\?v=sidebar_icone_originali_20261012/);
+  const css=read('static/dashboard/css/dashboard-real-map.css');
+  assert.match(css,/leaflet-control-attribution svg/);
+  assert.match(css,/max-width:none!important/);
+  assert.match(html,/dashboard-real-map\.css\?v=gf_realmap_clean_20261012_2/);
 });
