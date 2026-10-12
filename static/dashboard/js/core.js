@@ -4291,6 +4291,11 @@ function dashboardRoutePicker(routes, selectedId, onChangeFn, label){
 }
 
 function renderDashboardInProgressSubpage(routes, selectedRoute){
+  // Nuovo layout dedicato: riutilizza le API e tutte le funzioni operative esistenti.
+  if(window.GFInProgressReference?.render){
+    window.GFInProgressReference.render(routes,selectedRoute);
+    return;
+  }
   const page = document.getElementById('dashboardInProgressPage');
   if(!page) return;
   if(!routes.length){
