@@ -291,6 +291,17 @@ footer{background:#0f172a;color:#e2e8f0;padding:60px 6% 28px;}
 <link rel="stylesheet" href="/static/design-system/layout.css?v=ds_20261007">
 <link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007">
 <script src="/static/design-system/design-system.js?v=ds_20261007" defer></script>
+<!-- At narrow widths the reference fonts need compact actions to prevent document overflow. -->
+<style>
+@media(max-width:480px){
+  body[data-gf-surface="public"] nav{min-width:0;padding-inline:10px;gap:6px}
+  body[data-gf-surface="public"] .nav-logo{gap:5px;min-width:0;flex-shrink:0}
+  body[data-gf-surface="public"] .nav-logo-text{font-size:14px;white-space:nowrap}
+  body[data-gf-surface="public"] .nav-logo-icon{width:28px;height:28px;flex-shrink:0}
+  body[data-gf-surface="public"] .nav-actions{min-width:0;gap:4px}
+  body[data-gf-surface="public"] .nav-actions a{box-sizing:border-box;min-height:32px;padding:6px 7px!important;font-size:11px;line-height:1.2;white-space:nowrap}
+}
+</style>
 </head>
 <body data-gf-surface="public" data-gf-portal>
 
