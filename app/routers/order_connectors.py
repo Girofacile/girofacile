@@ -1,9 +1,6 @@
 """Company-owned connectors and authenticated provider deliveries."""
-import base64
 import hashlib
-import hmac
 import json
-import os
 import re
 import secrets
 from typing import Literal
@@ -34,23 +31,21 @@ class ConnectorCreate(BaseModel):
 def create(data:ConnectorCreate,request:Request,db:Session=Depends(get_db),user:User=Depends(current_user)):
     if getattr(request.state,'company_collaborator',None):
         raise HTTPException(403,'Il titolare configura i collegamenti automatici.')
+    if data.provider=='email':
+        raise HTTPException(503, 'Inoltro email in fase di sviluppo: configurazione non ancora disponibile.')
     db.query(User).filter_by(id=user.id).with_for_update().one()
     if db.query(OrderSource).filter(OrderSource.user_id==user.id,OrderSource.kind.in_(('api','file'))).count()>=100:
         raise HTTPException(422,'Massimo 100 fonti per azienda.')
     key='c'+secrets.token_hex(12)
     config={'connector':data.provider,'software':data.provider,'mapping':{},'excluded_fields':['requested_date'], 'validated':True}
-    if data.provider=='email':
-        local,domain=adapter.email_base().split('@')
-        config['inbound_address']=local+'+'+key+'@'+domain
-    else:
-        store=data.store.lower().strip().removeprefix('https://').rstrip('/')
-        if not re.fullmatch(r'[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?',store) or '.' not in store or '..' in store:
-            raise HTTPException(422,'Indica il dominio del negozio, senza percorsi.')
-        if data.provider=='shopify' and not store.endswith('.myshopify.com'):
-            raise HTTPException(422,'Usa il dominio originale del negozio: nome.myshopify.com.')
-        if len(data.secret)<16:
-            raise HTTPException(422,'Inserisci la chiave di firma del collegamento (almeno 16 caratteri).')
-        config.update(store=store,connector_secret=adapter.seal(data.secret))
+    store=data.store.lower().strip().removeprefix('https://').rstrip('/')
+    if not re.fullmatch(r'[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?',store) or '.' not in store or '..' in store:
+        raise HTTPException(422,'Indica il dominio del negozio, senza percorsi.')
+    if data.provider=='shopify' and not store.endswith('.myshopify.com'):
+        raise HTTPException(422,'Usa il dominio originale del negozio: nome.myshopify.com.')
+    if len(data.secret)<16:
+        raise HTTPException(422,'Inserisci la chiave di firma del collegamento (almeno 16 caratteri).')
+    config.update(store=store,connector_secret=adapter.seal(data.secret))
     src=OrderSource(user_id=user.id,key=key,name=data.name,kind='api',status='active',configuration=config)
     db.add(src);db.commit()
     return service.public_source(db,src)
@@ -138,22 +133,4 @@ async def commerce_hook(key:str,request:Request,db:Session=Depends(get_db)):
 
 @router.post('/api/order-connectors/email')
 async def email_hook(request:Request,db:Session=Depends(get_db)):
-    throttle_ip(request)
-    adapter.email_base()
-    expected='Basic '+base64.b64encode(('girofacile:'+os.environ['ORDER_INBOUND_PASSWORD']).encode()).decode()
-    if not hmac.compare_digest(request.headers.get('authorization','').encode(),expected.encode()):
-        raise HTTPException(401,'Autenticazione ricezione email non valida.')
-    raw=await bounded_body(request)
-    try:
-        body=json.loads(raw)
-        recipient=body['OriginalRecipient'].lower()
-        event=body['MessageID']
-        key=recipient.split('@')[0].split('+')[1]
-        if not isinstance(event,str) or not event or len(event)>500:
-            raise ValueError()
-    except (ValueError,KeyError,TypeError,IndexError,AttributeError):
-        raise HTTPException(422,'Messaggio email non valido.')
-    src=locked_source(db,key)
-    if src.configuration.get('connector')!='email' or recipient!=src.configuration.get('inbound_address'):
-        raise HTTPException(401,'Destinatario non valido.')
-    return receive(db,src,body,event,raw,adapter.email_orders)
+    raise HTTPException(503, 'Inoltro email in fase di sviluppo: ricezione non disponibile.')

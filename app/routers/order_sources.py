@@ -75,6 +75,8 @@ def source_action(source_id:int,data:SourceAction,request:Request,response:Respo
     src=service.source(db,user.id,source_id,lock=True)
     if src.version!=data.version: raise HTTPException(409,'Fonte modificata: ricarica la pagina.')
     if src.status=='removed': raise HTTPException(409,'La fonte è rimossa; gli ordini restano disponibili.')
+    if src.configuration.get('connector')=='email' and data.action in ('activate','resume'):
+        raise HTTPException(503,'Inoltro email in fase di sviluppo.')
     if src.configuration.get('connector') and data.action in ('activate','rotate','revoke'):
         raise HTTPException(422,'Usa pausa o rimozione per questo collegamento automatico.')
     secret=None

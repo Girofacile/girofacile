@@ -1,3 +1,5 @@
+> **Stato aggiornato: inoltro email IN FASE DI SVILUPPO.** Creazione e ricezione email sono disabilitate anche con variabili server configurate. Eventuali fonti email precedenti vengono mostrate come in sviluppo. Le istruzioni email sotto restano materiale tecnico da rivalutare, non una procedura attivabile. Shopify e WooCommerce restano disponibili.
+
 # Ricezione automatica degli ordini aziendali
 
 Ogni azienda configura fonti separate da Ordini > Collega i tuoi ordini. Nessuna lettura delle email personali del gestore GiroFacile. I nuovi ordini ricevuti rimangono autonomi dai Clienti e richiedono la verifica dell'indirizzo prima della pianificazione. Non vengono avviati giri automaticamente.

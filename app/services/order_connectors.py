@@ -41,6 +41,8 @@ def connector_public(src):
     kind = src.configuration.get('connector')
     if kind not in CONNECTORS:
         return {}
+    if kind == 'email':
+        return {'status':'development', 'connector':{'provider':'email','available':False}}
     from ..core.config import APP_BASE_URL
     info = {'provider': kind, 'store': src.configuration.get('store', ''),
             'received': bool(src.configuration.get('connector_received'))}

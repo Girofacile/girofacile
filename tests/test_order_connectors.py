@@ -70,22 +70,13 @@ def email_deliver(client,body,authorized=True):
     return client.post('/api/order-connectors/email',json=body,headers=headers)
 
 
-def test_email_text_attachments_unknown_format_and_auth(connectors):
-    client,db,*_=connectors;src=create(connectors,'email');body=email_body(src)
-    assert email_deliver(client,body,False).status_code==401
-    response=email_deliver(client,body);assert response.status_code==200,response.text
-    assert response.json()['status']=='completed'
-    assert email_deliver(client,body).json()==response.json()
-    assert db.query(Order).count()==1
-    body=email_body(src,'testo libero senza indirizzo');body['MessageID']='free-text'
-    response=email_deliver(client,body);assert response.json()['status']=='failed'
-    assert db.query(Order).count()==1
-    body=email_body(src,'');body['MessageID']='attachment'
-    body['Attachments']=[{'Name':'orders.csv','Content':base64.b64encode(CSV.encode()).decode()}]
-    assert email_deliver(client,body).json()['status']=='completed'
-    assert db.query(Order).count()==2
-    body['OriginalRecipient']='someone+'+body['OriginalRecipient'].split('+')[1]
-    assert email_deliver(client,body).status_code==401
+def test_email_unavailable_even_with_server_configuration(connectors):
+    client,db,*_=connectors
+    response=client.post('/api/order-sources/connectors',json={'name':'Email','provider':'email'})
+    assert response.status_code==503 and 'sviluppo' in response.json()['detail']
+    assert email_deliver(client,{}).status_code==503
+    assert email_deliver(client,{},False).status_code==503
+    assert db.query(OrderSource).count()==0 and db.query(Order).count()==0
 
 
 def test_pause_and_tenant_ownership(connectors):
@@ -128,20 +119,15 @@ def test_missing_address_is_reported_not_imported(connectors):
     assert report['items'][0]['report']['error']
 
 
-def test_excluded_email_values_and_duplicate_rows_are_atomic(connectors):
-    client,db,*_=connectors;src=create(connectors,'email')
-    body=email_body(src,'Numero ordine: A\nDestinatario: Mario\nIndirizzo: Via Roma 1\nData consegna: not-a-date')
-    assert email_deliver(client,body).json()['status']=='completed'
-    assert db.query(Order).one().requested_date is None
-    src=client.put(f"/api/order-sources/{src['id']}/fields",json={'version':src['version'],'excluded_fields':[]}).json()
-    body['MessageID']='date-enabled'
-    assert email_deliver(client,body).json()['status']=='failed'
-    assert db.query(Order).count()==1
-    body=email_body(src,'');body['MessageID']='duplicate-rows'
-    content='Numero ordine;Destinatario;Indirizzo\nDUP;Name;Address\nDUP;Name;Address\n'
-    body['Attachments']=[{'Name':'orders.csv','Content':base64.b64encode(content.encode()).decode()}]
-    assert email_deliver(client,body).json()['status']=='failed'
-    assert db.query(Order).count()==1
+def test_existing_email_is_development_and_cannot_resume(connectors):
+    client,db,owner,*_=connectors
+    src=OrderSource(user_id=owner.id,key='existing-email',name='Email',kind='api',status='active',configuration={'connector':'email','inbound_address':'old@example.com','validated':True})
+    db.add(src);db.commit()
+    public=client.get('/api/order-sources').json()['items'][0]
+    assert public['status']=='development'
+    assert 'address' not in public['connector']
+    assert client.post(f"/api/order-sources/{src.id}/action",json={'version':src.version,'action':'resume'}).status_code==503
+    assert email_deliver(client,{'OriginalRecipient':'old@example.com'}).status_code==503
 
 
 def test_connector_permissions_and_owner_only_configuration(connectors):
