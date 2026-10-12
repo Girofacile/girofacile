@@ -143,9 +143,12 @@
       canvas.setAttribute('aria-label','Mappa geografica del giro di consegne');
       element.appendChild(canvas);
       map = L.map(canvas, {scrollWheelZoom:false, zoomControl:true});
+      // Il prefisso Leaflet include una bandierina SVG: il tema globale della
+      // dashboard la ingrandiva. Manteniamo visibile il credito OSM del layer.
+      map.attributionControl.setPrefix('');
       L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom:19,
-        attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>'
       }).addTo(map);
       const bounds = positions.length ? L.latLngBounds(positions) : L.latLngBounds([]);
       let hasRoad = false;
@@ -174,7 +177,7 @@
         marker.on('popupclose',() => highlight(index,false));
         stopMarkers.set(index,marker);
       });
-      if (bounds.isValid()) map.fitBounds(bounds,{padding:[30,30],maxZoom:14,animate:false});
+      if (bounds.isValid()) map.fitBounds(bounds,{padding:[18,18],maxZoom:13,animate:false});
       const subtitle = document.getElementById('gfRefRouteSubtitle');
       if (subtitle) subtitle.textContent = hasRoad
         ? 'Percorso stradale pianificato, con fermate e consegne aggiornate'
