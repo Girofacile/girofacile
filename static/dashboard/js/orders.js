@@ -297,10 +297,10 @@
     }
     if(!can('orders.update'))return;
     if(!confirm('Verificare gli indirizzi degli ordini nei filtri attuali? Il sistema riutilizza le verifiche già valide, ma i nuovi indirizzi possono consumare crediti API di geocodifica. Gli ordini validi diventeranno subito pianificabili.'))return;
-    const button=el('ordersVerifyAll'),note=el('ordersMessage'),filters=verifyFilters();
+    const button=el('ordersVerifyAll'),label=el('ordersVerifyAllLabel'),note=el('ordersMessage'),filters=verifyFilters();
     let after=0,processed=0,verified=0,already=0,failed=0,skipped=0,issues=[];
     bulkVerifying=true;stopBulkVerification=false;
-    if(button){button.textContent='Interrompi verifica';button.setAttribute('aria-busy','true');}
+    if(button){if(label)label.textContent='Interrompi verifica';button.setAttribute('aria-busy','true');}
     try{
       for(let batch=0;batch<1000&&!stopBulkVerification;batch++){
         const result=await orderApi('/api/orders/verify-addresses',{
@@ -327,7 +327,7 @@
       if(note)note.textContent='Verifica interrotta dopo '+processed+' ordini: '+(err.message||String(err))+'. '+verified+' verificati.';
     }finally{
       bulkVerifying=false;stopBulkVerification=false;
-      if(button){button.textContent='Verifica indirizzi';button.removeAttribute('aria-busy');}
+      if(button){if(label)label.textContent='Verifica indirizzi';button.removeAttribute('aria-busy');}
     }
   }
 
