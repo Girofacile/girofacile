@@ -50,7 +50,7 @@
 <link rel="stylesheet" href="/static/dashboard/css/login.css?v=login_preview_exact_20261007">
 <script src="/static/design-system/design-system.js?v=ds_20261007_reference_2" defer></script>
 <link rel="stylesheet" href="/static/dashboard/css/collaborators.css?v=invitations_20261009">
-<link rel="stylesheet" href="/static/dashboard/css/orders.css?v=orders_verify_toolbar_20261012_1">
+<link rel="stylesheet" href="/static/dashboard/css/orders.css?v=orders_clients_alignment_20261012_1">
 </head>
 <body data-gf-surface="workspace">
 
@@ -929,41 +929,48 @@
       </section>
 
       <section id="tab-ordini" class="tab hidden gf-page orders-page">
-        <div class="page-title-row gf-directory-title">
+        <div class="page-title-row gf-directory-title orders-page-title">
           <div><h1>Ordini</h1><p>Gestisci gli ordini ricevuti e prepara le tue consegne.</p></div>
-          <div id="ordersInlineActionsHost">
-            <div id="ordersPageActions" class="page-actions">
-              <button class="btn-secondary" onclick="showTab('ordini-collegamenti')">Collega i tuoi ordini</button>
-              <button id="ordersImport" class="btn-secondary" onclick="GFOrderImport.start()">Importa file</button>
-              <button id="ordersNew" class="btn-primary" onclick="GFOrders.newOrder()"><span aria-hidden="true">＋</span> Nuovo ordine</button>
-            </div>
-          </div>
         </div>
 
         <div id="ordersMetrics" class="orders-metrics" aria-label="Indicatori ordini"></div>
 
-        <section class="orders-list-panel" aria-label="Elenco ordini">
-          <div class="orders-list-toolbar">
-            <div class="orders-list-search">
-              <div class="orders-search-input-wrap">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg>
-                <input id="ordersSearch" type="search" maxlength="200" placeholder="Cerca ordine, destinatario..." aria-label="Cerca ordini" oninput="GFOrders.search()">
-              </div>
-              <button id="ordersFilterToggle" class="btn-secondary orders-filter-toggle" type="button" aria-expanded="false" aria-controls="ordersFilterDrawer" onclick="GFOrders.toggleFilters()">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16l-6 7v5l-4 2v-7Z"/></svg>
-                Filtri
-              </button>
+        <section class="orders-list-panel panel" aria-label="Elenco ordini">
+          <div class="orders-list-head panel-header">
+            <div>
+              <h2>Elenco Ordini</h2>
+              <p class="panel-subtitle">Cerca rapidamente oppure apri i filtri avanzati quando servono.</p>
             </div>
-            <div class="orders-list-toolbar-right">
-              <p id="ordersMessage" role="status"></p>
-              <button id="ordersVerifyAll" class="orders-verify-all" type="button" onclick="GFOrders.bulkVerify()" title="Verifica gli indirizzi degli ordini secondo i filtri attuali. Potrebbero essere utilizzati crediti API.">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a8 8 0 0 0-8 8c0 5 8 12 8 12s8-7 8-12a8 8 0 0 0-8-8Z"/><path d="m9 10 2 2 4-4"/></svg>
-                <span id="ordersVerifyAllLabel">Verifica indirizzi</span>
-              </button>
-              <div class="orders-view-switch" role="group" aria-label="Vista ordini">
-                <button id="ordersView-table" class="btn-secondary" aria-pressed="true" onclick="GFOrders.view('table')">Tabella</button>
-                <button id="ordersView-cards" class="btn-secondary" aria-pressed="false" onclick="GFOrders.view('cards')">Schede</button>
+            <div id="ordersInlineActionsHost" class="orders-list-head-actions">
+              <div id="ordersPageActions" class="page-actions">
+                <button class="btn-secondary" onclick="showTab('ordini-collegamenti')">Collega i tuoi ordini</button>
+                <button id="ordersImport" class="btn-secondary" onclick="GFOrderImport.start()">Importa file</button>
+                <button id="ordersNew" class="btn-primary" onclick="GFOrders.newOrder()"><span aria-hidden="true">＋</span> Nuovo ordine</button>
               </div>
+            </div>
+          </div>
+
+          <div class="orders-list-toolbar">
+            <div class="orders-search-input-wrap">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg>
+              <input id="ordersSearch" type="search" maxlength="200" placeholder="Cerca ordine, destinatario..." aria-label="Cerca ordini" oninput="GFOrders.search()">
+            </div>
+            <button id="ordersFilterToggle" class="btn-secondary orders-filter-toggle" type="button" aria-expanded="false" aria-controls="ordersFilterDrawer" onclick="GFOrders.toggleFilters()">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18l-7 8v7l-4 2V12Z"/></svg>
+              Filtra
+            </button>
+            <select id="ordersSort" class="orders-toolbar-sort" aria-label="Ordina ordini" onchange="GFOrders.load(true)">
+              <option value="received_at">↕　Ordina per ricezione</option>
+              <option value="requested_date">Data richiesta</option>
+              <option value="number">Numero ordine</option>
+            </select>
+            <button id="ordersVerifyAll" class="orders-verify-all" type="button" onclick="GFOrders.bulkVerify()" title="Verifica gli indirizzi degli ordini secondo i filtri attuali. Potrebbero essere utilizzati crediti API.">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a8 8 0 0 0-8 8c0 5 8 12 8 12s8-7 8-12a8 8 0 0 0-8-8Z"/><path d="m9 10 2 2 4-4"/></svg>
+              <span id="ordersVerifyAllLabel">Verifica indirizzi</span>
+            </button>
+            <div class="orders-view-switch" role="group" aria-label="Vista ordini">
+              <button id="ordersView-table" class="btn-secondary" aria-label="Vista elenco" aria-pressed="true" onclick="GFOrders.view('table')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h1M3 12h1M3 18h1"/></svg></button>
+              <button id="ordersView-cards" class="btn-secondary" aria-label="Vista griglia" aria-pressed="false" onclick="GFOrders.view('cards')"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="15" y="3" width="6" height="6" rx="1"/><rect x="3" y="15" width="6" height="6" rx="1"/><rect x="15" y="15" width="6" height="6" rx="1"/></svg></button>
             </div>
           </div>
 
@@ -973,7 +980,6 @@
               <label>Fonte<select id="ordersSource" onchange="GFOrders.load(true)"><option value="">Tutte le fonti</option></select></label>
               <label>Data richiesta dal<input id="ordersFrom" type="date" onchange="GFOrders.load(true)"></label>
               <label>Al<input id="ordersTo" type="date" onchange="GFOrders.load(true)"></label>
-              <label>Ordina per<select id="ordersSort" onchange="GFOrders.load(true)"><option value="received_at">Ricezione</option><option value="requested_date">Data richiesta</option><option value="number">Numero ordine</option></select></label>
               <label>Direzione<select id="ordersDirection" onchange="GFOrders.load(true)"><option value="desc">Decrescente</option><option value="asc">Crescente</option></select></label>
             </div>
           </div>
@@ -992,10 +998,13 @@
           </section>
 
           <div id="ordersResults"></div>
-          <div class="orders-pagination">
-            <button id="ordersPrevious" class="btn-secondary" onclick="GFOrders.page(-1)">Precedente</button>
-            <span id="ordersPage"></span>
-            <button id="ordersNext" class="btn-secondary" onclick="GFOrders.page(1)">Successiva</button>
+          <div class="orders-list-footer">
+            <span id="ordersMessage" role="status"></span>
+            <div class="orders-pagination">
+              <button id="ordersPrevious" class="btn-secondary" onclick="GFOrders.page(-1)" aria-label="Pagina precedente">‹</button>
+              <span id="ordersPage"></span>
+              <button id="ordersNext" class="btn-secondary" onclick="GFOrders.page(1)" aria-label="Pagina successiva">›</button>
+            </div>
           </div>
         </section>
       </section>
@@ -2128,7 +2137,7 @@
 <script src="/static/dashboard/js/live-design.js?v=20261006"></script>
 <script src="/static/password-strength.js?v=password_policy_20261008_1"></script>
 <script src="/static/dashboard/js/collaborators.js?v=20261011_fields1"></script>
-<script src="/static/dashboard/js/orders.js?v=orders_verify_toolbar_20261012_1"></script>
+<script src="/static/dashboard/js/orders.js?v=orders_clients_alignment_20261012_1"></script>
 <script src="/static/dashboard/js/order-import.js?v=20261011_fields1"></script>
 <script src="/static/dashboard/js/order-sources.js?v=20261011_fields1"></script>
 <script src="/static/dashboard/js/order-customers.js?v=orders_optional_matching_20261011"></script>
