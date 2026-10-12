@@ -1689,6 +1689,87 @@ function renderDashTrend(routes){
     <g class="labels">${labels}</g>
   </svg>`;
 }
+function renderGFReferenceDashboardHero(summary){
+  const root=document.getElementById("gfRefHeroWrap");
+  if(!root) return Promise.resolve();
+  const get=id=>document.getElementById(id);
+  const txt=(id,value)=>{const n=get(id);if(n)n.textContent=String(value);};
+  const drawing=get("gfRefRouteDrawing"),list=get("gfRefStopList"),bar=get("gfRefProgressBar"),issues=get("gfRefMissed");
+  root.classList.toggle("has-route",!!summary);
+  if(!summary){
+    txt("gfRefRouteTitle","Nessun giro in corso");
+    txt("gfRefRouteSubtitle","I percorsi attivi appariranno qui quando un autista avvia un giro");
+    txt("gfRefRouteStatus","In attesa");
+    txt("gfRefDriver","—");txt("gfRefVehicle","—");
+    txt("gfRefCompleted","0 su 0");txt("gfRefRemaining","0 da fare");
+    if(drawing)drawing.innerHTML='<div class="gf-ref-route-placeholder">Non ci sono giri attivi da visualizzare.</div>';
+    if(list)list.innerHTML="";if(bar)bar.innerHTML="";if(issues)issues.innerHTML="";
+    return Promise.resolve();
+  }
+  txt("gfRefRouteTitle",summary.nome || "Giro consegne");
+  txt("gfRefRouteSubtitle","Schema del percorso operativo, aggiornato alle consegne registrate");
+  txt("gfRefRouteStatus","In corso");
+  txt("gfRefDriver",summary.driver_name || "Da assegnare");
+  txt("gfRefVehicle",summary.vehicle_name || "Da assegnare");
+  const total=Math.max(0,Number(summary.consegne_count)||0);
+  const done=Math.max(0,Number(summary.completed_count)||0);
+  const missed=Math.max(0,Number(summary.missed_count)||0);
+  const remaining=Math.max(0,total-done-missed);
+  txt("gfRefCompleted",`${done} su ${total}`);
+  txt("gfRefRemaining",`${remaining} da fare`);
+  if(bar){
+    const d=total?Math.min(100,100*done/total):0;
+    const m=total?Math.min(100-d,100*missed/total):0;
+    bar.innerHTML=`<span class="done" style="width:${d}%"></span><span class="miss" style="width:${m}%"></span>`;
+    bar.setAttribute("aria-label",`${done} completate, ${missed} mancate, ${remaining} da fare`);
+  }
+  if(issues)issues.innerHTML=missed?`<span class="gf-ref-pill red">${missed} mancat${missed===1?"a":"e"}</span>`:"";
+  if(drawing)drawing.innerHTML='<div class="gf-ref-route-placeholder">Caricamento delle fermate…</div>';
+  if(list)list.innerHTML="";
+  const routeId=Number(summary.id);
+  if(!Number.isSafeInteger(routeId) || routeId<=0)return Promise.resolve();
+  return api(`/api/routes/${routeId}`).then(route=>{
+    if(!root.isConnected || !root.classList.contains("has-route"))return;
+    const rows=Array.isArray(route.consegne)?route.consegne.slice():[];
+    rows.sort((a,b)=>(Number(a.ordine)||0)-(Number(b.ordine)||0));
+    if(!rows.length){
+      if(drawing)drawing.innerHTML='<div class="gf-ref-route-placeholder">Non sono presenti fermate per questo giro.</div>';
+      return;
+    }
+    const maxShown=6,shown=rows.slice(0,maxShown);
+    const points=[{x:62,y:226},...shown.map((_,i)=>({x:150+i*90,y:[120,196,84,158,70,190][i]}))];
+    const status=d=>["completata","consegnata","completed"].includes(String(d.delivery_status||d.status||"").toLowerCase())?"done":["mancata","non_consegnata","missed"].includes(String(d.delivery_status||d.status||"").toLowerCase())?"miss":"todo";
+    const curved=(a,b)=>`M${a.x} ${a.y} C${(a.x+b.x)/2} ${a.y} ${(a.x+b.x)/2} ${b.y} ${b.x} ${b.y}`;
+    const gridX=Array.from({length:16},(_,i)=>`<line class="gf-ref-gridline" x1="${40+i*40}" y1="0" x2="${40+i*40}" y2="300"/>`).join("");
+    const gridY=Array.from({length:7},(_,i)=>`<line class="gf-ref-gridline" x1="0" y1="${30+i*40}" x2="660" y2="${30+i*40}"/>`).join("");
+    const lines=shown.map((d,i)=>`<path class="gf-ref-route-${status(d)==="done"?"done":"todo"}" d="${curved(points[i],points[i+1])}"/>`).join("");
+    const nodes=shown.map((d,i)=>{
+      const p=points[i+1],s=status(d),label=d.cliente_nome||`Fermata ${i+1}`;
+      return `<g class="gf-ref-stop-node is-${s}" data-gf-ref-stop="${i}" tabindex="0" role="img" aria-label="${esc(label)}: ${s==="done"?"Completata":s==="miss"?"Mancata":"Da fare"}" transform="translate(${p.x} ${p.y})"><circle r="14"/><text y="1">${i+1}</text><title>${esc(label)}</title></g>`;
+    }).join("");
+    if(drawing){
+      drawing.innerHTML=`<svg viewBox="0 0 660 300" role="img" aria-label="Schema non geografico delle prime ${shown.length} fermate del giro.">${gridX}${gridY}${lines}<g class="gf-ref-depot"><rect x="32" y="213" width="60" height="26" rx="7"/><text x="62" y="226">Deposito</text></g>${nodes}</svg>`;
+    }
+    if(list){
+      list.innerHTML=shown.map((d,i)=>{
+        const st=status(d),name=d.cliente_nome||`Fermata ${i+1}`;
+        return `<li class="is-${st}" data-gf-ref-stop="${i}" tabindex="0"><span class="gf-ref-stop-number">${st==="done"?"✓":i+1}</span><span class="gf-ref-stop-name">${esc(name)}</span><span class="gf-ref-pill ${st==="done"?"green":st==="miss"?"red":""}">${st==="done"?"Completata":st==="miss"?"Mancata":"Da fare"}</span></li>`;
+      }).join("")+(rows.length>maxShown?`<li><span class="gf-ref-stop-name">Altre ${rows.length-maxShown} fermate disponibili nel controllo giro</span></li>`:"");
+    }
+    const highlight=(id,on)=>root.querySelectorAll(`[data-gf-ref-stop="${id}"]`).forEach(el=>el.classList.toggle("hl",on));
+    root.querySelectorAll("[data-gf-ref-stop]").forEach(el=>{
+      const i=el.getAttribute("data-gf-ref-stop");
+      el.addEventListener("mouseenter",()=>highlight(i,true));
+      el.addEventListener("mouseleave",()=>highlight(i,false));
+      el.addEventListener("focus",()=>highlight(i,true));
+      el.addEventListener("blur",()=>highlight(i,false));
+    });
+  }).catch(e=>{
+    if(drawing)drawing.innerHTML='<div class="gf-ref-route-placeholder">Dettaglio fermate temporaneamente non disponibile. Apri il controllo giro per riprovare.</div>';
+    console.warn("Dettaglio dashboard",e);
+  });
+}
+
 async function loadDashboardHome(){
   const dash = document.getElementById("tab-dashboard");
   if(!dash) return;
@@ -1731,25 +1812,47 @@ async function loadDashboardHome(){
     const completedBox=document.getElementById("dashCompletedList");
     renderLogisticsDashboardV50([...(operational || []), ...(routes || [])]);
     if(scheduledBox) scheduledBox.innerHTML = scheduled.slice(0,3).map(r=>dashRouteItem(r,'scheduled')).join("") || renderEmptyDashList("Nessun giro programmato.", "scheduled");
-    if(progressBox) progressBox.innerHTML = progress.slice(0,3).map(r=>dashRouteItem(r,'progress')).join("") || renderEmptyDashList("Nessun giro in corso.", "progress");
+    if(progressBox) progressBox.innerHTML = progress.slice(1,3).map(r=>dashRouteItem(r,'progress')).join("");
+    document.getElementById("gfRefOtherActive")?.classList.toggle("hidden", progress.length <= 1);
     if(completedBox) completedBox.innerHTML = completedToday.slice(0,3).map(r=>dashRouteItem(r,'completed')).join("") || renderEmptyDashList("Nessun giro completato oggi.", "completed");
 
-    const vehBox = document.getElementById("dashVehicleStatus");
-    if(vehBox){
-      vehBox.innerHTML = vehicles.slice(0,4).map(v=>{
-        const inUse = (v.stato || "Disponibile") === "In uso";
-        return `<div class="dash-vehicle-card"><div><span class="vehicle-dot ${inUse?'busy':'free'}"></span><strong>${esc(v.nome||'Mezzo')}</strong><small>${esc(v.targa||'')}</small><small>${esc(v.stato || (inUse?'In uso':'Disponibile'))}</small></div>${v.photo_url ? imageThumb(v.photo_url,'','vehicle-thumb') : '<span class="dashboard-resource-icon"><img src="/static/design-system/icons/mezzi.svg" alt=""></span>'}</div>`;
-      }).join("") || renderEmptyDashList("Nessun mezzo registrato.");
-    }
 
-    const driverBox = document.getElementById("dashDriverStatus");
-    if(driverBox){
-      driverBox.innerHTML = drivers.slice(0,4).map(d=>{
-        const busy = (d.stato || "Disponibile") === "In servizio";
-        const name = `${d.nome||""} ${d.cognome||""}`.trim() || "Autista";
-        return `<div class="dash-vehicle-card dash-driver-card"><div><span class="vehicle-dot ${busy?'busy':'free'}"></span><strong>${esc(name)}</strong><small>${esc(d.patente||'')}</small><small>${esc(d.stato || "Disponibile")}</small></div>${d.photo_url ? imageThumb(d.photo_url,'','driver-thumb') : '<span class="dashboard-resource-icon"><img src="/static/design-system/icons/agenti.svg" alt=""></span>'}</div>`;
-      }).join("") || renderEmptyDashList("Nessun autista registrato.");
+    const vehBox=document.getElementById("dashVehicleStatus");
+    if(vehBox){
+      vehBox.innerHTML=vehicles.slice(0,4).map(v=>{
+        const inUse=(v.stato||"Disponibile")==="In uso";
+        const label=v.stato||(inUse?"In uso":"Disponibile");
+        return `<div class="gf-ref-resource-entry">
+          <span class="name">${esc(v.nome||"Mezzo")}</span>
+          <span class="gf-ref-plate">${esc(v.targa||"—")}</span>
+          <span class="gf-ref-pill ${inUse?"":"green"}">${esc(label)}</span>
+        </div>`;
+      }).join("")||renderEmptyDashList("Nessun mezzo registrato.");
     }
+    const driverBox=document.getElementById("dashDriverStatus");
+    if(driverBox){
+      driverBox.innerHTML=drivers.slice(0,4).map(d=>{
+        const busy=(d.stato||"Disponibile")==="In servizio";
+        const name=`${d.nome||""} ${d.cognome||""}`.trim()||"Autista";
+        const initials=name.split(/\s+/).slice(0,2).map(s=>s.charAt(0).toUpperCase()).join("");
+        return `<div class="gf-ref-resource-entry">
+          <span class="gf-ref-driver-name"><span class="gf-ref-initials">${esc(initials)}</span><span class="name">${esc(name)}</span></span>
+          <span class="gf-ref-license">${esc(d.patente||"n.d.")}</span>
+          <span class="gf-ref-pill ${busy?"amber":"green"}">${esc(d.stato||(busy?"In servizio":"Disponibile"))}</span>
+        </div>`;
+      }).join("")||renderEmptyDashList("Nessun autista registrato.");
+    }
+    const title=document.getElementById("workspacePageTitle");
+    const subtitle=document.getElementById("workspacePageSubtitle");
+    if(!dash.classList.contains("hidden")){
+      const companyName=(localStorage.getItem("girofacile_company_name")||"").trim();
+      if(title)title.textContent=companyName?`Buongiorno, ${companyName}`:"Buongiorno";
+      if(subtitle){
+        const day=new Intl.DateTimeFormat("it-IT",{weekday:"long",day:"numeric",month:"long"}).format(new Date());
+        subtitle.textContent=`${day.charAt(0).toUpperCase()+day.slice(1)}: lo stato delle consegne e delle risorse di oggi`;
+      }
+    }
+    renderGFReferenceDashboardHero(progress[0]||null);
   }catch(e){ console.warn(e); }
 }
 
