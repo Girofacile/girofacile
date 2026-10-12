@@ -66,7 +66,13 @@ function syncWorkspaceTopbar(name){
   const title=document.getElementById("workspacePageTitle");
   const subtitle=document.getElementById("workspacePageSubtitle");
   if(title) title.textContent=name==="dashboard"?dashboardGreetingTitle():meta.title;
-  if(subtitle) subtitle.textContent=meta.subtitle;
+  if(subtitle){
+    if(name==="dashboard-in-progress"){
+      const day=new Intl.DateTimeFormat("it-IT",{weekday:"long",day:"numeric",month:"long"}).format(new Date());
+      subtitle.textContent=day.charAt(0).toUpperCase()+day.slice(1)+": "+
+        meta.subtitle.charAt(0).toLowerCase()+meta.subtitle.slice(1);
+    }else subtitle.textContent=meta.subtitle;
+  }
   const badge=document.getElementById("workspacePageBadge");
   if(badge){badge.hidden=true;badge.textContent="";badge.className="order-source-topbar-badge";}
   if(document.body){
