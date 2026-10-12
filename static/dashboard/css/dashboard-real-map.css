@@ -25,6 +25,38 @@ body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-ready .leaflet
   height:auto!important;
   aspect-ratio:auto!important;
 }
+/* Isola i contenuti Leaflet dai selettori generici SVG/immagini della dashboard.
+   L'attribuzione contiene normalmente un'icona SVG: non deve diventare grande
+   quanto il vecchio grafico del percorso. */
+body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-canvas.leaflet-container img{
+  max-width:none!important;
+  max-height:none!important;
+}
+body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-canvas .leaflet-control-attribution svg{
+  display:inline-block!important;
+  width:12px!important;
+  height:8px!important;
+  max-width:12px!important;
+  max-height:8px!important;
+  aspect-ratio:3/2!important;
+  vertical-align:middle;
+}
+body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-canvas .leaflet-control-attribution{
+  padding:4px 8px;
+  background:rgba(255,255,255,.92);
+  border-top-left-radius:7px;
+  color:#64748b;
+  font:500 10.5px/1.3 var(--gf-font-family);
+  box-shadow:none;
+}
+body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-canvas .leaflet-control-attribution a{
+  color:#476585;
+  text-decoration:none;
+}
+body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-canvas .leaflet-control-attribution a:hover{
+  color:var(--gf-color-primary);
+  text-decoration:underline;
+}
 body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-marker{
   border:none;
   background:transparent;
