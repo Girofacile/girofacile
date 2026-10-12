@@ -7,7 +7,7 @@ from datetime import date,datetime,time
 from fastapi import HTTPException
 from openpyxl import load_workbook
 from ..schemas.order_sources import MAX_BYTES,MAX_ROWS,ExternalOrder
-from .order_customers import normalize
+from .order_grouping import normalize
 
 FIELDS=list(ExternalOrder.model_fields)
 ALIASES={'external_id':['idordine','id','nordine','numeroordine'], 'number':['numeroordine','nordine','numero'],
