@@ -1,99 +1,60 @@
-"""Customer recognition, precedence, grouping and stable multi-order delivery links."""
+"""Orders are independent of customers; compatible orders may share a delivery stop."""
 from copy import deepcopy
 import pytest
 from test_order_planning import planning, routing_env, env, ready, preview
 from app.models import Customer, Delivery, RoutePlan
 from app.order_models import Order, CustomerSourceMapping, RouteOrderAssignment
 
-
 def customer(ctx, **values):
-    db=ctx[1];row=Customer(user_id=ctx[2].id,nome='Recipient',indirizzo='Order address',**values)
+    db=ctx[1]
+    row=Customer(user_id=ctx[2].id,nome='Recipient',indirizzo='Order address',**values)
     db.add(row);db.commit();return row
 
-
 def create(ctx, **values):
-    response=ctx[0].post('/api/orders',json={'number':'MATCH','recipient_name':'Recipient','delivery_address':'Order address',**values})
+    response=ctx[0].post('/api/orders',json={'number':'MATCH',
+        'recipient_name':'Recipient','delivery_address':'Order address',**values})
     assert response.status_code==201,response.text
     return response.json()
 
-
-def action(ctx, order, name, **values):
-    return ctx[0].post(f"/api/orders/{order['id']}/customer",json={'version':order['version'],'action':name,**values})
-
-
-def test_certain_normalized_and_ambiguous_matches(planning):
-    ctx,_=planning;c=customer(ctx)
-    order=create(ctx,recipient_name='  RECIPIENT ',delivery_address='Order, address')
-    assert order['customer_id']==c.id and order['customer_resolution']=='automatic'
-    assert order['address_verification'] is None
-    customer(ctx)
-    ambiguous=create(ctx)
-    assert ambiguous['customer_id'] is None
-    result=ctx[0].get(f"/api/orders/{ambiguous['id']}/customers").json()
-    assert result['kind']=='probable' and len(result['candidates'])==2
-    assert any(a['code']=='customer' and not a['blocking'] for a in ambiguous['anomalies'])
-    separated=action(ctx,ambiguous,'separate').json()
-    assert separated['customer_resolution']=='separate'
-    assert not any(a['code']=='customer' for a in separated['anomalies'])
-    assert separated['original_payload']==ambiguous['original_payload']
-
-
-def test_probable_confirmation_mapping_and_tenant_isolation(planning):
-    ctx,_=planning;client,db,owner,other,*_=ctx;c=customer(ctx)
-    order=create(ctx,delivery_address='Different destination')
-    assert order['customer_id'] is None
-    row=db.get(Order,order['id']);row.external_customer_id='EXT-C';db.commit()
-    linked=action(ctx,order,'link',customer_id=c.id)
-    assert linked.status_code==200,linked.text
-    assert linked.json()['effective_data']['delivery_address']=='Different destination'
-    assert db.query(CustomerSourceMapping).one().customer_id==c.id
-    from app.services.order_customers import auto_link
-    second=db.get(Order,create(ctx,recipient_name='External alias')['id']);second.external_customer_id='EXT-C'
-    auto_link(db,second,'test');db.commit();assert second.customer_id==c.id
-    foreign=Customer(user_id=other.id,nome='Foreign',indirizzo='Foreign address');db.add(foreign);db.commit()
-    result=action(ctx,linked.json(),'link',customer_id=foreign.id)
-    assert result.status_code==404
-    c.is_active=False;db.commit()
-    assert ctx[0].get(f"/api/orders/{order['id']}/customers").json()['kind']=='invalid'
-
-
-def test_defaults_respect_false_and_verify_effective_address(planning,monkeypatch):
+def test_identical_customer_is_never_linked_and_never_inherited(planning):
     from datetime import time
-    ctx,_=planning;c=customer(ctx,sponda=True,ztl=True,transpallet=True,scarico_mattina_da=time(9),scarico_mattina_a=time(12))
-    order=create(ctx,delivery_address=None,tail_lift=False,ztl=False)
-    order=action(ctx,order,'link',customer_id=c.id).json()
-    assert order['effective_data']['tail_lift'] is False and order['effective_data']['ztl'] is False
-    assert order['effective_data']['pallet_truck'] is True
-    assert order['effective_data']['delivery_address']=='Order address'
-    assert order['operational_data']['delivery_address'] is None
-    from app.services.occasional_stops import sign_stop_address
-    def verify(db,uid,address):
-        return {'indirizzo':address,'stato_geocodifica':'verificato','lat':45.2,'lon':9.2,'geocoding_token':sign_stop_address(uid,address,45.2,9.2)}
-    monkeypatch.setattr('app.services.orders.verify_stop_address',verify)
-    verified=ctx[0].post(f"/api/orders/{order['id']}/verify-address",json={'version':order['version']}).json()
-    ready_response=ctx[0].post(f"/api/orders/{order['id']}/status",json={'version':verified['version'],'status':'pronto'})
-    assert ready_response.status_code==200,ready_response.text
-    state,_=preview(planning,[ctx[1].get(Order,order['id'])])
-    stop=state['stops'][0]
-    assert stop['sponda'] is False and stop['scarico_mattina_da']=='09:00:00'
-    assert stop['order_operational']['pallet_truck'] is True
-    # A changed inherited address must be verified again.
-    c.indirizzo='New address';ctx[1].commit()
     from app.services.order_planning import to_stop
     from fastapi import HTTPException
+    ctx,_=planning
+    known=customer(ctx,sponda=True,transpallet=True,ztl=True,
+        scarico_mattina_da=time(9),scarico_mattina_a=time(12),
+        lat=45.2,lon=9.2,stato_geocodifica='verificato',note='Nota anagrafica')
+    order=create(ctx,tail_lift=False,notes='Nota ordine')
+    assert 'customer_id' not in order and 'customer_resolution' not in order
+    assert order['status']=='nuovo' and order['address_verification'] is None
+    assert order['effective_data']['tail_lift'] is False
+    assert order['effective_data']['pallet_truck'] is None
+    assert order['effective_data']['ztl'] is None
+    assert order['effective_data']['notes']=='Nota ordine'
+    assert not order['effective_data'].get('time_from')
+    assert ctx[1].get(Order,order['id']).customer_id is None
+    assert ctx[1].query(CustomerSourceMapping).count()==0
+    assert known.lat==45.2
     with pytest.raises(HTTPException):to_stop(ctx[1].get(Order,order['id']))
+    assert ctx[0].get(f"/api/orders/{order['id']}/customers").status_code==404
+    assert ctx[0].post(f"/api/orders/{order['id']}/customer",
+        json={'version':order['version'],'action':'link','customer_id':known.id}).status_code==404
 
-
-def test_create_customer_explicit_atomic_and_versioned(planning):
-    ctx,_=planning;db=ctx[1];before=db.query(Customer).count();order=create(ctx)
-    assert db.query(Customer).count()==before
-    result=action(ctx,order,'create');assert result.status_code==200,result.text
-    created=db.get(Customer,result.json()['customer_id'])
-    assert created.stato_geocodifica=='da_verificare' and created.lat is None
-    assert db.query(Customer).count()==before+1
-    assert action(ctx,order,'create').status_code==409
-    assert db.query(Customer).count()==before+1
-
+def test_legacy_customer_link_is_ignored_for_order_planning(planning):
+    from app.services.order_planning import to_stop
+    from fastapi import HTTPException
+    ctx,_=planning
+    known=customer(ctx,sponda=True,transpallet=True,note='Customer note')
+    order=create(ctx,tail_lift=False)
+    row=ctx[1].get(Order,order['id'])
+    row.customer_id=known.id
+    row.customer_resolution='confirmed'
+    ctx[1].commit()
+    detail=ctx[0].get(f"/api/orders/{row.id}").json()
+    assert 'customer_id' not in detail and 'inherited_fields' not in detail
+    assert detail['effective_data']['tail_lift'] is False
+    assert detail['effective_data']['notes'] is None
+    with pytest.raises(HTTPException):to_stop(row)
 
 def test_grouping_lifecycle_and_partial_regroup(planning):
     ctx,_=planning;client,db,*_=ctx
@@ -165,34 +126,4 @@ def test_grouping_never_merges_different_destination_or_customer(planning):
     values=dict(b.operational_data);values.update(recipient_name=b.recipient_name,delivery_address=b.delivery_address);b.operational_data=values
     assert len(group_stops(ctx[2].id,[to_stop(a),to_stop(b)]))==2
 
-
-def test_invalid_mapping_can_be_repaired_by_explicit_confirmation(planning):
-    ctx,_=planning;db=ctx[1];old=customer(ctx);order=create(ctx,delivery_address='Other address')
-    row=db.get(Order,order['id']);row.external_customer_id='REPAIR';db.commit()
-    linked=action(ctx,order,'link',customer_id=old.id).json()
-    old.is_active=False;db.commit()
-    replacement=customer(ctx)
-    result=action(ctx,linked,'link',customer_id=replacement.id)
-    assert result.status_code==200,result.text
-    assert db.query(CustomerSourceMapping).one().customer_id==replacement.id
-    assert result.json()['customer_id']==replacement.id
-
-
-def test_verified_existing_customer_makes_matching_order_ready_without_geocoding(planning, monkeypatch):
-    ctx,_=planning
-    from app.services.order_planning import to_stop
-    def forbidden(*args,**kwargs):
-        raise AssertionError('Already verified registry destinations must not call geocoding')
-    monkeypatch.setattr('app.services.orders.verify_stop_address',forbidden)
-    known=customer(ctx,lat=45.2,lon=9.2,stato_geocodifica='verificato',
-                   indirizzo_geocodificato='Order address')
-    order=create(ctx)
-    assert order['customer_id']==known.id
-    assert order['customer_resolution']=='automatic'
-    assert order['status']=='pronto'
-    assert order['verification_status']=='verified'
-    assert order['address_verification']['input_address']=='Order address'
-    stop=to_stop(ctx[1].get(Order,order['id']))
-    assert stop['lat']==45.2 and stop['lon']==9.2
-    assert stop['cliente_nome']=='Recipient'
 
