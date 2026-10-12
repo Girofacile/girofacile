@@ -233,7 +233,7 @@ test('dashboard salutation uses company name and never silently substitutes user
   assert.equal(greeting({username:'Mario',company_name:''},'Logistica Firenze'),'Buongiorno, Logistica Firenze');
   assert.equal(greeting({username:'Mario',company_name:''},'Mario'),'Buongiorno');
   assert.match(navigation,/currentSessionUser\?\.company_name/);
-  assert.match(read('static/dashboard/index.html'),/navigation\\.js\\?v=company_greeting_20261012/);
+  assert.match(read('static/dashboard/index.html'),/navigation\\.js\\?v=gf_inprogress_ref_20261013_1/);
 });
 
 test('company name and account username use separate identity storage',()=>{
