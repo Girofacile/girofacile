@@ -1699,6 +1699,10 @@ function renderGFReferenceDashboardHero(summary){
   const get=id=>document.getElementById(id);
   const txt=(id,value)=>{const n=get(id);if(n)n.textContent=String(value);};
   const drawing=get("gfRefRouteDrawing"),list=get("gfRefStopList"),bar=get("gfRefProgressBar"),issues=get("gfRefMissed");
+  // Ogni apertura/invocazione sostituisce la mappa precedente senza duplicarla.
+  const version=(Number(root.dataset.gfRefRenderVersion)||0)+1;
+  root.dataset.gfRefRenderVersion=String(version);
+  window.GiroFacileDashboardMap?.reset();
   root.classList.toggle("has-route",!!summary);
   if(!summary){
     txt("gfRefRouteTitle","Nessun giro in corso");
@@ -1711,7 +1715,7 @@ function renderGFReferenceDashboardHero(summary){
     return Promise.resolve();
   }
   txt("gfRefRouteTitle",summary.nome || "Giro consegne");
-  txt("gfRefRouteSubtitle","Schema del percorso operativo, aggiornato alle consegne registrate");
+  txt("gfRefRouteSubtitle","Mappa geografica del giro, con fermate e stato delle consegne");
   txt("gfRefRouteStatus","In corso");
   txt("gfRefDriver",summary.driver_name || "Da assegnare");
   txt("gfRefVehicle",summary.vehicle_name || "Da assegnare");
@@ -1733,7 +1737,7 @@ function renderGFReferenceDashboardHero(summary){
   const routeId=Number(summary.id);
   if(!Number.isSafeInteger(routeId) || routeId<=0)return Promise.resolve();
   return api(`/api/routes/${routeId}`).then(route=>{
-    if(!root.isConnected || !root.classList.contains("has-route"))return;
+    if(!root.isConnected || !root.classList.contains("has-route") || root.dataset.gfRefRenderVersion!==String(version))return;
     const rows=Array.isArray(route.consegne)?route.consegne.slice():[];
     rows.sort((a,b)=>(Number(a.ordine)||0)-(Number(b.ordine)||0));
     if(!rows.length){
@@ -1741,19 +1745,10 @@ function renderGFReferenceDashboardHero(summary){
       return;
     }
     const maxShown=6,shown=rows.slice(0,maxShown);
-    const points=[{x:62,y:226},...shown.map((_,i)=>({x:150+i*90,y:[120,196,84,158,70,190][i]}))];
     const status=d=>["completata","consegnata","completed"].includes(String(d.delivery_status||d.status||"").toLowerCase())?"done":["mancata","non_consegnata","missed"].includes(String(d.delivery_status||d.status||"").toLowerCase())?"miss":"todo";
-    const curved=(a,b)=>`M${a.x} ${a.y} C${(a.x+b.x)/2} ${a.y} ${(a.x+b.x)/2} ${b.y} ${b.x} ${b.y}`;
-    const gridX=Array.from({length:16},(_,i)=>`<line class="gf-ref-gridline" x1="${40+i*40}" y1="0" x2="${40+i*40}" y2="300"/>`).join("");
-    const gridY=Array.from({length:7},(_,i)=>`<line class="gf-ref-gridline" x1="0" y1="${30+i*40}" x2="660" y2="${30+i*40}"/>`).join("");
-    const lines=shown.map((d,i)=>`<path class="gf-ref-route-${status(d)==="done"?"done":"todo"}" d="${curved(points[i],points[i+1])}"/>`).join("");
-    const nodes=shown.map((d,i)=>{
-      const p=points[i+1],s=status(d),label=d.cliente_nome||`Fermata ${i+1}`;
-      return `<g class="gf-ref-stop-node is-${s}" data-gf-ref-stop="${i}" tabindex="0" role="img" aria-label="${esc(label)}: ${s==="done"?"Completata":s==="miss"?"Mancata":"Da fare"}" transform="translate(${p.x} ${p.y})"><circle r="14"/><text y="1">${i+1}</text><title>${esc(label)}</title></g>`;
-    }).join("");
-    if(drawing){
-      drawing.innerHTML=`<svg viewBox="0 0 660 300" role="img" aria-label="Schema non geografico delle prime ${shown.length} fermate del giro.">${gridX}${gridY}${lines}<g class="gf-ref-depot"><rect x="32" y="213" width="60" height="26" rx="7"/><text x="62" y="226">Deposito</text></g>${nodes}</svg>`;
-    }
+    // La mappa disegna solo strade salvate e coordinate autentiche.
+    // La lista operativa continua a utilizzare i dati/stati del giro.
+    if(drawing) window.GiroFacileDashboardMap?.render(routeId,rows,drawing);
     if(list){
       list.innerHTML=shown.map((d,i)=>{
         const st=status(d),name=d.cliente_nome||`Fermata ${i+1}`;
@@ -1767,6 +1762,16 @@ function renderGFReferenceDashboardHero(summary){
       el.addEventListener("mouseleave",()=>highlight(i,false));
       el.addEventListener("focus",()=>highlight(i,true));
       el.addEventListener("blur",()=>highlight(i,false));
+      // Da lista a mappa: clic su una fermata apre il relativo segnaposto.
+      if(el.matches("#gfRefStopList [data-gf-ref-stop]")){
+        el.addEventListener("click",()=>window.GiroFacileDashboardMap?.focusStop(i));
+        el.addEventListener("keydown",event=>{
+          if(event.key==="Enter" || event.key===" "){
+            event.preventDefault();
+            window.GiroFacileDashboardMap?.focusStop(i);
+          }
+        });
+      }
     });
   }).catch(e=>{
     if(drawing)drawing.innerHTML='<div class="gf-ref-route-placeholder">Dettaglio fermate temporaneamente non disponibile. Apri il controllo giro per riprovare.</div>';
