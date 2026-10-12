@@ -2,6 +2,8 @@
 /* GiroFacile · 12 ottobre 2026 · riferimento visivo dashboard.html.
    I token provengono da tokens.css; questo file adatta i layout esistenti
    senza toccare API, controlli di accesso o comportamento dei modali. */
+/* Evita scrollbar orizzontali quando il TIR esce dalla viewport. */
+body[data-gf-surface="workspace"]{overflow-x:hidden}
 body[data-gf-surface], body[data-gf-portal]{
   -webkit-font-smoothing:antialiased;
   font-family:var(--gf-font-family);
