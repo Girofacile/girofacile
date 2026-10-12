@@ -3378,3 +3378,22 @@ html.order-modal-open{overflow:hidden}
   #tab-ordini .orders-toolbar-sort{grid-column:1/-1}
   #tab-ordini .orders-verify-all{justify-self:stretch}
 }
+
+
+/* Search icon alignment fix — 2026-10-12. */
+#tab-ordini .orders-search-input-wrap{
+  position:relative!important;
+}
+#tab-ordini .orders-search-input-wrap>svg{
+  position:absolute!important;
+  left:14px!important;
+  top:50%!important;
+  z-index:2;
+  width:18px!important;
+  height:18px!important;
+  transform:translateY(-50%)!important;
+  pointer-events:none;
+}
+#tab-ordini .orders-search-input-wrap>input{
+  padding-left:44px!important;
+}
