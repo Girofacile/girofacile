@@ -93,13 +93,9 @@ def main():
                     page.locator('#orderSave').click()
                     page.wait_for_function("document.getElementById('orderModalContent').textContent.includes('Modifica dati')")
                     from app.order_models import Order
-                    candidate=Customer(user_id=user.id,nome='Destinatario <script>test</script>',indirizzo='Via Alternativa 2, Milano')
-                    db.add(candidate);db.commit()
                     page.evaluate('GFOrders.open('+str(db.query(Order).one().id)+')')
-                    page.locator('#orderCustomerPanel .order-customer-optional summary').click()
-                    page.get_by_role('button',name='Sì, associa',exact=True).click()
-                    page.wait_for_function("document.getElementById('orderCustomerPanel')?.textContent.includes('Cliente riconosciuto')")
-                    assert page.locator('#orderCustomerPanel script').count()==0
+                    assert page.locator('#orderCustomerPanel').count()==0
+                    assert page.get_by_role('button',name='Sì, associa').count()==0
                     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 2')
                     page.screenshot(path=str(output/f'detail-{width}.png'),full_page=True)
                     page.locator('#orderModal .order-modal-close').click()
@@ -116,8 +112,6 @@ def main():
                     order.address_verification={'input_address':order.delivery_address,'indirizzo':order.delivery_address,'stato_geocodifica':'verificato','lat':45.47,'lon':9.2,'geocoding_token':sign_stop_address(user.id,order.delivery_address,45.47,9.2)}
                     db.commit()
                     created=client.post('/api/orders',json={**order.original_payload,'number':'ORD-002','packages':3}).json()
-                    response=client.post(f"/api/orders/{created['id']}/customer",json={'version':created['version'],'action':'link','customer_id':candidate.id})
-                    assert response.status_code==200,response.text
                     second=db.get(Order,created['id']);second.status='pronto';second.address_verification=order.address_verification;db.commit()
                     page.evaluate('GFOrders.load()')
                     page.locator('#ordersView-table').click()
@@ -242,6 +236,6 @@ def main():
                     context.close()
             engine.dispose()
         browser.close()
-    print('Orders: create, edit, escaping, filters, customer confirmation, persisted selection, grouped planning stops, three-step file import, repeat without duplicates, imported-order planning errors and recovery, current API setup, credential clearing and layout passed at 390/768/1024/1440px')
+    print('Orders: create, edit, escaping, filters, independent orders, persisted selection, grouped planning stops, three-step file import, repeat without duplicates, imported-order planning errors and recovery, current API setup, credential clearing and layout passed at 390/768/1024/1440px')
 
 if __name__=='__main__':main()
