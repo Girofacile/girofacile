@@ -99,9 +99,7 @@ def snapshot(db, user_id, actor, data):
 
 
 def to_stop(order):
-    from sqlalchemy.orm import object_session
-    from .order_customers import effective
-    values, _ = effective(object_session(order), order)
+    values = order.operational_data or {}
     verified = order.address_verification or {}
     if not values.get('recipient_name') or not values.get('delivery_address') or verified.get('input_address') != values['delivery_address'] or not has_verified_coordinates(verified.get('stato_geocodifica'), verified.get('lat'), verified.get('lon')):
         raise HTTPException(409, f'Ordine {order.number}: completa e verifica il destinatario prima di pianificare.')
@@ -109,8 +107,8 @@ def to_stop(order):
                 lat=verified['lat'], lon=verified['lon'], geocoding_token=verified['geocoding_token'],
                 stato_geocodifica='verificato', indirizzo_geocodificato=verified['indirizzo'],
                 peso_kg=values.get('weight_kg') or 0, colli=values.get('packages') or 0,
-                scarico_mattina_da=values.get('time_from') or values.get('scarico_mattina_da'), scarico_mattina_a=values.get('time_to') or values.get('scarico_mattina_a'),
-                scarico_pomeriggio_da=values.get('scarico_pomeriggio_da'), scarico_pomeriggio_a=values.get('scarico_pomeriggio_a'), tempo_scarico_min=values.get('tempo_scarico_min') or 10,
+                scarico_mattina_da=values.get('time_from'), scarico_mattina_a=values.get('time_to'),
+                scarico_pomeriggio_da=None, scarico_pomeriggio_a=None, tempo_scarico_min=10,
                 sponda=values.get('tail_lift') is True, ztl=values.get('ztl') is True,
                 note=values.get('notes'), order_refs=[{'id':order.id,'version':order.version}],
                 order_stop_key=stop_key(order.user_id, order.id), order_numbers=[order.number],
