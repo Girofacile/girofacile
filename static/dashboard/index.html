@@ -42,7 +42,7 @@
 <script src="/static/dashboard/js/drivers.js?v=directory_template_20261007"></script>
 
 <!-- Shared GiroFacile design system; legacy sheets retain feature layout. -->
-<link rel="stylesheet" href="/static/design-system/tokens.css?v=ds_border_20261009">
+<link rel="stylesheet" href="/static/design-system/tokens.css?v=gf_reference_20261012">
 <link rel="stylesheet" href="/static/design-system/components.css?v=ds_20261007_legal_cleanup_4">
 <link rel="stylesheet" href="/static/design-system/layout.css?v=order_source_detail_20261011_4">
 <link rel="stylesheet" href="/static/design-system/workspace.css?v=ds_20261007_planning_alignment_16">
@@ -51,6 +51,7 @@
 <script src="/static/design-system/design-system.js?v=ds_20261007_reference_2" defer></script>
 <link rel="stylesheet" href="/static/dashboard/css/collaborators.css?v=search_icon_fix_20261012_1">
 <link rel="stylesheet" href="/static/dashboard/css/orders.css?v=connections_dashboard_20261012_2">
+<link rel="stylesheet" href="/static/design-system/reference-theme.css?v=gf_reference_20261012">
 </head>
 <body data-gf-surface="workspace">
 
@@ -592,84 +593,40 @@
             <p>Clienti, mezzi, autisti, pianificazione, storico e report saranno disponibili appena completi la configurazione iniziale.</p>
           </div>
         </div>
-        <div class="dash-hero-row">
-          <div>
-            <h1>Dashboard</h1>
-            <p>Panoramica operativa delle consegne e dell'attività aziendale.</p>
-          </div>
-          <button class="btn-primary" onclick="showTab('giro')" data-gf-label="new_route">+ Nuovo giro</button>
+
+        <!-- Dashboard reference: nessun dato dimostrativo. -->
+        <div class="gf-ref-day-strip" aria-label="Riepilogo di oggi">
+          <button type="button" class="gf-ref-day-cell" onclick="openDashboardScheduledPage()"><span>Giri programmati</span><strong id="dashTodayScheduled">0</strong><small>oggi</small></button>
+          <button type="button" class="gf-ref-day-cell" onclick="openDashboardInProgressPage()"><span>Giri in corso</span><strong id="dashTodayProgress">0</strong><small>attivi adesso</small></button>
+          <div class="gf-ref-day-cell"><span>Consegne completate</span><strong id="dashTodayCompletedDeliveries">0</strong><small>dagli autisti oggi</small></div>
+          <div class="gf-ref-day-cell"><span>Autisti impegnati</span><strong id="dashBusyDrivers">0/0</strong><small>in servizio</small></div>
+          <div class="gf-ref-day-cell"><span>Mezzi impegnati</span><strong id="dashBusyVehicles">0/0</strong><small>in uso</small></div>
         </div>
-
-        <div class="dash-kpi-grid">
-          <div class="dash-kpi-card dash-kpi-standard dash-kpi-click" onclick="openDashboardScheduledPage()" role="button" tabindex="0">
-            <div class="dash-kpi-icon orange"><svg viewBox="0 0 24 24"><path d="M7 3.8v3M17 3.8v3"/><rect x="4" y="5.7" width="16" height="14.3" rx="3"/><path d="M8 12.2h3M13.5 12.2H16M8 16h7"/></svg></div>
-            <div class="dash-kpi-content">
-              <span class="dash-kpi-title"><span data-gf-label="scheduled_routes">Giri programmati</span> oggi</span>
-              <div class="dash-kpi-metric"><strong id="dashTodayScheduled">0</strong><small>oggi</small></div>
+        <div class="gf-ref-hero-wrapper" id="gfRefHeroWrap">
+          <div class="gf-ref-truck" aria-hidden="true"><svg viewBox="0 0 220 280"><ellipse cx="120" cy="275" rx="90" ry="8" fill="#16213A" opacity=".15"/><rect x="0" y="240" width="20" height="15" fill="var(--gf-color-text)" rx="4"/><path d="M15 20 Q30 5 80 5L140 5Q180 5 190 45L205 160Q210 180 210 200L210 255Q210 270 190 270L15 270Z" fill="var(--gf-color-primary)"/><path d="M70 35L150 35Q175 35 180 65L192 145H70Z" fill="var(--gf-color-bg)"/><rect x="15" y="185" width="198" height="6" fill="var(--gf-color-warning)"/><circle cx="135" cy="270" r="35" fill="var(--gf-color-text)"/><circle cx="135" cy="270" r="18" fill="var(--gf-color-border)"/></svg></div>
+          <section class="panel gf-ref-hero" aria-label="Giro in corso">
+            <div class="gf-ref-map-side">
+              <div class="gf-ref-watermark" aria-hidden="true">GIROFACILE</div>
+              <div class="gf-ref-hero-heading"><div><h2 id="gfRefRouteTitle">Giro in corso</h2><p id="gfRefRouteSubtitle">Percorso del giro attivo, aggiornato alle consegne registrate</p></div><span class="gf-ref-pill" id="gfRefRouteStatus">In corso</span></div>
+              <div class="gf-ref-route-drawing" id="gfRefRouteDrawing" aria-live="polite"><div class="gf-ref-route-placeholder">Caricamento…</div></div>
+              <div class="gf-ref-legend"><span><i class="done"></i>Completata</span><span><i></i>Da fare</span><span><i class="miss"></i>Mancata</span></div>
             </div>
-          </div>
-          <div class="dash-kpi-card dash-kpi-standard dash-kpi-click" onclick="openDashboardInProgressPage()">
-            <div class="dash-kpi-icon blue"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l10-6.5-10-6.5z"/></svg></div>
-            <div class="dash-kpi-content">
-              <span class="dash-kpi-title" data-gf-label="active_routes">Giri in corso</span>
-              <div class="dash-kpi-metric"><strong id="dashTodayProgress">0</strong><small>attivi adesso</small></div>
+            <div class="gf-ref-detail-side">
+              <div class="gf-ref-crew"><div><small>Autista</small><strong id="gfRefDriver">—</strong></div><div><small>Mezzo</small><strong id="gfRefVehicle">—</strong></div></div>
+              <div class="gf-ref-progress"><div class="gf-ref-progress-top"><span><b id="gfRefCompleted">0 su 0</b> completate</span><span id="gfRefRemaining">0 da fare</span></div><div class="gf-ref-progress-track" id="gfRefProgressBar" aria-label="Avanzamento giro"></div><div class="gf-ref-missed" id="gfRefMissed"></div></div>
+              <ol class="gf-ref-stops" id="gfRefStopList" aria-label="Fermate del giro"></ol>
+              <div class="gf-ref-other-active hidden" id="gfRefOtherActive"><h3>Altri giri in corso <span id="dashInProgressBadge">0</span></h3><div id="dashProgressList"></div></div>
+              <div class="gf-ref-hero-footer"><button class="gf-ref-text-action" onclick="openDashboardInProgressPage()">Apri controllo giri <span aria-hidden="true">›</span></button></div>
             </div>
-          </div>
-          <div class="dash-kpi-card dash-kpi-standard">
-            <div class="dash-kpi-icon green"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="m8.2 12.4 2.5 2.5 5.2-5.6"/></svg></div>
-            <div class="dash-kpi-content">
-              <span class="dash-kpi-title">Consegne completate oggi</span>
-              <div class="dash-kpi-metric"><strong id="dashTodayCompletedDeliveries">0</strong><small>completate dagli autisti oggi</small></div>
-            </div>
-          </div>
-          <div class="dash-kpi-card dash-kpi-resources">
-            <div class="dash-kpi-content">
-              <span class="dash-kpi-title">Risorse impegnate</span>
-              <div class="dash-busy-split">
-                <div><i class="dash-resource-symbol" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg></i><div><strong id="dashBusyDrivers">0/0</strong><small>Autisti</small></div></div>
-                <div><i class="dash-resource-symbol" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 6h11v11H3zM14 10h4l3 4v3h-7"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg></i><div><strong id="dashBusyVehicles">0/0</strong><small>Mezzi</small></div></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="dash-board-columns">
-          <section class="panel dash-list-card">
-            <div class="dash-list-head"><h2 data-gf-label="scheduled_routes">Giri programmati</h2><span id="dashScheduledBadge">0</span></div>
-            <div id="dashScheduledList" class="dash-route-list"></div>
-            <button class="dash-link-btn" onclick="openDashboardScheduledPage()">Vedi tutti</button>
-          </section>
-
-          <section class="panel dash-list-card">
-            <div class="dash-list-head"><h2 data-gf-label="active_routes">Giri in corso</h2><span id="dashInProgressBadge">0</span></div>
-            <div id="dashProgressList" class="dash-route-list"></div>
-            <button class="dash-link-btn" onclick="openDashboardInProgressPage()">Apri controllo giri</button>
-          </section>
-
-          <section class="panel dash-list-card">
-            <div class="dash-list-head"><h2 data-gf-label="completed_today">Giri completati oggi</h2><span id="dashCompletedBadge">0</span></div>
-            <div id="dashCompletedList" class="dash-route-list"></div>
-            <button class="dash-link-btn" onclick="openDashboardCompletedPage()">Vedi storico</button>
           </section>
         </div>
-
-
-        <div class="dash-resource-row">
-          <section class="panel dash-vehicles-panel">
-            <div class="panel-header dash-panel-title">
-              <h2><span>Stato </span><span data-gf-label="vehicles">mezzi</span></h2>
-              <button class="dash-resource-action" onclick="showTab('mezzi')"><span>Tutti i </span><span data-gf-label="vehicles">mezzi</span></button>
-            </div>
-            <div id="dashVehicleStatus" class="dash-vehicle-grid"></div>
-          </section>
-
-          <section class="panel dash-vehicles-panel">
-            <div class="panel-header dash-panel-title">
-              <h2><span>Stato </span><span data-gf-label="drivers">autisti</span></h2>
-              <button class="dash-resource-action" onclick="showTab('autisti')"><span>Tutti gli </span><span data-gf-label="drivers">autisti</span></button>
-            </div>
-            <div id="dashDriverStatus" class="dash-driver-grid"></div>
-          </section>
+        <div class="gf-ref-columns">
+          <section class="panel gf-ref-list-panel"><div class="gf-ref-panel-header"><h2>Giri programmati</h2><span id="dashScheduledBadge">0</span></div><div id="dashScheduledList" class="gf-ref-list"></div><div class="gf-ref-panel-footer"><button class="gf-ref-text-action" onclick="openDashboardScheduledPage()">Vedi tutti i giri ›</button></div></section>
+          <section class="panel gf-ref-list-panel"><div class="gf-ref-panel-header"><h2>Giri completati oggi</h2><span id="dashCompletedBadge">0</span></div><div id="dashCompletedList" class="gf-ref-list"></div><div class="gf-ref-panel-footer"><button class="gf-ref-text-action" onclick="openDashboardCompletedPage()">Vedi lo storico ›</button></div></section>
+        </div>
+        <div class="gf-ref-columns gf-ref-resources">
+          <section class="panel gf-ref-list-panel"><div class="gf-ref-panel-header"><h2>Stato mezzi</h2><button class="gf-ref-text-action" onclick="showTab('mezzi')">Tutti i mezzi</button></div><div class="gf-ref-resource-table-head"><span>Mezzo</span><span>Targa</span><span>Stato</span></div><div class="gf-ref-resource-rows" id="dashVehicleStatus"></div></section>
+          <section class="panel gf-ref-list-panel"><div class="gf-ref-panel-header"><h2>Stato autisti</h2><button class="gf-ref-text-action" onclick="showTab('autisti')">Tutti gli autisti</button></div><div class="gf-ref-resource-table-head"><span>Autista</span><span>Patente</span><span>Stato</span></div><div class="gf-ref-resource-rows" id="dashDriverStatus"></div></section>
         </div>
       </section>
 
