@@ -50,7 +50,7 @@
 <link rel="stylesheet" href="/static/dashboard/css/login.css?v=login_preview_exact_20261007">
 <script src="/static/design-system/design-system.js?v=ds_20261007_reference_2" defer></script>
 <link rel="stylesheet" href="/static/dashboard/css/collaborators.css?v=search_icon_fix_20261012_1">
-<link rel="stylesheet" href="/static/dashboard/css/orders.css?v=modal_clean_20261012_1">
+<link rel="stylesheet" href="/static/dashboard/css/orders.css?v=connections_dashboard_20261012_1">
 </head>
 <body data-gf-surface="workspace">
 
@@ -433,6 +433,7 @@
 
       <div class="top-actions">
         <button class="btn-primary topbar-new-route" onclick="showTab('giro')"><span data-gf-label="new_route">Nuovo giro</span></button>
+        <button id="ordersConnectionsNewSource" class="btn-primary orders-connections-new-source" type="button" onclick="GFOrderSources.createForm('api')" hidden>+ Nuova fonte</button>
         <div id="ordersTopbarActionsHost" class="orders-topbar-actions-host" aria-label="Azioni ordini"></div>
         <div id="orderSourceTopbarActionsHost" class="order-source-topbar-actions-host" aria-label="Azioni fonte ordini"></div>
         <div id="companyTopbarStatus" class="company-topbar-status" aria-live="polite">
@@ -1046,7 +1047,7 @@
           </div>
           <section id="sourceWizard" class="panel" hidden></section>
           <section class="orders-sources-directory" aria-labelledby="ordersSourcesTitle">
-            <h2 id="ordersSourcesTitle">Le tue fonti</h2>
+            <div class="orders-sources-directory-head"><h2 id="ordersSourcesTitle">Le tue fonti</h2><span id="sourceCount" class="orders-sources-count" aria-live="polite">— fonti</span></div>
             <div id="sourceList"></div>
             <div id="sourcePagination" class="page-actions orders-source-pagination"><button id="sourcePrevious" class="btn-secondary" onclick="GFOrderSources.page(-1)">Precedenti</button><span id="sourcePage"></span><button id="sourceNext" class="btn-secondary" onclick="GFOrderSources.page(1)">Successive</button></div>
           </section>
@@ -2139,7 +2140,7 @@
 <script src="/static/dashboard/js/collaborators.js?v=20261011_fields1"></script>
 <script src="/static/dashboard/js/orders.js?v=independent_orders_20261012"></script>
 <script src="/static/dashboard/js/order-import.js?v=20261011_fields1"></script>
-<script src="/static/dashboard/js/order-sources.js?v=20261011_fields1"></script>
+<script src="/static/dashboard/js/order-sources.js?v=connections_dashboard_20261012_1"></script>
 <script src="/static/dashboard/js/core.js?v=orders_planning_20261010_2"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=orders_2"></script>
 <script src="/static/dashboard/js/order-planning.js?v=orders_layout_ref_20261011_2"></script>
