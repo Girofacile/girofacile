@@ -76,8 +76,3 @@ class OrderBulkVerify(BaseModel):
 class OrderVersion(BaseModel):
     model_config = ConfigDict(extra='forbid')
     version: int = Field(ge=1)
-
-
-class CustomerResolution(OrderVersion):
-    action: Literal['recognize', 'link', 'separate', 'create']
-    customer_id: int | None = Field(default=None, gt=0)
