@@ -180,11 +180,6 @@ html body[data-gf-surface="workspace"] #app#app .content :is(.fleet-card,.driver
 html body[data-gf-surface="workspace"] #app#app .content :is(.fleet-card,.driver-card,.deposit-card,.agent-card,.gf-directory-card) :is(.btn-danger,.danger,[data-variant="danger"]):hover{
   background:var(--gf-color-danger-bg)!important;
 }
-/* Clienti: il primo pulsante di riga è solo icona (Modifica); il testo non deve trasparire tagliato. */
-html body[data-gf-surface="workspace"] #app#app #tab-clienti .customer-row-actions button:first-child{
-  font-size:0!important;width:35px!important;min-width:35px!important;padding:8px!important;gap:0!important;overflow:hidden!important;
-}
-
 /* ---------------------------------------------------------------------------
    5. Stati vuoti: icona discreta, titolo 16 px, testo 13 px, al centro del pannello.
    ------------------------------------------------------------------------- */

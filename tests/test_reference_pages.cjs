@@ -60,7 +60,7 @@ test('popup skins preserve overlays and all operational modal IDs',()=>{
   const html=read('static/dashboard/index.html');
   for(const id of ['orderModal','agentOverlay','depositOverlay','driverFormOverlay',
     'customerOverlay','customerImportOverlay','deliveryDetailsOverlay','onboardingOverlay',
-    'profileOverlay','customerDetailsDialog','collaboratorDialog']){
+    'profileOverlay','customerDrawer','collaboratorDialog']){
     assert.equal((html.match(new RegExp('id="'+id+'"','g'))||[]).length,1);
   }
   assert.match(css,/::backdrop/);
