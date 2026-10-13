@@ -41,7 +41,7 @@
   function renderQuick(){
     const root=document.getElementById('customerQuickFilters');
     const all=customerDirectory.all,unver=all.filter(x=>!isVerified(x)).length,noslot=all.filter(x=>!hasSlot(x)).length;
-    const chips=[['all','Tutti',all.length],['unverified','Da verificare',unver],['noSlot','Senza fascia di scarico',noslot],['verified','Verificati',all.length-unver]];
+    const chips=[['all','Tutti',all.length],['unverified','Da verificare',unver],['noSlot','Senza fascia di scarico',noslot]];
     if(root){
       root.replaceChildren();
       chips.forEach(([key,label,num])=>{
