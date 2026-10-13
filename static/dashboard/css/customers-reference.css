@@ -363,3 +363,17 @@ body[data-gf-surface="workspace"] #app #tab-clienti .customer-cards{
     font-size:12px!important;
   }
 }
+
+
+/* Reference KPI buttons use only a hover state, not a persistent top stripe. */
+body[data-gf-surface="workspace"] #app #tab-clienti .customer-metrics>.customer-metric[aria-pressed="true"]::before{
+  content:none!important;display:none!important;
+}
+body[data-gf-surface="workspace"] #app #tab-clienti .customer-unloading .gf-customer-slot{
+  gap:7px!important;font-variant-numeric:tabular-nums!important;
+}
+body[data-gf-surface="workspace"] #app #tab-clienti .customer-unloading .gf-customer-slot svg{
+  width:14px!important;height:14px!important;flex:0 0 14px!important;
+  color:#1f5bff!important;fill:none!important;stroke:currentColor!important;
+  stroke-width:1.8!important;stroke-linecap:round!important;
+}
