@@ -2,7 +2,7 @@
 (function(){
   'use strict';
   const el=id=>document.getElementById(id);
-  let resources=[],plan=null,busy=false,changedAssignments=false;
+  let resources=[],plan=null,busy=false,changedAssignments=false,draftAssignments=null,manualAdjusted=false,acknowledgedWarning=false;
   const active=()=>el('planningMode')?.value==='fleet';
   const blank=()=>({vehicle_id:0,driver_id:0,max_minutes:480,energy_price_primary:1.75,energy_price_electric:0.30});
   const can=permission=>!window.GFCompanyAccess||GFCompanyAccess.can(permission);
@@ -33,7 +33,7 @@
     return result;
   }
   function restore(saved={}){el('planningMode').value=saved.planning_mode||'single';el('fleetStrategy').value=saved.fleet_strategy||'efficient';resources=(saved.fleet_resources||[]).map(r=>({...blank(),...r}));modeChanged(false);}
-  function reset(){plan=null;changedAssignments=false;restore();}
+  function reset(){plan=null;changedAssignments=false;draftAssignments=null;manualAdjusted=false;acknowledgedWarning=false;window.GFFleetReview?.stopMap();restore();}
   function notice(text){const box=el('fleetMessage');if(box){box.textContent=text;box.scrollIntoView({block:'nearest'});}}
   async function calculate(){
     if(busy)return;
@@ -44,7 +44,7 @@
     try{
       showTab('route-preview');el('routePreviewResult').innerHTML='<section class="panel"><p role="status">Distribuzione delle consegne in corso…</p></section>';
       const data={nome:val('routeName')||'Piano consegne',data_giro:val('routeDate'),orario_partenza:val('routeStart'),deposit_id:Number(val('routeDeposit')),rientro_deposito:boolVal('returnDepot'),strategy:el('fleetStrategy').value,resources,consegne:deliveries};
-      plan=await api('/api/fleet-planning/preview',{method:'POST',body:JSON.stringify(data)});changedAssignments=false;render();
+      plan=await api('/api/fleet-planning/preview',{method:'POST',body:JSON.stringify(data)});changedAssignments=false;draftAssignments=null;manualAdjusted=false;acknowledgedWarning=false;render();
     }catch(e){el('routePreviewResult').innerHTML=`<section class="panel"><h2>Distribuzione non completata</h2><p role="alert">${esc(e.message)}</p><button class="btn-secondary" onclick="showTab('giro')">Torna alla pianificazione</button></section>`;}
     finally{busy=false;}
   }
@@ -55,25 +55,86 @@
     const timing=route?.result.ordered[route.stop_indexes.indexOf(index)];
     return `<li><div><strong>${esc(row.cliente_nome)}</strong><small>${esc(row.indirizzo)}</small>${timing?`<small>Arrivo ${esc(timing.arrivo_stimato||'—')} · ${Number(row.peso_kg||0)} kg · ${Number(row.colli||0)} colli</small>`:''}</div>${plan.status==='preview'?`<select data-stop="${index}" aria-label="Assegna ${esc(row.cliente_nome)}"><option value="" ${resource===null?'selected':''}>Non assegnata</option>${plan.configuration.resources.map((r,i)=>`<option value="${i}" ${resource===i?'selected':''}>Mezzo e autista ${i+1}</option>`).join('')}</select>`:''}</li>`;
   }
-  function render(){
-    const preview=plan.status==='preview',saved=plan.status==='saved';
-    const total=plan.routes.reduce((a,r)=>a+r.stop_indexes.length,0);
-    el('routePreviewResult').innerHTML=`<section class="panel fleet-result"><h2>${preview?'Controlla la suddivisione':saved?'Giri salvati in bozza':'Giri programmati'}</h2><p>${total} consegne su ${plan.routes.length} mezzi · ${plan.unassigned.length} non assegnate</p><p>${preview?'Puoi spostare le consegne tra i mezzi e ricalcolare prima di salvare.':saved?'Le consegne sono riservate. Programma i giri per renderli operativi.':'I giri sono disponibili nello storico e nel portale degli autisti.'}</p><div id="fleetMessage" role="status" tabindex="-1"></div><div class="fleet-actions">${preview?'<button class="btn-secondary" data-action="revise">Ricalcola assegnazioni</button><button class="btn-primary" data-action="confirm">Salva giri in bozza</button>':saved&&can('routes.program')?'<button class="btn-primary" data-action="program">Programma tutti i giri</button>':''}<button class="btn-secondary" onclick="showTab('giro')">Torna alla pianificazione</button></div>${preview&&plan.unassigned.length?'<label><input id="fleetAccept" type="checkbox"> Salva i giri lasciando queste consegne non assegnate</label>':''}${plan.warnings.map(w=>`<p><small>${esc(w)}</small></p>`).join('')}</section>`+
-    plan.routes.map((r,i)=>`<section class="panel fleet-result"><h2>Mezzo e autista ${r.resource+1} · ${esc(r.vehicle_name)}</h2><p>${esc(r.driver_name)}</p><div class="fleet-summary"><span>${r.stop_indexes.length} consegne</span><span>${Math.round(r.result.total_min)} min · ${plan.configuration.rientro_deposito?'rientro':'fine'} ${esc(r.result.return_time||'—')}</span><span>${Number(r.result.total_km).toFixed(1)} km</span><span>${Number(r.weight_kg).toFixed(1)} kg · ${r.packages} colli</span><span>Carburante/energia € ${Number(r.fuel_cost).toFixed(2)}</span></div>${plan.route_ids?.[i]?`<button class="btn-secondary" data-open="${plan.route_ids[i]}">Apri giro #${plan.route_ids[i]}</button>`:''}<ul class="fleet-stops">${r.stop_indexes.map(index=>stop(index,r.resource)).join('')}</ul></section>`).join('')+
-    (plan.unassigned.length?`<section class="panel fleet-result"><h2>Consegne non assegnate</h2><p>Rimangono da pianificare. Puoi cambiare mezzi, disponibilità o assegnazione.</p><ul class="fleet-stops">${plan.unassigned.map(s=>stop(s.index,null)+`<li><small>${esc(s.reason)}</small></li>`).join('')}</ul></section>`:'');
+
+  function reviewAssignments(){return draftAssignments?draftAssignments.slice():assignments();}
+  function moveStop(index,to){
+    if(busy||!plan||plan.status!=='preview')return;
+    const current=reviewAssignments(),before=assignments();
+    if(index<0||index>=current.length||to===current[index])return;
+    const apply=()=>{
+      draftAssignments=current.slice();draftAssignments[index]=to;
+      changedAssignments=draftAssignments.some((v,i)=>v!==before[i]);
+      manualAdjusted=true;
+      render();
+      if(changedAssignments)notice('Suddivisione modificata: ricalcola per aggiornare l’ordine delle fermate, i tempi e i costi.');
+    };
+    if(!acknowledgedWarning){
+      window.GFFleetReview.warning(()=>{acknowledgedWarning=true;apply();});
+    }else apply();
   }
-  async function action(name){
+  function render(){
+    if(!plan)return;
+    window.GFFleetReview.render({
+      plan,assignment:reviewAssignments(),dirty:changedAssignments,busy,manualAdjusted,
+      permission:can('routes.program'),
+      onMove:moveStop,
+      onUndo:()=>{draftAssignments=null;changedAssignments=false;render();},
+      onRecalc:()=>action('revise'),
+      onPlan:accept=>action('plan',accept),
+      onBack:()=>showTab('giro')
+    });
+  }
+  async function action(name,acceptUnassigned=false){
     if(busy||!plan)return;
-    if(name==='confirm'&&changedAssignments){notice('Ricalcola le assegnazioni prima di salvare.');return;}
-    const payload={version:plan.version};
-    if(name==='revise'){payload.assignments=assignments();el('routePreviewResult').querySelectorAll('[data-stop]').forEach(s=>payload.assignments[Number(s.dataset.stop)]=s.value===''?null:Number(s.value));}
-    if(name==='confirm')payload.accept_unassigned=!!el('fleetAccept')?.checked;
-    busy=true;el('routePreviewResult').querySelectorAll('[data-action],[data-stop]').forEach(b=>b.disabled=true);notice('Operazione in corso…');
+    if(name==='plan'&&plan.status==='preview'&&changedAssignments){
+      notice('Ricalcola le assegnazioni prima di pianificare i giri.');return;
+    }
+    if(name==='plan'&&!can('routes.program')){
+      notice('Il tuo account non ha il permesso di programmare i giri.');return;
+    }
+    if(name==='plan'&&plan.status==='preview'&&plan.unassigned.length&&!acceptUnassigned){
+      notice('Conferma esplicitamente le consegne non assegnate prima di pianificare.');return;
+    }
+    if(name==='revise'&&!changedAssignments)return;
+    if(name==='revise'&&plan.status!=='preview')return;
+    if(name!=='plan'&&name!=='revise')return;
+    busy=true;
+    el('routePreviewResult')?.querySelectorAll('button,select').forEach(b=>b.disabled=true);
+    notice(name==='revise'?'Ricalcolo delle assegnazioni in corso…':'Verifica e programmazione dei giri in corso…');
     try{
-      plan=await api(`/api/fleet-planning/${plan.id}/${name}`,{method:'POST',body:JSON.stringify(payload)});changedAssignments=false;render();
-      if(name!=='revise'){globalThis.GFOrderPlanning?.leave();await loadRoutes();await loadDashboardRoutes();}
-    }catch(e){notice(e.message);}
-    finally{busy=false;el('routePreviewResult').querySelectorAll('[data-action],[data-stop]').forEach(b=>b.disabled=false);}
+      if(name==='revise'){
+        const payload={version:plan.version,assignments:reviewAssignments()};
+        plan=await api(`/api/fleet-planning/${plan.id}/revise`,{method:'POST',body:JSON.stringify(payload)});
+        changedAssignments=false;draftAssignments=null;
+        render();notice('Nuove fermate e stime ricalcolate. Controlla il risultato e premi “Pianifica giri”.');
+      }else{
+        if(plan.status==='preview'){
+          plan=await api(`/api/fleet-planning/${plan.id}/confirm`,{
+            method:'POST',body:JSON.stringify({version:plan.version,accept_unassigned:!!acceptUnassigned})
+          });
+          render();notice('Assegnazioni salvate. Programmazione definitiva in corso…');
+        }
+        if(plan.status==='saved'){
+          plan=await api(`/api/fleet-planning/${plan.id}/program`,{
+            method:'POST',body:JSON.stringify({version:plan.version})
+          });
+        }
+        render();
+        if(plan.status==='programmed'){
+          notice('Giri programmati correttamente. Le consegne sono ora disponibili nel portale degli autisti.');
+          globalThis.GFOrderPlanning?.leave();
+          await loadRoutes();await loadDashboardRoutes();
+        }
+      }
+    }catch(e){
+      render();
+      notice(plan?.status==='saved'
+        ?'La programmazione non è stata completata: i giri sono rimasti in bozza e possono essere riprovati senza duplicazioni. '+e.message
+        :e.message);
+    }finally{
+      busy=false;
+      el('routePreviewResult')?.querySelectorAll('[data-fleet-plan],[data-fleet-recalc],[data-fleet-back]')?.forEach(b=>{if(b.dataset.fleetPlan!==undefined)b.disabled=changedAssignments||!can('routes.program');else b.disabled=false;});
+    }
   }
   document.addEventListener('change',e=>{
     if(e.target.id==='planningMode'){modeChanged();refreshResourceAvailability();}
