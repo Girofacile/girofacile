@@ -4,9 +4,21 @@ const WORKSPACE_TOPBAR_META = {
   "ordine-dettaglio": {title:"Dettaglio ordine",subtitle:"Dati operativi e storico delle correzioni."},
   "ordine-modifica": {title:"Modifica ordine",subtitle:"Completa le informazioni disponibili."},
   "ordini-collegamenti": {title:"Collega i tuoi ordini",subtitle:"Importa un file o prepara l’invio dal tuo gestionale. Controlla sempre l’anteprima prima di attivare una fonte."},
-  "ordini-importa": {title:"Importa ordini",subtitle:"Carica il file, controlla i dati e conferma."},
+  "ordini-importa": {title:"Importa ordini",subtitle:"Carica il file, controlla i dati e conferma.",back:{label:"Torna agli ordini",go:()=>showTab("ordini")}},
   "ordine-fonte": {title:"Fonte ordini",subtitle:"Gestione fonte e validazione dei dati in ingresso."},
-  collaboratori: {title:"Collaboratori",subtitle:"Gestisci accessi personali e funzioni assegnate."},
+  collaboratori: {title:"Collaboratori",subtitle:"Accessi personali al gestionale, con le funzioni che decidi di assegnare."},
+  "collaborator-home": {title:"Il tuo accesso",subtitle:"Funzioni operative assegnate dal titolare dell’azienda."},
+  settings: {title:"Impostazioni",subtitle:"Configura le preferenze operative applicate al gestionale aziendale."},
+  report: {title:"Report consegne",subtitle:"Analizza i giri completati: chilometri, tempi, consumi e costi stimati."},
+  storico: {title:"Storico giri",subtitle:"Consulta i percorsi completati, i chilometri e i dati operativi dei tuoi giri."},
+  "plan-account": {title:"Piani e abbonamento",subtitle:"Gestisci il piano attivo e confronta le funzionalità disponibili.",back:{label:"Torna al profilo",go:()=>returnFromPlanAccount()}},
+  "billing-account": {title:"Fatturazione e pagamenti",subtitle:"Abbonamento, metodo di pagamento, dati fiscali, fatture e addebiti.",back:{label:"Torna a Piani e abbonamento",go:()=>returnFromBillingPageV876()}},
+  "dashboard-scheduled": {title:"Giri programmati",subtitle:"Giri assegnati ma non ancora avviati dall’autista.",back:{label:"Torna alla Dashboard",go:()=>showTab("dashboard")}},
+  "dashboard-completed": {title:"Giri completati",subtitle:"Archivio operativo dei giri conclusi dall’autista.",back:{label:"Torna allo Storico",go:()=>showTab("storico")}},
+  "admin-dashboard": {title:"Dashboard admin",subtitle:"Controlla utenti registrati, ticket aperti e richieste di assistenza."},
+  "admin-users": {title:"Utenti",subtitle:"Account registrati sulla piattaforma."},
+  "admin-tickets": {title:"Ticket",subtitle:"Richieste di assistenza degli utenti."},
+  "admin-settings": {title:"Impostazioni admin",subtitle:"Configurazione della piattaforma."},
   "dashboard-in-progress": {
     title: "Giri in corso",
     subtitle: "Avanzamento delle consegne, stato delle fermate e posizione GPS degli autisti."
@@ -72,6 +84,15 @@ function syncWorkspaceTopbar(name){
       subtitle.textContent=day.charAt(0).toUpperCase()+day.slice(1)+": "+
         meta.subtitle.charAt(0).toLowerCase()+meta.subtitle.slice(1);
     }else subtitle.textContent=meta.subtitle;
+  }
+  // Pulsante "indietro" unico, nella barra in alto come nelle altre sottopagine.
+  const back=document.getElementById("workspaceTopbarBack");
+  if(back){
+    const target=meta.back && WORKSPACE_TOPBAR_META[name]===meta ? meta.back : null;
+    back.hidden=!target;
+    back.onclick=target?target.go:null;
+    if(target){back.setAttribute("aria-label",target.label);back.title=target.label;}
+    document.body?.classList.toggle("gf-has-topbar-back",!!target);
   }
   const badge=document.getElementById("workspacePageBadge");
   if(badge){badge.hidden=true;badge.textContent="";badge.className="order-source-topbar-badge";}

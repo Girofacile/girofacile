@@ -1,0 +1,228 @@
+/* GiroFacile · interfaccia unificata (14 ottobre 2026).
+   Riferimento: la Dashboard. Questo foglio è caricato per ultimo e porta tutte le
+   sezioni del gestionale sullo stesso linguaggio: titolo nella barra in alto,
+   riquadri numerici a striscia, pannelli bianchi a 16 px, pulsanti e stati vuoti
+   coerenti. Usa solo i token di tokens.css; non cambia ID, handler o flussi.
+   Le pagine già ridisegnate (Dashboard, Clienti, Giri in corso, Profilo azienda,
+   anteprima/revisione piano) restano governate dai loro fogli. */
+
+:root{
+  --gf-u-gap: 22px;
+  --gf-u-panel-pad: 20px;
+}
+
+/* ---------------------------------------------------------------------------
+   1. Intestazione di pagina: titolo e sottotitolo sempre nella barra in alto.
+   Su mobile (≤ 820 px) resta l'intestazione nella pagina, come oggi.
+   ------------------------------------------------------------------------- */
+html body[data-gf-surface="workspace"] #app#app .gf-topbar-back{
+  display:none;width:40px;height:40px;flex:0 0 40px;place-items:center;padding:0;
+  margin-right:14px;border:1px solid var(--gf-color-border);border-radius:var(--gf-radius-pill);
+  background:var(--gf-color-surface);color:var(--gf-color-muted);cursor:pointer;box-shadow:none;
+  transition:background var(--gf-motion-duration),color var(--gf-motion-duration),border-color var(--gf-motion-duration);
+}
+html body[data-gf-surface="workspace"] #app#app .gf-topbar-back svg{
+  width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;
+}
+html body[data-gf-surface="workspace"] #app#app .gf-topbar-back:hover{
+  background:var(--gf-color-surface-subtle);color:var(--gf-color-text);border-color:var(--gf-color-nav-text);
+}
+html body[data-gf-surface="workspace"] #app#app .gf-topbar-back:focus-visible{outline:none;box-shadow:var(--gf-focus-ring)}
+
+@media (min-width:821px){
+  html body[data-gf-surface="workspace"].gf-has-topbar-back #app#app .gf-topbar-back:not([hidden]){display:grid}
+
+  /* Il titolo in alto è visibile in ogni sezione, tranne quelle con intestazione propria. */
+  html body[data-gf-surface="workspace"] #app#app .topbar-dashboard-title{display:block!important;min-width:0}
+  html body[data-gf-surface="workspace"] #app#app:has(#tab-dashboard-in-progress:not(.hidden)) .topbar-dashboard-title,
+  html body[data-gf-surface="workspace"] #app#app:has(#tab-route-preview:not(.hidden)) .topbar-dashboard-title{display:none!important}
+  html body[data-gf-surface="workspace"] #app#app .topbar-dashboard-title h1{
+    font:700 28px/1.1 var(--gf-font-display)!important;letter-spacing:-.02em!important;color:var(--gf-color-text)!important;margin:0!important;
+  }
+  html body[data-gf-surface="workspace"] #app#app .topbar-dashboard-title p{
+    margin:4px 0 0!important;font:400 14px/1.4 var(--gf-font-family)!important;color:var(--gf-color-muted)!important;
+  }
+
+  /* Intestazioni doppie dentro la pagina: titolo e descrizione sono già in alto. */
+  html body[data-gf-surface="workspace"] #app#app :is(#tab-settings,#tab-storico,#tab-chat-autisti,#tab-collaborator-home,#tab-admin-dashboard,#tab-admin-users,#tab-admin-tickets,#tab-admin-settings) > .page-title-row,
+  html body[data-gf-surface="workspace"] #app#app :is(#tab-dashboard-scheduled,#tab-dashboard-completed) > :is(.dash-subpage-topbar,.dash-subpage-title-row),
+  html body[data-gf-surface="workspace"] #app#app #tab-ordini-importa .order-import-wrap > button.btn-secondary:first-child,
+  html body[data-gf-surface="workspace"] #app#app #tab-collaborator-home > .panel > h1{display:none!important}
+
+  /* Righe con azioni: resta solo la barra azioni allineata a destra. */
+  html body[data-gf-surface="workspace"] #app#app #tab-collaboratori > .dash-hero-row,
+  html body[data-gf-surface="workspace"] #app#app #tab-plan-account > .plan-page-top-v875,
+  html body[data-gf-surface="workspace"] #app#app #tab-billing-account > .billing-page-top-v876{
+    display:flex!important;justify-content:flex-end!important;align-items:center!important;gap:10px!important;
+    min-height:0!important;margin:0 0 16px!important;padding:0!important;background:none!important;border:0!important;box-shadow:none!important;
+  }
+  html body[data-gf-surface="workspace"] #app#app #tab-collaboratori > .dash-hero-row > div:first-child,
+  html body[data-gf-surface="workspace"] #app#app #tab-plan-account .plan-title-block-v875,
+  html body[data-gf-surface="workspace"] #app#app #tab-billing-account > .billing-page-top-v876 > div:first-child{display:none!important}
+
+  /* Report: il titolo va in alto; la nota di metodo resta, discreta, accanto alle azioni. */
+  html body[data-gf-surface="workspace"] #app#app #tab-report > .report-hero-row{
+    display:flex!important;align-items:flex-start!important;justify-content:space-between!important;gap:24px!important;
+    margin:0 0 16px!important;padding:0!important;background:none!important;border:0!important;box-shadow:none!important;
+  }
+  html body[data-gf-surface="workspace"] #app#app #tab-report > .report-hero-row h1{display:none!important}
+  html body[data-gf-surface="workspace"] #app#app #tab-report > .report-hero-row p{
+    margin:0!important;flex:1 1 auto;max-width:62%;font-size:13px!important;line-height:1.5!important;color:var(--gf-color-muted)!important;
+  }
+  html body[data-gf-surface="workspace"] #app#app #tab-report .report-actions{flex:0 0 auto;display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+}
+
+/* ---------------------------------------------------------------------------
+   2. Riquadri numerici: un'unica striscia bianca, come "Riepilogo di oggi".
+   Le divisioni sono il bordo stesso (gap di 1 px), così funzionano su più righe.
+   ------------------------------------------------------------------------- */
+html body[data-gf-surface="workspace"] #app#app :is(
+  .gf-directory-metrics,.orders-metrics,.collaborator-metrics,.report-kpi-grid,#tab-giro .stats-grid,.dash-kpi-grid
+){
+  display:grid!important;grid-template-columns:repeat(auto-fit,minmax(170px,1fr))!important;gap:1px!important;
+  margin:0 0 var(--gf-u-gap)!important;padding:0!important;overflow:hidden!important;
+  border:1px solid var(--gf-color-border)!important;border-radius:var(--gf-radius-lg)!important;
+  background:var(--gf-color-border)!important;box-shadow:var(--gf-shadow-sm)!important;
+}
+html body[data-gf-surface="workspace"] #app#app #tab-report .report-kpi-grid{grid-template-columns:repeat(5,minmax(0,1fr))!important}
+html body[data-gf-surface="workspace"] #app#app :is(
+  .gf-directory-metrics>.gf-directory-metric,.orders-metrics>.orders-metric-card,.collaborator-metrics>div,
+  .report-kpi-grid>.report-kpi-card,#tab-giro .stats-grid>.stat-card,.dash-kpi-grid>.dash-kpi-card
+){
+  display:flex!important;flex-direction:column!important;justify-content:center!important;gap:0!important;
+  min-width:0!important;min-height:96px!important;margin:0!important;padding:16px 22px!important;
+  border:0!important;border-radius:0!important;background:var(--gf-color-surface)!important;box-shadow:none!important;
+  text-align:left!important;align-items:flex-start!important;color:var(--gf-color-text)!important;grid-column:auto!important;
+}
+/* Le icone colorate non fanno parte del linguaggio della dashboard. */
+html body[data-gf-surface="workspace"] #app#app :is(
+  .gf-directory-metric-icon,.deposit-metric-icon,.orders-metric-icon,.report-kpi-icon,#tab-giro .stat-icon,.dash-kpi-icon
+){display:none!important}
+html body[data-gf-surface="workspace"] #app#app :is(.gf-directory-metric,.orders-metric-card,.stat-card,.dash-kpi-card)>div{
+  display:flex!important;flex-direction:column!important;gap:0!important;min-width:0!important;padding:0!important;
+}
+/* Etichetta */
+html body[data-gf-surface="workspace"] #app#app :is(
+  .gf-directory-metric h2,.orders-metric-label,.collaborator-metrics>div>span,.report-kpi-card>small,
+  #tab-giro .stat-card>div>span,.dash-kpi-card>div>span
+){
+  order:1;margin:0!important;font:400 13px/1.4 var(--gf-font-family)!important;color:var(--gf-color-muted)!important;
+  letter-spacing:0!important;text-transform:none!important;
+}
+/* Valore */
+html body[data-gf-surface="workspace"] #app#app :is(
+  .gf-directory-metric strong,.orders-metric-value,.collaborator-metrics>div>strong,.report-kpi-card>strong,
+  #tab-giro .stat-card strong,.dash-kpi-card strong
+){
+  order:2;display:block;margin:4px 0 0!important;font:700 30px/1.1 var(--gf-font-display)!important;
+  letter-spacing:-.02em!important;color:var(--gf-color-primary)!important;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+/* Descrizione */
+html body[data-gf-surface="workspace"] #app#app :is(
+  .gf-directory-metric p,.orders-metric-description,#tab-giro .stat-card small,.dash-kpi-card small
+){
+  order:3;margin:4px 0 0!important;font:400 13px/1.35 var(--gf-font-family)!important;color:var(--gf-color-muted)!important;
+}
+/* Nel deposito predefinito il valore è un nome: si mantiene leggibile su una riga. */
+html body[data-gf-surface="workspace"] #app#app #tab-depositi .gf-directory-metric strong{font-size:24px!important}
+@media (max-width:1100px){
+  html body[data-gf-surface="workspace"] #app#app #tab-report .report-kpi-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+}
+@media (max-width:640px){
+  html body[data-gf-surface="workspace"] #app#app :is(.gf-directory-metrics,.orders-metrics,.collaborator-metrics,.report-kpi-grid,#tab-giro .stats-grid,.dash-kpi-grid){
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+  html body[data-gf-surface="workspace"] #app#app :is(.gf-directory-metric,.orders-metric-card,.collaborator-metrics>div,.report-kpi-card,#tab-giro .stat-card,.dash-kpi-card){
+    min-height:84px!important;padding:12px 15px!important;
+  }
+  /* Un numero dispari di riquadri: l'ultimo occupa tutta la riga, senza celle grigie vuote. */
+  html body[data-gf-surface="workspace"] #app#app :is(.gf-directory-metric,.orders-metric-card,.collaborator-metrics>div,.report-kpi-card,#tab-giro .stat-card,.dash-kpi-card):nth-child(odd):last-child{
+    grid-column:1/-1!important;
+  }
+  html body[data-gf-surface="workspace"] #app#app :is(.gf-directory-metric strong,.orders-metric-value,.collaborator-metrics strong,.report-kpi-card strong,#tab-giro .stat-card strong,.dash-kpi-card strong){font-size:26px!important}
+}
+
+/* ---------------------------------------------------------------------------
+   3. Pannelli: bianco, bordo sottile, raggio 16, ombra leggera; intestazione
+   con titolo 16 px in font display, come i pannelli della dashboard.
+   ------------------------------------------------------------------------- */
+html body[data-gf-surface="workspace"] #app#app .content :is(.panel,.card,.gf-card):not(.hidden){
+  border:1px solid var(--gf-color-border)!important;border-radius:var(--gf-radius-lg)!important;
+  background:var(--gf-color-surface)!important;box-shadow:var(--gf-shadow-sm)!important;
+}
+html body[data-gf-surface="workspace"] #app#app .content :is(.panel-header,.gf-directory-head) h2,
+html body[data-gf-surface="workspace"] #app#app .content .panel > h2:first-child{
+  margin:0!important;font:700 16px/1.25 var(--gf-font-display)!important;letter-spacing:-.005em!important;color:var(--gf-color-text)!important;
+}
+html body[data-gf-surface="workspace"] #app#app .content :is(.panel-header,.gf-directory-head) .panel-subtitle{
+  margin:3px 0 0!important;font-size:13px!important;line-height:1.4!important;color:var(--gf-color-muted)!important;
+}
+
+/* ---------------------------------------------------------------------------
+   4. Pulsanti: blu pieno per l'azione principale, bianco bordato per le altre.
+   Le azioni distruttive sono contornate in rosso, mai piene, fuori dai dialoghi.
+   ------------------------------------------------------------------------- */
+html body[data-gf-surface="workspace"] #app#app .content :is(.btn-primary,.btn-secondary,.btn-light,.gf-button){
+  border-radius:var(--gf-radius-md)!important;font-family:var(--gf-font-family)!important;font-weight:600!important;
+}
+html body[data-gf-surface="workspace"] #app#app .content .btn-primary:not(.mini):not(.small){min-height:40px}
+html body[data-gf-surface="workspace"] #app#app #tab-ordini .orders-verify-all{
+  min-height:40px!important;border:1px solid var(--gf-color-border)!important;border-radius:var(--gf-radius-md)!important;
+  background:var(--gf-color-surface)!important;color:var(--gf-color-text)!important;box-shadow:none!important;font-weight:600!important;
+}
+html body[data-gf-surface="workspace"] #app#app #tab-ordini .orders-verify-all:hover{border-color:var(--gf-color-primary)!important;color:var(--gf-color-primary)!important}
+html body[data-gf-surface="workspace"] #app#app #tab-ordini .orders-verify-all svg{stroke:currentColor!important;color:var(--gf-color-success)!important}
+html body[data-gf-surface="workspace"] #app#app .content :is(.fleet-card,.driver-card,.deposit-card,.agent-card,.gf-directory-card) :is(.btn-danger,.danger,[data-variant="danger"]){
+  background:var(--gf-color-surface)!important;color:var(--gf-color-danger)!important;
+  border:1px solid color-mix(in srgb,var(--gf-color-danger) 35%,white)!important;box-shadow:none!important;
+}
+html body[data-gf-surface="workspace"] #app#app .content :is(.fleet-card,.driver-card,.deposit-card,.agent-card,.gf-directory-card) :is(.btn-danger,.danger,[data-variant="danger"]):hover{
+  background:var(--gf-color-danger-bg)!important;
+}
+/* Clienti: il primo pulsante di riga è solo icona (Modifica); il testo non deve trasparire tagliato. */
+html body[data-gf-surface="workspace"] #app#app #tab-clienti .customer-row-actions button:first-child{
+  font-size:0!important;width:35px!important;min-width:35px!important;padding:8px!important;gap:0!important;overflow:hidden!important;
+}
+
+/* ---------------------------------------------------------------------------
+   5. Stati vuoti: icona discreta, titolo 16 px, testo 13 px, al centro del pannello.
+   ------------------------------------------------------------------------- */
+html body[data-gf-surface="workspace"] #app#app .content :is(.dash-empty-subpage,.history-empty-v311,.route-preview-empty-v76,.dash-detail-empty){
+  display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;
+  min-height:220px;padding:32px 24px!important;text-align:center!important;
+  border:1px solid var(--gf-color-border)!important;border-radius:var(--gf-radius-lg)!important;
+  background:var(--gf-color-surface)!important;box-shadow:var(--gf-shadow-sm)!important;
+}
+html body[data-gf-surface="workspace"] #app#app .content :is(.dash-empty-icon,.history-empty-icon-v311){
+  display:grid!important;place-items:center!important;width:46px!important;height:46px!important;margin:0 0 12px!important;
+  border-radius:var(--gf-radius-pill)!important;background:var(--gf-color-surface-subtle)!important;
+  color:var(--gf-color-muted)!important;font-size:20px!important;box-shadow:none!important;
+}
+html body[data-gf-surface="workspace"] #app#app .content :is(.dash-empty-icon,.history-empty-icon-v311) svg{
+  width:22px!important;height:22px!important;fill:none!important;stroke:currentColor!important;stroke-width:1.8!important;
+  stroke-linecap:round;stroke-linejoin:round;
+}
+html body[data-gf-surface="workspace"] #app#app .content .history-empty-kicker-v311{display:none!important}
+html body[data-gf-surface="workspace"] #app#app .content :is(.dash-empty-subpage,.history-empty-v311,.route-preview-empty-v76,.dash-detail-empty) :is(h2,h3){
+  margin:0!important;font:700 16px/1.3 var(--gf-font-display)!important;color:var(--gf-color-text)!important;
+}
+html body[data-gf-surface="workspace"] #app#app .content :is(.dash-empty-subpage,.history-empty-v311,.route-preview-empty-v76,.dash-detail-empty) p{
+  max-width:420px;margin:6px auto 0!important;font-size:13px!important;line-height:1.5!important;color:var(--gf-color-muted)!important;
+}
+html body[data-gf-surface="workspace"] #app#app .content :is(.dash-empty-subpage,.history-empty-v311,.route-preview-empty-v76) .btn-primary{margin-top:16px!important}
+
+/* ---------------------------------------------------------------------------
+   6. Badge e stati: pillole con colori semantici del sistema.
+   ------------------------------------------------------------------------- */
+html body[data-gf-surface="workspace"] #app#app .content :is(.route-status-pill,.status-pill,.gf-badge,.badge,.dash-date-chip){
+  border-radius:var(--gf-radius-pill)!important;font-family:var(--gf-font-family)!important;font-weight:600!important;
+}
+html body[data-gf-surface="workspace"] #app#app .content .dash-sub-icon svg{
+  width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;
+}
+
+/* Etichette di sezione: niente maiuscoletto colorato, come le etichette della dashboard. */
+html body[data-gf-surface="workspace"] #app#app .content :is(.plan-eyebrow-v875,.plan-kicker-v875,.billing-kicker-v876,.billing-section-kicker-v876,.dash-detail-eyebrow,.source-guide-kicker){
+  font:600 13px/1.4 var(--gf-font-family)!important;letter-spacing:0!important;text-transform:none!important;color:var(--gf-color-muted)!important;
+}

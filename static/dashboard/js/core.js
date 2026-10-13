@@ -4331,7 +4331,7 @@ function renderDashboardInProgressSubpage(routes, selectedRoute){
   const page = document.getElementById('dashboardInProgressPage');
   if(!page) return;
   if(!routes.length){
-    page.innerHTML = `<div class="dash-empty-subpage"><div class="dash-empty-icon">▶</div><h2>Nessun giro in corso</h2><p>Un giro entra qui solo quando l'autista preme “Avvia giro” dal suo portale.</p><button class="btn-primary" onclick="showTab('giro')">Pianifica un giro</button></div>`;
+    page.innerHTML = `<div class="dash-empty-subpage"><div class="dash-empty-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h11M12 6l6 6-6 6"/><circle cx="4" cy="12" r="1.5"/></svg></div><h2>Nessun giro in corso</h2><p>Un giro entra qui solo quando l'autista preme “Avvia giro” dal suo portale.</p><button class="btn-primary" onclick="showTab('giro')">Pianifica un giro</button></div>`;
     return;
   }
   const r = selectedRoute || routes[0];
@@ -4410,7 +4410,7 @@ function renderUnifiedRouteView(r, targetId='historyResult', context='history'){
   const rows = r.consegne || [];
   const status = r.status || 'programmato';
   const statusLabel = r.status_label || ({programmato:'Programmato', in_corso:'In corso', completato:'Completato', bozza:'Bozza'}[status] || 'Giro');
-  const icon = status === 'completato' ? '✓' : (status === 'in_corso' ? '▶' : '📅');
+  const icon = status === 'completato' ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4 10-10"/></svg>' : (status === 'in_corso' ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h11M12 6l6 6-6 6"/><circle cx="4" cy="12" r="1.5"/></svg>' : '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>');
   target.innerHTML = `<section class="panel dash-sub-card gf-unified-route-view">
     <div class="gf-unified-route-head">
       <div class="dash-sub-card-title"><div class="dash-sub-icon">${icon}</div><div><h2>${esc(r.nome || 'Giro consegne')}</h2><p>Schermata giro unificata · ${esc(statusLabel)} · ${esc(r.data_giro || '-')}</p></div></div>
@@ -4479,7 +4479,7 @@ function renderDashboardScheduledSubpage(routes, selectedRoute){
   const page = document.getElementById('dashboardScheduledPage');
   if(!page) return;
   if(!routes.length){
-    page.innerHTML = `<div class="dash-empty-subpage"><div class="dash-empty-icon">📅</div><h2>Nessun giro programmato</h2><p>I giri salvati e assegnati compariranno qui finché l’autista non li avvia.</p><button class="btn-primary" onclick="showTab('giro')">Pianifica un giro</button></div>`;
+    page.innerHTML = `<div class="dash-empty-subpage"><div class="dash-empty-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg></div><h2>Nessun giro programmato</h2><p>I giri salvati e assegnati compariranno qui finché l’autista non li avvia.</p><button class="btn-primary" onclick="showTab('giro')">Pianifica un giro</button></div>`;
     return;
   }
   const r = selectedRoute || routes[0];
