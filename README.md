@@ -17,6 +17,11 @@ python -m app.migrations
 uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
+In produzione (`APP_ENV=production` o `prod`) il server si rifiuta di partire se
+`APP_SECRET` manca, usa un valore di sviluppo o ha meno di 32 caratteri, se
+`SUPERADMIN_PASSWORD` (o in sua assenza `APP_PASSWORD`) manca, è comune o ha
+meno di 12 caratteri, oppure se `COOKIE_SECURE` è disattivato.
+
 Gli script di avvio locale e l'immagine Docker eseguono già le migrazioni.
 Per avvii personalizzati, includere il comando prima dell'avvio dei worker.
 Non eseguire migrazioni tramite importazione di `app.main`: l'importazione

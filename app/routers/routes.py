@@ -108,6 +108,8 @@ def _validate_route_tenant_scope(db, user: User, data, deliveries: list[dict]):
     route_orders.validate_references(db, user.id, deliveries, getattr(data, "route_id", None), getattr(data, "data_giro", None))
     _enrich_owned_deliveries(db, user, deliveries)
     from ..schemas.driver_schedule import DriverSchedule
+    if not hasattr(data, "driver_schedule"):
+        data.driver_schedule = None
     if data.driver_schedule is None and getattr(data,'route_id',None):
         existing=owned(db.query(RoutePlan),RoutePlan,user).filter_by(id=data.route_id).first()
         if existing and existing.driver_id==data.driver_id:

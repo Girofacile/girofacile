@@ -31,7 +31,9 @@ from .services.object_storage import StorageUnavailable
 # -----------------------------------------------------------------------
 @asynccontextmanager
 async def lifespan(app):
+    from .core.production_check import require_production_config
     from .migrations import require_current_schema
+    require_production_config()
     require_current_schema(engine)
     yield
 

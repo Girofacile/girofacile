@@ -220,11 +220,12 @@ def list_vehicles(db: Session = Depends(get_db), user: User = Depends(current_us
         engine = db.get_bind()
         from sqlalchemy import inspect
         columns = {c["name"] for c in inspect(engine).get_columns("vehicles")}
-        clauses = []
-        params = {}
-        if "user_id" in columns:
-            clauses.append("user_id = :uid")
-            params["uid"] = user.id
+        if "user_id" not in columns:
+            # Senza colonna aziendale non è possibile isolare i dati: meglio un
+            # errore esplicito che restituire i mezzi di tutte le aziende.
+            raise HTTPException(503, "Registro mezzi non disponibile: schema database da aggiornare") from exc
+        clauses = ["user_id = :uid"]
+        params = {"uid": user.id}
         if "deleted_at" in columns:
             clauses.append("deleted_at IS NULL")
         where_sql = (" WHERE " + " AND ".join(clauses)) if clauses else ""

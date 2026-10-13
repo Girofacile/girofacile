@@ -144,7 +144,10 @@ def run_migrations(engine):
                     conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261013_01', 'now': datetime.utcnow()})
             if '20261013_02' not in applied:
                 with engine.begin() as conn:
+                    tables=set(inspect(conn).get_table_names())
                     for table,columns in {'drivers':['work_schedule'],'route_plans':['driver_schedule','driver_breaks']}.items():
+                        # Tabella assente (schema parziale o legacy): nessuna colonna da aggiungere.
+                        if table not in tables: continue
                         existing={c['name'] for c in inspect(conn).get_columns(table)}
                         for column in columns:
                             if column not in existing: conn.execute(text(f'ALTER TABLE {table} ADD COLUMN {column} JSON'))
