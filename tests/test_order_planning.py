@@ -174,3 +174,16 @@ def test_selection_reports_distinct_requested_dates(planning):
     assert result.status_code==200,result.text
     assert result.json()['requested_dates']==['2099-01-16','2099-01-17']
     assert client.get('/api/order-planning/selection').json()['requested_dates']==['2099-01-16','2099-01-17']
+
+
+def test_selection_summarizes_each_route_once_with_json_breaks(planning):
+    ctx,_=planning;client,db,*_=ctx
+    first,second=ready(ctx,'Break-A'),ready(ctx,'Break-B')
+    route,_=calculate(planning,[first,second])
+    saved=db.get(RoutePlan,route['id'])
+    saved.driver_schedule={'start':'08:00','end':'17:00','breaks':[{'start':'12:00','end':'13:00'}]}
+    saved.driver_breaks=[{'start':'12:00','end':'13:00','after_order':1,'duration_min':60}]
+    db.commit()
+    response=client.get('/api/order-planning/selection')
+    assert response.status_code==200,response.text
+    assert response.json()['routes']==[{'id':saved.id,'name':saved.nome,'status':'bozza'}]

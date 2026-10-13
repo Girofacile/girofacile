@@ -23,8 +23,10 @@ def selection(db, user_id, actor, lock=False):
 def selection_response(db, row):
     if row is None:
         return {'version': 0, 'order_ids': [], 'configuration': {}, 'stops': None, 'routes': [], 'requested_dates': []}
-    routes = db.query(RoutePlan).join(RouteOrderAssignment, RouteOrderAssignment.route_plan_id == RoutePlan.id).filter(
-        RouteOrderAssignment.user_id == row.user_id, RouteOrderAssignment.order_id.in_(row.order_ids)).distinct().all()
+    # DISTINCT must compare scalar summary fields, not RoutePlan JSON snapshots.
+    routes = db.query(RoutePlan.id, RoutePlan.nome, RoutePlan.status).join(
+        RouteOrderAssignment, RouteOrderAssignment.route_plan_id == RoutePlan.id).filter(
+        RoutePlan.user_id == row.user_id, RouteOrderAssignment.user_id == row.user_id, RouteOrderAssignment.order_id.in_(row.order_ids)).distinct().all()
     dates = db.query(Order.requested_date).filter(Order.user_id == row.user_id, Order.id.in_(row.order_ids), Order.requested_date.isnot(None)).distinct().order_by(Order.requested_date).all()
     return {'version': row.version, 'order_ids': row.order_ids, 'configuration': row.configuration,
             'requested_dates': [value.isoformat() for (value,) in dates],
