@@ -16,10 +16,10 @@ body[data-gf-surface="workspace"] #app #tab-clienti .customer-metric{
 #tab-clienti .customer-metric:hover{background:var(--cr-soft)!important}
 #tab-clienti .customer-metric[aria-pressed="true"]::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--cr-blue)}
 #tab-clienti .customer-metric .customer-metric-icon{display:none!important}
-#tab-clienti .customer-metric h2{font-weight:400!important;font-size:13px!important;line-height:1.4!important;color:var(--cr-muted)!important;margin:0 0 4px!important}
+#tab-clienti .customer-metric .customer-metric-label{font-weight:400!important;font-size:13px!important;line-height:1.4!important;color:var(--cr-muted)!important;margin:0 0 4px!important}
 #tab-clienti .customer-metric strong{font:700 30px/1.1 "Bricolage Grotesque","Segoe UI",sans-serif!important;color:var(--cr-ink)!important;letter-spacing:-.02em}
-#tab-clienti .customer-metric p{font-size:12.5px!important;font-weight:400!important;color:var(--cr-muted)!important;margin:5px 0 0!important}
-#tab-clienti .customer-metric:has(#customerMetricPending) p{color:#b7791f!important}
+#tab-clienti .customer-metric .customer-metric-help{font-size:12.5px!important;font-weight:400!important;color:var(--cr-muted)!important;margin:5px 0 0!important}
+#tab-clienti .customer-metric:has(#customerMetricPending) .customer-metric-help{color:#b7791f!important}
 body[data-gf-surface="workspace"] #app #tab-clienti .customer-list-panel-v8{
   margin:0!important;padding:0!important;overflow:hidden!important;border-radius:16px!important;
   border:1px solid var(--cr-border)!important;background:#fff!important;
@@ -190,3 +190,9 @@ body[data-gf-surface="workspace"] #app #tab-clienti .customer-list-panel-v8{
   .customer-details-dialog.gf-dialog{width:100vw!important;max-width:100vw!important}
   .customer-details-dialog dl{grid-template-columns:1fr!important}
 }
+
+/* Bulk action is relevant only while the Customers tab is visible. */
+body:has(#tab-clienti.hidden) #customerBulkBar{display:none!important}
+#tab-clienti .customer-metric .customer-metric-copy{display:flex;flex-direction:column;align-items:flex-start}
+#tab-clienti .customer-metric .customer-metric-label{display:block}
+#tab-clienti .customer-metric .customer-metric-help{display:block}
