@@ -59,7 +59,7 @@
 <link rel="stylesheet" href="/static/dashboard/css/company-profile-reference.css?v=company_hero_full_width_20261013_1">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap">
 <link rel="stylesheet" href="/static/design-system/sidebar-unified.css?v=sidebar_global_20261013_1">
-<link rel="stylesheet" href="/static/dashboard/css/customers-reference.css?v=customers_reference_20261013_1">
+<link rel="stylesheet" href="/static/dashboard/css/customers-reference.css?v=customers_reference_20261013_2">
 </head>
 <body data-gf-surface="workspace">
 
@@ -1057,10 +1057,10 @@
         <div class="page-title-row customer-page-title gf-directory-title">
           <div><h1 data-gf-label="customers">Clienti</h1><p>Anagrafica <span data-gf-label="customers">Clienti</span> e fasce orarie di scarico.</p></div>
         </div>
-        <div class="customer-metrics" aria-label="Riepilogo clienti"><button type="button" class="customer-metric" data-customer-quick="all"><span class="customer-metric-icon blue"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2m20 0v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/><circle cx="9" cy="7" r="4"/></svg></span><div><h2>Totale clienti</h2><strong id="customerMetricTotal">—</strong><p>Tutti i clienti registrati</p></div></button>
-<button type="button" class="customer-metric" data-customer-quick="verified"><span class="customer-metric-icon green"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg></span><div><h2>Indirizzi verificati</h2><strong id="customerMetricVerified">—</strong><p>Indirizzi con verifica completata</p></div></button>
-<button type="button" class="customer-metric" data-customer-quick="unverified"><span class="customer-metric-icon orange"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><div><h2>Da verificare</h2><strong id="customerMetricPending">—</strong><p>Indirizzi ancora da verificare</p></div></button>
-<button type="button" class="customer-metric" data-customer-quick="withSlot"><span class="customer-metric-icon purple"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21V7l10-4v18M13 9h7v12H3m4-12v2m0 3v2m3-8v2m0 3v2m6-1v2m0-6v1"/></svg></span><div><h2>Con fascia di scarico</h2><strong id="customerMetricWithSlot">—</strong><p>Clienti con fascia impostata</p></div></button>
+        <div class="customer-metrics" aria-label="Riepilogo clienti"><button type="button" class="customer-metric" data-customer-quick="all"><span class="customer-metric-icon blue"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2m20 0v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/><circle cx="9" cy="7" r="4"/></svg></span><span class="customer-metric-copy"><span class="customer-metric-label">Totale clienti</span><strong id="customerMetricTotal">—</strong><span class="customer-metric-help">Tutti i clienti registrati</span></span></button>
+<button type="button" class="customer-metric" data-customer-quick="verified"><span class="customer-metric-icon green"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg></span><span class="customer-metric-copy"><span class="customer-metric-label">Indirizzi verificati</span><strong id="customerMetricVerified">—</strong><span class="customer-metric-help">Indirizzi con verifica completata</span></span></button>
+<button type="button" class="customer-metric" data-customer-quick="unverified"><span class="customer-metric-icon orange"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><span class="customer-metric-copy"><span class="customer-metric-label">Da verificare</span><strong id="customerMetricPending">—</strong><span class="customer-metric-help">Indirizzi ancora da verificare</span></span></button>
+<button type="button" class="customer-metric" data-customer-quick="withSlot"><span class="customer-metric-icon purple"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21V7l10-4v18M13 9h7v12H3m4-12v2m0 3v2m3-8v2m0 3v2m6-1v2m0-6v1"/></svg></span><span class="customer-metric-copy"><span class="customer-metric-label">Con fascia di scarico</span><strong id="customerMetricWithSlot">—</strong><span class="customer-metric-help">Clienti con fascia impostata</span></span></button>
 </div>
         <section class="panel customer-list-panel-v8">
           <div class="panel-header customer-list-head"><div><h2>Elenco <span data-gf-label="customers">Clienti</span></h2><p class="panel-subtitle">Cerca rapidamente oppure apri i filtri avanzati quando servono.</p></div>
@@ -1088,7 +1088,7 @@
           <div class="customer-list-footer"><span id="customerCount" role="status"></span><nav id="customerPagination" aria-label="Pagine clienti"></nav></div>
         </section>
       </section>
-      <div id="customerBulkBar" class="customer-bulk-bar hidden" role="region" aria-label="Clienti selezionati">
+      <div id="customerBulkBar" data-gf-feature="time_windows" class="customer-bulk-bar hidden" role="region" aria-label="Clienti selezionati">
         <span id="customerSelectedCount">0 clienti selezionati</span>
         <button type="button" class="btn-primary" onclick="openCustomerBulkSlotDialog()">Imposta fascia di scarico</button>
         <button type="button" class="btn-secondary" onclick="clearCustomerSelection()">Deseleziona</button>
