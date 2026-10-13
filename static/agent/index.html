@@ -22,6 +22,8 @@
 <link rel="stylesheet" href="/static/design-system/layout.css?v=ds_20261007">
 <link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007">
 <script src="/static/design-system/design-system.js?v=ds_20261007" defer></script>
+<script src="/static/design-system/gf-icons.js?v=gf_unified_20261014_1"></script>
+<link rel="stylesheet" href="/static/design-system/portal-unified.css?v=gf_unified_20261014_1">
 </head>
 <body data-gf-surface="agent" data-gf-portal>
   <div id="loginView" class="login hidden">
@@ -38,7 +40,7 @@
   </div>
 
   <div id="appView" class="app hidden">
-    <header class="top"><div class="brand"><div class="logo">GF</div><div>Portale Agente<br><small id="agentSub">GiroFacile</small></div></div><button class="btn ghost" onclick="logout()">Esci</button></header>
+    <header class="top"><div class="brand"><div class="logo gf-brand-slot"><svg class="gf-unified-brand-mark" viewBox="0 0 34 34" role="img" aria-label="Logo GiroFacile"><rect width="34" height="34" rx="9" fill="#1F5BFF"/><path d="M24 12.2A8.2 8.2 0 1 0 25 17.5H17.5" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="24.2" cy="9.6" r="2.4" fill="#9CC0FF"/></svg></div><div><strong class="gf-portal-name">GiroFacile</strong><small id="agentSub">Portale agente</small></div></div><button class="btn ghost" onclick="logout()">Esci</button></header>
     <main class="wrap grid">
       <section class="card hero">
         <div><h1 id="welcomeTitle">I miei clienti</h1><p id="welcomeText">Crea nuovi clienti e importali direttamente nella Dashboard aziendale.</p></div>

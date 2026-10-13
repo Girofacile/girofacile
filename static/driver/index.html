@@ -270,6 +270,8 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
 <link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007">
 <script src="/static/design-system/design-system.js?v=ds_20261007" defer></script>
 <link rel="stylesheet" href="/static/driver-schedule.css?v=20261013_1"><script src="/static/driver-schedule.js?v=20261013_1"></script>
+<script src="/static/design-system/gf-icons.js?v=gf_unified_20261014_1"></script>
+<link rel="stylesheet" href="/static/design-system/portal-unified.css?v=gf_unified_20261014_1">
 </head>
 <body data-gf-surface="driver" data-gf-portal>
 
@@ -277,7 +279,7 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
 <div id="loginScreen" class="login-screen">
   <div class="login-card">
     <div class="login-brand">
-      <div class="login-icon">G</div>
+      <img class="gf-auth-logo login-icon" src="/static/girofacile-logo.png" alt="Logo GiroFacile" width="56" height="56">
       <h1>Portale Autista</h1>
       <p>GiroFacile — Accesso riservato</p>
     </div>
@@ -304,9 +306,9 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
   <!-- HEADER -->
   <div class="app-header">
     <div class="header-left">
-      <div class="header-logo">G</div>
+      <div class="header-logo gf-brand-slot"><svg class="gf-unified-brand-mark" viewBox="0 0 34 34" role="img" aria-label="Logo GiroFacile"><rect width="34" height="34" rx="9" fill="#1F5BFF"/><path d="M24 12.2A8.2 8.2 0 1 0 25 17.5H17.5" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="24.2" cy="9.6" r="2.4" fill="#9CC0FF"/></svg></div>
       <div>
-        <div class="header-title">Giro<span>Facile</span></div>
+        <div class="header-title">GiroFacile</div>
         <div class="header-driver" id="headerDriverName">Portale Autista</div>
       </div>
     </div>
@@ -358,7 +360,7 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
 <div class="delivery-list" id="deliveryList"></div>
       <div id="completedScreen" class="hidden">
         <div class="completed-wrap">
-          <div class="completed-icon">🎉</div>
+          <div class="completed-icon"><svg class="gf-i" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg></div>
           <h2>Giro completato!</h2>
           <p>Ottimo lavoro! Tutte le consegne sono state gestite.</p>
         </div>
@@ -410,7 +412,7 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
 <!-- MODAL CONSEGNATO -->
 <div id="modalDone" class="modal-overlay hidden">
   <div class="modal">
-    <div class="modal-header"><h3>✅ Consegna effettuata</h3><button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="modal-header"><h3><svg class="gf-i" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg> Consegna effettuata</h3><button class="modal-close" onclick="closeModal()">×</button></div>
     <div class="modal-body">
       <div class="modal-sub">Seleziona il tempo di scarico effettivo</div>
       <div class="tempo-grid" id="tempoGrid"></div>
@@ -434,7 +436,7 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
 <!-- MODAL FIRMA CLIENTE -->
 <div id="modalSignature" class="modal-overlay hidden">
   <div class="modal signature-only-modal">
-    <div class="modal-header"><h3>✍️ Firma cliente</h3><button class="modal-close" onclick="closeSignatureModal()">×</button></div>
+    <div class="modal-header"><h3><svg class="gf-i" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m15 4 5 5M4 20l5-1L21 7a2 2 0 0 0-5-5L4 14Z"/></svg> Firma cliente</h3><button class="modal-close" onclick="closeSignatureModal()">×</button></div>
     <div class="modal-body">
       <div class="signature-intro">Inserisci il nome del firmatario e fai firmare il cliente sul display.</div>
       <div class="signature-label">Nome firmatario</div>
@@ -453,7 +455,7 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
 <!-- MODAL MANCATA -->
 <div id="modalMissed" class="modal-overlay hidden">
   <div class="modal">
-    <div class="modal-header"><h3>❌ Mancata consegna</h3><button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="modal-header"><h3><svg class="gf-i" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="m9 9 6 6M15 9l-6 6"/></svg> Mancata consegna</h3><button class="modal-close" onclick="closeModal()">×</button></div>
     <div class="modal-body">
       <div class="modal-sub">Seleziona il motivo</div>
       <div class="motivo-list" id="motivoList"></div>
@@ -467,7 +469,7 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
 <!-- MODAL NOTA -->
 <div id="modalNote" class="modal-overlay hidden">
   <div class="modal">
-    <div class="modal-header"><h3>📝 Aggiungi nota</h3><button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="modal-header"><h3><svg class="gf-i" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 3h10l4 4v14H5Z"/><path d="M14 3v5h5M8 12h8M8 16h5"/></svg> Aggiungi nota</h3><button class="modal-close" onclick="closeModal()">×</button></div>
     <div class="modal-body">
       <textarea class="note-textarea" id="noteText" placeholder="Scrivi una nota..." style="min-height:120px"></textarea>
       <button class="btn-confirm blue" onclick="confirmNote()">Salva nota</button>
@@ -478,7 +480,7 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
 <!-- POPUP CONFERMA AVVIO ANTICIPATO -->
 <div id="popupEarly" class="popup-overlay hidden">
   <div class="popup-card">
-    <div class="popup-icon">⚠️</div>
+    <div class="popup-icon"><svg class="gf-i" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17h.01"/></svg></div>
     <div class="popup-title">Avvio anticipato</div>
     <div class="popup-text" id="popupEarlyText">Stai avviando il giro prima dell'orario previsto. Sei sicuro di voler procedere?</div>
     <div class="popup-actions">
@@ -595,11 +597,11 @@ function renderRoutes() {
   if(upcoming.length === 0) {
     html += `<div class="section-card"><p style="text-align:center;color:#6b7280;font-size:14px;padding:16px 0">Nessun giro programmato</p></div>`;
   } else {
-    html += `<div style="font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Giri programmati</div>`;
+    html += `<div class="gf-section-label">Giri programmati</div>`;
     upcoming.forEach(r => { html += renderRouteCard(r, today); });
   }
   if(past.length > 0) {
-    html += `<div style="font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px">Recenti</div>`;
+    html += `<div class="gf-section-label" style="margin-top:16px">Recenti</div>`;
     past.forEach(r => { html += renderRouteCard(r, today); });
   }
   box.innerHTML = html;
@@ -646,10 +648,10 @@ function renderRouteCard(r, today) {
       <div class="rc-info">
         <div class="rc-name">${esc(r.nome)}</div>
         <div class="rc-meta">
-          <span>🕐 ${esc(r.orario_partenza||'—')}</span>
-          <span>📍 ${r.n_consegne} fermate</span>
-          ${r.totale_km?`<span>📏 ${fmt(r.totale_km)} km</span>`:''}
-          ${r.deposit_nome?`<span>🏭 ${esc(r.deposit_nome)}</span>`:''}
+          <span>${gfIcon('clock')} ${esc(r.orario_partenza||'—')}</span>
+          <span>${gfIcon('pin')} ${r.n_consegne} fermate</span>
+          ${r.totale_km?`<span>${gfIcon('route')} ${fmt(r.totale_km)} km</span>`:''}
+          ${r.deposit_nome?`<span>${gfIcon('warehouse')} ${esc(r.deposit_nome)}</span>`:''}
         </div>
       </div>
       <div class="rc-status"><span class="rc-badge ${badge}">${label}</span></div>
@@ -750,7 +752,7 @@ function renderExecution(data) {
     const isMissed = c.status === 'mancata';
     const numClass = isActive?'active':isDone?'done':isMissed?'mancata':'waiting';
     const cardClass = isActive?'active':isDone?'done':isMissed?'mancata':'';
-    const statusIcon = isDone?'✅':isMissed?'❌':isActive?'📍':'';
+    const statusIcon = isDone?gfIcon('checkCircle'):isMissed?gfIcon('xCircle'):isActive?gfIcon('pin'):'';
     const navUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(c.indirizzo)}`;
 
     let detailsHtml = '';
@@ -763,18 +765,18 @@ function renderExecution(data) {
           ${c.km_tappa?`<div class="di-time-item"><div class="di-time-lbl">Km tappa</div><div class="di-time-val">${fmt(c.km_tappa)} km</div></div>`:''}
         </div>`;
       }
-      if(c.note) detailsHtml += `<div class="di-note-box">📝 ${esc(c.note)}</div>`;
-      if(c.warning) detailsHtml += `<div class="di-warn-box">⚠️ ${esc(c.warning.split('|').join(' · '))}</div>`;
+      if(c.note) detailsHtml += `<div class="di-note-box">${gfIcon('note')} ${esc(c.note)}</div>`;
+      if(c.warning) detailsHtml += `<div class="di-warn-box">${gfIcon('alert')} ${esc(c.warning.split('|').join(' · '))}</div>`;
       if(isDone) {
         detailsHtml += podEvidenceButtons(c, `/api/driver/delivery/${c.id}/evidence`);
-        detailsHtml += `<div class="di-done-box">✅ Consegnato${c.tempo_scarico_effettivo?` in ${c.tempo_scarico_effettivo} min`:''}${c.note_operatore?` · "${esc(c.note_operatore)}"`:''}</div>`;
+        detailsHtml += `<div class="di-done-box">${gfIcon('checkCircle')} Consegnato${c.tempo_scarico_effettivo?` in ${c.tempo_scarico_effettivo} min`:''}${c.note_operatore?` · "${esc(c.note_operatore)}"`:''}</div>`;
         if(c.signed_by_name || c.signed_at){
-          detailsHtml += `<div class="di-signature-box">✍️ Firma raccolta${c.signed_by_name?`: ${esc(c.signed_by_name)}`:''}</div>`;
+          detailsHtml += `<div class="di-signature-box">${gfIcon('pen')} Firma raccolta${c.signed_by_name?`: ${esc(c.signed_by_name)}`:''}</div>`;
         }
       }
       if(isMissed) {
         const motiviLabels = {assente:'Cliente assente',chiuso:'Attività chiusa',rifiutato:'Consegna rifiutata',altro:'Altro'};
-        detailsHtml += `<div class="di-missed-box">❌ ${motiviLabels[c.motivo_mancata]||c.motivo_mancata||'Mancata'}${c.note_operatore?` · "${esc(c.note_operatore)}"`:''}</div>`;
+        detailsHtml += `<div class="di-missed-box">${gfIcon('xCircle')} ${motiviLabels[c.motivo_mancata]||c.motivo_mancata||'Mancata'}${c.note_operatore?` · "${esc(c.note_operatore)}"`:''}</div>`;
       }
       detailsHtml += `</div>`;
     }
@@ -787,14 +789,14 @@ function renderExecution(data) {
           Naviga verso ${esc(c.cliente_nome)}
         </a>
         <div class="btn-row">
-          <button class="btn-done" onclick="openDone(${c.id})">✅ Consegnato</button>
-          <button class="btn-missed" onclick="openMissed(${c.id})">❌ Mancata</button>
+          <button class="btn-done" onclick="openDone(${c.id})">${gfIcon('check')} Consegnato</button>
+          <button class="btn-missed" onclick="openMissed(${c.id})">${gfIcon('x')} Mancata</button>
         </div>
-        <button class="btn-note-small" onclick="openNote(${c.id})">📝 ${c.note_operatore?'Modifica nota':'Aggiungi nota'}</button>
+        <button class="btn-note-small" onclick="openNote(${c.id})">${gfIcon('note')} ${c.note_operatore?'Modifica nota':'Aggiungi nota'}</button>
       </div>`;
     } else if(isDone || isMissed) {
       actionsHtml = `<div class="di-actions">
-        <button class="btn-note-small" onclick="openNote(${c.id})">📝 ${c.note_operatore?'Modifica nota':'Aggiungi nota'}</button>
+        <button class="btn-note-small" onclick="openNote(${c.id})">${gfIcon('note')} ${c.note_operatore?'Modifica nota':'Aggiungi nota'}</button>
       </div>`;
     }
 
@@ -803,11 +805,11 @@ function renderExecution(data) {
         <div class="di-num ${numClass}">${i+1}</div>
         <div class="di-info">
           <div class="di-name">${esc(c.cliente_nome)}</div>${c.order_numbers?.length?`<details><summary>${c.order_numbers.length} ordini · ${esc(c.colli??0)} colli</summary><p>${c.order_numbers.map(esc).join(', ')}</p></details>`:''}
-          <div class="di-addr">📍 ${esc(c.indirizzo)}</div>
+          <div class="di-addr">${gfIcon('pin')} ${esc(c.indirizzo)}</div>
           <div class="di-badges">
-            ${c.ztl?'<span class="di-badge db-ztl">⚠ ZTL</span>':''}
-            ${c.sponda?'<span class="di-badge db-sponda">🔧 Sponda</span>':''}
-            ${c.tempo_scarico_min?`<span class="di-badge db-time">⏱ ${c.tempo_scarico_min} min</span>`:''}
+            ${c.ztl?'<span class="di-badge db-ztl">'+gfIcon('alert')+' ZTL</span>':''}
+            ${c.sponda?'<span class="di-badge db-sponda">'+gfIcon('tool')+' Sponda</span>':''}
+            ${c.tempo_scarico_min?`<span class="di-badge db-time">${gfIcon('timer')} ${c.tempo_scarico_min} min</span>`:''}
           </div>
         </div>
         ${statusIcon?`<div class="di-status-icon">${statusIcon}</div>`:''}
@@ -979,7 +981,7 @@ function openMissed(id) {
   currentDeliveryId = id;
   selectedMotivo = null;
   document.getElementById('noteMissed').value = '';
-  const motivi = {assente:'👤 Cliente assente',chiuso:'🔒 Attività chiusa',rifiutato:'🚫 Consegna rifiutata',altro:'💬 Altro motivo'};
+  const motivi = {assente:gfIcon('user')+' Cliente assente',chiuso:gfIcon('lock')+' Attività chiusa',rifiutato:gfIcon('ban')+' Consegna rifiutata',altro:gfIcon('chat')+' Altro motivo'};
   document.getElementById('motivoList').innerHTML = Object.entries(motivi).map(([k,v]) =>
     `<button class="motivo-btn" onclick="selectMotivo('${k}',this)">${v}</button>`
   ).join('');
@@ -1042,10 +1044,10 @@ async function loadStorico() {
           <span class="rc-badge ${r.status==='completato'?'rb-done':'rb-prog'}">${r.status==='completato'?'Completato':'—'}</span>
         </div>
         <div class="hi-stats">
-          <span>📍 ${r.n_consegne} fermate</span>
-          <span>✅ ${r.completate} consegnate</span>
-          <span>❌ ${r.mancate} mancate</span>
-          ${r.totale_km?`<span>📏 ${fmt(r.totale_km)} km</span>`:''}
+          <span>${gfIcon('pin')} ${r.n_consegne} fermate</span>
+          <span>${gfIcon('checkCircle')} ${r.completate} consegnate</span>
+          <span>${gfIcon('xCircle')} ${r.mancate} mancate</span>
+          ${r.totale_km?`<span>${gfIcon('route')} ${fmt(r.totale_km)} km</span>`:''}
         </div>
       </div>`).join('');
   } catch(e) { box.innerHTML = `<div class="section-card"><small>Errore: ${esc(e.message)}</small></div>`; }

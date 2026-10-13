@@ -251,3 +251,139 @@ html body[data-gf-surface="auth"] .brand:has(>.brand-sub)>.gf-auth-logo{grid-row
 html body[data-gf-surface="auth"] .brand:has(>.brand-sub)>h1{align-self:end}
 html body[data-gf-surface="auth"] .brand:has(>.brand-sub)>.brand-sub{align-self:start}
 html body[data-gf-surface="auth"] .invite-brand img{width:48px!important;height:48px!important;border-radius:12px!important}
+
+/* ===========================================================================
+   Portali operativi: autista, operatore (link giro), app mobile, agente
+   ======================================================================== */
+:is(body[data-gf-surface="driver"],body[data-gf-surface="operator"],body[data-gf-surface="mobile"],body[data-gf-surface="agent"]){
+  --blue:var(--gf-color-primary);--border:var(--gf-color-border);--muted:var(--gf-color-muted);
+  background:var(--gf-color-bg)!important;
+}
+/* Icone a linea */
+.gf-i{width:16px;height:16px;flex:0 0 auto;display:inline-block;vertical-align:-3px;
+  fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+:is(h3,.completed-icon,.popup-icon,.kpi-icon,.menu-icon) .gf-i{width:20px;height:20px}
+:is(.completed-icon,.popup-icon) .gf-i{width:44px;height:44px;padding:10px;border-radius:999px;color:var(--gf-color-success);background:var(--gf-color-success-bg)}
+.popup-icon .gf-i{color:var(--gf-color-warning);background:var(--gf-color-warning-bg)}
+:is(.di-status-icon,.dc-status-icon) .gf-i{width:20px;height:20px}
+
+/* Testata con marchio */
+html body[data-gf-portal] :is(.app-header,.header,header.top){
+  background:var(--gf-color-surface)!important;border-bottom:1px solid var(--gf-color-border)!important;box-shadow:none!important;color:var(--gf-color-text)!important;
+}
+html body[data-gf-portal] .gf-brand-slot{width:36px!important;height:36px!important;padding:0!important;background:none!important;border-radius:10px!important;box-shadow:none!important}
+html body[data-gf-portal] .gf-brand-slot .gf-unified-brand-mark{width:36px;height:36px}
+html body[data-gf-portal] :is(.header-title,.gf-portal-name){
+  font:700 19px/1.1 var(--gf-font-display)!important;letter-spacing:-.01em!important;color:var(--gf-color-text)!important;
+}
+html body[data-gf-portal] :is(.header-title strong,.header-title span){color:inherit!important;font-weight:inherit!important}
+html body[data-gf-portal] :is(.header-driver,header.top small){font-size:12px!important;color:var(--gf-color-muted)!important}
+html body[data-gf-surface="operator"] .header-info{color:var(--gf-color-muted)!important}
+
+/* Titoli ed etichette */
+html body[data-gf-portal] .page-head h2,html body[data-gf-portal] .hero h1{
+  font:700 24px/1.15 var(--gf-font-display)!important;letter-spacing:-.02em!important;color:var(--gf-color-text)!important;
+}
+html body[data-gf-portal] .page-head p{color:var(--gf-color-muted)!important;font-size:13px!important}
+html body[data-gf-portal] .gf-section-label{margin:4px 0 8px;font:600 13px/1.3 var(--gf-font-family);color:var(--gf-color-muted)}
+
+/* Schede */
+html body[data-gf-portal] :is(.route-card,.delivery-card,.di-card,.section-card,.card,.deposit-card,.dash-stats,.route-head-card){
+  border:1px solid var(--gf-color-border)!important;border-radius:var(--gf-radius-lg)!important;
+  background:var(--gf-color-surface)!important;box-shadow:var(--gf-shadow-sm)!important;
+}
+html body[data-gf-portal] .route-card.today{border-color:var(--gf-color-primary)!important}
+html body[data-gf-portal] .route-card.completed{opacity:1!important}
+html body[data-gf-portal] .rc-name{font:700 15px/1.3 var(--gf-font-display)!important}
+html body[data-gf-portal] .rc-meta{gap:10px!important;color:var(--gf-color-muted)!important;font-size:12.5px!important}
+html body[data-gf-portal] .rc-meta span{display:inline-flex;align-items:center;gap:5px}
+html body[data-gf-portal] .rc-date-badge{
+  border-radius:10px!important;background:var(--gf-color-info-bg)!important;color:var(--gf-color-primary)!important;
+}
+html body[data-gf-portal] .rc-date-day{font-family:var(--gf-font-display)!important}
+html body[data-gf-portal] .rc-date-month{letter-spacing:0!important}
+html body[data-gf-portal] :is(.rc-badge,.badge,.status-badge,.di-badge,.dc-badge){border-radius:999px!important;font-weight:600!important;display:inline-flex;align-items:center;gap:4px}
+
+/* Pulsanti */
+html body[data-gf-portal] :is(.btn-primary,.btn-start,.btn-done,.btn){border-radius:var(--gf-radius-md)!important;font-weight:600!important;font-family:var(--gf-font-family)!important}
+html body[data-gf-portal] :is(.btn-primary,.btn-start){background:var(--gf-color-primary)!important;color:#fff!important;border:0!important}
+html body[data-gf-portal][data-gf-portal] .btn-done{background:var(--gf-color-success)!important;color:#fff!important;border:0!important}
+html body[data-gf-portal][data-gf-portal] .btn-missed{background:var(--gf-color-surface)!important;color:var(--gf-color-danger)!important;border:1px solid color-mix(in srgb,var(--gf-color-danger) 35%,white)!important;border-radius:var(--gf-radius-md)!important}
+html body[data-gf-portal] :is(.btn-detail,.btn-secondary,.btn-note,.btn-note-small,.btn.ghost){
+  background:var(--gf-color-surface)!important;color:var(--gf-color-text)!important;border:1px solid var(--gf-color-border)!important;border-radius:var(--gf-radius-md)!important;
+}
+html body[data-gf-portal] :is(.btn-done,.btn-missed,.btn-note,.btn-note-small,.mini-btn,.btn-dep-nav,.btn-nav) .gf-i{margin-right:2px}
+html body[data-gf-surface="mobile"] .mini-btn{border-radius:8px!important;font-weight:600!important;display:inline-flex;align-items:center;gap:4px}
+html body[data-gf-surface="mobile"] .mini-btn.green{background:var(--gf-color-surface)!important;color:var(--gf-color-success)!important;border:1px solid color-mix(in srgb,var(--gf-color-success) 35%,white)!important}
+html body[data-gf-surface="mobile"] .mini-btn.red,html body[data-gf-surface="mobile"] .mini-btn.remove{background:var(--gf-color-surface)!important;color:var(--gf-color-danger)!important;border:1px solid color-mix(in srgb,var(--gf-color-danger) 35%,white)!important}
+
+/* App mobile: i numeri come la striscia della Dashboard */
+html body[data-gf-surface="mobile"] .kpi-grid{
+  gap:1px!important;margin:0 12px 12px!important;padding:0!important;overflow:hidden;
+  border:1px solid var(--gf-color-border);border-radius:var(--gf-radius-lg);background:var(--gf-color-border)!important;box-shadow:var(--gf-shadow-sm);
+}
+html body[data-gf-surface="mobile"] .kpi-card{border:0!important;border-radius:0!important;box-shadow:none!important;background:var(--gf-color-surface)!important;padding:14px 16px!important;display:flex;flex-direction:column}
+html body[data-gf-surface="mobile"] .kpi-icon{display:none!important}
+html body[data-gf-surface="mobile"] .kpi-lbl{order:1;margin:0!important;font-size:13px!important;color:var(--gf-color-muted)!important}
+html body[data-gf-surface="mobile"] .kpi-val{order:2;margin-top:4px;font:700 28px/1.1 var(--gf-font-display)!important;color:var(--gf-color-primary)!important}
+html body[data-gf-surface="mobile"] .dash-stat-val{font-family:var(--gf-font-display)!important;color:var(--gf-color-primary)!important}
+html body[data-gf-surface="mobile"] .menu-icon{color:var(--gf-color-primary);display:inline-grid;place-items:center}
+html body[data-gf-surface="mobile"] .app-header .header-logo{gap:10px}
+
+/* Barra di navigazione inferiore */
+html body[data-gf-portal] :is(.bottom-nav,.bnav,.mobile-nav){border-top:1px solid var(--gf-color-border)!important;background:var(--gf-color-surface)!important;box-shadow:none!important}
+html body[data-gf-portal] :is(.bnav-btn,.nav-btn).active{color:var(--gf-color-primary)!important;background:var(--gf-color-info-bg)!important;border-radius:var(--gf-radius-md)!important}
+
+/* Dettagli fermata */
+html body[data-gf-portal] :is(.di-addr,.dc-addr,.di-note-box,.dc-note,.di-warn-box,.dc-warning,.di-done-box,.dc-done-info,.di-missed-box,.dc-mancata-info,.di-signature-box){
+  display:flex;align-items:flex-start;gap:6px;
+}
+html body[data-gf-portal] :is(.di-warn-box,.dc-warning){background:var(--gf-color-warning-bg)!important;color:var(--gf-color-warning)!important;border-radius:var(--gf-radius-md)!important}
+html body[data-gf-portal] :is(.di-done-box,.dc-done-info){background:var(--gf-color-success-bg)!important;color:var(--gf-color-success)!important;border-radius:var(--gf-radius-md)!important}
+html body[data-gf-portal] :is(.di-missed-box,.dc-mancata-info){background:var(--gf-color-danger-bg)!important;color:var(--gf-color-danger)!important;border-radius:var(--gf-radius-md)!important}
+html body[data-gf-portal] .modal-header h3{display:flex;align-items:center;gap:8px;font-family:var(--gf-font-display)!important}
+
+/* Portale agente */
+html body[data-gf-surface="agent"] header.top .brand{display:flex;align-items:center;gap:10px}
+html body[data-gf-surface="agent"] header.top .brand small{display:block}
+
+/* Tracking pubblico: marchio e etichette come nel resto del prodotto. */
+html body[data-gf-surface="tracking"]{background:var(--gf-color-bg)!important}
+html body[data-gf-surface="tracking"] header{display:flex;align-items:center;gap:10px}
+html body[data-gf-surface="tracking"] header .gf-unified-brand-mark{width:32px;height:32px}
+html body[data-gf-surface="tracking"] header strong{font:700 19px/1.1 var(--gf-font-display);color:var(--gf-color-text)}
+html body[data-gf-surface="tracking"] header .eyebrow{margin-left:auto}
+html body[data-gf-surface="tracking"] .eyebrow{text-transform:none!important;letter-spacing:0!important;font:600 13px/1.3 var(--gf-font-family)!important;color:var(--gf-color-muted)!important}
+html body[data-gf-surface="tracking"] .card{border:1px solid var(--gf-color-border)!important;border-radius:var(--gf-radius-lg)!important;box-shadow:var(--gf-shadow-sm)!important}
+html body[data-gf-surface="tracking"] h1{font-family:var(--gf-font-display)!important}
+html body[data-gf-surface="mobile"] .dash-stats{box-shadow:none!important;background:var(--gf-color-surface)!important}
+html body[data-gf-surface="mobile"] :is(.dash-stats-row,.dash-stats-inner,.today-stats){background:var(--gf-color-surface-subtle)!important;box-shadow:none!important;border-radius:var(--gf-radius-md)!important}
+html body[data-gf-surface="mobile"] .section-card>.kpi-grid{margin:0!important;box-shadow:none!important}
+html body[data-gf-surface="mobile"] .kpi-grid>.dash-stat{background:var(--gf-color-surface)!important;padding:12px 6px!important}
+html body[data-gf-surface="mobile"] .dash-stat-lbl{font-size:12px!important;color:var(--gf-color-muted)!important}
+
+/* ===========================================================================
+   Documenti legali: testata con marchio, documento su scheda bianca
+   ======================================================================== */
+html body[data-gf-surface="legal"]{background:var(--gf-color-bg)!important}
+html body[data-gf-surface="legal"] .gf-legal-top{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  max-width:var(--gf-content-width);margin:0 auto;padding:22px var(--gf-space-5) 0;
+}
+html body[data-gf-surface="legal"] .gf-legal-brand{display:inline-flex;align-items:center;gap:10px;text-decoration:none;color:var(--gf-color-text)}
+html body[data-gf-surface="legal"] .gf-legal-brand strong{font:700 20px/1 var(--gf-font-display)}
+html body[data-gf-surface="legal"] .gf-legal-login{
+  padding:9px 16px;border-radius:var(--gf-radius-md);background:var(--gf-color-primary);color:#fff!important;font-weight:600;font-size:14px;text-decoration:none;
+}
+html body[data-gf-surface="legal"] .doc{
+  border:1px solid var(--gf-color-border)!important;border-radius:var(--gf-radius-lg)!important;
+  background:var(--gf-color-surface)!important;box-shadow:var(--gf-shadow-sm)!important;
+}
+html body[data-gf-surface="legal"] .doc h1{font:700 30px/1.15 var(--gf-font-display)!important;letter-spacing:-.02em!important}
+html body[data-gf-surface="legal"] .doc h2{font:700 19px/1.25 var(--gf-font-display)!important;margin-top:28px!important}
+html body[data-gf-surface="legal"] .doc :is(p,li){font-size:14px;line-height:1.65;color:var(--gf-color-text)}
+html body[data-gf-surface="legal"] .doc .meta{color:var(--gf-color-muted)!important}
+html body[data-gf-surface="legal"] .doc .notice{border-radius:var(--gf-radius-md)!important;background:var(--gf-color-info-bg)!important;color:var(--gf-color-info)!important;border:0!important}
+html body[data-gf-surface="legal"] .doc a{color:var(--gf-color-primary)}
+html body[data-gf-surface="legal"] .gf-legal-top + .wrap{padding-top:16px!important}
+@media (max-width:640px){html body[data-gf-surface="legal"] .gf-legal-top{padding:16px var(--gf-space-4) 0}}

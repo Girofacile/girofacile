@@ -188,7 +188,7 @@ html body[data-gf-surface="workspace"] #app#app #tab-clienti .customer-row-actio
 /* ---------------------------------------------------------------------------
    5. Stati vuoti: icona discreta, titolo 16 px, testo 13 px, al centro del pannello.
    ------------------------------------------------------------------------- */
-html body[data-gf-surface="workspace"] #app#app .content :is(.dash-empty-subpage,.history-empty-v311,.route-preview-empty-v76,.dash-detail-empty){
+html body[data-gf-surface="workspace"] #app#app .content :is(.dash-empty-subpage,.history-empty-v311,.route-preview-empty-v76,.dash-detail-empty):not(.hidden){
   display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;
   min-height:220px;padding:32px 24px!important;text-align:center!important;
   border:1px solid var(--gf-color-border)!important;border-radius:var(--gf-radius-lg)!important;
@@ -226,3 +226,33 @@ html body[data-gf-surface="workspace"] #app#app .content .dash-sub-icon svg{
 html body[data-gf-surface="workspace"] #app#app .content :is(.plan-eyebrow-v875,.plan-kicker-v875,.billing-kicker-v876,.billing-section-kicker-v876,.dash-detail-eyebrow,.source-guide-kicker){
   font:600 13px/1.4 var(--gf-font-family)!important;letter-spacing:0!important;text-transform:none!important;color:var(--gf-color-muted)!important;
 }
+
+/* ---------------------------------------------------------------------------
+   7. Dettaglio giri programmati e completati: numeri e dati del giro a striscia.
+   ------------------------------------------------------------------------- */
+html body[data-gf-surface="workspace"] #app#app :is(#tab-dashboard-scheduled .scheduled-metrics,#tab-dashboard-completed .completed-metrics,#tab-dashboard-completed .completed-identity){
+  display:grid!important;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))!important;gap:1px!important;
+  margin:0 0 var(--gf-u-gap)!important;padding:0!important;overflow:hidden!important;
+  border:1px solid var(--gf-color-border)!important;border-radius:var(--gf-radius-lg)!important;
+  background:var(--gf-color-border)!important;box-shadow:var(--gf-shadow-sm)!important;
+}
+html body[data-gf-surface="workspace"] #app#app :is(.scheduled-metrics>.scheduled-metric,.completed-metrics>.completed-card,.completed-identity>.completed-card){
+  display:block!important;min-width:0!important;margin:0!important;padding:16px 20px!important;min-height:0!important;
+  border:0!important;border-radius:0!important;background:var(--gf-color-surface)!important;box-shadow:none!important;
+}
+html body[data-gf-surface="workspace"] #app#app :is(.scheduled-metric,.completed-card)>:is(.scheduled-icon,.completed-icon){display:none!important}
+html body[data-gf-surface="workspace"] #app#app :is(.scheduled-metric,.completed-card)>div{display:flex!important;flex-direction:column!important;min-width:0!important}
+html body[data-gf-surface="workspace"] #app#app :is(.scheduled-metric,.completed-card) span{
+  font:400 13px/1.4 var(--gf-font-family)!important;color:var(--gf-color-muted)!important;letter-spacing:0!important;text-transform:none!important;
+}
+html body[data-gf-surface="workspace"] #app#app :is(.scheduled-metric,.completed-metrics .completed-card) strong{
+  margin-top:4px!important;font:700 28px/1.1 var(--gf-font-display)!important;letter-spacing:-.02em!important;color:var(--gf-color-primary)!important;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+html body[data-gf-surface="workspace"] #app#app .completed-identity .completed-card strong{
+  margin-top:4px!important;font:600 15px/1.3 var(--gf-font-family)!important;color:var(--gf-color-text)!important;
+  word-break:normal!important;overflow-wrap:anywhere;
+}
+html body[data-gf-surface="workspace"] #app#app :is(.scheduled-metric,.completed-card) small{margin-top:3px!important;font-size:12px!important;color:var(--gf-color-muted)!important}
+/* Le pillole di stato nelle tabelle non vanno mai a capo lettera per lettera. */
+html body[data-gf-surface="workspace"] #app#app .content table :is([class*="badge"],[class*="pill"],[class*="status"]){white-space:nowrap!important;word-break:keep-all!important}

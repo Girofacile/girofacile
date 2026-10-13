@@ -37,6 +37,7 @@
 <link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007">
 <script src="/static/design-system/design-system.js?v=ds_20261007" defer></script>
 <link rel="stylesheet" href="/static/design-system/portal-unified.css?v=gf_unified_20261014_1">
+<script src="/static/design-system/gf-icons.js?v=gf_unified_20261014_1"></script>
 </head>
 <body data-gf-surface="mobile" data-gf-portal>
 
@@ -77,8 +78,8 @@
 
   <header class="app-header">
     <div class="header-logo">
-      <div class="header-icon">G</div>
-      <span class="header-title">Giro<strong>Facile</strong></span>
+      <div class="header-icon gf-brand-slot"><svg class="gf-unified-brand-mark" viewBox="0 0 34 34" role="img" aria-label="Logo GiroFacile"><rect width="34" height="34" rx="9" fill="#1F5BFF"/><path d="M24 12.2A8.2 8.2 0 1 0 25 17.5H17.5" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="24.2" cy="9.6" r="2.4" fill="#9CC0FF"/></svg></div>
+      <span class="header-title">GiroFacile</span>
     </div>
     <div class="header-user">
       <div class="user-avatar" id="userAvatar">A</div>
@@ -92,10 +93,10 @@
     <section id="view-dashboard" class="view active">
       <div class="page-head"><h2>Dashboard</h2><p id="companyLabel">Panoramica operativa</p></div>
       <div class="kpi-grid">
-        <div class="kpi-card blue"><div class="kpi-icon">👥</div><div class="kpi-val" id="kpiCustomers">0</div><div class="kpi-lbl">Clienti</div></div>
-        <div class="kpi-card green"><div class="kpi-icon">🚛</div><div class="kpi-val" id="kpiVehicles">0</div><div class="kpi-lbl">Mezzi</div></div>
-        <div class="kpi-card purple"><div class="kpi-icon">👤</div><div class="kpi-val" id="kpiDrivers">0</div><div class="kpi-lbl">Autisti</div></div>
-        <div class="kpi-card orange"><div class="kpi-icon">📍</div><div class="kpi-val" id="kpiRoutes">0</div><div class="kpi-lbl">Giri attivi</div></div>
+        <div class="kpi-card blue"><div class="kpi-icon"><svg class="gf-i" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="9" cy="8" r="3.5"/><path d="M2 20a7 7 0 0 1 14 0M16 4.5a3.5 3.5 0 0 1 0 7M18 13.5a6 6 0 0 1 4 6"/></svg></div><div class="kpi-val" id="kpiCustomers">0</div><div class="kpi-lbl">Clienti</div></div>
+        <div class="kpi-card green"><div class="kpi-icon"><svg class="gf-i" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 6h11v10H3zM14 9h4l3 3v4h-7"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg></div><div class="kpi-val" id="kpiVehicles">0</div><div class="kpi-lbl">Mezzi</div></div>
+        <div class="kpi-card purple"><div class="kpi-icon"><svg class="gf-i" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></div><div class="kpi-val" id="kpiDrivers">0</div><div class="kpi-lbl">Autisti</div></div>
+        <div class="kpi-card orange"><div class="kpi-icon"><svg class="gf-i" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg></div><div class="kpi-val" id="kpiRoutes">0</div><div class="kpi-lbl">Giri attivi</div></div>
       </div>
       <div class="section-card">
         <div class="kpi-grid" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:0">
@@ -145,7 +146,7 @@
           <div id="selectedDeliveries" class="stack-list"></div>
         </div>
         <div id="routeResult" class="hidden"></div>
-        <div class="action-bottom"><button class="btn-primary" onclick="optimizeMobileRoute()">🚚 Calcola percorso</button></div>
+        <div class="action-bottom"><button class="btn-primary" onclick="optimizeMobileRoute()">Calcola percorso</button></div>
       </div>
 
       <!-- TAB STORICO -->
@@ -182,7 +183,7 @@
         <button class="btn-primary" onclick="openAddCustomer()" style="margin-bottom:8px">+ Nuovo cliente</button>
         <button class="btn-secondary" onclick="verifyPendingMobile()" style="margin-bottom:8px">Verifica indirizzi in sospeso</button>
         <label class="btn-secondary" style="text-align:center;cursor:pointer">
-          📂 Importa CSV/Excel
+          <svg class="gf-i" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 6h6l2 2h10v11H3Z"/></svg> Importa CSV/Excel
           <input type="file" id="importFile" accept=".csv,.xlsx,.xls" style="display:none" onchange="importCustomersMobile()">
         </label>
       </div>
@@ -219,17 +220,17 @@
       <div class="section-card">
         <div class="section-head"><h3>Risorse aziendali</h3></div>
         <div class="menu-list">
-          <div class="menu-item" onclick="showSubView('autisti')"><span class="menu-icon">👤</span><span class="menu-label">Autisti</span><span class="menu-arrow">›</span></div>
-          <div class="menu-item" onclick="showSubView('mezzi')"><span class="menu-icon">🚛</span><span class="menu-label">Mezzi</span><span class="menu-arrow">›</span></div>
-          <div class="menu-item" onclick="showSubView('depositi')"><span class="menu-icon">🏭</span><span class="menu-label">Depositi</span><span class="menu-arrow">›</span></div>
-          <div class="menu-item" onclick="showSubView('agenti')"><span class="menu-icon">🤝</span><span class="menu-label">Agenti</span><span class="menu-arrow">›</span></div>
-          <div class="menu-item" onclick="showSubView('storico')"><span class="menu-icon">🕐</span><span class="menu-label">Storico giri</span><span class="menu-arrow">›</span></div>
+          <div class="menu-item" onclick="showSubView('autisti')"><span class="menu-icon"><svg class="gf-i" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span><span class="menu-label">Autisti</span><span class="menu-arrow">›</span></div>
+          <div class="menu-item" onclick="showSubView('mezzi')"><span class="menu-icon"><svg class="gf-i" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 6h11v10H3zM14 9h4l3 3v4h-7"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg></span><span class="menu-label">Mezzi</span><span class="menu-arrow">›</span></div>
+          <div class="menu-item" onclick="showSubView('depositi')"><span class="menu-icon"><svg class="gf-i" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 21V9l9-5 9 5v12"/><path d="M7 21v-7h10v7M7 17h10"/></svg></span><span class="menu-label">Depositi</span><span class="menu-arrow">›</span></div>
+          <div class="menu-item" onclick="showSubView('agenti')"><span class="menu-icon"><svg class="gf-i" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m11 17 2 2a2 2 0 0 0 3-3M14 14l2.5 2.5a2 2 0 0 0 3-3L15 9l-3 1-2-2 3-3 4 1 4 4M3 11l4-4 4 1"/><path d="m7 15 2 2"/></svg></span><span class="menu-label">Agenti</span><span class="menu-arrow">›</span></div>
+          <div class="menu-item" onclick="showSubView('storico')"><span class="menu-icon"><svg class="gf-i" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><span class="menu-label">Storico giri</span><span class="menu-arrow">›</span></div>
         </div>
       </div>
       <div class="section-card">
         <div class="section-head"><h3>Account</h3></div>
         <div class="menu-list">
-          <div class="menu-item danger" onclick="mobileLogout()"><span class="menu-icon">↩</span><span class="menu-label">Esci</span><span class="menu-arrow">›</span></div>
+          <div class="menu-item danger" onclick="mobileLogout()"><span class="menu-icon"><svg class="gf-i" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m15 18-6-6 6-6"/><path d="M9 12h10"/></svg></span><span class="menu-label">Esci</span><span class="menu-arrow">›</span></div>
         </div>
       </div>
       <div id="subView" class="hidden" style="padding:0 12px">
@@ -262,6 +263,6 @@
 </div>
 
 <script src="/static/password-strength.js?v=password_policy_20261008_1"></script>
-<script src="/static/mobile/mobile.js?v=password_policy_20261008_1"></script>
+<script src="/static/mobile/mobile.js?v=gf_unified_20261014_1"></script>
 </body>
 </html>

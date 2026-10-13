@@ -150,6 +150,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 <link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007">
 <script src="/static/design-system/design-system.js?v=ds_20261007" defer></script>
 <link rel="stylesheet" href="/static/driver-schedule.css?v=20261013_1"><script src="/static/driver-schedule.js?v=20261013_1"></script>
+<script src="/static/design-system/gf-icons.js?v=gf_unified_20261014_1"></script>
+<link rel="stylesheet" href="/static/design-system/portal-unified.css?v=gf_unified_20261014_1">
 </head>
 <body data-gf-surface="operator" data-gf-portal>
 
@@ -159,7 +161,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 </div>
 
 <div id="errorScreen" class="loading hidden">
-  <div style="font-size:48px;margin-bottom:16px">⚠️</div>
+  <svg class="gf-state-icon is-warning" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17h.01"/></svg>
   <h2 style="font-size:20px;font-weight:700;margin-bottom:8px">Link non valido</h2>
   <p id="errorMsg" style="font-size:14px;color:var(--gray)">Il link è scaduto o non è valido.</p>
 </div>
@@ -169,8 +171,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
   <!-- HEADER -->
   <div class="header">
     <div class="header-logo">
-      <div class="header-icon">G</div>
-      <div class="header-title">Giro<strong>Facile</strong></div>
+      <div class="header-icon gf-brand-slot"><svg class="gf-unified-brand-mark" viewBox="0 0 34 34" role="img" aria-label="Logo GiroFacile"><rect width="34" height="34" rx="9" fill="#1F5BFF"/><path d="M24 12.2A8.2 8.2 0 1 0 25 17.5H17.5" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="24.2" cy="9.6" r="2.4" fill="#9CC0FF"/></svg></div>
+      <div class="header-title">GiroFacile</div>
     </div>
     <div class="header-info">
       <div id="hDate"></div>
@@ -208,7 +210,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
   <!-- SCHERMATA COMPLETATA -->
   <div id="completedScreen" class="hidden">
     <div class="completed-screen">
-      <div class="completed-icon">🎉</div>
+      <div class="completed-icon"><svg class="gf-i" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg></div>
       <h2>Giro completato!</h2>
       <p>Tutte le consegne sono state gestite. Ottimo lavoro!</p>
     </div>
@@ -220,7 +222,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 <div id="modalDone" class="modal-overlay hidden">
   <div class="modal">
     <div class="modal-header">
-      <h3>✅ Consegna effettuata</h3>
+      <h3><svg class="gf-i" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg> Consegna effettuata</h3>
       <button class="modal-close" onclick="closeModals()">×</button>
     </div>
     <div class="modal-body">
@@ -244,7 +246,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 <div id="modalMissed" class="modal-overlay hidden">
   <div class="modal">
     <div class="modal-header">
-      <h3>❌ Mancata consegna</h3>
+      <h3><svg class="gf-i" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="m9 9 6 6M15 9l-6 6"/></svg> Mancata consegna</h3>
       <button class="modal-close" onclick="closeModals()">×</button>
     </div>
     <div class="modal-body">
@@ -261,7 +263,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 <div id="modalNote" class="modal-overlay hidden">
   <div class="modal">
     <div class="modal-header">
-      <h3>📝 Aggiungi nota</h3>
+      <h3><svg class="gf-i" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 3h10l4 4v14H5Z"/><path d="M14 3v5h5M8 12h8M8 16h5"/></svg> Aggiungi nota</h3>
       <button class="modal-close" onclick="closeModals()">×</button>
     </div>
     <div class="modal-body">
@@ -340,9 +342,9 @@ function render() {
   let html = '';
   if (route.deposit_indirizzo) {
     html += `<div class="deposit-card">
-      <h3>🏭 Punto di partenza</h3>
+      <h3>${gfIcon('warehouse')} Punto di partenza</h3>
       <p>${esc(route.deposit_nome || '')} · ${esc(route.deposit_indirizzo)}</p>
-      <a class="btn-dep-nav" href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(route.deposit_indirizzo)}" target="_blank">🗺 Naviga al deposito</a>
+      <a class="btn-dep-nav" href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(route.deposit_indirizzo)}" target="_blank">${gfIcon('map')} Naviga al deposito</a>
     </div>`;
   }
 
@@ -366,14 +368,14 @@ function render() {
     else numClass += 'waiting';
 
     let statusIcon = '';
-    if (isDone) statusIcon = '✅';
-    if (isMissed) statusIcon = '❌';
-    if (isActive) statusIcon = '📍';
+    if (isDone) statusIcon = gfIcon('checkCircle');
+    if (isMissed) statusIcon = gfIcon('xCircle');
+    if (isActive) statusIcon = gfIcon('pin');
 
     // Fasce orarie
     let orari = '';
-    if (c.scarico_mattina_da) orari += `🕐 Mattina: ${c.scarico_mattina_da}–${c.scarico_mattina_a || ''}`;
-    if (c.scarico_pomeriggio_da) orari += (orari ? ' · ' : '') + `🕑 Pomeriggio: ${c.scarico_pomeriggio_da}–${c.scarico_pomeriggio_a || ''}`;
+    if (c.scarico_mattina_da) orari += `Mattina: ${c.scarico_mattina_da}–${c.scarico_mattina_a || ''}`;
+    if (c.scarico_pomeriggio_da) orari += (orari ? ' · ' : '') + `Pomeriggio: ${c.scarico_pomeriggio_da}–${c.scarico_pomeriggio_a || ''}`;
 
     // Maps URL per questo cliente
     const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(c.indirizzo)}`;
@@ -383,11 +385,11 @@ function render() {
         <div class="${numClass}">${i + 1}</div>
         <div class="dc-info">
           <div class="dc-name">${esc(c.cliente_nome)}</div>${c.order_numbers?.length?`<details><summary>${c.order_numbers.length} ordini · ${esc(c.colli??0)} colli</summary><p>${c.order_numbers.map(esc).join(', ')}</p></details>`:''}
-          <div class="dc-addr">📍 ${esc(c.indirizzo)}</div>
+          <div class="dc-addr">${gfIcon('pin')} ${esc(c.indirizzo)}</div>
           <div class="dc-meta">
-            ${c.ztl ? '<span class="dc-badge ztl">⚠ ZTL</span>' : ''}
-            ${c.sponda ? '<span class="dc-badge sponda">🔧 Sponda</span>' : ''}
-            ${c.arrivo_stimato ? `<span class="dc-badge time">🕐 Arrivo est. ${c.arrivo_stimato}</span>` : ''}
+            ${c.ztl ? '<span class="dc-badge ztl">'+gfIcon('alert')+' ZTL</span>' : ''}
+            ${c.sponda ? '<span class="dc-badge sponda">'+gfIcon('tool')+' Sponda</span>' : ''}
+            ${c.arrivo_stimato ? `<span class="dc-badge time">${gfIcon('clock')} Arrivo est. ${c.arrivo_stimato}</span>` : ''}
           </div>
         </div>
         ${statusIcon ? `<div class="dc-status"><span class="status-icon">${statusIcon}</span></div>` : ''}
@@ -399,26 +401,26 @@ function render() {
 
       if (c.colli > 0 || c.peso_kg > 0) {
         html += `<div class="dc-detail-row">
-          ${c.colli > 0 ? `<div class="dc-detail"><strong>📦 ${c.colli}</strong> colli</div>` : ''}
-          ${c.peso_kg > 0 ? `<div class="dc-detail"><strong>⚖ ${fmt(c.peso_kg)} kg</strong></div>` : ''}
-          <div class="dc-detail"><strong>⏱ ${c.tempo_scarico_min} min</strong> scarico previsto</div>
+          ${c.colli > 0 ? `<div class="dc-detail"><strong>${gfIcon('box')} ${c.colli}</strong> colli</div>` : ''}
+          ${c.peso_kg > 0 ? `<div class="dc-detail"><strong>${gfIcon('weight')} ${fmt(c.peso_kg)} kg</strong></div>` : ''}
+          <div class="dc-detail"><strong>${gfIcon('timer')} ${c.tempo_scarico_min} min</strong> scarico previsto</div>
         </div>`;
       }
       if (orari) {
-        html += `<div class="dc-note">🕐 ${orari}</div>`;
+        html += `<div class="dc-note">${gfIcon('clock')} ${orari}</div>`;
       }
       if (c.note) {
-        html += `<div class="dc-note">📝 ${esc(c.note)}</div>`;
+        html += `<div class="dc-note">${gfIcon('note')} ${esc(c.note)}</div>`;
       }
       if (c.warning) {
-        html += `<div class="dc-warning">⚠️ ${esc(c.warning.split('|').join(' · '))}</div>`;
+        html += `<div class="dc-warning">${gfIcon('alert')} ${esc(c.warning.split('|').join(' · '))}</div>`;
       }
       if (isDone) {
-        html += `<div class="dc-done-info">✅ Consegnato${c.tempo_scarico_effettivo ? ` in ${c.tempo_scarico_effettivo} min` : ''}${podEvidenceButtons(c, `/api/operator/${token}/delivery/${c.id}/evidence`)}${c.note_operatore ? ` · "${esc(c.note_operatore)}"` : ''}</div>`;
+        html += `<div class="dc-done-info">${gfIcon('checkCircle')} Consegnato${c.tempo_scarico_effettivo ? ` in ${c.tempo_scarico_effettivo} min` : ''}${podEvidenceButtons(c, `/api/operator/${token}/delivery/${c.id}/evidence`)}${c.note_operatore ? ` · "${esc(c.note_operatore)}"` : ''}</div>`;
       }
       if (isMissed) {
         const motiviLabels = {assente:'Cliente assente',chiuso:'Attività chiusa',rifiutato:'Consegna rifiutata',altro:'Altro'};
-        html += `<div class="dc-mancata-info">❌ Mancata: ${motiviLabels[c.motivo_mancata] || c.motivo_mancata || ''}${c.note_operatore ? ` · "${esc(c.note_operatore)}"` : ''}</div>`;
+        html += `<div class="dc-mancata-info">${gfIcon('xCircle')} Mancata: ${motiviLabels[c.motivo_mancata] || c.motivo_mancata || ''}${c.note_operatore ? ` · "${esc(c.note_operatore)}"` : ''}</div>`;
       }
       html += `</div>`;
     }
@@ -427,20 +429,20 @@ function render() {
     if (isActive) {
       html += `<div class="dc-actions">
         <a class="btn-navigate" href="${mapsUrl}" target="_blank">
-          🗺 Naviga verso ${esc(c.cliente_nome)}
+          ${gfIcon('map')} Naviga verso ${esc(c.cliente_nome)}
         </a>
         <div class="action-row">
-          <button class="btn-done" onclick="openDone(${c.id})">✅ Consegnato</button>
-          <button class="btn-missed" onclick="openMissed(${c.id})">❌ Mancata</button>
+          <button class="btn-done" onclick="openDone(${c.id})">${gfIcon('check')} Consegnato</button>
+          <button class="btn-missed" onclick="openMissed(${c.id})">${gfIcon('x')} Mancata</button>
         </div>
-        <button class="btn-note" onclick="openNote(${c.id})">📝 Aggiungi nota</button>
+        <button class="btn-note" onclick="openNote(${c.id})">${gfIcon('note')} Aggiungi nota</button>
       </div>`;
     }
 
     // Pulsante nota anche per completate/mancate
     if ((isDone || isMissed) && !isWaiting) {
       html += `<div class="dc-actions">
-        <button class="btn-note" onclick="openNote(${c.id})">📝 ${c.note_operatore ? 'Modifica nota' : 'Aggiungi nota'}</button>
+        <button class="btn-note" onclick="openNote(${c.id})">${gfIcon('note')} ${c.note_operatore ? 'Modifica nota' : 'Aggiungi nota'}</button>
       </div>`;
     }
 
@@ -497,7 +499,7 @@ function openMissed(id) {
   currentDeliveryId = id;
   selectedMotivo = null;
   document.getElementById('noteMissed').value = '';
-  const motiviLabels = {assente:'👤 Cliente assente',chiuso:'🔒 Attività chiusa',rifiutato:'🚫 Consegna rifiutata',altro:'💬 Altro motivo'};
+  const motiviLabels = {assente:'Cliente assente',chiuso:'Attività chiusa',rifiutato:'Consegna rifiutata',altro:'Altro motivo'};
   document.getElementById('motivoList').innerHTML = routeData.motivi_mancata.map(m => `
     <button class="motivo-btn" onclick="selectMotivo('${m}', this)">${motiviLabels[m] || m}</button>
   `).join('');

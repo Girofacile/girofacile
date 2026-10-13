@@ -165,10 +165,10 @@ async function loadDashboard(){
           <div><div class="rh-name">${esc(r.nome)}</div><div class="rh-date">${esc(r.data_giro)} · ${esc(r.orario_partenza||"")} · ${esc(r.driver_name||"Autista n/a")}</div></div>
           <span class="badge ${r.status||"programmato"}">${esc(r.status_label||r.status||"")}</span>
         </div>
-        <div class="rh-meta"><span>📍 ${r.consegne_count||0} fermate</span><span>📏 ${fmt(r.totale_km)} km</span></div>
+        <div class="rh-meta"><span>${gfIcon('pin')} ${r.consegne_count||0} fermate</span><span>${gfIcon('route')} ${fmt(r.totale_km)} km</span></div>
         <div class="rh-actions">
-          ${r.status==="programmato"||r.status==="in_corso"?`<button class="mini-btn green" onclick="completeRoute(${r.id})">✓ Completa</button>`:``}
-          ${r.status!=="completato"&&r.status!=="annullato"?`<button class="mini-btn red" onclick="cancelRoute(${r.id})">✕ Annulla</button>`:``}
+          ${r.status==="programmato"||r.status==="in_corso"?`<button class="mini-btn green" onclick="completeRoute(${r.id})">${gfIcon('check')} Completa</button>`:``}
+          ${r.status!=="completato"&&r.status!=="annullato"?`<button class="mini-btn red" onclick="cancelRoute(${r.id})">${gfIcon('x')} Annulla</button>`:``}
           <button class="mini-btn" onclick="viewRouteDetail(${r.id})">Dettaglio</button>
         </div>
       </div>`).join("")||`<div class="list-card"><small>Nessun giro operativo oggi.</small></div>`;
@@ -249,10 +249,10 @@ async function loadStorico(){
           <div><div class="rh-name">${esc(r.nome)}</div><div class="rh-date">${esc(r.data_giro)} · ${esc(r.driver_name||"Autista n/a")}</div></div>
           <span class="badge ${r.status||"programmato"}">${esc(r.status_label||"")}</span>
         </div>
-        <div class="rh-meta"><span>📍 ${r.consegne_count||0} fermate</span><span>📏 ${fmt(r.totale_km)} km</span><span>💰 €${fmt(r.costo_totale??r.costo_carburante,2)}</span></div>
+        <div class="rh-meta"><span>${gfIcon('pin')} ${r.consegne_count||0} fermate</span><span>${gfIcon('route')} ${fmt(r.totale_km)} km</span><span>${gfIcon('euro')} €${fmt(r.costo_totale??r.costo_carburante,2)}</span></div>
         <div class="rh-actions">
-          ${r.status==="programmato"||r.status==="in_corso"?`<button class="mini-btn green" onclick="completeRoute(${r.id});loadStorico()">✓ Completa</button>`:""}
-          ${r.status!=="completato"&&r.status!=="annullato"?`<button class="mini-btn red" onclick="cancelRoute(${r.id});loadStorico()">✕ Annulla</button>`:""}
+          ${r.status==="programmato"||r.status==="in_corso"?`<button class="mini-btn green" onclick="completeRoute(${r.id});loadStorico()">${gfIcon('check')} Completa</button>`:""}
+          ${r.status!=="completato"&&r.status!=="annullato"?`<button class="mini-btn red" onclick="cancelRoute(${r.id});loadStorico()">${gfIcon('x')} Annulla</button>`:""}
           <button class="mini-btn" onclick="viewRouteDetail(${r.id})">Dettaglio</button>
         </div>
       </div>`).join("")
@@ -275,7 +275,7 @@ async function loadCustomersMobile(){
           <div style="flex:1;min-width:0">
             <strong>${esc(c.codice_cliente?c.codice_cliente+" · ":"")}${esc(c.nome)}</strong>
             <small>${esc(c.comune||"")} · ${esc(c.indirizzo)}</small>
-            ${c.ztl?`<small style="color:var(--red)">⚠ ZTL</small>`:""}
+            ${c.ztl?`<small style="color:var(--red)">${gfIcon('alert')} ZTL</small>`:""}
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
             <span class="badge ${st}">${st.replace("_"," ")}</span>
@@ -365,7 +365,7 @@ async function optimizeMobileRoute(){
   if(!depositId) return alert("Seleziona un deposito");
   const box=document.getElementById("routeResult");
   box.classList.remove("hidden");
-  box.innerHTML=`<div class="section-card"><div style="text-align:center;padding:20px;color:#6b7280">🚚 Calcolo percorso in corso...</div></div>`;
+  box.innerHTML=`<div class="section-card"><div style="text-align:center;padding:20px;color:#6b7280">Calcolo percorso in corso...</div></div>`;
   box.scrollIntoView({behavior:"smooth"});
   const payload={
     nome:document.getElementById("routeName").value||"Giro consegne",
