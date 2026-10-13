@@ -73,7 +73,9 @@ function lane(plan,assignment,dirty,i){
  '<span><i style="width:'+(invalid?0:Math.min(100,Math.round(duration/max*100)))+'%"></i></span></div>';
  return '<section class="fleet-review-panel fleet-review-lane" style="--lane:'+color(i)+'" aria-label="Mezzo '+(i+1)+'">'+section+stats+dur+
  '<ol class="fleet-review-lane-list" data-fleet-lane="'+i+'">'+
- (all.length?all.map(k=>stop(plan,assignment,dirty,k,i)).join(''):'<li class="fleet-review-lane-empty">Nessuna consegna<small>Trascina qui una consegna da un altro mezzo.</small></li>')+'</ol></section>';
+ (all.length?all.map(k=>stop(plan,assignment,dirty,k,i)).join(''):'<li class="fleet-review-lane-empty">Nessuna consegna<small>Trascina qui una consegna da un altro mezzo.</small></li>')+'</ol>'+
+ (plan.status==='programmed'&&route&&plan.route_ids?.[plan.routes.indexOf(route)]
+  ?'<div class="fleet-review-lane-footer"><button type="button" data-open="'+Number(plan.route_ids[plan.routes.indexOf(route)])+'">Apri giro programmato</button></div>':'')+'</section>';
 }
 function stopMap(){epoch++;if(map){map.remove();map=null;}}
 function highlight(index,on){site()?.querySelectorAll('[data-fleet-stop="'+index+'"],[data-fleet-pin="'+index+'"]').forEach(x=>x.classList.toggle('hl',on));}
