@@ -78,7 +78,7 @@
       plan,assignment:reviewAssignments(),dirty:changedAssignments,busy,manualAdjusted,
       permission:can('routes.program'),
       onMove:moveStop,
-      onUndo:()=>{draftAssignments=null;changedAssignments=false;render();},
+      onUndo:()=>{draftAssignments=null;changedAssignments=false;manualAdjusted=false;acknowledgedWarning=false;render();},
       onRecalc:()=>action('revise'),
       onPlan:accept=>action('plan',accept),
       onBack:()=>showTab('giro')
