@@ -79,7 +79,15 @@ function stopMap(){epoch++;if(map){map.remove();map=null;}}
 function highlight(index,on){site()?.querySelectorAll('[data-fleet-stop="'+index+'"],[data-fleet-pin="'+index+'"]').forEach(x=>x.classList.toggle('hl',on));}
 async function drawMap(plan,assignment){
  const token=epoch,host=site()?.querySelector('.fleet-review-map');if(!host)return;
- const coords=plan.configuration.consegne.map(d=>d.lat==null||d.lon==null?null:[Number(d.lat),Number(d.lon)]).map(p=>p&&p.every(Number.isFinite)&&Math.abs(p[0])<=90&&Math.abs(p[1])<=180?p:null);
+ const known=new Map();
+ plan.routes.forEach(r=>(r.stop_indexes||[]).forEach((index,j)=>{
+  const item=r.result?.ordered?.[j]||{};
+  const coord=item.coord||item;
+  if(coord?.lat!=null&&coord?.lon!=null)known.set(index,[Number(coord.lat),Number(coord.lon)]);
+ }));
+ const coords=plan.configuration.consegne.map((d,i)=>known.get(i)||
+  (d.lat==null||d.lon==null?null:[Number(d.lat),Number(d.lon)]))
+  .map(p=>p&&p.every(Number.isFinite)&&Math.abs(p[0])<=90&&Math.abs(p[1])<=180?p:null);
  if(!coords.some(Boolean)){host.textContent='Coordinate delle fermate non disponibili.';return;}
  try{
   await loadRoadMapLibrary();if(token!==epoch||!host.isConnected)return;
