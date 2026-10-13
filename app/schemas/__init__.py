@@ -1,3 +1,4 @@
+from .driver_schedule import DriverSchedule
 from pydantic import BaseModel, Field, StringConstraints, field_validator
 from typing import Annotated, Optional, List, Literal
 from datetime import datetime
@@ -111,6 +112,7 @@ class VehicleIn(BaseModel):
     photo_url: Optional[str] = None
 
 class DriverIn(BaseModel):
+    work_schedule: DriverSchedule = Field(default_factory=DriverSchedule)
     nome: RequiredName = Field(max_length=150)
     cognome: Optional[str] = None
     telefono: Optional[str] = None
@@ -155,6 +157,7 @@ class DeliveryIn(BaseModel):
     indirizzo_geocodificato: Optional[str] = None
 
 class RoutePlanIn(BaseModel):
+    driver_schedule: DriverSchedule | None = None
     nome: str | None = None
     data_giro: str
     orario_partenza: str = "08:00"

@@ -1,3 +1,4 @@
+from .driver_schedule import DriverSchedule
 """Bounded common-depot, same-day fleet planning."""
 from datetime import date,time
 from typing import Literal
@@ -5,6 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator, field_valida
 from . import RoutePlanIn, DeliveryIn
 
 class FleetResource(BaseModel):
+    driver_schedule: DriverSchedule | None = None
     model_config=ConfigDict(extra='forbid')
     vehicle_id: int=Field(gt=0)
     driver_id: int=Field(gt=0)

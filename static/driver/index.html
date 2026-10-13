@@ -257,8 +257,8 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
 .spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;margin-bottom:12px;}
 @keyframes spin{to{transform:rotate(360deg)}}
 </style>
-<link rel="stylesheet" href="/static/routing-summary.css">
-<script src="/static/routing-summary.js"></script>
+<link rel="stylesheet" href="/static/routing-summary.css?v=driver_shifts_20261013_1">
+<script src="/static/routing-summary.js?v=driver_shifts_20261013_1"></script>
 <link rel="stylesheet" href="/static/live-gps.css?v=20261005">
 <script src="/static/live-gps.js?v=20261005"></script>
 <link rel="stylesheet" href="/static/pod.css?v=1">
@@ -269,6 +269,7 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
 <link rel="stylesheet" href="/static/design-system/layout.css?v=ds_20261007">
 <link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007">
 <script src="/static/design-system/design-system.js?v=ds_20261007" defer></script>
+<link rel="stylesheet" href="/static/driver-schedule.css?v=20261013_1"><script src="/static/driver-schedule.js?v=20261013_1"></script>
 </head>
 <body data-gf-surface="driver" data-gf-portal>
 
@@ -743,7 +744,7 @@ function renderExecution(data) {
   list.classList.remove('hidden');
 
   const mapsUrl = encodeURIComponent;
-  list.innerHTML = consegne.map((c, i) => {
+  list.innerHTML = GFDriverBreaks.cards(route,0)+consegne.map((c, i) => {
     const isActive = c.status === 'in_attesa' && i === progress.prossima_idx;
     const isDone = c.status === 'completata';
     const isMissed = c.status === 'mancata';
@@ -813,7 +814,7 @@ function renderExecution(data) {
       </div>
       ${detailsHtml}
       ${actionsHtml}
-    </div>`;
+    </div>`+GFDriverBreaks.cards(route,i+1);
   }).join('');
 }
 

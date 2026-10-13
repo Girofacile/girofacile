@@ -1,3 +1,4 @@
+from ..services import driver_schedule as shifts
 from ..services import route_orders
 from ..services.order_planning import ORDER_FIELDS
 from ..services.route_schedule import live_route_schedule, route_schedule_datetimes
@@ -106,6 +107,12 @@ def _validate_route_tenant_scope(db, user: User, data, deliveries: list[dict]):
     driver = _require_owned_entity(db, Driver, user, data.driver_id, "Autista", optional=True)
     route_orders.validate_references(db, user.id, deliveries, getattr(data, "route_id", None), getattr(data, "data_giro", None))
     _enrich_owned_deliveries(db, user, deliveries)
+    from ..schemas.driver_schedule import DriverSchedule
+    if data.driver_schedule is None and getattr(data,'route_id',None):
+        existing=owned(db.query(RoutePlan),RoutePlan,user).filter_by(id=data.route_id).first()
+        if existing and existing.driver_id==data.driver_id:
+            data.driver_schedule=DriverSchedule.model_validate(existing.driver_schedule or {})
+    data.driver_schedule=DriverSchedule.model_validate(shifts.resolved(data.driver_schedule.model_dump() if data.driver_schedule is not None else None,driver))
     return deposit, vehicle, driver
 
 
@@ -314,10 +321,13 @@ def ensure_not_past_route_date(data_giro):
         raise HTTPException(400, "Non puoi programmare un giro in una data precedente a oggi")
 
 
-def build_vehicle_dict(vehicle):
+def build_vehicle_dict(vehicle, driver_schedule=None):
+    if not vehicle and driver_schedule:
+        return {"driver_schedule":driver_schedule}
     if not vehicle:
         return None
     return {
+        "driver_schedule":driver_schedule,
         "id": vehicle.id, "nome": vehicle.nome, "targa": vehicle.targa,
         "ha_sponda": bool(vehicle.ha_sponda), "accesso_ztl": bool(vehicle.accesso_ztl),
         "capacita_kg": vehicle.capacita_kg, "capacita_colli": vehicle.capacita_colli,
@@ -351,6 +361,7 @@ def route_response(plan, result):
         "litri_stimati": plan.litri_stimati, "costo_carburante": plan.costo_carburante,
         "costo_totale": plan.costo_totale, "google_maps_url": plan.google_maps_url,
         **routing_metadata(plan),
+        **shifts.metadata(plan),
         "status": computed_route_status(plan), "status_label": route_status_label(computed_route_status(plan)),
         "consegne": result["ordered"],
         **window_summary(result["ordered"]),
@@ -389,6 +400,7 @@ def serialize_route(plan):
         "litri_stimati": plan.litri_stimati, "costo_carburante": plan.costo_carburante,
         "costo_totale": plan.costo_totale, "google_maps_url": plan.google_maps_url,
         **routing_metadata(plan),
+        **shifts.metadata(plan),
         "status": computed_route_status(plan), "status_label": route_status_label(computed_route_status(plan)),
         "consegne": [{
             "id": d.id, "customer_id": d.customer_id, "cliente_nome": d.cliente_nome, "indirizzo": d.indirizzo,
@@ -412,7 +424,8 @@ def serialize_route(plan):
         } for d in consegne],
     }
 
-    enrich_saved_schedule(response["consegne"], plan.orario_partenza)
+    if not (plan.driver_schedule or {}).get("breaks"):
+        enrich_saved_schedule(response["consegne"], plan.orario_partenza)
     for row, delivery in zip(response["consegne"], consegne):
         if delivery.optimizer_details:
             details = json.loads(delivery.optimizer_details)
@@ -424,6 +437,7 @@ def serialize_route(plan):
 
 def save_route_result(db, user, data, result, vehicle, route_id=None, *, commit=True):
     check_daily_route_limit(user, db, data.data_giro, exclude_route_id=route_id)
+    if result.get("driver_schedule_error"): raise HTTPException(422,result["driver_schedule_error"])
     if route_id:
         existing = owned(db.query(RoutePlan), RoutePlan, user).filter(RoutePlan.id == route_id).first()
         if existing and (existing.started_at or existing.status in ("in_corso", "completato")):
@@ -465,6 +479,8 @@ def save_route_result(db, user, data, result, vehicle, route_id=None, *, commit=
         ids = db.query(Delivery.id).filter(Delivery.route_plan_id == plan.id)
         db.query(DeliveryTrackingLink).filter(DeliveryTrackingLink.delivery_id.in_(ids)).delete(synchronize_session=False)
         db.query(Delivery).filter(Delivery.route_plan_id == plan.id).delete(synchronize_session=False)
+    plan.driver_schedule=data.driver_schedule.model_dump() if data.driver_schedule else {}
+    plan.driver_breaks=result.get("driver_breaks",[])
     plan.nome = (data.nome or "").strip() or "Giro consegne"
     plan.data_giro = parse_date_value(data.data_giro)
     plan.orario_partenza = parse_time_value(data.orario_partenza)
@@ -506,7 +522,7 @@ def save_route_result(db, user, data, result, vehicle, route_id=None, *, commit=
         delivery_data["optimizer_details"] = json.dumps({k: item[k] for k in
             (*TIMING_DETAILS, *STOP_VERIFICATION_FIELDS, *ORDER_FIELDS) if k in item} | (item.get("coord") or {}))
         for extra in (*ORDER_FIELDS, "geocoding_token", "coord", "lat", "lon", "stato_geocodifica", "indirizzo_geocodificato",
-                      "arrivo_fisico", "inizio_servizio", "lateness_min", "time_window_violation"):
+                      "arrivo_fisico", "inizio_servizio", "lateness_min", "time_window_violation", "pause_travel_min"):
             delivery_data.pop(extra, None)
         for _f in ["scarico_mattina_da", "scarico_mattina_a", "scarico_pomeriggio_da", "scarico_pomeriggio_a", "arrivo_stimato", "partenza_stimata"]:
             if _f in delivery_data:
@@ -584,7 +600,7 @@ def create_and_optimize_route(
     deposit, vehicle, _driver = _validate_route_tenant_scope(db, user, data, deliveries)
     _apply_route_preferences(user, deliveries)
     try:
-        result = optimize_route(db, deposit, deliveries, build_vehicle_dict(vehicle), data.rientro_deposito, data.orario_partenza, route_date=data.data_giro)
+        result = optimize_route(db, deposit, deliveries, build_vehicle_dict(vehicle, data.driver_schedule.model_dump()), data.rientro_deposito, data.orario_partenza, route_date=data.data_giro)
     except ValueError as e:
         # Gli errori di configurazione del routing arrivano come ValueError
         # per poter essere mostrati bene in Dashboard, ma sono errori tecnici
@@ -633,7 +649,7 @@ def recalc_manual_route(
     check_daily_route_limit(user, db, data.data_giro, exclude_route_id=data.route_id)
     _apply_route_preferences(user, deliveries)
     try:
-        result = recalculate_manual_route(db, deposit, deliveries, build_vehicle_dict(vehicle), data.rientro_deposito, data.orario_partenza, route_date=data.data_giro)
+        result = recalculate_manual_route(db, deposit, deliveries, build_vehicle_dict(vehicle, data.driver_schedule.model_dump()), data.rientro_deposito, data.orario_partenza, route_date=data.data_giro)
     except ValueError as e:
         error_id = None
         if _is_route_api_configuration_error(e):
@@ -847,6 +863,7 @@ def program_route(
         raise HTTPException(400, str(exc))
     try:
         enrich_final_route(db, plan)
+        shifts.ensure_shift(plan.driver_schedule,plan.orario_partenza,plan.totale_minuti)
     except ValueError as exc:
         raise HTTPException(400, str(exc))
     try:
@@ -992,6 +1009,7 @@ def get_route_map_data(route_id: int, db: Session = Depends(get_db), user: User 
     return {
         "map_provider": "openstreetmap",
         **routing_metadata(plan),
+        **shifts.metadata(plan),
         "route_id": plan.id,
         "name": plan.nome,
         "google_maps_url": plan.google_maps_url,

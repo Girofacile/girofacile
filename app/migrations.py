@@ -2,7 +2,7 @@
 from datetime import datetime
 from sqlalchemy import inspect, text
 
-LATEST = '20261013_01'
+LATEST = '20261013_02'
 LOCK_ID = 7640152404
 
 
@@ -141,6 +141,13 @@ def run_migrations(engine):
                 from .fleet_models import FleetPlan
                 with engine.begin() as conn:
                     FleetPlan.__table__.create(conn, checkfirst=True)
+                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261013_01', 'now': datetime.utcnow()})
+            if '20261013_02' not in applied:
+                with engine.begin() as conn:
+                    for table,columns in {'drivers':['work_schedule'],'route_plans':['driver_schedule','driver_breaks']}.items():
+                        existing={c['name'] for c in inspect(conn).get_columns(table)}
+                        for column in columns:
+                            if column not in existing: conn.execute(text(f'ALTER TABLE {table} ADD COLUMN {column} JSON'))
                     conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': LATEST, 'now': datetime.utcnow()})
         finally:
             if postgres:

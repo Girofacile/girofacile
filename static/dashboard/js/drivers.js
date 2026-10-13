@@ -44,7 +44,7 @@ function renderDriverDirectory(){
 }
 function showDriverDetails(id){
  const d=driversCache.find(x=>x.id===id);if(!d)return;
- const fields=[['Telefono',d.telefono],['Email',d.email],['Patente',d.patente],['Scadenza patente',d.scadenza_patente],['Giri assegnati',d.giri_assegnati??0],['Mezzo abituale',d.mezzo_abituale?[d.mezzo_abituale.nome,d.mezzo_abituale.targa].filter(Boolean).join(' · '):'Non assegnato'],['Portale',d.account_attivo?'Attivo':d.email?'Da invitare':'Email non indicata'],['Note',d.note]];
+ const fields=[['Turno abituale',d.work_schedule?.start?d.work_schedule.start+'–'+d.work_schedule.end:'Non impostato'],['Pause',(d.work_schedule?.breaks||[]).map(b=>b.start+'–'+b.end).join(', ')||'Nessuna pausa impostata'],['Telefono',d.telefono],['Email',d.email],['Patente',d.patente],['Scadenza patente',d.scadenza_patente],['Giri assegnati',d.giri_assegnati??0],['Mezzo abituale',d.mezzo_abituale?[d.mezzo_abituale.nome,d.mezzo_abituale.targa].filter(Boolean).join(' · '):'Non assegnato'],['Portale',d.account_attivo?'Attivo':d.email?'Da invitare':'Email non indicata'],['Note',d.note]];
  document.getElementById('driverDetailsContent').innerHTML=`<h2 id="driverDetailsTitle">${esc(driverFullName(d))}</h2>${driverDirectoryStatus(d)}<dl>${fields.map(([k,v])=>`<div><dt>${k}</dt><dd>${esc(v??'—')||'—'}</dd></div>`).join('')}</dl><button class="btn-primary" onclick="document.getElementById('driverDetailsDialog').close();editDriver(${Number(id)})">Modifica autista</button>`;
  document.getElementById('driverDetailsDialog').showModal();
 }

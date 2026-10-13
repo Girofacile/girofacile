@@ -10,7 +10,7 @@ from .traffic_provider import get_traffic_provider, TrafficUnavailable
 from .toll_provider import get_toll_calculator
 
 
-TIMING_DETAILS = ("arrivo_fisico", "inizio_servizio", "lateness_min", "time_window_violation",
+TIMING_DETAILS = ("pause_travel_min", "arrivo_fisico", "inizio_servizio", "lateness_min", "time_window_violation",
                   "arrival_at", "service_start_at", "departure_at", "lat", "lon")
 
 
@@ -41,6 +41,7 @@ def initialize_snapshot(plan, result):
             "km": max(0, result["total_km"] - sum(d["km"] for d in base_legs)),
             "min": max(0, result["total_min"] - sum(d["min"] for d in base_legs) -
                        sum(float(d.get("tempo_scarico_min") or 0) + float(d.get("attesa_min") or 0) for d in ordered))})
+    plan.driver_breaks=result.get("driver_breaks",[])
     plan.routing_snapshot_json = _dump({
         "revision": int(previous.get("revision") or 0) + 1,
         "points": points, "deliveries": ordered, "base_legs": base_legs,
@@ -113,6 +114,7 @@ def evaluate_legs(snapshot, legs, plan, *, return_depot=None):
     if plan.rientro_deposito and len(legs) > len(rows):
         matrix[len(rows), 0] = {"km": snapshot["base_legs"][-1]["km"], "min": legs[-1]["duration"] / 60}
     vehicle = {"ha_sponda": bool(plan.vehicle.ha_sponda), "accesso_ztl": bool(plan.vehicle.accesso_ztl)} if plan.vehicle else None
+    vehicle={**(vehicle or {}),"driver_schedule":getattr(plan,"driver_schedule",None) or {}}
     include_return = plan.rientro_deposito if return_depot is None else return_depot
     return _evaluate_fixed_sequence(rows[:min(len(rows), len(legs))], matrix, [],
                                     vehicle=vehicle, return_depot=include_return, start_time=plan.orario_partenza)
@@ -126,7 +128,7 @@ def _persist_timing(plan, result, departure):
             setattr(saved, name, timing.get(name))
         saved.arrivo_stimato = parse_time_value(timing["arrivo_stimato"])
         saved.partenza_stimata = parse_time_value(timing["partenza_stimata"])
-        cursor += timedelta(minutes=float(timing["minuti_tappa"]))
+        cursor += timedelta(minutes=float(timing["minuti_tappa"])+float(timing.get("pause_travel_min") or 0))
         details = json_data(saved.optimizer_details)
         details.update({key: timing[key] for key in TIMING_DETAILS if key in timing})
         details["arrival_at"] = cursor.astimezone(LOCAL_TZ).isoformat()
@@ -135,6 +137,7 @@ def _persist_timing(plan, result, departure):
         cursor += timedelta(minutes=float(timing.get("tempo_scarico_min") or 0))
         details["departure_at"] = cursor.astimezone(LOCAL_TZ).isoformat()
         saved.optimizer_details = _dump(details)
+    plan.driver_breaks=result.get("driver_breaks",[])
     plan.totale_minuti = result["total_min"]
     plan.orario_rientro_stimato = parse_time_value(result["return_time"])
 

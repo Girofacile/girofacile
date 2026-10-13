@@ -1,3 +1,4 @@
+from sqlalchemy import JSON
 from datetime import datetime
 from sqlalchemy import Boolean, Float, Integer, String, Text, DateTime, Date, Time, ForeignKey, UniqueConstraint, Index, false
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -381,6 +382,7 @@ class FuelPriceSnapshot(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 class Driver(Base):
+    work_schedule: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     __tablename__ = "drivers"
     __table_args__ = (Index("ix_drivers_company", "user_id"),)
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
@@ -403,6 +405,8 @@ class Driver(Base):
 
 
 class RoutePlan(Base):
+    driver_schedule: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    driver_breaks: Mapped[list | None] = mapped_column(JSON, nullable=True)
     __tablename__ = "route_plans"
     __table_args__ = (Index("ix_route_plans_company", "user_id"),)
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)

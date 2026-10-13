@@ -21,7 +21,7 @@ def get_plan(db,user,actor,plan_id,lock=False):
 def route_data(data,resource,rows,index):
     values=data.model_dump(exclude={'resources','strategy','consegne'})
     values.update(nome=f'{data.nome or "Giro consegne"} · {index+1}',vehicle_id=resource.vehicle_id,
-                  driver_id=resource.driver_id,consegne=rows,energy_price_mode='manual',
+                  driver_id=resource.driver_id,driver_schedule=resource.driver_schedule,consegne=rows,energy_price_mode='manual',
                   energy_price_primary=resource.energy_price_primary,energy_price_electric=resource.energy_price_electric)
     return RoutePlanIn.model_validate(values)
 
@@ -36,6 +36,10 @@ def input_state(db,user,data):
     _apply_route_preferences(user,rows)
     vehicles=[_require_owned_entity(db,Vehicle,user,r.vehicle_id,'Mezzo') for r in data.resources]
     drivers=[_require_owned_entity(db,Driver,user,r.driver_id,'Autista') for r in data.resources]
+    from .driver_schedule import resolved
+    from ..schemas.driver_schedule import DriverSchedule
+    for resource,driver in zip(data.resources,drivers):
+        resource.driver_schedule=DriverSchedule.model_validate(resolved(resource.driver_schedule.model_dump() if resource.driver_schedule else None,driver))
     return deposit,rows,vehicles,drivers
 
 
@@ -78,7 +82,7 @@ def distribute(db,user,data,assignments=None):
     keys=[point_key(deposit_id=deposit.id,lat=depot['lat'],lon=depot['lon'],user_id=user.id)]+[
         point_key(customer_id=r.get('customer_id'),lat=r['coord']['lat'],lon=r['coord']['lon'],user_id=user.id) for r in rows]
     matrix=opt.build_distance_matrix(db,user.id,points,keys,start_time=data.orario_partenza,route_date=data.data_giro)
-    vehicle_data=[build_vehicle_dict(v) for v in vehicles]
+    vehicle_data=[build_vehicle_dict(v,r.driver_schedule.model_dump()) for v,r in zip(vehicles,data.resources)]
     routes=[[] for _ in vehicles];results=[None for _ in vehicles]
     unresolved={}
 
@@ -235,6 +239,8 @@ def program(db,user,actor,plan_id,data):
     check_version(plan,data.version)
     rows=drafts()
     for row in rows:
+        from .driver_schedule import ensure_shift
+        ensure_shift(row.driver_schedule,row.orario_partenza,row.totale_minuti)
         db.query(RoutePlan).filter_by(id=row.id,user_id=user.id).with_for_update().one()
         lock_route_resources(db,row)
         from ..models import Deposit
@@ -260,7 +266,7 @@ def program(db,user,actor,plan_id,data):
         route_orders.sync_route_orders(db,row,'scheduled')
     updated=deepcopy(plan.result)
     for proposal,row in zip(updated['routes'],rows):
-        proposal['result'].update(total_min=row.totale_minuti,return_time=row.orario_rientro_stimato.strftime('%H:%M'))
+        proposal['result'].update(driver_breaks=row.driver_breaks or [],total_min=row.totale_minuti,return_time=row.orario_rientro_stimato.strftime('%H:%M'))
         for stop,delivery in zip(proposal['result']['ordered'],sorted(row.deliveries,key=lambda d:d.ordine)):
             stop.update(arrivo_stimato=delivery.arrivo_stimato.strftime('%H:%M'),partenza_stimata=delivery.partenza_stimata.strftime('%H:%M'))
     updated['warnings']=['Giri programmati. Apri ciascun giro per traffico, pedaggi e costi aggiornati.',

@@ -137,8 +137,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 .deposit-card p{font-size:13px;opacity:.85;}
 .deposit-card .btn-dep-nav{display:inline-flex;align-items:center;gap:6px;margin-top:10px;background:rgba(255,255,255,.2);color:#fff;border:1.5px solid rgba(255,255,255,.4);padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;}
 </style>
-<link rel="stylesheet" href="/static/routing-summary.css">
-<script src="/static/routing-summary.js"></script>
+<link rel="stylesheet" href="/static/routing-summary.css?v=driver_shifts_20261013_1">
+<script src="/static/routing-summary.js?v=driver_shifts_20261013_1"></script>
 <link rel="stylesheet" href="/static/live-gps.css?v=20261005">
 <script src="/static/live-gps.js?v=20261005"></script>
 <link rel="stylesheet" href="/static/pod.css?v=1">
@@ -149,6 +149,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 <link rel="stylesheet" href="/static/design-system/layout.css?v=ds_20261007">
 <link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007">
 <script src="/static/design-system/design-system.js?v=ds_20261007" defer></script>
+<link rel="stylesheet" href="/static/driver-schedule.css?v=20261013_1"><script src="/static/driver-schedule.js?v=20261013_1"></script>
 </head>
 <body data-gf-surface="operator" data-gf-portal>
 
@@ -346,6 +347,7 @@ function render() {
   }
 
   // Consegne
+  html += GFDriverBreaks.cards(route,0);
   consegne.forEach((c, i) => {
     const isActive = c.status === 'in_attesa' && i === progress.prossima_idx;
     const isDone = c.status === 'completata';
@@ -442,7 +444,7 @@ function render() {
       </div>`;
     }
 
-    html += `</div>`;
+    html += `</div>`+GFDriverBreaks.cards(route,i+1);
   });
 
   document.getElementById('deliveryList').innerHTML = html;

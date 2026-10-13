@@ -11,6 +11,7 @@
     const canRefresh = refreshAction && route.id && ["bozza","programmato"].includes(route.status);
     const energyUnit = route.energy_unit || "L";
     return '<section class="gf-routing-summary" aria-label="Traffico e costi del giro">' +
+      (route.driver_schedule_error ? '<p role="alert" class="gf-shift-warning">' + escape(route.driver_schedule_error) + '</p>' : '') +
       '<div class="gf-routing-eta"><strong>' + escape(route.eta_label || "ETA storico salvato") + '</strong>' +
       (route.traffic_status === "updated" && updated ? '<small>Traffico calcolato: ' + escape(updated) + '</small>' : '') +
       (route.traffic_status === "unavailable" ? '<small>Traffico non disponibile; utilizzati i tempi stradali salvati.</small>' : '') +

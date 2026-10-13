@@ -13,8 +13,9 @@
   }
   function refresh(){
     if(!el('fleetResources'))return;
-    el('fleetResources').innerHTML=resources.map((r,i)=>`<section class="fleet-resource"><header><strong>Mezzo e autista ${i+1}</strong>${resources.length>2?`<button type="button" class="btn-secondary" data-remove="${i}">Rimuovi</button>`:''}</header><div class="fleet-fields"><div><label for="fleetVehicle${i}">Mezzo</label><select id="fleetVehicle${i}" data-index="${i}" data-field="vehicle_id">${options('vehicles',r.vehicle_id)}</select></div><div><label for="fleetDriver${i}">Autista</label><select id="fleetDriver${i}" data-index="${i}" data-field="driver_id">${options('drivers',r.driver_id)}</select></div></div><details><summary>Durata e costi · massimo ${r.max_minutes} minuti</summary><div class="fleet-fields"><div><label for="fleetDuration${i}">Durata massima del giro (minuti)</label><input id="fleetDuration${i}" type="number" min="1" max="1440" data-index="${i}" data-field="max_minutes" value="${r.max_minutes}"></div><div><label for="fleetFuel${i}">Carburante (€/litro o €/kg)</label><input id="fleetFuel${i}" type="number" min="0.01" step="0.01" data-index="${i}" data-field="energy_price_primary" value="${r.energy_price_primary}"></div><div><label for="fleetElectric${i}">Energia elettrica (€/kWh)</label><input id="fleetElectric${i}" type="number" min="0.01" step="0.01" data-index="${i}" data-field="energy_price_electric" value="${r.energy_price_electric}"></div></div></details></section>`).join('');
+    el('fleetResources').innerHTML=resources.map((r,i)=>`<section class="fleet-resource"><header><strong>Mezzo e autista ${i+1}</strong>${resources.length>2?`<button type="button" class="btn-secondary" data-remove="${i}">Rimuovi</button>`:''}</header><div class="fleet-fields"><div><label for="fleetVehicle${i}">Mezzo</label><select id="fleetVehicle${i}" data-index="${i}" data-field="vehicle_id">${options('vehicles',r.vehicle_id)}</select></div><div><label for="fleetDriver${i}">Autista</label><select id="fleetDriver${i}" data-index="${i}" data-field="driver_id">${options('drivers',r.driver_id)}</select></div></div><details><summary>Durata e costi · massimo ${r.max_minutes} minuti</summary><div class="fleet-fields"><div><label for="fleetDuration${i}">Durata massima del giro (minuti)</label><input id="fleetDuration${i}" type="number" min="1" max="1440" data-index="${i}" data-field="max_minutes" value="${r.max_minutes}"></div><div><label for="fleetFuel${i}">Carburante (€/litro o €/kg)</label><input id="fleetFuel${i}" type="number" min="0.01" step="0.01" data-index="${i}" data-field="energy_price_primary" value="${r.energy_price_primary}"></div><div><label for="fleetElectric${i}">Energia elettrica (€/kWh)</label><input id="fleetElectric${i}" type="number" min="0.01" step="0.01" data-index="${i}" data-field="energy_price_electric" value="${r.energy_price_electric}"></div></div></details><details class="driver-schedule-editor"><summary>Turno e pause per questo giro</summary><div id="fleetDriverSchedule${i}"></div></details></section>`).join('');
     el('fleetAdd').disabled=resources.length>=10;
+    globalThis.GFDriverSchedules?.fleet(resources);
   }
   function modeChanged(notify=true){
     if(active()&&!resources.length)resources=[blank(),blank()];
@@ -30,6 +31,7 @@
     if(resources.some(r=>!(r.energy_price_electric>0)))result.push('prezzo energia');
     const start=val('routeStart').split(':').map(Number);
     if(resources.some(r=>!Number.isInteger(r.max_minutes)||r.max_minutes<1||r.max_minutes>1440||start[0]*60+start[1]+r.max_minutes>1440))result.push('durata massima dei giri (entro la giornata)');
+    if(resources.some(r=>globalThis.GFDriverSchedules?.error(r.driver_schedule??GFDriverSchedules.defaults(r.driver_id))))result.push("turni e pause autisti");
     return result;
   }
   function restore(saved={}){el('planningMode').value=saved.planning_mode||'single';el('fleetStrategy').value=saved.fleet_strategy||'efficient';resources=(saved.fleet_resources||[]).map(r=>({...blank(),...r}));modeChanged(false);}
@@ -141,7 +143,7 @@
   }
   document.addEventListener('change',e=>{
     if(e.target.id==='planningMode'){modeChanged();refreshResourceAvailability();}
-    if(e.target.dataset.field&&el('fleetResources').contains(e.target)){resources[Number(e.target.dataset.index)][e.target.dataset.field]=Number(e.target.value);updateRoutePlanningGateV68();globalThis.GFOrderPlanning?.changed();}
+    if(e.target.dataset.field&&el('fleetResources').contains(e.target)){resources[Number(e.target.dataset.index)][e.target.dataset.field]=Number(e.target.value);if(e.target.dataset.field==='driver_id'){resources[Number(e.target.dataset.index)].driver_schedule=null;GFDriverSchedules.fleet(resources);}updateRoutePlanningGateV68();globalThis.GFOrderPlanning?.changed();}
     if(e.target.id==='fleetStrategy')globalThis.GFOrderPlanning?.changed();
     if(e.target.dataset.stop!==undefined&&el('routePreviewResult').contains(e.target)){changedAssignments=true;notice('Assegnazioni modificate: premi Ricalcola assegnazioni per verificare i nuovi giri.');}
   });

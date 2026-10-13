@@ -56,8 +56,43 @@ def route_schedule_datetimes(plan, status_map=None, now=None):
     if returned is None:
         returned = start + timedelta(minutes=float(plan.totale_minuti or 0))
     result = {'deliveries': deliveries, 'return_at': returned + shift}
+    if (getattr(plan,'driver_schedule',None) or {}).get('breaks') and (shift or source=='execution'):
+        _project_shift(plan,statuses,result,start,started)
     _apply_gps(plan, statuses, result, now or datetime.now(LOCAL))
     return result
+
+
+def _project_shift(plan,statuses,result,start,started):
+    """Keep fixed breaks fixed when actual departure/completions change the ETA."""
+    import json
+    from ..optimizer import _evaluate_fixed_sequence
+    from .driver_schedule import travel_end,intervals
+    cursor=started.replace(tzinfo=LOCAL) if plan.status=='in_corso' and started else start
+    changed=cursor if started else None
+    for delivery in sorted(plan.deliveries or [],key=lambda d:(d.ordine or 0,d.id or 0)):
+        status=statuses.get(delivery.id)
+        if status and status.status in ('completata','mancata') and status.completata_il:
+            cursor=status.completata_il.replace(tzinfo=LOCAL);changed=cursor;continue
+        if not changed:continue
+        schedule=plan.driver_schedule if cursor.date()==plan.data_giro else {}
+        row={field:getattr(delivery,field) for field in ('tempo_scarico_min','scarico_mattina_da','scarico_mattina_a','scarico_pomeriggio_da','scarico_pomeriggio_a')}
+        row['_matrix_index']=1
+        evaluation=_evaluate_fixed_sequence([row],{(0,1):{'km':delivery.km_tappa or 0,'min':delivery.minuti_tappa or 0}},[],
+            {'driver_schedule':schedule},False,cursor.strftime('%H:%M'))
+        timing=evaluation['ordered'][0]
+        wait=float(timing.get('attesa_min') or 0)
+        arrival=cursor+timedelta(minutes=float(delivery.minuti_tappa or 0)+float(timing.get('pause_travel_min') or 0)+wait)
+        result['deliveries'][delivery.id]={'arrival':arrival,'source':'execution','updated_at':changed}
+        cursor+=timedelta(minutes=evaluation['total_min'])
+    if changed:
+        if plan.rientro_deposito:
+            snapshot=json.loads(plan.routing_snapshot_json or '{}');traffic=json.loads(plan.traffic_result_json or '{}')
+            legs=traffic.get('legs') or []
+            back=float(legs[-1]['duration'])/60 if legs else float((snapshot.get('base_legs') or [{}])[-1].get('min') or 0)
+            minute=cursor.hour*60+cursor.minute+cursor.second/60
+            pauses=intervals(plan.driver_schedule) if cursor.date()==plan.data_giro else []
+            cursor+=timedelta(minutes=travel_end(minute,back,pauses)-minute)
+        result['return_at']=cursor
 
 
 def _apply_gps(plan, statuses, result, now):
@@ -81,6 +116,12 @@ def _apply_gps(plan, statuses, result, now):
     if arrival <= now:
         return
     updated = position.eta_calculated_at.replace(tzinfo=timezone.utc).astimezone(LOCAL)
+    from .driver_schedule import intervals,travel_end,service_ready
+    pauses=intervals(getattr(plan,"driver_schedule",None))
+    if pauses and updated.date()==plan.data_giro:
+        minute=updated.hour*60+updated.minute+updated.second/60
+        drive=(arrival-updated).total_seconds()/60
+        arrival=updated+timedelta(minutes=travel_end(minute,drive,pauses)-minute)
     last_old = last_new = None
     for index, delivery in enumerate(pending):
         if index:
@@ -88,7 +129,12 @@ def _apply_gps(plan, statuses, result, now):
             minutes = delivery.minuti_tappa
             if minutes is None:
                 break
-            arrival += timedelta(minutes=max(0, float(minutes)))
+            minute=arrival.hour*60+arrival.minute+arrival.second/60
+            active_pauses=pauses if arrival.date()==plan.data_giro else []
+            arrival += timedelta(minutes=travel_end(minute,max(0,float(minutes)),active_pauses)-minute)
+        minute=arrival.hour*60+arrival.minute+arrival.second/60
+        active_pauses=pauses if arrival.date()==plan.data_giro else []
+        arrival+=timedelta(minutes=service_ready(minute,float(delivery.tempo_scarico_min or 0),active_pauses)-minute)
         windows = []
         for prefix in ('scarico_mattina', 'scarico_pomeriggio'):
             opening, closing = getattr(delivery, prefix + '_da'), getattr(delivery, prefix + '_a')
@@ -106,12 +152,27 @@ def _apply_gps(plan, statuses, result, now):
                     result['deliveries'][rest.id] = {'arrival': None, 'source': None, 'updated_at': updated}
                 break
             arrival = min(feasible)
+            minute=arrival.hour*60+arrival.minute+arrival.second/60
+            arrival+=timedelta(minutes=service_ready(minute,float(delivery.tempo_scarico_min or 0),active_pauses)-minute)
+            if active_pauses and not any(start<=arrival and arrival+timedelta(minutes=float(delivery.tempo_scarico_min or 0))<=end for start,end in windows):
+                for rest in pending[index:]:result['deliveries'][rest.id]={'arrival':None,'source':None,'updated_at':updated}
+                break
         last_old = result['deliveries'][delivery.id]['arrival']
         last_new = arrival
         result['deliveries'][delivery.id] = {'arrival': arrival, 'source': 'gps', 'updated_at': updated}
         arrival += timedelta(minutes=max(0, delivery.tempo_scarico_min or 0))
     if last_old and last_new:
-        result['return_at'] += last_new - last_old
+        if pauses:
+            import json
+            if plan.rientro_deposito:
+                snapshot=json.loads(plan.routing_snapshot_json or '{}');traffic=json.loads(plan.traffic_result_json or '{}')
+                legs=traffic.get('legs') or []
+                back=float(legs[-1]['duration'])/60 if legs else float((snapshot.get('base_legs') or [{}])[-1].get('min') or 0)
+                minute=arrival.hour*60+arrival.minute+arrival.second/60
+                arrival+=timedelta(minutes=travel_end(minute,back,pauses if arrival.date()==plan.data_giro else [])-minute)
+            result['return_at']=arrival
+        else:
+            result['return_at'] += last_new - last_old
 
 
 def live_route_schedule(plan, status_map=None):

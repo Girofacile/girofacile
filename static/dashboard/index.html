@@ -21,8 +21,8 @@
 <link href="/static/dashboard/css/route-preview.css?v=preview_20261006" rel="stylesheet">
 <link href="/static/dashboard/css/scheduled.css?v=sidebar_stable_20261001" rel="stylesheet">
 <link href="/static/dashboard/css/customers.css?v=customer_layout_20261006_5" rel="stylesheet">
-<link rel="stylesheet" href="/static/routing-summary.css">
-<script src="/static/routing-summary.js"></script>
+<link rel="stylesheet" href="/static/routing-summary.css?v=driver_shifts_20261013_1">
+<script src="/static/routing-summary.js?v=driver_shifts_20261013_1"></script>
 <link rel="stylesheet" href="/static/dashboard/css/live-gps.css?v=live_20261006">
 <script src="/static/dashboard/js/live-gps.js?v=live_20261006"></script>
 <link href="/static/dashboard/css/deposits.css?v=search_icon_fix_20261012_1" rel="stylesheet">
@@ -39,7 +39,7 @@
 <link href="/static/dashboard/css/vehicles.css?v=vehicle_placeholder_20261007" rel="stylesheet">
 <script src="/static/dashboard/js/vehicles.js?v=vehicle_placeholder_20261007"></script>
 <link href="/static/dashboard/css/drivers.css?v=drivers_20261007" rel="stylesheet">
-<script src="/static/dashboard/js/drivers.js?v=directory_template_20261007"></script>
+<script src="/static/dashboard/js/drivers.js?v=driver_shifts_20261013_1"></script>
 
 <!-- Shared GiroFacile design system; legacy sheets retain feature layout. -->
 <link rel="stylesheet" href="/static/design-system/tokens.css?v=gf_reference_20261012">
@@ -812,7 +812,7 @@
  <div class="fleet-mode"><label for="planningMode">Come vuoi organizzare le consegne?</label><select id="planningMode"><option value="single">Un solo mezzo</option><option value="fleet">Suddivisione automatica su più mezzi</option></select></div>
  <div class="plan-step-fields"><div><label for="routeDeposit">Deposito</label><select id="routeDeposit"></select></div>
 <div id="singleVehicleField"><label for="routeVehicle" data-gf-label="vehicle">Mezzo</label><select id="routeVehicle" disabled></select><small id="vehicleAvailabilityHint" class="availability-hint">Seleziona prima data e orario di partenza</small></div>
-<div id="singleDriverField"><label for="routeDriver" data-gf-label="driver">Autista</label><select id="routeDriver" disabled></select><small id="driverAvailabilityHint" class="availability-hint">Seleziona prima data e orario di partenza</small></div></div>
+<div id="singleDriverField"><label for="routeDriver" data-gf-label="driver">Autista</label><select id="routeDriver" disabled></select><small id="driverAvailabilityHint" class="availability-hint">Seleziona prima data e orario di partenza</small><details class="driver-schedule-editor"><summary>Turno e pause per questo giro</summary><p class="driver-schedule-hint">Le modifiche valgono solo per il giro e non cambiano la scheda autista.</p><div id="routeDriverSchedule"></div></details></div></div>
 
 
  </section>
@@ -1713,6 +1713,10 @@
     </section>
 
     <section class="driver-modal-section">
+      <details class="driver-schedule-editor"><summary>Turno abituale e pause</summary><p class="driver-schedule-hint">Questi orari saranno proposti nei nuovi giri. Potrai modificarli per la singola giornata.</p><div id="driverWorkSchedule"></div></details>
+    </section>
+
+    <section class="driver-modal-section">
       <div class="driver-modal-section-title">
         <h3>Note operative</h3>
         <p>Disponibilità, preferenze di contatto o informazioni utili.</p>
@@ -2122,7 +2126,7 @@
 <script src="/static/dashboard/js/reports.js?v=audit_20261004"></script>
 <script src="/static/dashboard/js/customers.js?v=customer_kpi_fix_20261006_6"></script>
 <script src="/static/dashboard/js/navigation.js?v=gf_inprogress_ref_20261013_1"></script>
-<script src="/static/dashboard/js/completed.js?v=20261006"></script>
+<script src="/static/dashboard/js/completed.js?v=driver_shifts_20261013_1"></script>
 <script src="/static/dashboard/js/preview-design.js?v=20261006"></script>
 <script src="/static/dashboard/js/live-design.js?v=20261006"></script>
 <script src="/static/password-strength.js?v=password_policy_20261008_1"></script>
@@ -2131,14 +2135,17 @@
 <script src="/static/dashboard/js/order-import.js?v=20261011_fields1"></script>
 <script src="/static/dashboard/js/order-sources.js?v=email_development_20261012"></script>
 <script src="/static/dashboard/js/dashboard-real-map.js?v=gf_realmap_clean_20261012_2"></script>
-<script src="/static/dashboard/js/in-progress-reference.js?v=gf_inprogress_ref_20261013_1"></script>
-<script src="/static/dashboard/js/core.js?v=fleet_20261013_1"></script>
+<script src="/static/dashboard/js/in-progress-reference.js?v=driver_shifts_20261013_1"></script>
+<script src="/static/dashboard/js/core.js?v=driver_shifts_20261013_1"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=orders_2"></script>
 <link rel="stylesheet" href="/static/dashboard/css/fleet-planning.css?v=20261013_1">
-<link rel="stylesheet" href="/static/dashboard/css/fleet-review.css?v=ref_split_20261013_1">
-<script src="/static/dashboard/js/fleet-review.js?v=ref_split_20261013_1"></script>
-<script src="/static/dashboard/js/fleet-planning.js?v=ref_split_20261013_1"></script>
-<script src="/static/dashboard/js/order-planning.js?v=fleet_20261013_1"></script>
+<link rel="stylesheet" href="/static/dashboard/css/fleet-review.css?v=driver_shifts_20261013_1">
+<script src="/static/dashboard/js/fleet-review.js?v=driver_shifts_20261013_1"></script>
+<link rel="stylesheet" href="/static/driver-schedule.css?v=20261013_1">
+<script src="/static/driver-schedule.js?v=20261013_1"></script>
+<script src="/static/dashboard/js/driver-schedules.js?v=20261013_1"></script>
+<script src="/static/dashboard/js/fleet-planning.js?v=driver_shifts_20261013_1"></script>
+<script src="/static/dashboard/js/order-planning.js?v=driver_shifts_20261013_1"></script>
 
 <script>
 function toggleLoginPassword(){

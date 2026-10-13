@@ -1032,7 +1032,7 @@ function printStopsTable(){
   if(!lastRouteResult){ alert("Nessun risultato giro da stampare"); return; }
   const r = lastRouteResult;
   const consegne = r.consegne || [];
-  const rows = consegne.map(d => `
+  const rows = GFDriverBreaks.table(r,0,8)+consegne.map((d,i) => `
     <tr>
       <td>${esc(d.ordine)}</td>
       <td>${esc(d.cliente_nome)}${globalThis.GFOrderPlanning?.describe(d)||""}</td>
@@ -1042,7 +1042,7 @@ function printStopsTable(){
       <td>${Math.round(parseFloat(d.attesa_min)||0)} min</td>
       <td>${d.km_tappa ?? "-"}</td>
       <td>${esc(d.warning || "OK")}</td>
-    </tr>`).join("");
+    </tr>`+GFDriverBreaks.table(r,i+1,8)).join("");
   const html = `<!doctype html><html><head><meta charset="utf-8"><title>Stampa dettaglio fermate - GiroFacile</title>
   <style>
     body{font-family:Arial,Helvetica,sans-serif;margin:28px;color:#111827;font-size:13px;}
@@ -1524,6 +1524,7 @@ function routePlanningMissingFieldsV68(){
   if(!val("routeStart")) missing.push("orario partenza");
   if(!val("routeDeposit")) missing.push("deposito");
   if(globalThis.GFFleetPlanning?.active()) return missing.concat(GFFleetPlanning.missing());
+  missing.push(...(globalThis.GFDriverSchedules?.missing()||[]));
   if(!val("routeVehicle")) missing.push("mezzo");
   if(!val("routeDriver")) missing.push("autista");
   const vehicle = vehiclesCache.find(v=>String(v.id)===String(val("routeVehicle")));
@@ -1967,8 +1968,8 @@ function dashboardStopRows(r){
       <thead>
         <tr><th>#</th><th>Cliente</th><th>Indirizzo</th><th>Arrivo</th><th>Stato</th><th>Note autista</th></tr>
       </thead>
-      <tbody>
-        ${rows.map(d=>`
+      <tbody>${GFDriverBreaks.table(r,0,6)}
+        ${rows.map((d,i)=>`
           <tr class="delivery-row-${esc(d.delivery_status||'in_attesa')}">
             <td><strong>${d.ordine || ""}</strong></td>
             <td><strong>${esc(d.cliente_nome || "-")}</strong></td>
@@ -1977,7 +1978,7 @@ function dashboardStopRows(r){
             <td>${deliveryStatusPill(d.delivery_status)}${d.motivo_mancata?`<small class="delivery-reason">${esc(d.motivo_mancata)}</small>`:""}</td>
             <td>${d.note_operatore?esc(d.note_operatore):warningBadges(d.warning)} ${deliverySignatureAction(d, r.driver_name)} ${trackingButton(d, r)}</td>
           </tr>
-        `).join("")}
+        `+GFDriverBreaks.table(r,i+1,6)).join("")}
       </tbody>
     </table>
   </div>`;
@@ -2090,8 +2091,8 @@ function dashboardDeliveryRowsForSubpage(r){
   return `<div class="dash-sub-table-wrap">
     <table class="dash-sub-table">
       <thead><tr><th>#</th><th>Cliente</th><th>Indirizzo</th><th>Colli / consegna</th><th>Stato</th><th>Distanza</th></tr></thead>
-      <tbody>
-        ${rows.map(d=>`
+      <tbody>${GFDriverBreaks.table(r,0,6)}
+        ${rows.map((d,i)=>`
           <tr class="delivery-row-${esc(d.delivery_status||'in_attesa')}">
             <td>${d.ordine || ''}</td>
             <td><strong>${esc(d.cliente_nome || '-')}</strong></td>
@@ -2100,7 +2101,7 @@ function dashboardDeliveryRowsForSubpage(r){
             <td>${deliveryStatusPill(d.delivery_status)}${d.motivo_mancata?`<small class="delivery-reason">${esc(d.motivo_mancata)}</small>`:''} ${deliverySignatureAction(d, r.driver_name)} ${trackingButton(d, r)}</td>
             <td>${d.distanza_km ? fmtKm(d.distanza_km) : '-'}</td>
           </tr>
-        `).join('')}
+        `+GFDriverBreaks.table(r,i+1,6)).join('')}
       </tbody>
     </table>
   </div>`;
@@ -2112,13 +2113,13 @@ function dashboardStopsTimelineForSubpage(r){
     return `<div class="dash-detail-empty small">Nessuna fermata pianificata.</div>`;
   }
   return `<div class="dash-stops-timeline">
-    ${rows.map(d=>`
+    ${GFDriverBreaks.cards(r,0)}${rows.map((d,i)=>`
       <div class="dash-stop-line ${esc(d.delivery_status || 'in_attesa')}">
         <div class="dash-stop-number">${d.ordine || ''}</div>
         <div><strong>${esc(d.cliente_nome || '-')}</strong><small>${esc(d.indirizzo || '-')}</small></div>
         <div class="dash-stop-status">${deliveryStatusPill(d.delivery_status)} ${trackingButton(d, r)}</div>
       </div>
-    `).join('')}
+    `+GFDriverBreaks.cards(r,i+1)).join('')}
   </div>`;
 }
 
@@ -2602,6 +2603,7 @@ function renderDrivers(){
   renderDriverDirectory();
 }
 function resetDriverForm(){
+  globalThis.GFDriverSchedules?.driver({});
   ["drId","drNome","drCognome","drTelefono","drEmail","drPatente","drScadenzaPatente","drNote","drPhotoUrl"].forEach(id=>set(id,""));
   clearFileInput("drPhotoFile"); updateDriverPreview();
   const title = document.getElementById("driverModalTitle"); if(title) title.textContent = "Nuovo autista";
@@ -2622,6 +2624,7 @@ function openNewDriverModal(){
 }
 function editDriver(id){
   const d = driversCache.find(x=>x.id===id); if(!d) return;
+  globalThis.GFDriverSchedules?.driver(d.work_schedule);
   set("drId", d.id); set("drNome", d.nome); set("drCognome", d.cognome); set("drTelefono", d.telefono); set("drEmail", d.email);
   set("drPatente", d.patente); set("drScadenzaPatente", d.scadenza_patente); set("drNote", d.note); set("drPhotoUrl", d.photo_url || ""); clearFileInput("drPhotoFile"); updateDriverPreview();
   const title = document.getElementById("driverModalTitle"); if(title) title.textContent = "Modifica autista";
@@ -2629,8 +2632,9 @@ function editDriver(id){
 }
 async function saveDriver(){
   return withButtonLoading("saveDriverBtn", "Salvataggio...", async()=>{
-    const payload = {nome:val("drNome"), cognome:val("drCognome"), telefono:val("drTelefono"), email:val("drEmail"), patente:val("drPatente"), scadenza_patente:val("drScadenzaPatente")||null, cqc:false, scadenza_cqc:null, adr:false, note:val("drNote"), photo_url:val("drPhotoUrl") || null};
+    const payload = {work_schedule:GFDriverSchedules.read("driverWorkSchedule"),nome:val("drNome"), cognome:val("drCognome"), telefono:val("drTelefono"), email:val("drEmail"), patente:val("drPatente"), scadenza_patente:val("drScadenzaPatente")||null, cqc:false, scadenza_cqc:null, adr:false, note:val("drNote"), photo_url:val("drPhotoUrl") || null};
     if(!payload.nome){ alert("Inserisci almeno il nome dell'autista"); return; }
+    const scheduleError=GFDriverSchedules.error(payload.work_schedule);if(scheduleError){alert(scheduleError);return;}
     const id = val("drId");
     const r = await api(id?`/api/drivers/${id}`:"/api/drivers", {method:id?"PUT":"POST", body:JSON.stringify(payload)});
     closeDriverModal();
@@ -3399,6 +3403,7 @@ function cleanDeliveryForPayload(d){
 function routePayloadFromResult(){
   return {
     route_id: lastRouteResult?.id || null,
+    driver_schedule:lastRouteResult?.driver_schedule||GFDriverSchedules.routePayload().driver_schedule,
     nome: lastRouteResult?.nome || val("routeName") || "Giro consegne",
     data_giro: lastRouteResult?.data_giro || val("routeDate"),
     orario_partenza: lastRouteResult?.orario_partenza || val("routeStart") || "08:00",
@@ -3449,6 +3454,7 @@ function addExtraStopAfterResult(){
 
 
 function clearRouteWorkspace(){
+  globalThis.GFDriverSchedules?.route({});
   globalThis.GFFleetPlanning?.reset();
   globalThis.GFOrderPlanning?.leave();
   deliveries = [];
@@ -3512,6 +3518,7 @@ async function openProgrammedRouteForEdit(id, goToPlanning=false){
     await refreshResourceAvailability();
     set("routeVehicle", r.vehicle_id || "");
     set("routeDriver", r.driver_id || "");
+    globalThis.GFDriverSchedules?.route(r.driver_schedule);
     await updateRouteEnergyPricingV895();
     deliveries = (r.consegne || []).map(cleanDeliveryForPayload);
     customerPlanningStepOpenedV68 = true;
@@ -3554,7 +3561,7 @@ function renderRouteResult(r, targetId="routeResult", fromHistory=false){
     const paths = {clock:'<circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/>',return:'<path d="M9 7H5l4-4M5 7h10a5 5 0 0 1 0 10H9m0-4-4 4 4 4"/>',distance:'<path d="m12 3 6 9-6 9-6-9zM6 12h12m-6-9v18"/>',fuel:'<path d="M5 21V4h9v17M5 9h9m0 4h2v5a2 2 0 0 0 4 0v-8l-3-3M3 21h13"/>',euro:'<path d="M17 6a7 7 0 1 0 0 12M4 10h11M4 14h10"/>',calendar:'<rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4m8-4v4M4 11h16m-11 4h2m3 0h2m-7 3h2"/>',map:'<path d="m3 5 6-2 6 2 6-2v16l-6 2-6-2-6 2zM9 3v16m6-14v16"/>',truck:'<path d="M3 5h12v13H3zM15 10h3l3 4v4h-6"/><circle cx="7" cy="19" r="2"/><circle cx="18" cy="19" r="2"/>'};
     return '<svg viewBox="0 0 24 24" aria-hidden="true">'+paths[name]+'</svg>';
   };
-  let rows = "";
+  let rows = GFDriverBreaks.table(r,0,9);
   consegne.forEach((d,idx)=>{
     const dragAttrs = fromHistory ? "" : `draggable="true" ondragstart="resultDragStart(event, ${idx})" ondragover="resultDragOver(event)" ondrop="resultDrop(event, ${idx})"`;
     rows += `<tr class="draggable-stop" ${dragAttrs}>
@@ -3567,7 +3574,7 @@ function renderRouteResult(r, targetId="routeResult", fromHistory=false){
       <td>${d.km_tappa ?? "-"}</td>
       <td>${warningBadges(d.warning)}</td>
       <td class="preview-stop-actions"><details><summary aria-label="Azioni fermata ${idx+1}">›</summary><div class="row-actions compact"><a target="_blank" href="${mapsAddressUrl(d.indirizzo)}"><button title="Apri fermata su Maps">📍</button></a><button onclick="copyText('${esc(d.indirizzo).replace(/'/g,"\\'")}', 'Indirizzo copiato')" title="Copia indirizzo">⧉</button>${deliverySignatureAction(d, r.driver_name)} ${trackingButton(d, r)}</div></details></td>
-    </tr>`;
+    </tr>`+GFDriverBreaks.table(r,idx+1,9);
   });
   target.innerHTML = `<section class="result-pro route-preview-design">
     <nav class="preview-breadcrumb" aria-label="Percorso"><button type="button" onclick="showTab('giro')">Pianificazione</button><span aria-hidden="true">›</span><span>${fromHistory ? "Giro salvato" : "Nuovo giro"}</span></nav>
@@ -3774,7 +3781,7 @@ async function optimizeRoute(){
   if(!val("routeDate") || !val("routeStart")){ alert("Seleziona prima data e orario di partenza"); return; }
   if(!routeDateIsValid()){ alert("Non puoi programmare un giro in una data precedente a oggi"); enforceRouteDateMin(); return; }
   await refreshResourceAvailability();
-  const payload = {nome:val("routeName") || "Giro consegne", data_giro:val("routeDate"), orario_partenza:val("routeStart"), deposit_id:parseInt(val("routeDeposit")),
+  const payload = {...GFDriverSchedules.routePayload(),nome:val("routeName") || "Giro consegne", data_giro:val("routeDate"), orario_partenza:val("routeStart"), deposit_id:parseInt(val("routeDeposit")),
     vehicle_id:val("routeVehicle") ? parseInt(val("routeVehicle")) : null, driver_id:val("routeDriver") ? parseInt(val("routeDriver")) : null, rientro_deposito:boolVal("returnDepot"), prezzo_carburante_litro:parseFloat(val("fuelPrice")||0), energy_price_mode:(document.querySelector('input[name="energyPriceMode"]:checked')?.value||"manual"), energy_price_primary:parseFloat(val("fuelPrice")||0), energy_price_electric:parseFloat(val("electricityPrice")||0), consegne:deliveries};
   const box = document.getElementById("routePreviewResult");
   if(box) box.innerHTML = `<section class="panel"><div class="resultBox">Calcolo anteprima giro in corso...</div></section>`;
@@ -4268,7 +4275,7 @@ function dashboardStopRowsUnified(r, mode='live'){
       <thead>
         <tr><th>#</th><th>Cliente</th><th>Indirizzo</th><th>Arrivo previsto</th><th>Arrivo reale</th><th>Differenza</th><th>Stato</th><th>Documenti e tracking</th><th>Note</th></tr>
       </thead>
-      <tbody>
+      <tbody>${GFDriverBreaks.table(r,0,9)}
         ${rows.map((d, idx)=>{
           const st = d.delivery_status || d.status || 'in_attesa';
           const note = d.note_operatore || d.note_autista || d.note || '';
@@ -4285,7 +4292,7 @@ function dashboardStopRowsUnified(r, mode='live'){
             <td>${deliveryStatusPill(st)}${d.motivo_mancata?`<small class="delivery-reason">${esc(d.motivo_mancata)}</small>`:''}</td>
             <td>${deliverySignatureAction(d, r.driver_name)} ${trackingButton(d, r)}</td>
             <td>${note ? `<button type="button" class="btn-mini note-mini-btn" data-note="${esc(String(note))}" onclick="alert(this.dataset.note)">Note</button>` : '<span class="muted">-</span>'}</td>
-          </tr>`;
+          </tr>`+GFDriverBreaks.table(r,idx+1,9);
         }).join('')}
       </tbody>
     </table>

@@ -270,7 +270,7 @@ window.GFInProgressReference=(()=>{
           <select class="gf-ip-outcome" aria-label="Filtra fermate per esito"><option value="all">Tutti gli esiti</option><option value="done">Completate</option><option value="miss">Mancate</option><option value="todo">Da fare</option></select></div>
         <div class="gf-ip-table-wrap"><table class="gf-ip-table">
           <thead><tr><th>#</th><th>Cliente</th><th>Indirizzo</th><th>Arrivo previsto</th><th>Arrivo reale</th><th>Differenza</th><th>Stato</th><th>Documenti e tracking</th></tr></thead>
-          <tbody>${rows.map((d,i)=>stopRow(d,i,detail,plan)).join('')||'<tr><td colspan="8" class="gf-ip-empty-rows">Nessuna fermata registrata.</td></tr>'}</tbody>
+          <tbody>${GFDriverBreaks.table(detail,0,8)}${rows.map((d,i)=>stopRow(d,i,detail,plan)+GFDriverBreaks.table(detail,i+1,8)).join('')||'<tr><td colspan="8" class="gf-ip-empty-rows">Nessuna fermata registrata.</td></tr>'}</tbody>
         </table></div>
         <div class="gf-ip-footer"><button type="button" data-ip-action="chat" aria-expanded="${state.chat}">${icon('chat')} ${state.chat?'Chiudi':'Apri'} chat autista</button></div>
       </section>

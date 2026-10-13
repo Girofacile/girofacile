@@ -56,7 +56,7 @@
     }catch(e){el('ordersMessage').textContent=e.message;await loadSelection().catch(()=>{});}
     finally{busy=false;controls();GFOrders.refreshSelection?.();}
   }
-  function config(){return {...(globalThis.GFFleetPlanning?.config()||{}),group_orders:!!el('orderGroupOrders')?.checked,nome:val('routeName'),data_giro:val('routeDate'),orario_partenza:val('routeStart'),deposit_id:Number(val('routeDeposit'))||null,vehicle_id:Number(val('routeVehicle'))||null,driver_id:Number(val('routeDriver'))||null,rientro_deposito:boolVal('returnDepot'),energy_price_mode:document.querySelector('input[name="energyPriceMode"]:checked')?.value||'manual',energy_price_primary:Number(val('fuelPrice'))||0,energy_price_electric:Number(val('electricityPrice'))||0};}
+  function config(){return {...(globalThis.GFDriverSchedules?.routePayload()||{}),...(globalThis.GFFleetPlanning?.config()||{}),group_orders:!!el('orderGroupOrders')?.checked,nome:val('routeName'),data_giro:val('routeDate'),orario_partenza:val('routeStart'),deposit_id:Number(val('routeDeposit'))||null,vehicle_id:Number(val('routeVehicle'))||null,driver_id:Number(val('routeDriver'))||null,rientro_deposito:boolVal('returnDepot'),energy_price_mode:document.querySelector('input[name="energyPriceMode"]:checked')?.value||'manual',energy_price_primary:Number(val('fuelPrice'))||0,energy_price_electric:Number(val('electricityPrice'))||0};}
   function gate(){
     const banner=el('orderPlanningBanner');if(banner)banner.hidden=!enabled;
     if(!enabled)return;
@@ -104,6 +104,7 @@
         await updateRouteEnergyPricingV895();
       }
       globalThis.GFFleetPlanning?.restore(saved);
+      globalThis.GFDriverSchedules?.route(saved.driver_schedule??GFDriverSchedules.defaults(saved.driver_id));
       if(!saved.data_giro&&state.requested_dates?.length===1)set('routeDate',state.requested_dates[0]);
       feedback('');updateRoutePlanningGateV68();gate();message(`${state.order_ids.length} ordini selezionati.${state.requested_dates?.length?' Date richieste: '+state.requested_dates.join(', ')+'.':''} Completa la configurazione del giro.`);
     }catch(e){alert(e.message);}

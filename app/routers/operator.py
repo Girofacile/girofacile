@@ -1,3 +1,4 @@
+from ..services.driver_schedule import metadata as driver_schedule_metadata
 from ..services.route_execution import apply_delivery_update, get_or_create_delivery_status, update_customer_unload_time, refresh_route_completion
 from ..services.route_enrichment import routing_metadata, json_data, TIMING_DETAILS
 """
@@ -169,6 +170,7 @@ def get_operator_route(token: str, db: Session = Depends(get_db)):
     return {
         "route": {
             **routing_metadata(plan),
+            **driver_schedule_metadata(plan),
             "id": plan.id,
             "status": plan.status,
             "nome": plan.nome,

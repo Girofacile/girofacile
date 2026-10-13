@@ -1,3 +1,4 @@
+from .driver_schedule import DriverSchedule
 """Typed, bounded planning snapshots; limits are technical, not subscription quotas."""
 from datetime import date, time
 from typing import Literal
@@ -26,6 +27,7 @@ class SelectionChange(BaseModel):
 
 
 class PlanningConfiguration(BaseModel):
+    driver_schedule: DriverSchedule | None = None
     model_config = ConfigDict(extra='forbid')
     group_orders: bool = False
     planning_mode: Literal['single','fleet'] = 'single'

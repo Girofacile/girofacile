@@ -327,6 +327,7 @@ def driver_to_dict(driver, db: Session) -> dict:
         "scadenza_cqc": driver.scadenza_cqc.isoformat() if driver.scadenza_cqc else None,
         "adr": driver.adr,
         "note": driver.note,
+        "work_schedule": driver.work_schedule or {},
         "photo_url": driver.photo_url,
         "stato": driver_status(driver, db),
         "giri_assegnati": total_routes,
@@ -450,6 +451,7 @@ def update_driver(item_id: int, data: DriverIn, db: Session = Depends(get_db), u
 
     old_email = (item.email or "").strip().lower()
     payload = _normalize_driver_payload(data)
+    if "work_schedule" not in data.model_fields_set: payload.pop("work_schedule",None)
     payload["email"] = normalize_email(payload.get("email"))
     ensure_driver_email_unique(db, user, payload.get("email"), exclude_id=item.id)
     for k, v in payload.items():

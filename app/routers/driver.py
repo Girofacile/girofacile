@@ -1,3 +1,4 @@
+from ..services.driver_schedule import metadata as driver_schedule_metadata
 from ..services.identity import ensure_login_email_available
 from ..services.route_execution import apply_delivery_update, get_or_create_delivery_status, update_customer_unload_time, refresh_route_completion
 from ..services.route_enrichment import routing_metadata, json_data, TIMING_DETAILS
@@ -322,6 +323,7 @@ def get_driver_route_detail(route_id: int, da: DriverAccount = Depends(get_curre
     return {
         "route": {
             **routing_metadata(r),
+            **driver_schedule_metadata(r),
             "id": r.id, "nome": r.nome, "data_giro": date_to_iso(r.data_giro),
             "orario_partenza": time_to_hhmm(r.orario_partenza), "orario_rientro_stimato": time_to_hhmm(r.orario_rientro_stimato),
             "totale_km": r.totale_km, "totale_minuti": r.totale_minuti,

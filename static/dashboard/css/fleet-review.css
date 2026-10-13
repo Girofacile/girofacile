@@ -123,3 +123,6 @@
 #app #routePreviewResult.fleet-review-page .fleet-review-lane-footer button{border:1px solid var(--line);border-radius:9px;padding:7px 11px;background:#fff;color:var(--primary);font:600 12px var(--gf-font-family);cursor:pointer}
 #app #routePreviewResult.fleet-review-page .fleet-review-unassigned-row{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px 16px;padding:9px 0;border-top:1px solid var(--line);font-size:13px}
 #app #routePreviewResult.fleet-review-page .fleet-review-unassigned-row select{width:145px;max-width:100%}
+
+/* Keep move labels available to assistive technology without crowding stops. */
+#app #routePreviewResult.fleet-review-page .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}

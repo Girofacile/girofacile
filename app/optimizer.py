@@ -465,11 +465,23 @@ def _evaluate_fixed_sequence(sequence, matrix, points, vehicle=None, return_depo
     start_clock = _start_clock(start_time)
     current_clock = start_clock
     current_idx = 0
+    from .services import driver_schedule as shifts
+    schedule=(vehicle or {}).get('driver_schedule') or {}
+    pauses=shifts.intervals(schedule)
+    departures=[]
 
     for original in sequence:
         selected = dict(original)
         leg = _matrix_leg(matrix, points, current_idx, selected["_matrix_index"])
-        ev = (_earliest_feasible_candidate if earliest_windows else evaluate_candidate)(current_clock, leg, selected)
+        physical_arrival=shifts.travel_end(current_clock,leg['min'],pauses)
+        evaluator=_earliest_feasible_candidate if earliest_windows else evaluate_candidate
+        ev=evaluator(current_clock,{**leg,'min':physical_arrival-current_clock},selected)
+        if pauses:
+            for _ in range(len(pauses)+1):
+                ready=shifts.service_ready(ev['service_start'],float(selected.get('tempo_scarico_min') or 0),pauses)
+                if ready==ev['service_start']: break
+                ev=evaluator(current_clock,{**leg,'min':ready-current_clock},selected)
+            ev['wait']=max(0,ev['service_start']-physical_arrival)
 
         warnings = []
         if ev.get("warning"):
@@ -487,6 +499,7 @@ def _evaluate_fixed_sequence(sequence, matrix, points, vehicle=None, return_depo
         selected["ordine"] = len(ordered) + 1
         selected["km_tappa"] = round(leg["km"], 2)
         selected["minuti_tappa"] = round(leg["min"], 1)
+        if pauses: selected["pause_travel_min"]=round(physical_arrival-current_clock-leg["min"],1)
         selected["attesa_min"] = round(ev.get("wait") or 0, 1)
         selected["arrivo_stimato"] = fmt_hhmm(service_start)
         selected["partenza_stimata"] = fmt_hhmm(service_end)
@@ -494,21 +507,24 @@ def _evaluate_fixed_sequence(sequence, matrix, points, vehicle=None, return_depo
         if ev.get("window_end") is not None:
             total_lateness += max(0.0, service_end - ev["window_end"])
         if include_details:
-            selected.update(stop_timing_details(selected, current_clock + leg["min"], service_start, service_end, ev.get("window_end")))
+            selected.update(stop_timing_details(selected, physical_arrival, service_start, service_end, ev.get("window_end")))
 
         total_km += leg["km"]
         total_wait += float(ev.get("wait") or 0)
         current_clock = service_end
+        departures.append(service_end)
         current_idx = selected["_matrix_index"]
         ordered.append(selected)
 
     if return_depot and ordered:
         back = _matrix_leg(matrix, points, current_idx, 0)
         total_km += back["km"]
-        current_clock += back["min"]
+        current_clock = shifts.travel_end(current_clock,back["min"],pauses)
 
     total_min = current_clock - start_clock
-    has_constraints = _has_strong_constraints(sequence)
+    schedule_error=shifts.shift_error(schedule,start_clock,current_clock)
+    if schedule_error: violations+=1
+    has_constraints = _has_strong_constraints(sequence) or bool(schedule)
 
     if has_constraints:
         # Historical diagnostic only; solution_key controls the search.
@@ -522,6 +538,8 @@ def _evaluate_fixed_sequence(sequence, matrix, points, vehicle=None, return_depo
 
     return {
         "ordered": ordered,
+        "driver_breaks": shifts.events(pauses,start_clock,current_clock,departures),
+        "driver_schedule_error": schedule_error,
         "total_km": round(total_km, 2),
         "total_min": round(total_min, 1),
         "return_time": fmt_hhmm(current_clock),

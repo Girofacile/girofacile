@@ -24,7 +24,8 @@ window.GFCompleted = (() => {
     const matches=filtered(), pages=Math.max(1,Math.ceil(matches.length/size));
     page=Math.min(page,pages);
     const visible=new Set(matches.slice((page-1)*size,page*size).map(x=>x.i));
-    document.querySelectorAll('#completedTable tbody tr').forEach((tr,i)=>{tr.hidden=!visible.has(i);});
+    document.querySelectorAll('#completedTable tbody tr:not(.driver-break-row)').forEach((tr,i)=>{tr.hidden=!visible.has(i);});
+    document.querySelectorAll('#completedTable .driver-break-row').forEach(tr=>{const after=Number(tr.dataset.breakAfter);tr.hidden=!visible.has(after<rows.length?after:after-1);});
     document.getElementById('completedNoMatches').hidden=matches.length>0;
     document.getElementById('completedCount').textContent=matches.length ? `${(page-1)*size+1}–${Math.min(page*size,matches.length)} di ${matches.length} fermate${matches.length!==rows.length ? ` (${rows.length} totali)` : ''}` : 'Nessuna fermata trovata';
     const numbers=[...new Set([1,page-1,page,page+1,pages])].filter(n=>n>=1&&n<=pages).sort((a,b)=>a-b);

@@ -46,7 +46,7 @@ function checks(plan,assignment,dirty){
  check(missing?missing+' consegne non assegnate':'Tutte le consegne assegnate',
  missing?'Assegna le consegne oppure conferma esplicitamente le esclusioni.':'Ogni fermata è assegnata a un mezzo.',!!missing)+
  check('Distribuzione tra i mezzi','Da '+Math.min(...numbers)+' a '+Math.max(...numbers)+' fermate per mezzo.',Math.max(...numbers)-Math.min(...numbers)>=5)+
- check('Verifica dei vincoli','Il motore controlla peso, colli, fasce orarie, attrezzature e durata.')+
+ check('Verifica dei vincoli','Il motore controlla peso, colli, fasce orarie, attrezzature, durata, turni e pause degli autisti.')+
  (warn?check('Tratte da verificare','Alcune distanze possono essere approssimative.',true):'');
 }
 function stop(plan,assignment,dirty,index,lane){
@@ -73,7 +73,7 @@ function lane(plan,assignment,dirty,i){
  '<span><i style="width:'+(invalid?0:Math.min(100,Math.round(duration/max*100)))+'%"></i></span></div>';
  return '<section class="fleet-review-panel fleet-review-lane" style="--lane:'+color(i)+'" aria-label="Mezzo '+(i+1)+'">'+section+stats+dur+
  '<ol class="fleet-review-lane-list" data-fleet-lane="'+i+'">'+
- (all.length?all.map(k=>stop(plan,assignment,dirty,k,i)).join(''):'<li class="fleet-review-lane-empty">Nessuna consegna<small>Trascina qui una consegna da un altro mezzo.</small></li>')+'</ol>'+
+ (!dirty&&route?GFDriverBreaks.cards(route.result,0,'li'):'')+(all.length?all.map((k,position)=>stop(plan,assignment,dirty,k,i)+(!dirty&&route?GFDriverBreaks.cards(route.result,position+1,'li'):'')).join(''):'<li class="fleet-review-lane-empty">Nessuna consegna<small>Trascina qui una consegna da un altro mezzo.</small></li>')+'</ol>'+
  (plan.status==='programmed'&&route&&plan.route_ids?.[plan.routes.indexOf(route)]
   ?'<div class="fleet-review-lane-footer"><button type="button" data-open="'+Number(plan.route_ids[plan.routes.indexOf(route)])+'">Apri giro programmato</button></div>':'')+'</section>';
 }
