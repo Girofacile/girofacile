@@ -112,7 +112,7 @@
         const ranges=[];
         if(x.scarico_mattina_da&&x.scarico_mattina_a)ranges.push(x.scarico_mattina_da+'–'+x.scarico_mattina_a);
         if(x.scarico_pomeriggio_da&&x.scarico_pomeriggio_a)ranges.push(x.scarico_pomeriggio_da+'–'+x.scarico_pomeriggio_a);
-        span.textContent=ranges.join(' / ');slot.replaceChildren(span);
+        span.innerHTML=customerIcons.clock;span.append(document.createTextNode(ranges.join(' / ')));slot.replaceChildren(span);
       }else if(slot){
         const button=document.createElement('button');button.type='button';button.className='gf-customer-slot gf-customer-slot-empty';
         button.textContent='Non impostata';button.addEventListener('click',()=>openCustomerModal(id(x)));slot.replaceChildren(button);
