@@ -145,8 +145,23 @@
     await originalRefresh();
     const set=new Set(customerDirectory.all.map(id));
     for(const customerId of ui.selected)if(!set.has(customerId))ui.selected.delete(customerId);
+    const total=customerDirectory.all.length;
+    const verified=customerDirectory.all.filter(isVerified).length;
+    const withSlot=customerDirectory.all.filter(hasSlot).length;
     const measure=document.getElementById('customerMetricWithSlot');
-    if(measure)measure.textContent=String(customerDirectory.all.filter(hasSlot).length);
+    if(measure)measure.textContent=String(withSlot);
+    const verifiedRatio=document.getElementById('customerMetricVerifiedTotal');
+    if(verifiedRatio)verifiedRatio.textContent='su '+total;
+    const slotRatio=document.getElementById('customerMetricWithSlotTotal');
+    if(slotRatio)slotRatio.textContent='su '+total;
+    const remaining=document.getElementById('customerMetricSlotsRemaining');
+    if(remaining){
+      const pending=total-withSlot;
+      remaining.textContent=pending?(pending+' da impostare'):'Tutte impostate';
+      remaining.style.color=pending?'#b7791f':'#127a52';
+    }
+    const progress=document.getElementById('customerMetricSlotProgress');
+    if(progress)progress.style.width=(total?Math.round(withSlot/total*100):0)+'%';
     renderSelection();
   };
   document.addEventListener('click',event=>{
