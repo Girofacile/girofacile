@@ -324,13 +324,14 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 <link rel="stylesheet" href="/static/design-system/components.css?v=ds_20261007">
 <link rel="stylesheet" href="/static/design-system/layout.css?v=ds_20261007">
 <script src="/static/design-system/design-system.js?v=ds_20261007" defer></script>
+<link rel="stylesheet" href="/static/design-system/portal-unified.css?v=gf_unified_20261014_1">
 </head>
 <body data-gf-surface="admin">
 
 <!-- Mobile shell v62 - Super Admin -->
 <div class="admin-mobile-topbar-v62">
   <button type="button" class="admin-mobile-icon-btn-v62" onclick="toggleAdminMobileMoreV62()" aria-label="Apri menu">☰</button>
-  <div class="admin-mobile-brand-v62"><div class="logo">G</div><div><strong>GiroFacile</strong><small>Admin Panel</small></div></div>
+  <div class="admin-mobile-brand-v62"><svg class="gf-unified-brand-mark" viewBox="0 0 34 34" role="img" aria-label="Logo GiroFacile"><rect width="34" height="34" rx="9" fill="#1F5BFF"/><path d="M24 12.2A8.2 8.2 0 1 0 25 17.5H17.5" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="24.2" cy="9.6" r="2.4" fill="#9CC0FF"/></svg><div class="logo" hidden>G</div><div><strong>GiroFacile</strong><small>Admin Panel</small></div></div>
   <div class="admin-mobile-actions-v62">
     <button type="button" class="admin-mobile-icon-btn-v62" onclick="navigate('errors')" aria-label="Errori">⚠</button>
     <button type="button" class="admin-mobile-avatar-v62" onclick="navigate('profile')" aria-label="Profilo">A</button>
@@ -361,10 +362,10 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 <!-- SIDEBAR -->
 <aside class="sidebar">
   <div class="sidebar-logo">
-    <div class="logo-icon">G</div>
+    <div class="logo-icon"><svg class="gf-unified-brand-mark" viewBox="0 0 34 34" role="img" aria-label="Logo GiroFacile"><rect width="34" height="34" rx="9" fill="#1F5BFF"/><path d="M24 12.2A8.2 8.2 0 1 0 25 17.5H17.5" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="24.2" cy="9.6" r="2.4" fill="#9CC0FF"/></svg></div>
     <div>
       <div class="logo-text">GiroFacile</div>
-      <div class="logo-sub">Admin Panel</div>
+      <div class="logo-sub">Pannello Super Admin</div>
     </div>
   </div>
 
@@ -601,7 +602,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
                 <div class="label">MRR stimato (abbonamenti attivi)</div>
                 <div class="arr" id="rev-arr">ARR: €0</div>
               </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px" id="rev-kpi"></div>
+              <div class="stats-grid rev-kpi-strip" id="rev-kpi"></div>
             </div>
           </div>
           <div class="panel">
@@ -610,7 +611,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
           </div>
         </div>
         <div class="panel">
-          <div class="panel-header"><span class="panel-title">⚠️ Trial in scadenza (entro 3 giorni)</span></div>
+          <div class="panel-header"><span class="panel-title">Trial in scadenza (entro 3 giorni)</span></div>
           <div class="table-wrap">
             <table>
               <thead><tr><th>Utente</th><th>Email</th><th>Piano</th><th>Trial scade</th><th>Clienti</th><th>Giri</th><th>Azione</th></tr></thead>
@@ -1489,22 +1490,10 @@ async function loadRevenue() {
     billingNote.textContent=`Incassi reali: €${data.actual_receipts_eur || 0} · Account test: ${data.test_accounts || 0} · Accessi amministrativi: ${data.manual_accounts || 0}. Test e accessi gratuiti esclusi dall’MRR.`;
     document.getElementById('rev-arr').textContent = `ARR stimato: €${data.arr}`;
     document.getElementById('rev-kpi').innerHTML = `
-      <div style="background:var(--surface2);border-radius:8px;padding:12px;text-align:center">
-        <div style="font-size:22px;font-weight:700;color:var(--accent)">${data.abbonamenti_attivi}</div>
-        <div style="font-size:11px;color:var(--muted)">Abbonamenti attivi</div>
-      </div>
-      <div style="background:var(--surface2);border-radius:8px;padding:12px;text-align:center">
-        <div style="font-size:22px;font-weight:700;color:var(--warning)">${data.trial_attivi}</div>
-        <div style="font-size:11px;color:var(--muted)">Trial attivi</div>
-      </div>
-      <div style="background:var(--surface2);border-radius:8px;padding:12px;text-align:center">
-        <div style="font-size:22px;font-weight:700;color:var(--danger)">${data.trial_in_scadenza}</div>
-        <div style="font-size:11px;color:var(--muted)">Trial in scadenza</div>
-      </div>
-      <div style="background:var(--surface2);border-radius:8px;padding:12px;text-align:center">
-        <div style="font-size:22px;font-weight:700">€${data.abbonamenti_attivi > 0 ? Math.round(data.mrr / data.abbonamenti_attivi) : 0}</div>
-        <div style="font-size:11px;color:var(--muted)">ARPU medio</div>
-      </div>
+      <div class="stat-card"><div class="stat-label">Abbonamenti attivi</div><div class="stat-value">${data.abbonamenti_attivi}</div></div>
+      <div class="stat-card"><div class="stat-label">Trial attivi</div><div class="stat-value">${data.trial_attivi}</div></div>
+      <div class="stat-card"><div class="stat-label">Trial in scadenza</div><div class="stat-value">${data.trial_in_scadenza}</div></div>
+      <div class="stat-card"><div class="stat-label">ARPU medio</div><div class="stat-value">€${data.abbonamenti_attivi > 0 ? Math.round(data.mrr / data.abbonamenti_attivi) : 0}</div></div>
     `;
     const colors = { starter: '#94a3b8', business: '#3b82f6', pro: '#8b5cf6' };
     document.getElementById('rev-breakdown').innerHTML = data.breakdown_piani.length

@@ -43,11 +43,12 @@ body{min-height:100vh;background:linear-gradient(135deg,#1e3a8a,#2563eb);display
 <link rel="stylesheet" href="/static/design-system/layout.css?v=ds_20261007">
 <link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007">
 <script src="/static/design-system/design-system.js?v=ds_20261007" defer></script>
+<link rel="stylesheet" href="/static/design-system/portal-unified.css?v=gf_unified_20261014_1">
 </head>
 <body data-gf-surface="auth" data-gf-portal>
 <div class="card">
   <div class="brand">
-    <div class="brand-icon">G</div>
+    <img class="gf-auth-logo" src="/static/girofacile-logo.png" alt="Logo GiroFacile" width="48" height="48">
     <h1>GiroFacile</h1>
     <div class="brand-sub">Portale autista</div>
   </div>
@@ -55,7 +56,7 @@ body{min-height:100vh;background:linear-gradient(135deg,#1e3a8a,#2563eb);display
   <div id="loadingState" class="loading">Caricamento...</div>
 
   <div id="errorState" style="display:none;text-align:center;padding:20px 0;">
-    <div style="font-size:40px;margin-bottom:12px">⚠️</div>
+    <svg class="gf-state-icon is-warning" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17h.01"/></svg>
     <h2 style="font-size:18px;font-weight:700;margin-bottom:6px">Link non valido</h2>
     <p id="errorText" style="font-size:13px;color:#6b7280"></p>
   </div>
@@ -81,7 +82,7 @@ body{min-height:100vh;background:linear-gradient(135deg,#1e3a8a,#2563eb);display
 
   <div id="successState" style="display:none">
     <div class="success">
-      <div class="success-icon">✅</div>
+      <div class="success-icon"><svg class="gf-state-icon is-success" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg></div>
       <h2>Account attivato!</h2>
       <p>Stai per essere reindirizzato al portale...</p>
     </div>
