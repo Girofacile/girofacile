@@ -14,52 +14,6 @@ body:has(#tab-company:not(.hidden)) #app .topbar-dashboard-title h1{
 body:has(#tab-company:not(.hidden)) #app .topbar-dashboard-title p{
   color:#5a6680;font-size:12px;
 }
-/* Sidebar style from the supplied HTML, applied only while viewing company profile. */
-@media(min-width:821px){
-  body:has(#tab-company:not(.hidden)){--gf-sidebar-width:244px}
-}
-body:has(#tab-company:not(.hidden)) #app .sidebar {
-  background:#0f2250!important;border-right:1px solid #1d3470!important;
-}
-body:has(#tab-company:not(.hidden)) #app .brand {
-  padding-inline:18px!important;border-bottom:1px solid #1d3470;min-height:76px;height:76px;
-}
-body:has(#tab-company:not(.hidden)) #app .side-nav{
-  padding:14px 14px 22px!important;gap:3px!important;
-}
-body:has(#tab-company:not(.hidden)) #app .nav-item{
-  min-height:40px!important;padding:8px 12px!important;border:0!important;
-  border-radius:9px!important;gap:12px!important;
-  background:transparent!important;color:#c9d4f0!important;
-  font-size:13.5px!important;font-weight:500!important;box-shadow:none!important;
-  transform:none!important;
-}
-body:has(#tab-company:not(.hidden)) #app .nav-item:hover{
-  background:rgba(255,255,255,.07)!important;color:#fff!important;
-}
-body:has(#tab-company:not(.hidden)) #app .nav-item.active{
-  background:rgba(255,255,255,.1)!important;color:#fff!important;position:relative;
-}
-body:has(#tab-company:not(.hidden)) #app .nav-item.active::before{
-  content:"";display:block!important;position:absolute;
-  width:4px;left:-14px;top:7px;bottom:7px;border-radius:0 4px 4px 0;background:#6e9bff;
-}
-body:has(#tab-company:not(.hidden)) #app .nav-item>.nav-svg{
-  flex:0 0 18px!important;width:18px!important;height:18px!important;
-  background:none!important;border:0!important;box-shadow:none!important;
-}
-body:has(#tab-company:not(.hidden)) #app .nav-item .nav-svg svg{
-  width:18px!important;height:18px!important;
-}
-body:has(#tab-company:not(.hidden)) #app .nav-section-label{
-  color:#7f93c6!important;font-size:12px!important;
-  font-weight:500!important;letter-spacing:0!important;text-transform:none!important;
-  padding:19px 10px 5px!important;
-}
-body:has(#tab-company:not(.hidden)) #app .side-footer{
-  border-top-color:#1d3470!important;color:#7f93c6!important;
-  padding:16px 10px!important;font-size:11px!important;
-}
 #tab-company .gf-ref-profile{
   --gf-ref-color:#1f5bff;
   --gf-ref-ink:#16213a;
@@ -372,19 +326,6 @@ body:has(#tab-company:not(.hidden)) #app .side-footer{
 }
 
 
-/* Keep original shared sidebar artwork intact for other pages; use outlines on company only. */
-body:has(#tab-company:not(.hidden)) #app .nav-item .nav-svg:has(.gf-profile-nav-icon) > svg:not(.gf-profile-nav-icon){
-  display:none!important;
-}
-body:has(#tab-company:not(.hidden)) #app .nav-item .nav-svg > svg.gf-profile-nav-icon{
-  display:block!important;flex:0 0 18px;width:18px!important;height:18px!important;
-  fill:none!important;stroke:currentColor!important;stroke-width:1.8!important;
-  stroke-linejoin:round!important;stroke-linecap:round!important;
-}
-body:has(#tab-company:not(.hidden)) #app .nav-item .nav-svg > svg.gf-profile-nav-icon path{
-  fill:none!important;stroke:currentColor!important;stroke-width:1.8!important;
-  stroke-linecap:round!important;stroke-linejoin:round!important;
-}
 #tab-company .gf-ref-stack .gf-ref-section-body.gf-ref-same-on > .company-contact-grid{
   display:none!important;
 }
