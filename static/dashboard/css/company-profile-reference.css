@@ -370,3 +370,22 @@ body:has(#tab-company:not(.hidden)) #app .side-footer{
   #tab-company .gf-ref-preview{padding:16px}
   #tab-company .gf-ref-brand-controls{align-items:flex-start}
 }
+
+
+/* Keep original shared sidebar artwork intact for other pages; use outlines on company only. */
+body:has(#tab-company:not(.hidden)) #app .nav-item .nav-svg:has(.gf-profile-nav-icon) > svg:not(.gf-profile-nav-icon){
+  display:none!important;
+}
+body:has(#tab-company:not(.hidden)) #app .nav-item .nav-svg > svg.gf-profile-nav-icon{
+  display:block!important;flex:0 0 18px;width:18px!important;height:18px!important;
+  fill:none!important;stroke:currentColor!important;stroke-width:1.8!important;
+  stroke-linejoin:round!important;stroke-linecap:round!important;
+}
+body:has(#tab-company:not(.hidden)) #app .nav-item .nav-svg > svg.gf-profile-nav-icon path{
+  fill:none!important;stroke:currentColor!important;stroke-width:1.8!important;
+  stroke-linecap:round!important;stroke-linejoin:round!important;
+}
+#tab-company .gf-ref-stack .gf-ref-section-body.gf-ref-same-on > .company-contact-grid{
+  display:none!important;
+}
+#tab-company .gf-ref-stack .company-card-v29:focus-within{scroll-margin-top:110px}
