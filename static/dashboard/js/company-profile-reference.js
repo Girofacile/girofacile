@@ -156,35 +156,6 @@
       if(!missing.length){const p=document.createElement('p');p.textContent='✓ Il profilo contiene tutti i dati principali.';todo.append(p);}
       clear.hidden=!val('companyLogoUrl');syncSame();
     }
-    // Use the supplied outline icon language on this page only.
-    const sidebarIcons = {
-      dashboard:'M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z',
-      company:icons.company,
-      giro:'M4 6h16v15H4z M8 3v5 M16 3v5 M4 11h16',
-      'dashboard-scheduled':'M4 6h16v15H4z M8 3v5 M16 3v5 M4 11h16',
-      ordini:'M9 4h6v3H9z M7 5H6a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1h-1 M9 12h6 M9 16h6',
-      clienti:icons.users, collaboratori:icons.users, agenti:icons.users,
-      report:'M3 3v18h18 M7 15l4-4 3 3 5-6',
-      depositi:'M3 10l9-6 9 6v10H3z M8 20v-6h8v6',
-      mezzi:icons.truck, autisti:'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M4 21a8 8 0 0 1 16 0',
-      storico:'M3 12a9 9 0 1 0 3-6.7 M3 4v5h5 M12 7v5l3 2',
-      'chat-autisti':'M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z',
-      settings:'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M12 2v3 M12 19v3 M2 12h3 M19 12h3 M5 5l2 2 M17 17l2 2 M5 19l2-2 M17 7l2-2'
-    };
-    document.querySelectorAll('#app .side-nav .nav-item').forEach(button=>{
-      const key=button.dataset.tab || (button.textContent.includes('Supporto')?'supporto':'');
-      const path=sidebarIcons[key] || (key==='supporto'?'M4 14v-2a8 8 0 0 1 16 0v2 M4 14h3v5H5a1 1 0 0 1-1-1z M20 14h-3v5h2a1 1 0 0 0 1-1z':'');
-      const slot=button.querySelector('.nav-svg');
-      if(!path||!slot||slot.querySelector('.gf-profile-nav-icon'))return;
-      const glyph=document.createElementNS('http://www.w3.org/2000/svg','svg');
-      glyph.setAttribute('viewBox','0 0 24 24');
-      glyph.setAttribute('aria-hidden','true');
-      glyph.classList.add('gf-profile-nav-icon');
-      const p=document.createElementNS('http://www.w3.org/2000/svg','path');
-      p.setAttribute('d',path);
-      glyph.appendChild(p);
-      slot.appendChild(glyph);
-    });
     tab.addEventListener('input',sync);tab.addEventListener('change',sync);
     sync();
     window.GFCompanyReference={refresh:sync};
