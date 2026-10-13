@@ -141,7 +141,9 @@ function render({plan,assignment,dirty,busy,manualAdjusted,permission,onMove,onU
  '<div class="fleet-review-section-title"><h2>Suddivisione per mezzo</h2><p>Trascina una consegna su un altro mezzo oppure utilizza il selettore Sposta.</p></div>'+
  '<div class="fleet-review-lanes">'+plan.configuration.resources.map((_,i)=>lane(plan,assignment,dirty,i)).join('')+'</div>'+
  (missing?'<section class="fleet-review-panel fleet-review-unassigned"><h2>Consegne non assegnate ('+missing+')</h2><p>Verifica prima di pianificare.</p>'+
- '<ul>'+assignment.map((v,i)=>v==null?'<li>'+esc(plan.configuration.consegne[i]?.cliente_nome||'Consegna')+'</li>':'').join('')+'</ul>'+
+ '<ul>'+assignment.map((v,i)=>v==null?'<li class="fleet-review-unassigned-row"><span>'+esc(plan.configuration.consegne[i]?.cliente_nome||'Consegna')+'</span>'+
+ (plan.status==='preview'?'<label><span class="sr-only">Assegna consegna</span><select class="fleet-review-move" data-fleet-move="'+i+'" aria-label="Assegna '+esc(plan.configuration.consegne[i]?.cliente_nome||'Consegna')+'"><option value="">Assegna a mezzo</option>'+
+ plan.configuration.resources.map((_,j)=>'<option value="'+j+'">Mezzo '+(j+1)+'</option>').join('')+'</select></label>':'')+'</li>':'').join('')+'</ul>'+
  (plan.status==='preview'?'<label><input type="checkbox" data-fleet-accept-unassigned> Confermo che queste consegne rimangano non assegnate</label>':'')+'</section>':'')+
  (plan.warnings?.length?'<details class="fleet-review-technical"><summary>Note sul calcolo</summary>'+plan.warnings.map(w=>'<p>'+esc(w)+'</p>').join('')+'</details>':'')+
  '<div id="fleetMessage" role="status" tabindex="-1" class="fleet-review-message"></div>'+
