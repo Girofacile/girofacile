@@ -9,6 +9,7 @@ import hashlib
 import os
 import secrets
 from datetime import datetime, timedelta
+from ..core.clock import utc_now
 
 from fastapi import Request, APIRouter, Cookie, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
@@ -90,7 +91,7 @@ def get_setup_info(token: str, db: Session = Depends(get_db)):
     st = db.query(DriverSetupToken).filter(DriverSetupToken.token == token).first()
     if not st:
         raise HTTPException(404, "Link non valido o scaduto")
-    if datetime.utcnow() > st.expires_at:
+    if utc_now() > st.expires_at:
         raise HTTPException(410, "Link scaduto. Contatta l'amministratore per riceverne uno nuovo.")
     if st.used_at:
         raise HTTPException(409, "Questo link è già stato utilizzato. Accedi con le tue credenziali.")
@@ -110,7 +111,7 @@ def complete_setup(token: str, payload: dict, response: Response, db: Session = 
     st = db.query(DriverSetupToken).filter(DriverSetupToken.token == token).first()
     if not st:
         raise HTTPException(404, "Link non valido")
-    if datetime.utcnow() > st.expires_at:
+    if utc_now() > st.expires_at:
         raise HTTPException(410, "Link scaduto")
     if st.used_at:
         raise HTTPException(409, "Link già utilizzato")
@@ -145,7 +146,7 @@ def complete_setup(token: str, payload: dict, response: Response, db: Session = 
         )
         db.add(da)
 
-    st.used_at = datetime.utcnow()
+    st.used_at = utc_now()
     db.commit()
     db.refresh(da)
 
@@ -170,7 +171,7 @@ def driver_login(payload: dict, response: Response, db: Session = Depends(get_db
         raise HTTPException(403, "Account disabilitato")
     if password_needs_rehash(da.password_hash):
         da.password_hash = hash_password(password)
-    da.last_login = datetime.utcnow()
+    da.last_login = utc_now()
     db.commit()
     session_token = make_session_token(da)
     response.set_cookie("driver_session", session_token, **cookie_options(60*60*24*30))
@@ -408,7 +409,7 @@ def get_driver_direct_chat(since_id: int = 0, da: DriverAccount = Depends(get_cu
     ).order_by(ChatMessage.created_at).all()
     for m in msgs:
         if m.sender_type == "admin" and not m.read_at:
-            m.read_at = datetime.utcnow()
+            m.read_at = utc_now()
     db.commit()
     return [{"id": m.id, "sender_type": m.sender_type, "sender_name": m.sender_name,
              "message": m.message, "created_at": m.created_at.isoformat()} for m in msgs]
@@ -442,7 +443,7 @@ def get_driver_chat(route_id: int, since_id: int = 0, da: DriverAccount = Depend
     # Marca come letti i messaggi admin
     for m in msgs:
         if m.sender_type == "admin" and not m.read_at:
-            m.read_at = datetime.utcnow()
+            m.read_at = utc_now()
     db.commit()
     return [{"id": m.id, "sender_type": m.sender_type, "sender_name": m.sender_name,
              "message": m.message, "created_at": m.created_at.isoformat()} for m in msgs]
@@ -529,7 +530,7 @@ def get_admin_chat(route_id: int, since_id: int = 0, mark_read: bool = True, db:
     if mark_read:
         for m in msgs:
             if m.sender_type == "driver" and not m.read_at:
-                m.read_at = datetime.utcnow()
+                m.read_at = utc_now()
         db.commit()
     return {
         "messages": [{"id": m.id, "sender_type": m.sender_type, "sender_name": m.sender_name,
@@ -572,7 +573,7 @@ def get_admin_direct_chat(driver_id: int, since_id: int = 0, mark_read: bool = T
     if mark_read:
         for m in msgs:
             if m.sender_type == "driver" and not m.read_at:
-                m.read_at = datetime.utcnow()
+                m.read_at = utc_now()
         db.commit()
     return {
         "messages": [{"id": m.id, "sender_type": m.sender_type, "sender_name": m.sender_name,
@@ -611,7 +612,7 @@ def create_driver_setup_token(driver_id: int, db: Session) -> str:
         DriverSetupToken.used_at == None
     ).delete()
     token = secrets.token_urlsafe(32)
-    expires = datetime.utcnow() + timedelta(days=7)
+    expires = utc_now() + timedelta(days=7)
     st = DriverSetupToken(driver_id=driver_id, token=token, expires_at=expires)
     db.add(st)
     db.commit()

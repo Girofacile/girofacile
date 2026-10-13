@@ -2,6 +2,7 @@
 
 
 from datetime import datetime, timedelta
+from ..core.clock import utc_now
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from ..core.dependencies import is_admin_user, require_superadmin
@@ -27,7 +28,7 @@ def admin_overview(db: Session = Depends(get_db), superadmin: dict = Depends(req
     all_users = db.query(User).all()
     non_admin = [u for u in all_users if not is_admin_user(u)]
 
-    now = datetime.utcnow()
+    now = utc_now()
     first_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     thirty_days_ago = now - timedelta(days=30)
 

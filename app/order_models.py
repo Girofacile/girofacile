@@ -1,5 +1,6 @@
 """Order archive: additive tables, no dependency on transient delivery IDs."""
 from datetime import datetime, date
+from .core.clock import utc_now
 from sqlalchemy import (Integer, String, Text, DateTime, Date, ForeignKey, ForeignKeyConstraint,
                         UniqueConstraint, CheckConstraint, Index, JSON)
 from sqlalchemy.orm import Mapped, mapped_column
@@ -18,7 +19,7 @@ class OrderSource(Base):
     configuration: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
     version: Mapped[int] = mapped_column(Integer, default=1, server_default='1', nullable=False)
     credential_hash: Mapped[str | None] = mapped_column(String(64))
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
 
 
 class Order(Base):
@@ -53,8 +54,8 @@ class Order(Base):
     status: Mapped[str] = mapped_column(String(30), default='nuovo', nullable=False)
     address_verification: Mapped[dict | None] = mapped_column(JSON)
     version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
-    received_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    received_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, nullable=False)
 
 
 class OrderItem(Base):
@@ -73,7 +74,7 @@ class OrderEvent(Base):
     actor: Mapped[str] = mapped_column(String(80), nullable=False)
     kind: Mapped[str] = mapped_column(String(40), nullable=False)
     changes: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, nullable=False)
 
 
 class OrderImportRun(Base):
@@ -89,7 +90,7 @@ class OrderImportRun(Base):
     source_id: Mapped[int] = mapped_column(Integer, nullable=False)
     status: Mapped[str] = mapped_column(String(30), nullable=False)
     report: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, nullable=False)
 
 
 # Historical table retained without deletion; no order workflow reads or writes it.
@@ -118,7 +119,7 @@ class RouteOrderAssignment(Base):
     order_id: Mapped[int] = mapped_column(Integer, nullable=False)
     route_plan_id: Mapped[int] = mapped_column(ForeignKey('route_plans.id'), nullable=False)
     stop_key: Mapped[str] = mapped_column(String(36), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, nullable=False)
 
 
 ORDER_TABLES = [OrderSource.__table__, Order.__table__, OrderItem.__table__, OrderEvent.__table__,
@@ -136,4 +137,4 @@ class OrderPlanningSelection(Base):
     configuration: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
     stops: Mapped[list | None] = mapped_column(JSON)
     version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, nullable=False)

@@ -3,6 +3,7 @@ import hashlib
 import hmac
 import json
 from datetime import datetime
+from ..core.clock import utc_now
 
 from fastapi import HTTPException
 
@@ -15,7 +16,7 @@ def lookup_signature(user_id, plate, provider, when):
 
 
 def lookup_receipt(user_id, plate, provider, when=None):
-    when = when or datetime.utcnow()
+    when = when or utc_now()
     return {'lookup_at': when.isoformat(),
             'lookup_token': lookup_signature(user_id, plate, provider, when)}
 

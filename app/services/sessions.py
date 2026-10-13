@@ -1,5 +1,6 @@
 """Credential-bound, expiring sessions and persistent logout revocation."""
 from datetime import datetime, timedelta
+from ..core.clock import utc_now
 from hashlib import sha256
 
 from ..core.security import read_account_token, verify_superadmin_token
@@ -52,7 +53,7 @@ def logout_sessions(request, response, db, names=('session', 'driver_session', '
         if raw and len(raw) < 4096 and valid:
             digest = sha256(raw.encode()).hexdigest()
             if not db.get(RevokedSession, digest):
-                db.add(RevokedSession(token_hash=digest, expires_at=datetime.utcnow() + timedelta(days=31)))
+                db.add(RevokedSession(token_hash=digest, expires_at=utc_now() + timedelta(days=31)))
         response.delete_cookie(name, path='/', domain=COOKIE_DOMAIN)
-    db.query(RevokedSession).filter(RevokedSession.expires_at < datetime.utcnow()).delete()
+    db.query(RevokedSession).filter(RevokedSession.expires_at < utc_now()).delete()
     db.commit()

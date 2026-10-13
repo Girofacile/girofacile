@@ -2,6 +2,7 @@
 
 
 from datetime import datetime
+from ..core.clock import utc_now
 import json
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -52,17 +53,17 @@ def admin_update_ticket(ticket_id: int, payload: dict, db: Session = Depends(get
     previous_status = ticket.status
     ticket.status = new_status
     ticket.admin_note = payload.get("admin_note", ticket.admin_note)
-    ticket.updated_at = datetime.utcnow()
+    ticket.updated_at = utc_now()
 
     linked_error = db.get(SystemErrorLog, getattr(ticket, "system_error_id", None)) if getattr(ticket, "system_error_id", None) else None
     if linked_error:
         if new_status == "in_lavorazione":
             linked_error.status = "in_progress"
             if not linked_error.seen_at:
-                linked_error.seen_at = datetime.utcnow()
+                linked_error.seen_at = utc_now()
         elif new_status == "chiuso":
             linked_error.status = "resolved"
-            linked_error.resolved_at = datetime.utcnow()
+            linked_error.resolved_at = utc_now()
             if ticket.admin_note:
                 linked_error.admin_note = (linked_error.admin_note or "") + f"\nTicket #{ticket.id} chiuso: {ticket.admin_note}"
                 linked_error.admin_note = linked_error.admin_note.strip()[:4000]
@@ -137,7 +138,7 @@ def admin_system_error_detail(error_id: int, db: Session = Depends(get_db), supe
         raise HTTPException(404, "Errore non trovato")
     if row.status == "new":
         row.status = "seen"
-        row.seen_at = datetime.utcnow()
+        row.seen_at = utc_now()
         db.commit()
         db.refresh(row)
     return error_log_to_dict(row)
@@ -153,9 +154,9 @@ def admin_update_system_error(error_id: int, payload: dict, db: Session = Depend
     if status in ("new", "seen", "in_progress", "resolved", "ignored"):
         row.status = status
         if status in ("seen", "in_progress") and not row.seen_at:
-            row.seen_at = datetime.utcnow()
+            row.seen_at = utc_now()
         if status == "resolved":
-            row.resolved_at = datetime.utcnow()
+            row.resolved_at = utc_now()
     if "admin_note" in payload:
         row.admin_note = (payload.get("admin_note") or "")[:4000]
     if status == "resolved":
@@ -165,7 +166,7 @@ def admin_update_system_error(error_id: int, payload: dict, db: Session = Depend
         ).all()
         for ticket in linked_tickets:
             ticket.status = "chiuso"
-            ticket.updated_at = datetime.utcnow()
+            ticket.updated_at = utc_now()
             if row.admin_note and not ticket.admin_note:
                 ticket.admin_note = row.admin_note
             if getattr(ticket, "notify_on_resolution", True) and not getattr(ticket, "resolved_email_sent", False):

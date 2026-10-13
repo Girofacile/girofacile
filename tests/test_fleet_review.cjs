@@ -16,6 +16,7 @@ function preview(){
    querySelector(){return {onclick:null}},addEventListener(){},showModal(){},remove(){}};}
  };
  const sandbox={window:{},document,console,requestAnimationFrame(){},setTimeout(){}};
+ sandbox.GFDriverBreaks=vm.runInNewContext(read('static/driver-schedule.js')+';window.GFDriverBreaks',{window:{}});
  vm.runInNewContext(read('static/dashboard/js/fleet-review.js'),sandbox);
  const plan={
   id:15,version:1,status:'preview',
@@ -86,7 +87,7 @@ test('trasferimenti notificati e mappe solo sul contenuto, senza nuova sidebar',
  assert.match(review,/Collegamenti indicativi, non stradali/);
  assert.match(css,/#routePreviewResult\.fleet-review-page/);
  assert.doesNotMatch(css,/\.sidebar\s*\{|\.brand\s*\{|\.topbar\s*\{/);
- assert.match(html,/fleet-review\.css\?v=ref_split_20261013_1/);
- assert.match(html,/fleet-review\.js\?v=ref_split_20261013_1/);
+ assert.match(html,/fleet-review\.css\?v=driver_shifts_20261013_1/);
+ assert.match(html,/fleet-review\.js\?v=driver_shifts_20261013_1/);
  assert.match(html,/design-system\.js\?v=sidebar_icone_originali_20261012/);
 });

@@ -1,5 +1,6 @@
 from sqlalchemy import JSON
 from datetime import datetime
+from .core.clock import utc_now
 from sqlalchemy import Boolean, Float, Integer, String, Text, DateTime, Date, Time, ForeignKey, UniqueConstraint, Index, false
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -17,7 +18,7 @@ class CompanyCollaborator(Base):
     permissions_json: Mapped[str] = mapped_column(Text, default="[]", nullable=False)
     session_version: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
     last_login: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
 
@@ -27,7 +28,7 @@ class CollaboratorInvitation(Base):
     collaborator_id: Mapped[int] = mapped_column(ForeignKey("company_collaborators.id", ondelete="CASCADE"), index=True, nullable=False)
     email: Mapped[str] = mapped_column(String(200), nullable=False)
     token_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, nullable=False)
     expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     sent_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     used_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
@@ -68,7 +69,7 @@ class User(Base):
     onboarding_completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     onboarding_dismissed: Mapped[bool] = mapped_column(Boolean, default=False)
     password_hash: Mapped[str] = mapped_column(String(300), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
 
     # --- Abbonamento / Piano ---
     plan: Mapped[str] = mapped_column(String(30), default="starter")
@@ -101,7 +102,7 @@ class BillingInvoice(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
     invoice_number: Mapped[str] = mapped_column(String(80), index=True, nullable=False)
-    invoice_date: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
+    invoice_date: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
     period_start: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     period_end: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     plan_name: Mapped[str | None] = mapped_column(String(80), nullable=True)
@@ -113,7 +114,7 @@ class BillingInvoice(Base):
     pdf_path: Mapped[str | None] = mapped_column(Text, nullable=True)
     stripe_invoice_id: Mapped[str | None] = mapped_column(String(200), nullable=True, unique=True)
     is_test: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
 
 
 class BillingPayment(Base):
@@ -128,14 +129,14 @@ class BillingPayment(Base):
     transaction_id: Mapped[str | None] = mapped_column(String(200), nullable=True)
     is_test: Mapped[bool] = mapped_column(Boolean, default=True)
     paid_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
 
 
 class BillingEvent(Base):
     __tablename__ = "billing_events"
     event_id: Mapped[str] = mapped_column(String(200), primary_key=True)
     event_type: Mapped[str] = mapped_column(String(100))
-    processed_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    processed_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
 
 
 class RouteUsage(Base):
@@ -145,7 +146,7 @@ class RouteUsage(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     month: Mapped[str] = mapped_column(String(7), index=True)
     deliveries: Mapped[int] = mapped_column(Integer)
-    started_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    started_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
 
 
 class BillingNotice(Base):
@@ -153,7 +154,7 @@ class BillingNotice(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     notice_key: Mapped[str] = mapped_column(String(160))
-    sent_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    sent_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
     __table_args__ = (UniqueConstraint("user_id", "notice_key"),)
 
 
@@ -167,7 +168,7 @@ class SaaSPlatformSetting(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     key: Mapped[str] = mapped_column(String(120), unique=True, index=True, nullable=False)
     value: Mapped[str | None] = mapped_column(Text, nullable=True)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
 
 
 class SuperAdminProfile(Base):
@@ -188,8 +189,8 @@ class SuperAdminProfile(Base):
     notify_new_companies: Mapped[bool] = mapped_column(Boolean, default=True)
     notify_new_payments: Mapped[bool] = mapped_column(Boolean, default=True)
     last_access_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
 
 
 class SuperAdminActivityLog(Base):
@@ -200,7 +201,7 @@ class SuperAdminActivityLog(Base):
     action: Mapped[str] = mapped_column(String(140), index=True, nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     severity: Mapped[str] = mapped_column(String(30), default="info", index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
 
 
 class SuperAdminCollaborator(Base):
@@ -221,8 +222,8 @@ class SuperAdminCollaborator(Base):
     invitation_sent: Mapped[bool] = mapped_column(Boolean, default=False)
     invited_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     last_access_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
 
 
 class ApiUsageLog(Base):
@@ -246,7 +247,7 @@ class ApiUsageLog(Base):
     response_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
     estimated_cost_eur: Mapped[float] = mapped_column(Float, default=0)
     meta_json: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
 
 
 class SupportTicket(Base):
@@ -264,8 +265,8 @@ class SupportTicket(Base):
     notify_on_resolution: Mapped[bool] = mapped_column(Boolean, default=True)
     resolved_email_sent: Mapped[bool] = mapped_column(Boolean, default=False)
     admin_note: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
 
 
 class Deposit(Base):
@@ -275,7 +276,7 @@ class Deposit(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, index=True)
-    updated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, default=datetime.utcnow)
+    updated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, default=utc_now)
     nome: Mapped[str] = mapped_column(String(200), nullable=False)
     indirizzo: Mapped[str] = mapped_column(String(500), nullable=False)
     predefinito: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -300,7 +301,7 @@ class Agent(Base):
     attivo: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
     photo_url: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
 
 
 class Customer(Base):
@@ -379,7 +380,7 @@ class FuelPriceSnapshot(Base):
     price: Mapped[float] = mapped_column(Float, nullable=False)
     unit: Mapped[str] = mapped_column(String(10), nullable=False, default="€/L")
     source: Mapped[str] = mapped_column(String(180), nullable=False, default="MIMIT")
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
 
 class Driver(Base):
     work_schedule: Mapped[dict | None] = mapped_column(JSON, nullable=True)
@@ -401,7 +402,7 @@ class Driver(Base):
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
     photo_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_admin_driver: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
 
 
 class RoutePlan(Base):
@@ -454,7 +455,7 @@ class RoutePlan(Base):
     started_at_utc: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     completed_at_utc: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     cancelled_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
     deposit = relationship("Deposit")
     vehicle = relationship("Vehicle")
     driver = relationship("Driver")
@@ -553,7 +554,7 @@ class RouteToken(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     route_plan_id: Mapped[int] = mapped_column(ForeignKey("route_plans.id", ondelete="CASCADE"), nullable=False, index=True)
     token: Mapped[str] = mapped_column(String(64), unique=True, index=True, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
     expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     used_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
@@ -566,7 +567,7 @@ class DriverAccount(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
     last_login: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
 
@@ -576,7 +577,7 @@ class DriverSetupToken(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     driver_id: Mapped[int] = mapped_column(ForeignKey("drivers.id", ondelete="CASCADE"), nullable=False, index=True)
     token: Mapped[str] = mapped_column(String(64), unique=True, nullable=False, index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
     expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     used_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
@@ -589,7 +590,7 @@ class AgentAccount(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
     last_login: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
 
@@ -599,7 +600,7 @@ class AgentSetupToken(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     agent_id: Mapped[int] = mapped_column(ForeignKey("agents.id", ondelete="CASCADE"), nullable=False, index=True)
     token: Mapped[str] = mapped_column(String(64), unique=True, nullable=False, index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
     expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     used_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
@@ -616,7 +617,7 @@ class PasswordResetToken(Base):
     account_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
     email: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     token: Mapped[str] = mapped_column(String(128), unique=True, nullable=False, index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
     expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     used_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
@@ -640,7 +641,7 @@ class DistanceCache(Base):
     dest_key: Mapped[str] = mapped_column(String(120), index=True, nullable=False)
     km: Mapped[float] = mapped_column(Float, nullable=False)
     min: Mapped[float] = mapped_column(Float, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
     expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, index=True)
 
 
@@ -658,7 +659,7 @@ class Notification(Base):
     action_tab: Mapped[str | None] = mapped_column(String(80), nullable=True)
     action_label: Mapped[str | None] = mapped_column(String(100), nullable=True)
     is_read: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
     read_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
 
@@ -676,7 +677,7 @@ class ChatMessage(Base):
     sender_type: Mapped[str] = mapped_column(String(20), nullable=False)  # "admin" | "driver"
     sender_name: Mapped[str] = mapped_column(String(100), nullable=False)
     message: Mapped[str] = mapped_column(String(1000), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
     read_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
 
@@ -708,7 +709,7 @@ class SystemErrorLog(Base):
     severity: Mapped[str] = mapped_column(String(30), default="high", index=True)
     status: Mapped[str] = mapped_column(String(30), default="new", index=True)
     email_sent: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
     seen_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     resolved_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     admin_note: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -720,7 +721,7 @@ class DeliveryTrackingLink(Base):
     delivery_id: Mapped[int] = mapped_column(ForeignKey("deliveries.id", ondelete="CASCADE"), nullable=False, unique=True)
     selector: Mapped[str] = mapped_column(String(64), nullable=False, unique=True, index=True)
     expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, nullable=False)
 
 # Register the additive order archive on the shared metadata.
 from .order_models import Order, OrderSource, OrderItem, OrderEvent, OrderImportRun, CustomerSourceMapping, RouteOrderAssignment

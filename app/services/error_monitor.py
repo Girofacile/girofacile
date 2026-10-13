@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import traceback
 from datetime import datetime
+from ..core.clock import utc_now
 from typing import Any
 
 from fastapi import Request
@@ -108,7 +109,7 @@ def log_exception(request: Request, exc: Exception, *, severity: str | None = No
             ip_address=_client_ip(request),
             severity=severity,
             status="new",
-            created_at=datetime.utcnow(),
+            created_at=utc_now(),
         )
         db.add(row)
         db.commit()

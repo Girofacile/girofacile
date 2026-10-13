@@ -2,6 +2,7 @@
 
 
 from datetime import datetime
+from ..core.clock import utc_now
 import json
 import os
 from fastapi import APIRouter, Depends, HTTPException
@@ -36,7 +37,7 @@ router = APIRouter(prefix="/api/admin", tags=["admin"])
 def admin_profile(db: Session = Depends(get_db), superadmin: dict = Depends(require_superadmin)):
     _require_perm(superadmin, "manage_platform")
     profile = _get_or_create_superadmin_profile(db, superadmin.get("username"))
-    profile.last_access_at = datetime.utcnow()
+    profile.last_access_at = utc_now()
     db.commit()
     db.refresh(profile)
     return _profile_to_dict(profile)
@@ -55,7 +56,7 @@ def admin_update_profile(payload: dict, db: Session = Depends(get_db), superadmi
     profile.notify_tickets = bool(payload.get("notify_tickets", profile.notify_tickets))
     profile.notify_new_companies = bool(payload.get("notify_new_companies", profile.notify_new_companies))
     profile.notify_new_payments = bool(payload.get("notify_new_payments", profile.notify_new_payments))
-    profile.updated_at = datetime.utcnow()
+    profile.updated_at = utc_now()
     _activity(db, superadmin.get("username"), "superadmin_profile_updated", "Profilo Super Admin aggiornato")
     db.commit()
     db.refresh(profile)
@@ -205,7 +206,7 @@ def admin_create_collaborator(payload: dict, db: Session = Depends(get_db), supe
         password_hash=hash_password(temporary),
         permissions_json=permissions_json,
         is_active=bool(payload.get("is_active", True)),
-        invited_at=datetime.utcnow(),
+        invited_at=utc_now(),
     )
     db.add(collab)
     db.commit()
@@ -237,7 +238,7 @@ def admin_update_collaborator(collaborator_id: int, payload: dict, db: Session =
     collab.role_label = (payload.get("role_label") or "Collaboratore").strip()[:120]
     collab.permissions_json = _permissions_to_json(payload)
     collab.is_active = bool(payload.get("is_active", collab.is_active))
-    collab.updated_at = datetime.utcnow()
+    collab.updated_at = utc_now()
     _activity(db, superadmin.get("username"), "collaborator_updated", f"Aggiornato collaboratore {collab.full_name}")
     db.commit()
     db.refresh(collab)
@@ -252,7 +253,7 @@ def admin_resend_collaborator(collaborator_id: int, db: Session = Depends(get_db
         raise HTTPException(404, "Collaboratore non trovato")
     temporary = _temporary_password()
     collab.password_hash = hash_password(temporary)
-    collab.invited_at = datetime.utcnow()
+    collab.invited_at = utc_now()
     perms = _collaborator_permissions(collab)
     labels = [label for key, label in COLLABORATOR_PERMISSIONS.items() if perms.get(key)]
     sent = send_superadmin_collaborator_invitation(
@@ -260,7 +261,7 @@ def admin_resend_collaborator(collaborator_id: int, db: Session = Depends(get_db
         f"{APP_BASE_URL.rstrip('/')}/admin/login"
     )
     collab.invitation_sent = bool(sent)
-    collab.updated_at = datetime.utcnow()
+    collab.updated_at = utc_now()
     _activity(db, superadmin.get("username"), "collaborator_invitation_resent", f"Reinvitato collaboratore {collab.full_name}")
     db.commit()
     result = collaborator_to_dict(collab)

@@ -10,7 +10,7 @@ function planningFixture() {
   const document={getElementById(id){
     if(!nodes.has(id)) {
       const classes=new Set(['hidden']);
-      nodes.set(id,{textContent:'',innerHTML:'',dataset:{},classList:{add:c=>classes.add(c),remove:c=>classes.delete(c),contains:c=>classes.has(c)},focus(){state.focused=id;},scrollIntoView(){},addEventListener(){}});
+      nodes.set(id,{textContent:'',innerHTML:'',dataset:{},classList:{add:c=>classes.add(c),remove:c=>classes.delete(c),contains:c=>classes.has(c)},focus(){state.focused=id;},scrollIntoView(){},addEventListener(){},closest(){return null;}});
     }
     return nodes.get(id);
   }};

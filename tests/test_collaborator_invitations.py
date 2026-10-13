@@ -2,6 +2,7 @@
 import hashlib
 import json
 from datetime import datetime, timedelta
+from app.core.clock import utc_now
 from urllib.parse import parse_qs, urlsplit
 
 import pytest
@@ -74,8 +75,8 @@ def test_creation_emails_single_use_hashed_link_without_an_owner_password(compan
     assert invitation.token_hash == hashlib.sha256(token.encode()).hexdigest()
     assert token != invitation.token_hash and len(token) >= 32
     assert invitation.email == actor.email
-    assert datetime.utcnow() + timedelta(days=6, hours=23) < invitation.expires_at
-    assert invitation.expires_at <= datetime.utcnow() + timedelta(days=7, minutes=1)
+    assert utc_now() + timedelta(days=6, hours=23) < invitation.expires_at
+    assert invitation.expires_at <= utc_now() + timedelta(days=7, minutes=1)
     assert invitation.sent_at is not None and invitation.used_at is None
     listing = client.get("/api/collaborators")
     assert listing.status_code == 200
@@ -198,13 +199,13 @@ def test_tampered_expired_used_and_unknown_links_have_uniform_error(company, mai
     assert info_bad.json()["detail"] == accept_bad.json()["detail"]
     assert _accept(client, "x" * len(token)).json()["detail"] == accept_bad.json()["detail"]
     row = db.query(CollaboratorInvitation).filter_by(collaborator_id=actor.id).one()
-    row.expires_at = datetime.utcnow() - timedelta(seconds=1)
+    row.expires_at = utc_now() - timedelta(seconds=1)
     db.commit()
     assert client.post("/api/collaborator-invitations/info", json={"token": token}).json()["detail"] == accept_bad.json()["detail"]
     assert _accept(client, token).status_code == 400
     db.refresh(actor)
     assert actor.password_setup_required is True
-    row.expires_at = datetime.utcnow() + timedelta(hours=1)
+    row.expires_at = utc_now() + timedelta(hours=1)
     db.commit()
     assert _accept(client, token).status_code == 200
     accepted_hash = actor.password_hash
@@ -365,7 +366,7 @@ def test_expired_invitation_is_reported_and_can_be_renewed(company, mailbox):
     client, db, _, _, _, _, _, login_owner, _ = company
     _, actor, token = _create(company, mailbox)
     row = db.query(CollaboratorInvitation).filter_by(collaborator_id=actor.id).one()
-    row.expires_at = datetime.utcnow() - timedelta(seconds=1)
+    row.expires_at = utc_now() - timedelta(seconds=1)
     db.commit()
     login_owner()
     public = next(item for item in client.get("/api/collaborators").json() if item["id"] == actor.id)

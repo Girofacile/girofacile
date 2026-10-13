@@ -7,6 +7,7 @@ import time
 import threading
 from collections import OrderedDict
 from datetime import datetime,timedelta
+from ..core.clock import utc_now
 from fastapi import HTTPException
 from starlette.responses import JSONResponse
 from ..schemas.order_sources import MAX_BYTES
@@ -75,7 +76,7 @@ def authenticated(db,sid,token,rate=False):
     from .plans import require_active_plan
     require_active_plan(db.get(User,src.user_id))
     if rate:
-        now=datetime.utcnow();config=dict(src.configuration)
+        now=utc_now();config=dict(src.configuration)
         start=datetime.fromisoformat(config.get('_rate_start',now.isoformat()));count=config.get('_rate_count',0)
         if now-start>=timedelta(minutes=1): start,count=now,0
         if count>=60: raise HTTPException(429,'Limite tecnico: massimo 60 richieste al minuto per fonte.',headers={'Retry-After':'60'})

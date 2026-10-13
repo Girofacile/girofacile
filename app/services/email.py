@@ -2,6 +2,7 @@
 Servizio email — invio tramite SMTP Ionos.
 """
 import os
+from ..core.clock import utc_now
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -56,7 +57,7 @@ def _log_email_failure(subject: str, to_email: str, reason: str, severity: str =
                 severity=severity,
                 status="new",
                 email_sent=False,
-                created_at=datetime.utcnow(),
+                created_at=utc_now(),
             )
             db.add(row)
             db.commit()

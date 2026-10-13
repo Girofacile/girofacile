@@ -2,6 +2,7 @@
 import hashlib
 import json
 from datetime import datetime,timedelta
+from ..core.clock import utc_now
 from uuid import uuid4
 from fastapi import HTTPException
 from pydantic import ValidationError
@@ -55,7 +56,7 @@ def public_run(row,offset=0):
 
 def stage(db,src,headers,rows):
     if src.status not in ('draft','active'): raise HTTPException(409,'La fonte è in pausa o rimossa.')
-    now=datetime.utcnow()
+    now=utc_now()
     db.query(OrderImportRun).filter(OrderImportRun.user_id==src.user_id,OrderImportRun.expires_at<now,OrderImportRun.payload.isnot(None)).update({OrderImportRun.payload:None},synchronize_session=False)
     item=OrderImportRun(user_id=src.user_id,source_id=src.id,status='uploaded',payload={'headers':headers,'rows':rows},
                         report={'total':len(rows)},expires_at=now+timedelta(hours=24),source_version=src.version)
@@ -63,7 +64,7 @@ def stage(db,src,headers,rows):
 
 
 def check_payload(item):
-    if not item.payload or not item.expires_at or item.expires_at<datetime.utcnow():
+    if not item.payload or not item.expires_at or item.expires_at<utc_now():
         raise HTTPException(410,'Anteprima scaduta: carica nuovamente il file o il campione.')
 
 

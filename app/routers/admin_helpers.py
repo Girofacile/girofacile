@@ -2,6 +2,7 @@
 
 
 from datetime import datetime
+from ..core.clock import utc_now
 import json
 import os
 import secrets
@@ -108,7 +109,7 @@ def _set_setting_value(db: Session, key: str, value: str | None):
         db.add(row)
     else:
         row.value = value or ""
-        row.updated_at = datetime.utcnow()
+        row.updated_at = utc_now()
     return row
 
 
@@ -136,7 +137,7 @@ def _get_or_create_superadmin_profile(db: Session, username: str = None) -> Supe
             notify_tickets=True,
             notify_new_companies=True,
             notify_new_payments=True,
-            last_access_at=datetime.utcnow(),
+            last_access_at=utc_now(),
         )
         db.add(profile)
         db.commit()

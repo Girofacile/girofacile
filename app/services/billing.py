@@ -1,5 +1,6 @@
 """Sandbox-only billing. Stripe is the authority; redirects never grant access."""
 from datetime import datetime, timedelta, timezone
+from ..core.clock import utc_now
 from uuid import uuid4
 
 from fastapi import HTTPException
@@ -116,7 +117,7 @@ def sync_subscription(db, user, sub):
             if user.billing_grace_until is None:
                 invoice = sub.get("latest_invoice") or {}
                 failed_at = utc(invoice.get("created")) if isinstance(invoice, dict) else None
-                user.billing_grace_until = (failed_at or datetime.utcnow()) + timedelta(days=GRACE_DAYS)
+                user.billing_grace_until = (failed_at or utc_now()) + timedelta(days=GRACE_DAYS)
             user.plan_status = "past_due"
         else:
             user.plan_status = "incomplete"
@@ -135,7 +136,7 @@ def sync_invoice(db, user, invoice):
         row = BillingInvoice(user_id=user.id, stripe_invoice_id=invoice["id"], invoice_number=invoice.get("number") or invoice["id"])
         db.add(row)
     row.invoice_number = invoice.get("number") or invoice["id"]
-    row.invoice_date = utc(invoice.get("created")) or datetime.utcnow()
+    row.invoice_date = utc(invoice.get("created")) or utc_now()
     row.period_start, row.period_end = utc(invoice.get("period_start")), utc(invoice.get("period_end"))
     row.plan_name = PLAN_LIMITS[user.plan]["name"]
     row.subtotal, row.total = (invoice.get("subtotal") or 0) / 100, (invoice.get("total") or 0) / 100
@@ -196,7 +197,7 @@ def checkout(db, user, plan):
             user.stripe_subscription_id = sub["id"]
             db.commit()
             raise HTTPException(409, "Abbonamento già presente: aggiorna lo stato o gestisci il piano")
-    if user.billing_checkout_id and not user.billing_checkout_id.startswith("pending_") and user.billing_checkout_expires and user.billing_checkout_expires > datetime.utcnow():
+    if user.billing_checkout_id and not user.billing_checkout_id.startswith("pending_") and user.billing_checkout_expires and user.billing_checkout_expires > utc_now():
         session = assert_test(stripe.checkout.Session.retrieve(user.billing_checkout_id))
         if session.get("status") == "open":
             if (session.get("metadata") or {}).get("plan") == plan:
@@ -205,10 +206,10 @@ def checkout(db, user, plan):
         if session.get("status") == "complete":
             raise HTTPException(409, "Checkout completato: aggiorna lo stato prima di un nuovo acquisto")
     # Persist operation key before HTTP: retry after a crash cannot create two sessions.
-    if not user.billing_checkout_expires or user.billing_checkout_expires <= datetime.utcnow():
+    if not user.billing_checkout_expires or user.billing_checkout_expires <= utc_now():
         user.billing_checkout_id = "pending_" + uuid4().hex
         user.billing_checkout_plan = plan
-        user.billing_checkout_expires = datetime.utcnow() + timedelta(hours=1)
+        user.billing_checkout_expires = utc_now() + timedelta(hours=1)
         db.commit()
         user = lock_user(db, user)
     key = user.billing_checkout_id

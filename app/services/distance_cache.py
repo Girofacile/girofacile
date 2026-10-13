@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import os
 from datetime import datetime, timedelta
+from ..core.clock import utc_now
 
 from sqlalchemy import or_, tuple_
 from sqlalchemy.orm import Session
@@ -19,7 +20,7 @@ def cache_ttl_days() -> int:
 
 def cache_expires_at(now: datetime | None = None) -> datetime | None:
     days = cache_ttl_days()
-    return (now or datetime.utcnow()) + timedelta(days=days) if days else None
+    return (now or utc_now()) + timedelta(days=days) if days else None
 
 
 def _company_prefix(user_id) -> str:
@@ -59,7 +60,7 @@ def _chunks(values, size=400):
 
 def get_pairs(db: Session, user_id: int, pairs: list[tuple[str, str]]) -> dict:
     unique = list({p for p in pairs if not any("|departure=" in k for k in p)})
-    now, result = datetime.utcnow(), {}
+    now, result = utc_now(), {}
     for batch in _chunks(unique):
         rows = (db.query(DistanceCache).filter(DistanceCache.user_id == user_id)
                 .filter(tuple_(DistanceCache.origin_key, DistanceCache.dest_key).in_(batch))
@@ -78,7 +79,7 @@ def save_pairs(db: Session, user_id: int, entries: list[tuple[str, str, float, f
         from sqlalchemy.dialects.postgresql import insert
     else:
         from sqlalchemy.dialects.sqlite import insert
-    now = datetime.utcnow()
+    now = utc_now()
     rows = [dict(user_id=user_id, origin_key=o, dest_key=d, km=km, min=minutes,
                  updated_at=now, expires_at=cache_expires_at(now))
             for (o, d), (km, minutes) in entries.items()]
@@ -104,7 +105,7 @@ def invalidate_key(db: Session, key: str, user_id: int | None = None, *, commit:
 
 
 def cleanup_expired(db: Session, user_id: int | None = None) -> int:
-    now = datetime.utcnow()
+    now = utc_now()
     q = db.query(DistanceCache).filter(or_(
         DistanceCache.origin_key.contains("|departure=", autoescape=True),
         DistanceCache.dest_key.contains("|departure=", autoescape=True),
@@ -117,7 +118,7 @@ def cleanup_expired(db: Session, user_id: int | None = None) -> int:
 
 
 def cleanup_older_than(db: Session, days: int = 15, user_id: int | None = None) -> int:
-    cutoff = datetime.utcnow() - timedelta(days=max(1, int(days)))
+    cutoff = utc_now() - timedelta(days=max(1, int(days)))
     q = db.query(DistanceCache).filter(or_(DistanceCache.updated_at.is_(None), DistanceCache.updated_at < cutoff))
     if user_id is not None:
         q = q.filter(DistanceCache.user_id == user_id)

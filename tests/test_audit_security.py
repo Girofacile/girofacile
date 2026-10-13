@@ -1,4 +1,5 @@
 from datetime import datetime
+from app.core.clock import utc_now
 from types import SimpleNamespace
 
 import pytest
@@ -61,7 +62,7 @@ def test_reset_never_reactivates_archived_identity(env, role):
     db.add(da); db.commit()
     person, account = (driver, da) if role == 'driver' else (seller, agent)
     token = _create_reset_token(db, role, account.id, account.email)
-    person.deleted_at = datetime.utcnow()
+    person.deleted_at = utc_now()
     person.is_active = False
     account.is_active = False
     db.commit()

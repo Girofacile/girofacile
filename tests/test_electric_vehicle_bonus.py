@@ -4,6 +4,7 @@ import os
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
+from app.core.clock import utc_now
 from threading import Barrier
 from types import SimpleNamespace
 
@@ -173,7 +174,7 @@ def test_inactive_live_vehicles_count_but_archived_vehicles_do_not(fleet_env):
     ctx = fleet_env
     rows = seed_fleet(ctx, non_electric=10, electric=2)
     rows[0].is_active = False
-    rows[-1].deleted_at = datetime.utcnow()
+    rows[-1].deleted_at = utc_now()
     rows[-1].is_active = False
     ctx[1].commit()
     current = usage(ctx)
@@ -341,7 +342,7 @@ def test_scheduled_cancellation_keeps_bonus_until_access_expires(fleet_env, monk
     seed_fleet(ctx, non_electric=10, electric=1)
     assert usage(ctx)["plan_active"]
     assert create_vehicle(ctx).status_code == 200
-    ctx[2].plan_expires_at = datetime.utcnow() - timedelta(seconds=1)
+    ctx[2].plan_expires_at = utc_now() - timedelta(seconds=1)
     ctx[1].commit()
     assert not usage(ctx)["plan_active"]
     assert create_vehicle(ctx).status_code == 403

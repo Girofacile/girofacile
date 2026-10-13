@@ -1,5 +1,6 @@
 """Real acquisition APIs on isolated databases; no production services."""
 import io
+from app.core.clock import utc_now
 import pytest
 from copy import deepcopy
 from openpyxl import Workbook
@@ -152,7 +153,7 @@ def test_stale_preview_expiry_and_activation_guard(ingestion):
     row=db.query(Order).one();row.version+=1;db.commit()
     result=client.post(path+'/commit',json={'confirm':True})
     assert result.status_code==422 and result.json()['report']['invalid']==1
-    item=db.get(OrderImportRun,upload['run_id']);item.expires_at=datetime.utcnow()-timedelta(seconds=1);db.commit()
+    item=db.get(OrderImportRun,upload['run_id']);item.expires_at=utc_now()-timedelta(seconds=1);db.commit()
     assert client.post(path+'/preview').status_code==410
     source=db.get(OrderSource,src['id'])
     result=client.post(f"/api/order-sources/{src['id']}/action",json={'version':source.version,'action':'activate','run_id':rid})

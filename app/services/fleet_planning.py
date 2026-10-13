@@ -1,6 +1,7 @@
 """Constrained fleet insertion on one shared road matrix, with private persisted previews."""
 from copy import deepcopy
 from datetime import datetime, timedelta
+from ..core.clock import utc_now
 import math
 from fastapi import HTTPException
 from .. import optimizer as opt
@@ -160,7 +161,7 @@ def public(plan):
 
 def check_version(plan,version):
     if plan.version!=version: raise HTTPException(409,'Anteprima modificata. Ricaricala prima di continuare.')
-    if plan.created_at<datetime.utcnow()-timedelta(hours=12) and plan.status=='preview':
+    if plan.created_at<utc_now()-timedelta(hours=12) and plan.status=='preview':
         raise HTTPException(409,'Anteprima scaduta: ricalcola la distribuzione.')
 
 
@@ -261,7 +262,7 @@ def program(db,user,actor,plan_id,data):
     from secrets import token_urlsafe
     for row in rows:
         db.query(RouteToken).filter_by(route_plan_id=row.id).delete()
-        db.add(RouteToken(route_plan_id=row.id,token=token_urlsafe(32),expires_at=datetime.utcnow()+timedelta(days=3)))
+        db.add(RouteToken(route_plan_id=row.id,token=token_urlsafe(32),expires_at=utc_now()+timedelta(days=3)))
         row.status='programmato'
         route_orders.sync_route_orders(db,row,'scheduled')
     updated=deepcopy(plan.result)

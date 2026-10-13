@@ -1,6 +1,7 @@
 from ..services.identity import ensure_login_email_available
 import secrets
 from datetime import datetime, timedelta
+from ..core.clock import utc_now
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import or_
@@ -84,7 +85,7 @@ def _create_agent_invite(agent: Agent, db: Session, user: User, is_reinvite: boo
     st = AgentSetupToken(
         agent_id=agent.id,
         token=token,
-        expires_at=datetime.utcnow() + timedelta(days=7),
+        expires_at=utc_now() + timedelta(days=7),
         used_at=None,
     )
     db.add(st)
@@ -191,7 +192,7 @@ def delete_agent(item_id: int, db: Session = Depends(get_db), user: User = Depen
         raise HTTPException(404, "Agente non trovato")
     item.attivo = False
     item.is_active = False
-    item.deleted_at = datetime.utcnow()
+    item.deleted_at = utc_now()
     account = db.query(AgentAccount).filter(AgentAccount.agent_id == item.id).first()
     if account:
         account.is_active = False

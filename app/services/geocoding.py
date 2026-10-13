@@ -4,6 +4,7 @@ Modalità Google-only: usa esclusivamente Google Maps Geocoding.
 Geoapify e Nominatim sono disattivati per evitare fallback non desiderati.
 """
 from datetime import datetime
+from ..core.clock import utc_now
 
 import time
 import requests
@@ -153,7 +154,7 @@ def apply_geocode(customer, result: dict):
     customer.fonte_geocodifica = result.get("source")
     customer.google_place_id = result.get("place_id")
     customer.affidabilita_geocodifica = result.get("confidence")
-    customer.geocodificato_il = datetime.utcnow()
+    customer.geocodificato_il = utc_now()
 
 
 def search_address_autocomplete(

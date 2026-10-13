@@ -3,6 +3,7 @@ from ..services.platform_policy import require_registration, trial_days, default
 from ..services.sessions import read_session, active_identity, logout_sessions, revoked, credential
 from ..core.security import make_account_token
 from datetime import datetime, timedelta
+from ..core.clock import utc_now
 import hashlib
 import secrets
 
@@ -54,7 +55,7 @@ def signup(data: SignupIn, response: Response, db: Session = Depends(get_db)):
         raise HTTPException(400, "Email già registrata")
     ensure_login_email_available(db, email, "user")
     configured_trial_days = trial_days(db)
-    trial_ends = datetime.utcnow() + timedelta(days=configured_trial_days)
+    trial_ends = utc_now() + timedelta(days=configured_trial_days)
     selected_plan = (getattr(data, "plan", None) or default_plan(db)).strip().lower()
     if selected_plan not in {"starter", "business", "pro"}:
         selected_plan = "starter"
@@ -168,7 +169,7 @@ def superadmin_login(payload: dict, response: Response, db: Session = Depends(ge
 
     collaborator = db.query(SuperAdminCollaborator).filter(func.lower(SuperAdminCollaborator.email) == identifier_norm).first()
     if collaborator and collaborator.is_active and verify_password(password, collaborator.password_hash):
-        collaborator.last_access_at = datetime.utcnow()
+        collaborator.last_access_at = utc_now()
         db.commit()
         response.delete_cookie("session", path="/", domain=COOKIE_DOMAIN)
         response.delete_cookie("driver_session", path="/", domain=COOKIE_DOMAIN)
@@ -276,7 +277,7 @@ async def login(payload: dict, response: Response, db: Session = Depends(get_db)
     if collaborator and verify_password(password, collaborator.password_hash):
         if not active_identity(collaborator, db):
             raise HTTPException(403, "Account collaboratore disabilitato")
-        collaborator.last_login = datetime.utcnow()
+        collaborator.last_login = utc_now()
         if password_needs_rehash(collaborator.password_hash):
             collaborator.password_hash = hash_password(password)
         db.commit()
@@ -291,7 +292,7 @@ async def login(payload: dict, response: Response, db: Session = Depends(get_db)
             raise HTTPException(403, "Account autista disabilitato")
         if password_needs_rehash(driver_account.password_hash):
             driver_account.password_hash = hash_password(password)
-        driver_account.last_login = datetime.utcnow()
+        driver_account.last_login = utc_now()
         db.commit()
         _set_login_cookie_for_role(response, "driver", driver_account)
         driver = db.get(Driver, driver_account.driver_id)
@@ -313,7 +314,7 @@ async def login(payload: dict, response: Response, db: Session = Depends(get_db)
             raise HTTPException(403, "Account agente disabilitato")
         if password_needs_rehash(agent_account.password_hash):
             agent_account.password_hash = hash_password(password)
-        agent_account.last_login = datetime.utcnow()
+        agent_account.last_login = utc_now()
         db.commit()
         _set_login_cookie_for_role(response, "agent", agent_account)
         agent = db.get(Agent, agent_account.agent_id)
@@ -488,7 +489,7 @@ def _create_reset_token(db: Session, account_type: str, account_id: int, email: 
         account_id=account_id,
         email=email.strip().lower(),
         token=token,
-        expires_at=datetime.utcnow() + timedelta(hours=1),
+        expires_at=utc_now() + timedelta(hours=1),
         used_at=None,
     )
     db.add(prt)
@@ -545,7 +546,7 @@ def legacy_password_reset_request(payload: dict, db: Session = Depends(get_db)):
 @router.get("/api/password-reset/{token}")
 def get_password_reset_info(token: str, db: Session = Depends(get_db)):
     prt = db.query(PasswordResetToken).filter(PasswordResetToken.token == token).first()
-    if not prt or prt.used_at or datetime.utcnow() > prt.expires_at:
+    if not prt or prt.used_at or utc_now() > prt.expires_at:
         raise HTTPException(404, "Link non valido o scaduto")
     model = {"user": User, "driver": DriverAccount, "agent": AgentAccount, "collaborator": CompanyCollaborator}.get(prt.account_type)
     account = db.get(model, prt.account_id) if model else None
@@ -569,7 +570,7 @@ def confirm_password_reset(payload: dict, db: Session = Depends(get_db)):
     token = (payload.get("token") or "").strip()
     password = payload.get("password") or ""
     prt = db.query(PasswordResetToken).filter(PasswordResetToken.token == token).first()
-    if not prt or prt.used_at or datetime.utcnow() > prt.expires_at:
+    if not prt or prt.used_at or utc_now() > prt.expires_at:
         raise HTTPException(400, "Link non valido o scaduto")
 
     if prt.account_type == "user":
@@ -589,7 +590,7 @@ def confirm_password_reset(payload: dict, db: Session = Depends(get_db)):
         # A reset already in flight cannot overwrite a new recipient's password.
         account = db.query(CompanyCollaborator).filter_by(id=prt.account_id).with_for_update().populate_existing().first()
         prt = db.query(PasswordResetToken).filter_by(id=prt.id).with_for_update().populate_existing().first()
-        if not prt or prt.used_at or datetime.utcnow() > prt.expires_at:
+        if not prt or prt.used_at or utc_now() > prt.expires_at:
             raise HTTPException(400, "Link non valido o scaduto")
         if not account or not active_identity(account, db):
             raise HTTPException(404, "Account collaboratore non attivo")
@@ -607,7 +608,7 @@ def confirm_password_reset(payload: dict, db: Session = Depends(get_db)):
         raise HTTPException(400, str(exc))
 
     account.password_hash = hash_password(password)
-    prt.used_at = datetime.utcnow()
+    prt.used_at = utc_now()
     db.commit()
     return {"ok": True, "message": "Password aggiornata correttamente. Ora puoi accedere con la nuova password."}
 
@@ -734,7 +735,7 @@ def change_account_password(
         raise HTTPException(400, str(exc))
 
     user.password_hash = hash_password(new_password)
-    now = datetime.utcnow()
+    now = utc_now()
     db.query(PasswordResetToken).filter(
         PasswordResetToken.account_type == "user",
         PasswordResetToken.account_id == user.id,
@@ -846,7 +847,7 @@ def onboarding_status(user: User = Depends(current_user), db: Session = Depends(
 @router.post("/api/onboarding/complete")
 def complete_onboarding(user: User = Depends(current_user), db: Session = Depends(get_db)):
     user.onboarding_completed = True
-    user.onboarding_completed_at = datetime.utcnow()
+    user.onboarding_completed_at = utc_now()
     user.onboarding_dismissed = True
     db.commit()
     return {"ok": True}

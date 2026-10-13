@@ -1,5 +1,5 @@
 """Security boundaries for collaborator invitations, without SMTP or production DB."""
-from collections import defaultdict, deque
+from collections import OrderedDict
 from html import escape
 from pathlib import Path
 import threading
@@ -98,7 +98,7 @@ def invitation_limiter(monkeypatch):
     monkeypatch.setattr(http_security, "LOGIN_RATE_LIMIT_ATTEMPTS", 2)
     monkeypatch.setattr(http_security, "LOGIN_RATE_LIMIT_WINDOW_SECONDS", 60)
     monkeypatch.setattr(http_security, "TRUST_PROXY_HEADERS", False)
-    monkeypatch.setattr(http_security, "_attempts", defaultdict(deque))
+    monkeypatch.setattr(http_security, "_attempts", OrderedDict())
     monkeypatch.setattr(http_security, "_attempts_lock", threading.Lock())
     assert "/api/collaborator-invitations/accept" in http_security.LOGIN_PATHS
 

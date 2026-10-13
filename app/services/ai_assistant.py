@@ -6,6 +6,7 @@ produce solo testi brevi e modificabili dall'utente/Super Admin.
 from __future__ import annotations
 
 from datetime import datetime
+from ..core.clock import utc_now
 import json
 import os
 import requests
@@ -113,14 +114,14 @@ def run_ai_text(db: Session, *, task: str, system_prompt: str, user_prompt: str,
         "max_tokens": 450,
     }
     try:
-        started = datetime.utcnow()
+        started = utc_now()
         resp = requests.post(
             "https://api.openai.com/v1/chat/completions",
             headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
             data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
             timeout=30,
         )
-        response_ms = int((datetime.utcnow() - started).total_seconds() * 1000)
+        response_ms = int((utc_now() - started).total_seconds() * 1000)
         if resp.status_code >= 400:
             msg = resp.text[:1000]
             log_api_usage(db, user_id=user_id, provider="openai", service=f"openai_{task}", action="Chiamata AI", endpoint="/v1/chat/completions", status="failed", message=msg, response_ms=response_ms, estimated_cost_eur=0, meta={"task": task, "model": model})

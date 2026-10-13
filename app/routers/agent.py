@@ -3,6 +3,7 @@ from ..services.identity import ensure_login_email_available
 import hashlib
 import secrets
 from datetime import datetime, timedelta
+from ..core.clock import utc_now
 from pathlib import Path
 
 import pandas as pd
@@ -15,7 +16,7 @@ from ..core.http_security import cookie_options
 from ..core.security import hash_password as secure_hash_password, password_needs_rehash, validate_password_strength, verify_password
 from ..core.utils import time_to_hhmm, parse_time_value
 from ..database import get_db
-from ..services.customer_import import read_customer_import, preflight_customer_import, customer_address_key, invalidate_imported_address
+from ..services.customer_import import read_customer_import, preflight_customer_import, customer_address_key, invalidate_imported_address, unload_minutes
 from ..models import Agent, AgentAccount, AgentSetupToken, Customer, User
 from ..schemas import CustomerIn
 from ..services.geocoding import geocode_customer
@@ -70,7 +71,7 @@ def get_setup_info(token: str, db: Session = Depends(get_db)):
         raise HTTPException(404, "Link non valido o scaduto")
     if st.used_at:
         raise HTTPException(409, "Questo link è già stato utilizzato. Accedi con le tue credenziali.")
-    if datetime.utcnow() > st.expires_at:
+    if utc_now() > st.expires_at:
         raise HTTPException(410, "Link scaduto. Contatta l'amministratore per riceverne uno nuovo.")
     agent = db.get(Agent, st.agent_id)
     if not agent:
@@ -92,7 +93,7 @@ def complete_setup(token: str, payload: dict, response: Response, db: Session = 
         raise HTTPException(404, "Link non valido")
     if st.used_at:
         raise HTTPException(409, "Link già utilizzato")
-    if datetime.utcnow() > st.expires_at:
+    if utc_now() > st.expires_at:
         raise HTTPException(410, "Link scaduto")
     password = payload.get("password") or ""
     agent = db.get(Agent, st.agent_id)
@@ -118,7 +119,7 @@ def complete_setup(token: str, payload: dict, response: Response, db: Session = 
     else:
         account = AgentAccount(agent_id=agent.id, email=email, password_hash=hash_password(password), is_active=True)
         db.add(account)
-    st.used_at = datetime.utcnow()
+    st.used_at = utc_now()
     db.commit()
     db.refresh(account)
     response.set_cookie("agent_session", make_session_token(account), **cookie_options(60*60*24*30))
@@ -137,7 +138,7 @@ def agent_login(payload: dict, response: Response, db: Session = Depends(get_db)
     agent, user = ensure_agent_owner(account, db)
     if password_needs_rehash(account.password_hash):
         account.password_hash = hash_password(password)
-    account.last_login = datetime.utcnow()
+    account.last_login = utc_now()
     db.commit()
     response.set_cookie("agent_session", make_session_token(account), **cookie_options(60*60*24*30))
     return {"ok": True, "agent_id": agent.id, "agent_name": agent_full_name(agent), "email": account.email, "company_name": user.company_name}
@@ -230,7 +231,7 @@ def delete_agent_customer(customer_id: int, db: Session = Depends(get_db), accou
     if not item:
         raise HTTPException(404, "Cliente non trovato")
     item.is_active = False
-    item.deleted_at = datetime.utcnow()
+    item.deleted_at = utc_now()
     db.commit()
     return {"ok": True, "archived": True}
 
@@ -298,10 +299,7 @@ async def import_agent_customers(file: UploadFile = File(...), db: Session = Dep
         item.scarico_mattina_a = parse_time_value(get(row, "scarico_mattina_a", ""))
         item.scarico_pomeriggio_da = parse_time_value(get(row, "scarico_pomeriggio_da", ""))
         item.scarico_pomeriggio_a = parse_time_value(get(row, "scarico_pomeriggio_a", ""))
-        try:
-            item.tempo_scarico_min = int(get(row, "tempo_scarico_min", item.tempo_scarico_min or 10) or 10)
-        except Exception:
-            item.tempo_scarico_min = item.tempo_scarico_min or 10
+        item.tempo_scarico_min = unload_minutes(get(row, "tempo_scarico_min"), item.tempo_scarico_min if item.tempo_scarico_min is not None else 10)
         item.ztl = b(get(row, "ztl", False))
         item.sponda = b(get(row, "sponda", False))
         item.transpallet = b(get(row, "transpallet", False))

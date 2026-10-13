@@ -1,5 +1,6 @@
 """Invitation locking checks on a disposable PostgreSQL schema, never SQLite concurrency."""
 import hashlib
+from app.core.clock import utc_now
 from concurrent.futures import ThreadPoolExecutor
 from threading import Barrier
 from urllib.parse import parse_qs, urlsplit
@@ -207,7 +208,7 @@ def test_older_smtp_success_cannot_overwrite_a_newer_failed_invitation(pg, monke
                 live = db.query(CollaboratorInvitation).filter_by(
                     collaborator_id=actor_id, used_at=None).one()
                 # The anti-double-click interval is deliberately passed to allow a real retry.
-                live.created_at = datetime.utcnow() - timedelta(seconds=31)
+                live.created_at = utc_now() - timedelta(seconds=31)
                 db.commit()
                 second = issue_invitation(
                     db, db.get(CompanyCollaborator, actor_id), db.get(User, owner_id))

@@ -1,4 +1,5 @@
 import base64
+from app.core.clock import utc_now
 import hashlib
 import io
 
@@ -168,7 +169,7 @@ def test_tenant_driver_token_and_corrupt_key_isolation(env, storage):
     assert client.get(f'/api/driver/delivery/{delivery.id}/evidence/pod').status_code == 404
     token = db.query(RouteToken).filter_by(token='test-route').one()
     from datetime import datetime, timedelta
-    token.expires_at = datetime.utcnow() - timedelta(seconds=1)
+    token.expires_at = utc_now() - timedelta(seconds=1)
     db.commit()
     assert client.get(f'/api/operator/test-route/delivery/{delivery.id}/evidence/signature').status_code == 410
 

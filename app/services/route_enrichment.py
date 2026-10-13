@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
+from ..core.clock import utc_now
 import json
 
 from ..core.utils import LOCAL_TZ, parse_time_value, time_to_hhmm
@@ -194,6 +195,6 @@ def enrich_final_route(db, plan, *, force=False):
         plan.traffic_result_json = _dump({"status": plan.traffic_status, "departure_time": departure,
                                          "legs": base, "version": 1})
     _persist_timing(plan, result, departure)
-    plan.traffic_calculated_at = datetime.utcnow()
+    plan.traffic_calculated_at = utc_now()
     plan.traffic_departure_at = datetime.fromisoformat(departure.replace("Z", "+00:00"))
     plan.traffic_version = revision

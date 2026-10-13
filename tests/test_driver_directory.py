@@ -1,4 +1,5 @@
 from datetime import date, time, datetime
+from app.core.clock import utc_now
 from test_agents_feature import env
 
 
@@ -7,7 +8,7 @@ def test_usual_vehicle_uses_frequency_and_excludes_foreign_archived_and_cancelle
     from app.routers.vehicles_drivers import driver_to_dict
     _, db, owner, other, *_ = env
     driver = Driver(user_id=owner.id, nome='Mario', cognome='Rossi')
-    cars = [Vehicle(user_id=owner.id, nome='Abituale', targa='AA'), Vehicle(user_id=owner.id, nome='Recente', targa='BB'), Vehicle(user_id=other.id, nome='Altrui'), Vehicle(user_id=owner.id, nome='Archiviato', deleted_at=datetime.utcnow())]
+    cars = [Vehicle(user_id=owner.id, nome='Abituale', targa='AA'), Vehicle(user_id=owner.id, nome='Recente', targa='BB'), Vehicle(user_id=other.id, nome='Altrui'), Vehicle(user_id=owner.id, nome='Archiviato', deleted_at=utc_now())]
     db.add_all([driver,*cars]);db.flush()
     def route(vehicle, day, status='completato', user_id=None):
         return RoutePlan(user_id=user_id or owner.id, driver_id=driver.id, vehicle_id=vehicle.id, nome='Test', data_giro=date(2026,1,day), orario_partenza=time(8), status=status)

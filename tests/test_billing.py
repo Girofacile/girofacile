@@ -1,5 +1,6 @@
 """Billing and operational quota regression tests; no external API or real DB."""
 from datetime import datetime, timedelta, date, time
+from app.core.clock import utc_now
 from types import SimpleNamespace
 import pytest
 from fastapi import HTTPException
@@ -79,7 +80,7 @@ def test_payment_sync_and_grace_cannot_be_extended_by_retries(billing_env, monke
     assert get_user_plan_status(user) == 'past_due'
     sync_subscription(db, user, subscription(user, 'past_due'))
     assert user.billing_grace_until == grace
-    user.billing_grace_until=datetime.utcnow()-timedelta(seconds=1)
+    user.billing_grace_until=utc_now()-timedelta(seconds=1)
     assert get_user_plan_status(user) == 'expired'
     sync_subscription(db, user, subscription(user))
     assert user.billing_grace_until is None and user.plan_status == 'active'
@@ -195,7 +196,7 @@ def test_invoice_download_is_tenant_scoped(billing_env):
 def test_notifications_are_deduplicated(billing_env, monkeypatch):
     from app.services import billing_notices
     _,db,user,*_=billing_env
-    user.plan_status='trial';user.trial_ends_at=datetime.utcnow()+timedelta(days=2);user.email='test@example.test';db.commit()
+    user.plan_status='trial';user.trial_ends_at=utc_now()+timedelta(days=2);user.email='test@example.test';db.commit()
     sent=[];monkeypatch.setattr(billing_notices,'_send',lambda *args:sent.append(args) or True)
     assert billing_notices.send_due_notices(db,send=False)['sent']==0
     assert not sent

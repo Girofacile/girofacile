@@ -1,6 +1,7 @@
 """Owner-managed company collaborators and separate self-service identity."""
 import json
 from datetime import datetime
+from ..core.clock import utc_now
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr
 from sqlalchemy import func
@@ -95,7 +96,7 @@ def save(data, owner, db, actor=None):
         actor.session_version += 1
         revoke_invitations(db, actor)
         db.query(PasswordResetToken).filter_by(account_type="collaborator", account_id=actor.id, used_at=None).update(
-            {"used_at": datetime.utcnow()}, synchronize_session=False)
+            {"used_at": utc_now()}, synchronize_session=False)
     if email_changed:
         # A changed login address must be verified by its recipient.
         actor.password_setup_required = True
@@ -207,7 +208,7 @@ def password(payload: dict, response: Response, actor=Depends(actor_account), db
         raise HTTPException(400, str(exc))
     actor.password_hash = hash_password(new)
     revoke_invitations(db, actor)
-    db.query(PasswordResetToken).filter_by(account_type="collaborator", account_id=actor.id, used_at=None).update({"used_at": datetime.utcnow()})
+    db.query(PasswordResetToken).filter_by(account_type="collaborator", account_id=actor.id, used_at=None).update({"used_at": utc_now()})
     db.commit()
     response.delete_cookie("session", path="/", domain=COOKIE_DOMAIN)
     return {"ok": True, "reauthenticate": True, "message": "Password aggiornata. Accedi di nuovo."}

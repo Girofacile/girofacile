@@ -22,6 +22,16 @@ In produzione (`APP_ENV=production` o `prod`) il server si rifiuta di partire se
 `SUPERADMIN_PASSWORD` (o in sua assenza `APP_PASSWORD`) manca, è comune o ha
 meno di 12 caratteri, oppure se `COOKIE_SECURE` è disattivato.
 
+Con Docker Compose l'app (porta 8000) e OSRM (porta 5000) ascoltano solo su
+`127.0.0.1`: il traffico pubblico deve passare dal reverse proxy HTTPS. Per
+esporre l'app direttamente impostare `APP_BIND_ADDRESS=0.0.0.0` (sconsigliato).
+Gli header `X-Forwarded-For` sono considerati solo se la connessione arriva da
+un indirizzo interno (loopback o rete privata).
+
+Le dipendenze sono in `requirements.txt`; `requirements.lock` fissa anche
+quelle indirette ed è usato dalla build Docker. Dopo ogni aggiornamento
+rigenerarlo e verificare con `pip-audit -r requirements.lock`.
+
 Gli script di avvio locale e l'immagine Docker eseguono già le migrazioni.
 Per avvii personalizzati, includere il comando prima dell'avvio dei worker.
 Non eseguire migrazioni tramite importazione di `app.main`: l'importazione

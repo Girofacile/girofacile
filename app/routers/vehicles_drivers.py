@@ -1,5 +1,6 @@
 from ..services.identity import ensure_login_email_available
 from datetime import datetime
+from ..core.clock import utc_now
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import text, func
@@ -285,7 +286,7 @@ def delete_vehicle(item_id: int, db: Session = Depends(get_db), user: User = Dep
     if not item:
         raise HTTPException(404, "Mezzo non trovato")
     item.is_active = False
-    item.deleted_at = datetime.utcnow()
+    item.deleted_at = utc_now()
     db.commit()
     return {"ok": True, "archived": True}
 
@@ -505,7 +506,7 @@ def delete_driver(item_id: int, db: Session = Depends(get_db), user: User = Depe
     if not item:
         raise HTTPException(404, "Autista non trovato")
     item.is_active = False
-    item.deleted_at = datetime.utcnow()
+    item.deleted_at = utc_now()
     account = db.query(DriverAccount).filter(DriverAccount.driver_id == item.id).first()
     if account:
         account.is_active = False

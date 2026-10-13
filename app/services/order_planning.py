@@ -1,5 +1,6 @@
 """Persistent actor selections and conversion into the existing planning schema."""
 from datetime import datetime
+from ..core.clock import utc_now
 from uuid import uuid5, NAMESPACE_URL
 from fastapi import HTTPException
 from sqlalchemy import or_
@@ -75,7 +76,7 @@ def change_selection(db, user_id, actor, data):
     row.order_ids = sorted(ids)
     row.stops = None
     row.version += 1
-    row.updated_at = datetime.utcnow()
+    row.updated_at = utc_now()
     db.flush()
     return row
 
@@ -95,7 +96,7 @@ def snapshot(db, user_id, actor, data):
         # Removing a stop only removes it from this actor's selection.
         row.order_ids = sorted(ids)
     row.version += 1
-    row.updated_at = datetime.utcnow()
+    row.updated_at = utc_now()
     db.flush()
     return row
 

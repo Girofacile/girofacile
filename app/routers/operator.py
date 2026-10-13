@@ -7,6 +7,7 @@ Accessibile tramite token senza login — /giro/{token}
 """
 import secrets
 from datetime import datetime, timedelta
+from ..core.clock import utc_now
 
 from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
@@ -34,7 +35,7 @@ def get_route_by_token(token: str, db: Session) -> tuple[RouteToken, RoutePlan]:
     rt = db.query(RouteToken).filter(RouteToken.token == token).first()
     if not rt:
         raise HTTPException(404, "Link non valido o scaduto")
-    if rt.expires_at and datetime.utcnow() > rt.expires_at:
+    if rt.expires_at and utc_now() > rt.expires_at:
         raise HTTPException(410, "Link scaduto")
     plan = db.get(RoutePlan, rt.route_plan_id)
     if not plan:
@@ -101,7 +102,7 @@ def generate_route_token(
     db.query(RouteToken).filter(RouteToken.route_plan_id == route_id).delete()
 
     token = secrets.token_urlsafe(32)
-    expires = datetime.utcnow() + timedelta(days=3)
+    expires = utc_now() + timedelta(days=3)
     rt = RouteToken(
         route_plan_id=route_id,
         token=token,

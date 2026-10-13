@@ -1,5 +1,6 @@
 import io
 from datetime import date, datetime, time, timedelta, timezone
+from app.core.clock import utc_now
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -20,7 +21,7 @@ def seed_route(env):
     db.add_all([account, route]); db.flush()
     delivery = Delivery(route_plan_id=route.id, customer_id=customer.id, cliente_nome='Test', indirizzo='Via Test')
     db.add(delivery)
-    db.add(RouteToken(route_plan_id=route.id, token='test-route', expires_at=datetime.utcnow()+timedelta(days=1)))
+    db.add(RouteToken(route_plan_id=route.id, token='test-route', expires_at=utc_now()+timedelta(days=1)))
     owner.delivery_signature_enabled = True
     db.commit()
     return route, delivery, account

@@ -3,6 +3,7 @@ Servizio piani abbonamento.
 Definisce i limiti per piano e le funzioni di controllo.
 """
 from datetime import datetime
+from ..core.clock import utc_now
 from fastapi import HTTPException
 from ..core.utils import parse_date_value
 from sqlalchemy import func
@@ -34,12 +35,12 @@ def get_user_plan_status(user: User) -> str:
     status = user.plan_status or "trial"
     if status == "past_due":
         grace = getattr(user, "billing_grace_until", None)
-        return "past_due" if grace and datetime.utcnow() < grace else "expired"
+        return "past_due" if grace and utc_now() < grace else "expired"
     if status == "trial":
-        if user.trial_ends_at and datetime.utcnow() > user.trial_ends_at:
+        if user.trial_ends_at and utc_now() > user.trial_ends_at:
             return "expired"
     if status == "active":
-        if user.plan_expires_at and datetime.utcnow() > user.plan_expires_at:
+        if user.plan_expires_at and utc_now() > user.plan_expires_at:
             return "expired"
     return status
 

@@ -1,5 +1,6 @@
 from ..services.customer_planning import planning_customer_filters
 from datetime import datetime
+from ..core.clock import utc_now
 import time
 from pathlib import Path
 
@@ -11,7 +12,7 @@ from sqlalchemy.orm import Session
 from ..core.dependencies import current_user, owned
 from ..core.utils import time_to_hhmm, parse_time_value
 from ..database import get_db
-from ..services.customer_import import read_customer_import, preflight_customer_import, customer_address_key, invalidate_imported_address
+from ..services.customer_import import read_customer_import, preflight_customer_import, customer_address_key, invalidate_imported_address, unload_minutes
 from ..models import Agent, Customer, User
 from ..routers.agents import agent_full_name
 from ..schemas import CustomerIn
@@ -204,7 +205,7 @@ def delete_customer(item_id: int, db: Session = Depends(get_db), user: User = De
     if not item:
         raise HTTPException(404, "Cliente non trovato")
     item.is_active = False
-    item.deleted_at = datetime.utcnow()
+    item.deleted_at = utc_now()
     db.commit()
     dc.invalidate_key(db, dc.customer_key(item_id, user_id=user.id), user_id=user.id)
     return {"ok": True, "archived": True}
@@ -337,7 +338,7 @@ async def import_customers(
         item.scarico_mattina_a = parse_time_value(get(row, "scarico_mattina_a"))
         item.scarico_pomeriggio_da = parse_time_value(get(row, "scarico_pomeriggio_da"))
         item.scarico_pomeriggio_a = parse_time_value(get(row, "scarico_pomeriggio_a"))
-        item.tempo_scarico_min = int(get(row, "tempo_scarico_min", 10) or 10)
+        item.tempo_scarico_min = unload_minutes(get(row, "tempo_scarico_min"))
         item.ztl = b(get(row, "ztl", False))
         item.sponda = b(get(row, "sponda", False))
         item.transpallet = b(get(row, "transpallet", False))

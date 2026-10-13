@@ -1,6 +1,7 @@
 """PostgreSQL migration, constraints and real concurrent writes in disposable schemas."""
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, date, time
+from app.core.clock import utc_now
 from sqlalchemy import text, inspect
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
@@ -20,7 +21,7 @@ def test_order_migration_repeatable_and_preserves_existing_records(pg):
         for table in reversed(ORDER_TABLES):table.drop(conn)
         conn.execute(text('CREATE TABLE schema_migrations (version VARCHAR(40) PRIMARY KEY, applied_at TIMESTAMP NOT NULL)'))
         for version in ('20261004_01','20261004_02','20261004_03','20261004_04','20261006_01','20261009_01','20261009_02'):
-            conn.execute(text('INSERT INTO schema_migrations VALUES (:v,:now)'),{'v':version,'now':datetime.utcnow()})
+            conn.execute(text('INSERT INTO schema_migrations VALUES (:v,:now)'),{'v':version,'now':utc_now()})
     with ThreadPoolExecutor(max_workers=2) as pool:list(pool.map(lambda _:run_migrations(pg),range(2)))
     run_migrations(pg);require_current_schema(pg)
     assert all(inspect(pg).has_table(t.name) for t in ORDER_TABLES)

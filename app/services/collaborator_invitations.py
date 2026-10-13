@@ -3,6 +3,7 @@ import hashlib
 import re
 import secrets
 from datetime import datetime, timedelta, timezone
+from ..core.clock import utc_now
 from urllib.parse import urlsplit
 
 from fastapi import HTTPException
@@ -59,7 +60,7 @@ def invitation_fields(actor, invitation=None):
         status = "pending"
     elif not invitation.sent_at and invitation.used_at:
         status = "failed"
-    elif invitation.used_at or invitation.expires_at <= datetime.utcnow():
+    elif invitation.used_at or invitation.expires_at <= utc_now():
         status = "expired"
     else:
         status = "pending"
@@ -73,7 +74,7 @@ def invitation_fields(actor, invitation=None):
 
 def revoke_invitations(db, actor):
     db.query(CollaboratorInvitation).filter_by(collaborator_id=actor.id, used_at=None).update(
-        {"used_at": datetime.utcnow()}, synchronize_session=False)
+        {"used_at": utc_now()}, synchronize_session=False)
 
 
 def issue_invitation(db, actor, owner):
@@ -85,7 +86,7 @@ def issue_invitation(db, actor, owner):
         raise HTTPException(403, "Riattiva il collaboratore prima di inviare un invito")
     if not actor.password_setup_required:
         raise HTTPException(409, "Il collaboratore ha già impostato la password. Può usare Password dimenticata.")
-    now = datetime.utcnow()
+    now = utc_now()
     previous = latest_invitation(db, actor)
     if (previous and not previous.used_at and not previous.sent_at
             and now - previous.created_at < timedelta(seconds=30)):
@@ -115,9 +116,9 @@ def issue_invitation(db, actor, owner):
         sent = False
     query = db.query(CollaboratorInvitation).filter_by(id=invitation_id)
     if sent:
-        query.filter_by(used_at=None).update({"sent_at": datetime.utcnow()}, synchronize_session=False)
+        query.filter_by(used_at=None).update({"sent_at": utc_now()}, synchronize_session=False)
     else:
-        query.filter_by(used_at=None).update({"used_at": datetime.utcnow()}, synchronize_session=False)
+        query.filter_by(used_at=None).update({"used_at": utc_now()}, synchronize_session=False)
     db.commit()
     db.refresh(actor)
     current = latest_invitation(db, actor)
@@ -148,7 +149,7 @@ def _find_invitation(db, token, lock=False):
         invitation = db.query(CollaboratorInvitation).filter_by(id=invitation.id).with_for_update().populate_existing().first()
     if (not actor or not actor.is_active or not actor.password_setup_required
             or not db.get(User, actor.user_id) or not invitation or invitation.used_at
-            or invitation.expires_at <= datetime.utcnow()
+            or invitation.expires_at <= utc_now()
             or invitation.email.lower() != actor.email.lower()):
         raise _invalid()
     return actor, invitation
@@ -175,11 +176,11 @@ def confirm_invitation(db, token, password, confirm_password):
     actor.password_hash = hash_password(password)
     actor.password_setup_required = False
     actor.session_version += 1
-    invitation.used_at = datetime.utcnow()
+    invitation.used_at = utc_now()
     revoke_invitations(db, actor)
     db.query(PasswordResetToken).filter_by(
         account_type="collaborator", account_id=actor.id, used_at=None).update(
-            {"used_at": datetime.utcnow()}, synchronize_session=False)
+            {"used_at": utc_now()}, synchronize_session=False)
     db.commit()
     return {"ok": True, "message": "Password impostata. Ora puoi accedere con la tua email.",
             "redirect_url": "/dashboard"}

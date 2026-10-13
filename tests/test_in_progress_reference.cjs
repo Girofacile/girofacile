@@ -54,6 +54,7 @@ function harness(){
     setTimeout:()=>0,requestAnimationFrame(){},
     console:{warn(){}}
   };
+  context.GFDriverBreaks=vm.runInNewContext(read('static/driver-schedule.js')+';window.GFDriverBreaks',{window:{}});
   vm.runInNewContext(read('static/dashboard/js/in-progress-reference.js'),context);
   return {page,picker,count,route:selectedRoute,controller:context.window.GFInProgressReference};
 }
@@ -97,7 +98,7 @@ test('sidebar e login esclusi dal redesign di Giri in corso',()=>{
   assert.doesNotMatch(css,/\.sidebar\s*\{|\.brand\s*\{|\.login-side\s*\{/);
   assert.match(html,/design-system\.js\?v=sidebar_icone_originali_20261012/);
   assert.match(html,/in-progress-reference\.css\?v=gf_inprogress_ref_20261013_1/);
-  assert.match(html,/in-progress-reference\.js\?v=gf_inprogress_ref_20261013_1/);
+  assert.match(html,/in-progress-reference\.js\?v=driver_shifts_20261013_1/);
   assert.match(core,/GFInProgressReference\?\.render/);
   assert.match(navigation,/GFInProgressReference\?\.suspend/);
   assert.match(navigation,/"dashboard-in-progress":\s*\{\s*title: "Giri in corso"/);

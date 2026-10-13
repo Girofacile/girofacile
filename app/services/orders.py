@@ -1,5 +1,6 @@
 """Company-scoped orders and auditable, versioned operational corrections."""
 from datetime import datetime, date
+from ..core.clock import utc_now
 import hmac
 from uuid import uuid4
 from fastapi import HTTPException
@@ -36,7 +37,7 @@ def record(db, order, actor, kind, changes):
 
 def touch(order):
     order.version += 1
-    order.updated_at = datetime.utcnow()
+    order.updated_at = utc_now()
 
 
 def project(order, values):

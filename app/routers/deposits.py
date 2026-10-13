@@ -1,4 +1,5 @@
 from datetime import datetime
+from ..core.clock import utc_now
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -41,7 +42,7 @@ def update_deposit(item_id: int, data: DepositIn, db: Session = Depends(get_db),
     address_changed = (data.indirizzo or "").strip().lower() != (item.indirizzo or "").strip().lower()
     for k, v in data.model_dump().items():
         setattr(item, k, v)
-    item.updated_at = datetime.utcnow()
+    item.updated_at = utc_now()
     if address_changed:
         item.lat = None
         item.lon = None
@@ -57,7 +58,7 @@ def delete_deposit(item_id: int, db: Session = Depends(get_db), user: User = Dep
     if not item:
         raise HTTPException(404, "Deposito non trovato")
     item.is_active = False
-    item.deleted_at = datetime.utcnow()
+    item.deleted_at = utc_now()
     item.predefinito = False
     db.commit()
     dc.invalidate_key(db, dc.deposit_key(item_id, user_id=user.id), user_id=user.id)

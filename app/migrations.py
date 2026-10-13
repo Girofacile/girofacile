@@ -1,5 +1,6 @@
 """Explicit, locked, versioned schema upgrades: python -m app.migrations."""
 from datetime import datetime
+from .core.clock import utc_now
 from sqlalchemy import inspect, text
 
 LATEST = '20261013_02'
@@ -47,11 +48,11 @@ def run_migrations(engine):
                 legacy_schema.ensure_default_user()
                 legacy_schema.harden_tenant_schema()
                 with engine.begin() as conn:
-                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261004_01', 'now': datetime.utcnow()})
+                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261004_01', 'now': utc_now()})
             if '20261004_02' not in applied:
                 with engine.begin() as conn:
                     conn.execute(text('CREATE UNIQUE INDEX IF NOT EXISTS uq_delivery_status_event_idx ON delivery_statuses (delivery_id, route_plan_id)'))
-                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261004_02', 'now': datetime.utcnow()})
+                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261004_02', 'now': utc_now()})
             if '20261004_03' not in applied:
                 from .models import DeliveryStatus
                 with engine.begin() as conn:
@@ -64,12 +65,12 @@ def run_migrations(engine):
                         if name not in existing:
                             sql_type = table.c[name].type.compile(dialect=engine.dialect)
                             conn.execute(text(f'ALTER TABLE {table.name} ADD COLUMN {name} {sql_type}'))
-                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261004_03', 'now': datetime.utcnow()})
+                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261004_03', 'now': utc_now()})
             if '20261004_04' not in applied:
                 from .models import DeliveryTrackingLink
                 with engine.begin() as conn:
                     DeliveryTrackingLink.__table__.create(conn, checkfirst=True)
-                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261004_04', 'now': datetime.utcnow()})
+                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261004_04', 'now': utc_now()})
             if '20261005_01' not in applied and '20261006_01' not in applied:
                 # Fresh installs can apply this structural step as part of the
                 # current schema without recording an otherwise redundant
@@ -95,12 +96,12 @@ def run_migrations(engine):
                         'transfer_booking_portal_settings',
                     ):
                         conn.execute(text(f'DROP TABLE IF EXISTS {table_name}'))
-                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261006_01', 'now': datetime.utcnow()})
+                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261006_01', 'now': utc_now()})
             if '20261009_01' not in applied:
                 from .models import CompanyCollaborator
                 with engine.begin() as conn:
                     CompanyCollaborator.__table__.create(conn, checkfirst=True)
-                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261009_01', 'now': datetime.utcnow()})
+                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261009_01', 'now': utc_now()})
             if '20261009_02' not in applied:
                 from .models import CollaboratorInvitation
                 with engine.begin() as conn:
@@ -109,23 +110,23 @@ def run_migrations(engine):
                         # Existing password-based accounts remain initialized.
                         conn.execute(text('ALTER TABLE company_collaborators ADD COLUMN password_setup_required BOOLEAN NOT NULL DEFAULT FALSE'))
                     CollaboratorInvitation.__table__.create(conn, checkfirst=True)
-                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261009_02', 'now': datetime.utcnow()})
+                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261009_02', 'now': utc_now()})
             if '20261010_01' not in applied:
                 from .order_models import ORDER_TABLES
                 with engine.begin() as conn:
                     for table in ORDER_TABLES:
                         table.create(conn, checkfirst=True)
-                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261010_01', 'now': datetime.utcnow()})
+                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261010_01', 'now': utc_now()})
             if '20261010_02' not in applied:
                 from .order_models import OrderPlanningSelection
                 with engine.begin() as conn:
                     OrderPlanningSelection.__table__.create(conn, checkfirst=True)
-                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261010_02', 'now': datetime.utcnow()})
+                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261010_02', 'now': utc_now()})
             if '20261011_01' not in applied:
                 with engine.begin() as conn:
                     if 'customer_resolution' not in {c['name'] for c in inspect(conn).get_columns('orders')}:
                         conn.execute(text("ALTER TABLE orders ADD COLUMN customer_resolution VARCHAR(30) NOT NULL DEFAULT 'pending'"))
-                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261011_01', 'now': datetime.utcnow()})
+                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261011_01', 'now': utc_now()})
             if '20261011_02' not in applied:
                 with engine.begin() as conn:
                     additions = {'order_sources': {'version': "INTEGER NOT NULL DEFAULT 1"},
@@ -136,12 +137,12 @@ def run_migrations(engine):
                         for name, ddl in columns.items():
                             if name not in existing: conn.execute(text(f'ALTER TABLE {table} ADD COLUMN {name} {ddl}'))
                     conn.execute(text('CREATE UNIQUE INDEX IF NOT EXISTS uq_order_import_request ON order_import_runs (source_id, idempotency_key)'))
-                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261011_02', 'now': datetime.utcnow()})
+                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261011_02', 'now': utc_now()})
             if '20261013_01' not in applied:
                 from .fleet_models import FleetPlan
                 with engine.begin() as conn:
                     FleetPlan.__table__.create(conn, checkfirst=True)
-                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261013_01', 'now': datetime.utcnow()})
+                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261013_01', 'now': utc_now()})
             if '20261013_02' not in applied:
                 with engine.begin() as conn:
                     tables=set(inspect(conn).get_table_names())
@@ -151,7 +152,7 @@ def run_migrations(engine):
                         existing={c['name'] for c in inspect(conn).get_columns(table)}
                         for column in columns:
                             if column not in existing: conn.execute(text(f'ALTER TABLE {table} ADD COLUMN {column} JSON'))
-                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': LATEST, 'now': datetime.utcnow()})
+                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': LATEST, 'now': utc_now()})
         finally:
             if postgres:
                 lock.execute(text('SELECT pg_advisory_unlock(:key)'), {'key': LOCK_ID})

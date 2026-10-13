@@ -6,6 +6,7 @@ avvenimenti operativi più importanti senza dover aprire ogni sezione.
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from ..core.clock import utc_now
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -83,7 +84,7 @@ def _ensure_notification(
         entity_id=entity_id,
         action_tab=action_tab,
         action_label=action_label,
-        created_at=created_at or datetime.utcnow(),
+        created_at=created_at or utc_now(),
     )
     db.add(n)
     return n
@@ -99,7 +100,7 @@ def sync_operational_notifications(db: Session, user: User) -> None:
     """
     user_id = user.id
     db.query(User).filter(User.id == user_id).with_for_update().one()
-    since = datetime.utcnow() - timedelta(days=14)
+    since = utc_now() - timedelta(days=14)
 
     # Chat libere o collegate a giri: notifica se ci sono messaggi autista non letti.
     unread_driver_msgs = (
@@ -226,7 +227,7 @@ def sync_operational_notifications(db: Session, user: User) -> None:
             ds.id,
             "dashboard-in-progress",
             "Controlla giro",
-            ds.completata_il or datetime.utcnow(),
+            ds.completata_il or utc_now(),
         )
 
     db.commit()
@@ -266,7 +267,7 @@ def mark_notification_read(notification_id: int, db: Session = Depends(get_db), 
     if not n or n.user_id != user.id:
         raise HTTPException(404, "Notifica non trovata")
     n.is_read = True
-    n.read_at = datetime.utcnow()
+    n.read_at = utc_now()
     db.commit()
     return {"ok": True}
 
@@ -274,7 +275,7 @@ def mark_notification_read(notification_id: int, db: Session = Depends(get_db), 
 @router.post("/read-all")
 def mark_all_notifications_read(db: Session = Depends(get_db), user: User = Depends(current_user)):
     rows = db.query(Notification).filter(Notification.user_id == user.id, Notification.is_read.is_(False)).all()
-    now = datetime.utcnow()
+    now = utc_now()
     for n in rows:
         n.is_read = True
         n.read_at = now

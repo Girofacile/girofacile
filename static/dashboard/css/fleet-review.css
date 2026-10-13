@@ -1,4 +1,4 @@
-#app #tab-route-preview #routePreviewResult.fleet-review-page{--ink:#16213A;--muted:#5A6680;--line:#DCE1EB;--primary:#1F5BFF;--green:#127A52;--amber:#B7791F;--soft:#F6F8FC;--shadow:0 1px 2px #0F225010,0 8px 24px -12px #0F225033;color:var(--ink);font-family:var(--gf-font-family);padding-bottom:70px}
+#app #tab-route-preview #routePreviewResult.fleet-review-page{--lane:#1F5BFF;--ink:#16213A;--muted:#5A6680;--line:#DCE1EB;--primary:#1F5BFF;--green:#127A52;--amber:#B7791F;--soft:#F6F8FC;--shadow:0 1px 2px #0F225010,0 8px 24px -12px #0F225033;color:var(--ink);font-family:var(--gf-font-family);padding-bottom:70px}
 #app #tab-route-preview #routePreviewResult.fleet-review-page *{box-sizing:border-box}
 #app #routePreviewResult.fleet-review-page .fleet-review-panel{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;min-width:0}
 #app #routePreviewResult.fleet-review-page .fleet-review-header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:15px;margin:4px 0 20px}

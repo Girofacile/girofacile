@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from ..core.clock import utc_now
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
@@ -120,15 +121,15 @@ def create_support_ticket(
         messaggio=message,
         status="aperto",
         notify_on_resolution=bool(payload.notify_on_resolution),
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow(),
+        created_at=utc_now(),
+        updated_at=utc_now(),
     )
     db.add(ticket)
 
     if linked_error:
         linked_error.status = "in_progress"
         if not linked_error.seen_at:
-            linked_error.seen_at = datetime.utcnow()
+            linked_error.seen_at = utc_now()
         note = f"Ticket assistenza collegato: #{ticket.id}"
         existing_note = linked_error.admin_note or ""
         linked_error.admin_note = (existing_note + "\n" + note).strip()[:4000]

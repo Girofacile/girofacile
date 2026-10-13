@@ -5,6 +5,7 @@ Acquisti sandbox riservati agli account di collaudo; incassi reali bloccati.
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
+from ..core.clock import utc_now
 
 from ..core.config import PLAN_PRICES, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET
 from ..core.dependencies import current_user
@@ -70,7 +71,7 @@ def billing_overview(db: Session = Depends(get_db), user: User = Depends(current
     plan = (user.plan or "starter").lower()
     status = get_user_plan_status(user)
     price = _plan_monthly_price(plan)
-    now = datetime.utcnow()
+    now = utc_now()
     next_charge = user.plan_expires_at if user.stripe_subscription_id and not user.billing_cancel_at_period_end else None
 
     invoices = db.query(BillingInvoice).filter(BillingInvoice.user_id == user.id).order_by(BillingInvoice.invoice_date.desc()).limit(24).all()
@@ -218,7 +219,7 @@ def cancel_checkout(db: Session = Depends(get_db), user: User = Depends(current_
     from ..services.billing import stripe_client, assert_test, lock_user, checkout
     stripe = stripe_client(user)
     user = lock_user(db, user)
-    if user.billing_checkout_id and user.billing_checkout_id.startswith("pending_") and user.billing_checkout_expires and user.billing_checkout_expires > datetime.utcnow():
+    if user.billing_checkout_id and user.billing_checkout_id.startswith("pending_") and user.billing_checkout_expires and user.billing_checkout_expires > utc_now():
         # Recover an API response lost after creation before cancelling the session.
         checkout(db, user, user.billing_checkout_plan)
         user = lock_user(db, user)

@@ -1,5 +1,6 @@
 """Daily reminder worker. Explicit --send is required by the CLI."""
 from datetime import datetime, timedelta
+from ..core.clock import utc_now
 from html import escape
 from ..core.config import APP_BASE_URL
 from ..models import User, BillingNotice
@@ -20,7 +21,7 @@ def due_notice(user, now):
 
 
 def send_due_notices(db, send=False):
-    now, result = datetime.utcnow(), {"due": 0, "sent": 0, "failed": 0}
+    now, result = utc_now(), {"due": 0, "sent": 0, "failed": 0}
     for user in db.query(User).order_by(User.id).with_for_update().all():
         notice = due_notice(user, now)
         if not notice:

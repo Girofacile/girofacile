@@ -2,6 +2,7 @@
 import asyncio
 import io
 from datetime import datetime, timedelta
+from app.core.clock import utc_now
 
 import pytest
 
@@ -35,7 +36,7 @@ def env(monkeypatch, tmp_path):
         db.add_all([seller, foreign])
         db.flush()
         account = AgentAccount(agent_id=seller.id, email=seller.email, password_hash="test", is_active=True)
-        token = AgentSetupToken(agent_id=seller.id, token="setup-test", expires_at=datetime.utcnow()+timedelta(days=1))
+        token = AgentSetupToken(agent_id=seller.id, token="setup-test", expires_at=utc_now()+timedelta(days=1))
         customer = Customer(user_id=owner.id, nome="Esistente", codice_cliente="C1", indirizzo="Via Roma", agent_id=seller.id)
         db.add_all([account, token, customer])
         db.commit()
@@ -156,7 +157,7 @@ def test_existing_database_migration_preserves_usage_and_runs_only_once(env):
     from app.database import Base
     client, db, owner, other, seller, foreign, *_ = env
     owner_id, other_id = owner.id, other.id
-    foreign.deleted_at = datetime.utcnow()
+    foreign.deleted_at = utc_now()
     db.commit()
     engine = db.get_bind()
     db.close()
@@ -182,7 +183,7 @@ def test_customer_directory_pagination_preserves_tenant_and_soft_delete_filter(e
     from app.models import Customer
     db.add_all([Customer(user_id=owner.id, nome=f"Paging {i:02}", indirizzo="Via Test") for i in range(15)])
     db.add(Customer(user_id=other.id, nome="Paging foreign", indirizzo="Via Test"))
-    db.add(Customer(user_id=owner.id, nome="Paging deleted", indirizzo="Via Test", deleted_at=datetime.utcnow()))
+    db.add(Customer(user_id=owner.id, nome="Paging deleted", indirizzo="Via Test", deleted_at=utc_now()))
     db.commit()
     first = client.get('/api/customers?q=Paging&limit=10&offset=0').json()
     second = client.get('/api/customers?q=Paging&limit=10&offset=10').json()

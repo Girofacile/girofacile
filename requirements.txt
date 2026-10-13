@@ -1,19 +1,21 @@
-fastapi==0.115.6
+fastapi==0.136.3
+# Versione con le correzioni di sicurezza (richiesta da fastapi; fissata esplicitamente)
+starlette==1.8.0
 uvicorn[standard]==0.34.0
 sqlalchemy==2.0.36
-requests==2.32.3
-python-multipart==0.0.20
+requests==2.34.2
+python-multipart==0.0.32
 pandas==2.2.3
 openpyxl==3.1.5
 stripe==15.6.1
 psycopg2-binary==2.9.10
 
 qrcode[pil]==8.2
-pytest==8.3.4
+pytest==9.1.1
 httpx==0.28.1
 
 boto3==1.43.108
 reportlab==4.4.3
-Pillow==11.3.0
+Pillow==12.3.0
 
-cryptography==48.0.1
+cryptography==50.0.2

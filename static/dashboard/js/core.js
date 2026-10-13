@@ -256,7 +256,21 @@ async function api(path, options = {}) {
     let errorId = null;
     try {
       const j = await res.json();
-      if (j && typeof j.detail === "object") {
+      if (j && Array.isArray(j.detail)) {
+        // Errori di validazione (422): mostra il motivo leggibile del primo campo.
+        const first = j.detail.find(e => e && e.msg) || {};
+        const ctx = first.ctx || {};
+        const italian = {
+          greater_than_equal: `deve essere almeno ${ctx.ge}`,
+          less_than_equal: `deve essere al massimo ${ctx.le}`,
+          greater_than: `deve essere maggiore di ${ctx.gt}`,
+          finite_number: "deve essere un numero valido",
+          missing: "campo obbligatorio",
+        }[first.type];
+        msg = italian || String(first.msg || "Dati non validi").replace(/^Value error, /, "");
+        const field = Array.isArray(first.loc) ? first.loc[first.loc.length - 1] : "";
+        if (field && !/^Value error/.test(first.msg || "") && typeof field === "string") msg = `${field}: ${msg}`;
+      } else if (j && typeof j.detail === "object") {
         msg = j.detail.message || j.detail.detail || msg;
         errorId = j.detail.error_id || j.detail.system_error_id || null;
       } else {

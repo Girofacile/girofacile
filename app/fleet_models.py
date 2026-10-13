@@ -1,5 +1,6 @@
 """Private, versioned multi-route previews; no operational routes until confirmation."""
 from datetime import datetime
+from .core.clock import utc_now
 from sqlalchemy import ForeignKey, JSON, String, DateTime
 from sqlalchemy.orm import Mapped, mapped_column
 from .database import Base
@@ -14,4 +15,4 @@ class FleetPlan(Base):
     configuration: Mapped[dict]=mapped_column(JSON)
     result: Mapped[dict]=mapped_column(JSON)
     route_ids: Mapped[list]=mapped_column(JSON,default=list)
-    created_at: Mapped[datetime]=mapped_column(DateTime,default=datetime.utcnow)
+    created_at: Mapped[datetime]=mapped_column(DateTime,default=utc_now)

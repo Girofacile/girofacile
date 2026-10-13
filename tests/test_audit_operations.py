@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, date, time
+from app.core.clock import utc_now
 from types import SimpleNamespace
 
 import pytest
@@ -185,7 +186,7 @@ def test_notifications_tenant_filter_and_repeated_unread_count(env):
     sync_operational_notifications(db, owner)
     notification = db.query(Notification).filter_by(user_id=owner.id, type='chat').one()
     notification.is_read = True
-    first.read_at = datetime.utcnow()
+    first.read_at = utc_now()
     db.add(ChatMessage(driver_id=mine.id, sender_type='driver', sender_name='Audit', message='two'))
     db.commit()
     sync_operational_notifications(db, owner)
@@ -242,7 +243,7 @@ def test_registration_policy_and_trial_catalog(env, monkeypatch):
     from app.models import User
     created = db.query(User).filter_by(username='audit-new').one()
     assert created.plan == 'business'
-    assert 6 <= (created.trial_ends_at - datetime.utcnow()).days <= 7
+    assert 6 <= (created.trial_ends_at - utc_now()).days <= 7
     assert all(x['trial_days'] == 7 for x in list_plans(db))
 
 

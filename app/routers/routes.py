@@ -7,6 +7,7 @@ from ..services.occasional_stops import verify_stop_address, validate_occasional
 from ..services.customer_planning import customer_is_plannable, PLANNING_ADDRESS_ERROR
 from ..services.delivery_pod import evidence_metadata, evidence_response
 from datetime import datetime, timedelta
+from ..core.clock import utc_now
 import time
 
 from fastapi import Response, APIRouter, Depends, HTTPException, Request, Query
@@ -884,7 +885,7 @@ def program_route(
     # Token legacy per portale operatore condivisibile, mantenuto per compatibilità.
     db.query(RouteToken).filter(RouteToken.route_plan_id == route_id).delete()
     token = _secrets.token_urlsafe(32)
-    expires = datetime.utcnow() + timedelta(days=3)
+    expires = utc_now() + timedelta(days=3)
     rt = RouteToken(route_plan_id=route_id, token=token, expires_at=expires)
     db.add(rt)
     db.commit()

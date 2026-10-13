@@ -5,7 +5,8 @@ services:
     restart: unless-stopped
     command: ["osrm-routed", "--algorithm", "mld", "/data/${OSRM_DATASET_BASENAME:-sud-latest}.osrm"]
     ports:
-      - "5000:5000"
+      # Solo locale: OSRM non deve essere raggiungibile da Internet.
+      - "127.0.0.1:5000:5000"
     volumes:
       - ./data/osrm:/data:ro
       - ./scripts/osrm_healthcheck.sh:/opt/girofacile-healthcheck.sh:ro
@@ -46,7 +47,9 @@ services:
       osrm:
         condition: service_healthy
     ports:
-      - "8000:8000"
+      # Per default l'app ascolta solo in locale, dietro il reverse proxy HTTPS.
+      # Esporla direttamente (APP_BIND_ADDRESS=0.0.0.0) è sconsigliato.
+      - "${APP_BIND_ADDRESS:-127.0.0.1}:8000:8000"
     environment:
       APP_ENV: ${APP_ENV:-production}
       # Host Python uses localhost; containers use service DNS. DB overrides still win.

@@ -2,6 +2,7 @@
 
 
 from datetime import datetime, timedelta
+from ..core.clock import utc_now
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -118,7 +119,7 @@ def admin_revenue(db: Session = Depends(get_db), superadmin: dict = Depends(requ
         info["mrr"] += PLAN_MRR.get(p, 0)
 
     trial_converting = [u for u in trial if u.trial_ends_at and
-                        u.trial_ends_at - datetime.utcnow() <= timedelta(days=3)]
+                        u.trial_ends_at - utc_now() <= timedelta(days=3)]
 
     return {
         "mrr": mrr,

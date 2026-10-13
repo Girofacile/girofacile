@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from ..core.clock import utc_now
 import calendar
 import json
 import math
@@ -72,7 +73,7 @@ def log_api_usage(
 
 
 def range_from_filter(period: str = "today", start: str = "", end: str = ""):
-    now = datetime.utcnow()
+    now = utc_now()
     period = (period or "today").strip().lower()
     if period == "live":
         return now - timedelta(hours=1), now
@@ -413,7 +414,7 @@ def _month_key(value: str | None, now: datetime) -> datetime:
 
 
 def api_cost_dashboard(db: Session, month: str = "") -> dict:
-    now = datetime.utcnow()
+    now = utc_now()
     ref = _month_key(month, now)
     month_start, month_end = _month_bounds(ref)
     profiles = get_api_cost_profiles(db)

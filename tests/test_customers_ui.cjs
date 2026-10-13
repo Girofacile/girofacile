@@ -4,7 +4,7 @@ const fs=require('node:fs');
 const vm=require('node:vm');
 function fixture(){
   const fields={};
-  const ctx=vm.createContext({document:{getElementById:id=>fields[id]||null},agentsFeatureEnabled:()=>true,customersCache:[],api:async()=>[]});
+  const ctx=vm.createContext({document:{getElementById:id=>fields[id]||null,addEventListener(){}},agentsFeatureEnabled:()=>true,customersCache:[],api:async()=>[]});
   vm.runInContext(fs.readFileSync('static/dashboard/js/customers.js','utf8'),ctx);
   vm.runInContext('renderCustomerDirectory=()=>{}',ctx);
   return {ctx,fields,run:code=>vm.runInContext(code,ctx)};
