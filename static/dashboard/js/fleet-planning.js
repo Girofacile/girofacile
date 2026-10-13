@@ -121,7 +121,10 @@
         }
         render();
         if(plan.status==='programmed'){
-          notice('Giri programmati correttamente. Le consegne sono ora disponibili nel portale degli autisti.');
+          const issues=(plan.warnings||[]).filter(x=>/email non inviata|notifiche? non inviate?/i.test(x));
+          notice(issues.length
+            ?'Giri programmati. Attenzione: '+issues.join(' ') 
+            :'Giri programmati correttamente. Le consegne sono ora disponibili nel portale degli autisti.');
           globalThis.GFOrderPlanning?.leave();
           await loadRoutes();await loadDashboardRoutes();
         }
