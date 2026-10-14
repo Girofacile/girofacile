@@ -133,6 +133,17 @@
   --gf-auth-width: 440px;
   --gf-map-min-height: 300px;
   --gf-stop-list-max-height: 270px;
+  /* Misure dei componenti proposti (sezione Proposte del catalogo). */
+  --gf-bottom-nav-height: 68px;
+  --gf-bottom-nav-action: 60px;
+  --gf-drawer-width: 480px;
+  --gf-dialog-width-lg: 960px;
+  --gf-banner-width: 920px;
+  --gf-notifications-width: 360px;
+  --gf-chat-height: 360px;
+  --gf-chart-track: 10px;
+  --gf-upload-preview: 72px;
+  --gf-auth-aside-width: 440px;
   --gf-breakpoint-sm: 640px;
   --gf-breakpoint-md: 768px;
   --gf-breakpoint-lg: 1024px;

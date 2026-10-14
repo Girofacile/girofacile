@@ -33,6 +33,8 @@
     settings: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M12 2v3 M12 19v3 M2 12h3 M19 12h3 M4.9 4.9l2.1 2.1 M17 17l2.1 2.1 M4.9 19.1L7 17 M17 7l2.1-2.1',
     document: 'M7 3h7l5 5v13H7z M14 3v5h5 M10 13h6 M10 17h6',
     menu: 'M4 6h16 M4 12h16 M4 18h16',
+    back: 'M15 18l-6-6 6-6 M9 12h10',
+    bell: 'M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9 M10.3 21a1.94 1.94 0 0 0 3.4 0',
     close: 'M6 6l12 12 M18 6L6 18'
   };
   // Menu standard del gestionale: stesso ordine e stesse voci della Dashboard.
@@ -121,6 +123,12 @@
         link.dataset.gfNav = item.id;
         if(item.id === active) link.setAttribute('aria-current','page');
         link.append(icon(item.icon,'gf-sidebar__icon'), el('span',null,item.label));
+        // Proposta 1: contatore accanto alla voce (es. messaggi non letti).
+        if(item.count !== undefined && item.count !== null){
+          const count = el('span','gf-sidebar__count',item.count);
+          count.dataset.gfNavCount = item.id;
+          link.appendChild(count);
+        }
         group.appendChild(link);
       });
       nav.appendChild(group);
