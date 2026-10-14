@@ -154,7 +154,6 @@
     menu.setAttribute('aria-controls','gf-shell-sidebar');
     menu.setAttribute('aria-expanded','false');
     menu.appendChild(icon('menu'));
-    menu.addEventListener('click',() => setOpen(shell, menu, shell.dataset.gfShellOpen !== 'true'));
     const titles = el('div','gf-header__titles');
     titles.appendChild(el('h1','gf-header__title',options.title || ''));
     if(options.subtitle) titles.appendChild(el('p','gf-header__subtitle',options.subtitle));
@@ -186,6 +185,29 @@
     try { return JSON.parse(source.textContent); } catch(error){ return NAV; }
   }
 
+  // Collega pulsante menu, velo, tasto Esc e chiusura dopo la scelta di una voce.
+  // Funziona sia con la cornice costruita da mount() sia con una cornice scritta
+  // direttamente nella pagina (Dashboard, Super Admin) con le stesse classi.
+  let active = null;
+  function bind(shell){
+    if(!shell || shell.dataset.gfShellBound) return shell;
+    shell.dataset.gfShellBound = 'true';
+    if(!shell.dataset.gfShellOpen) shell.dataset.gfShellOpen = 'false';
+    const menu = shell.querySelector('.gf-header__menu');
+    const scrim = shell.querySelector('.gf-shell__scrim');
+    const sidebar = shell.querySelector('.gf-sidebar');
+    const set = open => { if(menu) setOpen(shell, menu, open); else shell.dataset.gfShellOpen = open ? 'true' : 'false'; };
+    if(menu) menu.addEventListener('click',() => set(shell.dataset.gfShellOpen !== 'true'));
+    if(scrim) scrim.addEventListener('click',() => set(false));
+    if(sidebar) sidebar.addEventListener('click',event => { if(event.target.closest && event.target.closest('a,button')) set(false); });
+    doc.addEventListener('keydown',event => {
+      if(event.key === 'Escape' && shell.dataset.gfShellOpen === 'true'){ set(false); if(menu) menu.focus(); }
+    });
+    active = {shell, set};
+    return shell;
+  }
+  function open(state){ if(active) active.set(state === undefined ? active.shell.dataset.gfShellOpen !== 'true' : !!state); }
+
   function mount(options){
     const body = doc.body;
     options = options || {};
@@ -198,22 +220,19 @@
     const scrim = el('div','gf-shell__scrim');
     const main = el('div','gf-shell__main');
     const built = buildHeader(options, shell);
-    scrim.addEventListener('click',() => setOpen(shell, built.menu, false));
-    sidebar.addEventListener('click',event => { if(event.target.closest && event.target.closest('a')) setOpen(shell, built.menu, false); });
-    doc.addEventListener('keydown',event => {
-      if(event.key === 'Escape' && shell.dataset.gfShellOpen === 'true'){ setOpen(shell, built.menu, false); built.menu.focus(); }
-    });
     content.classList.add('gf-shell__content');
     content.parentNode.insertBefore(shell, content);
     main.append(built.header, content);
     shell.append(sidebar, scrim, main);
     body.classList.add('gf-has-shell');
-    return shell;
+    return bind(shell);
   }
 
   function autoMount(){
     const body = doc.body;
     if(!body || body.dataset.gfLayout !== 'base') return;
+    const existing = doc.querySelector('[data-gf-shell]');
+    if(existing){ bind(existing); return; }
     mount({
       nav: readNav(),
       active: body.dataset.gfNavActive,
@@ -225,7 +244,7 @@
     });
   }
 
-  global.GFShell = {NAV, ICONS, mount, icon};
+  global.GFShell = {NAV, ICONS, mount, bind, open, icon};
   if(doc.readyState === 'loading') doc.addEventListener('DOMContentLoaded', autoMount);
   else autoMount();
 })(window);

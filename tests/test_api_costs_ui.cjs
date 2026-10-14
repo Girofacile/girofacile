@@ -7,7 +7,9 @@ const js=fs.readFileSync('static/admin/api-costs.js','utf8');
 
 test('Super Admin exposes a dedicated API costs section on desktop and mobile',()=>{
   assert.match(html,/navigate\('api-costs'\)/);
-  assert.match(html,/adminMobileGoV62\('api-costs'\)/);
+  // Su smartphone la voce resta nella sidebar, aperta dal pulsante "Altro" della barra in basso.
+  assert.match(html,/data-admin-nav="api-costs"[^>]*onclick="navigate\('api-costs'\)/);
+  assert.match(html,/class="gf-bottom-nav"[\s\S]*onclick="GFShell\.open\(true\)"/);
   assert.match(html,/id="section-api-costs"/);
   assert.match(html,/Consumo e quota gratuita per servizio/);
 });
@@ -23,6 +25,7 @@ test('API costs UI shows quota, cost, projection, company and settings surfaces'
 });
 
 test('API costs table has mobile responsive card treatment',()=>{
-  assert.match(html,/#api-cost-table thead\{display:none\}/);
+  // Le schede su smartphone vengono dalla regola comune delle tabelle data-gf-responsive.
+  assert.match(html,/<table class="gf-table" id="api-cost-table" data-gf-responsive="cards">/);
   assert.match(js,/data-label="Avanzamento"/);
 });
