@@ -36,8 +36,8 @@
       if(!allowedTab(name)) denied.add(el);
     });
     const controls = {
-      'routes.plan':'.topbar-new-route,.gf-mobile-bottom-nav-v62 .main',
-      'notifications.read':'#notificationBellBtn,.gf-mobile-top-actions-v62 [aria-label="Notifiche"]',
+      'routes.plan':'.topbar-new-route,#gfMobileBottomNavV62 .main',
+      'notifications.read':'#notificationBellBtn',
       'customers.create':'#newCustomerBtn,#customerImportBtn',
       'deposits.create':'#newDepositBtn', 'vehicles.create':'.fleet-create',
       'drivers.create':'#newDriverBtn', 'company.update':'#companySaveChangesBtn,#companyDiscardChangesBtn',

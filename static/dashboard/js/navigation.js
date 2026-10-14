@@ -95,10 +95,20 @@ function syncWorkspaceTopbar(name){
     document.body?.classList.toggle("gf-has-topbar-back",!!target);
   }
   const badge=document.getElementById("workspacePageBadge");
-  if(badge){badge.hidden=true;badge.textContent="";badge.className="order-source-topbar-badge";}
+  if(badge){badge.hidden=true;badge.textContent="";badge.className="gf-badge";delete badge.dataset.status;}
+  // Elementi legati a una sezione (azioni dell'intestazione, voci di menu): visibili solo lì.
+  document.querySelectorAll("[data-show-on-tabs]").forEach(el=>el.classList.toggle("gf-hidden",!el.dataset.showOnTabs.split(" ").includes(name)));
+  document.querySelectorAll("[data-hide-on-tabs]").forEach(el=>el.classList.toggle("gf-hidden",el.dataset.hideOnTabs.split(" ").includes(name)));
   if(document.body){
     document.body.classList.toggle("gf-company-page-active",company);
   }
+}
+
+// Voce attiva della sidebar del layout base (aria-current, come in shell.js).
+function setActiveNavItem(name){
+  document.querySelectorAll(".gf-sidebar__item[data-tab]").forEach(x=>{
+    if(x.dataset.tab===name) x.setAttribute("aria-current","page"); else x.removeAttribute("aria-current");
+  });
 }
 
 function showTab(name){
@@ -113,9 +123,8 @@ function showTab(name){
   document.querySelectorAll(".tab").forEach(x=>x.classList.add("hidden"));
   const tab = document.getElementById("tab-"+name);
   if(tab) tab.classList.remove("hidden");
-  document.querySelectorAll(".nav-item").forEach(x=>x.classList.remove("active"));
   const navTab=["ordini-importa","ordine-fonte","ordine-dettaglio","ordine-modifica","ordini-collegamenti"].includes(name)?"ordini":name;
-  document.querySelectorAll(`.nav-item[data-tab="${navTab}"]`).forEach(x=>x.classList.add("active"));
+  setActiveNavItem(navTab);
   syncWorkspaceTopbar(name);
 
   if(name==="dashboard"){ loadDashboardHome(); if(!window.GFCompanyAccess || GFCompanyAccess.can("notifications.read")) loadNotificationsV30(false); if(!featureLockedForTab("chat-autisti") && (!window.GFCompanyAccess || GFCompanyAccess.can("chat.read"))) loadDriverChatNotifications(); }

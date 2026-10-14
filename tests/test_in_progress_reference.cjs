@@ -96,7 +96,7 @@ test('sidebar e login esclusi dal redesign di Giri in corso',()=>{
   const core=read('static/dashboard/js/core.js');
   assert.match(css,/#app #tab-dashboard-in-progress/);
   assert.doesNotMatch(css,/\.sidebar\s*\{|\.brand\s*\{|\.login-side\s*\{/);
-  assert.match(html,/design-system\.js\?v=sidebar_icone_originali_20261012/);
+  assert.match(html,/\/static\/design-system\/design-system\.js\?v=[\w-]+/);
   assert.match(html,/in-progress-reference\.css\?v=gf_inprogress_ref_20261013_1/);
   assert.match(html,/in-progress-reference\.js\?v=driver_shifts_20261013_1/);
   assert.match(core,/GFInProgressReference\?\.render/);

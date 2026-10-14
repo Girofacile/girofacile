@@ -69,7 +69,7 @@ def main():
                         page.get_by_role('button',name='Apri menu mobile').click()
                         page.get_by_role('button',name='▤ Ordini',exact=True).click()
                     else:
-                        page.locator('button.nav-item[data-tab="ordini"]').click()
+                        page.locator('button.gf-sidebar__item[data-tab="ordini"]').click()
                     page.wait_for_function("document.getElementById('ordersMessage').textContent.includes('Nessun ordine')")
                     assert page.locator('#ordersVerifyAll').is_visible()
                     page.locator('#ordersNew').click()

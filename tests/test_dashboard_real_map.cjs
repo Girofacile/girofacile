@@ -136,7 +136,7 @@ test('switching routes disposes old map and does not change any sidebar styling'
   assert.match(core,/GiroFacileDashboardMap\?\.render\(routeId,rows,drawing\)/);
   assert.doesNotMatch(core,/Schema non geografico delle prime/);
   assert.match(html,/dashboard-real-map\.js\?v=gf_realmap_clean_20261012_2/);
-  assert.match(html,/design-system\.js\?v=sidebar_icone_originali_20261012/);
+  assert.match(html,/\/static\/design-system\/design-system\.js\?v=[\w-]+/);
   const css=read('static/dashboard/css/dashboard-real-map.css');
   assert.match(css,/leaflet-control-attribution svg/);
   assert.match(css,/max-width:none!important/);

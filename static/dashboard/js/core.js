@@ -182,8 +182,7 @@ function showLockedOrProceed(name){
   document.querySelectorAll(".tab").forEach(x=>x.classList.add("hidden"));
   const tab = document.getElementById("tab-" + name);
   if(tab) tab.classList.remove("hidden");
-  document.querySelectorAll(".nav-item").forEach(x=>x.classList.remove("active"));
-  document.querySelectorAll(`.nav-item[data-tab="${name}"]`).forEach(x=>x.classList.add("active"));
+  if(typeof setActiveNavItem === "function") setActiveNavItem(name);
   renderFeatureLockedTab(name, locked);
   return true;
 }
@@ -191,7 +190,7 @@ function showLockedOrProceed(name){
 function updatePremiumNavState(){
   Object.keys(STARTER_LOCKED_TABS).forEach(name=>{
     const cfg = featureLockedForTab(name);
-    document.querySelectorAll(`.nav-item[data-tab="${name}"]`).forEach(btn=>{
+    document.querySelectorAll(`.gf-sidebar__item[data-tab="${name}"]`).forEach(btn=>{
       btn.classList.toggle("is-premium-locked", !!cfg);
       btn.title = cfg ? (window.GFCompanyAccess?.isCollaborator() ? `${cfg.title}: funzionalità non disponibile per questa azienda` : `${cfg.title}: disponibile dal piano Business`) : "";
     });
@@ -4893,23 +4892,20 @@ function renderNotificationsDropdownV30(unread){
   if(sub) sub.textContent = unread ? `${unread} da leggere` : "Tutto aggiornato";
   if(!list) return;
   if(!notificationsCacheV30.length){
-    list.innerHTML = `<div class="notification-empty-v30">Nessuna notifica operativa.</div>`;
+    list.innerHTML = `<li class="gf-empty"><p>Nessuna notifica operativa.</p></li>`;
     return;
   }
   list.innerHTML = notificationsCacheV30.map(n=>{
-    const unreadCls = n.is_read ? "" : "unread";
-    const action = n.action_tab ? `<button onclick="openNotificationActionV30(${n.id}, '${esc(n.action_tab)}')">${esc(n.action_label || 'Apri')}</button>` : "";
-    return `<div class="notification-item-v30 ${unreadCls}">
-      <div class="notification-icon-v30">${notificationIconV30(n.type)}</div>
-      <div class="notification-body-v30">
-        <div class="notification-title-v30"><strong>${esc(n.title || 'Notifica')}</strong><small>${esc(notificationTimeLabelV30(n.created_at))}</small></div>
-        <p>${esc(n.message || '')}</p>
-        <div class="notification-actions-v30">
-          ${action}
-          ${!n.is_read ? `<button class="light" onclick="markNotificationReadV30(${n.id})">Segna letta</button>` : ""}
-        </div>
+    const action = n.action_tab ? `<button type="button" class="gf-button" data-variant="link" data-size="sm" onclick="openNotificationActionV30(${n.id}, '${esc(n.action_tab)}')">${esc(n.action_label || 'Apri')}</button>` : "";
+    return `<li class="gf-notification"${n.is_read ? "" : " data-unread"}>
+      <strong>${notificationIconV30(n.type)} ${esc(n.title || 'Notifica')}</strong>
+      <p>${esc(n.message || '')}</p>
+      <small>${esc(notificationTimeLabelV30(n.created_at))}</small>
+      <div class="gf-cluster">
+        ${action}
+        ${!n.is_read ? `<button type="button" class="gf-button" data-variant="ghost" data-size="sm" onclick="markNotificationReadV30(${n.id})">Segna letta</button>` : ""}
       </div>
-    </div>`;
+    </li>`;
   }).join("");
 }
 
@@ -5218,11 +5214,10 @@ function gfIsLogisticsV50(){
   return gfCurrentSectorKeyV50() === "logistics";
 }
 function setNavTextV50(tab, text){
-  const btn = document.querySelector(`.nav-item[data-tab="${tab}"]`);
+  const btn = document.querySelector(`.gf-sidebar__item[data-tab="${tab}"]`);
   if(!btn || !text) return;
-  const icon = btn.querySelector(".nav-svg")?.outerHTML || "";
-  const badge = btn.querySelector(".side-chat-badge")?.outerHTML || "";
-  btn.innerHTML = `${icon} ${esc(text)} ${badge}`.trim();
+  const label = btn.querySelector(":scope > span:not(.gf-sidebar__count)");
+  if(label) label.textContent = text;
 }
 function gfVerticalLabelsV51(){
   return GF_VERTICAL_LABELS_V51[gfCurrentSectorKeyV50()] || null;
@@ -5255,11 +5250,11 @@ function applyLogisticsWorkspaceV50(){
     setNavTextV50("report", labels.reports);
     setNavTextV50("chat-autisti", labels.chat);
     if(labels.integrations) setNavTextV50("integrations", labels.integrations);
-    const agentBtn = document.querySelector('.nav-item[data-tab="agenti"]');
-    if(agentBtn) agentBtn.style.display = "none";
+    const agentBtn = document.querySelector('.gf-sidebar__item[data-tab="agenti"]');
+    if(agentBtn) agentBtn.classList.add("gf-hidden");
   }else{
-    const agentBtn = document.querySelector('.nav-item[data-tab="agenti"]');
-    if(agentBtn && isWorkspaceOperationalV49()) agentBtn.style.display = "";
+    const agentBtn = document.querySelector('.gf-sidebar__item[data-tab="agenti"]');
+    if(agentBtn && isWorkspaceOperationalV49()) agentBtn.classList.remove("gf-hidden");
   }
   renderLogisticsDashboardV50();
 }
@@ -5444,18 +5439,9 @@ window.showShopifyComingSoonV52 = showShopifyComingSoonV52;
    le azioni principali, il menu Altro espone tutte le sezioni.
 ========================================================== */
 function isMobileViewportV62(){ return window.matchMedia && window.matchMedia('(max-width: 820px)').matches; }
-function toggleMobileMoreMenuV62(){
-  const menu=document.getElementById('gfMobileMoreMenuV62');
-  const backdrop=document.getElementById('gfMobileMoreBackdropV62');
-  if(!menu || !backdrop) return;
-  const hidden=menu.classList.contains('hidden');
-  menu.classList.toggle('hidden', !hidden);
-  backdrop.classList.toggle('hidden', !hidden);
-}
-function closeMobileMoreMenuV62(){
-  document.getElementById('gfMobileMoreMenuV62')?.classList.add('hidden');
-  document.getElementById('gfMobileMoreBackdropV62')?.classList.add('hidden');
-}
+// "Altro" apre la sidebar a scomparsa del layout base, che contiene tutte le sezioni.
+function toggleMobileMoreMenuV62(){ window.GFShell?.open(); }
+function closeMobileMoreMenuV62(){ window.GFShell?.open(false); }
 function mobileGoTabV62(tab){
   closeMobileMoreMenuV62();
   if(typeof showTab === 'function') showTab(tab);
@@ -5463,22 +5449,13 @@ function mobileGoTabV62(tab){
 }
 function syncMobileShellV62(){
   try{
-    const topAvatar=document.getElementById('topProfileAvatar')?.textContent?.trim() || 'A';
-    const mobAvatar=document.getElementById('gfMobileAvatarTextV62');
-    if(mobAvatar) mobAvatar.textContent = topAvatar.slice(0,1).toUpperCase();
-    const badge=document.getElementById('notificationBadge');
-    const dot=document.getElementById('gfMobileBellDotV62');
-    if(dot && badge) dot.classList.toggle('hidden', badge.classList.contains('hidden') || !badge.textContent || badge.textContent === '0');
-    const integrationsDesktop=document.querySelector('.nav-item[data-tab="integrations"]');
-    const integrationsMobile=document.getElementById('gfMobileIntegrationsBtnV62');
-    if(integrationsMobile && integrationsDesktop){
-      integrationsMobile.classList.toggle('hidden', integrationsDesktop.classList.contains('hidden'));
-    }
-    const active=document.querySelector('.nav-item.active')?.dataset?.tab || 'dashboard';
-    document.querySelectorAll('.gf-mobile-bottom-nav-v62 button').forEach(b=>b.classList.remove('active'));
-    const direct=document.querySelector(`.gf-mobile-bottom-nav-v62 button[data-mobile-tab="${active}"]`);
-    if(direct) direct.classList.add('active');
-    else if(['giro','dashboard-scheduled','dashboard-completed'].includes(active)) document.querySelector('.gf-mobile-bottom-nav-v62 button.main')?.classList.add('active');
+    const active=document.querySelector('.gf-sidebar__item[aria-current="page"]')?.dataset?.tab || 'dashboard';
+    const nav=document.getElementById('gfMobileBottomNavV62');
+    if(!nav) return;
+    nav.querySelectorAll('button').forEach(b=>b.removeAttribute('aria-current'));
+    const direct=nav.querySelector(`button[data-mobile-tab="${active}"]`);
+    if(direct) direct.setAttribute('aria-current','page');
+    else if(['giro','dashboard-scheduled','dashboard-completed'].includes(active)) nav.querySelector('button.main')?.setAttribute('aria-current','page');
   }catch(e){ console.warn('syncMobileShellV62', e); }
 }
 (function initMobileShellV62(){

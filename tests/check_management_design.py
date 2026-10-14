@@ -241,9 +241,8 @@ def main():
                 page.evaluate("closeDriverModal(); showTab('dashboard'); toggleNotificationsDropdown()")
                 if phase == "after":
                     page.evaluate("showNotificationsDropdownV30(false)")
+                    # Con il layout base la campanella è nell'intestazione a ogni larghezza.
                     trigger = page.locator('#notificationBellBtn')
-                    if not trigger.is_visible():
-                        trigger = page.locator('.gf-mobile-top-actions-v62 [aria-label="Notifiche"]')
                     trigger.click()
                     page.locator("#notificationDropdown").wait_for(state="visible")
                     assert trigger.get_attribute("aria-expanded") == "true"

@@ -614,6 +614,7 @@ body[data-gf-surface] .gf-notifications{position:relative}
 body[data-gf-surface] .gf-icon-button__dot{
   position:absolute;top:var(--gf-space-2);right:var(--gf-space-2);width:var(--gf-space-2);height:var(--gf-space-2);
   border:var(--gf-border-width-strong) solid var(--gf-color-surface);border-radius:var(--gf-radius-circle);background:var(--gf-color-danger);
+  overflow:hidden;font-size:0;line-height:0;
 }
 body[data-gf-surface] .gf-notifications>.gf-icon-button{position:relative}
 body[data-gf-surface] .gf-notifications__panel{

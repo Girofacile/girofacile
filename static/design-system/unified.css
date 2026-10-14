@@ -29,7 +29,8 @@ html body[data-gf-surface="workspace"] #app#app .gf-topbar-back:hover{
 }
 html body[data-gf-surface="workspace"] #app#app .gf-topbar-back:focus-visible{outline:none;box-shadow:var(--gf-focus-ring)}
 
-@media (min-width:821px){
+/* Con il layout base il titolo è nell'intestazione a ogni larghezza (prima solo oltre 820 px). */
+@media all{
   html body[data-gf-surface="workspace"].gf-has-topbar-back #app#app .gf-topbar-back:not([hidden]){display:grid}
 
   /* Il titolo in alto è visibile in ogni sezione, tranne quelle con intestazione propria. */

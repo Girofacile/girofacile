@@ -245,12 +245,12 @@ def main():
                     page.evaluate("""async me => {
                         currentSessionUser=me;showGestionaleAfterLogin();await initApp();acceptCookieNotice();
                     }""",ME)
-                    nav = page.locator("#app .nav-item[data-tab]").evaluate_all("(els)=>els.map(el=>el.dataset.tab)")
+                    nav = page.locator("#app .gf-sidebar__item[data-tab]").evaluate_all("(els)=>els.map(el=>el.dataset.tab)")
                     for name in ("dashboard","clienti","giro","mezzi","autisti","depositi","storico","settings","report"):
                         assert name in nav,name
-                    sidebar_icon = styles(page.locator("#app .nav-item .nav-svg").first,("borderTopWidth","flexBasis","boxShadow"))
-                    assert sidebar_icon == dict(borderTopWidth="0px",flexBasis="20px",boxShadow="none"),sidebar_icon
-                    assert page.locator("#app .brand-title").evaluate("""el => {
+                    sidebar_icon = styles(page.locator("#app .gf-sidebar__item .gf-sidebar__icon").first,("width","height","boxShadow"))
+                    assert sidebar_icon == dict(width="18px",height="18px",boxShadow="none"),sidebar_icon
+                    assert page.locator("#app .gf-sidebar__brand-name").evaluate("""el => {
                         const probe=document.createElement('span');probe.style.color='var(--gf-color-on-primary)';
                         el.append(probe);const match=getComputedStyle(el).color===getComputedStyle(probe).color;
                         probe.remove();return match;

@@ -222,7 +222,7 @@ test('company profile uses the workspace topbar and keeps billing addresses alwa
 
 test('company edits are saved from the topbar and bottom save actions are removed',()=>{
   const html=read('static/dashboard/index.html');
-  assert.match(html,/id="companySaveBar" class="company-save-bar hidden"/);
+  assert.match(html,/id="companySaveBar" class="gf-savebar hidden"/);
   assert.match(html,/id="companySaveChangesBtn"[^>]*onclick="saveCompanyProfile\(\)"/);
   assert.match(html,/id="companyDiscardChangesBtn"[^>]*onclick="cancelCompanyProfileChanges\(\)"/);
   assert.doesNotMatch(html,/class="company-save-actions"/);
@@ -280,11 +280,11 @@ test('company name and account username use separate identity storage',()=>{
 
 test('workspace topbar keeps modern notification and account actions',()=>{
   const html=read('static/dashboard/index.html');
-  const topbar=html.slice(html.indexOf('<div class="top-actions">'),html.indexOf('</header>'));
-  assert.match(topbar,/class="bell-icon-v30"[^>]*><svg/);
+  const topbar=html.slice(html.indexOf('<div class="gf-header__actions">'),html.indexOf('</header>'));
+  assert.match(topbar,/id="notificationBellBtn" class="gf-icon-button"[^>]*><svg/);
   assert.doesNotMatch(topbar,/>🔔</);
   assert.doesNotMatch(topbar,/id="logoutBtn"/);
-  assert.match(topbar,/class="profile-button-chevron"/);
+  assert.match(topbar,/class="gf-header__user profile-button" onclick="openProfilePanel\(\)"/);
 
   const profile=html.slice(html.indexOf('<div id="profileOverlay"'),html.indexOf('<!-- COOKIE NOTICE'));
   assert.match(profile,/id="logoutBtn" class="profile-logout-btn hidden"/);
@@ -292,9 +292,9 @@ test('workspace topbar keeps modern notification and account actions',()=>{
   assert.doesNotMatch(profile,/btn-danger/);
   assert.equal((html.match(/id="logoutBtn"/g)||[]).length,1);
 
-  const layout=read(assets+'layout.css');
-  assert.match(layout,/\.notification-bell-v30\{[^}]*border:0[^}]*background:transparent[^}]*box-shadow:none/);
-  assert.match(layout,/\.bell-icon-v30 svg\{[^}]*stroke:currentColor/);
+  const components=read(assets+'components.css');
+  assert.match(components,/\.gf-notifications__panel\{/);
+  assert.match(components,/\.gf-icon-button svg,/);
 });
 
 test('account profile modal follows the workspace design system',()=>{
@@ -333,25 +333,23 @@ test('workspace sidebar uses the GiroFacile brand artwork',()=>{
 
 test('workspace legal links live in navigation and advanced legal docs live in support',()=>{
   const html=read('static/dashboard/index.html');
-  const sidebarTag=[...html.matchAll(/<aside\b[^>]*>/g)].find(match=>(match[0].match(/\bclass="([^"]*)"/)?.[1] || '').split(/\s+/).includes('sidebar'));
-  assert.ok(sidebarTag,'Workspace sidebar');
+  const sidebarTag=[...html.matchAll(/<aside\b[^>]*>/g)].find(match=>(match[0].match(/\bclass="([^"]*)"/)?.[1] || '').split(/\s+/).includes('gf-sidebar'));
+  assert.ok(sidebarTag,'Workspace sidebar (layout base)');
   const sidebarEnd=html.indexOf('</aside>',sidebarTag.index);
   assert.ok(sidebarEnd>sidebarTag.index,'Sidebar closing tag');
   const sidebar=html.slice(sidebarTag.index,sidebarEnd);
-  assert.match(sidebar,/class="side-footer"/);
-  assert.match(sidebar,/class="side-footer-copyright">© 2026 GiroFacile/);
-  assert.match(sidebar,/class="side-footer-version">v3\.11\.0/);
+  assert.match(sidebar,/class="gf-sidebar__footer"/);
+  assert.match(sidebar,/© 2026 GiroFacile · v3\.11\.0/);
   assert.match(sidebar,/href="\/privacy-policy"[^>]*>Privacy<\/a>/);
   assert.match(sidebar,/href="\/termini-condizioni"[^>]*>Termini<\/a>/);
   assert.match(sidebar,/href="\/cookie-policy"[^>]*>Cookie<\/a>/);
   assert.doesNotMatch(sidebar,/Sicurezza|DPA|Fornitori|>API</);
   assert.doesNotMatch(html,/class="dashboard-legal-footer"/);
 
-  const mobile=html.slice(html.indexOf('id="gfMobileMoreMenuV62"'),html.indexOf('<nav class="gf-mobile-bottom-nav-v62"'));
-  assert.match(mobile,/class="gf-mobile-legal-v62"/);
-  assert.match(mobile,/Privacy/);
-  assert.match(mobile,/Termini/);
-  assert.match(mobile,/Cookie/);
+  // Su smartphone le stesse voci legali restano nella sidebar, aperta dal pulsante "Altro".
+  const mobile=html.slice(html.indexOf('id="gfMobileBottomNavV62"'),html.indexOf('</nav>',html.indexOf('id="gfMobileBottomNavV62"')));
+  assert.match(mobile,/onclick="toggleMobileMoreMenuV62\(\)"/);
+  assert.match(read('static/dashboard/js/core.js'),/function toggleMobileMoreMenuV62\(\)\{ window\.GFShell\?\.open\(\); \}/);
 
   const core=read('static/dashboard/js/core.js');
   const support=core.slice(core.indexOf('function ensureSupportModalV60'),core.indexOf('function openSupportPanelV49'));
@@ -361,9 +359,7 @@ test('workspace legal links live in navigation and advanced legal docs live in s
   assert.match(support,/href="\/subprocessors"/);
 
   const layout=read(assets+'layout.css');
-  assert.match(layout,/Workspace legal navigation consolidation/);
-  assert.match(layout,/\.side-legal-links\{[^}]*justify-content:flex-start/);
-  assert.match(layout,/\.gf-mobile-legal-v62\{display:none\}/);
+  assert.match(layout,/\.gf-sidebar__links\{/);
 
   const components=read(assets+'components.css');
   assert.match(components,/Support legal resources moved out of the workspace footer/);

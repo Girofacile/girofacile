@@ -302,7 +302,7 @@ def main():
                     assert_fits(page, "#companySaveBar")
                     if width <= 768:
                         bar_box = page.locator("#companySaveBar").bounding_box()
-                        nav_box = page.locator(".gf-mobile-bottom-nav-v62").bounding_box()
+                        nav_box = page.locator("#gfMobileBottomNavV62").bounding_box()
                         assert nav_box and bar_box["y"] + bar_box["height"] <= nav_box["y"] - 7, (bar_box, nav_box)
                         for control in ("#companySaveChangesBtn", "#companyDiscardChangesBtn"):
                             assert page.locator(control).bounding_box()["height"] >= 44

@@ -126,8 +126,6 @@ body[data-gf-surface="admin"] :is(.db-sensitive-v71,.advanced-access-v69) { back
     background: var(--gf-color-surface); color: var(--gf-color-text);
     border-bottom: 1px solid var(--gf-color-border); backdrop-filter: none; box-shadow: none;
   }
-  body[data-gf-surface="workspace"] #app { padding-top: var(--gf-topbar-height); }
-  body[data-gf-surface="admin"] { padding-top: var(--gf-topbar-height); padding-bottom: 100px; }
   body[data-gf-surface="workspace"] .gf-mobile-brand-v62,
   body[data-gf-surface="admin"] .admin-mobile-brand-v62 strong { font-size: var(--gf-font-xl); color: var(--gf-color-text); }
   body[data-gf-surface="workspace"] .gf-mobile-brand-v62 strong { color: var(--gf-color-primary); }
