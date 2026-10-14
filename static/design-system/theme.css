@@ -1,0 +1,166 @@
+/* Font ufficiali della dashboard di riferimento: un solo import per tutte le superfici. */
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+
+/* GiroFacile · theme.css
+   Unica fonte delle decisioni visive: colori, font, dimensioni del testo,
+   spaziature, bordi, ombre e misure del layout. Riferimento: la Dashboard
+   (palette blu/navy, pannello "Giro consegne" con mappa e fermate).
+   tokens.css è un alias storico che importa questo file.
+   Le media query ripetono i breakpoint documentati qui sotto perché le
+   variabili CSS non sono valide nelle condizioni delle media query. */
+:root {
+  color-scheme: light;
+
+  /* --- Colori di base -------------------------------------------------- */
+  --gf-color-primary: #1665ff;
+  --gf-color-primary-hover: #0c55db;
+  --gf-color-on-primary: #ffffff;
+  --gf-color-bg: #edf0f6;
+  --gf-color-surface: #ffffff;
+  --gf-color-surface-subtle: #f6f8fc;
+  --gf-color-text: #16213a;
+  --gf-color-muted: #5a6680;
+  --gf-color-border: #dce1eb;
+  --gf-color-border-strong: var(--gf-color-nav-text);
+  --gf-color-overlay: rgba(23,36,59,.45);
+
+  /* --- Colori di stato ------------------------------------------------- */
+  --gf-color-success: #127a52;
+  --gf-color-success-bg: #ddf3e8;
+  --gf-color-warning: #b7791f;
+  --gf-color-warning-bg: #fdf1d8;
+  --gf-color-danger: #c7283f;
+  --gf-color-danger-bg: #fbe3e7;
+  --gf-color-info: #0b3a99;
+  --gf-color-info-bg: #e4f0ff;
+  --gf-color-neutral: var(--gf-color-muted);
+  --gf-color-neutral-bg: var(--gf-color-surface-subtle);
+
+  /* --- Navigazione (sidebar blu notte) --------------------------------- */
+  --gf-color-nav: #0f2250;
+  --gf-color-nav-text: #c9d4f0;
+  --gf-color-nav-muted: #7f93c6;
+  --gf-color-nav-active: #273961;
+  --gf-color-nav-hover-bg: rgba(255,255,255,.07);
+  --gf-color-nav-selected-bg: rgba(255,255,255,.10);
+  --gf-color-nav-divider: #1d3470;
+  --gf-color-on-nav: #ffffff;
+  --gf-color-brand-accent: #9cc0ff;
+
+  /* --- Mappa del giro e avvisi operativi ------------------------------- */
+  --gf-color-route-done: var(--gf-color-primary);
+  --gf-color-route-todo: var(--gf-color-muted);
+  --gf-color-route-miss: var(--gf-color-danger);
+  --gf-color-route-miss-bg: var(--gf-color-danger-bg);
+  --gf-color-map-bg: var(--gf-color-surface-subtle);
+  --gf-color-map-grid: var(--gf-color-border);
+  --gf-color-depot: var(--gf-color-nav);
+  --gf-color-ztl: var(--gf-color-warning);
+  --gf-color-ztl-bg: var(--gf-color-warning-bg);
+  --gf-color-tail-lift: var(--gf-color-info);
+  --gf-color-tail-lift-bg: var(--gf-color-info-bg);
+
+  /* --- Font e testo ---------------------------------------------------- */
+  --gf-font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --gf-font-family: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --gf-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --gf-font-xs: 12px;
+  --gf-font-sm: 13px;
+  --gf-font-md: 14px;
+  --gf-font-lg: 16px;
+  --gf-font-xl: 20px;
+  --gf-font-section: 22px;
+  --gf-font-2xl: 28px;
+  --gf-font-stat: 30px;
+  --gf-font-3xl: 36px;
+  --gf-font-size-base: var(--gf-font-md);
+  --gf-font-size-header: var(--gf-font-2xl);
+  --gf-weight-normal: 400;
+  --gf-weight-medium: 500;
+  --gf-weight-semibold: 600;
+  --gf-weight-bold: 700;
+  --gf-line-height: 1.5;
+  --gf-line-height-tight: 1.15;
+  --gf-letter-spacing-title: -.02em;
+
+  /* --- Spaziature ------------------------------------------------------ */
+  --gf-space-1: 4px;
+  --gf-space-2: 8px;
+  --gf-space-3: 12px;
+  --gf-space-4: 16px;
+  --gf-space-5: 20px;
+  --gf-space-6: 24px;
+  --gf-space-8: 32px;
+  --gf-space-10: 40px;
+  --gf-space-12: 48px;
+  --gf-gap-layout: 22px;
+
+  /* --- Bordi e raggi --------------------------------------------------- */
+  --gf-border-width: 1px;
+  --gf-border-width-strong: 2px;
+  --gf-border: var(--gf-border-width) solid var(--gf-color-border);
+  --gf-radius-xs: 6px;
+  --gf-radius-sm: 9px;
+  --gf-radius-md: 10px;
+  --gf-radius-map: 12px;
+  --gf-radius-lg: 16px;
+  --gf-radius-pill: 999px;
+  --gf-radius-circle: 50%;
+
+  /* --- Ombre e focus --------------------------------------------------- */
+  --gf-shadow-sm: 0 1px 2px rgba(15,34,80,.06), 0 8px 24px -12px rgba(15,34,80,.18);
+  --gf-shadow-md: 0 8px 24px rgba(15,34,80,.12);
+  --gf-shadow-dialog: 0 16px 48px rgba(16,24,40,.16);
+  --gf-focus-ring: 0 0 0 3px rgba(22,101,255,.17);
+
+  /* --- Controlli e icone ----------------------------------------------- */
+  --gf-control-height: 40px;
+  --gf-control-height-sm: 32px;
+  --gf-control-touch: 44px;
+  --gf-control-check: 18px;
+  --gf-icon-size: 18px;
+  --gf-avatar-size: 36px;
+  --gf-stop-marker: 26px;
+
+  /* --- Layout ---------------------------------------------------------- */
+  --gf-sidebar-width: 244px;
+  --gf-topbar-height: 80px;
+  --gf-header-height: 86px;
+  --gf-content-padding: 32px;
+  --gf-content-width: 1200px;
+  --gf-content-narrow: 760px;
+  --gf-dialog-width: 640px;
+  --gf-auth-width: 440px;
+  --gf-map-min-height: 300px;
+  --gf-stop-list-max-height: 270px;
+  --gf-breakpoint-sm: 640px;
+  --gf-breakpoint-md: 768px;
+  --gf-breakpoint-lg: 1024px;
+  --gf-breakpoint-xl: 1440px;
+  --gf-motion-duration: 140ms;
+  --gf-z-menu: 40;
+  --gf-z-drawer: 80;
+  --gf-z-dialog: 100;
+
+  /* --- Nomi di compatibilità: alias, non una seconda palette ------------ */
+  --bg: var(--gf-color-bg);
+  --panel: var(--gf-color-surface);
+  --text: var(--gf-color-text);
+  --muted: var(--gf-color-muted);
+  --line: var(--gf-color-border);
+  --primary: var(--gf-color-primary);
+  --primary-dark: var(--gf-color-primary-hover);
+  --side: var(--gf-color-nav);
+  --green: var(--gf-color-success);
+  --orange: var(--gf-color-warning);
+  --purple: var(--gf-color-info);
+  --danger: var(--gf-color-danger);
+  --shadow: var(--gf-shadow-sm);
+  --primary-soft: var(--gf-color-info-bg);
+  --shadow-soft: var(--gf-shadow-sm);
+  --radius-xl: var(--gf-radius-lg);
+  --radius-lg: var(--gf-radius-lg);
+  --gf-width-content: var(--gf-content-width);
+  --gf-width-auth: var(--gf-auth-width);
+  --gf-touch-height: var(--gf-control-touch);
+}

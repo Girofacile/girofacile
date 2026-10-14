@@ -9,9 +9,11 @@ modifica database, prezzi, quote, Stripe, email o algoritmo di ottimizzazione.
 
 | Asset condiviso | Responsabilità |
 | --- | --- |
-| `static/design-system/tokens.css` | Palette semantica, font, spaziature, raggi, ombre, controlli e breakpoint |
+| `static/design-system/theme.css` | **Unica fonte** di colori, font, dimensioni del testo, spaziature, bordi, ombre, controlli, misure del layout e breakpoint |
+| `tokens.css` | Alias storico: importa `theme.css`, così le pagine esistenti non cambiano |
 | `components.css` | Componenti riutilizzabili, varianti, focus, disabled e liste responsive |
-| `layout.css` | Sidebar, topbar e shell aziendale/Super Admin |
+| `layout.css` | Layout base condiviso (`.gf-shell`), più gli adattatori di sidebar e topbar esistenti |
+| `shell.js` | Costruisce sidebar e intestazione del layout base con il menu standard |
 | `workspace.css` | Collegamento dei moduli gestionali esistenti al sistema |
 | `portals.css` | Mobile, autista, operatore, agente, login/setup, tracking, sito e documenti |
 | `design-system.js` | Miglioramenti di presentazione e helper DOM sicuri |
@@ -37,12 +39,15 @@ generate dai moduli attuali.
 
 ## Token e regole
 
-Blu principale `#0b63f6`, superfici bianche e neutre, testo `#17243b`.
-Verde significa successo/attivo/completato; ambra avviso/programmato;
-rosso problema/errore/eliminazione; blu informazione/in corso.
-Raggi 6, 10 e 12 px, ombre leggere. Font Arial/Helvetica/sans-serif,
-testo base 14 px, titolo gestionale 28 px. Controlli 40 px, target touch 44 px.
-La preferenza `prefers-reduced-motion` è rispettata.
+Riferimento: la Dashboard. Blu principale `--gf-color-primary` (`#1665ff`),
+sidebar blu notte `--gf-color-nav` (`#0f2250`), sfondo `#edf0f6`, superfici
+bianche, testo `#16213a`. Verde significa successo/attivo/completato; ambra
+avviso/programmato; rosso problema/errore/eliminazione; blu informazione/in
+corso; grigio bozza. ZTL usa i toni di avviso, la sponda quelli informativi.
+Titoli in Bricolage Grotesque, testo in IBM Plex Sans; testo base 14 px,
+titolo di pagina 28 px. Raggi 9, 10, 12 e 16 px, ombre leggere. Controlli
+40 px, target touch 44 px. La preferenza `prefers-reduced-motion` è rispettata.
+I valori sono in `theme.css`: altrove si usano solo le variabili.
 
 Breakpoint comuni: 640, 768, 1024, 1440 px. Le media query ripetono i valori
 documentati perché le variabili CSS non possono sostituire le condizioni.
@@ -72,6 +77,15 @@ pagina; l'aspetto di un componente deve cambiare nel foglio condiviso.
 | Empty/loading | `.gf-empty`, `.gf-loading[role="status"]` |
 | Alert/toast | `.gf-alert[data-status]`, `.gf-toast[role="status"]` |
 | Page header | `.gf-page-header`: titolo, descrizione e azione principale |
+| Disposizione | `.gf-stack[data-gap]`, `.gf-cluster[data-justify]`, `.gf-grid[data-cols="2\|3\|4\|main-side"]` |
+| Testo | `.gf-title`, `.gf-subtitle`, `.gf-text`, `.gf-muted`, `.gf-kicker` |
+| Pulsanti extra | `data-variant="link"`, `data-size="sm"`, `.gf-icon-button`, `.gf-avatar` |
+| Pannello | `.gf-panel` con `__header`, `__title`, `__meta`, `__body`, `__footer`; righe `.gf-list-item` |
+| Numeri del giorno | `.gf-stat-strip` con celle `__cell`, `__label`, `__value`, `__unit` |
+| Campi | `.gf-form-grid`, `.gf-field` (`__label`, `__hint`, `__error`, `[data-invalid]`), `.gf-fieldset`, `.gf-check`, `.gf-form-actions` |
+| Mappa + fermate | `.gf-route-panel` (`__map`, `__canvas`, `__detail`, `__footer`), `.gf-route-map__*`, `.gf-crew`, `.gf-progress`, `.gf-stop-list` / `.gf-stop.is-done\|is-miss\|is-next` |
+| Avvisi operativi | `.gf-alert[data-kind="ztl\|tail-lift"]` con `__icon`, `__title`, `__text`; badge `.gf-badge[data-kind]` |
+| Filtri | `.gf-filters` con campi `.gf-field` e `.gf-chip[aria-pressed]` |
 
 `GFDesignSystem` espone `enhance`, `breakpoints`, `announce`,
 `createButton`, `createBadge`, `createEmptyState`, `createLoading` e
@@ -102,19 +116,35 @@ restyling precedente: questa richiesta autorizza la loro migrazione. Si
 conservano i controlli di comportamento e si verifica la coerenza del nuovo
 sistema, senza imporre le vecchie proprietà CSS.
 
-## UI kit solo per sviluppo
+## Layout base condiviso
 
-Il riferimento è `docs/design-system/ui-kit.html`, **fuori da static**.
-Non esiste una route applicativa e Docker non copia docs: gli utenti della
-produzione non possono aprirlo. Nascondere un link sarebbe insufficiente.
+Ogni nuova pagina usa il layout base: sidebar blu notte con il menu della
+Dashboard, intestazione con titolo, sottotitolo, azioni e utente, contenuto
+con margini di 32 px. Sotto 1024 px la sidebar si apre dal pulsante menu.
 
-Dalla radice del checkout:
-```text
-python -m http.server 8765 --bind 127.0.0.1
+```html
+<body data-gf-surface="workspace" data-gf-layout="base"
+      data-gf-nav-active="clienti" data-gf-title="Clienti"
+      data-gf-subtitle="Anagrafica e indirizzi di consegna">
+  <button class="gf-button" data-variant="primary" data-gf-slot="header-actions">Nuovo cliente</button>
+  <main data-gf-shell-content>…</main>
+  <script src="/static/design-system/shell.js" defer></script>
+</body>
 ```
-Aprire localmente `http://127.0.0.1:8765/docs/design-system/ui-kit.html`.
-Gli esempi mostrano tutti i componenti, tastiera, dialog e messaggi senza
-chiamare API o modificare dati.
+
+Il menu standard è `GFShell.NAV` in `shell.js`; uno
+`<script type="application/json" id="gf-shell-nav">` lo sostituisce solo
+dove serve un menu diverso (per esempio il catalogo). shell.js crea i nodi con
+`textContent` e non interpreta testi come HTML.
+
+## Catalogo dei componenti (/catalogo)
+
+Il catalogo sostituisce il vecchio UI kit: `docs/design-system/catalogo.html`,
+servito da `/catalogo` **solo fuori produzione** (`APP_ENV` diverso da
+`production`/`prod`). Il file sta in docs, che Docker non copia, quindi in
+produzione la route risponde 404. Mostra le variabili di `theme.css` lette in
+automatico, il layout base e tutti i componenti con dati di esempio, senza
+chiamare API o modificare dati. Ogni nuovo componente approvato va aggiunto qui.
 
 ## Verifica
 

@@ -190,7 +190,7 @@ def main():
             page.evaluate("window.scrollTo(0,0)")
             preview = page.screenshot(type="jpeg",quality=70,full_page=False,animations="disabled")
             print("GF_DESIGN_PREVIEW:" + name + ":" + str(width) + ":" + base64.b64encode(preview).decode("ascii"),flush=True)
-        assert page.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--gf-color-primary').trim().toLowerCase()") == "#2563eb"
+        assert page.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--gf-color-primary').trim().toLowerCase()") == "#1665ff"
         checked.append(dict(page=name,width=width))
 
     try:
@@ -203,7 +203,7 @@ def main():
                     page.route("**/*",handle)
                     page.on("pageerror",lambda error:errors.append(str(error)))
                     state["surface"] = "kit"
-                    page.goto(base+"/docs/design-system/ui-kit.html",wait_until="networkidle")
+                    page.goto(base+"/docs/design-system/catalogo.html",wait_until="networkidle")
                     page.wait_for_function("!!window.GFDesignSystem")
                     primary = styles(page.get_by_role("button",name="Crea giro",exact=True),BUTTON_PROPERTIES)
                     field = styles(page.locator("#kitName"),INPUT_PROPERTIES)
@@ -239,7 +239,7 @@ def main():
                     assert toast_message.is_visible()
                     assert toast_message.evaluate("(el)=>!!el.closest('[role=status]')")
                     labels(page,"#kitTable",width)
-                    capture(page,"ui-kit",width)
+                    capture(page,"catalogo",width)
                     state["surface"] = "workspace"
                     page.goto(base+"/static/dashboard/index.html",wait_until="networkidle")
                     page.evaluate("""async me => {

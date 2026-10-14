@@ -6,7 +6,7 @@ Tutta la logica è nei moduli app/routers/ e app/services/.
 from pathlib import Path
 from contextlib import asynccontextmanager
 
-from fastapi import Depends, FastAPI, Request
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, RedirectResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import inspect, text
@@ -216,6 +216,21 @@ def dpa_page():
 @app.get("/subprocessors")
 def subprocessors_page():
     return FileResponse(static_dir / "legal" / "subprocessors.html", headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
+
+
+# Catalogo dei componenti: solo sviluppo. Il file sta in docs/, che l'immagine
+# Docker non copia, e la route non risponde in produzione.
+design_catalog_page = static_dir.parent / "docs" / "design-system" / "catalogo.html"
+
+
+@app.get("/catalogo", include_in_schema=False)
+def design_catalog():
+    if IS_PRODUCTION or not design_catalog_page.is_file():
+        raise HTTPException(status_code=404, detail="Not Found")
+    return FileResponse(
+        design_catalog_page,
+        headers={"Cache-Control": "no-cache, no-store, must-revalidate", "X-Robots-Tag": "noindex"},
+    )
 
 
 # -----------------------------------------------------------------------

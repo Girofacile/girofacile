@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Catalogo componenti · GiroFacile</title>
+<link rel="icon" href="/static/favicon-32x32.png">
+<link rel="stylesheet" href="/static/design-system/tokens.css">
+<link rel="stylesheet" href="/static/design-system/components.css">
+<link rel="stylesheet" href="/static/design-system/layout.css">
+<script src="/static/design-system/design-system.js" defer></script>
+<script src="/static/design-system/shell.js" defer></script>
+<script type="application/json" id="gf-shell-nav">
+[
+  {"label":"Fondamenti","items":[
+    {"id":"colori","label":"Colori","icon":"settings","href":"#colori"},
+    {"id":"testo","label":"Font e testo","icon":"document","href":"#testo"},
+    {"id":"misure","label":"Spazi, bordi, ombre","icon":"dashboard","href":"#misure"},
+    {"id":"layout","label":"Layout base","icon":"company","href":"#layout"}
+  ]},
+  {"label":"Componenti","items":[
+    {"id":"pulsanti","label":"Pulsanti","icon":"orders","href":"#pulsanti"},
+    {"id":"card","label":"Card e pannelli","icon":"dashboard","href":"#card"},
+    {"id":"tabelle","label":"Tabelle","icon":"report","href":"#tabelle"},
+    {"id":"badge","label":"Badge di stato","icon":"history","href":"#badge"},
+    {"id":"form","label":"Form e campi","icon":"document","href":"#form"},
+    {"id":"mappa","label":"Mappa + fermate","icon":"truck","href":"#mappa"},
+    {"id":"avvisi","label":"Avvisi","icon":"support","href":"#avvisi"},
+    {"id":"filtri","label":"Filtri","icon":"calendar","href":"#filtri"},
+    {"id":"interazioni","label":"Schede e finestre","icon":"chat","href":"#interazioni"}
+  ]}
+]
+</script>
+</head>
+<body data-gf-surface="workspace" data-gf-layout="base" data-gf-nav-active="colori"
+      data-gf-title="Catalogo componenti" data-gf-subtitle="Riferimento unico per colori, layout e componenti dell'interfaccia GiroFacile"
+      data-gf-user-name="Team GiroFacile" data-gf-user-role="Solo sviluppo">
+
+<a class="gf-button" data-variant="secondary" href="/dashboard" data-gf-slot="header-actions">Apri la Dashboard</a>
+
+<main data-gf-shell-content>
+<div class="gf-stack" data-gap="lg">
+
+<p class="gf-alert" data-status="info">Pagina di sviluppo: risponde solo fuori produzione e usa dati di esempio. Nessun pulsante modifica account, giri o pagamenti.</p>
+
+<!-- ============================ FONDAMENTI ============================ -->
+<section class="gf-panel gf-catalog-section" id="colori" aria-labelledby="colori-title">
+  <header class="gf-panel__header"><h2 class="gf-panel__title" id="colori-title">Colori</h2><span class="gf-panel__meta">theme.css · letti in automatico</span></header>
+  <div class="gf-panel__body gf-stack">
+    <p class="gf-muted">Ogni campione è una variabile <code>--gf-color-*</code> di theme.css. Usare sempre la variabile, mai il valore.</p>
+    <div class="gf-grid" data-size="sm" id="catalogSwatches" aria-live="polite"></div>
+  </div>
+</section>
+
+<section class="gf-panel gf-catalog-section" id="testo" aria-labelledby="testo-title">
+  <header class="gf-panel__header"><h2 class="gf-panel__title" id="testo-title">Font e testo</h2><span class="gf-panel__meta">Bricolage Grotesque · IBM Plex Sans</span></header>
+  <div class="gf-panel__body gf-stack">
+    <div id="catalogFonts"></div>
+    <div id="catalogSizes"></div>
+    <div id="catalogWeights"></div>
+    <div class="gf-stack" data-gap="sm">
+      <p class="gf-kicker">Classi di testo</p>
+      <h3 class="gf-title">.gf-title · Titolo di sezione</h3>
+      <p class="gf-subtitle">.gf-subtitle · Titolo di pannello</p>
+      <p class="gf-text">.gf-text · Testo principale per pianificare e prendere decisioni.</p>
+      <p class="gf-muted">.gf-muted · Testo secondario che accompagna l'azione principale.</p>
+    </div>
+  </div>
+</section>
+
+<section class="gf-panel gf-catalog-section" id="misure" aria-labelledby="misure-title">
+  <header class="gf-panel__header"><h2 class="gf-panel__title" id="misure-title">Spaziature, bordi e ombre</h2></header>
+  <div class="gf-panel__body gf-grid" data-cols="3">
+    <div><p class="gf-kicker">Spaziature</p><div id="catalogSpaces"></div></div>
+    <div><p class="gf-kicker">Raggi</p><div id="catalogRadii"></div></div>
+    <div><p class="gf-kicker">Ombre</p><div id="catalogShadows"></div></div>
+  </div>
+</section>
+
+<section class="gf-panel gf-catalog-section" id="layout" aria-labelledby="layout-title">
+  <header class="gf-panel__header"><h2 class="gf-panel__title" id="layout-title">Layout base condiviso</h2><span class="gf-panel__meta">shell.js + layout.css</span></header>
+  <div class="gf-panel__body gf-stack">
+    <p class="gf-text">Questa pagina usa il layout base: sidebar blu notte a sinistra, intestazione con titolo, azioni e utente in alto, contenuto sotto. Sotto 1024 px la sidebar si apre dal pulsante menu.</p>
+    <p class="gf-muted">Una pagina dichiara gli attributi sul body e un solo contenitore principale; shell.js costruisce il resto con il menu standard della Dashboard.</p>
+    <pre class="gf-code"><code>&lt;body data-gf-surface="workspace" data-gf-layout="base"
+      data-gf-nav-active="clienti" data-gf-title="Clienti"
+      data-gf-subtitle="Anagrafica e indirizzi di consegna"&gt;
+  &lt;button class="gf-button" data-variant="primary" data-gf-slot="header-actions"&gt;Nuovo cliente&lt;/button&gt;
+  &lt;main data-gf-shell-content&gt; … &lt;/main&gt;
+  &lt;script src="/static/design-system/shell.js" defer&gt;&lt;/script&gt;
+&lt;/body&gt;</code></pre>
+    <div class="gf-grid" data-cols="4">
+      <div class="gf-card"><p class="gf-kicker">Sidebar</p><p class="gf-text">244 px, voci da 40 px, voce attiva con barra blu.</p></div>
+      <div class="gf-card"><p class="gf-kicker">Intestazione</p><p class="gf-text">Titolo 28 px, sottotitolo, azioni e utente.</p></div>
+      <div class="gf-card"><p class="gf-kicker">Contenuto</p><p class="gf-text">Margini laterali 32 px, distanza tra blocchi 22 px.</p></div>
+      <div class="gf-card"><p class="gf-kicker">Disposizione</p><p class="gf-text">.gf-stack, .gf-cluster, .gf-grid (2, 3, 4, main-side).</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ COMPONENTI ============================ -->
+<section class="gf-panel gf-catalog-section" id="pulsanti" aria-labelledby="pulsanti-title">
+  <header class="gf-panel__header"><h2 class="gf-panel__title" id="pulsanti-title">Pulsanti</h2><span class="gf-panel__meta">.gf-button · .gf-icon-button</span></header>
+  <div class="gf-panel__body gf-stack">
+    <div class="gf-cluster">
+      <button class="gf-button" data-variant="primary" type="button">Crea giro</button>
+      <button class="gf-button" data-variant="secondary" type="button">Esporta</button>
+      <button class="gf-button" data-variant="ghost" type="button">Dettagli</button>
+      <button class="gf-button" data-variant="danger" type="button">Elimina</button>
+      <button class="gf-button" data-variant="primary" data-status="success" type="button">Conferma consegna</button>
+      <button class="gf-button" data-variant="primary" type="button" disabled>Non disponibile</button>
+    </div>
+    <div class="gf-cluster">
+      <button class="gf-button" data-variant="primary" data-size="sm" type="button">Assegna</button>
+      <button class="gf-button" data-variant="secondary" data-size="sm" type="button">Duplica</button>
+      <button class="gf-button" data-variant="link" type="button">Apri controllo giri ›</button>
+      <button class="gf-icon-button" type="button" aria-label="Notifiche" data-catalog-icon="chat"></button>
+      <button class="gf-icon-button" type="button" aria-label="Impostazioni" data-catalog-icon="settings"></button>
+      <span class="gf-avatar" aria-label="Marco Rossi">MR</span>
+    </div>
+    <p class="gf-muted">Una sola azione primaria per area. Danger solo per azioni distruttive, success per confermare un esito.</p>
+  </div>
+</section>
+
+<section class="gf-stack gf-catalog-section" id="card" aria-labelledby="card-title">
+  <h2 class="gf-title" id="card-title">Card, pannelli e numeri del giorno</h2>
+  <div class="gf-stat-strip" aria-label="Riepilogo di oggi">
+    <button type="button" class="gf-stat-strip__cell"><span class="gf-stat-strip__label">Giri programmati</span><strong class="gf-stat-strip__value">8</strong><small class="gf-stat-strip__unit">oggi</small></button>
+    <button type="button" class="gf-stat-strip__cell"><span class="gf-stat-strip__label">Giri in corso</span><strong class="gf-stat-strip__value">3</strong><small class="gf-stat-strip__unit">attivi adesso</small></button>
+    <div class="gf-stat-strip__cell"><span class="gf-stat-strip__label">Consegne completate</span><strong class="gf-stat-strip__value">46</strong><small class="gf-stat-strip__unit">dagli autisti oggi</small></div>
+    <div class="gf-stat-strip__cell"><span class="gf-stat-strip__label">Autisti impegnati</span><strong class="gf-stat-strip__value">5</strong><small class="gf-stat-strip__unit">su 7</small></div>
+    <div class="gf-stat-strip__cell"><span class="gf-stat-strip__label">Mezzi impegnati</span><strong class="gf-stat-strip__value">4</strong><small class="gf-stat-strip__unit">su 6</small></div>
+  </div>
+  <div class="gf-grid" data-cols="2">
+    <section class="gf-panel" aria-labelledby="catalogScheduledTitle">
+      <header class="gf-panel__header"><h3 class="gf-panel__title" id="catalogScheduledTitle">Giri programmati</h3><span class="gf-panel__meta">3</span></header>
+      <ul class="gf-list">
+        <li class="gf-list-item"><div class="gf-list-item__main"><strong>Milano Nord · mattina</strong><small>Marco Rossi · Iveco Daily FX 482 KL · 12 fermate</small></div><span class="gf-badge" data-status="warning" data-dot>08:00</span></li>
+        <li class="gf-list-item"><div class="gf-list-item__main"><strong>Monza e Brianza</strong><small>Giulia Bianchi · Fiat Ducato GH 117 TR · 9 fermate</small></div><span class="gf-badge" data-status="warning" data-dot>09:30</span></li>
+        <li class="gf-list-item"><div class="gf-list-item__main"><strong>Sesto · Cologno</strong><small>Luca Ferri · Renault Master EZ 903 PB · 14 fermate</small></div><span class="gf-badge" data-status="warning" data-dot>13:00</span></li>
+      </ul>
+      <footer class="gf-panel__footer"><button class="gf-button" data-variant="link" type="button">Tutti i giri programmati ›</button></footer>
+    </section>
+    <div class="gf-stack">
+      <article class="gf-card"><h3 class="gf-subtitle">Card standard</h3><p class="gf-muted">Contenitore bianco a 16 px con bordo e ombra leggera.</p></article>
+      <article class="gf-card" data-variant="action"><div><h3 class="gf-subtitle">Pianifica il prossimo giro</h3><p class="gf-muted">Una sola azione principale.</p></div><button class="gf-button" data-variant="primary" type="button">Pianifica</button></article>
+      <article class="gf-card" data-variant="warning"><h3 class="gf-subtitle">Verifica necessaria</h3><p class="gf-text">Due clienti non hanno coordinate valide.</p></article>
+    </div>
+  </div>
+</section>
+
+<section class="gf-panel gf-catalog-section" id="tabelle" aria-labelledby="tabelle-title">
+  <header class="gf-panel__header"><h2 class="gf-panel__title" id="tabelle-title">Tabelle</h2><span class="gf-panel__meta">Su smartphone diventano schede</span></header>
+  <div class="gf-table-wrap">
+    <table class="gf-table" id="kitTable" data-gf-responsive="cards">
+      <caption>Clienti di esempio: tutte le azioni restano accessibili su smartphone.</caption>
+      <thead><tr><th scope="col">Cliente</th><th scope="col">Indirizzo</th><th scope="col">Finestra</th><th scope="col">Stato</th><th scope="col">Azioni</th></tr></thead>
+      <tbody>
+        <tr><td data-label="Cliente">Bar Centrale</td><td data-label="Indirizzo">Via Padova 41, Milano</td><td data-label="Finestra">07:30–10:00</td><td data-label="Stato"><span class="gf-badge" data-status="success">Attivo</span></td><td data-label="Azioni"><button class="gf-button" data-variant="ghost" data-size="sm" type="button">Modifica Bar Centrale</button></td></tr>
+        <tr><td data-label="Cliente">Ristorante Da Gino</td><td data-label="Indirizzo">Corso Buenos Aires 15, Milano <span class="gf-badge" data-kind="ztl">ZTL</span></td><td data-label="Finestra">10:00–11:30</td><td data-label="Stato"><span class="gf-badge" data-status="success">Attivo</span></td><td data-label="Azioni"><button class="gf-button" data-variant="ghost" data-size="sm" type="button">Modifica Da Gino</button></td></tr>
+        <tr><td data-label="Cliente">Conad Palmanova</td><td data-label="Indirizzo">Via Palmanova 88, Cologno Monzese <span class="gf-badge" data-kind="tail-lift">Sponda</span></td><td data-label="Finestra">—</td><td data-label="Stato"><span class="gf-badge" data-status="warning">Da verificare</span></td><td data-label="Azioni"><button class="gf-button" data-variant="ghost" data-size="sm" type="button">Modifica Conad</button></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <footer class="gf-panel__footer">
+    <nav class="gf-pagination" aria-label="Paginazione esempio"><button class="gf-button" data-variant="secondary" data-size="sm" type="button" disabled>Precedente</button><span aria-live="polite">Pagina 1 di 1 · 3 elementi</span><button class="gf-button" data-variant="secondary" data-size="sm" type="button" disabled>Successiva</button></nav>
+  </footer>
+</section>
+
+<section class="gf-panel gf-catalog-section" id="badge" aria-labelledby="badge-title">
+  <header class="gf-panel__header"><h2 class="gf-panel__title" id="badge-title">Badge di stato</h2><span class="gf-panel__meta">.gf-badge · data-status · data-kind</span></header>
+  <div class="gf-panel__body gf-stack">
+    <div class="gf-cluster"><span class="gf-badge" data-status="neutral">Bozza</span><span class="gf-badge" data-status="warning">Programmato</span><span class="gf-badge" data-status="info">In corso</span><span class="gf-badge" data-status="success">Completato</span><span class="gf-badge" data-status="danger">Problema</span></div>
+    <div class="gf-cluster"><span class="gf-badge" data-status="info" data-dot>Live</span><span class="gf-badge" data-status="success" data-dot>Consegnata</span><span class="gf-badge" data-status="danger" data-dot>Mancata</span><span class="gf-badge" data-kind="ztl">ZTL</span><span class="gf-badge" data-kind="tail-lift">Sponda</span></div>
+    <p class="gf-muted">Verde: completato o attivo. Ambra: programmato o da verificare. Blu: in corso o informazione. Rosso: problema. Grigio: bozza.</p>
+  </div>
+</section>
+
+<section class="gf-panel gf-catalog-section" id="form" aria-labelledby="form-title">
+  <header class="gf-panel__header"><h2 class="gf-panel__title" id="form-title">Form e campi</h2><span class="gf-panel__meta">.gf-field · .gf-form-grid</span></header>
+  <form class="gf-panel__body gf-stack" id="kitForm" novalidate>
+    <div class="gf-form-grid">
+      <label class="gf-field" for="kitName"><span class="gf-field__label">Nome cliente <span class="gf-field__required" aria-hidden="true">*</span></span><input class="gf-input" id="kitName" name="name" placeholder="Es. Bar Centrale" autocomplete="off" required></label>
+      <label class="gf-field" for="kitEmail"><span class="gf-field__label">Email</span><input class="gf-input" id="kitEmail" name="email" type="email" placeholder="nome@azienda.it" autocomplete="off"></label>
+      <label class="gf-field" for="kitFuel"><span class="gf-field__label">Alimentazione mezzo</span><select class="gf-select" id="kitFuel" name="fuel"><option value="gasolio">Gasolio</option><option value="elettrico">Elettrico</option><option value="metano">Metano</option></select></label>
+      <label class="gf-field" for="kitDisabled"><span class="gf-field__label">Codice cliente</span><input class="gf-input" id="kitDisabled" value="CL-00128" disabled><p class="gf-field__hint">Assegnato automaticamente.</p></label>
+      <label class="gf-field" data-invalid for="kitCap"><span class="gf-field__label">CAP</span><input class="gf-input" id="kitCap" value="201" aria-invalid="true" aria-describedby="kitCapError"><p class="gf-field__error" id="kitCapError">Il CAP deve avere 5 cifre.</p></label>
+      <label class="gf-field" for="kitWindow"><span class="gf-field__label">Finestra di consegna</span><input class="gf-input" id="kitWindow" placeholder="07:30–10:00"></label>
+      <label class="gf-field" data-span="full" for="kitNotes"><span class="gf-field__label">Note per l'autista</span><textarea class="gf-textarea" id="kitNotes" name="notes" rows="3" placeholder="Citofono, accesso al magazzino, orari di scarico"></textarea></label>
+    </div>
+    <fieldset class="gf-fieldset">
+      <legend>Requisiti della consegna</legend>
+      <div class="gf-cluster">
+        <label class="gf-check"><input type="checkbox" id="kitCheckbox"> Cliente in ZTL</label>
+        <label class="gf-check"><input type="checkbox"> Serve la sponda idraulica</label>
+        <label class="gf-check"><input type="radio" name="kitPay" checked> Fattura mensile</label>
+        <label class="gf-check"><input type="radio" name="kitPay"> Contrassegno</label>
+        <label class="gf-switch"><input id="kitSwitch" type="checkbox" role="switch"><span>Firma alla consegna</span></label>
+      </div>
+    </fieldset>
+    <div class="gf-form-actions"><button class="gf-button" data-variant="secondary" type="reset">Annulla</button><button class="gf-button" data-variant="primary" type="submit">Salva cliente</button></div>
+  </form>
+</section>
+
+<section class="gf-stack gf-catalog-section" id="mappa" aria-labelledby="mappa-title">
+  <h2 class="gf-title" id="mappa-title">Pannello mappa + fermate</h2>
+  <section class="gf-route-panel" aria-label="Giro in corso">
+    <div class="gf-route-panel__map">
+      <div class="gf-route-panel__heading">
+        <div><h3 class="gf-title">Milano Nord · mattina</h3><p class="gf-muted">Percorso del giro attivo, aggiornato alle consegne registrate</p></div>
+        <span class="gf-badge" data-status="info" data-dot>In corso</span>
+      </div>
+      <div class="gf-route-panel__canvas">
+        <svg viewBox="0 0 660 300" role="img" aria-label="Schema del percorso: 6 fermate, 2 completate, 1 mancata">
+          <g aria-hidden="true">
+            <line class="gf-route-map__grid" x1="0" y1="75" x2="660" y2="75"/><line class="gf-route-map__grid" x1="0" y1="150" x2="660" y2="150"/><line class="gf-route-map__grid" x1="0" y1="225" x2="660" y2="225"/>
+            <line class="gf-route-map__grid" x1="165" y1="0" x2="165" y2="300"/><line class="gf-route-map__grid" x1="330" y1="0" x2="330" y2="300"/><line class="gf-route-map__grid" x1="495" y1="0" x2="495" y2="300"/>
+          </g>
+          <path class="gf-route-map__done" d="M60 230 C 110 200, 120 150, 160 130 S 240 90, 270 110"/>
+          <path class="gf-route-map__todo" d="M270 110 C 320 140, 340 210, 400 200 S 480 120, 520 90 S 600 140, 610 190"/>
+          <g class="gf-route-map__depot"><rect x="34" y="216" width="52" height="28" rx="6"/><text x="60" y="230">DEP</text></g>
+          <g class="gf-route-map__node is-done"><circle cx="160" cy="130" r="14"/><text x="160" y="130">1</text></g>
+          <g class="gf-route-map__node is-done"><circle cx="270" cy="110" r="14"/><text x="270" y="110">2</text></g>
+          <g class="gf-route-map__node is-miss"><circle cx="335" cy="185" r="14"/><text x="335" y="185">3</text></g>
+          <g class="gf-route-map__node is-next"><circle cx="400" cy="200" r="14"/><text x="400" y="200">4</text></g>
+          <g class="gf-route-map__node"><circle cx="520" cy="90" r="14"/><text x="520" y="90">5</text></g>
+          <g class="gf-route-map__node"><circle cx="610" cy="190" r="14"/><text x="610" y="190">6</text></g>
+        </svg>
+      </div>
+      <div class="gf-legend"><span><i data-state="done"></i>Completata</span><span><i></i>Da fare</span><span><i data-state="miss"></i>Mancata</span></div>
+    </div>
+    <div class="gf-route-panel__detail">
+      <div class="gf-crew"><div><small>Autista</small><strong>Marco Rossi</strong></div><div><small>Mezzo</small><strong>Iveco Daily · FX 482 KL</strong></div></div>
+      <div class="gf-progress">
+        <div class="gf-progress__top"><span><b>2 su 6</b> completate</span><span>3 da fare</span></div>
+        <div class="gf-progress__track" role="img" aria-label="2 completate, 1 mancata, 3 da fare"><span class="gf-progress__done" data-gf-width="35"></span><span class="gf-progress__miss" data-gf-width="15"></span></div>
+      </div>
+      <div class="gf-alert" data-kind="ztl" role="note"><svg class="gf-alert__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17h.01"/></svg><div class="gf-alert__body"><p class="gf-alert__title">Prossima fermata in ZTL</p><p class="gf-alert__text">Varco attivo fino alle 10:00: permesso del mezzo verificato.</p></div></div>
+      <ol class="gf-stop-list" aria-label="Fermate del giro">
+        <li class="gf-stop is-done"><span class="gf-stop__number">1</span><span class="gf-stop__main"><span class="gf-stop__name">Bar Centrale</span><span class="gf-stop__meta">Via Padova 41, Milano</span></span><span class="gf-stop__time">08:12</span></li>
+        <li class="gf-stop is-done"><span class="gf-stop__number">2</span><span class="gf-stop__main"><span class="gf-stop__name">Farmacia San Marco</span><span class="gf-stop__meta">Viale Monza 120, Milano</span></span><span class="gf-stop__time">08:41</span></li>
+        <li class="gf-stop is-miss"><span class="gf-stop__number">3</span><span class="gf-stop__main"><span class="gf-stop__name">Panificio Lombardo</span><span class="gf-stop__meta">Via Pallanza 7 · Chiuso</span></span><span class="gf-stop__time">09:05</span></li>
+        <li class="gf-stop is-next is-highlighted"><span class="gf-stop__number">4</span><span class="gf-stop__main"><span class="gf-stop__name">Ristorante Da Gino</span><span class="gf-stop__meta">Corso Buenos Aires 15 <span class="gf-badge" data-kind="ztl">ZTL</span></span></span><span class="gf-stop__time">09:35</span></li>
+        <li class="gf-stop"><span class="gf-stop__number">5</span><span class="gf-stop__main"><span class="gf-stop__name">Conad Palmanova</span><span class="gf-stop__meta">Cologno Monzese <span class="gf-badge" data-kind="tail-lift">Sponda</span></span></span><span class="gf-stop__time">10:10</span></li>
+        <li class="gf-stop"><span class="gf-stop__number">6</span><span class="gf-stop__main"><span class="gf-stop__name">Hotel Lombardia</span><span class="gf-stop__meta">Sesto San Giovanni</span></span><span class="gf-stop__time">10:45</span></li>
+      </ol>
+      <div class="gf-route-panel__footer"><button class="gf-button" data-variant="link" type="button">Apri controllo giri ›</button></div>
+    </div>
+  </section>
+  <p class="gf-muted">Il riquadro .gf-route-panel__canvas accoglie lo schema SVG o una mappa reale (Leaflet). La barra di avanzamento usa data-gf-width in passi del 5%.</p>
+</section>
+
+<section class="gf-panel gf-catalog-section" id="avvisi" aria-labelledby="avvisi-title">
+  <header class="gf-panel__header"><h2 class="gf-panel__title" id="avvisi-title">Avvisi e messaggi</h2><span class="gf-panel__meta">.gf-alert · .gf-toast · .gf-empty</span></header>
+  <div class="gf-panel__body gf-stack">
+    <div class="gf-grid" data-cols="2">
+      <div class="gf-alert" data-kind="ztl" role="note"><svg class="gf-alert__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17h.01"/></svg><div class="gf-alert__body"><p class="gf-alert__title">Cliente in ZTL</p><p class="gf-alert__text">3 fermate richiedono il permesso di accesso: controlla gli orari del varco.</p></div></div>
+      <div class="gf-alert" data-kind="tail-lift" role="note"><svg class="gf-alert__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 6h11v10H2z M13 9h5l3 3v4h-8z M6.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z M17.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/></svg><div class="gf-alert__body"><p class="gf-alert__title">Serve la sponda idraulica</p><p class="gf-alert__text">2 fermate: assegna un mezzo con sponda (Iveco Daily FX 482 KL).</p></div></div>
+    </div>
+    <p class="gf-alert" data-status="success">Giro salvato e assegnato a Marco Rossi.</p>
+    <p class="gf-alert" data-status="warning">Controlla i dati prima di continuare: 2 indirizzi non sono stati trovati.</p>
+    <p class="gf-alert" data-status="danger">Non è stato possibile salvare. I dati inseriti restano disponibili.</p>
+    <p class="gf-alert" data-status="info">Gli orari sono tempi stradali stimati.</p>
+    <div class="gf-cluster"><button class="gf-button" data-variant="secondary" id="kitToast" type="button">Mostra toast</button></div>
+    <div class="gf-grid" data-cols="2">
+      <div class="gf-card"><div class="gf-loading" role="status" aria-live="polite">Caricamento in corso…</div></div>
+      <div class="gf-card"><div class="gf-empty"><h3 class="gf-subtitle">Nessun risultato</h3><p>Prova a modificare ricerca o filtri.</p><button class="gf-button" data-variant="secondary" type="button">Azzera filtri</button></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="gf-stack gf-catalog-section" id="filtri" aria-labelledby="filtri-title">
+  <h2 class="gf-title" id="filtri-title">Filtri e barra strumenti</h2>
+  <form class="gf-filters" role="search" aria-label="Filtra i giri" id="kitFilters">
+    <label class="gf-field" data-grow for="kitSearch"><span class="gf-field__label">Cerca</span><input class="gf-input" id="kitSearch" type="search" placeholder="Giro, cliente o autista"></label>
+    <label class="gf-field" for="kitStatus"><span class="gf-field__label">Stato</span><select class="gf-select" id="kitStatus"><option value="">Tutti gli stati</option><option>Programmato</option><option>In corso</option><option>Completato</option></select></label>
+    <label class="gf-field" for="kitDate"><span class="gf-field__label">Data</span><input class="gf-input" id="kitDate" type="date" value="2026-10-15"></label>
+    <label class="gf-field" for="kitDriver"><span class="gf-field__label">Autista</span><select class="gf-select" id="kitDriver"><option value="">Tutti</option><option>Marco Rossi</option><option>Giulia Bianchi</option><option>Luca Ferri</option></select></label>
+    <div class="gf-filters__chips" aria-label="Filtri rapidi">
+      <button class="gf-chip" type="button" aria-pressed="true">Oggi <span class="gf-chip__count">8</span></button>
+      <button class="gf-chip" type="button" aria-pressed="false">Con ZTL <span class="gf-chip__count">3</span></button>
+      <button class="gf-chip" type="button" aria-pressed="false">Serve sponda <span class="gf-chip__count">2</span></button>
+      <button class="gf-chip" type="button" aria-pressed="false">Con problemi <span class="gf-chip__count">1</span></button>
+      <button class="gf-button" data-variant="link" type="reset">Azzera filtri</button>
+    </div>
+  </form>
+  <div class="gf-toolbar">
+    <details class="gf-dropdown" id="kitDropdown"><summary class="gf-button" data-variant="secondary">Altre azioni</summary><div><button class="gf-button" data-variant="ghost" type="button">Esporta lista</button><button class="gf-button" data-variant="ghost" type="button">Stampa</button></div></details>
+    <span class="gf-muted">Il menu a tendina si apre con Invio e si chiude con Invio.</span>
+  </div>
+</section>
+
+<section class="gf-panel gf-catalog-section" id="interazioni" aria-labelledby="interazioni-title">
+  <header class="gf-panel__header"><h2 class="gf-panel__title" id="interazioni-title">Schede e finestre</h2><span class="gf-panel__meta">.gf-tabs · dialog.gf-dialog</span></header>
+  <div class="gf-panel__body gf-stack">
+    <div class="gf-tabs" role="tablist" aria-label="Esempio schede"><button class="gf-button" data-variant="ghost" id="kitTabDetails" type="button" role="tab" aria-selected="true" aria-controls="kitPanelDetails">Dettagli</button><button class="gf-button" data-variant="ghost" id="kitTabActivity" type="button" role="tab" aria-selected="false" aria-controls="kitPanelActivity" tabindex="-1">Attività</button></div>
+    <div class="gf-card" id="kitPanelDetails" role="tabpanel" aria-labelledby="kitTabDetails"><p class="gf-text">Informazioni principali del cliente.</p></div>
+    <div class="gf-card" id="kitPanelActivity" role="tabpanel" aria-labelledby="kitTabActivity" hidden><p class="gf-text">Ultime consegne e note dell'autista.</p></div>
+    <div><button class="gf-button" data-variant="secondary" id="kitDialogOpen" type="button">Apri finestra di esempio</button></div>
+    <dialog class="gf-dialog" id="kitDialog" aria-labelledby="kitDialogTitle"><form method="dialog" class="gf-stack"><h2 class="gf-title" id="kitDialogTitle">Rinomina giro</h2><p class="gf-muted">Finestra nativa: focus interno, Esc chiude e il focus torna al pulsante.</p><label class="gf-field" for="kitDialogName"><span class="gf-field__label">Nome del giro</span><input class="gf-input" id="kitDialogName" value="Milano Nord · mattina" autofocus></label><div class="gf-form-actions"><button class="gf-button" data-variant="secondary" value="cancel">Annulla</button><button class="gf-button" data-variant="primary" value="confirm">Salva</button></div></form></dialog>
+  </div>
+</section>
+
+</div>
+</main>
+
+<script>
+(function(){
+  'use strict';
+  // Legge le variabili di theme.css (anche se importato da tokens.css).
+  function themeTokens(){
+    const tokens = [];
+    const visit = sheet => {
+      let rules; try { rules = sheet.cssRules; } catch(error){ return; }
+      Array.from(rules || []).forEach(rule => {
+        if(rule.styleSheet) visit(rule.styleSheet);
+        else if(rule.selectorText === ':root' && rule.style){
+          Array.from(rule.style).forEach(name => { if(name.startsWith('--gf-') && !tokens.includes(name)) tokens.push(name); });
+        }
+      });
+    };
+    Array.from(document.styleSheets).forEach(visit);
+    return tokens;
+  }
+  const rootStyle = getComputedStyle(document.documentElement);
+  const tokens = themeTokens();
+  function make(tag, className, text){ const node = document.createElement(tag); if(className) node.className = className; if(text !== undefined) node.textContent = text; return node; }
+  function sample(node, token){ node.style.setProperty('--catalog-value', 'var(' + token + ')'); return node; }
+  function specimen(target, token, visual){
+    const row = make('div','gf-specimen');
+    const label = make('div');
+    label.append(make('strong',null,token.replace('--gf-','')), make('br'), make('code',null,'var(' + token + ') · ' + rootStyle.getPropertyValue(token).trim()));
+    row.append(label, visual);
+    target.appendChild(row);
+  }
+  const swatches = document.getElementById('catalogSwatches');
+  tokens.filter(name => name.startsWith('--gf-color-')).forEach(token => {
+    const item = make('div','gf-swatch');
+    item.append(sample(make('span','gf-swatch__chip'),token), make('code',null,token), make('small',null,rootStyle.getPropertyValue(token).trim()));
+    swatches.appendChild(item);
+  });
+  tokens.filter(name => /^--gf-font-(display|family)$/.test(name)).forEach(token => {
+    const text = sample(make('p','gf-specimen__text','Giro consegne Milano Nord'),token); text.dataset.sample = 'family';
+    specimen(document.getElementById('catalogFonts'), token, text);
+  });
+  tokens.filter(name => /^--gf-font-(xs|sm|md|lg|xl|section|2xl|stat|3xl)$/.test(name)).forEach(token => {
+    const text = sample(make('p','gf-specimen__text','12 fermate · 46 consegne'),token); text.dataset.sample = 'size';
+    specimen(document.getElementById('catalogSizes'), token, text);
+  });
+  tokens.filter(name => name.startsWith('--gf-weight-')).forEach(token => {
+    const text = sample(make('p','gf-specimen__text','Autista Marco Rossi'),token); text.dataset.sample = 'weight';
+    specimen(document.getElementById('catalogWeights'), token, text);
+  });
+  tokens.filter(name => /^--gf-(space-\d+|gap-layout)$/.test(name)).forEach(token => specimen(document.getElementById('catalogSpaces'), token, sample(make('span','gf-specimen__bar'),token)));
+  tokens.filter(name => /^--gf-radius-(xs|sm|md|map|lg)$/.test(name)).forEach(token => { const box = sample(make('span','gf-specimen__box'),token); box.dataset.sample = 'radius'; specimen(document.getElementById('catalogRadii'), token, box); });
+  tokens.filter(name => name.startsWith('--gf-shadow-')).forEach(token => { const box = sample(make('span','gf-specimen__box'),token); box.dataset.sample = 'shadow'; specimen(document.getElementById('catalogShadows'), token, box); });
+
+  // Icone dei pulsanti di esempio, dallo stesso set del layout base.
+  function placeIcons(){
+    if(!window.GFShell) return;
+    document.querySelectorAll('[data-catalog-icon]').forEach(button => { if(!button.firstChild) button.appendChild(window.GFShell.icon(button.dataset.catalogIcon)); });
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', placeIcons); else placeIcons();
+
+  // Voce attiva della sidebar in base alla sezione visibile.
+  function syncActive(){
+    const sections = Array.from(document.querySelectorAll('.gf-catalog-section'));
+    let current = sections[0];
+    sections.forEach(section => { if(section.getBoundingClientRect().top < 140) current = section; });
+    document.querySelectorAll('[data-gf-nav]').forEach(link => {
+      if(link.dataset.gfNav === current.id) link.setAttribute('aria-current','page'); else link.removeAttribute('aria-current');
+    });
+  }
+  window.addEventListener('scroll', syncActive, {passive:true});
+
+  document.getElementById('kitForm').addEventListener('submit', event => event.preventDefault());
+  document.getElementById('kitFilters').addEventListener('submit', event => event.preventDefault());
+  document.querySelectorAll('.gf-chip').forEach(chip => chip.addEventListener('click', () => chip.setAttribute('aria-pressed', String(chip.getAttribute('aria-pressed') !== 'true'))));
+  document.getElementById('kitDialogOpen').addEventListener('click', () => document.getElementById('kitDialog').showModal());
+  document.getElementById('kitToast').addEventListener('click', () => window.GFDesignSystem.announce('Esempio completato senza modificare dati.','success'));
+  const tabs = Array.from(document.querySelectorAll('[role="tab"]'));
+  function activate(tab){ tabs.forEach(item => { const selected = item === tab; item.setAttribute('aria-selected', String(selected)); item.tabIndex = selected ? 0 : -1; document.getElementById(item.getAttribute('aria-controls')).hidden = !selected; }); tab.focus(); }
+  tabs.forEach((tab, index) => {
+    tab.addEventListener('click', () => activate(tab));
+    tab.addEventListener('keydown', event => {
+      let next;
+      if(event.key === 'ArrowRight') next = (index + 1) % tabs.length;
+      if(event.key === 'ArrowLeft') next = (index + tabs.length - 1) % tabs.length;
+      if(event.key === 'Home') next = 0;
+      if(event.key === 'End') next = tabs.length - 1;
+      if(next === undefined) return;
+      event.preventDefault(); activate(tabs[next]);
+    });
+  });
+})();
+</script>
+</body>
+</html>

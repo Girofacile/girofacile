@@ -42,8 +42,10 @@ function runtime(){
   vm.runInContext(read(assets+'design-system.js'),context);
   return{api:window.GFDesignSystem,document,context};
 }
-test('tokens centrally define palette, geometry, spacing, typography and breakpoints',()=>{
-  const css=read(assets+'tokens.css');
+test('theme.css centrally defines palette, geometry, spacing, typography and breakpoints',()=>{
+  assert.match(read(assets+'tokens.css'),/@import url\("theme\.css"\)/,'tokens.css stays an alias of theme.css');
+  assert.doesNotMatch(read(assets+'tokens.css'),/--gf-[\w-]+\s*:/,'Variables live only in theme.css');
+  const css=read(assets+'theme.css');
   for(const token of ['color-primary','color-bg','color-surface','color-text','color-muted','color-border','color-border-strong','color-success','color-success-bg','color-warning','color-warning-bg','color-danger','color-danger-bg','color-info','color-info-bg','radius-sm','radius-md','radius-lg','shadow-sm','control-height','touch-height','font-size-base','font-size-header','breakpoint-sm','breakpoint-md','breakpoint-lg','breakpoint-xl','space-1','space-2','space-3','space-4','space-6','space-8'])
     assert.match(css,new RegExp('--gf-'+token+'\\s*:'));
   assert.match(css,/--gf-color-primary\s*:\s*#1665ff/i);
@@ -90,14 +92,40 @@ test('runtime reads responsive tokens and does not contact application services'
   assert.doesNotMatch(source,/\bfetch\s*\(|XMLHttpRequest|localStorage|sessionStorage|location\.(?:href|assign|replace)|\/api\//);
   new vm.Script(source);
 });
-test('developer UI kit remains outside static hosting and deployable image',()=>{
-  assert.ok(fs.existsSync(path.join(root,'docs/design-system/ui-kit.html')));
-  assert.equal(fs.existsSync(path.join(root,'static/design-system/ui-kit.html')),false);
-  assert.doesNotMatch(read('app/main.py'),/ui-kit|design-system\/ui/);
+test('component catalog replaces the UI kit and stays out of production',()=>{
+  assert.equal(fs.existsSync(path.join(root,'docs/design-system/ui-kit.html')),false);
+  assert.equal(fs.existsSync(path.join(root,'static/design-system/catalogo.html')),false);
+  const main=read('app/main.py');
+  assert.match(main,/@app\.get\("\/catalogo", include_in_schema=False\)/);
+  assert.match(main,/if IS_PRODUCTION or not design_catalog_page\.is_file\(\):/);
   assert.doesNotMatch(read('Dockerfile'),/COPY\s+(?:\.\s|docs\b)/);
-  const kit=read('docs/design-system/ui-kit.html');
+  const kit=read('docs/design-system/catalogo.html');
   assert.match(kit,/<dialog[^>]*class="gf-dialog"/);assert.match(kit,/role="tablist"/);assert.match(kit,/role="switch"/);assert.match(kit,/data-gf-responsive="cards"/);
+  assert.match(kit,/data-gf-layout="base"/);assert.match(kit,/\/static\/design-system\/shell\.js/);
+  for(const name of ['gf-button','gf-card','gf-panel','gf-table','gf-badge','gf-field','gf-route-panel','gf-stop-list','gf-alert','gf-filters','gf-chip','gf-stat-strip'])
+    assert.match(kit,new RegExp('class="'+name+'[\\s"]'),name);
+  assert.match(kit,/data-kind="ztl"/);assert.match(kit,/data-kind="tail-lift"/);
+  assert.doesNotMatch(kit,/\sstyle="/,'No inline styles in the catalog markup');
+  assert.doesNotMatch(kit,/<style[\s>]/,'No page-specific CSS in the catalog');
   for(const [,source]of kit.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g))new vm.Script(source);
+});
+
+test('unified components and shared layout use only theme variables',()=>{
+  const components=read(assets+'components.css');
+  const unified=components.slice(components.indexOf('Componenti del sistema unificato'));
+  assert.ok(unified.length>1000,'Missing unified component section');
+  for(const name of ['panel','stat-strip','field','form-grid','route-panel','route-map','stop-list','stop','progress','legend','filters','chip','icon-button','avatar','stack','cluster','grid'])
+    assert.match(unified,new RegExp('\\.gf-'+name+'(?:__|[\\s:[.#{])'),name);
+  assert.doesNotMatch(unified,/#[0-9a-f]{3,8}\b/i,'Colors belong to theme.css');
+  assert.doesNotMatch(unified,/font-family:\s*(?!var\(|inherit)["A-Za-z]/,'Fonts belong to theme.css');
+  const layout=read(assets+'layout.css');
+  const shellCss=layout.slice(layout.indexOf('Layout base condiviso'));
+  assert.match(shellCss,/\.gf-shell\{/);assert.match(shellCss,/\.gf-sidebar__item\[aria-current="page"\]/);assert.match(shellCss,/\.gf-header__title\{/);
+  assert.doesNotMatch(shellCss,/#[0-9a-f]{3,8}\b|rgba?\(/i,'Shell colors come from theme.css');
+  const shell=read(assets+'shell.js');new vm.Script(shell);
+  assert.doesNotMatch(shell,/innerHTML|insertAdjacentHTML|fetch\s*\(|\/api\//);
+  for(const item of ['dashboard','company','giro','ordini','clienti','depositi','mezzi','autisti','storico','settings'])
+    assert.match(shell,new RegExp("id:'"+item+"'"),item);
 });
 
 test('derived operational badges follow real portal classes and state transitions',()=>{
@@ -119,7 +147,7 @@ test('derived operational badges follow real portal classes and state transition
 
 
 test('dashboard reference view shares tokens and retains live API connections',()=>{
-  const tokens=read(assets+'tokens.css');
+  const tokens=read(assets+'theme.css');
   assert.match(tokens,/--gf-focus-ring\s*:\s*0 0 0 3px rgba\(22,101,255,\.17\)/i);
   assert.match(tokens,/--gf-sidebar-width\s*:\s*244px/);
   const theme=read(assets+'reference-theme.css');
