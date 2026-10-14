@@ -133,7 +133,7 @@
   --gf-auth-width: 440px;
   --gf-map-min-height: 300px;
   --gf-stop-list-max-height: 270px;
-  /* Misure dei componenti proposti (sezione Proposte del catalogo). */
+  /* Misure di layout base esteso, finestre, chat, grafici e accesso. */
   --gf-bottom-nav-height: 68px;
   --gf-bottom-nav-action: 60px;
   --gf-drawer-width: 480px;

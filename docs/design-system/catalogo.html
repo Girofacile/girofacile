@@ -8,7 +8,6 @@
 <link rel="stylesheet" href="/static/design-system/tokens.css">
 <link rel="stylesheet" href="/static/design-system/components.css">
 <link rel="stylesheet" href="/static/design-system/layout.css">
-<link rel="stylesheet" href="/static/design-system/proposte.css">
 <script src="/static/design-system/design-system.js" defer></script>
 <script src="/static/design-system/shell.js" defer></script>
 <script type="application/json" id="gf-shell-nav">
@@ -30,12 +29,12 @@
     {"id":"filtri","label":"Filtri","icon":"calendar","href":"#filtri"},
     {"id":"interazioni","label":"Schede e finestre","icon":"chat","href":"#interazioni"}
   ]},
-  {"label":"Proposte da approvare","items":[
-    {"id":"proposte-layout","label":"1–4 Layout base","icon":"company","href":"#proposte-layout","count":3},
-    {"id":"proposte-finestre","label":"5 Finestre e pannello","icon":"document","href":"#proposte-finestre"},
-    {"id":"proposte-dati","label":"6–9 Dati e grafici","icon":"report","href":"#proposte-dati"},
-    {"id":"proposte-flussi","label":"10–12 Passaggi, chat, foto","icon":"chat","href":"#proposte-flussi"},
-    {"id":"proposte-accesso","label":"13–15 Accesso e banner","icon":"user","href":"#proposte-accesso"}
+  {"label":"Componenti del gestionale","items":[
+    {"id":"gestionale-layout","label":"Menu, notifiche, barra mobile","icon":"company","href":"#gestionale-layout","count":3},
+    {"id":"gestionale-finestre","label":"Finestre e pannello","icon":"document","href":"#gestionale-finestre"},
+    {"id":"gestionale-dati","label":"Dati e grafici","icon":"report","href":"#gestionale-dati"},
+    {"id":"gestionale-flussi","label":"Passaggi, chat, foto","icon":"chat","href":"#gestionale-flussi"},
+    {"id":"gestionale-accesso","label":"Accesso e banner","icon":"user","href":"#gestionale-accesso"}
   ]}
 ]
 </script>
@@ -310,18 +309,17 @@
 </section>
 
 
-<!-- ============================ PROPOSTE ============================ -->
-<p class="gf-alert" data-status="warning" id="proposte">Da qui in giù: componenti <strong>proposti, non ancora approvati</strong>. Lo stile è in proposte.css, caricato solo da questa pagina.</p>
+<!-- ============================ COMPONENTI DEL GESTIONALE =========== -->
 
-<section class="gf-stack gf-catalog-section" id="proposte-layout" aria-labelledby="proposte-layout-title">
-  <h2 class="gf-title" id="proposte-layout-title">Proposte 1–4 · Estensioni del layout base</h2>
+<section class="gf-stack gf-catalog-section" id="gestionale-layout" aria-labelledby="gestionale-layout-title">
+  <h2 class="gf-title" id="gestionale-layout-title">Estensioni del layout base</h2>
   <div class="gf-grid" data-cols="2">
     <section class="gf-panel" aria-labelledby="p1-title">
-      <header class="gf-panel__header"><h3 class="gf-panel__title" id="p1-title">1 · Contatore nel menu</h3><span class="gf-panel__meta">.gf-sidebar__count</span></header>
-      <div class="gf-panel__body gf-stack"><p class="gf-text">Visibile nella sidebar di questa pagina, accanto a "1–4 Layout base". Nel gestionale: Chat autisti, Ticket, Errori sistema.</p><p class="gf-muted">shell.js lo mostra con la proprietà <code>count</code> della voce; le pagine aggiornano il numero nel nodo esistente.</p></div>
+      <header class="gf-panel__header"><h3 class="gf-panel__title" id="p1-title">Contatore nel menu</h3><span class="gf-panel__meta">.gf-sidebar__count</span></header>
+      <div class="gf-panel__body gf-stack"><p class="gf-text">Visibile nella sidebar di questa pagina, accanto a "Menu, notifiche, barra mobile". Nel gestionale: Chat autisti, Ticket, Errori sistema.</p><p class="gf-muted">shell.js lo mostra con la proprietà <code>count</code> della voce; le pagine aggiornano il numero nel nodo esistente.</p></div>
     </section>
     <section class="gf-panel" aria-labelledby="p2-title">
-      <header class="gf-panel__header"><h3 class="gf-panel__title" id="p2-title">2 · Menu notifiche</h3><span class="gf-panel__meta">.gf-notifications</span></header>
+      <header class="gf-panel__header"><h3 class="gf-panel__title" id="p2-title">Menu notifiche</h3><span class="gf-panel__meta">.gf-notifications</span></header>
       <div class="gf-panel__body gf-stack">
         <div class="gf-cluster"><div class="gf-notifications"><button class="gf-icon-button" type="button" aria-label="Notifiche, 2 non lette" data-catalog-icon="bell"><span class="gf-icon-button__dot" aria-hidden="true"></span></button></div><span class="gf-muted">Pulsante con pallino; sotto, il pannello aperto.</span></div>
         <div class="gf-notifications__panel" data-embedded>
@@ -335,7 +333,7 @@
       </div>
     </section>
     <section class="gf-panel" aria-labelledby="p3-title">
-      <header class="gf-panel__header"><h3 class="gf-panel__title" id="p3-title">3 · Barra in basso su smartphone</h3><span class="gf-panel__meta">.gf-bottom-nav</span></header>
+      <header class="gf-panel__header"><h3 class="gf-panel__title" id="p3-title">Barra in basso su smartphone</h3><span class="gf-panel__meta">.gf-bottom-nav</span></header>
       <div class="gf-panel__body gf-stack">
         <nav class="gf-bottom-nav" aria-label="Esempio barra mobile">
           <button class="gf-bottom-nav__item" type="button" aria-current="page" data-catalog-icon-before="dashboard">Dashboard</button>
@@ -348,7 +346,7 @@
       </div>
     </section>
     <section class="gf-panel" aria-labelledby="p4-title">
-      <header class="gf-panel__header"><h3 class="gf-panel__title" id="p4-title">4 · Intestazione: indietro e modifiche non salvate</h3><span class="gf-panel__meta">.gf-header__back · .gf-savebar</span></header>
+      <header class="gf-panel__header"><h3 class="gf-panel__title" id="p4-title">Intestazione: indietro e modifiche non salvate</h3><span class="gf-panel__meta">.gf-header__back · .gf-savebar</span></header>
       <div class="gf-panel__body gf-stack">
         <div class="gf-cluster"><button class="gf-icon-button gf-header__back" type="button" aria-label="Torna agli ordini" data-catalog-icon="back"></button><strong class="gf-subtitle">Fonte ordini · Shopify</strong></div>
         <div class="gf-savebar" role="status"><span>Modifiche non salvate</span><button class="gf-button" data-variant="secondary" data-size="sm" type="button">Annulla</button><button class="gf-button" data-variant="primary" data-size="sm" type="button">Salva modifiche</button></div>
@@ -358,8 +356,8 @@
   </div>
 </section>
 
-<section class="gf-stack gf-catalog-section" id="proposte-finestre" aria-labelledby="proposte-finestre-title">
-  <h2 class="gf-title" id="proposte-finestre-title">Proposta 5 · Finestra sovrapposta e pannello laterale</h2>
+<section class="gf-stack gf-catalog-section" id="gestionale-finestre" aria-labelledby="gestionale-finestre-title">
+  <h2 class="gf-title" id="gestionale-finestre-title">Finestra sovrapposta e pannello laterale</h2>
   <div class="gf-grid" data-cols="2">
     <div class="gf-overlay" data-embedded>
       <div class="gf-modal" role="dialog" aria-modal="false" aria-labelledby="p5-title">
@@ -379,18 +377,18 @@
   <p class="gf-muted">Si apre e si chiude con la stessa logica di oggi (classe nascosta sul contenitore). Data-position="side" la trasforma nel pannello laterale usato per i clienti.</p>
 </section>
 
-<section class="gf-stack gf-catalog-section" id="proposte-dati" aria-labelledby="proposte-dati-title">
-  <h2 class="gf-title" id="proposte-dati-title">Proposte 6–9 · Dati, impostazioni e grafici</h2>
+<section class="gf-stack gf-catalog-section" id="gestionale-dati" aria-labelledby="gestionale-dati-title">
+  <h2 class="gf-title" id="gestionale-dati-title">Dati, impostazioni e grafici</h2>
   <div class="gf-grid" data-cols="2">
     <section class="gf-panel" aria-labelledby="p6-title">
-      <header class="gf-panel__header"><h3 class="gf-panel__title" id="p6-title">6 · Elenco chiave–valore</h3><span class="gf-panel__meta">.gf-details</span></header>
+      <header class="gf-panel__header"><h3 class="gf-panel__title" id="p6-title">Elenco chiave–valore</h3><span class="gf-panel__meta">.gf-details</span></header>
       <div class="gf-panel__body gf-stack">
         <dl class="gf-details"><div class="gf-details__item"><dt>Azienda</dt><dd>Logistica Demo S.r.l.</dd></div><div class="gf-details__item"><dt>Piano</dt><dd>Business</dd></div><div class="gf-details__item"><dt>Registrata il</dt><dd>3 ottobre 2026</dd></div><div class="gf-details__item"><dt>Giri questo mese</dt><dd>48</dd></div></dl>
         <dl class="gf-details" data-layout="rows"><div class="gf-details__item"><dt>Km totali</dt><dd>42 km</dd></div><div class="gf-details__item"><dt>Durata</dt><dd>1 h 35 min</dd></div><div class="gf-details__item"><dt>Costo carburante</dt><dd>6,50 €</dd></div></dl>
       </div>
     </section>
     <section class="gf-panel" aria-labelledby="p7-title">
-      <header class="gf-panel__header"><h3 class="gf-panel__title" id="p7-title">7 · Riga impostazione</h3><span class="gf-panel__meta">.gf-setting</span></header>
+      <header class="gf-panel__header"><h3 class="gf-panel__title" id="p7-title">Riga impostazione</h3><span class="gf-panel__meta">.gf-setting</span></header>
       <div class="gf-panel__body">
         <div class="gf-setting"><div class="gf-setting__copy"><strong>Firma alla consegna</strong><p>L'autista non può confermare la consegna senza la firma del cliente.</p></div><div class="gf-setting__control"><label class="gf-switch"><input type="checkbox" role="switch" checked><span class="gf-muted">Attiva</span></label></div></div>
         <div class="gf-setting"><div class="gf-setting__copy"><strong>Foto della consegna</strong><p>Richiedi una foto come prova di consegna.</p></div><div class="gf-setting__control"><label class="gf-switch"><input type="checkbox" role="switch"><span class="gf-muted">Disattiva</span></label></div></div>
@@ -404,9 +402,9 @@
     <div class="gf-stat-card"><span class="gf-stat-card__icon" data-tone="warning" data-catalog-icon="support"></span><span class="gf-stat-card__label">Ticket aperti</span><strong class="gf-stat-card__value">6</strong><span class="gf-stat-card__change">2 in attesa di risposta</span></div>
     <div class="gf-stat-card"><span class="gf-stat-card__icon" data-tone="danger" data-catalog-icon="settings"></span><span class="gf-stat-card__label">Errori di sistema</span><strong class="gf-stat-card__value">3</strong><span class="gf-stat-card__change" data-trend="down">+2 da ieri</span></div>
   </div>
-  <p class="gf-muted">8 · .gf-stat-card: numero con icona e variazione, per Report e Super Admin.</p>
+  <p class="gf-muted">.gf-stat-card: numero con icona e variazione, per Report e Super Admin.</p>
   <section class="gf-panel" aria-labelledby="p9-title">
-    <header class="gf-panel__header"><h3 class="gf-panel__title" id="p9-title">9 · Grafico a barre · Consegne per autista</h3><span class="gf-panel__meta">.gf-bar-chart</span></header>
+    <header class="gf-panel__header"><h3 class="gf-panel__title" id="p9-title">Grafico a barre · Consegne per autista</h3><span class="gf-panel__meta">.gf-bar-chart</span></header>
     <div class="gf-panel__body">
       <ul class="gf-bar-chart">
         <li class="gf-bar-chart__row"><span class="gf-bar-chart__label">Marco Rossi</span><span class="gf-bar-chart__track"><span class="gf-bar-chart__fill" data-gf-width="100"></span></span><span class="gf-bar-chart__value">46</span></li>
@@ -417,17 +415,17 @@
   </section>
 </section>
 
-<section class="gf-stack gf-catalog-section" id="proposte-flussi" aria-labelledby="proposte-flussi-title">
-  <h2 class="gf-title" id="proposte-flussi-title">Proposte 10–12 · Passaggi, chat e immagini</h2>
+<section class="gf-stack gf-catalog-section" id="gestionale-flussi" aria-labelledby="gestionale-flussi-title">
+  <h2 class="gf-title" id="gestionale-flussi-title">Passaggi, chat e immagini</h2>
   <section class="gf-panel" aria-labelledby="p10-title">
-    <header class="gf-panel__header"><h3 class="gf-panel__title" id="p10-title">10 · Passaggi numerati</h3><span class="gf-panel__meta">.gf-steps</span></header>
+    <header class="gf-panel__header"><h3 class="gf-panel__title" id="p10-title">Passaggi numerati</h3><span class="gf-panel__meta">.gf-steps</span></header>
     <div class="gf-panel__body">
       <ol class="gf-steps"><li class="gf-step is-done"><strong>Account</strong><small>Email e password</small></li><li class="gf-step" aria-current="step"><strong>Dati aziendali</strong><small>Ragione sociale e sede</small></li><li class="gf-step"><strong>Fatturazione</strong><small>Partita IVA e SDI</small></li><li class="gf-step"><strong>Settore</strong><small>Tipo di consegne</small></li></ol>
     </div>
   </section>
   <div class="gf-grid" data-cols="2">
     <section class="gf-panel" aria-labelledby="p11-title">
-      <header class="gf-panel__header"><h3 class="gf-panel__title" id="p11-title">11 · Chat · Marco Rossi</h3><span class="gf-panel__meta">.gf-chat</span></header>
+      <header class="gf-panel__header"><h3 class="gf-panel__title" id="p11-title">Chat · Marco Rossi</h3><span class="gf-panel__meta">.gf-chat</span></header>
       <div class="gf-chat">
         <div class="gf-chat__messages" aria-live="polite">
           <div class="gf-message"><span class="gf-message__bubble">Sono alla fermata 3, il panificio è chiuso.</span><small>Marco · 09:04</small></div>
@@ -438,7 +436,7 @@
       </div>
     </section>
     <section class="gf-panel" aria-labelledby="p12-title">
-      <header class="gf-panel__header"><h3 class="gf-panel__title" id="p12-title">12 · Caricamento immagine</h3><span class="gf-panel__meta">.gf-upload</span></header>
+      <header class="gf-panel__header"><h3 class="gf-panel__title" id="p12-title">Caricamento immagine</h3><span class="gf-panel__meta">.gf-upload</span></header>
       <div class="gf-panel__body gf-stack">
         <div class="gf-upload"><span class="gf-upload__preview" aria-hidden="true">GF</span><div class="gf-upload__copy"><label class="gf-button gf-upload__button" data-variant="secondary">Carica logo<input type="file" accept="image/*" aria-label="Carica logo aziendale"></label><p class="gf-field__hint">Logo quadrato o orizzontale, massimo 2,5 MB.</p></div></div>
         <div class="gf-upload"><span class="gf-upload__preview" aria-hidden="true" data-catalog-icon="truck"></span><div class="gf-upload__copy"><label class="gf-button gf-upload__button" data-variant="secondary">Carica foto del mezzo<input type="file" accept="image/*" aria-label="Carica foto del mezzo"></label><p class="gf-field__hint">JPG o PNG.</p></div></div>
@@ -447,8 +445,8 @@
   </div>
 </section>
 
-<section class="gf-stack gf-catalog-section" id="proposte-accesso" aria-labelledby="proposte-accesso-title">
-  <h2 class="gf-title" id="proposte-accesso-title">Proposte 13–15 · Accesso, banner e classe di servizio</h2>
+<section class="gf-stack gf-catalog-section" id="gestionale-accesso" aria-labelledby="gestionale-accesso-title">
+  <h2 class="gf-title" id="gestionale-accesso-title">Accesso, banner e classe di servizio</h2>
   <div class="gf-auth" data-embedded>
     <aside class="gf-auth__aside">
       <span class="gf-auth__brand">GiroFacile</span>
@@ -461,17 +459,17 @@
         <label class="gf-field"><span class="gf-field__label">Utente o email</span><input class="gf-input" autocomplete="off" placeholder="Email o nome utente"></label>
         <label class="gf-field"><span class="gf-field__label">Password</span><input class="gf-input" type="password" autocomplete="off" placeholder="Inserisci la tua password"></label>
         <button class="gf-button" data-variant="primary" type="button">Accedi a GiroFacile</button>
-        <p class="gf-muted">Non hai un account? <a href="#proposte-accesso">Registrati gratis</a></p>
+        <p class="gf-muted">Non hai un account? <a href="#gestionale-accesso">Registrati gratis</a></p>
       </form>
     </div>
   </div>
-  <p class="gf-muted">13 · .gf-auth: schermata di accesso e registrazione del gestionale (sotto i 1024 px resta solo il modulo).</p>
+  <p class="gf-muted">.gf-auth: schermata di accesso e registrazione del gestionale (sotto i 1024 px resta solo il modulo).</p>
   <div class="gf-banner" data-embedded role="region" aria-label="Avviso cookie">
     <span class="gf-banner__icon" data-catalog-icon="document"></span>
     <div class="gf-banner__text"><strong>Cookie tecnici</strong><p>GiroFacile usa solo cookie tecnici necessari per login, sicurezza e funzionamento del servizio.</p></div>
     <button class="gf-button" data-variant="primary" type="button">Ho capito</button>
   </div>
-  <p class="gf-muted">14 · .gf-banner: avviso fisso in basso (qui mostrato dentro la pagina). 15 · .gf-hidden: nasconde un elemento; sostituisce la vecchia classe .hidden usata dal JavaScript.</p>
+  <p class="gf-muted">.gf-banner: avviso fisso in basso (qui mostrato dentro la pagina). .gf-hidden: nasconde un elemento; sostituisce la vecchia classe .hidden usata dal JavaScript.</p>
 </section>
 </div>
 </main>

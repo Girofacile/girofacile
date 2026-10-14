@@ -114,13 +114,13 @@ test('unified components and shared layout use only theme variables',()=>{
   const components=read(assets+'components.css');
   const unified=components.slice(components.indexOf('Componenti del sistema unificato'));
   assert.ok(unified.length>1000,'Missing unified component section');
-  for(const name of ['panel','stat-strip','field','form-grid','route-panel','route-map','stop-list','stop','progress','legend','filters','chip','icon-button','avatar','stack','cluster','grid'])
+  for(const name of ['panel','stat-strip','field','form-grid','route-panel','route-map','stop-list','stop','progress','legend','filters','chip','icon-button','avatar','stack','cluster','grid','notifications','bottom-nav','savebar','overlay','modal','details','setting','stat-card','bar-chart','steps','chat','message','upload','auth','banner','hidden'])
     assert.match(unified,new RegExp('\\.gf-'+name+'(?:__|[\\s:[.#{])'),name);
   assert.doesNotMatch(unified,/#[0-9a-f]{3,8}\b/i,'Colors belong to theme.css');
   assert.doesNotMatch(unified,/font-family:\s*(?!var\(|inherit)["A-Za-z]/,'Fonts belong to theme.css');
   const layout=read(assets+'layout.css');
   const shellCss=layout.slice(layout.indexOf('Layout base condiviso'));
-  assert.match(shellCss,/\.gf-shell\{/);assert.match(shellCss,/\.gf-sidebar__item\[aria-current="page"\]/);assert.match(shellCss,/\.gf-header__title\{/);
+  assert.match(shellCss,/\.gf-shell\{/);assert.match(shellCss,/\.gf-sidebar__count\{/);assert.match(shellCss,/\.gf-shell>\.gf-bottom-nav/);assert.match(shellCss,/\.gf-sidebar__item\[aria-current="page"\]/);assert.match(shellCss,/\.gf-header__title\{/);
   assert.doesNotMatch(shellCss,/#[0-9a-f]{3,8}\b|rgba?\(/i,'Shell colors come from theme.css');
   const shell=read(assets+'shell.js');new vm.Script(shell);
   assert.doesNotMatch(shell,/innerHTML|insertAdjacentHTML|fetch\s*\(|\/api\//);

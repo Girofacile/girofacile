@@ -406,3 +406,17 @@ body[data-gf-layout="base"] .gf-shell__content{
 @media (prefers-reduced-motion:reduce){
   body[data-gf-layout="base"] .gf-sidebar{transition:none}
 }
+
+/* --- Estensioni del layout base (approvate il 15 ottobre 2026) --------------- */
+/* Contatore accanto a una voce del menu ------------------------------------------------------ */
+body[data-gf-surface] .gf-sidebar__count{
+  margin-left:auto;min-width:20px;padding:0 6px;border-radius:var(--gf-radius-pill);
+  background:var(--gf-color-primary);color:var(--gf-color-on-primary);
+  font-size:var(--gf-font-xs);font-weight:var(--gf-weight-semibold);line-height:20px;text-align:center;
+}
+/* Barra in basso su smartphone: nel layout base fissa in basso solo sotto i 1024 px. */
+body[data-gf-layout="base"] .gf-shell>.gf-bottom-nav{display:none}
+@media (max-width:1024px){
+  body[data-gf-layout="base"] .gf-shell>.gf-bottom-nav{display:grid;position:fixed;left:var(--gf-space-3);right:var(--gf-space-3);bottom:var(--gf-space-3);z-index:var(--gf-z-menu)}
+  body[data-gf-layout="base"] .gf-shell:has(>.gf-bottom-nav) .gf-shell__content{padding-bottom:calc(var(--gf-bottom-nav-height) + var(--gf-space-10))}
+}
