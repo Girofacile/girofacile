@@ -47,7 +47,6 @@
 <link rel="stylesheet" href="/static/design-system/layout.css?v=order_source_detail_20261011_4">
 <link rel="stylesheet" href="/static/design-system/workspace.css?v=ds_20261007_planning_alignment_16">
 <link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007_reference_2">
-<link rel="stylesheet" href="/static/dashboard/css/login.css?v=login_preview_exact_20261007">
 <script src="/static/design-system/design-system.js?v=gf_base_20261015" defer></script>
 <script src="/static/design-system/shell.js?v=gf_base_20261015" defer></script>
 <link rel="stylesheet" href="/static/dashboard/css/collaborators.css?v=search_icon_fix_20261012_1">
@@ -64,278 +63,132 @@
 </head>
 <body data-gf-surface="workspace" data-gf-layout="base">
 
-<section id="loginCard" class="login-screen gf-login-page">
-  <aside class="login-side">
-    <div class="login-side-inner">
-      <div class="login-brand-large">
-        <img class="login-brand-logo" src="/static/girofacile-logo.png?v=login_dashboard_20261007" alt="Logo GiroFacile">
-        <div>
-          <h1>Giro<span>Facile</span></h1>
-          <p>Gestione percorsi e consegne</p>
-        </div>
-      </div>
-
-      <div class="login-side-divider"></div>
-
-      <div class="login-features">
-        <div class="login-feature">
-          <div class="login-feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 9h16"/><path d="M8 13h3M8 16h6"/></svg></div>
-          <div>
-            <strong>Pianifica</strong>
-            <span>Organizza i percorsi<br>in modo efficiente</span>
-          </div>
-        </div>
-
-        <div class="login-feature">
-          <div class="login-feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h11v9H3z"/><path d="M14 10h4l3 3v3h-7"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg></div>
-          <div>
-            <strong>Monitora</strong>
-            <span>Segui consegne e stati<br>in tempo reale</span>
-          </div>
-        </div>
-
-        <div class="login-feature">
-          <div class="login-feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16"/><rect x="6" y="12" width="3" height="5" rx=".5"/><rect x="11" y="8" width="3" height="9" rx=".5"/><rect x="16" y="4" width="3" height="13" rx=".5"/></svg></div>
-          <div>
-            <strong>Analizza</strong>
-            <span>Report dettagliati per<br>decisioni migliori</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="login-route-art" aria-hidden="true">
-        <svg viewBox="0 0 520 430">
-          <defs>
-            <filter id="gfLoginGlow" x="-80%" y="-80%" width="260%" height="260%">
-              <feGaussianBlur stdDeviation="4" result="blur"/>
-              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-            </filter>
-          </defs>
-          <g class="login-map-grid">
-            <path d="M-45 304C24 293 59 256 118 250c43-5 67 28 111 22 55-7 77-55 130-65 46-9 80 14 133 2"/>
-            <path d="M-22 354c75-8 123-44 175-45 41-1 61 29 108 21 44-7 67-45 111-53 45-8 88 7 148-12"/>
-            <path d="M12 226c64-1 105-20 154-37 45-15 79-8 119 10 49 22 92 17 138-12 27-17 51-25 92-25"/>
-            <path d="M42 395c45-33 78-54 126-50 34 3 59 21 91 15 49-9 69-51 117-65 48-14 88 6 139-16"/>
-            <path d="M72 155c50 11 78 42 123 44 45 2 75-27 111-48 41-24 91-25 137-8"/>
-            <path d="M119 431c9-56 5-100 38-134 29-30 73-37 92-72 21-38 11-81 52-116"/>
-            <path d="M248 436c-3-54 16-86 47-112 33-28 69-34 83-72 14-36-1-71 34-104"/>
-            <path d="M365 424c-12-43-5-79 21-105 28-29 65-36 83-69"/>
-          </g>
-          <g class="login-map-blocks">
-            <path d="M0 325 65 304 116 329 74 367 18 356Z"/>
-            <path d="M112 282 170 253 221 279 175 319Z"/>
-            <path d="M188 343 250 313 314 340 267 383 207 374Z"/>
-            <path d="M292 257 349 227 410 251 367 292Z"/>
-            <path d="M385 316 444 283 512 306 468 352Z"/>
-            <path d="M266 180 326 150 377 171 334 211Z"/>
-          </g>
-          <path class="login-route-line" d="M112 330C139 344 153 374 184 374c38 0 51-43 83-55 34-13 58 11 88-13 27-21 20-57 55-76"/>
-          <g class="login-route-pin muted" transform="translate(95 307)">
-            <path d="M10 0C4.5 0 0 4.5 0 10c0 7.3 10 17 10 17s10-9.7 10-17C20 4.5 15.5 0 10 0Z"/><circle cx="10" cy="10" r="3.2"/>
-          </g>
-          <g class="login-route-pin muted" transform="translate(390 207)">
-            <path d="M10 0C4.5 0 0 4.5 0 10c0 7.3 10 17 10 17s10-9.7 10-17C20 4.5 15.5 0 10 0Z"/><circle cx="10" cy="10" r="3.2"/>
-          </g>
-          <g class="login-route-pin active" transform="translate(250 294)" filter="url(#gfLoginGlow)">
-            <path d="M12 0C5.4 0 0 5.4 0 12c0 8.8 12 20 12 20s12-11.2 12-20C24 5.4 18.6 0 12 0Z"/><circle cx="12" cy="12" r="3.8"/>
-          </g>
-          <g class="login-route-pin active secondary" transform="translate(398 194)" filter="url(#gfLoginGlow)">
-            <path d="M10 0C4.5 0 0 4.5 0 10c0 7.3 10 17 10 17s10-9.7 10-17C20 4.5 15.5 0 10 0Z"/><circle cx="10" cy="10" r="3.2"/>
-          </g>
-          <g class="login-route-vehicle" transform="translate(305 329)" filter="url(#gfLoginGlow)">
-            <rect class="vehicle-tile" x="-9" y="-9" width="72" height="62" rx="13"/>
-            <path d="M5 12h27v18H5zM32 17h10l9 9v4H32"/>
-            <circle cx="14" cy="34" r="4"/><circle cx="43" cy="34" r="4"/>
-          </g>
-        </svg>
-      </div>
-
-      <div class="login-side-footer">
-        <div>
-          <span>© 2026 GiroFacile</span>
-          <small>Tutti i diritti riservati</small>
-        </div>
-        <nav aria-label="Informazioni legali">
-          <a href="/privacy-policy" target="_blank">Privacy</a>
-          <a href="/termini-condizioni" target="_blank">Termini</a>
-          <a href="/cookie-policy" target="_blank">Cookie</a>
-        </nav>
-      </div>
-    </div>
+<section id="loginCard" class="gf-auth">
+  <aside class="gf-auth__aside">
+    <div class="gf-cluster"><svg class="gf-sidebar__mark" viewBox="0 0 34 34" role="img" aria-label="Logo GiroFacile"><rect class="gf-sidebar__mark-bg" width="34" height="34" rx="9"/><path class="gf-sidebar__mark-g" d="M24 12.2A8.2 8.2 0 1 0 25 17.5H17.5"/><circle class="gf-sidebar__mark-dot" cx="24.2" cy="9.6" r="2.4"/></svg><div><span class="gf-auth__brand">GiroFacile</span><p>Gestione percorsi e consegne</p></div></div>
+    <ul class="gf-auth__features">
+      <li><strong>Pianifica</strong><span>Organizza i percorsi in modo efficiente</span></li>
+      <li><strong>Monitora</strong><span>Segui consegne e stati in tempo reale</span></li>
+      <li><strong>Analizza</strong><span>Report dettagliati per decisioni migliori</span></li>
+    </ul>
+    <nav class="gf-auth__footer" aria-label="Informazioni legali">© 2026 GiroFacile · Tutti i diritti riservati · <a href="/privacy-policy" target="_blank">Privacy</a> · <a href="/termini-condizioni" target="_blank">Termini</a> · <a href="/cookie-policy" target="_blank">Cookie</a></nav>
   </aside>
 
-  <main class="login-main">
+  <main class="gf-auth__main">
+    <div class="gf-stack">
 
     <!-- PANNELLO LOGIN -->
-    <div class="login-card-pro" id="loginPanel">
-      <div class="login-card-brand">
-        <img src="/static/girofacile-logo.png?v=login_logo_2" alt="Logo GiroFacile" width="82" height="82">
-        <div>
-          <strong>GiroFacile</strong>
-          <span>Gestione percorsi e consegne</span>
-        </div>
+    <div class="gf-auth__card" id="loginPanel">
+      <div class="gf-cluster"><svg class="gf-sidebar__mark" viewBox="0 0 34 34" aria-hidden="true"><rect class="gf-sidebar__mark-bg" width="34" height="34" rx="9"/><path class="gf-sidebar__mark-g" d="M24 12.2A8.2 8.2 0 1 0 25 17.5H17.5"/><circle class="gf-sidebar__mark-dot" cx="24.2" cy="9.6" r="2.4"/></svg><div><strong class="gf-subtitle">GiroFacile</strong><p class="gf-muted">Gestione percorsi e consegne</p></div></div>
+      <div><h2 class="gf-title">Accesso riservato</h2><p class="gf-muted">Accedi al tuo portale</p></div>
+      <label class="gf-field" for="loginUser"><span class="gf-field__label">Utente o Email</span><input class="gf-input" id="loginUser" placeholder="Email o nome utente" value="" autocomplete="username"></label>
+      <div class="gf-field"><label class="gf-field__label" for="loginPass">Password</label>
+        <div class="gf-cluster"><input class="gf-input" id="loginPass" type="password" placeholder="Inserisci la tua password" value="" autocomplete="current-password"><button type="button" class="gf-icon-button password-eye" onclick="toggleLoginPassword()" aria-label="Mostra o nascondi password"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.8 12s3.3-5.7 9.2-5.7 9.2 5.7 9.2 5.7-3.3 5.7-9.2 5.7S2.8 12 2.8 12Z M12 14.7a2.7 2.7 0 1 0 0-5.4 2.7 2.7 0 0 0 0 5.4z"/></svg></button></div>
       </div>
-      <div class="login-card-title">
-        <h2>Accesso riservato</h2>
-        <p>Accedi al tuo portale</p>
+      <button type="button" onclick="login()" class="gf-button" data-variant="primary">Accedi a GiroFacile →</button>
+      <div class="gf-stack" data-gap="sm">
+        <p class="gf-muted">Non hai un account? <button type="button" class="gf-button" data-variant="link" onclick="toggleSignup(true)">Registrati gratis</button></p>
+        <p class="gf-muted">oppure <button type="button" id="forgotPasswordBtn" class="gf-button" data-variant="link" onclick="toggleForgotPassword(true)">Password dimenticata?</button></p>
       </div>
-      <label>Utente o Email</label>
-      <div class="login-input-wrap login-input-wrap-pro">
-        <span class="login-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 12.2a4.1 4.1 0 1 0 0-8.2 4.1 4.1 0 0 0 0 8.2Z"/><path d="M4.8 20.2c.8-4 3.4-6.1 7.2-6.1s6.4 2.1 7.2 6.1"/></svg></span>
-        <input id="loginUser" placeholder="Email o nome utente" value="" autocomplete="username">
-      </div>
-      <label>Password</label>
-      <div class="login-input-wrap login-input-wrap-pro">
-        <span class="login-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7.2 10.4V8a4.8 4.8 0 0 1 9.6 0v2.4"/><rect x="5.4" y="10.4" width="13.2" height="9.2" rx="2.4"/><path d="M12 14.2v2.2"/></svg></span>
-        <input id="loginPass" type="password" placeholder="Inserisci la tua password" value="">
-        <button type="button" class="password-eye password-eye-pro" onclick="toggleLoginPassword()" aria-label="Mostra o nascondi password"><svg viewBox="0 0 24 24"><path d="M2.8 12s3.3-5.7 9.2-5.7 9.2 5.7 9.2 5.7-3.3 5.7-9.2 5.7S2.8 12 2.8 12Z"/><circle cx="12" cy="12" r="2.7"/></svg></button>
-      </div>
-      <button onclick="login()" class="btn-primary login-submit"><span>Accedi a GiroFacile</span><span class="login-submit-arrow" aria-hidden="true">→</span></button>
-      <div class="login-switch">
-        <span>Non hai un account?</span>
-        <button type="button" onclick="toggleSignup(true)">Registrati gratis</button>
-      </div>
-      <div class="login-link-divider" aria-hidden="true"><span>oppure</span></div>
-      <button type="button" id="forgotPasswordBtn" class="forgot-link" onclick="toggleForgotPassword(true)">Password dimenticata?</button>
-      <div id="forgotBox" class="signup-box hidden">
-        <h3>Recupero password</h3>
-        <p class="forgot-help">Inserisci l'email del tuo account. Riceverai un link sicuro per impostare una nuova password.</p>
-        <input id="forgotEmail" type="email" placeholder="Email registrata">
-        <button type="button" id="forgotPasswordSubmitBtn" class="btn-primary full" onclick="requestPasswordReset()">Invia link di recupero</button>
-        <button type="button" id="forgotPasswordCancelBtn" class="forgot-link" onclick="toggleForgotPassword(false)">Annulla</button>
+      <div id="forgotBox" class="gf-stack hidden" data-gap="sm">
+        <h3 class="gf-subtitle">Recupero password</h3>
+        <p class="gf-muted">Inserisci l'email del tuo account. Riceverai un link sicuro per impostare una nuova password.</p>
+        <input class="gf-input" id="forgotEmail" type="email" placeholder="Email registrata" aria-label="Email registrata">
+        <button type="button" id="forgotPasswordSubmitBtn" class="gf-button" data-variant="primary" onclick="requestPasswordReset()">Invia link di recupero</button>
+        <div><button type="button" id="forgotPasswordCancelBtn" class="gf-button" data-variant="link" onclick="toggleForgotPassword(false)">Annulla</button></div>
       </div>
     </div>
-
-
 
     <!-- PANNELLO RESET PASSWORD -->
-    <div class="login-card-pro hidden" id="resetPasswordPanel" style="max-width:460px">
-      <div class="login-card-brand">
-        <img src="/static/girofacile-logo.png?v=login_logo_2" alt="Logo GiroFacile" width="82" height="82">
-        <div>
-          <strong>GiroFacile</strong>
-          <span>Recupero password</span>
-        </div>
-      </div>
-      <div class="login-card-title">
-        <h2>Imposta nuova password</h2>
-        <p id="resetPasswordHelp">Inserisci una nuova password per il tuo account.</p>
-      </div>
-      <label>Nuova password</label>
-      <div class="login-input-wrap">
-        <span>▣</span>
-        <input id="resetPassword1" type="password" placeholder="Almeno 8 caratteri, maiuscola e simbolo" autocomplete="new-password">
-      </div>
+    <div class="gf-auth__card hidden" id="resetPasswordPanel">
+      <div class="gf-cluster"><svg class="gf-sidebar__mark" viewBox="0 0 34 34" aria-hidden="true"><rect class="gf-sidebar__mark-bg" width="34" height="34" rx="9"/><path class="gf-sidebar__mark-g" d="M24 12.2A8.2 8.2 0 1 0 25 17.5H17.5"/><circle class="gf-sidebar__mark-dot" cx="24.2" cy="9.6" r="2.4"/></svg><div><strong class="gf-subtitle">GiroFacile</strong><p class="gf-muted">Recupero password</p></div></div>
+      <div><h2 class="gf-title">Imposta nuova password</h2><p class="gf-muted" id="resetPasswordHelp">Inserisci una nuova password per il tuo account.</p></div>
+      <label class="gf-field" for="resetPassword1"><span class="gf-field__label">Nuova password</span><input class="gf-input" id="resetPassword1" type="password" placeholder="Almeno 8 caratteri, maiuscola e simbolo" autocomplete="new-password"></label>
       <div id="resetPasswordMeter" class="gf-password-meter" aria-live="polite"></div>
-      <label>Conferma password</label>
-      <div class="login-input-wrap">
-        <span>▣</span>
-        <input id="resetPassword2" type="password" placeholder="Ripeti la nuova password" autocomplete="new-password">
-      </div>
-      <button type="button" id="resetPasswordSubmitBtn" class="btn-primary login-submit" onclick="confirmPasswordReset()">Aggiorna password</button>
-      <button type="button" class="forgot-link" onclick="location.href='/login'">Torna al login</button>
+      <label class="gf-field" for="resetPassword2"><span class="gf-field__label">Conferma password</span><input class="gf-input" id="resetPassword2" type="password" placeholder="Ripeti la nuova password" autocomplete="new-password"></label>
+      <button type="button" id="resetPasswordSubmitBtn" class="gf-button" data-variant="primary" onclick="confirmPasswordReset()">Aggiorna password</button>
+      <div><button type="button" class="gf-button" data-variant="link" onclick="location.href='/login'">Torna al login</button></div>
     </div>
 
-    <!-- PANNELLO REGISTRAZIONE v46 - onboarding aziende a step -->
-    <div class="login-card-pro signup-wizard-v46" id="signupPanel" style="display:none;max-width:760px">
-      <div class="login-card-brand">
-        <img src="/static/girofacile-logo.png?v=login_logo_2" alt="Logo GiroFacile" width="82" height="82">
-        <div>
-          <strong>GiroFacile</strong>
-          <span>Registrazione azienda</span>
-        </div>
-      </div>
-      <div class="login-card-title signup-title-v46">
-        <h2>Configura la tua azienda</h2>
-        <p>14 giorni di prova gratuita · Nessuna carta richiesta</p>
-      </div>
+    <!-- PANNELLO REGISTRAZIONE - onboarding aziende a passaggi -->
+    <div class="gf-auth__card hidden" data-size="lg" id="signupPanel">
+      <div class="gf-cluster"><svg class="gf-sidebar__mark" viewBox="0 0 34 34" aria-hidden="true"><rect class="gf-sidebar__mark-bg" width="34" height="34" rx="9"/><path class="gf-sidebar__mark-g" d="M24 12.2A8.2 8.2 0 1 0 25 17.5H17.5"/><circle class="gf-sidebar__mark-dot" cx="24.2" cy="9.6" r="2.4"/></svg><div><strong class="gf-subtitle">GiroFacile</strong><p class="gf-muted">Registrazione azienda</p></div></div>
+      <div><h2 class="gf-title">Configura la tua azienda</h2><p class="gf-muted">14 giorni di prova gratuita · Nessuna carta richiesta</p></div>
 
-      <div class="signup-progress-v46" aria-label="Avanzamento registrazione">
-        <div class="signup-step-dot active" data-signup-step-dot="1"><span>1</span><small>Account</small></div>
-        <div class="signup-step-dot" data-signup-step-dot="2"><span>2</span><small>Azienda</small></div>
-        <div class="signup-step-dot" data-signup-step-dot="3"><span>3</span><small>Fatturazione</small></div>
-        <div class="signup-step-dot" data-signup-step-dot="4"><span>4</span><small>Operatività</small></div>
-      </div>
+      <ol class="gf-steps" aria-label="Avanzamento registrazione">
+        <li class="gf-step" data-signup-step-dot="1" aria-current="step"><strong>Account</strong><small>Dati di accesso</small></li>
+        <li class="gf-step" data-signup-step-dot="2"><strong>Azienda</strong><small>Dati aziendali</small></li>
+        <li class="gf-step" data-signup-step-dot="3"><strong>Fatturazione</strong><small>PEC e SDI</small></li>
+        <li class="gf-step" data-signup-step-dot="4"><strong>Operatività</strong><small>Come consegni</small></li>
+      </ol>
 
-      <div class="signup-step-panel-v46" data-signup-step="1">
-        <div class="signup-section-head-v46">
-          <h3>Dati di accesso</h3>
-          <p>Crea l'account principale che userai per accedere alla Dashboard.</p>
-        </div>
-        <div class="signup-grid-v46">
-          <div><label>Nome azienda / insegna</label><input id="signupCompany" placeholder="Es. Trasporti Rossi S.r.l."></div>
-          <div><label>Nome utente</label><input id="signupUser" placeholder="Scegli un nome utente"></div>
-          <div><label>Email account</label><input id="signupEmail" type="email" placeholder="La tua email aziendale"></div>
-          <div><label>Password</label><input id="signupPass" type="password" placeholder="Almeno 8 caratteri, maiuscola e simbolo"><div id="signupPasswordMeter" class="gf-password-meter" aria-live="polite"></div></div>
-          <div><label>Telefono referente</label><input id="signupPhone" placeholder="Es. 333 1234567"></div>
-          <div><label>Dimensione azienda</label><select id="signupCompanySize"><option value="">Seleziona</option><option value="1-5">1-5 persone</option><option value="6-15">6-15 persone</option><option value="16-50">16-50 persone</option><option value="51-100">51-100 persone</option><option value="100+">Oltre 100 persone</option></select></div>
+      <div class="gf-stack" data-signup-step="1">
+        <div><h3 class="gf-subtitle">Dati di accesso</h3><p class="gf-muted">Crea l'account principale che userai per accedere alla Dashboard.</p></div>
+        <div class="gf-form-grid">
+          <label class="gf-field" for="signupCompany"><span class="gf-field__label">Nome azienda / insegna</span><input class="gf-input" id="signupCompany" placeholder="Es. Trasporti Rossi S.r.l."></label>
+          <label class="gf-field" for="signupUser"><span class="gf-field__label">Nome utente</span><input class="gf-input" id="signupUser" placeholder="Scegli un nome utente"></label>
+          <label class="gf-field" for="signupEmail"><span class="gf-field__label">Email account</span><input class="gf-input" id="signupEmail" type="email" placeholder="La tua email aziendale"></label>
+          <div class="gf-field"><label class="gf-field__label" for="signupPass">Password</label><input class="gf-input" id="signupPass" type="password" placeholder="Almeno 8 caratteri, maiuscola e simbolo"><div id="signupPasswordMeter" class="gf-password-meter" aria-live="polite"></div></div>
+          <label class="gf-field" for="signupPhone"><span class="gf-field__label">Telefono referente</span><input class="gf-input" id="signupPhone" placeholder="Es. 333 1234567"></label>
+          <label class="gf-field" for="signupCompanySize"><span class="gf-field__label">Dimensione azienda</span><select class="gf-select" id="signupCompanySize"><option value="">Seleziona</option><option value="1-5">1-5 persone</option><option value="6-15">6-15 persone</option><option value="16-50">16-50 persone</option><option value="51-100">51-100 persone</option><option value="100+">Oltre 100 persone</option></select></label>
         </div>
       </div>
 
-      <div class="signup-step-panel-v46 hidden" data-signup-step="2">
-        <div class="signup-section-head-v46">
-          <h3>Dati aziendali</h3>
-          <p>Queste informazioni saranno usate per il profilo azienda e per configurare il gestionale.</p>
-        </div>
-        <div class="signup-grid-v46">
-          <div><label>Ragione sociale</label><input id="signupLegalName" placeholder="Es. Rossi Distribuzione S.r.l."></div>
-          <div><label>Partita IVA</label><input id="signupVat" placeholder="IT01234567890"></div>
-          <div><label>Codice fiscale</label><input id="signupFiscalCode" placeholder="Opzionale"></div>
-          <div><label>Telefono aziendale</label><input id="signupCompanyPhone" placeholder="Telefono aziendale"></div>
-          <div class="full"><label>Sede operativa</label><input id="signupAddress" placeholder="Via, numero civico"></div>
-          <div><label>Città</label><input id="signupCity" placeholder="Città"></div>
-          <div><label>CAP</label><input id="signupZip" placeholder="CAP"></div>
-          <div><label>Paese</label><input id="signupCountry" placeholder="Italia" value="Italia"></div>
+      <div class="gf-stack hidden" data-signup-step="2">
+        <div><h3 class="gf-subtitle">Dati aziendali</h3><p class="gf-muted">Queste informazioni saranno usate per il profilo azienda e per configurare il gestionale.</p></div>
+        <div class="gf-form-grid">
+          <label class="gf-field" for="signupLegalName"><span class="gf-field__label">Ragione sociale</span><input class="gf-input" id="signupLegalName" placeholder="Es. Rossi Distribuzione S.r.l."></label>
+          <label class="gf-field" for="signupVat"><span class="gf-field__label">Partita IVA</span><input class="gf-input" id="signupVat" placeholder="IT01234567890"></label>
+          <label class="gf-field" for="signupFiscalCode"><span class="gf-field__label">Codice fiscale</span><input class="gf-input" id="signupFiscalCode" placeholder="Opzionale"></label>
+          <label class="gf-field" for="signupCompanyPhone"><span class="gf-field__label">Telefono aziendale</span><input class="gf-input" id="signupCompanyPhone" placeholder="Telefono aziendale"></label>
+          <label class="gf-field" data-span="full" for="signupAddress"><span class="gf-field__label">Sede operativa</span><input class="gf-input" id="signupAddress" placeholder="Via, numero civico"></label>
+          <label class="gf-field" for="signupCity"><span class="gf-field__label">Città</span><input class="gf-input" id="signupCity" placeholder="Città"></label>
+          <label class="gf-field" for="signupZip"><span class="gf-field__label">CAP</span><input class="gf-input" id="signupZip" placeholder="CAP"></label>
+          <label class="gf-field" for="signupCountry"><span class="gf-field__label">Paese</span><input class="gf-input" id="signupCountry" placeholder="Italia" value="Italia"></label>
         </div>
       </div>
 
-      <div class="signup-step-panel-v46 hidden" data-signup-step="3">
-        <div class="signup-section-head-v46">
-          <h3>Fatturazione</h3>
-          <p>Dati utili per future fatture, abbonamenti e documenti aziendali.</p>
+      <div class="gf-stack hidden" data-signup-step="3">
+        <div><h3 class="gf-subtitle">Fatturazione</h3><p class="gf-muted">Dati utili per future fatture, abbonamenti e documenti aziendali.</p></div>
+        <div class="gf-form-grid">
+          <label class="gf-field" for="signupPec"><span class="gf-field__label">PEC</span><input class="gf-input" id="signupPec" type="email" placeholder="azienda@pec.it"></label>
+          <label class="gf-field" for="signupSdi"><span class="gf-field__label">Codice SDI</span><input class="gf-input" id="signupSdi" placeholder="Es. ABC1234"></label>
+          <label class="gf-field" data-span="full" for="signupLegalAddress"><span class="gf-field__label">Sede legale</span><input class="gf-input" id="signupLegalAddress" placeholder="Lascia vuoto se coincide con la sede operativa"></label>
+          <label class="gf-field" data-span="full" for="signupBillingAddress"><span class="gf-field__label">Indirizzo di fatturazione</span><input class="gf-input" id="signupBillingAddress" placeholder="Lascia vuoto se coincide con la sede legale"></label>
         </div>
-        <div class="signup-grid-v46">
-          <div><label>PEC</label><input id="signupPec" type="email" placeholder="azienda@pec.it"></div>
-          <div><label>Codice SDI</label><input id="signupSdi" placeholder="Es. ABC1234"></div>
-          <div class="full"><label>Sede legale</label><input id="signupLegalAddress" placeholder="Lascia vuoto se coincide con la sede operativa"></div>
-          <div class="full"><label>Indirizzo di fatturazione</label><input id="signupBillingAddress" placeholder="Lascia vuoto se coincide con la sede legale"></div>
-        </div>
-        <div class="signup-helper-box-v46">Potrai modificare questi dati in seguito dalla sezione <strong>Azienda</strong>.</div>
+        <p class="gf-alert" data-status="info">Potrai modificare questi dati in seguito dalla sezione <strong>Azienda</strong>.</p>
       </div>
 
-      <div class="signup-step-panel-v46 hidden" data-signup-step="4">
-        <div class="signup-section-head-v46">
-          <h3>Come lavori con le consegne?</h3>
-          <p>Configura solo le funzioni utili alla tua attività. Potrai cambiarle in qualsiasi momento dalle Impostazioni.</p>
+      <div class="gf-stack hidden" data-signup-step="4">
+        <div><h3 class="gf-subtitle">Come lavori con le consegne?</h3><p class="gf-muted">Configura solo le funzioni utili alla tua attività. Potrai cambiarle in qualsiasi momento dalle Impostazioni.</p></div>
+        <div class="gf-form-grid">
+          <label class="gf-field" for="signupDailyDeliveries"><span class="gf-field__label">Consegne medie al giorno</span><select class="gf-select" id="signupDailyDeliveries"><option value="">Seleziona</option><option value="1-10">1-10</option><option value="11-30">11-30</option><option value="31-80">31-80</option><option value="81-150">81-150</option><option value="150+">Oltre 150</option></select></label>
+          <label class="gf-field" for="signupPlanSelect"><span class="gf-field__label">Piano iniziale</span><select class="gf-select" id="signupPlanSelect"><option value="starter">Starter</option><option value="business" selected>Business</option><option value="pro">Pro</option></select></label>
+          <label class="gf-field" data-span="full" for="signupActivityType"><span class="gf-field__label">Descrizione attività <span class="gf-muted">(opzionale)</span></span><input class="gf-input" id="signupActivityType" placeholder="Es. distribuzione alimentare, ricambi, consegne e-commerce..."></label>
         </div>
-        <div class="signup-grid-v46">
-          <div><label>Consegne medie al giorno</label><select id="signupDailyDeliveries"><option value="">Seleziona</option><option value="1-10">1-10</option><option value="11-30">11-30</option><option value="31-80">31-80</option><option value="81-150">81-150</option><option value="150+">Oltre 150</option></select></div>
-          <div><label>Piano iniziale</label><select id="signupPlanSelect"><option value="starter">Starter</option><option value="business" selected>Business</option><option value="pro">Pro</option></select></div>
-          <div class="full"><label>Descrizione attività <span class="muted">(opzionale)</span></label><input id="signupActivityType" placeholder="Es. distribuzione alimentare, ricambi, consegne e-commerce..."></div>
-        </div>
-        <div class="signup-checks-v46">
-          <label><input type="checkbox" id="signupHasTimeWindows" checked> Finestre orarie di consegna</label>
-          <label><input type="checkbox" id="signupNeedsSignature"> Firma alla consegna</label>
-          <label><input type="checkbox" id="signupNeedsPhotoProof" disabled title="Funzione in sviluppo"> Foto prova consegna (in sviluppo)</label>
-          <label><input type="checkbox" id="signupRefrigerated" disabled title="Funzione in sviluppo"> Merce refrigerata/surgelata (in sviluppo)</label>
-          <label><input type="checkbox" id="signupZtl"> Consegne in ZTL o zone difficili</label>
-          <label><input type="checkbox" id="signupTailLift"> Sponda idraulica / transpallet</label>
-        </div>
+        <fieldset class="gf-fieldset"><legend>Funzioni utili</legend>
+          <div class="gf-grid" data-cols="2">
+            <label class="gf-check"><input type="checkbox" id="signupHasTimeWindows" checked> Finestre orarie di consegna</label>
+            <label class="gf-check"><input type="checkbox" id="signupNeedsSignature"> Firma alla consegna</label>
+            <label class="gf-check"><input type="checkbox" id="signupNeedsPhotoProof" disabled title="Funzione in sviluppo"> Foto prova consegna (in sviluppo)</label>
+            <label class="gf-check"><input type="checkbox" id="signupRefrigerated" disabled title="Funzione in sviluppo"> Merce refrigerata/surgelata (in sviluppo)</label>
+            <label class="gf-check"><input type="checkbox" id="signupZtl"> Consegne in ZTL o zone difficili</label>
+            <label class="gf-check"><input type="checkbox" id="signupTailLift"> Sponda idraulica / transpallet</label>
+          </div>
+        </fieldset>
       </div>
 
-      <div class="signup-actions-v46">
-        <button type="button" class="btn-light" id="signupBackBtn" onclick="signupWizardBack()" disabled>Indietro</button>
-        <button type="button" class="btn-primary" id="signupNextBtn" onclick="signupWizardNext()">Avanti</button>
-        <button type="button" class="btn-primary hidden" id="signupCreateBtn" onclick="signup()">Crea account gratuito →</button>
+      <div class="gf-cluster" data-justify="between">
+        <button type="button" class="gf-button" data-variant="secondary" id="signupBackBtn" onclick="signupWizardBack()" disabled>Indietro</button>
+        <button type="button" class="gf-button" data-variant="primary" id="signupNextBtn" onclick="signupWizardNext()">Avanti</button>
+        <button type="button" class="gf-button hidden" data-variant="primary" id="signupCreateBtn" onclick="signup()">Crea account gratuito →</button>
       </div>
 
-      <div class="login-switch" style="margin-top:14px">
-        <span>Hai già un account?</span>
-        <button type="button" onclick="toggleSignup(false)">Accedi</button>
-      </div>
+      <p class="gf-muted">Hai già un account? <button type="button" class="gf-button" data-variant="link" onclick="toggleSignup(false)">Accedi</button></p>
     </div>
 
-    <div class="login-main-footer">© 2026 GiroFacile · <a href="/privacy-policy" target="_blank">Privacy</a> · <a href="/termini-condizioni" target="_blank">Termini</a> · <a href="/cookie-policy" target="_blank">Cookie</a></div>
+    <p class="gf-muted">© 2026 GiroFacile · <a href="/privacy-policy" target="_blank">Privacy</a> · <a href="/termini-condizioni" target="_blank">Termini</a> · <a href="/cookie-policy" target="_blank">Cookie</a></p>
+    </div>
   </main>
 </section>
 
@@ -2134,20 +1987,6 @@ function toggleLoginPassword(){
   input.type = input.type === "password" ? "text" : "password";
 }
 
-
-/* GiroFacile topbar scroll state 2026-09-28 */
-(function initDashboardTopbarScrollState(){
-  const topbar = document.querySelector(".topbar");
-  if(!topbar) return;
-
-  const syncTopbar = () => {
-    const scrollTop = document.scrollingElement ? document.scrollingElement.scrollTop : window.scrollY;
-    topbar.classList.toggle("topbar-scrolled", scrollTop > 8);
-  };
-
-  syncTopbar();
-  window.addEventListener("scroll", syncTopbar, {passive:true});
-})();
 </script>
 
 <script src="/static/dashboard/js/company-profile.js?v=company_clean_20261013_1"></script>

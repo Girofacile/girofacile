@@ -4,14 +4,8 @@ function showGestionaleAfterLogin(isAdmin=false){
   isAdmin = false;
   const loginCard = document.getElementById('loginCard');
   const app = document.getElementById('app');
-  if(loginCard){
-    loginCard.classList.add('hidden');
-    loginCard.style.display = 'none';
-  }
-  if(app){
-    app.classList.remove('hidden');
-    app.style.display = 'flex';
-  }
+  if(loginCard) loginCard.classList.add('hidden');
+  if(app) app.classList.remove('hidden');
   document.body.classList.add('app-logged-in');
   document.body.classList.toggle('admin-mode', !!isAdmin);
   document.body.classList.toggle('user-mode', !isAdmin);
@@ -20,14 +14,8 @@ function showGestionaleAfterLogin(isAdmin=false){
 function showLoginScreen(){
   const loginCard = document.getElementById('loginCard');
   const app = document.getElementById('app');
-  if(app){
-    app.classList.add('hidden');
-    app.style.display = 'none';
-  }
-  if(loginCard){
-    loginCard.classList.remove('hidden');
-    loginCard.style.display = 'grid';
-  }
+  if(app) app.classList.add('hidden');
+  if(loginCard) loginCard.classList.remove('hidden');
   document.body.classList.remove('app-logged-in');
 }
 
@@ -1104,8 +1092,8 @@ function toggleSignup(show){
   const loginPanel = document.getElementById("loginPanel");
   const signupPanel = document.getElementById("signupPanel");
   const forgotBox = document.getElementById("forgotBox");
-  if(loginPanel) loginPanel.style.display = show ? "none" : "";
-  if(signupPanel) signupPanel.style.display = show ? "" : "none";
+  if(loginPanel) loginPanel.classList.toggle("hidden", !!show);
+  if(signupPanel) signupPanel.classList.toggle("hidden", !show);
   if(show){
     fillSectorSelectV47("signupSector", val("signupSector"));
     setSignupWizardStep(1);
@@ -1120,9 +1108,9 @@ function toggleForgotPassword(show){
   const signupPanel = document.getElementById("signupPanel");
   const resetPanel = document.getElementById("resetPasswordPanel");
   const box = document.getElementById("forgotBox");
-  if(signupPanel) signupPanel.style.display = "none";
+  if(signupPanel) signupPanel.classList.add("hidden");
   if(resetPanel) resetPanel.classList.add("hidden");
-  if(loginPanel) loginPanel.style.display = "";
+  if(loginPanel) loginPanel.classList.remove("hidden");
   if(box) box.classList.toggle("hidden", !show);
   if(show){
     setTimeout(() => document.getElementById("forgotEmail")?.focus(), 50);
@@ -1227,8 +1215,8 @@ function setSignupWizardStep(step){
   });
   document.querySelectorAll("[data-signup-step-dot]").forEach(dot => {
     const n = Number(dot.getAttribute("data-signup-step-dot"));
-    dot.classList.toggle("active", n === signupWizardCurrentStep);
-    dot.classList.toggle("done", n < signupWizardCurrentStep);
+    if(n === signupWizardCurrentStep) dot.setAttribute("aria-current", "step"); else dot.removeAttribute("aria-current");
+    dot.classList.toggle("is-done", n < signupWizardCurrentStep);
   });
   const back = document.getElementById("signupBackBtn");
   const next = document.getElementById("signupNextBtn");
@@ -1282,10 +1270,10 @@ async function showResetPasswordPanel(){
   const resetPanel = document.getElementById("resetPasswordPanel");
   const app = document.getElementById("app");
   const loginCard = document.getElementById("loginCard");
-  if(app){ app.classList.add("hidden"); app.style.display="none"; }
-  if(loginCard){ loginCard.classList.remove("hidden"); loginCard.style.display="grid"; }
-  if(loginPanel) loginPanel.style.display = "none";
-  if(signupPanel) signupPanel.style.display = "none";
+  if(app) app.classList.add("hidden");
+  if(loginCard) loginCard.classList.remove("hidden");
+  if(loginPanel) loginPanel.classList.add("hidden");
+  if(signupPanel) signupPanel.classList.add("hidden");
   if(resetPanel) resetPanel.classList.remove("hidden");
   const token = resetTokenFromPath();
   try{
@@ -1297,7 +1285,7 @@ async function showResetPasswordPanel(){
   }catch(e){
     const help = document.getElementById("resetPasswordHelp");
     if(help) help.textContent = "Link non valido o scaduto. Richiedi un nuovo recupero password.";
-    const btn = document.querySelector("#resetPasswordPanel .login-submit");
+    const btn = document.getElementById("resetPasswordSubmitBtn");
     if(btn) btn.disabled = true;
   }
 }

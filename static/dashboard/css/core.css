@@ -716,9 +716,6 @@ body.app-logged-in #loginCard{
   pointer-events:none !important;
 }
 
-body.app-logged-in #app{
-  display:flex !important;
-}
 
 
 /* GiroFacile V3.6.3.2 - Logo pieno e icone login più fedeli al mockup */

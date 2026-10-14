@@ -593,39 +593,30 @@ test('planning fuel KPI stays empty until a vehicle is selected',()=>{
 });
 
 
-test('login page matches the dashboard visual language and redesigned sidebar',()=>{
+test('login page uses the shared access screen with the same content and actions',()=>{
   const html=read('static/dashboard/index.html');
-  const login=html.slice(html.indexOf('<section id="loginCard"'),html.indexOf('<section id="app"'));
-  assert.match(html,/\/static\/dashboard\/css\/login\.css\?v=[^"&\s]+/);
-  assert.match(login,/class="login-brand-logo"[^>]*girofacile-logo\.png/);
-  assert.match(login,/<strong>Monitora<\/strong>/);
-  assert.match(login,/class="login-route-art"/);
+  const login=html.slice(html.indexOf('<section id="loginCard"'),html.indexOf('<div id="app"'));
+  // Componente approvato del catalogo al posto del vecchio login.css.
+  assert.match(login,/<section id="loginCard" class="gf-auth">/);
+  assert.doesNotMatch(html,/\/static\/dashboard\/css\/login\.css/);
+  assert.doesNotMatch(login,/\sstyle="/);
+  // Stessi contenuti: tre punti di forza, informazioni legali, accesso, registrazione e recupero.
+  for(const feature of ['Pianifica','Monitora','Analizza']) assert.match(login,new RegExp('<strong>'+feature+'</strong>'));
   assert.match(login,/aria-label="Informazioni legali"/);
-  assert.match(login,/class="login-link-divider"[^>]*><span>oppure<\/span>/);
-  assert.match(login,/class="login-submit-arrow"[^>]*>→<\/span>/);
-
-  const css=read('static/dashboard/css/login.css');
-  assert.match(css,/#loginCard\.gf-login-page\{[\s\S]*grid-template-columns:31\.5% 68\.5%/);
-  const loginSide=ruleDeclarations(css,'#loginCard .login-side');
-  assert.match(loginSide,/\bbackground\s*:/);
-  assert.match(loginSide,/\bcolor\s*:\s*var\(--gf-color-on-primary\)/);
-  const loginIcon=ruleDeclarations(css,'#loginCard .login-feature-icon');
-  assert.match(loginIcon,/\bwidth\s*:\s*74px!important/);
-  const iconShadow=loginIcon.match(/\bbox-shadow\s*:\s*([^;}]*)/)?.[1];
-  assert.ok(iconShadow,'Login icon shadow');
-  assert.match(iconShadow,/^(?:none|inset\b)/,'Keep outer shadows absent');
-  assert.match(css,/#loginCard #loginPanel\{[\s\S]*min-height:704px[\s\S]*padding:52px 58px 42px/);
-  assert.match(css,/#loginCard #loginPanel \.login-submit\{[\s\S]*background:var\(--gf-color-primary\)!important/);
-  assert.match(css,/#loginCard \.login-side-footer nav\{[\s\S]*display:flex/);
-  assert.match(css,/#loginCard \.login-route-art\{[\s\S]*height:430px[\s\S]*opacity:\.92/);
-  assert.match(css,/animation:gfLoginRouteFlow 2\.8s linear infinite/);
-  assert.match(css,/@keyframes gfLoginPinPulse/);
-  assert.match(css,/#loginCard \.login-feature-icon\{[\s\S]*color:#70a5f3!important/);
-  assert.match(css,/#loginCard \.login-card-pro\{[\s\S]*width:50%;[\s\S]*min-width:548px;[\s\S]*max-width:660px/);
-  assert.doesNotMatch(css,/@media\(max-height:860px\)/);
-  assert.match(css,/#loginCard #loginPanel \.login-card-brand img\{[\s\S]*width:76px!important/);
-  assert.match(css,/#loginCard #loginPanel \.login-card-title h2\{[\s\S]*font-size:34px!important/);
-  assert.doesNotMatch(css,/linear-gradient\(180deg,#06152e|0 0 24px rgba\(18,101,255/);
+  for(const [href,label] of [['privacy-policy','Privacy'],['termini-condizioni','Termini'],['cookie-policy','Cookie']])
+    assert.match(login,new RegExp('href="/'+href+'"[^>]*>'+label+'</a>'));
+  assert.match(login,/id="loginUser"/);assert.match(login,/id="loginPass"[^>]*type="password"/);
+  assert.match(login,/onclick="login\(\)"[^>]*data-variant="primary">Accedi a GiroFacile →</);
+  assert.match(login,/onclick="toggleSignup\(true\)">Registrati gratis</);
+  assert.match(login,/oppure <button type="button" id="forgotPasswordBtn"/);
+  // Registrazione a passaggi con il componente gf-steps; stato gestito con aria-current.
+  assert.equal((login.match(/class="gf-step"/g)||[]).length,4);
+  assert.equal((login.match(/data-signup-step="\d"/g)||[]).length,4);
+  const core=read('static/dashboard/js/core.js');
+  assert.match(core,/dot\.setAttribute\("aria-current", "step"\)/);
+  assert.doesNotMatch(core,/loginCard\.style\.display|app\.style\.display/);
+  const components=read(assets+'components.css');
+  assert.match(components,/\.gf-auth__card\[data-size="lg"\]\{/);
 });
 
 test('every stylesheet resolves its referenced custom properties',()=>{

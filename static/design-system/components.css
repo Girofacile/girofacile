@@ -769,11 +769,14 @@ body[data-gf-surface] .gf-auth__features li{display:grid;gap:2px}
 body[data-gf-surface] .gf-auth__features strong{color:var(--gf-color-on-nav);font-size:var(--gf-font-md)}
 body[data-gf-surface] .gf-auth__features span{font-size:var(--gf-font-sm)}
 body[data-gf-surface] .gf-auth__footer{margin-top:auto;color:var(--gf-color-nav-muted);font-size:var(--gf-font-xs)}
+body[data-gf-surface] .gf-auth a{color:var(--gf-color-primary)}
+body[data-gf-surface] .gf-auth__footer a{color:var(--gf-color-nav-text)}
 body[data-gf-surface] .gf-auth__main{display:grid;place-items:center;padding:var(--gf-space-8) var(--gf-space-4)}
 body[data-gf-surface] .gf-auth__card{
   display:grid;gap:var(--gf-space-5);width:min(var(--gf-auth-width),100%);padding:var(--gf-space-8);
   border:var(--gf-border);border-radius:var(--gf-radius-lg);background:var(--gf-color-surface);box-shadow:var(--gf-shadow-sm);
 }
+body[data-gf-surface] .gf-auth__card[data-size="lg"]{width:min(var(--gf-content-narrow),100%)}
 /* Banner in basso -------------------------------------------------------- */
 body[data-gf-surface] .gf-banner{
   position:fixed;left:50%;bottom:var(--gf-space-5);z-index:var(--gf-z-menu);transform:translateX(-50%);
