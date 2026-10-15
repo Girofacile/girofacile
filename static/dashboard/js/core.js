@@ -1911,7 +1911,8 @@ async function loadDashboardRoutes(){
 function deliveryStatusPill(status){
   const s = status || "in_attesa";
   const label = {in_attesa:"Da fare", completata:"Completata", mancata:"Mancata"}[s] || "Da fare";
-  return `<span class="delivery-status-pill ${esc(s)}">${esc(label)}</span>`;
+  const tone = {completata:"success", mancata:"danger"}[s] || "neutral";
+  return `<span class="gf-badge" data-status="${tone}">${esc(label)}</span>`;
 }
 
 function signatureDateLabel(value){
@@ -4234,36 +4235,37 @@ function gfPlannedArrivalDates(route, rows){
 function gfDeltaBadge(planned, real){
   if(!(planned instanceof Date) || Number.isNaN(planned.getTime()) ||
      !(real instanceof Date) || Number.isNaN(real.getTime())){
-    return '<span class="muted">-</span>';
+    return '<span class="gf-muted">-</span>';
   }
   const diff = Math.round((real.getTime() - planned.getTime()) / 60000);
-  const cls = diff <= 0 ? 'early' : (diff <= 10 ? 'ok' : 'late');
+  const tone = diff <= 0 ? 'success' : (diff <= 10 ? 'info' : 'danger');
   const label = diff === 0 ? 'In orario' : `${diff > 0 ? '+' : ''}${diff} min`;
-  return `<span class="gf-delta-badge ${cls}">${esc(label)}</span>`;
+  return `<span class="gf-badge" data-status="${tone}">${esc(label)}</span>`;
 }
 function dashboardRouteSummaryCards(r, rows){
   const completed = rows.filter(x=>x.delivery_status === 'completata').length;
   const missed = rows.filter(x=>x.delivery_status === 'mancata').length;
   const pending = Math.max(rows.length - completed - missed, 0);
-  return `<div class="gf-route-kpi-grid">
-    <div><span>Km previsti</span><strong>${esc(r.totale_km ?? '-')} km</strong></div>
-    <div><span>Tempo previsto</span><strong>${Math.round(Number(r.totale_minuti||0)) || '-'} min</strong></div>
-    <div><span>Consegne</span><strong>${completed}/${rows.length}</strong><small>${missed} mancate · ${pending} da fare</small></div>
-    <div><span>${esc(gfRouteEnergyMetric(r).label)}</span><strong>${esc(gfRouteEnergyMetric(r).value)}</strong></div>
-    <div><span>Costo stimato</span><strong>€ ${esc(r.costo_carburante ?? '-')}</strong></div>
-    <div><span>Rientro previsto</span><strong>${esc(r.orario_rientro_stimato || '-')}</strong></div>
+  const cell = (label, value, unit='') => `<div class="gf-stat-strip__cell"><span class="gf-stat-strip__label">${label}</span><strong class="gf-stat-strip__value">${value}</strong>${unit?`<small class="gf-stat-strip__unit">${unit}</small>`:''}</div>`;
+  return `<div class="gf-stat-strip">
+    ${cell('Km previsti', `${esc(r.totale_km ?? '-')}`, 'km')}
+    ${cell('Tempo previsto', `${Math.round(Number(r.totale_minuti||0)) || '-'}`, 'min')}
+    ${cell('Consegne', `${completed}/${rows.length}`, `${missed} mancate · ${pending} da fare`)}
+    ${cell(esc(gfRouteEnergyMetric(r).label), esc(gfRouteEnergyMetric(r).value))}
+    ${cell('Costo stimato', `€ ${esc(r.costo_carburante ?? '-')}`)}
+    ${cell('Rientro previsto', esc(r.orario_rientro_stimato || '-'))}
   </div>`;
 }
 function dashboardStopRowsUnified(r, mode='live'){
   const rows = r.consegne || [];
   if(!rows.length){
-    return `<div class="dash-detail-empty small">Nessuna fermata collegata a questo giro.</div>`;
+    return `<div class="gf-empty"><p>Nessuna fermata collegata a questo giro.</p></div>`;
   }
   const plannedDates = gfPlannedArrivalDates(r, rows);
-  return `<div class="dash-sub-table-wrap gf-unified-stop-wrap">
-    <table class="dash-sub-table dash-stop-table-unified gf-unified-stop-table">
+  return `<div class="gf-table-wrap">
+    <table class="gf-table" data-gf-responsive="cards">
       <thead>
-        <tr><th>#</th><th>Cliente</th><th>Indirizzo</th><th>Arrivo previsto</th><th>Arrivo reale</th><th>Differenza</th><th>Stato</th><th>Documenti e tracking</th><th>Note</th></tr>
+        <tr><th scope="col">#</th><th scope="col">Cliente</th><th scope="col">Indirizzo</th><th scope="col">Arrivo previsto</th><th scope="col">Arrivo reale</th><th scope="col">Differenza</th><th scope="col">Stato</th><th scope="col">Documenti e tracking</th><th scope="col">Note</th></tr>
       </thead>
       <tbody>${GFDriverBreaks.table(r,0,9)}
         ${rows.map((d, idx)=>{
@@ -4272,16 +4274,16 @@ function dashboardStopRowsUnified(r, mode='live'){
           const planned = gfPlannedArrival(d);
           const real = gfRealArrival(d);
           const realDate = gfRealArrivalDate(d);
-          return `<tr class="delivery-row-${esc(st)}">
-            <td><span class="dash-stop-number mini">${d.ordine || ''}</span></td>
-            <td><strong>${esc(d.cliente_nome || '-')}</strong></td>
-            <td>${esc(d.indirizzo || '-')}</td>
-            <td><strong>${esc(planned)}</strong></td>
-            <td>${real ? `<strong class="gf-real-arrival">${esc(real)}</strong>` : '<span class="muted">-</span>'}</td>
-            <td>${gfDeltaBadge(plannedDates[idx], realDate)}</td>
-            <td>${deliveryStatusPill(st)}${d.motivo_mancata?`<small class="delivery-reason">${esc(d.motivo_mancata)}</small>`:''}</td>
-            <td>${deliverySignatureAction(d, r.driver_name)} ${trackingButton(d, r)}</td>
-            <td>${note ? `<button type="button" class="btn-mini note-mini-btn" data-note="${esc(String(note))}" onclick="alert(this.dataset.note)">Note</button>` : '<span class="muted">-</span>'}</td>
+          return `<tr data-delivery-status="${esc(st)}">
+            <td data-label="#"><span class="gf-badge" data-status="neutral">${d.ordine || ''}</span></td>
+            <td data-label="Cliente"><strong>${esc(d.cliente_nome || '-')}</strong></td>
+            <td data-label="Indirizzo">${esc(d.indirizzo || '-')}</td>
+            <td data-label="Arrivo previsto"><strong>${esc(planned)}</strong></td>
+            <td data-label="Arrivo reale">${real ? `<strong>${esc(real)}</strong>` : '<span class="gf-muted">-</span>'}</td>
+            <td data-label="Differenza">${gfDeltaBadge(plannedDates[idx], realDate)}</td>
+            <td data-label="Stato">${deliveryStatusPill(st)}${d.motivo_mancata?`<br><small class="gf-muted">${esc(d.motivo_mancata)}</small>`:''}</td>
+            <td data-label="Documenti e tracking">${deliverySignatureAction(d, r.driver_name)} ${trackingButton(d, r)}</td>
+            <td data-label="Note">${note ? `<button type="button" class="gf-button" data-variant="ghost" data-size="sm" data-note="${esc(String(note))}" onclick="alert(this.dataset.note)">Note</button>` : '<span class="gf-muted">-</span>'}</td>
           </tr>`+GFDriverBreaks.table(r,idx+1,9);
         }).join('')}
       </tbody>
@@ -4290,93 +4292,17 @@ function dashboardStopRowsUnified(r, mode='live'){
 }
 
 function dashboardRoutePicker(routes, selectedId, onChangeFn, label){
-  return `<div class="dash-sub-route-picker">
-    <label>${esc(label || 'Seleziona giro')}</label>
-    <select onchange="${onChangeFn}(Number(this.value))">
+  return `<label class="gf-field">
+    <span class="gf-field__label">${esc(label || 'Seleziona giro')}</span>
+    <select class="gf-select" onchange="${onChangeFn}(Number(this.value))">
       ${routes.map(x=>`<option value="${x.id}" ${Number(x.id)===Number(selectedId)?'selected':''}>${esc(x.nome || 'Giro consegne')} · ${esc(x.driver_name || 'Autista non assegnato')}</option>`).join('')}
     </select>
-  </div>`;
+  </label>`;
 }
 
 function renderDashboardInProgressSubpage(routes, selectedRoute){
-  // Nuovo layout dedicato: riutilizza le API e tutte le funzioni operative esistenti.
-  if(window.GFInProgressReference?.render){
-    window.GFInProgressReference.render(routes,selectedRoute);
-    return;
-  }
-  const page = document.getElementById('dashboardInProgressPage');
-  if(!page) return;
-  if(!routes.length){
-    page.innerHTML = `<div class="dash-empty-subpage"><div class="dash-empty-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h11M12 6l6 6-6 6"/><circle cx="4" cy="12" r="1.5"/></svg></div><h2>Nessun giro in corso</h2><p>Un giro entra qui solo quando l'autista preme “Avvia giro” dal suo portale.</p><button class="btn-primary" onclick="showTab('giro')">Pianifica un giro</button></div>`;
-    return;
-  }
-  const r = selectedRoute || routes[0];
-  dashboardInProgressSelectedId = r.id;
-  const rows = r.consegne || [];
-  const completed = rows.filter(x=>x.delivery_status === 'completata').length;
-  const missed = rows.filter(x=>x.delivery_status === 'mancata').length;
-  const pending = Math.max(rows.length - completed - missed, 0);
-  const progress = rows.length ? Math.round(((completed + missed) / rows.length) * 100) : routeProgressPercent(r);
-  const next = rows.find(x => !['completata','mancata'].includes(x.delivery_status || 'in_attesa'));
-  const unread = Number(r.unread_driver_messages || 0);
-  page.innerHTML = `
-    <div class="dash-sub-layout">
-      <aside class="dash-sub-sidebar">
-        ${dashboardRoutePicker(routes, r.id, 'openDashboardInProgressPage', 'Giro attivo')}
-        <div class="dash-live-summary-card">
-          <div class="dash-live-header">
-            <div class="dash-live-play">▶</div>
-            <div><span>Stato giro in corso</span><strong>${routes.length}</strong><small>${routes.length===1?'giro attivo':'giri attivi'}</small></div>
-          </div>
-          <div class="dash-live-summary-body">
-            <div><span>Autista</span><strong>${esc(r.driver_name || 'Non assegnato')}</strong></div>
-            <div><span>Mezzo</span><strong>${esc(r.vehicle_name || '-')}</strong></div>
-            <div><span>Completate</span><strong>${completed} / ${rows.length}</strong></div>
-            <div><span>Mancate</span><strong>${missed}</strong></div>
-            <div><span>Da fare</span><strong>${pending}</strong></div>
-            <div><span>Rientro stimato</span><strong>${esc(r.rientro_stimato_aggiornato || r.orario_rientro_stimato || '-')}</strong></div>
-            <div><span>Avanzamento</span><strong>${progress}%</strong></div>
-            <div class="dash-side-progress"><span style="width:${progress}%"></span></div>
-            ${next?`<div class="dash-next-box"><span>Prossima consegna</span><strong>${esc(next.cliente_nome || '-')}</strong><small>${esc(next.indirizzo || '')}</small></div>`:''}
-            ${unread?`<div class="dash-chat-alert strong">💬 ${unread} messagg${unread===1?'io':'i'} non lett${unread===1?'o':'i'}</div>`:''}
-          </div>
-          <button class="btn-light full" onclick="showTab('dashboard')">Chiudi controllo</button>
-        </div>
-      </aside>
-      <main class="dash-sub-main">
-        <section id="dashboardLiveGPS" class="panel dash-sub-card gf-live-gps" data-state="unavailable">
-          <div class="dash-sub-card-title"><div class="dash-sub-icon" aria-hidden="true">📍</div><div><h2>Posizione del mezzo</h2><p class="gf-live-state" data-gps-state role="status">In attesa della posizione</p></div></div>
-          <dl class="gf-live-meta">
-            <div><dt>Giro attivo</dt><dd data-gps-route>${esc(r.nome)}</dd></div>
-            <div><dt>Mezzo</dt><dd data-gps-vehicle>${esc(r.vehicle_name || 'Non assegnato')}</dd></div>
-            <div><dt>Prossima fermata</dt><dd data-gps-next>${esc(next?.cliente_nome || 'Fermate terminate')}</dd></div>
-            <div><dt>Avanzamento</dt><dd data-gps-progress>${progress}%</dd></div>
-          </dl>
-          <div class="gf-live-map-wrap"><div class="gf-live-map" data-gps-map aria-label="Mappa ultima posizione del mezzo"></div><div class="gf-live-empty" data-gps-empty>La posizione del mezzo apparirà qui.<br>Il giro resta monitorato tramite le conferme di consegna.</div></div>
-          <p class="gf-live-updated" data-gps-updated>La posizione viene aggiornata quando il portale autista è aperto.</p>
-          <p class="gf-live-updated">Durante la navigazione in Google Maps il GPS del portale può sospendersi. Una posizione non aggiornata non alimenta l’ETA live.</p>
-        </section>
-        <section class="panel dash-sub-card">
-          <div class="dash-sub-card-title"><div class="dash-sub-icon">📍</div><div><h2>Fermate del giro</h2><p>Confronto tra arrivo previsto e arrivo reale registrato dall'autista.</p></div></div>
-          ${window.GiroFacileRouting.summaryHtml(r)}
-    ${dashboardRouteSummaryCards(r, rows)}
-          ${dashboardStopRowsUnified(r, 'live')}
-        </section>
-        <section class="panel dash-sub-card">
-          <aside class="dash-admin-chat-card embedded full-width">
-            <div class="dash-chat-title"><h3>Chat autista</h3><small id="dashChatStatus">Messaggi collegati a questo giro</small></div>
-            <div id="dashAdminChatMessages" class="dash-admin-chat-messages"><div class="dash-empty">Caricamento chat...</div></div>
-            <div class="dash-admin-chat-input">
-              <textarea id="dashAdminChatInput" rows="2" placeholder="Scrivi all'autista..."></textarea>
-              <button class="btn-primary" onclick="sendDashboardRouteChat(${r.id})">Invia</button>
-            </div>
-          </aside>
-        </section>
-      </main>
-    </div>`;
-  window.GFLiveDesign?.decorate(page, r, progress);
-  GiroFacileLiveMap.mount(r.id);
-  loadDashboardRouteChat(r.id, true);
+  // Il controllo dei giri in corso è disegnato da in-progress-reference.js con le API esistenti.
+  window.GFInProgressReference?.render(routes,selectedRoute);
 }
 
 
@@ -4386,25 +4312,26 @@ function renderUnifiedRouteView(r, targetId='historyResult', context='history'){
   const rows = r.consegne || [];
   const status = r.status || 'programmato';
   const statusLabel = r.status_label || ({programmato:'Programmato', in_corso:'In corso', completato:'Completato', bozza:'Bozza'}[status] || 'Giro');
-  const icon = status === 'completato' ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4 10-10"/></svg>' : (status === 'in_corso' ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h11M12 6l6 6-6 6"/><circle cx="4" cy="12" r="1.5"/></svg>' : '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>');
-  target.innerHTML = `<section class="panel dash-sub-card gf-unified-route-view">
-    <div class="gf-unified-route-head">
-      <div class="dash-sub-card-title"><div class="dash-sub-icon">${icon}</div><div><h2>${esc(r.nome || 'Giro consegne')}</h2><p>Schermata giro unificata · ${esc(statusLabel)} · ${esc(r.data_giro || '-')}</p></div></div>
-      <div class="gf-unified-route-actions">
+  target.innerHTML = `<section class="gf-panel" aria-label="${esc(r.nome || 'Giro consegne')}">
+    <header class="gf-panel__header">
+      <div><h2 class="gf-panel__title">${esc(r.nome || 'Giro consegne')}</h2><p class="gf-muted">Schermata giro unificata · ${esc(statusLabel)} · ${esc(r.data_giro || '-')}</p></div>
+      <div class="gf-cluster">
         ${routeStatusBadge(status, statusLabel)}
-        ${r.google_maps_url ? `<a target="_blank" href="${esc(r.google_maps_url)}"><button class="btn-primary">Apri Maps</button></a>` : ''}
+        ${r.google_maps_url ? `<a class="gf-button" data-variant="primary" target="_blank" rel="noopener" href="${esc(r.google_maps_url)}">Apri Maps</a>` : ''}
       </div>
+    </header>
+    <div class="gf-panel__body gf-stack">
+      <dl class="gf-details">
+        <div class="gf-details__item"><dt>Autista</dt><dd>${esc(r.driver_name || 'Non assegnato')}</dd></div>
+        <div class="gf-details__item"><dt>Mezzo</dt><dd>${esc(r.vehicle_name || '-')}</dd></div>
+        <div class="gf-details__item"><dt>Partenza prevista</dt><dd>${esc(r.orario_partenza || '-')}</dd></div>
+        <div class="gf-details__item"><dt>Partenza reale</dt><dd>${gfTimeFromIso(r.started_at) || '-'}</dd></div>
+        <div class="gf-details__item"><dt>Rientro previsto</dt><dd>${esc(r.orario_rientro_stimato || '-')}</dd></div>
+        <div class="gf-details__item"><dt>Rientro reale</dt><dd>${gfTimeFromIso(r.completed_at) || '-'}</dd></div>
+      </dl>
+      ${dashboardRouteSummaryCards(r, rows)}
+      <div><h3 class="gf-subtitle">Fermate del giro</h3><p class="gf-muted">Confronto tra orario previsto dal software e orario reale registrato dall'autista.</p></div>
     </div>
-    <div class="gf-route-meta-grid">
-      <div><span>Autista</span><strong>${esc(r.driver_name || 'Non assegnato')}</strong></div>
-      <div><span>Mezzo</span><strong>${esc(r.vehicle_name || '-')}</strong></div>
-      <div><span>Partenza prevista</span><strong>${esc(r.orario_partenza || '-')}</strong></div>
-      <div><span>Partenza reale</span><strong>${gfTimeFromIso(r.started_at) || '-'}</strong></div>
-      <div><span>Rientro previsto</span><strong>${esc(r.orario_rientro_stimato || '-')}</strong></div>
-      <div><span>Rientro reale</span><strong>${gfTimeFromIso(r.completed_at) || '-'}</strong></div>
-    </div>
-    ${dashboardRouteSummaryCards(r, rows)}
-    <div class="gf-unified-section-title"><h3>Fermate del giro</h3><p>Confronto tra orario previsto dal software e orario reale registrato dall'autista.</p></div>
     ${dashboardStopRowsUnified(r, context)}
   </section>`;
 }
@@ -4418,7 +4345,7 @@ async function openDashboardInProgressPage(routeId=null){
 async function loadDashboardInProgressPage(routeId=null){
   window.GFLiveDesign?.closeMap();
   const page = document.getElementById('dashboardInProgressPage');
-  if(page) page.innerHTML = `<div class="dash-detail-empty"><h2>Caricamento giri in corso...</h2><p>Sto recuperando avanzamento, fermate e chat.</p></div>`;
+  if(page) page.innerHTML = `<div class="gf-loading" role="status"><strong>Caricamento giri in corso...</strong><p>Sto recuperando avanzamento, fermate e chat.</p></div>`;
   try{
     const rows = await api('/api/routes/operativi');
     const progress = rows.filter(r=>r.status==='in_corso');
@@ -4428,7 +4355,7 @@ async function loadDashboardInProgressPage(routeId=null){
     renderDashboardInProgressSubpage(progress, selected);
     await loadDashboardHome();
   }catch(e){
-    if(page) page.innerHTML = `<div class="dash-detail-empty"><h2>Errore</h2><p>${esc(e.message)}</p></div>`;
+    if(page) page.innerHTML = `<div class="gf-alert" data-status="danger"><div class="gf-alert__body"><strong class="gf-alert__title">Errore</strong><p>${esc(e.message)}</p></div></div>`;
   }
 }
 
@@ -4440,7 +4367,7 @@ async function openDashboardScheduledPage(routeId=null){
 
 async function loadDashboardScheduledPage(routeId=null){
   const page = document.getElementById('dashboardScheduledPage');
-  if(page) page.innerHTML = `<div class="dash-detail-empty"><h2>Caricamento giri programmati...</h2><p>Sto recuperando i giri non ancora avviati.</p></div>`;
+  if(page) page.innerHTML = `<div class="gf-loading" role="status"><strong>Caricamento giri programmati...</strong><p>Sto recuperando i giri non ancora avviati.</p></div>`;
   try{
     const rows = await api('/api/routes/operativi');
     const scheduled = rows.filter(r=>r.status==='programmato');
@@ -4448,14 +4375,14 @@ async function loadDashboardScheduledPage(routeId=null){
     let selected = scheduled.find(r=>Number(r.id)===Number(selectedId)) || scheduled[0] || null;
     if(selected) selected = await api(`/api/routes/${selected.id}`);
     renderDashboardScheduledSubpage(scheduled, selected);
-  }catch(e){ if(page) page.innerHTML = `<div class="dash-detail-empty"><h2>Errore</h2><p>${esc(e.message)}</p></div>`; }
+  }catch(e){ if(page) page.innerHTML = `<div class="gf-alert" data-status="danger"><div class="gf-alert__body"><strong class="gf-alert__title">Errore</strong><p>${esc(e.message)}</p></div></div>`; }
 }
 
 function renderDashboardScheduledSubpage(routes, selectedRoute){
   const page = document.getElementById('dashboardScheduledPage');
   if(!page) return;
   if(!routes.length){
-    page.innerHTML = `<div class="dash-empty-subpage"><div class="dash-empty-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg></div><h2>Nessun giro programmato</h2><p>I giri salvati e assegnati compariranno qui finché l’autista non li avvia.</p><button class="btn-primary" onclick="showTab('giro')">Pianifica un giro</button></div>`;
+    page.innerHTML = `<div class="gf-empty"><h2>Nessun giro programmato</h2><p>I giri salvati e assegnati compariranno qui finché l’autista non li avvia.</p><button type="button" class="gf-button" data-variant="primary" onclick="showTab('giro')">Pianifica un giro</button></div>`;
     return;
   }
   const r = selectedRoute || routes[0];
@@ -4464,50 +4391,36 @@ function renderDashboardScheduledSubpage(routes, selectedRoute){
   const completed = rows.filter(d=>(d.delivery_status || d.status) === 'completata').length;
   const missed = rows.filter(d=>(d.delivery_status || d.status) === 'mancata').length;
   const pending = Math.max(rows.length - completed - missed, 0);
-  const paths = {
-    calendar:'<rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4m8-4v4M4 11h16m-11 4h2m3 0h2m-7 3h2"/>',
-    driver:'<circle cx="12" cy="7" r="4"/><path d="M4 21v-2a8 5 0 0 1 16 0v2z"/>',
-    truck:'<path d="M3 5h12v13H3zM15 10h3l3 4v4h-6"/><circle cx="7" cy="19" r="2"/><circle cx="18" cy="19" r="2"/>',
-    road:'<path d="M7 3 3 21M17 3l4 18M12 3v3m0 4v4m0 4v3"/>',
-    clock:'<circle cx="12" cy="12" r="9"/><path d="M12 6v6l4 2"/>',
-    box:'<path d="m12 3 9 5v9l-9 5-9-5V8zM3 8l9 5 9-5m-9 5v9M7 5.8l9 5"/>',
-    fuel:'<path d="M5 21V4h9v17M5 9h9m0 4h2v5a2 2 0 0 0 4 0v-8l-3-3M3 21h13"/>',
-    euro:'<path d="M17 6a7 7 0 1 0 0 12M4 10h11M4 14h10"/>',
-    return:'<path d="M4 8a9 9 0 1 1-1 7M4 3v5h5M12 7v5l3 2"/>',
-    pin:'<circle cx="12" cy="8" r="6"/><path d="M12 14v8"/>',
-    chart:'<path d="M5 21V11m7 10V3m7 18V8"/>',
-    edit:'<path d="m4 16 12-12 4 4L8 20H4zm10-10 4 4"/>'
-  };
-  const icon = (name, color='blue') => '<span class="scheduled-icon '+color+'"><svg viewBox="0 0 24 24" aria-hidden="true">'+paths[name]+'</svg></span>';
   const metrics = [
-    ['Km previsti', (r.totale_km ?? '-')+' km', 'road', 'blue'],
-    ['Tempo previsto', Math.round(Number(r.totale_minuti||0))+' min', 'clock', 'pink'],
-    ['Consegne', completed+'/'+rows.length, 'box', 'purple', missed+' mancate · '+pending+' da fare'],
-    [gfRouteEnergyMetric(r).label, gfRouteEnergyMetric(r).value, 'fuel', 'green'],
-    ['Costo stimato', '€ '+(r.costo_carburante ?? '-'), 'euro', 'orange'],
-    ['Rientro previsto', r.rientro_stimato_aggiornato || r.orario_rientro_stimato || '-', 'return', 'blue']
+    ['Km previsti', (r.totale_km ?? '-')+' km'],
+    ['Tempo previsto', Math.round(Number(r.totale_minuti||0))+' min'],
+    ['Consegne', completed+'/'+rows.length, missed+' mancate · '+pending+' da fare'],
+    [gfRouteEnergyMetric(r).label, gfRouteEnergyMetric(r).value],
+    ['Costo stimato', '€ '+(r.costo_carburante ?? '-')],
+    ['Rientro previsto', r.rientro_stimato_aggiornato || r.orario_rientro_stimato || '-']
   ];
   const vehicleParts = String(r.vehicle_name || '-').split(' · ');
+  const item = (label, value, detail) => `<div class="gf-details__item"><dt>${esc(label)}</dt><dd><strong>${esc(value)}</strong>${detail ? '<br><small class="gf-muted">'+esc(detail)+'</small>' : ''}</dd></div>`;
   page.innerHTML = `
     ${routes.length > 1 ? dashboardRoutePicker(routes, r.id, 'openDashboardScheduledPage', 'Seleziona giro programmato') : ''}
-    <section class="scheduled-overview" aria-label="Giro programmato">
-      <div class="scheduled-identity">${icon('calendar')}<div><span>Giro programmato</span><h2>${esc(r.nome || 'Giro consegne')}</h2><small>${esc(r.data_giro || '-')}</small></div></div>
-      <div class="scheduled-resource">${icon('driver','purple')}<div><span>Autista</span><strong>${esc(r.driver_name || 'Non assegnato')}</strong></div></div>
-      <div class="scheduled-resource">${icon('truck')}<div><span>Mezzo</span><strong>${esc(vehicleParts[0])}</strong>${vehicleParts.length>1 ? '<small>'+esc(vehicleParts.slice(1).join(' · '))+'</small>' : ''}</div></div>
-      <div class="scheduled-status"><span aria-hidden="true"></span>Programmato</div>
-      <button type="button" class="btn-primary scheduled-edit" onclick="openProgrammedRouteForEdit(${Number(r.id)}, true)">${icon('edit')}Modifica dalla pianificazione</button>
+    <section class="gf-panel" aria-label="Giro programmato">
+      <div class="gf-panel__body gf-cluster" data-justify="between">
+        <div><p class="gf-kicker">Giro programmato</p><h2 class="gf-title">${esc(r.nome || 'Giro consegne')}</h2><small class="gf-muted">${esc(r.data_giro || '-')}</small></div>
+        <dl class="gf-details">${item('Autista', r.driver_name || 'Non assegnato')}${item('Mezzo', vehicleParts[0], vehicleParts.slice(1).join(' · '))}</dl>
+        <span class="gf-badge" data-status="warning" data-dot>Programmato</span>
+        <button type="button" class="gf-button" data-variant="primary" onclick="openProgrammedRouteForEdit(${Number(r.id)}, true)">Modifica dalla pianificazione</button>
+      </div>
     </section>
-    <div class="scheduled-metrics">${metrics.map(([label,value,symbol,color,detail])=>`<div class="scheduled-metric">${icon(symbol,color)}<div><span>${label}</span><strong>${esc(value)}</strong>${detail ? '<small>'+esc(detail)+'</small>' : ''}</div></div>`).join('')}</div>
+    <div class="gf-stat-strip">${metrics.map(([label,value,detail])=>`<div class="gf-stat-strip__cell"><span class="gf-stat-strip__label">${esc(label)}</span><strong class="gf-stat-strip__value">${esc(value)}</strong>${detail ? '<small class="gf-stat-strip__unit">'+esc(detail)+'</small>' : ''}</div>`).join('')}</div>
     ${window.GiroFacileRouting.summaryHtml(r, `refreshRouteTraffic(${Number(r.id)}, 'dashboardScheduledPage', 'scheduled')`)}
-    <div class="scheduled-content">
-      <section class="scheduled-stops">
-        <div class="scheduled-panel-heading">${icon('pin','pink')}<div><h2>Fermate programmate</h2><p>Sequenza prevista prima dell'avvio del giro. La colonna reale resta vuota finché l'autista non gestisce la tappa.</p></div></div>
+    <div class="gf-grid" data-cols="main-side">
+      <section class="gf-panel" aria-labelledby="scheduledStopsTitle">
+        <header class="gf-panel__header"><div><h2 class="gf-panel__title" id="scheduledStopsTitle">Fermate programmate</h2><p class="gf-muted">Sequenza prevista prima dell'avvio del giro. La colonna reale resta vuota finché l'autista non gestisce la tappa.</p></div></header>
         ${dashboardStopRowsUnified(r, 'scheduled')}
       </section>
-      <aside class="scheduled-summary" aria-label="Riepilogo giro">
-        <div class="scheduled-panel-heading">${icon('chart')}<div><h2>Riepilogo giro</h2><p>Totali e informazioni principali</p></div></div>
-        ${metrics.map(([label,value,symbol,color,detail])=>`<div class="scheduled-summary-row">${icon(symbol,color)}<span>${label}</span><div><strong>${esc(value)}</strong>${detail ? '<small>'+esc(detail)+'</small>' : ''}</div></div>`).join('')}
-        <details class="scheduled-departure"><summary>Orario di partenza</summary><strong>${esc(r.orario_partenza || '-')}</strong></details>
+      <aside class="gf-panel" aria-labelledby="scheduledSummaryTitle">
+        <header class="gf-panel__header"><div><h2 class="gf-panel__title" id="scheduledSummaryTitle">Riepilogo giro</h2><p class="gf-muted">Totali e informazioni principali</p></div></header>
+        <div class="gf-panel__body"><dl class="gf-details">${metrics.map(([label,value,detail])=>item(label, value, detail)).join('')}${item('Orario di partenza', r.orario_partenza || '-')}</dl></div>
       </aside>
     </div>`;
 }
@@ -4520,7 +4433,7 @@ async function openDashboardCompletedPage(routeId=null){
 
 async function loadDashboardCompletedPage(routeId=null){
   const page = document.getElementById('dashboardCompletedPage');
-  if(page) page.innerHTML = `<div class="dash-detail-empty"><h2>Caricamento giri completati...</h2><p>Sto recuperando lo storico operativo.</p></div>`;
+  if(page) page.innerHTML = `<div class="gf-loading" role="status"><strong>Caricamento giri completati...</strong><p>Sto recuperando lo storico operativo.</p></div>`;
   try{
     const rows = await api('/api/routes');
     const completed = rows.filter(r=>r.status==='completato');
@@ -4528,7 +4441,7 @@ async function loadDashboardCompletedPage(routeId=null){
     let selected = completed.find(r=>Number(r.id)===Number(selectedId)) || completed[0] || null;
     if(selected) selected = await api(`/api/routes/${selected.id}`);
     renderDashboardCompletedSubpage(completed, selected);
-  }catch(e){ if(page) page.innerHTML = `<div class="dash-detail-empty"><h2>Errore</h2><p>${esc(e.message)}</p></div>`; }
+  }catch(e){ if(page) page.innerHTML = `<div class="gf-alert" data-status="danger"><div class="gf-alert__body"><strong class="gf-alert__title">Errore</strong><p>${esc(e.message)}</p></div></div>`; }
 }
 
 function renderDashboardCompletedSubpage(routes, selectedRoute){

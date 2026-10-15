@@ -20,9 +20,10 @@ function fixture(){
 }
 test('scheduled overview preserves selection, delivery counts, zero metrics and escaped notes',()=>{
   const f=fixture();f.run('renderDashboardScheduledSubpage([route],route)');const html=f.node.innerHTML;
-  assert.equal((html.match(/class="scheduled-metric"/g)||[]).length,6);
+  // Sei indicatori nella striscia numeri del sistema.
+  assert.equal((html.match(/class="gf-stat-strip__cell"/g)||[]).length,6);
   for(const text of ['1/3','1 mancate · 1 da fare','0 km','0 min','Cliente &lt;test&gt;','data-note="All&#39;ingresso &quot;laterale&quot;','alert(this.dataset.note)','openProgrammedRouteForEdit(42, true)']) assert.ok(html.includes(text),text);
-  assert.doesNotMatch(html,/class="dash-sub-route-picker"/);
+  assert.doesNotMatch(html,/onchange="openDashboardScheduledPage/);
   f.run('renderDashboardScheduledSubpage([route,{...route,id:43}],route)');assert.match(f.node.innerHTML,/openDashboardScheduledPage/);
   f.run('renderDashboardScheduledSubpage([],null)');assert.match(f.node.innerHTML,/Nessun giro programmato/);
 });

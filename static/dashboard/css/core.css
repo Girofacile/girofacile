@@ -1665,9 +1665,6 @@ body.admin-mode .side-nav .nav-item.active{
 
 /* Dashboard operativa v1: focus su giri in corso e chat autista */
 
-.dash-live-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
-.dash-live-grid span{background:#f1f5f9;border-radius:10px;padding:8px;text-align:center;color:#475569;font-size:12px;font-weight:700}
-.dash-live-grid b{display:block;color:#0f172a;font-size:16px}
 .dash-next-stop{margin-top:9px;color:#334155!important;font-weight:700}
 .dash-chat-alert{margin-top:10px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:12px;padding:8px 10px;font-weight:900;font-size:13px;display:inline-flex;align-items:center;gap:6px}
 .dash-detail-kpis-operative{grid-template-columns:repeat(4,minmax(0,1fr))}
@@ -1689,23 +1686,13 @@ body.admin-mode .side-nav .nav-item.active{
 
 /* Dashboard sottopagina Giri in corso */
 .dash-kpi-click{cursor:pointer;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
-.dash-kpi-click:hover{transform:translateY(-2px);box-shadow:0 18px 45px rgba(15,23,42,.10);border-color:rgba(37,99,235,.28)}
-.dash-subpage-topbar{display:flex;align-items:center;gap:18px;margin-bottom:20px}
-.dash-breadcrumb{font-size:14px;color:#64748b;font-weight:700}.dash-breadcrumb span{margin:0 10px;color:#94a3b8}
-.dash-subpage-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:26px}
-.dash-subpage-title-row h1{font-size:32px;margin:0 0 6px;color:#0f172a}.dash-subpage-title-row p{margin:0;color:#64748b;font-weight:600}
-.dash-date-chip{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:14px 18px;color:#334155;font-weight:800;box-shadow:0 8px 28px rgba(15,23,42,.05)}
-.dashboard-in-progress-page{min-height:360px}.dash-sub-layout{display:grid;grid-template-columns:360px minmax(0,1fr);gap:28px;align-items:start}
+.dash-kpi-click:hover{transform:translateY(-2px);box-shadow:0 18px 45px rgba(15,23,42,.10);border-color:rgba(37,99,235,.28)}.dash-sub-layout{display:grid;grid-template-columns:360px minmax(0,1fr);gap:28px;align-items:start}
 .dash-sub-sidebar{position:sticky;top:100px;display:flex;flex-direction:column;gap:16px}.dash-sub-route-picker{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:16px;box-shadow:0 12px 40px rgba(15,23,42,.06)}
-.dash-sub-route-picker label{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#64748b;font-weight:900;margin-bottom:8px}.dash-sub-route-picker select{width:100%;border:1px solid #dbe3ef;border-radius:12px;padding:12px 13px;background:#f8fafc;font-weight:800;color:#0f172a}
-.dash-live-summary-card{background:#fff;border:1px solid #dbeafe;border-radius:22px;box-shadow:0 18px 50px rgba(15,23,42,.08);overflow:hidden}.dash-live-header{display:flex;gap:16px;align-items:center;padding:22px;background:linear-gradient(135deg,#e9fff4,#eff6ff)}
-.dash-live-play{width:56px;height:56px;border-radius:18px;background:#dcfce7;color:#059669;display:grid;place-items:center;font-size:26px;font-weight:900}.dash-live-header span,.dash-live-summary-body span{display:block;color:#64748b;font-size:13px;font-weight:800}.dash-live-header strong{display:block;font-size:28px;color:#0f172a}.dash-live-header small{color:#64748b;font-weight:700}
-.dash-live-summary-body{padding:18px 22px 22px}.dash-live-summary-body>div:not(.dash-side-progress):not(.dash-next-box):not(.dash-chat-alert){display:flex;align-items:center;justify-content:space-between;gap:18px;padding:13px 0;border-bottom:1px solid #eef2f7}.dash-live-summary-body strong{color:#0f172a;font-size:16px;text-align:right}.dash-side-progress{height:10px;background:#e2e8f0;border-radius:999px;overflow:hidden;margin:14px 0 16px}.dash-side-progress span{display:block;height:100%;background:linear-gradient(90deg,#10b981,#059669);border-radius:999px}
-.dash-next-box{background:#f8fafc;border:1px solid #e5e7eb;border-radius:16px;padding:14px;margin:12px 0}.dash-next-box strong{text-align:left;display:block;margin:4px 0}.dash-next-box small{display:block;color:#64748b;line-height:1.4}.dash-chat-alert.strong{border-radius:14px;padding:12px 14px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;font-weight:900;margin:12px 0}.btn-light.full{width:calc(100% - 44px);margin:0 22px 22px}
+.dash-sub-route-picker label{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#64748b;font-weight:900;margin-bottom:8px}.dash-sub-route-picker select{width:100%;border:1px solid #dbe3ef;border-radius:12px;padding:12px 13px;background:#f8fafc;font-weight:800;color:#0f172a}.dash-chat-alert.strong{border-radius:14px;padding:12px 14px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;font-weight:900;margin:12px 0}.btn-light.full{width:calc(100% - 44px);margin:0 22px 22px}
 .dash-sub-main{display:flex;flex-direction:column;gap:24px}.dash-sub-card{padding:26px;border-radius:22px}.dash-sub-card-title{display:flex;align-items:center;gap:16px;margin-bottom:20px}.dash-sub-card-title h2{margin:0;color:#0f172a;font-size:22px}.dash-sub-card-title p{margin:4px 0 0;color:#64748b;font-weight:600}.dash-sub-icon{width:54px;height:54px;border-radius:16px;background:#eef4ff;display:grid;place-items:center;font-size:25px}.dash-sub-card-title-actions{justify-content:space-between}.dash-sub-card-title-left{display:flex;align-items:center;gap:16px}
-.dash-sub-table-wrap{border:1px solid #e5e7eb;border-radius:18px;overflow:auto}.dash-sub-table{width:100%;border-collapse:collapse;background:#fff}.dash-sub-table th{background:#f8fafc;color:#334155;font-size:13px;text-align:left;padding:16px 18px;border-bottom:1px solid #e5e7eb}.dash-sub-table td{padding:18px;border-bottom:1px solid #eef2f7;color:#334155;vertical-align:middle}.dash-sub-table tr:last-child td{border-bottom:0}.dash-sub-totals{display:flex;justify-content:flex-end;gap:30px;margin-top:16px;color:#334155}.dash-stops-timeline{border:1px solid #e5e7eb;border-radius:18px;overflow:hidden;background:#fff}.dash-stop-line{display:grid;grid-template-columns:54px 1fr 150px;gap:16px;align-items:center;padding:16px 18px;border-bottom:1px solid #eef2f7}.dash-stop-line:last-child{border-bottom:0}.dash-stop-number{width:34px;height:34px;border-radius:999px;background:#0b63f6;color:#fff;display:grid;place-items:center;font-weight:900}.dash-stop-line small{display:block;color:#64748b;margin-top:4px;line-height:1.35}.dash-stop-status{text-align:right}.dash-sub-bottom-grid{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:24px}.dash-note-grid{border:1px solid #e5e7eb;border-radius:18px;display:grid;grid-template-columns:150px 1fr 1fr;overflow:hidden;background:#fff}.dash-note-grid>div{padding:18px;border-right:1px solid #eef2f7}.dash-note-grid>div:last-child{border-right:0}.dash-note-grid span{display:block;color:#64748b;font-size:13px;font-weight:800;margin-bottom:8px}.dash-note-grid strong{color:#334155}.dash-admin-chat-card.embedded{height:100%;min-height:330px}.dash-empty-subpage{background:#fff;border:1px dashed #cbd5e1;border-radius:24px;padding:60px;text-align:center;color:#64748b}.dash-empty-subpage h2{color:#0f172a}.dash-empty-icon{width:70px;height:70px;border-radius:22px;background:#dcfce7;color:#059669;display:grid;place-items:center;margin:0 auto 18px;font-size:30px}
+.dash-sub-table-wrap{border:1px solid #e5e7eb;border-radius:18px;overflow:auto}.dash-sub-table{width:100%;border-collapse:collapse;background:#fff}.dash-sub-table th{background:#f8fafc;color:#334155;font-size:13px;text-align:left;padding:16px 18px;border-bottom:1px solid #e5e7eb}.dash-sub-table td{padding:18px;border-bottom:1px solid #eef2f7;color:#334155;vertical-align:middle}.dash-sub-table tr:last-child td{border-bottom:0}.dash-sub-totals{display:flex;justify-content:flex-end;gap:30px;margin-top:16px;color:#334155}.dash-stops-timeline{border:1px solid #e5e7eb;border-radius:18px;overflow:hidden;background:#fff}.dash-stop-line{display:grid;grid-template-columns:54px 1fr 150px;gap:16px;align-items:center;padding:16px 18px;border-bottom:1px solid #eef2f7}.dash-stop-line:last-child{border-bottom:0}.dash-stop-number{width:34px;height:34px;border-radius:999px;background:#0b63f6;color:#fff;display:grid;place-items:center;font-weight:900}.dash-stop-line small{display:block;color:#64748b;margin-top:4px;line-height:1.35}.dash-stop-status{text-align:right}.dash-sub-bottom-grid{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:24px}.dash-note-grid{border:1px solid #e5e7eb;border-radius:18px;display:grid;grid-template-columns:150px 1fr 1fr;overflow:hidden;background:#fff}.dash-note-grid>div{padding:18px;border-right:1px solid #eef2f7}.dash-note-grid>div:last-child{border-right:0}.dash-note-grid span{display:block;color:#64748b;font-size:13px;font-weight:800;margin-bottom:8px}.dash-note-grid strong{color:#334155}.dash-admin-chat-card.embedded{height:100%;min-height:330px}
 @media(max-width:1100px){.dash-sub-layout{grid-template-columns:1fr}.dash-sub-sidebar{position:static}.dash-sub-bottom-grid{grid-template-columns:1fr}.dash-note-grid{grid-template-columns:1fr}.dash-note-grid>div{border-right:0;border-bottom:1px solid #eef2f7}.dash-note-grid>div:last-child{border-bottom:0}}
-@media(max-width:720px){.dash-subpage-title-row{flex-direction:column}.dash-sub-card{padding:18px}.dash-stop-line{grid-template-columns:40px 1fr}.dash-stop-status{grid-column:2;text-align:left}.dash-sub-totals{flex-direction:column;gap:8px}.dash-sub-table th,.dash-sub-table td{padding:12px}.dash-subpage-title-row h1{font-size:26px}}
+@media(max-width:720px){.dash-sub-card{padding:18px}.dash-stop-line{grid-template-columns:40px 1fr}.dash-stop-status{grid-column:2;text-align:left}.dash-sub-totals{flex-direction:column;gap:8px}.dash-sub-table th,.dash-sub-table td{padding:12px}}
 
 /* Pulizia dashboard/pianificazione: sezioni rimosse o non più usate */
 .dash-main-grid{display:none!important}
@@ -2248,27 +2235,6 @@ button:disabled{opacity:.65;cursor:not-allowed;}
 @media(max-width:760px){.signature-viewer-meta-grid{grid-template-columns:1fr;}}
 
 /* GiroFacile v45 - Schermata giro unificata */
-.gf-unified-route-view{margin-top:18px;}
-.gf-unified-route-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:16px;}
-.gf-unified-route-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;}
-.gf-route-meta-grid,.gf-route-kpi-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:14px 0 18px;}
-.gf-route-meta-grid>div,.gf-route-kpi-grid>div{background:#f8fafc;border:1px solid #e2e8f0;border-radius:16px;padding:14px;box-shadow:0 8px 24px rgba(15,23,42,.04);}
-.gf-route-meta-grid span,.gf-route-kpi-grid span{display:block;color:#64748b;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;}
-.gf-route-meta-grid strong,.gf-route-kpi-grid strong{font-size:17px;color:#0f172a;font-weight:900;}
-.gf-route-kpi-grid small{display:block;color:#64748b;margin-top:4px;font-size:12px;}
-.gf-unified-section-title{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin:18px 0 10px;}
-.gf-unified-section-title h3{margin:0;font-size:18px;font-weight:900;color:#0f172a;}
-.gf-unified-section-title p{margin:4px 0 0;color:#64748b;font-size:13px;}
-.gf-unified-stop-wrap{overflow:auto;border-radius:16px;border:1px solid #e2e8f0;background:#fff;}
-.gf-unified-stop-table{min-width:1020px;}
-.gf-unified-stop-table th{white-space:nowrap;}
-.gf-real-arrival{color:#0f766e;}
-.gf-delta-badge{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;padding:5px 9px;font-size:12px;font-weight:900;border:1px solid #e2e8f0;background:#f8fafc;color:#334155;white-space:nowrap;}
-.gf-delta-badge.early{background:#ecfdf5;color:#047857;border-color:#bbf7d0;}
-.gf-delta-badge.ok{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe;}
-.gf-delta-badge.late{background:#fff7ed;color:#c2410c;border-color:#fed7aa;}
-.note-mini-btn{background:#f8fafc!important;color:#334155!important;border:1px solid #cbd5e1!important;font-weight:800;}
-@media(max-width:900px){.gf-unified-route-head{display:block}.gf-unified-route-actions{justify-content:flex-start;margin-top:10px}.gf-route-meta-grid,.gf-route-kpi-grid{grid-template-columns:1fr}.gf-unified-stop-wrap{margin-left:-4px;margin-right:-4px}}
 
 /* ------------------------------------------------------------------
    v46 - Registrazione azienda professionale a step

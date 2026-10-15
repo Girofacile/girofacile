@@ -35,27 +35,18 @@ test('notification triggers stay open after their bubbling click, outside click 
 });
 
 test('live route detail renders stops, routing summary and chat without undeclared preview variables', () => {
-  const node = {innerHTML:''};
-  const chats = [];
-  const context = vm.createContext({
-    document:{getElementById: () => node},
-    esc: value => String(value ?? ''),
-    dashboardRoutePicker: () => '',
-    dashboardRouteSummaryCards: () => '<div>Metrics</div>',
-    dashboardStopRowsUnified: () => '<table>Stops</table>',
-    loadDashboardRouteChat: id => chats.push(id),
-    GiroFacileLiveMap:{mount(){}},
-    window:{GiroFacileRouting:{summaryHtml: route => `<div>Routing ${route.id}</div>`}},
-    route:{id:42,status:'in_corso',consegne:[{cliente_nome:'Demo',delivery_status:'in_attesa'}]},
-  });
+  // Il controllo dei giri in corso è sempre disegnato da in-progress-reference.js: la funzione delega.
+  const calls = [];
+  const context = vm.createContext({window:{GFInProgressReference:{render:(routes,route)=>calls.push([routes.length,route?.id])}}});
   vm.runInContext(core.slice(core.indexOf('function renderDashboardInProgressSubpage('), core.indexOf('function renderUnifiedRouteView(')), context);
-  vm.runInContext('renderDashboardInProgressSubpage([route], route)', context);
-  assert.match(node.innerHTML, /Routing 42/);
-  assert.match(node.innerHTML, /<table>Stops<\/table>/);
-  assert.match(node.innerHTML, /sendDashboardRouteChat\(42\)/);
-  assert.deepEqual(chats, [42]);
-  vm.runInContext('renderDashboardInProgressSubpage([], null)', context);
-  assert.match(node.innerHTML, /Nessun giro in corso/);
+  vm.runInContext('renderDashboardInProgressSubpage([{id:42}], {id:42}); renderDashboardInProgressSubpage([], null)', context);
+  assert.deepEqual(calls, [[1,42],[0,undefined]]);
+  const reference = fs.readFileSync('static/dashboard/js/in-progress-reference.js', 'utf8');
+  assert.match(reference, /Nessun giro in corso/);
+  assert.match(reference, /GFDriverBreaks\.table\(detail,0,8\)/);
+  assert.match(reference, /sendDashboardRouteChat\(Number\(state\.id\)\)/);
+  assert.match(reference, /loadDashboardRouteChat\(Number\(detail\.id\),false\)/);
+  assert.match(fs.readFileSync('static/dashboard/index.html','utf8'), /in-progress-reference\.js/);
 });
 
 

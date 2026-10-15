@@ -1,7 +1,4 @@
 #app #tab-dashboard-in-progress{--ip-bg:#edf0f6;--ip-ink:#16213a;--ip-muted:#5a6680;--ip-line:#dce1eb;--ip-blue:#1f5bff;--ip-blue-soft:#e4ecff;--ip-green:#127a52;--ip-green-soft:#ddf3e8;--ip-red:#c7283f;--ip-red-soft:#fbe3e7;--ip-amber:#b7791f;--ip-amber-soft:#fdf1d8;--ip-shadow:0 1px 2px rgba(15,34,80,.06),0 8px 24px -12px rgba(15,34,80,.18)}
-#app #tab-dashboard-in-progress .dash-subpage-title-row{display:none!important}
-#app #tab-dashboard-in-progress .dash-subpage-title-row h1{font-family:var(--gf-font-display);font-size:30px;letter-spacing:-.02em}
-#app #tab-dashboard-in-progress .dash-subpage-title-row p{font-size:13px;color:var(--ip-muted)}
 #app #tab-dashboard-in-progress #dashboardInProgressPage{display:flex;flex-direction:column;gap:20px;min-width:0}
 #app #tab-dashboard-in-progress #dashboardInProgressPage *{box-sizing:border-box}
 #app #tab-dashboard-in-progress .gf-ip-panel{min-width:0;border:1px solid var(--ip-line);border-radius:16px;background:#fff;box-shadow:var(--ip-shadow);overflow:hidden;color:var(--ip-ink);font-family:var(--gf-font-family)}

@@ -26,20 +26,20 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(h1,h2,h3,h4)
   letter-spacing:-.01em;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .page-title-row,.dash-subpage-title-row,.orders-page-title,.orders-connections-mobile-head
+  .page-title-row,.orders-page-title,.orders-connections-mobile-head
 ){
   min-width:0;
   gap:16px 24px;
   margin-bottom:22px;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .page-title-row,.dash-subpage-title-row) h1{
+  .page-title-row) h1{
   margin:0 0 5px!important;
   font:700 28px/1.12 var(--gf-font-display)!important;
   letter-spacing:-.02em!important;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .page-title-row,.dash-subpage-title-row) p{
+  .page-title-row) p{
   margin:3px 0 0!important;
   font:400 14px/1.5 var(--gf-font-family)!important;
   color:var(--gf-color-muted)!important;
@@ -75,9 +75,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .panel,.card,.gf-card,.gf-directory-panel,.customer-list-panel-v8,.orders-list-panel,.orders-filter-panel,.orders-source-panel,
   .orders-source-card,.orders-order-card,
-  .customer-card,.dash-sub-card,.dash-sub-route-picker,
-  .scheduled-overview,.scheduled-stops,.scheduled-summary,.completed-picker,
-  .completed-stops,.completed-summary,.live-design-card,.live-design-picker,
+  .customer-card,.dash-sub-card,.dash-sub-route-picker,.live-design-card,.live-design-picker,
   .route-map-panel-v74,.planning-setup-panel){
   border:1px solid var(--gf-color-border)!important;
   border-radius:16px!important;
@@ -107,8 +105,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(.gf-director
 
 /* 3. KPI: stesso ordine tipografico dello strip della dashboard. */
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .stat-card,.customer-metric,.gf-directory-metric,.orders-metric-card,.gf-stat,.scheduled-metric,.completed-card
-){
+  .stat-card,.customer-metric,.gf-directory-metric,.orders-metric-card,.gf-stat){
   min-width:0;
   padding:18px 20px!important;
   border:1px solid var(--gf-color-border)!important;
@@ -117,22 +114,19 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   box-shadow:var(--gf-shadow-sm)!important;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .stat-card,.customer-metric,.gf-directory-metric,.orders-metric-card,.gf-stat,.scheduled-metric
-) :is(strong,.stat-value,.customer-metric-value,.orders-metric-value){
+  .stat-card,.customer-metric,.gf-directory-metric,.orders-metric-card,.gf-stat) :is(strong,.stat-value,.customer-metric-value,.orders-metric-value){
   color:var(--gf-color-primary)!important;
   font:700 30px/1.1 var(--gf-font-display)!important;
   letter-spacing:-.02em!important;
   font-variant-numeric:tabular-nums;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .stat-card,.customer-metric,.gf-directory-metric,.orders-metric-card,.gf-stat,.scheduled-metric
-) :is(small,.stat-label,.orders-metric-label,.customer-metric-label){
+  .stat-card,.customer-metric,.gf-directory-metric,.orders-metric-card,.gf-stat) :is(small,.stat-label,.orders-metric-label,.customer-metric-label){
   font:400 13px/1.4 var(--gf-font-family)!important;
   color:var(--gf-color-muted)!important;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .orders-metrics,.gf-directory-metrics,.customer-metrics,.stats-grid,.scheduled-metrics
-){
+  .orders-metrics,.gf-directory-metrics,.customer-metrics,.stats-grid){
   gap:16px!important;
   margin-bottom:22px;
 }
@@ -374,7 +368,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
 
 /* 8. Etichette, icone di stato e segnali: stessa palette senza riscrivere il significato. */
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .gf-badge,.orders-status,.customer-status,.scheduled-status,.route-status-pill,
+  .gf-badge,.orders-status,.customer-status,.route-status-pill,
   .company-configured-badge-v40
 ){
   font:600 12px/1.3 var(--gf-font-family)!important;
@@ -435,8 +429,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
 }
 @media(max-width:820px){
   body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-    .page-title-row,.dash-subpage-title-row
-  ) h1{font-size:24px!important}
+    .page-title-row) h1{font-size:24px!important}
   body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
     .panel-header,.customer-list-head,.gf-directory-head,
     .orders-list-head){padding:14px 16px}

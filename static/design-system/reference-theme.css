@@ -104,7 +104,7 @@ body[data-gf-surface="workspace"] #app .profile-button{
 body[data-gf-surface="workspace"] #app :is(.panel,.card,.gf-card){
   box-shadow:var(--gf-shadow-sm);
 }
-body[data-gf-surface="workspace"] #app :is(.page-title-row h1,.dash-subpage-title-row h1,.panel-header h2,.customer-list-head h2){
+body[data-gf-surface="workspace"] #app :is(.page-title-row h1,.panel-header h2,.customer-list-head h2){
   font-family:var(--gf-font-display);
 }
 body[data-gf-surface="workspace"] #app :is(.gf-modal,.gf-dialog,.modal-content,.modal-panel){
