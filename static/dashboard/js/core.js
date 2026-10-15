@@ -2130,12 +2130,12 @@ async function loadDashboardRouteChat(routeId, markRead=true){
     box.innerHTML = msgs.length ? msgs.map(m=>{
       const mine = m.sender_type === 'admin';
       const when = m.created_at ? new Date(m.created_at).toLocaleString('it-IT', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}) : '';
-      return `<div class="dash-chat-msg ${mine?'admin':'driver'}"><div class="dash-chat-bubble"><strong>${esc(m.sender_name|| (mine?'Admin':'Autista'))}</strong><p>${esc(m.message||'')}</p><small>${esc(when)}</small></div></div>`;
-    }).join("") : `<div class="dash-empty">Nessun messaggio per questo giro.</div>`;
+      return `<div class="gf-message"${mine?' data-from="me"':''}><span class="gf-message__bubble">${esc(m.message||'')}</span><small>${esc(m.sender_name|| (mine?'Admin':'Autista'))} · ${esc(when)}</small></div>`;
+    }).join("") : `<div class="gf-empty"><p>Nessun messaggio per questo giro.</p></div>`;
     box.scrollTop = box.scrollHeight;
     if(markRead) await loadDashboardHome();
   }catch(e){
-    box.innerHTML = `<div class="dash-empty">Errore chat: ${esc(e.message)}</div>`;
+    box.innerHTML = `<div class="gf-alert" data-status="danger">Errore chat: ${esc(e.message)}</div>`;
   }
 }
 async function sendDashboardRouteChat(routeId){

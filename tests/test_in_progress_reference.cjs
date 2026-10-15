@@ -23,9 +23,9 @@ function harness(){
   const page={
     innerHTML:'',children:[],
     querySelector(selector){
-      if(selector==='.gf-ip-picker')return picker;
-      if(selector==='.gf-ip-count')return count;
-      if(selector==='.gf-ip-outcome')return {value:'all'};
+      if(selector==='[data-ip-picker]')return picker;
+      if(selector==='[data-ip-count]')return count;
+      if(selector==='[data-ip-outcome-filter]')return {value:'all'};
       if(selector==='.gf-ip-map-badge')return {className:'',innerHTML:''};
       if(selector==='.gf-ip-map-gps')return {textContent:''};
       if(selector==='[data-ip-action="follow"]')return {disabled:true,setAttribute(){}};

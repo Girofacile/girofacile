@@ -26,23 +26,22 @@ window.GFInProgressReference=(()=>{
   }
   function suspend(){if(state.timer)clearInterval(state.timer);state.timer=null;stopMap();}
   function bar(route){
-    const s=stat(route);
-    return '<span class="gf-ip-bar" role="img" aria-label="'+s.done+' completate, '+s.miss+' mancate, '+s.todo+' da fare">'+
-      (s.done?'<i class="done" style="flex:'+s.done+'"></i>':'')+
-      (s.miss?'<i class="miss" style="flex:'+s.miss+'"></i>':'')+
-      (s.todo?'<i class="todo" style="flex:'+s.todo+'"></i>':'')+'</span>';
+    const s=stat(route),w=v=>s.total?Math.max(0,Math.min(100,Math.round(20*v/s.total)*5)):0;
+    return '<span class="gf-progress__track" role="img" aria-label="'+s.done+' completate, '+s.miss+' mancate, '+s.todo+' da fare">'+
+      '<span class="gf-progress__done" data-gf-width="'+w(s.done)+'"></span><span class="gf-progress__miss" data-gf-width="'+w(s.miss)+'"></span></span>';
   }
-  const chip=(label,type='blue')=>'<span class="gf-ip-chip '+type+'">'+esc(label)+'</span>';
+  const chip=(label,type='info')=>'<span class="gf-badge" data-status="'+type+'">'+esc(label)+'</span>';
+  const gpsTone=p=>p?.state==='fresh'?'success':p?.state==='stale'?'warning':'neutral';
   const issue=r=>stat(r).miss>0 || n(r.delay_minutes)>0 || r.late===true;
   function routeCard(r){
     const s=stat(r),p=state.gps.get(Number(r.id)),chosen=Number(state.id)===Number(r.id);
-    return '<button type="button" class="gf-ip-route-card" role="radio" data-ip-route="'+Number(r.id)+'" aria-checked="'+chosen+'" tabindex="'+(chosen?0:-1)+'">'+
-      '<span class="gf-ip-route-top"><span class="gf-ip-avatar">'+esc(initials(r.driver_name))+'</span><span class="gf-ip-route-person"><b>'+esc(r.driver_name||'Autista non assegnato')+
-      '</b><small>'+esc(r.vehicle_name||'Mezzo non assegnato')+'</small></span>'+chip(issue(r)?'Da verificare':'In corso',issue(r)?'amber':'blue')+'</span>'+bar(r)+
-      '<span class="gf-ip-route-meta"><span><b>'+s.done+'/'+s.total+'</b> consegne</span>'+
-      (s.miss?'<span class="gf-ip-danger"><b>'+s.miss+'</b> mancate</span>':'')+
+    return '<button type="button" class="gf-list-item" role="radio" data-ip-route="'+Number(r.id)+'" aria-checked="'+chosen+'" aria-current="'+chosen+'" tabindex="'+(chosen?0:-1)+'">'+
+      '<span class="gf-avatar" aria-hidden="true">'+esc(initials(r.driver_name))+'</span><span class="gf-list-item__main gf-stack" data-gap="sm">'+
+      '<span class="gf-cluster" data-justify="between"><span><b>'+esc(r.driver_name||'Autista non assegnato')+'</b><br><small class="gf-muted">'+esc(r.vehicle_name||'Mezzo non assegnato')+'</small></span>'+chip(issue(r)?'Da verificare':'In corso',issue(r)?'warning':'info')+'</span>'+bar(r)+
+      '<span class="gf-cluster"><span><b>'+s.done+'/'+s.total+'</b> consegne</span>'+
+      (s.miss?'<span class="gf-badge" data-status="danger">'+s.miss+' mancate</span>':'')+
       '<span>Rientro <b>'+esc(r.rientro_stimato_aggiornato||r.orario_rientro_stimato||'—')+'</b></span>'+
-      '<span class="gf-ip-gps '+gpsClass(p)+'"><i></i>'+esc(gpsText(p))+'</span></span></button>';
+      '<span class="gf-badge" data-dot data-status="'+gpsTone(p)+'">'+esc(gpsText(p))+'</span></span></span></button>';
   }
   function filtered(){
     return state.routes.filter(r=>state.filter==='issue'?issue(r):
@@ -50,38 +49,39 @@ window.GFInProgressReference=(()=>{
   }
   function paintCards(){
     const page=root();if(!page)return;
-    const box=page.querySelector('.gf-ip-picker');if(!box)return;
+    const box=page.querySelector('[data-ip-picker]');if(!box)return;
     const visible=filtered();
-    box.innerHTML=visible.length?visible.map(routeCard).join(''):'<p class="gf-ip-empty-filter">Nessun giro corrisponde al filtro selezionato.</p>';
+    box.innerHTML=visible.length?visible.map(routeCard).join(''):'<div class="gf-empty"><p>Nessun giro corrisponde al filtro selezionato.</p></div>';
     const issueCount=state.routes.filter(issue).length;
     const gpsCount=state.routes.filter(r=>state.gps.has(Number(r.id))&&state.gps.get(Number(r.id)).state!=='fresh').length;
     [['all','Tutti ('+state.routes.length+')'],['issue','Con mancate o ritardi ('+issueCount+')'],['gps','GPS non aggiornato ('+gpsCount+')']].forEach(([key,label])=>{
       const b=page.querySelector('[data-ip-filter="'+key+'"]');
       if(b){b.textContent=label;b.setAttribute('aria-pressed',String(state.filter===key));}
     });
-    const count=page.querySelector('.gf-ip-count');
+    const count=page.querySelector('[data-ip-count]');
     if(count)count.textContent=state.routes.length+' '+(state.routes.length===1?'giro attivo':'giri attivi');
   }
   function stopRow(d,i,r,planned){
     const type=outcome(d),notes=d.note_operatore||d.note_autista||d.note||'';
     const title=type==='done'?'Completata':type==='miss'?'Mancata':'Da fare';
+    const tone=type==='done'?'success':type==='miss'?'danger':'neutral';
     const time=gfRealArrival(d);
     return '<tr data-ip-stop="'+i+'" data-ip-outcome="'+type+'">'+
-      '<td><span class="gf-ip-index '+type+'">'+(i+1)+'</span></td>'+
-      '<td><strong>'+esc(d.cliente_nome||'—')+'</strong></td><td>'+esc(d.indirizzo||'—')+'</td>'+
-      '<td>'+esc(gfPlannedArrival(d)||'—')+'</td><td>'+esc(time||'—')+'</td>'+
-      '<td>'+gfDeltaBadge(planned[i],gfRealArrivalDate(d))+'</td>'+
-      '<td>'+chip(title,type==='done'?'green':type==='miss'?'red':'neutral')+
-      (d.motivo_mancata?'<small class="gf-ip-reason">'+esc(d.motivo_mancata)+'</small>':'')+'</td>'+
-      '<td><div class="gf-ip-table-actions">'+deliverySignatureAction(d,r.driver_name)+' '+trackingButton(d,r)+
-      (notes?'<button type="button" class="gf-ip-mini" data-ip-note="'+esc(notes)+'">Note</button>':'')+
+      '<td data-label="#"><span class="gf-badge" data-status="'+tone+'">'+(i+1)+'</span></td>'+
+      '<td data-label="Cliente"><strong>'+esc(d.cliente_nome||'—')+'</strong></td><td data-label="Indirizzo">'+esc(d.indirizzo||'—')+'</td>'+
+      '<td data-label="Arrivo previsto">'+esc(gfPlannedArrival(d)||'—')+'</td><td data-label="Arrivo reale">'+esc(time||'—')+'</td>'+
+      '<td data-label="Differenza">'+gfDeltaBadge(planned[i],gfRealArrivalDate(d))+'</td>'+
+      '<td data-label="Stato">'+chip(title,tone)+
+      (d.motivo_mancata?'<br><small class="gf-muted">'+esc(d.motivo_mancata)+'</small>':'')+'</td>'+
+      '<td data-label="Documenti e tracking"><div class="gf-cluster">'+deliverySignatureAction(d,r.driver_name)+' '+trackingButton(d,r)+
+      (notes?'<button type="button" class="gf-button" data-variant="ghost" data-size="sm" data-ip-note="'+esc(notes)+'">Note</button>':'')+
       '</div></td></tr>';
   }
   function paintOutcome(){
     root()?.querySelectorAll('tr[data-ip-outcome]').forEach(tr=>tr.hidden=state.outcome!=='all'&&tr.dataset.ipOutcome!==state.outcome);
   }
   function highlight(index,on){
-    root()?.querySelectorAll('[data-ip-stop="'+index+'"],[data-ip-pin="'+index+'"]').forEach(el=>el.classList.toggle('hl',on));
+    root()?.querySelectorAll('[data-ip-stop="'+index+'"],[data-ip-pin="'+index+'"]').forEach(el=>el.classList.toggle(el.matches('tr')?'is-highlighted':'hl',on));
   }
   function focusStop(index){
     const marker=state.markers.get(Number(index));
@@ -215,27 +215,28 @@ window.GFInProgressReference=(()=>{
     state.detail=detail;state.id=detail?.id||null;
     state.gps.clear();
     if(!detail||!state.routes.length){
-      page.innerHTML='<section class="gf-ip-panel gf-ip-empty"><h2>Nessun giro in corso</h2><p>Qui compariranno i giri quando gli autisti li avviano.</p><button type="button" data-ip-action="plan">Pianifica un giro</button></section>';
+      page.innerHTML='<section class="gf-panel"><div class="gf-empty"><h2>Nessun giro in corso</h2><p>Qui compariranno i giri quando gli autisti li avviano.</p><button type="button" class="gf-button" data-variant="primary" data-ip-action="plan">Pianifica un giro</button></div></section>';
       suspend();return;
     }
     const rows=detail.consegne||[],s=stat(detail),progress=s.total?Math.round(100*(s.done+s.miss)/s.total):0;
     const plan=gfPlannedArrivalDates(detail,rows),fuelLabel=gfRouteEnergyMetric(detail).electric?'Costo energia':'Carburante';
     const eta=detail.rientro_stimato_aggiornato||detail.orario_rientro_stimato||'—';
-    const kpi=(label,value,sub)=>'<div class="gf-ip-kpi"><dt>'+esc(label)+'</dt><dd>'+esc(value)+'</dd><small>'+esc(sub||'')+'</small></div>';
+    const kpi=(label,value,sub)=>'<div class="gf-details__item"><dt>'+esc(label)+'</dt><dd><strong>'+esc(value)+'</strong><br><small class="gf-muted">'+esc(sub||'')+'</small></dd></div>';
+    const svgIcon=name=>icon(name).replace('<svg ','<svg class="gf-icon" ');
     page.innerHTML=`
-      <section class="gf-ip-panel gf-ip-picker-panel" aria-label="Giri attivi">
-        <div class="gf-ip-panel-heading"><h2>Giri attivi</h2><span class="gf-ip-count"></span><span class="gf-ip-auto"><i></i>Aggiornamento automatico</span>
-          <div class="gf-ip-filters" role="group" aria-label="Filtra i giri">
-            <button type="button" data-ip-filter="all">Tutti</button>
-            <button type="button" data-ip-filter="issue">Con mancate o ritardi</button>
-            <button type="button" data-ip-filter="gps">GPS non aggiornato</button>
+      <section class="gf-panel" aria-label="Giri attivi">
+        <header class="gf-panel__header"><h2 class="gf-panel__title">Giri attivi</h2><span class="gf-badge" data-status="neutral" data-ip-count></span><span class="gf-muted">Aggiornamento automatico</span>
+          <div class="gf-cluster" role="group" aria-label="Filtra i giri">
+            <button type="button" class="gf-chip" data-ip-filter="all">Tutti</button>
+            <button type="button" class="gf-chip" data-ip-filter="issue">Con mancate o ritardi</button>
+            <button type="button" class="gf-chip" data-ip-filter="gps">GPS non aggiornato</button>
           </div>
-        </div>
-        <div class="gf-ip-picker" role="radiogroup" aria-label="Seleziona un giro"></div>
+        </header>
+        <div class="gf-grid" data-cols="3" data-ip-picker role="radiogroup" aria-label="Seleziona un giro"></div>
       </section>
-      <section class="gf-ip-panel gf-ip-hero" aria-label="Dettaglio del giro selezionato">
-        <div class="gf-ip-hero-map">
-          <div class="gf-ip-hero-heading"><div><h2>${esc(detail.nome||'Giro consegne')}</h2><p>Percorso stradale pianificato e posizione GPS dell’autista</p></div>${chip('In corso')}</div>
+      <section class="gf-route-panel" aria-label="Dettaglio del giro selezionato">
+        <div class="gf-route-panel__map">
+          <div class="gf-route-panel__heading"><div><h2 class="gf-title">${esc(detail.nome||'Giro consegne')}</h2><p class="gf-muted">Percorso stradale pianificato e posizione GPS dell’autista</p></div>${chip('In corso')}</div>
           <div class="gf-ip-map-wrap">
             <div class="gf-ip-map-canvas" aria-label="Mappa del giro selezionato"></div>
             <div class="gf-ip-map-badge unknown"></div>
@@ -247,39 +248,43 @@ window.GFInProgressReference=(()=>{
             <div class="gf-ip-map-stats"><span>${s.total} fermate</span><span>${esc(km(detail.totale_km))}</span><span class="gf-ip-map-gps">GPS in attesa</span></div>
             <div class="gf-ip-map-warning" role="status"></div>
           </div>
-          <div class="gf-ip-legend"><span><i class="van"></i>Mezzo GPS</span><span><i class="done"></i>Completata</span><span><i></i>Da fare</span><span><i class="miss"></i>Mancata</span></div>
+          <div class="gf-legend"><span>${svgIcon('target')}Mezzo GPS</span><span><i data-state="done"></i>Completata</span><span><i></i>Da fare</span><span><i data-state="miss"></i>Mancata</span></div>
         </div>
-        <div class="gf-ip-hero-side">
-          <h2 class="gf-ip-side-title">Indicatori del giro</h2>
-          <dl class="gf-ip-kpis">
-            ${kpi('Avanzamento',progress+'%',s.done+s.miss+' su '+s.total+' fermate gestite')}
-            ${kpi('Consegne',s.done+'/'+s.total,s.miss+' mancate · '+s.todo+' da fare')}
-            ${kpi('Rientro stimato',eta,detail.eta_label||'Orario previsto')}
-            ${kpi('Percorso',km(detail.totale_km),detail.totale_minuti!=null?Math.round(detail.totale_minuti)+' min previsti':'Durata non disponibile')}
-            ${kpi(fuelLabel,money(detail.costo_carburante),'Costo stimato')}
-            ${kpi('Pedaggi',money(detail.toll_estimated_eur),detail.toll_status==='estimated'?'Stima disponibile':'Stima non disponibile')}
-          </dl>
-          <div class="gf-ip-hero-actions">
-            <button type="button" data-ip-action="refresh">${icon('refresh')} Aggiorna dati</button>
-            ${detail.google_maps_url?'<a href="'+esc(detail.google_maps_url)+'" target="_blank" rel="noopener noreferrer">'+icon('map')+' Apri navigazione</a>':''}
+        <div class="gf-route-panel__detail">
+          <div class="gf-panel__body gf-stack">
+            <h2 class="gf-subtitle">Indicatori del giro</h2>
+            <dl class="gf-details">
+              ${kpi('Avanzamento',progress+'%',s.done+s.miss+' su '+s.total+' fermate gestite')}
+              ${kpi('Consegne',s.done+'/'+s.total,s.miss+' mancate · '+s.todo+' da fare')}
+              ${kpi('Rientro stimato',eta,detail.eta_label||'Orario previsto')}
+              ${kpi('Percorso',km(detail.totale_km),detail.totale_minuti!=null?Math.round(detail.totale_minuti)+' min previsti':'Durata non disponibile')}
+              ${kpi(fuelLabel,money(detail.costo_carburante),'Costo stimato')}
+              ${kpi('Pedaggi',money(detail.toll_estimated_eur),detail.toll_status==='estimated'?'Stima disponibile':'Stima non disponibile')}
+            </dl>
+          </div>
+          <div class="gf-route-panel__footer gf-cluster">
+            <button type="button" class="gf-button" data-variant="secondary" data-ip-action="refresh">${svgIcon('refresh')} Aggiorna dati</button>
+            ${detail.google_maps_url?'<a class="gf-button" data-variant="primary" href="'+esc(detail.google_maps_url)+'" target="_blank" rel="noopener noreferrer">'+svgIcon('map')+' Apri navigazione</a>':''}
           </div>
         </div>
       </section>
-      <section class="gf-ip-panel gf-ip-stops" aria-label="Fermate del giro">
-        <div class="gf-ip-panel-heading gf-ip-stops-heading"><div><h2>Fermate del giro</h2><p>Confronto tra arrivo previsto e arrivo reale registrato dall’autista</p></div>
-          <select class="gf-ip-outcome" aria-label="Filtra fermate per esito"><option value="all">Tutti gli esiti</option><option value="done">Completate</option><option value="miss">Mancate</option><option value="todo">Da fare</option></select></div>
-        <div class="gf-ip-table-wrap"><table class="gf-ip-table">
-          <thead><tr><th>#</th><th>Cliente</th><th>Indirizzo</th><th>Arrivo previsto</th><th>Arrivo reale</th><th>Differenza</th><th>Stato</th><th>Documenti e tracking</th></tr></thead>
-          <tbody>${GFDriverBreaks.table(detail,0,8)}${rows.map((d,i)=>stopRow(d,i,detail,plan)+GFDriverBreaks.table(detail,i+1,8)).join('')||'<tr><td colspan="8" class="gf-ip-empty-rows">Nessuna fermata registrata.</td></tr>'}</tbody>
+      <section class="gf-panel" aria-label="Fermate del giro">
+        <header class="gf-panel__header"><div><h2 class="gf-panel__title">Fermate del giro</h2><p class="gf-muted">Confronto tra arrivo previsto e arrivo reale registrato dall’autista</p></div>
+          <select class="gf-select" data-ip-outcome-filter aria-label="Filtra fermate per esito"><option value="all">Tutti gli esiti</option><option value="done">Completate</option><option value="miss">Mancate</option><option value="todo">Da fare</option></select></header>
+        <div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards">
+          <thead><tr><th scope="col">#</th><th scope="col">Cliente</th><th scope="col">Indirizzo</th><th scope="col">Arrivo previsto</th><th scope="col">Arrivo reale</th><th scope="col">Differenza</th><th scope="col">Stato</th><th scope="col">Documenti e tracking</th></tr></thead>
+          <tbody>${GFDriverBreaks.table(detail,0,8)}${rows.map((d,i)=>stopRow(d,i,detail,plan)+GFDriverBreaks.table(detail,i+1,8)).join('')||'<tr><td colspan="8"><div class="gf-empty"><p>Nessuna fermata registrata.</p></div></td></tr>'}</tbody>
         </table></div>
-        <div class="gf-ip-footer"><button type="button" data-ip-action="chat" aria-expanded="${state.chat}">${icon('chat')} ${state.chat?'Chiudi':'Apri'} chat autista</button></div>
+        <footer class="gf-panel__footer"><button type="button" class="gf-button" data-variant="secondary" data-ip-action="chat" aria-expanded="${state.chat}">${svgIcon('chat')} ${state.chat?'Chiudi':'Apri'} chat autista</button></footer>
       </section>
-      <section class="gf-ip-panel gf-ip-chat" ${state.chat?'':'hidden'} aria-label="Chat autista">
-        <div class="gf-ip-panel-heading"><h2>Chat autista</h2><small id="dashChatStatus">Messaggi collegati a questo giro</small></div>
-        <div id="dashAdminChatMessages" class="dash-admin-chat-messages"><div class="dash-empty">Caricamento chat…</div></div>
-        <div class="dash-admin-chat-input"><textarea id="dashAdminChatInput" rows="2" placeholder="Scrivi all’autista…"></textarea><button type="button" data-ip-action="send">Invia</button></div>
+      <section class="gf-panel" data-ip-chat ${state.chat?'':'hidden'} aria-label="Chat autista">
+        <header class="gf-panel__header"><h2 class="gf-panel__title">Chat autista</h2><small class="gf-muted" id="dashChatStatus">Messaggi collegati a questo giro</small></header>
+        <div class="gf-chat">
+          <div id="dashAdminChatMessages" class="gf-chat__messages" aria-live="polite"><div class="gf-loading" role="status">Caricamento chat…</div></div>
+          <div class="gf-chat__composer"><textarea class="gf-textarea" id="dashAdminChatInput" rows="2" placeholder="Scrivi all’autista…" aria-label="Messaggio all'autista"></textarea><button type="button" class="gf-button" data-variant="primary" data-ip-action="send">Invia</button></div>
+        </div>
       </section>`;
-    page.querySelector('.gf-ip-outcome').value=state.outcome;
+    page.querySelector('[data-ip-outcome-filter]').value=state.outcome;
     paintCards();paintOutcome();drawGPS();drawMap(Number(detail.id));updateGPS();
     if(state.chat)loadDashboardRouteChat(Number(detail.id),false);
     if(!state.timer)state.timer=setInterval(refresh,30000);
@@ -304,16 +309,16 @@ window.GFInProgressReference=(()=>{
       case 'follow':state.follow=!state.follow;drawGPS();break;
       case 'refresh':refresh();break;
       case 'chat':
-        state.chat=!state.chat;page.querySelector('.gf-ip-chat').hidden=!state.chat;
+        state.chat=!state.chat;page.querySelector('[data-ip-chat]').hidden=!state.chat;
         action.setAttribute('aria-expanded',String(state.chat));
-        action.innerHTML=icon('chat')+(state.chat?' Chiudi chat autista':' Apri chat autista');
+        action.innerHTML=icon('chat').replace('<svg ','<svg class="gf-icon" ')+(state.chat?' Chiudi chat autista':' Apri chat autista');
         if(state.chat)loadDashboardRouteChat(Number(state.id),true);
         break;
       case 'send':sendDashboardRouteChat(Number(state.id));break;
     }
   });
   document.addEventListener('change',event=>{
-    if(event.target.matches('#tab-dashboard-in-progress .gf-ip-outcome')){state.outcome=event.target.value;paintOutcome();}
+    if(event.target.matches('#tab-dashboard-in-progress [data-ip-outcome-filter]')){state.outcome=event.target.value;paintOutcome();}
   });
   document.addEventListener('keydown',event=>{
     if(!event.target.matches('#tab-dashboard-in-progress [data-ip-route]'))return;
