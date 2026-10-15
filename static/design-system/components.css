@@ -259,7 +259,7 @@ body[data-gf-surface] .gf-panel__header{
 }
 body[data-gf-surface] .gf-panel__title{margin:0;font:var(--gf-weight-bold) var(--gf-font-lg)/1.2 var(--gf-font-display);letter-spacing:-.005em}
 body[data-gf-surface] .gf-panel__meta{margin-left:auto;color:var(--gf-color-muted);font-size:var(--gf-font-xs);font-weight:var(--gf-weight-semibold)}
-body[data-gf-surface] .gf-panel__header>:is(.gf-button,.gf-cluster){margin-left:auto}
+body[data-gf-surface] .gf-panel__header>:is(.gf-button,.gf-cluster,.gf-badge){margin-left:auto}
 body[data-gf-surface] .gf-panel__body{padding:var(--gf-space-5)}
 body[data-gf-surface] .gf-panel__footer{
   display:flex;justify-content:flex-end;gap:var(--gf-space-3);margin-top:auto;

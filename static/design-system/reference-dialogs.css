@@ -3,10 +3,23 @@
    NON cambia apertura/chiusura, validazione, dimensioni canvas/mappa e API. */
 
 /* 1. Superfici delle finestre, senza scambiare gli overlay per le card. */
-
+body[data-gf-surface="workspace"] :is(
+  #agentOverlay,#depositOverlay,#driverFormOverlay,#customerOverlay,
+  #customerImportOverlay,#deliveryDetailsOverlay,.modal-overlay.gf-dialog
+){
+  background:rgba(15,34,80,.46)!important;
+  backdrop-filter:blur(2px);
+  padding:16px;
+}
+body[data-gf-surface="workspace"] :is(
+  #agentOverlay,#depositOverlay,#driverFormOverlay,#customerOverlay,
+  #customerImportOverlay,#deliveryDetailsOverlay) :is(.modal,.modal-card),
 body[data-gf-surface="workspace"] :is(
   #orderModal.order-modal,#customerDetailsDialog.customer-details-dialog,
   #collaboratorDialog.collaborators-dialog,#occasionalStopDialog.occasional-dialog
+),
+body[data-gf-surface="workspace"] :is(
+  .signature-viewer-overlay .signature-viewer-modal
 ){
   max-width:calc(100vw - 32px);
   max-height:calc(100dvh - 32px);
@@ -22,16 +35,241 @@ body[data-gf-surface="workspace"] :is(
   background:rgba(15,34,80,.46)!important;
   backdrop-filter:blur(2px);
 }
+body[data-gf-surface="workspace"] :is(
+  #customerOverlay,#depositOverlay,#driverFormOverlay,#deliveryDetailsOverlay,
+  #agentOverlay,#customerImportOverlay) :is(.modal){
+  overflow-y:auto;
+  overscroll-behavior:contain;
+}
 
 /* 2. Intestazioni, titoli e separatori identici allo stile delle card dashboard. */
+body[data-gf-surface="workspace"] :is(
+  #agentOverlay,#depositOverlay,#driverFormOverlay,#customerOverlay,
+  #customerImportOverlay,#deliveryDetailsOverlay,#orderModal,#collaboratorDialog,#customerDetailsDialog) :is(
+  .modal-header,.modal-head,.order-modal-header,.delivery-modal-header-v5
+){
+  border-bottom:1px solid var(--gf-color-border)!important;
+  background:var(--gf-color-surface)!important;
+  box-shadow:none!important;
+}
+body[data-gf-surface="workspace"] :is(
+  #agentOverlay,#depositOverlay,#driverFormOverlay,#customerOverlay,
+  #customerImportOverlay,#deliveryDetailsOverlay,#orderModal,#collaboratorDialog,#customerDetailsDialog) :is(
+  .modal-header,.modal-head,.order-modal-header,.delivery-modal-header-v5
+) :is(h1,h2,h3,strong){
+  color:var(--gf-color-text)!important;
+  font:700 22px/1.2 var(--gf-font-display)!important;
+  letter-spacing:-.015em!important;
+}
+body[data-gf-surface="workspace"] :is(
+  #agentOverlay,#depositOverlay,#driverFormOverlay,#customerOverlay,
+  #customerImportOverlay,#deliveryDetailsOverlay,#orderModal,#collaboratorDialog,#customerDetailsDialog) :is(
+  .modal-header,.modal-head,.order-modal-header,.delivery-modal-header-v5
+) :is(p,small){
+  color:var(--gf-color-muted)!important;
+  font:400 13px/1.5 var(--gf-font-family)!important;
+}
+body[data-gf-surface="workspace"] :is(
+  #agentOverlay,#depositOverlay,#driverFormOverlay,#customerOverlay,
+  #customerImportOverlay,#deliveryDetailsOverlay,#orderModal
+) :is(.modal-kicker,.modal-eyebrow,.order-modal-eyebrow){
+  color:var(--gf-color-muted)!important;
+  font:600 11px/1.4 var(--gf-font-family)!important;
+  text-transform:none!important;
+  letter-spacing:0!important;
+}
 
 /* 3. Chiusura modali compatta: mantiene i pulsanti esistenti e i loro onclick. */
+body[data-gf-surface="workspace"] :is(
+  #agentOverlay,#depositOverlay,#driverFormOverlay,#customerOverlay,
+  #customerImportOverlay,#deliveryDetailsOverlay,
+  #orderModal,#collaboratorDialog,#customerDetailsDialog) :is(
+  .modal-close,.order-modal-close,.customer-dialog-close,
+  .dialog-close,.close-modal,.support-close-v60
+){
+  width:36px!important;
+  min-width:36px!important;
+  height:36px!important;
+  min-height:36px!important;
+  padding:0!important;
+  flex:0 0 36px;
+  display:grid;
+  place-items:center;
+  border:1px solid var(--gf-color-border)!important;
+  border-radius:10px!important;
+  background:var(--gf-color-surface)!important;
+  color:var(--gf-color-muted)!important;
+  box-shadow:none!important;
+}
+body[data-gf-surface="workspace"] :is(
+  #agentOverlay,#depositOverlay,#driverFormOverlay,#customerOverlay,
+  #customerImportOverlay,#deliveryDetailsOverlay,#orderModal,#collaboratorDialog,#customerDetailsDialog
+) :is(.modal-close,.order-modal-close,.customer-dialog-close,.dialog-close):hover{
+  color:var(--gf-color-text)!important;
+  background:var(--gf-color-surface-subtle)!important;
+}
 
 /* 4. Sezioni interne: card bianche 12px radius, titoli 16 e iconografia coerente. */
+body[data-gf-surface="workspace"] :is(
+  #customerOverlay,#customerImportOverlay,#depositOverlay,#driverFormOverlay,
+  #deliveryDetailsOverlay,#agentOverlay,#orderModal,#collaboratorDialog
+) :is(
+  .delivery-modal-section,.driver-modal-section,.deposit-modal-section,
+  .order-modal-card,.collaborator-permissions,
+  .agent-form-section,.onboarding-card-v29
+){
+  border-color:var(--gf-color-border)!important;
+  border-radius:12px!important;
+  background:var(--gf-color-surface)!important;
+  box-shadow:none!important;
+}
+body[data-gf-surface="workspace"] :is(
+  #customerOverlay,#customerImportOverlay,#depositOverlay,#driverFormOverlay,
+  #deliveryDetailsOverlay,#agentOverlay,#orderModal,#collaboratorDialog
+) :is(
+  .delivery-modal-section-title,.driver-modal-section-title,
+  .deposit-modal-section-title,.order-modal-card-head){
+  border-color:var(--gf-color-border)!important;
+}
+body[data-gf-surface="workspace"] :is(
+  #customerOverlay,#customerImportOverlay,#depositOverlay,#driverFormOverlay,
+  #deliveryDetailsOverlay,#agentOverlay,#orderModal,#collaboratorDialog
+) :is(
+  .delivery-modal-section-title,.driver-modal-section-title,
+  .deposit-modal-section-title,.order-modal-card-head) :is(h2,h3,strong){
+  color:var(--gf-color-text)!important;
+  font:700 16px/1.25 var(--gf-font-display)!important;
+  letter-spacing:-.005em!important;
+}
+body[data-gf-surface="workspace"] :is(
+  #customerOverlay,#customerImportOverlay,#depositOverlay,#driverFormOverlay,
+  #deliveryDetailsOverlay,#agentOverlay,#orderModal,#collaboratorDialog
+) :is(
+  .delivery-modal-section-title,.driver-modal-section-title,
+  .deposit-modal-section-title,.order-modal-section-icon,
+  .company-section-icon
+)>span:first-child{
+  background:var(--gf-color-info-bg)!important;
+  color:var(--gf-color-info)!important;
+  border-radius:10px!important;
+}
+body[data-gf-surface="workspace"] :is(
+  #customerOverlay,#customerImportOverlay,#depositOverlay,#driverFormOverlay,
+  #deliveryDetailsOverlay,#agentOverlay,#orderModal
+) :is(
+  .delivery-modal-summary,.delivery-modal-client-box,.delivery-modal-address-box,
+  .driver-profile-head,.deposit-default-choice,.order-modal-alert
+){
+  border:1px solid var(--gf-color-border)!important;
+  border-radius:12px!important;
+  background:var(--gf-color-surface-subtle)!important;
+  color:var(--gf-color-text)!important;
+  box-shadow:none!important;
+}
 
 /* 5. Testo, label e input dei popup; nessun intervento su checkbox o upload file. */
+body[data-gf-surface="workspace"] :is(
+  #agentOverlay,#depositOverlay,#driverFormOverlay,#customerOverlay,#customerImportOverlay,
+  #deliveryDetailsOverlay,#orderModal,
+  #customerDetailsDialog,#collaboratorDialog) :is(label,.gf-field label,.company-field label,.deposit-field label){
+  font:600 13px/1.4 var(--gf-font-family);
+  color:var(--gf-color-text);
+  letter-spacing:0;
+}
+body[data-gf-surface="workspace"] :is(
+  #agentOverlay,#depositOverlay,#driverFormOverlay,#customerOverlay,#customerImportOverlay,
+  #deliveryDetailsOverlay,#orderModal,
+  #customerDetailsDialog,#collaboratorDialog) :is(input,select,textarea):not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="file"]){
+  min-height:40px;
+  border:1px solid var(--gf-color-border)!important;
+  border-radius:10px!important;
+  background:var(--gf-color-surface)!important;
+  color:var(--gf-color-text)!important;
+  font:400 14px/1.5 var(--gf-font-family)!important;
+  box-shadow:none!important;
+}
+body[data-gf-surface="workspace"] :is(
+  #agentOverlay,#depositOverlay,#driverFormOverlay,#customerOverlay,#customerImportOverlay,
+  #deliveryDetailsOverlay,#orderModal,
+  #customerDetailsDialog,#collaboratorDialog) :is(input,select,textarea):focus{
+  border-color:var(--gf-color-primary)!important;
+  outline:0;
+  box-shadow:var(--gf-focus-ring)!important;
+}
+body[data-gf-surface="workspace"] :is(
+  #agentOverlay,#depositOverlay,#driverFormOverlay,#customerOverlay,#customerImportOverlay,
+  #deliveryDetailsOverlay,#orderModal,
+  #collaboratorDialog) :is(input,select,textarea):disabled{
+  background:var(--gf-color-surface-subtle)!important;
+  color:var(--gf-color-muted)!important;
+}
+body[data-gf-surface="workspace"] :is(
+  #agentOverlay,#depositOverlay,#driverFormOverlay,#customerOverlay,#customerImportOverlay,
+  #deliveryDetailsOverlay,#orderModal,
+  #collaboratorDialog) :is(input[type=checkbox],input[type=radio]){
+  accent-color:var(--gf-color-primary);
+}
+body[data-gf-surface="workspace"] :is(
+  #agentOverlay,#depositOverlay,#driverFormOverlay,#customerOverlay,#customerImportOverlay,
+  #deliveryDetailsOverlay,#orderModal,
+  #customerDetailsDialog,#collaboratorDialog) :is(input,textarea)::placeholder{
+  color:#8995ae;
+}
 
 /* 6. Piè di pagina e azioni dei modali: allineamento, margini, bottoni. */
+body[data-gf-surface="workspace"] :is(
+  #agentOverlay,#depositOverlay,#driverFormOverlay,#customerOverlay,#customerImportOverlay,
+  #deliveryDetailsOverlay,#orderModal,
+  #collaboratorDialog) :is(
+  .modal-actions,.actions-row,.delivery-modal-actions-v5,.deposit-modal-actions,
+  .driver-modal-actions,.order-modal-footer,
+  .order-modal-editor-actions){
+  gap:10px;
+  border-color:var(--gf-color-border)!important;
+  background:var(--gf-color-surface)!important;
+}
+body[data-gf-surface="workspace"] :is(
+  #agentOverlay,#depositOverlay,#driverFormOverlay,#customerOverlay,#customerImportOverlay,
+  #deliveryDetailsOverlay,#orderModal,
+  #collaboratorDialog) :is(.btn-primary,.btn-secondary,.btn-light,.gf-button){
+  min-height:40px;
+  border-radius:10px!important;
+  font:600 14px/1.4 var(--gf-font-family)!important;
+  text-shadow:none!important;
+  box-shadow:none!important;
+  transform:none!important;
+}
+body[data-gf-surface="workspace"] :is(
+  #agentOverlay,#depositOverlay,#driverFormOverlay,#customerOverlay,#customerImportOverlay,
+  #deliveryDetailsOverlay,#orderModal,
+  #collaboratorDialog) :is(.btn-primary,.gf-button[data-variant="primary"]){
+  border-color:var(--gf-color-primary)!important;
+  background:var(--gf-color-primary)!important;
+  color:#fff!important;
+}
+body[data-gf-surface="workspace"] :is(
+  #agentOverlay,#depositOverlay,#driverFormOverlay,#customerOverlay,#customerImportOverlay,
+  #deliveryDetailsOverlay,#orderModal,
+  #collaboratorDialog) :is(.btn-secondary,.btn-light,.gf-button[data-variant="secondary"]){
+  border-color:var(--gf-color-border)!important;
+  background:var(--gf-color-surface)!important;
+  color:var(--gf-color-text)!important;
+}
+body[data-gf-surface="workspace"] :is(
+  #agentOverlay,#depositOverlay,#driverFormOverlay,#customerOverlay,#customerImportOverlay,
+  #deliveryDetailsOverlay,#orderModal,
+  #collaboratorDialog) :is(.gf-button[data-variant="danger"],.deposit-delete-danger,.customer-delete-danger,.btn-danger){
+  border-color:var(--gf-color-danger)!important;
+  background:var(--gf-color-danger)!important;
+  color:#fff!important;
+}
+body[data-gf-surface="workspace"] :is(
+  #agentOverlay,#depositOverlay,#driverFormOverlay,#customerOverlay,#customerImportOverlay,
+  #deliveryDetailsOverlay,#orderModal,
+  #collaboratorDialog) :is(button,a,summary):focus-visible{
+  outline:2px solid var(--gf-color-primary)!important;
+  outline-offset:2px;
+}
 
 /* 7. Dettaglio ordine: sottopannelli e tabelle non più con vecchi blu e angoli 7-10px. */
 body[data-gf-surface="workspace"] #orderModal .order-modal-header{
@@ -91,6 +329,27 @@ body[data-gf-surface="workspace"] #orderModal .order-modal-loading span{
 }
 
 /* 8. Popup generati da JS e piccoli menu, stessa superficie e contrasto. */
+body[data-gf-surface="workspace"] :is(.gf-mobile-more-menu-v62,
+  .address-suggestions,.driver-menu>div,.gf-dropdown [data-gf-menu],
+  .orders-action-menu,.order-modal-more-menu,.gf-context-menu){
+  border-color:var(--gf-color-border)!important;
+  background:var(--gf-color-surface)!important;
+  color:var(--gf-color-text);
+  border-radius:12px!important;
+  box-shadow:var(--gf-shadow-md)!important;
+}
+body[data-gf-surface="workspace"] :is(.gf-context-menu-header
+){
+  border-color:var(--gf-color-border)!important;
+}
+body[data-gf-surface="workspace"] :is(.gf-dropdown [data-gf-menu] button
+):hover{
+  background:var(--gf-color-surface-subtle);
+}
+body[data-gf-surface="workspace"] :is(
+  .gf-toast,.toast){
+  font-family:var(--gf-font-family);
+}
 
 /* 9. Mobile: modali adatti al viewport senza tagliare azioni e titoli. */
 @media(max-width:820px){
@@ -114,5 +373,18 @@ body[data-gf-surface="workspace"] #orderModal .order-modal-loading span{
   }
   body[data-gf-surface="workspace"] #orderModal .order-modal-body{
     padding:14px;
+  }
+}
+@media(max-width:520px){
+  body[data-gf-surface="workspace"] :is(
+    #agentOverlay,#depositOverlay,#driverFormOverlay,#customerOverlay,
+    #customerImportOverlay,#deliveryDetailsOverlay,#orderModal,#collaboratorDialog) :is(.modal-header,.order-modal-header) :is(h1,h2,h3,strong){
+    font-size:19px!important;
+  }
+  body[data-gf-surface="workspace"] :is(
+    #agentOverlay,#depositOverlay,#driverFormOverlay,#customerOverlay,
+    #customerImportOverlay,#deliveryDetailsOverlay,
+    #orderModal,#collaboratorDialog) :is(.modal-actions,.actions-row,.order-modal-footer){
+    flex-wrap:wrap;
   }
 }

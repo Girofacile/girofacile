@@ -28,7 +28,7 @@ body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.panel,.cust
 .completed-picker,.completed-stops,.completed-summary,.live-design-picker,.live-design-actions,
 .result-summary-card,.stops-panel,.alerts-panel,.route-map-panel-v74,.planning-setup-panel,
 .billing-section-v876,.plan-page-features-v875,.plan-help-card-v875,.plan-comparison-v875,
-.up-card-v875,.feature-lock-card,.feature-plan-card,.driver-chat-list-card,.driver-chat-room-card){
+.up-card-v875,.feature-lock-card,.feature-plan-card){
 min-width:0;border:1px solid var(--gf-color-border);border-radius:var(--gf-radius-lg);background:var(--gf-color-surface);color:var(--gf-color-text);box-shadow:var(--gf-shadow-sm);
 }
 body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.dash-vehicle-card,.driver-info-grid>div,.driver-directory-avatar,.fleet-photo,.fleet-plate,
@@ -124,13 +124,13 @@ body[data-gf-surface="workspace"] #app #tab-settings .setting-copy strong{color:
 body[data-gf-surface="workspace"] #app #tab-settings .settings-detail{border-radius:var(--gf-radius-md);background:var(--gf-color-bg);color:var(--gf-color-muted)}
 body[data-gf-surface="workspace"] #app #tab-settings .switch-toggle input:checked+.switch-slider{background:var(--gf-color-primary);border-color:var(--gf-color-primary)}
 /* .gf-dialog is sometimes a viewport overlay: only style its inner surface. */
-
+body[data-gf-surface="workspace"] :is(.gf-dialog .modal,dialog.customer-details-dialog,dialog.customer-tracking-dialog,dialog.live-map-dialog,dialog#driverDetailsDialog){border-color:var(--gf-color-border);border-radius:var(--gf-radius-lg);background:var(--gf-color-surface);color:var(--gf-color-text);box-shadow:var(--gf-shadow-md)}
 body[data-gf-surface="workspace"] .gf-dialog :is(.modal-head,.modal-header,.delivery-modal-head,.driver-modal-section,.delivery-modal-section,.deposit-modal-section){border-color:var(--gf-color-border);background:var(--gf-color-surface);box-shadow:none}
 body[data-gf-surface="workspace"] .gf-dialog :is(.driver-modal-section,.delivery-modal-section,.deposit-modal-section){border-radius:var(--gf-radius-md)}
 body[data-gf-surface="workspace"] .customer-tracking-dialog :is(.tracking-dialog-header,.tracking-dialog-footer){background:var(--gf-color-surface);border-color:var(--gf-color-border)}
 body[data-gf-surface="workspace"] .customer-tracking-dialog{--tracking-ink:var(--gf-color-text);--tracking-muted:var(--gf-color-muted);--tracking-line:var(--gf-color-border)}
 body[data-gf-surface="workspace"] #app #tab-autisti .driver-menu>div,body[data-gf-surface="workspace"] .gf-dialog .address-suggestions{border-color:var(--gf-color-border);border-radius:var(--gf-radius-md);background:var(--gf-color-surface);box-shadow:var(--gf-shadow-md)}
-body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.dash-empty,.customer-empty,.deposit-empty,.fleet-empty,.driver-directory-empty,.history-empty-v311,.dash-empty-subpage,.billing-empty-v63){border-color:var(--gf-color-border);border-radius:var(--gf-radius-md);background:var(--gf-color-surface);color:var(--gf-color-muted);box-shadow:none;backdrop-filter:none}
+body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.dash-empty,.customer-empty,.deposit-empty,.fleet-empty,.driver-directory-empty,.dash-empty-subpage,.billing-empty-v63){border-color:var(--gf-color-border);border-radius:var(--gf-radius-md);background:var(--gf-color-surface);color:var(--gf-color-muted);box-shadow:none;backdrop-filter:none}
 @media(max-width:1024px){
 body[data-gf-surface="workspace"] #app #tab-clienti .customer-searchbar-v8{grid-template-columns:minmax(0,1fr) auto}
 body[data-gf-surface="workspace"] #app #tab-clienti .customer-search{grid-column:1/-1}
@@ -160,6 +160,7 @@ body[data-gf-surface="workspace"] #app #tab-autisti .driver-search-box{grid-colu
 body[data-gf-surface="workspace"] #app #tab-mezzi .fleet-specs,body[data-gf-surface="workspace"] #app #tab-autisti .driver-directory-bottom{grid-template-columns:1fr;gap:var(--gf-space-3)}
 body[data-gf-surface="workspace"] #app #tab-mezzi .fleet-specs>div,body[data-gf-surface="workspace"] #app #tab-autisti .driver-directory-spec{border:0;padding:0;min-height:0}
 body[data-gf-surface="workspace"] #app #tab-autisti .driver-view{grid-column:auto;margin:0}
+body[data-gf-surface="workspace"] .gf-dialog :is(.modal){border-radius:var(--gf-radius-lg)!important}
 }
 
 /* Home dashboard follows the supplied operational overview reference.

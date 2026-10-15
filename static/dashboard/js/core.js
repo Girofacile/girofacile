@@ -3830,7 +3830,7 @@ async function loadRoutes(){
 
   rows.forEach(r=>{
     if(!body) return;
-    body.innerHTML += `<tr><td>${esc(r.data_giro)}</td><td><strong>${esc(r.nome)}</strong></td><td>${r.orario_partenza||""}</td><td>${r.orario_rientro_stimato||""}</td><td>${esc(r.driver_name||"-")}</td><td>${r.totale_km}</td><td>€ ${r.costo_totale ?? r.costo_carburante}</td><td class="row-actions"><button onclick="openSavedRoute(${r.id})">Apri giro</button>${r.google_maps_url?`<a target="_blank" href="${r.google_maps_url}"><button>Maps</button></a><button onclick="copyText('${String(r.google_maps_url).replace(/'/g,"\\'")}', 'Link Google Maps copiato')">Condividi</button>`:""}</td></tr>`;
+    body.innerHTML += `<tr><td data-label="Data">${esc(r.data_giro)}</td><td data-label="Nome"><strong>${esc(r.nome)}</strong></td><td data-label="Partenza">${r.orario_partenza||""}</td><td data-label="Rientro">${r.orario_rientro_stimato||""}</td><td data-label="Autista">${esc(r.driver_name||"-")}</td><td data-label="Km">${r.totale_km}</td><td data-label="Costo carburante">€ ${r.costo_totale ?? r.costo_carburante}</td><td data-label="Azioni"><div class="gf-cluster"><button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="openSavedRoute(${r.id})">Apri giro</button>${r.google_maps_url?`<a class="gf-button" data-variant="ghost" data-size="sm" target="_blank" href="${r.google_maps_url}">Maps</a><button type="button" class="gf-button" data-variant="ghost" data-size="sm" onclick="copyText('${String(r.google_maps_url).replace(/'/g,"\\'")}', 'Link Google Maps copiato')">Condividi</button>`:""}</div></td></tr>`;
   });
 }
 async function openSavedRoute(id){
@@ -3999,7 +3999,7 @@ function driverChatAvatar(thread){
   }
   const name = (thread.driver_name || "Autista").trim();
   const initials = name.split(/\s+/).slice(0,2).map(x=>x[0]||"").join("").toUpperCase() || "A";
-  return `<span>${esc(initials)}</span>`;
+  return esc(initials);
 }
 
 async function loadDriverChatNotifications(){
@@ -4023,7 +4023,7 @@ async function loadDriverChatCenter(driverId=null){
   if(showLockedOrProceed("chat-autisti")) return;
   const list = document.getElementById('driverChatThreadList');
   const count = document.getElementById('driverChatCenterCount');
-  if(list) list.innerHTML = '<div class="dash-empty">Caricamento conversazioni...</div>';
+  if(list) list.innerHTML = '<div class="gf-empty"><p>Caricamento conversazioni...</p></div>';
   try{
     driverChatThreadsCache = await api('/api/driver/admin/chat-threads');
     if(count) count.textContent = `${driverChatThreadsCache.length} chat`;
@@ -4033,7 +4033,7 @@ async function loadDriverChatCenter(driverId=null){
     else renderEmptyDriverChatRoom();
     await loadDriverChatNotifications();
   }catch(e){
-    if(list) list.innerHTML = `<div class="dash-empty">Errore caricamento chat: ${esc(e.message||'Errore')}</div>`;
+    if(list) list.innerHTML = `<div class="gf-empty"><p>Errore caricamento chat: ${esc(e.message||'Errore')}</p></div>`;
   }
 }
 
@@ -4041,21 +4041,21 @@ function renderDriverChatThreadList(){
   const list = document.getElementById('driverChatThreadList');
   if(!list) return;
   if(!driverChatThreadsCache.length){
-    list.innerHTML = '<div class="dash-empty">Nessuna conversazione. Le chat appariranno quando un autista scrive o quando apri la conversazione.</div>';
+    list.innerHTML = '<div class="gf-empty"><p>Nessuna conversazione. Le chat appariranno quando un autista scrive o quando apri la conversazione.</p></div>';
     return;
   }
   list.innerHTML = driverChatThreadsCache.map(t=>{
     const unread = Number(t.unread||0);
     const active = Number(t.driver_id) === Number(driverChatCenterDriverId);
     const last = t.last_message ? esc(t.last_message) : 'Nessun messaggio ancora';
-    return `<button class="driver-chat-thread ${active?'active':''} ${unread?'has-unread':''}" onclick="openDriverChatCenterThread(${t.driver_id})">
-      <div class="driver-chat-avatar">${driverChatAvatar(t)}</div>
-      <div class="driver-chat-thread-body">
-        <div class="driver-chat-thread-top"><strong>${esc(t.driver_name||'Autista')}</strong><small>${esc(chatTimeLabel(t.last_message_at) || t.date || '')}</small></div>
-        <span>${esc(t.route_name || 'Chat libera')}</span>
-        <p>${last}</p>
-      </div>
-      ${unread?`<span class="driver-chat-unread">${unread}</span>`:''}
+    return `<button type="button" class="gf-list-item"${active?' aria-current="true"':''} onclick="openDriverChatCenterThread(${t.driver_id})">
+      <span class="gf-avatar" aria-hidden="true">${driverChatAvatar(t)}</span>
+      <span class="gf-list-item__main">
+        <strong>${esc(t.driver_name||'Autista')}</strong>
+        <small>${esc(t.route_name || 'Chat libera')} · ${esc(chatTimeLabel(t.last_message_at) || t.date || '')}</small>
+        <small>${last}</small>
+      </span>
+      ${unread?`<span class="gf-badge" data-status="info">${unread}</span>`:''}
     </button>`;
   }).join('');
 }
@@ -4067,7 +4067,7 @@ function renderEmptyDriverChatRoom(){
   const badge = document.getElementById('driverChatRoomBadge');
   if(title) title.textContent = 'Seleziona una chat';
   if(sub) sub.textContent = 'Apri una conversazione per leggere e rispondere all\'autista.';
-  if(box) box.innerHTML = '<div class="dash-empty">Nessuna chat selezionata.</div>';
+  if(box) box.innerHTML = '<div class="gf-empty"><p>Nessuna chat selezionata.</p></div>';
   if(badge) badge.classList.add('hidden');
 }
 
@@ -4096,12 +4096,12 @@ async function loadDriverChatCenterMessages(driverId, markRead=true){
     const data = await api(`/api/driver/admin/direct-chat/${driverId}?since_id=0&mark_read=${markRead?'true':'false'}`);
     const msgs = data.messages || [];
     if(!msgs.length){
-      box.innerHTML = '<div class="dash-empty">Nessun messaggio. Puoi scrivere all\'autista da qui.</div>';
+      box.innerHTML = '<div class="gf-empty"><p>Nessun messaggio. Puoi scrivere all\'autista da qui.</p></div>';
     }else{
       box.innerHTML = msgs.map(m=>{
         const mine = m.sender_type === 'admin';
         const when = chatTimeLabel(m.created_at);
-        return `<div class="dash-chat-msg ${mine?'admin':'driver'}"><div class="dash-chat-bubble"><strong>${esc(m.sender_name || (mine?'Responsabile':'Autista'))}</strong><p>${esc(m.message||'')}</p><small>${esc(when)}</small></div></div>`;
+        return `<div class="gf-message"${mine?' data-from="me"':''}><span class="gf-message__bubble">${esc(m.message||'')}</span><small>${esc(m.sender_name || (mine?'Responsabile':'Autista'))} · ${esc(when)}</small></div>`;
       }).join('');
       box.scrollTop = box.scrollHeight;
     }
@@ -4110,7 +4110,7 @@ async function loadDriverChatCenterMessages(driverId, markRead=true){
       await loadDriverChatNotifications();
     }
   }catch(e){
-    box.innerHTML = `<div class="dash-empty">Errore chat: ${esc(e.message||'Errore')}</div>`;
+    box.innerHTML = `<div class="gf-empty"><p>Errore chat: ${esc(e.message||'Errore')}</p></div>`;
   }
 }
 

@@ -10,8 +10,8 @@
 <meta charset="utf-8">
 <title>GiroFacile</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link href="/static/dashboard/css/core.css?v=gf_base_20261015b" rel="stylesheet">
-<link href="/static/dashboard/css/account.css?v=gf_base_20261015b" rel="stylesheet">
+<link href="/static/dashboard/css/core.css?v=gf_base_20261015c" rel="stylesheet">
+<link href="/static/dashboard/css/account.css?v=gf_base_20261015c" rel="stylesheet">
 <link href="/static/password-strength.css?v=password_policy_20261008_1" rel="stylesheet">
 <script src="/api/billing/catalog.js"></script>
 <script src="/static/dashboard/js/billing.js?v=collaborator_presets_20261009"></script>
@@ -27,9 +27,9 @@
 <script src="/static/dashboard/js/live-gps.js?v=live_20261006"></script>
 <link href="/static/dashboard/css/deposits.css?v=search_icon_fix_20261012_1" rel="stylesheet">
 <link href="/static/dashboard/css/settings.css?v=sidebar_stable_20261001" rel="stylesheet">
-<link rel="stylesheet" href="/static/dashboard/css/electric-vehicles.css?v=gf_base_20261015b">
+<link rel="stylesheet" href="/static/dashboard/css/electric-vehicles.css?v=gf_base_20261015c">
 <script src="/static/dashboard/js/electric-vehicles.js?v=electric_bonus_20261002"></script>
-<link rel="stylesheet" href="/static/dashboard/css/management.css?v=gf_base_20261015b">
+<link rel="stylesheet" href="/static/dashboard/css/management.css?v=gf_base_20261015c">
 <link rel="stylesheet" href="/static/dashboard/css/completed.css?v=20261006">
 <link rel="stylesheet" href="/static/pod.css?v=1">
 <link rel="stylesheet" href="/static/dashboard/css/occasional-stops.css?v=1">
@@ -42,21 +42,21 @@
 <script src="/static/dashboard/js/drivers.js?v=driver_shifts_20261013_1"></script>
 
 <!-- Shared GiroFacile design system; legacy sheets retain feature layout. -->
-<link rel="stylesheet" href="/static/design-system/tokens.css?v=gf_base_20261015b">
-<link rel="stylesheet" href="/static/design-system/components.css?v=gf_base_20261015b">
-<link rel="stylesheet" href="/static/design-system/layout.css?v=gf_base_20261015b">
-<link rel="stylesheet" href="/static/design-system/workspace.css?v=gf_base_20261015b">
+<link rel="stylesheet" href="/static/design-system/tokens.css?v=gf_base_20261015c">
+<link rel="stylesheet" href="/static/design-system/components.css?v=gf_base_20261015c">
+<link rel="stylesheet" href="/static/design-system/layout.css?v=gf_base_20261015c">
+<link rel="stylesheet" href="/static/design-system/workspace.css?v=gf_base_20261015c">
 <link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007_reference_2">
 <script src="/static/design-system/design-system.js?v=gf_base_20261015" defer></script>
-<script src="/static/design-system/shell.js?v=gf_base_20261015b" defer></script>
+<script src="/static/design-system/shell.js?v=gf_base_20261015c" defer></script>
 <link rel="stylesheet" href="/static/dashboard/css/collaborators.css?v=search_icon_fix_20261012_1">
 <link rel="stylesheet" href="/static/dashboard/css/orders.css?v=orders_header_canvas_20261013_1">
-<link rel="stylesheet" href="/static/design-system/reference-theme.css?v=sidebar_azzurra_20261012">
-<link rel="stylesheet" href="/static/design-system/reference-pages.css?v=gf_base_20261015b">
-<link rel="stylesheet" href="/static/design-system/reference-dialogs.css?v=gf_base_20261015b">
+<link rel="stylesheet" href="/static/design-system/reference-theme.css?v=gf_base_20261015c">
+<link rel="stylesheet" href="/static/design-system/reference-pages.css?v=gf_base_20261015c">
+<link rel="stylesheet" href="/static/design-system/reference-dialogs.css?v=gf_base_20261015c">
 <link rel="stylesheet" href="/static/dashboard/css/dashboard-real-map.css?v=gf_realmap_clean_20261012_2">
 <link rel="stylesheet" href="/static/dashboard/css/in-progress-reference.css?v=gf_inprogress_ref_20261013_1">
-<link rel="stylesheet" href="/static/dashboard/css/company.css?v=company_header_canvas_20261013_2">
+<link rel="stylesheet" href="/static/dashboard/css/company.css?v=gf_base_20261015c">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap">
 <link rel="stylesheet" href="/static/design-system/sidebar-unified.css?v=sidebar_global_20261013_1">
 <link rel="stylesheet" href="/static/dashboard/css/customers.css?v=cx_reference_20261014_1">
@@ -519,45 +519,32 @@
       </section>
 
 
-      <section id="tab-chat-autisti" class="tab hidden gf-page">
-        <div class="page-title-row">
-          <div>
-            <h1>Chat autisti</h1>
-            <p>Centro comunicazioni con gli autisti: conversazioni collegate ai giri e notifiche dei messaggi non letti.</p>
+            <section id="tab-chat-autisti" class="tab hidden gf-grid" data-cols="side-main">
+        <section class="gf-panel" aria-labelledby="driverChatListTitle">
+          <header class="gf-panel__header">
+            <h2 class="gf-panel__title" id="driverChatListTitle">Conversazioni</h2>
+            <div class="gf-cluster">
+              <span class="gf-panel__meta" id="driverChatCenterCount">0 chat</span>
+              <button type="button" class="gf-icon-button" onclick="loadDriverChatCenter()" aria-label="Aggiorna conversazioni" title="Aggiorna conversazioni"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7 M21 4v5h-5"/></svg></button>
+            </div>
+          </header>
+          <div id="driverChatThreadList" class="gf-list">
+            <div class="gf-empty"><p>Caricamento conversazioni...</p></div>
           </div>
-        </div>
-        <div class="driver-chat-center">
-          <aside class="driver-chat-list-card">
-            <div class="driver-chat-list-head">
-              <strong>Conversazioni</strong>
-              <div class="driver-chat-list-head-actions">
-                <small id="driverChatCenterCount">0 chat</small>
-                <button type="button" class="driver-chat-refresh" onclick="loadDriverChatCenter()" aria-label="Aggiorna conversazioni" title="Aggiorna conversazioni">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6v5h-5"/><path d="M19 11a7.5 7.5 0 1 0 1 5"/></svg>
-                </button>
-              </div>
-            </div>
-            <div id="driverChatThreadList" class="driver-chat-thread-list">
-              <div class="dash-empty">Caricamento conversazioni...</div>
-            </div>
-          </aside>
-          <section class="driver-chat-room-card">
-            <div class="driver-chat-room-head">
-              <div>
-                <h2 id="driverChatRoomTitle">Seleziona una chat</h2>
-                <p id="driverChatRoomSubtitle">Apri una conversazione per leggere e rispondere all'autista.</p>
-              </div>
-              <span id="driverChatRoomBadge" class="chat-room-badge hidden">0 nuovi</span>
-            </div>
-            <div id="driverChatRoomMessages" class="dash-admin-chat-messages chat-center-messages">
-              <div class="dash-empty">Nessuna chat selezionata.</div>
-            </div>
-            <div class="dash-admin-chat-input chat-center-input">
-              <textarea id="driverChatCenterInput" rows="2" placeholder="Scrivi all'autista..."></textarea>
-              <button class="btn-primary" onclick="sendDriverChatCenterMessage()">Invia</button>
-            </div>
-          </section>
-        </div>
+        </section>
+        <section class="gf-panel gf-chat" aria-labelledby="driverChatRoomTitle">
+          <header class="gf-panel__header">
+            <div><h2 class="gf-panel__title" id="driverChatRoomTitle">Seleziona una chat</h2><p class="gf-muted" id="driverChatRoomSubtitle">Apri una conversazione per leggere e rispondere all'autista.</p></div>
+            <span id="driverChatRoomBadge" class="gf-badge hidden" data-status="info">0 nuovi</span>
+          </header>
+          <div id="driverChatRoomMessages" class="gf-chat__messages" aria-live="polite">
+            <div class="gf-empty"><p>Nessuna chat selezionata.</p></div>
+          </div>
+          <div class="gf-chat__composer">
+            <textarea id="driverChatCenterInput" class="gf-textarea" rows="2" placeholder="Scrivi all'autista..." aria-label="Messaggio per l'autista"></textarea>
+            <button type="button" class="gf-button" data-variant="primary" onclick="sendDriverChatCenterMessage()">Invia</button>
+          </div>
+        </section>
       </section>
 
       <section id="tab-giro" class="tab hidden gf-page">
@@ -1231,35 +1218,23 @@
         <dialog id="driverDetailsDialog" aria-labelledby="driverDetailsTitle"><div id="driverDetailsContent"></div><form method="dialog"><button class="btn-secondary">Chiudi</button></form></dialog>
       </section>
 
-      <section id="tab-storico" class="tab hidden history-page-v311 gf-page">
-        <div class="page-title-row history-title-v311"><div><h1>Storico giri</h1><p>Consulta i percorsi completati, i chilometri e i dati operativi dei tuoi giri.</p></div></div>
-
-        <section id="historyEmptyState" class="history-empty-v311 hidden" aria-live="polite">
-          <div class="history-empty-icon-v311" aria-hidden="true">
-            <svg viewBox="0 0 64 64">
-              <path d="M14 46c7-13 15-18 26-18h6" />
-              <path d="M40 18h10v10" />
-              <path d="M50 18 38 30" />
-              <circle cx="14" cy="46" r="6" />
-              <circle cx="50" cy="18" r="6" />
-            </svg>
+            <section id="tab-storico" class="tab hidden gf-stack" data-gap="lg">
+        <section id="historyEmptyState" class="gf-panel hidden" aria-live="polite">
+          <div class="gf-empty gf-stack">
+            <p class="gf-kicker">Storico giri</p>
+            <h2>Il tuo storico inizia dal primo giro</h2>
+            <p>Qui troverai automaticamente percorsi, chilometri, autisti, costi e dettagli dei giri completati. Crea il tuo primo giro per iniziare a tracciare i dati della tua attività.</p>
+            <div><button type="button" class="gf-button" data-variant="primary" onclick="showTab('giro')">+ Nuovo giro</button></div>
+            <p class="gf-muted">I giri salvati verranno organizzati qui automaticamente.</p>
           </div>
-          <span class="history-empty-kicker-v311">STORICO GIRI</span>
-          <h2>Il tuo storico inizia dal primo giro</h2>
-          <p>Qui troverai automaticamente percorsi, chilometri, autisti, costi e dettagli dei giri completati. Crea il tuo primo giro per iniziare a tracciare i dati della tua attività.</p>
-          <button type="button" class="btn-primary history-empty-action-v311" onclick="showTab('giro')">+ Nuovo giro</button>
-          <small>I giri salvati verranno organizzati qui automaticamente.</small>
         </section>
 
-        <section id="historyDataPanel" class="panel history-data-panel-v311 hidden">
-          <div class="history-toolbar-v311">
-            <div>
-              <strong>Archivio giri</strong>
-              <span>Consulta e riapri i percorsi già salvati.</span>
-            </div>
-            <button onclick="loadRoutes()" class="btn-primary">Aggiorna storico</button>
-          </div>
-          <div class="tableWrap"><table><thead><tr><th>Data</th><th>Nome</th><th>Partenza</th><th>Rientro</th><th>Autista</th><th>Km</th><th>Costo carburante</th><th>Azioni</th></tr></thead><tbody id="routesBody"></tbody></table></div>
+        <section id="historyDataPanel" class="gf-panel hidden">
+          <header class="gf-panel__header">
+            <div><h2 class="gf-panel__title">Archivio giri</h2><p class="gf-muted">Consulta e riapri i percorsi già salvati.</p></div>
+            <button type="button" onclick="loadRoutes()" class="gf-button" data-variant="primary" data-size="sm">Aggiorna storico</button>
+          </header>
+          <div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards"><thead><tr><th>Data</th><th>Nome</th><th>Partenza</th><th>Rientro</th><th>Autista</th><th>Km</th><th>Costo carburante</th><th>Azioni</th></tr></thead><tbody id="routesBody"></tbody></table></div>
           <div id="historyResult"></div>
         </section>
       </section>
@@ -1906,18 +1881,18 @@
 
 <script src="/static/dashboard/js/reports.js?v=audit_20261004"></script>
 <script src="/static/dashboard/js/customers.js?v=cx_reference_20261014_1"></script>
-<script src="/static/dashboard/js/navigation.js?v=gf_base_20261015b"></script>
+<script src="/static/dashboard/js/navigation.js?v=gf_base_20261015c"></script>
 <script src="/static/dashboard/js/completed.js?v=driver_shifts_20261013_1"></script>
 <script src="/static/dashboard/js/preview-design.js?v=20261006"></script>
 <script src="/static/dashboard/js/live-design.js?v=20261006"></script>
 <script src="/static/password-strength.js?v=password_policy_20261008_1"></script>
-<script src="/static/dashboard/js/collaborators.js?v=gf_base_20261015b"></script>
+<script src="/static/dashboard/js/collaborators.js?v=gf_base_20261015c"></script>
 <script src="/static/dashboard/js/orders.js?v=independent_orders_20261012"></script>
 <script src="/static/dashboard/js/order-import.js?v=20261011_fields1"></script>
 <script src="/static/dashboard/js/order-sources.js?v=email_development_20261012"></script>
 <script src="/static/dashboard/js/dashboard-real-map.js?v=gf_realmap_clean_20261012_2"></script>
 <script src="/static/dashboard/js/in-progress-reference.js?v=driver_shifts_20261013_1"></script>
-<script src="/static/dashboard/js/core.js?v=gf_base_20261015b"></script>
+<script src="/static/dashboard/js/core.js?v=gf_base_20261015c"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=orders_2"></script>
 <link rel="stylesheet" href="/static/dashboard/css/fleet-planning.css?v=20261013_1">
 <link rel="stylesheet" href="/static/dashboard/css/fleet-review.css?v=driver_shifts_20261013_1">
@@ -1940,6 +1915,6 @@ function toggleLoginPassword(){
 <script src="/static/dashboard/js/company-profile.js?v=company_clean_20261013_1"></script>
 
 <!-- Ultimo foglio: allinea tutte le sezioni al linguaggio visivo della dashboard. -->
-<link rel="stylesheet" href="/static/design-system/unified.css?v=gf_base_20261015b">
+<link rel="stylesheet" href="/static/design-system/unified.css?v=gf_base_20261015c">
 </body>
 </html>

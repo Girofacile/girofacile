@@ -21,7 +21,7 @@ body[data-gf-surface] :is(.gf-button,.btn-primary,.btn-secondary,.btn-light){
   font-weight:600;
 }
 body[data-gf-surface] :is(.gf-card,.panel,.card,.modal-card,.dialog-card),
-body[data-gf-portal] :is(.card,.section-card,.modal,.popup-card,.login-card){
+body[data-gf-portal] :is(.card,.section-card,.modal,.popup-card){
   border-radius:var(--gf-radius-lg);
 }
 body[data-gf-surface] :is(.gf-input,.gf-select,.gf-textarea,input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),select,textarea){

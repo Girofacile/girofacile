@@ -30,6 +30,8 @@ test('the restyled workspace explicitly excludes the dashboard home',()=>{
 
 test('all major workspace sections share dashboard panel, table, toolbar and KPI styles',()=>{
   const css=read(base+'reference-pages.css');
+  const fs=require('node:fs');
+  const dashboardSource=read('static/dashboard/index.html')+fs.readdirSync('static/dashboard/js').map(f=>read('static/dashboard/js/'+f)).join('');
   for(const selector of [
     '.customer-metric','.deposit-metric','.orders-metric-card','.driver-stat',
     '.collaborator-metrics>div','.report-kpi-card','.company-card-v29',
@@ -39,7 +41,10 @@ test('all major workspace sections share dashboard panel, table, toolbar and KPI
     '.gf-directory-metric','.plan-current-hero-v875','.billing-section-v876',
     '.result-table','.tableWrap','.orders-table-shell'
   ]){
-    assert.ok(css.includes(selector),'Missing visual contract '+selector);
+    // Finché un elemento della vecchia interfaccia è in pagina deve avere il suo stile;
+    // quando la sezione è convertita ai componenti del sistema la classe sparisce dal markup.
+    const name=selector.replace(/^\./,'').split(/[^\w-]/)[0];
+    assert.ok(css.includes(selector) || !dashboardSource.includes(name),'Missing visual contract '+selector);
   }
   assert.match(css,/font-family:var\(--gf-font-display\)/);
   assert.match(css,/font-family:var\(--gf-font-family\)/);

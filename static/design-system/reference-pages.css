@@ -86,15 +86,13 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .deposit-list-panel,.orders-list-panel,.orders-filter-panel,.orders-source-panel,
   .orders-source-card,.orders-order-card,.driver-directory-card,.fleet-card,
   .customer-card,.deposit-card,.company-card-v29,.onboarding-card-v29,
-  .settings-panel,.report-chart-card,.report-table-card,.report-kpi-card,
-  .driver-chat-list-card,.driver-chat-room-card,.dash-sub-card,.dash-sub-route-picker,
+  .settings-panel,.report-chart-card,.report-table-card,.report-kpi-card,.dash-sub-card,.dash-sub-route-picker,
   .scheduled-overview,.scheduled-stops,.scheduled-summary,.completed-picker,
   .completed-stops,.completed-summary,.live-design-card,.live-design-picker,
   .route-map-panel-v74,.planning-setup-panel,.billing-section-v876,
   .billing-summary-card-v876,.plan-current-hero-v875,.plan-current-side-v875,
   .plan-page-features-v875,.plan-help-card-v875,.plan-comparison-v875,
-  .up-card-v875,.feature-lock-card,.feature-plan-card,.history-data-panel-v311
-){
+  .up-card-v875,.feature-lock-card,.feature-plan-card){
   border:1px solid var(--gf-color-border)!important;
   border-radius:16px!important;
   background:var(--gf-color-surface)!important;
@@ -111,9 +109,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .company-section-heading,.driver-directory-top,.fleet-card-head,
-  .deposit-card-heading,.customer-card-heading,.order-source-panel-head,
-  .driver-chat-list-head,.driver-chat-room-head
-){
+  .deposit-card-heading,.customer-card-heading,.order-source-panel-head){
   border-color:var(--gf-color-border)!important;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
@@ -124,8 +120,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .company-section-icon,.settings-icon,.deposit-card-icon,.gf-directory-metric-icon,
-  .report-kpi-icon,.driver-directory-avatar,.fleet-photo-placeholder,
-  .history-empty-icon-v311,.billing-summary-icon-v876
+  .report-kpi-icon,.driver-directory-avatar,.fleet-photo-placeholder,.billing-summary-icon-v876
 ){
   border-radius:10px!important;
   background:var(--gf-color-info-bg)!important;
@@ -177,7 +172,10 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .btn-primary,.gf-button[data-variant="primary"],.fleet-create,
   .orders-open-button,.order-selection-action.primary
-){
+),
+body[data-gf-surface="workspace"] :is(
+  .modal-overlay,.gf-dialog,#orderModal
+) :is(.btn-primary,.gf-button[data-variant="primary"]){
   min-height:40px;
   padding:9px 16px;
   border:1px solid var(--gf-color-primary)!important;
@@ -192,7 +190,10 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .btn-primary,.gf-button[data-variant="primary"],.fleet-create,
   .orders-open-button,.order-selection-action.primary
-):hover:not(:disabled){
+):hover:not(:disabled),
+body[data-gf-surface="workspace"] :is(
+  .modal-overlay,.gf-dialog,#orderModal
+) :is(.btn-primary,.gf-button[data-variant="primary"]):hover:not(:disabled){
   background:var(--gf-color-primary-hover)!important;
   border-color:var(--gf-color-primary-hover)!important;
   box-shadow:none!important;
@@ -203,7 +204,10 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .btn-secondary,.btn-light,.gf-button[data-variant="secondary"],.fleet-edit,
   .driver-view,.orders-view-switch button,.customer-view-controls button,
   .deposit-view-controls button,.fleet-views button
-){
+),
+body[data-gf-surface="workspace"] :is(
+  .modal-overlay,.gf-dialog,#orderModal
+) :is(.btn-secondary,.btn-light,.gf-button[data-variant="secondary"]){
   min-height:40px;
   padding:9px 14px;
   border:1px solid var(--gf-color-border)!important;
@@ -217,7 +221,10 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .btn-secondary,.btn-light,.gf-button[data-variant="secondary"],.fleet-edit,
   .driver-view
-):hover:not(:disabled){
+):hover:not(:disabled),
+body[data-gf-surface="workspace"] :is(
+  .modal-overlay,.gf-dialog,#orderModal
+) :is(.btn-secondary,.btn-light,.gf-button[data-variant="secondary"]):hover:not(:disabled){
   border-color:#c2d0e7!important;
   background:var(--gf-color-surface-subtle)!important;
 }
@@ -236,11 +243,15 @@ body[data-gf-surface="workspace"] :is(.modal-overlay,.gf-dialog,#orderModal) :is
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .gf-button[data-variant="ghost"],.btn-ghost
+),
+body[data-gf-surface="workspace"] :is(.modal-overlay,.gf-dialog) :is(
+  .gf-button[data-variant="ghost"],.btn-ghost
 ){
   background:transparent!important;border-color:transparent!important;
   color:var(--gf-color-primary)!important;box-shadow:none!important;
 }
-body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(button,a):focus-visible{
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(button,a):focus-visible,
+body[data-gf-surface="workspace"] :is(.modal-overlay,.gf-dialog,#orderModal) :is(button,a):focus-visible{
   outline:2px solid var(--gf-color-primary);
   outline-offset:2px;
 }
@@ -249,7 +260,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(button,a):fo
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .orders-list-toolbar,.orders-toolbar,.customer-searchbar-v8,
   .deposit-searchbar,.deposit-list-toolbar,.fleet-toolbar,.driver-toolbar,
-  .collaborators-toolbar,.gf-directory-toolbar,.history-toolbar-v311,
+  .collaborators-toolbar,.gf-directory-toolbar,
   .report-toolbar,.report-filter-row,.orders-filters,.picker-filters
 ){
   gap:12px!important;
@@ -373,7 +384,10 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .deposit-field input,.deposit-field textarea,
   .orders-filter-grid input,.orders-filter-grid select,
   .orders-form-grid input,.orders-form-grid select,.orders-form-grid textarea
-):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]){
+):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]),
+body[data-gf-surface="workspace"] :is(
+  .modal-overlay,.gf-dialog,#orderModal
+) :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]),select,textarea){
   min-height:40px;
   border:1px solid var(--gf-color-border)!important;
   border-radius:10px!important;
@@ -386,7 +400,10 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .gf-input,.gf-select,.gf-textarea,
   .company-field input,.company-field select,.company-field textarea,
   .gf-field input,.gf-field select,.gf-field textarea
-):focus{
+):focus,
+body[data-gf-surface="workspace"] :is(
+  .modal-overlay,.gf-dialog,#orderModal
+) :is(input,select,textarea):focus{
   border-color:var(--gf-color-primary)!important;
   outline:0;
   box-shadow:var(--gf-focus-ring)!important;
@@ -464,20 +481,18 @@ body[data-gf-surface="workspace"] #app #tab-ordini-collegamenti .orders-source-o
 body[data-gf-surface="workspace"] #app #tab-settings .settings-item+.settings-item{
   border-top-color:var(--gf-color-border)!important;
 }
-body[data-gf-surface="workspace"] #app #tab-report .report-chart-card :is(h2,h3),
-body[data-gf-surface="workspace"] #app #tab-storico :is(h2,h3){
+body[data-gf-surface="workspace"] #app #tab-report .report-chart-card :is(h2,h3){
   font-family:var(--gf-font-display)!important;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .gf-empty,.customer-empty,.deposit-empty,.fleet-empty,.driver-directory-empty,
-  .orders-empty,.history-empty-v311,.dash-detail-empty
+  .orders-empty,.dash-detail-empty
 ){
   color:var(--gf-color-muted);
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .gf-empty h2,.customer-empty h2,.deposit-empty h2,.fleet-empty h2,
-  .driver-directory-empty h2,.history-empty-v311 h2
-){
+  .driver-directory-empty h2){
   font:700 16px/1.3 var(--gf-font-display)!important;
   color:var(--gf-color-text)!important;
 }

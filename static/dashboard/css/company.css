@@ -157,8 +157,6 @@ body.gf-company-page-active #showOnboardingBtn {
   }
 }
 
-
-
 /* GiroFacile company profile 2026-10-13 — scoped restyle based on approved reference. */
 body:has(#tab-company:not(.hidden)) #app .main-area {
   background:#edf0f6!important;
@@ -447,7 +445,6 @@ body:has(#tab-company:not(.hidden)) #app .topbar-dashboard-title p{
   background:#fff!important;box-shadow:none!important;
 }
 #tab-company .gf-ref-rail .onboarding-card-v29 h2{font-size:15px}
-#tab-company .gf-ref-rail .onboarding-card-v29 .onboarding-progress-v29{max-width:100%}
 @media(min-width:821px){
   body:has(#tab-company:not(.hidden)) #app #companySaveBar:not(.hidden){
     position:fixed!important;top:auto!important;bottom:18px!important;
@@ -495,7 +492,6 @@ body:has(#tab-company:not(.hidden)) #app .topbar-dashboard-title p{
   #tab-company .gf-ref-preview{padding:16px}
   #tab-company .gf-ref-brand-controls{align-items:flex-start}
 }
-
 
 #tab-company .gf-ref-stack .gf-ref-section-body.gf-ref-same-on > .company-contact-grid{
   display:none!important;

@@ -38,7 +38,7 @@ body:has(#app .gf-page:not(.hidden)) .content{padding:28px 34px 48px}
 #app .gf-page :is(.panel-header,.drivers-list-header) p{font-size:13px;line-height:1.6;font-weight:400;color:var(--gf-muted);margin:6px 0 0}
 
 /* Reusable surfaces: compact nested cards, generous main panels. */
-#app .gf-page :is(.panel,.driver-card,.history-empty-v311,.dash-live-summary-card,.dash-main-card,.dash-empty-subpage,.dash-detail-empty,
+#app .gf-page :is(.panel,.driver-card,.dash-live-summary-card,.dash-main-card,.dash-empty-subpage,.dash-detail-empty,
   .scheduled-overview,.scheduled-stops,.scheduled-summary,.result-summary-card,.stops-panel,.alerts-panel,
   .billing-section-v876,.plan-page-features-v875,.plan-help-card-v875,.plan-comparison-v875,.up-card-v875,.feature-lock-card,.feature-plan-card){
   min-width:0;border:1px solid var(--gf-line);border-radius:var(--gf-radius);background:var(--gf-surface);box-shadow:var(--gf-shadow);
@@ -101,10 +101,8 @@ body:has(#app .gf-page:not(.hidden)) .content{padding:28px 34px 48px}
 #app .gf-page td{padding:14px 16px;border-bottom:1px solid var(--gf-line);color:#344156;font-size:13px;line-height:1.5}
 #app .gf-page tbody tr:last-child td{border-bottom:0}
 #app .gf-page tbody tr:hover{background:#f8fbff}
-#app .gf-page :is(.route-status-pill,.driver-status,.chat-room-badge){font-size:11px;font-weight:600;line-height:1.4;border-radius:999px;padding:5px 10px}
+#app .gf-page :is(.route-status-pill,.driver-status){font-size:11px;font-weight:600;line-height:1.4;border-radius:999px;padding:5px 10px}
 #app .gf-page :is(.dash-empty,.empty-picker){padding:26px 18px;border:1px dashed #d9e5f6;border-radius:13px;background:#f8fbff;color:var(--gf-muted);font-size:14px;font-weight:400;line-height:1.6}
-#app .gf-page .history-empty-v311{box-shadow:var(--gf-shadow);backdrop-filter:none}
-#app .gf-page .history-empty-icon-v311{box-shadow:none;background:var(--gf-tint);border:0}
 
 /* Planning: preserve the workflow, quieten the step backgrounds. */
 #app #tab-giro .planning-steps{gap:24px}
@@ -161,21 +159,13 @@ body:has(#app .gf-page:not(.hidden)) .content{padding:28px 34px 48px}
 #app #tab-autisti .driver-card{border-radius:14px;box-shadow:none;padding:18px}
 #app #tab-autisti .driver-avatar{background:#edf5ff;color:#247bff;box-shadow:none}
 #app #tab-autisti .driver-info-grid div{background:#f8fbff;border-color:var(--gf-line);border-radius:10px}
-#app #tab-chat-autisti .driver-chat-center{grid-template-columns:minmax(250px,.75fr) minmax(0,1.65fr);gap:16px;min-height:580px}
-#app #tab-chat-autisti :is(.driver-chat-list-card,.driver-chat-room-card){min-width:0;min-height:580px;border:1px solid var(--gf-line);border-radius:18px;box-shadow:var(--gf-shadow);background:var(--gf-surface)}
-#app #tab-chat-autisti :is(.driver-chat-list-head,.driver-chat-room-head){padding:20px;background:#fff;border-bottom:1px solid var(--gf-line)}
-#app #tab-chat-autisti .driver-chat-room-head h2{font-size:20px;letter-spacing:-.4px}
-#app #tab-chat-autisti .driver-chat-room-head p{font-size:13px;line-height:1.6;font-weight:400;color:var(--gf-muted)}
-#app #tab-chat-autisti .driver-chat-thread{border-radius:12px}
-#app #tab-chat-autisti .chat-center-input{padding:16px;gap:12px;background:#fff;border-top:1px solid var(--gf-line)}
-#app #tab-chat-autisti .chat-center-input textarea{flex:1;width:100%}
 #app #tab-settings .settings-panel{padding:0 24px}
 #app #tab-settings .settings-save-bar-v893{border-color:var(--gf-line);box-shadow:var(--gf-shadow)}
 #app #tab-settings #settingsSaveBtnV893{border-radius:12px;min-height:44px;font-size:14px;font-weight:600}
 
 /* Dialogs and dropdowns also belong to the same product, including those
  * launched from protected pages. Their parent pages remain untouched. */
-.gf-dialog :is(.modal,.profile-modal){
+.gf-dialog :is(.modal){
   border:1px solid var(--gf-line);border-radius:18px;background:#fff;box-shadow:0 18px 60px #101b3d26;
 }
 .gf-dialog :is(.modal-head,.modal-header,.delivery-modal-head){
@@ -193,7 +183,6 @@ body:has(#app .gf-page:not(.hidden)) .content{padding:28px 34px 48px}
 #customerDetailsDialog.gf-dialog{border:1px solid var(--gf-line);border-radius:18px;box-shadow:0 18px 60px #101b3d26}
 #customerDetailsDialog.gf-dialog h2{font-size:24px;line-height:1.25;letter-spacing:-.6px}
 #customerDetailsDialog.gf-dialog .customer-detail-actions{flex-wrap:wrap}
-#profileOverlay .profile-plan-actions-v63{grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
 #gfMobileMoreMenuV62{border-radius:18px;border-color:#e8eef8;box-shadow:0 12px 36px #244f8720;font-family:Arial,Helvetica,sans-serif}
 #gfMobileMoreMenuV62>button{border-radius:12px;font-size:14px;font-weight:600;color:#374e77}
 #gfMobileMoreMenuV62>button:hover{background:#edf5ff;color:#0b63f6}
@@ -211,18 +200,14 @@ body:has(#app .gf-page:not(.hidden)) .content{padding:28px 34px 48px}
   body:has(#app .gf-page:not(.hidden)) .content{padding:20px 16px 110px}
   #app .gf-page :is(h1,.route-preview-design .result-header h2){font-size:32px;letter-spacing:-1px}
   #app .gf-page :is(.page-title-row,.report-hero-row,.dash-subpage-title-row,.plan-page-top-v875,.billing-page-top-v876){align-items:flex-start;flex-direction:column;gap:14px;min-height:0;margin-bottom:22px}
-  #app .gf-page :is(.panel,.history-empty-v311){padding:18px 16px}
+  #app .gf-page :is(.panel){padding:18px 16px}
   body.app-logged-in #app .gf-page .panel{border-radius:18px!important;box-shadow:var(--gf-shadow)!important}
   #app #tab-report :is(.report-chart-grid,.report-filter-grid){grid-template-columns:1fr}
   #app #tab-report .report-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
   #app #tab-report .report-kpi-card,#app #tab-report .report-kpi-card:nth-child(-n+4){grid-column:auto;min-height:140px;padding:16px}
   #app #tab-report .report-kpi-card:nth-child(-n+4) strong{font-size:27px}
-  #app #tab-chat-autisti .driver-chat-center{grid-template-columns:1fr}
-  #app #tab-chat-autisti .driver-chat-list-card{min-height:0;max-height:300px}
-  #app #tab-chat-autisti .driver-chat-room-card{min-height:420px}
-  #app #tab-chat-autisti .chat-center-messages{min-height:240px}
   #app #tab-settings .settings-panel{padding:0 16px}
-  .gf-dialog :is(.modal,.profile-modal){border-radius:18px!important}
+  .gf-dialog :is(.modal){border-radius:18px!important}
 }
 @media(max-width:520px){
   #app #tab-mezzi .vehicle-data-grid-v896{grid-template-columns:1fr}
@@ -230,8 +215,6 @@ body:has(#app .gf-page:not(.hidden)) .content{padding:28px 34px 48px}
   #app .gf-page .drivers-cards{grid-template-columns:1fr}
   #app .gf-page :is(.stat-card,.scheduled-metric){padding:16px}
   #app .gf-page .stat-card>div>strong{font-size:27px}
-  #app #tab-chat-autisti .chat-center-input{flex-wrap:wrap}
-  #app #tab-chat-autisti .chat-center-input textarea{flex-basis:100%}
   .gf-dialog :is(.modal-head,.modal-header,.delivery-modal-head) h2{font-size:22px}
 }
 @media(prefers-reduced-motion:reduce){
