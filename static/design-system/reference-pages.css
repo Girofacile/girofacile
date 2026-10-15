@@ -26,8 +26,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(h1,h2,h3,h4)
   letter-spacing:-.01em;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .page-title-row,.orders-connections-mobile-head
-){
+  .page-title-row){
   min-width:0;
   gap:16px 24px;
   margin-bottom:22px;
@@ -45,7 +44,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   color:var(--gf-color-muted)!important;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .panel-header,.customer-list-head,.gf-directory-head,.orders-sources-directory-head,.settings-section-head
+  .panel-header,.customer-list-head,.gf-directory-head,.settings-section-head
 ){
   display:flex;
   align-items:center;
@@ -56,7 +55,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   background:var(--gf-color-surface)!important;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .panel-header,.customer-list-head,.gf-directory-head,.orders-sources-directory-head) h2{
+  .panel-header,.customer-list-head,.gf-directory-head) h2{
   margin:0;
   color:var(--gf-color-text)!important;
   font:700 16px/1.2 var(--gf-font-display)!important;
@@ -71,8 +70,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
 
 /* 2. Superfici: una sola grammatica visiva per pagine gestionali. */
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .panel,.card,.gf-card,.gf-directory-panel,.customer-list-panel-v8,.orders-filter-panel,.orders-source-panel,
-  .orders-source-card,
+  .panel,.card,.gf-card,.gf-directory-panel,.customer-list-panel-v8,.orders-filter-panel,
   .customer-card,.dash-sub-card,.dash-sub-route-picker,.live-design-card,.live-design-picker,
   .route-map-panel-v74,.planning-setup-panel){
   border:1px solid var(--gf-color-border)!important;
@@ -82,17 +80,12 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   box-shadow:var(--gf-shadow-sm)!important;
   min-width:0;
 }
-body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(.customer-card,
-  .orders-source-card):hover{
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(.customer-card):hover{
   border-color:#c2d0e7!important;
   box-shadow:0 4px 18px rgba(15,34,80,.09)!important;
 }
-body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(.customer-card-heading,.order-source-panel-head){
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(.customer-card-heading){
   border-color:var(--gf-color-border)!important;
-}
-body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .orders-source-card h3){
-  color:var(--gf-color-text);
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(.gf-directory-metric-icon){
   border-radius:10px!important;
@@ -305,9 +298,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(.gf-plate,.v
 /* 7. Campi: manteniamo gli stati validazione, file, mappa e i custom input. */
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .gf-input,.gf-select,.gf-textarea,
-  .gf-field input,.gf-field select,.gf-field textarea,
-  .orders-form-grid input,.orders-form-grid select,.orders-form-grid textarea
-):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]),
+  .gf-field input,.gf-field select,.gf-field textarea):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]),
 body[data-gf-surface="workspace"] :is(
   .modal-overlay,.gf-dialog) :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]),select,textarea){
   min-height:40px;
@@ -328,8 +319,7 @@ body[data-gf-surface="workspace"] :is(
   outline:0;
   box-shadow:var(--gf-focus-ring)!important;
 }
-body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(.gf-field label,
-  .orders-form-grid label){
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(.gf-field label){
   color:var(--gf-color-text);
   font:600 13px/1.45 var(--gf-font-family);
   letter-spacing:0;

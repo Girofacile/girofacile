@@ -1998,12 +1998,6 @@ body.admin-mode .side-nav .nav-item.active{
 .left-column{
   width:100%;
 }
-.page-actions{
-  display:flex;
-  gap:10px;
-  align-items:center;
-  flex-wrap:wrap;
-}
 .customer-list-panel-v8{
   margin-top:4px;
 }
@@ -2039,8 +2033,6 @@ body.admin-mode .side-nav .nav-item.active{
   margin-bottom:8px;
 }
 @media(max-width:760px){
-  .page-actions{width:100%}
-  .page-actions button{flex:1}
   .customer-searchbar-v8{grid-template-columns:1fr}
 }
 

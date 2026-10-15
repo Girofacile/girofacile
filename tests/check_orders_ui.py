@@ -146,7 +146,7 @@ def main():
                     page.wait_for_function("document.getElementById('ordersMessage').textContent.includes('Nessun ordine')")
                     page.get_by_role('button',name='Collega i tuoi ordini',exact=True).click()
                     assert page.locator('#tab-ordini-collegamenti').is_visible()
-                    page.locator('.orders-source-option').filter(has=page.get_by_role('heading',name='E-commerce',exact=True)).get_by_role('button').click()
+                    page.locator('[data-source-option]').filter(has=page.get_by_role('heading',name='E-commerce',exact=True)).get_by_role('button').click()
                     page.get_by_role('button',name='Carica il file esportato',exact=True).click()
                     page.locator('#orderImportName').fill('Magazzino <script>test</script>')
                     csv_file={'name':'ordini.csv','mimeType':'text/csv','buffer':b'NOrdine;RagioneSociale;IndSped;Pedana;NColli;DataCons\nIMPORT-001;Destinatario;Via Roma 1;No;3;2099-01-16\n'}

@@ -58,7 +58,7 @@ test('order source onboarding explains samples and protects regenerated API keys
   new vm.Script(src,{filename:path});
   assert.match(src,/Verifica un ordine di esempio/);
   assert.match(src,/Invia le istruzioni al tuo fornitore/);
-  assert.match(src,/source-api-settings-layout/);
+  assert.match(src,/data-source-api-settings/);
   assert.match(src,/Verifica con un ordine di esempio/);
   assert.match(src,/Scarica istruzioni per il tuo gestionale/);
   assert.match(src,/function downloadInstructions\(\)/);

@@ -201,7 +201,7 @@ html body[data-gf-surface="workspace"] #app#app .content .dash-sub-icon svg{
 }
 
 /* Etichette di sezione: niente maiuscoletto colorato, come le etichette della dashboard. */
-html body[data-gf-surface="workspace"] #app#app .content :is(.dash-detail-eyebrow,.source-guide-kicker){
+html body[data-gf-surface="workspace"] #app#app .content :is(.dash-detail-eyebrow){
   font:600 13px/1.4 var(--gf-font-family)!important;letter-spacing:0!important;text-transform:none!important;color:var(--gf-color-muted)!important;
 }
 
