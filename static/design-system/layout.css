@@ -177,8 +177,7 @@ body[data-gf-surface="workspace"] #app .nav-section-label{padding:20px 16px 8px;
 body[data-gf-surface="workspace"] #app .side-footer{margin:0;padding:16px 12px;border-top:1px solid var(--gf-color-nav-active)}
 body[data-gf-surface="workspace"] #app .topbar-dashboard-title,body[data-gf-surface="workspace"] #app .topbar-new-route{display:none}
 body[data-gf-surface="workspace"] #app:has(#tab-dashboard:not(.hidden)) .topbar-dashboard-title,
-body[data-gf-surface="workspace"] #app:has(#tab-company:not(.hidden)) .topbar-dashboard-title,
-body[data-gf-surface="workspace"] #app:has(#tab-giro:not(.hidden)) .topbar-dashboard-title{display:block;min-width:0}
+body[data-gf-surface="workspace"] #app:has(#tab-company:not(.hidden)) .topbar-dashboard-title{display:block;min-width:0}
 body[data-gf-surface="workspace"] #app:has(#tab-dashboard:not(.hidden)) .topbar-new-route{display:inline-flex;white-space:nowrap}
 body[data-gf-surface="workspace"] #app:has(#tab-dashboard:not(.hidden)) .topbar-spacer{display:none}
 body[data-gf-surface="workspace"] #app .workspace-title-line{display:flex;align-items:center;gap:10px;min-width:0}

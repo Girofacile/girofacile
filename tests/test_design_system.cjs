@@ -522,31 +522,17 @@ test('planning page uses the shared topbar and dashboard visual language',()=>{
   const navigation=read('static/dashboard/js/navigation.js');
   assert.match(navigation,/giro:\s*\{[\s\S]*title: "Pianificazione giro consegne"[\s\S]*subtitle: "Seleziona clienti, configura risorse e calcola il percorso prima della programmazione\."/);
 
-  const layout=read(assets+'layout.css');
-  assert.match(layout,/#app:has\(#tab-giro:not\(\.hidden\)\) \.topbar-dashboard-title\{display:block;min-width:0\}/);
 
-  const planning=read('static/dashboard/css/planning.css');
-  assert.match(planning,/body:has\(#tab-giro:not\(\.hidden\)\) \.main-area\{background:var\(--gf-color-bg/);
-  assert.match(planning,/#tab-giro \.stat-card\{[\s\S]*border:1px solid var\(--gf-color-border[\s\S]*border-radius:var\(--gf-radius-lg[\s\S]*background:var\(--gf-color-surface/);
-  assert.match(planning,/#tab-giro \.plan-step-heading\{[\s\S]*background:var\(--gf-color-surface-subtle/);
-  assert.match(planning,/#tab-giro \.plan-step-number\{[\s\S]*background:var\(--gf-color-nav/);
-  assert.match(planning,/#tab-giro \.plan-step-art\{[\s\S]*color:var\(--gf-color-muted/);
-  assert.match(planning,/#tab-giro #openCustomerStepBtn\{[\s\S]*background:var\(--gf-color-nav/);
-  assert.match(planning,/@media\(min-width:821px\)\{[\s\S]*#tab-giro>\.page-title-row\{display:none!important\}/);
-  assert.match(planning,/#tab-giro \.plan-step-heading\{[\s\S]*min-height:62px[\s\S]*margin:-1px -19px 14px!important/);
-  assert.match(planning,/#tab-giro \.stat-icon\.blue,[\s\S]*background:var\(--gf-color-bg[\s\S]*color:var\(--gf-color-muted/);
-  assert.doesNotMatch(planning,/linear-gradient\(125deg|#8737ff|#0066ff|#12b67f/);
-
+  // Indicatori come card numeriche del sistema con icona neutra; passi del giro come card con stato a badge.
   const html=read('static/dashboard/index.html');
   const planningHtml=html.slice(html.indexOf('<section id="tab-giro"'),html.indexOf('<section id="tab-route-preview"'));
-  assert.match(planningHtml,/<span>Consegne pianificate<\/span>/);
+  assert.match(planningHtml,/<span class="gf-stat-card__label">Consegne pianificate<\/span>/);
   assert.doesNotMatch(planningHtml,/Consegne<\/span> pianificate/);
-
-  const workspace=read(assets+'workspace.css');
-  assert.match(workspace,/#tab-giro \.plan-step-number\{background:var\(--gf-color-nav\);color:var\(--gf-color-on-primary\)/);
-  assert.match(workspace,/#tab-giro \.plan-step:not\(:last-child\)::after\{content:none\}/);
-  assert.match(workspace,/#tab-giro :is\(\.stat-icon,\.stat-icon\.blue,\.stat-icon\.orange,\.stat-icon\.green,\.stat-icon\.purple\)\{[\s\S]*background:var\(--gf-color-bg\);[\s\S]*color:var\(--gf-color-muted\)/);
-  assert.match(workspace,/@media\(min-width:821px\)\{[\s\S]*#tab-giro>\.page-title-row\{display:none!important\}/);
+  assert.equal((planningHtml.match(/class="gf-stat-card__icon" data-tone="neutral"/g)||[]).length,4);
+  for(const n of [1,2,3])assert.match(planningHtml,new RegExp('id="planStepStatus'+n+'" class="gf-badge"'));
+  assert.doesNotMatch(planningHtml,/<h1|page-title-row|style="/);
+  const core=read('static/dashboard/js/core.js');
+  assert.match(core,/badge\.dataset\.status = state === "complete" \? "success"/);
 });
 
 

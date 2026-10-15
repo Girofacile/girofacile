@@ -1,27 +1,9 @@
 /* Reuse planning cards, form controls and buttons from the dashboard. */
-.fleet-mode,#fleetSetup{margin-top:18px;position:relative;z-index:1}
-#fleetSetup[hidden],#singleVehicleField[hidden],#singleDriverField[hidden]{display:none!important}
-#fleetSetup>label{display:block;margin-top:18px}
-#fleetSetup>small{display:block;margin-top:10px;line-height:1.5;color:#64748b}
-.fleet-resource{padding:14px;margin-bottom:12px;border:1px solid #dce4ee;border-radius:12px;background:#fff}
-.fleet-resource header,.fleet-actions{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:12px}
-.fleet-resource .fleet-fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.fleet-resource label{display:block;margin-top:8px}
-.fleet-resource select,.fleet-resource input{width:100%;min-width:0}
-.fleet-resource details{margin-top:12px}.fleet-resource summary{cursor:pointer;color:#475569}
+
+.fleet-actions{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:12px}
 .fleet-result{margin-bottom:18px}.fleet-result h2{margin:0}.fleet-result p{color:#64748b}
 .fleet-stops{list-style:none;padding:0;margin:0}.fleet-stops li{display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-top:1px solid #e2e8f0;align-items:center}
 .fleet-stops li>div{min-width:0;overflow-wrap:anywhere}.fleet-stops small{display:block;color:#64748b}.fleet-stops select{max-width:240px;min-width:160px}
 .fleet-summary{display:flex;flex-wrap:wrap;gap:12px;margin:16px 0}.fleet-summary span{background:#f1f5f9;padding:10px 14px;border-radius:10px}
 #fleetMessage{margin:12px 0;white-space:pre-line}#fleetMessage:empty{display:none}
-@media(max-width:600px){.fleet-resource .fleet-fields{grid-template-columns:1fr}.fleet-stops li{align-items:stretch;flex-direction:column}.fleet-stops select{max-width:none;width:100%}.fleet-actions button{width:100%}}
-
-#tab-giro .fleet-mode{margin:0 0 14px}
-#tab-giro .fleet-mode select,#tab-giro #fleetSetup :is(input,select){min-height:44px;background:#fff;border:1px solid #dce4ee;border-radius:9px;padding:10px 12px;width:100%;font:inherit}
-#tab-giro .fleet-mode label{display:block;margin-bottom:8px}
-#tab-giro:has(#fleetSetup:not([hidden])) .planning-steps{align-items:start}
-#tab-giro:has(#fleetSetup:not([hidden])) #routeEnergyPriceBoxV895{display:none!important}
-#tab-giro #fleetResources{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:14px}
-#fleetSetup h2{font-size:18px;margin:0 0 10px}
-#fleetResources .fleet-resource{margin:0 0 12px}
-#fleetSetup>select{max-width:520px}
+@media(max-width:600px){.fleet-stops li{align-items:stretch;flex-direction:column}.fleet-stops select{max-width:none;width:100%}.fleet-actions button{width:100%}}

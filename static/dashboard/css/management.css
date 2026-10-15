@@ -99,22 +99,13 @@ body:has(#app .gf-page:not(.hidden)) .content{padding:28px 34px 48px}
 #app .gf-page tbody tr:last-child td{border-bottom:0}
 #app .gf-page tbody tr:hover{background:#f8fbff}
 #app .gf-page :is(.route-status-pill){font-size:11px;font-weight:600;line-height:1.4;border-radius:999px;padding:5px 10px}
-#app .gf-page :is(.dash-empty,.empty-picker){padding:26px 18px;border:1px dashed #d9e5f6;border-radius:13px;background:#f8fbff;color:var(--gf-muted);font-size:14px;font-weight:400;line-height:1.6}
+#app .gf-page :is(.dash-empty){padding:26px 18px;border:1px dashed #d9e5f6;border-radius:13px;background:#f8fbff;color:var(--gf-muted);font-size:14px;font-weight:400;line-height:1.6}
 
 /* Planning: preserve the workflow, quieten the step backgrounds. */
-#app #tab-giro .planning-steps{gap:24px}
-#app #tab-giro .plan-step{background:#f8fbff;border:1px solid var(--gf-line);padding:20px;min-height:0}
-#app #tab-giro .plan-step-2{background:#f7fcf9}
-#app #tab-giro .plan-step-3{background:#fbf9fe}
-#app #tab-giro .plan-step-heading h2{color:var(--gf-ink)}
-#app #tab-giro .plan-step:not(:last-child)::after{right:-34px}
-#app #tab-giro .plan-step-description{min-height:0;margin:12px 35px 18px 0}
-#app #tab-giro .energy-price-box-v895{background:#f8faff;border-color:var(--gf-line)}
-#app #tab-giro .planning-completion{background:#f8fbff;border-color:var(--gf-line)}
-#app #tab-giro .delivery-workbench{margin-top:20px}
+
 #app .gf-page .result-layout{gap:20px}
 #app .gf-page .gf-vehicle-usage-card.electric{background:linear-gradient(135deg,#fff 50%,#effcf6)}
-#app .gf-page :is(.result-cards,.stats-grid){gap:16px;margin-bottom:20px}
+#app .gf-page :is(.result-cards){gap:16px;margin-bottom:20px}
 #app .gf-page .dash-sub-layout{grid-template-columns:minmax(260px,.65fr) minmax(0,1.35fr);gap:20px}
 #app .gf-page .dash-sub-main{min-width:0;gap:20px}
 #app .gf-page .dash-sub-route-picker{border:1px solid var(--gf-line);border-radius:18px;box-shadow:var(--gf-shadow)}
@@ -132,17 +123,15 @@ body:has(#app .gf-page:not(.hidden)) .content{padding:28px 34px 48px}
 .gf-dialog :is(.modal){
   border:1px solid var(--gf-line);border-radius:18px;background:#fff;box-shadow:0 18px 60px #101b3d26;
 }
-.gf-dialog :is(.modal-head,.modal-header,.delivery-modal-head){
+.gf-dialog :is(.modal-head,.modal-header){
   background:transparent;border-bottom:1px solid var(--gf-line);border-radius:0;box-shadow:none;
 }
 .gf-dialog .modal-header{padding-bottom:18px}
-.gf-dialog :is(.modal-head,.modal-header,.delivery-modal-head) h2{
+.gf-dialog :is(.modal-head,.modal-header) h2{
   color:var(--gf-ink);font-size:24px;line-height:1.25;letter-spacing:-.6px;font-weight:700;
 }
-.gf-dialog :is(.modal-head,.modal-header,.delivery-modal-head) p{font-size:13px;line-height:1.6;color:var(--gf-muted);font-weight:400}
-.gf-dialog :is(.delivery-modal-section){border-color:var(--gf-line);border-radius:13px;box-shadow:none;background:#fff}
-.gf-dialog :is(.delivery-modal-summary-v5){border-color:var(--gf-line);border-radius:13px;background:#f8fbff;box-shadow:none}
-.gf-dialog :is(.modal-actions,.delivery-modal-actions-v5){gap:10px;flex-wrap:wrap;border-color:var(--gf-line);background:#fff}
+.gf-dialog :is(.modal-head,.modal-header) p{font-size:13px;line-height:1.6;color:var(--gf-muted);font-weight:400}
+.gf-dialog :is(.modal-actions){gap:10px;flex-wrap:wrap;border-color:var(--gf-line);background:#fff}
 .gf-dialog .address-suggestions{border-color:var(--gf-line);border-radius:12px;box-shadow:var(--gf-shadow)}
 #customerDetailsDialog.gf-dialog{border:1px solid var(--gf-line);border-radius:18px;box-shadow:0 18px 60px #101b3d26}
 #customerDetailsDialog.gf-dialog h2{font-size:24px;line-height:1.25;letter-spacing:-.6px}
@@ -164,7 +153,7 @@ body:has(#app .gf-page:not(.hidden)) .content{padding:28px 34px 48px}
 @media(max-width:520px){
   #app .gf-page :is(.stat-card){padding:16px}
   #app .gf-page .stat-card>div>strong{font-size:27px}
-  .gf-dialog :is(.modal-head,.modal-header,.delivery-modal-head) h2{font-size:22px}
+  .gf-dialog :is(.modal-head,.modal-header) h2{font-size:22px}
 }
 @media(prefers-reduced-motion:reduce){
   :is(#app .gf-page,.gf-dialog) :is(button,a){transition:none}

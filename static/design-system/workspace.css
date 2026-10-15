@@ -25,13 +25,13 @@ margin:0;color:var(--gf-color-text);font-size:var(--gf-font-xl);font-weight:var(
 body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.panel,.customer-list-panel-v8,
 .dash-list-card,.dash-vehicles-panel,.customer-card,
 .dash-sub-card,.dash-sub-route-picker,.live-design-picker,.live-design-actions,
-.result-summary-card,.stops-panel,.alerts-panel,.route-map-panel-v74,.planning-setup-panel){
+.result-summary-card,.stops-panel,.alerts-panel,.route-map-panel-v74){
 min-width:0;border:1px solid var(--gf-color-border);border-radius:var(--gf-radius-lg);background:var(--gf-color-surface);color:var(--gf-color-text);box-shadow:var(--gf-shadow-sm);
 }
-body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.dash-vehicle-card,.driver-info-grid>div,.energy-price-box-v895,.gf-routing-summary){
+body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.dash-vehicle-card,.driver-info-grid>div,.gf-routing-summary){
 border-color:var(--gf-color-border);border-radius:var(--gf-radius-md);background:var(--gf-color-bg);color:var(--gf-color-text);box-shadow:none;
 }
-body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.dash-kpi-grid,.stats-grid){gap:var(--gf-space-4);margin-bottom:var(--gf-space-6)}
+body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.dash-kpi-grid){gap:var(--gf-space-4);margin-bottom:var(--gf-space-6)}
 body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.stat-card,.dash-kpi-card,.mini-card,.live-design-card,.gf-vehicle-usage-card){
 min-width:0;padding:var(--gf-space-5);border:1px solid var(--gf-color-border);border-radius:var(--gf-radius-lg);background:var(--gf-color-surface);color:var(--gf-color-text);box-shadow:var(--gf-shadow-sm);
 }
@@ -51,39 +51,16 @@ body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-card::after,body
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-card:nth-child(1) .dash-kpi-icon{color:var(--gf-color-warning);background:var(--gf-color-warning-bg)}
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-card:nth-child(3) .dash-kpi-icon{color:var(--gf-color-success);background:var(--gf-color-success-bg)}
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-card:nth-child(4) .dash-kpi-icon{color:var(--gf-color-muted);background:var(--gf-color-bg)}
-body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.route-status-pill.completato,.delivery-status-pill.completata,.delivery-status-pill.consegnata,.plan-status.complete,.planning-check.complete){background:var(--gf-color-success-bg);color:var(--gf-color-success);border-color:var(--gf-color-success-bg)}
-body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.route-status-pill.programmato,.route-status-pill.da_completare,.plan-status.partial,.planning-check:not(.complete)){background:var(--gf-color-warning-bg);color:var(--gf-color-warning);border-color:var(--gf-color-warning-bg)}
+body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.route-status-pill.completato,.delivery-status-pill.completata,.delivery-status-pill.consegnata){background:var(--gf-color-success-bg);color:var(--gf-color-success);border-color:var(--gf-color-success-bg)}
+body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.route-status-pill.programmato,.route-status-pill.da_completare){background:var(--gf-color-warning-bg);color:var(--gf-color-warning);border-color:var(--gf-color-warning-bg)}
 body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.route-status-pill.in_corso,.delivery-status-pill.in_corso,.delivery-status-pill.in_attesa){background:var(--gf-color-info-bg);color:var(--gf-color-info);border-color:var(--gf-color-info-bg)}
 body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.route-status-pill.annullato,.delivery-status-pill.mancata,.delivery-status-pill.non_consegnata){background:var(--gf-color-danger-bg);color:var(--gf-color-danger);border-color:var(--gf-color-danger-bg)}
-body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.plan-status::before){background:currentColor}
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-list-card{padding:0}
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-list-head{padding:var(--gf-space-5);border-bottom:1px solid var(--gf-color-border)}
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-list-head>span{background:var(--gf-color-bg);color:var(--gf-color-muted);border-radius:var(--gf-radius-pill)}
 /* Active is identical to Total. Retain its ID and updates, show three measures. */
 
 body[data-gf-surface="workspace"] #app .company-configured-badge-v40{border-radius:var(--gf-radius-pill);background:var(--gf-color-success-bg);color:var(--gf-color-success);border-color:var(--gf-color-success-bg)}
-body[data-gf-surface="workspace"] #app #tab-giro .plan-step{--step-color:var(--gf-color-nav);border:1px solid var(--gf-color-border);border-radius:var(--gf-radius-md);background:var(--gf-color-surface);box-shadow:none}
-body[data-gf-surface="workspace"] #app #tab-giro .plan-step-number{background:var(--gf-color-nav);color:var(--gf-color-on-primary);box-shadow:none}
-body[data-gf-surface="workspace"] #app #tab-giro .plan-step:not(:last-child)::after{content:none}
-body[data-gf-surface="workspace"] #app #tab-giro :is(.stat-icon,.stat-icon.blue,.stat-icon.orange,.stat-icon.green,.stat-icon.purple){
-  border:1px solid var(--gf-color-border);
-  border-radius:var(--gf-radius-circle);
-  background:var(--gf-color-bg);
-  color:var(--gf-color-muted);
-  box-shadow:none;
-}
-body[data-gf-surface="workspace"] #app #tab-giro .plan-step{padding-top:0!important}
-body[data-gf-surface="workspace"] #app #tab-giro .plan-step-heading{
-  min-height:62px;
-  margin-top:-1px!important;
-  background:var(--gf-color-surface-subtle);
-}
-@media(min-width:821px){
-  body[data-gf-surface="workspace"] #app #tab-giro>.page-title-row{display:none!important}
-}
-body[data-gf-surface="workspace"] #app #tab-giro .planning-completion{border-color:var(--gf-color-border);border-radius:var(--gf-radius-md);background:var(--gf-color-surface)}
-body[data-gf-surface="workspace"] #app #tab-giro .planning-check-icon{background:var(--gf-color-warning);border:0}
-body[data-gf-surface="workspace"] #app #tab-giro .planning-check.complete .planning-check-icon{background:var(--gf-color-success);border:0}
 body[data-gf-surface="workspace"] #app #tab-dashboard-completed{background:none}
 body[data-gf-surface="workspace"] #app #tab-route-preview .route-preview-design :is(.mini-card,.gf-routing-costs>div,.stops-panel,.route-map-panel-v74,.result-summary-card),
 body[data-gf-surface="workspace"] #app #tab-dashboard-in-progress :is(.live-design-card,.live-design-picker,.live-design-main>.dash-sub-card,.live-design-actions){border-color:var(--gf-color-border);border-radius:var(--gf-radius-lg);background:var(--gf-color-surface);color:var(--gf-color-text);box-shadow:var(--gf-shadow-sm)}
@@ -91,8 +68,7 @@ body[data-gf-surface="workspace"] #app #tab-dashboard-in-progress #dashboardLive
 body[data-gf-surface="workspace"] #app #tab-route-preview .route-preview-design :is(.preview-cost-icon,.mini-icon,.preview-section-icon){border-radius:var(--gf-radius-md);background:var(--gf-color-info-bg);color:var(--gf-color-info)}
 /* .gf-dialog is sometimes a viewport overlay: only style its inner surface. */
 body[data-gf-surface="workspace"] :is(.gf-dialog .modal,dialog.customer-details-dialog,dialog.customer-tracking-dialog,dialog.live-map-dialog){border-color:var(--gf-color-border);border-radius:var(--gf-radius-lg);background:var(--gf-color-surface);color:var(--gf-color-text);box-shadow:var(--gf-shadow-md)}
-body[data-gf-surface="workspace"] .gf-dialog :is(.modal-head,.modal-header,.delivery-modal-head,.delivery-modal-section){border-color:var(--gf-color-border);background:var(--gf-color-surface);box-shadow:none}
-body[data-gf-surface="workspace"] .gf-dialog :is(.delivery-modal-section){border-radius:var(--gf-radius-md)}
+body[data-gf-surface="workspace"] .gf-dialog :is(.modal-head,.modal-header){border-color:var(--gf-color-border);background:var(--gf-color-surface);box-shadow:none}
 body[data-gf-surface="workspace"] .customer-tracking-dialog :is(.tracking-dialog-header,.tracking-dialog-footer){background:var(--gf-color-surface);border-color:var(--gf-color-border)}
 body[data-gf-surface="workspace"] .customer-tracking-dialog{--tracking-ink:var(--gf-color-text);--tracking-muted:var(--gf-color-muted);--tracking-line:var(--gf-color-border)}
 body[data-gf-surface="workspace"] .gf-dialog .address-suggestions{border-color:var(--gf-color-border);border-radius:var(--gf-radius-md);background:var(--gf-color-surface);box-shadow:var(--gf-shadow-md)}

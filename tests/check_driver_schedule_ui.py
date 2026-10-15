@@ -76,7 +76,7 @@ def main():
                 assert db.query(Driver).filter_by(nome='Nuovo turnista').one().work_schedule['start']=='09:00'
                 page.evaluate("showTab('giro')")
                 page.locator('#routeVehicle').select_option('1');page.locator('#routeDriver').select_option('1')
-                page.locator('#singleDriverField .driver-schedule-editor summary').click()
+                page.locator('#singleDriverField [data-schedule-editor] summary').click()
                 assert page.locator('#routeDriverScheduleBreak0Start').input_value()=='08:15'
                 # Daily override must not overwrite the driver's normal break.
                 page.locator('#routeDriverScheduleBreak0End').fill('09:00');page.locator('#routeDriverScheduleBreak0End').blur()
@@ -98,7 +98,7 @@ def main():
                 for i in range(2):
                     page.locator(f'#fleetVehicle{i}').select_option(str(vehicles[i]['id']))
                     page.locator(f'#fleetDriver{i}').select_option(str(drivers[i]['id']))
-                page.locator('#fleetResources .driver-schedule-editor summary').first.click()
+                page.locator('#fleetResources [data-schedule-editor] summary').first.click()
                 assert page.locator('#fleetDriverSchedule0Break0Start').input_value()=='08:15'
                 page.locator('#fleetStrategy').select_option('balanced')
                 page.locator('#openCustomerStepBtn').click()

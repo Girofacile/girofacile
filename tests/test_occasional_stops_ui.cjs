@@ -76,10 +76,13 @@ test('drag/drop preserves verification and company preferences clear disabled op
 
 test('planning markup exposes occasional edit badge, responsive dialog and touch reorder controls',()=>{
   const html=fs.readFileSync('static/dashboard/index.html','utf8');
-  const css=fs.readFileSync('static/dashboard/css/occasional-stops.css','utf8');
+  // La finestra usa gf-modal; su mobile i controlli del sistema hanno l'altezza di tocco del tema.
+  const css=fs.readFileSync('static/design-system/components.css','utf8');
   assert.match(html,/\+ Fermata occasionale/);assert.match(html,/<dialog id="occasionalStopDialog"/);
   assert.match(html,/oninput="invalidateOccasionalAddress\(\)"/);
-  assert.match(css,/@media\(max-width:540px\)/);assert.match(css,/min-height:44px/);
+  assert.match(html,/<dialog id="occasionalStopDialog" class="gf-modal"/);
+  assert.match(css,/@media\(max-width:640px\) \{ body\[data-gf-surface\] \.gf-button \{ min-height:var\(--gf-control-touch\) !important; \}/);
+  assert.match(fs.readFileSync('static/design-system/theme.css','utf8'),/--gf-control-touch:\s*44px/);
   assert.match(core,/planningStopDrop\(event, \$\{i\}\)/);assert.match(core,/moveDelivery\(\$\{i\}, -1\)/);
   assert.match(core,/Occasionale<\/span>/);
 });

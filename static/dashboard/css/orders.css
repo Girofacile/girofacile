@@ -53,9 +53,6 @@
 
 /* Compact file wizard, separate from the API settings page. */
 
-#orderPlanningProceedMessage{white-space:pre-wrap;margin:0 0 12px;padding:12px;border-radius:10px;background:#fff7ed;color:#9a3412;text-align:left}
-#orderPlanningProceedMessage[data-state="loading"]{background:#eff6ff;color:#1d4ed8}
-
 /* Orders main page: compact reference layout, scoped to avoid order subpages. */
 
 /* Order detail modal: compact workspace overlay. */

@@ -72,7 +72,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .panel,.card,.gf-card,.gf-directory-panel,.customer-list-panel-v8,.orders-filter-panel,
   .customer-card,.dash-sub-card,.dash-sub-route-picker,.live-design-card,.live-design-picker,
-  .route-map-panel-v74,.planning-setup-panel){
+  .route-map-panel-v74){
   border:1px solid var(--gf-color-border)!important;
   border-radius:16px!important;
   background:var(--gf-color-surface)!important;
@@ -116,7 +116,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   font:400 13px/1.4 var(--gf-font-family)!important;
   color:var(--gf-color-muted)!important;
 }
-body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(.gf-directory-metrics,.stats-grid){
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(.gf-directory-metrics){
   gap:16px!important;
   margin-bottom:22px;
 }
@@ -195,8 +195,7 @@ body[data-gf-surface="workspace"] :is(.modal-overlay,.gf-dialog) :is(button,a):f
 
 /* 5. Barre strumenti e controlli scheda/tabella. */
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(.orders-toolbar,.customer-searchbar-v8,.fleet-toolbar,.gf-directory-toolbar,
-  .report-toolbar,.orders-filters,.picker-filters
-){
+  .report-toolbar,.orders-filters){
   gap:12px!important;
   border-color:var(--gf-color-border)!important;
   background:transparent;
@@ -351,12 +350,6 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(.route-statu
 
 /* 9. Sezioni con layout specifico: ordine delle aree invariato. */
 
-body[data-gf-surface="workspace"] #app #tab-giro .plan-step{
-  border-color:var(--gf-color-border)!important;
-  border-radius:12px!important;
-  background:var(--gf-color-surface)!important;
-  box-shadow:none!important;
-}
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .gf-empty,
   .orders-empty,.dash-detail-empty

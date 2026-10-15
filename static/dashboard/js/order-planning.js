@@ -7,7 +7,8 @@
   const ids=['routeName','routeDate','routeStart','routeDeposit','routeVehicle','routeDriver','returnDepot','fuelPrice','electricityPrice'];
   const el=id=>document.getElementById(id);
   const allowed=()=>!window.GFCompanyAccess || GFCompanyAccess.can('orders.plan');
-  const message=text=>{if(el('orderPlanningMessage'))el('orderPlanningMessage').textContent=text;};
+  // Ogni riga del messaggio va a capo senza stili in linea.
+  const message=text=>{const node=el('orderPlanningMessage');if(node)node.replaceChildren(...String(text??'').split('\n').flatMap((line,i)=>i?[document.createElement('br'),line]:[line]));};
   function feedback(text,state='error'){
     const box=el('orderPlanningProceedMessage');if(!box)return;
     box.textContent=text;box.hidden=!text;box.dataset.state=state;

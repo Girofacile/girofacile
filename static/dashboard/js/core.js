@@ -1384,7 +1384,8 @@ function setAvailabilityHint(id, text, state="muted"){
   const el = document.getElementById(id);
   if(!el) return;
   el.textContent = text || "";
-  el.className = `availability-hint ${state}`;
+  el.className = "gf-badge";
+  el.dataset.status = {ok:"success", warn:"warning", error:"danger", busy:"warning"}[state] || "neutral";
 }
 
 function resourcesDateTimeReady(){
@@ -1542,7 +1543,7 @@ function renderPlanningCompletion(missing){
   if(globalThis.GFFleetPlanning?.active())items.push(["Durata dei giri", !missing.includes("durata massima dei giri (entro la giornata)")]);
   const checklist = document.getElementById("planningChecklist");
   if(checklist) checklist.innerHTML = items.map(([label, done, detail]) =>
-    `<div class="planning-check ${done ? 'complete' : ''}"><span class="planning-check-icon" aria-hidden="true">${done ? '✓' : '!'}</span><div><strong>${label}</strong><small>${detail || (done ? 'Completato' : 'Da completare')}</small></div></div>`
+    `<span class="gf-badge" data-status="${done ? 'success' : 'warning'}"><span aria-hidden="true">${done ? '✓' : '!'}</span> ${label} · ${detail || (done ? 'Completato' : 'Da completare')}</span>`
   ).join("");
   const basicDone = [!missing.includes("data"), !missing.includes("orario partenza")];
   const resourceDone = ["deposito", "mezzo", "autista", "prezzo carburante", "prezzo energia", "durata massima dei giri (entro la giornata)"].every(field=>!missing.includes(field));
@@ -1550,7 +1551,8 @@ function renderPlanningCompletion(missing){
   states.forEach((state, i)=>{
     const badge = document.getElementById(`planStepStatus${i+1}`);
     if(badge){
-      badge.className = `plan-status ${state}`;
+      badge.className = "gf-badge";
+      badge.dataset.status = state === "complete" ? "success" : state === "partial" ? "warning" : "neutral";
       badge.textContent = state === "complete" ? "Completato" : state === "partial" ? "Quasi completato" : "Da completare";
     }
   });
@@ -1584,7 +1586,8 @@ function updateRoutePlanningGateV68(){
   }
   if(hint){
     hint.textContent = ready ? "Dati giro completi: puoi selezionare i clienti e preparare il percorso." : `Campi mancanti: ${missing.join(", ")}.`;
-    hint.className = `route-gate-hint ${ready ? "ok" : "warn"}`;
+    hint.className = "gf-badge";
+    hint.dataset.status = ready ? "success" : "warning";
   }
   renderPlanningCompletion(missing);
   if(!ready){
@@ -3078,11 +3081,11 @@ async function loadCustomerPicker(){
   const rows = await api("/api/customers?"+params.toString());
   box.innerHTML = rows.filter(customerIsPlannable).map(c=>{
     const already = deliveries.some(d=>String(d.customer_id||"")===String(c.id));
-    return `<div class="picker-customer-row ${already ? 'already-added' : ''}">
-      <div><strong>${esc(c.codice_cliente||"")} ${esc(c.nome)}</strong><small>${esc(c.indirizzo)} · ${esc(c.comune||"")} ${esc(c.provincia||"")} · ${agentsFeatureEnabled() ? esc(c.agent_name||"Cliente interno") + " · " : ""}${fascia(c)}</small></div>
-      <button onclick="quickAddCustomerToDelivery(${c.id})" ${already ? 'class="btn-secondary"' : ''}>${already ? 'Aggiunto' : '+ Aggiungi'}</button>
+    return `<div class="gf-list-item" data-already-added="${already}">
+      <span class="gf-list-item__main"><strong>${esc(c.codice_cliente||"")} ${esc(c.nome)}</strong><br><small class="gf-muted">${esc(c.indirizzo)} · ${esc(c.comune||"")} ${esc(c.provincia||"")} · ${agentsFeatureEnabled() ? esc(c.agent_name||"Cliente interno") + " · " : ""}${fascia(c)}</small></span>
+      <button type="button" class="gf-button" data-variant="${already ? 'secondary' : 'primary'}" data-size="sm" onclick="quickAddCustomerToDelivery(${c.id})">${already ? 'Aggiunto' : '+ Aggiungi'}</button>
     </div>`;
-  }).join("") || `<div class="empty-picker">Nessun cliente trovato con questi filtri</div>`;
+  }).join("") || `<div class="gf-empty"><p>Nessun cliente trovato con questi filtri</p></div>`;
 }
 
 function deliveryFromCustomer(c){
@@ -3252,13 +3255,14 @@ function moveDelivery(i, direction){
 }
 
 function renderDeliveryEmptyRow(){
-  return `<tr><td colspan="5"><div class="empty-state-small">Nessuna consegna inserita. Seleziona i clienti dalla lista superiore e premi “+ Aggiungi”.</div></td></tr>`;
+  return `<tr><td colspan="5"><div class="gf-empty"><p>Nessuna consegna inserita. Seleziona i clienti dalla lista superiore e premi “+ Aggiungi”.</p></div></td></tr>`;
 }
 
 function deliveryGeoBadge(d){
   const geo = d.stato_geocodifica || (d.lat && d.lon ? "verificato" : "da_verificare");
   const label = {verificato:"Indirizzo verificato", da_verificare:"Da verificare", non_trovato:"Non trovato", manuale:"Manuale"}[geo] || "Da verificare";
-  return `<span class="geo-badge ${esc(geo)}">${esc(label)}</span>`;
+  const tone = {verificato:"success", da_verificare:"warning", non_trovato:"danger", manuale:"info"}[geo] || "warning";
+  return `<span class="gf-badge" data-status="${tone}">${esc(label)}</span>`;
 }
 
 function deliverySpecsSummary(d){
@@ -3284,24 +3288,26 @@ function renderDeliveries(){
     return;
   }
   body.innerHTML = deliveries.map((d,i)=>`
-    <tr data-delivery-row="${i}" class="delivery-clean-row" draggable="true" ondragstart="planningStopDragStart(event, ${i})" ondragend="planningStopDragEnd()" ondragover="event.preventDefault()" ondrop="planningStopDrop(event, ${i})">
-      <td class="delivery-main-cell clean">
-        <strong>${esc(d.cliente_nome)}</strong>${globalThis.GFOrderPlanning?.describe(d)||""}${d.customer_id == null ? ' <span class="badge">Occasionale</span>' : ''}
-        <small>${d.codice_cliente ? `Codice cliente: ${esc(d.codice_cliente)}` : `Fermata #${i+1}`}</small>
+    <tr data-delivery-row="${i}" draggable="true" ondragstart="planningStopDragStart(event, ${i})" ondragend="planningStopDragEnd()" ondragover="event.preventDefault()" ondrop="planningStopDrop(event, ${i})">
+      <td data-label="Cliente">
+        <strong>${esc(d.cliente_nome)}</strong>${globalThis.GFOrderPlanning?.describe(d)||""}${d.customer_id == null ? ' <span class="gf-badge" data-status="neutral">Occasionale</span>' : ''}
+        <br><small class="gf-muted">${d.codice_cliente ? `Codice cliente: ${esc(d.codice_cliente)}` : `Fermata #${i+1}`}</small>
       </td>
-      <td class="delivery-address-cell">
+      <td data-label="Indirizzo">
         <strong>${esc(d.indirizzo||"")}</strong>
-        ${d.indirizzo_geocodificato && d.indirizzo_geocodificato !== d.indirizzo ? `<small>Verificato come: ${esc(d.indirizzo_geocodificato)}</small>` : ""}
+        ${d.indirizzo_geocodificato && d.indirizzo_geocodificato !== d.indirizzo ? `<br><small class="gf-muted">Verificato come: ${esc(d.indirizzo_geocodificato)}</small>` : ""}
       </td>
-      <td>${deliveryGeoBadge(d)}</td>
-      <td>
-        <button class="btn-secondary compact-btn" onclick="${d.customer_id == null ? 'openOccasionalStopModal' : 'openDeliveryDetailsModal'}(${i})">${d.customer_id == null ? 'Modifica' : 'Dettagli'}</button>
-        <small class="delivery-specs-preview">${esc(deliverySpecsSummary(d) || "Specifiche non inserite")}</small>
+      <td data-label="Stato indirizzo">${deliveryGeoBadge(d)}</td>
+      <td data-label="Specifiche">
+        <button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="${d.customer_id == null ? 'openOccasionalStopModal' : 'openDeliveryDetailsModal'}(${i})">${d.customer_id == null ? 'Modifica' : 'Dettagli'}</button>
+        <br><small class="gf-muted">${esc(deliverySpecsSummary(d) || "Specifiche non inserite")}</small>
       </td>
-      <td class="row-actions compact">
-        <button title="Sposta su" onclick="moveDelivery(${i}, -1)">↑</button>
-        <button title="Sposta giù" onclick="moveDelivery(${i}, 1)">↓</button>
-        <button title="Rimuovi" onclick="removeDelivery(${i})">X</button>
+      <td data-label="Ordine">
+        <div class="gf-cluster">
+          <button type="button" class="gf-button" data-variant="ghost" data-size="sm" title="Sposta su" aria-label="Sposta su" onclick="moveDelivery(${i}, -1)">↑</button>
+          <button type="button" class="gf-button" data-variant="ghost" data-size="sm" title="Sposta giù" aria-label="Sposta giù" onclick="moveDelivery(${i}, 1)">↓</button>
+          <button type="button" class="gf-button" data-variant="danger" data-size="sm" title="Rimuovi" aria-label="Rimuovi" onclick="removeDelivery(${i})">X</button>
+        </div>
       </td>
     </tr>`).join("");
 }
