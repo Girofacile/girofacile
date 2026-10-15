@@ -150,18 +150,18 @@ test('dashboard reference view shares tokens and retains live API connections',(
   const tokens=read(assets+'theme.css');
   assert.match(tokens,/--gf-focus-ring\s*:\s*0 0 0 3px rgba\(22,101,255,\.17\)/i);
   assert.match(tokens,/--gf-sidebar-width\s*:\s*244px/);
-  const theme=read(assets+'reference-theme.css');
-  for(const selector of ['.gf-ref-day-strip','.gf-ref-hero-wrapper','.gf-ref-hero','.gf-ref-columns','.gf-ref-resource-entry','.gf-ref-truck','.gf-ref-legend']){
-    assert.ok(theme.includes(selector),'Missing dashboard reference style '+selector);
+  // La dashboard usa i componenti del sistema: striscia numeri, pannello giro, legenda, avanzamento e fermate.
+  const components=read(assets+'components.css');
+  for(const selector of ['.gf-stat-strip','.gf-route-panel','.gf-route-panel__canvas','.gf-crew','.gf-legend','.gf-progress','.gf-stop-list']){
+    assert.ok(components.includes(selector),'Missing dashboard component '+selector);
   }
-  assert.match(theme,/prefers-reduced-motion:no-preference/);
-  assert.match(theme,/\.gf-ref-hero\{[^}]*grid-template-columns:/);
+  assert.match(components,/\.gf-route-panel\{[^}]*grid-template-columns:/);
   const html=read('static/dashboard/index.html');
   const dashboard=html.slice(html.indexOf('<section id="tab-dashboard"'),html.indexOf('<section id="tab-dashboard-scheduled"'));
   for(const id of ['dashTodayScheduled','dashTodayProgress','dashTodayCompletedDeliveries','dashBusyDrivers','dashBusyVehicles','dashScheduledBadge','dashInProgressBadge','dashCompletedBadge','dashScheduledList','dashCompletedList','dashVehicleStatus','dashDriverStatus','gfRefRouteDrawing','gfRefStopList']){
     assert.equal((dashboard.match(new RegExp('id="'+id+'"','g'))||[]).length,1,'Missing or duplicate dashboard '+id);
   }
-  for(const phrase of ['gf-ref-day-strip','gf-ref-hero-wrapper','gf-ref-columns','gf-ref-resource-table-head'])
+  for(const phrase of ['class="gf-stat-strip"','class="gf-route-panel" id="gfRefHeroWrap"','class="gf-stop-list" id="gfRefStopList"','class="gf-legend"'])
     assert.match(dashboard,new RegExp(phrase));
   assert.match(dashboard,/onclick="openDashboardInProgressPage\(\)"/);
   assert.match(html,/\/static\/design-system\/reference-theme\.css/);
@@ -172,9 +172,9 @@ test('dashboard reference view shares tokens and retains live API connections',(
   assert.match(core,/completedToday\.slice\(0,3\)\.map/);
   assert.match(core,/progress\.slice\(1,3\)\.map/);
   const routeItem=core.slice(core.indexOf('function dashRouteItem'),core.indexOf('function gfTimeFromIso'));
-  assert.match(routeItem,/dash-route-context/);
-  assert.match(routeItem,/dash-route-progress-line/);
-  assert.match(routeItem,/dash-route-issues/);
+  assert.match(routeItem,/class="gf-list-item" role="button"/);
+  assert.match(routeItem,/class="gf-progress__top"/);
+  assert.match(routeItem,/issues\.length\?`<div class="gf-cluster">/);
   new vm.Script(core);
 });
 
@@ -357,15 +357,13 @@ test('workspace legal links live in navigation and advanced legal docs live in s
 test('dashboard resources use reference rows and keep both navigation actions',()=>{
   const html=read('static/dashboard/index.html');
   const dashboard=html.slice(html.indexOf('<section id="tab-dashboard"'),html.indexOf('<section id="tab-dashboard-scheduled"'));
-  assert.match(dashboard,/class="gf-ref-text-action" onclick="showTab\('mezzi'\)">Tutti i mezzi/);
-  assert.match(dashboard,/class="gf-ref-text-action" onclick="showTab\('autisti'\)">Tutti gli autisti/);
+  assert.match(dashboard,/data-variant="link" onclick="showTab\('mezzi'\)">Tutti i mezzi/);
+  assert.match(dashboard,/data-variant="link" onclick="showTab\('autisti'\)">Tutti gli autisti/);
   assert.match(dashboard,/id="dashVehicleStatus"/);
   assert.match(dashboard,/id="dashDriverStatus"/);
-  assert.equal((dashboard.match(/class="gf-ref-resource-table-head"/g)||[]).length,2);
-  const css=read(assets+'reference-theme.css');
-  assert.match(css,/\.gf-ref-resource-entry/);
-  assert.match(css,/\.gf-ref-plate/);
-  assert.match(css,/\.gf-ref-license/);
+  // Le risorse sono tabelle del sistema con intestazioni Mezzo/Targa/Stato e Autista/Patente/Stato.
+  assert.match(dashboard,/<th scope="col">Mezzo<\/th><th scope="col">Targa<\/th><th scope="col">Stato<\/th><\/tr><\/thead><tbody id="dashVehicleStatus">/);
+  assert.match(dashboard,/<th scope="col">Autista<\/th><th scope="col">Patente<\/th><th scope="col">Stato<\/th><\/tr><\/thead><tbody id="dashDriverStatus">/);
   const core=read('static/dashboard/js/core.js');
   assert.match(core,/vehicles\.slice\(0,4\)\.map/);
   assert.match(core,/drivers\.slice\(0,4\)\.map/);
@@ -374,8 +372,8 @@ test('dashboard resources use reference rows and keep both navigation actions',(
 test('dashboard completed-deliveries KPI has fixed copy and uses actual completion events',()=>{
   const html=read('static/dashboard/index.html');
   const dashboard=html.slice(html.indexOf('<section id="tab-dashboard"'),html.indexOf('<section id="tab-dashboard-scheduled"'));
-  assert.match(dashboard,/<span>Consegne completate<\/span><strong id="dashTodayCompletedDeliveries">0<\/strong>/);
-  assert.match(dashboard,/id="dashTodayCompletedDeliveries">0<\/strong><small>dagli autisti oggi<\/small>/);
+  assert.match(dashboard,/>Consegne completate<\/span><strong class="gf-stat-strip__value" id="dashTodayCompletedDeliveries">0<\/strong>/);
+  assert.match(dashboard,/id="dashTodayCompletedDeliveries">0<\/strong><small class="gf-stat-strip__unit">dagli autisti oggi<\/small>/);
   assert.doesNotMatch(dashboard,/Consegne<\/span> merce/);
 
   const core=read('static/dashboard/js/core.js');

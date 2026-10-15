@@ -1656,14 +1656,15 @@ function routeProgressPercent(r){
 }
 
 function renderEmptyDashList(text, illustration){
-  if(!illustration) return `<div class="dash-empty">${esc(text)}</div>`;
+  if(!illustration) return `<div class="gf-empty"><p>${esc(text)}</p></div>`;
   const descriptions = {
     scheduled: 'I giri pianificati appariranno qui, pronti per la partenza.',
     progress: 'Segui qui i giri avviati e lo stato delle consegne.',
     completed: 'I giri completati oggi appariranno qui.'
   };
-  return `<div class="dash-empty dash-empty-illustrated"><img src="/static/design-system/icons/empty.svg" alt="" width="200" height="125"><strong>${esc(text)}</strong><p>${descriptions[illustration]}</p></div>`;
+  return `<div class="gf-empty"><img src="/static/design-system/icons/empty.svg" alt="" width="48" height="30"><p><strong>${esc(text)}</strong></p><p>${descriptions[illustration]}</p></div>`;
 }
+function gfWidth5(value){ return Math.max(0, Math.min(100, Math.round((Number(value)||0) / 5) * 5)); }
 function renderDashTrend(routes){
   const el = document.getElementById("dashTrendChart");
   if(!el) return;
@@ -1706,7 +1707,7 @@ function renderGFReferenceDashboardHero(summary){
     txt("gfRefRouteStatus","In attesa");
     txt("gfRefDriver","—");txt("gfRefVehicle","—");
     txt("gfRefCompleted","0 su 0");txt("gfRefRemaining","0 da fare");
-    if(drawing)drawing.innerHTML='<div class="gf-ref-route-placeholder">Non ci sono giri attivi da visualizzare.</div>';
+    if(drawing)drawing.innerHTML='<div class="gf-empty"><p>Non ci sono giri attivi da visualizzare.</p></div>';
     if(list)list.innerHTML="";if(bar)bar.innerHTML="";if(issues)issues.innerHTML="";
     return Promise.resolve();
   }
@@ -1724,11 +1725,11 @@ function renderGFReferenceDashboardHero(summary){
   if(bar){
     const d=total?Math.min(100,100*done/total):0;
     const m=total?Math.min(100-d,100*missed/total):0;
-    bar.innerHTML=`<span class="done" style="width:${d}%"></span><span class="miss" style="width:${m}%"></span>`;
+    bar.innerHTML=`<span class="gf-progress__done" data-gf-width="${gfWidth5(d)}"></span><span class="gf-progress__miss" data-gf-width="${gfWidth5(m)}"></span>`;
     bar.setAttribute("aria-label",`${done} completate, ${missed} mancate, ${remaining} da fare`);
   }
-  if(issues)issues.innerHTML=missed?`<span class="gf-ref-pill red">${missed} mancat${missed===1?"a":"e"}</span>`:"";
-  if(drawing)drawing.innerHTML='<div class="gf-ref-route-placeholder">Caricamento delle fermate…</div>';
+  if(issues)issues.innerHTML=missed?`<span class="gf-badge" data-status="danger">${missed} mancat${missed===1?"a":"e"}</span>`:"";
+  if(drawing)drawing.innerHTML='<div class="gf-empty"><p>Caricamento delle fermate…</p></div>';
   if(list)list.innerHTML="";
   const routeId=Number(summary.id);
   if(!Number.isSafeInteger(routeId) || routeId<=0)return Promise.resolve();
@@ -1737,7 +1738,7 @@ function renderGFReferenceDashboardHero(summary){
     const rows=Array.isArray(route.consegne)?route.consegne.slice():[];
     rows.sort((a,b)=>(Number(a.ordine)||0)-(Number(b.ordine)||0));
     if(!rows.length){
-      if(drawing)drawing.innerHTML='<div class="gf-ref-route-placeholder">Non sono presenti fermate per questo giro.</div>';
+      if(drawing)drawing.innerHTML='<div class="gf-empty"><p>Non sono presenti fermate per questo giro.</p></div>';
       return;
     }
     const maxShown=6,shown=rows.slice(0,maxShown);
@@ -1748,10 +1749,10 @@ function renderGFReferenceDashboardHero(summary){
     if(list){
       list.innerHTML=shown.map((d,i)=>{
         const st=status(d),name=d.cliente_nome||`Fermata ${i+1}`;
-        return `<li class="is-${st}" data-gf-ref-stop="${i}" tabindex="0"><span class="gf-ref-stop-number">${st==="done"?"✓":i+1}</span><span class="gf-ref-stop-name">${esc(name)}</span><span class="gf-ref-pill ${st==="done"?"green":st==="miss"?"red":""}">${st==="done"?"Completata":st==="miss"?"Mancata":"Da fare"}</span></li>`;
-      }).join("")+(rows.length>maxShown?`<li><span class="gf-ref-stop-name">Altre ${rows.length-maxShown} fermate disponibili nel controllo giro</span></li>`:"");
+        return `<li class="gf-stop${st==="todo"?"":" is-"+st}" data-gf-ref-stop="${i}" tabindex="0"><span class="gf-stop__number">${st==="done"?"✓":i+1}</span><span class="gf-stop__main"><span class="gf-stop__name">${esc(name)}</span></span><span class="gf-badge" data-status="${st==="done"?"success":st==="miss"?"danger":"neutral"}">${st==="done"?"Completata":st==="miss"?"Mancata":"Da fare"}</span></li>`;
+      }).join("")+(rows.length>maxShown?`<li class="gf-stop"><span class="gf-stop__main"><span class="gf-stop__meta">Altre ${rows.length-maxShown} fermate disponibili nel controllo giro</span></span></li>`:"");
     }
-    const highlight=(id,on)=>root.querySelectorAll(`[data-gf-ref-stop="${id}"]`).forEach(el=>el.classList.toggle("hl",on));
+    const highlight=(id,on)=>root.querySelectorAll(`[data-gf-ref-stop="${id}"]`).forEach(el=>el.classList.toggle(el.classList.contains("gf-stop")?"is-highlighted":"hl",on));
     root.querySelectorAll("[data-gf-ref-stop]").forEach(el=>{
       const i=el.getAttribute("data-gf-ref-stop");
       el.addEventListener("mouseenter",()=>highlight(i,true));
@@ -1770,7 +1771,7 @@ function renderGFReferenceDashboardHero(summary){
       }
     });
   }).catch(e=>{
-    if(drawing)drawing.innerHTML='<div class="gf-ref-route-placeholder">Dettaglio fermate temporaneamente non disponibile. Apri il controllo giro per riprovare.</div>';
+    if(drawing)drawing.innerHTML='<div class="gf-empty"><p>Dettaglio fermate temporaneamente non disponibile. Apri il controllo giro per riprovare.</p></div>';
     console.warn("Dettaglio dashboard",e);
   });
 }
@@ -1829,12 +1830,12 @@ async function loadDashboardHome(){
       vehBox.innerHTML=vehicles.slice(0,4).map(v=>{
         const inUse=(v.stato||"Disponibile")==="In uso";
         const label=v.stato||(inUse?"In uso":"Disponibile");
-        return `<div class="gf-ref-resource-entry">
-          <span class="name">${esc(v.nome||"Mezzo")}</span>
-          <span class="gf-ref-plate">${esc(v.targa||"—")}</span>
-          <span class="gf-ref-pill ${inUse?"":"green"}">${esc(label)}</span>
-        </div>`;
-      }).join("")||renderEmptyDashList("Nessun mezzo registrato.");
+        return `<tr>
+          <td data-label="Mezzo">${esc(v.nome||"Mezzo")}</td>
+          <td data-label="Targa">${esc(v.targa||"—")}</td>
+          <td data-label="Stato"><span class="gf-badge" data-status="${inUse?"info":"success"}">${esc(label)}</span></td>
+        </tr>`;
+      }).join("")||`<tr><td colspan="3">${renderEmptyDashList("Nessun mezzo registrato.")}</td></tr>`;
     }
     const driverBox=document.getElementById("dashDriverStatus");
     if(driverBox){
@@ -1842,12 +1843,12 @@ async function loadDashboardHome(){
         const busy=(d.stato||"Disponibile")==="In servizio";
         const name=`${d.nome||""} ${d.cognome||""}`.trim()||"Autista";
         const initials=name.split(/\s+/).slice(0,2).map(s=>s.charAt(0).toUpperCase()).join("");
-        return `<div class="gf-ref-resource-entry">
-          <span class="gf-ref-driver-name"><span class="gf-ref-initials">${esc(initials)}</span><span class="name">${esc(name)}</span></span>
-          <span class="gf-ref-license">${esc(d.patente||"n.d.")}</span>
-          <span class="gf-ref-pill ${busy?"amber":"green"}">${esc(d.stato||(busy?"In servizio":"Disponibile"))}</span>
-        </div>`;
-      }).join("")||renderEmptyDashList("Nessun autista registrato.");
+        return `<tr>
+          <td data-label="Autista"><span class="gf-cluster"><span class="gf-avatar" aria-hidden="true">${esc(initials)}</span><span>${esc(name)}</span></span></td>
+          <td data-label="Patente">${esc(d.patente||"n.d.")}</td>
+          <td data-label="Stato"><span class="gf-badge" data-status="${busy?"warning":"success"}">${esc(d.stato||(busy?"In servizio":"Disponibile"))}</span></td>
+        </tr>`;
+      }).join("")||`<tr><td colspan="3">${renderEmptyDashList("Nessun autista registrato.")}</td></tr>`;
     }
     const title=document.getElementById("workspacePageTitle");
     const subtitle=document.getElementById("workspacePageSubtitle");
@@ -1862,10 +1863,11 @@ async function loadDashboardHome(){
   }catch(e){ console.warn(e); }
 }
 
+const ROUTE_STATUS_TONE = {bozza:"neutral", programmato:"warning", in_corso:"info", da_completare:"warning", completato:"success", annullato:"danger"};
 function routeStatusBadge(status, label){
   const s = status || "programmato";
   const text = label || ({bozza:"Bozza", programmato:"Programmato", in_corso:"In corso", da_completare:"Da completare", completato:"Completato", annullato:"Annullato"}[s] || "Programmato");
-  return `<span class="route-status-pill ${s}">${esc(text)}</span>`;
+  return `<span class="gf-badge" data-status="${ROUTE_STATUS_TONE[s] || "neutral"}">${esc(text)}</span>`;
 }
 
 async function loadDashboardRoutes(){
@@ -4160,28 +4162,25 @@ function dashRouteItem(r, type){
   const isProgress = type === 'progress';
   const context = [r.driver_name, r.vehicle_name].filter(Boolean).map(esc).join(' · ') || 'Autista e mezzo non assegnati';
   const issues = [];
-  if(missed) issues.push(`<span class="dash-route-issue danger">${missed} mancat${missed===1?'a':'e'}</span>`);
-  if(unread) issues.push(`<span class="dash-route-issue info">${unread} messagg${unread===1?'io':'i'} non lett${unread===1?'o':'i'}</span>`);
+  if(missed) issues.push(`<span class="gf-badge" data-status="danger">${missed} mancat${missed===1?'a':'e'}</span>`);
+  if(unread) issues.push(`<span class="gf-badge" data-status="info">${unread} messagg${unread===1?'io':'i'} non lett${unread===1?'o':'i'}</span>`);
   let click = `openDashboardRoute(${r.id})`;
   if(type === 'scheduled') click = `openDashboardScheduledPage(${r.id})`;
   if(type === 'progress') click = `openDashboardInProgressPage(${r.id})`;
   if(type === 'completed') click = `openDashboardCompletedPage(${r.id})`;
-  return `<div class="dash-route-item ${isProgress?'dash-route-item-live':''}" role="button" tabindex="0" onkeydown="if(event.target===this &amp;&amp; (event.key==='Enter' || event.key===' ')){event.preventDefault();this.click()}" onclick="${click}">
-    <div class="dash-route-main">
+  return `<div class="gf-list-item" role="button" tabindex="0" onkeydown="if(event.target===this &amp;&amp; (event.key==='Enter' || event.key===' ')){event.preventDefault();this.click()}" onclick="${click}">
+    <div class="gf-list-item__main gf-stack" data-gap="sm">
       <strong>${esc(r.nome||"Giro consegne")}</strong>
       ${isProgress?`
-        <small class="dash-route-context">${context}</small>
-        <div class="dash-route-progress-line">
-          <span><b>${completed}/${total}</b> completate</span>
-          <span>${remaining} da fare</span>
+        <small class="gf-muted">${context}</small>
+        <div class="gf-progress">
+          <div class="gf-progress__top"><span><b>${completed}/${total}</b> completate</span><span>${remaining} da fare</span></div>
+          <div class="gf-progress__track" role="img" aria-label="${completed} consegne completate su ${total}"><span class="gf-progress__done" data-gf-width="${gfWidth5(completedPercent)}"></span><span class="gf-progress__miss" data-gf-width="${gfWidth5(missedPercent)}"></span></div>
         </div>
-        <div class="dash-progress" aria-label="${completed} consegne completate su ${total}">
-          <span style="width:${completedPercent}%"></span><span class="dash-progress-missed" style="width:${missedPercent}%"></span>
-        </div>
-        ${issues.length?`<div class="dash-route-issues">${issues.join('')}</div>`:""}
-      `:`<small>${meta}</small>`}
+        ${issues.length?`<div class="gf-cluster">${issues.join('')}</div>`:""}
+      `:`<small class="gf-muted">${meta}</small>`}
     </div>
-    <div class="dash-route-side">${pill}<span class="dash-arrow">›</span></div>
+    <div class="gf-cluster">${pill}<span aria-hidden="true">›</span></div>
   </div>`;
 }
 

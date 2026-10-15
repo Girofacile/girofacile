@@ -595,7 +595,7 @@ label{letter-spacing:.01em;}
 .dash-kpi-card span{display:block;color:var(--muted);font-size:14px;margin-bottom:5px}.dash-kpi-card strong{display:block;font-size:28px;color:var(--text);line-height:1}.dash-kpi-card small{display:block;color:var(--muted);font-size:13px;margin-top:7px}
 .dash-main-grid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(320px,.9fr);gap:18px;margin-bottom:18px}.dash-chart-card,.dash-recent-card{min-height:270px}.dash-panel-title{align-items:center}.dash-toggle{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#f8fafc}.dash-toggle span{padding:8px 16px;font-size:13px;font-weight:800;color:var(--muted)}.dash-toggle .active{background:#eef5ff;color:#0b63f6}.dash-trend-chart{height:190px;margin-top:10px}.dash-svg-chart{width:100%;height:100%;overflow:visible}.dash-svg-chart .grid line{stroke:#e5eaf2;stroke-width:1}.dash-svg-chart .dots circle{fill:#0b63f6;stroke:white;stroke-width:3}.dash-svg-chart .labels text{fill:#64748b;font-size:12px;font-weight:700}
 .dash-recent-list{display:flex;flex-direction:column;gap:10px}.dash-recent-item{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding:12px 0;cursor:pointer}.dash-recent-item strong{display:block;font-size:15px}.dash-recent-item small{display:block;color:var(--muted);margin-top:4px}.dash-recent-item span{font-size:28px;color:var(--muted)}
-.dash-board-columns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-bottom:18px}.dash-list-card{padding:0;overflow:hidden}.dash-list-head{display:flex;justify-content:space-between;align-items:center;padding:20px 22px;border-bottom:1px solid var(--line)}.dash-list-head h2{margin:0;font-size:20px}.dash-list-head span{min-width:28px;height:28px;border-radius:10px;background:#eef5ff;color:#0b63f6;display:flex;align-items:center;justify-content:center;font-weight:900}.dash-route-list{padding:8px 14px;min-height:170px}.dash-route-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 8px;border-bottom:1px solid var(--line);cursor:pointer}.dash-route-item:hover{background:#f8fafc;border-radius:12px}.dash-route-main strong{display:block;font-size:15px}.dash-route-main small{display:block;color:var(--muted);margin-top:5px}.dash-route-side{display:flex;align-items:center;gap:10px}.dash-arrow{font-size:26px;color:var(--muted)}.dash-progress{height:7px;background:#e8eef8;border-radius:999px;margin-top:10px;overflow:hidden}.dash-progress span{display:block;height:100%;background:#0b63f6;border-radius:999px}.dash-link-btn{width:calc(100% - 28px);margin:0 14px 14px;border:1px solid var(--line);background:#fff;color:#0b63f6;border-radius:12px;padding:11px;font-weight:800}.dash-empty{color:var(--muted);padding:22px 8px;font-weight:700;text-align:center}.dash-link-inline{border:0;background:transparent;color:#0b63f6;font-weight:800;cursor:pointer}.dash-vehicle-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.dash-vehicle-card{border:1px solid var(--line);border-radius:16px;padding:18px;background:#fff;display:flex;align-items:center;justify-content:space-between;min-height:110px}.dash-vehicle-card strong{display:block;margin-bottom:5px}.dash-vehicle-card small{display:block;color:var(--muted);margin-top:4px}.vehicle-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px}.vehicle-dot.free{background:#16a34a}.vehicle-dot.busy{background:#f59e0b}.dash-vehicle-icon{font-size:36px;opacity:.8}
+.dash-board-columns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-bottom:18px}.dash-list-card{padding:0;overflow:hidden}.dash-list-head{display:flex;justify-content:space-between;align-items:center;padding:20px 22px;border-bottom:1px solid var(--line)}.dash-list-head h2{margin:0;font-size:20px}.dash-list-head span{min-width:28px;height:28px;border-radius:10px;background:#eef5ff;color:#0b63f6;display:flex;align-items:center;justify-content:center;font-weight:900}.dash-link-btn{width:calc(100% - 28px);margin:0 14px 14px;border:1px solid var(--line);background:#fff;color:#0b63f6;border-radius:12px;padding:11px;font-weight:800}.dash-empty{color:var(--muted);padding:22px 8px;font-weight:700;text-align:center}.dash-link-inline{border:0;background:transparent;color:#0b63f6;font-weight:800;cursor:pointer}.dash-vehicle-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.dash-vehicle-card{border:1px solid var(--line);border-radius:16px;padding:18px;background:#fff;display:flex;align-items:center;justify-content:space-between;min-height:110px}.dash-vehicle-card strong{display:block;margin-bottom:5px}.dash-vehicle-card small{display:block;color:var(--muted);margin-top:4px}.vehicle-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px}.vehicle-dot.free{background:#16a34a}.vehicle-dot.busy{background:#f59e0b}.dash-vehicle-icon{font-size:36px;opacity:.8}
 @media(max-width:1100px){.dash-kpi-grid{grid-template-columns:repeat(2,1fr)}.dash-main-grid,.dash-board-columns{grid-template-columns:1fr}.dash-vehicle-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:640px){.dash-kpi-grid,.dash-vehicle-grid{grid-template-columns:1fr}.dash-hero-row{flex-direction:column}.dash-kpi-card{padding:18px}.dash-hero-row h1{font-size:28px}}
 
@@ -1469,14 +1469,12 @@ tr:hover td{
   gap:18px;
 }
 .dash-recent-item,
-.dash-route-item,
 .dash-vehicle-card{
   border:1px solid #edf1f7;
   border-radius:14px;
   background:#fff;
 }
-.dash-recent-item:hover,
-.dash-route-item:hover{
+.dash-recent-item:hover{
   background:#f8fbff;
   border-color:#d9e7ff;
 }
@@ -1666,7 +1664,7 @@ body.admin-mode .side-nav .nav-item.active{
 }
 
 /* Dashboard operativa v1: focus su giri in corso e chat autista */
-.dash-route-item-live{align-items:flex-start;border:1px solid #e8eef8;border-radius:16px;margin:8px 0;padding:16px;background:linear-gradient(180deg,#ffffff,#f8fbff)}
+
 .dash-live-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
 .dash-live-grid span{background:#f1f5f9;border-radius:10px;padding:8px;text-align:center;color:#475569;font-size:12px;font-weight:700}
 .dash-live-grid b{display:block;color:#0f172a;font-size:16px}
@@ -1718,7 +1716,6 @@ body.admin-mode .side-nav .nav-item.active{
 .dash-board-columns{grid-template-columns:repeat(4,minmax(0,1fr));align-items:stretch}
 .dash-board-columns .dash-list-card{display:flex;flex-direction:column;min-height:300px}
 .dash-board-columns .dash-list-card:nth-child(2){grid-column:span 2;border-color:#bfdbfe;box-shadow:0 18px 45px rgba(11,99,246,.09)}
-.dash-route-list{flex:1;display:flex;flex-direction:column}
 .dash-link-btn{margin-top:auto}
 @media(max-width:1200px){.dash-board-columns{grid-template-columns:1fr}.dash-board-columns .dash-list-card:nth-child(2){grid-column:auto}}
 
@@ -1772,12 +1769,6 @@ body.admin-mode .side-nav .nav-item.active{
 .dash-board-columns .dash-list-card:nth-child(3){
   border-color:#bbf7d0;
   box-shadow:0 18px 45px rgba(22,163,74,.08);
-}
-.dash-board-columns .dash-route-list{
-  flex:1 1 auto !important;
-  display:flex !important;
-  flex-direction:column !important;
-  min-height:0 !important;
 }
 .dash-board-columns .dash-link-btn{
   margin-top:auto !important;
@@ -2356,117 +2347,6 @@ body.workspace-empty-v49-active #tab-dashboard > :not(#workspaceEmptyDashboardV4
   padding:6px 0 24px;
 }
 .workspace-empty-v49.hidden{display:none!important;}
-.workspace-empty-hero-v49{
-  background:linear-gradient(135deg,#ffffff,#f8fbff 55%,#eef6ff);
-  border:1px solid #e2e8f0;
-  border-radius:28px;
-  box-shadow:0 24px 70px rgba(15,23,42,.09);
-  padding:30px;
-}
-.workspace-empty-kicker-v49{
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  padding:7px 12px;
-  border-radius:999px;
-  background:#eff6ff;
-  color:#2563eb;
-  border:1px solid #bfdbfe;
-  font-size:12px;
-  font-weight:900;
-  text-transform:uppercase;
-  letter-spacing:.04em;
-}
-.workspace-empty-hero-v49 h1{
-  margin:16px 0 8px;
-  font-size:34px;
-  line-height:1.05;
-  color:#0f172a;
-}
-.workspace-empty-hero-v49 p{
-  margin:0;
-  max-width:760px;
-  color:#64748b;
-  font-size:15px;
-  line-height:1.6;
-}
-.workspace-sector-card-v49{
-  margin-top:22px;
-  max-width:620px;
-  border-radius:22px;
-  border:1px solid #dbeafe;
-  background:#ffffff;
-  padding:18px;
-  box-shadow:0 14px 34px rgba(37,99,235,.08);
-}
-.workspace-sector-card-v49 small{
-  display:block;
-  color:#64748b;
-  font-size:12px;
-  font-weight:800;
-  text-transform:uppercase;
-  letter-spacing:.05em;
-  margin-bottom:5px;
-}
-.workspace-sector-card-v49 strong{
-  display:block;
-  color:#0f172a;
-  font-size:20px;
-  margin-bottom:5px;
-}
-.workspace-setup-grid-v49{
-  display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
-  gap:14px;
-}
-.workspace-setup-grid-v49 button{
-  text-align:left;
-  border:1px solid #e2e8f0;
-  background:#fff;
-  border-radius:22px;
-  padding:18px;
-  box-shadow:0 16px 40px rgba(15,23,42,.07);
-  cursor:pointer;
-  transition:.18s ease;
-}
-.workspace-setup-grid-v49 button:hover{
-  transform:translateY(-2px);
-  border-color:#93c5fd;
-  box-shadow:0 20px 46px rgba(37,99,235,.11);
-}
-.workspace-setup-grid-v49 span{
-  width:34px;
-  height:34px;
-  border-radius:12px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:#eff6ff;
-  color:#2563eb;
-  font-weight:900;
-  margin-bottom:12px;
-}
-.workspace-setup-grid-v49 strong{
-  display:block;
-  color:#0f172a;
-  font-size:15px;
-  margin-bottom:6px;
-}
-.workspace-setup-grid-v49 small{
-  color:#64748b;
-  line-height:1.45;
-}
-.workspace-empty-note-v49{
-  border-radius:22px;
-  border:1px dashed #cbd5e1;
-  background:#f8fafc;
-  padding:18px 20px;
-  color:#475569;
-}
-.workspace-empty-note-v49 strong{display:block;color:#0f172a;margin-bottom:4px;}
-.workspace-empty-note-v49 p{margin:0;line-height:1.5;}
-@media(max-width:980px){.workspace-setup-grid-v49{grid-template-columns:repeat(2,minmax(0,1fr));}.workspace-empty-hero-v49 h1{font-size:28px;}}
-@media(max-width:640px){.workspace-setup-grid-v49{grid-template-columns:1fr}.workspace-empty-hero-v49{padding:22px;border-radius:22px}}
 
 /* --------------------------------------------------------------------------
    v50 - Settore Logistica / Corrieri locali
@@ -3001,7 +2881,7 @@ body.workspace-empty-v49-active #tab-dashboard > :not(#workspaceEmptyDashboardV4
   body.app-logged-in .btn-primary,body.app-logged-in .btn-secondary,body.app-logged-in .btn-light,body.app-logged-in .btn-danger-soft{min-height:44px;border-radius:14px;font-weight:850}
 
   body.app-logged-in .distribution-dashboard-v50,body.app-logged-in .logistics-dashboard-v50,body.app-logged-in .ecommerce-dashboard-v51,body.app-logged-in .food-dashboard-v53,body.app-logged-in .healthcare-dashboard-v55{margin-top:0!important}
-  body.app-logged-in .vertical-modules-v51{grid-template-columns:1fr!important}.workspace-empty-hero-v49{border-radius:28px!important}
+  body.app-logged-in .vertical-modules-v51{grid-template-columns:1fr!important}
 }
 
 @media(max-width:390px){

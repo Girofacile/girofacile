@@ -28,7 +28,7 @@
     element.classList.remove('gf-ref-map-ready');
     element.replaceChildren();
     const label = document.createElement('div');
-    label.className = 'gf-ref-route-placeholder';
+    label.className = 'gf-empty';
     label.textContent = message;
     element.appendChild(label);
   }

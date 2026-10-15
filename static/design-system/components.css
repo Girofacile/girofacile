@@ -88,7 +88,7 @@ body[data-gf-surface] .gf-card[data-variant="warning"] { background: var(--gf-co
 body[data-gf-surface] .gf-stat { display: grid; gap: var(--gf-space-1); }
 body[data-gf-surface] .gf-stat strong { font-size: var(--gf-font-2xl); font-weight: var(--gf-weight-bold); }
 body[data-gf-surface] .gf-stat :is(span,small) { color: var(--gf-color-muted); }
-body[data-gf-surface] .gf-table { width: 100%; border-collapse: collapse; color: var(--gf-color-text); background: var(--gf-color-surface); font-size: var(--gf-font-sm); }
+body[data-gf-surface] .gf-table { width: 100%; min-width: 0; border-collapse: collapse; color: var(--gf-color-text); background: var(--gf-color-surface); font-size: var(--gf-font-sm); }
 body[data-gf-surface] .gf-table :is(th,td) { padding: var(--gf-space-3) var(--gf-space-4) !important; border: 0; border-bottom: 1px solid var(--gf-color-border); text-align: left; vertical-align: middle; line-height: 1.5; }
 body[data-gf-surface] .gf-table th { background: var(--gf-color-surface-subtle) !important; color: var(--gf-color-muted) !important; font-size: var(--gf-font-xs) !important; font-weight: var(--gf-weight-semibold) !important; letter-spacing: 0; text-transform: none; }
 body[data-gf-surface] .gf-table tbody tr:hover { background: var(--gf-color-info-bg); }

@@ -115,91 +115,14 @@ body[data-gf-surface="workspace"] #app :is(.result-table,.customer-table) th{
 }
 /* Dashboard: strip riassuntivo, percorso + avanzamento, due gruppi da due pannelli. */
 body[data-gf-surface="workspace"] #app #tab-dashboard{font-family:var(--gf-font-family);}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-day-strip{
-  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));
-  border:1px solid var(--gf-color-border);border-radius:16px;
-  background:var(--gf-color-surface);box-shadow:var(--gf-shadow-sm);
-  padding:6px 0;margin-bottom:22px;overflow:hidden;
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-day-cell{
-  min-width:0;display:grid;grid-template-columns:max-content minmax(0,1fr);column-gap:6px;
-  align-content:center;align-items:end;
-  padding:14px 22px;border:0;border-left:1px solid var(--gf-color-border);
-  background:transparent;text-align:left;color:var(--gf-color-text);
-  line-height:1.2;font-family:var(--gf-font-family);font-weight:400;
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-day-cell:first-child{border-left:0}
-body[data-gf-surface="workspace"] #app #tab-dashboard button.gf-ref-day-cell{cursor:pointer}
-body[data-gf-surface="workspace"] #app #tab-dashboard button.gf-ref-day-cell:hover{background:var(--gf-color-surface-subtle)}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-day-cell>span{
-  grid-column:1/-1;font-size:13px;line-height:1.4;color:var(--gf-color-muted);
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-day-cell strong{
-  color:var(--gf-color-primary);font:700 30px/1.1 var(--gf-font-display);
-  letter-spacing:-.02em;margin:4px 0 0;white-space:nowrap;
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-day-cell small{
-  align-self:end;margin-bottom:4px;color:var(--gf-color-muted);font-size:13px;
-}
 /* Tir animato: all'avvio trascina il pannello; disattivato senza un giro o con reduced motion. */
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-hero-wrapper{
-  position:relative;margin:0 0 22px;min-width:0;
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-truck{
-  display:none;pointer-events:none;position:absolute;z-index:2;
-  top:50%;left:0;width:220px;height:280px;
-  transform:translate(-12px,-50%);
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-truck svg{display:block;width:100%;height:100%}
+
 body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-hero{
   display:grid;grid-template-columns:minmax(0,1.7fr) minmax(280px,1fr);
   min-width:0;padding:0!important;overflow:hidden;
   border:1px solid var(--gf-color-border)!important;
   border-radius:16px!important;background:var(--gf-color-surface)!important;
   box-shadow:var(--gf-shadow-sm)!important;
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-side{
-  min-width:0;position:relative;padding:20px 22px 18px;
-  border-right:1px solid var(--gf-color-border);
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-watermark{
-  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-  color:var(--gf-color-text);opacity:.03;
-  font:900 clamp(32px,5.2vw,80px)/1 var(--gf-font-display);
-  white-space:nowrap;pointer-events:none;user-select:none;
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-hero-heading{
-  position:relative;display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;
-  justify-content:space-between;
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-hero-heading h2{
-  margin:0;font:700 22px/1.15 var(--gf-font-display);letter-spacing:-.015em;
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-hero-heading p{
-  margin:4px 0 0;color:var(--gf-color-muted);font-size:14px;
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-pill{
-  display:inline-flex;align-items:center;gap:6px;
-  padding:4px 10px;border:0;border-radius:99px;
-  background:var(--gf-color-info-bg);color:var(--gf-color-info);
-  font:600 12px/1.4 var(--gf-font-family);white-space:nowrap;
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-pill::before{
-  content:"";width:6px;height:6px;border-radius:50%;background:currentColor;
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-pill.green{background:var(--gf-color-success-bg);color:var(--gf-color-success)}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-pill.red{background:var(--gf-color-danger-bg);color:var(--gf-color-danger)}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-pill.amber{background:var(--gf-color-warning-bg);color:var(--gf-color-warning)}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-route-drawing{
-  position:relative;z-index:1;min-height:300px;margin-top:10px;border-radius:12px;
-  background:var(--gf-color-surface-subtle);overflow:hidden;
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-route-placeholder{
-  display:flex;align-items:center;justify-content:center;
-  min-height:300px;padding:28px;text-align:center;color:var(--gf-color-muted);
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-route-drawing svg{
-  display:block;width:100%;height:auto;aspect-ratio:660/300;
 }
 body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-gridline{
   stroke:var(--gf-color-border);stroke-width:1;
@@ -229,156 +152,7 @@ body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-stop-node.is-miss 
 body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-stop-node.is-miss text{fill:var(--gf-color-danger)}
 body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-stop-node:focus-visible circle,
 body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-stop-node.hl circle{stroke-width:4}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-legend{
-  position:relative;display:flex;flex-wrap:wrap;gap:6px 18px;
-  margin-top:12px;color:var(--gf-color-muted);font-size:12.5px;
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-legend span{display:inline-flex;align-items:center;gap:7px}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-legend i{width:10px;height:10px;display:inline-block;border:2px solid var(--gf-color-muted);border-radius:50%}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-legend i.done{background:var(--gf-color-primary);border-color:var(--gf-color-primary)}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-legend i.miss{background:var(--gf-color-danger-bg);border-color:var(--gf-color-danger)}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-detail-side{min-width:0;display:flex;flex-direction:column}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-crew{
-  display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--gf-color-border);
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-crew>div{min-width:0;padding:16px 20px}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-crew>div+div{border-left:1px solid var(--gf-color-border)}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-crew small{display:block;color:var(--gf-color-muted);font-size:12.5px}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-crew strong{
-  display:block;margin-top:2px;font-weight:600;font-size:14px;
-  overflow-wrap:anywhere;text-transform:capitalize;
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-progress{padding:16px 20px 6px}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-progress-top{
-  display:flex;justify-content:space-between;gap:10px;margin-bottom:8px;font-size:13px;
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-progress-top>:last-child{color:var(--gf-color-muted)}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-progress-track{
-  height:8px;display:flex;gap:2px;overflow:hidden;border-radius:99px;background:var(--gf-color-border);
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-progress-track span{display:block;height:100%}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-progress-track .done{background:var(--gf-color-primary)}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-progress-track .miss{background:var(--gf-color-danger)}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-missed{margin-top:8px;min-height:19px}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-stops{
-  min-width:0;list-style:none;padding:0 8px 10px;margin:8px 0 0;overflow-y:auto;max-height:270px;
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-stops li{
-  display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:10px;
-  font-size:14px;cursor:default;
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-stops li:hover,
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-stops li.hl{
-  background:var(--gf-color-surface-subtle)
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-stop-number{
-  width:26px;height:26px;display:grid;place-items:center;flex:none;
-  border:2px solid var(--gf-color-muted);border-radius:50%;font-size:12px;font-weight:600;
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-stops li.is-done .gf-ref-stop-number{background:var(--gf-color-primary);border-color:var(--gf-color-primary);color:#fff}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-stops li.is-miss .gf-ref-stop-number{background:var(--gf-color-danger-bg);border-color:var(--gf-color-danger);color:var(--gf-color-danger)}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-stop-name{flex:1;min-width:0;font-weight:500;overflow-wrap:anywhere}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-other-active{padding:0 20px 16px}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-other-active h3{font:700 14px var(--gf-font-display)}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-hero-footer{
-  margin-top:auto;padding:10px 16px;display:flex;justify-content:flex-end;border-top:1px solid var(--gf-color-border);
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-text-action{
-  background:transparent!important;border:0!important;
-  padding:6px 4px;cursor:pointer;color:var(--gf-color-primary)!important;
-  font:600 14px var(--gf-font-family);display:inline-flex;align-items:center;gap:8px;
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-text-action:hover{text-decoration:underline}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-columns{
-  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:22px;margin:0 0 22px;
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-list-panel{
-  min-width:0;padding:0!important;display:flex;flex-direction:column;overflow:hidden;
-  border:1px solid var(--gf-color-border)!important;border-radius:16px!important;
-  background:var(--gf-color-surface)!important;box-shadow:var(--gf-shadow-sm)!important;
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-panel-header{
-  min-height:57px;padding:16px 20px;border-bottom:1px solid var(--gf-color-border);
-  display:flex;align-items:center;gap:10px;
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-panel-header h2{
-  margin:0;font:700 16px/1.2 var(--gf-font-display);letter-spacing:-.005em;
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-panel-header>span{
-  margin-left:auto;color:var(--gf-color-muted);font-size:12px;font-weight:600;
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-panel-header>.gf-ref-text-action{margin-left:auto;font-size:13px}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-list{flex:1;min-height:0}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-list .dash-route-item{
-  display:flex;align-items:center;padding:16px 20px;
-  border:0!important;border-radius:0!important;margin:0;background:none!important;
-  box-shadow:none!important;gap:14px;
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-list .dash-route-item+.dash-route-item{border-top:1px solid var(--gf-color-border)!important}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-list .dash-route-main strong{font-size:14px}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-list .dash-route-main small{font-size:13px;color:var(--gf-color-muted)}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-list .dash-route-side{max-width:50%;gap:8px}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-list .dash-arrow{display:none}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-list .route-status-pill{border-radius:99px;padding:3px 10px}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-list .dash-empty-illustrated{
-  min-height:178px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-list .dash-empty-illustrated img{
-  width:46px;height:46px;object-fit:contain;margin:0 0 12px;opacity:.65;
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-list .dash-empty-illustrated strong{
-  font:700 16px var(--gf-font-display);text-align:center;
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-list .dash-empty-illustrated p{
-  margin:4px auto 0;font-size:13px;text-align:center;max-width:320px;
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-panel-footer{
-  margin-top:auto;padding:10px 16px;border-top:1px solid var(--gf-color-border);
-  display:flex;justify-content:flex-end;
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-resource-table-head,
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-resource-entry{
-  display:grid;grid-template-columns:minmax(0,1.7fr) minmax(65px,.8fr) minmax(80px,.8fr);
-  align-items:center;gap:10px;padding:10px 20px;
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-resource-table-head{
-  background:var(--gf-color-surface-subtle);color:var(--gf-color-muted);
-  border-bottom:1px solid var(--gf-color-border);
-  font-size:12.5px;font-weight:500;
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-resource-entry{
-  min-height:55px;padding-block:12px;font-size:13px;
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-resource-entry+.gf-ref-resource-entry{border-top:1px solid var(--gf-color-border)}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-resource-entry .name{
-  min-width:0;overflow-wrap:anywhere;font-weight:600;text-transform:capitalize;
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-plate{
-  display:inline-block;justify-self:start;max-width:100%;padding:2px 8px;
-  background:var(--gf-color-surface);color:var(--gf-color-text);
-  border:1.5px solid var(--gf-color-text);border-radius:5px;
-  font:600 12px var(--gf-font-family);letter-spacing:.04em;overflow-wrap:anywhere;
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-driver-name{display:flex;align-items:center;gap:10px;min-width:0}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-initials{
-  display:grid;place-items:center;flex:none;width:34px;height:34px;
-  background:var(--gf-color-info-bg);color:var(--gf-color-info);
-  border-radius:10px;font:700 12px var(--gf-font-display);
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-license{
-  justify-self:start;padding:2px 8px;min-width:26px;text-align:center;
-  background:var(--gf-color-surface-subtle);border:1px solid var(--gf-color-border);
-  border-radius:6px;font-weight:600;font-size:12px;
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-resource-rows>.dash-empty{padding:26px;color:var(--gf-color-muted);text-align:center}
 @media (prefers-reduced-motion:no-preference){
-  body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-hero-wrapper.has-route .gf-ref-truck{
-    display:block;animation:gfRefDrive 2.8s cubic-bezier(.65,0,.25,1) forwards;
-  }
-  body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-hero-wrapper.has-route .gf-ref-hero{
-    clip-path:inset(0 100% 0 0);animation:gfRefReveal 2.8s cubic-bezier(.65,0,.25,1) forwards;
-  }
   body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-route-done{animation:gfRefDraw 1.3s 1.9s ease-out both}
 }
 @keyframes gfRefDrive{
@@ -393,27 +167,8 @@ body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-resource-rows>.das
 @keyframes gfRefDraw{from{stroke-dashoffset:0}}
 @media(max-width:1180px){
   body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-hero{grid-template-columns:1fr}
-  body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-side{border-right:0;border-bottom:1px solid var(--gf-color-border)}
-  body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-day-strip{grid-template-columns:repeat(3,minmax(0,1fr))}
-  body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-day-cell:nth-child(4){border-left:0}
-  body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-day-cell:nth-child(n+4){border-top:1px solid var(--gf-color-border)}
-}
-@media(max-width:900px){
-  body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-columns{grid-template-columns:1fr}
 }
 @media(max-width:820px){
   body[data-gf-surface="workspace"] #app .content{padding:0 16px 112px!important}
   body[data-gf-surface="workspace"] #app .topbar{padding:16px!important}
-}
-@media(max-width:560px){
-  body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-day-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
-  body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-day-cell{border-left:0;border-top:1px solid var(--gf-color-border);padding:12px 15px}
-  body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-day-cell:nth-child(-n+2){border-top:0}
-  body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-day-cell:nth-child(even){border-left:1px solid var(--gf-color-border)}
-  body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-day-cell strong{font-size:26px}
-  body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-side{padding:16px}
-  body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-hero-heading h2{font-size:20px}
-  body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-resource-table-head,
-  body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-resource-entry{grid-template-columns:minmax(0,1.25fr) minmax(64px,.8fr) minmax(72px,.8fr);padding-inline:10px;gap:5px}
-  body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-resource-entry{font-size:12px}
 }

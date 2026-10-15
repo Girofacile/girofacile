@@ -1,10 +1,5 @@
 /* Solo la mappa centrale della nuova dashboard. Sidebar e resto del tema invariati. */
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-route-drawing.gf-ref-map-ready{
-  height:315px;
-  min-height:315px;
-  isolation:isolate;
-  background:#eaf1f7;
-}
+
 body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-canvas{
   position:absolute;
   inset:0;
@@ -95,13 +90,6 @@ body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-marker:focus-v
   transform:scale(1.12);
   box-shadow:0 0 0 5px rgba(22,101,255,.17),0 2px 8px rgba(15,34,80,.25);
 }
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-stops li[data-gf-ref-stop]{
-  cursor:pointer;
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-stops li[data-gf-ref-stop]:focus-visible{
-  outline:2px solid var(--gf-color-primary);
-  outline-offset:-2px;
-}
 body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-notice{
   position:absolute;
   bottom:12px;
@@ -140,10 +128,6 @@ body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-canvas .leafle
   color:var(--gf-color-text);
 }
 @media(max-width:560px){
-  body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-route-drawing.gf-ref-map-ready{
-    min-height:265px;
-    height:265px;
-  }
   body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-notice{
     left:8px;
     bottom:8px;
