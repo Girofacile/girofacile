@@ -4218,6 +4218,7 @@ async function loadCompanyProfile(showToast=false){
     set("companySdiInput", data.company_sdi || "");
     set("companyLegalAddressInput", data.company_legal_address || "");
     set("companyBillingAddressInput", data.company_billing_address || "");
+    window.GFCompanyReference?.syncAddresses?.();
     set("companyActivityTypeInput", data.company_activity_type || "");
     set("companySizeInput", data.company_size || "");
     set("companyDailyDeliveriesInput", data.daily_deliveries || "");

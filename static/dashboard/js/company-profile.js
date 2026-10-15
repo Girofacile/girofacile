@@ -36,8 +36,10 @@
     }).observe(logo,{childList:true,characterData:true,subtree:true});
 
     const fields=byId('companyAddressFields'), legalInput=byId('companyLegalAddressInput'), billInput=byId('companyBillingAddressInput'), same=byId('gfRefSame');
+    const addressesEmpty=()=>!legalInput.value.trim()&&!billInput.value.trim();
+    // Stato dell'interruttore ricavato dai dati: solo all'avvio e al caricamento del profilo.
     function syncSame(){
-      const yes=!legalInput.value.trim()&&!billInput.value.trim();
+      const yes=addressesEmpty();
       same.checked=yes;fields.hidden=yes;
     }
     same.addEventListener('change',e=>{
@@ -45,7 +47,9 @@
       if(e.target.checked)[legalInput,billInput].forEach(input=>{input.value='';input.dispatchEvent(new Event('input',{bubbles:true}));});
       fields.hidden=e.target.checked;
     });
-    [legalInput,billInput].forEach(x=>x.addEventListener('input',syncSame));
+    // L'utente svuota entrambi i campi: si torna agli indirizzi uguali alla sede.
+    [legalInput,billInput].forEach(x=>x.addEventListener('input',()=>{if(addressesEmpty()){same.checked=true;fields.hidden=true;}}));
+    syncSame();
     const colors=['#1F5BFF','#0B8A7C','#7B4FE0','#C2255C','#D9480F','#2B8A3E','#1F2A44'];
     const swatches=byId('gfRefColors');
     function selectColor(c){
@@ -98,11 +102,11 @@
         todo.append(b);
       });
       if(!missing.length){const p=document.createElement('p');p.className='gf-muted';p.textContent='✓ Il profilo contiene tutti i dati principali.';todo.append(p);}
-      clear.hidden=!val('companyLogoUrl');syncSame();
+      clear.hidden=!val('companyLogoUrl');
     }
     tab.addEventListener('input',sync);tab.addEventListener('change',sync);
     sync();
-    window.GFCompanyReference={refresh:sync};
+    window.GFCompanyReference={refresh:sync,syncAddresses:syncSame};
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);
   else init();
