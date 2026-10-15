@@ -480,31 +480,23 @@ label{letter-spacing:.01em;}
 @media(max-width:900px){.picker-filters,.customer-filters{grid-template-columns:1fr 1fr}.picker-customer-row{align-items:flex-start;flex-direction:column}.result-header{flex-direction:column}.result-header-actions{justify-items:start}.customer-list-head{align-items:flex-start}}
 
 /* GiroFacile V3.7.8.1 - Sezione Autisti */
-.driver-stats-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:18px;}
+
 .drivers-layout{display:grid;grid-template-columns:minmax(330px,420px) 1fr;gap:18px;align-items:start;}
 .driver-form-panel,.drivers-list-panel{overflow:hidden;}
 .panel-header p{margin:4px 0 0;color:#64748b;font-size:13px;}
-.driver-profile-head{display:flex;gap:14px;align-items:center;padding:14px;border:1px solid #e5e7eb;border-radius:18px;background:linear-gradient(135deg,#f8fafc,#eef6ff);margin-bottom:16px;}
-.driver-avatar-big,.driver-avatar{width:54px;height:54px;border-radius:18px;background:linear-gradient(135deg,#2563eb,#06b6d4);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;box-shadow:0 10px 25px rgba(37,99,235,.20);}
+.driver-avatar{width:54px;height:54px;border-radius:18px;background:linear-gradient(135deg,#2563eb,#06b6d4);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;box-shadow:0 10px 25px rgba(37,99,235,.20);}
 .driver-avatar{width:48px;height:48px;border-radius:16px;flex:0 0 auto;}
-.driver-profile-head strong{display:block;font-size:18px;color:#0f172a;}
-.driver-profile-head small{color:#64748b;}
 .driver-form-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
-.driver-toolbar{display:grid;grid-template-columns:1fr 190px;gap:10px;margin-bottom:14px;}
-.drivers-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;}
 .driver-card{border:1px solid #e5e7eb;border-radius:22px;background:#fff;padding:16px;box-shadow:0 12px 32px rgba(15,23,42,.06);}
 .driver-card-top{display:flex;gap:12px;align-items:center;margin-bottom:14px;}
 .driver-card h3{margin:0 0 6px;font-size:17px;color:#0f172a;}
-.driver-status{display:inline-flex;padding:5px 10px;border-radius:999px;font-size:12px;font-weight:800;}
-.driver-status.available{background:#dcfce7;color:#166534;}
-.driver-status.working{background:#ffedd5;color:#9a3412;}
 .driver-info-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
 .driver-info-grid div{padding:10px;border-radius:14px;background:#f8fafc;border:1px solid #eef2f7;min-width:0;}
 .driver-info-grid small{display:block;color:#64748b;font-size:11px;margin-bottom:4px;}
 .driver-info-grid strong{display:block;color:#0f172a;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .driver-note{margin:12px 0 0;padding:10px;border-radius:14px;background:#fff7ed;color:#9a3412;font-size:13px;}
 .driver-actions{margin-top:12px;display:flex;justify-content:flex-end;gap:8px;}
-@media(max-width:1050px){.drivers-layout{grid-template-columns:1fr}.drivers-cards{grid-template-columns:1fr}.driver-stats-grid{grid-template-columns:1fr}.driver-toolbar{grid-template-columns:1fr}.driver-form-grid{grid-template-columns:1fr}}
+@media(max-width:1050px){.drivers-layout{grid-template-columns:1fr}.driver-form-grid{grid-template-columns:1fr}}
 
 /* V3.7.8.1 - Dashboard giri programmati/in corso */
 .operational-dashboard-panel{
@@ -2124,9 +2116,7 @@ body.admin-mode .side-nav .nav-item.active{
 }
 
 /* GiroFacile v6 - pagina Autisti più pulita con creazione/modifica in popup */
-#tab-autisti .page-title-row{
-  align-items:center;
-}
+
 .drivers-list-panel-full{
   width:100%;
 }
@@ -2139,9 +2129,6 @@ body.admin-mode .side-nav .nav-item.active{
 .drivers-layout{
   display:block !important;
 }
-.drivers-cards{
-  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
-}
 .driver-card{
   transition:transform .14s ease, box-shadow .14s ease, border-color .14s ease;
 }
@@ -2150,108 +2137,8 @@ body.admin-mode .side-nav .nav-item.active{
   border-color:#bfdbfe;
   box-shadow:0 18px 44px rgba(15,23,42,.10);
 }
-.driver-form-modal{
-  width:min(860px,96vw);
-  max-height:92vh;
-  overflow:auto;
-  padding:28px;
-}
-.modal-eyebrow{
-  display:inline-flex;
-  padding:6px 10px;
-  border-radius:999px;
-  background:#eff6ff;
-  color:#0b63f6;
-  font-size:12px;
-  font-weight:900;
-  text-transform:uppercase;
-  letter-spacing:.04em;
-  margin-bottom:10px;
-}
-.driver-modal-header{
-  padding-bottom:16px;
-  border-bottom:1px solid #e5e7eb;
-}
-.driver-modal-section{
-  margin-top:18px;
-  padding:18px;
-  border:1px solid #e5e7eb;
-  border-radius:20px;
-  background:#fff;
-}
-.driver-modal-identity{
-  background:linear-gradient(135deg,#f8fafc,#eef6ff);
-}
-.driver-profile-head-modal{
-  background:#fff;
-  margin-bottom:16px;
-}
-.driver-modal-section-title{
-  display:flex;
-  justify-content:space-between;
-  gap:16px;
-  align-items:flex-start;
-  margin-bottom:14px;
-}
-.driver-modal-section-title h3{
-  margin:0;
-  font-size:16px;
-  color:#0f172a;
-}
-.driver-modal-section-title p{
-  margin:4px 0 0;
-  color:#64748b;
-  font-size:13px;
-  font-weight:600;
-}
-.driver-modal-grid{
-  display:grid;
-  gap:14px;
-}
-.driver-modal-grid.two-cols{
-  grid-template-columns:repeat(2,minmax(0,1fr));
-}
-.driver-modal-grid.three-cols{
-  grid-template-columns:repeat(3,minmax(0,1fr));
-}
-.driver-modal-grid label,
-.driver-modal-section label{
-  display:block;
-  margin-bottom:7px;
-  color:#334155;
-  font-size:13px;
-  font-weight:850;
-}
-.driver-modal-grid input,
-.driver-modal-grid select,
-.driver-modal-section textarea{
-  width:100%;
-  border:1px solid var(--line);
-  border-radius:14px;
-  padding:13px 14px;
-  font:inherit;
-  background:#fff;
-  color:#0f172a;
-}
-.driver-modal-section textarea{
-  min-height:92px;
-  resize:vertical;
-}
-.driver-modal-actions{
-  justify-content:flex-end;
-  margin-top:18px;
-  padding-top:18px;
-  border-top:1px solid #e5e7eb;
-}
-@media(max-width:1250px){
-  .drivers-cards{grid-template-columns:repeat(2,minmax(0,1fr)) !important;}
-}
 @media(max-width:760px){
-  .drivers-cards{grid-template-columns:1fr !important;}
   .drivers-list-header{flex-direction:column;}
-  .driver-modal-grid.two-cols,
-  .driver-modal-grid.three-cols{grid-template-columns:1fr;}
-  .driver-form-modal{padding:20px;}
 }
 
 /* GiroFacile v7 - immagini profilo risorse */
@@ -2287,8 +2174,7 @@ body.admin-mode .side-nav .nav-item.active{
 .asset-thumb{width:52px;height:52px;border-radius:16px;font-size:24px;}
 .asset-photo-preview img,
 .asset-thumb img,
-.driver-avatar img,
-.driver-avatar-big img{
+.driver-avatar img{
   width:100%;
   height:100%;
   object-fit:cover;
@@ -2297,12 +2183,9 @@ body.admin-mode .side-nav .nav-item.active{
 .entity-cell{display:flex;align-items:center;gap:12px;min-width:0;}
 .entity-cell strong{display:block;color:#0f172a;}
 .entity-cell small{display:block;color:#64748b;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.photo-upload-inline{display:inline-flex;align-items:center;gap:10px;margin-top:9px;font-size:13px;color:#0b63f6;font-weight:850;cursor:pointer;}
-.photo-upload-inline input{font-size:12px;max-width:230px;}
-.driver-avatar-big{overflow:hidden;}
 .driver-avatar{overflow:hidden;}
 .driver-info-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
-@media(max-width:760px){.asset-photo-row{align-items:flex-start;flex-direction:column}.entity-cell{align-items:flex-start}.photo-upload-inline{align-items:flex-start;flex-direction:column}}
+@media(max-width:760px){.asset-photo-row{align-items:flex-start;flex-direction:column}.entity-cell{align-items:flex-start}}
 
 /* v8 - Clienti puliti e pianificazione full width */
 .giro-layout.giro-layout-full,

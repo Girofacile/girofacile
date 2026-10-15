@@ -101,7 +101,7 @@ body:has(#app .gf-page:not(.hidden)) .content{padding:28px 34px 48px}
 #app .gf-page td{padding:14px 16px;border-bottom:1px solid var(--gf-line);color:#344156;font-size:13px;line-height:1.5}
 #app .gf-page tbody tr:last-child td{border-bottom:0}
 #app .gf-page tbody tr:hover{background:#f8fbff}
-#app .gf-page :is(.route-status-pill,.driver-status){font-size:11px;font-weight:600;line-height:1.4;border-radius:999px;padding:5px 10px}
+#app .gf-page :is(.route-status-pill){font-size:11px;font-weight:600;line-height:1.4;border-radius:999px;padding:5px 10px}
 #app .gf-page :is(.dash-empty,.empty-picker){padding:26px 18px;border:1px dashed #d9e5f6;border-radius:13px;background:#f8fbff;color:var(--gf-muted);font-size:14px;font-weight:400;line-height:1.6}
 
 /* Planning: preserve the workflow, quieten the step backgrounds. */
@@ -117,7 +117,7 @@ body:has(#app .gf-page:not(.hidden)) .content{padding:28px 34px 48px}
 #app #tab-giro .delivery-workbench{margin-top:20px}
 #app .gf-page .result-layout{gap:20px}
 #app .gf-page .gf-vehicle-usage-card.electric{background:linear-gradient(135deg,#fff 50%,#effcf6)}
-#app .gf-page :is(.result-cards,.scheduled-metrics,.stats-grid,.driver-stats-grid){gap:16px;margin-bottom:20px}
+#app .gf-page :is(.result-cards,.scheduled-metrics,.stats-grid){gap:16px;margin-bottom:20px}
 #app .gf-page .dash-subpage-topbar{margin-bottom:14px}
 #app .gf-page .dash-live-summary-card{overflow:hidden}
 #app .gf-page .dash-live-header{background:#edf5ff;color:var(--gf-ink)}
@@ -148,9 +148,6 @@ body:has(#app .gf-page:not(.hidden)) .content{padding:28px 34px 48px}
 /* Fleet: form and saved vehicles are independent visual sections. */
 
 /* Drivers and chat retain all actions while sharing lighter surfaces. */
-#app #tab-autisti .driver-card{border-radius:14px;box-shadow:none;padding:18px}
-#app #tab-autisti .driver-avatar{background:#edf5ff;color:#247bff;box-shadow:none}
-#app #tab-autisti .driver-info-grid div{background:#f8fbff;border-color:var(--gf-line);border-radius:10px}
 
 /* Dialogs and dropdowns also belong to the same product, including those
  * launched from protected pages. Their parent pages remain untouched. */
@@ -165,8 +162,8 @@ body:has(#app .gf-page:not(.hidden)) .content{padding:28px 34px 48px}
   color:var(--gf-ink);font-size:24px;line-height:1.25;letter-spacing:-.6px;font-weight:700;
 }
 .gf-dialog :is(.modal-head,.modal-header,.delivery-modal-head) p{font-size:13px;line-height:1.6;color:var(--gf-muted);font-weight:400}
-.gf-dialog :is(.driver-modal-section,.delivery-modal-section){border-color:var(--gf-line);border-radius:13px;box-shadow:none;background:#fff}
-.gf-dialog :is(.driver-profile-head,.delivery-modal-summary-v5){border-color:var(--gf-line);border-radius:13px;background:#f8fbff;box-shadow:none}
+.gf-dialog :is(.delivery-modal-section){border-color:var(--gf-line);border-radius:13px;box-shadow:none;background:#fff}
+.gf-dialog :is(.delivery-modal-summary-v5){border-color:var(--gf-line);border-radius:13px;background:#f8fbff;box-shadow:none}
 .gf-dialog :is(.modal-actions,.delivery-modal-actions-v5){gap:10px;flex-wrap:wrap;border-color:var(--gf-line);background:#fff}
 .gf-dialog .address-suggestions{border-color:var(--gf-line);border-radius:12px;box-shadow:var(--gf-shadow)}
 #customerDetailsDialog.gf-dialog{border:1px solid var(--gf-line);border-radius:18px;box-shadow:0 18px 60px #101b3d26}
@@ -197,8 +194,6 @@ body:has(#app .gf-page:not(.hidden)) .content{padding:28px 34px 48px}
   .gf-dialog :is(.modal){border-radius:18px!important}
 }
 @media(max-width:520px){
-  #app .gf-page .driver-toolbar{grid-template-columns:1fr}
-  #app .gf-page .drivers-cards{grid-template-columns:1fr}
   #app .gf-page :is(.stat-card,.scheduled-metric){padding:16px}
   #app .gf-page .stat-card>div>strong{font-size:27px}
   .gf-dialog :is(.modal-head,.modal-header,.delivery-modal-head) h2{font-size:22px}

@@ -466,7 +466,7 @@ test('resource directories keep titles in the topbar and create actions inside t
   const vehicles=html.slice(html.indexOf('<section id="tab-mezzi"'),html.indexOf('<section id="tab-autisti"'));
   assert.match(vehicles,/class="gf-panel__header"[^]*\+ Nuovo mezzo/);
   const drivers=html.slice(html.indexOf('<section id="tab-autisti"'),html.indexOf('<section id="tab-storico"'));
-  assert.match(drivers,/gf-directory-head-actions[^]*\+ Nuovo autista/);
+  assert.match(drivers,/class="gf-panel__header"[^]*\+ Nuovo autista/);
   const agents=html.slice(html.indexOf('<section id="tab-agenti"'),html.indexOf('<section id="tab-report"'));
   assert.match(agents,/class="gf-panel__header"[^]*\+ Nuovo agente/);
 

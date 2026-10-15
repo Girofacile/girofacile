@@ -58,7 +58,7 @@ def main():
                 page.locator('#routeDate').fill('2099-01-15');page.locator('#routeStart').fill('08:00');page.locator('#routeStart').blur()
                 page.evaluate('refreshResourceAvailability()')
                 page.evaluate("showTab('autisti');editDriver(1)")
-                page.locator('#driverFormOverlay .driver-schedule-editor summary').click()
+                page.locator('#driverFormOverlay [data-schedule-editor] summary').click()
                 page.locator('#driverWorkScheduleStart').fill('08:00');page.locator('#driverWorkScheduleEnd').fill('17:00')
                 page.locator('#driverWorkSchedule [data-add-break]').click()
                 page.locator('#driverWorkScheduleBreak0Start').fill('08:15');page.locator('#driverWorkScheduleBreak0End').fill('08:45')
@@ -70,7 +70,7 @@ def main():
                 # The creation form exposes the same controls and persists an independent schedule.
                 page.evaluate('openNewDriverModal()')
                 page.locator('#drNome').fill('Nuovo turnista')
-                page.locator('#driverFormOverlay .driver-schedule-editor').evaluate('(n)=>n.open=true')
+                page.locator('#driverFormOverlay [data-schedule-editor]').evaluate('(n)=>n.open=true')
                 page.locator('#driverWorkScheduleStart').fill('09:00');page.locator('#driverWorkScheduleEnd').fill('18:00')
                 page.locator('#saveDriverBtn').click();page.locator('#driverFormOverlay').wait_for(state='hidden')
                 assert db.query(Driver).filter_by(nome='Nuovo turnista').one().work_schedule['start']=='09:00'

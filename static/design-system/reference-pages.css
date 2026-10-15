@@ -83,7 +83,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
 /* 2. Superfici: una sola grammatica visiva per pagine gestionali. */
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .panel,.card,.gf-card,.gf-directory-panel,.customer-list-panel-v8,.orders-list-panel,.orders-filter-panel,.orders-source-panel,
-  .orders-source-card,.orders-order-card,.driver-directory-card,
+  .orders-source-card,.orders-order-card,
   .customer-card,.company-card-v29,.onboarding-card-v29,.report-chart-card,.report-table-card,.report-kpi-card,.dash-sub-card,.dash-sub-route-picker,
   .scheduled-overview,.scheduled-stops,.scheduled-summary,.completed-picker,
   .completed-stops,.completed-summary,.live-design-card,.live-design-picker,
@@ -98,25 +98,24 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   box-shadow:var(--gf-shadow-sm)!important;
   min-width:0;
 }
-body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(.driver-directory-card,.customer-card,.orders-order-card,
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(.customer-card,.orders-order-card,
   .orders-source-card,.up-card-v875
 ):hover{
   border-color:#c2d0e7!important;
   box-shadow:0 4px 18px rgba(15,34,80,.09)!important;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .company-section-heading,.driver-directory-top,.customer-card-heading,.order-source-panel-head){
+  .company-section-heading,.customer-card-heading,.order-source-panel-head){
   border-color:var(--gf-color-border)!important;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .company-section-heading,.company-section-heading h2,
-  .orders-source-card h3,.driver-directory-identity strong
-){
+  .orders-source-card h3){
   color:var(--gf-color-text);
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .company-section-icon,.gf-directory-metric-icon,
-  .report-kpi-icon,.driver-directory-avatar,.billing-summary-icon-v876
+  .report-kpi-icon,.billing-summary-icon-v876
 ){
   border-radius:10px!important;
   background:var(--gf-color-info-bg)!important;
@@ -126,8 +125,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
 
 /* 3. KPI: stesso ordine tipografico dello strip della dashboard. */
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .stat-card,.customer-metric,.gf-directory-metric,
-  .driver-stat,.orders-metric-card,.report-kpi-card,.billing-summary-card-v876,
+  .stat-card,.customer-metric,.gf-directory-metric,.orders-metric-card,.report-kpi-card,.billing-summary-card-v876,
   .collaborator-metrics>div,.gf-stat,.scheduled-metric,.completed-card
 ){
   min-width:0;
@@ -138,8 +136,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   box-shadow:var(--gf-shadow-sm)!important;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .stat-card,.customer-metric,.gf-directory-metric,
-  .driver-stat,.orders-metric-card,.report-kpi-card,.billing-summary-card-v876,
+  .stat-card,.customer-metric,.gf-directory-metric,.orders-metric-card,.report-kpi-card,.billing-summary-card-v876,
   .collaborator-metrics>div,.gf-stat,.scheduled-metric
 ) :is(strong,.stat-value,.customer-metric-value,.orders-metric-value){
   color:var(--gf-color-primary)!important;
@@ -148,16 +145,14 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   font-variant-numeric:tabular-nums;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .stat-card,.customer-metric,.gf-directory-metric,
-  .driver-stat,.orders-metric-card,.report-kpi-card,.billing-summary-card-v876,
+  .stat-card,.customer-metric,.gf-directory-metric,.orders-metric-card,.report-kpi-card,.billing-summary-card-v876,
   .collaborator-metrics>div,.gf-stat,.scheduled-metric
 ) :is(small,.stat-label,.orders-metric-label,.customer-metric-label){
   font:400 13px/1.4 var(--gf-font-family)!important;
   color:var(--gf-color-muted)!important;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .orders-metrics,.gf-directory-metrics,.customer-metrics,
-  .driver-stats-grid,.collaborator-metrics,.stats-grid,.report-kpi-grid,
+  .orders-metrics,.gf-directory-metrics,.customer-metrics,.collaborator-metrics,.stats-grid,.report-kpi-grid,
   .billing-summary-grid-v876,.scheduled-metrics
 ){
   gap:16px!important;
@@ -197,8 +192,7 @@ body[data-gf-surface="workspace"] :is(
   transform:none!important;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .btn-secondary,.btn-light,.gf-button[data-variant="secondary"],
-  .driver-view,.orders-view-switch button,.customer-view-controls button),
+  .btn-secondary,.btn-light,.gf-button[data-variant="secondary"],.orders-view-switch button,.customer-view-controls button),
 body[data-gf-surface="workspace"] :is(
   .modal-overlay,.gf-dialog,#orderModal
 ) :is(.btn-secondary,.btn-light,.gf-button[data-variant="secondary"]){
@@ -213,9 +207,7 @@ body[data-gf-surface="workspace"] :is(
   transform:none!important;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .btn-secondary,.btn-light,.gf-button[data-variant="secondary"],
-  .driver-view
-):hover:not(:disabled),
+  .btn-secondary,.btn-light,.gf-button[data-variant="secondary"]):hover:not(:disabled),
 body[data-gf-surface="workspace"] :is(
   .modal-overlay,.gf-dialog,#orderModal
 ) :is(.btn-secondary,.btn-light,.gf-button[data-variant="secondary"]):hover:not(:disabled){
@@ -223,7 +215,7 @@ body[data-gf-surface="workspace"] :is(
   background:var(--gf-color-surface-subtle)!important;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .gf-button[data-variant="danger"],.btn-danger,.driver-delete,.customer-delete-danger
+  .gf-button[data-variant="danger"],.btn-danger,.customer-delete-danger
 ),
 body[data-gf-surface="workspace"] :is(.modal-overlay,.gf-dialog,#orderModal) :is(
   .gf-button[data-variant="danger"],.btn-danger,.customer-delete-danger
@@ -251,7 +243,7 @@ body[data-gf-surface="workspace"] :is(.modal-overlay,.gf-dialog,#orderModal) :is
 
 /* 5. Barre strumenti e controlli scheda/tabella. */
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .orders-list-toolbar,.orders-toolbar,.customer-searchbar-v8,.fleet-toolbar,.driver-toolbar,
+  .orders-list-toolbar,.orders-toolbar,.customer-searchbar-v8,.fleet-toolbar,
   .collaborators-toolbar,.gf-directory-toolbar,
   .report-toolbar,.report-filter-row,.orders-filters,.picker-filters
 ){
@@ -294,7 +286,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   box-shadow:var(--gf-shadow-sm)!important;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .customer-search,.driver-search-box,.collaborator-search,
+  .customer-search,.collaborator-search,
   .orders-search-input-wrap,.gf-directory-search,.report-table-search
 ){
   position:relative;
@@ -305,7 +297,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   box-shadow:none!important;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .customer-search,.driver-search-box,.collaborator-search,
+  .customer-search,.collaborator-search,
   .orders-search-input-wrap,.gf-directory-search,.report-table-search
 )>svg{
   position:absolute;
@@ -315,7 +307,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   pointer-events:none;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .customer-search,.driver-search-box,.collaborator-search,
+  .customer-search,.collaborator-search,
   .orders-search-input-wrap,.gf-directory-search,.report-table-search
 ):has(>svg)>input{
   padding-left:42px!important;
@@ -399,8 +391,7 @@ body[data-gf-surface="workspace"] :is(
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .company-field label,.gf-field label,
-  .orders-form-grid label,.driver-modal-grid label
-){
+  .orders-form-grid label){
   color:var(--gf-color-text);
   font:600 13px/1.45 var(--gf-font-family);
   letter-spacing:0;
@@ -413,7 +404,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
 
 /* 8. Etichette, icone di stato e segnali: stessa palette senza riscrivere il significato. */
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .gf-badge,.orders-status,.customer-status,.driver-status,.scheduled-status,.route-status-pill,
+  .gf-badge,.orders-status,.customer-status,.scheduled-status,.route-status-pill,
   .company-configured-badge-v40
 ){
   font:600 12px/1.3 var(--gf-font-family)!important;
@@ -421,18 +412,18 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   box-shadow:none!important;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .orders-status,.route-status-pill,.driver-status)[data-status="success"],
+  .orders-status,.route-status-pill)[data-status="success"],
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .customer-status.verified,.orders-status-consegnato
 ){
   background:var(--gf-color-success-bg)!important;color:var(--gf-color-success)!important;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .orders-status,.route-status-pill,.driver-status)[data-status="warning"]{
+  .orders-status,.route-status-pill)[data-status="warning"]{
   background:var(--gf-color-warning-bg)!important;color:var(--gf-color-warning)!important;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .orders-status,.route-status-pill,.driver-status)[data-status="danger"]{
+  .orders-status,.route-status-pill)[data-status="danger"]{
   background:var(--gf-color-danger-bg)!important;color:var(--gf-color-danger)!important;
 }
 
@@ -466,14 +457,13 @@ body[data-gf-surface="workspace"] #app #tab-report .report-chart-card :is(h2,h3)
   font-family:var(--gf-font-display)!important;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .gf-empty,.customer-empty,.driver-directory-empty,
+  .gf-empty,.customer-empty,
   .orders-empty,.dash-detail-empty
 ){
   color:var(--gf-color-muted);
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .gf-empty h2,.customer-empty h2,
-  .driver-directory-empty h2){
+  .gf-empty h2,.customer-empty h2){
   font:700 16px/1.3 var(--gf-font-display)!important;
   color:var(--gf-color-text)!important;
 }
@@ -499,16 +489,13 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
 }
 @media(max-width:520px){
   body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-    .orders-metrics,.customer-metrics,.gf-directory-metrics,
-    .driver-stats-grid,.collaborator-metrics
+    .orders-metrics,.customer-metrics,.gf-directory-metrics,.collaborator-metrics
   ){gap:10px!important}
   body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-    .stat-card,.customer-metric,.gf-directory-metric,
-    .driver-stat,.orders-metric-card,.collaborator-metrics>div
+    .stat-card,.customer-metric,.gf-directory-metric,.orders-metric-card,.collaborator-metrics>div
   ){padding:14px!important}
   body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-    .stat-card,.customer-metric,.gf-directory-metric,
-    .driver-stat,.orders-metric-card,.collaborator-metrics>div
+    .stat-card,.customer-metric,.gf-directory-metric,.orders-metric-card,.collaborator-metrics>div
   ) :is(strong,.orders-metric-value){font-size:24px!important}
   body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
     .panel-header,.customer-list-head,.gf-directory-head,
