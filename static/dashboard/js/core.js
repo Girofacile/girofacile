@@ -595,7 +595,7 @@ async function loadPlanInfo(){
     const planNames = {starter:"Starter",business:"Business",pro:"Pro"};
     if(badge){
       badge.textContent = planNames[plan] || plan;
-      badge.className = "plan-badge-ui " + plan;
+      badge.dataset.status = plan === "starter" ? "neutral" : "info";
     }
     const planActiveBtn = document.getElementById("btnPlanActive");
     if(planActiveBtn){
@@ -611,7 +611,7 @@ async function loadPlanInfo(){
     const statusDesc = document.getElementById("planStatusDesc");
 
     const setPlanStatusTone = (tone, icon) => {
-      if(statusBox) statusBox.className = `profile-plan-status ${tone}`;
+      if(statusBox) statusBox.dataset.status = {"is-warning":"warning","is-success":"success","is-danger":"danger"}[tone] || "info";
       if(statusIcon) statusIcon.textContent = icon;
     };
     if(status === "trial"){
@@ -654,16 +654,9 @@ async function loadPlanInfo(){
           {label:"Autisti", used: drivers.length, max: limits.max_drivers},
           {label:"Depositi", used: deposits.length, max: limits.max_deposits},
         ];
-        const icons = {
-          Clienti:'<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M4 19c.5-3.1 2.3-4.8 5-4.8s4.5 1.7 5 4.8"/><circle cx="17" cy="9" r="2.2"/><path d="M15.5 14.5c.5-.4 1.1-.6 1.8-.6 1.9 0 3.2 1.3 3.5 3.8"/></svg>',
-          "Mezzi standard":'<svg viewBox="0 0 24 24"><path d="M3 6h11v11H3zM14 10h4l3 4v3h-7"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg>',
-          "Bonus elettrici":'<svg viewBox="0 0 24 24"><path d="m13 2-7 11h5l-1 9 8-12h-5z"/></svg>',
-          Autisti:'<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg>',
-          Depositi:'<svg viewBox="0 0 24 24"><path d="M3 10 12 4l9 6v10H3z"/><path d="M7 20v-7h10v7M8 15h8"/></svg>'
-        };
         usageRows.innerHTML = rows.map(r => {
           const maxLabel = r.max != null ? `${r.used} / ${r.max}` : `${r.used} / ∞`;
-          return `<div class="plan-usage-chip-v40"><span class="plan-usage-chip-icon" aria-hidden="true">${icons[r.label] || ""}</span><span>${r.label}</span><strong>${maxLabel}</strong></div>`;
+          return `<div class="gf-details__item"><dt>${r.label}</dt><dd>${maxLabel}</dd></div>`;
         }).join("");
       }
     }catch(e){ console.warn('GiroFacile: operazione non completata', e); }
@@ -4749,10 +4742,9 @@ async function saveCompanyProfile(){
 
 function onboardingStepHtml(step){
   const icon = step.done ? "✓" : "•";
-  return `<button class="onboarding-step-v29 ${step.done ? 'done' : ''}" onclick="showTab('${esc(step.tab)}'); closeOnboardingPanel();">
-    <span>${icon}</span>
-    <strong>${esc(step.label)}</strong>
-    <small>${step.done ? 'Completato' : 'Da completare'}</small>
+  return `<button type="button" class="gf-list-item" onclick="showTab('${esc(step.tab)}'); closeOnboardingPanel();">
+    <span class="gf-badge" data-status="${step.done ? 'success' : 'neutral'}">${icon}</span>
+    <span class="gf-list-item__main"><strong>${esc(step.label)}</strong><small>${step.done ? 'Completato' : 'Da completare'}</small></span>
   </button>`;
 }
 
@@ -4764,7 +4756,7 @@ function renderOnboardingStatus(data){
   const setText=(id,v)=>{ const el=document.getElementById(id); if(el) el.textContent=v; };
   setText("onboardingProgressLabel", label);
   setText("onboardingModalProgressLabel", label);
-  ["onboardingProgressFill","onboardingModalProgressFill"].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.width = pct + "%"; });
+  ["onboardingProgressFill","onboardingModalProgressFill"].forEach(id=>{ const el=document.getElementById(id); if(el) el.dataset.gfWidth = String(Math.max(0, Math.min(100, Math.round(pct / 5) * 5))); });
   const html = (data.steps || []).map(onboardingStepHtml).join("");
   const list = document.getElementById("onboardingStepsList"); if(list) list.innerHTML = html;
   const modalList = document.getElementById("onboardingModalSteps"); if(modalList) modalList.innerHTML = html;
@@ -4986,42 +4978,34 @@ function ensureSupportModalV60(){
   if(document.getElementById("supportTicketModalV60")) return;
   const wrap = document.createElement("div");
   wrap.id = "supportTicketModalV60";
-  wrap.className = "support-modal-v60 hidden";
+  wrap.className = "gf-overlay hidden";
   wrap.innerHTML = `
-    <div class="support-card-v60">
-      <div class="support-head-v60">
+    <div class="gf-modal" role="dialog" aria-modal="true" aria-labelledby="supportTicketTitleV60">
+      <header class="gf-modal__header">
         <div>
-          <strong>Invia ticket assistenza</strong>
-          <small id="supportTicketSubtitleV60">Descrivi il problema al supporto GiroFacile.</small>
+          <h2 class="gf-modal__title" id="supportTicketTitleV60">Invia ticket assistenza</h2>
+          <p class="gf-muted" id="supportTicketSubtitleV60">Descrivi il problema al supporto GiroFacile.</p>
         </div>
-        <button type="button" onclick="closeSupportTicketModalV60()">×</button>
-      </div>
-      <div class="support-body-v60">
+        <button type="button" class="gf-icon-button" aria-label="Chiudi" onclick="closeSupportTicketModalV60()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12 M18 6L6 18"/></svg></button>
+      </header>
+      <div class="gf-modal__body gf-stack">
         <input type="hidden" id="supportTicketErrorIdV60">
-        <label>Oggetto</label>
-        <input id="supportTicketSubjectV60" type="text" placeholder="Es. Errore calcolo percorso">
-        <label>Descrizione problema</label>
-        <textarea id="supportTicketMessageV60" rows="6" placeholder="Spiega cosa stavi facendo, quale pulsante hai cliccato e cosa è successo..."></textarea>
-        <label class="support-check-v60">
-          <input id="supportTicketNotifyV60" type="checkbox" checked>
-          Avvisami via email quando il problema è risolto
-        </label>
-        <div id="supportTicketLinkedErrorV60" class="support-linked-error-v60 hidden"></div>
-        <button type="button" id="supportTicketAiBtnV67" class="btn-secondary hidden" onclick="generateSupportTicketTextAIv67()">Genera testo assistito AI</button>
-        <small id="supportTicketAiHintV67" class="hidden" style="color:var(--muted)">Disponibile solo per ticket collegati a un errore sistema e piano Pro.</small>
-      </div>
-      <div class="support-legal-v60">
-        <span>Informazioni legali</span>
-        <div>
+        <label class="gf-field" for="supportTicketSubjectV60"><span class="gf-field__label">Oggetto</span><input class="gf-input" id="supportTicketSubjectV60" type="text" placeholder="Es. Errore calcolo percorso"></label>
+        <label class="gf-field" for="supportTicketMessageV60"><span class="gf-field__label">Descrizione problema</span><textarea class="gf-textarea" id="supportTicketMessageV60" rows="6" placeholder="Spiega cosa stavi facendo, quale pulsante hai cliccato e cosa è successo..."></textarea></label>
+        <label class="gf-check"><input id="supportTicketNotifyV60" type="checkbox" checked> Avvisami via email quando il problema è risolto</label>
+        <p id="supportTicketLinkedErrorV60" class="gf-alert hidden" data-status="warning"></p>
+        <div><button type="button" id="supportTicketAiBtnV67" class="gf-button hidden" data-variant="secondary" onclick="generateSupportTicketTextAIv67()">Genera testo assistito AI</button></div>
+        <p id="supportTicketAiHintV67" class="gf-muted hidden">Disponibile solo per ticket collegati a un errore sistema e piano Pro.</p>
+        <div class="gf-cluster" data-legal="support"><span class="gf-muted">Informazioni legali</span>
           <a href="/sicurezza" target="_blank" rel="noopener">Sicurezza</a>
           <a href="/dpa-responsabile-trattamento" target="_blank" rel="noopener">DPA</a>
           <a href="/subprocessors" target="_blank" rel="noopener">Fornitori</a>
         </div>
       </div>
-      <div class="support-actions-v60">
-        <button type="button" class="btn-secondary" onclick="closeSupportTicketModalV60()">Annulla</button>
-        <button type="button" class="btn-primary" onclick="submitSupportTicketV60()">Invia ticket</button>
-      </div>
+      <footer class="gf-modal__footer">
+        <button type="button" class="gf-button" data-variant="secondary" onclick="closeSupportTicketModalV60()">Annulla</button>
+        <button type="button" class="gf-button" data-variant="primary" onclick="submitSupportTicketV60()">Invia ticket</button>
+      </footer>
     </div>`;
   document.body.appendChild(wrap);
 }

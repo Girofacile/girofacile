@@ -124,7 +124,7 @@ body[data-gf-surface="workspace"] #app #tab-settings .setting-copy strong{color:
 body[data-gf-surface="workspace"] #app #tab-settings .settings-detail{border-radius:var(--gf-radius-md);background:var(--gf-color-bg);color:var(--gf-color-muted)}
 body[data-gf-surface="workspace"] #app #tab-settings .switch-toggle input:checked+.switch-slider{background:var(--gf-color-primary);border-color:var(--gf-color-primary)}
 /* .gf-dialog is sometimes a viewport overlay: only style its inner surface. */
-body[data-gf-surface="workspace"] :is(.gf-dialog .modal,.gf-dialog .profile-modal,dialog.customer-details-dialog,dialog.customer-tracking-dialog,dialog.live-map-dialog,dialog#driverDetailsDialog){border-color:var(--gf-color-border);border-radius:var(--gf-radius-lg);background:var(--gf-color-surface);color:var(--gf-color-text);box-shadow:var(--gf-shadow-md)}
+
 body[data-gf-surface="workspace"] .gf-dialog :is(.modal-head,.modal-header,.delivery-modal-head,.driver-modal-section,.delivery-modal-section,.deposit-modal-section){border-color:var(--gf-color-border);background:var(--gf-color-surface);box-shadow:none}
 body[data-gf-surface="workspace"] .gf-dialog :is(.driver-modal-section,.delivery-modal-section,.deposit-modal-section){border-radius:var(--gf-radius-md)}
 body[data-gf-surface="workspace"] .customer-tracking-dialog :is(.tracking-dialog-header,.tracking-dialog-footer){background:var(--gf-color-surface);border-color:var(--gf-color-border)}
@@ -160,7 +160,6 @@ body[data-gf-surface="workspace"] #app #tab-autisti .driver-search-box{grid-colu
 body[data-gf-surface="workspace"] #app #tab-mezzi .fleet-specs,body[data-gf-surface="workspace"] #app #tab-autisti .driver-directory-bottom{grid-template-columns:1fr;gap:var(--gf-space-3)}
 body[data-gf-surface="workspace"] #app #tab-mezzi .fleet-specs>div,body[data-gf-surface="workspace"] #app #tab-autisti .driver-directory-spec{border:0;padding:0;min-height:0}
 body[data-gf-surface="workspace"] #app #tab-autisti .driver-view{grid-column:auto;margin:0}
-body[data-gf-surface="workspace"] .gf-dialog :is(.modal,.profile-modal){border-radius:var(--gf-radius-lg)!important}
 }
 
 /* Home dashboard follows the supplied operational overview reference.
@@ -245,8 +244,6 @@ body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-standard .dash-k
 }
 @media(min-width:821px){body[data-gf-surface="workspace"] #app #tab-dashboard>.dash-hero-row{display:none!important}}
 
-
-
 /* Company profile uses the same restrained panel language as the dashboard. */
 body[data-gf-surface="workspace"] #app #tab-company .company-card-v29{
   border:1px solid var(--gf-color-border);
@@ -292,7 +289,6 @@ body[data-gf-surface="workspace"] #app #tab-company .company-logo-preview-v29{
   color:var(--gf-color-text);
   box-shadow:none;
 }
-
 
 /* Shared anagrafica directory template — Clienti is the reference. */
 body[data-gf-surface="workspace"] #app :is(#tab-depositi,#tab-mezzi,#tab-autisti,#tab-agenti){
@@ -804,7 +800,6 @@ body[data-gf-surface="workspace"] #app .gf-directory-empty{
   }
 }
 
-
 /* Directory KPI icons: neutral, quiet and dashboard-aligned. */
 body[data-gf-surface="workspace"] #app :is(#tab-clienti,#tab-depositi,#tab-mezzi,#tab-autisti,#tab-agenti)
 :is(.customer-metric-icon,.deposit-metric-icon,.gf-directory-metric-icon,.stat-icon){
@@ -840,7 +835,6 @@ body[data-gf-surface="workspace"] #app :is(#tab-clienti,#tab-depositi,#tab-mezzi
 :is(.customer-metric,.deposit-metric,.gf-directory-metric,.driver-stat){
   column-gap:16px;
 }
-
 
 /* Directory create/import actions live inside the list panel, above toolbar and view controls. */
 body[data-gf-surface="workspace"] #app :is(#tab-clienti,#tab-depositi,#tab-mezzi,#tab-autisti,#tab-agenti) .gf-directory-head-actions{

@@ -87,7 +87,7 @@ test('trasferimenti notificati e mappe solo sul contenuto, senza nuova sidebar',
  assert.match(review,/Collegamenti indicativi, non stradali/);
  assert.match(css,/#routePreviewResult\.fleet-review-page/);
  assert.doesNotMatch(css,/\.sidebar\s*\{|\.brand\s*\{|\.topbar\s*\{/);
- assert.match(html,/fleet-review\.css\?v=driver_shifts_20261013_1/);
- assert.match(html,/fleet-review\.js\?v=driver_shifts_20261013_1/);
+ assert.match(html,/fleet-review\.css\?v=[\w-]+/);
+ assert.match(html,/fleet-review\.js\?v=[\w-]+/);
  assert.match(html,/\/static\/design-system\/design-system\.js\?v=[\w-]+/);
 });

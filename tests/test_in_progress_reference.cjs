@@ -97,8 +97,8 @@ test('sidebar e login esclusi dal redesign di Giri in corso',()=>{
   assert.match(css,/#app #tab-dashboard-in-progress/);
   assert.doesNotMatch(css,/\.sidebar\s*\{|\.brand\s*\{|\.login-side\s*\{/);
   assert.match(html,/\/static\/design-system\/design-system\.js\?v=[\w-]+/);
-  assert.match(html,/in-progress-reference\.css\?v=gf_inprogress_ref_20261013_1/);
-  assert.match(html,/in-progress-reference\.js\?v=driver_shifts_20261013_1/);
+  assert.match(html,/in-progress-reference\.css\?v=[\w-]+/);
+  assert.match(html,/in-progress-reference\.js\?v=[\w-]+/);
   assert.match(core,/GFInProgressReference\?\.render/);
   assert.match(navigation,/GFInProgressReference\?\.suspend/);
   assert.match(navigation,/"dashboard-in-progress":\s*\{\s*title: "Giri in corso"/);

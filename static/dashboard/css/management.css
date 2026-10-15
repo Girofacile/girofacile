@@ -2,7 +2,7 @@
  * Opt-in only: .gf-page for pages, .gf-dialog for overlays. Never style the
  * protected tab roots or the shared navigation through these selectors.
  */
-:is(.gf-page,.gf-dialog,#supportTicketModalV60,#notificationDropdown){
+:is(.gf-page,.gf-dialog){
   --gf-ink:#101b3d;
   --gf-muted:#657a9f;
   --gf-line:#e8eef8;
@@ -54,33 +54,33 @@ body:has(#app .gf-page:not(.hidden)) .content{padding:28px 34px 48px}
 
 /* Buttons and fields are shared by pages and opt-in dialogs. Keep native types,
  * disabled states, validation and all existing event handlers intact. */
-:is(#app .gf-page,.gf-dialog,#supportTicketModalV60,#notificationDropdown) :is(.btn-primary,.btn-secondary,.btn-light){
+:is(#app .gf-page,.gf-dialog) :is(.btn-primary,.btn-secondary,.btn-light){
   display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;
   padding:11px 18px;border-radius:12px;font-family:inherit;font-size:14px;line-height:1.4;font-weight:600;
   text-decoration:none;cursor:pointer;white-space:normal;transition:background .15s,border-color .15s,box-shadow .15s;
 }
-:is(#app .gf-page,.gf-dialog,#supportTicketModalV60) .btn-primary{
+:is(#app .gf-page,.gf-dialog) .btn-primary{
   background:linear-gradient(180deg,#3188ff,#0761f5);border:1px solid #247bff;color:#fff;box-shadow:0 5px 14px #0b63f61a;
 }
-:is(#app .gf-page,.gf-dialog,#supportTicketModalV60,#notificationDropdown) :is(.btn-secondary,.btn-light){
+:is(#app .gf-page,.gf-dialog) :is(.btn-secondary,.btn-light){
   background:#fff;border:1px solid #dce7f7;color:#344e77;box-shadow:0 2px 5px #172b4d03;
 }
-:is(#app .gf-page,.gf-dialog,#supportTicketModalV60) .btn-primary:hover:not(:disabled){background:linear-gradient(180deg,#247bff,#0754d5)}
-:is(#app .gf-page,.gf-dialog,#supportTicketModalV60,#notificationDropdown) :is(.btn-secondary,.btn-light):hover:not(:disabled){background:#edf5ff;border-color:#b9d3fb}
-:is(#app .gf-page,.gf-dialog,#supportTicketModalV60) button:disabled{opacity:.55;cursor:not-allowed}
-:is(#app .gf-page,.gf-dialog,#supportTicketModalV60) :is(input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not([type=file]),select,textarea){
+:is(#app .gf-page,.gf-dialog) .btn-primary:hover:not(:disabled){background:linear-gradient(180deg,#247bff,#0754d5)}
+:is(#app .gf-page,.gf-dialog) :is(.btn-secondary,.btn-light):hover:not(:disabled){background:#edf5ff;border-color:#b9d3fb}
+:is(#app .gf-page,.gf-dialog) button:disabled{opacity:.55;cursor:not-allowed}
+:is(#app .gf-page,.gf-dialog) :is(input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not([type=file]),select,textarea){
   min-width:0;max-width:100%;min-height:44px;padding:11px 13px;border:1px solid #dfe4ec;
   border-radius:var(--gf-control-radius);background:#fff;color:var(--gf-ink);font:400 14px/1.5 Arial,Helvetica,sans-serif;
   box-shadow:inset 0 1px 2px #15234a03;
 }
-:is(#app .gf-page,.gf-dialog,#supportTicketModalV60) textarea{resize:vertical}
-:is(#app .gf-page,.gf-dialog,#supportTicketModalV60) input::placeholder,
-:is(#app .gf-page,.gf-dialog,#supportTicketModalV60) textarea::placeholder{color:#8590a0;opacity:1}
-:is(#app .gf-page,.gf-dialog,#supportTicketModalV60) :is(input,select,textarea):disabled{background:#f5f7fb;color:#71839e;cursor:not-allowed}
-:is(#app .gf-page,.gf-dialog,#supportTicketModalV60,#notificationDropdown) :is(button,a,input,select,textarea,summary):focus-visible{
+:is(#app .gf-page,.gf-dialog) textarea{resize:vertical}
+:is(#app .gf-page,.gf-dialog) input::placeholder,
+:is(#app .gf-page,.gf-dialog) textarea::placeholder{color:#8590a0;opacity:1}
+:is(#app .gf-page,.gf-dialog) :is(input,select,textarea):disabled{background:#f5f7fb;color:#71839e;cursor:not-allowed}
+:is(#app .gf-page,.gf-dialog) :is(button,a,input,select,textarea,summary):focus-visible{
   outline:3px solid #76aaff;outline-offset:3px;
 }
-:is(#app .gf-page,.gf-dialog,#supportTicketModalV60) :is(input[type=checkbox],input[type=radio]){accent-color:var(--gf-blue)}
+:is(#app .gf-page,.gf-dialog) :is(input[type=checkbox],input[type=radio]){accent-color:var(--gf-blue)}
 #app .gf-page .gf-field{display:flex;flex-direction:column;gap:6px;min-width:0}
 #app .gf-page .gf-field>label{font-size:13px;font-weight:600;line-height:1.5;margin:0;color:#374e77}
 
@@ -175,25 +175,20 @@ body:has(#app .gf-page:not(.hidden)) .content{padding:28px 34px 48px}
 
 /* Dialogs and dropdowns also belong to the same product, including those
  * launched from protected pages. Their parent pages remain untouched. */
-.gf-dialog :is(.modal,.profile-modal),#supportTicketModalV60 .support-card-v60{
+.gf-dialog :is(.modal,.profile-modal){
   border:1px solid var(--gf-line);border-radius:18px;background:#fff;box-shadow:0 18px 60px #101b3d26;
 }
-.gf-dialog :is(.modal-head,.modal-header,.delivery-modal-head),#supportTicketModalV60 .support-head-v60{
+.gf-dialog :is(.modal-head,.modal-header,.delivery-modal-head){
   background:transparent;border-bottom:1px solid var(--gf-line);border-radius:0;box-shadow:none;
 }
 .gf-dialog .modal-header{padding-bottom:18px}
-.gf-dialog :is(.modal-head,.modal-header,.delivery-modal-head) h2,#supportTicketModalV60 .support-head-v60 strong{
+.gf-dialog :is(.modal-head,.modal-header,.delivery-modal-head) h2{
   color:var(--gf-ink);font-size:24px;line-height:1.25;letter-spacing:-.6px;font-weight:700;
 }
 .gf-dialog :is(.modal-head,.modal-header,.delivery-modal-head) p{font-size:13px;line-height:1.6;color:var(--gf-muted);font-weight:400}
 .gf-dialog :is(.driver-modal-section,.delivery-modal-section){border-color:var(--gf-line);border-radius:13px;box-shadow:none;background:#fff}
 .gf-dialog :is(.driver-profile-head,.delivery-modal-summary-v5){border-color:var(--gf-line);border-radius:13px;background:#f8fbff;box-shadow:none}
-.gf-dialog :is(.modal-actions,.delivery-modal-actions-v5),#supportTicketModalV60 .support-actions-v60{gap:10px;flex-wrap:wrap;border-color:var(--gf-line);background:#fff}
-#supportTicketModalV60 .support-card-v60{max-height:calc(100dvh - 32px);overflow:auto}
-#notificationDropdown{border:1px solid var(--gf-line);border-radius:18px;background:#fff;box-shadow:0 12px 36px #244f871a;max-width:calc(100vw - 24px)}
-#notificationDropdown .notification-head-v30{background:#f8fbff;border-bottom-color:var(--gf-line)}
-#notificationDropdown .notification-item-v30{border-color:var(--gf-line);border-radius:12px}
-#notificationDropdown .notification-head-v30 .btn-light{flex:0 0 auto;width:auto;font-size:12px;min-height:36px;padding:8px 12px}
+.gf-dialog :is(.modal-actions,.delivery-modal-actions-v5){gap:10px;flex-wrap:wrap;border-color:var(--gf-line);background:#fff}
 .gf-dialog .address-suggestions{border-color:var(--gf-line);border-radius:12px;box-shadow:var(--gf-shadow)}
 #customerDetailsDialog.gf-dialog{border:1px solid var(--gf-line);border-radius:18px;box-shadow:0 18px 60px #101b3d26}
 #customerDetailsDialog.gf-dialog h2{font-size:24px;line-height:1.25;letter-spacing:-.6px}
@@ -227,16 +222,6 @@ body:has(#app .gf-page:not(.hidden)) .content{padding:28px 34px 48px}
   #app #tab-chat-autisti .driver-chat-room-card{min-height:420px}
   #app #tab-chat-autisti .chat-center-messages{min-height:240px}
   #app #tab-settings .settings-panel{padding:0 16px}
-  /* The desktop topbar is normally hidden on mobile; make only its open
-   * notification dropdown visible, without moving the mobile navigation. */
-  body.app-logged-in:has(#notificationDropdown:not(.hidden)) .topbar{
-    display:block!important;position:fixed;inset:0 0 auto;height:0;padding:0;min-height:0;
-    border:0;background:transparent;box-shadow:none;z-index:1100;pointer-events:none;
-  }
-  body.app-logged-in:has(#notificationDropdown:not(.hidden)) .topbar .top-actions{display:block!important}
-  body.app-logged-in:has(#notificationDropdown:not(.hidden)) .topbar .top-actions>*:not(.notification-center-v30){display:none!important}
-  body.app-logged-in:has(#notificationDropdown:not(.hidden)) #notificationBellBtn{display:none!important}
-  #notificationDropdown:not(.hidden){position:fixed;inset:92px 12px auto auto;width:360px;max-height:calc(100dvh - 180px);overflow:auto;pointer-events:auto}
   .gf-dialog :is(.modal,.profile-modal){border-radius:18px!important}
 }
 @media(max-width:520px){
@@ -250,5 +235,5 @@ body:has(#app .gf-page:not(.hidden)) .content{padding:28px 34px 48px}
   .gf-dialog :is(.modal-head,.modal-header,.delivery-modal-head) h2{font-size:22px}
 }
 @media(prefers-reduced-motion:reduce){
-  :is(#app .gf-page,.gf-dialog,#supportTicketModalV60) :is(button,a){transition:none}
+  :is(#app .gf-page,.gf-dialog) :is(button,a){transition:none}
 }

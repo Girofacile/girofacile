@@ -31,7 +31,6 @@
   .plan-page-actions-v874 .btn-secondary,.plan-page-actions-v874 .btn-primary{flex:1}
 }
 
-
 /* V87.5 - Redesign pagina Piani e abbonamento full-width */
 .plan-account-page-v875{width:100%;max-width:none;margin:0;padding:10px 28px 48px;box-sizing:border-box}
 .plan-page-top-v875{display:flex;align-items:flex-start;justify-content:space-between;gap:28px;margin:0 0 24px}
@@ -44,7 +43,6 @@
 .plan-page-actions-v875{position:sticky;bottom:0;z-index:8;display:flex;justify-content:flex-end;gap:10px;padding:14px 0;background:linear-gradient(180deg,rgba(248,250,252,0),rgba(248,250,252,.97) 35%,#f8fafc 100%);backdrop-filter:blur(8px)}.plan-page-actions-v875 .btn-primary,.plan-page-actions-v875 .btn-secondary{min-height:44px;padding:0 20px}
 @media(max-width:980px){.plan-account-page-v875{padding:8px 16px 96px}.plan-current-hero-v875{grid-template-columns:1fr}.plan-current-side-v875{border-left:0;border-top:1px solid #dbeafe}.plan-page-grid-v875{grid-template-columns:1fr}.up-card-v875{min-height:auto}.plan-detail-grid-v875{grid-template-columns:1fr}.plan-feature-list-v875{grid-template-columns:1fr 1fr}}
 @media(max-width:620px){.plan-page-top-v875,.plan-section-head-v875,.plan-comparison-head-v875{flex-direction:column;align-items:flex-start}.plan-page-top-v875{gap:14px}.plan-billing-btn-v875{width:100%}.plan-title-block-v875 h1{font-size:27px}.plan-current-main-v875,.plan-current-side-v875{padding:20px}.plan-current-title-row-v875 h2{font-size:23px}.plan-page-grid-v875{gap:12px}.up-card-v875{padding:19px}.up-price-v875{font-size:30px}.plan-feature-list-v875{grid-template-columns:1fr}.plan-page-features-v875,.plan-help-card-v875,.plan-comparison-v875{padding:18px}.plan-page-actions-v875{bottom:70px;display:grid;grid-template-columns:1fr 1.2fr}.plan-page-actions-v875 .btn-primary,.plan-page-actions-v875 .btn-secondary{padding:0 10px;font-size:11px}}
-
 
 /* =========================
    V87.6 - Fatturazione full page
@@ -105,93 +103,5 @@
   .billing-footer-help-v876{flex-direction:column;align-items:flex-start}.billing-footer-help-v876 button{width:100%}
 }
 
-
 /* Account password security — compact workspace-aligned treatment */
-#profileOverlay .profile-modal-v2{max-height:calc(100vh - 40px);overflow-y:auto;overscroll-behavior:contain}
-#profileOverlay .profile-security-entry{min-width:0}
-#profileOverlay .profile-security-row{
-  min-height:var(--gf-control-height);
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  padding:6px 7px 6px 12px;
-  border:1px solid var(--gf-color-border);
-  border-radius:var(--gf-radius-sm);
-  background:var(--gf-color-surface);
-}
-#profileOverlay .profile-security-label{
-  color:var(--gf-color-text);
-  font-size:var(--gf-font-sm);
-  font-weight:var(--gf-weight-medium);
-  line-height:1.3;
-}
-#profileOverlay .profile-security-open{
-  flex:0 0 auto;
-  min-height:32px;
-  padding:6px 11px;
-  border:1px solid var(--gf-color-border);
-  border-radius:var(--gf-radius-sm);
-  background:var(--gf-color-surface-subtle);
-  color:var(--gf-color-text);
-  box-shadow:none!important;
-  font-size:var(--gf-font-xs);
-  font-weight:var(--gf-weight-semibold);
-}
-#profileOverlay .profile-security-open:hover{
-  background:var(--gf-color-bg);
-  border-color:var(--gf-color-border-strong);
-}
-#profileOverlay .profile-security-open:focus-visible{
-  outline:0;
-  box-shadow:var(--gf-focus-ring)!important;
-}
-#profileOverlay .profile-password-panel{
-  margin-top:16px;
-  padding:16px;
-  border:1px solid var(--gf-color-border);
-  border-radius:var(--gf-radius-md);
-  background:var(--gf-color-bg);
-  box-shadow:none;
-}
-#profileOverlay .profile-password-panel-head{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  margin-bottom:14px;
-}
-#profileOverlay .profile-password-panel-head h4{
-  margin:0;
-  color:var(--gf-color-text);
-  font-size:var(--gf-font-sm);
-  font-weight:var(--gf-weight-semibold);
-  line-height:1.35;
-}
-#profileOverlay .profile-password-grid{
-  display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:12px;
-}
-#profileOverlay .profile-password-grid .profile-field{min-width:0}
-#profileOverlay .profile-password-grid input{width:100%;box-sizing:border-box}
-#profileOverlay .profile-password-actions{
-  display:flex;
-  justify-content:flex-end;
-  gap:9px;
-  margin-top:14px;
-}
-#profileOverlay .profile-password-actions .btn-primary,
-#profileOverlay .profile-password-actions .btn-secondary{
-  min-height:36px;
-  padding:7px 12px;
-  border-radius:var(--gf-radius-sm);
-  box-shadow:none!important;
-  font-size:var(--gf-font-xs);
-  font-weight:var(--gf-weight-semibold);
-}
-@media(max-width:760px){
-  #profileOverlay .profile-security-row{min-height:44px}
-  #profileOverlay .profile-password-grid{grid-template-columns:1fr}
-  #profileOverlay .profile-password-actions{display:grid;grid-template-columns:1fr 1.2fr}
-}
+

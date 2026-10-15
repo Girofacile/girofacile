@@ -177,11 +177,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .btn-primary,.gf-button[data-variant="primary"],.fleet-create,
   .orders-open-button,.order-selection-action.primary
-),
-body[data-gf-surface="workspace"] :is(
-  .modal-overlay,.gf-dialog,#profileOverlay,#supportTicketModalV60,
-  #notificationDropdown,#orderModal
-) :is(.btn-primary,.gf-button[data-variant="primary"]){
+){
   min-height:40px;
   padding:9px 16px;
   border:1px solid var(--gf-color-primary)!important;
@@ -196,11 +192,7 @@ body[data-gf-surface="workspace"] :is(
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .btn-primary,.gf-button[data-variant="primary"],.fleet-create,
   .orders-open-button,.order-selection-action.primary
-):hover:not(:disabled),
-body[data-gf-surface="workspace"] :is(
-  .modal-overlay,.gf-dialog,#profileOverlay,#supportTicketModalV60,
-  #notificationDropdown,#orderModal
-) :is(.btn-primary,.gf-button[data-variant="primary"]):hover:not(:disabled){
+):hover:not(:disabled){
   background:var(--gf-color-primary-hover)!important;
   border-color:var(--gf-color-primary-hover)!important;
   box-shadow:none!important;
@@ -211,10 +203,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .btn-secondary,.btn-light,.gf-button[data-variant="secondary"],.fleet-edit,
   .driver-view,.orders-view-switch button,.customer-view-controls button,
   .deposit-view-controls button,.fleet-views button
-),
-body[data-gf-surface="workspace"] :is(
-  .modal-overlay,.gf-dialog,#profileOverlay,#supportTicketModalV60,#orderModal
-) :is(.btn-secondary,.btn-light,.gf-button[data-variant="secondary"]){
+){
   min-height:40px;
   padding:9px 14px;
   border:1px solid var(--gf-color-border)!important;
@@ -228,10 +217,7 @@ body[data-gf-surface="workspace"] :is(
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .btn-secondary,.btn-light,.gf-button[data-variant="secondary"],.fleet-edit,
   .driver-view
-):hover:not(:disabled),
-body[data-gf-surface="workspace"] :is(
-  .modal-overlay,.gf-dialog,#profileOverlay,#supportTicketModalV60,#orderModal
-) :is(.btn-secondary,.btn-light,.gf-button[data-variant="secondary"]):hover:not(:disabled){
+):hover:not(:disabled){
   border-color:#c2d0e7!important;
   background:var(--gf-color-surface-subtle)!important;
 }
@@ -250,15 +236,11 @@ body[data-gf-surface="workspace"] :is(.modal-overlay,.gf-dialog,#orderModal) :is
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .gf-button[data-variant="ghost"],.btn-ghost
-),
-body[data-gf-surface="workspace"] :is(.modal-overlay,.gf-dialog,#profileOverlay) :is(
-  .gf-button[data-variant="ghost"],.btn-ghost
 ){
   background:transparent!important;border-color:transparent!important;
   color:var(--gf-color-primary)!important;box-shadow:none!important;
 }
-body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(button,a):focus-visible,
-body[data-gf-surface="workspace"] :is(.modal-overlay,.gf-dialog,#profileOverlay,#supportTicketModalV60,#orderModal) :is(button,a):focus-visible{
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(button,a):focus-visible{
   outline:2px solid var(--gf-color-primary);
   outline-offset:2px;
 }
@@ -391,10 +373,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .deposit-field input,.deposit-field textarea,
   .orders-filter-grid input,.orders-filter-grid select,
   .orders-form-grid input,.orders-form-grid select,.orders-form-grid textarea
-):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]),
-body[data-gf-surface="workspace"] :is(
-  .modal-overlay,.gf-dialog,#profileOverlay,#supportTicketModalV60,#orderModal
-) :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]),select,textarea){
+):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]){
   min-height:40px;
   border:1px solid var(--gf-color-border)!important;
   border-radius:10px!important;
@@ -407,10 +386,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .gf-input,.gf-select,.gf-textarea,
   .company-field input,.company-field select,.company-field textarea,
   .gf-field input,.gf-field select,.gf-field textarea
-):focus,
-body[data-gf-surface="workspace"] :is(
-  .modal-overlay,.gf-dialog,#profileOverlay,#supportTicketModalV60,#orderModal
-) :is(input,select,textarea):focus{
+):focus{
   border-color:var(--gf-color-primary)!important;
   outline:0;
   box-shadow:var(--gf-focus-ring)!important;

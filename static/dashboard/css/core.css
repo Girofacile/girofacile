@@ -24,23 +24,6 @@ body{
   font-family:Arial,Helvetica,sans-serif;
 }
 .hidden{display:none!important}
-
-.login-screen{
-  min-height:100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:linear-gradient(135deg,#071b35,#0b63f6);
-  padding:20px;
-}
-.login-panel{
-  width:100%;
-  max-width:420px;
-  background:white;
-  border-radius:24px;
-  padding:34px;
-  box-shadow:0 30px 80px rgba(0,0,0,.25);
-}
 .brand-login{display:flex;align-items:center;gap:14px;margin-bottom:26px}
 .brand-mark{
   width:52px;height:52px;border-radius:16px;
@@ -50,7 +33,6 @@ body{
 .brand-login h1{font-size:23px;margin:0}
 .brand-login h1 span,.brand-title span{color:#3b82f6}
 .brand-login p{margin:4px 0 0;color:var(--muted)}
-.login-panel h2{margin:0 0 16px;font-size:22px}
 
 .app-shell{min-height:100vh;display:flex}
 
@@ -339,7 +321,6 @@ td button:hover{background:#f8fafc}
   .btn-primary,.btn-secondary,.btn-light{width:100%}
 }
 
-
 /* V3.6.3.2 leggibilità generale */
 body{font-size:15.5px;}
 input,select,textarea{min-height:46px;font-weight:600;}
@@ -396,7 +377,6 @@ label{letter-spacing:.01em;}
 @media(max-width:1350px){.result-cards{grid-template-columns:repeat(3,1fr)}.result-layout{grid-template-columns:1fr}.result-summary-card{position:static}.add-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:760px){.result-cards,.alert-grid{grid-template-columns:1fr}.time-range{grid-template-columns:auto 1fr;}.add-grid{grid-template-columns:1fr}.row-actions{flex-wrap:wrap}.result-header h2{font-size:28px}}
 
-
 /* V3.6.3.2 GiroFacile: profilo account e pulizia topbar/sidebar */
 .profile-button{
   border:0;
@@ -407,242 +387,19 @@ label{letter-spacing:.01em;}
   color:inherit;
 }
 .profile-button:hover{background:#f1f5f9;}
-.avatar img,.profile-preview img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;}
+.avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;}
 .side-footer{margin-top:auto;}
 .modal-overlay{
   position:fixed;inset:0;background:rgba(15,23,42,.45);
   z-index:9998;display:flex;align-items:center;justify-content:center;padding:20px;
 }
-.profile-modal{
-  width:min(720px,96vw);background:#fff;border-radius:22px;padding:26px;
-  border:1px solid var(--line);box-shadow:0 30px 90px rgba(15,23,42,.28);
-}
 .modal-header{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:18px;}
 .modal-header h2{margin:0;font-size:26px;letter-spacing:-.03em;}
 .modal-header p{margin:6px 0 0;color:var(--muted);font-weight:600;}
 .modal-close{border:0;background:#f1f5f9;border-radius:12px;width:42px;height:42px;font-size:28px;line-height:1;cursor:pointer;color:#334155;}
-.profile-photo-row{display:flex;align-items:center;gap:18px;margin-bottom:18px;padding:16px;border:1px solid var(--line);border-radius:16px;background:#fbfcfe;}
-.profile-preview{width:78px;height:78px;border-radius:50%;background:#e8f1ff;color:#0b63f6;display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:900;overflow:hidden;flex:0 0 auto;}
-.profile-photo-row small{display:block;color:var(--muted);margin-top:6px;font-weight:600;}
-.profile-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
 .profile-note{margin-top:16px;background:#f8fafc;border:1px solid var(--line);border-radius:14px;padding:14px;color:#475569;font-weight:600;line-height:1.5;}
-@media(max-width:760px){.profile-grid{grid-template-columns:1fr}.profile-photo-row{align-items:flex-start;flex-direction:column}.profile-modal{padding:20px}}
-
 
 /* GiroFacile V3.6.3.2 - Schermata iniziale professionale */
-.gf-login-page{
-  min-height:100vh !important;
-  display:grid !important;
-  grid-template-columns:420px 1fr !important;
-  background:#f8fafc !important;
-  padding:0 !important;
-  align-items:stretch !important;
-  justify-content:stretch !important;
-}
-
-.login-side{
-  background:
-    radial-gradient(circle at 20% 20%, rgba(37,99,235,.22), transparent 32%),
-    linear-gradient(180deg,#06152e 0%,#071b35 48%,#04101f 100%);
-  color:white;
-  min-height:100vh;
-  display:flex;
-  align-items:stretch;
-}
-
-.login-side-inner{
-  width:100%;
-  padding:70px 58px 54px;
-  display:flex;
-  flex-direction:column;
-}
-
-.login-brand-large h1{
-  font-size:43px;
-  line-height:1;
-  letter-spacing:-.05em;
-  margin:0;
-  font-weight:900;
-}
-
-.login-brand-large h1 span{color:#1265ff}
-
-.login-brand-large p{
-  margin:14px 0 0;
-  color:#c8d4e8;
-  font-size:18px;
-  line-height:1.45;
-}
-
-.login-accent-line{
-  width:46px;
-  height:3px;
-  border-radius:999px;
-  background:#1265ff;
-  margin:52px 0 58px;
-  box-shadow:0 0 24px rgba(18,101,255,.8);
-}
-
-.login-features{display:flex;flex-direction:column;gap:42px}
-
-.login-feature{
-  display:grid;
-  grid-template-columns:56px 1fr;
-  gap:18px;
-  align-items:center;
-}
-
-.login-feature-icon{
-  width:56px;height:56px;
-  border:1px solid rgba(255,255,255,.14);
-  border-radius:12px;
-  background:rgba(15,49,100,.42);
-  display:flex;align-items:center;justify-content:center;
-  color:#1d6bff;
-  font-size:28px;
-  font-weight:900;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.08);
-}
-
-.login-feature strong{
-  display:block;
-  font-size:17px;
-  margin-bottom:7px;
-  color:#fff;
-}
-
-.login-feature span{
-  display:block;
-  color:#c4cee0;
-  font-size:16px;
-  line-height:1.45;
-}
-
-.login-side-footer{
-  margin-top:auto;
-  padding-top:34px;
-  border-top:1px solid rgba(255,255,255,.12);
-  color:#b9c7dc;
-}
-
-.login-side-footer span,
-.login-side-footer small{
-  display:block;
-  font-size:15px;
-  line-height:1.7;
-}
-
-.login-main{
-  min-height:100vh;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  padding:42px 24px;
-  position:relative;
-  background:
-    radial-gradient(circle at 50% 30%, rgba(2,6,23,.035), transparent 32%),
-    #f9fafc;
-}
-
-.login-card-pro{
-  width:min(100%,530px);
-  background:rgba(255,255,255,.94);
-  border:1px solid #d9dee8;
-  border-radius:20px;
-  padding:50px 58px 42px;
-  box-shadow:0 22px 55px rgba(15,23,42,.08);
-}
-
-.login-card-brand{
-  display:flex;
-  align-items:center;
-  gap:18px;
-  margin-bottom:42px;
-}
-
-.login-card-brand img{
-  width:64px;
-  height:64px;
-  border-radius:14px;
-  object-fit:cover;
-  box-shadow:0 12px 25px rgba(18,101,255,.22);
-}
-
-.login-card-brand strong{
-  display:block;
-  font-size:25px;
-  color:#101a33;
-  letter-spacing:-.03em;
-}
-
-.login-card-brand span{
-  display:block;
-  margin-top:5px;
-  color:#64748b;
-  font-size:17px;
-}
-
-.login-card-title{margin-bottom:28px}
-
-.login-card-title h2{
-  font-size:31px !important;
-  line-height:1.08;
-  letter-spacing:-.04em;
-  margin:0 0 10px;
-  color:#111b33;
-}
-
-.login-card-title p{
-  margin:0;
-  color:#667085;
-  font-size:17px;
-}
-
-.login-card-pro label{
-  font-size:15.5px !important;
-  color:#344054 !important;
-  margin:22px 0 9px !important;
-  font-weight:700;
-}
-
-.login-input-wrap{
-  height:56px;
-  border:1px solid #d8dee8;
-  background:white;
-  border-radius:10px;
-  display:flex;
-  align-items:center;
-  gap:12px;
-  padding:0 16px;
-  transition:.18s ease;
-}
-
-.login-input-wrap:focus-within{
-  border-color:#1265ff;
-  box-shadow:0 0 0 4px rgba(18,101,255,.10);
-}
-
-.login-input-wrap span{
-  color:#44546a;
-  font-size:20px;
-  width:22px;
-  text-align:center;
-}
-
-.login-input-wrap input{
-  flex:1;
-  border:0 !important;
-  min-height:0 !important;
-  height:auto !important;
-  padding:0 !important;
-  box-shadow:none !important;
-  font-size:16.5px !important;
-  outline:none;
-  background:transparent;
-}
-
-.login-input-wrap input::placeholder{color:#98a2b3}
 
 .password-eye{
   border:0;
@@ -651,16 +408,6 @@ label{letter-spacing:.01em;}
   cursor:pointer;
   font-size:18px;
   padding:6px;
-}
-
-.login-submit{
-  width:100%;
-  height:56px;
-  margin-top:34px;
-  border-radius:9px !important;
-  font-size:17px !important;
-  background:#075dff !important;
-  box-shadow:0 12px 30px rgba(7,93,255,.22) !important;
 }
 
 .forgot-link{
@@ -674,13 +421,6 @@ label{letter-spacing:.01em;}
   margin:24px auto 0;
 }
 
-.login-main-footer{
-  position:absolute;
-  bottom:55px;
-  color:#8a94a6;
-  font-size:15px;
-}
-
 .brand-logo-img{
   width:31px;
   height:31px;
@@ -691,17 +431,7 @@ label{letter-spacing:.01em;}
   box-shadow:0 6px 14px rgba(11,99,246,.28);
 }
 
-@media(max-width:980px){
-  .gf-login-page{grid-template-columns:1fr !important}
-  .login-side{display:none}
-  .login-main{padding:24px}
-  .login-card-pro{padding:34px 24px}
-  .login-main-footer{position:static;margin-top:28px}
-}
-
-
 /* GiroFacile V3.6.3.2.1 - Fix: la login non deve rimanere dietro il gestionale */
-#loginCard.hidden,
 #app.hidden{
   display:none !important;
   visibility:hidden !important;
@@ -709,87 +439,7 @@ label{letter-spacing:.01em;}
   pointer-events:none !important;
 }
 
-body.app-logged-in #loginCard{
-  display:none !important;
-  visibility:hidden !important;
-  opacity:0 !important;
-  pointer-events:none !important;
-}
-
-
-
 /* GiroFacile V3.6.3.2 - Logo pieno e icone login più fedeli al mockup */
-.login-card-brand{
-  gap:22px !important;
-  align-items:center !important;
-}
-
-.login-card-brand img{
-  width:82px !important;
-  height:82px !important;
-  min-width:82px !important;
-  border-radius:18px !important;
-  object-fit:cover !important;
-  background:#075dff !important;
-  padding:0 !important;
-  border:0 !important;
-  box-shadow:0 18px 35px rgba(7,93,255,.28) !important;
-  display:block !important;
-}
-
-.login-card-brand strong{
-  font-size:28px !important;
-  line-height:1.05 !important;
-}
-
-.login-card-brand span{
-  font-size:17.5px !important;
-}
-
-.login-feature{
-  grid-template-columns:78px 1fr !important;
-  gap:26px !important;
-  min-height:82px !important;
-}
-
-.login-feature-icon{
-  width:72px !important;
-  height:72px !important;
-  border-radius:17px !important;
-  border:1.5px solid rgba(23,102,255,.72) !important;
-  background:
-    radial-gradient(circle at 35% 20%, rgba(30,113,255,.30), rgba(7,23,52,.50) 55%, rgba(4,16,35,.72) 100%) !important;
-  color:#2f7dff !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.12),
-    0 0 0 1px rgba(23,102,255,.10),
-    0 16px 34px rgba(0,0,0,.16),
-    0 0 24px rgba(23,102,255,.18) !important;
-  overflow:hidden !important;
-}
-
-.login-feature-icon svg{
-  width:47px !important;
-  height:47px !important;
-  display:block !important;
-  filter:drop-shadow(0 0 8px rgba(47,125,255,.36));
-}
-
-.login-feature-icon.icon-box svg,
-.login-feature-icon.icon-chart svg{
-  width:46px !important;
-  height:46px !important;
-}
-
-.login-feature strong{
-  font-size:19px !important;
-  margin-bottom:8px !important;
-}
-
-.login-feature span{
-  font-size:17px !important;
-  line-height:1.46 !important;
-}
 
 .brand-logo-img{
   width:38px !important;
@@ -800,15 +450,6 @@ body.app-logged-in #loginCard{
   padding:0 !important;
   object-fit:cover !important;
 }
-
-@media(max-width:980px){
-  .login-card-brand img{
-    width:72px !important;
-    height:72px !important;
-    min-width:72px !important;
-  }
-}
-
 
 /* GiroFacile V3.6.3 - Messaggi errore calcolo più chiari */
 .route-error-box{
@@ -834,13 +475,9 @@ body.app-logged-in #loginCard{
 }
 
 /* GiroFacile V3.7.8.1 - account, filtri clienti, selezione clienti, drag & drop */
-.login-switch{margin-top:14px;display:flex;align-items:center;justify-content:center;gap:8px;color:#64748b;font-size:14px}
-.login-switch button{border:0;background:transparent;color:#2563eb;font-weight:800;cursor:pointer}
-.signup-box{margin-top:16px;padding:16px;border:1px solid #e5e7eb;border-radius:18px;background:#f8fafc;display:grid;gap:10px}
-.signup-box h3{margin:0;font-size:17px;color:#111827}.signup-box input{height:44px;border:1px solid #d1d5db;border-radius:12px;padding:0 12px;background:white}.full{width:100%}
+.full{width:100%}
 .customer-picker-panel{border:1px solid #dbeafe;background:#f8fbff;border-radius:18px;padding:14px;margin-bottom:16px}.picker-header{display:flex;justify-content:space-between;gap:10px;align-items:end;margin-bottom:12px}.picker-header strong{font-size:17px;color:#0f172a}.picker-header small{color:#64748b}.picker-filters,.customer-filters{display:grid;grid-template-columns:repeat(5,minmax(120px,1fr));gap:10px;margin-bottom:12px}.picker-filters input,.picker-filters select,.customer-filters input,.customer-filters select{height:42px;border:1px solid #d1d5db;border-radius:12px;padding:0 10px;background:white}.customer-picker-list{max-height:290px;overflow:auto;display:grid;gap:8px}.picker-customer-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 12px;border:1px solid #e5e7eb;border-radius:14px;background:#fff}.picker-customer-row small{display:block;color:#64748b;margin-top:3px}.picker-customer-row button{border:0;border-radius:11px;padding:9px 12px;background:#2563eb;color:white;font-weight:800;cursor:pointer;white-space:nowrap}.empty-picker{padding:14px;text-align:center;color:#64748b;background:white;border-radius:12px;border:1px dashed #cbd5e1}.customer-list-head{align-items:center}.btn-danger{background:#dc2626;color:#fff;border:0;border-radius:12px;padding:11px 14px;font-weight:800;cursor:pointer}.btn-danger:hover{filter:brightness(.96)}.draggable-stop{cursor:grab}.draggable-stop:active{cursor:grabbing}.drag-handle{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:8px;background:#eef2ff;color:#3730a3;margin-right:6px;font-weight:900}.result-header{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}.result-header-actions{display:grid;gap:7px;justify-items:end}.result-header-actions small{color:#64748b;font-weight:700}.resultBox{margin-bottom:12px}
 @media(max-width:900px){.picker-filters,.customer-filters{grid-template-columns:1fr 1fr}.picker-customer-row{align-items:flex-start;flex-direction:column}.result-header{flex-direction:column}.result-header-actions{justify-items:start}.customer-list-head{align-items:flex-start}}
-
 
 /* GiroFacile V3.7.8.1 - Sezione Autisti */
 .driver-stats-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:18px;}
@@ -868,7 +505,6 @@ body.app-logged-in #loginCard{
 .driver-note{margin:12px 0 0;padding:10px;border-radius:14px;background:#fff7ed;color:#9a3412;font-size:13px;}
 .driver-actions{margin-top:12px;display:flex;justify-content:flex-end;gap:8px;}
 @media(max-width:1050px){.drivers-layout{grid-template-columns:1fr}.drivers-cards{grid-template-columns:1fr}.driver-stats-grid{grid-template-columns:1fr}.driver-toolbar{grid-template-columns:1fr}.driver-form-grid{grid-template-columns:1fr}}
-
 
 /* V3.7.8.1 - Dashboard giri programmati/in corso */
 .operational-dashboard-panel{
@@ -956,7 +592,6 @@ body.app-logged-in #loginCard{
   .operational-mini-stats{grid-template-columns:1fr}
 }
 
-
 /* V3.7.8.1 - Dashboard professionale */
 .dash-hero-row{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;gap:18px}
 .dash-hero-row h1{font-size:34px;margin:0 0 6px;color:var(--text)}
@@ -971,7 +606,6 @@ body.app-logged-in #loginCard{
 .dash-board-columns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-bottom:18px}.dash-list-card{padding:0;overflow:hidden}.dash-list-head{display:flex;justify-content:space-between;align-items:center;padding:20px 22px;border-bottom:1px solid var(--line)}.dash-list-head h2{margin:0;font-size:20px}.dash-list-head span{min-width:28px;height:28px;border-radius:10px;background:#eef5ff;color:#0b63f6;display:flex;align-items:center;justify-content:center;font-weight:900}.dash-route-list{padding:8px 14px;min-height:170px}.dash-route-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 8px;border-bottom:1px solid var(--line);cursor:pointer}.dash-route-item:hover{background:#f8fafc;border-radius:12px}.dash-route-main strong{display:block;font-size:15px}.dash-route-main small{display:block;color:var(--muted);margin-top:5px}.dash-route-side{display:flex;align-items:center;gap:10px}.dash-arrow{font-size:26px;color:var(--muted)}.dash-progress{height:7px;background:#e8eef8;border-radius:999px;margin-top:10px;overflow:hidden}.dash-progress span{display:block;height:100%;background:#0b63f6;border-radius:999px}.dash-link-btn{width:calc(100% - 28px);margin:0 14px 14px;border:1px solid var(--line);background:#fff;color:#0b63f6;border-radius:12px;padding:11px;font-weight:800}.dash-empty{color:var(--muted);padding:22px 8px;font-weight:700;text-align:center}.dash-link-inline{border:0;background:transparent;color:#0b63f6;font-weight:800;cursor:pointer}.dash-vehicle-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.dash-vehicle-card{border:1px solid var(--line);border-radius:16px;padding:18px;background:#fff;display:flex;align-items:center;justify-content:space-between;min-height:110px}.dash-vehicle-card strong{display:block;margin-bottom:5px}.dash-vehicle-card small{display:block;color:var(--muted);margin-top:4px}.vehicle-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px}.vehicle-dot.free{background:#16a34a}.vehicle-dot.busy{background:#f59e0b}.dash-vehicle-icon{font-size:36px;opacity:.8}
 @media(max-width:1100px){.dash-kpi-grid{grid-template-columns:repeat(2,1fr)}.dash-main-grid,.dash-board-columns{grid-template-columns:1fr}.dash-vehicle-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:640px){.dash-kpi-grid,.dash-vehicle-grid{grid-template-columns:1fr}.dash-hero-row{flex-direction:column}.dash-kpi-card{padding:18px}.dash-hero-row h1{font-size:28px}}
-
 
 /* V3.7.8.1 - Autocomplete indirizzi */
 .address-autocomplete-wrap{
@@ -1048,7 +682,6 @@ input.address-unverified{
   box-shadow:0 0 0 3px rgba(245,158,11,.12);
 }
 
-
 /* V3.7.8.1 - Disponibilità autisti e mezzi */
 .availability-hint{
   display:block;
@@ -1069,7 +702,6 @@ select option:disabled{
   background:#fff7f7;
 }
 
-
 /* V3.7.8.1 - Programmazione giro */
 .program-route-btn{
   margin-top:8px;
@@ -1085,7 +717,6 @@ select option:disabled{
   background:#eef2ff;
   color:#3730a3;
 }
-
 
 /* V3.7.8.1 - Dettaglio giro direttamente in Dashboard */
 .dashboard-route-detail-panel{
@@ -1202,7 +833,6 @@ select option:disabled{
   .dash-detail-header-actions{justify-content:flex-start;}
 }
 
-
 /* Fix disponibilità mezzi/autisti in Dashboard */
 .dash-resource-row{
   display:grid;
@@ -1222,7 +852,6 @@ select option:disabled{
   .dash-driver-grid{grid-template-columns:1fr;}
 }
 
-
 /* V3.7.8.1 - Agenti */
 #tab-agenti textarea,
 #tab-clienti textarea{
@@ -1231,7 +860,6 @@ select option:disabled{
 #tab-agenti .route-status-pill{
   display:inline-flex;
 }
-
 
 /* V3.7.8.1 - Report / Analisi dati */
 .report-hero-row{
@@ -1346,7 +974,6 @@ select option:disabled{
   .report-filter-grid{grid-template-columns:1fr;}
   .report-kpi-grid{grid-template-columns:1fr;}
 }
-
 
 /* V3.7.8.1 - miglioramento grafici Report */
 .report-chart-head{
@@ -1472,7 +1099,6 @@ select option:disabled{
   color:#0b63f6;
 }
 
-
 /* V3.7.8.8 - Dashboard KPI giornalieri */
 .topbar-spacer{
   flex:1 1 auto;
@@ -1480,7 +1106,6 @@ select option:disabled{
 .dash-kpi-card small#dashTodayBusyResourcesSub{
   line-height:1.25;
 }
-
 
 /* V3.7.8.9 - Pianificazione con tabella consegne modificabile */
 .panel-subtitle{
@@ -1609,7 +1234,6 @@ select option:disabled{
     width:100%;
   }
 }
-
 
 /* V3.7.9.0 - Restyling estetico professionale
    Solo CSS/HTML visivo: nessuna modifica a logica, API o database.
@@ -2043,7 +1667,6 @@ tr:hover td{
   }
 }
 
-
 /* V3.7.9.2 - Dashboard: giri da completare visibili */
 .dash-board-columns{
   grid-template-columns:repeat(4,minmax(0,1fr));
@@ -2061,7 +1684,6 @@ tr:hover td{
 #dashToCompleteBadge{
   color:#c2410c;
 }
-
 
 /* V3.8.0 - Area Admin */
 body:not(.admin-mode) .admin-only,
@@ -2297,7 +1919,6 @@ body.admin-mode .side-nav .nav-item.active{
 .delivery-modal-grid .full-field{grid-column:1/-1}
 .delivery-modal-grid textarea{width:100%;border:1px solid var(--line);border-radius:12px;padding:12px;font-family:inherit;resize:vertical}
 @media(max-width:760px){.delivery-modal-summary{grid-template-columns:1fr}.delivery-address-cell{min-width:260px}.editable-delivery-table{min-width:720px}}
-
 
 /* GiroFacile v5 - rifiniture Dashboard e popup dettagli consegna */
 .dash-kpi-click{
@@ -3265,29 +2886,19 @@ body.admin-mode .side-nav .nav-item.active{
 .feature-plan-card .btn-primary{width:100%;justify-content:center}
 @media(max-width:980px){.feature-lock-layout{grid-template-columns:1fr}.feature-lock-card{padding:34px 24px}.feature-lock-side{padding:18px}}
 
-
 /* Legal footer e cookie notice */
-.login-main-footer a{color:#2563eb;text-decoration:none;font-weight:700}
-.login-main-footer a:hover{text-decoration:underline}
+
 .side-legal-links{display:flex;gap:6px;justify-content:center;align-items:center;flex-wrap:wrap;margin-top:8px;font-size:10px;line-height:1.3}
 .side-legal-links a{color:#93c5fd;text-decoration:none}
 .side-legal-links a:hover{text-decoration:underline;color:#fff}
 .dashboard-legal-footer{margin:26px 0 0;padding:18px 6px 4px;border-top:1px solid rgba(148,163,184,.22);display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;color:#94a3b8;font-size:12px}
 .dashboard-legal-footer a{color:#64748b;text-decoration:none;font-weight:700}
 .dashboard-legal-footer a:hover{color:#2563eb;text-decoration:underline}
-.cookie-notice{position:fixed;left:0;right:0;bottom:18px;z-index:9999;display:flex;justify-content:center;padding:0 18px;pointer-events:none}
-.cookie-notice.hidden{display:none}
-.cookie-notice-card{pointer-events:auto;width:min(920px,100%);background:rgba(255,255,255,.98);border:1px solid rgba(37,99,235,.16);border-radius:22px;box-shadow:0 24px 70px rgba(15,23,42,.20);padding:18px;display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;backdrop-filter:blur(10px)}
-.cookie-notice-icon{width:44px;height:44px;border-radius:16px;background:#eff6ff;display:flex;align-items:center;justify-content:center;font-size:22px}
-.cookie-notice-text strong{display:block;font-size:15px;color:#0f172a;margin-bottom:3px}
-.cookie-notice-text p{margin:0 0 4px;color:#64748b;font-size:13px;line-height:1.45}
-.cookie-notice-text a{color:#2563eb;text-decoration:none;font-size:12px;font-weight:800}
-.cookie-notice-text a:hover{text-decoration:underline}
 .cookie-accept-btn{white-space:nowrap;padding:11px 16px;border-radius:12px}
-@media(max-width:720px){.cookie-notice{bottom:12px}.cookie-notice-card{grid-template-columns:1fr;padding:16px;text-align:left}.cookie-notice-icon{display:none}.cookie-accept-btn{width:100%}.dashboard-legal-footer{font-size:11px;gap:8px}}
+@media(max-width:720px){.cookie-accept-btn{width:100%}.dashboard-legal-footer{font-size:11px;gap:8px}}
 
 /* Fix v25 - recupero password cliccabile */
-#loginPanel, #forgotBox{position:relative; z-index:10;}
+ #forgotBox{position:relative; z-index:10;}
 #forgotPasswordBtn, #forgotPasswordCancelBtn{position:relative; z-index:30; pointer-events:auto;}
 #forgotBox.hidden{display:none !important;}
 #forgotBox{display:block;}
@@ -3327,61 +2938,20 @@ body.admin-mode .side-nav .nav-item.active{
 .file-btn{position:relative;overflow:hidden;display:inline-flex;cursor:pointer;}
 .file-btn input{position:absolute;inset:0;opacity:0;cursor:pointer;}
 .muted-small{font-size:12px;color:#64748b;margin:8px 0 0;}
-.onboarding-progress-v29{margin:14px 0 16px;}
-.onboarding-progress-v29>div:first-child{display:flex;align-items:baseline;gap:6px;margin-bottom:8px;color:#0f172a;}
-.onboarding-progress-v29 strong{font-size:20px;}
-.onboarding-progress-v29 span{font-size:13px;color:#64748b;}
-.onboarding-progress-v29.compact{margin-top:4px;}
-.onboarding-track-v29{height:10px;background:#e5e7eb;border-radius:999px;overflow:hidden;}
-.onboarding-track-v29>div{height:100%;border-radius:999px;background:linear-gradient(90deg,#2563eb,#10b981);transition:width .25s ease;}
-.onboarding-steps-v29{display:grid;gap:10px;margin:12px 0 18px;}
-.onboarding-step-v29{
-  border:1px solid #e5e7eb;background:#fff;border-radius:16px;padding:12px;
-  display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:10px;text-align:left;cursor:pointer;
-  transition:.18s ease;
-}
-.onboarding-step-v29:hover{border-color:#93c5fd;box-shadow:0 10px 24px rgba(37,99,235,.08);transform:translateY(-1px);}
-.onboarding-step-v29 span{width:28px;height:28px;border-radius:10px;background:#eff6ff;color:#2563eb;display:flex;align-items:center;justify-content:center;font-weight:900;}
-.onboarding-step-v29 strong{font-size:13px;color:#111827;}
-.onboarding-step-v29 small{font-size:11px;color:#64748b;background:#f8fafc;border:1px solid #e5e7eb;border-radius:999px;padding:4px 8px;}
-.onboarding-step-v29.done{background:#f0fdf4;border-color:#bbf7d0;}
-.onboarding-step-v29.done span{background:#10b981;color:#fff;}
-.onboarding-step-v29.done small{background:#dcfce7;color:#166534;border-color:#bbf7d0;}
-.onboarding-modal-v29{max-width:720px;}
 @media(max-width:1050px){.company-layout-v29{grid-template-columns:1fr;}.company-logo-row-v29{align-items:flex-start;}}
-@media(max-width:640px){.onboarding-step-v29{grid-template-columns:32px 1fr;}.onboarding-step-v29 small{grid-column:2;justify-self:start}.company-logo-row-v29{flex-direction:column}.company-card-v29,.onboarding-card-v29{padding:16px;border-radius:18px;}}
+@media(max-width:640px){.company-logo-row-v29{flex-direction:column}.company-card-v29,.onboarding-card-v29{padding:16px;border-radius:18px;}}
 
 /* V30 - Notifiche interne */
-.notification-center-v30{position:relative;display:flex;align-items:center;z-index:30}
-.notification-bell-v30{width:44px;height:44px;border-radius:14px;border:1px solid rgba(15,23,42,.10);background:#fff;box-shadow:0 8px 22px rgba(15,23,42,.08);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:.18s ease;color:#0f172a}
-.notification-bell-v30:hover{transform:translateY(-1px);box-shadow:0 12px 28px rgba(15,23,42,.12)}
-.bell-icon-v30{font-size:18px;line-height:1}
-.notification-badge-v30{position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:#ef4444;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 14px rgba(239,68,68,.35);border:2px solid #fff}
-.notification-dropdown-v30{position:absolute;right:0;top:54px;width:min(430px,calc(100vw - 28px));background:#fff;border:1px solid rgba(15,23,42,.10);border-radius:22px;box-shadow:0 28px 70px rgba(15,23,42,.18);overflow:hidden;z-index:200}
-.notification-head-v30{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 16px 12px;border-bottom:1px solid rgba(15,23,42,.08);background:linear-gradient(135deg,#f8fbff,#ffffff)}
-.notification-head-v30 strong{display:block;font-size:16px;color:#0f172a}
-.notification-head-v30 small{display:block;margin-top:2px;color:#64748b;font-size:12px}.btn-light.mini{padding:7px 10px;border-radius:10px;font-size:12px}
-.notification-list-v30{max-height:430px;overflow:auto;padding:8px}.notification-empty-v30{padding:28px;text-align:center;color:#64748b;font-size:14px}
-.notification-item-v30{display:flex;gap:12px;padding:12px;border-radius:16px;border:1px solid transparent;background:#fff;transition:.15s ease}.notification-item-v30+.notification-item-v30{margin-top:6px}.notification-item-v30:hover{background:#f8fafc;border-color:rgba(15,23,42,.07)}.notification-item-v30.unread{background:#eff6ff;border-color:rgba(37,99,235,.18)}
-.notification-icon-v30{width:36px;height:36px;flex:0 0 36px;border-radius:13px;background:#fff;box-shadow:inset 0 0 0 1px rgba(15,23,42,.08);display:flex;align-items:center;justify-content:center;font-size:17px}.notification-item-v30.unread .notification-icon-v30{background:#dbeafe}
-.notification-body-v30{min-width:0;flex:1}.notification-title-v30{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.notification-title-v30 strong{font-size:13px;color:#0f172a}.notification-title-v30 small{font-size:11px;color:#64748b;white-space:nowrap}.notification-body-v30 p{margin:4px 0 8px;color:#475569;font-size:12.5px;line-height:1.35}.notification-actions-v30{display:flex;gap:8px;flex-wrap:wrap}.notification-actions-v30 button{border:0;background:#2563eb;color:#fff;border-radius:10px;padding:6px 9px;font-size:12px;font-weight:700;cursor:pointer}.notification-actions-v30 button.light{background:#fff;color:#334155;border:1px solid rgba(15,23,42,.12)}
-@media (max-width:760px){.notification-dropdown-v30{right:-86px;width:calc(100vw - 24px);top:52px}.notification-bell-v30{width:40px;height:40px;border-radius:12px}.notification-list-v30{max-height:55vh}}
 
-
-.notification-dropdown-v30{max-width:430px}.notification-item-v30{align-items:flex-start}.notification-actions-v30 button{border-radius:11px}
+.bell-icon-v30{font-size:18px;line-height:1}.btn-light.mini{padding:7px 10px;border-radius:10px;font-size:12px}
 
 /* v40 - Ritocchi estetici dashboard/login/report/profilo */
-.login-input-wrap-pro .login-field-icon{
-  width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;flex:0 0 24px;color:#475569;
-}
-.login-input-wrap-pro .login-field-icon svg,
+
 .password-eye-pro svg{
   width:24px;height:24px;display:block;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;
 }
 .password-eye-pro{width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;border-radius:10px;color:#475569;transition:.16s ease;}
 .password-eye-pro:hover{background:#f1f5f9;color:#0f172a;}
-.login-input-wrap-pro{gap:14px;}
-.login-input-wrap-pro input{padding-left:2px !important;}
 
 .company-header-actions-v40{display:flex;align-items:center;gap:10px;justify-content:flex-end;flex-wrap:wrap;}
 .company-configured-badge-v40{display:inline-flex;align-items:center;gap:8px;padding:11px 14px;border-radius:14px;background:#dcfce7;border:1px solid #bbf7d0;color:#15803d;font-weight:800;font-size:13px;}
@@ -3417,15 +2987,11 @@ body.admin-mode .side-nav .nav-item.active{
 #tab-storico .btn-primary,
 #tab-mezzi .btn-primary,
 #tab-mezzi .btn-secondary{margin:4px 0;}
-
-#profileOverlay .profile-note{display:none !important;}
 .plan-usage-rowline-v40{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;margin:14px 0 16px;border:1px solid #e5eaf3;border-radius:15px;background:#fff;overflow:hidden;}
 .plan-usage-chip-v40{display:flex;align-items:center;justify-content:center;gap:7px;min-height:48px;padding:10px 8px;color:#334155;font-size:13px;border-right:1px solid #e5eaf3;white-space:nowrap;}
 .plan-usage-chip-v40:last-child{border-right:0;}
 .plan-usage-chip-v40 strong{font-weight:900;color:#0f172a;}
 .plan-usage-chip-icon{color:#0b63f6;font-size:15px;line-height:1;}
-#profileOverlay .profile-modal{max-width:720px;}
-#profileOverlay .actions-row{margin-top:18px;}
 
 @media(max-width:1050px){
   .report-bottom-grid,.report-table-grid{grid-template-columns:1fr;}
@@ -3502,177 +3068,6 @@ button:disabled{opacity:.65;cursor:not-allowed;}
 /* ------------------------------------------------------------------
    v46 - Registrazione azienda professionale a step
 ------------------------------------------------------------------ */
-.signup-wizard-v46 {
-  width: min(760px, calc(100vw - 28px));
-}
-.signup-title-v46 p {
-  margin-top: 6px;
-}
-.signup-progress-v46 {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
-  margin: 18px 0 22px;
-  position: relative;
-}
-.signup-step-dot {
-  border: 1px solid #e2e8f0;
-  background: #f8fafc;
-  border-radius: 16px;
-  padding: 10px 8px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #64748b;
-  min-width: 0;
-}
-.signup-step-dot span {
-  width: 28px;
-  height: 28px;
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: #e2e8f0;
-  color: #475569;
-  font-size: 13px;
-  font-weight: 800;
-  flex: 0 0 auto;
-}
-.signup-step-dot small {
-  font-size: 12px;
-  font-weight: 700;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.signup-step-dot.active {
-  border-color: #2563eb;
-  background: #eff6ff;
-  color: #1d4ed8;
-  box-shadow: 0 10px 30px rgba(37, 99, 235, 0.12);
-}
-.signup-step-dot.active span {
-  background: #2563eb;
-  color: #ffffff;
-}
-.signup-step-dot.done {
-  border-color: #bbf7d0;
-  background: #f0fdf4;
-  color: #166534;
-}
-.signup-step-dot.done span {
-  background: #22c55e;
-  color: #ffffff;
-}
-.signup-section-head-v46 {
-  margin-bottom: 16px;
-}
-.signup-section-head-v46 h3 {
-  margin: 0 0 6px;
-  font-size: 19px;
-  color: #0f172a;
-}
-.signup-section-head-v46 p {
-  margin: 0;
-  color: #64748b;
-  font-size: 13px;
-  line-height: 1.5;
-}
-.signup-step-panel-v46 {
-  border: 1px solid #e2e8f0;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-  border-radius: 22px;
-  padding: 20px;
-  box-shadow: 0 14px 45px rgba(15, 23, 42, 0.06);
-}
-.signup-grid-v46 {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-}
-.signup-grid-v46 .full {
-  grid-column: 1 / -1;
-}
-.signup-grid-v46 label,
-.signup-checks-v46 label {
-  display: block;
-  font-size: 12px;
-  color: #334155;
-  font-weight: 750;
-  margin-bottom: 7px;
-}
-.signup-grid-v46 input,
-.signup-grid-v46 select {
-  width: 100%;
-  min-height: 44px;
-  border: 1px solid #dbe3ef;
-  border-radius: 14px;
-  background: #ffffff;
-  color: #0f172a;
-  padding: 0 12px;
-  outline: none;
-  transition: border-color .18s ease, box-shadow .18s ease;
-}
-.signup-grid-v46 input:focus,
-.signup-grid-v46 select:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, .10);
-}
-.signup-helper-box-v46 {
-  margin-top: 16px;
-  background: #eff6ff;
-  color: #1e3a8a;
-  border: 1px solid #bfdbfe;
-  border-radius: 16px;
-  padding: 12px 14px;
-  font-size: 13px;
-}
-.signup-checks-v46 {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  margin-top: 16px;
-}
-.signup-checks-v46 label {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px;
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
-  border-radius: 15px;
-  margin: 0;
-  cursor: pointer;
-  color: #475569;
-}
-.signup-checks-v46 input {
-  width: 17px;
-  height: 17px;
-  accent-color: #2563eb;
-}
-.signup-actions-v46 {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 18px;
-}
-.signup-actions-v46 .btn-primary,
-.signup-actions-v46 .btn-light {
-  min-width: 150px;
-}
-.signup-actions-v46 .btn-primary.hidden {
-  display: none !important;
-}
-@media (max-width: 760px) {
-  .signup-wizard-v46 { width: calc(100vw - 20px); }
-  .signup-progress-v46 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .signup-grid-v46 { grid-template-columns: 1fr; }
-  .signup-checks-v46 { grid-template-columns: 1fr; }
-  .signup-actions-v46 { position: sticky; bottom: 0; background: rgba(255,255,255,.94); padding-top: 12px; }
-  .signup-actions-v46 .btn-primary,
-  .signup-actions-v46 .btn-light { flex: 1; min-width: 0; }
-}
 
 /* ------------------------------------------------------------------
    v47 - Motore Settori Aziendali
@@ -4293,7 +3688,6 @@ body.workspace-empty-v49-active #tab-dashboard > :not(#workspaceEmptyDashboardV4
   .integration-badge-v52{margin-left:0;}
 }
 
-
 /* --------------------------------------------------------------------------
    v53 - Settore Food delivery / Ristorazione
    -------------------------------------------------------------------------- */
@@ -4344,25 +3738,6 @@ body.workspace-empty-v49-active #tab-dashboard > :not(#workspaceEmptyDashboardV4
 @media(max-width:620px){.healthcare-dashboard-v55 .vertical-modules-v51{grid-template-columns:1fr;}}
 
 /* V60 - Ticket assistenza utente */
-.support-modal-v60{
-  position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center;
-  background:rgba(15,23,42,.55); padding:18px;
-}
-.support-modal-v60.hidden{display:none!important;}
-.support-card-v60{width:min(620px,100%); background:#fff; border-radius:22px; box-shadow:0 24px 80px rgba(15,23,42,.22); overflow:hidden;}
-.support-head-v60{display:flex; align-items:flex-start; justify-content:space-between; gap:14px; padding:20px 22px; border-bottom:1px solid #e5e7eb;}
-.support-head-v60 strong{display:block; font-size:20px; color:#0f172a;}
-.support-head-v60 small{display:block; margin-top:4px; color:#64748b;}
-.support-head-v60 button{border:0; background:#f1f5f9; color:#0f172a; border-radius:12px; width:36px; height:36px; font-size:24px; line-height:1; cursor:pointer;}
-.support-body-v60{padding:20px 22px; display:grid; gap:10px;}
-.support-body-v60 label{font-size:13px; font-weight:800; color:#334155;}
-.support-body-v60 input[type="text"], .support-body-v60 textarea{width:100%; border:1px solid #dbe3ef; border-radius:14px; padding:12px 14px; font:inherit; outline:none;}
-.support-body-v60 textarea{resize:vertical; min-height:120px;}
-.support-check-v60{display:flex!important; align-items:center; gap:10px; font-weight:700!important; color:#475569!important; margin-top:4px;}
-.support-check-v60 input{width:18px; height:18px;}
-.support-linked-error-v60{background:#fff7ed; border:1px solid #fed7aa; color:#9a3412; padding:12px 14px; border-radius:14px; font-size:13px; line-height:1.45;}
-.support-actions-v60{display:flex; justify-content:flex-end; gap:10px; padding:16px 22px 22px; border-top:1px solid #e5e7eb;}
-@media(max-width:640px){.support-card-v60{border-radius:18px}.support-actions-v60{flex-direction:column}.support-actions-v60 button{width:100%;}}
 
 /* ==========================================================
    v62 - Mobile premium layout gestionale
@@ -4406,7 +3781,7 @@ body.workspace-empty-v49-active #tab-dashboard > :not(#workspaceEmptyDashboardV4
   body.app-logged-in .dash-kpi-icon{width:56px!important;height:56px!important;border-radius:18px!important;flex:0 0 56px!important}body.app-logged-in .dash-kpi-card strong{font-size:30px!important}body.app-logged-in .dash-kpi-card span{font-size:13px!important;line-height:1.25}body.app-logged-in .dash-kpi-card small{font-size:12px!important;line-height:1.25}
   body.app-logged-in .dash-board-columns,body.app-logged-in .dash-main-grid,body.app-logged-in .dash-operational-split,body.app-logged-in .route-grid,body.app-logged-in .company-layout-v29{grid-template-columns:1fr!important;gap:16px!important}
   body.app-logged-in .tableWrap,body.app-logged-in .table-wrap{margin-left:-4px;margin-right:-4px;overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:18px}body.app-logged-in table{min-width:680px}
-  body.app-logged-in .modal,body.app-logged-in .profile-modal,body.app-logged-in .support-modal-v60{width:calc(100vw - 20px)!important;max-width:none!important;max-height:calc(100vh - 24px)!important;border-radius:26px!important;margin:12px auto!important}
+  body.app-logged-in .modal{width:calc(100vw - 20px)!important;max-width:none!important;max-height:calc(100vh - 24px)!important;border-radius:26px!important;margin:12px auto!important}
   body.app-logged-in .modal-overlay{align-items:flex-end!important;padding:0 10px 10px!important}
   body.app-logged-in input,body.app-logged-in select,body.app-logged-in textarea{font-size:16px!important;border-radius:15px!important}
   body.app-logged-in .btn-primary,body.app-logged-in .btn-secondary,body.app-logged-in .btn-light,body.app-logged-in .btn-danger-soft{min-height:44px;border-radius:14px;font-weight:850}
@@ -4420,10 +3795,8 @@ body.workspace-empty-v49-active #tab-dashboard > :not(#workspaceEmptyDashboardV4
   body.app-logged-in .content{padding-left:12px;padding-right:12px}body.app-logged-in .dash-kpi-card{padding:14px!important}
 }
 
-
 /* v63 - Area Fatturazione nel profilo account */
-.profile-plan-actions-v63{display:grid;grid-template-columns:1fr;gap:8px;margin-top:10px}
-.profile-plan-actions-v63 button{width:100%;padding:10px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer}
+
 .btn-plan-active-v88{background:#2563eb;color:#fff;border:1px solid #2563eb}
 .btn-plan-active-v88:hover{background:#1d4ed8;border-color:#1d4ed8}
 .btn-billing-v63{background:#0f172a;color:#fff;border:1px solid #0f172a}
@@ -4704,7 +4077,6 @@ html[data-gf-tail-lift="off"] .gf-customers-table-v892 td:nth-child(8),
 html[data-gf-tail-lift="off"] .gf-vehicles-table-v892 th:nth-child(4),
 html[data-gf-tail-lift="off"] .gf-vehicles-table-v892 td:nth-child(4) { display:none !important; }
 
-
 /* v89.3 - barra salvataggio manuale impostazioni */
 .settings-save-bar-v893{position:sticky;bottom:14px;z-index:8;margin-top:22px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:16px;background:rgba(255,255,255,.96);border:1px solid #e2e8f0;border-radius:14px;box-shadow:0 10px 28px rgba(15,23,42,.10);backdrop-filter:blur(8px)}
 .settings-save-bar-v893 .settings-save-state{margin-top:0}
@@ -4743,17 +4115,6 @@ html[data-gf-tail-lift="off"] .gf-vehicles-table-v892 td:nth-child(4) { display:
   rotate: 0deg !important;
   object-fit: contain !important;
   object-position: center center !important;
-}
-
-.login-card-brand img {
-  transform: none !important;
-  rotate: 0deg !important;
-  object-fit: cover !important;
-  object-position: center !important;
-  flex-shrink: 0;
-  padding: 0 !important;
-  border: 0 !important;
-  box-shadow: none !important;
 }
 
 .brand-logo-img {

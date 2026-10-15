@@ -49,15 +49,19 @@ test('all major workspace sections share dashboard panel, table, toolbar and KPI
 
 test('popup skins preserve overlays and all operational modal IDs',()=>{
   const css=read(base+'reference-dialogs.css');
+  const html=read('static/dashboard/index.html');
+  const core=read('static/dashboard/js/core.js');
+  const convertedPopup=id=>new RegExp('id="'+id+'" class="gf-overlay').test(html)
+    || (id==='supportTicketModalV60' && /wrap\.className = "gf-overlay hidden"/.test(core));
   for(const selector of [
     '#agentOverlay','#depositOverlay','#driverFormOverlay','#customerOverlay',
     '#customerImportOverlay','#deliveryDetailsOverlay','#onboardingOverlay',
     '#profileOverlay','#orderModal','#customerDetailsDialog',
     '#collaboratorDialog','#supportTicketModalV60'
   ]){
-    assert.ok(css.includes(selector),'Unstyled popup '+selector);
+    // Una finestra è coperta dal vecchio foglio oppure è già convertita al componente gf-overlay.
+    assert.ok(css.includes(selector) || convertedPopup(selector.slice(1)),'Unstyled popup '+selector);
   }
-  const html=read('static/dashboard/index.html');
   for(const id of ['orderModal','agentOverlay','depositOverlay','driverFormOverlay',
     'customerOverlay','customerImportOverlay','deliveryDetailsOverlay','onboardingOverlay',
     'profileOverlay','customerDrawer','collaboratorDialog']){

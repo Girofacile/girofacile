@@ -43,7 +43,7 @@ function runtime(){
   return{api:window.GFDesignSystem,document,context};
 }
 test('theme.css centrally defines palette, geometry, spacing, typography and breakpoints',()=>{
-  assert.match(read(assets+'tokens.css'),/@import url\("theme\.css"\)/,'tokens.css stays an alias of theme.css');
+  assert.match(read(assets+'tokens.css'),/@import url\("theme\.css(\?v=[\w-]+)?"\)/,'tokens.css stays an alias of theme.css');
   assert.doesNotMatch(read(assets+'tokens.css'),/--gf-[\w-]+\s*:/,'Variables live only in theme.css');
   const css=read(assets+'theme.css');
   for(const token of ['color-primary','color-bg','color-surface','color-text','color-muted','color-border','color-border-strong','color-success','color-success-bg','color-warning','color-warning-bg','color-danger','color-danger-bg','color-info','color-info-bg','radius-sm','radius-md','radius-lg','shadow-sm','control-height','touch-height','font-size-base','font-size-header','breakpoint-sm','breakpoint-md','breakpoint-lg','breakpoint-xl','space-1','space-2','space-3','space-4','space-6','space-8'])
@@ -261,7 +261,7 @@ test('dashboard salutation uses company name and never silently substitutes user
   assert.equal(greeting({username:'Mario',company_name:''},'Logistica Firenze'),'Buongiorno, Logistica Firenze');
   assert.equal(greeting({username:'Mario',company_name:''},'Mario'),'Buongiorno');
   assert.match(navigation,/currentSessionUser\?\.company_name/);
-  assert.match(read('static/dashboard/index.html'),/navigation\.js\?v=gf_unified_20261014_1/);
+  assert.match(read('static/dashboard/index.html'),/navigation\.js\?v=[\w-]+/);
 });
 
 test('company name and account username use separate identity storage',()=>{
@@ -287,8 +287,8 @@ test('workspace topbar keeps modern notification and account actions',()=>{
   assert.match(topbar,/class="gf-header__user profile-button" onclick="openProfilePanel\(\)"/);
 
   const profile=html.slice(html.indexOf('<div id="profileOverlay"'),html.indexOf('<!-- COOKIE NOTICE'));
-  assert.match(profile,/id="logoutBtn" class="profile-logout-btn hidden"/);
-  assert.match(profile,/class="profile-modal-footer"/);
+  assert.match(profile,/id="logoutBtn" class="gf-button hidden" data-variant="ghost"/);
+  assert.match(profile,/class="gf-modal__footer"/);
   assert.doesNotMatch(profile,/btn-danger/);
   assert.equal((html.match(/id="logoutBtn"/g)||[]).length,1);
 
@@ -300,34 +300,34 @@ test('workspace topbar keeps modern notification and account actions',()=>{
 test('account profile modal follows the workspace design system',()=>{
   const html=read('static/dashboard/index.html');
   const profile=html.slice(html.indexOf('<div id="profileOverlay"'),html.indexOf('<!-- COOKIE NOTICE'));
-  assert.match(profile,/class="profile-modal profile-modal-v2"/);
-  assert.match(profile,/class="profile-modal-section profile-identity-section"/);
-  assert.match(profile,/class="profile-modal-section profile-plan-section"/);
-  assert.match(profile,/id="planStatusBox" class="profile-plan-status is-loading"/);
-  assert.match(profile,/class="profile-plan-actions-v63 profile-plan-actions-v2"/);
+  assert.match(profile,/<div id="profileOverlay" class="gf-overlay hidden" onclick="closeProfilePanel\(event\)">/);
+  assert.match(profile,/class="gf-modal" data-size="lg" role="dialog" aria-modal="true"/);
+  assert.match(profile,/aria-labelledby="profileIdentityHeading"/);
+  assert.match(profile,/aria-labelledby="profilePlanHeading"/);
+  assert.match(profile,/id="planStatusBox" class="gf-alert" data-status="info"/);
+  assert.match(profile,/id="btnPlanActive"[^>]*onclick="openPlanAccountPage\(\)"/);
+  assert.match(profile,/onclick="openBillingPanel\(\)">Fatturazione</);
+  assert.doesNotMatch(profile,/\sstyle="/);
 
   const core=read('static/dashboard/js/core.js');
   assert.match(core,/const setPlanStatusTone = \(tone, icon\)/);
   assert.match(core,/setPlanStatusTone\("is-success", "✓"\)/);
   assert.doesNotMatch(core,/statusBox\.style\.background/);
-  assert.match(core,/plan-usage-chip-icon" aria-hidden="true"/);
+  assert.match(core,/<div class="gf-details__item"><dt>\$\{r\.label\}<\/dt><dd>\$\{maxLabel\}<\/dd><\/div>/);
 
   const components=read(assets+'components.css');
-  assert.match(components,/Account profile dialog — GiroFacile workspace reference/);
-  assert.match(components,/#profileOverlay \.profile-modal-v2\{[^}]*max-width:760px[^}]*box-shadow:var\(--gf-shadow-dialog\)/);
-  assert.match(components,/#profileOverlay \.profile-logout-btn\{[^}]*background:var\(--gf-color-surface-subtle\)[^}]*color:var\(--gf-color-muted\)/);
-  assert.match(components,/#profileOverlay \.profile-plan-usage\{[^}]*grid-template-columns:repeat\(5,minmax\(0,1fr\)\)/);
-  assert.match(components,/#profileOverlay \.profile-field input:focus\{[^}]*box-shadow:var\(--gf-focus-ring\)/);
+  assert.match(components,/\.gf-modal\[data-size="lg"\]\{/);
+  assert.match(components,/\.gf-details\[data-layout="rows"\]/);
 });
 
 
 test('workspace sidebar uses the GiroFacile brand artwork',()=>{
   const html=read('static/dashboard/index.html');
-  const brand=html.slice(html.indexOf('<div class="brand">'),html.indexOf('<nav class="side-nav">'));
-  assert.match(brand,/class="brand-logo-img"/);
-  assert.match(brand,/src="\/static\/girofacile-logo\.png\?v=20261007_sidebar"/);
-  assert.match(brand,/class="reference-brand-name">GiroFacile<\/span>/);
-  assert.doesNotMatch(brand,/reference-brand-icon/);
+  // Marchio del layout base: simbolo SVG con i colori del tema e nome GiroFacile.
+  const brand=html.slice(html.indexOf('<a class="gf-sidebar__brand"'),html.indexOf('<nav class="gf-sidebar__nav"'));
+  assert.match(brand,/class="gf-sidebar__mark"[^>]*aria-label="Logo GiroFacile"/);
+  assert.match(brand,/class="gf-sidebar__brand-name">GiroFacile<\/span>/);
+  assert.doesNotMatch(brand,/#[0-9a-f]{3,6}\b/i);
 });
 
 
@@ -353,7 +353,7 @@ test('workspace legal links live in navigation and advanced legal docs live in s
 
   const core=read('static/dashboard/js/core.js');
   const support=core.slice(core.indexOf('function ensureSupportModalV60'),core.indexOf('function openSupportPanelV49'));
-  assert.match(support,/class="support-legal-v60"/);
+  assert.match(support,/data-legal="support"/);
   assert.match(support,/href="\/sicurezza"/);
   assert.match(support,/href="\/dpa-responsabile-trattamento"/);
   assert.match(support,/href="\/subprocessors"/);
@@ -361,9 +361,7 @@ test('workspace legal links live in navigation and advanced legal docs live in s
   const layout=read(assets+'layout.css');
   assert.match(layout,/\.gf-sidebar__links\{/);
 
-  const components=read(assets+'components.css');
-  assert.match(components,/Support legal resources moved out of the workspace footer/);
-  assert.match(components,/\.support-legal-v60\{[^}]*background:var\(--gf-color-bg\)/);
+  assert.match(support,/wrap.className = "gf-overlay hidden"/);
 });
 
 
@@ -406,17 +404,12 @@ test('dashboard completed-deliveries KPI has fixed copy and uses actual completi
 test('account password UI stays compact and uses shared visual tokens',()=>{
   const html=read('static/dashboard/index.html');
   const profile=html.slice(html.indexOf('<div id="profileOverlay"'),html.indexOf('<!-- COOKIE NOTICE'));
-  assert.match(profile,/class="profile-security-row"/);
-  assert.match(profile,/class="profile-security-label">Cambio password<\/span>/);
+  assert.match(profile,/class="gf-setting"[\s\S]*<strong>Cambio password<\/strong>/);
   assert.match(profile,/id="profileSecurityOpenBtn"[^>]*>Modifica<\/button>/);
-  assert.match(profile,/id="profilePasswordChangePanel" class="profile-password-panel hidden"/);
+  assert.match(profile,/id="profilePasswordChangePanel" class="gf-card gf-stack hidden"/);
   assert.doesNotMatch(profile,/Credenziali protette|Password dimenticata|profile-password-help|profile-password-collapse/);
 
-  const account=read('static/dashboard/css/account.css');
-  const passwordCss=account.slice(account.indexOf('/* Account password security — compact workspace-aligned treatment */'));
-  assert.match(passwordCss,/\.profile-security-row\{[\s\S]*background:var\(--gf-color-surface\)/);
-  assert.match(passwordCss,/\.profile-password-panel\{[\s\S]*background:var\(--gf-color-bg\)[\s\S]*box-shadow:none/);
-  assert.doesNotMatch(passwordCss,/linear-gradient|#cfe0ff|#fff7ed|#9a5a16/);
+  assert.doesNotMatch(profile,/linear-gradient|#cfe0ff|#fff7ed|#9a5a16|\sstyle="/);
 
   const core=read('static/dashboard/js/core.js');
   assert.match(core,/profileSecurityOpenBtn/);

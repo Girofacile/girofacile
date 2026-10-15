@@ -15,15 +15,8 @@
 .gf-electric-form-hint.warning{color:#92400e}
 .gf-electric-benefit{display:block;padding:10px 12px;margin:12px 0;background:#f0fdf4;border:0;border-radius:10px;color:#15805b;font-size:12px;line-height:1.5;font-weight:600;text-align:left;overflow-wrap:anywhere}
 .plan-card .gf-electric-benefit,.plan-card-mini .gf-electric-benefit{font-size:11px;padding:7px 4px;text-align:center;margin:8px 0 0;background:transparent;border-top:1px solid var(--line,var(--border,#e5eaf2));border-radius:0}
-/* Five resources are shown now: retain a single balanced row on desktop. */
-#planUsageRows{grid-template-columns:repeat(5,minmax(0,1fr))}
-#planUsageRows .plan-usage-chip-v40{min-width:0;flex-wrap:wrap;white-space:normal;text-align:center}
 .gf-mobile-primary-consumption.hidden,.gf-mobile-electric-consumption.hidden{display:none!important}
 @media(max-width:800px){
- #planUsageRows{grid-template-columns:repeat(2,minmax(0,1fr))}
- #planUsageRows .plan-usage-chip-v40{border-right:1px solid #e5eaf3;border-bottom:1px solid #e5eaf3}
- #planUsageRows .plan-usage-chip-v40:nth-child(even){border-right:0}
- #planUsageRows .plan-usage-chip-v40:last-child{grid-column:1/-1;border:0}
 }
 @media(max-width:600px){
  .gf-vehicle-usage-grid{gap:10px}
