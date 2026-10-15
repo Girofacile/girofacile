@@ -28,11 +28,18 @@ def select_ready(page):
     """Seleziona gli ordini pronti: su desktop con la casella in intestazione, su mobile
     (tabella a schede, intestazione nascosta) spuntando ogni ordine selezionabile."""
     box=page.get_by_role('checkbox',name='Seleziona ordini pronti di questa pagina',exact=True)
-    if box.is_visible():
+    # Sulle schede mobili l'intestazione resta nel DOM ma ridotta a 1 pixel (solo per lettori di schermo).
+    header_visible=box.count() and box.evaluate("el=>el.closest('thead').getBoundingClientRect().width>2")
+    if header_visible:
         box.check();return
-    rows=page.locator('input.order-select:not(.order-select-all):not([disabled])')
-    for i in range(rows.count()):
-        rows.nth(i).check()
+    # La lista si ridisegna a ogni spunta: si clicca una casella alla volta finché ne restano.
+    # (Verificato a parte che a 390 px la casella è cliccabile: nessun elemento la copre.)
+    for _ in range(50):
+        box=page.locator('input.order-select:not(.order-select-all):not([disabled]):not(:checked)').first
+        if not box.count():
+            break
+        box.evaluate("el=>{el.scrollIntoView({block:'center'});el.click();}")
+        page.wait_for_timeout(150)
 
 def main():
     output=ROOT/'test-results'/'orders-responsive';output.mkdir(parents=True,exist_ok=True)

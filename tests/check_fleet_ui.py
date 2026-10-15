@@ -80,7 +80,7 @@ def main():
                 page.locator('[data-fleet-recalc]').click()
                 page.wait_for_function("document.getElementById('fleetMessage')?.textContent.includes('Nuove fermate')")
                 page.locator('[data-fleet-plan]').click()
-                page.get_by_text('Giri programmati',exact=True).wait_for()
+                page.locator('[data-fleet-review] .gf-badge[data-status="success"]',has_text='Giri programmati').wait_for()
                 page.locator('[data-open]').first.click()
                 page.wait_for_function("document.getElementById('planningMode').value==='single'")
                 assert page.locator('#singleVehicleField').is_visible()

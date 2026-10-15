@@ -284,9 +284,12 @@ def main():
                     page.locator("#customerGridView").click()
                     assert page.locator("#customerCards").is_visible()
                     page.locator("#customerCards").get_by_role("button", name="Dettagli", exact=True).first.click()
-                    page.locator("#customerDetailsDialog").wait_for(state="visible")
+                    # I dettagli si aprono nel pannello laterale; "Tutti i campi" porta al modulo completo.
+                    drawer = page.locator("#customerDrawer")
+                    drawer.wait_for(state="visible")
                     capture(page, "customer-details", width)
-                    page.locator("#customerDetailsDialog").get_by_role("button", name="Modifica cliente").click()
+                    drawer.get_by_role("button", name="Modifica dati").click()
+                    drawer.locator("[data-cx-full]").click()
                     page.locator("#customerOverlay").wait_for(state="visible")
                     assert page.locator("#cNome").input_value() == "Cliente Demo"
                     page.locator("#customerOverlay").get_by_role("button", name="Annulla", exact=True).click()
@@ -294,7 +297,7 @@ def main():
                     page.locator("#customerListView").click()
                     interactions.append(f"{width}: customer filters, list/grid, details and edit dialog")
                     page.evaluate("showTab('mezzi')")
-                    page.locator('#tab-mezzi .gf-directory-head-actions button[onclick="createFleetVehicle()"]').click()
+                    page.locator('#tab-mezzi .gf-panel__header button[onclick="createFleetVehicle()"]').click()
                     page.locator("#vehicleDrawer").wait_for(state="visible")
                     page.locator("#vFuelType").select_option("elettrico")
                     assert page.locator("#vElectricConsumptionWrap").is_visible()
@@ -310,9 +313,10 @@ def main():
                     capture(page, "report-filters", width)
                     page.locator("#reportFilterToggleBtn").click()
                     page.evaluate("showTab('settings')")
-                    page.locator(".settings-expand").first.click()
-                    assert page.locator(".settings-expand").first.get_attribute("aria-expanded") == "true"
-                    page.locator(".settings-expand").first.click()
+                    detail = page.locator('#tab-settings [onclick="toggleSettingsDetail(this)"]').first
+                    detail.click()
+                    assert detail.get_attribute("aria-expanded") == "true"
+                    detail.click()
                     interactions.append(f"{width}: report filters and settings detail")
                 page.close()
             browser.close()
