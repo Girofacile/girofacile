@@ -78,17 +78,15 @@ html body[data-gf-surface="workspace"] #app#app .gf-topbar-back:focus-visible{ou
    Le divisioni sono il bordo stesso (gap di 1 px), così funzionano su più righe.
    ------------------------------------------------------------------------- */
 html body[data-gf-surface="workspace"] #app#app :is(
-  .gf-directory-metrics,.orders-metrics,.report-kpi-grid,#tab-giro .stats-grid,.dash-kpi-grid
+  .gf-directory-metrics,.orders-metrics,#tab-giro .stats-grid,.dash-kpi-grid
 ){
   display:grid!important;grid-template-columns:repeat(auto-fit,minmax(170px,1fr))!important;gap:1px!important;
   margin:0 0 var(--gf-u-gap)!important;padding:0!important;overflow:hidden!important;
   border:1px solid var(--gf-color-border)!important;border-radius:var(--gf-radius-lg)!important;
   background:var(--gf-color-border)!important;box-shadow:var(--gf-shadow-sm)!important;
 }
-html body[data-gf-surface="workspace"] #app#app #tab-report .report-kpi-grid{grid-template-columns:repeat(5,minmax(0,1fr))!important}
 html body[data-gf-surface="workspace"] #app#app :is(
-  .gf-directory-metrics>.gf-directory-metric,.orders-metrics>.orders-metric-card,
-  .report-kpi-grid>.report-kpi-card,#tab-giro .stats-grid>.stat-card,.dash-kpi-grid>.dash-kpi-card
+  .gf-directory-metrics>.gf-directory-metric,.orders-metrics>.orders-metric-card,#tab-giro .stats-grid>.stat-card,.dash-kpi-grid>.dash-kpi-card
 ){
   display:flex!important;flex-direction:column!important;justify-content:center!important;gap:0!important;
   min-width:0!important;min-height:96px!important;margin:0!important;padding:16px 22px!important;
@@ -97,14 +95,14 @@ html body[data-gf-surface="workspace"] #app#app :is(
 }
 /* Le icone colorate non fanno parte del linguaggio della dashboard. */
 html body[data-gf-surface="workspace"] #app#app :is(
-  .gf-directory-metric-icon,.orders-metric-icon,.report-kpi-icon,#tab-giro .stat-icon,.dash-kpi-icon
+  .gf-directory-metric-icon,.orders-metric-icon,#tab-giro .stat-icon,.dash-kpi-icon
 ){display:none!important}
 html body[data-gf-surface="workspace"] #app#app :is(.gf-directory-metric,.orders-metric-card,.stat-card,.dash-kpi-card)>div{
   display:flex!important;flex-direction:column!important;gap:0!important;min-width:0!important;padding:0!important;
 }
 /* Etichetta */
 html body[data-gf-surface="workspace"] #app#app :is(
-  .gf-directory-metric h2,.orders-metric-label,.report-kpi-card>small,
+  .gf-directory-metric h2,.orders-metric-label,
   #tab-giro .stat-card>div>span,.dash-kpi-card>div>span
 ){
   order:1;margin:0!important;font:400 13px/1.4 var(--gf-font-family)!important;color:var(--gf-color-muted)!important;
@@ -112,7 +110,7 @@ html body[data-gf-surface="workspace"] #app#app :is(
 }
 /* Valore */
 html body[data-gf-surface="workspace"] #app#app :is(
-  .gf-directory-metric strong,.orders-metric-value,.report-kpi-card>strong,
+  .gf-directory-metric strong,.orders-metric-value,
   #tab-giro .stat-card strong,.dash-kpi-card strong
 ){
   order:2;display:block;margin:4px 0 0!important;font:700 30px/1.1 var(--gf-font-display)!important;
@@ -131,17 +129,17 @@ html body[data-gf-surface="workspace"] #app#app :is(
   html body[data-gf-surface="workspace"] #app#app #tab-report .report-kpi-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
 }
 @media (max-width:640px){
-  html body[data-gf-surface="workspace"] #app#app :is(.gf-directory-metrics,.orders-metrics,.report-kpi-grid,#tab-giro .stats-grid,.dash-kpi-grid){
+  html body[data-gf-surface="workspace"] #app#app :is(.gf-directory-metrics,.orders-metrics,#tab-giro .stats-grid,.dash-kpi-grid){
     grid-template-columns:repeat(2,minmax(0,1fr))!important;
   }
-  html body[data-gf-surface="workspace"] #app#app :is(.gf-directory-metric,.orders-metric-card,.report-kpi-card,#tab-giro .stat-card,.dash-kpi-card){
+  html body[data-gf-surface="workspace"] #app#app :is(.gf-directory-metric,.orders-metric-card,#tab-giro .stat-card,.dash-kpi-card){
     min-height:84px!important;padding:12px 15px!important;
   }
   /* Un numero dispari di riquadri: l'ultimo occupa tutta la riga, senza celle grigie vuote. */
-  html body[data-gf-surface="workspace"] #app#app :is(.gf-directory-metric,.orders-metric-card,.report-kpi-card,#tab-giro .stat-card,.dash-kpi-card):nth-child(odd):last-child{
+  html body[data-gf-surface="workspace"] #app#app :is(.gf-directory-metric,.orders-metric-card,#tab-giro .stat-card,.dash-kpi-card):nth-child(odd):last-child{
     grid-column:1/-1!important;
   }
-  html body[data-gf-surface="workspace"] #app#app :is(.gf-directory-metric strong,.orders-metric-value,.report-kpi-card strong,#tab-giro .stat-card strong,.dash-kpi-card strong){font-size:26px!important}
+  html body[data-gf-surface="workspace"] #app#app :is(.gf-directory-metric strong,.orders-metric-value,#tab-giro .stat-card strong,.dash-kpi-card strong){font-size:26px!important}
 }
 
 /* ---------------------------------------------------------------------------

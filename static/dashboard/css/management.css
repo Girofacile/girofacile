@@ -22,15 +22,15 @@
 body:has(#app .gf-page:not(.hidden)) .main-area{background-color:#f5f7fb}
 body:has(#app .gf-page:not(.hidden)) .content{padding:28px 34px 48px}
 #app .gf-page:is(.plan-account-page-v875,.billing-page-v876){padding:0 0 32px}
-#app .gf-page :is(.page-title-row,.report-hero-row,.dash-subpage-title-row,.plan-page-top-v875,.billing-page-top-v876){
+#app .gf-page :is(.page-title-row,.dash-subpage-title-row,.plan-page-top-v875,.billing-page-top-v876){
   display:flex;align-items:center;justify-content:space-between;gap:24px;
   min-height:74px;margin:0 0 24px;padding:0;border:0;background:transparent;box-shadow:none;
 }
-#app .gf-page :is(.page-title-row,.report-hero-row,.dash-subpage-title-row,.plan-page-top-v875,.billing-page-top-v876)>div{min-width:0}
+#app .gf-page :is(.page-title-row,.dash-subpage-title-row,.plan-page-top-v875,.billing-page-top-v876)>div{min-width:0}
 #app .gf-page :is(h1,.route-preview-design .result-header h2){
   font:700 40px/1.12 Arial,Helvetica,sans-serif;letter-spacing:-1.5px;color:#0b1435;margin:0 0 7px;
 }
-#app .gf-page :is(.page-title-row,.report-hero-row,.dash-subpage-title-row,.plan-title-block-v875,.billing-page-top-v876) p{
+#app .gf-page :is(.page-title-row,.dash-subpage-title-row,.plan-title-block-v875,.billing-page-top-v876) p{
   font-size:15px;font-weight:400;line-height:1.5;color:#52688f;margin:0;max-width:850px;
 }
 #app .gf-page :is(.panel-header,.drivers-list-header){gap:16px;flex-wrap:wrap;align-items:center}
@@ -45,7 +45,7 @@ body:has(#app .gf-page:not(.hidden)) .content{padding:28px 34px 48px}
 }
 #app .gf-page .panel{padding:22px 20px}
 #app .gf-page :is(.tableWrap,.form-grid,.panel-header,.result-main,.result-layout)>*{min-width:0}
-#app .gf-page :is(.actions-row,.row-actions,.driver-actions,.report-actions){gap:10px;flex-wrap:wrap}
+#app .gf-page :is(.actions-row,.row-actions,.driver-actions){gap:10px;flex-wrap:wrap}
 #app .gf-page .row-actions button{
   min-height:36px;padding:8px 12px;border:1px solid #dce7f7;border-radius:10px;
   background:#fff;color:#344e77;font:600 12px/1.4 Arial,Helvetica,sans-serif;cursor:pointer;
@@ -85,16 +85,16 @@ body:has(#app .gf-page:not(.hidden)) .content{padding:28px 34px 48px}
 #app .gf-page .gf-field>label{font-size:13px;font-weight:600;line-height:1.5;margin:0;color:#374e77}
 
 /* Shared KPIs, table surfaces, status pills and empty states. */
-#app .gf-page :is(.stat-card,.report-kpi-card,.scheduled-metric,.mini-card,.billing-summary-card-v876,.gf-vehicle-usage-card){
+#app .gf-page :is(.stat-card,.scheduled-metric,.mini-card,.billing-summary-card-v876,.gf-vehicle-usage-card){
   min-width:0;padding:22px 20px;border:1px solid var(--gf-line);border-radius:var(--gf-radius);
   background:linear-gradient(135deg,#fff 50%,#edf5ff);box-shadow:var(--gf-shadow);
 }
-#app .gf-page :is(.stat-card,.report-kpi-card,.scheduled-metric,.billing-summary-card-v876):nth-child(2){background:linear-gradient(135deg,#fff 50%,#effcf6)}
-#app .gf-page :is(.stat-card,.report-kpi-card,.scheduled-metric,.billing-summary-card-v876):nth-child(3){background:linear-gradient(135deg,#fff 50%,#f6f0ff)}
-#app .gf-page :is(.stat-card,.report-kpi-card,.scheduled-metric,.billing-summary-card-v876):nth-child(4){background:linear-gradient(135deg,#fff 50%,#fff2f6)}
-#app .gf-page :is(.stat-card,.report-kpi-card)>strong,
+#app .gf-page :is(.stat-card,.scheduled-metric,.billing-summary-card-v876):nth-child(2){background:linear-gradient(135deg,#fff 50%,#effcf6)}
+#app .gf-page :is(.stat-card,.scheduled-metric,.billing-summary-card-v876):nth-child(3){background:linear-gradient(135deg,#fff 50%,#f6f0ff)}
+#app .gf-page :is(.stat-card,.scheduled-metric,.billing-summary-card-v876):nth-child(4){background:linear-gradient(135deg,#fff 50%,#fff2f6)}
+#app .gf-page :is(.stat-card)>strong,
 #app .gf-page .stat-card>div>strong{font-size:32px;line-height:1.2;font-weight:700;letter-spacing:-1px;color:#0b1435;font-variant-numeric:tabular-nums}
-#app .gf-page :is(.stat-icon,.report-kpi-icon){border-radius:17px;box-shadow:none}
+#app .gf-page :is(.stat-icon){border-radius:17px;box-shadow:none}
 #app .gf-page :is(.tableWrap){max-width:100%;overflow:auto;border:1px solid var(--gf-line);border-radius:13px}
 #app .gf-page table{width:100%;border-collapse:collapse;font-size:13px}
 #app .gf-page th{padding:14px 16px;background:#f8faff;color:#52688f;border-bottom:1px solid var(--gf-line);font-size:12px;line-height:1.5;font-weight:600}
@@ -132,18 +132,6 @@ body:has(#app .gf-page:not(.hidden)) .content{padding:28px 34px 48px}
 #app .gf-page .gf-route-kpi-grid strong{font-size:22px;font-weight:700;color:var(--gf-ink)}
 
 /* Report: four primary KPIs followed by the six secondary measures. */
-#app #tab-report .report-hero-row{align-items:flex-start;flex-wrap:wrap}
-#app #tab-report .report-actions{margin-left:auto}
-#app #tab-report .report-kpi-grid{grid-template-columns:repeat(12,minmax(0,1fr));gap:16px;margin-bottom:20px}
-#app #tab-report .report-kpi-card{grid-column:span 2;display:flex;flex-direction:column;align-items:flex-start;gap:9px;padding:18px;min-height:138px}
-#app #tab-report .report-kpi-card:nth-child(-n+4){grid-column:span 3;min-height:162px;padding:22px 20px}
-#app #tab-report .report-kpi-card small{font-size:12px;line-height:1.5;font-weight:600;color:#52688f}
-#app #tab-report .report-kpi-card strong{font-size:24px;overflow-wrap:anywhere}
-#app #tab-report .report-kpi-card:nth-child(-n+4) strong{font-size:32px}
-#app #tab-report .report-chart-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:20px}
-#app #tab-report :is(.report-bottom-grid,.report-table-grid){gap:16px;margin-bottom:20px}
-#app #tab-report .report-filter-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
-#app #tab-report .report-chart-card.wide{grid-column:1/-1}
 
 /* Fleet: form and saved vehicles are independent visual sections. */
 
@@ -174,23 +162,13 @@ body:has(#app .gf-page:not(.hidden)) .content{padding:28px 34px 48px}
 #gfMobileMoreMenuV62>button:hover{background:#edf5ff;color:#0b63f6}
 #gfMobileMoreMenuV62>button.danger{color:#dc2626}
 #gfMobileMoreMenuV62 button:focus-visible{outline:3px solid #76aaff;outline-offset:-3px}
-
-@media(max-width:1200px){
-  #app #tab-report .report-kpi-grid{grid-template-columns:repeat(6,minmax(0,1fr))}
-  #app #tab-report .report-kpi-card:nth-child(-n+4){grid-column:span 3}
-  #app #tab-report :is(.report-bottom-grid,.report-table-grid){grid-template-columns:1fr}
-}
 @media(max-width:1100px){#app .gf-page .dash-sub-layout{grid-template-columns:1fr}}
 @media(max-width:820px){
   body:has(#app .gf-page:not(.hidden)) .content{padding:20px 16px 110px}
   #app .gf-page :is(h1,.route-preview-design .result-header h2){font-size:32px;letter-spacing:-1px}
-  #app .gf-page :is(.page-title-row,.report-hero-row,.dash-subpage-title-row,.plan-page-top-v875,.billing-page-top-v876){align-items:flex-start;flex-direction:column;gap:14px;min-height:0;margin-bottom:22px}
+  #app .gf-page :is(.page-title-row,.dash-subpage-title-row,.plan-page-top-v875,.billing-page-top-v876){align-items:flex-start;flex-direction:column;gap:14px;min-height:0;margin-bottom:22px}
   #app .gf-page :is(.panel){padding:18px 16px}
   body.app-logged-in #app .gf-page .panel{border-radius:18px!important;box-shadow:var(--gf-shadow)!important}
-  #app #tab-report :is(.report-chart-grid,.report-filter-grid){grid-template-columns:1fr}
-  #app #tab-report .report-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-  #app #tab-report .report-kpi-card,#app #tab-report .report-kpi-card:nth-child(-n+4){grid-column:auto;min-height:140px;padding:16px}
-  #app #tab-report .report-kpi-card:nth-child(-n+4) strong{font-size:27px}
   .gf-dialog :is(.modal){border-radius:18px!important}
 }
 @media(max-width:520px){

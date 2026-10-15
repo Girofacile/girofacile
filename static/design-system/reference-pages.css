@@ -26,7 +26,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(h1,h2,h3,h4)
   letter-spacing:-.01em;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .page-title-row,.report-hero-row,.dash-subpage-title-row,.orders-page-title,
+  .page-title-row,.dash-subpage-title-row,.orders-page-title,
   .plan-page-top-v875,.billing-page-top-v876,.orders-connections-mobile-head
 ){
   min-width:0;
@@ -34,7 +34,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   margin-bottom:22px;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .page-title-row,.report-hero-row,.dash-subpage-title-row,
+  .page-title-row,.dash-subpage-title-row,
   .plan-page-top-v875,.billing-page-top-v876
 ) h1{
   margin:0 0 5px!important;
@@ -42,7 +42,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   letter-spacing:-.02em!important;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .page-title-row,.report-hero-row,.dash-subpage-title-row,
+  .page-title-row,.dash-subpage-title-row,
   .plan-page-top-v875,.billing-page-top-v876
 ) p{
   margin:3px 0 0!important;
@@ -51,7 +51,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .panel-header,.customer-list-head,.gf-directory-head,
-  .orders-list-head,.orders-sources-directory-head,.report-chart-head,
+  .orders-list-head,.orders-sources-directory-head,
   .billing-section-head-v876,.settings-section-head
 ){
   display:flex;
@@ -64,7 +64,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .panel-header,.customer-list-head,.gf-directory-head,
-  .orders-list-head,.orders-sources-directory-head,.report-chart-head,
+  .orders-list-head,.orders-sources-directory-head,
   .billing-section-head-v876
 ) h2{
   margin:0;
@@ -84,7 +84,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .panel,.card,.gf-card,.gf-directory-panel,.customer-list-panel-v8,.orders-list-panel,.orders-filter-panel,.orders-source-panel,
   .orders-source-card,.orders-order-card,
-  .customer-card,.company-card-v29,.onboarding-card-v29,.report-chart-card,.report-table-card,.report-kpi-card,.dash-sub-card,.dash-sub-route-picker,
+  .customer-card,.company-card-v29,.onboarding-card-v29,.dash-sub-card,.dash-sub-route-picker,
   .scheduled-overview,.scheduled-stops,.scheduled-summary,.completed-picker,
   .completed-stops,.completed-summary,.live-design-card,.live-design-picker,
   .route-map-panel-v74,.planning-setup-panel,.billing-section-v876,
@@ -114,8 +114,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   color:var(--gf-color-text);
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .company-section-icon,.gf-directory-metric-icon,
-  .report-kpi-icon,.billing-summary-icon-v876
+  .company-section-icon,.gf-directory-metric-icon,.billing-summary-icon-v876
 ){
   border-radius:10px!important;
   background:var(--gf-color-info-bg)!important;
@@ -125,7 +124,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
 
 /* 3. KPI: stesso ordine tipografico dello strip della dashboard. */
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .stat-card,.customer-metric,.gf-directory-metric,.orders-metric-card,.report-kpi-card,.billing-summary-card-v876,.gf-stat,.scheduled-metric,.completed-card
+  .stat-card,.customer-metric,.gf-directory-metric,.orders-metric-card,.billing-summary-card-v876,.gf-stat,.scheduled-metric,.completed-card
 ){
   min-width:0;
   padding:18px 20px!important;
@@ -135,7 +134,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   box-shadow:var(--gf-shadow-sm)!important;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .stat-card,.customer-metric,.gf-directory-metric,.orders-metric-card,.report-kpi-card,.billing-summary-card-v876,.gf-stat,.scheduled-metric
+  .stat-card,.customer-metric,.gf-directory-metric,.orders-metric-card,.billing-summary-card-v876,.gf-stat,.scheduled-metric
 ) :is(strong,.stat-value,.customer-metric-value,.orders-metric-value){
   color:var(--gf-color-primary)!important;
   font:700 30px/1.1 var(--gf-font-display)!important;
@@ -143,13 +142,13 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   font-variant-numeric:tabular-nums;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .stat-card,.customer-metric,.gf-directory-metric,.orders-metric-card,.report-kpi-card,.billing-summary-card-v876,.gf-stat,.scheduled-metric
+  .stat-card,.customer-metric,.gf-directory-metric,.orders-metric-card,.billing-summary-card-v876,.gf-stat,.scheduled-metric
 ) :is(small,.stat-label,.orders-metric-label,.customer-metric-label){
   font:400 13px/1.4 var(--gf-font-family)!important;
   color:var(--gf-color-muted)!important;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .orders-metrics,.gf-directory-metrics,.customer-metrics,.stats-grid,.report-kpi-grid,
+  .orders-metrics,.gf-directory-metrics,.customer-metrics,.stats-grid,
   .billing-summary-grid-v876,.scheduled-metrics
 ){
   gap:16px!important;
@@ -241,7 +240,7 @@ body[data-gf-surface="workspace"] :is(.modal-overlay,.gf-dialog,#orderModal) :is
 /* 5. Barre strumenti e controlli scheda/tabella. */
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .orders-list-toolbar,.orders-toolbar,.customer-searchbar-v8,.fleet-toolbar,.gf-directory-toolbar,
-  .report-toolbar,.report-filter-row,.orders-filters,.picker-filters
+  .report-toolbar,.orders-filters,.picker-filters
 ){
   gap:12px!important;
   border-color:var(--gf-color-border)!important;
@@ -283,8 +282,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .customer-search,
-  .orders-search-input-wrap,.gf-directory-search,.report-table-search
-){
+  .orders-search-input-wrap,.gf-directory-search){
   position:relative;
   min-width:0;
   border-color:var(--gf-color-border)!important;
@@ -294,8 +292,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .customer-search,
-  .orders-search-input-wrap,.gf-directory-search,.report-table-search
-)>svg{
+  .orders-search-input-wrap,.gf-directory-search)>svg{
   position:absolute;
   width:18px;height:18px;
   left:13px;top:50%;transform:translateY(-50%);
@@ -304,8 +301,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .customer-search,
-  .orders-search-input-wrap,.gf-directory-search,.report-table-search
-):has(>svg)>input{
+  .orders-search-input-wrap,.gf-directory-search):has(>svg)>input{
   padding-left:42px!important;
 }
 
@@ -319,8 +315,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   max-width:100%;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .gf-table,.customer-table,.orders-table,
-  .report-data-table,.plan-table-v875,.result-table
+  .gf-table,.customer-table,.orders-table,.plan-table-v875,.result-table
 ){
   font:400 14px/1.5 var(--gf-font-family)!important;
   color:var(--gf-color-text);
@@ -449,9 +444,6 @@ body[data-gf-surface="workspace"] #app #tab-ordini-collegamenti .orders-source-o
   background:var(--gf-color-surface)!important;
   box-shadow:none!important;
 }
-body[data-gf-surface="workspace"] #app #tab-report .report-chart-card :is(h2,h3){
-  font-family:var(--gf-font-display)!important;
-}
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .gf-empty,.customer-empty,
   .orders-empty,.dash-detail-empty
@@ -473,12 +465,11 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
 }
 @media(max-width:820px){
   body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-    .page-title-row,.report-hero-row,.dash-subpage-title-row
+    .page-title-row,.dash-subpage-title-row
   ) h1{font-size:24px!important}
   body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
     .panel-header,.customer-list-head,.gf-directory-head,
-    .orders-list-head,.report-chart-head
-  ){padding:14px 16px}
+    .orders-list-head){padding:14px 16px}
   body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) table:not(.leaflet-control table) :is(th,td){
     padding:10px 12px;
   }

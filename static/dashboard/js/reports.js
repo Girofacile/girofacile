@@ -60,8 +60,8 @@ function toggleReportFilters(forceOpen){
   const shouldOpen = typeof forceOpen === "boolean" ? forceOpen : panel.classList.contains("hidden");
   panel.classList.toggle("hidden", !shouldOpen);
   if(btn){
-    btn.classList.toggle("open", shouldOpen);
-    btn.innerHTML = `<span class="filter-icon-v40">${shouldOpen ? '⌃' : '⌄'}</span> ${shouldOpen ? 'Nascondi filtri' : 'Mostra filtri'}`;
+    btn.setAttribute("aria-expanded", String(shouldOpen));
+    btn.textContent = `${shouldOpen ? '⌃' : '⌄'} ${shouldOpen ? 'Nascondi filtri' : 'Mostra filtri'}`;
   }
 }
 
@@ -119,7 +119,7 @@ function renderReportMetrics(m){
 }
 
 function chartEmpty(id, text="Nessun dato disponibile"){
-  const el=document.getElementById(id); if(el) el.innerHTML = `<div class="report-chart-empty">${esc(text)}</div>`;
+  const el=document.getElementById(id); if(el) el.innerHTML = `<div class="gf-empty"><p>${esc(text)}</p></div>`;
 }
 
 function compactDateLabel(value){
@@ -130,24 +130,19 @@ function compactDateLabel(value){
 
 function reportSinglePointCard(id, row, mode){
   const el=document.getElementById(id); if(!el) return;
+  const item=(label,value)=>`<div class="gf-details__item"><dt>${label}</dt><dd><strong>${value}</strong></dd></div>`;
   if(mode === "trend"){
-    el.innerHTML = `<div class="report-single-chart">
-      <div class="single-date">${esc(compactDateLabel(row.data))}</div>
-      <div class="single-values">
-        <div><span class="dot blue"></span><small>Consegne</small><strong>${fmtNumber(row.consegne || 0)}</strong></div>
-        <div><span class="dot purple"></span><small>Km pianificati</small><strong>${fmtNumber(row.km || 0,2)} km</strong></div>
-      </div>
-      <p>Nel periodo selezionato è presente un solo giorno con dati. Il grafico andamento completo apparirà con più giornate.</p>
+    el.innerHTML = `<div class="gf-stack">
+      <p class="gf-kicker">${esc(compactDateLabel(row.data))}</p>
+      <dl class="gf-details">${item("Consegne", fmtNumber(row.consegne || 0))}${item("Km pianificati", fmtNumber(row.km || 0,2) + " km")}</dl>
+      <p class="gf-muted">Nel periodo selezionato è presente un solo giorno con dati. Il grafico andamento completo apparirà con più giornate.</p>
     </div>`;
     return;
   }
-  el.innerHTML = `<div class="report-single-chart fuel">
-    <div class="single-date">${esc(compactDateLabel(row.data))}</div>
-    <div class="single-fuel-box">
-      <small>Costo carburante stimato</small>
-      <strong>${fmtMoney(row.costo || 0)}</strong>
-    </div>
-    <p>Con più giorni nel filtro verrà mostrato il confronto a colonne.</p>
+  el.innerHTML = `<div class="gf-stack">
+    <p class="gf-kicker">${esc(compactDateLabel(row.data))}</p>
+    <dl class="gf-details">${item("Costo carburante stimato", fmtMoney(row.costo || 0))}</dl>
+    <p class="gf-muted">Con più giorni nel filtro verrà mostrato il confronto a colonne.</p>
   </div>`;
 }
 
@@ -255,10 +250,10 @@ function svgHorizontalBars(id, rows, key="consegne", suffix=""){
   rows=(rows||[]).slice(0,7);
   if(!rows.length){ chartEmpty(id); return; }
   const max=Math.max(1,...rows.map(r=>Number(r[key])||0));
-  el.innerHTML = `<div class="report-hbars">${rows.map(r=>{
-    const val=Number(r[key])||0, pct=Math.max(2, val/max*100);
-    return `<div class="report-hbar-row"><span>${esc(r.nome)}</span><div class="report-hbar-track"><b style="width:${pct}%"></b></div><strong>${fmtNumber(val, key==='costo'?2:0)}${suffix}</strong></div>`;
-  }).join("")}</div>`;
+  el.innerHTML = `<ul class="gf-bar-chart">${rows.map(r=>{
+    const val=Number(r[key])||0, pct=Math.max(5, Math.round(val/max*20)*5);
+    return `<li class="gf-bar-chart__row"><span class="gf-bar-chart__label">${esc(r.nome)}</span><span class="gf-bar-chart__track"><span class="gf-bar-chart__fill" data-gf-width="${pct}"></span></span><span class="gf-bar-chart__value">${fmtNumber(val, key==='costo'?2:0)}${suffix}</span></li>`;
+  }).join("")}</ul>`;
 }
 
 function renderReportCharts(charts){
@@ -285,21 +280,21 @@ function renderReportTables(){
   const s=reportSort.drivers || {key:"consegne", dir:-1};
   drivers.sort((a,b)=>((a[s.key]>b[s.key])?1:-1)*s.dir);
   const driverBody=document.getElementById("reportDriversBody");
-  if(driverBody) driverBody.innerHTML=drivers.map(r=>`<tr><td><strong>${esc(r.nome)}</strong></td><td>${r.giri}</td><td>${r.consegne}</td><td>${fmtNumber(r.km,2)}</td><td>${fmtNumber(r.ore,2)}</td><td>${fmtMoney(r.costo)}</td><td>${fmtNumber(r.consegne_per_giro,2)}</td></tr>`).join("") || `<tr><td colspan="7">Nessun dato</td></tr>`;
+  if(driverBody) driverBody.innerHTML=drivers.map(r=>`<tr><td data-label="Autista"><strong>${esc(r.nome)}</strong></td><td data-label="Giri">${r.giri}</td><td data-label="Consegne">${r.consegne}</td><td data-label="Km">${fmtNumber(r.km,2)}</td><td data-label="Ore">${fmtNumber(r.ore,2)}</td><td data-label="Costo">${fmtMoney(r.costo)}</td><td data-label="Consegne/giro">${fmtNumber(r.consegne_per_giro,2)}</td></tr>`).join("") || `<tr><td colspan="7"><div class="gf-empty"><p>Nessun dato</p></div></td></tr>`;
 
   const agentBody=document.getElementById("reportAgentsBody");
   const agents=t.agenti||[];
-  if(agentBody) agentBody.innerHTML=agents.map(r=>`<tr><td><strong>${esc(r.nome)}</strong></td><td>${r.giri}</td><td>${r.consegne}</td><td>${fmtNumber(r.km,2)}</td><td>${fmtMoney(r.costo)}</td><td>${fmtNumber(r.consegne_per_giro,2)}</td></tr>`).join("") || `<tr><td colspan="6">Nessun dato</td></tr>`;
+  if(agentBody) agentBody.innerHTML=agents.map(r=>`<tr><td data-label="Agente"><strong>${esc(r.nome)}</strong></td><td data-label="Giri">${r.giri}</td><td data-label="Consegne">${r.consegne}</td><td data-label="Km">${fmtNumber(r.km,2)}</td><td data-label="Costo">${fmtMoney(r.costo)}</td><td data-label="Consegne/giro">${fmtNumber(r.consegne_per_giro,2)}</td></tr>`).join("") || `<tr><td colspan="6"><div class="gf-empty"><p>Nessun dato</p></div></td></tr>`;
 
   const customerQ=(document.getElementById("reportCustomersSearch")?.value || "").toLowerCase();
   const customerBody=document.getElementById("reportCustomersBody");
   const customers=(t.clienti||[]).filter(r=>!customerQ || String(r.nome||"").toLowerCase().includes(customerQ)).slice(0,80);
-  if(customerBody) customerBody.innerHTML=customers.map(r=>`<tr><td><strong>${esc(r.nome||"Cliente")}</strong></td><td>${r.consegne}</td><td>${r.giri}</td><td>${fmtNumber(r.km_tappe,2)} km</td></tr>`).join("") || `<tr><td colspan="4">Nessun cliente trovato</td></tr>`;
+  if(customerBody) customerBody.innerHTML=customers.map(r=>`<tr><td data-label="Cliente"><strong>${esc(r.nome||"Cliente")}</strong></td><td data-label="Consegne">${r.consegne}</td><td data-label="Giri">${r.giri}</td><td data-label="Km tappe">${fmtNumber(r.km_tappe,2)} km</td></tr>`).join("") || `<tr><td colspan="4"><div class="gf-empty"><p>Nessun cliente trovato</p></div></td></tr>`;
 }
 
 function renderReportInsights(rows){
   const el=document.getElementById("reportInsights"); if(!el) return;
-  el.innerHTML=(rows||[]).map((x,i)=>`<div class="report-insight"><span class="report-insight-icon i${i}">✦</span><div><strong>${esc(x.titolo)}</strong><p>${esc(x.testo)}</p></div></div>`).join("") || `<div class="dash-empty">Nessun insight disponibile.</div>`;
+  el.innerHTML=(rows||[]).map(x=>`<div class="gf-alert" data-status="info"><div class="gf-alert__body"><strong class="gf-alert__title">${esc(x.titolo)}</strong><p>${esc(x.testo)}</p></div></div>`).join("") || `<div class="gf-empty"><p>Nessun insight disponibile.</p></div>`;
 }
 
 function exportReportCsv(){
