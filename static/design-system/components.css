@@ -208,7 +208,7 @@ body[data-gf-surface] .gf-table [class*="row-actions"] .gf-button {
    ======================================================================== */
 
 /* --- Disposizione: pile, gruppi e griglie -------------------------------- */
-body[data-gf-surface] .gf-stack{display:grid;gap:var(--gf-space-4);min-width:0}
+body[data-gf-surface] .gf-stack{display:grid;align-content:start;gap:var(--gf-space-4);min-width:0}
 body[data-gf-surface] .gf-stack[data-gap="sm"]{gap:var(--gf-space-2)}
 body[data-gf-surface] .gf-stack[data-gap="lg"]{gap:var(--gf-gap-layout)}
 body[data-gf-surface] .gf-cluster{display:flex;flex-wrap:wrap;align-items:center;gap:var(--gf-space-3);min-width:0}

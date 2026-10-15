@@ -4761,7 +4761,7 @@ function renderOnboardingStatus(data){
   const badge = document.getElementById("companyConfiguredBadge");
   const guideBtn = document.getElementById("showOnboardingBtn");
   const done = !!data.completed;
-  if(layout) layout.classList.toggle("company-completed-v40", done);
+  layout?.querySelector("[data-onboarding-card]")?.classList.toggle("hidden", done);
   if(badge) badge.classList.toggle("hidden", !done);
   if(guideBtn) guideBtn.classList.toggle("hidden", done);
 }

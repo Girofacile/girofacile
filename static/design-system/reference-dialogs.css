@@ -105,8 +105,7 @@ body[data-gf-surface="workspace"] :is(
   #deliveryDetailsOverlay,#orderModal) :is(
   .delivery-modal-section,
   .order-modal-card,
-  .agent-form-section,.onboarding-card-v29
-){
+  .agent-form-section){
   border-color:var(--gf-color-border)!important;
   border-radius:12px!important;
   background:var(--gf-color-surface)!important;
@@ -129,9 +128,7 @@ body[data-gf-surface="workspace"] :is(
 body[data-gf-surface="workspace"] :is(
   #customerOverlay,#customerImportOverlay,
   #deliveryDetailsOverlay,#orderModal) :is(
-  .delivery-modal-section-title,.order-modal-section-icon,
-  .company-section-icon
-)>span:first-child{
+  .delivery-modal-section-title,.order-modal-section-icon)>span:first-child{
   background:var(--gf-color-info-bg)!important;
   color:var(--gf-color-info)!important;
   border-radius:10px!important;
@@ -152,7 +149,7 @@ body[data-gf-surface="workspace"] :is(
 /* 5. Testo, label e input dei popup; nessun intervento su checkbox o upload file. */
 body[data-gf-surface="workspace"] :is(#customerOverlay,#customerImportOverlay,
   #deliveryDetailsOverlay,#orderModal,
-  #customerDetailsDialog) :is(label,.gf-field label,.company-field label){
+  #customerDetailsDialog) :is(label,.gf-field label){
   font:600 13px/1.4 var(--gf-font-family);
   color:var(--gf-color-text);
   letter-spacing:0;

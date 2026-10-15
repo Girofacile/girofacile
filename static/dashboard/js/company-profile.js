@@ -1,4 +1,4 @@
-/* Company profile reference restyle: keep all existing field IDs, handlers and API calls. */
+/* Profilo azienda: anteprima tracking, colore di prova, completamento e indirizzi uguali alla sede. */
 (function () {
   'use strict';
   const byId = id => document.getElementById(id);
@@ -15,42 +15,15 @@
   function init() {
     const tab=byId('tab-company'), root=byId('companyLayoutV29');
     if(!tab || !root || root.dataset.refInitialized) return;
-    const grid=el(root,'.company-profile-grid'), cards=[...grid.querySelectorAll(':scope > .company-card-v29')];
-    const onboarding=el(root,'.onboarding-card-v29');
-    if(cards.length!==5 || !onboarding) return;
     root.dataset.refInitialized='1';
-    root.classList.add('gf-ref-profile');
-    const hero=document.createElement('section');
-    hero.className='gf-ref-hero';
-    hero.setAttribute('aria-label','Identità e anteprima aziendale');
-    hero.innerHTML='<div class="gf-ref-identity">'+
-      '<div class="gf-ref-banner" aria-hidden="true"><svg viewBox="0 0 800 132" preserveAspectRatio="xMidYMid slice"><path d="M-20 100 C100 30 190 120 320 70 S520 10 640 78 S760 50 830 22" fill="none" stroke="#fff" stroke-opacity=".38" stroke-width="3" stroke-linecap="round" stroke-dasharray="2 9"/><g fill="#fff" fill-opacity=".8"><circle cx="150" cy="82" r="5"/><circle cx="320" cy="70" r="5"/><circle cx="470" cy="38" r="5"/><circle cx="640" cy="78" r="5"/></g></svg></div>'+
-      '<div class="gf-ref-logo-row"><div class="gf-ref-logo-host"></div><div class="gf-ref-logo-actions"></div></div>'+
-      '<div class="gf-ref-company-copy"><h2 id="gfRefName">Nome azienda</h2><p id="gfRefDescription"></p><div id="gfRefFacts" class="gf-ref-facts"></div></div>'+
-      '<div class="gf-ref-brand-controls"><div><strong>Colore del brand</strong><small>Anteprima locale del colore: non cambia il tracking pubblicato</small></div><div id="gfRefColors" class="gf-ref-swatches" role="group" aria-label="Colore di anteprima"></div></div>'+
-    '</div><div class="gf-ref-preview"><h2>Anteprima per i tuoi clienti</h2><p>Simulazione del tracking. Nome e logo seguono i dati del profilo.</p>'+
-      '<div class="gf-ref-phone"><div class="gf-ref-phone-head"><span id="gfRefPhoneLogo" class="gf-ref-phone-logo"></span><b id="gfRefPhoneName"></b></div>'+
-      '<div class="gf-ref-phone-body"><small>Ordine di esempio</small><h3>È in consegna</h3><div class="gf-ref-eta"><span>Arrivo previsto</span><strong>16:20</strong></div>'+
-      '<ol class="gf-ref-steps"><li class="done">Ordine preparato</li><li class="current">In viaggio verso di te</li><li>Consegnato</li></ol>'+
-      '<div class="gf-ref-tracking-button">Segui l’autista</div></div></div></div>';
-    root.insertBefore(hero,grid);
-
-    const row=el(cards[0],'.company-logo-row-v29');
-    const logo=byId('companyLogoPreview');
-    el(hero,'.gf-ref-logo-host').appendChild(logo);
-    const actions=el(hero,'.gf-ref-logo-actions');
-    [...row.children].forEach(child => {
-      if(child.contains(byId('companyLogoUrl')) || child.querySelector('input[type=file]')) actions.appendChild(child);
-    });
-    const clear=document.createElement('button');clear.type='button';clear.className='gf-ref-logo-remove';
-    clear.textContent='Rimuovi logo';actions.appendChild(clear);
+    const logo=byId('companyLogoPreview'), clear=byId('companyLogoRemoveBtn');
     clear.addEventListener('click',()=>{
       const hidden=byId('companyLogoUrl');hidden.value='';
       hidden.dispatchEvent(new Event('input',{bubbles:true}));
       if(typeof setCompanyLogoPreview==='function') setCompanyLogoPreview();
       sync();
     });
-    const fileInput=el(actions,'input[type=file]');
+    const fileInput=byId('companyLogoFile');
     if(fileInput) fileInput.addEventListener('change',()=>{
       setTimeout(()=>{
         if(typeof updateCompanyProfileDirtyStateV29==='function')updateCompanyProfileDirtyStateV29();
@@ -62,46 +35,17 @@
       if(typeof updateCompanyProfileDirtyStateV29==='function')updateCompanyProfileDirtyStateV29();
     }).observe(logo,{childList:true,characterData:true,subtree:true});
 
-    const details=document.createElement('div');details.className='gf-ref-details';
-    const stack=document.createElement('div');stack.className='gf-ref-stack';
-    const rail=document.createElement('aside');rail.className='gf-ref-rail';
-    details.append(stack,rail);
-    root.insertBefore(details,grid);
-    const names=['Identità','Contatti e sede','Dati fiscali','Operatività','Indirizzi legali e fatturazione'];
-    const help=['Come si presenta la tua azienda ai clienti e agli autisti.','Recapiti e sede della tua azienda.','Informazioni fiscali e codice azienda.','Dimensioni della tua attività.','Indica indirizzi differenti dalla sede aziendale.'];
-    ['company','phone','doc','truck','pin'].forEach((name,i)=>{
-      const card=cards[i],heading=el(card,'.company-section-heading'),body=document.createElement('div');
-      body.className='gf-ref-section-body';
-      [...card.children].forEach(node=>{if(node!==heading)body.appendChild(node);});
-      card.append(body);stack.appendChild(card);
-      el(heading,'.company-section-icon').innerHTML=svg(icons[name]);
-      el(heading,'h2').textContent=names[i];el(heading,'p').textContent=help[i];
-    });
-    // Match the reference's identity section: description alongside the company name.
-    const description=el(cards[3],'.company-description');
-    if(description)el(cards[0],'.gf-ref-section-body').appendChild(description);
-
-    rail.innerHTML='<section class="gf-ref-completion"><div class="gf-ref-progress-head">'+
-      '<div class="gf-ref-ring"><svg viewBox="0 0 84 84"><circle class="track" cx="42" cy="42" r="36"/><circle class="meter" id="gfRefMeter" cx="42" cy="42" r="36"/></svg><strong id="gfRefPercent">0%</strong></div>'+
-      '<div><h2>Completamento del profilo</h2><p id="gfRefMissingTitle"></p></div></div><div id="gfRefTodo" class="gf-ref-todo"></div></section>';
-    rail.appendChild(onboarding);
-    grid.remove();
-
-    const legal=el(cards[4],'.gf-ref-section-body'), legalInput=byId('companyLegalAddressInput'), billInput=byId('companyBillingAddressInput');
-    const same=document.createElement('label');same.className='gf-ref-same-address';
-    same.innerHTML='<span><b>Uguali alla sede aziendale</b><small>Usa la sede come indirizzo legale e di fatturazione</small></span><input id="gfRefSame" type="checkbox" role="switch">';
-    legal.prepend(same);
+    const fields=byId('companyAddressFields'), legalInput=byId('companyLegalAddressInput'), billInput=byId('companyBillingAddressInput'), same=byId('gfRefSame');
     function syncSame(){
       const yes=!legalInput.value.trim()&&!billInput.value.trim();
-      byId('gfRefSame').checked=yes;legal.classList.toggle('gf-ref-same-on',yes);
+      same.checked=yes;fields.hidden=yes;
     }
-    same.querySelector('input').addEventListener('change',e=>{
+    same.addEventListener('change',e=>{
       if(e.target.checked&&(legalInput.value||billInput.value)&&!confirm('Usare la sede? Gli indirizzi differenti saranno svuotati dopo il salvataggio.')){e.target.checked=false;return;}
       if(e.target.checked)[legalInput,billInput].forEach(input=>{input.value='';input.dispatchEvent(new Event('input',{bubbles:true}));});
-      legal.classList.toggle('gf-ref-same-on',e.target.checked);
+      fields.hidden=e.target.checked;
     });
     [legalInput,billInput].forEach(x=>x.addEventListener('input',syncSame));
-
     const colors=['#1F5BFF','#0B8A7C','#7B4FE0','#C2255C','#D9480F','#2B8A3E','#1F2A44'];
     const swatches=byId('gfRefColors');
     function selectColor(c){
@@ -145,15 +89,15 @@
       });
       const missing=required.filter(([id])=>!val(id)),pct=Math.round((required.length-missing.length)*100/required.length);
       byId('gfRefPercent').textContent=pct+'%';
-      byId('gfRefMeter').style.strokeDashoffset=String(2*Math.PI*36*(1-pct/100));
+      byId('gfRefMeter').dataset.gfWidth=String(Math.round(pct/5)*5);
       byId('gfRefMissingTitle').textContent=missing.length?'Mancano '+missing.length+' '+(missing.length===1?'elemento':'elementi')+'.':'Dati principali completi.';
       const todo=byId('gfRefTodo');todo.replaceChildren();
       missing.forEach(([id,label])=>{
-        const b=document.createElement('button');b.type='button';b.textContent=label+'  ›';
+        const b=document.createElement('button');b.type='button';b.className='gf-list-item';b.textContent=label+'  ›';
         b.addEventListener('click',()=>{byId(id).scrollIntoView({behavior:'smooth',block:'center'});byId(id).focus({preventScroll:true});});
         todo.append(b);
       });
-      if(!missing.length){const p=document.createElement('p');p.textContent='✓ Il profilo contiene tutti i dati principali.';todo.append(p);}
+      if(!missing.length){const p=document.createElement('p');p.className='gf-muted';p.textContent='✓ Il profilo contiene tutti i dati principali.';todo.append(p);}
       clear.hidden=!val('companyLogoUrl');syncSame();
     }
     tab.addEventListener('input',sync);tab.addEventListener('change',sync);

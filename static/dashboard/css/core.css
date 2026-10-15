@@ -2194,42 +2194,6 @@ body.admin-mode .side-nav .nav-item.active{
 #forgotBox{display:block;}
 
 /* v29 - Profilo azienda + onboarding iniziale */
-.company-layout-v29{
-  display:grid;
-  grid-template-columns:minmax(0,1.45fr) minmax(320px,.85fr);
-  gap:18px;
-  align-items:start;
-}
-.company-card-v29,.onboarding-card-v29{
-  background:#fff;
-  border:1px solid rgba(15,23,42,.08);
-  border-radius:22px;
-  box-shadow:0 18px 50px rgba(15,23,42,.06);
-  padding:22px;
-}
-.company-logo-row-v29{
-  display:flex;
-  align-items:center;
-  gap:16px;
-  padding:16px;
-  border-radius:18px;
-  background:linear-gradient(135deg,#f8fafc,#eef2ff);
-  border:1px solid rgba(37,99,235,.10);
-  margin:16px 0 20px;
-}
-.company-logo-preview-v29{
-  width:78px;height:78px;border-radius:22px;
-  display:flex;align-items:center;justify-content:center;
-  background:#fff;color:#2563eb;font-size:22px;font-weight:900;
-  border:1px solid rgba(37,99,235,.18);overflow:hidden;
-  box-shadow:0 12px 28px rgba(37,99,235,.10);
-}
-.company-logo-preview-v29 img{width:100%;height:100%;object-fit:cover;display:block;}
-.file-btn{position:relative;overflow:hidden;display:inline-flex;cursor:pointer;}
-.file-btn input{position:absolute;inset:0;opacity:0;cursor:pointer;}
-.muted-small{font-size:12px;color:#64748b;margin:8px 0 0;}
-@media(max-width:1050px){.company-layout-v29{grid-template-columns:1fr;}.company-logo-row-v29{align-items:flex-start;}}
-@media(max-width:640px){.company-logo-row-v29{flex-direction:column}.company-card-v29,.onboarding-card-v29{padding:16px;border-radius:18px;}}
 
 /* V30 - Notifiche interne */
 
@@ -2245,14 +2209,10 @@ body.admin-mode .side-nav .nav-item.active{
 
 .company-header-actions-v40{display:flex;align-items:center;gap:10px;justify-content:flex-end;flex-wrap:wrap;}
 .company-configured-badge-v40{display:inline-flex;align-items:center;gap:8px;padding:11px 14px;border-radius:14px;background:#dcfce7;border:1px solid #bbf7d0;color:#15803d;font-weight:800;font-size:13px;}
-.company-layout-v29.company-completed-v40{grid-template-columns:1fr;}
-.company-layout-v29.company-completed-v40 .onboarding-card-v29{display:none;}
-.company-layout-v29.company-completed-v40 .company-card-v29{width:100%;}
 
 .btn-primary,.btn-secondary,.btn-light{display:inline-flex;align-items:center;justify-content:center;gap:8px;line-height:1.15;}
 .actions-row,.modal-actions{gap:12px;margin-top:22px;}
 .panel > .actions-row{margin-top:20px;margin-bottom:18px;}
-.company-card-v29 .modal-actions{padding-top:6px;}
 .plan-usage-rowline-v40{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;margin:14px 0 16px;border:1px solid #e5eaf3;border-radius:15px;background:#fff;overflow:hidden;}
 .plan-usage-chip-v40{display:flex;align-items:center;justify-content:center;gap:7px;min-height:48px;padding:10px 8px;color:#334155;font-size:13px;border-right:1px solid #e5eaf3;white-space:nowrap;}
 .plan-usage-chip-v40:last-child{border-right:0;}
@@ -3029,11 +2989,11 @@ body.workspace-empty-v49-active #tab-dashboard > :not(#workspaceEmptyDashboardV4
   body.app-logged-in .page-title-row{align-items:flex-start;gap:14px;margin:4px 0 18px;flex-direction:column}body.app-logged-in .page-title-row h1{font-size:28px;letter-spacing:-.8px;line-height:1.05}body.app-logged-in .page-title-row p{font-size:15px;line-height:1.45;color:#667085}
   body.app-logged-in .page-title-row .btn-primary,body.app-logged-in .page-title-row .btn-secondary,body.app-logged-in .page-title-row .btn-light{width:100%;justify-content:center;min-height:50px;border-radius:16px}
 
-  body.app-logged-in .panel,body.app-logged-in .card,body.app-logged-in .dash-list-card,body.app-logged-in .dash-kpi-card,body.app-logged-in .gf-unified-route-card,body.app-logged-in .company-card-v29,body.app-logged-in .onboarding-card-v29{border-radius:24px!important;box-shadow:0 14px 45px rgba(15,23,42,.07)!important;border-color:#e8edf5!important;background:#fff!important}
+  body.app-logged-in .panel,body.app-logged-in .card,body.app-logged-in .dash-list-card,body.app-logged-in .dash-kpi-card,body.app-logged-in .gf-unified-route-card{border-radius:24px!important;box-shadow:0 14px 45px rgba(15,23,42,.07)!important;border-color:#e8edf5!important;background:#fff!important}
   body.app-logged-in .dash-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;margin-bottom:16px!important}
   body.app-logged-in .dash-kpi-card{min-height:132px!important;padding:16px!important;gap:12px!important;align-items:flex-start!important;flex-direction:column!important}
   body.app-logged-in .dash-kpi-icon{width:56px!important;height:56px!important;border-radius:18px!important;flex:0 0 56px!important}body.app-logged-in .dash-kpi-card strong{font-size:30px!important}body.app-logged-in .dash-kpi-card span{font-size:13px!important;line-height:1.25}body.app-logged-in .dash-kpi-card small{font-size:12px!important;line-height:1.25}
-  body.app-logged-in .dash-board-columns,body.app-logged-in .dash-main-grid,body.app-logged-in .dash-operational-split,body.app-logged-in .route-grid,body.app-logged-in .company-layout-v29{grid-template-columns:1fr!important;gap:16px!important}
+  body.app-logged-in .dash-board-columns,body.app-logged-in .dash-main-grid,body.app-logged-in .dash-operational-split,body.app-logged-in .route-grid{grid-template-columns:1fr!important;gap:16px!important}
   body.app-logged-in .tableWrap,body.app-logged-in .table-wrap{margin-left:-4px;margin-right:-4px;overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:18px}body.app-logged-in table{min-width:680px}
   body.app-logged-in .modal{width:calc(100vw - 20px)!important;max-width:none!important;max-height:calc(100vh - 24px)!important;border-radius:26px!important;margin:12px auto!important}
   body.app-logged-in .modal-overlay{align-items:flex-end!important;padding:0 10px 10px!important}

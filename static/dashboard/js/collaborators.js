@@ -16,14 +16,14 @@
     const collaborator=isCollaborator();
     document.body.classList.toggle('company-collaborator-session',collaborator);
     // Read-only company forms must not create an unsavable dirty draft.
-    document.querySelectorAll('#tab-company .company-card-v29 input,#tab-company .company-card-v29 select,#tab-company .company-card-v29 textarea').forEach(el=>{
+    document.querySelectorAll('#companyLayoutV29 input,#companyLayoutV29 select,#companyLayoutV29 textarea').forEach(el=>{
       if(collaborator && !can('company.update')){
         if(!companyDisabled.has(el)) companyDisabled.set(el,el.disabled);
         el.disabled=true;
       }else if(companyDisabled.has(el)){
         el.disabled=companyDisabled.get(el); companyDisabled.delete(el);
       }
-      if(el.type==='file') el.closest('.file-btn')?.setAttribute('aria-disabled',String(el.disabled));
+      if(el.type==='file') el.closest('.gf-upload__button')?.setAttribute('aria-disabled',String(el.disabled));
     });
     const email=document.getElementById('profileEmail'); if(email) email.readOnly=collaborator;
     if(!collaborator){
@@ -69,7 +69,7 @@
         if(pattern.test(code) && !can(key) && !(/^save/.test(code) && can(key.replace('.update','.create')))) denied.add(el);
       }
     });
-    document.querySelectorAll('.company-owner-only,#btnPlanActive,.btn-billing-v63,#showOnboardingBtn,.onboarding-card-v29').forEach(el=>denied.add(el));
+    document.querySelectorAll('.company-owner-only,#btnPlanActive,.btn-billing-v63,#showOnboardingBtn,[data-onboarding-card]').forEach(el=>denied.add(el));
     const plan=document.querySelector('#profileOverlay .profile-plan-section');
     if(plan) denied.add(plan);
     // Recompute visibility, including newly granted actions and owner login switches.

@@ -66,8 +66,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .panel-subtitle,.customer-list-head p,.gf-directory-head p,
-  .muted,.muted-small
-){
+  .muted){
   color:var(--gf-color-muted)!important;
   font-family:var(--gf-font-family);
 }
@@ -76,7 +75,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .panel,.card,.gf-card,.gf-directory-panel,.customer-list-panel-v8,.orders-list-panel,.orders-filter-panel,.orders-source-panel,
   .orders-source-card,.orders-order-card,
-  .customer-card,.company-card-v29,.onboarding-card-v29,.dash-sub-card,.dash-sub-route-picker,
+  .customer-card,.dash-sub-card,.dash-sub-route-picker,
   .scheduled-overview,.scheduled-stops,.scheduled-summary,.completed-picker,
   .completed-stops,.completed-summary,.live-design-card,.live-design-picker,
   .route-map-panel-v74,.planning-setup-panel){
@@ -92,17 +91,14 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(.customer-ca
   border-color:#c2d0e7!important;
   box-shadow:0 4px 18px rgba(15,34,80,.09)!important;
 }
-body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .company-section-heading,.customer-card-heading,.order-source-panel-head){
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(.customer-card-heading,.order-source-panel-head){
   border-color:var(--gf-color-border)!important;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .company-section-heading,.company-section-heading h2,
   .orders-source-card h3){
   color:var(--gf-color-text);
 }
-body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .company-section-icon,.gf-directory-metric-icon){
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(.gf-directory-metric-icon){
   border-radius:10px!important;
   background:var(--gf-color-info-bg)!important;
   color:var(--gf-color-info)!important;
@@ -338,7 +334,6 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(.gf-plate,.v
 /* 7. Campi: manteniamo gli stati validazione, file, mappa e i custom input. */
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .gf-input,.gf-select,.gf-textarea,
-  .company-field input,.company-field select,.company-field textarea,
   .gf-field input,.gf-field select,.gf-field textarea,
   .orders-filter-grid input,.orders-filter-grid select,
   .orders-form-grid input,.orders-form-grid select,.orders-form-grid textarea
@@ -356,7 +351,6 @@ body[data-gf-surface="workspace"] :is(
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .gf-input,.gf-select,.gf-textarea,
-  .company-field input,.company-field select,.company-field textarea,
   .gf-field input,.gf-field select,.gf-field textarea
 ):focus,
 body[data-gf-surface="workspace"] :is(
@@ -366,8 +360,7 @@ body[data-gf-surface="workspace"] :is(
   outline:0;
   box-shadow:var(--gf-focus-ring)!important;
 }
-body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .company-field label,.gf-field label,
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(.gf-field label,
   .orders-form-grid label){
   color:var(--gf-color-text);
   font:600 13px/1.45 var(--gf-font-family);
@@ -413,15 +406,6 @@ body[data-gf-surface="workspace"] #app #tab-ordini :is(.orders-list-toolbar,.ord
 }
 body[data-gf-surface="workspace"] #app #tab-ordini :is(.orders-metric-card,.orders-source-option){
   border-radius:16px!important;
-}
-body[data-gf-surface="workspace"] #app #tab-company .company-profile-grid{
-  gap:22px!important;
-}
-body[data-gf-surface="workspace"] #app #tab-company .company-card-v29{
-  padding:20px!important;
-}
-body[data-gf-surface="workspace"] #app #tab-company .company-section-heading h2{
-  font:700 16px/1.2 var(--gf-font-display)!important;
 }
 body[data-gf-surface="workspace"] #app #tab-giro .plan-step,
 body[data-gf-surface="workspace"] #app #tab-ordini-collegamenti .orders-source-option{

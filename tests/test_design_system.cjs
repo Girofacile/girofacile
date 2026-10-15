@@ -182,13 +182,14 @@ test('company profile uses the workspace topbar and keeps billing addresses alwa
   const html=read('static/dashboard/index.html');
   assert.match(html,/id="workspacePageTitle">Buongiorno<\/h1>/);
   assert.match(html,/id="workspacePageSubtitle"/);
-  assert.match(html,/id="companyTopbarStatus" class="company-topbar-status"/);
+  // Lo stato del profilo vive nell'intestazione condivisa e compare solo su Azienda.
+  assert.match(html,/id="companyTopbarStatus" class="gf-cluster gf-hidden" data-show-on-tabs="company"/);
   assert.equal((html.match(/id="companyConfiguredBadge"/g)||[]).length,1);
   assert.equal((html.match(/id="showOnboardingBtn"/g)||[]).length,1);
   const company=html.slice(html.indexOf('<section id="tab-company"'),html.indexOf('<section id="tab-dashboard"'));
   assert.doesNotMatch(company,/<div class="dash-hero-row">/);
-  assert.doesNotMatch(company,/<details class="company-address-details"/);
-  assert.match(company,/<section class="card company-card-v29 company-address-details"[^>]*aria-labelledby="companyAddressesTitle"/);
+  assert.doesNotMatch(company,/<details[^>]*companyAddressesTitle/);
+  assert.match(company,/<section class="gf-panel" aria-labelledby="companyAddressesTitle"/);
   assert.match(company,/id="companyLegalAddressInput"/);
   assert.match(company,/id="companyBillingAddressInput"/);
 
@@ -202,21 +203,9 @@ test('company profile uses the workspace topbar and keeps billing addresses alwa
   assert.match(navigation,/classList\.toggle\("gf-company-page-active",company\)/);
   assert.match(navigation,/syncWorkspaceTopbar\(name\)/);
 
-  const layoutCss=read(assets+'layout.css');
-  const companyHeader=ruleDeclarations(layoutCss,'body[data-gf-surface="workspace"] #app:has(#tab-company:not(.hidden)) .topbar-dashboard-title');
-  assert.match(companyHeader,/\bdisplay\s*:\s*block\b/);
-  assert.match(companyHeader,/\bmin-width\s*:\s*0\b/);
-
-  const companyCss=read('static/dashboard/css/company.css');
-  assert.match(companyCss,/body:has\(#tab-company:not\(\.hidden\)\) \.topbar\s*\{[^}]*background: var\(--gf-color-surface/);
-  assert.match(companyCss,/body\.gf-company-page-active \.topbar-new-route\s*\{\s*display: none !important/);
-  assert.match(companyCss,/\.company-topbar-status \{ display: none/);
-  assert.doesNotMatch(companyCss,/company-address-details summary/);
-
-  const workspace=read(assets+'workspace.css');
-  const innerSurface=workspace.slice(workspace.indexOf('.company-logo-row-v29'),workspace.indexOf('){',workspace.indexOf('.company-logo-row-v29')));
-  assert.doesNotMatch(innerSurface,/company-address-details/);
-  assert.match(workspace,/#app \.company-configured-badge-v40/);
+  // Il titolo è nell'intestazione condivisa; il pulsante "Nuovo giro" non compare su Azienda.
+  assert.match(html,/id="companySaveBar" class="gf-savebar hidden"/);
+  assert.match(html,/topbar-new-route" data-variant="primary" data-show-on-tabs="dashboard"/);
 });
 
 
@@ -418,24 +407,17 @@ test('account password UI stays compact and uses shared visual tokens',()=>{
 
 
 test('company profile visually follows the dashboard panel language',()=>{
-  const company=read('static/dashboard/css/company.css');
-  assert.match(company,/\.company-card-v29\s*\{[\s\S]*border: 1px solid var\(--gf-color-border/);
-  assert.doesNotMatch(company,/border-top:\s*3px solid/);
-  assert.match(company,/\.company-section-heading\s*\{[\s\S]*background: var\(--gf-color-nav/);
-  assert.match(company,/\.company-section-heading h2[^\{]*\{[\s\S]*color: var\(--gf-color-on-primary/);
-  assert.match(company,/\.company-section-heading p[^\{]*\{[\s\S]*color: var\(--gf-color-nav-text/);
-  assert.match(company,/\.company-section-icon\s*\{[\s\S]*border: 1px solid rgba\(255,255,255,\.18\)[\s\S]*background: rgba\(255,255,255,\.07\)[\s\S]*color: var\(--gf-color-nav-text/);
-  assert.match(company,/\.company-logo-row-v29\s*\{[\s\S]*background: var\(--gf-color-surface/);
-  assert.match(company,/\.company-profile-grid\s*\{[\s\S]*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\);[\s\S]*gap: 24px/);
-  assert.match(company,/\.company-field input,[\s\S]*min-height: var\(--gf-control-height[\s\S]*border: 1px solid var\(--gf-color-border/);
-  assert.doesNotMatch(company,/#0665ff|#eaf2ff|linear-gradient\(115deg, #f7faff, #f0f5ff\)/);
-
-  const workspace=read(assets+'workspace.css');
-  assert.match(workspace,/Company profile uses the same restrained panel language as the dashboard/);
-  assert.match(workspace,/#tab-company \.company-section-heading\{[\s\S]*background:var\(--gf-color-nav\)/);
-  assert.match(workspace,/#tab-company \.company-section-icon\{[\s\S]*background:rgba\(255,255,255,\.07\);[\s\S]*color:var\(--gf-color-nav-text\)/);
-  assert.match(workspace,/#tab-company \.company-card-v29\{[\s\S]*border:1px solid var\(--gf-color-border\);/);
-  assert.doesNotMatch(workspace,/#tab-company \.company-card-v29\{[\s\S]*border-top:3px solid/);
+  // Le cinque sezioni del profilo sono pannelli del sistema con icona neutra e campi gf-field.
+  const html=read('static/dashboard/index.html');
+  const company=html.slice(html.indexOf('<section id="tab-company"'),html.indexOf('<section id="tab-dashboard"'));
+  for(const id of ['companyIdentityTitle','companyContactsTitle','companyFiscalTitle','companyOperationsTitle','companyAddressesTitle'])
+    assert.match(company,new RegExp('<section class="gf-panel" aria-labelledby="'+id+'"'),id);
+  assert.equal((company.match(/class="gf-stat-card__icon" data-tone="neutral"/g)||[]).length,5);
+  assert.doesNotMatch(company,/company-card-v29|company-field|style="/);
+  assert.match(company,/class="gf-field" for="companyNameInput"/);
+  const components=read(assets+'components.css');
+  assert.match(components,/\.gf-panel\{[^}]*border:var\(--gf-border\)/);
+  assert.doesNotMatch(read('static/dashboard/js/company-profile.js'),/strokeDashoffset|insertBefore\(hero/);
 });
 
 
