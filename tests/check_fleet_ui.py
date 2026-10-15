@@ -69,19 +69,18 @@ def main():
                 page.evaluate('rows=>{deliveries=rows;renderDeliveries();}',data['consegne'][:6])
                 page.evaluate('optimizeRoute()')
                 page.get_by_role('heading',name='Controlla la suddivisione').wait_for()
-                assert page.locator('[data-stop]').count()==6
+                assert page.locator('[data-fleet-stop]').count()==6
                 assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 2')
                 page.evaluate('window.scrollTo(0,0)');page.screenshot(path=str(output/f'preview-{width}.png'),full_page=True)
-                move=page.locator('[data-stop]').first
-                move.select_option('1' if move.input_value()=='0' else '0')
-                page.locator('[data-action="confirm"]').click()
-                assert 'Ricalcola' in page.locator('#fleetMessage').inner_text()
-                page.locator('[data-action="revise"]').click()
-                page.wait_for_function("document.getElementById('fleetMessage').textContent==='' && !document.querySelector('[data-action=revise]').disabled")
-                page.locator('[data-action="confirm"]').click()
-                page.get_by_role('heading',name='Giri salvati in bozza').wait_for()
-                page.locator('[data-action="program"]').click()
-                page.get_by_role('heading',name='Giri programmati',exact=True).wait_for()
+                # Flusso attuale (dal 13/10): sposta una consegna, conferma l'avviso, ricalcola, poi un solo "Pianifica giri".
+                move=page.locator('[data-fleet-move]').first
+                move.select_option(move.locator('option:not([value=""])').first.get_attribute('value'))
+                page.get_by_role('button',name='Sposta comunque',exact=True).click()
+                assert page.locator('[data-fleet-plan]').is_disabled()
+                page.locator('[data-fleet-recalc]').click()
+                page.wait_for_function("document.getElementById('fleetMessage')?.textContent.includes('Nuove fermate')")
+                page.locator('[data-fleet-plan]').click()
+                page.get_by_text('Giri programmati',exact=True).wait_for()
                 page.locator('[data-open]').first.click()
                 page.wait_for_function("document.getElementById('planningMode').value==='single'")
                 assert page.locator('#singleVehicleField').is_visible()

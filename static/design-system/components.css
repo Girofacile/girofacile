@@ -94,7 +94,9 @@ body[data-gf-surface] .gf-table th { background: var(--gf-color-surface-subtle) 
 body[data-gf-surface] .gf-table tbody tr:hover { background: var(--gf-color-info-bg); }
 body[data-gf-surface] .gf-table tbody tr:last-child td { border-bottom: 0; }
 body[data-gf-surface] .gf-table :is(a,button) { max-width: 100%; }
-body[data-gf-surface] .gf-table td { overflow-wrap: break-word; }
+body[data-gf-surface] .gf-table td { overflow-wrap: anywhere; }
+/* I nomi in grassetto (cliente, giro) non vanno spezzati a metà parola. */
+body[data-gf-surface] .gf-table td :is(strong,b) { overflow-wrap: normal; }
 body[data-gf-surface] .gf-table .gf-badge { white-space: nowrap; }
 body[data-gf-surface] dialog.gf-dialog {
   max-width: min(var(--gf-dialog-width),calc(100vw - var(--gf-space-8)));

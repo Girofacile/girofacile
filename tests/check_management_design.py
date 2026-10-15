@@ -142,35 +142,24 @@ def main():
                         page.evaluate("showTab('route-preview')")
                     page.wait_for_timeout(150)
                     if phase == "after" and name == "dashboard-in-progress":
-                        page.locator("#dashboardInProgressPage .dash-sub-main").wait_for(state="visible")
+                        page.locator("#dashboardInProgressPage [data-ip-picker]").wait_for(state="visible")
                     capture(page, name, width)
                     if name == 'dashboard-in-progress':
+                        # Pagina "Giri in corso" con i componenti: scelta del giro, mappa, indicatori, fermate e chat.
                         live=page.locator('#dashboardInProgressPage')
-                        assert live.locator('.live-design-identity .live-design-card').count() == 5
-                        assert live.locator('.live-design-costs .live-design-card').count() == 6
-                        page.evaluate("window.testGPSHost=document.getElementById('dashboardLiveGPS')")
-                        live.get_by_role('button',name='Espandi mappa',exact=True).click()
-                        popup=page.locator('.live-map-dialog')
-                        assert popup.is_visible()
-                        assert page.evaluate("testGPSHost === document.querySelector('.live-map-dialog #dashboardLiveGPS')")
-                        assert popup.bounding_box()['width'] >= width*.9
-                        assert page.locator('[data-gps-map]').count() == 1
-                        page.screenshot(path=str(output/f'live-map-expanded-{width}.png'),animations='disabled')
-                        page.keyboard.press('Escape')
-                        popup.wait_for(state='detached')
-                        assert live.locator('#dashboardLiveGPS').is_visible()
-                        assert live.get_by_role('button',name='Espandi mappa',exact=True).evaluate('(el)=>el===document.activeElement')
-                        live.get_by_role('button',name='Espandi mappa',exact=True).click()
-                        page.get_by_role('button',name='Chiudi mappa',exact=True).click()
-                        page.locator('.live-map-dialog').wait_for(state='detached')
-                        live.locator('.live-chat-toggle').click()
-                        assert live.locator('.live-design-chat').is_visible()
-                        live.locator('.live-chat-toggle').click()
-                        live.locator('select[aria-label="Filtra fermate per stato"]').select_option('completata')
-                        assert live.locator('.gf-unified-stop-table tbody tr:visible').count() == 0
-                        live.locator('select[aria-label="Filtra fermate per stato"]').select_option('')
-                        assert live.locator('.gf-unified-stop-table tbody tr:visible').count() == 1
-                        interactions.append(f'{width}: live popup reuses map, Escape, close, focus, chat and filter')
+                        assert live.locator('[data-ip-picker] [data-ip-route]').count() >= 1
+                        assert live.locator('dl.gf-details dt').count() == 6
+                        for label in ('Ingrandisci','Riduci','Segui il mezzo'):
+                            assert live.get_by_role('button',name=label,exact=True).count() == 1
+                        live.locator('[data-ip-action="chat"]').click()
+                        assert live.locator('[data-ip-chat]').is_visible()
+                        live.locator('[data-ip-action="chat"]').click()
+                        assert live.locator('[data-ip-chat]').is_hidden()
+                        live.locator('select[aria-label="Filtra fermate per esito"]').select_option('done')
+                        assert live.locator('tr[data-ip-stop]:visible').count() == 0
+                        live.locator('select[aria-label="Filtra fermate per esito"]').select_option('all')
+                        assert live.locator('tr[data-ip-stop]:visible').count() == 1
+                        interactions.append(f'{width}: giro in corso, indicatori, controlli mappa, chat e filtro esiti')
                     if name == 'route-preview':
                         preview=page.locator('#routePreviewResult')
                         assert preview.locator('.gf-routing-costs > div').count() == 3
@@ -256,19 +245,24 @@ def main():
                     assert trigger.get_attribute("aria-expanded") == "false"
                     trigger.click()
                     # The notifications menu overlaps the right-hand KPI in the new header.
-                    page.locator("#tab-dashboard .dash-list-head h2").first.click()
+                    page.locator("#tab-dashboard .gf-panel__title").first.click()
                     assert not page.locator("#notificationDropdown").is_visible()
                     interactions.append(f"{width}: notifications open, Escape and outside close")
-                mobile_menu_button = page.get_by_role("button", name="Apri menu mobile")
+                # Su mobile il menu è la sidebar a scomparsa del layout base condiviso.
+                mobile_menu_button = page.get_by_role("button", name="Apri il menu", exact=True)
                 if mobile_menu_button.is_visible():
                     mobile_menu_button.click()
-                    page.locator("#gfMobileMoreMenuV62").wait_for(state="visible")
+                    page.locator("#gf-shell-sidebar").wait_for(state="visible")
                     page.screenshot(path=str(output / f"mobile-menu-{width}.png"), animations="disabled")
-                    page.locator("#gfMobileMoreMenuV62").get_by_role("button", name="Depositi").click()
+                    page.locator('#gf-shell-sidebar [data-tab="depositi"]').click()
                     assert page.locator("#tab-depositi").is_visible()
-                    assert not page.locator("#gfMobileMoreMenuV62").is_visible()
+                    assert page.locator("[data-gf-shell]").get_attribute("data-gf-shell-open") != "true"
                 if phase == "after":
                     page.evaluate("showTab('company')")
+                    # Indirizzi vuoti: "Uguali alla sede aziendale" è attivo e i campi sono nascosti (come prima).
+                    if page.locator("#gfRefSame").is_checked():
+                        assert page.locator("#companyLegalAddressInput").is_hidden()
+                        page.locator('label[for="gfRefSame"]').click()
                     assert page.locator("#companyLegalAddressInput").is_visible()
                     assert page.locator("#companyBillingAddressInput").is_visible()
                     page.locator("#companyNameInput").fill("Modifica di prova")

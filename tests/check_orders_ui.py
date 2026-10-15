@@ -24,6 +24,16 @@ from app.routers.order_sources import router as sources_router
 from check_management_design import ME,LIMITS,VEHICLES,DRIVERS,DEPOSITS,USAGE
 
 
+def select_ready(page):
+    """Seleziona gli ordini pronti: su desktop con la casella in intestazione, su mobile
+    (tabella a schede, intestazione nascosta) spuntando ogni ordine selezionabile."""
+    box=page.get_by_role('checkbox',name='Seleziona ordini pronti di questa pagina',exact=True)
+    if box.is_visible():
+        box.check();return
+    rows=page.locator('input.order-select:not(.order-select-all):not([disabled])')
+    for i in range(rows.count()):
+        rows.nth(i).check()
+
 def main():
     output=ROOT/'test-results'/'orders-responsive';output.mkdir(parents=True,exist_ok=True)
     with sync_playwright() as pw:
@@ -65,11 +75,10 @@ def main():
                     page.route('**/*',handle)
                     page.goto('http://orders.test/dashboard',wait_until='networkidle')
                     page.evaluate("owner=>{currentSessionUser=owner;showGestionaleAfterLogin();acceptCookieNotice();showTab('dashboard');}",ME)
-                    if page.get_by_role('button',name='Apri menu mobile').is_visible():
-                        page.get_by_role('button',name='Apri menu mobile').click()
-                        page.get_by_role('button',name='▤ Ordini',exact=True).click()
-                    else:
-                        page.locator('button.gf-sidebar__item[data-tab="ordini"]').click()
+                    # Su mobile la voce Ordini è nella sidebar a scomparsa del layout base.
+                    if page.get_by_role('button',name='Apri il menu',exact=True).is_visible():
+                        page.get_by_role('button',name='Apri il menu',exact=True).click()
+                    page.locator('button.gf-sidebar__item[data-tab="ordini"]').click()
                     page.wait_for_function("document.getElementById('ordersMessage').textContent.includes('Nessun ordine')")
                     assert page.locator('#ordersVerifyAll').is_visible()
                     page.locator('#ordersNew').click()
@@ -115,7 +124,7 @@ def main():
                     second=db.get(Order,created['id']);second.status='pronto';second.address_verification=order.address_verification;db.commit()
                     page.evaluate('GFOrders.load()')
                     page.locator('#ordersView-table').click()
-                    page.get_by_role('checkbox',name='Seleziona ordini pronti di questa pagina',exact=True).check()
+                    select_ready(page)
                     page.wait_for_function("document.getElementById('ordersSelectionCount').textContent.startsWith('2 ordini')")
                     page.locator('#ordersGoPlanning').click()
                     page.locator('#orderPlanningBanner').wait_for(state='visible')
@@ -186,7 +195,7 @@ def main():
                     page.get_by_role('button',name='Deseleziona',exact=True).click()
                     page.wait_for_function("document.getElementById('ordersSelectionCount').textContent.startsWith('0 ordini')")
                     page.locator('#ordersView-table').click()
-                    page.get_by_role('checkbox',name='Seleziona ordini pronti di questa pagina',exact=True).check()
+                    select_ready(page)
                     page.wait_for_function("document.getElementById('ordersSelectionCount').textContent.startsWith('1 ordini')")
                     page.once('dialog',lambda dialog:dialog.accept())
                     page.locator('#ordersGoPlanning').click()

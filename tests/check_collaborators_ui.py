@@ -321,15 +321,16 @@ def main():
                     assert page.locator("#settingDeliverySignature").is_enabled()
                     assert not page.locator("#companySaveChangesBtn").evaluate("el => el.classList.contains('collaborator-denied')")
                     if width <= 768:
-                        page.get_by_role("button", name="Apri menu mobile", exact=True).click()
-                        menu = page.locator("#gfMobileMoreMenuV62")
+                        # Su mobile il menu è la sidebar a scomparsa del layout base condiviso.
+                        page.get_by_role("button", name="Apri il menu", exact=True).click()
+                        menu = page.locator("#gf-shell-sidebar")
                         menu.wait_for(state="visible")
-                        assert menu.get_by_role("button", name="⌂ Azienda", exact=True).is_visible()
-                        assert menu.get_by_role("button", name="⚙ Impostazioni", exact=True).is_visible()
-                        assert menu.get_by_role("button", name="♙ Collaboratori", exact=True).is_hidden()
-                        menu.get_by_role("button", name="⚙ Impostazioni", exact=True).click()
+                        assert menu.locator('[data-tab="company"]').is_visible()
+                        assert menu.locator('[data-tab="settings"]').is_visible()
+                        assert menu.locator('[data-tab="collaboratori"]').is_hidden()
+                        menu.locator('[data-tab="settings"]').click()
                         assert page.locator("#tab-settings").is_visible()
-                        assert menu.is_hidden()
+                        assert page.locator("[data-gf-shell]").get_attribute("data-gf-shell-open") != "true"
                     else:
                         assert page.locator('[data-tab="company"]').is_visible()
                         assert page.locator('[data-tab="settings"]').is_visible()
@@ -366,7 +367,7 @@ def main():
                     page.evaluate("showTab('clienti')")
                     page.locator("#tab-clienti").wait_for(state="visible")
                     page.wait_for_timeout(100)
-                    assert page.locator('[onclick="openCustomerModal()"]').is_hidden()
+                    assert page.locator("[onclick=\"openCustomerDrawer(null,'new')\"]:visible").count() == 0
                     assert not page.evaluate("GFCompanyAccess.can('customers.update')")
                     assert not page.evaluate("GFCompanyAccess.allowedTab('settings')")
                     forbidden_areas()
@@ -378,7 +379,7 @@ def main():
                     assert page.locator("#companyNameInput").is_enabled()
                     assert page.locator("#companySizeInput").is_enabled()
                     page.evaluate("showTab('clienti')")
-                    page.locator('[onclick="openCustomerModal()"]').wait_for(state="visible")
+                    page.locator("[onclick=\"openCustomerDrawer(null,'new')\"]").first.wait_for(state="visible")
                     state["requests"].clear()
                     page.evaluate("openProfilePanel()")
                     page.locator("#profileOverlay").wait_for(state="visible")
