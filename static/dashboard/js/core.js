@@ -2886,7 +2886,8 @@ function setCustomerAddressStatus(text, status="muted"){
   const box = document.getElementById("customerAddressVerifyStatus");
   if(!box) return;
   box.textContent = text || "";
-  box.className = `address-verify-status ${status}`;
+  box.className = "gf-alert";
+  box.dataset.status = {ok:"success", warn:"warning", error:"danger", loading:"info"}[status] || "neutral";
 }
 
 function clearCustomerModalGeocode(){

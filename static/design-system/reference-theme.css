@@ -110,7 +110,7 @@ body[data-gf-surface="workspace"] #app :is(.page-title-row h1,.panel-header h2,.
 body[data-gf-surface="workspace"] #app :is(.gf-modal,.gf-dialog,.modal-content,.modal-panel){
   border-radius:16px;border-color:var(--gf-color-border);
 }
-body[data-gf-surface="workspace"] #app :is(.result-table,.customer-table) th{
+body[data-gf-surface="workspace"] #app :is(.result-table) th{
   background:var(--gf-color-surface-subtle);color:var(--gf-color-muted);
 }
 /* Dashboard: strip riassuntivo, percorso + avanzamento, due gruppi da due pannelli. */

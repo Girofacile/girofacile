@@ -845,9 +845,6 @@ select option:disabled{
 }
 
 /* V3.7.8.1 - Agenti */
-#tab-clienti textarea{
-  margin-top:12px;
-}
 
 /* V3.7.8.1 - Report / Analisi dati */
 
@@ -1623,7 +1620,6 @@ body.admin-mode .side-nav .nav-item.active{
 .geo-badge.non_trovato{background:#fef3f2;color:#b42318;border:1px solid #fecdca}
 .geo-badge.manuale{background:#eff8ff;color:#175cd3;border:1px solid #b2ddff}
 .btn-link-small{border:0;background:transparent;color:#175cd3;font-weight:800;font-size:11px;padding:4px 0;cursor:pointer}
-.address-validation-summary{margin-top:12px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:#f8fafc;color:#475467}
 
 /* ---- PLAN SELECTOR (registrazione) ---- */
 .plan-option {
@@ -2002,10 +1998,6 @@ body.admin-mode .side-nav .nav-item.active{
 .left-column{
   width:100%;
 }
-.customer-page-title{
-  align-items:flex-start;
-  gap:16px;
-}
 .page-actions{
   display:flex;
   gap:10px;
@@ -2038,14 +2030,6 @@ body.admin-mode .side-nav .nav-item.active{
 .customer-filters-advanced button{
   height:42px;
 }
-.customer-modal-v8{
-  max-width:920px;
-  max-height:86vh;
-  overflow:auto;
-}
-.customer-import-modal-v8{
-  max-width:640px;
-}
 .modal-kicker{
   color:#2563eb;
   font-weight:900;
@@ -2054,76 +2038,13 @@ body.admin-mode .side-nav .nav-item.active{
   text-transform:uppercase;
   margin-bottom:8px;
 }
-.customer-modal-grid-v8{
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:14px;
-}
-.customer-modal-grid-v8 .span-2{
-  grid-column:1 / -1;
-}
-.customer-modal-grid-v8 label{
-  display:block;
-  font-size:13px;
-  font-weight:800;
-  color:#334155;
-  margin-bottom:6px;
-}
-.customer-modal-grid-v8 input,
-.customer-modal-grid-v8 select,
-.customer-modal-v8 textarea{
-  width:100%;
-  border:1px solid #d1d5db;
-  border-radius:13px;
-  padding:12px 13px;
-  background:#fff;
-  font-weight:650;
-}
-.customer-modal-v8 textarea{
-  min-height:110px;
-  resize:vertical;
-}
-.import-drop-v8{
-  display:grid;
-  gap:10px;
-  padding:20px;
-  border:1px dashed #93c5fd;
-  background:#eff6ff;
-  border-radius:16px;
-}
-.import-drop-v8 strong{font-size:18px;color:#0f172a}
-.import-drop-v8 small{color:#64748b}
-.import-drop-v8 input{background:#fff;border:1px solid #bfdbfe;border-radius:12px;padding:12px}
 @media(max-width:760px){
-  .customer-page-title{flex-direction:column;align-items:stretch}
   .page-actions{width:100%}
   .page-actions button{flex:1}
   .customer-searchbar-v8{grid-template-columns:1fr}
-  .customer-modal-grid-v8{grid-template-columns:1fr}
 }
 
 /* v11 - verifica manuale indirizzo cliente */
-.customer-address-verify-row{
-  margin-top:14px;
-  display:flex;
-  align-items:center;
-  gap:12px;
-  flex-wrap:wrap;
-  padding:12px;
-  border:1px solid #e5e7eb;
-  border-radius:14px;
-  background:#f8fafc;
-}
-.address-verify-status{
-  font-size:13px;
-  font-weight:700;
-  color:#667085;
-}
-.address-verify-status.ok{color:#027a48;}
-.address-verify-status.warn{color:#b54708;}
-.address-verify-status.error{color:#b42318;}
-.address-verify-status.loading{color:#175cd3;}
-.address-verify-status.muted{color:#667085;}
 
 /* Chat autisti - centro comunicazioni */
 .side-chat-badge{

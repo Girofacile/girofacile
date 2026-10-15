@@ -1,5 +1,5 @@
-/* GiroFacile · pagina Clienti (riferimento grafico del 14 ottobre 2026).
-   Ricrea fedelmente il layout di riferimento usando i dati reali e le API
+/* GiroFacile · pagina Clienti.
+   Disposizione del riferimento del 14 ottobre 2026 sui componenti del sistema, con i dati reali e le API
    esistenti: striscia indicatori, elenco/schede, filtri, pannello laterale per
    dettagli, modifica e nuovo cliente, selezione multipla con fascia di scarico. */
 
@@ -26,7 +26,7 @@ const CX_FIELDS = ['agent_id','codice_cliente','nome','indirizzo','comune','prov
   'affidabilita_geocodifica','fonte_geocodifica','google_place_id'];
 const CX_GEO_FIELDS = ['lat','lon','indirizzo_geocodificato','stato_geocodifica','affidabilita_geocodifica','fonte_geocodifica','google_place_id'];
 
-function cxIcon(name){return '<svg class="cx-i" viewBox="0 0 24 24" aria-hidden="true"><path d="'+CX_ICONS[name]+'"/></svg>';}
+function cxIcon(name){return '<svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="'+CX_ICONS[name]+'"/></svg>';}
 function cxEsc(value){return typeof esc==='function'?esc(value==null?'':value):String(value==null?'':value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function cxEl(id){return typeof document!=='undefined'&&document.getElementById?document.getElementById(id):null;}
 function cxVerified(x){return x.stato_geocodifica==='verificato';}
@@ -40,11 +40,6 @@ function cxSlots(x){
 function cxInitials(name){
   const words=String(name||'').split(/\s+/).filter(w=>/^[A-Za-zÀ-ÿ0-9]/.test(w));
   return (((words[0]||'?')[0]||'?')+(words[1]?words[1][0]:'')).toLocaleUpperCase('it');
-}
-function cxColor(x){
-  const key=String(x.codice_cliente||x.id||'');let h=0;
-  for(let i=0;i<key.length;i++)h=(h*31+key.charCodeAt(i))%6;
-  return 'var(--cx-a'+(h+1)+')';
 }
 function cxPlace(x){return [x.comune,x.provincia?'('+x.provincia+')':''].filter(Boolean).join(' ');}
 
@@ -138,48 +133,48 @@ function cxFillPlaceFilters(){
 /* ---------- Render ---------- */
 function customerStatusMarkup(x){
   return cxVerified(x)
-    ? '<span class="cx-chip cx-green">'+cxIcon('check')+'Verificato</span>'
+    ? '<span class="gf-badge" data-status="success">'+cxIcon('check')+'Verificato</span>'
     : x.stato_geocodifica==='non_trovato'
-      ? '<span class="cx-chip cx-red">Non trovato</span>'
-      : '<span class="cx-chip cx-amber">Da verificare</span>';
+      ? '<span class="gf-badge" data-status="danger">Non trovato</span>'
+      : '<span class="gf-badge" data-status="warning">Da verificare</span>';
 }
 function cxSlotMarkup(x){
   const slots=cxSlots(x);
   return slots.length
-    ? '<span class="cx-slot">'+cxIcon('clock')+cxEsc(slots.join(' / '))+'</span>'
-    : '<button type="button" class="cx-slot cx-none" data-cx-slot="'+Number(x.id)+'" title="Imposta la fascia di scarico">Non impostata</button>';
+    ? '<span class="gf-badge" data-status="info">'+cxIcon('clock')+cxEsc(slots.join(' / '))+'</span>'
+    : '<button type="button" class="gf-button" data-variant="link" data-size="sm" data-cx-slot="'+Number(x.id)+'" title="Imposta la fascia di scarico">Non impostata</button>';
 }
 function cxActions(x){
   const id=Number(x.id);
-  return '<div class="cx-acts"><button type="button" class="cx-ibtn" data-cx-edit="'+id+'" title="Modifica" aria-label="Modifica '+cxEsc(x.nome)+'">'+cxIcon('edit')+'</button>'
-    +'<button type="button" class="cx-btn cx-line cx-sm" data-cx-open="'+id+'">'+cxIcon('eye')+'Dettagli</button></div>';
+  return '<div class="gf-cluster"><button type="button" class="gf-icon-button" data-cx-edit="'+id+'" title="Modifica" aria-label="Modifica '+cxEsc(x.nome)+'">'+cxIcon('edit')+'</button>'
+    +'<button type="button" class="gf-button" data-variant="secondary" data-size="sm" data-cx-open="'+id+'">'+cxIcon('eye')+'Dettagli</button></div>';
 }
-function cxAvatar(x,big){
-  return '<span class="cx-av'+(big?' cx-big':'')+'" style="--a:'+cxColor(x)+'" aria-hidden="true">'+cxEsc(x.nome?cxInitials(x.nome):'+')+'</span>';
+function cxAvatar(x){
+  return '<span class="gf-avatar" aria-hidden="true">'+cxEsc(x.nome?cxInitials(x.nome):'+')+'</span>';
 }
 function cxNameCell(x){
-  return '<div class="cx-cl">'+cxAvatar(x)+'<div><b>'+cxEsc(x.nome)+'</b><small>'+cxEsc(x.codice_cliente||'Senza codice')+'</small></div></div>';
+  return '<div class="gf-cluster">'+cxAvatar(x)+'<div><b>'+cxEsc(x.nome)+'</b><br><small class="gf-muted">'+cxEsc(x.codice_cliente||'Senza codice')+'</small></div></div>';
 }
 function cxAddressCell(x){
-  return '<div class="cx-ad"><b>'+cxEsc(x.indirizzo||'—')+'</b><small>'+cxEsc(cxPlace(x)||'Comune non indicato')+'</small></div>';
+  return '<div><b>'+cxEsc(x.indirizzo||'—')+'</b><br><small class="gf-muted">'+cxEsc(cxPlace(x)||'Comune non indicato')+'</small></div>';
 }
 function renderCustomerKpis(){
   const root=cxEl('customerKpis');if(!root)return;
   const all=customerDirectory.all,t=all.length,ver=all.filter(cxVerified).length,un=t-ver,wf=all.filter(cxHasSlot).length;
-  const cell=(quick,label,value,note,warn,bar,feature,id)=>'<button type="button" data-cx-quick="'+quick+'"'+(feature?' data-gf-feature="'+feature+'"':'')+'>'
-    +'<span class="cx-kl">'+label+'</span><span class="cx-kv" id="'+id+'">'+value+'</span><span class="cx-kn'+(warn?' cx-warn':'')+'">'+note+'</span>'
-    +(bar!=null?'<span class="cx-bar2"><i style="width:'+bar+'%"></i></span>':'')+'</button>';
+  const cell=(quick,label,value,note,warn,bar,feature,id)=>'<button type="button" class="gf-stat-strip__cell" data-cx-quick="'+quick+'"'+(feature?' data-gf-feature="'+feature+'"':'')+'>'
+    +'<span class="gf-stat-strip__label">'+label+'</span><strong class="gf-stat-strip__value" id="'+id+'">'+value+'</strong><small class="gf-stat-strip__unit">'+(warn?'<span class="gf-badge" data-status="warning">'+note+'</span>':note)+'</small>'
+    +(bar!=null?'<span class="gf-progress__track"><span class="gf-progress__done" data-gf-width="'+Math.round(bar/5)*5+'"></span></span>':'')+'</button>';
   root.innerHTML=
     cell('all','Totale clienti',t,'Tutti i clienti registrati',false,null,'','customerMetricTotal')+
-    cell('all','Indirizzi verificati',ver+'<small>su '+t+'</small>','Indirizzi con verifica completata',false,null,'','customerMetricVerified')+
+    cell('all','Indirizzi verificati',ver+'<small> su '+t+'</small>','Indirizzi con verifica completata',false,null,'','customerMetricVerified')+
     cell('unverified','Da verificare',un,'Indirizzi ancora da verificare',un>0,null,'','customerMetricPending')+
-    cell('noSlot','Con fascia di scarico',wf+'<small>su '+t+'</small>',wf<t?(t-wf)+' da impostare':'Tutte impostate',wf<t,t?Math.round(wf/t*100):0,'time_windows','customerMetricWithSlot');
+    cell('noSlot','Con fascia di scarico',wf+'<small> su '+t+'</small>',wf<t?(t-wf)+' da impostare':'Tutte impostate',wf<t,t?Math.round(wf/t*100):0,'time_windows','customerMetricWithSlot');
 }
 function renderCustomerQuick(){
   const root=cxEl('customerQuickFilters');
   const all=customerDirectory.all,un=all.filter(x=>!cxVerified(x)).length,nf=all.filter(x=>!cxHasSlot(x)).length;
   const chips=[['all','Tutti',all.length,''],['unverified','Da verificare',un,''],['noSlot','Senza fascia di scarico',nf,'time_windows']];
-  if(root)root.innerHTML=chips.map(([key,label,n,feature])=>'<button type="button" data-cx-quick="'+key+'"'+(feature?' data-gf-feature="'+feature+'"':'')+' aria-pressed="'+(customerDirectory.quick===key)+'">'+label+'<em>'+n+'</em></button>').join('');
+  if(root)root.innerHTML=chips.map(([key,label,n,feature])=>'<button type="button" class="gf-chip" data-cx-quick="'+key+'"'+(feature?' data-gf-feature="'+feature+'"':'')+' aria-pressed="'+(customerDirectory.quick===key)+'">'+label+' <span class="gf-badge" data-status="neutral">'+n+'</span></button>').join('');
   const active=['customerFilterComune','customerFilterProvincia','customerFilterAgent','customerFilterZtl','customerFilterSponda'].filter(k=>cxEl(k)?.value).length;
   const counter=cxEl('customerAdvancedFilterCount');
   if(counter){counter.hidden=!active;counter.textContent=String(active);}
@@ -195,35 +190,35 @@ function renderCustomerDirectory(){
   let html='';
   if(!rows.length){
     const none=!state.all.length;
-    html='<div class="cx-empty customer-empty"><b>'+(none?'Nessun cliente registrato':'Nessun cliente trovato')+'</b>'
-      +(none?'Aggiungi il primo cliente oppure importa un file CSV/Excel.':'Prova a cambiare la ricerca o i filtri.')+'<br>'
-      +(none?'<button type="button" class="cx-btn cx-sm" onclick="openCustomerDrawer(null,\'new\')">'+cxIcon('plus')+'Nuovo cliente</button>'
-            :'<button type="button" class="cx-btn cx-line cx-sm" onclick="clearCustomerListAllFilters()">Azzera ricerca e filtri</button>')+'</div>';
+    html='<div class="gf-empty"><p><strong>'+(none?'Nessun cliente registrato':'Nessun cliente trovato')+'</strong></p><p>'
+      +(none?'Aggiungi il primo cliente oppure importa un file CSV/Excel.':'Prova a cambiare la ricerca o i filtri.')+'</p>'
+      +(none?'<button type="button" class="gf-button" data-variant="primary" data-size="sm" onclick="openCustomerDrawer(null,\'new\')">'+cxIcon('plus')+'Nuovo cliente</button>'
+            :'<button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="clearCustomerListAllFilters()">Azzera ricerca e filtri</button>')+'</div>';
   }else if(state.view==='list'){
     const allSel=visible.every(x=>sel.has(Number(x.id)));
     const head=(key,label,feature)=>{
       const on=state.sort===key;
       const icon=on?(state.direction==='desc'?'down':'up'):'sort';
-      return '<th'+(feature?' data-gf-feature="'+feature+'"':'')+' aria-sort="'+(on?(state.direction==='desc'?'descending':'ascending'):'none')+'"><button type="button" data-cx-sort="'+key+'" class="'+(on?'cx-on':'')+'">'+label+cxIcon(icon)+'</button></th>';
+      return '<th scope="col"'+(feature?' data-gf-feature="'+feature+'"':'')+' aria-sort="'+(on?(state.direction==='desc'?'descending':'ascending'):'none')+'"><button type="button" class="gf-button" data-variant="ghost" data-size="sm" data-cx-sort="'+key+'"'+(on?' aria-pressed="true"':'')+'>'+label+cxIcon(icon)+'</button></th>';
     };
-    html='<div class="cx-table-wrap" id="customerTableWrap"><table class="cx-table"><thead><tr>'
-      +'<th class="cx-ck" data-gf-feature="time_windows"><input type="checkbox" class="cx-cb" id="customerSelectPage" aria-label="Seleziona tutti i clienti della pagina"'+(allSel?' checked':'')+'></th>'
+    html='<div class="gf-table-wrap" id="customerTableWrap"><table class="gf-table" data-gf-responsive="cards"><thead><tr>'
+      +'<th scope="col" data-gf-feature="time_windows"><input type="checkbox" class="cx-cb" id="customerSelectPage" aria-label="Seleziona tutti i clienti della pagina"'+(allSel?' checked':'')+'></th>'
       +head('nome','Cliente')+head('indirizzo','Indirizzo')+head('scarico_mattina_da','Fascia di scarico','time_windows')+head('stato_geocodifica','Stato indirizzo')
-      +'<th class="cx-right">Azioni</th></tr></thead><tbody id="customersBody">'
+      +'<th scope="col">Azioni</th></tr></thead><tbody id="customersBody">'
       +visible.map(x=>{
         const id=Number(x.id),on=sel.has(id);
-        return '<tr data-cx-row="'+id+'" class="'+(on?'cx-sel':'')+'">'
-          +'<td class="cx-ck" data-gf-feature="time_windows"><input type="checkbox" class="cx-cb" data-cx-cb="'+id+'" aria-label="Seleziona '+cxEsc(x.nome)+'"'+(on?' checked':'')+'></td>'
-          +'<td>'+cxNameCell(x)+'</td><td>'+cxAddressCell(x)+'</td>'
-          +'<td data-gf-feature="time_windows">'+cxSlotMarkup(x)+'</td><td>'+customerStatusMarkup(x)+'</td><td>'+cxActions(x)+'</td></tr>';
+        return '<tr data-cx-row="'+id+'" aria-selected="'+on+'">'
+          +'<td data-label="Seleziona" data-gf-feature="time_windows"><input type="checkbox" class="cx-cb" data-cx-cb="'+id+'" aria-label="Seleziona '+cxEsc(x.nome)+'"'+(on?' checked':'')+'></td>'
+          +'<td data-label="Cliente">'+cxNameCell(x)+'</td><td data-label="Indirizzo">'+cxAddressCell(x)+'</td>'
+          +'<td data-label="Fascia di scarico" data-gf-feature="time_windows">'+cxSlotMarkup(x)+'</td><td data-label="Stato indirizzo">'+customerStatusMarkup(x)+'</td><td data-label="Azioni">'+cxActions(x)+'</td></tr>';
       }).join('')+'</tbody></table></div>';
   }else{
-    html='<div class="cx-grid" id="customerCards">'+visible.map(x=>{
+    html='<div class="gf-panel__body gf-grid" data-cols="3" id="customerCards">'+visible.map(x=>{
       const id=Number(x.id),on=sel.has(id);
-      return '<article class="cx-card'+(on?' cx-sel':'')+'" data-cx-row="'+id+'">'
-        +'<input type="checkbox" class="cx-cb" data-gf-feature="time_windows" data-cx-cb="'+id+'" aria-label="Seleziona '+cxEsc(x.nome)+'"'+(on?' checked':'')+'>'
+      return '<article class="gf-card gf-stack" data-cx-row="'+id+'" aria-selected="'+on+'">'
+        +'<label class="gf-check" data-gf-feature="time_windows"><input type="checkbox" class="cx-cb" data-cx-cb="'+id+'" aria-label="Seleziona '+cxEsc(x.nome)+'"'+(on?' checked':'')+'><span>Seleziona</span></label>'
         +cxNameCell(x)+cxAddressCell(x)
-        +'<div class="cx-meta"><span data-gf-feature="time_windows">'+cxSlotMarkup(x)+'</span>'+customerStatusMarkup(x)+'</div>'+cxActions(x)+'</article>';
+        +'<div class="gf-cluster"><span data-gf-feature="time_windows">'+cxSlotMarkup(x)+'</span>'+customerStatusMarkup(x)+'</div>'+cxActions(x)+'</article>';
     }).join('')+'</div>';
   }
   target.innerHTML=html;
@@ -236,12 +231,13 @@ function renderCustomerDirectory(){
     if(pages<=1){pager.innerHTML='';}
     else{
       const numbers=[...new Set([1,state.page-1,state.page,state.page+1,pages])].filter(p=>p>=1&&p<=pages).sort((a,b)=>a-b);
-      let p='<button type="button" data-cx-page="'+(state.page-1)+'"'+(state.page<=1?' disabled':'')+' aria-label="Pagina precedente">'+cxIcon('chevl')+'</button>';
+      const pageButton=(n,text,extra)=>'<button type="button" class="gf-button" data-variant="secondary" data-size="sm" data-cx-page="'+n+'"'+extra+'>'+text+'</button>';
+      let p=pageButton(state.page-1,cxIcon('chevl'),(state.page<=1?' disabled':'')+' aria-label="Pagina precedente"');
       numbers.forEach((n,i)=>{
-        if(i&&n>numbers[i-1]+1)p+='<span class="cx-gap" aria-hidden="true">…</span>';
-        p+='<button type="button" data-cx-page="'+n+'"'+(n===state.page?' aria-current="page"':'')+'>'+n+'</button>';
+        if(i&&n>numbers[i-1]+1)p+='<span aria-hidden="true">…</span>';
+        p+=pageButton(n,n,n===state.page?' aria-current="page"':'');
       });
-      p+='<button type="button" data-cx-page="'+(state.page+1)+'"'+(state.page>=pages?' disabled':'')+' aria-label="Pagina successiva">'+cxIcon('chevr')+'</button>';
+      p+=pageButton(state.page+1,cxIcon('chevr'),(state.page>=pages?' disabled':'')+' aria-label="Pagina successiva"');
       pager.innerHTML=p;
     }
   }
@@ -263,32 +259,33 @@ function openCustomerDrawer(id,mode,focusSlot){
   customerDrawer.current=existing||{id:null,nome:'',indirizzo:'',comune:'',provincia:'',codice_cliente:'',stato_geocodifica:'da_verificare',isNew:true};
   const c=customerDrawer.current, edit=customerDrawer.mode!=='view';
   const second=Boolean(c.scarico_pomeriggio_da||c.scarico_pomeriggio_a);
-  const head='<div class="cx-dr-h">'+cxAvatar(c,true)+'<div><h2>'+(c.isNew?'Nuovo cliente':cxEsc(c.nome))+'</h2><small>'
-    +cxEsc(c.isNew?'I dati potranno essere completati anche in seguito':(c.codice_cliente||'Senza codice'))+(c.isNew?'':' '+customerStatusMarkup(c))+'</small></div>'
-    +'<button type="button" class="cx-ibtn" data-cx-close aria-label="Chiudi">'+cxIcon('close')+'</button></div>';
+  const head='<header class="gf-modal__header">'+cxAvatar(c)+'<div><h2 class="gf-modal__title">'+(c.isNew?'Nuovo cliente':cxEsc(c.nome))+'</h2><p class="gf-muted">'
+    +cxEsc(c.isNew?'I dati potranno essere completati anche in seguito':(c.codice_cliente||'Senza codice'))+(c.isNew?'':' '+customerStatusMarkup(c))+'</p></div>'
+    +'<button type="button" class="gf-icon-button" data-cx-close aria-label="Chiudi">'+cxIcon('close')+'</button></header>';
+  const field=(id,label,value,attrs)=>'<label class="gf-field" for="'+id+'"><span class="gf-field__label">'+label+'</span><input class="gf-input" id="'+id+'" value="'+cxEsc(value)+'" '+(attrs||'')+'></label>';
   let address;
   if(edit){
-    address='<div class="cx-f"><label for="cxName">Nome cliente</label><input class="cx-in" id="cxName" value="'+cxEsc(c.nome)+'" autocomplete="off" maxlength="250"></div>'
-      +'<div class="cx-f"><label for="cxAddress">Indirizzo</label><input class="cx-in" id="cxAddress" value="'+cxEsc(c.indirizzo)+'" placeholder="Via e numero civico" autocomplete="off"></div>'
-      +'<div class="cx-row3"><div class="cx-f"><label for="cxCode">Codice</label><input class="cx-in" id="cxCode" value="'+cxEsc(c.codice_cliente)+'" autocomplete="off"></div>'
-      +'<div class="cx-f"><label for="cxCity">Città</label><input class="cx-in" id="cxCity" value="'+cxEsc(c.comune)+'" autocomplete="off"></div>'
-      +'<div class="cx-f"><label for="cxProv">Prov.</label><input class="cx-in" id="cxProv" value="'+cxEsc(c.provincia)+'" maxlength="2" style="text-transform:uppercase"></div></div>'
-      +'<p class="cx-hint">'+(c.isNew?'Il nuovo indirizzo verrà verificato prima di essere usato nei giri.':'Se cambi l\'indirizzo, dovrà essere verificato di nuovo.')+'</p>'
-      +'<p class="cx-err" id="cxAddressError" role="alert"></p>'
-      +'<button type="button" class="cx-btn cx-ghost" data-cx-full>Tutti i campi: contatti, vincoli'+((typeof agentsFeatureEnabled==='function'&&agentsFeatureEnabled())?', agente':'')+'</button>';
+    address=field('cxName','Nome cliente',c.nome,'autocomplete="off" maxlength="250"')
+      +field('cxAddress','Indirizzo',c.indirizzo,'placeholder="Via e numero civico" autocomplete="off"')
+      +'<div class="gf-grid" data-cols="3">'+field('cxCode','Codice',c.codice_cliente,'autocomplete="off"')
+      +field('cxCity','Città',c.comune,'autocomplete="off"')
+      +field('cxProv','Prov.',c.provincia,'maxlength="2" autocapitalize="characters"')+'</div>'
+      +'<p class="gf-field__hint">'+(c.isNew?'Il nuovo indirizzo verrà verificato prima di essere usato nei giri.':'Se cambi l\'indirizzo, dovrà essere verificato di nuovo.')+'</p>'
+      +'<div class="gf-field" data-invalid><p class="gf-field__error" id="cxAddressError" role="alert"></p></div>'
+      +'<div><button type="button" class="gf-button" data-variant="ghost" data-cx-full>Tutti i campi: contatti, vincoli'+((typeof agentsFeatureEnabled==='function'&&agentsFeatureEnabled())?', agente':'')+'</button></div>';
   }else{
-    address='<div class="cx-addr-v"><b>'+cxEsc(c.indirizzo||'—')+'</b><small>'+cxEsc(cxPlace(c)||'Comune non indicato')+'</small>'
-      +(cxVerified(c)&&c.indirizzo_geocodificato?'<small class="cx-geo">'+cxIcon('pin')+'Verificato come: '+cxEsc(c.indirizzo_geocodificato)+'</small>':'')+'</div>'
-      +(cxVerified(c)?'':'<button type="button" class="cx-btn cx-line cx-sm cx-verify" data-cx-verify>Verifica indirizzo</button>');
+    address='<div><b>'+cxEsc(c.indirizzo||'—')+'</b><br><small class="gf-muted">'+cxEsc(cxPlace(c)||'Comune non indicato')+'</small>'
+      +(cxVerified(c)&&c.indirizzo_geocodificato?'<br><small class="gf-muted">'+cxIcon('pin')+'Verificato come: '+cxEsc(c.indirizzo_geocodificato)+'</small>':'')+'</div>'
+      +(cxVerified(c)?'':'<div><button type="button" class="gf-button" data-variant="secondary" data-size="sm" data-cx-verify>Verifica indirizzo</button></div>');
   }
-  const pair=(prefix,label,from,to)=>'<div class="cx-row2"><div class="cx-f"><label for="'+prefix+'From">'+label+'dalle</label><input class="cx-in" type="time" id="'+prefix+'From" value="'+cxEsc(from||'')+'"></div>'
-    +'<div class="cx-f"><label for="'+prefix+'To">'+label+'alle</label><input class="cx-in" type="time" id="'+prefix+'To" value="'+cxEsc(to||'')+'"></div></div>';
-  const slot='<section id="cxSlotSection" data-gf-feature="time_windows"><h3>Fascia di scarico</h3>'
-    +'<div class="cx-presets">'+CX_PRESETS.map((p,i)=>'<button type="button" data-cx-preset="'+i+'">'+p[0]+' <small>'+p[1]+'–'+p[2]+'</small></button>').join('')+'</div>'
+  const pair=(prefix,label,from,to)=>'<div class="gf-grid" data-cols="2"><label class="gf-field" for="'+prefix+'From"><span class="gf-field__label">'+label+'dalle</span><input class="gf-input" type="time" id="'+prefix+'From" value="'+cxEsc(from||'')+'"></label>'
+    +'<label class="gf-field" for="'+prefix+'To"><span class="gf-field__label">'+label+'alle</span><input class="gf-input" type="time" id="'+prefix+'To" value="'+cxEsc(to||'')+'"></label></div>';
+  const slot='<section class="gf-stack" id="cxSlotSection" data-gf-feature="time_windows"><h3 class="gf-subtitle">Fascia di scarico</h3>'
+    +'<div class="gf-cluster">'+CX_PRESETS.map((p,i)=>'<button type="button" class="gf-chip" data-cx-preset="'+i+'">'+p[0]+' <small>'+p[1]+'–'+p[2]+'</small></button>').join('')+'</div>'
     +pair('cxSlot1','',c.scarico_mattina_da,c.scarico_mattina_a).replace(/>dalle</,'>Dalle<').replace(/>alle</,'>Alle<')
     +'<div id="cxSecondSlot"'+(second?'':' hidden')+'>'+pair('cxSlot2','Seconda fascia ',c.scarico_pomeriggio_da,c.scarico_pomeriggio_a)+'</div>'
-    +(second?'':'<button type="button" class="cx-btn cx-ghost" data-cx-second>'+cxIcon('plus')+'Aggiungi una seconda fascia</button>')
-    +'<p class="cx-hint">Gli autisti possono consegnare solo in questa fascia. Lascia vuoto per nessun vincolo.</p><p class="cx-err" id="cxSlotError" role="alert"></p></section>';
+    +(second?'':'<div><button type="button" class="gf-button" data-variant="ghost" data-cx-second>'+cxIcon('plus')+'Aggiungi una seconda fascia</button></div>')
+    +'<p class="gf-field__hint">Gli autisti possono consegnare solo in questa fascia. Lascia vuoto per nessun vincolo.</p><div class="gf-field" data-invalid><p class="gf-field__error" id="cxSlotError" role="alert"></p></div></section>';
   let extra='';
   if(!edit){
     const rows=[];
@@ -297,25 +294,24 @@ function openCustomerDrawer(id,mode,focusSlot){
     if(c.email)rows.push(['Email',c.email]);
     rows.push(['Tempo di scarico',(c.tempo_scarico_min??10)+' min']);
     if(typeof agentsFeatureEnabled==='function'&&agentsFeatureEnabled())rows.push(['Agente',c.agent_name||'Cliente interno']);
-    const flags=[c.ztl?'<span class="cx-chip cx-amber" data-gf-feature="ztl">ZTL</span>':'',c.sponda?'<span class="cx-chip" data-gf-feature="tail_lift">Sponda</span>':'',c.transpallet?'<span class="cx-chip">Transpallet</span>':''].join('');
-    extra='<section><h3>Contatti e vincoli</h3><dl class="cx-dl">'+rows.map(r=>'<div><dt>'+r[0]+'</dt><dd>'+cxEsc(r[1])+'</dd></div>').join('')+'</dl>'
-      +(flags?'<div class="cx-meta">'+flags+'</div>':'')+(c.note?'<p class="cx-note">'+cxEsc(c.note)+'</p>':'')+'</section>';
+    const flags=[c.ztl?'<span class="gf-badge" data-kind="ztl" data-gf-feature="ztl">ZTL</span>':'',c.sponda?'<span class="gf-badge" data-kind="tail-lift" data-gf-feature="tail_lift">Sponda</span>':'',c.transpallet?'<span class="gf-badge" data-status="neutral">Transpallet</span>':''].join('');
+    extra='<section class="gf-stack"><h3 class="gf-subtitle">Contatti e vincoli</h3><dl class="gf-details">'+rows.map(r=>'<div class="gf-details__item"><dt>'+r[0]+'</dt><dd>'+cxEsc(r[1])+'</dd></div>').join('')+'</dl>'
+      +(flags?'<div class="gf-cluster">'+flags+'</div>':'')+(c.note?'<p class="gf-muted">'+cxEsc(c.note)+'</p>':'')+'</section>';
   }
-  const body='<div class="cx-dr-b"><section><h3>'+(edit?'Dati del cliente':'Indirizzo')+'</h3>'+address+'</section>'+slot+extra+'</div>';
-  const foot='<div class="cx-dr-f">'+(customerDrawer.mode==='view'
-      ?'<button type="button" class="cx-btn cx-line" data-cx-edit-current>'+cxIcon('edit')+'Modifica dati</button>'
-      :'<button type="button" class="cx-btn cx-line" data-cx-cancel>Annulla</button>')
-    +'<button type="button" class="cx-btn" data-cx-save>Salva</button></div>';
+  const body='<div class="gf-modal__body gf-stack" data-gap="lg"><section class="gf-stack"><h3 class="gf-subtitle">'+(edit?'Dati del cliente':'Indirizzo')+'</h3>'+address+'</section>'+slot+extra+'</div>';
+  const foot='<footer class="gf-modal__footer">'+(customerDrawer.mode==='view'
+      ?'<button type="button" class="gf-button" data-variant="secondary" data-cx-edit-current>'+cxIcon('edit')+'Modifica dati</button>'
+      :'<button type="button" class="gf-button" data-variant="secondary" data-cx-cancel>Annulla</button>')
+    +'<button type="button" class="gf-button" data-variant="primary" data-cx-save>Salva</button></footer>';
   drawer.innerHTML=head+body+foot;
-  drawer.classList.add('cx-open');drawer.setAttribute('aria-hidden','false');
-  cxEl('customerDrawerScrim')?.classList.add('cx-open');
+  drawer.setAttribute('aria-hidden','false');
+  cxEl('customerDrawerScrim')?.classList.remove('hidden');
   setTimeout(()=>{const t=focusSlot?cxEl('cxSlot1From'):(edit?cxEl('cxName'):drawer.querySelector('[data-cx-close]'));t?.focus();},280);
   if(focusSlot)setTimeout(()=>cxEl('cxSlotSection')?.scrollIntoView({block:'center',behavior:'smooth'}),120);
 }
 function closeCustomerDrawer(){
-  cxEl('customerDrawer')?.classList.remove('cx-open');
   cxEl('customerDrawer')?.setAttribute('aria-hidden','true');
-  cxEl('customerDrawerScrim')?.classList.remove('cx-open');
+  cxEl('customerDrawerScrim')?.classList.add('hidden');
   customerDrawer.current=null;
 }
 function cxReadSlot(prefix,label,errors){
@@ -341,7 +337,7 @@ async function saveCustomerDrawer(){
     const value=id=>(cxEl(id)?.value||'').trim();
     const required=['cxName','cxAddress','cxCity'];
     let bad=false;
-    required.forEach(id=>{const el=cxEl(id);const empty=!value(id);el?.classList.toggle('cx-bad',empty);if(empty)bad=true;});
+    required.forEach(id=>{const el=cxEl(id);const empty=!value(id);el?.closest?.('.gf-field')?.toggleAttribute('data-invalid',empty);if(empty)bad=true;});
     const addressError=cxEl('cxAddressError');
     if(addressError)addressError.textContent=bad?'Compila nome, indirizzo e città.':'';
     if(bad)return;
@@ -370,29 +366,23 @@ async function saveCustomerDrawer(){
 }
 
 /* ---------- Selezione multipla e fascia per più clienti ---------- */
-let customerBulkMenu=null;
+function cxBulkMenu(){return cxEl('customerBulkMenu');}
 function renderCustomerSelection(){
   const bar=cxEl('customerBulkBar');if(!bar)return;
   const n=customerDirectory.selected.size;
-  bar.classList.toggle('cx-show',n>0);
+  bar.classList.toggle('hidden',n===0);
   const msg=cxEl('customerSelectedCount');if(msg)msg.textContent=n+(n===1?' cliente selezionato':' clienti selezionati');
+  const list=cxBulkMenu()?.querySelector('[data-gf-menu]');
+  if(list&&!list.childElementCount)list.innerHTML='<p class="gf-kicker">Imposta per i clienti selezionati</p>'
+    +CX_PRESETS.map((p,i)=>'<button type="button" class="gf-button" data-variant="ghost" role="menuitem" data-cx-bulk="'+i+'">'+p[0]+' <small>'+p[1]+' – '+p[2]+'</small></button>').join('')
+    +'<button type="button" class="gf-button" data-variant="ghost" role="menuitem" data-cx-bulk="clear">Rimuovi la fascia</button>';
   if(!n)closeCustomerBulkMenu();
 }
 function clearCustomerSelection(){ customerDirectory.selected.clear(); closeCustomerBulkMenu(); renderCustomerDirectory(); }
-function closeCustomerBulkMenu(){ if(customerBulkMenu){customerBulkMenu.remove();customerBulkMenu=null;} }
+function closeCustomerBulkMenu(){ const menu=cxBulkMenu(); if(menu)menu.open=false; }
 function toggleCustomerBulkMenu(event){
   event?.stopPropagation?.();
-  if(customerBulkMenu){closeCustomerBulkMenu();return;}
-  const button=cxEl('customerBulkButton');if(!button)return;
-  const menu=document.createElement('div');menu.className='cx-menu';menu.setAttribute('role','menu');
-  menu.innerHTML='<div class="cx-mh">Imposta per i clienti selezionati</div>'
-    +CX_PRESETS.map((p,i)=>'<button type="button" role="menuitem" data-cx-bulk="'+i+'">'+p[0]+'<small>'+p[1]+' – '+p[2]+'</small></button>').join('')
-    +'<button type="button" role="menuitem" data-cx-bulk="clear">Rimuovi la fascia</button>';
-  document.body.appendChild(menu);
-  const r=button.getBoundingClientRect(),w=menu.offsetWidth,h=menu.offsetHeight;
-  menu.style.left=Math.max(8,Math.min(window.innerWidth-w-8,r.left))+'px';
-  menu.style.top=Math.max(8,r.top-h-8)+'px';
-  customerBulkMenu=menu;
+  const menu=cxBulkMenu(); if(menu)menu.open=!menu.open;
 }
 async function applyCustomerBulkSlot(choice){
   if(customerDirectory.busy)return;
@@ -431,8 +421,8 @@ if(typeof document!=='undefined'&&document.addEventListener){
   document.addEventListener('click',event=>{
     const t=event.target;
     if(!t||!t.closest)return;
-    if(customerBulkMenu&&!t.closest('.cx-menu')&&!t.closest('#customerBulkButton'))closeCustomerBulkMenu();
-    const bulk=t.closest('.cx-menu [data-cx-bulk]');
+    if(cxBulkMenu()?.open&&!t.closest('#customerBulkMenu'))closeCustomerBulkMenu();
+    const bulk=t.closest('#customerBulkMenu [data-cx-bulk]');
     if(bulk){applyCustomerBulkSlot(bulk.dataset.cxBulk==='clear'?'clear':Number(bulk.dataset.cxBulk));return;}
     const drawer=t.closest('#customerDrawer');
     if(drawer){
@@ -488,7 +478,7 @@ if(typeof document!=='undefined'&&document.addEventListener){
   });
   document.addEventListener('keydown',event=>{
     if(event.key!=='Escape')return;
-    if(customerBulkMenu){closeCustomerBulkMenu();return;}
+    if(cxBulkMenu()?.open){closeCustomerBulkMenu();return;}
     if(customerDrawer.current)closeCustomerDrawer();
   });
   document.addEventListener('DOMContentLoaded',()=>{

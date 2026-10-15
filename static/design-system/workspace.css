@@ -31,14 +31,14 @@ min-width:0;border:1px solid var(--gf-color-border);border-radius:var(--gf-radiu
 body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.dash-vehicle-card,.driver-info-grid>div,.energy-price-box-v895,.gf-routing-summary){
 border-color:var(--gf-color-border);border-radius:var(--gf-radius-md);background:var(--gf-color-bg);color:var(--gf-color-text);box-shadow:none;
 }
-body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.dash-kpi-grid,.customer-metrics,.stats-grid){gap:var(--gf-space-4);margin-bottom:var(--gf-space-6)}
-body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.stat-card,.dash-kpi-card,.customer-metric,.mini-card,.live-design-card,.gf-vehicle-usage-card){
+body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.dash-kpi-grid,.stats-grid){gap:var(--gf-space-4);margin-bottom:var(--gf-space-6)}
+body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.stat-card,.dash-kpi-card,.mini-card,.live-design-card,.gf-vehicle-usage-card){
 min-width:0;padding:var(--gf-space-5);border:1px solid var(--gf-color-border);border-radius:var(--gf-radius-lg);background:var(--gf-color-surface);color:var(--gf-color-text);box-shadow:var(--gf-shadow-sm);
 }
-body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.stat-card,.customer-metric,.dash-kpi-card) strong{
+body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.stat-card,.dash-kpi-card) strong{
 color:var(--gf-color-text);font-size:var(--gf-font-2xl);font-weight:var(--gf-weight-bold);line-height:1.25;letter-spacing:-.025em;font-variant-numeric:tabular-nums;
 }
-body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.stat-icon,.customer-metric-icon,.dash-kpi-icon,.mini-icon,.live-design-icon,.preview-cost-icon){
+body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.stat-icon,.dash-kpi-icon,.mini-icon,.live-design-icon,.preview-cost-icon){
 border-radius:var(--gf-radius-md);background:var(--gf-color-info-bg);color:var(--gf-color-info);box-shadow:none;
 }
 body[data-gf-surface="workspace"] #app #tab-dashboard :is(.dash-kpi-card,.dash-list-card,.dash-vehicles-panel){
@@ -48,26 +48,19 @@ body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-card{padding:var
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-card strong{font-size:var(--gf-font-2xl)!important}
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-icon{width:var(--gf-control-touch)!important;height:var(--gf-control-touch)!important;flex-basis:var(--gf-control-touch)!important;border-radius:var(--gf-radius-md)!important}
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-card::after,body[data-gf-surface="workspace"] #app #tab-dashboard .dash-list-head h2::before{content:none}
-body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-card:nth-child(1) .dash-kpi-icon,body[data-gf-surface="workspace"] #app #tab-clienti .customer-metric:nth-child(3) .customer-metric-icon{color:var(--gf-color-warning);background:var(--gf-color-warning-bg)}
-body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-card:nth-child(3) .dash-kpi-icon,body[data-gf-surface="workspace"] #app #tab-clienti .customer-metric:nth-child(2) .customer-metric-icon{color:var(--gf-color-success);background:var(--gf-color-success-bg)}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-card:nth-child(1) .dash-kpi-icon{color:var(--gf-color-warning);background:var(--gf-color-warning-bg)}
+body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-card:nth-child(3) .dash-kpi-icon{color:var(--gf-color-success);background:var(--gf-color-success-bg)}
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-card:nth-child(4) .dash-kpi-icon{color:var(--gf-color-muted);background:var(--gf-color-bg)}
-body[data-gf-surface="workspace"] #app #tab-clienti .customer-metric-icon.green svg{fill:none;stroke:currentColor;background:none}
-body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.route-status-pill.completato,.delivery-status-pill.completata,.delivery-status-pill.consegnata,.customer-status.verified,.plan-status.complete,.planning-check.complete){background:var(--gf-color-success-bg);color:var(--gf-color-success);border-color:var(--gf-color-success-bg)}
-body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.route-status-pill.programmato,.route-status-pill.da_completare,.customer-status.pending,.plan-status.partial,.planning-check:not(.complete)){background:var(--gf-color-warning-bg);color:var(--gf-color-warning);border-color:var(--gf-color-warning-bg)}
+body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.route-status-pill.completato,.delivery-status-pill.completata,.delivery-status-pill.consegnata,.plan-status.complete,.planning-check.complete){background:var(--gf-color-success-bg);color:var(--gf-color-success);border-color:var(--gf-color-success-bg)}
+body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.route-status-pill.programmato,.route-status-pill.da_completare,.plan-status.partial,.planning-check:not(.complete)){background:var(--gf-color-warning-bg);color:var(--gf-color-warning);border-color:var(--gf-color-warning-bg)}
 body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.route-status-pill.in_corso,.delivery-status-pill.in_corso,.delivery-status-pill.in_attesa){background:var(--gf-color-info-bg);color:var(--gf-color-info);border-color:var(--gf-color-info-bg)}
 body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.route-status-pill.annullato,.delivery-status-pill.mancata,.delivery-status-pill.non_consegnata){background:var(--gf-color-danger-bg);color:var(--gf-color-danger);border-color:var(--gf-color-danger-bg)}
 body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.plan-status::before){background:currentColor}
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-list-card{padding:0}
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-list-head{padding:var(--gf-space-5);border-bottom:1px solid var(--gf-color-border)}
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-list-head>span{background:var(--gf-color-bg);color:var(--gf-color-muted);border-radius:var(--gf-radius-pill)}
-body[data-gf-surface="workspace"] #app #tab-clienti .customer-searchbar-v8{gap:var(--gf-space-2);margin-bottom:var(--gf-space-4)}
-body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.customer-search){min-width:0}
-body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.customer-search)>svg{left:var(--gf-space-3);color:var(--gf-color-muted)}
-body[data-gf-surface="workspace"] #app #tab-clienti .customer-metric{min-height:0;gap:var(--gf-space-4)}
-body[data-gf-surface="workspace"] #app #tab-clienti .customer-metric-icon{width:var(--gf-control-height);height:var(--gf-control-height);flex-basis:var(--gf-control-height)}
 /* Active is identical to Total. Retain its ID and updates, show three measures. */
-body[data-gf-surface="workspace"] #app #tab-clienti .customer-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}
-body[data-gf-surface="workspace"] #app #tab-clienti .customer-metrics>.customer-metric:has(#customerMetricActive){display:none}
+
 body[data-gf-surface="workspace"] #app .company-configured-badge-v40{border-radius:var(--gf-radius-pill);background:var(--gf-color-success-bg);color:var(--gf-color-success);border-color:var(--gf-color-success-bg)}
 body[data-gf-surface="workspace"] #app #tab-giro .plan-step{--step-color:var(--gf-color-nav);border:1px solid var(--gf-color-border);border-radius:var(--gf-radius-md);background:var(--gf-color-surface);box-shadow:none}
 body[data-gf-surface="workspace"] #app #tab-giro .plan-step-number{background:var(--gf-color-nav);color:var(--gf-color-on-primary);box-shadow:none}
@@ -103,11 +96,7 @@ body[data-gf-surface="workspace"] .gf-dialog :is(.delivery-modal-section){border
 body[data-gf-surface="workspace"] .customer-tracking-dialog :is(.tracking-dialog-header,.tracking-dialog-footer){background:var(--gf-color-surface);border-color:var(--gf-color-border)}
 body[data-gf-surface="workspace"] .customer-tracking-dialog{--tracking-ink:var(--gf-color-text);--tracking-muted:var(--gf-color-muted);--tracking-line:var(--gf-color-border)}
 body[data-gf-surface="workspace"] .gf-dialog .address-suggestions{border-color:var(--gf-color-border);border-radius:var(--gf-radius-md);background:var(--gf-color-surface);box-shadow:var(--gf-shadow-md)}
-body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.dash-empty,.customer-empty){border-color:var(--gf-color-border);border-radius:var(--gf-radius-md);background:var(--gf-color-surface);color:var(--gf-color-muted);box-shadow:none;backdrop-filter:none}
-@media(max-width:1024px){
-body[data-gf-surface="workspace"] #app #tab-clienti .customer-searchbar-v8{grid-template-columns:minmax(0,1fr) auto}
-body[data-gf-surface="workspace"] #app #tab-clienti .customer-search{grid-column:1/-1}
-}
+body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.dash-empty){border-color:var(--gf-color-border);border-radius:var(--gf-radius-md);background:var(--gf-color-surface);color:var(--gf-color-muted);box-shadow:none;backdrop-filter:none}
 @media(max-width:768px){
 body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.page-title-row,.dash-hero-row){flex-direction:column;align-items:stretch;gap:var(--gf-space-4)}
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-board-columns{grid-template-columns:1fr!important}
@@ -117,12 +106,6 @@ body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.panel,.cust
 body[data-gf-surface="workspace"] #app .gf-page .panel{border-radius:var(--gf-radius-lg)!important;box-shadow:var(--gf-shadow-sm)!important}
 }
 @media(max-width:640px){
-body[data-gf-surface="workspace"] #app #tab-clienti .customer-metrics{grid-template-columns:1fr;gap:var(--gf-space-2)}
-body[data-gf-surface="workspace"] #app #tab-clienti .customer-metric{padding:var(--gf-space-3) var(--gf-space-4);align-items:center}
-body[data-gf-surface="workspace"] #app #tab-clienti .customer-metric p{font-size:var(--gf-font-xs)}
-body[data-gf-surface="workspace"] #app #tab-clienti .customer-metric strong{font-size:var(--gf-font-xl)}
-body[data-gf-surface="workspace"] #app #tab-clienti .customer-list-footer{align-items:flex-start;flex-direction:column}
-body[data-gf-surface="workspace"] #app #tab-clienti #customerPagination{max-width:100%;flex-wrap:wrap}
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--gf-space-3)}
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-card{padding:var(--gf-space-4)!important}
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-kpi-card strong{font-size:var(--gf-font-xl)!important}
@@ -201,97 +184,7 @@ body[data-gf-surface="workspace"] #app .gf-directory-empty{
   text-align:center;
 }
 
-@media(min-width:821px){
-  body[data-gf-surface="workspace"] #app :is(#tab-clienti)>.gf-directory-title{
-    display:none!important;
-  }
-  body:has(#tab-clienti:not(.hidden)) .content{
-    padding:24px 26px 24px;
-  }
-  body:has(#tab-clienti:not(.hidden)) .topbar{
-    background:var(--gf-color-surface)!important;
-    border-bottom:1px solid var(--gf-color-border)!important;
-    -webkit-backdrop-filter:none!important;
-    backdrop-filter:none!important;
-    box-shadow:none!important;
-  }
-}
-
 /* Directory KPI icons: neutral, quiet and dashboard-aligned. */
-body[data-gf-surface="workspace"] #app :is(#tab-clienti)
-:is(.customer-metric-icon,.gf-directory-metric-icon,.stat-icon){
-  display:grid!important;
-  place-items:center!important;
-  flex:0 0 48px!important;
-  width:48px!important;
-  height:48px!important;
-  border:1px solid var(--gf-color-border)!important;
-  border-radius:var(--gf-radius-circle)!important;
-  background:var(--gf-color-bg)!important;
-  color:var(--gf-color-muted)!important;
-  box-shadow:none!important;
-}
-body[data-gf-surface="workspace"] #app :is(#tab-clienti)
-:is(.customer-metric-icon,.gf-directory-metric-icon,.stat-icon) svg{
-  width:22px!important;
-  height:22px!important;
-  border-radius:0!important;
-  background:none!important;
-  fill:none!important;
-  stroke:currentColor!important;
-  stroke-width:1.75!important;
-  stroke-linecap:round!important;
-  stroke-linejoin:round!important;
-}
-body[data-gf-surface="workspace"] #app :is(#tab-clienti)
-:is(.customer-metric-icon,.gf-directory-metric-icon,.stat-icon) svg *{
-  fill:none!important;
-  stroke:currentColor!important;
-}
-body[data-gf-surface="workspace"] #app :is(#tab-clienti)
-:is(.customer-metric,.gf-directory-metric){
-  column-gap:16px;
-}
 
 /* Directory create/import actions live inside the list panel, above toolbar and view controls. */
-body[data-gf-surface="workspace"] #app :is(#tab-clienti) .gf-directory-head-actions{
-  display:flex;
-  align-items:center;
-  justify-content:flex-end;
-  gap:8px;
-  margin-left:auto;
-  flex-wrap:wrap;
-}
-body[data-gf-surface="workspace"] #app :is(#tab-clienti) .gf-directory-head-actions :is(.btn-primary,.btn-secondary){
-  min-height:36px;
-  margin:0;
-  padding:8px 13px;
-  border-radius:var(--gf-radius-sm);
-  font-family:var(--gf-font-family);
-  font-size:12px;
-  font-weight:var(--gf-weight-semibold);
-  line-height:1.2;
-  box-shadow:none;
-  white-space:nowrap;
-}
-body[data-gf-surface="workspace"] #app :is(#tab-clienti) .gf-directory-head-actions .btn-primary{
-  background:var(--gf-color-primary);
-  border-color:var(--gf-color-primary);
-  color:#fff;
-}
-body[data-gf-surface="workspace"] #app :is(#tab-clienti) .gf-directory-head-actions .btn-secondary{
-  background:var(--gf-color-surface);
-  border-color:var(--gf-color-border);
-  color:var(--gf-color-text);
-}
-@media(max-width:700px){
-  body[data-gf-surface="workspace"] #app :is(#tab-clienti) :is(.customer-list-head,.gf-directory-head){
-    align-items:flex-start;
-    flex-direction:column;
-  }
-  body[data-gf-surface="workspace"] #app :is(#tab-clienti) .gf-directory-head-actions{
-    width:100%;
-    margin-left:0;
-    justify-content:flex-start;
-  }
-}
+

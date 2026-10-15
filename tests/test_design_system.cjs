@@ -440,7 +440,8 @@ test('resource directories keep titles in the topbar and create actions inside t
   }
 
   const customers=html.slice(html.indexOf('<section id="tab-clienti"'),html.indexOf('<section id="tab-depositi"'));
-  assert.match(customers,/gf-directory-head-actions[^]*Importa clienti CSV\/Excel[^]*\+ Nuovo/);
+  // Clienti: importazione e nuovo cliente restano nell'intestazione della pagina, come nel disegno originale.
+  assert.match(html,/id="customersTopbarActionsHost"[^>]*data-show-on-tabs="clienti"[^]*?openCustomerImportModal\(\)[^]*?openCustomerDrawer\(null,'new'\)/);
   const deposits=html.slice(html.indexOf('<section id="tab-depositi"'),html.indexOf('id="depositOverlay"'));
   assert.match(deposits,/class="gf-panel__header"[^]*\+ Nuovo deposito/);
   const vehicles=html.slice(html.indexOf('<section id="tab-mezzi"'),html.indexOf('<section id="tab-autisti"'));
@@ -468,8 +469,6 @@ test('resource directories keep titles in the topbar and create actions inside t
 
   const workspace=read(assets+'workspace.css');
   assert.match(workspace,/Directory create\/import actions live inside the list panel/);
-  assert.match(workspace,/\.gf-directory-head-actions\{[\s\S]*justify-content:flex-end/);
-  assert.match(workspace,/\.gf-directory-head-actions :is\(\.btn-primary,\.btn-secondary\)\{[\s\S]*min-height:36px/);
 
   assert.match(vehicles,/id="fleetMetricTotal"/);
   assert.match(drivers,/id="driverTableWrap"/);
@@ -482,32 +481,17 @@ test('resource directories keep titles in the topbar and create actions inside t
 
 
 test('all five directory KPI icons use the same neutral gray dashboard treatment',()=>{
-  const workspace=read(assets+'workspace.css');
-  const start=workspace.indexOf('/* Directory KPI icons: neutral, quiet and dashboard-aligned. */');
-  assert.ok(start>=0);
-  const block=workspace.slice(start);
-  // Le sezioni convertite usano la card numerica con icona neutra; le altre il vecchio blocco.
+  // Le anagrafiche usano la card numerica del sistema: icone solo neutre, nessun colore di stato.
   const html=read('static/dashboard/index.html');
   for(const tab of ['clienti','depositi','mezzi','autisti','agenti']){
     const start=html.indexOf('<section id="tab-'+tab+'"');
     const section=html.slice(start,html.indexOf('<section id="tab-',start+20));
-    if(/gf-stat-card__icon/.test(section)){
-      assert.doesNotMatch(section,/gf-stat-card__icon"(?! data-tone="neutral")|data-tone="(?!neutral)[a-z]+"/,tab+' neutral icons');
-    }else if(/(customer|deposit|gf-directory)-metric-icon|stat-icon/.test(section)){
-      assert.match(block,new RegExp('#tab-'+tab),tab+' legacy neutral icons');
-    }
+    assert.doesNotMatch(section,/gf-stat-card__icon"(?! data-tone="neutral")|gf-stat-card__icon" data-tone="(?!neutral)/,tab+' neutral icons');
+    assert.doesNotMatch(section,/(customer|deposit|gf-directory)-metric-icon|stat-icon/,tab+' no legacy icons');
   }
-  assert.match(read(assets+'components.css'),/\.gf-stat-card__icon\[data-tone="neutral"\]\{background:var\(--gf-color-bg\);color:var\(--gf-color-muted\)\}/);
-  assert.match(block,/:is\(\.customer-metric-icon,(?:\.deposit-metric-icon,)?\.gf-directory-metric-icon,\.stat-icon\)\{/);
-  assert.match(block,/width:48px!important/);
-  assert.match(block,/height:48px!important/);
-  assert.match(block,/border-radius:var\(--gf-radius-circle\)!important/);
-  assert.match(block,/background:var\(--gf-color-bg\)!important/);
-  assert.match(block,/color:var\(--gf-color-muted\)!important/);
-  assert.match(block,/width:22px!important/);
-  assert.match(block,/stroke:currentColor!important/);
-  assert.match(block,/fill:none!important/);
-  assert.doesNotMatch(block,/var\(--gf-color-(?:info|success|warning|danger)(?:-bg)?\)/);
+  const components=read(assets+'components.css');
+  assert.match(components,/\.gf-stat-card__icon\[data-tone="neutral"\]\{background:var\(--gf-color-bg\);color:var\(--gf-color-muted\)\}/);
+  assert.match(components,/\.gf-stat-card__icon svg\{[^}]*fill:none;stroke:currentColor/);
 });
 
 

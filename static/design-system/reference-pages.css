@@ -105,7 +105,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(.gf-director
 
 /* 3. KPI: stesso ordine tipografico dello strip della dashboard. */
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .stat-card,.customer-metric,.gf-directory-metric,.orders-metric-card,.gf-stat){
+  .stat-card,.gf-directory-metric,.orders-metric-card,.gf-stat){
   min-width:0;
   padding:18px 20px!important;
   border:1px solid var(--gf-color-border)!important;
@@ -114,19 +114,19 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   box-shadow:var(--gf-shadow-sm)!important;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .stat-card,.customer-metric,.gf-directory-metric,.orders-metric-card,.gf-stat) :is(strong,.stat-value,.customer-metric-value,.orders-metric-value){
+  .stat-card,.gf-directory-metric,.orders-metric-card,.gf-stat) :is(strong,.stat-value,.orders-metric-value){
   color:var(--gf-color-primary)!important;
   font:700 30px/1.1 var(--gf-font-display)!important;
   letter-spacing:-.02em!important;
   font-variant-numeric:tabular-nums;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .stat-card,.customer-metric,.gf-directory-metric,.orders-metric-card,.gf-stat) :is(small,.stat-label,.orders-metric-label,.customer-metric-label){
+  .stat-card,.gf-directory-metric,.orders-metric-card,.gf-stat) :is(small,.stat-label,.orders-metric-label){
   font:400 13px/1.4 var(--gf-font-family)!important;
   color:var(--gf-color-muted)!important;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .orders-metrics,.gf-directory-metrics,.customer-metrics,.stats-grid){
+  .orders-metrics,.gf-directory-metrics,.stats-grid){
   gap:16px!important;
   margin-bottom:22px;
 }
@@ -187,11 +187,9 @@ body[data-gf-surface="workspace"] :is(
   background:var(--gf-color-surface-subtle)!important;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .gf-button[data-variant="danger"],.btn-danger,.customer-delete-danger
-),
+  .gf-button[data-variant="danger"],.btn-danger),
 body[data-gf-surface="workspace"] :is(.modal-overlay,.gf-dialog,#orderModal) :is(
-  .gf-button[data-variant="danger"],.btn-danger,.customer-delete-danger
-){
+  .gf-button[data-variant="danger"],.btn-danger){
   border-color:var(--gf-color-danger)!important;
   background:var(--gf-color-danger)!important;
   color:#fff!important;
@@ -257,7 +255,6 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   box-shadow:var(--gf-shadow-sm)!important;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .customer-search,
   .orders-search-input-wrap,.gf-directory-search){
   position:relative;
   min-width:0;
@@ -267,7 +264,6 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   box-shadow:none!important;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .customer-search,
   .orders-search-input-wrap,.gf-directory-search)>svg{
   position:absolute;
   width:18px;height:18px;
@@ -276,7 +272,6 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   pointer-events:none;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .customer-search,
   .orders-search-input-wrap,.gf-directory-search):has(>svg)>input{
   padding-left:42px!important;
 }
@@ -291,7 +286,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   max-width:100%;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .gf-table,.customer-table,.orders-table,.result-table
+  .gf-table,.orders-table,.result-table
 ){
   font:400 14px/1.5 var(--gf-font-family)!important;
   color:var(--gf-color-text);
@@ -368,7 +363,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
 
 /* 8. Etichette, icone di stato e segnali: stessa palette senza riscrivere il significato. */
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .gf-badge,.orders-status,.customer-status,.route-status-pill,
+  .gf-badge,.orders-status,.route-status-pill,
   .company-configured-badge-v40
 ){
   font:600 12px/1.3 var(--gf-font-family)!important;
@@ -377,8 +372,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .orders-status,.route-status-pill)[data-status="success"],
-body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .customer-status.verified,.orders-status-consegnato
+body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(.orders-status-consegnato
 ){
   background:var(--gf-color-success-bg)!important;color:var(--gf-color-success)!important;
 }
@@ -409,13 +403,13 @@ body[data-gf-surface="workspace"] #app #tab-ordini-collegamenti .orders-source-o
   box-shadow:none!important;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .gf-empty,.customer-empty,
+  .gf-empty,
   .orders-empty,.dash-detail-empty
 ){
   color:var(--gf-color-muted);
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .gf-empty h2,.customer-empty h2){
+  .gf-empty h2){
   font:700 16px/1.3 var(--gf-font-display)!important;
   color:var(--gf-color-text)!important;
 }
@@ -439,11 +433,11 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
 }
 @media(max-width:520px){
   body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-    .orders-metrics,.customer-metrics,.gf-directory-metrics){gap:10px!important}
+    .orders-metrics,.gf-directory-metrics){gap:10px!important}
   body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-    .stat-card,.customer-metric,.gf-directory-metric,.orders-metric-card){padding:14px!important}
+    .stat-card,.gf-directory-metric,.orders-metric-card){padding:14px!important}
   body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-    .stat-card,.customer-metric,.gf-directory-metric,.orders-metric-card) :is(strong,.orders-metric-value){font-size:24px!important}
+    .stat-card,.gf-directory-metric,.orders-metric-card) :is(strong,.orders-metric-value){font-size:24px!important}
   body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
     .panel-header,.customer-list-head,.gf-directory-head,
     .orders-list-head
