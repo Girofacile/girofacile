@@ -264,6 +264,7 @@ window.GFInProgressReference=(()=>{
           </div>
           <div class="gf-route-panel__footer gf-cluster">
             <button type="button" class="gf-button" data-variant="secondary" data-ip-action="refresh">${svgIcon('refresh')} Aggiorna dati</button>
+            ${!window.GFCompanyAccess?.isCollaborator()||window.GFCompanyAccess.can('routes.manage')?'<button type="button" class="gf-button" data-variant="danger" data-ip-action="cancel">Annulla giro</button>':''}
             ${detail.google_maps_url?'<a class="gf-button" data-variant="primary" href="'+esc(detail.google_maps_url)+'" target="_blank" rel="noopener noreferrer">'+svgIcon('map')+' Apri navigazione</a>':''}
           </div>
         </div>
@@ -290,7 +291,7 @@ window.GFInProgressReference=(()=>{
     if(!state.timer)state.timer=setInterval(refresh,30000);
     state.hash=fingerprint(state.routes,detail);
   }
-  document.addEventListener('click',event=>{
+  document.addEventListener('click',async event=>{
     const page=root();if(!page||!page.contains(event.target))return;
     const filter=event.target.closest('[data-ip-filter]');
     if(filter){state.filter=filter.dataset.ipFilter;paintCards();return;}
@@ -308,6 +309,18 @@ window.GFInProgressReference=(()=>{
       case 'zoom-out':state.map?.zoomOut();break;
       case 'follow':state.follow=!state.follow;drawGPS();break;
       case 'refresh':refresh();break;
+      case 'cancel':{
+        const id=Number(state.id),name=state.detail?.nome||'Giro consegne';
+        if(!id||action.disabled||!confirm('Annullare il giro "'+name+'"? Autista e mezzo saranno liberati. Gli esiti già registrati resteranno conservati.'))break;
+        action.disabled=true;
+        try{
+          await api('/api/routes/'+id+'/cancel',{method:'POST'});
+          toast('Giro annullato: autista e mezzo disponibili');
+          await loadDashboardInProgressPage();
+        }catch(e){toast(e.message);}
+        finally{action.disabled=false;}
+        break;
+      }
       case 'chat':
         state.chat=!state.chat;page.querySelector('[data-ip-chat]').hidden=!state.chat;
         action.setAttribute('aria-expanded',String(state.chat));

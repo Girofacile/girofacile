@@ -779,13 +779,23 @@ def dashboard_completed_deliveries_today(
 @router.get("/api/routes/operativi")
 def list_operational_routes(db: Session = Depends(get_db), user: User = Depends(current_user)):
     from_date = (local_today() - timedelta(days=7))
-    rows = (
+    # Running routes keep resources occupied regardless of age. Never hide them
+    # behind the date window or the limit for scheduled routes.
+    running = (
         owned(db.query(RoutePlan), RoutePlan, user)
+        .filter(RoutePlan.status == "in_corso")
+        .order_by(RoutePlan.data_giro.asc(), RoutePlan.id.asc())
+        .all()
+    )
+    scheduled = (
+        owned(db.query(RoutePlan), RoutePlan, user)
+        .filter(RoutePlan.status == "programmato")
         .filter(RoutePlan.data_giro >= from_date)
         .order_by(RoutePlan.data_giro.asc(), RoutePlan.orario_partenza.asc(), RoutePlan.created_at.desc())
         .limit(150)
         .all()
     )
+    rows = running + scheduled
     result = []
     for r in rows:
         status = computed_route_status(r)

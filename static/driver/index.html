@@ -590,14 +590,14 @@ function renderRoutes() {
   const today = new Date().toISOString().split('T')[0];
   const box = document.getElementById('routesList');
 
-  const upcoming = allRoutes.filter(r => r.data_giro >= today && r.status !== 'completato' && r.status !== 'annullato');
-  const past = allRoutes.filter(r => r.data_giro < today || r.status === 'completato' || r.status === 'annullato').slice(0,3);
+  const upcoming = allRoutes.filter(r => r.status === 'in_corso' || (r.data_giro >= today && r.status !== 'completato' && r.status !== 'annullato'));
+  const past = allRoutes.filter(r => r.status !== 'in_corso' && (r.data_giro < today || r.status === 'completato' || r.status === 'annullato')).slice(0,3);
 
   let html = '';
   if(upcoming.length === 0) {
     html += `<div class="section-card"><p style="text-align:center;color:#6b7280;font-size:14px;padding:16px 0">Nessun giro programmato</p></div>`;
   } else {
-    html += `<div class="gf-section-label">Giri programmati</div>`;
+    html += `<div class="gf-section-label">Giri in corso e programmati</div>`;
     upcoming.forEach(r => { html += renderRouteCard(r, today); });
   }
   if(past.length > 0) {

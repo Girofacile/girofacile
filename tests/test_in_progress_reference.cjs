@@ -7,6 +7,7 @@ const root=path.resolve(__dirname,'..');
 const read=file=>fs.readFileSync(path.join(root,file),'utf8');
 
 function harness(){
+  const handlers={};
   const selectedRoute={
     id:19,nome:'Giro aziendale',status:'in_corso',
     driver_name:'Autista Verificato',vehicle_name:'Furgone Uno',
@@ -22,6 +23,7 @@ function harness(){
   const count={textContent:''};
   const page={
     innerHTML:'',children:[],
+    contains:()=>true,
     querySelector(selector){
       if(selector==='[data-ip-picker]')return picker;
       if(selector==='[data-ip-count]')return count;
@@ -39,7 +41,7 @@ function harness(){
     document:{
       getElementById(id){return id==='dashboardInProgressPage'?page:
         id==='tab-dashboard-in-progress'?{classList:{contains:()=>false}}:null;},
-      addEventListener(){},
+      addEventListener(type,handler){handlers[type]=handler;},
     },
     api:async()=>({state:'unavailable'}),
     loadRoadMapLibrary:async()=>true,
@@ -56,8 +58,51 @@ function harness(){
   };
   context.GFDriverBreaks=vm.runInNewContext(read('static/driver-schedule.js')+';window.GFDriverBreaks',{window:{}});
   vm.runInNewContext(read('static/dashboard/js/in-progress-reference.js'),context);
-  return {page,picker,count,route:selectedRoute,controller:context.window.GFInProgressReference};
+  return {page,picker,count,route:selectedRoute,controller:context.window.GFInProgressReference,context,handlers};
 }
+
+test('annullamento usa il giro selezionato e aggiorna elenco solo dopo il successo',async()=>{
+  const {page,route,controller,context,handlers}=harness();
+  controller.render([route],route);
+  assert.match(page.innerHTML,/data-ip-action="cancel">Annulla giro/);
+  const calls=[];
+  context.confirm=()=>false;
+  context.api=async(...args)=>{calls.push(args);};
+  context.toast=()=>{};
+  context.loadDashboardInProgressPage=async()=>{calls.push(['reload']);};
+  const button={dataset:{ipAction:'cancel'},disabled:false};
+  const event={target:{closest:selector=>selector==='[data-ip-action]'?button:null}};
+  await handlers.click(event);
+  assert.equal(calls.length,0);
+  context.confirm=()=>true;
+  await handlers.click(event);
+  assert.equal(calls[0][0],'/api/routes/19/cancel');
+  assert.equal(calls[0][1].method,'POST');
+  assert.equal(calls[1][0],'reload');
+  assert.equal(button.disabled,false);
+  calls.length=0;
+  context.api=async()=>{throw new Error('Accesso negato');};
+  let message;
+  context.toast=value=>{message=value;};
+  await handlers.click(event);
+  assert.equal(message,'Accesso negato');
+  assert.equal(calls.length,0);
+  assert.equal(button.disabled,false);
+});
+
+test('autista vede il giro in corso vecchio anche con oltre tre giri recenti',()=>{
+  const html=read('static/driver/index.html');
+  const source=html.slice(html.indexOf('function renderRoutes()'),html.indexOf('function renderRouteCard('));
+  const box={innerHTML:''};
+  const context={document:{getElementById:()=>box},Date,
+    allRoutes:[...Array.from({length:5},(_,i)=>({id:i,data_giro:'2020-01-02',status:'completato'})),
+      {id:99,data_giro:'2020-01-01',status:'in_corso'}],
+    renderRouteCard:r=>'[route:'+r.id+']'};
+  vm.runInNewContext(source+';renderRoutes()',context);
+  assert.match(box.innerHTML,/Giri in corso e programmati/);
+  assert.equal(box.innerHTML.split('[route:99]').length-1,1);
+  assert.ok(box.innerHTML.indexOf('[route:99]')<box.innerHTML.indexOf('Recenti'));
+});
 
 test('nuovo layout giri in corso mantiene i dati reali e le azioni operative',()=>{
   const {page,picker,count,route,controller}=harness();
