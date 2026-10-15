@@ -174,19 +174,19 @@ def main():
                     if name == 'route-preview':
                         preview=page.locator('#routePreviewResult')
                         assert preview.locator('.gf-routing-costs > div').count() == 3
-                        assert preview.locator('.result-cards .mini-card').count() == 6
-                        assert preview.locator('.result-layout > .route-map-panel-v74').count() == 1
-                        assert preview.locator('.result-summary-card .preview-program').is_visible()
-                        assert preview.locator('.result-summary-card button', has_text='Aggiorna ETA').is_visible()
-                        assert preview.locator('.result-summary-card a', has_text='Apri in Google Maps').get_attribute('href').startswith('https://www.google.com/maps/')
-                        stops=preview.locator('.stops-panel').bounding_box()
-                        layout=preview.locator('.result-layout').bounding_box()
+                        assert preview.locator('[data-preview-metrics] .gf-stat-strip__cell').count() == 6
+                        assert preview.locator('[data-preview-layout] > [data-preview-map]').count() == 1
+                        assert preview.locator('[data-preview-summary] [data-preview-program]').is_visible()
+                        assert preview.locator('[data-preview-summary] button', has_text='Aggiorna ETA').is_visible()
+                        assert preview.locator('[data-preview-summary] a', has_text='Apri in Google Maps').get_attribute('href').startswith('https://www.google.com/maps/')
+                        stops=preview.locator('[data-preview-stops]').bounding_box()
+                        layout=preview.locator('[data-preview-layout]').bounding_box()
                         assert stops['y']+stops['height'] <= layout['y']+1
                         assert abs(stops['width']-layout['width']) < 2
-                        preview.locator('.preview-stop-actions summary').first.click()
-                        assert preview.locator('.preview-stop-actions .row-actions').first.is_visible()
-                        preview.locator('.preview-map-jump').click()
-                        preview.locator('.preview-back').click()
+                        preview.locator('[data-preview-stop-actions] summary').first.click()
+                        assert preview.locator('[data-preview-stop-actions] [data-preview-stop-tools]').first.is_visible()
+                        preview.locator('[data-preview-map-jump]').click()
+                        preview.locator('[data-preview-back]').click()
                         assert page.locator('#tab-giro').is_visible()
                         page.evaluate("showTab('route-preview')")
                         interactions.append(f'{width}: preview costs, full-width stops, map, actions and navigation')

@@ -29,9 +29,11 @@ test('zero violations has no urgent window alarm, preserves operational warnings
 
 test('clean preview uses six full-width metrics and keeps map, print and scheduling actions',()=>{
   const html=render(false,{consegne:[{ordine:1,cliente_nome:'Cliente',indirizzo:'Via Roma',warning:''}],totale_km:89.59,litri_stimati:7.62,google_maps_url:'https://www.google.com/maps'});
-  assert.equal((html.match(/class="mini-card"/g)||[]).length,6);
-  assert.ok(html.indexOf('class="result-cards"') < html.indexOf('class="result-layout"'));
-  assert.doesNotMatch(html,/class="alerts-panel"/);
+  // Sei indicatori nella striscia numeri, prima della griglia mappa + azioni; nessun avviso senza problemi.
+  const metrics=html.slice(html.indexOf('data-preview-metrics'),html.indexOf('data-preview-stops'));
+  assert.equal((metrics.match(/class="gf-stat-strip__cell"/g)||[]).length,6);
+  assert.ok(html.indexOf('data-preview-metrics') < html.indexOf('data-preview-layout'));
+  assert.doesNotMatch(html,/data-preview-alerts/);
   for(const text of ['89.59 km','7.62 L','Programma giro','Visualizza su mappa','Apri in Google Maps','Ricarica mappa','Stampa dettaglio fermate','Copia indirizzo']) assert.ok(html.includes(text),text);
 });
 
@@ -40,7 +42,7 @@ test('saved history cannot schedule or reorder stops and routes without IDs do n
   assert.doesNotMatch(history,/programCurrentRoute|draggable="true"/);
   assert.match(history,/Risultato giro salvato/);
   const unsaved=render(false,{id:null});
-  assert.doesNotMatch(unsaved,/programCurrentRoute|class="route-map-panel-v74"/);
+  assert.doesNotMatch(unsaved,/programCurrentRoute|data-preview-map[ >]/);
 });
 
 test('unclassified warnings remain visible in the preview summary and stop table',()=>{

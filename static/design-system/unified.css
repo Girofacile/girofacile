@@ -174,19 +174,18 @@ html body[data-gf-surface="workspace"] #app#app .content :is(.driver-card,.agent
 /* ---------------------------------------------------------------------------
    5. Stati vuoti: icona discreta, titolo 16 px, testo 13 px, al centro del pannello.
    ------------------------------------------------------------------------- */
-html body[data-gf-surface="workspace"] #app#app .content :is(.route-preview-empty-v76,.dash-detail-empty):not(.hidden){
+html body[data-gf-surface="workspace"] #app#app .content :is(.dash-detail-empty):not(.hidden){
   display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;
   min-height:220px;padding:32px 24px!important;text-align:center!important;
   border:1px solid var(--gf-color-border)!important;border-radius:var(--gf-radius-lg)!important;
   background:var(--gf-color-surface)!important;box-shadow:var(--gf-shadow-sm)!important;
 }
-html body[data-gf-surface="workspace"] #app#app .content :is(.route-preview-empty-v76,.dash-detail-empty) :is(h2,h3){
+html body[data-gf-surface="workspace"] #app#app .content :is(.dash-detail-empty) :is(h2,h3){
   margin:0!important;font:700 16px/1.3 var(--gf-font-display)!important;color:var(--gf-color-text)!important;
 }
-html body[data-gf-surface="workspace"] #app#app .content :is(.route-preview-empty-v76,.dash-detail-empty) p{
+html body[data-gf-surface="workspace"] #app#app .content :is(.dash-detail-empty) p{
   max-width:420px;margin:6px auto 0!important;font-size:13px!important;line-height:1.5!important;color:var(--gf-color-muted)!important;
 }
-html body[data-gf-surface="workspace"] #app#app .content :is(.route-preview-empty-v76) .btn-primary{margin-top:16px!important}
 
 /* ---------------------------------------------------------------------------
    6. Badge e stati: pillole con colori semantici del sistema.

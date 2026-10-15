@@ -85,7 +85,7 @@ def main():
                 page.locator('#routePreviewResult .driver-break-row').wait_for()
                 assert '09:00' in page.locator('#routePreviewResult .driver-break-row').inner_text()
                 assert db.get(Driver,1).work_schedule['breaks'][0]['end']=='08:45'
-                assert page.locator('#routePreviewResult .draggable-stop').count()==2
+                assert page.locator('#routePreviewResult [data-preview-stop]').count()==2
                 assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 2')
                 page.screenshot(path=str(output/f'single-{width}.png'),full_page=True)
                 # Every read-only stop view contains the same break row.
@@ -106,7 +106,7 @@ def main():
                 page.screenshot(path=str(output/f'fleet-setup-{width}.png'),full_page=True)
                 page.evaluate('rows=>{deliveries=rows;renderDeliveries();}',data['consegne'][:6])
                 page.evaluate('optimizeRoute()')
-                page.locator('.fleet-review-lane .driver-break-card').wait_for()
+                page.locator('[data-fleet-lane] .driver-break-card').wait_for()
                 assert page.locator('[data-fleet-stop]').count()==6
                 assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 2')
                 page.screenshot(path=str(output/f'fleet-{width}.png'),full_page=True)

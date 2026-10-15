@@ -71,8 +71,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
 /* 2. Superfici: una sola grammatica visiva per pagine gestionali. */
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .panel,.card,.gf-card,.gf-directory-panel,.customer-list-panel-v8,.orders-filter-panel,
-  .customer-card,.dash-sub-card,.dash-sub-route-picker,.live-design-card,.live-design-picker,
-  .route-map-panel-v74){
+  .customer-card,.dash-sub-card,.dash-sub-route-picker,.live-design-card,.live-design-picker){
   border:1px solid var(--gf-color-border)!important;
   border-radius:16px!important;
   background:var(--gf-color-surface)!important;

@@ -85,7 +85,9 @@ test('trasferimenti notificati e mappe solo sul contenuto, senza nuova sidebar',
  assert.match(review,/data-fleet-lane/);
  assert.match(review,/loadRoadMapLibrary\(\)/);
  assert.match(review,/Collegamenti indicativi, non stradali/);
- assert.match(css,/#routePreviewResult\.fleet-review-page/);
+ // La revisione usa i componenti del sistema; nel foglio dedicato restano solo i segnaposto della mappa.
+ assert.match(review,/data-fleet-review/);
+ assert.match(css,/\.fleet-review-pin/);
  assert.doesNotMatch(css,/\.sidebar\s*\{|\.brand\s*\{|\.topbar\s*\{/);
  assert.match(html,/fleet-review\.css\?v=[\w-]+/);
  assert.match(html,/fleet-review\.js\?v=[\w-]+/);

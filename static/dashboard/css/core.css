@@ -226,15 +226,6 @@ textarea{margin-top:14px;resize:vertical}
   font-size:15.5px;
 }
 .summary-row strong{color:var(--text)}
-.summary-highlight{
-  margin-top:18px;
-  border-radius:14px;
-  background:#f1e9ff;
-  padding:18px;
-  color:#6d28d9;
-}
-.summary-highlight span{display:block;font-size:13.5px;font-weight:700;margin-bottom:8px}
-.summary-highlight strong{font-size:24px}
 
 .tableWrap{overflow:auto;border:1px solid var(--line);border-radius:14px}
 table{width:100%;border-collapse:collapse;min-width:920px;background:white}
@@ -331,33 +322,13 @@ label{letter-spacing:.01em;}
 .toast{position:fixed;right:28px;bottom:28px;background:#071b35;color:white;padding:14px 18px;border-radius:12px;box-shadow:0 18px 40px rgba(15,23,42,.25);z-index:9999;font-weight:800;}
 
 /* V3.6.3.2 risultato giro professionale */
-.result-pro{margin-top:22px;}
-.result-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;}
-.result-header h2{font-size:34px;margin:0;letter-spacing:-.04em;}
-.result-header p{margin:6px 0 0;color:var(--muted);font-weight:600;}
-.result-layout{display:grid;grid-template-columns:1fr 310px;gap:18px;align-items:start;}
-.result-main{display:flex;flex-direction:column;gap:18px;}
-.result-cards{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;}
-.mini-card{background:white;border:1px solid var(--line);border-radius:16px;padding:18px;display:flex;gap:13px;align-items:center;box-shadow:var(--shadow);}
-.mini-card small{display:block;color:#64748b;font-weight:800;font-size:13px;margin-bottom:4px;}
-.mini-card strong{display:block;font-size:21px;letter-spacing:-.03em;}
-.mini-icon{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:20px;}
-.mini-icon.blue{background:#e8f1ff;color:#0b63f6}.mini-icon.orange{background:#fff2df;color:#f59e0b}.mini-icon.green{background:#e4f8ed;color:#16a34a}.mini-icon.purple{background:#f0e8ff;color:#7c3aed}
-.alerts-panel,.stops-panel,.result-summary-card{background:white;border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:var(--shadow);}
-.alerts-panel h3,.stops-panel h3,.result-summary-card h3{margin:0 0 16px;font-size:22px;letter-spacing:-.03em;}
-.alert-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;}
-.alert-card{border-radius:14px;padding:18px;border:1px solid;display:flex;flex-direction:column;gap:8px;}
-.alert-card strong{font-size:16px}.alert-card span{font-weight:900;}
-.alert-card.danger{background:#fff1f2;border-color:#fecdd3;color:#be123c}.alert-card.orange{background:#fff7ed;border-color:#fed7aa;color:#c2410c}.alert-card.yellow{background:#fefce8;border-color:#fde68a;color:#a16207}
-.result-summary-card{position:sticky;top:96px;}
-.result-summary-card .btn-primary,.result-summary-card .btn-secondary{margin-top:12px;text-align:center;}
+
 .badge{display:inline-block;padding:8px 10px;border-radius:8px;font-size:13px;font-weight:900;margin:2px;}
-.ok-badge{background:#eaf8ef;color:#15803d}.danger-badge{background:#fee2e2;color:#b91c1c}.orange-badge{background:#ffedd5;color:#c2410c}.warn-badge{background:#fef3c7;color:#a16207}
 .result-table th,.result-table td{font-size:14.5px;}
 .result-table{min-width:1180px;}
 
-@media(max-width:1350px){.result-cards{grid-template-columns:repeat(3,1fr)}.result-layout{grid-template-columns:1fr}.result-summary-card{position:static}.add-grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:760px){.result-cards,.alert-grid{grid-template-columns:1fr}.time-range{grid-template-columns:auto 1fr;}.add-grid{grid-template-columns:1fr}.row-actions{flex-wrap:wrap}.result-header h2{font-size:28px}}
+@media(max-width:1350px){.add-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:760px){.time-range{grid-template-columns:auto 1fr;}.add-grid{grid-template-columns:1fr}.row-actions{flex-wrap:wrap}}
 
 /* V3.6.3.2 GiroFacile: profilo account e pulizia topbar/sidebar */
 .profile-button{
@@ -458,8 +429,8 @@ label{letter-spacing:.01em;}
 
 /* GiroFacile V3.7.8.1 - account, filtri clienti, selezione clienti, drag & drop */
 .full{width:100%}
-.customer-picker-panel{border:1px solid #dbeafe;background:#f8fbff;border-radius:18px;padding:14px;margin-bottom:16px}.picker-header{display:flex;justify-content:space-between;gap:10px;align-items:end;margin-bottom:12px}.picker-header strong{font-size:17px;color:#0f172a}.picker-header small{color:#64748b}.customer-filters{display:grid;grid-template-columns:repeat(5,minmax(120px,1fr));gap:10px;margin-bottom:12px}.customer-filters input,.customer-filters select{height:42px;border:1px solid #d1d5db;border-radius:12px;padding:0 10px;background:white}.customer-picker-list{max-height:290px;overflow:auto;display:grid;gap:8px}.customer-list-head{align-items:center}.btn-danger{background:#dc2626;color:#fff;border:0;border-radius:12px;padding:11px 14px;font-weight:800;cursor:pointer}.btn-danger:hover{filter:brightness(.96)}.draggable-stop{cursor:grab}.draggable-stop:active{cursor:grabbing}.drag-handle{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:8px;background:#eef2ff;color:#3730a3;margin-right:6px;font-weight:900}.result-header{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}.result-header-actions{display:grid;gap:7px;justify-items:end}.result-header-actions small{color:#64748b;font-weight:700}.resultBox{margin-bottom:12px}
-@media(max-width:900px){.customer-filters{grid-template-columns:1fr 1fr}.result-header{flex-direction:column}.result-header-actions{justify-items:start}.customer-list-head{align-items:flex-start}}
+.customer-picker-panel{border:1px solid #dbeafe;background:#f8fbff;border-radius:18px;padding:14px;margin-bottom:16px}.picker-header{display:flex;justify-content:space-between;gap:10px;align-items:end;margin-bottom:12px}.picker-header strong{font-size:17px;color:#0f172a}.picker-header small{color:#64748b}.customer-filters{display:grid;grid-template-columns:repeat(5,minmax(120px,1fr));gap:10px;margin-bottom:12px}.customer-filters input,.customer-filters select{height:42px;border:1px solid #d1d5db;border-radius:12px;padding:0 10px;background:white}.customer-picker-list{max-height:290px;overflow:auto;display:grid;gap:8px}.customer-list-head{align-items:center}.btn-danger{background:#dc2626;color:#fff;border:0;border-radius:12px;padding:11px 14px;font-weight:800;cursor:pointer}.btn-danger:hover{filter:brightness(.96)}.resultBox{margin-bottom:12px}
+@media(max-width:900px){.customer-filters{grid-template-columns:1fr 1fr}.customer-list-head{align-items:flex-start}}
 
 /* GiroFacile V3.7.8.1 - Sezione Autisti */
 
@@ -1555,7 +1526,6 @@ body.admin-mode .side-nav .nav-item.active{
 /* Pulizia dashboard/pianificazione: sezioni rimosse o non più usate */
 .dash-main-grid{display:none!important}
 .right-summary{display:none!important}
-.result-header-actions small{max-width:360px;text-align:right;display:block}
 
 /* Dashboard/Pianificazione pulizia v4 */
 .dash-board-columns{grid-template-columns:repeat(4,minmax(0,1fr));align-items:stretch}
@@ -2469,7 +2439,7 @@ body.workspace-empty-v49-active #tab-dashboard > :not(#workspaceEmptyDashboardV4
 .btn-billing-v63{background:#0f172a;color:#fff;border:1px solid #0f172a}
 
 /* v67 - AI assistita */
-.ai-explanation-v67{margin-top:10px;padding:12px;border-radius:14px;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.18);font-size:13px;color:#0f172a;text-align:left}.ai-explanation-v67 strong{display:block;margin-bottom:6px;color:#1d4ed8}.ai-explanation-v67 p{margin:0;line-height:1.45}.ai-explanation-v67 small{display:block;margin-top:6px;color:#64748b}.hidden{display:none!important}@media(max-width:760px){.ai-explanation-v67{font-size:13px;border-radius:16px;padding:14px}}
+.hidden{display:none!important}
 
 /* v68 - Pianificazione guidata mobile/desktop */
 .route-step-panel{
@@ -2495,94 +2465,9 @@ body.workspace-empty-v49-active #tab-dashboard > :not(#workspaceEmptyDashboardV4
 }
 
 /* v74 - Mappa Google giro */
-.route-map-panel-v74{
-  margin-top:18px;
-  background:#fff;
-  border:1px solid #e5e7eb;
-  border-radius:18px;
-  padding:16px;
-  box-shadow:0 10px 28px rgba(15,23,42,.06);
-}
-.route-map-head-v74{
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:14px;
-  margin-bottom:12px;
-}
-.route-map-head-v74 h3{margin:0 0 4px;font-size:18px;color:#0f172a;}
-.route-map-head-v74 p{margin:0;color:#64748b;font-size:13px;}
-.route-map-actions-v74{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;}
-.route-google-map-v74{
-  width:100%;
-  min-height:420px;
-  border-radius:16px;
-  overflow:hidden;
-  background:#eef2f7;
-  border:1px solid #dbe3ee;
-  position:relative;
-}
-.route-map-loading-v74,.route-map-empty-v74{
-  min-height:420px;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
-  gap:8px;
-  padding:22px;
-  color:#475569;
-}
-.route-map-empty-v74 strong{color:#0f172a;font-size:16px;}
-.route-map-empty-v74 p{margin:0;max-width:520px;line-height:1.45;}
-.route-map-note-v74{display:block;margin-top:8px;color:#64748b;font-size:12px;}
-.route-map-popup-v74{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.35;color:#0f172a;max-width:240px;}
-.route-map-popup-v74 span{color:#475569;}
-.route-map-warn-v74{
-  position:absolute;
-  left:12px;
-  bottom:12px;
-  background:#fff7ed;
-  color:#9a3412;
-  border:1px solid #fed7aa;
-  border-radius:12px;
-  padding:8px 10px;
-  font-size:12px;
-  box-shadow:0 10px 24px rgba(15,23,42,.14);
-  z-index:2;
-}
-@media(max-width: 768px){
-  .route-map-panel-v74{padding:12px;border-radius:16px;margin-top:14px;}
-  .route-map-head-v74{display:block;}
-  .route-map-actions-v74{margin-top:10px;justify-content:stretch;}
-  .route-map-actions-v74 a,.route-map-actions-v74 button{width:100%;}
-  .route-google-map-v74{min-height:360px;border-radius:14px;}
-  .route-map-loading-v74,.route-map-empty-v74{min-height:360px;}
-}
 
 /* v76 - Anteprima giro dedicata */
-.route-preview-title-v76{
-  align-items:flex-start;
-  gap:16px;
-}
-.route-preview-actions-v76{
-  display:flex;
-  gap:10px;
-  align-items:center;
-}
-.route-preview-result-v76{
-  display:block;
-}
-.route-preview-empty-v76{
-  min-height:260px;
-  display:flex;
-  flex-direction:column;
-  align-items:flex-start;
-  justify-content:center;
-  gap:12px;
-  border:1px dashed #cfd8ea;
-  background:linear-gradient(180deg,#ffffff,#f8fbff);
-}
+
 .route-preview-top-actions-v76{
   display:flex;
   align-items:center;
@@ -2595,37 +2480,14 @@ body.workspace-empty-v49-active #tab-dashboard > :not(#workspaceEmptyDashboardV4
   color:#64748b;
   line-height:1.35;
 }
-#tab-route-preview .result-pro{
-  margin-top:0;
-}
-#tab-route-preview .route-map-panel-v74{
-  margin-top:18px;
-}
-#tab-route-preview .result-summary-card{
-  position:sticky;
-  top:92px;
-}
 
 @media (max-width: 760px){
-  .route-preview-title-v76{
-    flex-direction:column;
-  }
-  .route-preview-actions-v76,
-  .route-preview-actions-v76 button{
-    width:100%;
-  }
   .route-preview-top-actions-v76{
     width:100%;
     justify-content:flex-start;
   }
   .route-preview-top-actions-v76 button{
     width:100%;
-  }
-  #tab-route-preview .result-summary-card{
-    position:static;
-  }
-  #tab-route-preview .route-google-map-v74{
-    min-height:320px;
   }
 }
 
