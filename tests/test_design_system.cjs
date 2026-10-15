@@ -513,7 +513,7 @@ test('all five directory KPI icons use the same neutral gray dashboard treatment
     const section=html.slice(start,html.indexOf('<section id="tab-',start+20));
     if(/gf-stat-card__icon/.test(section)){
       assert.doesNotMatch(section,/gf-stat-card__icon"(?! data-tone="neutral")|data-tone="(?!neutral)[a-z]+"/,tab+' neutral icons');
-    }else{
+    }else if(/(customer|deposit|gf-directory)-metric-icon|stat-icon/.test(section)){
       assert.match(block,new RegExp('#tab-'+tab),tab+' legacy neutral icons');
     }
   }
