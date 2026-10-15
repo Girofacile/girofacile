@@ -10,42 +10,28 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GiroFacile · Super Admin</title>
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#0f172a;--surface:#1e293b;--surface2:#273549;--border:#334155;--text:#f1f5f9;--muted:#94a3b8;--accent:#3b82f6;--danger:#ef4444;--success:#10b981}
-body{min-height:100vh;background:radial-gradient(circle at top left,rgba(59,130,246,.22),transparent 34%),var(--bg);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--text);display:flex;align-items:center;justify-content:center;padding:24px}
-.card{width:100%;max-width:430px;background:rgba(30,41,59,.96);border:1px solid var(--border);border-radius:22px;padding:30px;box-shadow:0 24px 90px rgba(0,0,0,.35)}
-.brand{display:flex;gap:12px;align-items:center;margin-bottom:24px}.logo{width:44px;height:44px;border-radius:14px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:900}.brand h1{font-size:20px}.brand p{font-size:12px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.08em}
-.notice{padding:13px 14px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.25);border-radius:14px;color:#bfdbfe;font-size:13px;line-height:1.45;margin-bottom:20px}
-label{display:block;font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin:14px 0 7px}input{width:100%;padding:13px 14px;border-radius:12px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:15px;outline:none}input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,.16)}
-button{width:100%;margin-top:18px;padding:13px 16px;border-radius:12px;border:0;background:var(--accent);color:white;font-weight:800;font-size:15px;cursor:pointer}button:hover{background:#2563eb}button:disabled{opacity:.65;cursor:not-allowed}.msg{margin-top:14px;font-size:13px;line-height:1.45}.msg.error{color:#fecaca}.msg.ok{color:#bbf7d0}.links{display:flex;justify-content:space-between;gap:12px;margin-top:18px;font-size:13px}.links a{color:var(--muted);text-decoration:none}.links a:hover{color:var(--text)}
-</style>
 
 <link rel="stylesheet" href="/static/design-system/theme.css?v=gf_base_20261015v">
 <link rel="stylesheet" href="/static/design-system/components.css?v=gf_base_20261015u">
 <link rel="stylesheet" href="/static/design-system/layout.css?v=gf_base_20261015w">
-<link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007">
 <script src="/static/design-system/design-system.js?v=ds_20261007" defer></script>
-<link rel="stylesheet" href="/static/design-system/portal-unified.css?v=gf_unified_20261014_1">
 </head>
-<body data-gf-surface="auth" data-gf-portal>
-  <main class="card">
-    <div class="brand">
-      <img class="gf-auth-logo" src="/static/girofacile-logo.png" alt="Logo GiroFacile" width="48" height="48"><div><strong class="gf-auth-brand-name">GiroFacile</strong><p>Pannello Super Admin</p></div>
-    </div>
-    <h1 class="gf-auth-title">Accesso Super Admin</h1>
-    <div class="notice">Accesso riservato al proprietario della piattaforma. Per aziende, autisti e agenti usa il login normale.</div>
-    <form id="superadmin-form">
-      <label for="username">Username</label>
-      <input id="username" name="username" autocomplete="username" placeholder="admin" required>
-      <label for="password">Password</label>
-      <input id="password" name="password" type="password" autocomplete="current-password" required>
-      <button id="submit-btn" type="submit">Accedi al pannello SaaS</button>
-      <div id="msg" class="msg"></div>
-    </form>
-    <div class="links">
-      <a href="/login">Login utenti GiroFacile</a>
-      <a href="/">Torna al sito</a>
+<body data-gf-surface="auth">
+  <main class="gf-auth__main">
+    <div class="gf-auth__card">
+      <div class="gf-cluster"><img src="/static/girofacile-logo.png" alt="Logo GiroFacile" width="40" height="40"><div><strong>GiroFacile</strong><p class="gf-kicker">Pannello Super Admin</p></div></div>
+      <h1 class="gf-title">Accesso Super Admin</h1>
+      <div class="gf-alert" data-status="info">Accesso riservato al proprietario della piattaforma. Per aziende, autisti e agenti usa il login normale.</div>
+      <form id="superadmin-form" class="gf-stack">
+        <label class="gf-field" for="username"><span class="gf-field__label">Username</span><input class="gf-input" id="username" name="username" autocomplete="username" placeholder="admin" required></label>
+        <label class="gf-field" for="password"><span class="gf-field__label">Password</span><input class="gf-input" id="password" name="password" type="password" autocomplete="current-password" required></label>
+        <button id="submit-btn" class="gf-button" data-variant="primary" type="submit">Accedi al pannello SaaS</button>
+        <div id="msg" role="status" aria-live="polite"></div>
+      </form>
+      <div class="gf-cluster" data-justify="between">
+        <a class="gf-button" data-variant="link" href="/login">Login utenti GiroFacile</a>
+        <a class="gf-button" data-variant="link" href="/">Torna al sito</a>
+      </div>
     </div>
   </main>
 <script>
@@ -53,14 +39,14 @@ const form=document.getElementById('superadmin-form');
 const msg=document.getElementById('msg');
 const btn=document.getElementById('submit-btn');
 form.addEventListener('submit',async(e)=>{
-  e.preventDefault(); msg.textContent=''; msg.className='msg'; btn.disabled=true;
+  e.preventDefault(); msg.textContent=''; msg.className=''; btn.disabled=true;
   try{
     const res=await fetch('/api/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:document.getElementById('username').value,password:document.getElementById('password').value})});
     const data=await res.json().catch(()=>({}));
     if(!res.ok) throw new Error(data.detail||'Accesso non riuscito');
-    msg.textContent='Accesso effettuato. Reindirizzamento...'; msg.className='msg ok';
+    msg.textContent='Accesso effettuato. Reindirizzamento...'; msg.className='gf-alert'; msg.dataset.status='success';
     window.location.href=data.redirect_url||'/admin';
-  }catch(err){msg.textContent=err.message||'Errore'; msg.className='msg error';}
+  }catch(err){msg.textContent=err.message||'Errore'; msg.className='gf-alert'; msg.dataset.status='danger';}
   finally{btn.disabled=false;}
 });
 </script>
