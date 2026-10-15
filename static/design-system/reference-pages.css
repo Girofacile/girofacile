@@ -85,8 +85,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .panel,.card,.gf-card,.gf-directory-panel,.customer-list-panel-v8,
   .deposit-list-panel,.orders-list-panel,.orders-filter-panel,.orders-source-panel,
   .orders-source-card,.orders-order-card,.driver-directory-card,.fleet-card,
-  .customer-card,.deposit-card,.company-card-v29,.onboarding-card-v29,
-  .settings-panel,.report-chart-card,.report-table-card,.report-kpi-card,.dash-sub-card,.dash-sub-route-picker,
+  .customer-card,.deposit-card,.company-card-v29,.onboarding-card-v29,.report-chart-card,.report-table-card,.report-kpi-card,.dash-sub-card,.dash-sub-route-picker,
   .scheduled-overview,.scheduled-stops,.scheduled-summary,.completed-picker,
   .completed-stops,.completed-summary,.live-design-card,.live-design-picker,
   .route-map-panel-v74,.planning-setup-panel,.billing-section-v876,
@@ -113,13 +112,13 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   border-color:var(--gf-color-border)!important;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .company-section-heading,.company-section-heading h2,.settings-item h3,
+  .company-section-heading,.company-section-heading h2,
   .orders-source-card h3,.fleet-identity strong,.driver-directory-identity strong
 ){
   color:var(--gf-color-text);
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .company-section-icon,.settings-icon,.deposit-card-icon,.gf-directory-metric-icon,
+  .company-section-icon,.deposit-card-icon,.gf-directory-metric-icon,
   .report-kpi-icon,.driver-directory-avatar,.fleet-photo-placeholder,.billing-summary-icon-v876
 ){
   border-radius:10px!important;
@@ -471,15 +470,11 @@ body[data-gf-surface="workspace"] #app #tab-company .company-section-heading h2{
   font:700 16px/1.2 var(--gf-font-display)!important;
 }
 body[data-gf-surface="workspace"] #app #tab-giro .plan-step,
-body[data-gf-surface="workspace"] #app #tab-settings .settings-item,
 body[data-gf-surface="workspace"] #app #tab-ordini-collegamenti .orders-source-option{
   border-color:var(--gf-color-border)!important;
   border-radius:12px!important;
   background:var(--gf-color-surface)!important;
   box-shadow:none!important;
-}
-body[data-gf-surface="workspace"] #app #tab-settings .settings-item+.settings-item{
-  border-top-color:var(--gf-color-border)!important;
 }
 body[data-gf-surface="workspace"] #app #tab-report .report-chart-card :is(h2,h3){
   font-family:var(--gf-font-display)!important;

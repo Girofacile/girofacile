@@ -44,7 +44,7 @@ body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.stat-card,.
 color:var(--gf-color-text);font-size:var(--gf-font-2xl);font-weight:var(--gf-weight-bold);line-height:1.25;letter-spacing:-.025em;font-variant-numeric:tabular-nums;
 }
 body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.stat-icon,.customer-metric-icon,.deposit-metric-icon,.dash-kpi-icon,.mini-icon,.report-kpi-icon,
-.scheduled-icon,.completed-icon,.live-design-icon,.preview-cost-icon,.settings-icon,.company-section-icon){
+.scheduled-icon,.completed-icon,.live-design-icon,.preview-cost-icon,.company-section-icon){
 border-radius:var(--gf-radius-md);background:var(--gf-color-info-bg);color:var(--gf-color-info);box-shadow:none;
 }
 body[data-gf-surface="workspace"] #app #tab-dashboard :is(.dash-kpi-card,.dash-list-card,.dash-vehicles-panel){
@@ -119,10 +119,7 @@ body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.up-card-v87
 body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.up-card-v875.current-plan,.plan-page-grid-v874 .up-card.current-plan){border-color:var(--gf-color-success);background:var(--gf-color-success-bg)}
 body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) .up-card-v875:hover{transform:none;box-shadow:var(--gf-shadow-sm)}
 body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.plan-account-page-v875,.billing-page-v876){padding:0}
-body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.plan-page-actions-v875,.settings-save-bar-v893){background:var(--gf-color-surface);border-color:var(--gf-color-border);backdrop-filter:none;box-shadow:var(--gf-shadow-sm)}
-body[data-gf-surface="workspace"] #app #tab-settings .setting-copy strong{color:var(--gf-color-text);font-weight:var(--gf-weight-semibold);letter-spacing:normal}
-body[data-gf-surface="workspace"] #app #tab-settings .settings-detail{border-radius:var(--gf-radius-md);background:var(--gf-color-bg);color:var(--gf-color-muted)}
-body[data-gf-surface="workspace"] #app #tab-settings .switch-toggle input:checked+.switch-slider{background:var(--gf-color-primary);border-color:var(--gf-color-primary)}
+body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.plan-page-actions-v875){background:var(--gf-color-surface);border-color:var(--gf-color-border);backdrop-filter:none;box-shadow:var(--gf-shadow-sm)}
 /* .gf-dialog is sometimes a viewport overlay: only style its inner surface. */
 body[data-gf-surface="workspace"] :is(.gf-dialog .modal,dialog.customer-details-dialog,dialog.customer-tracking-dialog,dialog.live-map-dialog,dialog#driverDetailsDialog){border-color:var(--gf-color-border);border-radius:var(--gf-radius-lg);background:var(--gf-color-surface);color:var(--gf-color-text);box-shadow:var(--gf-shadow-md)}
 body[data-gf-surface="workspace"] .gf-dialog :is(.modal-head,.modal-header,.delivery-modal-head,.driver-modal-section,.delivery-modal-section,.deposit-modal-section){border-color:var(--gf-color-border);background:var(--gf-color-surface);box-shadow:none}
@@ -141,7 +138,7 @@ body[data-gf-surface="workspace"] #app #tab-dashboard .dash-board-columns{grid-t
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-list-card:last-child{grid-column:auto!important}
 body[data-gf-surface="workspace"] #app #tab-dashboard .dash-resource-row{grid-template-columns:1fr}
 body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.panel,.company-card-v29,.customer-list-panel-v8,.deposit-list-panel){padding:var(--gf-space-4)}
-body[data-gf-surface="workspace"] #app .gf-page .panel,body[data-gf-surface="workspace"] #app #tab-settings .settings-panel{border-radius:var(--gf-radius-lg)!important;box-shadow:var(--gf-shadow-sm)!important}
+body[data-gf-surface="workspace"] #app .gf-page .panel{border-radius:var(--gf-radius-lg)!important;box-shadow:var(--gf-shadow-sm)!important}
 }
 @media(max-width:640px){
 body[data-gf-surface="workspace"] #app #tab-clienti .customer-metrics{grid-template-columns:1fr;gap:var(--gf-space-2)}

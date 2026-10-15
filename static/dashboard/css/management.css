@@ -159,9 +159,6 @@ body:has(#app .gf-page:not(.hidden)) .content{padding:28px 34px 48px}
 #app #tab-autisti .driver-card{border-radius:14px;box-shadow:none;padding:18px}
 #app #tab-autisti .driver-avatar{background:#edf5ff;color:#247bff;box-shadow:none}
 #app #tab-autisti .driver-info-grid div{background:#f8fbff;border-color:var(--gf-line);border-radius:10px}
-#app #tab-settings .settings-panel{padding:0 24px}
-#app #tab-settings .settings-save-bar-v893{border-color:var(--gf-line);box-shadow:var(--gf-shadow)}
-#app #tab-settings #settingsSaveBtnV893{border-radius:12px;min-height:44px;font-size:14px;font-weight:600}
 
 /* Dialogs and dropdowns also belong to the same product, including those
  * launched from protected pages. Their parent pages remain untouched. */
@@ -206,7 +203,6 @@ body:has(#app .gf-page:not(.hidden)) .content{padding:28px 34px 48px}
   #app #tab-report .report-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
   #app #tab-report .report-kpi-card,#app #tab-report .report-kpi-card:nth-child(-n+4){grid-column:auto;min-height:140px;padding:16px}
   #app #tab-report .report-kpi-card:nth-child(-n+4) strong{font-size:27px}
-  #app #tab-settings .settings-panel{padding:0 16px}
   .gf-dialog :is(.modal){border-radius:18px!important}
 }
 @media(max-width:520px){
