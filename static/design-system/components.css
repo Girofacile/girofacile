@@ -94,7 +94,8 @@ body[data-gf-surface] .gf-table th { background: var(--gf-color-surface-subtle) 
 body[data-gf-surface] .gf-table tbody tr:hover { background: var(--gf-color-info-bg); }
 body[data-gf-surface] .gf-table tbody tr:last-child td { border-bottom: 0; }
 body[data-gf-surface] .gf-table :is(a,button) { max-width: 100%; }
-body[data-gf-surface] .gf-table td { overflow-wrap: anywhere; }
+body[data-gf-surface] .gf-table td { overflow-wrap: break-word; }
+body[data-gf-surface] .gf-table .gf-badge { white-space: nowrap; }
 body[data-gf-surface] dialog.gf-dialog {
   max-width: min(var(--gf-dialog-width),calc(100vw - var(--gf-space-8)));
   max-height: calc(100dvh - var(--gf-space-8)); overflow: auto;
@@ -175,7 +176,7 @@ body[data-gf-surface] :is(.gf-input,.gf-select) { height:var(--gf-control-height
 body[data-gf-surface] :is(.gf-input,.gf-select) { min-height:var(--gf-control-height) !important; }
 @media(max-width:640px) { body[data-gf-surface] :is(.gf-input,.gf-select) { min-height:var(--gf-control-touch) !important; } body[data-gf-surface] .gf-card[data-variant="action"] { align-items:flex-start; flex-direction:column; } }
 
-body[data-gf-surface] :is(.customer-search,.driver-search-box,.fleet-search) .gf-input { padding-left:var(--gf-space-10) !important; }
+body[data-gf-surface] :is(.customer-search,.driver-search-box) .gf-input { padding-left:var(--gf-space-10) !important; }
 body[data-gf-surface] .gf-button[aria-pressed="true"] { background:var(--gf-color-info-bg) !important; color:var(--gf-color-primary) !important; border-color:var(--gf-color-primary) !important; }
 
 /* Semantic actions retain readable contrast on hover. */
@@ -566,6 +567,12 @@ body[data-gf-surface] .gf-modal__footer{display:flex;justify-content:flex-end;fl
 body[data-gf-surface] .gf-overlay[data-position="side"]{place-items:stretch end;padding:0}
 body[data-gf-surface] .gf-overlay[data-position="side"] .gf-modal{width:min(var(--gf-drawer-width),100%);max-height:none;height:100%;border-radius:var(--gf-radius-lg) 0 0 var(--gf-radius-lg)}
 body[data-gf-surface] .gf-overlay[data-position="side"][data-embedded] .gf-modal{height:auto}
+/* Stessa finestra su <dialog> nativo (showModal): lo sfondo è il ::backdrop. */
+body[data-gf-surface] dialog.gf-modal{padding:0;color:var(--gf-color-text)}
+body[data-gf-surface] dialog.gf-modal:not([open]){display:none}
+body[data-gf-surface] dialog.gf-modal::backdrop{background:var(--gf-color-overlay)}
+body[data-gf-surface] dialog.gf-modal[data-position="side"]{margin:0 0 0 auto;width:min(var(--gf-drawer-width),100%);max-width:100%;height:100dvh;max-height:100dvh;border-radius:var(--gf-radius-lg) 0 0 var(--gf-radius-lg)}
+body[data-gf-surface] dialog.gf-modal[data-position="side"][data-size="lg"]{width:min(var(--gf-dialog-width),100%)}
 /* Elenco chiave–valore ---------------------------------------------------- */
 body[data-gf-surface] .gf-details{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:var(--gf-space-4) var(--gf-space-5);margin:0}
 body[data-gf-surface] .gf-details[data-layout="rows"]{grid-template-columns:minmax(0,1fr);gap:0}

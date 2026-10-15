@@ -10,8 +10,8 @@
 <meta charset="utf-8">
 <title>GiroFacile</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link href="/static/dashboard/css/core.css?v=gf_base_20261015f" rel="stylesheet">
-<link href="/static/dashboard/css/account.css?v=gf_base_20261015f" rel="stylesheet">
+<link href="/static/dashboard/css/core.css?v=gf_base_20261015g" rel="stylesheet">
+<link href="/static/dashboard/css/account.css?v=gf_base_20261015g" rel="stylesheet">
 <link href="/static/password-strength.css?v=password_policy_20261008_1" rel="stylesheet">
 <script src="/api/billing/catalog.js"></script>
 <script src="/static/dashboard/js/billing.js?v=collaborator_presets_20261009"></script>
@@ -25,38 +25,38 @@
 <script src="/static/routing-summary.js?v=driver_shifts_20261013_1"></script>
 <link rel="stylesheet" href="/static/dashboard/css/live-gps.css?v=live_20261006">
 <script src="/static/dashboard/js/live-gps.js?v=live_20261006"></script>
-<link href="/static/dashboard/css/deposits.css?v=gf_base_20261015f" rel="stylesheet">
-<link href="/static/dashboard/css/settings.css?v=gf_base_20261015f" rel="stylesheet">
-<link rel="stylesheet" href="/static/dashboard/css/electric-vehicles.css?v=gf_base_20261015f">
+<link href="/static/dashboard/css/deposits.css?v=gf_base_20261015g" rel="stylesheet">
+<link href="/static/dashboard/css/settings.css?v=gf_base_20261015g" rel="stylesheet">
+<link rel="stylesheet" href="/static/dashboard/css/electric-vehicles.css?v=gf_base_20261015g">
 <script src="/static/dashboard/js/electric-vehicles.js?v=electric_bonus_20261002"></script>
-<link rel="stylesheet" href="/static/dashboard/css/management.css?v=gf_base_20261015f">
+<link rel="stylesheet" href="/static/dashboard/css/management.css?v=gf_base_20261015g">
 <link rel="stylesheet" href="/static/dashboard/css/completed.css?v=20261006">
 <link rel="stylesheet" href="/static/pod.css?v=1">
 <link rel="stylesheet" href="/static/dashboard/css/occasional-stops.css?v=1">
 <script src="/static/pod.js?v=1"></script>
 <link rel="stylesheet" href="/static/tracking/company.css?v=20261004_design">
 <script src="/static/tracking/company.js?v=20261004_design"></script>
-<link href="/static/dashboard/css/vehicles.css?v=vehicle_placeholder_20261007" rel="stylesheet">
-<script src="/static/dashboard/js/vehicles.js?v=vehicle_placeholder_20261007"></script>
+<link href="/static/dashboard/css/vehicles.css?v=gf_base_20261015g" rel="stylesheet">
+<script src="/static/dashboard/js/vehicles.js?v=gf_base_20261015g"></script>
 <link href="/static/dashboard/css/drivers.css?v=drivers_20261007" rel="stylesheet">
 <script src="/static/dashboard/js/drivers.js?v=driver_shifts_20261013_1"></script>
 
 <!-- Shared GiroFacile design system; legacy sheets retain feature layout. -->
-<link rel="stylesheet" href="/static/design-system/tokens.css?v=gf_base_20261015f">
-<link rel="stylesheet" href="/static/design-system/components.css?v=gf_base_20261015f">
-<link rel="stylesheet" href="/static/design-system/layout.css?v=gf_base_20261015f">
-<link rel="stylesheet" href="/static/design-system/workspace.css?v=gf_base_20261015f">
+<link rel="stylesheet" href="/static/design-system/tokens.css?v=gf_base_20261015g">
+<link rel="stylesheet" href="/static/design-system/components.css?v=gf_base_20261015g">
+<link rel="stylesheet" href="/static/design-system/layout.css?v=gf_base_20261015g">
+<link rel="stylesheet" href="/static/design-system/workspace.css?v=gf_base_20261015g">
 <link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007_reference_2">
 <script src="/static/design-system/design-system.js?v=gf_base_20261015" defer></script>
-<script src="/static/design-system/shell.js?v=gf_base_20261015f" defer></script>
+<script src="/static/design-system/shell.js?v=gf_base_20261015g" defer></script>
 <link rel="stylesheet" href="/static/dashboard/css/collaborators.css?v=search_icon_fix_20261012_1">
 <link rel="stylesheet" href="/static/dashboard/css/orders.css?v=orders_header_canvas_20261013_1">
-<link rel="stylesheet" href="/static/design-system/reference-theme.css?v=gf_base_20261015f">
-<link rel="stylesheet" href="/static/design-system/reference-pages.css?v=gf_base_20261015f">
-<link rel="stylesheet" href="/static/design-system/reference-dialogs.css?v=gf_base_20261015f">
+<link rel="stylesheet" href="/static/design-system/reference-theme.css?v=gf_base_20261015g">
+<link rel="stylesheet" href="/static/design-system/reference-pages.css?v=gf_base_20261015g">
+<link rel="stylesheet" href="/static/design-system/reference-dialogs.css?v=gf_base_20261015g">
 <link rel="stylesheet" href="/static/dashboard/css/dashboard-real-map.css?v=gf_realmap_clean_20261012_2">
 <link rel="stylesheet" href="/static/dashboard/css/in-progress-reference.css?v=gf_inprogress_ref_20261013_1">
-<link rel="stylesheet" href="/static/dashboard/css/company.css?v=gf_base_20261015f">
+<link rel="stylesheet" href="/static/dashboard/css/company.css?v=gf_base_20261015g">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap">
 <link rel="stylesheet" href="/static/design-system/sidebar-unified.css?v=sidebar_global_20261013_1">
 <link rel="stylesheet" href="/static/dashboard/css/customers.css?v=cx_reference_20261014_1">
@@ -1118,76 +1118,82 @@
         </div>
       </div>
 
-      <section id="tab-mezzi" class="tab hidden gf-page gf-directory-page">
-        <div class="page-title-row gf-directory-title"><div><h1>Mezzi</h1><p>Gestisci i tuoi mezzi aziendali e le relative caratteristiche.</p></div></div>
-        <div class="gf-directory-metrics fleet-directory-metrics" aria-label="Riepilogo mezzi">
-          <article class="gf-directory-metric blue"><span class="gf-directory-metric-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h12v10H3zM15 10h4l2 3v4h-6"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg></span><div><h2>Totale mezzi</h2><strong id="fleetMetricTotal">0</strong><p>Veicoli registrati</p></div></article>
-          <article class="gf-directory-metric green"><span class="gf-directory-metric-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg></span><div><h2>Disponibili</h2><strong id="fleetMetricAvailable">0</strong><p>Pronti per nuovi giri</p></div></article>
-          <article class="gf-directory-metric orange"><span class="gf-directory-metric-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h10v8H4zM14 10h4l2 3v3h-6"/><circle cx="7" cy="17" r="1.5"/><circle cx="18" cy="17" r="1.5"/></svg></span><div><h2>In uso</h2><strong id="fleetMetricBusy">0</strong><p>Impegnati nei giri</p></div></article>
+      <section id="tab-mezzi" class="tab hidden gf-stack" data-gap="lg">
+        <div class="gf-grid" data-cols="3" aria-label="Riepilogo mezzi">
+          <article class="gf-stat-card"><span class="gf-stat-card__icon" data-tone="neutral"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h12v10H3zM15 10h4l2 3v4h-6"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg></span><span class="gf-stat-card__label">Totale mezzi</span><strong class="gf-stat-card__value" id="fleetMetricTotal">0</strong><span class="gf-stat-card__change">Veicoli registrati</span></article>
+          <article class="gf-stat-card"><span class="gf-stat-card__icon" data-tone="neutral"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg></span><span class="gf-stat-card__label">Disponibili</span><strong class="gf-stat-card__value" id="fleetMetricAvailable">0</strong><span class="gf-stat-card__change">Pronti per nuovi giri</span></article>
+          <article class="gf-stat-card"><span class="gf-stat-card__icon" data-tone="neutral"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h10v8H4zM14 10h4l2 3v3h-6"/><circle cx="7" cy="17" r="1.5"/><circle cx="18" cy="17" r="1.5"/></svg></span><span class="gf-stat-card__label">In uso</span><strong class="gf-stat-card__value" id="fleetMetricBusy">0</strong><span class="gf-stat-card__change">Impegnati nei giri</span></article>
         </div>
-        <section class="panel gf-directory-panel fleet-directory-panel" aria-labelledby="fleetDirectoryTitle">
-          <div class="panel-header gf-directory-head"><div><h2 id="fleetDirectoryTitle">Elenco mezzi</h2><p class="panel-subtitle">Cerca, filtra e scegli se visualizzare i mezzi a tabella o a card.</p></div><div class="gf-directory-head-actions"><button type="button" class="btn-primary" onclick="createFleetVehicle()">+ Nuovo mezzo</button></div></div>
-          <div class="gf-directory-toolbar fleet-directory-toolbar">
-            <label class="fleet-search gf-directory-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/></svg><input id="fleetSearch" aria-label="Cerca mezzi" placeholder="Cerca per nome, targa o modello..." oninput="renderFleetDirectory()"></label>
-            <select id="fleetStatusFilter" aria-label="Filtra disponibilità veicoli" onchange="renderFleetDirectory()"><option value="">Tutti gli stati</option><option value="available">Disponibili</option><option value="busy">In uso</option></select>
-            <select id="fleetSort" aria-label="Ordina mezzi" onchange="renderFleetDirectory()"><option value="name">Ordina per</option><option value="name_desc">Nome: Z–A</option><option value="plate">Targa</option><option value="status">Stato</option></select>
-            <div class="fleet-views gf-directory-view-controls" role="group" aria-label="Vista mezzi">
-              <button id="fleetTableButton" class="btn-secondary" type="button" aria-label="Vista tabella" aria-pressed="false" onclick="setFleetView('table')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h1M3 12h1M3 18h1"/></svg></button>
-              <button id="fleetCardsButton" class="btn-secondary" type="button" aria-label="Vista card" aria-pressed="true" onclick="setFleetView('cards')"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="15" y="3" width="6" height="6" rx="1"/><rect x="3" y="15" width="6" height="6" rx="1"/><rect x="15" y="15" width="6" height="6" rx="1"/></svg></button>
+        <section class="gf-panel" aria-labelledby="fleetDirectoryTitle">
+          <header class="gf-panel__header">
+            <div><h2 class="gf-panel__title" id="fleetDirectoryTitle">Elenco mezzi</h2><p class="gf-muted">Cerca, filtra e scegli se visualizzare i mezzi a tabella o a card.</p></div>
+            <button type="button" class="gf-button" data-variant="primary" onclick="createFleetVehicle()">+ Nuovo mezzo</button>
+          </header>
+          <div class="gf-panel__body gf-cluster">
+            <input class="gf-input" id="fleetSearch" type="search" aria-label="Cerca mezzi" placeholder="Cerca per nome, targa o modello..." oninput="renderFleetDirectory()">
+            <select class="gf-select" id="fleetStatusFilter" aria-label="Filtra disponibilità veicoli" onchange="renderFleetDirectory()"><option value="">Tutti gli stati</option><option value="available">Disponibili</option><option value="busy">In uso</option></select>
+            <select class="gf-select" id="fleetSort" aria-label="Ordina mezzi" onchange="renderFleetDirectory()"><option value="name">Ordina per</option><option value="name_desc">Nome: Z–A</option><option value="plate">Targa</option><option value="status">Stato</option></select>
+            <div class="gf-cluster" role="group" aria-label="Vista mezzi">
+              <button id="fleetTableButton" class="gf-chip" type="button" aria-label="Vista tabella" aria-pressed="false" onclick="setFleetView('table')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h1M3 12h1M3 18h1"/></svg></button>
+              <button id="fleetCardsButton" class="gf-chip" type="button" aria-label="Vista card" aria-pressed="true" onclick="setFleetView('cards')"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="15" y="3" width="6" height="6" rx="1"/><rect x="3" y="15" width="6" height="6" rx="1"/><rect x="15" y="15" width="6" height="6" rx="1"/></svg></button>
             </div>
           </div>
-          <p id="fleetPlanNotice" class="fleet-notice hidden" role="status"></p>
-          <div id="fleetCards" class="fleet-cards gf-directory-cards"></div>
-          <div id="fleetTable" class="tableWrap gf-directory-table hidden"><table class="fleet-table"><thead><tr><th>Mezzo</th><th>Targa</th><th>Tipo veicolo</th><th>Alimentazione</th><th>Consumo</th><th>Stato</th><th data-gf-feature="tail_lift">Sponda</th><th data-gf-feature="ztl">ZTL</th><th>Azioni</th></tr></thead><tbody id="vehiclesBody"></tbody></table></div>
-          <p id="fleetEmpty" class="fleet-empty hidden" role="status">Nessun mezzo trovato.</p><p id="fleetLoadStatus" class="fleet-notice hidden" role="status"></p>
+          <p id="fleetPlanNotice" class="gf-alert hidden" data-status="warning" role="status"></p>
+          <div id="fleetCards" class="gf-panel__body gf-grid" data-cols="3"></div>
+          <div id="fleetTable" class="gf-table-wrap hidden"><table class="gf-table" data-gf-responsive="cards"><thead><tr><th scope="col">Mezzo</th><th scope="col">Targa</th><th scope="col">Tipo veicolo</th><th scope="col">Alimentazione</th><th scope="col">Consumo</th><th scope="col">Stato</th><th scope="col" data-gf-feature="tail_lift">Sponda</th><th scope="col" data-gf-feature="ztl">ZTL</th><th scope="col">Azioni</th></tr></thead><tbody id="vehiclesBody"></tbody></table></div>
+          <div id="fleetEmpty" class="gf-empty hidden" role="status">Nessun mezzo trovato.</div><p id="fleetLoadStatus" class="gf-alert hidden" data-status="danger" role="status"></p>
         </section>
-        <dialog id="vehicleDrawer" aria-labelledby="vehicleFormTitle" oncancel="if(document.getElementById('saveVehicleBtn').disabled)event.preventDefault()">
-        <section class="panel gf-vehicle-form" aria-labelledby="vehicleFormTitle">
-          <div class="panel-header"><div><h2 id="vehicleFormTitle">Crea mezzo</h2><p>Compila i dati del veicolo, i consumi e le capacità operative.</p></div><button type="button" class="fleet-close" onclick="closeVehicleDrawer()" aria-label="Chiudi pannello mezzo">×</button></div>
+        <dialog id="vehicleDrawer" class="gf-modal" data-position="side" data-size="lg" aria-labelledby="vehicleFormTitle" oncancel="if(document.getElementById('saveVehicleBtn').disabled)event.preventDefault()">
+          <header class="gf-modal__header">
+            <div><h2 class="gf-modal__title" id="vehicleFormTitle">Crea mezzo</h2><p class="gf-muted">Compila i dati del veicolo, i consumi e le capacità operative.</p></div>
+            <button type="button" class="gf-icon-button" onclick="closeVehicleDrawer()" aria-label="Chiudi pannello mezzo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12 M18 6L6 18"/></svg></button>
+          </header>
+          <div class="gf-modal__body gf-stack">
           <input type="hidden" id="vId">
           <input type="hidden" id="vPhotoUrl">
-          <div class="vehicle-plate-lookup-v896">
-            <div class="vehicle-plate-field-v896">
-              <label for="vTarga">Targa</label>
-              <div class="vehicle-plate-input-v896">
-                <input id="vTarga" placeholder="Es. AB123CD" maxlength="10" autocomplete="off" oninput="normalizeVehiclePlateInputV896()">
-                <button type="button" id="vehiclePlateLookupBtnV896" class="btn-secondary" onclick="lookupVehiclePlateV896()">Recupera dati veicolo</button>
-              </div>
-              <div class="vehicle-lookup-status-row-v8966"><small id="vehiclePlateLookupStateV896">Inserisci la targa per compilare automaticamente i dati disponibili.</small><span id="vehiclePlateVerifiedBadgeV8966" class="vehicle-verified-badge-v8966 hidden">✓ Dati verificati da targa</span></div>
+          <div class="gf-field">
+            <label class="gf-field__label" for="vTarga">Targa</label>
+            <div class="gf-cluster">
+              <input class="gf-input" id="vTarga" placeholder="Es. AB123CD" maxlength="10" autocomplete="off" oninput="normalizeVehiclePlateInputV896()">
+              <button type="button" id="vehiclePlateLookupBtnV896" class="gf-button" data-variant="secondary" onclick="lookupVehiclePlateV896()">Recupera dati veicolo</button>
             </div>
+            <div class="gf-cluster"><small id="vehiclePlateLookupStateV896" class="gf-field__hint">Inserisci la targa per compilare automaticamente i dati disponibili.</small><span id="vehiclePlateVerifiedBadgeV8966" class="gf-badge hidden" data-status="success">✓ Dati verificati da targa</span></div>
           </div>
-          <div class="asset-photo-row">
-            <div id="vehiclePhotoPreview" class="asset-photo-preview vehicle-photo-preview"><span class="fleet-photo-placeholder"><svg class="fleet-vehicle-placeholder-icon is-preview" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5h10.5v8H3.5z"/><path d="M14 10.5h3.8l2.7 3v2H14"/><path d="M5.5 15.5h-2M20.5 15.5h-1.3"/><circle cx="7.5" cy="17.3" r="1.7"/><circle cx="17.2" cy="17.3" r="1.7"/></svg></span></div>
-            <div>
+          <div class="gf-upload">
+            <span id="vehiclePhotoPreview" class="gf-upload__preview"><span class="fleet-photo-placeholder"><svg class="gf-icon fleet-vehicle-placeholder-icon is-preview" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5h10.5v8H3.5z"/><path d="M14 10.5h3.8l2.7 3v2H14"/><path d="M5.5 15.5h-2M20.5 15.5h-1.3"/><circle cx="7.5" cy="17.3" r="1.7"/><circle cx="17.2" cy="17.3" r="1.7"/></svg></span></span>
+            <div class="gf-upload__copy">
               <strong>Foto mezzo</strong>
-              <small>Carica un'immagine del veicolo. Se manca, resta l'icona standard.</small>
-              <input id="vPhotoFile" type="file" accept="image/*" onchange="handleImageUpload(event,'vPhotoUrl','vehiclePhotoPreview','')">
+              <label class="gf-button gf-upload__button" data-variant="secondary">Carica foto del mezzo<input id="vPhotoFile" type="file" accept="image/*" aria-label="Carica foto del mezzo" onchange="handleImageUpload(event,'vPhotoUrl','vehiclePhotoPreview','')"></label>
+              <p class="gf-field__hint">Carica un'immagine del veicolo. Se manca, resta l'icona standard.</p>
             </div>
           </div>
-          <div class="form-grid vehicle-data-grid-v896">
-            <div class="gf-field"><label for="vNome">Nome mezzo</label><input id="vNome" placeholder="Nome mezzo"></div>
-            <div class="gf-field"><label for="vMarca">Marca</label><input id="vMarca" placeholder="Marca"></div>
-            <div class="gf-field"><label for="vModello">Modello</label><input id="vModello" placeholder="Modello"></div>
-            <div class="gf-field"><label for="vAnnoImmatricolazione">Anno immatricolazione</label><input id="vAnnoImmatricolazione" type="number" min="1900" max="2100" placeholder="Anno immatricolazione"></div>
-            <div class="gf-field"><label for="vCarrozzeria">Carrozzeria / tipo veicolo</label><input id="vCarrozzeria" placeholder="Carrozzeria / tipo veicolo"></div>
-            <div class="gf-field"><label for="vCilindrata">Cilindrata (cc)</label><input id="vCilindrata" type="number" min="0" placeholder="Cilindrata cc"></div>
-            <div class="gf-field"><label for="vPotenzaKw">Potenza (kW)</label><input id="vPotenzaKw" type="number" min="0" step="0.1" placeholder="Potenza kW"></div>
-            <div class="gf-field"><label for="vClasseEuro">Classe Euro</label><input id="vClasseEuro" placeholder="Classe Euro"></div>
-            <div class="gf-field"><label for="vTollClass">Classe pedaggio</label><select id="vTollClass"><option value="A">A · 2 assi, altezza fino a 1,3 m all’asse anteriore</option><option value="B" selected>B · 2 assi, altezza oltre 1,3 m</option><option value="3">3 assi</option><option value="4">4 assi</option><option value="5">5 o più assi</option></select></div>
-            <div class="gf-field"><label for="vFuelType">Alimentazione</label><select id="vFuelType" onchange="updateVehicleEnergyFieldsV895()">
+          <div class="gf-form-grid">
+            <label class="gf-field" for="vNome"><span class="gf-field__label">Nome mezzo</span><input class="gf-input" id="vNome" placeholder="Nome mezzo"></label>
+            <label class="gf-field" for="vMarca"><span class="gf-field__label">Marca</span><input class="gf-input" id="vMarca" placeholder="Marca"></label>
+            <label class="gf-field" for="vModello"><span class="gf-field__label">Modello</span><input class="gf-input" id="vModello" placeholder="Modello"></label>
+            <label class="gf-field" for="vAnnoImmatricolazione"><span class="gf-field__label">Anno immatricolazione</span><input class="gf-input" id="vAnnoImmatricolazione" type="number" min="1900" max="2100" placeholder="Anno immatricolazione"></label>
+            <label class="gf-field" for="vCarrozzeria"><span class="gf-field__label">Carrozzeria / tipo veicolo</span><input class="gf-input" id="vCarrozzeria" placeholder="Carrozzeria / tipo veicolo"></label>
+            <label class="gf-field" for="vCilindrata"><span class="gf-field__label">Cilindrata (cc)</span><input class="gf-input" id="vCilindrata" type="number" min="0" placeholder="Cilindrata cc"></label>
+            <label class="gf-field" for="vPotenzaKw"><span class="gf-field__label">Potenza (kW)</span><input class="gf-input" id="vPotenzaKw" type="number" min="0" step="0.1" placeholder="Potenza kW"></label>
+            <label class="gf-field" for="vClasseEuro"><span class="gf-field__label">Classe Euro</span><input class="gf-input" id="vClasseEuro" placeholder="Classe Euro"></label>
+            <label class="gf-field" for="vTollClass"><span class="gf-field__label">Classe pedaggio</span><select class="gf-select" id="vTollClass"><option value="A">A · 2 assi, altezza fino a 1,3 m all’asse anteriore</option><option value="B" selected>B · 2 assi, altezza oltre 1,3 m</option><option value="3">3 assi</option><option value="4">4 assi</option><option value="5">5 o più assi</option></select></label>
+            <label class="gf-field" for="vFuelType"><span class="gf-field__label">Alimentazione</span><select class="gf-select" id="vFuelType" onchange="updateVehicleEnergyFieldsV895()">
               <option value="gasolio">Gasolio</option><option value="benzina">Benzina</option><option value="gpl">GPL</option><option value="metano">Metano</option><option value="elettrico">Elettrico</option><option value="ibrido_benzina">Ibrido benzina</option><option value="ibrido_diesel">Ibrido diesel</option><option value="ibrido_plugin_benzina">Ibrido plug-in benzina</option><option value="ibrido_plugin_diesel">Ibrido plug-in diesel</option>
-            </select></div>
-            <div class="gf-field" id="vPrimaryConsumptionWrap"><label id="vPrimaryConsumptionLabel">Consumo L/100 km</label><input id="vConsumo" type="number" step="0.1" value="8.5"></div>
-            <div id="vElectricConsumptionWrap" class="gf-field hidden"><label>Consumo elettrico kWh/100 km</label><input id="vConsumoKwh" type="number" step="0.1" value="0"></div>
-            <div class="gf-field"><label for="vKg">Capacità (kg)</label><input id="vKg" type="number" value="1000" placeholder="Capacità kg"></div>
-            <div class="gf-field"><label for="vColli">Capacità (colli)</label><input id="vColli" type="number" value="100" placeholder="Capacità colli"></div>
-            <div class="gf-field" data-gf-feature="tail_lift"><label for="vSponda">Sponda</label><select data-gf-feature="tail_lift" id="vSponda"><option value="false">Sponda No</option><option value="true">Sponda Sì</option></select></div>
-            <div class="gf-field" data-gf-feature="ztl"><label for="vZtl">Accesso ZTL</label><select data-gf-feature="ztl" id="vZtl"><option value="false">ZTL No</option><option value="true">ZTL Sì</option></select></div>
+            </select></label>
+            <label class="gf-field" id="vPrimaryConsumptionWrap" for="vConsumo"><span class="gf-field__label" id="vPrimaryConsumptionLabel">Consumo L/100 km</span><input class="gf-input" id="vConsumo" type="number" step="0.1" value="8.5"></label>
+            <label id="vElectricConsumptionWrap" class="gf-field hidden" for="vConsumoKwh"><span class="gf-field__label">Consumo elettrico kWh/100 km</span><input class="gf-input" id="vConsumoKwh" type="number" step="0.1" value="0"></label>
+            <label class="gf-field" for="vKg"><span class="gf-field__label">Capacità (kg)</span><input class="gf-input" id="vKg" type="number" value="1000" placeholder="Capacità kg"></label>
+            <label class="gf-field" for="vColli"><span class="gf-field__label">Capacità (colli)</span><input class="gf-input" id="vColli" type="number" value="100" placeholder="Capacità colli"></label>
+            <label class="gf-field" for="vSponda" data-gf-feature="tail_lift"><span class="gf-field__label">Sponda</span><select class="gf-select" data-gf-feature="tail_lift" id="vSponda"><option value="false">Sponda No</option><option value="true">Sponda Sì</option></select></label>
+            <label class="gf-field" for="vZtl" data-gf-feature="ztl"><span class="gf-field__label">Accesso ZTL</span><select class="gf-select" data-gf-feature="ztl" id="vZtl"><option value="false">ZTL No</option><option value="true">ZTL Sì</option></select></label>
           </div>
           <p id="vehicleElectricBonusHint" class="gf-electric-form-hint" role="status" aria-live="polite"></p>
-          <div class="actions-row"><button type="button" id="saveVehicleBtn" onclick="saveVehicle()" class="btn-primary">Salva mezzo</button><button type="button" onclick="createFleetVehicle()" class="btn-secondary">Nuovo</button></div>
-          </section>
-          <details class="fleet-usage"><summary>Limiti del piano e bonus elettrici</summary><div id="vehicleUsageSummary" aria-live="polite"></div></details>
+          <details class="gf-panel"><summary class="gf-panel__header"><h3 class="gf-panel__title">Limiti del piano e bonus elettrici</h3></summary><div class="gf-panel__body" id="vehicleUsageSummary" aria-live="polite"></div></details>
+          </div>
+          <footer class="gf-modal__footer">
+            <button type="button" onclick="createFleetVehicle()" class="gf-button" data-variant="secondary">Nuovo</button>
+            <button type="button" id="saveVehicleBtn" onclick="saveVehicle()" class="gf-button" data-variant="primary">Salva mezzo</button>
+          </footer>
         </dialog>
       </section>
 
@@ -1876,18 +1882,18 @@
 
 <script src="/static/dashboard/js/reports.js?v=audit_20261004"></script>
 <script src="/static/dashboard/js/customers.js?v=cx_reference_20261014_1"></script>
-<script src="/static/dashboard/js/navigation.js?v=gf_base_20261015f"></script>
+<script src="/static/dashboard/js/navigation.js?v=gf_base_20261015g"></script>
 <script src="/static/dashboard/js/completed.js?v=driver_shifts_20261013_1"></script>
 <script src="/static/dashboard/js/preview-design.js?v=20261006"></script>
 <script src="/static/dashboard/js/live-design.js?v=20261006"></script>
 <script src="/static/password-strength.js?v=password_policy_20261008_1"></script>
-<script src="/static/dashboard/js/collaborators.js?v=gf_base_20261015f"></script>
+<script src="/static/dashboard/js/collaborators.js?v=gf_base_20261015g"></script>
 <script src="/static/dashboard/js/orders.js?v=independent_orders_20261012"></script>
 <script src="/static/dashboard/js/order-import.js?v=20261011_fields1"></script>
 <script src="/static/dashboard/js/order-sources.js?v=email_development_20261012"></script>
 <script src="/static/dashboard/js/dashboard-real-map.js?v=gf_realmap_clean_20261012_2"></script>
 <script src="/static/dashboard/js/in-progress-reference.js?v=driver_shifts_20261013_1"></script>
-<script src="/static/dashboard/js/core.js?v=gf_base_20261015f"></script>
+<script src="/static/dashboard/js/core.js?v=gf_base_20261015g"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=orders_2"></script>
 <link rel="stylesheet" href="/static/dashboard/css/fleet-planning.css?v=20261013_1">
 <link rel="stylesheet" href="/static/dashboard/css/fleet-review.css?v=driver_shifts_20261013_1">
@@ -1910,6 +1916,6 @@ function toggleLoginPassword(){
 <script src="/static/dashboard/js/company-profile.js?v=company_clean_20261013_1"></script>
 
 <!-- Ultimo foglio: allinea tutte le sezioni al linguaggio visivo della dashboard. -->
-<link rel="stylesheet" href="/static/design-system/unified.css?v=gf_base_20261015f">
+<link rel="stylesheet" href="/static/design-system/unified.css?v=gf_base_20261015g">
 </body>
 </html>

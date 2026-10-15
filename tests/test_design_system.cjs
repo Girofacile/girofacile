@@ -464,7 +464,7 @@ test('resource directories keep titles in the topbar and create actions inside t
   const deposits=html.slice(html.indexOf('<section id="tab-depositi"'),html.indexOf('id="depositOverlay"'));
   assert.match(deposits,/class="gf-panel__header"[^]*\+ Nuovo deposito/);
   const vehicles=html.slice(html.indexOf('<section id="tab-mezzi"'),html.indexOf('<section id="tab-autisti"'));
-  assert.match(vehicles,/gf-directory-head-actions[^]*\+ Nuovo mezzo/);
+  assert.match(vehicles,/class="gf-panel__header"[^]*\+ Nuovo mezzo/);
   const drivers=html.slice(html.indexOf('<section id="tab-autisti"'),html.indexOf('<section id="tab-storico"'));
   assert.match(drivers,/gf-directory-head-actions[^]*\+ Nuovo autista/);
   const agents=html.slice(html.indexOf('<section id="tab-agenti"'),html.indexOf('<section id="tab-report"'));
@@ -534,7 +534,8 @@ test('all five directory KPI icons use the same neutral gray dashboard treatment
 test('vehicle photo fallback uses a neutral outline icon instead of the truck emoji',()=>{
   const vehicles=read('static/dashboard/js/vehicles.js');
   assert.match(vehicles,/function vehiclePlaceholderSvg\(extraClass=''/);
-  assert.match(vehicles,/class="fleet-vehicle-placeholder-icon/);
+  // L'icona usa la classe gf-icon del sistema (contorno, colore del testo).
+  assert.match(vehicles,/class="gf-icon fleet-vehicle-placeholder-icon/);
   assert.match(vehicles,/function setVehiclePhotoPreview\(\)/);
   const fleetPhoto=vehicles.slice(vehicles.indexOf('function fleetPhoto'),vehicles.indexOf('function fleetStatus'));
   assert.doesNotMatch(fleetPhoto,/🚚/);
@@ -546,13 +547,10 @@ test('vehicle photo fallback uses a neutral outline icon instead of the truck em
 
   const html=read('static/dashboard/index.html');
   const preview=html.slice(html.indexOf('id="vehiclePhotoPreview"'),html.indexOf('id="vPhotoFile"'));
-  assert.match(preview,/fleet-vehicle-placeholder-icon is-preview/);
+  assert.match(preview,/gf-icon fleet-vehicle-placeholder-icon is-preview/);
   assert.doesNotMatch(preview,/🚚/);
 
-  const vehicleCss=read('static/dashboard/css/vehicles.css');
-  assert.match(vehicleCss,/Neutral vehicle image placeholder/);
-  assert.match(vehicleCss,/\.fleet-vehicle-placeholder-icon\{[^}]*width:29px[^}]*stroke:currentColor/);
-  assert.match(vehicleCss,/\.fleet-table \.fleet-vehicle-placeholder-icon\{[^}]*width:21px/);
+  assert.match(read(assets+'components.css'),/\.gf-icon\{[^}]*fill:none;stroke:currentColor/);
 });
 
 

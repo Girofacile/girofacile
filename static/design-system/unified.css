@@ -174,11 +174,11 @@ html body[data-gf-surface="workspace"] #app#app #tab-ordini .orders-verify-all{
 }
 html body[data-gf-surface="workspace"] #app#app #tab-ordini .orders-verify-all:hover{border-color:var(--gf-color-primary)!important;color:var(--gf-color-primary)!important}
 html body[data-gf-surface="workspace"] #app#app #tab-ordini .orders-verify-all svg{stroke:currentColor!important;color:var(--gf-color-success)!important}
-html body[data-gf-surface="workspace"] #app#app .content :is(.fleet-card,.driver-card,.agent-card,.gf-directory-card) :is(.btn-danger,.danger,[data-variant="danger"]){
+html body[data-gf-surface="workspace"] #app#app .content :is(.driver-card,.agent-card,.gf-directory-card) :is(.btn-danger,.danger,[data-variant="danger"]){
   background:var(--gf-color-surface)!important;color:var(--gf-color-danger)!important;
   border:1px solid color-mix(in srgb,var(--gf-color-danger) 35%,white)!important;box-shadow:none!important;
 }
-html body[data-gf-surface="workspace"] #app#app .content :is(.fleet-card,.driver-card,.agent-card,.gf-directory-card) :is(.btn-danger,.danger,[data-variant="danger"]):hover{
+html body[data-gf-surface="workspace"] #app#app .content :is(.driver-card,.agent-card,.gf-directory-card) :is(.btn-danger,.danger,[data-variant="danger"]):hover{
   background:var(--gf-color-danger-bg)!important;
 }
 /* ---------------------------------------------------------------------------

@@ -134,7 +134,7 @@ def check_pages(page, base, width, output, fit):
     }""")
     panel = page.locator("#tab-mezzi")
     page.locator("#vehicleDrawer").wait_for(state="visible")
-    usage = panel.locator("details.fleet-usage")
+    usage = panel.locator("details:has(#vehicleUsageSummary)")
     if usage.count() and not usage.evaluate("(el) => el.open"):
         usage.locator("summary").click()
     assert panel.get_by_text("Mezzi inclusi nel piano", exact=False).count()

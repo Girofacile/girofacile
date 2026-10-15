@@ -2203,7 +2203,7 @@ async function completeDashboardRoute(id){
 
 function depositActionIcon(kind){
   const path=kind==='edit'?'<path d="m15 4 5 5M4 20l5-1L21 7a2 2 0 0 0-5-5L4 14Z"/>':'<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/>';
-  return `<svg viewBox="0 0 24 24" aria-hidden="true">${path}</svg>`;
+  return `<svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true">${path}</svg>`;
 }
 function depositStatus(id,message,error=false){
   const node=document.getElementById(id);if(!node)return;
@@ -2493,12 +2493,12 @@ function normalizeVehiclePlateInputV896(){
     el.dataset.lookupProvider=""; el.dataset.lookupAt=""; el.dataset.lookupToken="";
   }
   const state=document.getElementById("vehiclePlateLookupStateV896");
-  if(state){state.className="";state.textContent="Inserisci la targa per compilare automaticamente i dati disponibili.";}
+  if(state){delete state.dataset.status;state.textContent="Inserisci la targa per compilare automaticamente i dati disponibili.";}
   clearVehicleLookupHighlightsV8966();
 }
 function setVehiclePlateLookupStateV896(message,type=""){
   const el=document.getElementById("vehiclePlateLookupStateV896");
-  if(!el)return; el.textContent=message; el.className=type||"";
+  if(!el)return; el.textContent=message; if(type)el.dataset.status=type; else delete el.dataset.status;
 }
 async function lookupVehiclePlateV896(){
   normalizeVehiclePlateInputV896();

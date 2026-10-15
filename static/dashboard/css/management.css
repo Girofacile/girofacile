@@ -146,14 +146,6 @@ body:has(#app .gf-page:not(.hidden)) .content{padding:28px 34px 48px}
 #app #tab-report .report-chart-card.wide{grid-column:1/-1}
 
 /* Fleet: form and saved vehicles are independent visual sections. */
-#app #tab-mezzi .gf-vehicle-form{margin-bottom:20px}
-#app #tab-mezzi .vehicle-data-grid-v896{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px 16px;align-items:end}
-#app #tab-mezzi .vehicle-data-grid-v896 :is(input,select){width:100%}
-#app #tab-mezzi .asset-photo-row{padding:16px 0;margin:16px 0 22px;border-bottom:1px solid var(--gf-line)}
-#app #tab-mezzi .vehicle-plate-lookup-v896{background:#f8fbff;border-color:var(--gf-line);border-radius:13px}
-#app #tab-mezzi .vehicle-plate-input-v896{flex-wrap:wrap}
-#app #tab-mezzi .actions-row{padding-top:16px;margin-top:16px;border-top:1px solid var(--gf-line)}
-#app #tab-mezzi .gf-vehicle-list .tableWrap{margin-top:16px}
 
 /* Drivers and chat retain all actions while sharing lighter surfaces. */
 #app #tab-autisti .driver-card{border-radius:14px;box-shadow:none;padding:18px}
@@ -190,7 +182,6 @@ body:has(#app .gf-page:not(.hidden)) .content{padding:28px 34px 48px}
   #app #tab-report .report-kpi-grid{grid-template-columns:repeat(6,minmax(0,1fr))}
   #app #tab-report .report-kpi-card:nth-child(-n+4){grid-column:span 3}
   #app #tab-report :is(.report-bottom-grid,.report-table-grid){grid-template-columns:1fr}
-  #app #tab-mezzi .vehicle-data-grid-v896{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media(max-width:1100px){#app .gf-page .dash-sub-layout{grid-template-columns:1fr}}
 @media(max-width:820px){
@@ -206,7 +197,6 @@ body:has(#app .gf-page:not(.hidden)) .content{padding:28px 34px 48px}
   .gf-dialog :is(.modal){border-radius:18px!important}
 }
 @media(max-width:520px){
-  #app #tab-mezzi .vehicle-data-grid-v896{grid-template-columns:1fr}
   #app .gf-page .driver-toolbar{grid-template-columns:1fr}
   #app .gf-page .drivers-cards{grid-template-columns:1fr}
   #app .gf-page :is(.stat-card,.scheduled-metric){padding:16px}
