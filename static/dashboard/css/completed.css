@@ -1,13 +1,6 @@
 /* Scoped to the completed-route archive. */
 #tab-dashboard-completed{color:#101b40;background:linear-gradient(130deg,#f4f9ff,transparent 65%);font-family:Arial,Helvetica,sans-serif}
-#tab-dashboard-completed .dash-sub-route-picker{padding:0;border:0;box-shadow:none;margin:0;width:min(410px,42%);background:none}
-#tab-dashboard-completed .dash-sub-route-picker label{font-size:12px;color:#334c78;font-weight:600}
 #tab-dashboard-completed select,#tab-dashboard-completed input{min-height:38px;border:1px solid #dde8f8;border-radius:8px;background:#fff;color:#17264b;font-size:12px;padding:8px 11px;max-width:100%}
 #tab-dashboard-completed h2{font-size:18px;margin:0;color:#0e1739}
-#app #tab-dashboard-completed .dash-sub-route-picker{border:0;padding:0;background:none}
-#app #tab-dashboard-completed .dash-sub-route-picker label{text-transform:none;letter-spacing:0;font-family:Arial,Helvetica,sans-serif;font-size:12px;font-weight:600}
-#tab-dashboard-completed .btn-light{border:1px solid #e0eafa;border-radius:8px;background:#fff;box-shadow:none;font-size:12px;min-height:38px;padding:8px 12px;color:#244579}
-#tab-dashboard-completed .dash-stop-number{background:#0066ff;color:#fff;border-radius:50%;width:28px;height:28px;display:inline-flex;justify-content:center;align-items:center}
 #tab-dashboard-completed button:disabled{opacity:.4;cursor:default}
 #tab-dashboard-completed :is(button,input,select):focus-visible{outline:2px solid #1671ff;outline-offset:3px}
-@media(max-width:600px){#tab-dashboard-completed .dash-sub-route-picker{width:calc(100% - 60px)}}

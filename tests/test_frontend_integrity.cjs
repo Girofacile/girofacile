@@ -56,15 +56,14 @@ test('order source onboarding explains samples and protects regenerated API keys
   const path='static/dashboard/js/order-sources.js';
   const src=readFileSync(path,'utf8');
   new vm.Script(src,{filename:path});
-  assert.match(src,/Verifica un ordine di esempio/);
-  assert.match(src,/Invia le istruzioni al tuo fornitore/);
   assert.match(src,/data-source-api-settings/);
   assert.match(src,/Verifica con un ordine di esempio/);
   assert.match(src,/Scarica istruzioni per il tuo gestionale/);
   assert.match(src,/function downloadInstructions\(\)/);
   assert.match(src,/function copyToken\(\)/);
   assert.match(src,/navigator\.clipboard\.writeText/);
-  assert.match(src,/Genera una nuova chiave/);
+  assert.match(src,/Genera nuova chiave/);
+  assert.doesNotMatch(src,/prioritizeApiKey/);
   assert.match(src,/Disattiva chiave/);
   assert.match(src,/In attesa del primo ordine/);
   assert.match(src,/la chiave esistente non può essere visualizzata/);

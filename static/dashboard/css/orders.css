@@ -1,23 +1,6 @@
 /* Orders: directory-style interface aligned with the GiroFacile workspace. */
 
 /* The same action node is moved here on desktop, preserving the IDs used by the UI. */
-.orders-topbar-actions-host{display:none}
-.orders-topbar-actions-host .btn-primary,
-.orders-topbar-actions-host .btn-secondary{
-  min-height:38px;
-  padding:0 14px;
-  border-radius:8px;
-  font-size:13px;
-  white-space:nowrap;
-  box-shadow:none;
-}
-.orders-topbar-actions-host .btn-secondary{
-  border:1px solid #d8e1ec;
-  background:#fff;
-  color:#334155;
-}
-.orders-topbar-actions-host .btn-secondary:hover{background:#f8fafc;border-color:#cbd5e1}
-.orders-topbar-actions-host .btn-primary{background:var(--gf-color-primary,#2563eb);color:#fff}
 
 /* KPI cards */
 

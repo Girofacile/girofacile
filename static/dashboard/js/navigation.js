@@ -15,10 +15,6 @@ const WORKSPACE_TOPBAR_META = {
   "billing-account": {title:"Fatturazione e pagamenti",subtitle:"Abbonamento, metodo di pagamento, dati fiscali, fatture e addebiti.",back:{label:"Torna a Piani e abbonamento",go:()=>returnFromBillingPageV876()}},
   "dashboard-scheduled": {title:"Giri programmati",subtitle:"Giri assegnati ma non ancora avviati dall’autista.",back:{label:"Torna alla Dashboard",go:()=>showTab("dashboard")}},
   "dashboard-completed": {title:"Giri completati",subtitle:"Archivio operativo dei giri conclusi dall’autista.",back:{label:"Torna allo Storico",go:()=>showTab("storico")}},
-  "admin-dashboard": {title:"Dashboard admin",subtitle:"Controlla utenti registrati, ticket aperti e richieste di assistenza."},
-  "admin-users": {title:"Utenti",subtitle:"Account registrati sulla piattaforma."},
-  "admin-tickets": {title:"Ticket",subtitle:"Richieste di assistenza degli utenti."},
-  "admin-settings": {title:"Impostazioni admin",subtitle:"Configurazione della piattaforma."},
   "dashboard-in-progress": {
     title: "Giri in corso",
     subtitle: "Avanzamento delle consegne, stato delle fermate e posizione GPS degli autisti."
@@ -113,7 +109,6 @@ function setActiveNavItem(name){
 
 function showTab(name){
   if(window.GFCompanyAccess && !GFCompanyAccess.allowedTab(name)){toast("Funzione non assegnata al tuo account");return;}
-  window.GFLiveDesign?.closeMap();
   if(name!=="dashboard-in-progress")window.GFInProgressReference?.suspend();
   if(name==='integrations') name='dashboard';
   if(name !== "company" && typeof blockCompanyNavigationForUnsavedChanges === "function" && blockCompanyNavigationForUnsavedChanges()) return;
@@ -136,7 +131,6 @@ function showTab(name){
   if(name==="dashboard-scheduled") loadDashboardScheduledPage();
   if(name==="dashboard-in-progress") loadDashboardInProgressPage();
   if(name==="dashboard-completed") loadDashboardCompletedPage();
-  if(name==="giro") loadDashboardRoutes();
   if(name==="clienti"){ loadCustomers(); if(agentsFeatureEnabled()) loadAgents(); }
   if(name==="agenti") loadAgents();
   if(name==="report") loadReport();
@@ -149,9 +143,6 @@ function showTab(name){
   if(name==="plan-account"){ renderUpgradeCards(); syncPlanPageHeaderV874(); }
   if(name==="integrations") renderIntegrationsV52();
 
-  if(name==="admin-dashboard") loadAdminDashboard();
-  if(name==="admin-users") loadAdminUsers();
-  if(name==="admin-tickets") loadAdminTickets();
   if(name === 'dashboard') applyWorkspaceStateV49(gfWorkspaceOperationalV49);
   setTimeout(()=>{syncMobileShellV62();window.GFCompanyAccess?.apply();}, 40);
 }

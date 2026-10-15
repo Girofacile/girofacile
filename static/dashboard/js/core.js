@@ -1365,7 +1365,6 @@ async function initApp(){
   if(agentsFeatureEnabled()) await loadAgents();
   await loadCustomers(); await loadCustomerPicker();
   await refreshResourceAvailability();
-  await loadDashboardRoutes();
   await loadDashboardHome();
   await loadCompanyProfile(false);
   await loadOnboardingStatus(true);
@@ -1668,31 +1667,6 @@ function renderEmptyDashList(text, illustration){
   return `<div class="gf-empty"><img src="/static/design-system/icons/empty.svg" alt="" width="48" height="30"><p><strong>${esc(text)}</strong></p><p>${descriptions[illustration]}</p></div>`;
 }
 function gfWidth5(value){ return Math.max(0, Math.min(100, Math.round((Number(value)||0) / 5) * 5)); }
-function renderDashTrend(routes){
-  const el = document.getElementById("dashTrendChart");
-  if(!el) return;
-  const days=[];
-  const now = new Date();
-  for(let i=6;i>=0;i--){ const d=new Date(now); d.setDate(now.getDate()-i); days.push(d.toISOString().slice(0,10)); }
-  const values = days.map(day => routes.filter(r=>r.data_giro===day).reduce((a,r)=>a+(Number(r.consegne_count)||0),0));
-  const max = Math.max(1, ...values);
-  const points = values.map((v,i)=>{
-    const x = 28 + i*(420/6);
-    const y = 130 - (v/max)*95;
-    return `${x},${y}`;
-  }).join(" ");
-  const area = `28,145 ${points} 448,145`;
-  const labels = days.map((d,i)=>`<text x="${28+i*(420/6)}" y="168" text-anchor="middle">${d.slice(5)}</text>`).join("");
-  const dots = values.map((v,i)=>{ const x=28+i*(420/6); const y=130-(v/max)*95; return `<circle cx="${x}" cy="${y}" r="4"><title>${days[i]} - ${v} consegne</title></circle>`; }).join("");
-  el.innerHTML = `<svg viewBox="0 0 480 180" class="dash-svg-chart" role="img" aria-label="Andamento consegne ultimi 7 giorni">
-    <defs><linearGradient id="dashAreaGrad" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#0b63f6" stop-opacity="0.24"/><stop offset="100%" stop-color="#0b63f6" stop-opacity="0.02"/></linearGradient></defs>
-    <g class="grid"><line x1="28" y1="35" x2="448" y2="35"/><line x1="28" y1="70" x2="448" y2="70"/><line x1="28" y1="105" x2="448" y2="105"/><line x1="28" y1="145" x2="448" y2="145"/></g>
-    <polygon points="${area}" fill="url(#dashAreaGrad)"></polygon>
-    <polyline points="${points}" fill="none" stroke="#0b63f6" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></polyline>
-    <g class="dots">${dots}</g>
-    <g class="labels">${labels}</g>
-  </svg>`;
-}
 function renderGFReferenceDashboardHero(summary){
   const root=document.getElementById("gfRefHeroWrap");
   if(!root) return Promise.resolve();
@@ -1873,42 +1847,6 @@ function routeStatusBadge(status, label){
   return `<span class="gf-badge" data-status="${ROUTE_STATUS_TONE[s] || "neutral"}">${esc(text)}</span>`;
 }
 
-async function loadDashboardRoutes(){
-  const body = document.getElementById("dashboardRoutesBody");
-  if(!body) return;
-  try{
-    const rows = await api("/api/routes/operativi");
-    const counts = {programmato:0, in_corso:0, da_completare:0};
-    rows.forEach(r => { if(counts[r.status] !== undefined) counts[r.status]++; });
-    const setText = (id,val)=>{ const el=document.getElementById(id); if(el) el.textContent=val; };
-    setText("dashScheduledCount", counts.programmato);
-    setText("dashInProgressCount", counts.in_corso);
-    setText("dashToCompleteCount", counts.da_completare);
-
-    if(!rows.length){
-      body.innerHTML = `<tr><td colspan="9"><div class="empty-state-small">Nessun giro programmato o in corso al momento.</div></td></tr>`;
-      return;
-    }
-
-    body.innerHTML = rows.map(r => `
-      <tr class="operational-route-row">
-        <td><strong>${esc(r.nome || "Giro consegne")}</strong></td>
-        <td>${esc(r.data_giro || "-")}</td>
-        <td>${esc(r.orario_partenza || "-")} → ${esc(r.orario_rientro_stimato || "-")}</td>
-        <td>${esc(r.driver_name || "-")}</td>
-        <td>${esc(r.vehicle_name || "-")}</td>
-        <td>${r.consegne_count || 0}</td>
-        <td>${r.totale_km ?? "-"}</td>
-        <td>${routeStatusBadge(r.status, r.status_label)}</td>
-        <td class="row-actions compact">
-          <button onclick="openDashboardRoute(${r.id})">Dettaglio</button>
-        </td>
-      </tr>
-    `).join("");
-  }catch(e){
-    body.innerHTML = `<tr><td colspan="9"><div class="resultBox warn">Errore caricamento giri: ${esc(e.message)}</div></td></tr>`;
-  }
-}
 
 
 function deliveryStatusPill(status){
@@ -1929,144 +1867,8 @@ function signatureDateLabel(value){
 function deliverySignatureAction(d, driverName=''){
   return d ? podEvidenceButtons(d, `/api/deliveries/${Number(d.id)}/evidence`) : '';
 }
-function openDeliverySignature(payload){
-  let info = {};
-  try{ info = JSON.parse(decodeURIComponent(payload || '{}')); }catch(e){ info = {data:decodeURIComponent(payload || '')}; }
-  const decoded = info.data || '';
-  const name = esc(info.name || '');
-  const signedAt = esc(signatureDateLabel(info.signedAt || ''));
-  const note = esc(info.note || '');
-  const driver = esc(info.driver || '');
-  const html = `<div class="signature-viewer-overlay" onclick="this.remove()">
-    <div class="signature-viewer-card" onclick="event.stopPropagation()">
-      <div class="signature-viewer-head"><h3>Firma consegna</h3><button type="button" onclick="document.querySelector('.signature-viewer-overlay')?.remove()">×</button></div>
-      <div class="signature-viewer-meta signature-viewer-meta-grid">
-        <div><span>Firmatario</span><strong>${name || 'Non indicato'}</strong></div>
-        <div><span>Orario firma</span><strong>${signedAt || '-'}</strong></div>
-        <div><span>Autista</span><strong>${driver || '-'}</strong></div>
-      </div>
-      <div class="signature-viewer-img"><img src="${decoded}" alt="Firma cliente"></div>
-      ${note?`<div class="signature-viewer-note"><strong>Nota firma</strong><br>${note}</div>`:''}
-    </div>
-  </div>`;
-  document.body.insertAdjacentHTML('beforeend', html);
-}
-function dashboardStopRows(r){
-  const rows = r.consegne || [];
-  if(!rows.length){
-    return `<div class="dash-detail-empty small">Nessuna fermata salvata per questo giro.</div>`;
-  }
-  return `<div class="tableWrap dash-detail-stops-wrap">
-    <table class="result-table dash-detail-stops">
-      <thead>
-        <tr><th>#</th><th>Cliente</th><th>Indirizzo</th><th>Arrivo</th><th>Stato</th><th>Note autista</th></tr>
-      </thead>
-      <tbody>${GFDriverBreaks.table(r,0,6)}
-        ${rows.map((d,i)=>`
-          <tr class="delivery-row-${esc(d.delivery_status||'in_attesa')}">
-            <td><strong>${d.ordine || ""}</strong></td>
-            <td><strong>${esc(d.cliente_nome || "-")}</strong></td>
-            <td>${esc(d.indirizzo || "-")}</td>
-            <td>${esc(d.arrivo_stimato || "-")}</td>
-            <td>${deliveryStatusPill(d.delivery_status)}${d.motivo_mancata?`<small class="delivery-reason">${esc(d.motivo_mancata)}</small>`:""}</td>
-            <td>${d.note_operatore?esc(d.note_operatore):warningBadges(d.warning)} ${deliverySignatureAction(d, r.driver_name)} ${trackingButton(d, r)}</td>
-          </tr>
-        `+GFDriverBreaks.table(r,i+1,6)).join("")}
-      </tbody>
-    </table>
-  </div>`;
-}
 
-function dashboardDetailActions(r){
-  const status = r.status || "programmato";
-  const mapsBtn = r.google_maps_url ? `<a target="_blank" href="${esc(r.google_maps_url)}"><button class="btn-primary">Apri Google Maps</button></a>` : "";
-  if(status === "programmato" || status === "bozza"){
-    return `
-      ${mapsBtn}
-      <button class="btn-secondary" onclick="openProgrammedRouteForEdit(${r.id})">Modifica completa</button>
-      <button class="btn-danger-soft" onclick="cancelDashboardRoute(${r.id})">Annulla giro</button>
-    `;
-  }
-  if(status === "in_corso" || status === "da_completare"){
-    return `
-      ${mapsBtn}
-      <button class="btn-secondary" onclick="loadDashboardRouteChat(${r.id}, true)">Apri chat autista</button>
-      <button class="btn-danger-soft" onclick="cancelDashboardRoute(${r.id})">Annulla giro</button>
-    `;
-  }
-  return `
-    ${mapsBtn}
-    <button class="btn-secondary" onclick="showTab('storico')">Vai allo storico</button>
-  `;
-}
 
-function renderDashboardRouteDetail(r){
-  const panel = document.getElementById("dashboardRouteDetailPanel");
-  if(!panel) return;
-  panel.classList.remove("hidden");
-  const status = r.status || "programmato";
-  const rows = r.consegne || [];
-  const completed = rows.filter(x=>x.delivery_status === 'completata').length;
-  const missed = rows.filter(x=>x.delivery_status === 'mancata').length;
-  const pending = Math.max(rows.length - completed - missed, 0);
-  const perc = rows.length ? Math.round(((completed + missed) / rows.length) * 100) : 0;
-  const editableNote = status === "programmato" || status === "bozza"
-    ? "Questo giro è programmato: puoi modificarlo prima dell'avvio da parte dell'autista."
-    : status === "in_corso"
-      ? "Questo è il controllo operativo del giro: segui avanzamento, fermate e chat con l'autista."
-      : "Dettaglio consultabile dalla Dashboard.";
-
-  panel.innerHTML = `
-    <div class="dash-detail-header">
-      <div>
-        <div class="dash-detail-eyebrow">Controllo giro</div>
-        <h2>${esc(r.nome || "Giro consegne")}</h2>
-        <p>${esc(editableNote)}</p>
-      </div>
-      <div class="dash-detail-header-actions">
-        ${routeStatusBadge(r.status, r.status_label)}
-        <button class="btn-light" onclick="closeDashboardRouteDetail()">Chiudi</button>
-      </div>
-    </div>
-
-    <div class="dash-detail-kpis dash-detail-kpis-operative">
-      <div><span>Autista</span><strong>${esc(r.driver_name || "Non assegnato")}</strong></div>
-      <div><span>Mezzo</span><strong>${esc(r.vehicle_name || "-")}</strong></div>
-      <div><span>Completate</span><strong>${completed}/${rows.length}</strong></div>
-      <div><span>Mancate</span><strong>${missed}</strong></div>
-      <div><span>Da fare</span><strong>${pending}</strong></div>
-      <div><span>Avanzamento</span><strong>${perc}%</strong></div>
-      <div><span>Orario</span><strong>${esc(r.orario_partenza || "-")} → ${esc(r.orario_rientro_stimato || "-")}</strong></div>
-      <div><span>Km</span><strong>${r.totale_km ?? "-"} km</strong></div>
-    </div>
-
-    <div class="dash-detail-progress-large"><span style="width:${perc}%"></span></div>
-
-    <div class="dash-detail-actions">
-      ${dashboardDetailActions(r)}
-    </div>
-
-    <div class="dash-operational-split">
-      <div>
-        <div class="dash-detail-section-title">
-          <h3>Fermate del giro</h3>
-          <small>Gli stati vengono aggiornati dall'autista dal portale mobile</small>
-        </div>
-        ${dashboardStopRows(r)}
-      </div>
-      <aside class="dash-admin-chat-card">
-        <div class="dash-chat-title"><h3>Chat autista</h3><small id="dashChatStatus">Messaggi collegati a questo giro</small></div>
-        <div id="dashAdminChatMessages" class="dash-admin-chat-messages"><div class="dash-empty">Caricamento chat...</div></div>
-        <div class="dash-admin-chat-input">
-          <textarea id="dashAdminChatInput" rows="2" placeholder="Scrivi all'autista..."></textarea>
-          <button class="btn-primary" onclick="sendDashboardRouteChat(${r.id})">Invia</button>
-        </div>
-      </aside>
-    </div>
-  `;
-  panel.scrollIntoView({behavior:"smooth", block:"start"});
-  loadDashboardRouteChat(r.id, true);
-}
 
 
 
@@ -2076,45 +1878,7 @@ let dashboardInProgressSelectedId = null;
 
 
 
-function dashboardDeliveryRowsForSubpage(r){
-  const rows = r.consegne || [];
-  if(!rows.length){
-    return `<div class="dash-detail-empty small">Nessuna consegna collegata a questo giro.</div>`;
-  }
-  return `<div class="dash-sub-table-wrap">
-    <table class="dash-sub-table">
-      <thead><tr><th>#</th><th>Cliente</th><th>Indirizzo</th><th>Colli / consegna</th><th>Stato</th><th>Distanza</th></tr></thead>
-      <tbody>${GFDriverBreaks.table(r,0,6)}
-        ${rows.map((d,i)=>`
-          <tr class="delivery-row-${esc(d.delivery_status||'in_attesa')}">
-            <td>${d.ordine || ''}</td>
-            <td><strong>${esc(d.cliente_nome || '-')}</strong></td>
-            <td>${esc(d.indirizzo || '-')}</td>
-            <td>${esc(d.manual_traffic || d.colli || d.pacchi || '-')}</td>
-            <td>${deliveryStatusPill(d.delivery_status)}${d.motivo_mancata?`<small class="delivery-reason">${esc(d.motivo_mancata)}</small>`:''} ${deliverySignatureAction(d, r.driver_name)} ${trackingButton(d, r)}</td>
-            <td>${d.distanza_km ? fmtKm(d.distanza_km) : '-'}</td>
-          </tr>
-        `+GFDriverBreaks.table(r,i+1,6)).join('')}
-      </tbody>
-    </table>
-  </div>`;
-}
 
-function dashboardStopsTimelineForSubpage(r){
-  const rows = r.consegne || [];
-  if(!rows.length){
-    return `<div class="dash-detail-empty small">Nessuna fermata pianificata.</div>`;
-  }
-  return `<div class="dash-stops-timeline">
-    ${GFDriverBreaks.cards(r,0)}${rows.map((d,i)=>`
-      <div class="dash-stop-line ${esc(d.delivery_status || 'in_attesa')}">
-        <div class="dash-stop-number">${d.ordine || ''}</div>
-        <div><strong>${esc(d.cliente_nome || '-')}</strong><small>${esc(d.indirizzo || '-')}</small></div>
-        <div class="dash-stop-status">${deliveryStatusPill(d.delivery_status)} ${trackingButton(d, r)}</div>
-      </div>
-    `+GFDriverBreaks.cards(r,i+1)).join('')}
-  </div>`;
-}
 
 
 
@@ -2153,51 +1917,10 @@ async function sendDashboardRouteChat(routeId){
   }catch(e){ alert(e.message); }
 }
 
-function closeDashboardRouteDetail(){
-  const panel = document.getElementById("dashboardRouteDetailPanel");
-  if(panel){
-    panel.classList.add("hidden");
-    panel.innerHTML = "";
-  }
-}
-
-async function cancelDashboardRoute(id){
-  if(!confirm("Annullare questo giro? Autista e mezzo torneranno disponibili e il giro resterà nello storico.")) return;
-  try{
-    await api(`/api/routes/${id}/cancel`, {method:"POST", body:"{}"});
-    toast("Giro annullato.");
-    closeDashboardRouteDetail();
-    await loadDashboardRoutes();
-    await loadDashboardHome();
-    await loadRoutes();
-    await loadVehicles();
-    await loadDrivers();
-    await refreshResourceAvailability();
-  }catch(e){ alert(e.message); }
-}
 
 
-async function openDashboardRoute(id){
-  try{
-    const r = await api(`/api/routes/${id}`);
-    renderDashboardRouteDetail(r);
-  }catch(e){ alert(e.message); }
-}
 
-async function completeDashboardRoute(id){
-  if(!confirm("Segnare questo giro come completato? Verrà tolto dai giri operativi della Dashboard e resterà nello Storico.")) return;
-  try{
-    await api(`/api/routes/${id}/complete`, {method:"POST", body:"{}"});
-    toast("Giro completato e spostato nello storico.");
-    closeDashboardRouteDetail();
-    await loadDashboardRoutes();
-    await loadDashboardHome();
-    await loadRoutes();
-    await loadVehicles();
-    await loadDrivers();
-    await refreshResourceAvailability();
-  }catch(e){ alert(e.message); }
-}
+
 
 
 function depositActionIcon(kind){
@@ -3489,7 +3212,6 @@ async function programCurrentRoute(){
     await api(`/api/routes/${lastRouteResult.id}/program`, {method:"POST", body:"{}"});
     toast("Giro programmato correttamente. Lo trovi in Giri programmati.");
     clearRouteWorkspace();
-    await loadDashboardRoutes();
     await loadDashboardHome();
     await loadRoutes();
     await loadVehicles();
@@ -3803,7 +3525,6 @@ async function optimizeRoute(){
     setText("summaryTime", Math.round(r.totale_minuti) + " min");
     setText("summaryCost", "€ " + (r.costo_totale ?? r.costo_carburante));
     loadRoutes();
-    loadDashboardRoutes();
     await loadVehicles();
     await loadDrivers();
     await refreshResourceAvailability();
@@ -3850,17 +3571,7 @@ async function openSavedRoute(id){
 }
 
 
-async function initAdminApp(){
-  loadProfilePanel();
-  showTab("admin-dashboard");
-  await loadAdminDashboard();
-}
 
-function adminStatusBadge(status){
-  const s = status || "aperto";
-  const text = {aperto:"Aperto", in_lavorazione:"In lavorazione", chiuso:"Chiuso"}[s] || s;
-  return `<span class="route-status-pill ${s}">${esc(text)}</span>`;
-}
 
 function formatDateTimeLabel(value){
   if(!value) return "-";
@@ -3871,91 +3582,9 @@ function formatDateTimeLabel(value){
   }catch(e){ return value; }
 }
 
-async function loadAdminDashboard(){
-  try{
-    const data = await api("/api/admin/summary");
-    const setText = (id,val)=>{ const el=document.getElementById(id); if(el) el.textContent=val; };
-    setText("adminTotalUsers", data.total_users || 0);
-    setText("adminOpenTickets", data.open_tickets || 0);
-    setText("adminPasswordTickets", data.password_tickets || 0);
-    setText("adminTotalTickets", data.total_tickets || 0);
 
-    const usersBox = document.getElementById("adminRecentUsers");
-    if(usersBox){
-      usersBox.innerHTML = (data.recent_users||[]).map(u=>`
-        <div class="admin-list-item">
-          <div><strong>${esc(u.company_name || u.username || "Utente")}</strong><small>${esc(u.email || "-")} · ${formatDateTimeLabel(u.created_at)}</small></div>
-          <span class="admin-mini-pill">${u.is_admin ? "Admin" : "Utente"}</span>
-        </div>`).join("") || renderEmptyDashList("Nessun utente registrato.");
-    }
 
-    const ticketsBox = document.getElementById("adminRecentTickets");
-    if(ticketsBox){
-      ticketsBox.innerHTML = (data.recent_tickets||[]).map(t=>`
-        <div class="admin-list-item">
-          <div><strong>${esc(t.oggetto || t.tipo || "Ticket")}</strong><small>${esc(t.email)} · ${formatDateTimeLabel(t.created_at)}</small></div>
-          ${adminStatusBadge(t.status)}
-        </div>`).join("") || renderEmptyDashList("Nessun ticket ricevuto.");
-    }
-  }catch(e){ console.warn(e); }
-}
 
-async function loadAdminUsers(){
-  try{
-    const rows = await api("/api/admin/users");
-    const body = document.getElementById("adminUsersBody");
-    if(!body) return;
-    body.innerHTML = rows.map(u=>`
-      <tr>
-        <td><strong>${esc(u.company_name || "-")}</strong></td>
-        <td>${esc(u.username || "-")}</td>
-        <td>${esc(u.email || "-")}</td>
-        <td>${formatDateTimeLabel(u.created_at)}</td>
-        <td>${u.customers_count || 0}</td>
-        <td>${u.routes_count || 0}</td>
-        <td>${u.vehicles_count || 0}</td>
-        <td>${u.drivers_count || 0}</td>
-        <td>${u.is_admin ? '<span class="admin-mini-pill">Admin</span>' : '<span class="admin-mini-pill user">Utente</span>'}</td>
-      </tr>`).join("") || `<tr><td colspan="9"><div class="empty-state-small">Nessun utente trovato.</div></td></tr>`;
-  }catch(e){ alert(e.message); }
-}
-
-async function loadAdminTickets(){
-  try{
-    const status = document.getElementById("adminTicketStatus")?.value || "";
-    const rows = await api("/api/admin/tickets" + (status ? `?status=${encodeURIComponent(status)}` : ""));
-    const box = document.getElementById("adminTicketsList");
-    if(!box) return;
-    box.innerHTML = rows.map(t=>`
-      <div class="admin-ticket-card">
-        <div class="admin-ticket-head">
-          <div>
-            <strong>${esc(t.oggetto || "Ticket")}</strong>
-            <small>${esc(t.email)} · ${esc(t.company_name || t.username || "Nessun utente collegato")} · ${formatDateTimeLabel(t.created_at)}</small>
-          </div>
-          ${adminStatusBadge(t.status)}
-        </div>
-        <p>${esc(t.messaggio || "")}</p>
-        <label>Note admin</label>
-        <textarea id="adminTicketNote${t.id}" rows="2" placeholder="Aggiungi una nota interna...">${esc(t.admin_note || "")}</textarea>
-        <div class="actions-row">
-          <button class="btn-secondary" onclick="copyText('${esc(t.email).replace(/'/g,"\\'")}', 'Email copiata')">Copia email</button>
-          <button class="btn-secondary" onclick="updateAdminTicket(${t.id}, 'in_lavorazione')">In lavorazione</button>
-          <button class="btn-primary" onclick="updateAdminTicket(${t.id}, 'chiuso')">Chiudi ticket</button>
-        </div>
-      </div>`).join("") || renderEmptyDashList("Nessun ticket trovato.");
-  }catch(e){ alert(e.message); }
-}
-
-async function updateAdminTicket(id, status){
-  try{
-    const note = document.getElementById(`adminTicketNote${id}`)?.value || "";
-    await api(`/api/admin/tickets/${id}`, {method:"PUT", body:JSON.stringify({status, admin_note:note})});
-    toast("Ticket aggiornato.");
-    await loadAdminTickets();
-    await loadAdminDashboard();
-  }catch(e){ alert(e.message); }
-}
 
 if(window.location.pathname.startsWith("/reset-password/")){
   showResetPasswordPanel();
@@ -4173,7 +3802,7 @@ function dashRouteItem(r, type){
   const issues = [];
   if(missed) issues.push(`<span class="gf-badge" data-status="danger">${missed} mancat${missed===1?'a':'e'}</span>`);
   if(unread) issues.push(`<span class="gf-badge" data-status="info">${unread} messagg${unread===1?'io':'i'} non lett${unread===1?'o':'i'}</span>`);
-  let click = `openDashboardRoute(${r.id})`;
+  let click = `openDashboardCompletedPage(${r.id})`;
   if(type === 'scheduled') click = `openDashboardScheduledPage(${r.id})`;
   if(type === 'progress') click = `openDashboardInProgressPage(${r.id})`;
   if(type === 'completed') click = `openDashboardCompletedPage(${r.id})`;
@@ -4351,7 +3980,6 @@ async function openDashboardInProgressPage(routeId=null){
 }
 
 async function loadDashboardInProgressPage(routeId=null){
-  window.GFLiveDesign?.closeMap();
   const page = document.getElementById('dashboardInProgressPage');
   if(page) page.innerHTML = `<div class="gf-loading" role="status"><strong>Caricamento giri in corso...</strong><p>Sto recuperando avanzamento, fermate e chat.</p></div>`;
   try{

@@ -61,7 +61,7 @@ test('company dirty-state blocks navigation until save or cancel', () => {
     'tab-dashboard': {classList:{add(){},remove(){}}},
   };
   const context = vm.createContext({
-    window:{GFLiveDesign:{closeMap(){}}},
+    window:{},
     document:{
       querySelectorAll: selector => selector === '.tab' ? Object.values(tabs) : [],
       getElementById: id => tabs[id] || null,

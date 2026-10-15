@@ -1,9 +1,3 @@
 /* Reuse planning cards, form controls and buttons from the dashboard. */
 
-.fleet-actions{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:12px}
-.fleet-result{margin-bottom:18px}.fleet-result h2{margin:0}.fleet-result p{color:#64748b}
-.fleet-stops{list-style:none;padding:0;margin:0}.fleet-stops li{display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-top:1px solid #e2e8f0;align-items:center}
-.fleet-stops li>div{min-width:0;overflow-wrap:anywhere}.fleet-stops small{display:block;color:#64748b}.fleet-stops select{max-width:240px;min-width:160px}
-.fleet-summary{display:flex;flex-wrap:wrap;gap:12px;margin:16px 0}.fleet-summary span{background:#f1f5f9;padding:10px 14px;border-radius:10px}
 #fleetMessage{margin:12px 0;white-space:pre-line}#fleetMessage:empty{display:none}
-@media(max-width:600px){.fleet-stops li{align-items:stretch;flex-direction:column}.fleet-stops select{max-width:none;width:100%}.fleet-actions button{width:100%}}

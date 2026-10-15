@@ -24,17 +24,6 @@ body{
   font-family:Arial,Helvetica,sans-serif;
 }
 .hidden{display:none!important}
-.brand-login{display:flex;align-items:center;gap:14px;margin-bottom:26px}
-.brand-mark{
-  width:52px;height:52px;border-radius:16px;
-  display:flex;align-items:center;justify-content:center;
-  background:#0b63f6;color:white;font-weight:800;
-}
-.brand-login h1{font-size:23px;margin:0}
-.brand-login h1 span,.brand-title span{color:#3b82f6}
-.brand-login p{margin:4px 0 0;color:var(--muted)}
-
-.app-shell{min-height:100vh;display:flex}
 
 .sidebar{
   width:260px;
@@ -54,100 +43,19 @@ body{
   padding:0 8px 18px;
   border-bottom:1px solid rgba(255,255,255,.08);
 }
-.brand-title{font-size:21px;font-weight:800;letter-spacing:-.03em}
-.side-nav{padding-top:24px;display:flex;flex-direction:column;gap:8px}
-.nav-item{
-  width:100%;
-  border:0;
-  background:transparent;
-  color:#d9e7ff;
-  padding:13px 14px;
-  border-radius:12px;
-  font-size:16px;
-  font-weight:600;
-  display:flex;
-  align-items:center;
-  gap:12px;
-  cursor:pointer;
-  text-align:left;
-}
-.nav-item span{
-  width:28px;height:28px;border-radius:8px;
-  display:flex;align-items:center;justify-content:center;
-  background:rgba(255,255,255,.07);
-}
-.nav-item:hover,.nav-item.active{background:#0b63f6;color:white}
-
-.company-card{
-  margin-top:auto;
-  background:rgba(255,255,255,.07);
-  border:1px solid rgba(255,255,255,.08);
-  border-radius:16px;
-  padding:14px;
-  display:flex;
-  align-items:center;
-  gap:12px;
-}
-.avatar-small,.avatar{
+.avatar{
   border-radius:50%;
   display:flex;align-items:center;justify-content:center;
   font-weight:800;
   background:#e8f1ff;
   color:#0b63f6;
 }
-.avatar-small{width:38px;height:38px}
 .avatar{width:42px;height:42px}
-.company-card small{display:block;color:#b9c8dd;margin-top:3px;font-size:11px}
-.side-footer{color:#8fa5c2;font-size:13.5px;text-align:center;padding:20px 0 2px}
-
-.main-area{
-  margin-left:260px;
-  width:calc(100% - 260px);
-  min-height:100vh;
-}
-.topbar{
-  height:76px;
-  background:rgba(255,255,255,.95);
-  border-bottom:1px solid var(--line);
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:0 34px;
-  position:sticky;
-  top:0;
-  z-index:10;
-}
-.search-box{
-  width:min(430px,45vw);
-  display:flex;
-  align-items:center;
-  gap:10px;
-  background:#fff;
-  border:1px solid var(--line);
-  border-radius:12px;
-  padding:0 14px;
-  height:44px;
-}
-.search-box input{border:0;outline:0;width:100%;padding:0;font-size:14px}
-.top-actions{display:flex;align-items:center;gap:12px}
 .profile{display:flex;align-items:center;gap:10px}
 .profile strong{display:block;font-size:14px}
 .profile small{display:block;color:var(--muted);font-size:12px}
 
 .content{padding:28px 34px 48px}
-.page-title-row{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px}
-.page-title-row h1{font-size:34px;letter-spacing:-.04em;margin:0}
-.page-title-row p{margin:8px 0 0;color:var(--muted)}
-.stat-card{
-  background:var(--panel);
-  border:1px solid var(--line);
-  border-radius:16px;
-  padding:18px;
-  display:flex;
-  gap:16px;
-  align-items:center;
-  box-shadow:var(--shadow);
-}
 .stat-icon{
   width:54px;height:54px;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
@@ -157,10 +65,7 @@ body{
 .stat-icon.orange{background:#fff2df;color:#f59e0b}
 .stat-icon.green{background:#e4f8ed;color:#16a34a}
 .stat-icon.purple{background:#f0e8ff;color:#7c3aed}
-.stat-card span{display:block;color:var(--muted);font-size:13px}
-.stat-card strong{display:block;font-size:25px;margin:4px 0;font-weight:800}
-.stat-card small{color:var(--muted)}
-.panel,.summary-card{
+.panel{
   background:var(--panel);
   border:1px solid var(--line);
   border-radius:18px;
@@ -168,15 +73,12 @@ body{
   box-shadow:var(--shadow);
 }
 .panel{margin-bottom:18px}
-.panel-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
-.panel-header h2,.summary-card h2{margin:0;font-size:20px;letter-spacing:-.02em}
 
 .form-grid{
   display:grid;
   grid-template-columns:repeat(3,minmax(0,1fr));
   gap:14px;
 }
-.add-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
 label{display:block;font-size:13.5px;color:#526079;font-weight:700;margin:0 0 7px}
 input,select,textarea{
   width:100%;
@@ -195,7 +97,7 @@ input:focus,select:focus,textarea:focus{
 }
 textarea{margin-top:14px;resize:vertical}
 
-.btn-primary,.btn-secondary,.btn-light{
+.btn-primary,.btn-secondary{
   border:0;
   border-radius:11px;
   font-weight:700;
@@ -209,23 +111,8 @@ textarea{margin-top:14px;resize:vertical}
   box-shadow:0 8px 18px rgba(11,99,246,.22);
 }
 .btn-primary:hover{background:var(--primary-dark)}
-.btn-primary.large{padding:14px 22px;font-size:15px}
 .btn-primary.full{width:100%;margin-top:16px}
 .btn-secondary{background:#edf2f7;color:#334155;padding:12px 18px}
-.btn-light{background:white;border:1px solid var(--line);color:#334155;padding:11px 14px}
-.actions-row{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}
-
-.right-summary{position:sticky;top:100px}
-.summary-card{padding:24px}
-.summary-row{
-  display:flex;
-  justify-content:space-between;
-  padding:14px 0;
-  border-bottom:1px solid #eef2f7;
-  color:var(--muted);
-  font-size:15.5px;
-}
-.summary-row strong{color:var(--text)}
 
 .tableWrap{overflow:auto;border:1px solid var(--line);border-radius:14px}
 table{width:100%;border-collapse:collapse;min-width:920px;background:white}
@@ -246,19 +133,6 @@ td button{
   font-weight:700;
 }
 td button:hover{background:#f8fafc}
-
-.suggestions{
-  position:absolute;
-  z-index:50;
-  background:white;
-  border:1px solid var(--line);
-  border-radius:12px;
-  box-shadow:0 18px 35px rgba(15,23,42,.12);
-  margin-top:6px;
-  max-height:240px;
-  overflow:auto;
-  min-width:260px;
-}
 .suggestion{padding:12px;border-bottom:1px solid #eef2f7;cursor:pointer}
 .suggestion:hover{background:#f8fafc}
 .suggestion small{color:var(--muted)}
@@ -273,25 +147,15 @@ td button:hover{background:#f8fafc}
 .resultBox p{line-height:1.8}
 .warn{color:var(--danger);font-weight:800}
 .ok{color:var(--green);font-weight:800}
-.checkbox-label{margin-top:14px;display:flex;gap:8px;align-items:center}
-.checkbox-label input{width:auto}
 
 @media(max-width:1180px){
-  .right-summary{position:static}
-  .form-grid,.add-grid{grid-template-columns:repeat(2,1fr)}
+  .form-grid{grid-template-columns:repeat(2,1fr)}
 }
 @media(max-width:760px){
   .sidebar{position:relative;width:100%;min-height:auto;inset:auto}
-  .app-shell{display:block}
-  .main-area{margin-left:0;width:100%}
-  .topbar{height:auto;padding:14px;flex-direction:column;align-items:stretch;gap:12px}
-  .search-box{width:100%}
-  .top-actions{flex-wrap:wrap}
   .content{padding:18px 12px}
-  .form-grid,.add-grid{grid-template-columns:1fr}
-  .page-title-row h1{font-size:25px}
-  .actions-row{justify-content:stretch;flex-direction:column}
-  .btn-primary,.btn-secondary,.btn-light{width:100%}
+  .form-grid{grid-template-columns:1fr}
+  .btn-primary,.btn-secondary{width:100%}
 }
 
 /* V3.6.3.2 leggibilità generale */
@@ -300,35 +164,11 @@ input,select,textarea{min-height:46px;font-weight:600;}
 label{letter-spacing:.01em;}
 .panel{padding:24px;}
 .form-grid{gap:16px;}
-.add-grid{grid-template-columns:repeat(3,minmax(0,1fr));}
-.time-window-field{grid-column:span 1;}
-.time-window-field label{font-size:14px;color:#334155;}
-.time-range{
-  min-height:46px;
-  display:grid;
-  grid-template-columns:auto 1fr auto 1fr;
-  align-items:center;
-  gap:9px;
-  border:1px solid #dbe3ee;
-  background:white;
-  border-radius:10px;
-  padding:6px 10px;
-}
-.time-range span{color:#64748b;font-size:13px;font-weight:800;text-transform:uppercase;}
-.time-range input{border:0;box-shadow:none!important;padding:6px;min-height:34px;background:transparent;}
-.time-range:focus-within{border-color:#8bb7ff;box-shadow:0 0 0 4px rgba(11,99,246,.09);}
-.row-actions{white-space:nowrap;display:flex;gap:8px;align-items:center;}
-.row-actions.compact button{min-width:42px;padding:9px 10px;}
 .toast{position:fixed;right:28px;bottom:28px;background:#071b35;color:white;padding:14px 18px;border-radius:12px;box-shadow:0 18px 40px rgba(15,23,42,.25);z-index:9999;font-weight:800;}
 
 /* V3.6.3.2 risultato giro professionale */
 
 .badge{display:inline-block;padding:8px 10px;border-radius:8px;font-size:13px;font-weight:900;margin:2px;}
-.result-table th,.result-table td{font-size:14.5px;}
-.result-table{min-width:1180px;}
-
-@media(max-width:1350px){.add-grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:760px){.time-range{grid-template-columns:auto 1fr;}.add-grid{grid-template-columns:1fr}.row-actions{flex-wrap:wrap}}
 
 /* V3.6.3.2 GiroFacile: profilo account e pulizia topbar/sidebar */
 .profile-button{
@@ -341,7 +181,6 @@ label{letter-spacing:.01em;}
 }
 .profile-button:hover{background:#f1f5f9;}
 .avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;}
-.side-footer{margin-top:auto;}
 .modal-overlay{
   position:fixed;inset:0;background:rgba(15,23,42,.45);
   z-index:9998;display:flex;align-items:center;justify-content:center;padding:20px;
@@ -350,7 +189,6 @@ label{letter-spacing:.01em;}
 .modal-header h2{margin:0;font-size:26px;letter-spacing:-.03em;}
 .modal-header p{margin:6px 0 0;color:var(--muted);font-weight:600;}
 .modal-close{border:0;background:#f1f5f9;border-radius:12px;width:42px;height:42px;font-size:28px;line-height:1;cursor:pointer;color:#334155;}
-.profile-note{margin-top:16px;background:#f8fafc;border:1px solid var(--line);border-radius:14px;padding:14px;color:#475569;font-weight:600;line-height:1.5;}
 
 /* GiroFacile V3.6.3.2 - Schermata iniziale professionale */
 
@@ -363,27 +201,6 @@ label{letter-spacing:.01em;}
   padding:6px;
 }
 
-.forgot-link{
-  display:block;
-  border:0;
-  background:transparent;
-  color:#075dff;
-  text-decoration:underline;
-  cursor:pointer;
-  font-size:15.5px;
-  margin:24px auto 0;
-}
-
-.brand-logo-img{
-  width:31px;
-  height:31px;
-  border-radius:9px;
-  object-fit:cover;
-  vertical-align:middle;
-  margin-right:8px;
-  box-shadow:0 6px 14px rgba(11,99,246,.28);
-}
-
 /* GiroFacile V3.6.3.2.1 - Fix: la login non deve rimanere dietro il gestionale */
 #app.hidden{
   display:none !important;
@@ -393,16 +210,6 @@ label{letter-spacing:.01em;}
 }
 
 /* GiroFacile V3.6.3.2 - Logo pieno e icone login più fedeli al mockup */
-
-.brand-logo-img{
-  width:38px !important;
-  height:38px !important;
-  border-radius:11px !important;
-  background:#075dff !important;
-  border:0 !important;
-  padding:0 !important;
-  object-fit:cover !important;
-}
 
 /* GiroFacile V3.6.3 - Messaggi errore calcolo più chiari */
 .route-error-box{
@@ -429,128 +236,19 @@ label{letter-spacing:.01em;}
 
 /* GiroFacile V3.7.8.1 - account, filtri clienti, selezione clienti, drag & drop */
 .full{width:100%}
-.customer-picker-panel{border:1px solid #dbeafe;background:#f8fbff;border-radius:18px;padding:14px;margin-bottom:16px}.picker-header{display:flex;justify-content:space-between;gap:10px;align-items:end;margin-bottom:12px}.picker-header strong{font-size:17px;color:#0f172a}.picker-header small{color:#64748b}.customer-filters{display:grid;grid-template-columns:repeat(5,minmax(120px,1fr));gap:10px;margin-bottom:12px}.customer-filters input,.customer-filters select{height:42px;border:1px solid #d1d5db;border-radius:12px;padding:0 10px;background:white}.customer-picker-list{max-height:290px;overflow:auto;display:grid;gap:8px}.customer-list-head{align-items:center}.btn-danger{background:#dc2626;color:#fff;border:0;border-radius:12px;padding:11px 14px;font-weight:800;cursor:pointer}.btn-danger:hover{filter:brightness(.96)}.resultBox{margin-bottom:12px}
-@media(max-width:900px){.customer-filters{grid-template-columns:1fr 1fr}.customer-list-head{align-items:flex-start}}
+.customer-picker-panel{border:1px solid #dbeafe;background:#f8fbff;border-radius:18px;padding:14px;margin-bottom:16px}.picker-header{display:flex;justify-content:space-between;gap:10px;align-items:end;margin-bottom:12px}.picker-header strong{font-size:17px;color:#0f172a}.picker-header small{color:#64748b}.resultBox{margin-bottom:12px}
 
 /* GiroFacile V3.7.8.1 - Sezione Autisti */
 
-.drivers-layout{display:grid;grid-template-columns:minmax(330px,420px) 1fr;gap:18px;align-items:start;}
-.driver-form-panel,.drivers-list-panel{overflow:hidden;}
-.panel-header p{margin:4px 0 0;color:#64748b;font-size:13px;}
-.driver-avatar{width:54px;height:54px;border-radius:18px;background:linear-gradient(135deg,#2563eb,#06b6d4);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;box-shadow:0 10px 25px rgba(37,99,235,.20);}
-.driver-avatar{width:48px;height:48px;border-radius:16px;flex:0 0 auto;}
-.driver-form-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
-.driver-card{border:1px solid #e5e7eb;border-radius:22px;background:#fff;padding:16px;box-shadow:0 12px 32px rgba(15,23,42,.06);}
-.driver-card-top{display:flex;gap:12px;align-items:center;margin-bottom:14px;}
-.driver-card h3{margin:0 0 6px;font-size:17px;color:#0f172a;}
-.driver-info-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
-.driver-info-grid div{padding:10px;border-radius:14px;background:#f8fafc;border:1px solid #eef2f7;min-width:0;}
-.driver-info-grid small{display:block;color:#64748b;font-size:11px;margin-bottom:4px;}
-.driver-info-grid strong{display:block;color:#0f172a;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.driver-note{margin:12px 0 0;padding:10px;border-radius:14px;background:#fff7ed;color:#9a3412;font-size:13px;}
 .driver-actions{margin-top:12px;display:flex;justify-content:flex-end;gap:8px;}
-@media(max-width:1050px){.drivers-layout{grid-template-columns:1fr}.driver-form-grid{grid-template-columns:1fr}}
 
 /* V3.7.8.1 - Dashboard giri programmati/in corso */
-.operational-dashboard-panel{
-  margin-bottom:22px;
-}
-.operational-header{
-  align-items:flex-start;
-}
-.operational-header p{
-  margin:6px 0 0;
-  color:var(--muted);
-  font-size:14px;
-}
-.operational-mini-stats{
-  display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:12px;
-  margin:12px 0 16px;
-}
-.operational-mini-stats>div{
-  border:1px solid var(--line);
-  background:#f8fafc;
-  border-radius:16px;
-  padding:14px 16px;
-}
-.operational-mini-stats span{
-  display:block;
-  color:var(--muted);
-  font-size:13px;
-  margin-bottom:5px;
-}
-.operational-mini-stats strong{
-  font-size:24px;
-  color:var(--text);
-}
-.route-status-pill{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  padding:6px 10px;
-  border-radius:999px;
-  font-weight:800;
-  font-size:12px;
-  white-space:nowrap;
-}
-.route-status-pill.programmato{
-  background:#eff6ff;
-  color:#1d4ed8;
-  border:1px solid #bfdbfe;
-}
-.route-status-pill.in_corso{
-  background:#ecfdf5;
-  color:#047857;
-  border:1px solid #a7f3d0;
-}
-.route-status-pill.da_completare{
-  background:#fff7ed;
-  color:#c2410c;
-  border:1px solid #fed7aa;
-}
-.route-status-pill.completato{
-  background:#f0fdf4;
-  color:#15803d;
-  border:1px solid #bbf7d0;
-}
-.route-status-pill.annullato{
-  background:#fef2f2;
-  color:#b91c1c;
-  border:1px solid #fecaca;
-}
-.btn-success-mini{
-  background:#16a34a!important;
-  color:white!important;
-  border-color:#16a34a!important;
-}
-.empty-state-small{
-  color:var(--muted);
-  padding:14px 4px;
-  font-weight:700;
-}
-.operational-route-row td{
-  vertical-align:middle;
-}
-@media(max-width:800px){
-  .operational-mini-stats{grid-template-columns:1fr}
-}
 
 /* V3.7.8.1 - Dashboard professionale */
 .dash-hero-row{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;gap:18px}
 .dash-hero-row h1{font-size:34px;margin:0 0 6px;color:var(--text)}
 .dash-hero-row p{margin:0;color:var(--muted);font-size:16px}
-.dash-kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;margin-bottom:18px}
-.dash-kpi-card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px 24px;box-shadow:var(--shadow);display:flex;align-items:center;gap:18px;min-height:112px}
-.dash-kpi-icon{width:54px;height:54px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;flex:0 0 54px}
-.dash-kpi-icon.blue{background:#eaf2ff;color:#0b63f6}.dash-kpi-icon.green{background:#eafaf0;color:#16a34a}.dash-kpi-icon.purple{background:#f1eaff;color:#7c3aed}.dash-kpi-icon.red{background:#fff1f2;color:#e11d48}
-.dash-kpi-card span{display:block;color:var(--muted);font-size:14px;margin-bottom:5px}.dash-kpi-card strong{display:block;font-size:28px;color:var(--text);line-height:1}.dash-kpi-card small{display:block;color:var(--muted);font-size:13px;margin-top:7px}
-.dash-main-grid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(320px,.9fr);gap:18px;margin-bottom:18px}.dash-chart-card,.dash-recent-card{min-height:270px}.dash-panel-title{align-items:center}.dash-toggle{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#f8fafc}.dash-toggle span{padding:8px 16px;font-size:13px;font-weight:800;color:var(--muted)}.dash-toggle .active{background:#eef5ff;color:#0b63f6}.dash-trend-chart{height:190px;margin-top:10px}.dash-svg-chart{width:100%;height:100%;overflow:visible}.dash-svg-chart .grid line{stroke:#e5eaf2;stroke-width:1}.dash-svg-chart .dots circle{fill:#0b63f6;stroke:white;stroke-width:3}.dash-svg-chart .labels text{fill:#64748b;font-size:12px;font-weight:700}
-.dash-recent-list{display:flex;flex-direction:column;gap:10px}.dash-recent-item{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding:12px 0;cursor:pointer}.dash-recent-item strong{display:block;font-size:15px}.dash-recent-item small{display:block;color:var(--muted);margin-top:4px}.dash-recent-item span{font-size:28px;color:var(--muted)}
-.dash-board-columns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-bottom:18px}.dash-list-card{padding:0;overflow:hidden}.dash-list-head{display:flex;justify-content:space-between;align-items:center;padding:20px 22px;border-bottom:1px solid var(--line)}.dash-list-head h2{margin:0;font-size:20px}.dash-list-head span{min-width:28px;height:28px;border-radius:10px;background:#eef5ff;color:#0b63f6;display:flex;align-items:center;justify-content:center;font-weight:900}.dash-link-btn{width:calc(100% - 28px);margin:0 14px 14px;border:1px solid var(--line);background:#fff;color:#0b63f6;border-radius:12px;padding:11px;font-weight:800}.dash-empty{color:var(--muted);padding:22px 8px;font-weight:700;text-align:center}.dash-link-inline{border:0;background:transparent;color:#0b63f6;font-weight:800;cursor:pointer}.dash-vehicle-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.dash-vehicle-card{border:1px solid var(--line);border-radius:16px;padding:18px;background:#fff;display:flex;align-items:center;justify-content:space-between;min-height:110px}.dash-vehicle-card strong{display:block;margin-bottom:5px}.dash-vehicle-card small{display:block;color:var(--muted);margin-top:4px}.vehicle-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px}.vehicle-dot.free{background:#16a34a}.vehicle-dot.busy{background:#f59e0b}.dash-vehicle-icon{font-size:36px;opacity:.8}
-@media(max-width:1100px){.dash-kpi-grid{grid-template-columns:repeat(2,1fr)}.dash-main-grid,.dash-board-columns{grid-template-columns:1fr}.dash-vehicle-grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:640px){.dash-kpi-grid,.dash-vehicle-grid{grid-template-columns:1fr}.dash-hero-row{flex-direction:column}.dash-kpi-card{padding:18px}.dash-hero-row h1{font-size:28px}}
+@media(max-width:640px){.dash-hero-row{flex-direction:column}.dash-hero-row h1{font-size:28px}}
 
 /* V3.7.8.1 - Autocomplete indirizzi */
 .address-autocomplete-wrap{
@@ -640,154 +338,10 @@ select option:disabled{
 }
 
 /* V3.7.8.1 - Programmazione giro */
-.program-route-btn{
-  margin-top:8px;
-}
-.program-route-note{
-  display:block;
-  margin-top:6px;
-  color:var(--muted);
-  font-size:12px;
-  line-height:1.35;
-}
-.route-status-pill.bozza{
-  background:#eef2ff;
-  color:#3730a3;
-}
 
 /* V3.7.8.1 - Dettaglio giro direttamente in Dashboard */
-.dashboard-route-detail-panel{
-  margin-top:18px;
-  overflow:hidden;
-}
-.dash-detail-empty{
-  padding:8px 2px;
-  color:var(--muted);
-}
-.dash-detail-empty h2{margin:0 0 6px;color:var(--text);}
-.dash-detail-empty.small{
-  padding:18px;
-  border:1px dashed var(--line);
-  border-radius:16px;
-  background:#f8fafc;
-}
-.dash-detail-header{
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-start;
-  gap:18px;
-  padding-bottom:16px;
-  border-bottom:1px solid var(--line);
-}
-.dash-detail-eyebrow{
-  color:var(--primary);
-  font-size:12px;
-  font-weight:800;
-  text-transform:uppercase;
-  letter-spacing:.05em;
-  margin-bottom:6px;
-}
-.dash-detail-header h2{
-  margin:0 0 6px;
-  font-size:24px;
-}
-.dash-detail-header p{
-  margin:0;
-  color:var(--muted);
-}
-.dash-detail-header-actions{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  flex-wrap:wrap;
-  justify-content:flex-end;
-}
-.dash-detail-kpis{
-  display:grid;
-  grid-template-columns:repeat(7,minmax(120px,1fr));
-  gap:10px;
-  margin:18px 0;
-}
-.dash-detail-kpis div{
-  background:#f8fafc;
-  border:1px solid var(--line);
-  border-radius:16px;
-  padding:12px;
-}
-.dash-detail-kpis span{
-  display:block;
-  color:var(--muted);
-  font-size:12px;
-  margin-bottom:6px;
-}
-.dash-detail-kpis strong{
-  font-size:14px;
-}
-.dash-detail-actions{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  flex-wrap:wrap;
-  margin-bottom:18px;
-}
-.btn-danger-soft{
-  border:1px solid #fecaca;
-  background:#fff1f2;
-  color:#be123c;
-  border-radius:12px;
-  padding:10px 14px;
-  cursor:pointer;
-  font-weight:800;
-}
-.btn-danger-soft:hover{
-  background:#ffe4e6;
-}
-.btn-success-mini.big{
-  padding:10px 14px;
-  border-radius:12px;
-  font-weight:800;
-}
-.dash-detail-section-title{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:12px;
-  margin:8px 0 10px;
-}
-.dash-detail-section-title h3{margin:0;}
-.dash-detail-section-title small{color:var(--muted);}
-.dash-detail-stops-wrap{
-  max-height:360px;
-  overflow:auto;
-}
-.dash-detail-stops td,
-.dash-detail-stops th{
-  font-size:13px;
-}
-@media (max-width:1100px){
-  .dash-detail-kpis{grid-template-columns:repeat(2,minmax(140px,1fr));}
-  .dash-detail-header{flex-direction:column;}
-  .dash-detail-header-actions{justify-content:flex-start;}
-}
 
 /* Fix disponibilità mezzi/autisti in Dashboard */
-.dash-resource-row{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:16px;
-}
-.dash-driver-grid{
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:12px;
-}
-.dash-driver-card .dash-vehicle-icon{
-  background:#eef2ff;
-}
-@media (max-width:1100px){
-  .dash-resource-row{grid-template-columns:1fr;}
-  .dash-driver-grid{grid-template-columns:1fr;}
-}
 
 /* V3.7.8.1 - Agenti */
 
@@ -863,58 +417,8 @@ select option:disabled{
 }
 
 /* V3.7.8.8 - Dashboard KPI giornalieri */
-.topbar-spacer{
-  flex:1 1 auto;
-}
-.dash-kpi-card small#dashTodayBusyResourcesSub{
-  line-height:1.25;
-}
 
 /* V3.7.8.9 - Pianificazione con tabella consegne modificabile */
-.panel-subtitle{
-  margin:6px 0 0;
-  color:var(--muted);
-  font-size:13px;
-  line-height:1.35;
-}
-.table-input,
-.table-select{
-  width:100%;
-  min-height:34px;
-  border:1px solid var(--line);
-  border-radius:9px;
-  background:#fff;
-  padding:7px 9px;
-  font-size:13px;
-  outline:none;
-}
-.table-input:focus,
-.table-select:focus{
-  border-color:#2563eb;
-  box-shadow:0 0 0 3px rgba(37,99,235,.12);
-}
-.address-input{
-  min-width:260px;
-}
-.note-input{
-  min-width:160px;
-}
-.small-number{
-  min-width:72px;
-}
-.inline-time-range{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:6px;
-  min-width:150px;
-}
-.row-actions.compact{
-  white-space:nowrap;
-}
-.row-actions.compact button{
-  padding:7px 9px;
-  min-width:34px;
-}
 
 /* V3.7.9.0 - Restyling estetico professionale
    Solo CSS/HTML visivo: nessuna modifica a logica, API o database.
@@ -959,114 +463,9 @@ body{
   border-bottom:0;
   padding:0 8px 22px;
 }
-.brand-title{
-  color:#0b1220;
-  font-weight:850;
-  letter-spacing:-.045em;
-}
-.brand-title span{color:#0b63f6}
-.brand-logo-img{
-  border-radius:12px;
-  box-shadow:0 6px 18px rgba(11,99,246,.13);
-}
-.side-nav{
-  padding-top:12px;
-  gap:6px;
-}
-.nav-item{
-  color:#43516a;
-  min-height:46px;
-  padding:12px 14px;
-  border-radius:12px;
-  font-size:15px;
-  font-weight:740;
-  letter-spacing:-.015em;
-  transition:background .16s ease, color .16s ease, box-shadow .16s ease, transform .16s ease;
-  position:relative;
-}
-.nav-item:hover{
-  background:#f3f7ff;
-  color:#0b63f6;
-  transform:translateX(1px);
-}
-.nav-item.active{
-  background:linear-gradient(90deg,#eff6ff 0%, #f8fbff 100%);
-  color:#0b63f6;
-  box-shadow:inset 3px 0 0 #0b63f6;
-}
-.side-nav .nav-item[data-tab="giro"]:focus,
-.side-nav .nav-item[data-tab="giro"]:focus-visible{
-  outline:none;
-  border:0;
-}
-.nav-item span{
-  width:28px;
-  height:28px;
-  border-radius:9px;
-  background:transparent;
-  color:currentColor;
-  flex:0 0 28px;
-}
-.nav-item > .nav-svg{
-  width:40px;
-  height:40px;
-  border-radius:13px;
-  background:#f4f7fb;
-  color:currentColor;
-  flex:0 0 40px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  border:1px solid #edf1f6;
-  box-shadow:0 1px 2px rgba(16,24,40,.025);
-  transition:background .16s ease, border-color .16s ease, box-shadow .16s ease;
-}
-.nav-svg svg{
-  width:21px;
-  height:21px;
-  display:block;
-}
-.nav-svg svg *{
-  fill:none;
-  stroke:currentColor;
-  stroke-width:1.85;
-  stroke-linecap:round;
-  stroke-linejoin:round;
-}
-.nav-svg svg rect,
-.nav-svg svg circle{
-  fill:none;
-}
-.nav-item:hover .nav-svg{
-  background:#eef4ff;
-  border-color:rgba(11,99,246,.08);
-}
-.nav-item.active .nav-svg{
-  background:#e6f0ff;
-  border-color:rgba(11,99,246,.10);
-}
-.side-footer{
-  color:#98a2b3;
-  border-top:1px solid #edf0f5;
-  margin-top:auto;
-  padding-top:18px;
-}
 
 /* Topbar più minimale e pulita */
-.main-area{
-  background:transparent;
-}
-.topbar{
-  height:72px;
-  background:rgba(255,255,255,.86);
-  border-bottom:1px solid rgba(230,234,242,.9);
-  backdrop-filter:blur(14px);
-  box-shadow:0 1px 0 rgba(16,24,40,.02);
-}
-.top-actions{
-  gap:10px;
-}
-.btn-light,
+
 .profile-button{
   border:1px solid var(--line);
   background:#fff;
@@ -1086,7 +485,6 @@ body{
 .content{
   padding:30px 34px 50px;
 }
-.page-title-row h1,
 .dash-hero-row h1{
   color:#0b1220;
   font-size:34px;
@@ -1094,7 +492,6 @@ body{
   font-weight:860;
   letter-spacing:-.055em;
 }
-.page-title-row p,
 .dash-hero-row p{
   color:#667085;
   font-size:15px;
@@ -1104,8 +501,7 @@ body{
 button{
   font-family:inherit;
 }
-.btn-primary,
-.actions-row .btn-primary{
+.btn-primary{
   background:linear-gradient(180deg,#0b6bff 0%, #095ce5 100%);
   border:1px solid #0757d8;
   box-shadow:0 10px 22px rgba(11,99,246,.18);
@@ -1116,25 +512,20 @@ button{
   filter:brightness(.98);
   box-shadow:0 12px 26px rgba(11,99,246,.24);
 }
-.btn-secondary,
-.dash-link-btn{
+.btn-secondary{
   border:1px solid var(--line);
   background:#fff;
   color:#344054;
   border-radius:12px;
   font-weight:750;
 }
-.btn-secondary:hover,
-.dash-link-btn:hover{
+.btn-secondary:hover{
   background:#f8fbff;
   color:#0b63f6;
 }
 
 /* Card e pannelli */
-.panel,
-.summary-card,
-.stat-card,
-.dash-kpi-card{
+.panel{
   border:1px solid rgba(230,234,242,.95);
   border-radius:var(--radius-xl);
   background:rgba(255,255,255,.96);
@@ -1143,29 +534,10 @@ button{
 .panel{
   padding:22px;
 }
-.panel-header h2,
-.summary-card h2,
-.dash-list-head h2{
-  color:#101828;
-  letter-spacing:-.035em;
-  font-weight:840;
-}
-.panel-subtitle,
-.panel-header p{
-  color:#667085;
-}
 
 /* KPI */
-.dash-kpi-grid{
-  gap:16px;
-}
-.stat-card,
-.dash-kpi-card{
-  min-height:112px;
-  padding:20px;
-}
-.stat-icon,
-.dash-kpi-icon{
+
+.stat-icon{
   width:52px;
   height:52px;
   border-radius:14px;
@@ -1174,51 +546,27 @@ button{
   align-items:center;
   justify-content:center;
 }
-.stat-icon svg,
-.dash-kpi-icon svg{
+.stat-icon svg{
   width:25px;
   height:25px;
 }
-.stat-icon svg *,
-.dash-kpi-icon svg *{
+.stat-icon svg *{
   fill:none;
   stroke:currentColor;
   stroke-width:1.9;
   stroke-linecap:round;
   stroke-linejoin:round;
 }
-.dash-kpi-icon.green svg path:first-child{
-  fill:currentColor;
-  stroke:none;
-}
-.stat-icon.blue,
-.dash-kpi-icon.blue{background:#eef5ff;color:#0b63f6}
-.stat-icon.orange,
-.dash-kpi-icon.orange{background:#fff7ed;color:#f59e0b}
-.stat-icon.green,
-.dash-kpi-icon.green{background:#ecfdf3;color:#16a34a}
-.stat-icon.purple,
-.dash-kpi-icon.purple{background:#f4f0ff;color:#7c3aed}
-.stat-icon.red,
-.dash-kpi-icon.red{background:#fff1f2;color:#e11d48}
-.stat-card span,
-.dash-kpi-card span{
-  color:#667085;
-  font-weight:720;
-}
-.stat-card strong,
-.dash-kpi-card strong{
-  color:#101828;
-  font-weight:880;
-  letter-spacing:-.045em;
-}
+.stat-icon.blue{background:#eef5ff;color:#0b63f6}
+.stat-icon.orange{background:#fff7ed;color:#f59e0b}
+.stat-icon.green{background:#ecfdf3;color:#16a34a}
+.stat-icon.purple{background:#f4f0ff;color:#7c3aed}
+.stat-icon.red{background:#fff1f2;color:#e11d48}
 
 /* Campi e filtri */
 input,
 select,
-textarea,
-.table-input,
-.table-select{
+textarea{
   border:1px solid #dbe3ee;
   background:#fff;
   border-radius:12px;
@@ -1227,9 +575,7 @@ textarea,
 }
 input:focus,
 select:focus,
-textarea:focus,
-.table-input:focus,
-.table-select:focus{
+textarea:focus{
   border-color:#0b63f6;
   box-shadow:0 0 0 4px rgba(11,99,246,.11);
 }
@@ -1278,44 +624,13 @@ tr:hover td{
 }
 
 /* Badge e stati */
-.route-status-pill,
 .badge{
   border-radius:999px;
   font-weight:820;
   letter-spacing:-.01em;
 }
-.route-status-pill.in_corso{
-  background:#eaf7ff;
-  color:#0969da;
-}
-.route-status-pill.programmato{
-  background:#eef4ff;
-  color:#0b63f6;
-}
-.route-status-pill.completato{
-  background:#ecfdf3;
-  color:#15803d;
-}
-.route-status-pill.da_completare{
-  background:#fff7ed;
-  color:#c2410c;
-}
 
 /* Grafici e liste dashboard */
-.dash-main-grid,
-.dash-board-columns{
-  gap:18px;
-}
-.dash-recent-item,
-.dash-vehicle-card{
-  border:1px solid #edf1f7;
-  border-radius:14px;
-  background:#fff;
-}
-.dash-recent-item:hover{
-  background:#f8fbff;
-  border-color:#d9e7ff;
-}
 
 /* Mobile: preserva layout senza cambiare funzioni */
 @media(max-width:900px){
@@ -1325,22 +640,6 @@ tr:hover td{
 }
 
 /* V3.7.9.2 - Dashboard: giri da completare visibili */
-.dash-board-columns{
-  grid-template-columns:repeat(4,minmax(0,1fr));
-}
-@media(max-width:1350px){
-  .dash-board-columns{
-    grid-template-columns:repeat(2,minmax(0,1fr));
-  }
-}
-@media(max-width:760px){
-  .dash-board-columns{
-    grid-template-columns:1fr;
-  }
-}
-#dashToCompleteBadge{
-  color:#c2410c;
-}
 
 /* V3.8.0 - Area Admin */
 body:not(.admin-mode) .admin-only,
@@ -1350,113 +649,8 @@ body.admin-mode .user-only{
 body.admin-mode .admin-only{
   display:flex;
 }
-body.admin-mode .side-nav .nav-item.active{
-  background:linear-gradient(90deg,#eff6ff 0%, #f8fbff 100%);
-}
-.admin-list,
-.admin-ticket-list{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-}
-.admin-list-item{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:14px;
-  border:1px solid var(--line);
-  border-radius:14px;
-  padding:14px 16px;
-  background:#fff;
-}
-.admin-list-item strong{
-  display:block;
-  color:#101828;
-  font-weight:850;
-}
-.admin-list-item small{
-  display:block;
-  margin-top:4px;
-  color:var(--muted);
-}
-.admin-mini-pill{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  padding:6px 10px;
-  border-radius:999px;
-  background:#eef5ff;
-  color:#0b63f6;
-  font-size:12px;
-  font-weight:850;
-  white-space:nowrap;
-}
-.admin-mini-pill.user{
-  background:#f2f4f7;
-  color:#475467;
-}
-.admin-filter-row{
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-.admin-filter-row select{
-  min-width:160px;
-}
-.admin-ticket-card{
-  border:1px solid var(--line);
-  border-radius:18px;
-  background:#fff;
-  box-shadow:var(--shadow-soft);
-  padding:18px;
-}
-.admin-ticket-head{
-  display:flex;
-  justify-content:space-between;
-  gap:14px;
-  align-items:flex-start;
-  margin-bottom:10px;
-}
-.admin-ticket-head strong{
-  display:block;
-  font-size:16px;
-  color:#101828;
-}
-.admin-ticket-head small{
-  display:block;
-  margin-top:4px;
-  color:var(--muted);
-}
-.admin-ticket-card p{
-  color:#475467;
-  margin:8px 0 14px;
-}
-.admin-ticket-card textarea{
-  width:100%;
-  margin-top:6px;
-}
-.route-status-pill.aperto{
-  background:#fff7ed;
-  color:#c2410c;
-}
-.route-status-pill.in_lavorazione{
-  background:#eef5ff;
-  color:#0b63f6;
-}
-.route-status-pill.chiuso{
-  background:#ecfdf3;
-  color:#15803d;
-}
-.forgot-help{
-  color:var(--muted);
-  font-size:13px;
-  line-height:1.4;
-  margin:0 0 10px;
-}
 
 /* V3.9.0 - Validazione professionale indirizzi */
-
-.btn-link-small{border:0;background:transparent;color:#175cd3;font-weight:800;font-size:11px;padding:4px 0;cursor:pointer}
 
 /* ---- PLAN SELECTOR (registrazione) ---- */
 .plan-option {
@@ -1471,168 +665,27 @@ body.admin-mode .side-nav .nav-item.active{
 }
 .plan-option:hover { border-color: #2563eb; }
 .plan-option.selected { border-color: #2563eb; background: #eff6ff; }
-.plan-option-badge {
-  position: absolute; top: -9px; left: 50%; transform: translateX(-50%);
-  background: #2563eb; color: #fff; font-size: 9px; font-weight: 700;
-  padding: 2px 8px; border-radius: 10px; white-space: nowrap;
-}
-.plan-option-name { font-size: 13px; font-weight: 700; margin-bottom: 4px; color: #111827; }
-.plan-option-price { font-size: 16px; font-weight: 800; color: #2563eb; }
-.plan-option-price span { font-size: 10px; font-weight: 400; color: #6b7280; }
-.plan-option-desc { font-size: 10px; color: #6b7280; margin-top: 4px; line-height: 1.3; }
 
 /* ---- TRIAL BANNER ---- */
-.trial-banner {
-  background: linear-gradient(90deg, #2563eb, #1d4ed8);
-  color: #fff; padding: 10px 20px;
-  display: flex; align-items: center; justify-content: space-between;
-  font-size: 13px; gap: 12px;
-}
-.trial-banner strong { font-weight: 700; }
-.trial-banner .btn-upgrade {
-  background: #fff; color: #2563eb;
-  border: none; padding: 5px 14px; border-radius: 6px;
-  font-size: 12px; font-weight: 700; cursor: pointer;
-  white-space: nowrap; flex-shrink: 0;
-}
 
 /* Dashboard operativa v1: focus su giri in corso e chat autista */
 
-.dash-next-stop{margin-top:9px;color:#334155!important;font-weight:700}
-.dash-chat-alert{margin-top:10px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:12px;padding:8px 10px;font-weight:900;font-size:13px;display:inline-flex;align-items:center;gap:6px}
-.dash-detail-kpis-operative{grid-template-columns:repeat(4,minmax(0,1fr))}
-.dash-detail-progress-large{height:12px;background:#e8eef8;border-radius:999px;overflow:hidden;margin:10px 0 20px}
-.dash-detail-progress-large span{display:block;height:100%;background:#0b63f6;border-radius:999px}
-.dash-operational-split{display:grid;grid-template-columns:minmax(0,1.35fr) 380px;gap:18px;align-items:start}
-.dash-admin-chat-card{border:1px solid var(--line);border-radius:18px;background:#fff;overflow:hidden;position:sticky;top:16px}
-.dash-chat-title{padding:16px 18px;border-bottom:1px solid var(--line)}
-.dash-chat-title h3{margin:0 0 4px;font-size:18px}.dash-chat-title small{color:var(--muted);font-weight:700}
-.dash-admin-chat-messages{height:360px;overflow-y:auto;background:#f8fafc;padding:14px;display:flex;flex-direction:column;gap:10px}
-.dash-admin-chat-input{display:flex;gap:10px;padding:12px;border-top:1px solid var(--line);background:#fff}.dash-admin-chat-input textarea{flex:1;resize:none;border:1px solid var(--line);border-radius:12px;padding:10px;font-family:inherit;outline:none}.dash-admin-chat-input textarea:focus{border-color:#0b63f6}
-.delivery-status-pill{display:inline-flex;align-items:center;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:900;background:#eef2ff;color:#3730a3}.delivery-status-pill.completata{background:#dcfce7;color:#166534}.delivery-status-pill.mancata{background:#fee2e2;color:#991b1b}.delivery-status-pill.in_attesa{background:#f1f5f9;color:#475569}.delivery-reason{display:block;margin-top:5px;color:#991b1b;font-weight:700}
-.delivery-row-completata td{background:#fbfffc}.delivery-row-mancata td{background:#fffafa}
-@media(max-width:1100px){.dash-operational-split{grid-template-columns:1fr}.dash-admin-chat-card{position:static}.dash-detail-kpis-operative{grid-template-columns:repeat(2,minmax(0,1fr))}}
-
 /* Dashboard sottopagina Giri in corso */
-.dash-kpi-click{cursor:pointer;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
-.dash-kpi-click:hover{transform:translateY(-2px);box-shadow:0 18px 45px rgba(15,23,42,.10);border-color:rgba(37,99,235,.28)}.dash-sub-layout{display:grid;grid-template-columns:360px minmax(0,1fr);gap:28px;align-items:start}
-.dash-sub-sidebar{position:sticky;top:100px;display:flex;flex-direction:column;gap:16px}.dash-sub-route-picker{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:16px;box-shadow:0 12px 40px rgba(15,23,42,.06)}
-.dash-sub-route-picker label{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#64748b;font-weight:900;margin-bottom:8px}.dash-sub-route-picker select{width:100%;border:1px solid #dbe3ef;border-radius:12px;padding:12px 13px;background:#f8fafc;font-weight:800;color:#0f172a}.dash-chat-alert.strong{border-radius:14px;padding:12px 14px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;font-weight:900;margin:12px 0}.btn-light.full{width:calc(100% - 44px);margin:0 22px 22px}
-.dash-sub-main{display:flex;flex-direction:column;gap:24px}.dash-sub-card{padding:26px;border-radius:22px}.dash-sub-card-title{display:flex;align-items:center;gap:16px;margin-bottom:20px}.dash-sub-card-title h2{margin:0;color:#0f172a;font-size:22px}.dash-sub-card-title p{margin:4px 0 0;color:#64748b;font-weight:600}.dash-sub-icon{width:54px;height:54px;border-radius:16px;background:#eef4ff;display:grid;place-items:center;font-size:25px}.dash-sub-card-title-actions{justify-content:space-between}.dash-sub-card-title-left{display:flex;align-items:center;gap:16px}
-.dash-sub-table-wrap{border:1px solid #e5e7eb;border-radius:18px;overflow:auto}.dash-sub-table{width:100%;border-collapse:collapse;background:#fff}.dash-sub-table th{background:#f8fafc;color:#334155;font-size:13px;text-align:left;padding:16px 18px;border-bottom:1px solid #e5e7eb}.dash-sub-table td{padding:18px;border-bottom:1px solid #eef2f7;color:#334155;vertical-align:middle}.dash-sub-table tr:last-child td{border-bottom:0}.dash-sub-totals{display:flex;justify-content:flex-end;gap:30px;margin-top:16px;color:#334155}.dash-stops-timeline{border:1px solid #e5e7eb;border-radius:18px;overflow:hidden;background:#fff}.dash-stop-line{display:grid;grid-template-columns:54px 1fr 150px;gap:16px;align-items:center;padding:16px 18px;border-bottom:1px solid #eef2f7}.dash-stop-line:last-child{border-bottom:0}.dash-stop-number{width:34px;height:34px;border-radius:999px;background:#0b63f6;color:#fff;display:grid;place-items:center;font-weight:900}.dash-stop-line small{display:block;color:#64748b;margin-top:4px;line-height:1.35}.dash-stop-status{text-align:right}.dash-sub-bottom-grid{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:24px}.dash-note-grid{border:1px solid #e5e7eb;border-radius:18px;display:grid;grid-template-columns:150px 1fr 1fr;overflow:hidden;background:#fff}.dash-note-grid>div{padding:18px;border-right:1px solid #eef2f7}.dash-note-grid>div:last-child{border-right:0}.dash-note-grid span{display:block;color:#64748b;font-size:13px;font-weight:800;margin-bottom:8px}.dash-note-grid strong{color:#334155}.dash-admin-chat-card.embedded{height:100%;min-height:330px}
-@media(max-width:1100px){.dash-sub-layout{grid-template-columns:1fr}.dash-sub-sidebar{position:static}.dash-sub-bottom-grid{grid-template-columns:1fr}.dash-note-grid{grid-template-columns:1fr}.dash-note-grid>div{border-right:0;border-bottom:1px solid #eef2f7}.dash-note-grid>div:last-child{border-bottom:0}}
-@media(max-width:720px){.dash-sub-card{padding:18px}.dash-stop-line{grid-template-columns:40px 1fr}.dash-stop-status{grid-column:2;text-align:left}.dash-sub-totals{flex-direction:column;gap:8px}.dash-sub-table th,.dash-sub-table td{padding:12px}}
 
 /* Pulizia dashboard/pianificazione: sezioni rimosse o non più usate */
-.dash-main-grid{display:none!important}
-.right-summary{display:none!important}
 
 /* Dashboard/Pianificazione pulizia v4 */
-.dash-board-columns{grid-template-columns:repeat(4,minmax(0,1fr));align-items:stretch}
-.dash-board-columns .dash-list-card{display:flex;flex-direction:column;min-height:300px}
-.dash-board-columns .dash-list-card:nth-child(2){grid-column:span 2;border-color:#bfdbfe;box-shadow:0 18px 45px rgba(11,99,246,.09)}
-.dash-link-btn{margin-top:auto}
-@media(max-width:1200px){.dash-board-columns{grid-template-columns:1fr}.dash-board-columns .dash-list-card:nth-child(2){grid-column:auto}}
-.compact-btn{padding:8px 12px;border-radius:10px;font-size:12px}
 
 /* GiroFacile v5 - rifiniture Dashboard e popup dettagli consegna */
-.dash-kpi-click{
-  cursor:pointer;
-  transition:transform .14s ease, box-shadow .14s ease, border-color .14s ease;
-}
-.dash-kpi-click:hover{
-  transform:translateY(-2px);
-  border-color:#bfdbfe;
-  box-shadow:0 18px 42px rgba(11,99,246,.10);
-}
 
 /* La colonna dei completati usa lo spazio libero a destra: è la card più ricca di dati. */
-.dash-board-columns{
-  display:grid !important;
-  grid-template-columns:minmax(280px,1fr) minmax(300px,1fr) minmax(420px,2fr) !important;
-  gap:18px !important;
-  align-items:stretch !important;
-}
-.dash-board-columns .dash-list-card{
-  display:flex !important;
-  flex-direction:column !important;
-  min-height:420px !important;
-}
-.dash-board-columns .dash-list-card:nth-child(2){
-  grid-column:auto !important;
-  border-color:#e5e7eb !important;
-  box-shadow:none !important;
-}
-.dash-board-columns .dash-list-card:nth-child(3){
-  border-color:#bbf7d0;
-  box-shadow:0 18px 45px rgba(22,163,74,.08);
-}
-.dash-board-columns .dash-link-btn{
-  margin-top:auto !important;
-  margin-left:14px !important;
-  margin-right:14px !important;
-  margin-bottom:18px !important;
-  flex:0 0 auto !important;
-}
-.dash-board-columns .dash-empty{
-  flex:1 1 auto;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  min-height:180px;
-}
-@media(max-width:1400px){
-  .dash-board-columns{grid-template-columns:1fr 1fr !important;}
-  .dash-board-columns .dash-list-card:nth-child(3){grid-column:1/-1;}
-}
-@media(max-width:900px){
-  .dash-board-columns{grid-template-columns:1fr !important;}
-  .dash-board-columns .dash-list-card:nth-child(3){grid-column:auto;}
-}
 
 /* Popup dettagli consegna più ordinato per sezioni */
 
 /* GiroFacile v6 - pagina Autisti più pulita con creazione/modifica in popup */
 
-.drivers-list-panel-full{
-  width:100%;
-}
-.drivers-list-header{
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:16px;
-}
-.drivers-layout{
-  display:block !important;
-}
-.driver-card{
-  transition:transform .14s ease, box-shadow .14s ease, border-color .14s ease;
-}
-.driver-card:hover{
-  transform:translateY(-2px);
-  border-color:#bfdbfe;
-  box-shadow:0 18px 44px rgba(15,23,42,.10);
-}
-@media(max-width:760px){
-  .drivers-list-header{flex-direction:column;}
-}
-
 /* GiroFacile v7 - immagini profilo risorse */
-.asset-photo-row{
-  display:flex;
-  align-items:center;
-  gap:14px;
-  padding:14px;
-  border:1px solid #e5e7eb;
-  border-radius:18px;
-  background:linear-gradient(135deg,#f8fafc,#eef6ff);
-  margin-bottom:14px;
-}
-.asset-photo-row strong{display:block;color:#0f172a;font-weight:900;margin-bottom:4px;}
-.asset-photo-row small{display:block;color:#64748b;font-weight:650;margin-bottom:9px;}
-.asset-photo-row input[type=file]{display:block;font-size:13px;max-width:100%;}
-.asset-photo-preview,
+
 .asset-thumb{
   width:58px;
   height:58px;
@@ -1649,98 +702,22 @@ body.admin-mode .side-nav .nav-item.active{
   border:1px solid #dbeafe;
 }
 .asset-thumb{width:52px;height:52px;border-radius:16px;font-size:24px;}
-.asset-photo-preview img,
-.asset-thumb img,
-.driver-avatar img{
+.asset-thumb img{
   width:100%;
   height:100%;
   object-fit:cover;
   display:block;
 }
-.entity-cell{display:flex;align-items:center;gap:12px;min-width:0;}
-.entity-cell strong{display:block;color:#0f172a;}
-.entity-cell small{display:block;color:#64748b;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.driver-avatar{overflow:hidden;}
-.driver-info-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
-@media(max-width:760px){.asset-photo-row{align-items:flex-start;flex-direction:column}.entity-cell{align-items:flex-start}}
 
 /* v8 - Clienti puliti e pianificazione full width */
-
-.customer-list-panel-v8{
-  margin-top:4px;
-}
-.customer-searchbar-v8{
-  display:grid;
-  grid-template-columns:minmax(240px,1fr) auto;
-  gap:10px;
-  margin-bottom:12px;
-}
-.customer-searchbar-v8 input{
-  height:44px;
-  border:1px solid #d1d5db;
-  border-radius:12px;
-  padding:0 12px;
-  background:#fff;
-}
-.customer-filters-advanced{
-  padding:12px;
-  border:1px solid #e5e7eb;
-  border-radius:16px;
-  background:#f8fafc;
-  margin-bottom:14px;
-}
-.customer-filters-advanced button{
-  height:42px;
-}
-.modal-kicker{
-  color:#2563eb;
-  font-weight:900;
-  font-size:12px;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-  margin-bottom:8px;
-}
-@media(max-width:760px){
-  .customer-searchbar-v8{grid-template-columns:1fr}
-}
 
 /* v11 - verifica manuale indirizzo cliente */
 
 /* Chat autisti - centro comunicazioni */
-.side-chat-badge{
-  margin-left:auto;
-  min-width:20px;
-  height:20px;
-  padding:0 6px;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  border-radius:999px;
-  background:#ef4444;
-  color:#fff;
-  font-size:11px;
-  font-weight:900;
-  line-height:1;
-}
 
 /* Piano Starter: sezioni premium visibili ma bloccate */
-.nav-item.is-premium-locked::after{
-  content:"🔒";
-  margin-left:auto;
-  font-size:12px;
-  opacity:.72;
-}
 
 /* Legal footer e cookie notice */
-
-.side-legal-links{display:flex;gap:6px;justify-content:center;align-items:center;flex-wrap:wrap;margin-top:8px;font-size:10px;line-height:1.3}
-.side-legal-links a{color:#93c5fd;text-decoration:none}
-.side-legal-links a:hover{text-decoration:underline;color:#fff}
-.dashboard-legal-footer{margin:26px 0 0;padding:18px 6px 4px;border-top:1px solid rgba(148,163,184,.22);display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;color:#94a3b8;font-size:12px}
-.dashboard-legal-footer a{color:#64748b;text-decoration:none;font-weight:700}
-.dashboard-legal-footer a:hover{color:#2563eb;text-decoration:underline}
-.cookie-accept-btn{white-space:nowrap;padding:11px 16px;border-radius:12px}
-@media(max-width:720px){.cookie-accept-btn{width:100%}.dashboard-legal-footer{font-size:11px;gap:8px}}
 
 /* Fix v25 - recupero password cliccabile */
  #forgotBox{position:relative; z-index:10;}
@@ -1752,64 +729,16 @@ body.admin-mode .side-nav .nav-item.active{
 
 /* V30 - Notifiche interne */
 
-.bell-icon-v30{font-size:18px;line-height:1}.btn-light.mini{padding:7px 10px;border-radius:10px;font-size:12px}
-
 /* v40 - Ritocchi estetici dashboard/login/report/profilo */
 
-.password-eye-pro svg{
-  width:24px;height:24px;display:block;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;
-}
-.password-eye-pro{width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;border-radius:10px;color:#475569;transition:.16s ease;}
-.password-eye-pro:hover{background:#f1f5f9;color:#0f172a;}
-
-.company-header-actions-v40{display:flex;align-items:center;gap:10px;justify-content:flex-end;flex-wrap:wrap;}
-.company-configured-badge-v40{display:inline-flex;align-items:center;gap:8px;padding:11px 14px;border-radius:14px;background:#dcfce7;border:1px solid #bbf7d0;color:#15803d;font-weight:800;font-size:13px;}
-
-.btn-primary,.btn-secondary,.btn-light{display:inline-flex;align-items:center;justify-content:center;gap:8px;line-height:1.15;}
-.actions-row,.modal-actions{gap:12px;margin-top:22px;}
-.panel > .actions-row{margin-top:20px;margin-bottom:18px;}
-.plan-usage-rowline-v40{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;margin:14px 0 16px;border:1px solid #e5eaf3;border-radius:15px;background:#fff;overflow:hidden;}
-.plan-usage-chip-v40{display:flex;align-items:center;justify-content:center;gap:7px;min-height:48px;padding:10px 8px;color:#334155;font-size:13px;border-right:1px solid #e5eaf3;white-space:nowrap;}
-.plan-usage-chip-v40:last-child{border-right:0;}
-.plan-usage-chip-v40 strong{font-weight:900;color:#0f172a;}
-.plan-usage-chip-icon{color:#0b63f6;font-size:15px;line-height:1;}
-@media(max-width:720px){
-  .company-header-actions-v40{justify-content:flex-start;}
-  .plan-usage-rowline-v40{grid-template-columns:1fr 1fr;}
-  .plan-usage-chip-v40:nth-child(2){border-right:0;}
-  .plan-usage-chip-v40:nth-child(-n+2){border-bottom:1px solid #e5eaf3;}
-}
+.btn-primary,.btn-secondary{display:inline-flex;align-items:center;justify-content:center;gap:8px;line-height:1.15;}
 
 /* v43 — Impostazioni azienda + firma consegna */
 
-.settings-section-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:18px;}
-.settings-section-head h2{margin:0 0 6px;font-size:20px;font-weight:850;color:#0f172a;}
-.settings-section-head p{margin:0;color:#64748b;font-size:14px;line-height:1.45;}
-.switch-toggle{position:relative;display:inline-flex;align-items:center;width:58px;height:34px;flex:0 0 auto;}
-.switch-toggle input{opacity:0;width:0;height:0;}
-.switch-slider{position:absolute;cursor:pointer;inset:0;background:#cbd5e1;border-radius:999px;transition:.2s;box-shadow:inset 0 0 0 1px rgba(15,23,42,.06);}
-.switch-slider:before{content:"";position:absolute;height:28px;width:28px;left:3px;top:3px;background:white;border-radius:50%;transition:.2s;box-shadow:0 4px 12px rgba(15,23,42,.18);}
-.switch-toggle input:checked + .switch-slider{background:#2563eb;}
-.switch-toggle input:checked + .switch-slider:before{transform:translateX(24px);}
-.signature-viewer-overlay{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px;}
-.signature-viewer-card{width:min(620px,100%);background:#fff;border-radius:22px;box-shadow:0 28px 80px rgba(15,23,42,.25);overflow:hidden;}
-.signature-viewer-head{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid #e5e7eb;}
-.signature-viewer-head h3{margin:0;font-size:18px;font-weight:850;color:#0f172a;}
-.signature-viewer-head button{border:0;background:#f1f5f9;color:#334155;border-radius:10px;width:34px;height:34px;font-size:22px;cursor:pointer;}
-.signature-viewer-meta{padding:14px 20px;color:#64748b;font-size:13px;}
-.signature-viewer-img{margin:0 20px 20px;border:1px dashed #cbd5e1;border-radius:16px;background:#fff;min-height:180px;display:flex;align-items:center;justify-content:center;}
-.signature-viewer-img img{max-width:100%;max-height:260px;display:block;}
-.signature-viewer-note{margin:0 20px 20px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:12px;color:#334155;font-size:13px;}
 .btn-mini{border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;border-radius:9px;padding:6px 9px;font-size:12px;font-weight:750;cursor:pointer;margin-left:6px;white-space:nowrap;}
 button:disabled{opacity:.65;cursor:not-allowed;}
 
 /* v44 — Popup firma completo con autista, orario e firmatario */
-.signature-mini-btn{display:inline-flex;align-items:center;gap:4px;margin-left:6px;background:#eff6ff!important;color:#1d4ed8!important;border:1px solid #bfdbfe!important;font-weight:800;}
-.signature-viewer-meta-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;background:#f8fafc;margin:14px 20px;border:1px solid #e2e8f0;border-radius:14px;padding:12px!important;}
-.signature-viewer-meta-grid div{display:flex;flex-direction:column;gap:3px;min-width:0;}
-.signature-viewer-meta-grid span{font-size:11px;color:#64748b;font-weight:800;text-transform:uppercase;letter-spacing:.03em;}
-.signature-viewer-meta-grid strong{font-size:13px;color:#0f172a;word-break:break-word;}
-@media(max-width:760px){.signature-viewer-meta-grid{grid-template-columns:1fr;}}
 
 /* GiroFacile v45 - Schermata giro unificata */
 
@@ -1820,76 +749,14 @@ button:disabled{opacity:.65;cursor:not-allowed;}
 /* ------------------------------------------------------------------
    v47 - Motore Settori Aziendali
 ------------------------------------------------------------------ */
-.sector-config-card-v47{
-  margin-top:18px;
-  padding:18px;
-  border:1px solid #e2e8f0;
-  border-radius:20px;
-  background:linear-gradient(135deg,#f8fafc,#eef6ff);
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:18px;
-}
-.sector-config-card-v47 small{
-  display:block;
-  color:#64748b;
-  font-weight:700;
-  text-transform:uppercase;
-  letter-spacing:.05em;
-  font-size:11px;
-  margin-bottom:6px;
-}
-.sector-config-card-v47 strong{
-  display:block;
-  color:#0f172a;
-  font-size:20px;
-  line-height:1.2;
-}
-.sector-config-card-v47 p{
-  margin:8px 0 0;
-  color:#475569;
-  font-size:13px;
-}
-.sector-feature-chips-v47{
-  display:flex;
-  flex-wrap:wrap;
-  justify-content:flex-end;
-  gap:8px;
-  max-width:360px;
-}
-.sector-feature-chips-v47 span{
-  display:inline-flex;
-  align-items:center;
-  border-radius:999px;
-  padding:7px 10px;
-  background:#ffffff;
-  border:1px solid #dbeafe;
-  color:#1e40af;
-  font-weight:700;
-  font-size:12px;
-  box-shadow:0 8px 18px rgba(37,99,235,.08);
-}
-@media (max-width: 760px){
-  .sector-config-card-v47{flex-direction:column;}
-  .sector-feature-chips-v47{justify-content:flex-start;max-width:none;}
-}
 
 /* -----------------------------------------------------------------------------
    v49 - Dashboard iniziale pulita per nuovi account aziendali
 ----------------------------------------------------------------------------- */
-body.workspace-empty-v49-active .nav-item[data-workspace-operational="1"]{
-  display:none !important;
-}
+
 body.workspace-empty-v49-active #tab-dashboard > :not(#workspaceEmptyDashboardV49){
   display:none !important;
 }
-.workspace-empty-v49{
-  display:grid;
-  gap:22px;
-  padding:6px 0 24px;
-}
-.workspace-empty-v49.hidden{display:none!important;}
 
 /* --------------------------------------------------------------------------
    v50 - Settore Logistica / Corrieri locali
@@ -2158,172 +1025,6 @@ body.workspace-empty-v49-active #tab-dashboard > :not(#workspaceEmptyDashboardV4
 /* --------------------------------------------------------------------------
    v52 - Sezione Integrazioni E-commerce / Shopify
    -------------------------------------------------------------------------- */
-.integrations-v52{
-  display:flex;
-  flex-direction:column;
-  gap:22px;
-}
-.integrations-hero-v52{
-  padding:26px;
-  border-radius:28px;
-  color:#fff;
-  background:linear-gradient(135deg,#0f172a 0%,#312e81 45%,#7c3aed 100%);
-  box-shadow:0 22px 55px rgba(15,23,42,.18);
-  position:relative;
-  overflow:hidden;
-}
-.integrations-hero-v52:after{
-  content:"";
-  position:absolute;
-  right:-70px;
-  top:-80px;
-  width:230px;
-  height:230px;
-  border-radius:999px;
-  background:rgba(255,255,255,.12);
-}
-.integrations-hero-v52 span{
-  display:inline-flex;
-  padding:7px 11px;
-  border-radius:999px;
-  background:rgba(255,255,255,.14);
-  border:1px solid rgba(255,255,255,.18);
-  font-size:12px;
-  font-weight:800;
-  text-transform:uppercase;
-  letter-spacing:.08em;
-}
-.integrations-hero-v52 h1{
-  margin:14px 0 8px;
-  font-size:34px;
-  line-height:1.05;
-  letter-spacing:-.04em;
-}
-.integrations-hero-v52 p{
-  margin:0;
-  max-width:760px;
-  color:rgba(255,255,255,.78);
-}
-.integrations-grid-v52{
-  display:grid;
-  grid-template-columns:minmax(0,1.45fr) minmax(280px,.75fr);
-  gap:18px;
-}
-.integration-card-v52,
-.integration-side-v52,
-.integrations-empty-v52{
-  background:#fff;
-  border:1px solid rgba(15,23,42,.08);
-  border-radius:24px;
-  padding:22px;
-  box-shadow:0 16px 40px rgba(15,23,42,.08);
-}
-.integration-card-head-v52{
-  display:flex;
-  align-items:flex-start;
-  gap:14px;
-}
-.integration-logo-v52{
-  width:48px;
-  height:48px;
-  flex:0 0 48px;
-  border-radius:16px;
-  display:grid;
-  place-items:center;
-  color:#fff;
-  background:linear-gradient(135deg,#16a34a,#22c55e);
-  font-size:25px;
-  font-weight:900;
-}
-.integration-card-head-v52 h2,
-.integration-side-v52 h2,
-.integrations-empty-v52 h1{
-  margin:0 0 6px;
-  color:#0f172a;
-  letter-spacing:-.025em;
-}
-.integration-card-head-v52 p,
-.integrations-empty-v52 p{
-  margin:0;
-  color:#64748b;
-}
-.integration-badge-v52{
-  margin-left:auto;
-  display:inline-flex;
-  white-space:nowrap;
-  padding:7px 10px;
-  border-radius:999px;
-  font-size:12px;
-  font-weight:800;
-  color:#6d28d9;
-  background:#f3e8ff;
-}
-.integration-form-v52{
-  display:grid;
-  gap:9px;
-  margin-top:22px;
-}
-.integration-form-v52 label{
-  font-size:13px;
-  color:#334155;
-  font-weight:800;
-}
-.integration-form-v52 input{
-  width:100%;
-  border:1px solid #e2e8f0;
-  border-radius:15px;
-  padding:13px 14px;
-  outline:none;
-  font-size:14px;
-  background:#f8fafc;
-}
-.integration-form-v52 input:focus{
-  border-color:#7c3aed;
-  background:#fff;
-  box-shadow:0 0 0 4px rgba(124,58,237,.12);
-}
-.integration-actions-v52{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  margin-top:18px;
-}
-.integration-note-v52{
-  margin-top:18px;
-  padding:16px;
-  border-radius:18px;
-  background:#f8fafc;
-  border:1px dashed #cbd5e1;
-}
-.integration-note-v52 strong{
-  display:block;
-  margin-bottom:5px;
-  color:#0f172a;
-}
-.integration-note-v52 p{
-  margin:0;
-  color:#64748b;
-  font-size:14px;
-}
-.integration-side-v52 ul{
-  margin:12px 0 0;
-  padding-left:20px;
-  color:#475569;
-  line-height:1.8;
-}
-.integrations-empty-v52{
-  text-align:center;
-  max-width:760px;
-  margin:30px auto;
-}
-.integrations-empty-v52 .btn-primary{
-  margin-top:16px;
-}
-@media(max-width:900px){
-  .integrations-grid-v52{grid-template-columns:1fr;}
-  .integration-card-head-v52{align-items:flex-start;}
-  .integration-badge-v52{margin-left:0;}
-}
 
 /* --------------------------------------------------------------------------
    v53 - Settore Food delivery / Ristorazione
@@ -2380,120 +1081,41 @@ body.workspace-empty-v49-active #tab-dashboard > :not(#workspaceEmptyDashboardV4
    v62 - Mobile premium layout gestionale
    Solo mobile: desktop invariato. Menu basso + Altro con tutte le sezioni.
 ========================================================== */
-.gf-mobile-topbar-v62,.gf-mobile-bottom-nav-v62,.gf-mobile-more-menu-v62,.gf-mobile-more-backdrop-v62{display:none}
 
 @media(max-width:820px){
   body.app-logged-in{background:#f7f9fc;overflow-x:hidden}
-  body.app-logged-in .app-shell{display:block!important;min-height:100vh;padding:96px 0 104px;background:linear-gradient(180deg,#fbfdff 0%,#f6f8fc 100%)}
   body.app-logged-in .sidebar{display:none!important}
-  body.app-logged-in .main-area{width:100%;min-width:0;margin:0;padding:0;display:block}
-  body.app-logged-in .topbar{display:none!important}
   body.app-logged-in .content{padding:16px 16px 24px;max-width:100%;overflow:hidden}
-  body.app-logged-in .dashboard-legal-footer{display:none}
 
-  .gf-mobile-topbar-v62{display:flex;position:fixed;top:0;left:0;right:0;height:86px;z-index:900;align-items:center;gap:14px;padding:22px 18px 12px;background:rgba(255,255,255,.92);backdrop-filter:blur(18px);border-bottom:1px solid rgba(226,232,240,.85)}
-  .gf-mobile-icon-btn-v62{width:48px;height:48px;border:1px solid #e6ebf3;border-radius:16px;background:#fff;color:#16233d;font-size:22px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 28px rgba(15,23,42,.06);position:relative}
-  .gf-mobile-brand-v62{font-size:28px;font-weight:900;letter-spacing:-1.2px;flex:1;color:#101828;line-height:1}.gf-mobile-brand-v62 strong{color:#0b63f6}.gf-mobile-brand-v62 span{color:#101828}
-  .gf-mobile-top-actions-v62{display:flex;align-items:center;gap:10px}.gf-mobile-avatar-v62{width:48px;height:48px;border:0;border-radius:50%;background:#0b63f6;color:#fff;font-size:18px;font-weight:900;box-shadow:0 14px 30px rgba(11,99,246,.22)}
-  .gf-mobile-dot-v62{position:absolute;width:8px;height:8px;border-radius:50%;background:#0b63f6;right:10px;top:10px;box-shadow:0 0 0 3px #fff}
-
-  .gf-mobile-bottom-nav-v62{display:grid;grid-template-columns:1fr 1fr 78px 1fr 1fr;gap:4px;position:fixed;left:14px;right:14px;bottom:14px;z-index:920;min-height:76px;padding:9px 10px;background:rgba(255,255,255,.94);border:1px solid rgba(226,232,240,.9);border-radius:26px;box-shadow:0 22px 60px rgba(15,23,42,.16);backdrop-filter:blur(20px)}
-  .gf-mobile-bottom-nav-v62 button{border:0;background:transparent;color:#667085;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-radius:18px;font-weight:800;min-width:0;font-size:11px;line-height:1.05}
-  .gf-mobile-bottom-nav-v62 button span{font-size:23px;line-height:1}.gf-mobile-bottom-nav-v62 button strong{font-size:11px;white-space:nowrap}
-  .gf-mobile-bottom-nav-v62 button.active{color:#0b63f6;background:#eef5ff}.gf-mobile-bottom-nav-v62 button.main{margin-top:-24px;height:78px;width:78px;justify-self:center;border-radius:50%;background:#0b63f6;color:#fff;box-shadow:0 14px 35px rgba(11,99,246,.35);border:6px solid rgba(238,245,255,.95)}
-  .gf-mobile-bottom-nav-v62 button.main span{font-size:34px;font-weight:600}.gf-mobile-bottom-nav-v62 button.main strong{font-size:10px;color:#1d4ed8;position:absolute;bottom:-18px;display:none}
-
-  .gf-mobile-more-backdrop-v62{display:block;position:fixed;inset:0;z-index:930;background:rgba(15,23,42,.18);backdrop-filter:blur(3px)}
-  .gf-mobile-more-backdrop-v62.hidden,.gf-mobile-more-menu-v62.hidden{display:none!important}
-  .gf-mobile-more-menu-v62{display:block;position:fixed;right:16px;bottom:102px;z-index:940;width:min(320px,calc(100vw - 32px));max-height:62vh;overflow:auto;background:#fff;border:1px solid #e6ebf3;border-radius:24px;padding:10px;box-shadow:0 28px 70px rgba(15,23,42,.22)}
-  .gf-mobile-more-head-v62{display:flex;align-items:center;justify-content:space-between;padding:8px 10px 12px;border-bottom:1px solid #eef2f7;margin-bottom:8px;color:#101828}.gf-mobile-more-head-v62 button{width:32px;height:32px;border:0;border-radius:10px;background:#f2f4f7;color:#344054;font-size:22px;line-height:1}
-  .gf-mobile-more-menu-v62>button{width:100%;display:flex;align-items:center;gap:10px;border:0;background:#fff;color:#344054;padding:13px 12px;border-radius:15px;text-align:left;font-size:14px;font-weight:800}.gf-mobile-more-menu-v62>button:hover,.gf-mobile-more-menu-v62>button:active{background:#f6f8fc;color:#0b63f6}.gf-mobile-more-menu-v62>button.danger{color:#dc2626;border-top:1px solid #fee2e2;margin-top:6px}
-
-  body.app-logged-in .page-title-row{align-items:flex-start;gap:14px;margin:4px 0 18px;flex-direction:column}body.app-logged-in .page-title-row h1{font-size:28px;letter-spacing:-.8px;line-height:1.05}body.app-logged-in .page-title-row p{font-size:15px;line-height:1.45;color:#667085}
-  body.app-logged-in .page-title-row .btn-primary,body.app-logged-in .page-title-row .btn-secondary,body.app-logged-in .page-title-row .btn-light{width:100%;justify-content:center;min-height:50px;border-radius:16px}
-
-  body.app-logged-in .panel,body.app-logged-in .card,body.app-logged-in .dash-list-card,body.app-logged-in .dash-kpi-card,body.app-logged-in .gf-unified-route-card{border-radius:24px!important;box-shadow:0 14px 45px rgba(15,23,42,.07)!important;border-color:#e8edf5!important;background:#fff!important}
-  body.app-logged-in .dash-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;margin-bottom:16px!important}
-  body.app-logged-in .dash-kpi-card{min-height:132px!important;padding:16px!important;gap:12px!important;align-items:flex-start!important;flex-direction:column!important}
-  body.app-logged-in .dash-kpi-icon{width:56px!important;height:56px!important;border-radius:18px!important;flex:0 0 56px!important}body.app-logged-in .dash-kpi-card strong{font-size:30px!important}body.app-logged-in .dash-kpi-card span{font-size:13px!important;line-height:1.25}body.app-logged-in .dash-kpi-card small{font-size:12px!important;line-height:1.25}
-  body.app-logged-in .dash-board-columns,body.app-logged-in .dash-main-grid,body.app-logged-in .dash-operational-split,body.app-logged-in .route-grid{grid-template-columns:1fr!important;gap:16px!important}
+  body.app-logged-in .panel,body.app-logged-in .card{border-radius:24px!important;box-shadow:0 14px 45px rgba(15,23,42,.07)!important;border-color:#e8edf5!important;background:#fff!important}
   body.app-logged-in .tableWrap,body.app-logged-in .table-wrap{margin-left:-4px;margin-right:-4px;overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:18px}body.app-logged-in table{min-width:680px}
   body.app-logged-in .modal{width:calc(100vw - 20px)!important;max-width:none!important;max-height:calc(100vh - 24px)!important;border-radius:26px!important;margin:12px auto!important}
   body.app-logged-in .modal-overlay{align-items:flex-end!important;padding:0 10px 10px!important}
   body.app-logged-in input,body.app-logged-in select,body.app-logged-in textarea{font-size:16px!important;border-radius:15px!important}
-  body.app-logged-in .btn-primary,body.app-logged-in .btn-secondary,body.app-logged-in .btn-light,body.app-logged-in .btn-danger-soft{min-height:44px;border-radius:14px;font-weight:850}
+  body.app-logged-in .btn-primary,body.app-logged-in .btn-secondary{min-height:44px;border-radius:14px;font-weight:850}
 
-  body.app-logged-in .distribution-dashboard-v50,body.app-logged-in .logistics-dashboard-v50,body.app-logged-in .ecommerce-dashboard-v51,body.app-logged-in .food-dashboard-v53,body.app-logged-in .healthcare-dashboard-v55{margin-top:0!important}
+  body.app-logged-in .logistics-dashboard-v50,body.app-logged-in .ecommerce-dashboard-v51,body.app-logged-in .food-dashboard-v53,body.app-logged-in .healthcare-dashboard-v55{margin-top:0!important}
   body.app-logged-in .vertical-modules-v51{grid-template-columns:1fr!important}
 }
 
 @media(max-width:390px){
-  .gf-mobile-brand-v62{font-size:24px}.gf-mobile-icon-btn-v62,.gf-mobile-avatar-v62{width:44px;height:44px}.gf-mobile-bottom-nav-v62{left:8px;right:8px;grid-template-columns:1fr 1fr 70px 1fr 1fr}.gf-mobile-bottom-nav-v62 button.main{width:70px;height:70px}.gf-mobile-bottom-nav-v62 button strong{font-size:10px}
-  body.app-logged-in .content{padding-left:12px;padding-right:12px}body.app-logged-in .dash-kpi-card{padding:14px!important}
+  body.app-logged-in .content{padding-left:12px;padding-right:12px}
 }
 
 /* v63 - Area Fatturazione nel profilo account */
 
-.btn-plan-active-v88{background:#2563eb;color:#fff;border:1px solid #2563eb}
-.btn-plan-active-v88:hover{background:#1d4ed8;border-color:#1d4ed8}
 .btn-billing-v63{background:#0f172a;color:#fff;border:1px solid #0f172a}
 
 /* v67 - AI assistita */
 .hidden{display:none!important}
 
 /* v68 - Pianificazione guidata mobile/desktop */
-.route-step-panel{
-  border:1px solid rgba(37,99,235,.16);
-  background:linear-gradient(135deg, rgba(37,99,235,.08), rgba(255,255,255,.94));
-}
-.route-step-ready{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:18px;
-}
-
-@media (max-width: 760px){
-  .route-step-ready{
-    flex-direction:column;
-    align-items:stretch;
-  }
-  .route-step-ready .btn-primary{
-    width:100%;
-    min-height:52px;
-  }
-}
 
 /* v74 - Mappa Google giro */
 
 /* v76 - Anteprima giro dedicata */
 
-.route-preview-top-actions-v76{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  justify-content:flex-end;
-  flex-wrap:wrap;
-  max-width:520px;
-}
-.route-preview-top-actions-v76 small{
-  color:#64748b;
-  line-height:1.35;
-}
-
-@media (max-width: 760px){
-  .route-preview-top-actions-v76{
-    width:100%;
-    justify-content:flex-start;
-  }
-  .route-preview-top-actions-v76 button{
-    width:100%;
-  }
-}
-
 /* v89 - configurazione universale consegne */
-.gf-feature-head-v89{margin-top:26px;padding-top:22px;border-top:1px solid var(--border,#e5e7eb)}
-.gf-feature-list-v89{display:flex;flex-direction:column;gap:12px;margin:14px 0 18px}
 
 /* V89.2 - visibilità globale funzionalità opzionali */
 html[data-gf-time-windows="off"] [data-gf-feature="time_windows"],
@@ -2501,16 +1123,6 @@ html[data-gf-ztl="off"] [data-gf-feature="ztl"],
 html[data-gf-tail-lift="off"] [data-gf-feature="tail_lift"],
 html[data-gf-photo-proof="off"] [data-gf-feature="photo_proof"],
 html[data-gf-refrigerated="off"] [data-gf-feature="refrigerated"] { display:none !important; }
-html[data-gf-time-windows="off"] .gf-customers-table-v892 th:nth-child(5),
-html[data-gf-time-windows="off"] .gf-customers-table-v892 td:nth-child(5) { display:none !important; }
-html[data-gf-ztl="off"] .gf-customers-table-v892 th:nth-child(7),
-html[data-gf-ztl="off"] .gf-customers-table-v892 td:nth-child(7),
-html[data-gf-ztl="off"] .gf-vehicles-table-v892 th:nth-child(5),
-html[data-gf-ztl="off"] .gf-vehicles-table-v892 td:nth-child(5) { display:none !important; }
-html[data-gf-tail-lift="off"] .gf-customers-table-v892 th:nth-child(8),
-html[data-gf-tail-lift="off"] .gf-customers-table-v892 td:nth-child(8),
-html[data-gf-tail-lift="off"] .gf-vehicles-table-v892 th:nth-child(4),
-html[data-gf-tail-lift="off"] .gf-vehicles-table-v892 td:nth-child(4) { display:none !important; }
 
 /* v89.3 - barra salvataggio manuale impostazioni */
 
@@ -2521,38 +1133,15 @@ html[data-gf-tail-lift="off"] .gf-vehicles-table-v892 td:nth-child(4) { display:
 /* V89.6.6 - rifinitura registro targa */
 
 /* GiroFacile V89.6.9 - Fix orientamento/logo sidebar */
-.brand-logo-img,
-.brand-login img {
-  transform: none !important;
-  rotate: 0deg !important;
-  object-fit: contain !important;
-  object-position: center center !important;
-}
-
-.brand-logo-img {
-  background: #075dff !important;
-  padding: 0 !important;
-}
 
 /* Company-level optional agent management. */
-html[data-gf-agents="off"] [data-gf-agents-only],
-html[data-gf-agents="off"] .nav-item[data-tab="agenti"]{ display:none!important; }
+html[data-gf-agents="off"] [data-gf-agents-only]{ display:none!important; }
 
 /* GiroFacile dashboard background 2026-09-28
    Sfondo globale dell'area gestionale: conserva la composizione originale
    (paesaggio in alto, camion a destra, sfumatura chiara verso il basso). */
 body.app-logged-in{
   background:#f5f7fb;
-}
-body.app-logged-in .app-shell{
-  background:transparent;
-}
-body.app-logged-in .main-area{
-  background-color:#f5f7fb;
-  background-image:url('/static/dashboard/dashboard-background.webp?v=20260928');
-  background-repeat:no-repeat;
-  background-position:top center;
-  background-size:100% auto;
 }
 
 /* GiroFacile topbar scroll reveal 2026-09-28

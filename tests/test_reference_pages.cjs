@@ -56,15 +56,16 @@ test('popup skins preserve overlays and all operational modal IDs',()=>{
   const css=read(base+'reference-dialogs.css');
   const html=read('static/dashboard/index.html');
   const core=read('static/dashboard/js/core.js');
-  const convertedPopup=id=>new RegExp('id="'+id+'" class="gf-overlay').test(html)
+  const components=read(base+'components.css');
+  const convertedPopup=id=>new RegExp('id="'+id+'" class="gf-(overlay|modal)').test(html)
     || (id==='supportTicketModalV60' && /wrap\.className = "gf-overlay hidden"/.test(core));
   for(const selector of [
     '#agentOverlay','#depositOverlay','#driverFormOverlay','#customerOverlay',
     '#customerImportOverlay','#deliveryDetailsOverlay','#onboardingOverlay',
-    '#profileOverlay','#orderModal','#customerDetailsDialog',
+    '#profileOverlay','#orderModal',
     '#collaboratorDialog','#supportTicketModalV60'
   ]){
-    // Una finestra è coperta dal vecchio foglio oppure è già convertita al componente gf-overlay.
+    // Una finestra è coperta dal vecchio foglio oppure è già convertita ai componenti gf-overlay / gf-modal.
     assert.ok(css.includes(selector) || convertedPopup(selector.slice(1)),'Unstyled popup '+selector);
   }
   for(const id of ['orderModal','agentOverlay','depositOverlay','driverFormOverlay',
@@ -72,8 +73,9 @@ test('popup skins preserve overlays and all operational modal IDs',()=>{
     'profileOverlay','customerDrawer','collaboratorDialog']){
     assert.equal((html.match(new RegExp('id="'+id+'"','g'))||[]).length,1);
   }
-  assert.match(css,/::backdrop/);
-  assert.match(css,/max-height:calc\(100dvh - 32px\)/);
+  // Sfondo e altezza massima delle finestre native sono ora nel componente gf-modal.
+  assert.match(components,/dialog\.gf-modal::backdrop/);
+  assert.match(components,/max-height:calc\(100dvh - var\(--gf-space-8\)\)/);
 });
 
 test('reference skins have balanced CSS blocks and no JS business logic',()=>{

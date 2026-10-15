@@ -1,12 +1,6 @@
 /* Scheduled route page: keep the other operational pages unchanged. */
 #tab-dashboard-scheduled { font-family:Arial,Helvetica,sans-serif;color:#0b1538; }
-#tab-dashboard-scheduled .dash-sub-route-picker { margin-bottom:16px;padding:14px 18px;box-shadow:none;border-color:#e5edf9; }
-#tab-dashboard-scheduled .dash-sub-route-picker select { background:#fff;font-size:14px; }
-#tab-dashboard-scheduled .dash-stop-number { width:31px;height:31px;font-size:15px;background:#006aff;box-shadow:0 4px 8px #1678ff16; }
-#tab-dashboard-scheduled .delivery-status-pill { font-size:11px;white-space:nowrap; }
 #tab-dashboard-scheduled :is(button,select,summary):focus-visible { outline:3px solid #a2c9ff;outline-offset:3px; }
-.nav-item.scheduled-nav-entry { display:none; }
-body:has(#tab-dashboard-scheduled:not(.hidden)) .nav-item.scheduled-nav-entry { display:flex; }
 @media(min-width:1101px) {
  body:has(#tab-dashboard-scheduled:not(.hidden)) .content { padding:0 20px 36px; }
 }

@@ -10,17 +10,17 @@ body[data-gf-surface], body[data-gf-portal]{
   color:var(--gf-color-text);
   background:var(--gf-color-bg);
 }
-body[data-gf-surface] :is(h1,h2,h3,.brand-title,.gf-dialog-title,.modal-title),
-body[data-gf-portal] :is(h1,h2,h3,.modal-title){
+body[data-gf-surface] :is(h1,h2,h3),
+body[data-gf-portal] :is(h1,h2,h3){
   font-family:var(--gf-font-display);
   letter-spacing:-.01em;
 }
-body[data-gf-surface] :is(.gf-button,.btn-primary,.btn-secondary,.btn-light){
+body[data-gf-surface] :is(.gf-button,.btn-primary,.btn-secondary){
   border-radius:var(--gf-radius-md);
   font-family:var(--gf-font-family);
   font-weight:600;
 }
-body[data-gf-surface] :is(.gf-card,.panel,.card,.modal-card,.dialog-card),
+body[data-gf-surface] :is(.gf-card,.panel,.card,.modal-card),
 body[data-gf-portal] :is(.card,.section-card,.modal,.popup-card){
   border-radius:var(--gf-radius-lg);
 }
@@ -37,58 +37,6 @@ body[data-gf-surface="workspace"] #app .brand{
   min-height:52px;
   padding:0 8px 18px!important;
 }
-body[data-gf-surface="workspace"] #app .brand-title{
-  color:#fff;
-  font:700 21px/1 var(--gf-font-display);
-  letter-spacing:-.01em;
-}
-body[data-gf-surface="workspace"] #app .brand-title span{color:#fff}
-body[data-gf-surface="workspace"] #app .brand-logo-img{
-  width:36px;height:36px;border-radius:10px;
-}
-body[data-gf-surface="workspace"] #app .side-nav{
-  padding-top:10px;gap:1px;
-}
-body[data-gf-surface="workspace"] #app .nav-item{
-  min-height:40px;
-  border:0!important;border-radius:9px;
-  padding:9px 12px;
-  font-size:14px;line-height:1.35;font-weight:500;
-  color:var(--gf-color-nav-text);
-  gap:12px;
-}
-body[data-gf-surface="workspace"] #app .nav-item:hover{
-  background:rgba(255,255,255,.07)!important;color:#fff!important;
-}
-body[data-gf-surface="workspace"] #app .nav-item.active{
-  background:rgba(255,255,255,.10)!important;
-  border:0!important;color:#fff!important;font-weight:500!important;
-  position:relative;
-}
-body[data-gf-surface="workspace"] #app .nav-item.active::before{
-  content:"";position:absolute;left:-14px;top:8px;bottom:8px;width:4px;
-  border-radius:0 4px 4px 0;background:var(--gf-color-primary);
-}
-body[data-gf-surface="workspace"] #app .nav-item > span.nav-svg,
-body[data-gf-surface="workspace"] #app .nav-item .nav-svg svg{
-  width:18px!important;height:18px!important;flex-basis:18px!important;
-}
-body[data-gf-surface="workspace"] #app .side-footer{
-  border-top:1px solid #1d3470;
-  margin-top:auto;padding:16px 10px 0;
-  font-size:11.5px;text-align:left;
-}
-body[data-gf-surface="workspace"] #app .topbar{
-  min-height:86px;height:auto;padding:22px 32px 18px!important;
-  background:var(--gf-color-bg)!important;
-  border:0!important;
-  position:relative;
-}
-body[data-gf-surface="workspace"] #app .topbar-dashboard-title h1{
-  font:700 28px/1.1 var(--gf-font-display);
-  letter-spacing:-.02em;
-}
-body[data-gf-surface="workspace"] #app .topbar-dashboard-title p{margin:3px 0 0;}
 body[data-gf-surface="workspace"] #app .content{
   padding:0 32px 48px!important;
 }
@@ -104,14 +52,8 @@ body[data-gf-surface="workspace"] #app .profile-button{
 body[data-gf-surface="workspace"] #app :is(.panel,.card,.gf-card){
   box-shadow:var(--gf-shadow-sm);
 }
-body[data-gf-surface="workspace"] #app :is(.page-title-row h1,.panel-header h2,.customer-list-head h2){
-  font-family:var(--gf-font-display);
-}
-body[data-gf-surface="workspace"] #app :is(.gf-modal,.gf-dialog,.modal-content,.modal-panel){
+body[data-gf-surface="workspace"] #app :is(.gf-modal){
   border-radius:16px;border-color:var(--gf-color-border);
-}
-body[data-gf-surface="workspace"] #app :is(.result-table) th{
-  background:var(--gf-color-surface-subtle);color:var(--gf-color-muted);
 }
 /* Dashboard: strip riassuntivo, percorso + avanzamento, due gruppi da due pannelli. */
 body[data-gf-surface="workspace"] #app #tab-dashboard{font-family:var(--gf-font-family);}
@@ -123,37 +65,6 @@ body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-hero{
   border:1px solid var(--gf-color-border)!important;
   border-radius:16px!important;background:var(--gf-color-surface)!important;
   box-shadow:var(--gf-shadow-sm)!important;
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-gridline{
-  stroke:var(--gf-color-border);stroke-width:1;
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-route-done{
-  fill:none;stroke:var(--gf-color-primary);stroke-width:4;stroke-linecap:round;
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-route-todo{
-  fill:none;stroke:var(--gf-color-muted);stroke-width:2.5;
-  stroke-linecap:round;stroke-dasharray:3 8;opacity:.75;
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-depot rect{fill:var(--gf-color-nav)}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-depot text{fill:#fff;font:600 11px var(--gf-font-family);text-anchor:middle;dominant-baseline:central}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-stop-node{
-  cursor:default;outline:none;
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-stop-node circle{
-  fill:var(--gf-color-surface);stroke:var(--gf-color-muted);stroke-width:2.5;
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-stop-node text{
-  font:600 12px var(--gf-font-family);fill:var(--gf-color-text);
-  text-anchor:middle;dominant-baseline:central;
-}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-stop-node.is-done circle{fill:var(--gf-color-primary);stroke:var(--gf-color-primary)}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-stop-node.is-done text{fill:#fff}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-stop-node.is-miss circle{fill:var(--gf-color-danger-bg);stroke:var(--gf-color-danger)}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-stop-node.is-miss text{fill:var(--gf-color-danger)}
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-stop-node:focus-visible circle,
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-stop-node.hl circle{stroke-width:4}
-@media (prefers-reduced-motion:no-preference){
-  body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-route-done{animation:gfRefDraw 1.3s 1.9s ease-out both}
 }
 @keyframes gfRefDrive{
   0%{left:0;transform:translate(-12px,-50%);opacity:1}
@@ -170,5 +81,4 @@ body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-stop-node.hl circl
 }
 @media(max-width:820px){
   body[data-gf-surface="workspace"] #app .content{padding:0 16px 112px!important}
-  body[data-gf-surface="workspace"] #app .topbar{padding:16px!important}
 }

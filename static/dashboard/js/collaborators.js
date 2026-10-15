@@ -98,7 +98,7 @@
     for(const [permission,loader] of [
       ['deposits.read',loadDeposits],['vehicles.read',loadVehicles],['drivers.read',loadDrivers],
       ['agents.read',()=>agentsFeatureEnabled()?loadAgents():Promise.resolve()],['customers.read',loadCustomers],
-      ['routes.plan',loadCustomerPicker],['routes.read',loadDashboardRoutes]
+      ['routes.plan',loadCustomerPicker]
     ]) if(can(permission)) await loader();
     if(notificationsPollV30) clearInterval(notificationsPollV30);
     if(can('notifications.read')){

@@ -230,9 +230,10 @@ test('company edits are saved from the topbar and bottom save actions are remove
   assert.match(navigation,/name !== "company"[^\n]*blockCompanyNavigationForUnsavedChanges/);
 
   const companyCss=read('static/dashboard/css/company.css');
-  assert.match(companyCss,/\.company-save-bar\s*\{[^}]*position: absolute[^}]*left: 50%[^}]*top: 50%/);
-  assert.match(companyCss,/\.company-save-bar\.hidden \{ display: none !important; \}/);
-  assert.doesNotMatch(companyCss,/company-save-actions/);
+  // La barra di salvataggio è il componente gf-savebar: il foglio Azienda non la ridisegna più.
+  const components=read('static/design-system/components.css');
+  assert.match(components,/\.gf-savebar\{/);
+  assert.doesNotMatch(companyCss,/\.company-save-bar\s*\{|company-save-actions/);
 });
 
 
