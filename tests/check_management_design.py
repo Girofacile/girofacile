@@ -276,7 +276,7 @@ def main():
                     page.wait_for_function("document.getElementById('companyNameInput').value === 'Logistica Demo'")
                     interactions.append(f"{width}: company addresses and cancel edits")
                     page.evaluate("showTab('depositi')")
-                    page.locator(".deposit-edit").first.click()
+                    page.locator("#depositsBody").get_by_role("button", name="Modifica", exact=False).first.click()
                     assert page.locator("#depNome").input_value() == DEPOSITS[0]["nome"]
                     page.locator("#depositOverlay").get_by_role("button", name="Annulla", exact=True).click()
                     page.locator("#newDepositBtn").click()

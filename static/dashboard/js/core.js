@@ -2207,7 +2207,7 @@ function depositActionIcon(kind){
 }
 function depositStatus(id,message,error=false){
   const node=document.getElementById(id);if(!node)return;
-  node.textContent=message;node.classList.toggle('hidden',!message);node.classList.toggle('is-error',error);
+  node.textContent=message;node.classList.toggle('hidden',!message);node.dataset.status=error?'danger':'info';
 }
 function renderDepositSummary(){
   const write=(id,value)=>{const node=document.getElementById(id);if(node)node.textContent=value;};
@@ -2228,10 +2228,10 @@ try{
 }catch(_error){}
 
 function depositDefaultBadgeMarkup(x){
-  return `<span class="deposit-default-badge ${x.predefinito?'is-default':''}">${x.predefinito?'Sì':'No'}</span>`;
+  return `<span class="gf-badge" data-status="${x.predefinito?'success':'neutral'}">${x.predefinito?'Sì':'No'}</span>`;
 }
 function depositEditActionMarkup(x){
-  return `<div class="deposit-row-actions"><button type="button" class="deposit-edit" onclick="editDeposit(${Number(x.id)})" aria-label="Modifica ${esc(x.nome)}">${depositActionIcon('edit')}Modifica</button></div>`;
+  return `<div class="gf-cluster"><button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="editDeposit(${Number(x.id)})" aria-label="Modifica ${esc(x.nome)}">${depositActionIcon('edit')}Modifica</button></div>`;
 }
 function renderDepositDirectory(){
   const q=(document.getElementById('depositSearch')?.value||'').trim().toLocaleLowerCase('it');
@@ -2246,10 +2246,10 @@ function renderDepositDirectory(){
   const cards=document.getElementById('depositCards');
   const tableWrap=document.getElementById('depositTableWrap');
   if(body){
-    body.innerHTML=rows.map(x=>`<tr><td><strong>${esc(x.nome)}</strong></td><td>${esc(x.indirizzo)}</td><td>${depositDefaultBadgeMarkup(x)}</td><td>${depositEditActionMarkup(x)}</td></tr>`).join('')||'<tr><td colspan="4" class="deposit-empty">Nessun deposito configurato. Usa “Nuovo deposito” per aggiungere il primo.</td></tr>';
+    body.innerHTML=rows.map(x=>`<tr><td data-label="Nome"><strong>${esc(x.nome)}</strong></td><td data-label="Indirizzo">${esc(x.indirizzo)}</td><td data-label="Predefinito">${depositDefaultBadgeMarkup(x)}</td><td data-label="Azioni">${depositEditActionMarkup(x)}</td></tr>`).join('')||'<tr><td colspan="4"><div class="gf-empty"><p>Nessun deposito configurato. Usa “Nuovo deposito” per aggiungere il primo.</p></div></td></tr>';
   }
   if(cards){
-    cards.innerHTML=rows.map(x=>`<article class="deposit-card"><div class="deposit-card-heading"><span class="deposit-card-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7M5 9v12h14V9M9 21v-8h6v8"/></svg></span>${depositDefaultBadgeMarkup(x)}</div><h3>${esc(x.nome)}</h3><span class="deposit-card-label">Indirizzo</span><p>${esc(x.indirizzo)}</p><div class="deposit-card-actions">${depositEditActionMarkup(x)}</div></article>`).join('')||'<p class="deposit-empty">Nessun deposito configurato. Usa “Nuovo deposito” per aggiungere il primo.</p>';
+    cards.innerHTML=rows.map(x=>`<article class="gf-card gf-stack"><div class="gf-cluster" data-justify="between"><span class="gf-avatar" aria-hidden="true"><svg class="gf-icon" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7M5 9v12h14V9M9 21v-8h6v8"/></svg></span>${depositDefaultBadgeMarkup(x)}</div><h3 class="gf-subtitle">${esc(x.nome)}</h3><dl class="gf-details"><div class="gf-details__item"><dt>Indirizzo</dt><dd>${esc(x.indirizzo)}</dd></div></dl>${depositEditActionMarkup(x)}</article>`).join('')||'<div class="gf-empty"><p>Nessun deposito configurato. Usa “Nuovo deposito” per aggiungere il primo.</p></div>';
   }
   tableWrap?.classList.toggle('hidden',depositDirectoryView!=='list');
   cards?.classList.toggle('hidden',depositDirectoryView!=='grid');

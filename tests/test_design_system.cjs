@@ -462,7 +462,7 @@ test('resource directories keep titles in the topbar and create actions inside t
   const customers=html.slice(html.indexOf('<section id="tab-clienti"'),html.indexOf('<section id="tab-depositi"'));
   assert.match(customers,/gf-directory-head-actions[^]*Importa clienti CSV\/Excel[^]*\+ Nuovo/);
   const deposits=html.slice(html.indexOf('<section id="tab-depositi"'),html.indexOf('id="depositOverlay"'));
-  assert.match(deposits,/gf-directory-head-actions[^]*\+ Nuovo deposito/);
+  assert.match(deposits,/class="gf-panel__header"[^]*\+ Nuovo deposito/);
   const vehicles=html.slice(html.indexOf('<section id="tab-mezzi"'),html.indexOf('<section id="tab-autisti"'));
   assert.match(vehicles,/gf-directory-head-actions[^]*\+ Nuovo mezzo/);
   const drivers=html.slice(html.indexOf('<section id="tab-autisti"'),html.indexOf('<section id="tab-storico"'));
@@ -518,7 +518,7 @@ test('all five directory KPI icons use the same neutral gray dashboard treatment
     }
   }
   assert.match(read(assets+'components.css'),/\.gf-stat-card__icon\[data-tone="neutral"\]\{background:var\(--gf-color-bg\);color:var\(--gf-color-muted\)\}/);
-  assert.match(block,/:is\(\.customer-metric-icon,\.deposit-metric-icon,\.gf-directory-metric-icon,\.stat-icon\)\{/);
+  assert.match(block,/:is\(\.customer-metric-icon,(?:\.deposit-metric-icon,)?\.gf-directory-metric-icon,\.stat-icon\)\{/);
   assert.match(block,/width:48px!important/);
   assert.match(block,/height:48px!important/);
   assert.match(block,/border-radius:var\(--gf-radius-circle\)!important/);

@@ -21,7 +21,7 @@ function fixture(){
   if(!nodes.has(id)){
    const classes=new Set(['hidden']),attrs=new Map();
    nodes.set(id,{
-    value:'',textContent:'',innerHTML:'',checked:false,disabled:false,
+    value:'',textContent:'',innerHTML:'',checked:false,disabled:false,dataset:{},
     classList:{
      toggle(name,force){if(force===undefined){if(classes.has(name)){classes.delete(name);return false;}classes.add(name);return true;}if(force)classes.add(name);else classes.delete(name);return !!force;},
      add(...names){names.forEach(name=>classes.add(name));},
@@ -52,17 +52,18 @@ function fixture(){
 
 test('deposit page mirrors the customer directory layout and keeps delete inside edit modal',()=>{
  assert.match(index,/id="newDepositBtn"[^>]+onclick="openDepositModal\(\)"/);
- assert.ok(hasClasses(index,'panel','deposit-list-panel'));
- assert.equal(hasClasses(index,'panel','deposit-form-panel'),false);
- assertClassesById('depositOverlay','modal-overlay','hidden','gf-dialog');
- assertClassesById('depositDeleteSection','deposit-delete-section','hidden');
+ const section=index.slice(index.indexOf('<section id="tab-depositi"'),index.indexOf('<div id="depositOverlay"'));
+ assert.ok(hasClasses(section,'gf-panel'));
+ assert.doesNotMatch(section,/id="depositForm"/);
+ assertClassesById('depositOverlay','gf-overlay','hidden');
+ assertClassesById('depositDeleteSection','gf-setting','hidden');
 });
 
 test('deposit directory exposes list and grid view controls like customers',()=>{
  assert.match(index,/id="depositListView"[^>]+onclick="setDepositView\('list'\)"/);
  assert.match(index,/id="depositGridView"[^>]+onclick="setDepositView\('grid'\)"/);
  assert.match(index,/id="depositTableWrap"/);
- assertClassesById('depositCards','deposit-cards','hidden');
+ assertClassesById('depositCards','gf-grid','hidden');
 });
 
 test('deposit overview uses real timestamps, counts defaults, escapes values and preserves route selection',async()=>{
@@ -77,8 +78,8 @@ test('deposit overview uses real timestamps, counts defaults, escapes values and
  assert.equal(f.node('depositLastUpdateTime').textContent,'ore 14:32');
  assert.match(f.node('depositsBody').innerHTML,/&lt;script>/);
  assert.match(f.node('depositCards').innerHTML,/&lt;script>/);
- assert.doesNotMatch(f.node('depositsBody').innerHTML,/deposit-delete/);
- assert.match(f.node('depositsBody').innerHTML,/deposit-edit/);
+ assert.doesNotMatch(f.node('depositsBody').innerHTML,/deleteDeposit/);
+ assert.match(f.node('depositsBody').innerHTML,/onclick="editDeposit\(/);
  f.ctx.api=async()=>[];await f.run('loadDeposits()');
  assert.equal(f.node('depositDefaultName').textContent,'Nessun deposito selezionato');
  assert.match(f.node('depositDefaultAddress').textContent,/Imposta un deposito/);
