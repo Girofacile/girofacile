@@ -43,8 +43,8 @@ function runtime(){
   return{api:window.GFDesignSystem,document,context};
 }
 test('theme.css centrally defines palette, geometry, spacing, typography and breakpoints',()=>{
-  assert.match(read(assets+'tokens.css'),/@import url\("theme\.css(\?v=[\w-]+)?"\)/,'tokens.css stays an alias of theme.css');
-  assert.doesNotMatch(read(assets+'tokens.css'),/--gf-[\w-]+\s*:/,'Variables live only in theme.css');
+  // Il vecchio alias tokens.css è stato unificato: le pagine includono direttamente theme.css.
+  assert.ok(!fs.existsSync(path.join(root,assets,'tokens.css')),'tokens.css merged into theme.css');
   const css=read(assets+'theme.css');
   for(const token of ['color-primary','color-bg','color-surface','color-text','color-muted','color-border','color-border-strong','color-success','color-success-bg','color-warning','color-warning-bg','color-danger','color-danger-bg','color-info','color-info-bg','radius-sm','radius-md','radius-lg','shadow-sm','control-height','touch-height','font-size-base','font-size-header','breakpoint-sm','breakpoint-md','breakpoint-lg','breakpoint-xl','space-1','space-2','space-3','space-4','space-6','space-8'])
     assert.match(css,new RegExp('--gf-'+token+'\\s*:'));
@@ -69,9 +69,9 @@ test('all existing HTML applications load the same tokens and components',()=>{
   const pages=['dashboard/index','admin/index','admin/login','mobile/index','driver/index','driver/setup','operator/index','agent/index','agent/setup','tracking/index','landing/index','legal/index','legal/privacy-policy','legal/cookie-policy','legal/termini-condizioni','legal/sicurezza','legal/dpa-responsabile-trattamento','legal/subprocessors'];
   for(const page of pages){
     const html=read('static/'+page+'.html');assert.match(html,/data-gf-surface=/,page);
-    for(const asset of ['tokens.css','components.css','layout.css','design-system.js'])
+    for(const asset of ['theme.css','components.css','layout.css','design-system.js'])
       assert.equal((html.match(new RegExp('/static/design-system/'+asset.replace('.','\\.'),'g'))||[]).length,1,page+': '+asset);
-    assert.ok(html.indexOf('/static/design-system/tokens.css')<html.indexOf('/static/design-system/components.css'),page);
+    assert.ok(html.indexOf('/static/design-system/theme.css')<html.indexOf('/static/design-system/components.css'),page);
     for(const [,source]of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g))new vm.Script(source,{filename:page});
   }
 });

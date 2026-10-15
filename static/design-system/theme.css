@@ -5,7 +5,6 @@
    Unica fonte delle decisioni visive: colori, font, dimensioni del testo,
    spaziature, bordi, ombre e misure del layout. Riferimento: la Dashboard
    (palette blu/navy, pannello "Giro consegne" con mappa e fermate).
-   tokens.css è un alias storico che importa questo file.
    Le media query ripetono i breakpoint documentati qui sotto perché le
    variabili CSS non sono valide nelle condizioni delle media query. */
 :root {

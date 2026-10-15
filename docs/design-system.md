@@ -10,7 +10,6 @@ modifica database, prezzi, quote, Stripe, email o algoritmo di ottimizzazione.
 | Asset condiviso | Responsabilità |
 | --- | --- |
 | `static/design-system/theme.css` | **Unica fonte** di colori, font, dimensioni del testo, spaziature, bordi, ombre, controlli, misure del layout e breakpoint |
-| `tokens.css` | Alias storico: importa `theme.css`, così le pagine esistenti non cambiano |
 | `components.css` | Componenti riutilizzabili, varianti, focus, disabled e liste responsive |
 | `layout.css` | Layout base condiviso (`.gf-shell`), più gli adattatori di sidebar e topbar esistenti |
 | `shell.js` | Costruisce sidebar e intestazione del layout base con il menu standard |

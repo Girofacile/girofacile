@@ -2,7 +2,7 @@
    Riferimento: la Dashboard. Questo foglio è caricato per ultimo e porta tutte le
    sezioni del gestionale sullo stesso linguaggio: titolo nella barra in alto,
    riquadri numerici a striscia, pannelli bianchi a 16 px, pulsanti e stati vuoti
-   coerenti. Usa solo i token di tokens.css; non cambia ID, handler o flussi.
+   coerenti. Usa solo i token di theme.css; non cambia ID, handler o flussi.
    Le pagine già ridisegnate (Dashboard, Clienti, Giri in corso, Profilo azienda,
    anteprima/revisione piano) restano governate dai loro fogli. */
 

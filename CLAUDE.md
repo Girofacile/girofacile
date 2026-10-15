@@ -3,7 +3,7 @@
 Il flusso di lavoro Git (commit e push su `main`) è descritto in [AGENTS.md](AGENTS.md).
 
 Riferimenti del sistema di stile:
-- variabili: `static/design-system/theme.css` (`tokens.css` è solo un alias che lo importa);
+- variabili: `static/design-system/theme.css` (unico foglio delle variabili, incluso direttamente da ogni pagina);
 - layout base condiviso: `static/design-system/shell.js` + sezione "Layout base condiviso" di `static/design-system/layout.css`;
 - componenti: `static/design-system/components.css`;
 - catalogo: `docs/design-system/catalogo.html`, aperto da `/catalogo` (solo fuori produzione);

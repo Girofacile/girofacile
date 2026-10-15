@@ -1,3 +1,0 @@
-/* Alias storico: tutte le variabili vivono in theme.css.
-   Le pagine esistenti continuano a includere tokens.css senza modifiche. */
-@import url("theme.css?v=gf_base_20261015b");
