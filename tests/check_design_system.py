@@ -258,13 +258,14 @@ def main():
                     for name in ("dashboard","clienti"):
                         page.evaluate("name=>showTab(name)",name)
                         page.wait_for_timeout(100)
-                        primary_button = page.locator(f"#tab-{name} .btn-primary").first
+                        # Il pulsante principale è il componente gf-button (nella sezione o nell'intestazione condivisa).
+                        primary_button = page.locator('#app .gf-button[data-variant="primary"]:visible').first
                         assert styles(primary_button,BUTTON_PROPERTIES) == primary,(name,width,styles(primary_button,BUTTON_PROPERTIES),primary)
                         capture(page,"workspace-"+name,width)
                     page.evaluate("setCustomerView('list')")
                     labels(page,"#customerTableWrap table",width)
                     page.locator("#customerListSearch").fill("nessuna corrispondenza di prova")
-                    assert page.locator("#customersBody .customer-empty").is_visible()
+                    assert page.locator("#tab-clienti .gf-empty", has_text="Nessun cliente trovato").is_visible()
                     page.locator("#customerListSearch").fill("")
                     page.evaluate("openCustomerModal()")
                     page.locator("#customerOverlay").wait_for(state="visible")

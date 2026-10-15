@@ -2,53 +2,11 @@
    feature navigation already uses it; new component breakpoints use token values. */
 body[data-gf-surface="workspace"] { background: var(--gf-color-bg); }
 body[data-gf-surface="workspace"] #app { background: var(--gf-color-bg) !important; }
-body[data-gf-surface="workspace"] #app .main-area {
-  min-width: 0; background: var(--gf-color-bg) !important;
-}
 body[data-gf-surface="workspace"] #app .content {
   padding: var(--gf-space-6) var(--gf-space-8) var(--gf-space-10) !important;
   max-width: 100%; min-width: 0;
 }
-body[data-gf-surface="workspace"] #app .sidebar {
-  width: var(--gf-sidebar-width) !important; background: var(--gf-color-nav) !important;
-  color: var(--gf-color-nav-text); padding: var(--gf-space-5) var(--gf-space-3);
-  border-right: 1px solid var(--gf-color-nav-active); box-shadow: none !important;
-}
 body[data-gf-surface="workspace"] #app .brand { padding: 0 var(--gf-space-2) var(--gf-space-4); height: auto; min-height: 48px; border-bottom: 1px solid var(--gf-color-nav-active); }
-body[data-gf-surface="workspace"] #app .brand-logo-img { width: 32px; height: 32px; border-radius: var(--gf-radius-sm); }
-body[data-gf-surface="workspace"] #app .side-nav { gap: var(--gf-space-1); padding-top: var(--gf-space-4); }
-body[data-gf-surface="workspace"] #app .nav-item {
-  min-height: var(--gf-control-height); padding: var(--gf-space-2) var(--gf-space-3);
-  border: 1px solid transparent; border-radius: var(--gf-radius-sm);
-  background: transparent; color: var(--gf-color-nav-text);
-  font-size: var(--gf-font-sm); line-height: 1.3; font-weight: var(--gf-weight-medium);
-  gap: var(--gf-space-3); box-shadow: none; transform: none;
-}
-body[data-gf-surface="workspace"] #app .nav-item:hover { background: var(--gf-color-nav-active); color: var(--gf-color-on-primary); }
-body[data-gf-surface="workspace"] #app .nav-item.active {
-  background: var(--gf-color-nav-active) !important; color: var(--gf-color-on-primary) !important;
-  border-left-color: var(--gf-color-primary); font-weight: var(--gf-weight-semibold);
-  box-shadow: none !important;
-}
-body[data-gf-surface="workspace"] #app .nav-item > span.nav-svg { width: 20px; height: 20px; flex: 0 0 20px; background: transparent; border: 0; border-radius: 0; box-shadow: none; }
-body[data-gf-surface="workspace"] #app .nav-item .nav-svg svg { width: 20px; height: 20px; }
-body[data-gf-surface="workspace"] #app .side-footer { font-size: var(--gf-font-xs); color: var(--gf-color-nav-muted); padding: var(--gf-space-3) 0 0; }
-body[data-gf-surface="workspace"] #app .side-footer a { color: var(--gf-color-nav-muted); }
-body[data-gf-surface="workspace"] #app .topbar {
-  min-height: var(--gf-topbar-height); height: var(--gf-topbar-height);
-  padding: 0 var(--gf-space-8); background: var(--gf-color-surface) !important;
-  border-bottom: 1px solid var(--gf-color-border) !important;
-  box-shadow: none !important; backdrop-filter: none !important;
-}
-body[data-gf-surface="workspace"] #app .search-box {
-  height: var(--gf-control-height); border-radius: var(--gf-radius-sm);
-  background: var(--gf-color-surface-subtle); border-color: var(--gf-color-border); box-shadow: none;
-}
-body[data-gf-surface="workspace"] #app .search-box input.gf-input { background: transparent !important; border: 0 !important; box-shadow: none !important; }
-body[data-gf-surface="workspace"] #app .top-actions { gap: var(--gf-space-3); }
-body[data-gf-surface="workspace"] #app .avatar { background: var(--gf-color-info-bg); color: var(--gf-color-primary); width: var(--gf-control-height); height: var(--gf-control-height); }
-body[data-gf-surface="workspace"] #app .profile strong { font-size: var(--gf-font-sm); color: var(--gf-color-text); }
-body[data-gf-surface="workspace"] #app .profile small { font-size: var(--gf-font-xs); color: var(--gf-color-muted); }
 body[data-gf-surface="workspace"] :is(.gf-mobile-more-menu-v62) {
   background: var(--gf-color-surface); border: 1px solid var(--gf-color-border);
   border-radius: var(--gf-radius-lg); box-shadow: var(--gf-shadow-md);
@@ -98,16 +56,11 @@ body[data-gf-surface="admin"] .spinner { border-color: var(--gf-color-border); b
 body[data-gf-surface="admin"] .masked-key-v69 { color: var(--gf-color-text); }
 body[data-gf-surface="admin"] .rev-hero { background: var(--gf-color-info-bg); border-color: var(--gf-color-border); border-radius: var(--gf-radius-lg); box-shadow: none; }
 body[data-gf-surface="admin"] :is(.db-sensitive-v71,.advanced-access-v69) { background: var(--gf-color-danger-bg); color: var(--gf-color-danger); }
-
-@media (min-width: 821px) {
-  body[data-gf-surface="workspace"] #app .main-area { margin-left: var(--gf-sidebar-width) !important; width: calc(100% - var(--gf-sidebar-width)) !important; }
-}
 @media (min-width: 821px) and (max-width: 1024px) {
   body[data-gf-surface="workspace"],body[data-gf-surface="admin"] { --gf-sidebar-width: 208px; }
   body[data-gf-surface="workspace"] #app :is(.content,.topbar),body[data-gf-surface="admin"] :is(.content,.topbar) { padding-inline: var(--gf-space-5) !important; }
 }
 @media (max-width: 820px) {
-  body[data-gf-surface="workspace"] #app .main-area { margin: 0 !important; width: 100% !important; }
   body[data-gf-surface="workspace"] #app .content { padding: var(--gf-space-5) var(--gf-space-4) 112px !important; }
   body[data-gf-surface="workspace"] .gf-mobile-topbar-v62,
   body[data-gf-surface="admin"] .admin-mobile-topbar-v62 {
@@ -161,70 +114,11 @@ body[data-gf-surface="admin"] :is(.db-sensitive-v71,.advanced-access-v69) { back
 }
 
 /* Dashboard reference: desktop navigation and header. */
-body[data-gf-surface="workspace"] #app .sidebar{padding:0}
+
 body[data-gf-surface="workspace"] #app .brand{height:80px;min-height:80px;padding:0 24px;display:flex;align-items:center}
-body[data-gf-surface="workspace"] #app .side-nav{padding:24px 16px;gap:4px}
-body[data-gf-surface="workspace"] #app .nav-item{font-size:16px;font-weight:400;min-height:44px;padding:10px 16px;border-radius:8px;gap:12px}
-body[data-gf-surface="workspace"] #app .nav-item.active{background:var(--gf-color-primary)!important;border-color:transparent;font-weight:500}
-body[data-gf-surface="workspace"] #app .nav-item.active::before{display:none}
-body[data-gf-surface="workspace"] #app .nav-item .reference-nav-icon{fill:currentColor;stroke:none;stroke-width:0;width:18px;height:18px}
-body[data-gf-surface="workspace"] #app .side-footer{margin:0;padding:16px 12px;border-top:1px solid var(--gf-color-nav-active)}
-body[data-gf-surface="workspace"] #app:has(#tab-dashboard:not(.hidden)) .topbar-spacer{display:none}
-body[data-gf-surface="workspace"] #app .workspace-title-line{display:flex;align-items:center;gap:10px;min-width:0}
-body[data-gf-surface="workspace"] #app .workspace-title-line h1{margin-bottom:0}
-body[data-gf-surface="workspace"] #app .topbar{gap:24px}
-body[data-gf-surface="workspace"] #app .bell-icon-v30{display:grid;place-items:center;width:20px;height:20px;font-size:0;line-height:0}
-body[data-gf-surface="workspace"] #app .bell-icon-v30 svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-@media(min-width:821px){body[data-gf-surface="workspace"] #app #tab-dashboard>.dash-hero-row{display:none}}
-@media(min-width:821px) and (max-width:1200px){body[data-gf-surface="workspace"] #app .nav-item{font-size:14px;padding-inline:10px}}
-body[data-gf-surface="workspace"] #app .reference-brand-icon{display:grid;place-items:center;width:32px;height:32px;border-radius:8px;background:var(--gf-color-primary);flex-shrink:0}
-body[data-gf-surface="workspace"] #app .reference-brand-icon svg{width:18px;height:18px;fill:var(--gf-color-on-primary)}
-body[data-gf-surface="workspace"] #app .nav-item>span.nav-svg{color:inherit!important}
-body[data-gf-surface="workspace"] #app .nav-item .reference-nav-icon,body[data-gf-surface="workspace"] #app .nav-item .reference-nav-icon path{fill:currentColor!important;stroke:none!important;color:inherit!important}
 
 /* Workspace legal navigation consolidation. */
-body[data-gf-surface="workspace"] #app .side-footer{
-  margin-top:auto;
-  padding:16px 20px 18px;
-  border-top:1px solid var(--gf-color-nav-active);
-  color:var(--gf-color-nav-muted);
-  text-align:left;
-  line-height:1.35;
-}
-body[data-gf-surface="workspace"] #app .side-footer-copyright{
-  display:block;
-  color:var(--gf-color-nav-text);
-  font-size:11px;
-  font-weight:var(--gf-weight-medium);
-}
-body[data-gf-surface="workspace"] #app .side-footer-version{
-  display:block;
-  margin-top:2px;
-  color:var(--gf-color-nav-muted);
-  font-size:10px;
-}
-body[data-gf-surface="workspace"] #app .side-legal-links{
-  display:flex;
-  align-items:center;
-  justify-content:flex-start;
-  flex-wrap:wrap;
-  gap:5px;
-  margin-top:8px;
-  font-size:10px;
-  line-height:1.25;
-}
-body[data-gf-surface="workspace"] #app .side-legal-links a{
-  color:var(--gf-color-nav-muted);
-  text-decoration:none;
-  font-weight:var(--gf-weight-medium);
-}
-body[data-gf-surface="workspace"] #app .side-legal-links a:hover{
-  color:var(--gf-color-nav-text);
-  text-decoration:none;
-}
-body[data-gf-surface="workspace"] #app .side-legal-links span{
-  color:var(--gf-color-nav-active);
-}
+
 body[data-gf-surface="workspace"] .gf-mobile-legal-v62{display:none}
 @media(max-width:820px){
   body[data-gf-surface="workspace"] .gf-mobile-legal-v62{
