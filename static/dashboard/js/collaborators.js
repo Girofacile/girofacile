@@ -135,7 +135,7 @@
     try{
       const [items,config]=await Promise.all([api('/api/collaborators'),api('/api/collaborators/permissions')]);
       records=items;catalog=config.permissions;presets=Array.isArray(config.presets)?config.presets:[];dependencies=config.dependencies;render();
-    }catch(e){root().innerHTML=`<tr><td colspan="5">${escape(e.message)} <button class="btn-secondary" onclick="GFCollaborators.load()">Riprova</button></td></tr>`;}
+    }catch(e){root().innerHTML=`<tr><td colspan="5"><div class="gf-empty"><p>${escape(e.message)}</p><button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="GFCollaborators.load()">Riprova</button></div></td></tr>`;}
   }
   function render(){
     const term=(document.getElementById('collaboratorSearch').value || '').trim().toLocaleLowerCase();
@@ -149,8 +149,8 @@
       const status=accessState(r);
       const label=status==='pending'?'Invito in attesa':(status==='active'?'Attivo':'Disattivato');
       const detail=status==='pending' && r.invitation_status==='failed'?'Email non inviata':(status==='pending' && r.invitation_status==='expired'?'Invito scaduto':'');
-      return `<tr><td data-label="Collaboratore"><strong>${escape(r.full_name)}</strong><small>${escape(r.email)}</small></td><td data-label="Accesso"><span class="gf-badge" data-status="${status==='pending'?'warning':(status==='active'?'success':'neutral')}">${label}</span>${detail?'<small class="collaborator-invitation-warning">'+escape(detail)+'</small>':''}</td><td data-label="Funzioni">${escape([...new Set(catalog.filter(p=>(r.permissions || []).includes(p.key)).map(p=>p.group))].join(', ') || 'Nessuna funzione assegnata')}</td><td data-label="Ultimo accesso">${r.last_login?escape(new Date(/[zZ]|[+-]\d{2}:?\d{2}$/.test(r.last_login)?r.last_login:r.last_login+'Z').toLocaleString('it-IT')):'Mai effettuato'}</td><td data-label="Azioni"><button class="btn-secondary" onclick="GFCollaborators.edit(${Number(r.id)})">Gestisci</button></td></tr>`;
-    }).join('') || '<tr><td colspan="5" class="collaborators-empty">Nessun collaboratore trovato. Invita un collaboratore e scegli le funzioni da assegnare.</td></tr>';
+      return `<tr><td data-label="Collaboratore"><strong>${escape(r.full_name)}</strong><br><small class="gf-muted">${escape(r.email)}</small></td><td data-label="Accesso"><span class="gf-badge" data-status="${status==='pending'?'warning':(status==='active'?'success':'neutral')}">${label}</span>${detail?' <span class="gf-badge" data-status="danger">'+escape(detail)+'</span>':''}</td><td data-label="Funzioni">${escape([...new Set(catalog.filter(p=>(r.permissions || []).includes(p.key)).map(p=>p.group))].join(', ') || 'Nessuna funzione assegnata')}</td><td data-label="Ultimo accesso">${r.last_login?escape(new Date(/[zZ]|[+-]\d{2}:?\d{2}$/.test(r.last_login)?r.last_login:r.last_login+'Z').toLocaleString('it-IT')):'Mai effettuato'}</td><td data-label="Azioni"><button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="GFCollaborators.edit(${Number(r.id)})">Gestisci</button></td></tr>`;
+    }).join('') || '<tr><td colspan="5"><div class="gf-empty"><p>Nessun collaboratore trovato. Invita un collaboratore e scegli le funzioni da assegnare.</p></div></td></tr>';
   }
   function selectedPermissions(){
     return [...document.querySelectorAll('#collaboratorPermissions input:checked')].map(el=>el.value);
@@ -194,7 +194,7 @@
     document.getElementById('collaboratorResendInvite').hidden=!(record && record.is_active && setupRequired(record));
     document.getElementById('collaboratorError').textContent='';
     const groups=[...new Set(catalog.map(p=>p.group))];
-    document.getElementById('collaboratorPermissions').innerHTML=groups.map(group=>`<fieldset><legend>${escape(group)}</legend>${catalog.filter(p=>p.group===group).map(p=>`<label><input type="checkbox" value="${escape(p.key)}" ${record?.permissions.includes(p.key)?'checked':''}> <span>${escape(p.label)}</span></label>`).join('')}</fieldset>`).join('');
+    document.getElementById('collaboratorPermissions').innerHTML=groups.map(group=>`<div class="gf-stack" data-gap="sm" role="group" aria-label="${escape(group)}"><strong class="gf-field__label">${escape(group)}</strong>${catalog.filter(p=>p.group===group).map(p=>`<label class="gf-check"><input type="checkbox" value="${escape(p.key)}" ${record?.permissions.includes(p.key)?'checked':''}> <span>${escape(p.label)}</span></label>`).join('')}</div>`).join('');
     const selector=document.getElementById('collaboratorPreset');
     selector.innerHTML=presets.map(preset=>'<option value="'+escape(preset.key)+'">'+escape(preset.label)+'</option>').join('')+'<option value="custom">Personalizzato</option>';
     const grants=new Set(record?.permissions || []);

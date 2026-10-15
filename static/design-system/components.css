@@ -567,6 +567,7 @@ body[data-gf-surface] .gf-modal__title{margin:0;font:var(--gf-weight-bold) var(-
 body[data-gf-surface] .gf-modal__body{flex:1;overflow-y:auto;padding:var(--gf-space-5) var(--gf-space-6)}
 /* Nel corpo scorrevole le righe restano alla loro altezza (i pannelli con overflow non si schiacciano). */
 body[data-gf-surface] .gf-modal__body.gf-stack{align-content:start;grid-auto-rows:max-content}
+body[data-gf-surface] .gf-modal>form{display:flex;flex-direction:column;flex:1;min-height:0}
 body[data-gf-surface] .gf-modal__footer{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:var(--gf-space-3);padding:var(--gf-space-4) var(--gf-space-6);border-top:var(--gf-border);background:var(--gf-color-surface-subtle)}
 body[data-gf-surface] .gf-overlay[data-position="side"]{place-items:stretch end;padding:0}
 body[data-gf-surface] .gf-overlay[data-position="side"] .gf-modal{width:min(var(--gf-drawer-width),100%);max-height:none;height:100%;border-radius:var(--gf-radius-lg) 0 0 var(--gf-radius-lg)}

@@ -188,7 +188,7 @@ def main():
                     page.wait_for_function("!!window.GFCollaborators && !!window.GFCompanyAccess")
                     page.evaluate("owner => {currentSessionUser=owner;showGestionaleAfterLogin();acceptCookieNotice();showTab('collaboratori');}", OWNER)
                     page.wait_for_function("document.getElementById('collaboratorsBody').textContent.includes('Nessun collaboratore')")
-                    page.locator("#tab-collaboratori button.btn-primary").first.click()
+                    page.locator("#tab-collaboratori .gf-panel__header .gf-button").first.click()
                     page.locator("#collaboratorName").fill("Collaboratore Demo")
                     page.locator("#collaboratorEmail").fill("demo@example.test")
                     assert page.locator("#collaboratorPassword").count() == 0
