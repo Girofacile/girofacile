@@ -10,8 +10,7 @@ body[data-gf-surface="workspace"] :is(#deliveryDetailsOverlay,.modal-overlay.gf-
   padding:16px;
 }
 body[data-gf-surface="workspace"] :is(#deliveryDetailsOverlay) :is(.modal,.modal-card),
-body[data-gf-surface="workspace"] :is(
-  #orderModal.order-modal,#customerDetailsDialog.customer-details-dialog,#occasionalStopDialog.occasional-dialog
+body[data-gf-surface="workspace"] :is(#customerDetailsDialog.customer-details-dialog,#occasionalStopDialog.occasional-dialog
 ),
 body[data-gf-surface="workspace"] :is(
   .signature-viewer-overlay .signature-viewer-modal
@@ -24,8 +23,7 @@ body[data-gf-surface="workspace"] :is(
   color:var(--gf-color-text)!important;
   box-shadow:0 18px 54px rgba(15,34,80,.18)!important;
 }
-body[data-gf-surface="workspace"] :is(
-  #orderModal,#customerDetailsDialog,#occasionalStopDialog
+body[data-gf-surface="workspace"] :is(#customerDetailsDialog,#occasionalStopDialog
 )::backdrop{
   background:rgba(15,34,80,.46)!important;
   backdrop-filter:blur(2px);
@@ -36,28 +34,27 @@ body[data-gf-surface="workspace"] :is(#deliveryDetailsOverlay) :is(.modal){
 }
 
 /* 2. Intestazioni, titoli e separatori identici allo stile delle card dashboard. */
-body[data-gf-surface="workspace"] :is(#deliveryDetailsOverlay,#orderModal,#customerDetailsDialog) :is(
-  .modal-header,.modal-head,.order-modal-header,.delivery-modal-header-v5
+body[data-gf-surface="workspace"] :is(#deliveryDetailsOverlay,#customerDetailsDialog) :is(
+  .modal-header,.modal-head,.delivery-modal-header-v5
 ){
   border-bottom:1px solid var(--gf-color-border)!important;
   background:var(--gf-color-surface)!important;
   box-shadow:none!important;
 }
-body[data-gf-surface="workspace"] :is(#deliveryDetailsOverlay,#orderModal,#customerDetailsDialog) :is(
-  .modal-header,.modal-head,.order-modal-header,.delivery-modal-header-v5
+body[data-gf-surface="workspace"] :is(#deliveryDetailsOverlay,#customerDetailsDialog) :is(
+  .modal-header,.modal-head,.delivery-modal-header-v5
 ) :is(h1,h2,h3,strong){
   color:var(--gf-color-text)!important;
   font:700 22px/1.2 var(--gf-font-display)!important;
   letter-spacing:-.015em!important;
 }
-body[data-gf-surface="workspace"] :is(#deliveryDetailsOverlay,#orderModal,#customerDetailsDialog) :is(
-  .modal-header,.modal-head,.order-modal-header,.delivery-modal-header-v5
+body[data-gf-surface="workspace"] :is(#deliveryDetailsOverlay,#customerDetailsDialog) :is(
+  .modal-header,.modal-head,.delivery-modal-header-v5
 ) :is(p,small){
   color:var(--gf-color-muted)!important;
   font:400 13px/1.5 var(--gf-font-family)!important;
 }
-body[data-gf-surface="workspace"] :is(#deliveryDetailsOverlay,#orderModal
-) :is(.modal-kicker,.order-modal-eyebrow){
+body[data-gf-surface="workspace"] :is(#deliveryDetailsOverlay) :is(.modal-kicker){
   color:var(--gf-color-muted)!important;
   font:600 11px/1.4 var(--gf-font-family)!important;
   text-transform:none!important;
@@ -65,9 +62,8 @@ body[data-gf-surface="workspace"] :is(#deliveryDetailsOverlay,#orderModal
 }
 
 /* 3. Chiusura modali compatta: mantiene i pulsanti esistenti e i loro onclick. */
-body[data-gf-surface="workspace"] :is(#deliveryDetailsOverlay,
-  #orderModal,#customerDetailsDialog) :is(
-  .modal-close,.order-modal-close,.customer-dialog-close,
+body[data-gf-surface="workspace"] :is(#deliveryDetailsOverlay,#customerDetailsDialog) :is(
+  .modal-close,.customer-dialog-close,
   .dialog-close,.close-modal,.support-close-v60
 ){
   width:36px!important;
@@ -84,17 +80,16 @@ body[data-gf-surface="workspace"] :is(#deliveryDetailsOverlay,
   color:var(--gf-color-muted)!important;
   box-shadow:none!important;
 }
-body[data-gf-surface="workspace"] :is(#deliveryDetailsOverlay,#orderModal,#customerDetailsDialog
-) :is(.modal-close,.order-modal-close,.customer-dialog-close,.dialog-close):hover{
+body[data-gf-surface="workspace"] :is(#deliveryDetailsOverlay,#customerDetailsDialog
+) :is(.modal-close,.customer-dialog-close,.dialog-close):hover{
   color:var(--gf-color-text)!important;
   background:var(--gf-color-surface-subtle)!important;
 }
 
 /* 4. Sezioni interne: card bianche 12px radius, titoli 16 e iconografia coerente. */
 body[data-gf-surface="workspace"] :is(
-  #deliveryDetailsOverlay,#orderModal) :is(
+  #deliveryDetailsOverlay) :is(
   .delivery-modal-section,
-  .order-modal-card,
   .agent-form-section){
   border-color:var(--gf-color-border)!important;
   border-radius:12px!important;
@@ -102,29 +97,27 @@ body[data-gf-surface="workspace"] :is(
   box-shadow:none!important;
 }
 body[data-gf-surface="workspace"] :is(
-  #deliveryDetailsOverlay,#orderModal) :is(
-  .delivery-modal-section-title,.order-modal-card-head){
+  #deliveryDetailsOverlay) :is(
+  .delivery-modal-section-title){
   border-color:var(--gf-color-border)!important;
 }
 body[data-gf-surface="workspace"] :is(
-  #deliveryDetailsOverlay,#orderModal) :is(
-  .delivery-modal-section-title,.order-modal-card-head) :is(h2,h3,strong){
+  #deliveryDetailsOverlay) :is(
+  .delivery-modal-section-title) :is(h2,h3,strong){
   color:var(--gf-color-text)!important;
   font:700 16px/1.25 var(--gf-font-display)!important;
   letter-spacing:-.005em!important;
 }
 body[data-gf-surface="workspace"] :is(
-  #deliveryDetailsOverlay,#orderModal) :is(
-  .delivery-modal-section-title,.order-modal-section-icon)>span:first-child{
+  #deliveryDetailsOverlay) :is(
+  .delivery-modal-section-title)>span:first-child{
   background:var(--gf-color-info-bg)!important;
   color:var(--gf-color-info)!important;
   border-radius:10px!important;
 }
 body[data-gf-surface="workspace"] :is(
-  #deliveryDetailsOverlay,#orderModal
-) :is(
-  .delivery-modal-summary,.delivery-modal-client-box,.delivery-modal-address-box,.order-modal-alert
-){
+  #deliveryDetailsOverlay) :is(
+  .delivery-modal-summary,.delivery-modal-client-box,.delivery-modal-address-box){
   border:1px solid var(--gf-color-border)!important;
   border-radius:12px!important;
   background:var(--gf-color-surface-subtle)!important;
@@ -134,14 +127,14 @@ body[data-gf-surface="workspace"] :is(
 
 /* 5. Testo, label e input dei popup; nessun intervento su checkbox o upload file. */
 body[data-gf-surface="workspace"] :is(
-  #deliveryDetailsOverlay,#orderModal,
+  #deliveryDetailsOverlay,
   #customerDetailsDialog) :is(label,.gf-field label){
   font:600 13px/1.4 var(--gf-font-family);
   color:var(--gf-color-text);
   letter-spacing:0;
 }
 body[data-gf-surface="workspace"] :is(
-  #deliveryDetailsOverlay,#orderModal,
+  #deliveryDetailsOverlay,
   #customerDetailsDialog) :is(input,select,textarea):not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="file"]){
   min-height:40px;
   border:1px solid var(--gf-color-border)!important;
@@ -152,38 +145,37 @@ body[data-gf-surface="workspace"] :is(
   box-shadow:none!important;
 }
 body[data-gf-surface="workspace"] :is(
-  #deliveryDetailsOverlay,#orderModal,
+  #deliveryDetailsOverlay,
   #customerDetailsDialog) :is(input,select,textarea):focus{
   border-color:var(--gf-color-primary)!important;
   outline:0;
   box-shadow:var(--gf-focus-ring)!important;
 }
 body[data-gf-surface="workspace"] :is(
-  #deliveryDetailsOverlay,#orderModal) :is(input,select,textarea):disabled{
+  #deliveryDetailsOverlay) :is(input,select,textarea):disabled{
   background:var(--gf-color-surface-subtle)!important;
   color:var(--gf-color-muted)!important;
 }
 body[data-gf-surface="workspace"] :is(
-  #deliveryDetailsOverlay,#orderModal) :is(input[type=checkbox],input[type=radio]){
+  #deliveryDetailsOverlay) :is(input[type=checkbox],input[type=radio]){
   accent-color:var(--gf-color-primary);
 }
 body[data-gf-surface="workspace"] :is(
-  #deliveryDetailsOverlay,#orderModal,
+  #deliveryDetailsOverlay,
   #customerDetailsDialog) :is(input,textarea)::placeholder{
   color:#8995ae;
 }
 
 /* 6. Piè di pagina e azioni dei modali: allineamento, margini, bottoni. */
 body[data-gf-surface="workspace"] :is(
-  #deliveryDetailsOverlay,#orderModal) :is(
-  .modal-actions,.actions-row,.delivery-modal-actions-v5,.order-modal-footer,
-  .order-modal-editor-actions){
+  #deliveryDetailsOverlay) :is(
+  .modal-actions,.actions-row,.delivery-modal-actions-v5){
   gap:10px;
   border-color:var(--gf-color-border)!important;
   background:var(--gf-color-surface)!important;
 }
 body[data-gf-surface="workspace"] :is(
-  #deliveryDetailsOverlay,#orderModal) :is(.btn-primary,.btn-secondary,.btn-light,.gf-button){
+  #deliveryDetailsOverlay) :is(.btn-primary,.btn-secondary,.btn-light,.gf-button){
   min-height:40px;
   border-radius:10px!important;
   font:600 14px/1.4 var(--gf-font-family)!important;
@@ -192,90 +184,35 @@ body[data-gf-surface="workspace"] :is(
   transform:none!important;
 }
 body[data-gf-surface="workspace"] :is(
-  #deliveryDetailsOverlay,#orderModal) :is(.btn-primary,.gf-button[data-variant="primary"]){
+  #deliveryDetailsOverlay) :is(.btn-primary,.gf-button[data-variant="primary"]){
   border-color:var(--gf-color-primary)!important;
   background:var(--gf-color-primary)!important;
   color:#fff!important;
 }
 body[data-gf-surface="workspace"] :is(
-  #deliveryDetailsOverlay,#orderModal) :is(.btn-secondary,.btn-light,.gf-button[data-variant="secondary"]){
+  #deliveryDetailsOverlay) :is(.btn-secondary,.btn-light,.gf-button[data-variant="secondary"]){
   border-color:var(--gf-color-border)!important;
   background:var(--gf-color-surface)!important;
   color:var(--gf-color-text)!important;
 }
 body[data-gf-surface="workspace"] :is(
-  #deliveryDetailsOverlay,#orderModal) :is(.gf-button[data-variant="danger"],.btn-danger){
+  #deliveryDetailsOverlay) :is(.gf-button[data-variant="danger"],.btn-danger){
   border-color:var(--gf-color-danger)!important;
   background:var(--gf-color-danger)!important;
   color:#fff!important;
 }
 body[data-gf-surface="workspace"] :is(
-  #deliveryDetailsOverlay,#orderModal) :is(button,a,summary):focus-visible{
+  #deliveryDetailsOverlay) :is(button,a,summary):focus-visible{
   outline:2px solid var(--gf-color-primary)!important;
   outline-offset:2px;
 }
 
 /* 7. Dettaglio ordine: sottopannelli e tabelle non più con vecchi blu e angoli 7-10px. */
-body[data-gf-surface="workspace"] #orderModal .order-modal-header{
-  min-height:70px;
-  padding:16px 20px;
-}
-body[data-gf-surface="workspace"] #orderModal .order-modal-title-row h2{
-  font:700 22px/1.2 var(--gf-font-display)!important;
-  color:var(--gf-color-text)!important;
-}
-body[data-gf-surface="workspace"] #orderModal .order-modal-heading>p{
-  font:400 13px/1.5 var(--gf-font-family)!important;
-  color:var(--gf-color-muted)!important;
-}
-body[data-gf-surface="workspace"] #orderModal .order-modal-body{
-  padding:20px;gap:16px;
-}
-body[data-gf-surface="workspace"] #orderModal .order-modal-card{
-  border:1px solid var(--gf-color-border)!important;
-  border-radius:12px!important;
-  background:var(--gf-color-surface)!important;
-  box-shadow:none!important;
-}
-body[data-gf-surface="workspace"] #orderModal .order-modal-card-head{
-  min-height:48px;
-  padding:10px 16px;
-  background:var(--gf-color-surface-subtle)!important;
-  border-bottom:1px solid var(--gf-color-border)!important;
-}
-body[data-gf-surface="workspace"] #orderModal .order-modal-card-head h3{
-  color:var(--gf-color-text)!important;
-  font:700 15px/1.2 var(--gf-font-display)!important;
-}
-body[data-gf-surface="workspace"] #orderModal :is(
-  .order-modal-source-chip,.order-modal-alert-band,.order-modal-more>summary,
-  .order-modal-more-menu,.order-modal-editor
-){
-  border-color:var(--gf-color-border)!important;
-  border-radius:10px!important;
-  box-shadow:none!important;
-}
-body[data-gf-surface="workspace"] #orderModal :is(
-  .order-modal-more-menu,.order-modal-source-chip
-){
-  background:var(--gf-color-surface)!important;
-}
-body[data-gf-surface="workspace"] #orderModal .order-modal-footer{
-  border-top:1px solid var(--gf-color-border)!important;
-  background:var(--gf-color-surface)!important;
-}
-body[data-gf-surface="workspace"] #orderModal :is(.order-modal-loading,.order-modal-error){
-  color:var(--gf-color-muted)!important;
-}
-body[data-gf-surface="workspace"] #orderModal .order-modal-loading span{
-  border-color:var(--gf-color-border);
-  border-top-color:var(--gf-color-primary);
-}
 
 /* 8. Popup generati da JS e piccoli menu, stessa superficie e contrasto. */
 body[data-gf-surface="workspace"] :is(.gf-mobile-more-menu-v62,
   .address-suggestions,.gf-dropdown [data-gf-menu],
-  .orders-action-menu,.order-modal-more-menu,.gf-context-menu){
+  .orders-action-menu,.gf-context-menu){
   border-color:var(--gf-color-border)!important;
   background:var(--gf-color-surface)!important;
   color:var(--gf-color-text);
@@ -320,11 +257,10 @@ body[data-gf-surface="workspace"] :is(
   }
 }
 @media(max-width:520px){
-  body[data-gf-surface="workspace"] :is(#deliveryDetailsOverlay,#orderModal) :is(.modal-header,.order-modal-header) :is(h1,h2,h3,strong){
+  body[data-gf-surface="workspace"] :is(#deliveryDetailsOverlay) :is(.modal-header) :is(h1,h2,h3,strong){
     font-size:19px!important;
   }
-  body[data-gf-surface="workspace"] :is(#deliveryDetailsOverlay,
-    #orderModal) :is(.modal-actions,.actions-row,.order-modal-footer){
+  body[data-gf-surface="workspace"] :is(#deliveryDetailsOverlay) :is(.modal-actions,.actions-row){
     flex-wrap:wrap;
   }
 }

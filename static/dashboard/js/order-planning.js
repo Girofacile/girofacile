@@ -20,12 +20,12 @@
     panel.hidden=!allowed() || (!count && !state.routes.length);
     const countLabel=count===1?'1 ordine selezionato':`${count} ordini selezionati`;
     el('ordersSelectionCount').textContent=countLabel;
-    const dot=panel.querySelector('.orders-selection-count-dot');if(dot)dot.textContent=String(count);
+    const dot=panel.querySelector('[data-orders-selection-count]');if(dot)dot.textContent=String(count);
     el('ordersGoPlanning').textContent=`Vai alla pianificazione (${count})`;
     el('ordersGoPlanning').disabled=busy || !count || !!state.routes.length;
-    el('ordersSelectionRoutes').innerHTML=state.routes.map(r=>`<button class="btn-secondary" onclick="GFOrderPlanning.openRoute(${r.id})">Apri ${r.status==='bozza'?'bozza':'giro'} #${r.id} · ${esc(r.name||'Giro consegne')}</button>`).join('');
+    el('ordersSelectionRoutes').innerHTML=state.routes.map(r=>`<button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="GFOrderPlanning.openRoute(${r.id})">Apri ${r.status==='bozza'?'bozza':'giro'} #${r.id} · ${esc(r.name||'Giro consegne')}</button>`).join('');
     if(state.routes.length)el('ordersSelectionCount').textContent=countLabel+' · alcuni ordini sono già riservati';
-    panel.querySelectorAll('.order-selection-action').forEach(button=>button.disabled=busy);
+    panel.querySelectorAll('[data-order-selection-action]').forEach(button=>button.disabled=busy);
   }
   async function loadSelection(){
     if(!allowed()){state={...state,order_ids:[],routes:[]};controls();return;}

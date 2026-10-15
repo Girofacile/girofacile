@@ -76,7 +76,7 @@ def main():
                     page.locator('#orderField-number').fill('ORD-001')
                     page.locator('#orderField-recipient_name').fill('Destinatario <script>test</script>')
                     page.locator('#orderField-delivery_address').fill('Via Roma 10, Milano')
-                    page.locator('#orderFormFields .order-form-optional summary').click()
+                    page.locator('#orderFormFields [data-order-form-optional] summary').click()
                     page.locator('#orderField-tail_lift').select_option('false')
                     page.locator('#orderField-time_from').fill('14:00')
                     page.locator('#orderSave').click()
@@ -88,7 +88,7 @@ def main():
                     assert page.locator('#orderModal').is_visible()
                     assert page.locator('#orderModalContent script').count()==0
                     page.get_by_role('button',name='Modifica dati',exact=True).click()
-                    page.locator('#orderFormFields .order-form-optional summary').click()
+                    page.locator('#orderFormFields [data-order-form-optional] summary').click()
                     page.locator('#orderField-packages').fill('5')
                     page.locator('#orderSave').click()
                     page.wait_for_function("document.getElementById('orderModalContent').textContent.includes('Modifica dati')")
@@ -98,7 +98,7 @@ def main():
                     assert page.get_by_role('button',name='Sì, associa').count()==0
                     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 2')
                     page.screenshot(path=str(output/f'detail-{width}.png'),full_page=True)
-                    page.locator('#orderModal .order-modal-close').click()
+                    page.locator('#orderModal [data-order-modal-close]').click()
                     page.locator('#orderModal').wait_for(state='hidden')
                     page.wait_for_function("document.getElementById('ordersResults').textContent.includes('ORD-001')")
                     page.locator('#ordersView-cards').click()

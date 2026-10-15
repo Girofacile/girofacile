@@ -565,15 +565,16 @@ body[data-gf-surface] .gf-modal__title{margin:0;font:var(--gf-weight-bold) var(-
 body[data-gf-surface] .gf-modal__body{flex:1;overflow-y:auto;padding:var(--gf-space-5) var(--gf-space-6)}
 /* Nel corpo scorrevole le righe restano alla loro altezza (i pannelli con overflow non si schiacciano). */
 body[data-gf-surface] .gf-modal__body.gf-stack{align-content:start;grid-auto-rows:max-content}
-body[data-gf-surface] .gf-modal>form{display:flex;flex-direction:column;flex:1;min-height:0}
+body[data-gf-surface] :is(.gf-modal>form,.gf-modal>[data-gf-modal-content],.gf-modal>[data-gf-modal-content]>form){display:flex;flex-direction:column;flex:1;min-height:0}
 body[data-gf-surface] .gf-modal__footer{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:var(--gf-space-3);padding:var(--gf-space-4) var(--gf-space-6);border-top:var(--gf-border);background:var(--gf-color-surface-subtle)}
 body[data-gf-surface] .gf-overlay[data-position="side"]{place-items:stretch end;padding:0}
 body[data-gf-surface] .gf-overlay[data-position="side"] .gf-modal{width:min(var(--gf-drawer-width),100%);max-height:none;height:100%;border-radius:var(--gf-radius-lg) 0 0 var(--gf-radius-lg)}
 body[data-gf-surface] .gf-overlay[data-position="side"][data-embedded] .gf-modal{height:auto}
 /* Stessa finestra su <dialog> nativo (showModal): lo sfondo è il ::backdrop. */
-body[data-gf-surface] dialog.gf-modal{padding:0;color:var(--gf-color-text)}
+body[data-gf-surface] dialog.gf-modal{padding:0;color:var(--gf-color-text);outline:none}
 body[data-gf-surface] dialog.gf-modal:not([open]){display:none}
 body[data-gf-surface] dialog.gf-modal::backdrop{background:var(--gf-color-overlay)}
+html:has(body[data-gf-surface] dialog.gf-modal[open]){overflow:hidden}
 body[data-gf-surface] dialog.gf-modal[data-position="side"]{margin:0 0 0 auto;width:min(var(--gf-drawer-width),100%);max-width:100%;height:100dvh;max-height:100dvh;border-radius:var(--gf-radius-lg) 0 0 var(--gf-radius-lg)}
 body[data-gf-surface] dialog.gf-modal[data-position="side"][data-size="lg"]{width:min(var(--gf-dialog-width),100%)}
 /* Elenco chiave–valore ---------------------------------------------------- */

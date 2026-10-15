@@ -3,11 +3,12 @@
   'use strict';
   const labels={nuovo:'Nuovo',da_verificare:'Da verificare',pronto:'Pronto',assegnato:'Assegnato',in_consegna:'In consegna',consegnato:'Consegnato',non_consegnato:'Non consegnato',annullato:'Annullato'};
   const metricMeta={
-    nuovo:{label:'Nuovi ordini',description:'Ordini appena ricevuti',icon:'<path d="M5 8h14l-1 11H6L5 8Z"/><path d="M8 8a4 4 0 0 1 8 0"/>',cls:'nuovo'},
-    da_verificare:{label:'Da verificare',description:'Controllo dati o indirizzo',icon:'<circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/>',cls:'da_verificare'},
-    pronto:{label:'Pronti per piano',description:'Pronti per la pianificazione',icon:'<circle cx="12" cy="12" r="8"/><path d="m8.5 12 2.2 2.2 4.8-5"/>',cls:'pronto'},
-    assegnato:{label:'Già assegnati',description:'Ordini inseriti in un giro',icon:'<path d="M3 7h11v9H3z"/><path d="M14 10h4l3 3v3h-7"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/>',cls:'assegnato'}
+    nuovo:{label:'Nuovi ordini',description:'Ordini appena ricevuti',icon:'<path d="M5 8h14l-1 11H6L5 8Z"/><path d="M8 8a4 4 0 0 1 8 0"/>'},
+    da_verificare:{label:'Da verificare',description:'Controllo dati o indirizzo',icon:'<circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/>'},
+    pronto:{label:'Pronti per piano',description:'Pronti per la pianificazione',icon:'<circle cx="12" cy="12" r="8"/><path d="m8.5 12 2.2 2.2 4.8-5"/>'},
+    assegnato:{label:'Già assegnati',description:'Ordini inseriti in un giro',icon:'<path d="M3 7h11v9H3z"/><path d="M14 10h4l3 3v3h-7"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/>'}
   };
+  const statusTone={nuovo:'info',da_verificare:'warning',pronto:'success',assegnato:'info',in_consegna:'info',consegnato:'success',non_consegnato:'danger',annullato:'neutral'};
   const fields={number:'Numero ordine',recipient_name:'Destinatario',delivery_address:'Indirizzo di consegna',requested_date:'Data richiesta',time_from:'Fascia oraria: dalle',time_to:'Alle',weight_kg:'Peso (kg)',packages:'Colli',pallets:'Pallet',volume_m3:'Volume (m³)',tail_lift:'Sponda',pallet_truck:'Transpallet',ztl:'ZTL',requirements:'Requisiti operativi',notes:'Note'};
   const numeric=['weight_kg','packages','pallets','volume_m3'], bools=['tail_lift','pallet_truck','ztl'];
   let page=1, sequence=0, detailSequence=0, view='table', current=null, last=null, timer, modalScrollY=0, bulkVerifying=false, stopBulkVerification=false;
@@ -16,7 +17,7 @@
   const display=value=>value===null || value===undefined || value===''?'Non indicato':value===true?'Sì':value===false?'No':String(value);
   const date=value=>value?new Date(value+'Z').toLocaleString('it-IT'):'Non indicata';
   const receivedDate=value=>value?new Date(value+'Z').toLocaleString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}):'Non indicata';
-  const statusBadge=status=>`<span class="orders-status orders-status-${esc(status)}"><i aria-hidden="true"></i>${esc(labels[status]||status)}</span>`;
+  const statusBadge=status=>`<span class="gf-badge" data-dot data-status="${statusTone[status]||'neutral'}">${esc(labels[status]||status)}</span>`;
   function syncActionPlacement(){
     const actions=el('ordersPageActions'), inline=el('ordersInlineActionsHost');
     if(!actions||!inline)return;
@@ -49,7 +50,7 @@
       if(window.GFOrderPlanning)await GFOrderPlanning.loadSelection();
       if(request!==sequence)return;
       last=data;
-      el('ordersMetrics').innerHTML=Object.entries(metricMeta).map(([key,meta])=>`<article class="orders-metric-card"><span class="orders-metric-icon is-${meta.cls}" aria-hidden="true"><svg viewBox="0 0 24 24">${meta.icon}</svg></span><div class="orders-metric-copy"><span class="orders-metric-label">${meta.label}</span><strong class="orders-metric-value">${Number(data.metrics[key]||0)}</strong><p class="orders-metric-description">${meta.description}</p></div></article>`).join('');
+      el('ordersMetrics').innerHTML=Object.entries(metricMeta).map(([key,meta])=>`<article class="gf-stat-card"><span class="gf-stat-card__icon" data-tone="neutral" aria-hidden="true"><svg viewBox="0 0 24 24">${meta.icon}</svg></span><span class="gf-stat-card__label">${meta.label}</span><strong class="gf-stat-card__value">${Number(data.metrics[key]||0)}</strong><span class="gf-stat-card__change">${meta.description}</span></article>`).join('');
       const selected=el('ordersSource').value;
       el('ordersSource').innerHTML='<option value="">Tutte le fonti</option>'+data.sources.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');el('ordersSource').value=selected;
       render();
@@ -62,12 +63,12 @@
   }
   function render(){
     if(!last)return;
-    const open=o=>`<button class="btn-secondary orders-open-button" onclick="GFOrders.open(${o.id})" aria-label="Apri ordine ${esc(o.number)}">Apri</button>`;
+    const open=o=>`<button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="GFOrders.open(${o.id})" aria-label="Apri ordine ${esc(o.number)}">Apri</button>`;
     if(view==='cards'){
-      el('ordersResults').innerHTML='<div class="orders-grid">'+last.items.map(o=>`<article class="panel orders-order-card ${window.GFOrderPlanning?.isSelected(o.id)?'is-selected':''}"><div class="orders-order-card-head"><span>${window.GFOrderPlanning?.checkbox(o)||""}</span>${statusBadge(o.status)}</div><h2>${esc(o.number)}</h2><p><strong>${esc(display(o.recipient_name))}</strong></p><p>${esc(display(o.delivery_address))}</p><p>${esc(o.source_name)} · ${esc(display(o.requested_date))}</p><p>${esc(display(o.packages))} colli · ${esc(display(o.weight_kg))} kg</p>${open(o)}</article>`).join('')+'</div>';
+      el('ordersResults').innerHTML='<div class="gf-panel__body gf-grid" data-cols="3">'+last.items.map(o=>`<article class="gf-card gf-stack" aria-selected="${!!window.GFOrderPlanning?.isSelected(o.id)}"><div class="gf-cluster" data-justify="between"><span>${window.GFOrderPlanning?.checkbox(o)||""}</span>${statusBadge(o.status)}</div><h2 class="gf-subtitle">${esc(o.number)}</h2><p><strong>${esc(display(o.recipient_name))}</strong></p><p>${esc(display(o.delivery_address))}</p><p class="gf-muted">${esc(o.source_name)} · ${esc(display(o.requested_date))}</p><p class="gf-muted">${esc(display(o.packages))} colli · ${esc(display(o.weight_kg))} kg</p><div>${open(o)}</div></article>`).join('')+'</div>';
     }else{
       const selectAll=window.GFOrderPlanning?.headerCheckbox(last.items)||'';
-      el('ordersResults').innerHTML='<div class="orders-table-shell tableWrap"><table class="orders-table" data-gf-responsive="cards"><thead><tr><th scope="col" class="orders-select-col" aria-label="Seleziona">'+selectAll+'</th><th scope="col">Numero ordine</th><th scope="col">Ricevuto</th><th scope="col">Cliente / destinatario</th><th scope="col">Indirizzo</th><th scope="col">Stato</th><th scope="col">Azioni</th></tr></thead><tbody>'+last.items.map(o=>`<tr class="${window.GFOrderPlanning?.isSelected(o.id)?'is-selected':''}"><td class="orders-select-cell">${window.GFOrderPlanning?.checkbox(o)||""}</td><td class="orders-number-cell">${esc(o.number)}</td><td>${esc(receivedDate(o.received_at))}</td><td class="orders-recipient-cell"><strong>${esc(display(o.recipient_name))}</strong></td><td class="orders-address-cell">${esc(display(o.delivery_address))}</td><td>${statusBadge(o.status)}</td><td>${open(o)}</td></tr>`).join('')+'</tbody></table></div>';
+      el('ordersResults').innerHTML='<div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards"><thead><tr><th scope="col" aria-label="Seleziona">'+selectAll+'</th><th scope="col">Numero ordine</th><th scope="col">Ricevuto</th><th scope="col">Cliente / destinatario</th><th scope="col">Indirizzo</th><th scope="col">Stato</th><th scope="col">Azioni</th></tr></thead><tbody>'+last.items.map(o=>`<tr aria-selected="${!!window.GFOrderPlanning?.isSelected(o.id)}"><td data-label="Seleziona">${window.GFOrderPlanning?.checkbox(o)||""}</td><td data-label="Numero ordine"><strong>${esc(o.number)}</strong></td><td data-label="Ricevuto">${esc(receivedDate(o.received_at))}</td><td data-label="Cliente / destinatario"><strong>${esc(display(o.recipient_name))}</strong></td><td data-label="Indirizzo">${esc(display(o.delivery_address))}</td><td data-label="Stato">${statusBadge(o.status)}</td><td data-label="Azioni">${open(o)}</td></tr>`).join('')+'</tbody></table></div>';
     }
     const totalPages=Math.max(1,Math.ceil(last.total/25));
     el('ordersPage').textContent=String(page);
@@ -79,21 +80,23 @@
   function form(data={}){
     el('orderFormFields').innerHTML=Object.entries(fields).map(([key,label])=>{
       const value=data[key], id='orderField-'+key;
-      if(bools.includes(key))return `<label for="${id}">${label}<select id="${id}" name="${key}"><option value="">Non indicato</option><option value="true" ${value===true?'selected':''}>Sì</option><option value="false" ${value===false?'selected':''}>No</option></select></label>`;
-      if(['notes','requirements'].includes(key))return `<label for="${id}" class="order-modal-form-wide">${label}<textarea id="${id}" name="${key}" maxlength="${key==='notes'?5000:2000}">${esc(value||'')}</textarea></label>`;
+      if(bools.includes(key))return `<label class="gf-field" for="${id}"><span class="gf-field__label">${label}</span><select class="gf-select" id="${id}" name="${key}"><option value="">Non indicato</option><option value="true" ${value===true?'selected':''}>Sì</option><option value="false" ${value===false?'selected':''}>No</option></select></label>`;
+      if(['notes','requirements'].includes(key))return `<label class="gf-field" data-span="full" for="${id}"><span class="gf-field__label">${label}</span><textarea class="gf-textarea" id="${id}" name="${key}" maxlength="${key==='notes'?5000:2000}">${esc(value||'')}</textarea></label>`;
       const type=numeric.includes(key)?'number':key==='requested_date'?'date':key.startsWith('time_')?'time':'text';
-      return `<label for="${id}">${label}<input id="${id}" name="${key}" type="${type}" value="${esc(value??'')}" ${key==='number'?'required maxlength="160"':key==='recipient_name'?'maxlength="200"':key==='delivery_address'?'maxlength="500"':''} ${type==='number'?`min="0" max="${key==='packages'?1000000:100000000}" step="${key==='packages'?1:'any'}"`:''}></label>`;
+      return `<label class="gf-field" for="${id}"><span class="gf-field__label">${label}</span><input class="gf-input" id="${id}" name="${key}" type="${type}" value="${esc(value??'')}" ${key==='number'?'required maxlength="160"':key==='recipient_name'?'maxlength="200"':key==='delivery_address'?'maxlength="500"':''} ${type==='number'?`min="0" max="${key==='packages'?1000000:100000000}" step="${key==='packages'?1:'any'}"`:''}></label>`;
     }).join('');
     // Keep the everyday workflow compact; optional logistics remain available on demand.
     const container=el('orderFormFields');
     const basic=document.createElement('div');
-    basic.className='order-form-primary';
+    basic.className='gf-form-grid';
     const optional=document.createElement('details');
-    optional.className='order-form-optional';
+    optional.className='gf-panel';
+    optional.dataset.orderFormOptional='';
     const title=document.createElement('summary');
+    title.className='gf-panel__header';
     title.textContent='Altre informazioni (facoltative)';
     const otherFields=document.createElement('div');
-    otherFields.className='orders-form-grid';
+    otherFields.className='gf-panel__body gf-form-grid';
     const essential=new Set(['number','recipient_name','delivery_address']);
     for(const label of Array.from(container.children)){
       const input=label.querySelector('input,select,textarea');
@@ -122,29 +125,27 @@
   }
   function renderEditor(data={},creating=false){
     const title=creating?'Nuovo ordine':`Modifica ${esc(current?.number||'ordine')}`;
-    el('orderModalContent').innerHTML=`<div class="order-modal-editor">
-      <header class="order-modal-header">
-        <div><h2 id="orderModalTitle">${title}</h2><p>${creating?'Inserisci i dati disponibili per creare un nuovo ordine.':'Aggiorna i dati operativi. I dati originali ricevuti restano conservati nello storico.'}</p></div>
-        <button class="order-modal-close" type="button" onclick="GFOrders.close()" aria-label="Chiudi"><svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+    el('orderModalContent').innerHTML=`<header class="gf-modal__header">
+        <div><h2 class="gf-modal__title" id="orderModalTitle">${title}</h2><p class="gf-muted">${creating?'Inserisci i dati disponibili per creare un nuovo ordine.':'Aggiorna i dati operativi. I dati originali ricevuti restano conservati nello storico.'}</p></div>
+        <button class="gf-icon-button" type="button" data-order-modal-close onclick="GFOrders.close()" aria-label="Chiudi"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
       </header>
-      <form class="order-modal-edit-form" onsubmit="GFOrders.save(event)">
-        <div id="orderFormFields" class="orders-form-grid"></div>
-        <p id="orderEditorError" class="orders-error" role="alert"></p>
-        <div class="order-modal-editor-actions">
-          <button class="btn-secondary" type="button" onclick="GFOrders.cancelEdit()">Annulla</button>
-          <button id="orderSave" class="btn-primary" type="submit">${creating?'Crea ordine':'Salva modifiche'}</button>
-        </div>
-      </form>
-    </div>`;
+      <form onsubmit="GFOrders.save(event)">
+        <div class="gf-modal__body gf-stack"><div id="orderFormFields" class="gf-stack"></div>
+        <div class="gf-field" data-invalid><p id="orderEditorError" class="gf-field__error" role="alert"></p></div></div>
+        <footer class="gf-modal__footer">
+          <button class="gf-button" data-variant="secondary" type="button" onclick="GFOrders.cancelEdit()">Annulla</button>
+          <button id="orderSave" class="gf-button" data-variant="primary" type="submit">${creating?'Crea ordine':'Salva modifiche'}</button>
+        </footer>
+      </form>`;
     showOrderModal();form(data);el('orderEditorError').textContent='';
   }
   function newOrder(){++detailSequence;current=null;renderEditor({},true);}
   async function open(id){
     const request=++detailSequence;
-    el('orderModalContent').innerHTML='<div class="order-modal-loading"><span></span><p>Caricamento ordine…</p></div>';
+    el('orderModalContent').innerHTML='<div class="gf-loading" role="status">Caricamento ordine…</div>';
     showOrderModal();
     try{const result=await orderApi('/api/orders/'+id);if(request!==detailSequence)return;current=result;detail();}
-    catch(err){if(request===detailSequence)el('orderModalContent').innerHTML=`<div class="order-modal-error"><p>${esc(err.message||String(err))}</p><button class="btn-secondary" onclick="GFOrders.close()">Chiudi</button></div>`;}
+    catch(err){if(request===detailSequence)el('orderModalContent').innerHTML=`<div class="gf-modal__body gf-stack"><div class="gf-alert" data-status="danger">${esc(err.message||String(err))}</div><div><button type="button" class="gf-button" data-variant="secondary" onclick="GFOrders.close()">Chiudi</button></div></div>`;}
   }
   function changes(event){
     if(event.kind==='corrected')return Object.entries(event.changes).map(([key,value])=>`<p>${fields[key]||esc(key)}: ${esc(display(value.before))} → ${esc(display(value.after))}</p>`).join('');
@@ -168,89 +169,69 @@
     const requested=data.requested_date?esc(data.requested_date):'Non indicata';
     const timeRange=data.time_from||data.time_to?`${esc(data.time_from||'—')} – ${esc(data.time_to||'—')}`:'Non indicata';
     const boolValue=value=>value===true?'Sì':value===false?'No':'N/D';
-    const sourceChip=`<span class="order-modal-source-chip">${esc(o.source_name)}</span>`;
-    const items=o.items?.length?o.items.map((item,index)=>`<div class="order-modal-item-row"><span>${esc(item.description||item.name||`Articolo ${index+1}`)}</span><strong>${esc(display(item.quantity))}</strong></div>`).join(''):'<p class="order-modal-empty">Nessun articolo indicato.</p>';
-    const notes=data.notes?`<p class="order-modal-note-text">“${esc(data.notes)}”</p>`:'<p class="order-modal-empty">Nessuna nota ordine.</p>';
+    const sourceChip=`<span class="gf-badge" data-status="neutral">${esc(o.source_name)}</span>`;
+    const items=o.items?.length?o.items.map((item,index)=>`<div class="gf-details__item"><dt>${esc(item.description||item.name||`Articolo ${index+1}`)}</dt><dd><strong>${esc(display(item.quantity))}</strong></dd></div>`).join(''):'<p class="gf-muted">Nessun articolo indicato.</p>';
+    const notes=data.notes?`<p>“${esc(data.notes)}”</p>`:'<p class="gf-muted">Nessuna nota ordine.</p>';
     const addressText=esc(display(data.delivery_address));
     const actionCard=!verified
-      ?`<section class="order-modal-alert">
-          <div class="order-modal-alert-band">Azione necessaria</div>
-          <div class="order-modal-alert-body">
-            <span class="order-modal-alert-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21s6-5.3 6-11a6 6 0 1 0-12 0c0 5.7 6 11 6 11Z"/><circle cx="12" cy="10" r="2"/></svg></span>
-            <strong>Indirizzo da confermare</strong>
+      ?`<section class="gf-alert" data-status="warning"><div class="gf-alert__body">
+            <p class="gf-kicker">Azione necessaria</p>
+            <strong class="gf-alert__title">Indirizzo da confermare</strong>
             <p>Verifica l’indirizzo “${addressText}”. Se è valido, l’ordine diventa subito pianificabile.</p>
-            ${allowed?'<button onclick="GFOrders.action(\'verify-address\')">Verifica indirizzo ora</button>':''}
-          </div>
-        </section>`
-      :`<section class="order-modal-alert is-ok">
-          
-          <div class="order-modal-alert-body">
-            <span class="order-modal-alert-icon" aria-hidden="true">✓</span>
-            <strong>Verifica completata</strong>
+            ${allowed?'<div><button type="button" class="gf-button" data-variant="primary" data-size="sm" onclick="GFOrders.action(\'verify-address\')">Verifica indirizzo ora</button></div>':''}
+        </div></section>`
+      :`<section class="gf-alert" data-status="success"><div class="gf-alert__body">
+            <strong class="gf-alert__title">✓ Verifica completata</strong>
             <p>L’indirizzo di consegna è stato verificato ed è pronto per la pianificazione.</p>
-          </div>
-        </section>`;
+        </div></section>`;
     const readyButton=''; // Verification makes the order ready without confirmation.
-    const editButton=allowed?'<button class="btn-primary order-modal-footer-edit" onclick="GFOrders.edit()">Modifica dati</button>':'';
-    const cancelButton=allowed?'<button class="order-modal-cancel-link" onclick="GFOrders.cancel()">Annulla ordine</button>':'';
+    const editButton=allowed?'<button type="button" class="gf-button" data-variant="primary" onclick="GFOrders.edit()">Modifica dati</button>':'';
+    const cancelButton=allowed?'<button type="button" class="gf-button" data-variant="ghost" onclick="GFOrders.cancel()">Annulla ordine</button>':'';
+    const item=(label,value)=>`<div class="gf-details__item"><dt>${label}</dt><dd><strong>${value}</strong></dd></div>`;
 
     el('orderModalContent').innerHTML=`
-      <header class="order-modal-header order-modal-detail-header">
-        <span class="order-modal-package-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="m12 2 9 5-9 5-9-5 9-5Zm-9 5v10l9 5 9-5V7M12 12v10"/></svg></span>
-        <div class="order-modal-heading">
-          <div class="order-modal-title-row"><h2 id="orderModalTitle">${esc(o.number)}</h2>${statusBadge(o.status)}${sourceChip}</div>
-          <p>Acquisito il ${esc(date(o.received_at))}</p>
+      <header class="gf-modal__header">
+        <div>
+          <div class="gf-cluster"><h2 class="gf-modal__title" id="orderModalTitle">${esc(o.number)}</h2>${statusBadge(o.status)}${sourceChip}</div>
+          <p class="gf-muted">Acquisito il ${esc(date(o.received_at))}</p>
         </div>
-        <button class="order-modal-close" type="button" onclick="GFOrders.close()" aria-label="Chiudi"><svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+        <button class="gf-icon-button" type="button" data-order-modal-close onclick="GFOrders.close()" aria-label="Chiudi"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
       </header>
-      <p id="orderActionMessage" class="order-modal-action-message" role="status"></p>
-      <div class="order-modal-body">
-        <main class="order-modal-main">
-          <section class="order-modal-card">
-            <div class="order-modal-card-head"><span class="order-modal-section-icon" aria-hidden="true">⌖</span><h3>Dati di consegna</h3></div>
-            <div class="order-modal-delivery-grid">
-              <div><span>Destinatario</span><strong>${esc(display(data.recipient_name))}</strong></div>
-              <div><span>Indirizzo di consegna</span><strong>${addressText}</strong></div>
-              <div><span>Data richiesta</span><strong>${requested}</strong></div>
-              <div><span>Fascia oraria</span><strong>${timeRange}</strong></div>
-            </div>
-          </section>
-
-          <section class="order-modal-card">
-            <div class="order-modal-card-head"><span class="order-modal-section-icon" aria-hidden="true">▣</span><h3>Specifiche merce e logistica</h3></div>
-            <div class="order-modal-logistics-grid">
-              <div><span>Peso (kg)</span><strong>${esc(display(data.weight_kg))}</strong></div>
-              <div><span>Colli</span><strong>${esc(display(data.packages))}</strong></div>
-              <div><span>Pallet</span><strong>${esc(display(data.pallets))}</strong></div>
-              <div><span>Volume (m³)</span><strong>${esc(display(data.volume_m3))}</strong></div>
-              <div><span>Sponda idraulica</span><strong>${boolValue(data.tail_lift)}</strong></div>
-              <div><span>Transpallet</span><strong>${boolValue(data.pallet_truck)}</strong></div>
-              <div><span>Permesso ZTL</span><strong>${boolValue(data.ztl)}</strong></div>
-              <div><span>Req. operativi</span><strong>${esc(display(data.requirements))}</strong></div>
-            </div>
-          </section>
-
-          <div class="order-modal-split">
-            <section class="order-modal-card">
-              <div class="order-modal-card-head"><span aria-hidden="true">≡</span><h3>Distinta articoli</h3><small>${o.items?.length||0} righe</small></div>
-              <div class="order-modal-items">${items}</div>
+      <div class="gf-modal__body gf-stack">
+        <p id="orderActionMessage" class="gf-muted" role="status"></p>
+        <div class="gf-grid" data-cols="main-side">
+          <div class="gf-stack">
+            <section class="gf-panel">
+              <header class="gf-panel__header"><h3 class="gf-panel__title">Dati di consegna</h3></header>
+              <div class="gf-panel__body"><dl class="gf-details">
+                ${item('Destinatario',esc(display(data.recipient_name)))}${item('Indirizzo di consegna',addressText)}${item('Data richiesta',requested)}${item('Fascia oraria',timeRange)}
+              </dl></div>
             </section>
-            <section class="order-modal-card order-modal-notes">
-              <div class="order-modal-card-head"><span aria-hidden="true">□</span><h3>Note ordine</h3></div>
-              <div class="order-modal-note-body">${notes}</div>
+            <section class="gf-panel">
+              <header class="gf-panel__header"><h3 class="gf-panel__title">Specifiche merce e logistica</h3></header>
+              <div class="gf-panel__body"><dl class="gf-details">
+                ${item('Peso (kg)',esc(display(data.weight_kg)))}${item('Colli',esc(display(data.packages)))}${item('Pallet',esc(display(data.pallets)))}${item('Volume (m³)',esc(display(data.volume_m3)))}
+                ${item('Sponda idraulica',boolValue(data.tail_lift))}${item('Transpallet',boolValue(data.pallet_truck))}${item('Permesso ZTL',boolValue(data.ztl))}${item('Req. operativi',esc(display(data.requirements)))}
+              </dl></div>
             </section>
+            <div class="gf-grid" data-cols="2">
+              <section class="gf-panel">
+                <header class="gf-panel__header"><h3 class="gf-panel__title">Distinta articoli</h3><span class="gf-panel__meta">${o.items?.length||0} righe</span></header>
+                <div class="gf-panel__body"><dl class="gf-details">${items}</dl></div>
+              </section>
+              <section class="gf-panel">
+                <header class="gf-panel__header"><h3 class="gf-panel__title">Note ordine</h3></header>
+                <div class="gf-panel__body">${notes}</div>
+              </section>
+            </div>
           </div>
-        </main>
-
-        <aside class="order-modal-side">
-          ${actionCard}
-          
-        </aside>
+          <aside>${actionCard}</aside>
+        </div>
       </div>
-      <footer class="order-modal-footer">
-        <div class="order-modal-footer-left">${cancelButton}</div>
-        <div class="order-modal-footer-actions">
-          <button class="btn-secondary" type="button" onclick="GFOrders.close()">Chiudi</button>
+      <footer class="gf-modal__footer">
+        <div class="gf-cluster">${cancelButton}</div>
+        <div class="gf-cluster">
+          <button type="button" class="gf-button" data-variant="secondary" onclick="GFOrders.close()">Chiudi</button>
           ${readyButton}
           ${editButton}
         </div>
@@ -342,7 +323,6 @@
     const open=typeof force==='boolean'?force:drawer.classList.contains('hidden');
     drawer.classList.toggle('hidden',!open);
     button.setAttribute('aria-expanded',String(open));
-    button.classList.toggle('is-active',open);
   }
   const orderDialog=modal();
   if(orderDialog){
