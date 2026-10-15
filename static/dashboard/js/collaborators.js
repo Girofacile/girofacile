@@ -45,6 +45,9 @@
     for(const [key,selector] of Object.entries(controls)) if(!can(key)) document.querySelectorAll(selector).forEach(el=>denied.add(el));
     const actions = [
       [/openNewCustomer|openCustomerImport|importCustomers/,'customers.create'],
+      // openCustomerDrawer(null,'new') crea; con un id esistente in modifica serve customers.update.
+      [/openCustomerDrawer\(\s*(?:null|undefined)?\s*[,)]/,'customers.create'],
+      [/openCustomerDrawer\(\s*(?!null\b|undefined\b)[^\s,)][^,)]*,\s*['"]edit['"]/,'customers.update'],
       [/editCustomer|saveCustomer|verifyCustomer|verifyPending/,'customers.update'],
       [/deleteCustomer/,'customers.delete'], [/openNewDeposit|newDeposit/,'deposits.create'],
       [/editDeposit|saveDeposit/,'deposits.update'], [/deleteDeposit/,'deposits.delete'],
