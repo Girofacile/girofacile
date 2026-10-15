@@ -13,14 +13,29 @@ modifica database, prezzi, quote, Stripe, email o algoritmo di ottimizzazione.
 | `components.css` | Componenti riutilizzabili, varianti, focus, disabled e liste responsive |
 | `layout.css` | Layout base condiviso (`.gf-shell`), più gli adattatori di sidebar e topbar esistenti |
 | `shell.js` | Costruisce sidebar e intestazione del layout base con il menu standard |
-| `workspace.css` | Collegamento dei moduli gestionali esistenti al sistema |
+| `workspace.css` | Solo adattatori dei moduli condivisi con i portali (riepilogo percorso, uso mezzi elettrici, tracking cliente) |
 | `portals.css` | Mobile, autista, operatore, agente, login/setup, tracking, sito e documenti |
 | `design-system.js` | Miglioramenti di presentazione e helper DOM sicuri |
 
 I documenti dichiarano `data-gf-surface` sul body. Gli adattatori sono limitati
-alla superficie interessata. I fogli precedenti conservano la geometria e i
-selettori utilizzati; la presentazione condivisa viene caricata dopo di essi.
-Una rimozione legacy richiede verifica degli utilizzi e delle regressioni.
+alla superficie interessata.
+
+### Gestionale (Dashboard e Super Admin) dopo la pulizia di ottobre 2026
+
+La vecchia interfaccia è stata eliminata: niente più `reference-*.css`,
+`unified.css`, `sidebar-unified.css`, `tokens.css` né fogli per singola sezione.
+Nella Dashboard restano, oltre ai fogli del sistema, solo:
+
+- `dashboard/css/core.css`: stati di visibilità comandati dal JS (`.hidden`,
+  funzionalità disattivate, permessi del collaboratore), pulsanti `btn-secondary` /
+  `btn-mini` generati dai moduli condivisi, grafici SVG del Report;
+- `dashboard-real-map.css`, `in-progress-reference.css`, `live-gps.css`,
+  `fleet-review.css`: segnaposto e controlli delle mappe Leaflet;
+- `company.css`: anteprima del colore del brand nella pagina Azienda;
+- `electric-vehicles.css`: condiviso con il portale mobile.
+
+Mappe, grafici e anteprima del brand sono in attesa dei componenti proposti per il
+catalogo; tutti i fogli usano solo variabili di `theme.css`.
 
 ## Analisi iniziale
 
