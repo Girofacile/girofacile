@@ -36,7 +36,7 @@
       if(!allowedTab(name)) denied.add(el);
     });
     const controls = {
-      'routes.plan':'.topbar-new-route,#gfMobileBottomNavV62 .main',
+      'routes.plan':'[data-new-route-button],#gfMobileBottomNavV62 .main',
       'notifications.read':'#notificationBellBtn',
       'customers.create':'#newCustomerBtn,#customerImportBtn',
       'deposits.create':'#newDepositBtn', 'vehicles.create':'.fleet-create',
@@ -69,7 +69,7 @@
         if(pattern.test(code) && !can(key) && !(/^save/.test(code) && can(key.replace('.update','.create')))) denied.add(el);
       }
     });
-    document.querySelectorAll('.company-owner-only,#btnPlanActive,.btn-billing-v63,#showOnboardingBtn,[data-onboarding-card]').forEach(el=>denied.add(el));
+    document.querySelectorAll('.company-owner-only,#btnPlanActive,[data-billing-button],#showOnboardingBtn,[data-onboarding-card]').forEach(el=>denied.add(el));
     const plan=document.querySelector('#profileOverlay .profile-plan-section');
     if(plan) denied.add(plan);
     // Recompute visibility, including newly granted actions and owner login switches.

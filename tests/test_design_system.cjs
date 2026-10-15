@@ -164,7 +164,8 @@ test('dashboard reference view shares tokens and retains live API connections',(
   for(const phrase of ['class="gf-stat-strip"','class="gf-route-panel" id="gfRefHeroWrap"','class="gf-stop-list" id="gfRefStopList"','class="gf-legend"'])
     assert.match(dashboard,new RegExp(phrase));
   assert.match(dashboard,/onclick="openDashboardInProgressPage\(\)"/);
-  assert.match(html,/\/static\/design-system\/reference-theme\.css/);
+  // Il vecchio foglio reference-theme.css è stato eliminato: la home usa solo i componenti.
+  assert.doesNotMatch(html,/reference-theme\.css/);
   const core=read('static/dashboard/js/core.js');
   assert.match(core,/function renderGFReferenceDashboardHero\(summary\)/);
   assert.match(core,/api\(`\/api\/routes\/\$\{routeId\}`\)/);
@@ -205,7 +206,7 @@ test('company profile uses the workspace topbar and keeps billing addresses alwa
 
   // Il titolo è nell'intestazione condivisa; il pulsante "Nuovo giro" non compare su Azienda.
   assert.match(html,/id="companySaveBar" class="gf-savebar hidden"/);
-  assert.match(html,/topbar-new-route" data-variant="primary" data-show-on-tabs="dashboard"/);
+  assert.match(html,/data-variant="primary" data-new-route-button data-show-on-tabs="dashboard"/);
 });
 
 
@@ -274,7 +275,7 @@ test('workspace topbar keeps modern notification and account actions',()=>{
   assert.match(topbar,/id="notificationBellBtn" class="gf-icon-button"[^>]*><svg/);
   assert.doesNotMatch(topbar,/>🔔</);
   assert.doesNotMatch(topbar,/id="logoutBtn"/);
-  assert.match(topbar,/class="gf-header__user profile-button" onclick="openProfilePanel\(\)"/);
+  assert.match(topbar,/class="gf-header__user" onclick="openProfilePanel\(\)"/);
 
   const profile=html.slice(html.indexOf('<div id="profileOverlay"'),html.indexOf('<!-- COOKIE NOTICE'));
   assert.match(profile,/id="logoutBtn" class="gf-button hidden" data-variant="ghost"/);
@@ -468,8 +469,9 @@ test('resource directories keep titles in the topbar and create actions inside t
   }
   assert.doesNotMatch(layout,/workspace-directory-topbar-actions/);
 
+  // Le azioni delle anagrafiche sono nei pannelli: workspace.css contiene solo gli adattatori dei moduli condivisi.
   const workspace=read(assets+'workspace.css');
-  assert.match(workspace,/Directory create\/import actions live inside the list panel/);
+  assert.doesNotMatch(workspace,/#tab-(clienti|depositi|mezzi|autisti|agenti)/);
 
   assert.match(vehicles,/id="fleetMetricTotal"/);
   assert.match(drivers,/id="driverTableWrap"/);

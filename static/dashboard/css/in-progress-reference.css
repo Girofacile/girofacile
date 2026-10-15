@@ -1,35 +1,35 @@
-#app #tab-dashboard-in-progress{--ip-bg:#edf0f6;--ip-ink:#16213a;--ip-muted:#5a6680;--ip-line:#dce1eb;--ip-blue:#1f5bff;--ip-blue-soft:#e4ecff;--ip-green:#127a52;--ip-green-soft:#ddf3e8;--ip-red:#c7283f;--ip-red-soft:#fbe3e7;--ip-amber:#b7791f;--ip-amber-soft:#fdf1d8;--ip-shadow:0 1px 2px rgba(15,34,80,.06),0 8px 24px -12px rgba(15,34,80,.18)}
+#app #tab-dashboard-in-progress{--ip-bg:var(--gf-color-bg);--ip-ink:var(--gf-color-text);--ip-muted:var(--gf-color-muted);--ip-line:var(--gf-color-border);--ip-blue:var(--gf-color-primary);--ip-blue-soft:var(--gf-color-info-bg);--ip-green:var(--gf-color-success);--ip-green-soft:var(--gf-color-success-bg);--ip-red:var(--gf-color-danger);--ip-red-soft:var(--gf-color-danger-bg);--ip-amber:var(--gf-color-warning);--ip-amber-soft:var(--gf-color-warning-bg);--ip-shadow:var(--gf-shadow-sm)}
 #app #tab-dashboard-in-progress #dashboardInProgressPage{display:flex;flex-direction:column;gap:20px;min-width:0}
 #app #tab-dashboard-in-progress #dashboardInProgressPage *{box-sizing:border-box}
-#app #tab-dashboard-in-progress .gf-ip-map-wrap{position:relative;margin-top:12px;height:370px;border:1px solid var(--ip-line);border-radius:12px;overflow:hidden;background:#eaf1f7;isolation:isolate}
-#app #tab-dashboard-in-progress .gf-ip-map-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:0;background:#eaf1f7;color:var(--ip-muted)}
+#app #tab-dashboard-in-progress .gf-ip-map-wrap{position:relative;margin-top:12px;height:370px;border:1px solid var(--ip-line);border-radius:12px;overflow:hidden;background:var(--gf-color-map-bg);isolation:isolate}
+#app #tab-dashboard-in-progress .gf-ip-map-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:0;background:var(--gf-color-map-bg);color:var(--ip-muted)}
 #app #tab-dashboard-in-progress .gf-ip-map-canvas.leaflet-container{font-family:var(--gf-font-family);font-size:13px}
 #app #tab-dashboard-in-progress .gf-ip-map-canvas.leaflet-container img{max-width:none!important;max-height:none!important}
 #app #tab-dashboard-in-progress .gf-ip-map-canvas .leaflet-control-attribution svg{width:12px!important;height:8px!important;max-width:12px!important}
-#app #tab-dashboard-in-progress .gf-ip-map-canvas .leaflet-control-attribution{font:500 10px/1.4 var(--gf-font-family);padding:3px 7px;background:rgba(255,255,255,.94);color:var(--ip-muted)}
-#app #tab-dashboard-in-progress .gf-ip-map-canvas .leaflet-control-attribution a{color:#425e83}
-#app #tab-dashboard-in-progress .gf-ip-map-badge{position:absolute;top:12px;left:12px;z-index:550;display:flex;align-items:flex-start;gap:9px;max-width:calc(100% - 90px);padding:8px 12px;background:#fff;border:1px solid var(--ip-line);border-radius:10px;box-shadow:var(--ip-shadow);pointer-events:none}
+#app #tab-dashboard-in-progress .gf-ip-map-canvas .leaflet-control-attribution{font:500 10px/1.4 var(--gf-font-family);padding:3px 7px;background:var(--gf-color-surface);color:var(--ip-muted)}
+#app #tab-dashboard-in-progress .gf-ip-map-canvas .leaflet-control-attribution a{color:var(--gf-color-muted)}
+#app #tab-dashboard-in-progress .gf-ip-map-badge{position:absolute;top:12px;left:12px;z-index:550;display:flex;align-items:flex-start;gap:9px;max-width:calc(100% - 90px);padding:8px 12px;background:var(--gf-color-surface);border:1px solid var(--ip-line);border-radius:10px;box-shadow:var(--ip-shadow);pointer-events:none}
 #app #tab-dashboard-in-progress .gf-ip-map-badge>i{width:9px;height:9px;margin-top:4px;border-radius:50%;flex:none;background:var(--ip-muted)}
 #app #tab-dashboard-in-progress .gf-ip-map-badge.live>i{background:var(--ip-green)}
 #app #tab-dashboard-in-progress .gf-ip-map-badge.stale>i{background:var(--ip-amber)}
 #app #tab-dashboard-in-progress .gf-ip-map-badge strong{display:block;font-size:12.5px;font-weight:600}
 #app #tab-dashboard-in-progress .gf-ip-map-badge small{display:block;max-width:350px;font-size:11px;color:var(--ip-muted);line-height:1.35}
 #app #tab-dashboard-in-progress .gf-ip-map-controls{position:absolute;right:12px;top:12px;z-index:600;display:flex;flex-direction:column;gap:6px}
-#app #tab-dashboard-in-progress .gf-ip-map-controls button{display:grid;place-items:center;width:36px;height:36px;border:1px solid var(--ip-line);border-radius:9px;background:#fff;box-shadow:var(--ip-shadow);font-size:20px;cursor:pointer;color:var(--ip-ink)}
+#app #tab-dashboard-in-progress .gf-ip-map-controls button{display:grid;place-items:center;width:36px;height:36px;border:1px solid var(--ip-line);border-radius:9px;background:var(--gf-color-surface);box-shadow:var(--ip-shadow);font-size:20px;cursor:pointer;color:var(--ip-ink)}
 #app #tab-dashboard-in-progress .gf-ip-map-controls button:hover:not(:disabled){border-color:var(--ip-blue);color:var(--ip-blue)}
 #app #tab-dashboard-in-progress .gf-ip-map-controls button:disabled{opacity:.55;cursor:not-allowed}
-#app #tab-dashboard-in-progress .gf-ip-map-controls button[aria-pressed="true"]{background:var(--ip-blue);color:#fff}
+#app #tab-dashboard-in-progress .gf-ip-map-controls button[aria-pressed="true"]{background:var(--ip-blue);color:var(--gf-color-on-primary)}
 #app #tab-dashboard-in-progress .gf-ip-map-controls svg{width:18px;height:18px}
 #app #tab-dashboard-in-progress .gf-ip-map-stats{position:absolute;left:12px;bottom:25px;z-index:500;display:flex;flex-wrap:wrap;gap:5px;max-width:calc(100% - 75px);pointer-events:none}
-#app #tab-dashboard-in-progress .gf-ip-map-stats span{padding:4px 10px;border:1px solid var(--ip-line);border-radius:99px;background:rgba(255,255,255,.96);color:var(--ip-ink);font-size:11px;box-shadow:var(--ip-shadow)}
-#app #tab-dashboard-in-progress .gf-ip-map-warning:not(:empty){position:absolute;left:12px;right:50px;bottom:65px;z-index:550;padding:7px 10px;background:rgba(255,255,255,.97);border:1px solid var(--ip-line);border-radius:8px;font-size:11px;color:var(--ip-muted)}
+#app #tab-dashboard-in-progress .gf-ip-map-stats span{padding:4px 10px;border:1px solid var(--ip-line);border-radius:99px;background:var(--gf-color-surface);color:var(--ip-ink);font-size:11px;box-shadow:var(--ip-shadow)}
+#app #tab-dashboard-in-progress .gf-ip-map-warning:not(:empty){position:absolute;left:12px;right:50px;bottom:65px;z-index:550;padding:7px 10px;background:var(--gf-color-surface);border:1px solid var(--ip-line);border-radius:8px;font-size:11px;color:var(--ip-muted)}
 #app #tab-dashboard-in-progress .gf-ip-pin-icon,#app #tab-dashboard-in-progress .gf-ip-vehicle-icon{background:transparent;border:0}
-#app #tab-dashboard-in-progress .gf-ip-pin{display:grid;place-items:center;width:32px;height:32px;border:2px solid var(--ip-muted);border-radius:50%;background:#fff;color:var(--ip-ink);box-shadow:0 2px 8px rgba(15,34,80,.22);font-weight:700;font-size:12px}
-#app #tab-dashboard-in-progress .gf-ip-pin.done{background:var(--ip-blue);border-color:var(--ip-blue);color:#fff}
+#app #tab-dashboard-in-progress .gf-ip-pin{display:grid;place-items:center;width:32px;height:32px;border:2px solid var(--ip-muted);border-radius:50%;background:var(--gf-color-surface);color:var(--ip-ink);box-shadow:var(--gf-shadow-md);font-weight:700;font-size:12px}
+#app #tab-dashboard-in-progress .gf-ip-pin.done{background:var(--ip-blue);border-color:var(--ip-blue);color:var(--gf-color-on-primary)}
 #app #tab-dashboard-in-progress .gf-ip-pin.miss{background:var(--ip-red-soft);border-color:var(--ip-red);color:var(--ip-red)}
-#app #tab-dashboard-in-progress .gf-ip-pin.depot{background:#0f2250;border-color:#fff;color:#fff}
-#app #tab-dashboard-in-progress .gf-ip-pin.hl{box-shadow:0 0 0 5px rgba(31,91,255,.18),0 2px 8px rgba(15,34,80,.22)}
-#app #tab-dashboard-in-progress .gf-ip-vehicle-icon span{display:grid;place-items:center;width:38px;height:38px;border:3px solid #fff;border-radius:50%;color:#fff;background:var(--ip-blue);box-shadow:0 2px 10px rgba(15,34,80,.25)}
+#app #tab-dashboard-in-progress .gf-ip-pin.depot{background:var(--gf-color-nav);border-color:var(--gf-color-on-primary);color:var(--gf-color-on-primary)}
+#app #tab-dashboard-in-progress .gf-ip-pin.hl{box-shadow:var(--gf-focus-ring),var(--gf-shadow-md)}
+#app #tab-dashboard-in-progress .gf-ip-vehicle-icon span{display:grid;place-items:center;width:38px;height:38px;border:3px solid var(--gf-color-on-primary);border-radius:50%;color:var(--gf-color-on-primary);background:var(--ip-blue);box-shadow:var(--gf-shadow-md)}
 #app #tab-dashboard-in-progress .gf-ip-vehicle-icon svg{width:20px;height:20px}
 #app #tab-dashboard-in-progress .gf-ip-vehicle-icon.stale span{background:var(--ip-amber)}
 @media(max-width:640px){

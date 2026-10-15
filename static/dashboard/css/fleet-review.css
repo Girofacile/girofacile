@@ -3,9 +3,9 @@
 
 #app #routePreviewResult.fleet-review-page button:disabled{opacity:.5;cursor:not-allowed}
 #app #routePreviewResult.fleet-review-page .fleet-review-pin-icon{border:0;background:none}
-#app #routePreviewResult.fleet-review-page .fleet-review-pin{display:grid;place-items:center;width:30px;height:30px;border:2px solid #fff;border-radius:50%;background:var(--lane);color:#fff;box-shadow:0 2px 8px #14244A33;font-size:12px;font-weight:700}
-#app #routePreviewResult.fleet-review-page .fleet-review-pin.depot{background:#0F2250}
-#app #routePreviewResult.fleet-review-page .fleet-review-pin.hl{border-color:#16213A;transform:scale(1.14)}
+#app #routePreviewResult.fleet-review-page .fleet-review-pin{display:grid;place-items:center;width:30px;height:30px;border:2px solid var(--gf-color-on-primary);border-radius:50%;background:var(--lane);color:var(--gf-color-on-primary);box-shadow:var(--gf-shadow-md);font-size:12px;font-weight:700}
+#app #routePreviewResult.fleet-review-page .fleet-review-pin.depot{background:var(--gf-color-nav)}
+#app #routePreviewResult.fleet-review-page .fleet-review-pin.hl{border-color:var(--gf-color-text);transform:scale(1.14)}
 
 /* Keep move labels available to assistive technology without crowding stops. */
 

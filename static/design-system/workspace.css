@@ -1,59 +1,20 @@
-/* Central workspace bridge: feature modules retain IDs, handlers and geometry.
-   Controls/tables live in components.css; frame lives in layout.css.
-   The tab anchor matches historical #app #tab-* specificity. */
-body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard){
---dash-ink:var(--gf-color-text);--dash-muted:var(--gf-color-muted);--dash-line:var(--gf-color-border);
---plan-line:var(--gf-color-border);--gf-ink:var(--gf-color-text);--gf-muted:var(--gf-color-muted);
---gf-line:var(--gf-color-border);--gf-blue:var(--gf-color-primary);--gf-tint:var(--gf-color-info-bg);
---gf-surface:var(--gf-color-surface);--gf-radius:var(--gf-radius-lg);
---gf-control-radius:var(--gf-radius-sm);--gf-shadow:var(--gf-shadow-sm);--gf-gap:var(--gf-space-4);
-min-width:0;color:var(--gf-color-text);font-family:var(--gf-font-family);letter-spacing:normal;
+/* GiroFacile · adattatori per i moduli condivisi con i portali.
+   Riepilogo percorso (routing-summary.js), uso dei mezzi elettrici (electric-vehicles.js) e finestra
+   di tracking cliente (tracking/company.js) generano ancora markup proprio: qui ricevono solo
+   le variabili di theme.css. Tutto il resto della Dashboard usa i componenti. */
+body[data-gf-surface="workspace"] #app .gf-routing-summary{
+  border-color:var(--gf-color-border);border-radius:var(--gf-radius-md);background:var(--gf-color-bg);color:var(--gf-color-text);box-shadow:none;
 }
-body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.dash-hero-row){
-display:flex;align-items:flex-start;justify-content:space-between;gap:var(--gf-space-6);min-height:0;margin:0 0 var(--gf-space-6);padding:0;border:0;background:none;box-shadow:none;
+body[data-gf-surface="workspace"] #app .gf-vehicle-usage-card{
+  min-width:0;padding:var(--gf-space-5);border:var(--gf-border);border-radius:var(--gf-radius-lg);
+  background:var(--gf-color-surface);color:var(--gf-color-text);box-shadow:var(--gf-shadow-sm);
 }
-body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.dash-hero-row) h1{
-margin:0 0 var(--gf-space-2);color:var(--gf-color-text);font:var(--gf-weight-bold) var(--gf-font-2xl)/1.25 var(--gf-font-family);letter-spacing:-.025em;
+body[data-gf-surface="workspace"] dialog.customer-tracking-dialog{
+  border-color:var(--gf-color-border);border-radius:var(--gf-radius-lg);background:var(--gf-color-surface);color:var(--gf-color-text);box-shadow:var(--gf-shadow-md);
 }
-body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.dash-hero-row) p{
-margin:0;max-width:100%;color:var(--gf-color-muted);font-size:var(--gf-font-md);font-weight:var(--gf-weight-normal);line-height:1.6;
+body[data-gf-surface="workspace"] .customer-tracking-dialog :is(.tracking-dialog-header,.tracking-dialog-footer){
+  background:var(--gf-color-surface);border-color:var(--gf-color-border);
 }
-body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.panel){
-min-width:0;border:1px solid var(--gf-color-border);border-radius:var(--gf-radius-lg);background:var(--gf-color-surface);color:var(--gf-color-text);box-shadow:var(--gf-shadow-sm);
+body[data-gf-surface="workspace"] .customer-tracking-dialog{
+  --tracking-ink:var(--gf-color-text);--tracking-muted:var(--gf-color-muted);--tracking-line:var(--gf-color-border);
 }
-body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.gf-routing-summary){
-border-color:var(--gf-color-border);border-radius:var(--gf-radius-md);background:var(--gf-color-bg);color:var(--gf-color-text);box-shadow:none;
-}
-body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.gf-vehicle-usage-card){
-min-width:0;padding:var(--gf-space-5);border:1px solid var(--gf-color-border);border-radius:var(--gf-radius-lg);background:var(--gf-color-surface);color:var(--gf-color-text);box-shadow:var(--gf-shadow-sm);
-}
-body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.stat-icon){
-border-radius:var(--gf-radius-md);background:var(--gf-color-info-bg);color:var(--gf-color-info);box-shadow:none;
-}
-/* Active is identical to Total. Retain its ID and updates, show three measures. */
-
-body[data-gf-surface="workspace"] #app #tab-dashboard-completed{background:none}
-body[data-gf-surface="workspace"] #app #tab-dashboard-in-progress #dashboardLiveGPS{border-color:var(--gf-color-border);border-radius:var(--gf-radius-lg);background:var(--gf-color-surface);box-shadow:var(--gf-shadow-sm)}
-/* .gf-dialog is sometimes a viewport overlay: only style its inner surface. */
-body[data-gf-surface="workspace"] :is(dialog.customer-tracking-dialog){border-color:var(--gf-color-border);border-radius:var(--gf-radius-lg);background:var(--gf-color-surface);color:var(--gf-color-text);box-shadow:var(--gf-shadow-md)}
-body[data-gf-surface="workspace"] .customer-tracking-dialog :is(.tracking-dialog-header,.tracking-dialog-footer){background:var(--gf-color-surface);border-color:var(--gf-color-border)}
-body[data-gf-surface="workspace"] .customer-tracking-dialog{--tracking-ink:var(--gf-color-text);--tracking-muted:var(--gf-color-muted);--tracking-line:var(--gf-color-border)}
-@media(max-width:768px){
-body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.dash-hero-row){flex-direction:column;align-items:stretch;gap:var(--gf-space-4)}
-body[data-gf-surface="workspace"] #app :is(.tab,#tab-dashboard) :is(.panel){padding:var(--gf-space-4)}
-}
-
-/* Home dashboard follows the supplied operational overview reference.
-   It is the visual baseline for the rest of the workspace: shared tokens,
-   bounded previews and no nested scrolling inside overview cards. */
-
-@media(min-width:821px){body[data-gf-surface="workspace"] #app #tab-dashboard>.dash-hero-row{display:none!important}}
-
-/* Company profile uses the same restrained panel language as the dashboard. */
-
-/* Shared anagrafica directory template — Clienti is the reference. */
-
-/* Directory KPI icons: neutral, quiet and dashboard-aligned. */
-
-/* Directory create/import actions live inside the list panel, above toolbar and view controls. */
-

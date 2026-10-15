@@ -1,6 +1,0 @@
-/* Scoped to the completed-route archive. */
-#tab-dashboard-completed{color:#101b40;background:linear-gradient(130deg,#f4f9ff,transparent 65%);font-family:Arial,Helvetica,sans-serif}
-#tab-dashboard-completed select,#tab-dashboard-completed input{min-height:38px;border:1px solid #dde8f8;border-radius:8px;background:#fff;color:#17264b;font-size:12px;padding:8px 11px;max-width:100%}
-#tab-dashboard-completed h2{font-size:18px;margin:0;color:#0e1739}
-#tab-dashboard-completed button:disabled{opacity:.4;cursor:default}
-#tab-dashboard-completed :is(button,input,select):focus-visible{outline:2px solid #1671ff;outline-offset:3px}

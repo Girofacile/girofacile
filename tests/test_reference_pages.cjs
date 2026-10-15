@@ -1,4 +1,4 @@
-// Regression guard for the 2026-10-12 visual rollout outside the home dashboard.
+// Guardia della pulizia: i vecchi fogli di adattamento sono eliminati e pagine e finestre usano i componenti.
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
@@ -6,89 +6,51 @@ const path=require('node:path');
 const root=path.resolve(__dirname,'..');
 const read=name=>fs.readFileSync(path.join(root,name),'utf8');
 const base='static/design-system/';
+const LEGACY=['design-system/reference-theme.css','design-system/reference-pages.css','design-system/reference-dialogs.css',
+  'design-system/unified.css','design-system/sidebar-unified.css','design-system/tokens.css','dashboard/css/orders.css',
+  'dashboard/css/scheduled.css','dashboard/css/completed.css','dashboard/css/collaborators.css','dashboard/css/fleet-planning.css'];
 
-test('reference theme for pages and dialogs loads after all legacy CSS',()=>{
-  const html=read('static/dashboard/index.html');
-  const theme=html.indexOf('/static/design-system/reference-theme.css');
-  const pages=html.indexOf('/static/design-system/reference-pages.css');
-  const dialogs=html.indexOf('/static/design-system/reference-dialogs.css');
-  assert.ok(theme>0&&pages>theme&&dialogs>pages,'Visual sheets should win the cascade');
-  assert.equal((html.match(/reference-pages\.css/g)||[]).length,1);
-  assert.equal((html.match(/reference-dialogs\.css/g)||[]).length,1);
+test('i fogli della vecchia interfaccia non esistono più e nessuna pagina li carica',()=>{
+  const pages=['dashboard/index','admin/index','admin/login'].map(p=>read('static/'+p+'.html')).join('\n');
+  for(const file of LEGACY){
+    assert.ok(!fs.existsSync(path.join(root,'static',file)),file+' should be deleted');
+    assert.ok(!pages.includes('/static/'+file),file+' still linked');
+  }
 });
 
-test('the restyled workspace explicitly excludes the dashboard home',()=>{
-  const pages=read(base+'reference-pages.css');
-  assert.match(pages,/\.tab:not\(#tab-dashboard\)/);
-  assert.doesNotMatch(pages,/#tab-dashboard\s+[.#]/);
+test('la home della Dashboard mantiene il pannello giro collegato alle API',()=>{
   const home=read('static/dashboard/index.html');
   assert.match(home,/id="gfRefHeroWrap"/);
   assert.match(home,/id="gfRefRouteDrawing"/);
-  // Styling elsewhere must not remove or rename the API-powered hero.
   assert.match(read('static/dashboard/js/core.js'),/renderGFReferenceDashboardHero/);
 });
 
-test('all major workspace sections share dashboard panel, table, toolbar and KPI styles',()=>{
-  const css=read(base+'reference-pages.css');
-  const fs=require('node:fs');
-  const dashboardSource=read('static/dashboard/index.html')+fs.readdirSync('static/dashboard/js').map(f=>read('static/dashboard/js/'+f)).join('');
-  for(const selector of [
-    '.customer-metric','.deposit-metric','.orders-metric-card','.driver-stat',
-    '.collaborator-metrics>div','.report-kpi-card','.company-card-v29',
-    '.orders-order-card','.fleet-card','.driver-directory-card',
-    '.settings-panel','.driver-chat-room-card','.orders-view-switch',
-    '.customer-view-controls','.deposit-view-controls','.fleet-views',
-    '.gf-directory-metric','.plan-current-hero-v875','.billing-section-v876',
-    '.result-table','.tableWrap','.orders-table-shell'
-  ]){
-    // Finché un elemento della vecchia interfaccia è in pagina deve avere il suo stile;
-    // quando la sezione è convertita ai componenti del sistema la classe sparisce dal markup.
-    const name=selector.replace(/^\./,'').split(/[^\w-]/)[0];
-    assert.ok(css.includes(selector) || !dashboardSource.includes(name),'Missing visual contract '+selector);
-  }
-  assert.match(css,/font-family:var\(--gf-font-display\)/);
-  assert.match(css,/font-family:var\(--gf-font-family\)/);
-  assert.match(css,/var\(--gf-color-primary\)/);
-  assert.match(css,/var\(--gf-color-border\)/);
-});
-
-test('popup skins preserve overlays and all operational modal IDs',()=>{
-  const css=read(base+'reference-dialogs.css');
+test('le finestre operative usano i componenti gf-overlay / gf-modal e restano uniche',()=>{
   const html=read('static/dashboard/index.html');
   const core=read('static/dashboard/js/core.js');
   const components=read(base+'components.css');
-  const convertedPopup=id=>new RegExp('id="'+id+'" class="gf-(overlay|modal)').test(html)
-    || (id==='supportTicketModalV60' && /wrap\.className = "gf-overlay hidden"/.test(core));
-  for(const selector of [
-    '#agentOverlay','#depositOverlay','#driverFormOverlay','#customerOverlay',
-    '#customerImportOverlay','#deliveryDetailsOverlay','#onboardingOverlay',
-    '#profileOverlay','#orderModal',
-    '#collaboratorDialog','#supportTicketModalV60'
-  ]){
-    // Una finestra è coperta dal vecchio foglio oppure è già convertita ai componenti gf-overlay / gf-modal.
-    assert.ok(css.includes(selector) || convertedPopup(selector.slice(1)),'Unstyled popup '+selector);
+  for(const id of ['agentOverlay','depositOverlay','driverFormOverlay','customerOverlay','customerImportOverlay',
+    'deliveryDetailsOverlay','onboardingOverlay','profileOverlay','orderModal','collaboratorDialog','supportTicketModalV60']){
+    const converted=new RegExp('id="'+id+'" class="gf-(overlay|modal)').test(html)
+      || (id==='supportTicketModalV60' && /wrap\.className = "gf-overlay hidden"/.test(core));
+    assert.ok(converted,'Popup senza componente '+id);
   }
-  for(const id of ['orderModal','agentOverlay','depositOverlay','driverFormOverlay',
-    'customerOverlay','customerImportOverlay','deliveryDetailsOverlay','onboardingOverlay',
-    'profileOverlay','customerDrawer','collaboratorDialog']){
-    assert.equal((html.match(new RegExp('id="'+id+'"','g'))||[]).length,1);
+  for(const id of ['orderModal','agentOverlay','depositOverlay','driverFormOverlay','customerOverlay','customerImportOverlay',
+    'deliveryDetailsOverlay','onboardingOverlay','profileOverlay','customerDrawer','collaboratorDialog']){
+    assert.equal((html.match(new RegExp('id="'+id+'"','g'))||[]).length,1,id);
   }
-  // Sfondo e altezza massima delle finestre native sono ora nel componente gf-modal.
   assert.match(components,/dialog\.gf-modal::backdrop/);
   assert.match(components,/max-height:calc\(100dvh - var\(--gf-space-8\)\)/);
 });
 
-test('reference skins have balanced CSS blocks and no JS business logic',()=>{
-  for(const file of ['reference-pages.css','reference-dialogs.css']){
-    const css=read(base+file);
+test('i fogli rimasti della Dashboard usano solo variabili del tema e non contengono logica',()=>{
+  const files=fs.readdirSync(path.join(root,'static/dashboard/css')).map(f=>'static/dashboard/css/'+f).concat([base+'workspace.css']);
+  for(const file of files){
+    const css=read(file);
     let depth=0;
-    for(const ch of css){
-      if(ch==='{') depth++;
-      if(ch==='}') depth--;
-      assert.ok(depth>=0,file+': unexpected closing brace');
-    }
+    for(const ch of css){ if(ch==='{')depth++; if(ch==='}')depth--; assert.ok(depth>=0,file+': unexpected closing brace'); }
     assert.equal(depth,0,file+': unclosed CSS block');
+    assert.doesNotMatch(css.replace(/\/\*[\s\S]*?\*\//g,''),/#[0-9a-f]{3,8}\b|rgba?\(/i,file+': colore scritto a mano');
     assert.doesNotMatch(css,/fetch\s*\(|XMLHttpRequest|localStorage|location\.href/);
-    assert.doesNotMatch(css,/!important\s*!important/);
   }
 });

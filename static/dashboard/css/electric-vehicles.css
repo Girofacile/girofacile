@@ -1,24 +1,24 @@
 /* Vehicle quotas follow the cards, typography and accents used by the application. */
-.gf-vehicle-usage{margin:0 0 22px;color:var(--text,#0f172a);min-width:0}
+.gf-vehicle-usage{margin:0 0 22px;color:var(--gf-color-text);min-width:0}
 .gf-vehicle-usage-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
-.gf-vehicle-usage-card{min-width:0;padding:22px 20px;border:1px solid var(--line,var(--border,#e5eaf2));border-radius:18px;background:linear-gradient(135deg,#fff 50%,#edf5ff);box-shadow:0 8px 25px #244f8710}
-.gf-vehicle-usage-card>span{display:block;color:var(--muted,#64748b);font-size:13px;line-height:1.5;font-weight:600}
+.gf-vehicle-usage-card{min-width:0;padding:22px 20px;border:1px solid var(--gf-color-border);border-radius:18px;background:var(--gf-color-surface);box-shadow:var(--gf-shadow-sm)}
+.gf-vehicle-usage-card>span{display:block;color:var(--gf-color-muted);font-size:13px;line-height:1.5;font-weight:600}
 .gf-vehicle-usage-card>strong{display:flex;align-items:baseline;flex-wrap:wrap;gap:6px;font-size:32px;line-height:1.2;font-weight:700;letter-spacing:-1px;margin-top:10px;font-variant-numeric:tabular-nums}
-.gf-vehicle-usage-card small{font-size:13px;color:var(--muted,#64748b);font-weight:400;letter-spacing:0}
-.gf-vehicle-usage-card.electric{background:linear-gradient(135deg,#fff 50%,#effcf6)}
-.gf-vehicle-usage-card.electric>span{color:#15805b}
-.gf-vehicle-usage-note{font-size:12px;line-height:1.6;color:var(--muted,#64748b);margin:10px 0 0;overflow-wrap:anywhere}
+.gf-vehicle-usage-card small{font-size:13px;color:var(--gf-color-muted);font-weight:400;letter-spacing:0}
+.gf-vehicle-usage-card.electric{background:var(--gf-color-surface)}
+.gf-vehicle-usage-card.electric>span{color:var(--gf-color-success)}
+.gf-vehicle-usage-note{font-size:12px;line-height:1.6;color:var(--gf-color-muted);margin:10px 0 0;overflow-wrap:anywhere}
 .gf-vehicle-usage-note+.gf-vehicle-usage-note{margin-top:4px}
-.gf-vehicle-usage-warning{background:#fffbeb;border:1px solid #fde68a;border-radius:12px;color:#92400e;font-size:12px;line-height:1.6;padding:12px 14px;margin:12px 0 0}
-.gf-electric-form-hint{font-size:12px;line-height:1.6;color:var(--muted,#64748b);margin:8px 0 12px;overflow-wrap:anywhere}
-.gf-electric-form-hint.positive{color:#15805b}
-.gf-electric-form-hint.warning{color:#92400e}
-.gf-electric-benefit{display:block;padding:10px 12px;margin:12px 0;background:#f0fdf4;border:0;border-radius:10px;color:#15805b;font-size:12px;line-height:1.5;font-weight:600;text-align:left;overflow-wrap:anywhere}
-.plan-card .gf-electric-benefit,.plan-card-mini .gf-electric-benefit{font-size:11px;padding:7px 4px;text-align:center;margin:8px 0 0;background:transparent;border-top:1px solid var(--line,var(--border,#e5eaf2));border-radius:0}
+.gf-vehicle-usage-warning{background:var(--gf-color-warning-bg);border:1px solid var(--gf-color-warning-bg);border-radius:12px;color:var(--gf-color-warning);font-size:12px;line-height:1.6;padding:12px 14px;margin:12px 0 0}
+.gf-electric-form-hint{font-size:12px;line-height:1.6;color:var(--gf-color-muted);margin:8px 0 12px;overflow-wrap:anywhere}
+.gf-electric-form-hint.positive{color:var(--gf-color-success)}
+.gf-electric-form-hint.warning{color:var(--gf-color-warning)}
+.gf-electric-benefit{display:block;padding:10px 12px;margin:12px 0;background:var(--gf-color-success-bg);border:0;border-radius:10px;color:var(--gf-color-success);font-size:12px;line-height:1.5;font-weight:600;text-align:left;overflow-wrap:anywhere}
+.plan-card .gf-electric-benefit,.plan-card-mini .gf-electric-benefit{font-size:11px;padding:7px 4px;text-align:center;margin:8px 0 0;background:transparent;border-top:1px solid var(--gf-color-border);border-radius:0}
 .gf-mobile-primary-consumption.hidden,.gf-mobile-electric-consumption.hidden{display:none!important}
 @media(max-width:600px){
  .gf-vehicle-usage-grid{gap:10px}
- .gf-vehicle-usage-card{padding:14px 12px;border-radius:14px;box-shadow:0 4px 14px #244f8708}
+ .gf-vehicle-usage-card{padding:14px 12px;border-radius:14px;box-shadow:var(--gf-shadow-sm)}
  .gf-vehicle-usage-card>span{font-size:11px}
  .gf-vehicle-usage-card>strong{font-size:26px;gap:4px;margin-top:8px}
  .gf-vehicle-usage-card small{font-size:11px;flex-basis:100%}

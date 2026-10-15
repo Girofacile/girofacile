@@ -370,9 +370,6 @@ function setImagePreview(previewId, valueId, fallback){
   if(!el) return;
   el.innerHTML = url ? `<img src="${url}" alt="Foto">` : esc(fallback || "");
 }
-function imageThumb(photo, fallback="👤", extraClass=""){
-  return `<div class="asset-thumb ${extraClass}">${photo ? `<img src="${photo}" alt="Foto">` : `<span>${esc(fallback)}</span>`}</div>`;
-}
 function handleImageUpload(ev, targetId, previewId, fallback){
   const file = ev?.target?.files?.[0];
   if(!file) return;
@@ -402,20 +399,18 @@ const addressAutocompleteState = {};
 function markAddressVerified(input, verified){
   if(!input) return;
   input.dataset.addressVerified = verified ? "true" : "false";
-  input.classList.toggle("address-verified", !!verified);
-  input.classList.toggle("address-unverified", !verified && (input.value || "").trim().length >= 4);
-  const wrap = input.closest(".address-autocomplete-wrap");
-  const hint = wrap?.querySelector(".address-hint");
+  const wrap = input.closest("[data-address-autocomplete]");
+  const hint = wrap?.querySelector("[data-address-hint]");
   if(hint){
     if(verified){
       hint.textContent = "Indirizzo verificato";
-      hint.className = "address-hint ok";
+      hint.dataset.status = "success";
     }else if((input.value || "").trim().length >= 4){
       hint.textContent = "Indirizzo non selezionato dai suggerimenti: verifica prima del calcolo.";
-      hint.className = "address-hint warn";
+      hint.dataset.status = "warning";
     }else{
       hint.textContent = "";
-      hint.className = "address-hint";
+      delete hint.dataset.status;
     }
   }
 }
@@ -425,20 +420,23 @@ function setupAddressAutocomplete(inputId, options={}){
   if(!input || input.dataset.autocompleteReady === "true") return;
   input.dataset.autocompleteReady = "true";
 
-  let wrap = input.closest(".address-autocomplete-wrap");
+  let wrap = input.closest("[data-address-autocomplete]");
   if(!wrap){
     wrap = document.createElement("div");
-    wrap.className = "address-autocomplete-wrap";
+    wrap.className = "gf-dropdown";
+    wrap.setAttribute("data-address-autocomplete", "");
     input.parentNode.insertBefore(wrap, input);
     wrap.appendChild(input);
   }
 
   const list = document.createElement("div");
-  list.className = "address-suggestions hidden";
+  list.className = "hidden";
+  list.setAttribute("data-gf-menu", "");
   wrap.appendChild(list);
 
   const hint = document.createElement("div");
-  hint.className = "address-hint";
+  hint.className = "gf-field__hint";
+  hint.setAttribute("data-address-hint", "");
   wrap.appendChild(hint);
 
   let timer = null;
@@ -456,7 +454,7 @@ function setupAddressAutocomplete(inputId, options={}){
     timer = setTimeout(async () => {
       try{
         list.classList.remove("hidden");
-        list.innerHTML = `<div class="address-loading">Ricerca indirizzi...</div>`;
+        list.innerHTML = `<div class="gf-loading" role="status">Ricerca indirizzi...</div>`;
         let extra = "";
         if(options.comuneId){
           const v = document.getElementById(options.comuneId)?.value?.trim();
@@ -468,18 +466,18 @@ function setupAddressAutocomplete(inputId, options={}){
         }
         const rows = await api(`/api/address/search?q=${encodeURIComponent(q)}${extra}`);
         if(!rows.length){
-          list.innerHTML = `<div class="address-empty">Nessun indirizzo trovato. Prova con comune, provincia o CAP.</div>`;
+          list.innerHTML = `<p class="gf-muted">Nessun indirizzo trovato. Prova con comune, provincia o CAP.</p>`;
           return;
         }
 
         list.innerHTML = rows.map((r, idx) => `
-          <button type="button" class="address-suggestion-item" data-index="${idx}">
-            <strong>${esc(r.label.split(",").slice(0,2).join(","))}</strong>
-            <span>${esc(r.label)}</span>
+          <button type="button" class="gf-list-item" data-index="${idx}">
+            <span class="gf-list-item__main"><strong>${esc(r.label.split(",").slice(0,2).join(","))}</strong>
+            <small>${esc(r.label)}</small></span>
           </button>
         `).join("");
 
-        list.querySelectorAll(".address-suggestion-item").forEach(btn => {
+        list.querySelectorAll("[data-index]").forEach(btn => {
           btn.addEventListener("click", () => {
             const r = rows[parseInt(btn.dataset.index)];
             input.value = r.label;
@@ -498,7 +496,7 @@ function setupAddressAutocomplete(inputId, options={}){
           });
         });
       }catch(e){
-        list.innerHTML = `<div class="address-empty">Servizio indirizzi momentaneamente non disponibile.</div>`;
+        list.innerHTML = `<p class="gf-muted">Servizio indirizzi momentaneamente non disponibile.</p>`;
       }
     }, 450);
   });
@@ -530,9 +528,11 @@ async function copyText(text, msg="Copiato negli appunti"){
   }
 }
 function toast(msg){
-  const old = document.querySelector(".toast"); if(old) old.remove();
+  const old = document.querySelector("[data-gf-toast]"); if(old) old.remove();
   const div = document.createElement("div");
-  div.className = "toast";
+  div.className = "gf-toast";
+  div.setAttribute("data-gf-toast", "");
+  div.setAttribute("role", "status");
   div.textContent = msg;
   document.body.appendChild(div);
   setTimeout(()=>div.remove(), 2600);
@@ -660,20 +660,6 @@ async function loadPlanInfo(){
       }
     }catch(e){ console.warn('GiroFacile: operazione non completata', e); }
 
-    // Cards upgrade
-    const upgradeBox = document.getElementById("planUpgradeBox");
-    const planCards = document.getElementById("planCards");
-    if(plan !== "pro" && planCards && upgradeBox){
-      upgradeBox.style.display = "block";
-      const allPlans = Object.entries(window.GF_PLANS).map(([key,p])=>({key,name:p.name,price:`€${p.price_eur}`}));
-      planCards.innerHTML = allPlans.map(p => `
-        <div class="plan-card-mini ${p.key === plan ? "current" : ""}" onclick="selectUpgradePlan('${p.key}')">
-          <div class="pname">${p.name}</div>
-          <div class="pprice">${p.price}<span>/mese</span></div>
-          ${PLAN_FEATURES[p.key]?.electricBenefit ? `<div class="gf-electric-benefit">${esc(PLAN_FEATURES[p.key].electricBenefit)}</div>` : ""}
-          ${p.key === plan ? '<div style="font-size:10px;color:#2563eb;margin-top:2px">Piano attuale</div>' : ""}
-        </div>`).join("");
-    }
   }catch(e){ console.error("loadPlanInfo:", e); }
 }
 
@@ -1181,15 +1167,10 @@ else initPasswordStrengthUi();
 
 let signupWizardCurrentStep = 1;
 
-function selectPlan(el){
-  document.querySelectorAll(".plan-option").forEach(x => x.classList.remove("selected"));
-  el.classList.add("selected");
-}
 function getSelectedPlan(){
   const select = document.getElementById("signupPlanSelect");
   if(select && select.value) return select.value;
-  const sel = document.querySelector(".plan-option.selected");
-  return sel ? sel.getAttribute("data-plan") : "business";
+  return "business";
 }
 function signupBool(id){
   return !!document.getElementById(id)?.checked;
@@ -2891,11 +2872,11 @@ function markRouteNeedsRecalculation(message="Le consegne sono state modificate.
   lastMapsUrl = "";
   const box = document.getElementById("routePreviewResult");
   if(box){
-    box.innerHTML = `<section class="panel"><div class="resultBox warn">
-      <strong>Anteprima da aggiornare</strong>
-      <span>${esc(message)}</span>
-      <button class="btn-secondary" onclick="showTab('giro')">Torna alla pianificazione</button>
-    </div></section>`;
+    box.innerHTML = `<div class="gf-alert" data-status="warning" role="status"><div class="gf-alert__body gf-stack">
+      <strong class="gf-alert__title">Anteprima da aggiornare</strong>
+      <p class="gf-alert__text">${esc(message)}</p>
+      <div class="gf-cluster"><button type="button" class="gf-button" data-variant="secondary" onclick="showTab('giro')">Torna alla pianificazione</button></div>
+    </div></div>`;
   }
 }
 
@@ -3146,7 +3127,7 @@ async function recalcManualRoute(reason="Ordine modificato manualmente. Percorso
   const box = document.getElementById("routePreviewResult");
   try{
     showTab("route-preview");
-    if(box) box.insertAdjacentHTML("afterbegin", `<div class="resultBox">Ricalcolo percorso in corso...</div>`);
+    if(box) box.insertAdjacentHTML("afterbegin", `<div class="gf-loading" role="status">Ricalcolo percorso in corso...</div>`);
     const r = await api("/api/routes/recalculate-manual", {method:"POST", body:JSON.stringify(routePayloadFromResult())});
     deliveries = (r.consegne || []).map(cleanDeliveryForPayload);
     customerPlanningStepOpenedV68 = true;
@@ -3187,7 +3168,7 @@ function clearRouteWorkspace(){
   editingDeliveryIndex = null;
   renderDeliveries();
   const result = document.getElementById("routePreviewResult");
-  if(result) result.innerHTML = `<section class="panel route-preview-empty-v76"><h2>Nessuna anteprima calcolata</h2><p>Vai in Pianificazione, inserisci i dati del giro, seleziona i clienti e calcola il percorso.</p><button class="btn-primary" onclick="showTab('giro')">Vai alla pianificazione</button></section>`;
+  if(result) result.innerHTML = `<section class="gf-panel"><div class="gf-empty"><h2>Nessuna anteprima calcolata</h2><p>Vai in Pianificazione, inserisci i dati del giro, seleziona i clienti e calcola il percorso.</p><button type="button" class="gf-button" data-variant="primary" onclick="showTab('giro')">Vai alla pianificazione</button></div></section>`;
   const inlineHint = document.getElementById("routePlanningInlineHint");
   if(inlineHint) inlineHint.classList.add("hidden");
   set("routeName", "");
@@ -3508,7 +3489,7 @@ async function optimizeRoute(){
   const payload = {...GFDriverSchedules.routePayload(),nome:val("routeName") || "Giro consegne", data_giro:val("routeDate"), orario_partenza:val("routeStart"), deposit_id:parseInt(val("routeDeposit")),
     vehicle_id:val("routeVehicle") ? parseInt(val("routeVehicle")) : null, driver_id:val("routeDriver") ? parseInt(val("routeDriver")) : null, rientro_deposito:boolVal("returnDepot"), prezzo_carburante_litro:parseFloat(val("fuelPrice")||0), energy_price_mode:(document.querySelector('input[name="energyPriceMode"]:checked')?.value||"manual"), energy_price_primary:parseFloat(val("fuelPrice")||0), energy_price_electric:parseFloat(val("electricityPrice")||0), consegne:deliveries};
   const box = document.getElementById("routePreviewResult");
-  if(box) box.innerHTML = `<section class="panel"><div class="resultBox">Calcolo anteprima giro in corso...</div></section>`;
+  if(box) box.innerHTML = `<section class="gf-panel"><div class="gf-loading" role="status">Calcolo anteprima giro in corso...</div></section>`;
   showTab("route-preview");
   try{
     const editingOrderRoute=globalThis.GFOrderPlanning?.routeId() || (lastRouteResult?.id && deliveries.some(d=>d.order_refs?.length) ? lastRouteResult.id : null);
@@ -3531,14 +3512,14 @@ async function optimizeRoute(){
     document.getElementById("routePreviewResult")?.scrollIntoView({behavior:"smooth", block:"start"});
   }catch(e){
     const msg = e.message || "Errore sconosciuto";
-    const ticketBtn = e.errorId ? `<button class="btn-secondary" style="margin-top:10px" onclick="openSupportPanelV49(${e.errorId})">Invia ticket assistenza</button>` : "";
+    const ticketBtn = e.errorId ? `<div class="gf-cluster"><button type="button" class="gf-button" data-variant="secondary" onclick="openSupportPanelV49(${e.errorId})">Invia ticket assistenza</button></div>` : "";
     if(box) box.innerHTML = `
-      <div class="resultBox warn route-error-box">
-        <strong>Errore calcolo percorso</strong>
-        <span>${esc(msg)}</span>
-        <small>${msg.toLowerCase().includes("non disponibile") || msg.toLowerCase().includes("già assegnato") ? "Scegli un altro mezzo/autista oppure modifica l'orario del giro." : "Controlla l'indirizzo indicato, rendilo più completo e riprova."}</small>
+      <div class="gf-alert" data-status="danger" role="alert"><div class="gf-alert__body gf-stack">
+        <strong class="gf-alert__title">Errore calcolo percorso</strong>
+        <p class="gf-alert__text">${esc(msg)}</p>
+        <small class="gf-muted">${msg.toLowerCase().includes("non disponibile") || msg.toLowerCase().includes("già assegnato") ? "Scegli un altro mezzo/autista oppure modifica l'orario del giro." : "Controlla l'indirizzo indicato, rendilo più completo e riprova."}</small>
         ${ticketBtn}
-      </div>`;
+      </div></div>`;
   }
 }
 async function loadRoutes(){
@@ -4501,11 +4482,9 @@ function applyWorkspaceStateV49(operational){
   document.body.classList.toggle("workspace-empty-v49-active", !gfWorkspaceOperationalV49);
   document.querySelectorAll("[data-workspace-operational='1']").forEach(el => {
     el.classList.toggle("hidden", !gfWorkspaceOperationalV49);
-    el.style.display = gfWorkspaceOperationalV49 ? "" : "none";
   });
   document.querySelectorAll("[data-workspace-common='1']").forEach(el => {
     el.classList.remove("hidden");
-    el.style.display = "";
   });
   const empty = document.getElementById("workspaceEmptyDashboardV49");
   if(empty) empty.classList.toggle("hidden", gfWorkspaceOperationalV49);
@@ -4749,16 +4728,10 @@ function applyLogisticsWorkspaceV50(){
   document.querySelectorAll('[data-sector-only="ecommerce"]').forEach(el => {
     const show = sectorNow === "ecommerce" && isWorkspaceOperationalV49();
     el.classList.toggle("hidden", !show);
-    el.style.display = show ? "" : "none";
   });
 
-  const heroTitle = document.querySelector("#tab-dashboard .dash-hero-row h1");
-  const heroSubtitle = document.querySelector("#tab-dashboard .dash-hero-row p");
-  const heroBtn = document.querySelector("#tab-dashboard .dash-hero-row .btn-primary");
+  // Il vecchio riquadro di benvenuto non esiste più: restano le etichette del menu.
   if(labels){
-    if(heroTitle) heroTitle.textContent = labels.dashboardTitle;
-    if(heroSubtitle) heroSubtitle.textContent = labels.dashboardSubtitle;
-    if(heroBtn) heroBtn.textContent = labels.newRoute;
     setNavTextV50("giro", labels.planning);
     setNavTextV50("clienti", labels.customers);
     setNavTextV50("mezzi", labels.vehicles);
@@ -4798,110 +4771,43 @@ function renderLogisticsDashboardV50(routes=[]){
   const driversBusy = new Set(activeRoutes.map(r=>r.driver_id || r.driver_name).filter(Boolean)).size;
 
 
-  if(sector === "healthcare"){
-    host.innerHTML = `
-      <section class="vertical-dashboard-v51 healthcare-dashboard-v55">
-        <div class="vertical-head-v51 healthcare-head-v55">
-          <span>Modulo verticale</span>
-          <h2>Centro operativo sanitario</h2>
-          <p>Interfaccia dedicata a farmacie, laboratori, materiale sanitario e consegne tracciate: priorità, orari tassativi, firma obbligatoria, temperatura e conformità.</p>
-        </div>
-        <div class="vertical-kpi-grid-v51 healthcare-kpi-grid-v55">
-          <div><small>Consegne oggi</small><strong>${itemsToday}</strong><span>Sanitarie pianificate</span></div>
-          <div><small>In consegna</small><strong>${activeRoutes.length}</strong><span>Operatori attivi</span></div>
-          <div><small>Urgenti</small><strong>${scheduled.length}</strong><span>Da avviare / assegnare</span></div>
-          <div><small>Completate con firma</small><strong>${completed.length}</strong><span>Prove consegna raccolte</span></div>
-          <div><small>Non conformità</small><strong>${missed}</strong><span>Da verificare</span></div>
-          <div><small>Risorse in uso</small><strong>${driversBusy}/${vehiclesBusy}</strong><span>Operatori / veicoli</span></div>
-        </div>
-        <div class="vertical-modules-v51 healthcare-modules-v55">
-          <button onclick="showTab('clienti')"><b>Punti consegna</b><span>Farmacie, laboratori, referenti sanitari e destinatari autorizzati.</span></button>
-          <button onclick="showTab('giro')"><b>Pianificazione sanitaria</b><span>Priorità, orario tassativo, temperatura richiesta e firma obbligatoria.</span></button>
-          <button onclick="openDashboardInProgressPage()"><b>Tracciabilità consegne</b><span>Monitora consegne urgenti, tappe, firme, note e anomalie.</span></button>
-          <button onclick="showHealthcareComplianceComingSoonV55()"><b>Conformità</b><span>Area futura per temperatura, note conformità e controlli sanitari.</span></button>
-          <button onclick="showTab('storico')"><b>Storico sanitario</b><span>Consulta prove consegna, non conformità, urgenze e report.</span></button>
-        </div>
-      </section>
-    `;
-    return;
-  }
-
-  if(sector === "food_delivery"){
-    host.innerHTML = `
-      <section class="vertical-dashboard-v51 food-dashboard-v53">
-        <div class="vertical-head-v51">
-          <span>Modulo verticale</span>
-          <h2>Centro operativo food delivery</h2>
-          <p>Interfaccia dedicata a ristoranti, pizzerie, dark kitchen e servizi di consegna food: ordini, rider, punti vendita, orari di ritiro e consegna.</p>
-        </div>
-        <div class="vertical-kpi-grid-v51">
-          <div><small>Ordini oggi</small><strong>${itemsToday}</strong><span>Ordini food pianificati</span></div>
-          <div><small>Turni attivi</small><strong>${activeRoutes.length}</strong><span>Rider in consegna</span></div>
-          <div><small>Da ritirare</small><strong>${scheduled.length}</strong><span>Ordini pronti/programmati</span></div>
-          <div><small>Completati oggi</small><strong>${completed.length}</strong><span>Turni chiusi</span></div>
-          <div><small>Ritardi / problemi</small><strong>${missed}</strong><span>Da verificare</span></div>
-          <div><small>Risorse in uso</small><strong>${driversBusy}/${vehiclesBusy}</strong><span>Rider / mezzi</span></div>
-        </div>
-        <div class="vertical-modules-v51">
-          <button onclick="showTab('clienti')"><b>Ordini e clienti finali</b><span>Telefono, indirizzo, note cliente, prodotti e metodo pagamento.</span></button>
-          <button onclick="showTab('giro')"><b>Turni e consegne food</b><span>Assegna rider, punto vendita, orario ritiro e orario consegna.</span></button>
-          <button onclick="openDashboardInProgressPage()"><b>Monitoraggio rider</b><span>Segui ordini in corso, ritardi e consegne completate.</span></button>
-          <button onclick="showFoodMenuComingSoonV53()"><b>Menu / Catalogo</b><span>Area dedicata a prodotti, categorie, prezzi e disponibilità.</span></button>
-          <button onclick="showTab('storico')"><b>Storico ordini food</b><span>Consulta consegne, annullamenti, ritardi e report.</span></button>
-        </div>
-      </section>
-    `;
-    return;
-  }
-
-  if(sector === "ecommerce"){
-    host.innerHTML = `
-      <section class="vertical-dashboard-v51 ecommerce-dashboard-v51">
-        <div class="vertical-head-v51">
-          <span>Modulo verticale</span>
-          <h2>Centro operativo ordini</h2>
-          <p>Interfaccia dedicata a shop online e aziende che consegnano ordini con mezzi propri: ordini, tracking, contrassegni, resi e prove di consegna.</p>
-        </div>
-        <div class="vertical-kpi-grid-v51">
-          <div><small>Ordini oggi</small><strong>${itemsToday}</strong><span>Totale consegne pianificate</span></div>
-          <div><small>In consegna</small><strong>${activeRoutes.length}</strong><span>Giri ordini attivi</span></div>
-          <div><small>Da programmare</small><strong>${scheduled.length}</strong><span>Ordini/giri pronti</span></div>
-          <div><small>Completati oggi</small><strong>${completed.length}</strong><span>Giri chiusi</span></div>
-          <div><small>Resi / problemi</small><strong>${missed}</strong><span>Da verificare</span></div>
-          <div><small>Risorse in uso</small><strong>${driversBusy}/${vehiclesBusy}</strong><span>Corrieri / mezzi</span></div>
-        </div>
-        <div class="vertical-modules-v51">
-          <button onclick="showTab('clienti')"><b>Ordini e destinatari</b><span>Numero ordine, tracking, email cliente, contrassegno e indirizzo.</span></button>
-          <button onclick="showTab('giro')"><b>Giri consegna ordini</b><span>Assegna ordini, corriere, mezzo e fascia prevista.</span></button>
-          <button onclick="openDashboardInProgressPage()"><b>Tracking operativo</b><span>Segui ordini in consegna, firme, note e anomalie.</span></button>
-          <button onclick="showTab('integrations')"><b>Integrazioni</b><span>Shopify: integrazione in sviluppo, import automatico non ancora disponibile.</span></button>
-          <button onclick="showTab('storico')"><b>Storico ordini e resi</b><span>Consulta esiti, prove consegna e ordini non riusciti.</span></button>
-        </div>
-      </section>
-    `;
-    return;
-  }
-
+  // Stessi contenuti per settore; resa con i componenti del sistema (pannello, indicatori, elenco).
+  const resources = `${driversBusy}/${vehiclesBusy}`;
+  const verticals = {
+    healthcare: {
+      title: "Centro operativo sanitario",
+      text: "Interfaccia dedicata a farmacie, laboratori, materiale sanitario e consegne tracciate: priorità, orari tassativi, firma obbligatoria, temperatura e conformità.",
+      kpis: [["Consegne oggi", itemsToday, "Sanitarie pianificate"], ["In consegna", activeRoutes.length, "Operatori attivi"], ["Urgenti", scheduled.length, "Da avviare / assegnare"], ["Completate con firma", completed.length, "Prove consegna raccolte"], ["Non conformità", missed, "Da verificare"], ["Risorse in uso", resources, "Operatori / veicoli"]],
+      modules: [["showTab('clienti')", "Punti consegna", "Farmacie, laboratori, referenti sanitari e destinatari autorizzati."], ["showTab('giro')", "Pianificazione sanitaria", "Priorità, orario tassativo, temperatura richiesta e firma obbligatoria."], ["openDashboardInProgressPage()", "Tracciabilità consegne", "Monitora consegne urgenti, tappe, firme, note e anomalie."], ["showHealthcareComplianceComingSoonV55()", "Conformità", "Area futura per temperatura, note conformità e controlli sanitari."], ["showTab('storico')", "Storico sanitario", "Consulta prove consegna, non conformità, urgenze e report."]]
+    },
+    food_delivery: {
+      title: "Centro operativo food delivery",
+      text: "Interfaccia dedicata a ristoranti, pizzerie, dark kitchen e servizi di consegna food: ordini, rider, punti vendita, orari di ritiro e consegna.",
+      kpis: [["Ordini oggi", itemsToday, "Ordini food pianificati"], ["Turni attivi", activeRoutes.length, "Rider in consegna"], ["Da ritirare", scheduled.length, "Ordini pronti/programmati"], ["Completati oggi", completed.length, "Turni chiusi"], ["Ritardi / problemi", missed, "Da verificare"], ["Risorse in uso", resources, "Rider / mezzi"]],
+      modules: [["showTab('clienti')", "Ordini e clienti finali", "Telefono, indirizzo, note cliente, prodotti e metodo pagamento."], ["showTab('giro')", "Turni e consegne food", "Assegna rider, punto vendita, orario ritiro e orario consegna."], ["openDashboardInProgressPage()", "Monitoraggio rider", "Segui ordini in corso, ritardi e consegne completate."], ["showFoodMenuComingSoonV53()", "Menu / Catalogo", "Area dedicata a prodotti, categorie, prezzi e disponibilità."], ["showTab('storico')", "Storico ordini food", "Consulta consegne, annullamenti, ritardi e report."]]
+    },
+    ecommerce: {
+      title: "Centro operativo ordini",
+      text: "Interfaccia dedicata a shop online e aziende che consegnano ordini con mezzi propri: ordini, tracking, contrassegni, resi e prove di consegna.",
+      kpis: [["Ordini oggi", itemsToday, "Totale consegne pianificate"], ["In consegna", activeRoutes.length, "Giri ordini attivi"], ["Da programmare", scheduled.length, "Ordini/giri pronti"], ["Completati oggi", completed.length, "Giri chiusi"], ["Resi / problemi", missed, "Da verificare"], ["Risorse in uso", resources, "Corrieri / mezzi"]],
+      modules: [["showTab('clienti')", "Ordini e destinatari", "Numero ordine, tracking, email cliente, contrassegno e indirizzo."], ["showTab('giro')", "Giri consegna ordini", "Assegna ordini, corriere, mezzo e fascia prevista."], ["openDashboardInProgressPage()", "Tracking operativo", "Segui ordini in consegna, firme, note e anomalie."], ["showTab('integrations')", "Integrazioni", "Shopify: integrazione in sviluppo, import automatico non ancora disponibile."], ["showTab('storico')", "Storico ordini e resi", "Consulta esiti, prove consegna e ordini non riusciti."]]
+    },
+    logistics: {
+      title: "Centro operativo spedizioni",
+      text: "Interfaccia dedicata a corrieri locali, logistica urbana, ultimo miglio, ritiri e consegne pacchi.",
+      kpis: [["Spedizioni oggi", itemsToday, "Totale fermate pianificate"], ["Giri spedizioni attivi", activeRoutes.length, "Corrieri in consegna"], ["Programmate", scheduled.length, "Da avviare"], ["Completate oggi", completed.length, "Giri chiusi"], ["Tentativi falliti", missed, "Da controllare"], ["Risorse in uso", resources, "Corrieri / mezzi"]],
+      modules: [["showTab('clienti')", "Spedizioni e destinatari", "Tracking, colli, peso, indirizzi e destinatari."], ["showTab('giro')", "Pianificazione ritiri/consegne", "Assegna corriere, mezzo e giro spedizioni."], ["openDashboardInProgressPage()", "Controllo consegne", "Stato in corso, tentativi falliti e firme."], ["showTab('storico')", "Storico spedizioni", "Consulta esiti, prove consegna e report."]]
+    }
+  };
+  const v = verticals[sector] || verticals.logistics;
   host.innerHTML = `
-    <section class="vertical-dashboard-v51 logistics-dashboard-v50">
-      <div class="vertical-head-v51 logistics-head-v50">
-        <span>Modulo verticale</span>
-        <h2>Centro operativo spedizioni</h2>
-        <p>Interfaccia dedicata a corrieri locali, logistica urbana, ultimo miglio, ritiri e consegne pacchi.</p>
-      </div>
-      <div class="vertical-kpi-grid-v51 logistics-kpi-grid-v50">
-        <div><small>Spedizioni oggi</small><strong>${itemsToday}</strong><span>Totale fermate pianificate</span></div>
-        <div><small>Giri spedizioni attivi</small><strong>${activeRoutes.length}</strong><span>Corrieri in consegna</span></div>
-        <div><small>Programmate</small><strong>${scheduled.length}</strong><span>Da avviare</span></div>
-        <div><small>Completate oggi</small><strong>${completed.length}</strong><span>Giri chiusi</span></div>
-        <div><small>Tentativi falliti</small><strong>${missed}</strong><span>Da controllare</span></div>
-        <div><small>Risorse in uso</small><strong>${driversBusy}/${vehiclesBusy}</strong><span>Corrieri / mezzi</span></div>
-      </div>
-      <div class="vertical-modules-v51 logistics-modules-v50">
-        <button onclick="showTab('clienti')"><b>Spedizioni e destinatari</b><span>Tracking, colli, peso, indirizzi e destinatari.</span></button>
-        <button onclick="showTab('giro')"><b>Pianificazione ritiri/consegne</b><span>Assegna corriere, mezzo e giro spedizioni.</span></button>
-        <button onclick="openDashboardInProgressPage()"><b>Controllo consegne</b><span>Stato in corso, tentativi falliti e firme.</span></button>
-        <button onclick="showTab('storico')"><b>Storico spedizioni</b><span>Consulta esiti, prove consegna e report.</span></button>
+    <section class="gf-panel" aria-labelledby="sectorDashboardTitle" data-sector-dashboard="${esc(sector)}">
+      <header class="gf-panel__header">
+        <div><p class="gf-kicker">Modulo verticale</p><h2 class="gf-panel__title" id="sectorDashboardTitle">${v.title}</h2><p class="gf-muted">${v.text}</p></div>
+      </header>
+      <div class="gf-panel__body gf-stack">
+        <div class="gf-stat-strip">${v.kpis.map(([label, value, unit]) => `<div class="gf-stat-strip__cell"><span class="gf-stat-strip__label">${label}</span><strong class="gf-stat-strip__value">${esc(String(value))}</strong><small class="gf-stat-strip__unit">${unit}</small></div>`).join("")}</div>
+        <div class="gf-grid" data-size="sm">${v.modules.map(([action, label, desc]) => `<div class="gf-panel"><button type="button" class="gf-list-item" onclick="${action}"><span class="gf-list-item__main"><strong>${label}</strong><small>${desc}</small></span></button></div>`).join("")}</div>
       </div>
     </section>
   `;
@@ -4935,7 +4841,7 @@ window.showFoodMenuComingSoonV53 = showFoodMenuComingSoonV53;
 // -----------------------------------------------------------------------------
 function renderIntegrationsV52(){
   const tab=document.getElementById('tab-integrations');
-  if(tab) tab.innerHTML='<section class="panel"><h1>Integrazioni · In sviluppo</h1><p>Il collegamento Shopify e l’importazione automatica degli ordini non sono ancora disponibili.</p><p>Puoi già importare i clienti da CSV o XLSX nella sezione Clienti.</p></section>';
+  if(tab) tab.innerHTML='<section class="gf-panel"><div class="gf-panel__body"><h1 class="gf-title">Integrazioni · In sviluppo</h1><p>Il collegamento Shopify e l’importazione automatica degli ordini non sono ancora disponibili.</p><p>Puoi già importare i clienti da CSV o XLSX nella sezione Clienti.</p></div></section>';
 }
 
 function showShopifyComingSoonV52(action){
@@ -5102,10 +5008,7 @@ const gfApplyLogisticsLegacyV89=window.applyLogisticsWorkspaceV50;
 window.applyLogisticsWorkspaceV50=function(){
   // Neutralizza classi/etichette verticali legacy.
   ['sector-logistics-v50','sector-ecommerce-v51','sector-food-v53','sector-healthcare-v55'].forEach(c=>document.body.classList.remove(c));
-  document.querySelectorAll('[data-sector-only]').forEach(el=>{el.classList.add('hidden');el.style.display='none';});
-  const title=document.querySelector('#tab-dashboard .dash-hero-row h1'); if(title)title.textContent='Dashboard';
-  const sub=document.querySelector('#tab-dashboard .dash-hero-row p'); if(sub)sub.textContent='Panoramica operativa delle consegne e dell’attività aziendale.';
-  const btn=document.querySelector('#tab-dashboard .dash-hero-row .btn-primary'); if(btn)btn.textContent='+ Nuovo giro';
+  document.querySelectorAll('[data-sector-only]').forEach(el=>{el.classList.add('hidden');});
   setNavTextV50('giro','Pianificazione'); setNavTextV50('clienti','Clienti'); setNavTextV50('mezzi','Mezzi'); setNavTextV50('autisti','Autisti'); setNavTextV50('storico','Storico'); setNavTextV50('report','Report'); setNavTextV50('chat-autisti','Chat autisti');
 };
 
