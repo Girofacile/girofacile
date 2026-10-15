@@ -182,7 +182,6 @@ body[data-gf-surface="workspace"] #app:has(#tab-clienti:not(.hidden)) .topbar-da
 body[data-gf-surface="workspace"] #app:has(#tab-depositi:not(.hidden)) .topbar-dashboard-title,
 body[data-gf-surface="workspace"] #app:has(#tab-mezzi:not(.hidden)) .topbar-dashboard-title,
 body[data-gf-surface="workspace"] #app:has(#tab-autisti:not(.hidden)) .topbar-dashboard-title,
-body[data-gf-surface="workspace"] #app:has(#tab-agenti:not(.hidden)) .topbar-dashboard-title,
 body[data-gf-surface="workspace"] #app:has(#tab-ordini:not(.hidden)) .topbar-dashboard-title,
 body[data-gf-surface="workspace"] #app:has(#tab-ordini-collegamenti:not(.hidden)) .topbar-dashboard-title,
 body[data-gf-surface="workspace"] #app:has(#tab-ordine-fonte:not(.hidden)) .topbar-dashboard-title,

@@ -448,9 +448,15 @@ test('resource directories keep titles in the topbar and create actions inside t
     assert.ok(start>=0,tab);
     const next=html.indexOf('<section id="tab-',start+20);
     const block=html.slice(start,next>start?next:html.length);
-    assert.match(block,/gf-directory-page/,tab+' page template');
-    assert.match(block,/gf-directory-title/,tab+' mobile title fallback');
-    assert.match(block,/gf-directory-head-actions/,tab+' panel actions');
+    // Sezione convertita: niente titolo in pagina (è nell'intestazione) e azione nel pannello.
+    const converted=/class="gf-panel__header"/.test(block);
+    if(converted){
+      assert.doesNotMatch(block,/<h1\b/,tab+' title stays in the topbar');
+    }else{
+      assert.match(block,/gf-directory-page/,tab+' page template');
+      assert.match(block,/gf-directory-title/,tab+' mobile title fallback');
+      assert.match(block,/gf-directory-head-actions/,tab+' panel actions');
+    }
   }
 
   const customers=html.slice(html.indexOf('<section id="tab-clienti"'),html.indexOf('<section id="tab-depositi"'));
@@ -462,7 +468,7 @@ test('resource directories keep titles in the topbar and create actions inside t
   const drivers=html.slice(html.indexOf('<section id="tab-autisti"'),html.indexOf('<section id="tab-storico"'));
   assert.match(drivers,/gf-directory-head-actions[^]*\+ Nuovo autista/);
   const agents=html.slice(html.indexOf('<section id="tab-agenti"'),html.indexOf('<section id="tab-report"'));
-  assert.match(agents,/gf-directory-head-actions[^]*\+ Nuovo agente/);
+  assert.match(agents,/class="gf-panel__header"[^]*\+ Nuovo agente/);
 
   const navigation=read('static/dashboard/js/navigation.js');
   new vm.Script(navigation);
@@ -472,8 +478,11 @@ test('resource directories keep titles in the topbar and create actions inside t
   assert.doesNotMatch(navigation,/WORKSPACE_DIRECTORY_ACTIONS|syncWorkspaceDirectoryActions|workspaceDirectoryPrimaryAction/);
 
   const layout=read(assets+'layout.css');
+  // Nel layout base il titolo è sempre nell'intestazione, tranne le sezioni elencate in data-hide-on-tabs.
+  const hidden=(html.match(/class="gf-header__titles" data-hide-on-tabs="([^"]*)"/)||[])[1];
+  assert.ok(hidden!==undefined,'header titles');
   for(const tab of ['clienti','depositi','mezzi','autisti','agenti']){
-    assert.match(layout,new RegExp('#app:has\\(#tab-'+tab+':not\\(\\.hidden\\)\\) \\.topbar-dashboard-title'),tab+' topbar visibility');
+    assert.ok(!hidden.split(' ').includes(tab),tab+' topbar visibility');
   }
   assert.doesNotMatch(layout,/workspace-directory-topbar-actions/);
 
@@ -497,7 +506,18 @@ test('all five directory KPI icons use the same neutral gray dashboard treatment
   const start=workspace.indexOf('/* Directory KPI icons: neutral, quiet and dashboard-aligned. */');
   assert.ok(start>=0);
   const block=workspace.slice(start);
-  assert.match(block,/#tab-clienti,#tab-depositi,#tab-mezzi,#tab-autisti,#tab-agenti/);
+  // Le sezioni convertite usano la card numerica con icona neutra; le altre il vecchio blocco.
+  const html=read('static/dashboard/index.html');
+  for(const tab of ['clienti','depositi','mezzi','autisti','agenti']){
+    const start=html.indexOf('<section id="tab-'+tab+'"');
+    const section=html.slice(start,html.indexOf('<section id="tab-',start+20));
+    if(/gf-stat-card__icon/.test(section)){
+      assert.doesNotMatch(section,/gf-stat-card__icon"(?! data-tone="neutral")|data-tone="(?!neutral)[a-z]+"/,tab+' neutral icons');
+    }else{
+      assert.match(block,new RegExp('#tab-'+tab),tab+' legacy neutral icons');
+    }
+  }
+  assert.match(read(assets+'components.css'),/\.gf-stat-card__icon\[data-tone="neutral"\]\{background:var\(--gf-color-bg\);color:var\(--gf-color-muted\)\}/);
   assert.match(block,/:is\(\.customer-metric-icon,\.deposit-metric-icon,\.gf-directory-metric-icon,\.stat-icon\)\{/);
   assert.match(block,/width:48px!important/);
   assert.match(block,/height:48px!important/);

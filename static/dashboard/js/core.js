@@ -2710,11 +2710,15 @@ function agentDirectoryRows(){
   });
 }
 function agentStatusMarkup(a){
-  return `<span class="route-status-pill ${a.attivo?"completato":"annullato"}">${a.attivo?"Attivo":"Non attivo"}</span>`;
+  return `<span class="gf-badge" data-status="${a.attivo?"success":"neutral"}">${a.attivo?"Attivo":"Non attivo"}</span>`;
+}
+// Foto o iniziali dentro il componente avatar del sistema.
+function gfAvatarMarkup(photo, fallback="👤"){
+  return `<span class="gf-avatar" aria-hidden="true">${photo ? `<img src="${photo}" alt="">` : esc(fallback)}</span>`;
 }
 function agentActionsMarkup(a){
   const id=Number(a.id);
-  return `<div class="row-actions gf-directory-row-actions"><button type="button" onclick="editAgent(${id})">Modifica</button>${a.email?`<button type="button" onclick="inviteAgent(${id})">${a.account_attivo?"Reinvita":"Invita"}</button>`:""}<button type="button" class="gf-directory-danger" onclick="deleteAgent(${id})">Elimina</button></div>`;
+  return `<div class="gf-cluster"><button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="editAgent(${id})">Modifica</button>${a.email?`<button type="button" class="gf-button" data-variant="ghost" data-size="sm" onclick="inviteAgent(${id})">${a.account_attivo?"Reinvita":"Invita"}</button>`:""}<button type="button" class="gf-button" data-variant="danger" data-size="sm" onclick="deleteAgent(${id})">Elimina</button></div>`;
 }
 function setAgentView(view){
   agentDirectoryView=view==="cards"?"cards":"table";
@@ -2731,22 +2735,22 @@ function renderAgentDirectory(){
   const body=document.getElementById("agentsBody");
   if(body){
     body.innerHTML=rows.length?rows.map(a=>`<tr>
-      <td>${esc(a.codice_agente||"—")}</td>
-      <td><div class="entity-cell">${imageThumb(a.photo_url,"👤","agent-thumb")}<div><strong>${esc(agentDisplayName(a))}</strong>${a.note?`<small>${esc(a.note)}</small>`:""}</div></div></td>
-      <td>${esc(a.telefono||"—")}<br><small>${esc(a.email||"")}</small></td>
-      <td>${esc(a.zona||"—")}</td>
-      <td>${agentStatusMarkup(a)}</td>
-      <td>${Number(a.clienti_assegnati||0)}</td>
-      <td>${agentActionsMarkup(a)}</td>
-    </tr>`).join(""):`<tr><td colspan="7" class="gf-directory-empty">Nessun agente trovato.</td></tr>`;
+      <td data-label="Codice">${esc(a.codice_agente||"—")}</td>
+      <td data-label="Agente"><div class="gf-cluster">${gfAvatarMarkup(a.photo_url)}<div class="gf-list-item__main"><strong>${esc(agentDisplayName(a))}</strong>${a.note?`<small>${esc(a.note)}</small>`:""}</div></div></td>
+      <td data-label="Contatti">${esc(a.telefono||"—")}<br><small class="gf-muted">${esc(a.email||"")}</small></td>
+      <td data-label="Zona">${esc(a.zona||"—")}</td>
+      <td data-label="Stato">${agentStatusMarkup(a)}</td>
+      <td data-label="Clienti">${Number(a.clienti_assegnati||0)}</td>
+      <td data-label="Azioni">${agentActionsMarkup(a)}</td>
+    </tr>`).join(""):`<tr><td colspan="7"><div class="gf-empty"><p>Nessun agente trovato.</p></div></td></tr>`;
   }
   const cards=document.getElementById("agentCards");
   if(cards){
-    cards.innerHTML=rows.length?rows.map(a=>`<article class="agent-directory-card">
-      <div class="agent-directory-card-head"><div class="agent-directory-avatar">${imageThumb(a.photo_url,"👤","agent-thumb")}</div><div><h3>${esc(agentDisplayName(a))}</h3><span>${esc(a.codice_agente||"Codice non indicato")}</span></div>${agentStatusMarkup(a)}</div>
-      <div class="agent-directory-meta"><div><small>Contatti</small><strong>${esc(a.telefono||"—")}</strong><span>${esc(a.email||"")}</span></div><div><small>Zona</small><strong>${esc(a.zona||"—")}</strong></div><div><small>Clienti</small><strong>${Number(a.clienti_assegnati||0)}</strong></div></div>
+    cards.innerHTML=rows.length?rows.map(a=>`<article class="gf-card gf-stack">
+      <div class="gf-cluster" data-justify="between"><div class="gf-cluster">${gfAvatarMarkup(a.photo_url)}<div class="gf-list-item__main"><strong>${esc(agentDisplayName(a))}</strong><small>${esc(a.codice_agente||"Codice non indicato")}</small></div></div>${agentStatusMarkup(a)}</div>
+      <dl class="gf-details"><div class="gf-details__item"><dt>Contatti</dt><dd>${esc(a.telefono||"—")}<br><small class="gf-muted">${esc(a.email||"")}</small></dd></div><div class="gf-details__item"><dt>Zona</dt><dd>${esc(a.zona||"—")}</dd></div><div class="gf-details__item"><dt>Clienti</dt><dd>${Number(a.clienti_assegnati||0)}</dd></div></dl>
       ${agentActionsMarkup(a)}
-    </article>`).join(""):`<p class="gf-directory-empty">Nessun agente trovato.</p>`;
+    </article>`).join(""):`<div class="gf-empty"><p>Nessun agente trovato.</p></div>`;
   }
   document.getElementById("agentTableWrap")?.classList.toggle("hidden",agentDirectoryView!=="table");
   cards?.classList.toggle("hidden",agentDirectoryView!=="cards");

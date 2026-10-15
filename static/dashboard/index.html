@@ -10,8 +10,8 @@
 <meta charset="utf-8">
 <title>GiroFacile</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link href="/static/dashboard/css/core.css?v=gf_base_20261015d" rel="stylesheet">
-<link href="/static/dashboard/css/account.css?v=gf_base_20261015d" rel="stylesheet">
+<link href="/static/dashboard/css/core.css?v=gf_base_20261015e" rel="stylesheet">
+<link href="/static/dashboard/css/account.css?v=gf_base_20261015e" rel="stylesheet">
 <link href="/static/password-strength.css?v=password_policy_20261008_1" rel="stylesheet">
 <script src="/api/billing/catalog.js"></script>
 <script src="/static/dashboard/js/billing.js?v=collaborator_presets_20261009"></script>
@@ -26,10 +26,10 @@
 <link rel="stylesheet" href="/static/dashboard/css/live-gps.css?v=live_20261006">
 <script src="/static/dashboard/js/live-gps.js?v=live_20261006"></script>
 <link href="/static/dashboard/css/deposits.css?v=search_icon_fix_20261012_1" rel="stylesheet">
-<link href="/static/dashboard/css/settings.css?v=gf_base_20261015d" rel="stylesheet">
-<link rel="stylesheet" href="/static/dashboard/css/electric-vehicles.css?v=gf_base_20261015d">
+<link href="/static/dashboard/css/settings.css?v=gf_base_20261015e" rel="stylesheet">
+<link rel="stylesheet" href="/static/dashboard/css/electric-vehicles.css?v=gf_base_20261015e">
 <script src="/static/dashboard/js/electric-vehicles.js?v=electric_bonus_20261002"></script>
-<link rel="stylesheet" href="/static/dashboard/css/management.css?v=gf_base_20261015d">
+<link rel="stylesheet" href="/static/dashboard/css/management.css?v=gf_base_20261015e">
 <link rel="stylesheet" href="/static/dashboard/css/completed.css?v=20261006">
 <link rel="stylesheet" href="/static/pod.css?v=1">
 <link rel="stylesheet" href="/static/dashboard/css/occasional-stops.css?v=1">
@@ -42,21 +42,21 @@
 <script src="/static/dashboard/js/drivers.js?v=driver_shifts_20261013_1"></script>
 
 <!-- Shared GiroFacile design system; legacy sheets retain feature layout. -->
-<link rel="stylesheet" href="/static/design-system/tokens.css?v=gf_base_20261015d">
-<link rel="stylesheet" href="/static/design-system/components.css?v=gf_base_20261015d">
-<link rel="stylesheet" href="/static/design-system/layout.css?v=gf_base_20261015d">
-<link rel="stylesheet" href="/static/design-system/workspace.css?v=gf_base_20261015d">
+<link rel="stylesheet" href="/static/design-system/tokens.css?v=gf_base_20261015e">
+<link rel="stylesheet" href="/static/design-system/components.css?v=gf_base_20261015e">
+<link rel="stylesheet" href="/static/design-system/layout.css?v=gf_base_20261015e">
+<link rel="stylesheet" href="/static/design-system/workspace.css?v=gf_base_20261015e">
 <link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007_reference_2">
 <script src="/static/design-system/design-system.js?v=gf_base_20261015" defer></script>
-<script src="/static/design-system/shell.js?v=gf_base_20261015d" defer></script>
+<script src="/static/design-system/shell.js?v=gf_base_20261015e" defer></script>
 <link rel="stylesheet" href="/static/dashboard/css/collaborators.css?v=search_icon_fix_20261012_1">
 <link rel="stylesheet" href="/static/dashboard/css/orders.css?v=orders_header_canvas_20261013_1">
-<link rel="stylesheet" href="/static/design-system/reference-theme.css?v=gf_base_20261015d">
-<link rel="stylesheet" href="/static/design-system/reference-pages.css?v=gf_base_20261015d">
-<link rel="stylesheet" href="/static/design-system/reference-dialogs.css?v=gf_base_20261015d">
+<link rel="stylesheet" href="/static/design-system/reference-theme.css?v=gf_base_20261015e">
+<link rel="stylesheet" href="/static/design-system/reference-pages.css?v=gf_base_20261015e">
+<link rel="stylesheet" href="/static/design-system/reference-dialogs.css?v=gf_base_20261015e">
 <link rel="stylesheet" href="/static/dashboard/css/dashboard-real-map.css?v=gf_realmap_clean_20261012_2">
 <link rel="stylesheet" href="/static/dashboard/css/in-progress-reference.css?v=gf_inprogress_ref_20261013_1">
-<link rel="stylesheet" href="/static/dashboard/css/company.css?v=gf_base_20261015d">
+<link rel="stylesheet" href="/static/dashboard/css/company.css?v=gf_base_20261015e">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap">
 <link rel="stylesheet" href="/static/design-system/sidebar-unified.css?v=sidebar_global_20261013_1">
 <link rel="stylesheet" href="/static/dashboard/css/customers.css?v=cx_reference_20261014_1">
@@ -896,35 +896,46 @@
         </div>
       </div>
 
-      <section id="tab-agenti" class="tab hidden gf-page gf-directory-page">
-        <div class="page-title-row gf-directory-title"><div><h1>Agenti</h1><p>Anagrafica agenti collegabili ai clienti.</p></div></div>
-        <div class="gf-directory-metrics" aria-label="Riepilogo agenti">
-          <article class="gf-directory-metric blue"><span class="gf-directory-metric-icon blue"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg></span><div><h2>Totale agenti</h2><strong id="agentMetricTotal">0</strong><p>Anagrafica commerciale</p></div></article>
-          <article class="gf-directory-metric green"><span class="gf-directory-metric-icon green"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg></span><div><h2>Attivi</h2><strong id="agentMetricActive">0</strong><p>Disponibili per i clienti</p></div></article>
-          <article class="gf-directory-metric orange"><span class="gf-directory-metric-icon orange"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span><div><h2>Clienti assegnati</h2><strong id="agentMetricClients">0</strong><p>Collegamenti complessivi</p></div></article>
+      <section id="tab-agenti" class="tab hidden gf-stack" data-gap="lg">
+        <div class="gf-stat-strip" aria-label="Riepilogo agenti">
+          <div class="gf-stat-strip__cell"><span class="gf-stat-strip__label">Totale agenti</span><strong class="gf-stat-strip__value" id="agentMetricTotal">0</strong><small class="gf-stat-strip__unit">Anagrafica commerciale</small></div>
+          <div class="gf-stat-strip__cell"><span class="gf-stat-strip__label">Attivi</span><strong class="gf-stat-strip__value" id="agentMetricActive">0</strong><small class="gf-stat-strip__unit">Disponibili per i clienti</small></div>
+          <div class="gf-stat-strip__cell"><span class="gf-stat-strip__label">Clienti assegnati</span><strong class="gf-stat-strip__value" id="agentMetricClients">0</strong><small class="gf-stat-strip__unit">Collegamenti complessivi</small></div>
         </div>
-        <section class="panel gf-directory-panel agent-directory-panel" aria-labelledby="agentDirectoryTitle">
-          <div class="panel-header gf-directory-head"><div><h2 id="agentDirectoryTitle">Elenco agenti</h2><p class="panel-subtitle">Cerca, filtra e scegli se visualizzare gli agenti a tabella o a card.</p></div><div class="gf-directory-head-actions"><button type="button" class="btn-primary" onclick="openNewAgentModal()">+ Nuovo agente</button></div></div>
-          <div class="gf-directory-toolbar">
-            <label class="gf-directory-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="agentSearch" aria-label="Cerca agenti" placeholder="Cerca agente, codice, zona o contatti..." oninput="renderAgentDirectory()"></label>
-            <select id="agentStatusFilter" onchange="renderAgentDirectory()" aria-label="Filtra stato agenti"><option value="">Tutti gli stati</option><option value="attivi">Attivi</option><option value="non_attivi">Non attivi</option></select>
-            <select id="agentSort" onchange="renderAgentDirectory()" aria-label="Ordina agenti"><option value="name">Ordina per</option><option value="name_desc">Nome: Z–A</option><option value="clients">Clienti assegnati</option><option value="zone">Zona</option></select>
-            <div class="gf-directory-view-controls" role="group" aria-label="Vista agenti"><button id="agentListView" class="btn-secondary" type="button" aria-label="Vista tabella" aria-pressed="true" onclick="setAgentView('table')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h1M3 12h1M3 18h1"/></svg></button><button id="agentGridView" class="btn-secondary" type="button" aria-label="Vista card" aria-pressed="false" onclick="setAgentView('cards')"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="15" y="3" width="6" height="6" rx="1"/><rect x="3" y="15" width="6" height="6" rx="1"/><rect x="15" y="15" width="6" height="6" rx="1"/></svg></button></div>
+        <section class="gf-panel" aria-labelledby="agentDirectoryTitle">
+          <header class="gf-panel__header">
+            <div><h2 class="gf-panel__title" id="agentDirectoryTitle">Elenco agenti</h2><p class="gf-muted">Cerca, filtra e scegli se visualizzare gli agenti a tabella o a card.</p></div>
+            <button type="button" class="gf-button" data-variant="primary" onclick="openNewAgentModal()">+ Nuovo agente</button>
+          </header>
+          <div class="gf-panel__body gf-cluster">
+            <input class="gf-input" id="agentSearch" type="search" aria-label="Cerca agenti" placeholder="Cerca agente, codice, zona o contatti..." oninput="renderAgentDirectory()">
+            <select class="gf-select" id="agentStatusFilter" onchange="renderAgentDirectory()" aria-label="Filtra stato agenti"><option value="">Tutti gli stati</option><option value="attivi">Attivi</option><option value="non_attivi">Non attivi</option></select>
+            <select class="gf-select" id="agentSort" onchange="renderAgentDirectory()" aria-label="Ordina agenti"><option value="name">Ordina per</option><option value="name_desc">Nome: Z–A</option><option value="clients">Clienti assegnati</option><option value="zone">Zona</option></select>
+            <div class="gf-cluster" role="group" aria-label="Vista agenti"><button id="agentListView" class="gf-chip" type="button" aria-label="Vista tabella" aria-pressed="true" onclick="setAgentView('table')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13 M8 12h13 M8 18h13 M3 6h.01 M3 12h.01 M3 18h.01"/></svg></button><button id="agentGridView" class="gf-chip" type="button" aria-label="Vista card" aria-pressed="false" onclick="setAgentView('cards')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h7v7H3z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7H3z"/></svg></button></div>
           </div>
-          <div id="agentTableWrap" class="tableWrap gf-directory-table"><table><thead><tr><th>Codice</th><th>Agente</th><th>Contatti</th><th>Zona</th><th>Stato</th><th>Clienti</th><th>Azioni</th></tr></thead><tbody id="agentsBody"></tbody></table></div>
-          <div id="agentCards" class="agent-cards gf-directory-cards hidden" aria-live="polite"></div>
+          <div id="agentTableWrap" class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards"><thead><tr><th>Codice</th><th>Agente</th><th>Contatti</th><th>Zona</th><th>Stato</th><th>Clienti</th><th>Azioni</th></tr></thead><tbody id="agentsBody"></tbody></table></div>
+          <div id="agentCards" class="gf-panel__body gf-grid hidden" aria-live="polite"></div>
         </section>
       </section>
 
-      <div id="agentOverlay" class="modal-overlay hidden gf-dialog" onclick="closeAgentModal(event)">
-        <div class="profile-modal agent-form-modal" onclick="event.stopPropagation()">
-          <div class="modal-header"><div><div class="modal-kicker">ANAGRAFICA AGENTE</div><h2 id="agentModalTitle">Nuovo agente</h2><p>Inserisci dati, contatti e area commerciale dell'agente.</p></div><button class="modal-close" type="button" onclick="closeAgentModal()" aria-label="Chiudi">×</button></div>
-          <input type="hidden" id="agId"><input type="hidden" id="agPhotoUrl">
-          <div class="asset-photo-row"><div id="agentPhotoPreview" class="asset-photo-preview agent-photo-preview">👤</div><div><strong>Foto agente</strong><small>Carica una foto profilo. Se manca, resta l'icona standard.</small><input id="agPhotoFile" type="file" accept="image/*" onchange="handleImageUpload(event,'agPhotoUrl','agentPhotoPreview','👤')"></div></div>
-          <div class="form-grid agent-form-grid">
-            <div class="gf-field"><label for="agCodice">Codice agente</label><input id="agCodice" placeholder="Codice agente"></div><div class="gf-field"><label for="agNome">Nome</label><input id="agNome" placeholder="Nome"></div><div class="gf-field"><label for="agCognome">Cognome</label><input id="agCognome" placeholder="Cognome"></div><div class="gf-field"><label for="agTelefono">Telefono</label><input id="agTelefono" placeholder="Telefono"></div><div class="gf-field"><label for="agEmail">Email</label><input id="agEmail" type="email" placeholder="Email"></div><div class="gf-field"><label for="agZona">Zona / area</label><input id="agZona" placeholder="Zona / area"></div><div class="gf-field"><label for="agAttivo">Stato</label><select id="agAttivo"><option value="true">Attivo</option><option value="false">Non attivo</option></select></div><div class="gf-field agent-form-notes"><label for="agNote">Note agente</label><textarea id="agNote" rows="3" placeholder="Note agente"></textarea></div>
+      <div id="agentOverlay" class="gf-overlay hidden" onclick="closeAgentModal(event)">
+        <div class="gf-modal" role="dialog" aria-modal="true" aria-labelledby="agentModalTitle" onclick="event.stopPropagation()">
+          <header class="gf-modal__header"><div><p class="gf-kicker">Anagrafica agente</p><h2 class="gf-modal__title" id="agentModalTitle">Nuovo agente</h2><p class="gf-muted">Inserisci dati, contatti e area commerciale dell'agente.</p></div><button class="gf-icon-button" type="button" onclick="closeAgentModal()" aria-label="Chiudi"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12 M18 6L6 18"/></svg></button></header>
+          <div class="gf-modal__body gf-stack">
+            <input type="hidden" id="agId"><input type="hidden" id="agPhotoUrl">
+            <div class="gf-upload"><span id="agentPhotoPreview" class="gf-upload__preview">👤</span><div class="gf-upload__copy"><strong>Foto agente</strong><label class="gf-button gf-upload__button" data-variant="secondary" for="agPhotoFile">Carica foto<input id="agPhotoFile" type="file" accept="image/*" onchange="handleImageUpload(event,'agPhotoUrl','agentPhotoPreview','👤')"></label><p class="gf-field__hint">Carica una foto profilo. Se manca, resta l'icona standard.</p></div></div>
+            <div class="gf-form-grid">
+              <label class="gf-field" for="agCodice"><span class="gf-field__label">Codice agente</span><input class="gf-input" id="agCodice" placeholder="Codice agente"></label>
+              <label class="gf-field" for="agNome"><span class="gf-field__label">Nome</span><input class="gf-input" id="agNome" placeholder="Nome"></label>
+              <label class="gf-field" for="agCognome"><span class="gf-field__label">Cognome</span><input class="gf-input" id="agCognome" placeholder="Cognome"></label>
+              <label class="gf-field" for="agTelefono"><span class="gf-field__label">Telefono</span><input class="gf-input" id="agTelefono" placeholder="Telefono"></label>
+              <label class="gf-field" for="agEmail"><span class="gf-field__label">Email</span><input class="gf-input" id="agEmail" type="email" placeholder="Email"></label>
+              <label class="gf-field" for="agZona"><span class="gf-field__label">Zona / area</span><input class="gf-input" id="agZona" placeholder="Zona / area"></label>
+              <label class="gf-field" for="agAttivo"><span class="gf-field__label">Stato</span><select class="gf-select" id="agAttivo"><option value="true">Attivo</option><option value="false">Non attivo</option></select></label>
+              <label class="gf-field" data-span="full" for="agNote"><span class="gf-field__label">Note agente</span><textarea class="gf-textarea" id="agNote" rows="3" placeholder="Note agente"></textarea></label>
+            </div>
           </div>
-          <div class="actions-row agent-modal-actions"><button type="button" class="btn-secondary" onclick="closeAgentModal()">Annulla</button><button type="button" id="saveAgentBtn" onclick="saveAgent()" class="btn-primary">Salva agente</button></div>
+          <footer class="gf-modal__footer"><button type="button" class="gf-button" data-variant="secondary" onclick="closeAgentModal()">Annulla</button><button type="button" id="saveAgentBtn" onclick="saveAgent()" class="gf-button" data-variant="primary">Salva agente</button></footer>
         </div>
       </div>
 
@@ -1871,18 +1882,18 @@
 
 <script src="/static/dashboard/js/reports.js?v=audit_20261004"></script>
 <script src="/static/dashboard/js/customers.js?v=cx_reference_20261014_1"></script>
-<script src="/static/dashboard/js/navigation.js?v=gf_base_20261015d"></script>
+<script src="/static/dashboard/js/navigation.js?v=gf_base_20261015e"></script>
 <script src="/static/dashboard/js/completed.js?v=driver_shifts_20261013_1"></script>
 <script src="/static/dashboard/js/preview-design.js?v=20261006"></script>
 <script src="/static/dashboard/js/live-design.js?v=20261006"></script>
 <script src="/static/password-strength.js?v=password_policy_20261008_1"></script>
-<script src="/static/dashboard/js/collaborators.js?v=gf_base_20261015d"></script>
+<script src="/static/dashboard/js/collaborators.js?v=gf_base_20261015e"></script>
 <script src="/static/dashboard/js/orders.js?v=independent_orders_20261012"></script>
 <script src="/static/dashboard/js/order-import.js?v=20261011_fields1"></script>
 <script src="/static/dashboard/js/order-sources.js?v=email_development_20261012"></script>
 <script src="/static/dashboard/js/dashboard-real-map.js?v=gf_realmap_clean_20261012_2"></script>
 <script src="/static/dashboard/js/in-progress-reference.js?v=driver_shifts_20261013_1"></script>
-<script src="/static/dashboard/js/core.js?v=gf_base_20261015d"></script>
+<script src="/static/dashboard/js/core.js?v=gf_base_20261015e"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=orders_2"></script>
 <link rel="stylesheet" href="/static/dashboard/css/fleet-planning.css?v=20261013_1">
 <link rel="stylesheet" href="/static/dashboard/css/fleet-review.css?v=driver_shifts_20261013_1">
@@ -1905,6 +1916,6 @@ function toggleLoginPassword(){
 <script src="/static/dashboard/js/company-profile.js?v=company_clean_20261013_1"></script>
 
 <!-- Ultimo foglio: allinea tutte le sezioni al linguaggio visivo della dashboard. -->
-<link rel="stylesheet" href="/static/design-system/unified.css?v=gf_base_20261015d">
+<link rel="stylesheet" href="/static/design-system/unified.css?v=gf_base_20261015e">
 </body>
 </html>

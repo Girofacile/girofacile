@@ -853,12 +853,8 @@ select option:disabled{
 }
 
 /* V3.7.8.1 - Agenti */
-#tab-agenti textarea,
 #tab-clienti textarea{
   margin-top:12px;
-}
-#tab-agenti .route-status-pill{
-  display:inline-flex;
 }
 
 /* V3.7.8.1 - Report / Analisi dati */
@@ -3789,8 +3785,7 @@ html[data-gf-tail-lift="off"] .gf-vehicles-table-v892 td:nth-child(4) { display:
 
 /* Company-level optional agent management. */
 html[data-gf-agents="off"] [data-gf-agents-only],
-html[data-gf-agents="off"] .nav-item[data-tab="agenti"],
-html[data-gf-agents="off"] #tab-agenti { display:none!important; }
+html[data-gf-agents="off"] .nav-item[data-tab="agenti"]{ display:none!important; }
 
 /* GiroFacile dashboard background 2026-09-28
    Sfondo globale dell'area gestionale: conserva la composizione originale
