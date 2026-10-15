@@ -31,14 +31,14 @@ function renderSubscriptionControls(data) {
   if (b.pending_plan) messages.push(`Piano ${b.pending_plan} programmato dal prossimo rinnovo.`);
   if (status === 'past_due') messages.push(`Pagamento da completare. Tolleranza fino al ${fmtDateV63(b.grace_until)}.`);
   if (['expired','cancelled','incomplete'].includes(status)) messages.push('Puoi consultare ed esportare i dati e terminare i giri già avviati. Nuovi giri non disponibili.');
-  box.innerHTML = `<div class="billing-empty-v63">${messages.map(m=>`<p>${esc(m)}</p>`).join('')}
+  box.innerHTML = `<div class="gf-alert" data-status="info"><div class="gf-stack" data-gap="sm">${messages.map(m=>`<p>${esc(m)}</p>`).join('')}
     <p><a href="/api/billing/data-export">Esporta i tuoi dati (CSV in ZIP)</a></p>
-    ${Object.entries(usage.resources || {}).map(([key,value])=>key==='vehicles' && value.standard_used!=null ? `<p>Mezzi standard: <strong>${value.standard_used} / ${value.standard_limit??'∞'}</strong> · ⚡ Bonus elettrici: <strong>${value.bonus_used} / ${value.electric_bonus??0}</strong></p>${value.over_limit?`<p class="gf-vehicle-usage-warning">${esc(value.message||'La flotta supera i limiti del piano. I mezzi esistenti sono conservati.')}</p>`:''}`:`<p>${({customers:'Clienti',vehicles:'Mezzi',drivers:'Autisti',deposits:'Depositi'})[key]}: ${value.used} / ${value.limit}${value.warning?' — Quota utilizzata almeno all’80%':''}</p>`).join('')}
+    ${Object.entries(usage.resources || {}).map(([key,value])=>key==='vehicles' && value.standard_used!=null ? `<p>Mezzi standard: <strong>${value.standard_used} / ${value.standard_limit??'∞'}</strong> · ⚡ Bonus elettrici: <strong>${value.bonus_used} / ${value.electric_bonus??0}</strong></p>${value.over_limit?`<p><strong>${esc(value.message||'La flotta supera i limiti del piano. I mezzi esistenti sono conservati.')}</strong></p>`:''}`:`<p>${({customers:'Clienti',vehicles:'Mezzi',drivers:'Autisti',deposits:'Depositi'})[key]}: ${value.used} / ${value.limit}${value.warning?' — Quota utilizzata almeno all’80%':''}</p>`).join('')}
     ${['routes','deliveries'].map(k=>usage[k] ? `<p>${k==='routes'?'Giri':'Consegne'} nel mese ${esc(usage.month)}: <strong>${usage[k].used} / ${usage[k].limit}</strong>${usage[k].warning?' — Attenzione: quota utilizzata almeno all’80%':''}</p>`:'').join('')}
-    ${b.checkout_enabled ? `<button class="btn-light" onclick="subscriptionAction('sync')">Aggiorna stato</button>
-      <button class="btn-light" onclick="subscriptionAction('cancel-checkout')">Annulla checkout aperto</button>` : ''}
-    ${b.checkout_enabled && b.subscription ? `<button class="btn-light" onclick="managePaymentMethodsV876()">Metodo di pagamento e documenti</button>
-      <button class="btn-light" onclick="subscriptionAction('${b.cancel_at_period_end?'resume':'cancel'}')">${b.cancel_at_period_end?'Ripristina rinnovo':'Disdici a fine periodo'}</button>`:''}</div>`;
+    <div class="gf-cluster">${b.checkout_enabled ? `<button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="subscriptionAction('sync')">Aggiorna stato</button>
+      <button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="subscriptionAction('cancel-checkout')">Annulla checkout aperto</button>` : ''}
+    ${b.checkout_enabled && b.subscription ? `<button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="managePaymentMethodsV876()">Metodo di pagamento e documenti</button>
+      <button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="subscriptionAction('${b.cancel_at_period_end?'resume':'cancel'}')">${b.cancel_at_period_end?'Ripristina rinnovo':'Disdici a fine periodo'}</button>`:''}</div></div></div>`;
   const button = document.getElementById('btnConfirmUpgrade');
   if (button) { button.disabled = !b.checkout_enabled; button.textContent = b.subscription ? 'Modifica piano di prova' : 'Acquista in modalità di prova'; }
 }

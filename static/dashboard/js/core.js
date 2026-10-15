@@ -120,12 +120,12 @@ function featureLockedForTab(name){
 }
 
 function premiumPlanCard(plan, title, price, badge, features){
-  return `<div class="feature-plan-card">
-    <div class="feature-plan-badge">${esc(badge)}</div>
-    <h3>${esc(title)}</h3>
-    <div class="feature-plan-price">${esc(price)}<span>/mese</span></div>
-    <ul>${features.map(f=>`<li>${esc(f)}</li>`).join("")}</ul>
-    <button class="btn-primary" onclick="openUpgradePanelFor('${plan}')">Passa a ${esc(title)}</button>
+  return `<div class="gf-card gf-stack">
+    <div><span class="gf-badge" data-status="info">${esc(badge)}</span></div>
+    <h3 class="gf-subtitle">${esc(title)}</h3>
+    <p><strong>${esc(price)}</strong> <span class="gf-muted">/mese</span></p>
+    <div class="gf-stack" data-gap="sm">${features.map(f=>`<span>✓ ${esc(f)}</span>`).join("")}</div>
+    <div><button type="button" class="gf-button" data-variant="primary" onclick="openUpgradePanelFor('${plan}')">Passa a ${esc(title)}</button></div>
   </div>`;
 }
 
@@ -133,34 +133,33 @@ function renderFeatureLockedTab(name, cfg){
   const tab = document.getElementById("tab-" + name);
   if(!tab || !cfg) return;
   if(window.GFCompanyAccess?.isCollaborator()){
-    tab.innerHTML = '<div class="feature-lock-page"><section class="feature-lock-card"><div class="feature-lock-icon">🔒</div><h1>'+esc(cfg.title)+'</h1><p>Funzionalità non disponibile per questa azienda. Contatta il titolare.</p></section></div>';
+    tab.innerHTML = '<section class="gf-panel"><div class="gf-panel__body gf-stack"><div><span class="gf-badge" data-status="warning">🔒 Non disponibile</span></div><h2 class="gf-subtitle">'+esc(cfg.title)+'</h2><p class="gf-muted">Funzionalità non disponibile per questa azienda. Contatta il titolare.</p></div></section>';
     return;
   }
-  tab.innerHTML = `<div class="feature-lock-page">
-    <div class="feature-lock-layout">
-      <section class="feature-lock-card">
-        <div class="feature-lock-icon">🔒</div>
-        <span class="feature-lock-kicker">Funzionalità premium</span>
-        <h1>${esc(cfg.title)}</h1>
-        <p>${esc(cfg.text)} Effettua l'upgrade al piano successivo per poter usufruire di questa sezione.</p>
-        <button class="btn-primary" onclick="openUpgradePanelFor('business')">Effettua upgrade</button>
-      </section>
-      <aside class="feature-lock-side">
-        <div class="feature-lock-side-title">Piani consigliati</div>
-        ${premiumPlanCard('business','Business',`€${window.GF_PLANS.business.price_eur}`,'Consigliato',[
-          'Agenti commerciali',
-          'Report e analisi finali',
-          'Chat autisti',
-          'Export CSV'
-        ])}
-        ${premiumPlanCard('pro','Pro',`€${window.GF_PLANS.pro.price_eur}`,'Completo',[
-          `${window.GF_PLANS.pro.max_customers} clienti · ${window.GF_PLANS.pro.max_routes_per_month} giri/mese`,
-          'Tutte le funzioni Business',
-          `${window.GF_PLANS.pro.max_vehicles} mezzi · ${window.GF_PLANS.pro.max_drivers} autisti`,
-          'Funzioni AI senza quota mensile'
-        ])}
-      </aside>
-    </div>
+  tab.innerHTML = `<div class="gf-grid" data-cols="main-side">
+    <section class="gf-panel">
+      <div class="gf-panel__body gf-stack">
+        <div><span class="gf-badge" data-status="warning">🔒 Funzionalità premium</span></div>
+        <h2 class="gf-subtitle">${esc(cfg.title)}</h2>
+        <p class="gf-muted">${esc(cfg.text)} Effettua l'upgrade al piano successivo per poter usufruire di questa sezione.</p>
+        <div><button type="button" class="gf-button" data-variant="primary" onclick="openUpgradePanelFor('business')">Effettua upgrade</button></div>
+      </div>
+    </section>
+    <aside class="gf-stack">
+      <p class="gf-kicker">Piani consigliati</p>
+      ${premiumPlanCard('business','Business',`€${window.GF_PLANS.business.price_eur}`,'Consigliato',[
+        'Agenti commerciali',
+        'Report e analisi finali',
+        'Chat autisti',
+        'Export CSV'
+      ])}
+      ${premiumPlanCard('pro','Pro',`€${window.GF_PLANS.pro.price_eur}`,'Completo',[
+        `${window.GF_PLANS.pro.max_customers} clienti · ${window.GF_PLANS.pro.max_routes_per_month} giri/mese`,
+        'Tutte le funzioni Business',
+        `${window.GF_PLANS.pro.max_vehicles} mezzi · ${window.GF_PLANS.pro.max_drivers} autisti`,
+        'Funzioni AI senza quota mensile'
+      ])}
+    </aside>
   </div>`;
 }
 
@@ -734,7 +733,7 @@ async function loadBillingOverviewV63(){
     setText("billingMethodCardSubV876", method.details || (method.label ? "Metodo utilizzato per il rinnovo del piano." : "Aggiungi un metodo per i rinnovi automatici."));
     const hasMethod = !!method.configured;
     const defBadge = document.getElementById("billingMethodDefaultV876");
-    if(defBadge) defBadge.style.display = hasMethod ? "inline-flex" : "none";
+    if(defBadge) defBadge.classList.toggle("hidden", !hasMethod);
     setText("billingPaymentStatusV876", ["overdue","failed","past_due","incomplete","expired"].includes(plan.status) ? "Da verificare" : "Regolare");
     setText("billingPaymentStatusHintV876", ["overdue","failed","past_due","incomplete","expired"].includes(plan.status) ? "Controlla il metodo di pagamento" : "Nessuna azione richiesta");
     set("billingCompanyNameV63", company.company_name || "");
@@ -750,41 +749,41 @@ async function loadBillingOverviewV63(){
     if(loading) loading.classList.add("hidden");
     if(content) content.classList.remove("hidden");
   }catch(e){
-    if(loading) loading.innerHTML = `<div class="billing-empty-v63"><strong>Errore caricamento fatturazione</strong><span>${esc(e.message)}</span></div>`;
+    if(loading) loading.innerHTML = `<div class="gf-alert" data-status="danger"><div class="gf-alert__body"><strong class="gf-alert__title">Errore caricamento fatturazione</strong><p>${esc(e.message)}</p></div></div>`;
   }
+}
+const BILLING_STATUS_TONE_V63 = {paid:"success", active:"success", trial:"info", pending:"warning", overdue:"danger", failed:"danger", expired:"danger", refunded:"neutral", cancelled:"neutral"};
+function billingEmptyRowV63(columns, title, text){
+  return `<tr><td colspan="${columns}"><div class="gf-empty"><strong>${title}</strong><p>${text}</p></div></td></tr>`;
 }
 function renderBillingInvoicesV63(invoices){
   const host=document.getElementById("billingInvoicesV63");
   if(!host) return;
   if(!invoices.length){
-    host.innerHTML = `<div class="billing-empty-v63"><strong>Nessuna fattura emessa</strong><span>Le fatture compariranno qui quando saranno generati i primi addebiti del piano.</span></div>`;
+    host.innerHTML = billingEmptyRowV63(4, "Nessuna fattura emessa", "Le fatture compariranno qui quando saranno generati i primi addebiti del piano.");
     return;
   }
   host.innerHTML = invoices.map(inv => `
-    <div class="billing-row-v63">
-      <div>
-        <strong>${inv.is_test ? "Documento di prova" : "Fattura"} ${esc(inv.number || "—")}</strong>
-        <span>${fmtDateV63(inv.date)} · Periodo ${fmtDateV63(inv.period_start)} - ${fmtDateV63(inv.period_end)}</span>
-      </div>
-      <div><b>${fmtEuroV63(inv.total)}</b><small class="billing-status-v63 ${esc(inv.status)}">${billingStatusLabelV63(inv.status)}</small></div>
-      <button ${inv.pdf_available ? "" : "disabled"} onclick="${inv.pdf_available ? `window.open('/api/billing/invoices/${inv.id}/download','_blank')` : "toast('PDF fattura in preparazione')"}">Scarica PDF</button>
-    </div>`).join("");
+    <tr>
+      <td data-label="Documento"><strong>${inv.is_test ? "Documento di prova" : "Fattura"} ${esc(inv.number || "—")}</strong><br><small class="gf-muted">${fmtDateV63(inv.date)}</small></td>
+      <td data-label="Periodo">${fmtDateV63(inv.period_start)} - ${fmtDateV63(inv.period_end)}</td>
+      <td data-label="Importo / Stato"><strong>${fmtEuroV63(inv.total)}</strong> <span class="gf-badge" data-status="${BILLING_STATUS_TONE_V63[inv.status] || "neutral"}">${billingStatusLabelV63(inv.status)}</span></td>
+      <td data-label="PDF"><button type="button" class="gf-button" data-variant="secondary" data-size="sm" ${inv.pdf_available ? "" : "disabled"} onclick="${inv.pdf_available ? `window.open('/api/billing/invoices/${inv.id}/download','_blank')` : "toast('PDF fattura in preparazione')"}">Scarica PDF</button></td>
+    </tr>`).join("");
 }
 function renderBillingPaymentsV63(payments){
   const host=document.getElementById("billingPaymentsV63");
   if(!host) return;
   if(!payments.length){
-    host.innerHTML = `<div class="billing-empty-v63"><strong>Nessun pagamento registrato</strong><span>I pagamenti appariranno qui quando verrà collegato il sistema di pagamento.</span></div>`;
+    host.innerHTML = billingEmptyRowV63(3, "Nessun pagamento registrato", "I pagamenti appariranno qui quando verrà collegato il sistema di pagamento.");
     return;
   }
   host.innerHTML = payments.map(pay => `
-    <div class="billing-row-v63 payment">
-      <div>
-        <strong>${pay.is_test ? "Prova — " : ""}${billingStatusLabelV63(pay.status)}</strong>
-        <span>${fmtDateV63(pay.paid_at || pay.created_at)} · ${esc(pay.method || "Metodo non indicato")}</span>
-      </div>
-      <div><b>${fmtEuroV63(pay.amount)}</b><small>${esc(pay.transaction_id || "")}</small></div>
-    </div>`).join("");
+    <tr>
+      <td data-label="Data / Esito"><strong>${pay.is_test ? "Prova — " : ""}${billingStatusLabelV63(pay.status)}</strong><br><small class="gf-muted">${fmtDateV63(pay.paid_at || pay.created_at)}</small></td>
+      <td data-label="Metodo">${esc(pay.method || "Metodo non indicato")}</td>
+      <td data-label="Importo"><strong>${fmtEuroV63(pay.amount)}</strong><br><small class="gf-muted">${esc(pay.transaction_id || "")}</small></td>
+    </tr>`).join("");
 }
 async function saveBillingDetailsV63(){
   try{
@@ -822,7 +821,7 @@ function syncPlanPageHeaderV874(){
   const title = document.getElementById("planPageCurrentNameV874");
   const status = document.getElementById("planPageCurrentStatusV874");
   if(title) title.textContent = `Piano ${name}`;
-  if(badge){ badge.textContent=name; badge.className=`plan-badge-ui ${_currentPlan||""}`; }
+  if(badge){ badge.textContent=name; badge.dataset.status=_currentPlan==="pro"?"success":_currentPlan==="business"?"info":"neutral"; }
   if(status) status.textContent = "Gestisci il tuo abbonamento e confrontalo con gli altri piani disponibili.";
 }
 function openPlanAccountPage(plan){
@@ -857,20 +856,16 @@ function renderUpgradeCards(){
     const isCurrent = p === _currentPlan;
     const isSelected = p === _selectedUpgradePlan;
     const preview = f.features.slice(0,4);
-    return `<button type="button" class="up-card-v875 ${isCurrent?"current-plan":""} ${isSelected?"selected":""}" onclick="selectUpgradePlan('${p}')">
-      <div class="up-card-top-v875">
-        <div>
-          <div class="up-name-v875">${f.name}</div>
-          <div class="up-desc-v875">${descriptions[p]}</div>
-        </div>
-        ${isCurrent?'<span class="up-tag-v875">Piano attuale</span>':''}
+    return `<article class="gf-card gf-stack">
+      <div class="gf-cluster" data-justify="between">
+        <div><h3 class="gf-subtitle">${f.name}</h3><p class="gf-muted">${descriptions[p]}</p></div>
+        ${isCurrent?'<span class="gf-badge" data-status="success">Piano attuale</span>':''}
       </div>
-      <div class="up-price-v875">${f.price}<span>${f.period}</span></div>
+      <p><strong class="gf-subtitle">${f.price}</strong> <span class="gf-muted">${f.period}</span></p>
       ${f.electricBenefit ? `<div class="gf-electric-benefit">${esc(f.electricBenefit)}</div>` : ""}
-      <div class="up-divider-v875"></div>
-      <div class="up-preview-v875">${preview.map(x=>`<span><i>✓</i>${x}</span>`).join("")}</div>
-      <span class="up-select-v875">${isCurrent?'Attivo':(isSelected?'Selezionato':'Seleziona piano')}</span>
-    </button>`;
+      <div class="gf-stack" data-gap="sm">${preview.map(x=>`<span>✓ ${x}</span>`).join("")}</div>
+      <div><button type="button" class="gf-button" data-variant="${isSelected?'primary':'secondary'}" aria-pressed="${isSelected}" onclick="selectUpgradePlan('${p}')">${isCurrent?'Attivo':(isSelected?'Selezionato':'Seleziona piano')}</button></div>
+    </article>`;
   }).join("");
   api("/api/billing/my-plan").then(renderSubscriptionControls).catch(e=>toast(e.message));
   renderUpgradeFeatures(_selectedUpgradePlan || _currentPlan);
@@ -884,12 +879,10 @@ function renderUpgradeFeatures(plan){
   const f = PLAN_FEATURES[plan];
   if(!f) return;
   const box = document.getElementById("upgradeFeatures");
-  const checkSvg = '<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>';
-  const crossSvg = '<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
-  box.innerHTML = `<div class="plan-features-head-v875"><div><span>PIANO SELEZIONATO</span><h3>${f.name}</h3></div><strong>${f.price}<small>${f.period}</small></strong></div>
-    <div class="plan-feature-list-v875">
-      ${f.features.map(x=>`<div class="up-feat-v875 yes">${checkSvg}<span>${x}</span></div>`).join("")}
-      ${f.missing.map(x=>`<div class="up-feat-v875 no">${crossSvg}<span>${x}</span></div>`).join("")}
+  box.innerHTML = `<header class="gf-panel__header"><div><p class="gf-kicker">Piano selezionato</p><h3 class="gf-panel__title">${f.name}</h3></div><strong class="gf-subtitle">${f.price} <small class="gf-muted">${f.period}</small></strong></header>
+    <div class="gf-panel__body gf-grid" data-cols="2">
+      ${f.features.map(x=>`<div class="gf-cluster"><span class="gf-badge" data-status="success" aria-label="Incluso">✓</span><span>${x}</span></div>`).join("")}
+      ${f.missing.map(x=>`<div class="gf-cluster"><span class="gf-badge" data-status="neutral" aria-label="Non incluso">✕</span><span>${x}</span></div>`).join("")}
     </div>`;
 }
 
@@ -904,8 +897,8 @@ function renderPlanComparisonV875(){
   ].map(([label,key])=>[label,...["starter","business","pro"].map(p=>
     typeof window.GF_PLANS[p][key] === 'boolean' ? (window.GF_PLANS[p][key]?'Incluso':'—') : window.GF_PLANS[p][key])]);
 
-  box.innerHTML = `<div class="plan-comparison-head-v875"><div><span>CONFRONTO COMPLETO</span><h2>Funzionalità incluse</h2></div><p>Una vista unica per confrontare rapidamente i tre livelli.</p></div>
-  <div class="plan-table-wrap-v875"><table class="plan-table-v875"><thead><tr><th>Funzionalità</th><th>Starter</th><th>Business</th><th>Pro</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`).join("")}</tbody></table></div>`;
+  box.innerHTML = `<header class="gf-panel__header"><div><p class="gf-kicker">Confronto completo</p><h2 class="gf-panel__title">Funzionalità incluse</h2></div><p class="gf-muted">Una vista unica per confrontare rapidamente i tre livelli.</p></header>
+  <div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards"><thead><tr><th scope="col">Funzionalità</th><th scope="col">Starter</th><th scope="col">Business</th><th scope="col">Pro</th></tr></thead><tbody>${rows.map(r=>`<tr><td data-label="Funzionalità">${r[0]}</td><td data-label="Starter">${r[1]}</td><td data-label="Business">${r[2]}</td><td data-label="Pro">${r[3]}</td></tr>`).join("")}</tbody></table></div>`;
 }
 async function confirmUpgrade(){ return checkoutOrChangePlan(); }
 

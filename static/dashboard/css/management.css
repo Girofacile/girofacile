@@ -21,16 +21,15 @@
 #app .gf-page{min-width:0}
 body:has(#app .gf-page:not(.hidden)) .main-area{background-color:#f5f7fb}
 body:has(#app .gf-page:not(.hidden)) .content{padding:28px 34px 48px}
-#app .gf-page:is(.plan-account-page-v875,.billing-page-v876){padding:0 0 32px}
-#app .gf-page :is(.page-title-row,.dash-subpage-title-row,.plan-page-top-v875,.billing-page-top-v876){
+#app .gf-page :is(.page-title-row,.dash-subpage-title-row){
   display:flex;align-items:center;justify-content:space-between;gap:24px;
   min-height:74px;margin:0 0 24px;padding:0;border:0;background:transparent;box-shadow:none;
 }
-#app .gf-page :is(.page-title-row,.dash-subpage-title-row,.plan-page-top-v875,.billing-page-top-v876)>div{min-width:0}
+#app .gf-page :is(.page-title-row,.dash-subpage-title-row)>div{min-width:0}
 #app .gf-page :is(h1,.route-preview-design .result-header h2){
   font:700 40px/1.12 Arial,Helvetica,sans-serif;letter-spacing:-1.5px;color:#0b1435;margin:0 0 7px;
 }
-#app .gf-page :is(.page-title-row,.dash-subpage-title-row,.plan-title-block-v875,.billing-page-top-v876) p{
+#app .gf-page :is(.page-title-row,.dash-subpage-title-row) p{
   font-size:15px;font-weight:400;line-height:1.5;color:#52688f;margin:0;max-width:850px;
 }
 #app .gf-page :is(.panel-header,.drivers-list-header){gap:16px;flex-wrap:wrap;align-items:center}
@@ -39,8 +38,7 @@ body:has(#app .gf-page:not(.hidden)) .content{padding:28px 34px 48px}
 
 /* Reusable surfaces: compact nested cards, generous main panels. */
 #app .gf-page :is(.panel,.driver-card,.dash-live-summary-card,.dash-main-card,.dash-empty-subpage,.dash-detail-empty,
-  .scheduled-overview,.scheduled-stops,.scheduled-summary,.result-summary-card,.stops-panel,.alerts-panel,
-  .billing-section-v876,.plan-page-features-v875,.plan-help-card-v875,.plan-comparison-v875,.up-card-v875,.feature-lock-card,.feature-plan-card){
+  .scheduled-overview,.scheduled-stops,.scheduled-summary,.result-summary-card,.stops-panel,.alerts-panel){
   min-width:0;border:1px solid var(--gf-line);border-radius:var(--gf-radius);background:var(--gf-surface);box-shadow:var(--gf-shadow);
 }
 #app .gf-page .panel{padding:22px 20px}
@@ -85,13 +83,13 @@ body:has(#app .gf-page:not(.hidden)) .content{padding:28px 34px 48px}
 #app .gf-page .gf-field>label{font-size:13px;font-weight:600;line-height:1.5;margin:0;color:#374e77}
 
 /* Shared KPIs, table surfaces, status pills and empty states. */
-#app .gf-page :is(.stat-card,.scheduled-metric,.mini-card,.billing-summary-card-v876,.gf-vehicle-usage-card){
+#app .gf-page :is(.stat-card,.scheduled-metric,.mini-card,.gf-vehicle-usage-card){
   min-width:0;padding:22px 20px;border:1px solid var(--gf-line);border-radius:var(--gf-radius);
   background:linear-gradient(135deg,#fff 50%,#edf5ff);box-shadow:var(--gf-shadow);
 }
-#app .gf-page :is(.stat-card,.scheduled-metric,.billing-summary-card-v876):nth-child(2){background:linear-gradient(135deg,#fff 50%,#effcf6)}
-#app .gf-page :is(.stat-card,.scheduled-metric,.billing-summary-card-v876):nth-child(3){background:linear-gradient(135deg,#fff 50%,#f6f0ff)}
-#app .gf-page :is(.stat-card,.scheduled-metric,.billing-summary-card-v876):nth-child(4){background:linear-gradient(135deg,#fff 50%,#fff2f6)}
+#app .gf-page :is(.stat-card,.scheduled-metric):nth-child(2){background:linear-gradient(135deg,#fff 50%,#effcf6)}
+#app .gf-page :is(.stat-card,.scheduled-metric):nth-child(3){background:linear-gradient(135deg,#fff 50%,#f6f0ff)}
+#app .gf-page :is(.stat-card,.scheduled-metric):nth-child(4){background:linear-gradient(135deg,#fff 50%,#fff2f6)}
 #app .gf-page :is(.stat-card)>strong,
 #app .gf-page .stat-card>div>strong{font-size:32px;line-height:1.2;font-weight:700;letter-spacing:-1px;color:#0b1435;font-variant-numeric:tabular-nums}
 #app .gf-page :is(.stat-icon){border-radius:17px;box-shadow:none}
@@ -166,7 +164,7 @@ body:has(#app .gf-page:not(.hidden)) .content{padding:28px 34px 48px}
 @media(max-width:820px){
   body:has(#app .gf-page:not(.hidden)) .content{padding:20px 16px 110px}
   #app .gf-page :is(h1,.route-preview-design .result-header h2){font-size:32px;letter-spacing:-1px}
-  #app .gf-page :is(.page-title-row,.dash-subpage-title-row,.plan-page-top-v875,.billing-page-top-v876){align-items:flex-start;flex-direction:column;gap:14px;min-height:0;margin-bottom:22px}
+  #app .gf-page :is(.page-title-row,.dash-subpage-title-row){align-items:flex-start;flex-direction:column;gap:14px;min-height:0;margin-bottom:22px}
   #app .gf-page :is(.panel){padding:18px 16px}
   body.app-logged-in #app .gf-page .panel{border-radius:18px!important;box-shadow:var(--gf-shadow)!important}
   .gf-dialog :is(.modal){border-radius:18px!important}

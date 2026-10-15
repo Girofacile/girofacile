@@ -26,33 +26,27 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(h1,h2,h3,h4)
   letter-spacing:-.01em;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .page-title-row,.dash-subpage-title-row,.orders-page-title,
-  .plan-page-top-v875,.billing-page-top-v876,.orders-connections-mobile-head
+  .page-title-row,.dash-subpage-title-row,.orders-page-title,.orders-connections-mobile-head
 ){
   min-width:0;
   gap:16px 24px;
   margin-bottom:22px;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .page-title-row,.dash-subpage-title-row,
-  .plan-page-top-v875,.billing-page-top-v876
-) h1{
+  .page-title-row,.dash-subpage-title-row) h1{
   margin:0 0 5px!important;
   font:700 28px/1.12 var(--gf-font-display)!important;
   letter-spacing:-.02em!important;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .page-title-row,.dash-subpage-title-row,
-  .plan-page-top-v875,.billing-page-top-v876
-) p{
+  .page-title-row,.dash-subpage-title-row) p{
   margin:3px 0 0!important;
   font:400 14px/1.5 var(--gf-font-family)!important;
   color:var(--gf-color-muted)!important;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .panel-header,.customer-list-head,.gf-directory-head,
-  .orders-list-head,.orders-sources-directory-head,
-  .billing-section-head-v876,.settings-section-head
+  .orders-list-head,.orders-sources-directory-head,.settings-section-head
 ){
   display:flex;
   align-items:center;
@@ -64,9 +58,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .panel-header,.customer-list-head,.gf-directory-head,
-  .orders-list-head,.orders-sources-directory-head,
-  .billing-section-head-v876
-) h2{
+  .orders-list-head,.orders-sources-directory-head) h2{
   margin:0;
   color:var(--gf-color-text)!important;
   font:700 16px/1.2 var(--gf-font-display)!important;
@@ -87,10 +79,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   .customer-card,.company-card-v29,.onboarding-card-v29,.dash-sub-card,.dash-sub-route-picker,
   .scheduled-overview,.scheduled-stops,.scheduled-summary,.completed-picker,
   .completed-stops,.completed-summary,.live-design-card,.live-design-picker,
-  .route-map-panel-v74,.planning-setup-panel,.billing-section-v876,
-  .billing-summary-card-v876,.plan-current-hero-v875,.plan-current-side-v875,
-  .plan-page-features-v875,.plan-help-card-v875,.plan-comparison-v875,
-  .up-card-v875,.feature-lock-card,.feature-plan-card){
+  .route-map-panel-v74,.planning-setup-panel){
   border:1px solid var(--gf-color-border)!important;
   border-radius:16px!important;
   background:var(--gf-color-surface)!important;
@@ -99,8 +88,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   min-width:0;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(.customer-card,.orders-order-card,
-  .orders-source-card,.up-card-v875
-):hover{
+  .orders-source-card):hover{
   border-color:#c2d0e7!important;
   box-shadow:0 4px 18px rgba(15,34,80,.09)!important;
 }
@@ -114,8 +102,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   color:var(--gf-color-text);
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .company-section-icon,.gf-directory-metric-icon,.billing-summary-icon-v876
-){
+  .company-section-icon,.gf-directory-metric-icon){
   border-radius:10px!important;
   background:var(--gf-color-info-bg)!important;
   color:var(--gf-color-info)!important;
@@ -124,7 +111,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
 
 /* 3. KPI: stesso ordine tipografico dello strip della dashboard. */
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .stat-card,.customer-metric,.gf-directory-metric,.orders-metric-card,.billing-summary-card-v876,.gf-stat,.scheduled-metric,.completed-card
+  .stat-card,.customer-metric,.gf-directory-metric,.orders-metric-card,.gf-stat,.scheduled-metric,.completed-card
 ){
   min-width:0;
   padding:18px 20px!important;
@@ -134,7 +121,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   box-shadow:var(--gf-shadow-sm)!important;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .stat-card,.customer-metric,.gf-directory-metric,.orders-metric-card,.billing-summary-card-v876,.gf-stat,.scheduled-metric
+  .stat-card,.customer-metric,.gf-directory-metric,.orders-metric-card,.gf-stat,.scheduled-metric
 ) :is(strong,.stat-value,.customer-metric-value,.orders-metric-value){
   color:var(--gf-color-primary)!important;
   font:700 30px/1.1 var(--gf-font-display)!important;
@@ -142,14 +129,13 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   font-variant-numeric:tabular-nums;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .stat-card,.customer-metric,.gf-directory-metric,.orders-metric-card,.billing-summary-card-v876,.gf-stat,.scheduled-metric
+  .stat-card,.customer-metric,.gf-directory-metric,.orders-metric-card,.gf-stat,.scheduled-metric
 ) :is(small,.stat-label,.orders-metric-label,.customer-metric-label){
   font:400 13px/1.4 var(--gf-font-family)!important;
   color:var(--gf-color-muted)!important;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .orders-metrics,.gf-directory-metrics,.customer-metrics,.stats-grid,
-  .billing-summary-grid-v876,.scheduled-metrics
+  .orders-metrics,.gf-directory-metrics,.customer-metrics,.stats-grid,.scheduled-metrics
 ){
   gap:16px!important;
   margin-bottom:22px;
@@ -315,7 +301,7 @@ body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
   max-width:100%;
 }
 body[data-gf-surface="workspace"] #app .tab:not(#tab-dashboard) :is(
-  .gf-table,.customer-table,.orders-table,.plan-table-v875,.result-table
+  .gf-table,.customer-table,.orders-table,.result-table
 ){
   font:400 14px/1.5 var(--gf-font-family)!important;
   color:var(--gf-color-text);
