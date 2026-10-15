@@ -551,7 +551,7 @@ body[data-gf-surface] .gf-savebar{
   font-size:var(--gf-font-sm);font-weight:var(--gf-weight-semibold);
 }
 /* Con la barra mobile in basso (fino a 1024 px) i pulsanti della barra di salvataggio hanno l'altezza touch. */
-@media (max-width:1024px){body[data-gf-surface] .gf-savebar .gf-button{min-height:var(--gf-control-touch)}}
+@media (max-width:1024px){body[data-gf-surface] .gf-savebar .gf-button{min-height:var(--gf-control-touch) !important}}
 /* Finestra sovrapposta e pannello laterale -------------------------------- */
 body[data-gf-surface] .gf-overlay{
   position:fixed;inset:0;z-index:var(--gf-z-dialog);display:grid;place-items:center;padding:var(--gf-space-4);
