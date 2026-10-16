@@ -124,8 +124,10 @@ test('unified components and shared layout use only theme variables',()=>{
   assert.doesNotMatch(shellCss,/#[0-9a-f]{3,8}\b|rgba?\(/i,'Shell colors come from theme.css');
   const shell=read(assets+'shell.js');new vm.Script(shell);
   assert.doesNotMatch(shell,/innerHTML|insertAdjacentHTML|fetch\s*\(|\/api\//);
-  for(const item of ['dashboard','company','giro','ordini','clienti','depositi','mezzi','autisti','storico','settings'])
+  for(const item of ['dashboard','company','ordini','clienti','depositi','mezzi','autisti','storico','settings'])
     assert.match(shell,new RegExp("id:'"+item+"'"),item);
+  assert.doesNotMatch(shell,/\bid:\s*['"]giro['"]/,'Planning opens after order or customer selection');
+  assert.match(read('static/dashboard/index.html'),/<section id="tab-giro"/);
 });
 
 test('derived operational badges follow real portal classes and state transitions',()=>{

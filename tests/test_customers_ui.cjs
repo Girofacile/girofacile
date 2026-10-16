@@ -44,10 +44,14 @@ test('directory loads beyond one API batch and discards stale responses',async()
   let resolve;f.ctx.api=()=>new Promise(r=>resolve=r);
   const old=f.run('refreshCustomerDirectory()');f.ctx.api=async()=>[{id:2000}];await f.run('refreshCustomerDirectory()');resolve([{id:3}]);await old;assert.equal(f.ctx.customersCache[0].id,2000);
 });
-test('customer directory offers row selection with a bulk unloading-window bar',()=>{
+test('customer selection supports planning and keeps unloading windows feature-gated',()=>{
   const html=fs.readFileSync('static/dashboard/index.html','utf8');
   const js=fs.readFileSync('static/dashboard/js/customers.js','utf8');
-  assert.match(html,/id="customerBulkBar"[^>]*data-gf-feature="time_windows"/);
+  const bulkBar=html.match(/<div\b[^>]*id="customerBulkBar"[^>]*>/)?.[0];
+  assert.ok(bulkBar,'Shared customer selection bar');
+  assert.doesNotMatch(bulkBar,/data-gf-feature=/);
+  assert.match(html,/id="customerBulkMenu"[^>]*data-gf-feature="time_windows"/);
+  assert.match(html,/id="customersGoPlanning"[^>]*onclick="goCustomerPlanning\(\)"/);
   assert.match(html,/id="customerDrawer"/);
   assert.match(js,/function clearCustomerSelection/);
   assert.match(js,/function applyCustomerBulkSlot/);
