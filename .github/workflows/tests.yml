@@ -141,3 +141,37 @@ jobs:
       - run: docker build -t girofacile-test .
       - name: Verify backup tools in the deployable image
         run: docker run --rm --entrypoint sh girofacile-test -c 'test -f /app/scripts/backup_database.py && pg_dump --version && pg_restore --version'
+
+  planning-selection:
+    name: Planning selection desktop and mobile
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      DATABASE_URL: 'sqlite+pysqlite:///:memory:'
+      ALLOW_SQLITE_LEGACY: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify selection controller regressions
+        run: node --test tests/test_customer_selection_planning.cjs tests/test_customer_planning_ui.cjs
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install isolated browser test dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install playwright==1.55.0
+          python -m playwright install --with-deps chromium
+      - name: Verify order and customer selection at all viewports
+        run: python tests/check_orders_ui.py
+      - name: Preserve planning screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: planning-selection-responsive
+          path: test-results/orders-responsive/
+          if-no-files-found: ignore
+          retention-days: 7
