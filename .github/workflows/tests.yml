@@ -211,3 +211,34 @@ jobs:
           path: test-results/gps-browser/
           if-no-files-found: ignore
           retention-days: 7
+
+  planning-previews:
+    name: Planning layout proposals desktop and mobile
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install isolated static preview browser dependencies
+        run: |
+          pip install playwright==1.55.0
+          python -m playwright install --with-deps chromium
+      - name: Verify all planning layout proposals at four viewports
+        run: python tests/check_planning_previews.py
+      - name: Preserve interactive proposals and responsive screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: planning-layout-previews
+          path: |
+            anteprime/
+            static/design-system/theme.css
+            static/design-system/components.css
+            static/design-system/layout.css
+            static/design-system/design-system.js
+            static/design-system/shell.js
+            test-results/planning-previews/
+          if-no-files-found: error
+          retention-days: 14
