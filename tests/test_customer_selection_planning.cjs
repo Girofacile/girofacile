@@ -62,3 +62,13 @@ test('selection and primary action remain available without time windows; no pla
   assert.doesNotMatch(customers, /data-label="Seleziona" data-gf-feature/);
   assert.doesNotMatch(customers, /class="gf-check" data-gf-feature="time_windows"><input type="checkbox" class="cx-cb"/);
 });
+
+test('editing customer selection does not require completing route details',()=>{
+  const core=fs.readFileSync('static/dashboard/js/core.js','utf8');
+  const start=core.indexOf('function advanceRoutePlanning(){');
+  const end=core.indexOf('\n}',start)+2;
+  const navigations=[];
+  const context={customerDirectoryPlanning:true,showTab:name=>navigations.push(name)};
+  new Function('context','with(context){'+core.slice(start,end)+';advanceRoutePlanning();}')(context);
+  assert.deepEqual(navigations,['clienti']);
+});

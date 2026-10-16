@@ -1541,6 +1541,7 @@ function renderPlanningCompletion(missing){
 }
 
 function advanceRoutePlanning(){
+  if(customerDirectoryPlanning){showTab("clienti");return;}
   if(globalThis.GFOrderPlanning?.active()){GFOrderPlanning.proceed();return;}
   const missing = routePlanningMissingFieldsV68();
   if(!missing.length){ openCustomerPlanningStep(); return; }
@@ -3213,6 +3214,7 @@ async function programCurrentRoute(){
 }
 
 async function openProgrammedRouteForEdit(id, goToPlanning=false){
+  customerDirectoryPlanning=false;
   globalThis.GFOrderPlanning?.leave();
   try{
     const r = await api(`/api/routes/${id}`);
