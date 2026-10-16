@@ -1,12 +1,13 @@
 import csv
 import io
+from datetime import date
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import Response
 from sqlalchemy.orm import Session, selectinload
 
 from ..core.dependencies import current_user, owned
-from ..core.utils import parse_date_value, date_to_iso, time_to_hhmm
+from ..core.utils import csv_safe_value, date_to_iso, time_to_hhmm
 from ..database import get_db
 from ..models import RoutePlan, User, DeliveryStatus, Delivery, Customer
 from ..routers.routes import computed_route_status, route_status_label
@@ -109,14 +110,36 @@ def build_report_data(
     driver_id: str = "", vehicle_id: str = "",
     status: str = "",
 ) -> dict:
+    dates = {}
+    for name, value in (("date_from", date_from), ("date_to", date_to)):
+        if not value:
+            continue
+        try:
+            parsed = date.fromisoformat(value)
+            if parsed.isoformat() != value:
+                raise ValueError
+            dates[name] = parsed
+        except (TypeError, ValueError):
+            raise HTTPException(422, "Le date del report devono essere valide e nel formato AAAA-MM-GG.")
+    if len(dates) == 2 and dates["date_from"] > dates["date_to"]:
+        raise HTTPException(422, "La data iniziale non può essere successiva alla data finale.")
+    for name, value in (("agent_id", agent_id), ("customer_id", customer_id),
+                        ("driver_id", driver_id), ("vehicle_id", vehicle_id)):
+        if not value or (name == "agent_id" and value == "interno"):
+            continue
+        try:
+            if not 0 < int(value) <= 2_147_483_647:
+                raise ValueError
+        except (TypeError, ValueError):
+            raise HTTPException(422, "Seleziona un filtro valido per il report.")
     show_agents = agents_enabled(user)
     if not show_agents:
         agent_id = ""
     query = owned(db.query(RoutePlan).options(selectinload(RoutePlan.deliveries).selectinload(Delivery.customer).selectinload(Customer.agent), selectinload(RoutePlan.driver), selectinload(RoutePlan.vehicle)), RoutePlan, user)
     if date_from:
-        query = query.filter(RoutePlan.data_giro >= parse_date_value(date_from))
+        query = query.filter(RoutePlan.data_giro >= dates["date_from"])
     if date_to:
-        query = query.filter(RoutePlan.data_giro <= parse_date_value(date_to))
+        query = query.filter(RoutePlan.data_giro <= dates["date_to"])
     if driver_id:
         try:
             query = query.filter(RoutePlan.driver_id == int(driver_id))
@@ -350,7 +373,9 @@ def reports_export(
     writer = csv.writer(output, delimiter=";")
     writer.writerow(["Data", "Giro", "Stato", "Autista", "Mezzo", "Fermate previste", "Km pianificati ripartiti", "Ore rilevate o stimate", "Litri stimati", "Costo energetico stimato"])
     for row in data["tables"]["giri"]:
-        writer.writerow([row["data_giro"], row["nome"], row["status_label"], row["driver_name"], row["vehicle_name"], row["consegne"], row["km"], row["ore"], row["litri"], row["costo"]])
+        values = [row["data_giro"], row["nome"], row["status_label"], row["driver_name"], row["vehicle_name"], row["consegne"], row["km"], row["ore"], row["litri"], row["costo"]]
+        # Names entered by users must remain text when opened in a spreadsheet.
+        writer.writerow([csv_safe_value(value) for value in values])
     return Response(
         content=output.getvalue(), media_type="text/csv",
         headers={"Content-Disposition": "attachment; filename=report_girofacile.csv"},

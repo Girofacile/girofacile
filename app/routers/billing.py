@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 from ..core.clock import utc_now
+from ..core.utils import csv_safe_value
 
 from ..core.config import PLAN_PRICES, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET
 from ..core.dependencies import current_user
@@ -197,7 +198,7 @@ def export_company_data(db: Session = Depends(get_db), user: User = Depends(curr
             for row in query.all():
                 values = [getattr(row, key, "") for key in fields]
                 # Neutralize spreadsheet formulas in user-entered cells.
-                writer.writerow(["'" + v if isinstance(v, str) and v.startswith(("=", "+", "-", "@", "\t", "\r")) else v for v in values])
+                writer.writerow([csv_safe_value(v) for v in values])
             z.writestr(model.__tablename__ + ".csv", output.getvalue().encode("utf-8-sig"))
     archive.seek(0)
     return StreamingResponse(archive, media_type="application/zip", headers={"Content-Disposition": 'attachment; filename="dati_girofacile.zip"'})

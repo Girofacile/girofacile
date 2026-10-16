@@ -8,6 +8,7 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy import inspect, text
 from sqlalchemy.orm import Session
 from ..core.dependencies import require_superadmin
+from ..core.utils import csv_safe_value
 from ..database import get_db, engine
 from .admin_helpers import (
     _activity,
@@ -211,7 +212,7 @@ def admin_database_export(
     with engine.connect() as conn:
         rows = conn.execute(rows_sql, params).mappings().all()
         for row in rows:
-            writer.writerow([_mask_db_value(col, row.get(col), table_name, row) for col in column_names])
+            writer.writerow([csv_safe_value(_mask_db_value(col, row.get(col), table_name, row)) for col in column_names])
 
     _activity(db, superadmin.get("username"), "database_table_exported", f"Export CSV tabella {table_name}", "warning")
     db.commit()

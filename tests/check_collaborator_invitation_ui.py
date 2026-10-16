@@ -152,7 +152,9 @@ def main():
                             if path == "/dashboard":
                                 route.fulfill(content_type="text/html", body="<h1>Accesso GiroFacile</h1>")
                                 return
-                            relative = "static/collaborator/setup.html" if path == "/collaborator/setup" else path.lstrip("/")
+                            aliases = {"/collaborator/setup": "static/collaborator/setup.html",
+                                       "/favicon.ico": "static/favicon.ico"}
+                            relative = aliases.get(path, path.lstrip("/"))
                             file = (ROOT / relative).resolve()
                             if file.is_relative_to(ROOT) and file.is_file():
                                 route.fulfill(path=str(file))

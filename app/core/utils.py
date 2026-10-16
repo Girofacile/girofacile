@@ -3,6 +3,14 @@ from zoneinfo import ZoneInfo
 
 from .config import LOCAL_TIMEZONE
 
+
+def csv_safe_value(value):
+    """Keep user-controlled strings from becoming spreadsheet formulas."""
+    if isinstance(value, str) and (value.startswith(("\t", "\r", "\n")) or
+                                   value.lstrip().startswith(("=", "+", "-", "@"))):
+        return "'" + value
+    return value
+
 try:
     LOCAL_TZ = ZoneInfo(LOCAL_TIMEZONE)
 except Exception:

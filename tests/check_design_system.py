@@ -195,7 +195,7 @@ def main():
 
     try:
         with sync_playwright() as pw:
-            browser = pw.chromium.launch(headless=True)
+            browser = pw.chromium.launch(**({"channel": "chrome"} if os.name == "nt" else {}), headless=True)
             try:
                 for width in WIDTHS:
                     page = browser.new_page(viewport=dict(width=width,height=1000),device_scale_factor=1)
