@@ -166,6 +166,7 @@
     $("#empty-selection").hidden = list.length > 0;
     $("#fleet-fields").hidden = !fleet();
     $("#trip-energy-price").disabled = value("trip-energy-mode") !== "custom";
+    if ($("#trip-energy-price").disabled) $("#trip-energy-price").value = value("trip-vehicle") === "ev01" ? "0.30" : "1.75";
     $("#trip-energy-price").previousElementSibling.textContent = value("trip-vehicle") === "ev01" ?
       "Prezzo energia (€/kWh)" : "Prezzo carburante (€/L)";
     $('[data-summary="departure"]').textContent =

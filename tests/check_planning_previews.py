@@ -273,8 +273,9 @@ def run_case(browser, origin, variant, width, height, output):
         page.locator("#trip-energy-price").fill("1.75")
         advanced.locator("summary").click()
 
-        # Negative inputs cannot produce a usable result.
-        action(page, "edit-config")
+        # The rejected price already returns to configuration.
+        # Negative quantities cannot produce a usable result either.
+        organize(page, variant)
         bad_weight = quantity_field(page, variant)
         bad_weight.fill("-1")
         organize(page, variant)
