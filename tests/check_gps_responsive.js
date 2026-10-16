@@ -71,7 +71,7 @@ async function main() {
         assert.equal(await page.locator('#errorScreen').isVisible(),false);
         assert.equal(await page.locator('#completedScreen').isVisible(),false);
       }
-      for(const width of [320,390,768,1440]) {
+      for(const width of [320,390,768,1024,1440]) {
         await page.setViewportSize({width,height:900});
         await page.evaluate(()=>window.scrollTo(0,0));
         const box=await page.locator('[data-gps-status]').boundingBox();
@@ -108,16 +108,29 @@ async function main() {
     const company=await browser.newPage();company.on('pageerror',e=>errors.push(e.message));
     await company.clock.install();
     let state='fresh', offline=false, reads=0;
+    const companyRoute={id:1,nome:'Consegne Milano centro',status:'in_corso',
+      data_giro:'2026-10-05',orario_partenza:'08:00',driver_name:'Marco Rossi',
+      vehicle_name:'Furgone 03',totale_km:12,totale_minuti:90,
+      consegne:[{id:11,ordine:1,cliente_nome:'Farmacia Centrale',indirizzo:'Via Roma 12, Milano',
+        delivery_status:'in_attesa',arrivo_stimato:'10:30'}]};
+    const mapData={depot:{lat:45.45,lon:9.18},
+      stops:[{id:11,name:'Farmacia Centrale',address:'Via Roma 12, Milano',lat:45.46,lon:9.19}],
+      road_polyline:{encoded_polylines:[]}};
     await company.route('**/api/**',route=>{
       const url=new URL(route.request().url()).pathname;
       if(url==='/api/routes/1/position') {
         reads++;
         if(offline) return route.abort();
-        return route.fulfill({json:{state,route_status:'in_corso',route_name:'Consegne Milano centro',vehicle_name:'Furgone 03',next_stop:'Farmacia Centrale',progress:40,
+        return route.fulfill({json:{state,route_status:'in_corso',route_name:companyRoute.nome,
+          vehicle_name:companyRoute.vehicle_name,
           position:state==='unavailable'?null:{latitude:45.46,longitude:9.19,accuracy:20,captured_at:new Date().toISOString()}}});
       }
+      if(url==='/api/routes/operativi')return route.fulfill({json:[companyRoute]});
+      if(url==='/api/routes/1')return route.fulfill({json:companyRoute});
+      if(url==='/api/routes/1/map-data')return route.fulfill({json:mapData});
       let data=[];
-      if(url==='/api/me')data={authenticated:true,username:'test',role:'admin',onboarding_completed:true,workspace_operational:true,plan:'business',plan_status:'active',limits:{}};
+      // Exercise the map in isolation after the real scripts have loaded.
+      if(url==='/api/me')data={authenticated:false};
       else if(url.includes('chat'))data={messages:[],unread:0};
       else if(url.endsWith('catalog.js'))return route.fulfill({contentType:'application/javascript',body:'window.GF_PLANS={};'});
       else if(/profile|settings|status|my-plan/.test(url))data={completed:true,workspace_operational:true};
@@ -129,32 +142,74 @@ async function main() {
       if(url.includes('tile.openstreetmap.org'))return route.fulfill({contentType:'image/svg+xml',body:'<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"><rect width="256" height="256" fill="#edf2ee"/><path d="M0 80H256M90 0V256M0 210H256" stroke="white" stroke-width="14"/></svg>'});
       return route.abort();
     });
-    await company.goto(base+'/static/dashboard/index.html');
+    await company.goto(base+'/static/dashboard/index.html',{waitUntil:'networkidle'});
     await company.waitForFunction(()=>typeof renderDashboardInProgressSubpage==='function');
-    await company.evaluate(()=>{
-      document.body.innerHTML='<div id="app"><div class="gf-page"><div id="dashboardInProgressPage"></div></div></div>';
-      const r={id:1,nome:'Consegne Milano centro',status:'in_corso',driver_name:'Marco Rossi',vehicle_name:'Furgone 03',consegne:[]};
+    await company.evaluate(r=>{
+      document.body.innerHTML='<div id="app"><div class="gf-page"><section id="tab-dashboard-in-progress" class="tab"><div id="dashboardInProgressPage"></div></section><section id="tab-route-preview" class="tab hidden"></section></div></div>';
       renderDashboardInProgressSubpage([r],r);
-    });
-    await company.locator('.gf-live-vehicle').waitFor();
-    for(const width of [320,390,768,1440]) {
+    },companyRoute);
+    const marker=company.locator('.gf-ip-vehicle-icon');
+    const badge=company.locator('.gf-ip-map-badge');
+    const follow=company.getByRole('button',{name:'Segui il mezzo',exact:true});
+    const assertMapPreserved=async()=>{
+      assert.equal(await company.locator('.gf-ip-map-canvas.leaflet-container').count(),1);
+      assert.equal(await company.locator('.gf-ip-pin-icon').count(),2);
+    };
+    const poll=async()=>{
+      const next=company.waitForRequest(request=>new URL(request.url()).pathname==='/api/routes/1/position');
+      await company.clock.fastForward(31000);
+      const response=await (await next).response();
+      if(response)await response.finished();
+    };
+    await marker.waitFor({state:'visible'});
+    await company.waitForFunction(()=>document.querySelector('.gf-ip-map-badge').classList.contains('live'));
+    assert.equal(await marker.count(),1);
+    assert.equal(await badge.locator('strong').textContent(),'Posizione live');
+    assert.equal(await follow.isEnabled(),true);
+    await assertMapPreserved();
+    const liveColor=await marker.locator('span').first().evaluate(el=>getComputedStyle(el).backgroundColor);
+    for(const width of [320,390,768,1024,1440]) {
       await company.setViewportSize({width,height:1100});
-      const box=await company.locator('#dashboardLiveGPS').boundingBox();
+      const box=await company.locator('.gf-ip-map-wrap').boundingBox();
       assert.ok(box.x>=0 && box.x+box.width<=width+1,JSON.stringify(box));
-      assert.ok(await company.locator('#dashboardLiveGPS').evaluate(el=>el.scrollWidth<=el.clientWidth));
+      assert.ok(await company.locator('.gf-ip-map-wrap').evaluate(el=>el.scrollWidth<=el.clientWidth));
       await company.screenshot({path:path.join(output,`dashboard-${width}.png`),fullPage:true});
     }
-    state='stale';await company.clock.fastForward(31000);
-    await company.waitForFunction(()=>document.querySelector('#dashboardLiveGPS').dataset.state==='stale');
-    assert.equal(await company.locator('.gf-live-vehicle').evaluate(el=>el.style.opacity),'0.45');
-    offline=true;await company.clock.fastForward(31000);
-    await company.waitForFunction(()=>document.querySelector('[data-gps-state]').textContent.includes('Connessione'));
-    offline=false;state='unavailable';await company.clock.fastForward(31000);
-    await company.waitForFunction(()=>document.querySelector('#dashboardLiveGPS').dataset.state==='unavailable');
-    assert.equal(await company.locator('.gf-live-vehicle').count(),0);
-    assert.ok(reads>=4);
+    state='stale';await poll();
+    await company.waitForFunction(()=>document.querySelector('.gf-ip-map-badge').classList.contains('stale'));
+    assert.equal(await marker.evaluate(el=>el.classList.contains('stale')),true);
+    assert.notEqual(await marker.locator('span').first().evaluate(el=>getComputedStyle(el).backgroundColor),liveColor);
+    assert.equal(await badge.locator('strong').textContent(),'Posizione non aggiornata');
+    offline=true;await poll();
+    await company.waitForFunction(()=>document.querySelector('.gf-ip-map-badge').classList.contains('unknown'));
+    assert.equal(await badge.locator('strong').textContent(),'Posizione GPS non disponibile');
+    assert.equal(await follow.isDisabled(),true);
+    assert.equal(await marker.count(),0);
+    assert.equal(await company.locator('.leaflet-overlay-pane path').count(),0);
+    await assertMapPreserved();
+    offline=false;state='fresh';await poll();
+    await marker.waitFor({state:'visible'});
+    await company.waitForFunction(()=>document.querySelector('.gf-ip-map-badge').classList.contains('live'));
+    assert.equal(await marker.count(),1);
+    assert.equal(await marker.evaluate(el=>el.classList.contains('stale')),false);
+    assert.equal(await follow.isEnabled(),true);
+    state='unavailable';await poll();
+    await company.waitForFunction(()=>document.querySelector('.gf-ip-map-badge').classList.contains('unknown'));
+    assert.equal(await marker.count(),0);
+    assert.equal(await company.locator('.leaflet-overlay-pane path').count(),0);
+    assert.equal(await follow.isDisabled(),true);
+    await assertMapPreserved();
+    state='fresh';await poll();
+    await marker.waitFor({state:'visible'});
+    assert.ok(reads>=6);
+    await company.evaluate(()=>showTab('route-preview'));
+    await company.waitForFunction(()=>document.getElementById('tab-dashboard-in-progress').classList.contains('hidden'));
+    const stoppedReads=reads;
+    await company.clock.fastForward(90000);
+    assert.equal(reads,stoppedReads);
+    assert.equal(await marker.count(),0);
     assert.deepEqual(errors,[]);
-    console.log('PASS GPS: driver/operator lifecycle, denial, background, reconnect; dashboard fresh/stale/offline; 320/390/768/1440px.');
+    console.log('PASS GPS: driver/operator lifecycle, denial, background, reconnect; dashboard fresh/stale/offline/unavailable, recovery and stop on navigation; 320/390/768/1024/1440px.');
   } finally {if(browser)await browser.close();await new Promise(resolve=>server.close(resolve));}
 }
 main().catch(error=>{console.error(error);process.exitCode=1;});

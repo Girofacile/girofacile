@@ -102,11 +102,15 @@ window.GFInProgressReference=(()=>{
     }
     const text=page?.querySelector('.gf-ip-map-gps');
     if(text)text.textContent=gpsText(current);
+    const lat=p?.latitude==null?NaN:Number(p.latitude),lon=p?.longitude==null?NaN:Number(p.longitude);
+    const hasPosition=Number.isFinite(lat)&&Number.isFinite(lon)&&Math.abs(lat)<=90&&Math.abs(lon)<=180;
+    if(!hasPosition){
+      state.vehicle?.remove();state.circle?.remove();
+      state.vehicle=state.circle=null;state.follow=false;
+    }
     const follow=page?.querySelector('[data-ip-action="follow"]');
-    if(follow){follow.disabled=!p;follow.setAttribute('aria-pressed',String(state.follow));}
-    if(!state.map||!p)return;
-    const lat=Number(p.latitude),lon=Number(p.longitude);
-    if(!Number.isFinite(lat)||!Number.isFinite(lon)||Math.abs(lat)>90||Math.abs(lon)>180)return;
+    if(follow){follow.disabled=!hasPosition;follow.setAttribute('aria-pressed',String(state.follow));}
+    if(!state.map||!hasPosition)return;
     const coord=[lat,lon],radius=Math.min(1000,Math.max(0,n(p.accuracy)));
     if(!state.vehicle){
       const mark=L.divIcon({className:'gf-ip-vehicle-icon',html:'<span>'+icon('target')+'</span>',iconSize:[38,38],iconAnchor:[19,19]});

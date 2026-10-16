@@ -155,3 +155,72 @@ test('nessun giro attivo mantiene lo stato vuoto e l’azione per pianificare',(
   assert.match(page.innerHTML,/Nessun giro in corso/);
   assert.match(page.innerHTML,/Pianifica un giro/);
 });
+
+function gpsHarness(){
+  const source=read('static/dashboard/js/in-progress-reference.js');
+  const start=source.indexOf('  function drawGPS(){');
+  const end=source.indexOf('  async function drawMap(',start);
+  assert.ok(start>=0&&end>start,'GPS rendering function');
+  const map={layers:new Set(),panTo(){}};
+  const state={id:1,gps:new Map(),map,vehicle:null,circle:null,follow:false};
+  const follow={disabled:true,attributes:{},setAttribute(name,value){this.attributes[name]=value;}};
+  const layer=(kind,coord)=>{
+    const item={kind,coord,removed:false,stale:false,
+      addTo(target){target.layers.add(this);return this;},
+      remove(){map.layers.delete(this);this.removed=true;return this;},
+      getElement(){return {classList:{toggle:(_,on)=>{this.stale=on;}}};},
+      setLatLng(next){this.coord=next;},
+      setRadius(radius){this.radius=radius;}
+    };
+    return item;
+  };
+  const context={state,
+    root:()=>({querySelector:selector=>selector==='[data-ip-action="follow"]'?follow:null}),
+    n:value=>Number(value)||0,icon:()=>'<svg></svg>',
+    L:{divIcon:options=>options,marker:coord=>layer('vehicle',coord),circle:coord=>layer('accuracy',coord)}
+  };
+  vm.runInNewContext(source.slice(start,end)+';this.drawGPS=drawGPS;',context);
+  return {state,map,follow,update(value){state.gps.set(1,value);context.drawGPS();}};
+}
+
+test('GPS unavailability removes the old marker and accuracy circle and recovers without removing the map',()=>{
+  const f=gpsHarness(),position={latitude:45.46,longitude:9.19,accuracy:20};
+  f.update({state:'fresh',position});
+  const oldMarker=f.state.vehicle,oldCircle=f.state.circle;
+  assert.equal(f.map.layers.size,2);
+  assert.equal(f.follow.disabled,false);
+  f.state.follow=true;
+  f.update({state:'unavailable',position:null});
+  assert.equal(oldMarker.removed,true);assert.equal(oldCircle.removed,true);
+  assert.equal(f.state.vehicle,null);assert.equal(f.state.circle,null);
+  assert.equal(f.state.map,f.map);assert.equal(f.map.layers.size,0);
+  assert.equal(f.follow.disabled,true);assert.equal(f.follow.attributes['aria-pressed'],'false');
+  f.update({state:'fresh',position});
+  assert.equal(f.map.layers.size,2);assert.equal(f.follow.disabled,false);
+  assert.notEqual(f.state.vehicle,oldMarker);
+});
+
+test('stale GPS keeps the last known marker while invalid coordinates remove it',()=>{
+  const f=gpsHarness(),position={latitude:45.46,longitude:9.19,accuracy:20};
+  f.update({state:'fresh',position});
+  const marker=f.state.vehicle;
+  f.update({state:'stale',position});
+  assert.equal(f.state.vehicle,marker);assert.equal(marker.stale,true);
+  assert.equal(f.map.layers.size,2);assert.equal(f.follow.disabled,false);
+  for(const invalid of [
+    {latitude:null,longitude:9.19},{latitude:45.46,longitude:null},
+    {latitude:91,longitude:9.19},{latitude:45.46,longitude:181},
+    {latitude:NaN,longitude:9.19},{latitude:45.46,longitude:Infinity}
+  ]){
+    f.update({state:'fresh',position});
+    f.update({state:'unavailable',position:invalid});
+    assert.equal(f.map.layers.size,0);assert.equal(f.follow.disabled,true);
+  }
+});
+
+test('zero-valued GPS coordinates remain valid',()=>{
+  const f=gpsHarness();
+  f.update({state:'fresh',position:{latitude:0,longitude:0,accuracy:0}});
+  assert.equal(f.map.layers.size,2);assert.equal(f.follow.disabled,false);
+  assert.equal(f.state.vehicle.coord[0],0);assert.equal(f.state.vehicle.coord[1],0);
+});
