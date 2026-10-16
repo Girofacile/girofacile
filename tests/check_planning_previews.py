@@ -198,6 +198,12 @@ def run_case(browser, origin, variant, width, height, output):
         expect(message).to_have_attribute("role", "status")
         assert_no_usable_old_result(page)
         organize(page, variant)
+        if variant == "c":
+            page.locator("#tab-config").focus()
+            page.keyboard.press("ArrowRight")
+            expect(page.locator("#tab-stops")).to_have_attribute("aria-selected", "true")
+            page.keyboard.press("ArrowLeft")
+            expect(page.locator("#tab-config")).to_have_attribute("aria-selected", "true")
         assert_stop_count(page, 6)
         assert_no_horizontal_overflow(page)
         result["screenshots"].append(screenshot(page, output, prefix, "initial"))
@@ -256,6 +262,17 @@ def run_case(browser, origin, variant, width, height, output):
         assert_no_horizontal_overflow(page)
         result["screenshots"].append(screenshot(page, output, prefix, "programmed"))
 
+        # Invalid prices cannot produce negative costs, even in demonstration.
+        action(page, "edit-config")
+        advanced.locator("summary").click()
+        page.locator("#trip-energy-mode").select_option("custom")
+        page.locator("#trip-energy-price").fill("-1")
+        action(page, "calculate")
+        assert_no_usable_old_result(page)
+        expect(message).to_contain_text("prezzo")
+        page.locator("#trip-energy-price").fill("1.75")
+        advanced.locator("summary").click()
+
         # Negative inputs cannot produce a usable result.
         action(page, "edit-config")
         bad_weight = quantity_field(page, variant)
@@ -285,7 +302,7 @@ def run_case(browser, origin, variant, width, height, output):
             if toggle.count():
                 toggle.click()
                 expect(toggle).to_have_attribute("aria-expanded", "true")
-                toggle.click()
+                page.keyboard.press("Escape")
                 expect(toggle).to_have_attribute("aria-expanded", "false")
 
         assert not result["unexpected_requests"], result["unexpected_requests"]

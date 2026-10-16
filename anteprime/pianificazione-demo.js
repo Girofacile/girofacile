@@ -281,6 +281,22 @@
       message("Controlla colli e peso: usa valori validi, maggiori o uguali a zero.", "warning");
       invalidQuantity.focus(); return;
     }
+    const invalidUnload = totals.list.map(row => document.getElementById("stop-unload-" + row.id))
+      .find(input => input.value === "" || !input.checkValidity());
+    if (invalidUnload) {
+      if (layout === "a") showStage("organize");
+      if (layout === "c") showTab("stops");
+      invalidUnload.closest("details").open = true;
+      message("Controlla i tempi di scarico: usa minuti validi tra 0 e 240.", "warning");
+      invalidUnload.focus(); return;
+    }
+    const price = $("#trip-energy-price");
+    if (!price.disabled && (price.value === "" || !price.checkValidity())) {
+      editConfig();
+      $("#advanced-options").open = true;
+      message("Inserisci un prezzo carburante / energia valido, maggiore o uguale a zero.", "warning");
+      price.focus(); return;
+    }
     const capacity = (value("trip-vehicle") === "ev01" ? 1200 : 1500) + (fleet() ? 1500 : 0);
     if (totals.kg > capacity) { message("Il carico supera la capacità dei mezzi selezionati. Riduci le consegne o scegli la flotta.", "warning"); return; }
     calculated = true;
@@ -343,7 +359,7 @@
         if (choice.checked) selected.add(id); else selected.delete(id);
         invalidate(); updateSummary(); return;
       }
-      if (event.target.matches("select")) { invalidate(); updateSummary(); }
+      if (event.target.matches("select, input[type=checkbox]")) { invalidate(); updateSummary(); }
     });
     document.addEventListener("input", event => {
       if (event.target.matches("input:not([type=checkbox])")) { invalidate(); updateSummary(); }

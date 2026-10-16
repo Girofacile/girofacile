@@ -22,6 +22,7 @@ Riferimenti verificati: `static/dashboard/index.html`, `static/dashboard/js/core
 - **C — Schede operative** ([HTML](pianificazione-c.html)): Configurazione, Fermate e Risultato in schede, con riepilogo condiviso. Tiene compatta la pagina, richiedendo però cambi di scheda.
 
 Contenuti e stile sono gli stessi: cambiano disposizione e navigazione. Si riutilizzano esclusivamente `theme.css`, `components.css`, `layout.css`, shell e componenti esistenti; nessun CSS nuovo.
+Fermate occasionali, doppie fasce, impostazioni complete della flotta, turni e pause rimangono funzionalità del prodotto; il demo non ne sostituisce gli editor esistenti.
 Un giro con un mezzo è l'esempio iniziale. La modalità flotta resta visibile e selezionabile in tutte le varianti.
 
 ## Priorità comuni
