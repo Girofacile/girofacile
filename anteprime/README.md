@@ -1,5 +1,33 @@
 # Percorso di pianificazione: confronto dei layout
 
+## Nuova proposta — Pianificazione guidata a schede
+
+**[Apri il nuovo HTML autonomo](html-autonomi/pianificazione-guidata.html)**.
+Questa proposta risponde alla richiesta successiva di una composizione più visiva:
+quattro schede di avanzamento, scelte singolo mezzo/flotta tramite riquadri,
+schede risorsa, riepilogo scuro compatto e barra di avanzamento sempre visibile.
+Sostituisce la precedente raccomandazione della variante B; A/B/C restano disponibili
+come storico dei confronti.
+
+Il percorso è Consegne → Organizza → Verifica → Pianifica. La demo consente ricerca,
+selezione, modifica quantità e vincoli di esempio, cambio delle risorse, controllo dei
+campi e della portata complessiva, ritorno ai passaggi precedenti e conferma finale.
+Modificare i dati invalida la verifica. Non vengono calcolate rotte, assegnazioni
+flotta o ETA reali; la conferma è una simulazione senza salvataggi o notifiche.
+La disponibilità delle risorse e i requisiti riportati sono dati fittizi.
+
+I nuovi riquadri e la composizione richiesta sono confinati in `guidata/` e non
+modificano il design system del prodotto. Usano la palette e i token GiroFacile e
+la shell esistente; la navigazione laterale è illustrativa. Un'eventuale adozione
+richiederà l'integrazione dei componenti approvati nel catalogo e dei dati reali.
+
+- Sorgenti: `guidata/index.html`, `guidata/guided.css`, `guidata/guided.js`.
+- Esportazione offline: `python scripts/export_guided_preview.py`.
+- Verifica: `python tests/check_guided_preview.py` (Playwright + Chromium).
+- In alternativa: aggiungere `--browser-executable "percorso/al/chrome.exe"`.
+- Controlli a 390, 768, 1440 e 1920 px: flusso completo, errori, ritorno/modifica,
+  selezione vuota, portata, assenza di overflow e di richieste di rete.
+
 Anteprime statiche con dati fittizi: non contattano l'applicazione, non salvano giri e non eseguono l'optimizer.
 Le pagine reali restano invariate fino alla scelta richiesta da [CLAUDE.md](../CLAUDE.md).
 

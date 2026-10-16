@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pianificazione guidata · GiroFacile</title><link rel="icon" href="data:,">
+<link rel="stylesheet" href="../../static/design-system/theme.css">
+<link rel="stylesheet" href="../../static/design-system/components.css">
+<link rel="stylesheet" href="../../static/design-system/layout.css">
+<link rel="stylesheet" href="guided.css">
+<script defer src="../../static/design-system/shell.js"></script>
+<script defer src="guided.js"></script>
+</head>
+<body data-gf-surface="workspace" data-gf-layout="base" data-gf-title="Pianifica un giro" data-gf-subtitle="Dalle consegne alla partenza, un passo alla volta." data-gf-nav-active="giro" data-gf-user-name="Azienda demo" data-gf-user-role="Anteprima interattiva">
+<script type="application/json" id="gf-shell-nav">[{"items":[{"id":"dashboard","label":"Dashboard","icon":"dashboard"},{"id":"ordini","label":"Ordini","icon":"orders"},{"id":"clienti","label":"Clienti","icon":"customers"},{"id":"giro","label":"Pianificazione","icon":"calendar"}]},{"label":"Risorse","items":[{"id":"depositi","label":"Depositi","icon":"deposit"},{"id":"mezzi","label":"Mezzi","icon":"truck"},{"id":"autisti","label":"Autisti","icon":"driver"}]},{"label":"Gestione","items":[{"id":"storico","label":"Storico giri","icon":"history"},{"id":"report","label":"Report","icon":"report"},{"id":"settings","label":"Impostazioni","icon":"settings"}]}]</script>
+<main data-gf-shell-content>
+<div class="journey">
+<div class="prototype"><span class="demo-dot"></span> Prototipo interattivo · dati di esempio <span>Le operazioni non vengono inviate al gestionale.</span></div>
+<nav class="steps" aria-label="Passaggi della pianificazione">
+<button class="step" data-step="0" aria-current="step"><span class="step-number">01</span><span><strong>Consegne</strong><small>Cosa devi consegnare</small></span><span class="step-mark" aria-hidden="true">→</span></button>
+<button class="step" data-step="1"><span class="step-number">02</span><span><strong>Organizza</strong><small>Quando, con chi e come</small></span><span class="step-mark" aria-hidden="true">→</span></button>
+<button class="step" data-step="2"><span class="step-number">03</span><span><strong>Verifica</strong><small>Controlla il risultato</small></span><span class="step-mark" aria-hidden="true">→</span></button>
+<button class="step" data-step="3"><span class="step-number">04</span><span><strong>Pianifica</strong><small>Pronto per la partenza</small></span><span class="step-mark" aria-hidden="true">✓</span></button>
+</nav>
+<div class="workspace">
+<div class="work-area">
+<section class="stage" data-panel="0" aria-labelledby="title-0">
+<header class="stage-heading"><div><p class="eyebrow">IL PUNTO DI PARTENZA</p><h2 id="title-0" tabindex="-1">Le consegne, tutte sotto controllo.</h2><p>Seleziona le fermate e controlla il carico. Ai dettagli pensiamo un passo alla volta.</p></div><span class="round-icon" data-icon="package"></span></header>
+<div class="metrics"><div><span class="metric-icon" data-icon="pin"></span><div><strong data-count>6</strong><span>fermate selezionate</span></div></div><div><span class="metric-icon" data-icon="package"></span><div><strong data-packages>32</strong><span>colli da caricare</span></div></div><div><span class="metric-icon" data-icon="weight"></span><div><strong><span data-weight>980</span> <small>kg</small></strong><span>peso complessivo</span></div></div></div>
+<section class="paper" aria-label="Elenco delle consegne">
+<div class="list-toolbar"><label class="search"><span data-icon="search"></span><input type="search" id="search" placeholder="Cerca cliente o indirizzo" aria-label="Cerca cliente o indirizzo"></label><label class="all-check"><input type="checkbox" id="select-all" checked> Seleziona tutte</label></div>
+<div id="stops"></div><p class="empty" id="empty-search" hidden>Nessuna consegna corrisponde alla ricerca.</p>
+<div class="list-note"><span data-icon="check"></span> Tutti gli indirizzi dell’esempio sono verificati.<span>Quantità e vincoli modificabili dai dettagli.</span></div>
+</section>
+</section>
+<section class="stage" data-panel="1" aria-labelledby="title-1" hidden>
+<header class="stage-heading"><div><p class="eyebrow">DIAMO FORMA AL GIRO</p><h2 id="title-1" tabindex="-1">Scegli come partire.</h2><p>Imposta la partenza e assegna le risorse. Le consegne restano già selezionate.</p></div><span class="round-icon" data-icon="truck"></span></header>
+<form id="configuration">
+<section class="paper form-paper"><h3><span data-icon="calendar"></span> Data e partenza</h3><div class="fields three"><label>Data del giro<input id="date" type="date" value="2026-10-19" required></label><label>Ora di partenza<input id="time" type="time" value="08:30" required></label><label>Deposito<select id="depot"><option>Milano · Bovisa</option><option>Sesto San Giovanni</option></select></label></div></section>
+<fieldset class="mode-set"><legend>Come vuoi organizzare le consegne?</legend><div class="choices"><label class="choice"><input type="radio" name="mode" value="single" checked><span class="choice-icon" data-icon="truck"></span><span><strong>Un solo mezzo</strong><small>Un giro, un autista, tutte le fermate.</small></span><span class="radio-mark"></span></label><label class="choice"><input type="radio" name="mode" value="fleet"><span class="choice-icon" data-icon="fleet"></span><span><strong>Più mezzi</strong><small>Distribuisci il lavoro tra più autisti.</small></span><span class="radio-mark"></span></label></div></fieldset>
+<section class="paper form-paper"><div class="section-title"><h3><span data-icon="user"></span> La squadra del giro</h3><span class="tag green">Risorse di esempio</span></div><div class="resource-grid"><label class="resource"><span class="resource-label">MEZZO</span><span class="resource-top"><span class="resource-art" data-icon="truck"></span><span class="tag">Con sponda</span></span><select id="vehicle" aria-label="Mezzo"><option value="van">Van 03 · Fiat Ducato</option><option value="electric">Elettrico 01 · e-Ducato</option></select><small id="vehicle-hint">Gasolio · portata 1.500 kg · accesso ZTL demo</small></label><label class="resource"><span class="resource-label">AUTISTA</span><span class="resource-top"><span class="avatar" id="driver-avatar">MR</span><span class="tag green">Turno 08:00–17:00</span></span><select id="driver" aria-label="Autista"><option>Marco Rossi</option><option>Sara Bianchi</option></select><small>Patente B · turno e pause configurabili</small></label></div><div class="fields" id="fleet-fields" hidden><label>Secondo mezzo<select id="vehicle-2"><option>Van 04 · Iveco Daily</option></select></label><label>Secondo autista<select id="driver-2"><option>Luca Conti</option></select></label><label>Distribuzione del lavoro<select id="strategy"><option>Usa meno mezzi, se possibile</option><option>Bilancia tra i mezzi disponibili</option></select></label></div></section>
+<details class="paper options"><summary><span data-icon="settings"></span><span><strong>Personalizza il giro</strong><small>Nome, rientro, costi, turno e pause</small></span><span class="expand">+</span></summary><div class="fields"><label>Nome del giro<input id="name" value="Milano Nord · mattina" maxlength="80"></label><label>Fine del giro<select id="return"><option value="yes">Rientro al deposito</option><option value="no">Ultima consegna</option></select></label><label>Prezzo carburante (€/L)<input id="fuel" type="number" min="0" step="0.001" value="1.75" required></label><label>Prezzo energia (€/kWh)<input id="energy" type="number" min="0" step="0.001" value="0.30" required></label><label>Fine turno<input id="shift" type="time" value="17:00" required></label><label>Pausa (minuti)<input id="break" type="number" value="30" min="0" max="180" step="1" required></label></div></details>
+</form></section>
+<section class="stage" data-panel="2" aria-labelledby="title-2" hidden>
+<header class="stage-heading"><div><p class="eyebrow">ULTIMO CONTROLLO</p><h2 id="title-2" tabindex="-1">Tutto pronto per pianificare?</h2><p>Rivedi le risorse e le fermate prima della conferma finale.</p></div><span class="round-icon" data-icon="check"></span></header>
+<div class="review-note"><span data-icon="info"></span><span><strong>Anteprima del percorso dimostrativa</strong><br>Questa demo non calcola distanze, tempi di arrivo o compatibilità reali. Nel prodotto verranno verificati dall’ottimizzatore.</span></div>
+<div class="paper review-summary"><div><span class="eyebrow">PARTENZA</span><strong id="review-date"></strong><span id="review-depot"></span></div><div><span class="eyebrow">RISORSE ASSEGNATE</span><strong id="review-driver"></strong><span id="review-vehicle"></span></div><button class="text-button" data-go="1">Modifica <span aria-hidden="true">↗</span></button></div>
+<section class="paper form-paper"><div class="section-title"><h3><span data-icon="route"></span> Le fermate del giro</h3><span class="tag">Sequenza illustrativa</span></div><div class="route-start"><span class="depot-mark" data-icon="depot"></span><div><strong data-depot></strong><small>Partenza dal deposito</small></div></div><ol class="timeline" id="review-stops"></ol><div class="route-start" id="route-end"><span class="depot-mark" data-icon="flag"></span><div><strong data-depot></strong><small>Rientro al deposito</small></div></div></section>
+<div class="confirmation"><label><input type="checkbox" id="confirm-review"> Ho controllato consegne, data e risorse di questa simulazione.</label></div>
+</section>
+<section class="stage" data-panel="3" aria-labelledby="title-3" hidden>
+<div class="paper finish"><span class="finish-icon" data-icon="check"></span><p class="eyebrow">PIANIFICAZIONE COMPLETATA · DEMO</p><h2 id="title-3" tabindex="-1">Il prossimo giro prende forma.</h2><p>Questo è il riepilogo che l’operatore vedrà al termine della pianificazione.</p><div class="finish-ticket"><span class="tag green">Simulazione riuscita</span><h3 id="finish-name"></h3><p id="finish-date"></p><div><strong><span data-count></span> fermate</strong><strong><span data-packages></span> colli</strong><strong><span data-weight></span> kg</strong></div></div><p class="gf-muted">Nessun giro è stato salvato e nessuna notifica è stata inviata agli autisti.</p><button class="secondary" id="edit-again">Torna a modificare il giro <span aria-hidden="true">↗</span></button></div>
+</section>
+<div id="message" class="error" role="alert" hidden></div>
+</div>
+<aside class="trip-aside" aria-label="Riepilogo del giro">
+<section class="trip-card"><div class="trip-card-top"><span class="tag dark">IL TUO GIRO</span><span class="trip-status" id="trip-status">In preparazione</span></div><h2 id="summary-name">Milano Nord<br>mattina</h2><p id="summary-depot">Da Milano · Bovisa</p><svg class="route-art" viewBox="0 0 300 100" aria-hidden="true"><path class="route-grid" d="M0 20h300M0 50h300M0 80h300M35 0v100M100 0v100M165 0v100M230 0v100"/><path class="route-line" d="M20 75h65q15 0 15-15V35q0-15 15-15h55q15 0 15 15v25q0 15 15 15h80"/><circle cx="20" cy="75" r="7"/><circle cx="100" cy="45" r="5"/><circle cx="160" cy="20" r="5"/><circle cx="220" cy="75" r="5"/><circle cx="280" cy="75" r="7"/></svg><div class="trip-facts"><div><span>Fermate</span><strong data-count>6</strong></div><div><span>Colli</span><strong data-packages>32</strong></div><div><span>Peso</span><strong><span data-weight>980</span> <small>kg</small></strong></div></div><div class="trip-departure"><span data-icon="calendar"></span><div><span id="summary-date">19 ottobre 2026</span><strong id="summary-time">Partenza alle 08:30</strong></div></div></section>
+<section class="helper"><span class="helper-icon" data-icon="spark"></span><h3 id="help-title">Prima le consegne.</h3><p id="help-text">Parti dagli ordini già selezionati. Apri i dettagli solo per le fermate che richiedono attenzione.</p><div class="help-progress"><span id="progress-label">Passaggio 1 di 4</span><progress id="progress" max="4" value="1" aria-label="Avanzamento della pianificazione"></progress></div></section>
+</aside>
+</div>
+<footer class="action-bar"><button class="secondary" id="back" hidden><span aria-hidden="true">←</span> Indietro</button><div class="action-copy"><strong id="action-title">6 fermate selezionate</strong><span id="action-hint">Nel prossimo passaggio scegli data, mezzo e autista.</span></div><button class="primary" id="next">Organizza il giro <span aria-hidden="true">→</span></button></footer>
+</div>
+</main>
+</body></html>
