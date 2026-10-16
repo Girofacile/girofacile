@@ -38,24 +38,81 @@ def test_concurrent_ingestion_and_conflicting_keys(pg):
 
 
 def test_ingestion_migration_is_additive_and_repeatable(pg):
-    from app.migrations import run_migrations,LATEST
+    from app.migrations import run_migrations, require_current_schema
     from app.models import User
-    from app.order_models import OrderSource,Order
+    from app.order_models import OrderSource, Order
+
+    # Recreate the schema immediately before this specific upgrade. LATEST may
+    # refer to an unrelated migration as the application evolves.
+    ingestion_version = '20261011_02'
+    additions = {
+        'order_sources': ['version'],
+        'orders': ['ingested_payload'],
+        'order_import_runs': [
+            'idempotency_key', 'payload_hash', 'payload', 'expires_at', 'source_version',
+        ],
+    }
+    history_sql = text('SELECT version, applied_at FROM schema_migrations ORDER BY version')
     run_migrations(pg)
+    with pg.connect() as conn:
+        original_history = dict(conn.execute(history_sql).all())
+    assert ingestion_version in original_history
     with Session(pg) as db:
-        user=db.query(User).first()
-        src=OrderSource(user_id=user.id,key='legacy',name='Legacy',kind='manual');db.add(src);db.flush()
-        order=Order(user_id=user.id,source_id=src.id,external_id='legacy',number='Legacy',original_payload={'number':'Keep'},operational_data={})
-        db.add(order);db.commit();oid=order.id
+        user = db.query(User).first()
+        src = OrderSource(user_id=user.id, key='legacy', name='Legacy', kind='manual')
+        db.add(src)
+        db.flush()
+        order = Order(
+            user_id=user.id, source_id=src.id, external_id='legacy', number='Legacy',
+            original_payload={'number': 'Keep'}, operational_data={},
+        )
+        db.add(order)
+        db.commit()
+        oid, sid = order.id, src.id
     with pg.begin() as conn:
         conn.execute(text('ALTER TABLE order_import_runs DROP CONSTRAINT IF EXISTS uq_order_import_request'))
         conn.execute(text('DROP INDEX IF EXISTS uq_order_import_request'))
-        for table,fields in {'order_sources':['version'],'orders':['ingested_payload'],'order_import_runs':['idempotency_key','payload_hash','payload','expires_at','source_version']}.items():
-            for field in fields:conn.execute(text(f'ALTER TABLE {table} DROP COLUMN {field}'))
-        conn.execute(text('DELETE FROM schema_migrations WHERE version=:v'),{'v':LATEST})
-    run_migrations(pg);run_migrations(pg)
+        for table, fields in additions.items():
+            for field in fields:
+                conn.execute(text(f'ALTER TABLE {table} DROP COLUMN {field}'))
+        conn.execute(
+            text('DELETE FROM schema_migrations WHERE version=:v'),
+            {'v': ingestion_version},
+        )
+    run_migrations(pg)
+    require_current_schema(pg)
+    with pg.connect() as conn:
+        applied_once = conn.execute(history_sql).all()
+    assert set(dict(applied_once)) == set(original_history)
+    assert {
+        version: applied_at for version, applied_at in applied_once
+        if version != ingestion_version
+    } == {
+        version: applied_at for version, applied_at in original_history.items()
+        if version != ingestion_version
+    }
+    run_migrations(pg)
+    require_current_schema(pg)
+    with pg.connect() as conn:
+        assert conn.execute(history_sql).all() == applied_once
     with Session(pg) as db:
-        assert db.get(Order,oid).original_payload=={'number':'Keep'}
-        assert db.get(Order,oid).ingested_payload is None
-        assert db.query(OrderSource).filter_by(key='legacy').one().version==1
-    assert 'uq_order_import_request' in {x['name'] for x in inspect(pg).get_indexes('order_import_runs')}
+        restored = db.get(Order, oid)
+        assert restored.source_id == sid
+        assert restored.original_payload == {'number': 'Keep'}
+        assert restored.ingested_payload is None
+        assert db.get(OrderSource, sid).version == 1
+    inspector = inspect(pg)
+    for table, fields in additions.items():
+        assert set(fields) <= {column['name'] for column in inspector.get_columns(table)}
+    version_column = next(
+        column for column in inspector.get_columns('order_sources')
+        if column['name'] == 'version'
+    )
+    assert version_column['nullable'] is False
+    assert version_column['default'] is not None
+    request_index = next(
+        index for index in inspector.get_indexes('order_import_runs')
+        if index['name'] == 'uq_order_import_request'
+    )
+    assert request_index['unique']
+    assert request_index['column_names'] == ['source_id', 'idempotency_key']
