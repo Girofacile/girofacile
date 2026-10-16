@@ -246,8 +246,10 @@ def main():
                         currentSessionUser=me;showGestionaleAfterLogin();await initApp();acceptCookieNotice();
                     }""",ME)
                     nav = page.locator("#app .gf-sidebar__item[data-tab]").evaluate_all("(els)=>els.map(el=>el.dataset.tab)")
-                    for name in ("dashboard","clienti","giro","mezzi","autisti","depositi","storico","settings","report"):
+                    for name in ("dashboard","ordini","clienti","mezzi","autisti","depositi","storico","settings","report"):
                         assert name in nav,name
+                    assert "giro" not in nav,"Planning opens after selecting orders or customers"
+                    assert page.locator("#tab-giro").count() == 1
                     sidebar_icon = styles(page.locator("#app .gf-sidebar__item .gf-sidebar__icon").first,("width","height","boxShadow"))
                     assert sidebar_icon == dict(width="18px",height="18px",boxShadow="none"),sidebar_icon
                     assert page.locator("#app .gf-sidebar__brand-name").evaluate("""el => {
