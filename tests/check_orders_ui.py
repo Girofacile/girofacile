@@ -9,7 +9,8 @@ sys.path.insert(0,str(ROOT))
 sys.path.insert(0,str(ROOT/'test-results'/'ui-tools'))
 os.environ['DATABASE_URL']='sqlite://'
 os.environ['ALLOW_SQLITE_LEGACY']='true'
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import expect, sync_playwright
+from time import sleep
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -25,21 +26,24 @@ from check_management_design import ME,LIMITS,VEHICLES,DRIVERS,DEPOSITS,USAGE
 
 
 def select_ready(page):
-    """Seleziona gli ordini pronti: su desktop con la casella in intestazione, su mobile
-    (tabella a schede, intestazione nascosta) spuntando ogni ordine selezionabile."""
+    """Seleziona gli ordini pronti aspettando ogni salvataggio, anche su mobile."""
     box=page.get_by_role('checkbox',name='Seleziona ordini pronti di questa pagina',exact=True)
-    # Sulle schede mobili l'intestazione resta nel DOM ma ridotta a 1 pixel (solo per lettori di schermo).
+    # Sulle schede mobili l'intestazione resta nel DOM ma ridotta a 1 pixel.
     header_visible=box.count() and box.evaluate("el=>el.closest('thead').getBoundingClientRect().width>2")
     if header_visible:
-        box.check();return
-    # La lista si ridisegna a ogni spunta: si clicca una casella alla volta finché ne restano.
-    # (Verificato a parte che a 390 px la casella è cliccabile: nessun elemento la copre.)
-    for _ in range(50):
-        box=page.locator('input.order-select:not(.order-select-all):not([disabled]):not(:checked)').first
-        if not box.count():
-            break
-        box.evaluate("el=>{el.scrollIntoView({block:'center'});el.click();}")
-        page.wait_for_timeout(150)
+        box.check()
+        expect(box).to_be_enabled()
+        return
+    # La lista viene ridisegnata durante il salvataggio. Conservare etichette, non
+    # nodi DOM, e attendere il nuovo render: in busy tutte le caselle sono disabilitate.
+    labels=page.locator(
+        'input.order-select:not(.order-select-all):not([disabled]):not(:checked)'
+    ).evaluate_all("nodes=>nodes.map(node=>node.getAttribute('aria-label'))")
+    for label in labels:
+        box=page.get_by_role('checkbox',name=label,exact=True)
+        box.check()
+        expect(box).to_be_checked()
+        expect(box).to_be_enabled()
 
 def main():
     output=ROOT/'test-results'/'orders-responsive';output.mkdir(parents=True,exist_ok=True)
@@ -62,6 +66,9 @@ def main():
                         parsed=urlparse(route.request.url);path=parsed.path
                         if parsed.hostname!='orders.test':route.abort();return
                         if path.startswith(('/api/orders','/api/order-planning','/api/order-sources')):
+                            # Exercise selection latency beyond the former 150 ms polling delay.
+                            if path=='/api/order-planning/selection' and route.request.method=='PUT':
+                                sleep(0.25)
                             response=client.request(route.request.method,path+('?' + parsed.query if parsed.query else ''),content=route.request.post_data_buffer,headers={'Content-Type':route.request.headers.get('content-type','application/json')})
                             route.fulfill(status=response.status_code,body=response.text,content_type='application/json');return
                         if path=='/api/billing/catalog.js':
