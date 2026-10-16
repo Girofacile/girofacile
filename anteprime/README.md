@@ -17,6 +17,30 @@ Riferimenti verificati: `static/dashboard/index.html`, `static/dashboard/js/core
 
 ## Tre proposte
 
+### Versione consigliata da valutare
+
+Aprire direttamente [B — Pagina unica, HTML autonomo](html-autonomi/pianificazione-b.html).
+Il file include stili e interazioni e funziona offline, anche copiato fuori dal progetto.
+Sono disponibili anche [A — Percorso guidato](html-autonomi/pianificazione-a.html)
+e [C — Schede operative](html-autonomi/pianificazione-c.html) per il confronto.
+
+La proposta B riprende le bozze esistenti e separa data/deposito da mezzi/autisti
+in sezioni numerate. Le opzioni espandibili precedono le consegne, così sono facili
+da trovare anche con elenchi lunghi. Il riepilogo laterale resta compatto e include
+collegamenti alle sezioni. Su schermi stretti il contenuto passa a una colonna.
+È la proposta preferita per confrontare configurazione e carico durante l'uso quotidiano;
+A privilegia la compilazione guidata, C la compattezza con cambi di scheda.
+
+Riferimenti UX: [GOV.UK — Question pages](https://design-system.service.gov.uk/patterns/question-pages/)
+per raggruppare domande comprensibili e riutilizzare i dati già inseriti;
+[GOV.UK — Details](https://design-system.service.gov.uk/components/details/)
+per mostrare su richiesta le informazioni necessarie solo ad alcuni utenti.
+La scelta del layout B è una proposta progettuale per GiroFacile, da validare con l'utente.
+
+Rigenerare le copie autonome dopo ogni modifica ai sorgenti:
+`python scripts/export_planning_previews.py --output-dir anteprime/html-autonomi`.
+La dashboard e il pianificatore reali non sono modificati da queste anteprime.
+
 - **A — Percorso guidato** ([HTML](pianificazione-a.html)): un passaggio visibile alla volta. Si entra direttamente in Organizza con le consegne già scelte, poi si passa a Verifica e programma.
 - **B — Pagina unica** ([HTML](pianificazione-b.html)): dati e consegne insieme, riepilogo laterale e risultato sotto il calcolo. Riduce i cambi di schermata nell'uso quotidiano.
 - **C — Schede operative** ([HTML](pianificazione-c.html)): Configurazione, Fermate e Risultato in schede, con riepilogo condiviso. Tiene compatta la pagina, richiedendo però cambi di scheda.

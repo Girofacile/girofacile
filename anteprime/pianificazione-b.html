@@ -15,7 +15,7 @@
 <script defer src="pianificazione-demo.js">
 </script>
 </head>
-<body data-gf-surface="workspace" data-gf-layout="base" data-gf-title="Pianifica le consegne" data-gf-subtitle="Pagina unica · anteprima B" data-gf-nav-active="ordini" data-gf-user-name="Azienda demo" data-gf-user-role="Ambiente dimostrativo" data-preview-layout="b">
+<body data-gf-surface="workspace" data-gf-layout="base" data-gf-title="Pianifica le consegne" data-gf-subtitle="Pagina unica · proposta consigliata" data-gf-nav-active="ordini" data-gf-user-name="Azienda demo" data-gf-user-role="Ambiente dimostrativo" data-preview-layout="b">
 <main data-gf-shell-content>
 <div class="gf-stack" data-gap="lg">
 <nav class="gf-toolbar" aria-label="Confronta le anteprime">
@@ -24,7 +24,7 @@
 <a class="gf-button" data-variant="secondary" href="pianificazione-c.html">C · Schede operative</a>
 </nav>
 <div class="gf-alert" data-status="info">
-<strong>Anteprima con dati di esempio.</strong> Non salva e non programma giri. Dati e consegne insieme, con riepilogo laterale. Il risultato compare sotto il calcolo.</div>
+<strong>Anteprima con dati di esempio.</strong> Non salva e non programma giri. Compila i dati, controlla le consegne e verifica il percorso. Le opzioni aggiuntive si aprono solo quando servono.</div>
 <section class="gf-panel" aria-label="Selezione di partenza">
 <div class="gf-panel__body gf-cluster" data-justify="between">
 <div class="gf-stack" data-gap="sm">
@@ -134,7 +134,7 @@
 <div class="gf-stack">
 <section class="gf-panel" aria-labelledby="config-title">
 <header class="gf-panel__header">
-<h2 class="gf-panel__title" id="config-title">Organizza il giro</h2>
+<h2 class="gf-panel__title" id="config-title">1. Quando e da dove</h2>
 <span class="gf-panel__meta">Informazioni essenziali</span>
 </header>
 <div class="gf-panel__body gf-stack">
@@ -154,6 +154,16 @@
 <option value="sesto">Deposito Sesto · Sesto S. Giovanni</option>
 </select>
 </label>
+</div>
+</div>
+</section>
+<section class="gf-panel" aria-labelledby="resources-title">
+<header class="gf-panel__header">
+<h2 class="gf-panel__title" id="resources-title">2. Mezzi e autisti</h2>
+<span class="gf-panel__meta">Un mezzo o una flotta</span>
+</header>
+<div class="gf-panel__body gf-stack">
+<div class="gf-form-grid">
 <label class="gf-field" for="trip-mode">
 <span class="gf-field__label">Modalità</span>
 <select class="gf-select" id="trip-mode">
@@ -196,15 +206,59 @@
 <p class="gf-muted">Disponibilità, capacità e requisiti del mezzo vengono verificati nel calcolo reale. Qui sono mostrati dati dimostrativi.</p>
 </div>
 </section>
+<details class="gf-panel" id="advanced-options">
+<summary class="gf-panel__header">
+<span class="gf-panel__title">Personalizza il giro</span>
+<span class="gf-panel__meta">Rientro, nome, costi e raggruppamento</span>
+</summary>
+<div class="gf-panel__body gf-stack">
+<div class="gf-form-grid">
+<label class="gf-field" for="trip-name">
+<span class="gf-field__label">Nome del giro</span>
+<input class="gf-input" id="trip-name" type="text" value="Milano Nord · mattina" >
+</label>
+<label class="gf-field" for="trip-return">
+<span class="gf-field__label">Rientro</span>
+<select class="gf-select" id="trip-return">
+<option value="yes">Rientra al deposito di partenza</option>
+<option value="no">Termina all’ultima consegna</option>
+</select>
+</label>
+<label class="gf-field" for="trip-energy-mode">
+<span class="gf-field__label">Costo carburante / energia</span>
+<select class="gf-select" id="trip-energy-mode">
+<option value="company">Usa le impostazioni aziendali</option>
+<option value="custom">Valore per questo giro</option>
+</select>
+</label>
+<label class="gf-field" for="trip-energy-price">
+<span class="gf-field__label">Prezzo carburante (€/L) / energia (€/kWh)</span>
+<input class="gf-input" id="trip-energy-price" type="number" value="1.75" min="0" max="100" step="0.01" disabled>
+</label>
+<label class="gf-field" for="trip-grouping">
+<span class="gf-field__label">Ordini dello stesso cliente</span>
+<select class="gf-select" id="trip-grouping">
+<option value="group">Raggruppa nella stessa fermata</option>
+<option value="separate">Mantieni consegne separate</option>
+</select>
+</label>
+</div>
+<div class="gf-cluster">
+<button type="button" class="gf-button" data-variant="secondary" data-action="demo-secondary">Turni e pause degli autisti</button>
+<span class="gf-muted">Restano associati alle risorse assegnate.</span>
+</div>
+<div class="gf-alert" data-status="info">Finestre orarie, scarico, ZTL, sponda e capacità rimangono vincoli del pianificatore. Nel prodotto restano disponibili fermate occasionali, doppie fasce orarie, strategia flotta, durata massima e tutte le risorse. Le opzioni sono mostrate senza modificarne la logica.</div>
+</div>
+</details>
 <section class="gf-panel" aria-labelledby="stops-title">
 <header class="gf-panel__header">
-<h2 class="gf-panel__title" id="stops-title">Controlla le consegne</h2>
+<h2 class="gf-panel__title" id="stops-title">3. Controlla le consegne</h2>
 <span class="gf-panel__meta">
 <span data-total="colli">32</span> colli · <span data-total="kg">980</span> kg</span>
 </header>
+<div class="gf-panel__body"><p class="gf-muted" id="stops-hint">Quantità visibili subito; finestre orarie e requisiti restano associati a ogni fermata.</p></div>
 <div class="gf-table-wrap">
-<table class="gf-table" data-gf-responsive="cards">
-<caption>Quantità visibili subito; finestre orarie e requisiti restano associati a ogni fermata.</caption>
+<table class="gf-table" data-gf-responsive="cards" aria-labelledby="stops-title" aria-describedby="stops-hint">
 <thead>
 <tr>
 <th scope="col">Destinazione</th>
@@ -466,50 +520,7 @@
 <button type="button" class="gf-button" data-variant="secondary" data-action="edit-selection" >Scegli consegne</button>
 </div>
 </section>
-<details class="gf-panel" id="advanced-options">
-<summary class="gf-panel__header">
-<span class="gf-panel__title">Opzioni del giro</span>
-<span class="gf-panel__meta">Rientro, energia e altri vincoli</span>
-</summary>
-<div class="gf-panel__body gf-stack">
-<div class="gf-form-grid">
-<label class="gf-field" for="trip-name">
-<span class="gf-field__label">Nome del giro</span>
-<input class="gf-input" id="trip-name" type="text" value="Milano Nord · mattina" >
-</label>
-<label class="gf-field" for="trip-return">
-<span class="gf-field__label">Rientro</span>
-<select class="gf-select" id="trip-return">
-<option value="yes">Rientra al deposito di partenza</option>
-<option value="no">Termina all’ultima consegna</option>
-</select>
-</label>
-<label class="gf-field" for="trip-energy-mode">
-<span class="gf-field__label">Costo carburante / energia</span>
-<select class="gf-select" id="trip-energy-mode">
-<option value="company">Usa le impostazioni aziendali</option>
-<option value="custom">Valore per questo giro</option>
-</select>
-</label>
-<label class="gf-field" for="trip-energy-price">
-<span class="gf-field__label">Prezzo carburante (€/L) / energia (€/kWh)</span>
-<input class="gf-input" id="trip-energy-price" type="number" value="1.75" min="0" max="100" step="0.01" disabled>
-</label>
-<label class="gf-field" for="trip-grouping">
-<span class="gf-field__label">Ordini dello stesso cliente</span>
-<select class="gf-select" id="trip-grouping">
-<option value="group">Raggruppa nella stessa fermata</option>
-<option value="separate">Mantieni consegne separate</option>
-</select>
-</label>
-</div>
-<div class="gf-cluster">
-<button type="button" class="gf-button" data-variant="secondary" data-action="demo-secondary">Turni e pause degli autisti</button>
-<span class="gf-muted">Restano associati alle risorse assegnate.</span>
-</div>
-<div class="gf-alert" data-status="info">Finestre orarie, scarico, ZTL, sponda e capacità rimangono vincoli del pianificatore. Nel prodotto restano disponibili fermate occasionali, doppie fasce orarie, strategia flotta, durata massima e tutte le risorse. Le opzioni sono mostrate senza modificarne la logica.</div>
-</div>
-</details>
+
 <section class="gf-panel">
 <footer class="gf-panel__footer gf-cluster" data-justify="end">
 <span class="gf-muted">Calcola, poi verifica prima di programmare.</span>
@@ -517,6 +528,7 @@
 </footer>
 </section>
 </div>
+<div class="gf-stack">
 <aside class="gf-panel" aria-labelledby="summary-title">
 <header class="gf-panel__header">
 <h2 class="gf-panel__title" id="summary-title">Il tuo giro</h2>
@@ -555,6 +567,17 @@
 <p class="gf-muted">L’azione finale sarà “Programma giro”, dopo aver verificato il percorso.</p>
 </div>
 </aside>
+<section class="gf-panel" aria-labelledby="guide-title">
+<header class="gf-panel__header"><h2 class="gf-panel__title" id="guide-title">Un passaggio alla volta</h2></header>
+<div class="gf-panel__body gf-stack">
+<p class="gf-muted">Puoi modificare i dati senza perdere le consegne selezionate.</p>
+<a class="gf-button" data-variant="secondary" href="#config-title">1. Data e deposito</a>
+<a class="gf-button" data-variant="secondary" href="#resources-title">2. Mezzi e autisti</a>
+<a class="gf-button" data-variant="secondary" href="#stops-title">3. Consegne e quantità</a>
+<p class="gf-field__hint">Dopo il calcolo potrai verificare il risultato prima di programmare il giro.</p>
+</div>
+</section>
+</div>
 </div>
 <section id="review-panel" class="gf-stack" data-step-panel="review" aria-labelledby="review-title" tabindex="-1" hidden>
 <div class="gf-panel">
