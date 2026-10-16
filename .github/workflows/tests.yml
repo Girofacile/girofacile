@@ -143,7 +143,7 @@ jobs:
         run: docker run --rm --entrypoint sh girofacile-test -c 'test -f /app/scripts/backup_database.py && pg_dump --version && pg_restore --version'
 
   planning-selection:
-    name: Planning selection desktop and mobile
+    name: Planning and management desktop and mobile
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
@@ -155,7 +155,7 @@ jobs:
         with:
           node-version: '22'
       - name: Verify selection controller regressions
-        run: node --test tests/test_customer_selection_planning.cjs tests/test_customer_planning_ui.cjs
+        run: node --test tests/test_customer_selection_planning.cjs tests/test_customer_planning_ui.cjs tests/test_planning_ui.cjs
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -167,6 +167,16 @@ jobs:
           python -m playwright install --with-deps chromium
       - name: Verify order and customer selection at all viewports
         run: python tests/check_orders_ui.py
+      - name: Verify management navigation and interactions
+        run: python tests/check_management_design.py after
+      - name: Preserve management navigation screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: management-navigation-responsive
+          path: test-results/management-design/
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Preserve planning screenshots
         if: always()
         uses: actions/upload-artifact@v4

@@ -2883,7 +2883,7 @@ function markRouteNeedsRecalculation(message="Le consegne sono state modificate.
     box.innerHTML = `<div class="gf-alert" data-status="warning" role="status"><div class="gf-alert__body gf-stack">
       <strong class="gf-alert__title">Anteprima da aggiornare</strong>
       <p class="gf-alert__text">${esc(message)}</p>
-      <div class="gf-cluster"><button type="button" class="gf-button" data-variant="secondary" onclick="openPlanningSelection()">Torna alla pianificazione</button></div>
+      <div class="gf-cluster"><button type="button" class="gf-button" data-variant="secondary" onclick="showTab('giro')">Torna alla pianificazione</button></div>
     </div></div>`;
   }
 }
@@ -3332,7 +3332,7 @@ function renderRouteResult(r, targetId="routeResult", fromHistory=false){
         <div class="gf-panel__body gf-stack">
           ${r.google_maps_url ? `<a class="gf-button" data-variant="secondary" target="_blank" rel="noopener noreferrer" href="${esc(r.google_maps_url)}">${icon("map").replace('<svg ','<svg class="gf-icon" ')}<span>Apri in Google Maps</span> ↗</a>` : ``}
           ${isProgrammable ? '<button type="button" class="gf-button" data-variant="primary" data-preview-program onclick="programCurrentRoute()"><span aria-hidden="true">▷</span> Programma giro</button>' : ''}
-          <button type="button" class="gf-button" data-variant="secondary" data-preview-back onclick="openPlanningSelection()"><span aria-hidden="true">←</span> Torna alla pianificazione</button>
+          <button type="button" class="gf-button" data-variant="secondary" data-preview-back onclick="showTab('giro')"><span aria-hidden="true">←</span> Torna alla pianificazione</button>
           <details class="gf-panel" data-preview-extra><summary class="gf-panel__header">Risorse e altre azioni</summary>
             <div class="gf-panel__body gf-stack">
               <dl class="gf-details">
