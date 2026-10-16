@@ -1553,6 +1553,7 @@ function advanceRoutePlanning(){
   target?.focus({preventScroll:true});
 }
 
+let customerDirectoryPlanning=false;
 function updateRoutePlanningGateV68(){
   const btn = document.getElementById("openCustomerStepBtn");
   const hint = document.getElementById("routePlanningGateHint");
@@ -1570,7 +1571,12 @@ function updateRoutePlanningGateV68(){
     hint.dataset.status = ready ? "success" : "warning";
   }
   renderPlanningCompletion(missing);
-  if(!ready){
+  if(customerDirectoryPlanning){
+    if(btn)btn.textContent='Modifica selezione clienti';
+    if(ready&&hint)hint.textContent='Clienti selezionati: completa le quantità e calcola il percorso.';
+    picker?.classList.add("hidden");
+    workbench?.classList.toggle("hidden",!ready);
+  }else if(!ready){
     customerPlanningStepOpenedV68 = false;
     picker?.classList.add("hidden");
     workbench?.classList.add("hidden");
@@ -1582,6 +1588,7 @@ function updateRoutePlanningGateV68(){
 }
 
 function openCustomerPlanningStep(){
+  if(customerDirectoryPlanning){showTab("clienti");return;}
   if(!routePlanningDetailsCompleteV68()){
     updateRoutePlanningGateV68();
     alert("Completa prima tutti i dati del giro: data, orario, deposito, mezzo, autista e prezzo carburante.");
@@ -2875,7 +2882,7 @@ function markRouteNeedsRecalculation(message="Le consegne sono state modificate.
     box.innerHTML = `<div class="gf-alert" data-status="warning" role="status"><div class="gf-alert__body gf-stack">
       <strong class="gf-alert__title">Anteprima da aggiornare</strong>
       <p class="gf-alert__text">${esc(message)}</p>
-      <div class="gf-cluster"><button type="button" class="gf-button" data-variant="secondary" onclick="showTab('giro')">Torna alla pianificazione</button></div>
+      <div class="gf-cluster"><button type="button" class="gf-button" data-variant="secondary" onclick="openPlanningSelection()">Torna alla pianificazione</button></div>
     </div></div>`;
   }
 }
@@ -3159,6 +3166,7 @@ function addExtraStopAfterResult(){
 
 
 function clearRouteWorkspace(){
+  customerDirectoryPlanning=false;
   globalThis.GFDriverSchedules?.route({});
   globalThis.GFFleetPlanning?.reset();
   globalThis.GFOrderPlanning?.leave();
@@ -3168,7 +3176,7 @@ function clearRouteWorkspace(){
   editingDeliveryIndex = null;
   renderDeliveries();
   const result = document.getElementById("routePreviewResult");
-  if(result) result.innerHTML = `<section class="gf-panel"><div class="gf-empty"><h2>Nessuna anteprima calcolata</h2><p>Vai in Pianificazione, inserisci i dati del giro, seleziona i clienti e calcola il percorso.</p><button type="button" class="gf-button" data-variant="primary" onclick="showTab('giro')">Vai alla pianificazione</button></div></section>`;
+  if(result) result.innerHTML = `<section class="gf-panel"><div class="gf-empty"><h2>Nessuna anteprima calcolata</h2><p>Seleziona gli ordini o i clienti da consegnare, poi passa alla pianificazione per configurare e calcolare il giro.</p><button type="button" class="gf-button" data-variant="primary" onclick="openPlanningSelection()">Seleziona consegne</button></div></section>`;
   const inlineHint = document.getElementById("routePlanningInlineHint");
   if(inlineHint) inlineHint.classList.add("hidden");
   set("routeName", "");
@@ -3322,7 +3330,7 @@ function renderRouteResult(r, targetId="routeResult", fromHistory=false){
         <div class="gf-panel__body gf-stack">
           ${r.google_maps_url ? `<a class="gf-button" data-variant="secondary" target="_blank" rel="noopener noreferrer" href="${esc(r.google_maps_url)}">${icon("map").replace('<svg ','<svg class="gf-icon" ')}<span>Apri in Google Maps</span> ↗</a>` : ``}
           ${isProgrammable ? '<button type="button" class="gf-button" data-variant="primary" data-preview-program onclick="programCurrentRoute()"><span aria-hidden="true">▷</span> Programma giro</button>' : ''}
-          <button type="button" class="gf-button" data-variant="secondary" data-preview-back onclick="showTab('giro')"><span aria-hidden="true">←</span> Torna alla pianificazione</button>
+          <button type="button" class="gf-button" data-variant="secondary" data-preview-back onclick="openPlanningSelection()"><span aria-hidden="true">←</span> Torna alla pianificazione</button>
           <details class="gf-panel" data-preview-extra><summary class="gf-panel__header">Risorse e altre azioni</summary>
             <div class="gf-panel__body gf-stack">
               <dl class="gf-details">
@@ -3999,7 +4007,7 @@ function renderDashboardScheduledSubpage(routes, selectedRoute){
   const page = document.getElementById('dashboardScheduledPage');
   if(!page) return;
   if(!routes.length){
-    page.innerHTML = `<div class="gf-empty"><h2>Nessun giro programmato</h2><p>I giri salvati e assegnati compariranno qui finché l’autista non li avvia.</p><button type="button" class="gf-button" data-variant="primary" onclick="showTab('giro')">Pianifica un giro</button></div>`;
+    page.innerHTML = `<div class="gf-empty"><h2>Nessun giro programmato</h2><p>I giri salvati e assegnati compariranno qui finché l’autista non li avvia.</p><button type="button" class="gf-button" data-variant="primary" onclick="openPlanningSelection()">Pianifica un giro</button></div>`;
     return;
   }
   const r = selectedRoute || routes[0];
@@ -4873,7 +4881,7 @@ function mobileGoTabV62(tab){
 }
 function syncMobileShellV62(){
   try{
-    const active=document.querySelector('.gf-sidebar__item[aria-current="page"]')?.dataset?.tab || 'dashboard';
+    const active=document.querySelector('.tab:not(.hidden)')?.id?.replace(/^tab-/,'') || document.querySelector('.gf-sidebar__item[aria-current="page"]')?.dataset?.tab || 'dashboard';
     const nav=document.getElementById('gfMobileBottomNavV62');
     if(!nav) return;
     nav.querySelectorAll('button').forEach(b=>b.removeAttribute('aria-current'));

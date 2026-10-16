@@ -36,7 +36,8 @@
       if(!allowedTab(name)) denied.add(el);
     });
     const controls = {
-      'routes.plan':'[data-new-route-button],#gfMobileBottomNavV62 .main',
+      'routes.plan':'[data-new-route-button],#gfMobileBottomNavV62 .main,#customersGoPlanning',
+      'customers.update':'#customerBulkMenu',
       'notifications.read':'#notificationBellBtn',
       'customers.create':'#newCustomerBtn,#customerImportBtn',
       'deposits.create':'#newDepositBtn', 'vehicles.create':'.fleet-create',

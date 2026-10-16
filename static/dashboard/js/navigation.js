@@ -146,3 +146,14 @@ function showTab(name){
   if(name === 'dashboard') applyWorkspaceStateV49(gfWorkspaceOperationalV49);
   setTimeout(()=>{syncMobileShellV62();window.GFCompanyAccess?.apply();}, 40);
 }
+
+/* New routes start from a delivery selection; the planner remains available for saved routes. */
+function openPlanningSelection(){
+  if(!window.GFCompanyAccess||GFCompanyAccess.can('orders.plan')){
+    showTab('ordini');return;
+  }
+  if(GFCompanyAccess.can('routes.plan')&&GFCompanyAccess.allowedTab('clienti')){
+    showTab('clienti');return;
+  }
+  toast('La selezione delle consegne non è assegnata al tuo account.');
+}

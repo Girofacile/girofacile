@@ -73,7 +73,9 @@ def main():
                             else:route.fulfill(status=404,body='')
                             return
                         data={'/api/me':{'authenticated':False},'/api/settings':{},'/api/sector-config':{},
-                              '/api/customers':[],'/api/deposits':DEPOSITS,'/api/vehicles':VEHICLES,'/api/drivers':DRIVERS,
+                              '/api/customers':[
+                                  {'id':101,'nome':'Cliente verificato','indirizzo':'Via Roma 1','stato_geocodifica':'verificato','lat':45.46,'lon':9.19,'tempo_scarico_min':15},
+                                  {'id':102,'nome':'Cliente da verificare','indirizzo':'Via Roma 2','stato_geocodifica':'da_verificare','lat':None,'lon':None}],'/api/deposits':DEPOSITS,'/api/vehicles':VEHICLES,'/api/drivers':DRIVERS,
                               '/api/vehicles/usage':USAGE,'/api/agents':[],'/api/routes':[],
                               '/api/notifications':{'items':[],'unread':0},'/api/notifications/count':{'unread':0},
                               '/api/driver/admin/chat-threads':[],'/api/driver/admin/unread':{'total':0,'routes':[]},
@@ -249,6 +251,31 @@ def main():
                     page.evaluate("showTab('ordini')")
                     assert page.locator('#sourceToken').count()==0
                     assert db.query(Order).count()==3
+                    # Customers use the same selection-first flow, also without time windows.
+                    assert page.locator('.gf-sidebar__item[data-tab="giro"]').count()==0
+                    page.evaluate("showTab('clienti');gfUniversalFeaturesV891.has_time_windows=false;applyUniversalFeaturesV891();")
+                    box=page.locator('#customerResults input[data-cx-cb="101"]')
+                    box.wait_for(state='visible')
+                    assert page.locator('#customersGoPlanning').is_hidden()
+                    box.check()
+                    assert page.locator('#customersGoPlanning').is_visible()
+                    assert '(1)' in page.locator('#customersGoPlanning').inner_text()
+                    page.locator('#customerResults input[data-cx-cb="102"]').check()
+                    page.once('dialog',lambda dialog:dialog.accept())
+                    page.locator('#customersGoPlanning').click()
+                    assert page.locator('#tab-clienti').is_visible()
+                    page.locator('#customerResults input[data-cx-cb="102"]').uncheck()
+                    page.once('dialog',lambda dialog:dialog.accept())
+                    page.locator('#customersGoPlanning').click()
+                    page.wait_for_function("deliveries.length===1 && deliveries[0].customer_id===101")
+                    assert page.locator('#tab-giro').is_visible()
+                    assert page.locator('#orderPlanningBanner').is_hidden()
+                    assert page.evaluate("deliveries[0].tempo_scarico_min===15")
+                    assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 2')
+                    page.screenshot(path=str(output/f'customer-planning-{width}.png'),full_page=True)
+                    page.locator('#openCustomerStepBtn').click()
+                    page.locator('#tab-clienti').wait_for(state='visible')
+                    assert page.locator('#customerResults input[data-cx-cb="101"]').is_checked()
                     assert not errors,errors
                     context.close()
             engine.dispose()

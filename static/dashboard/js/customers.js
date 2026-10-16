@@ -202,13 +202,13 @@ function renderCustomerDirectory(){
       return '<th scope="col"'+(feature?' data-gf-feature="'+feature+'"':'')+' aria-sort="'+(on?(state.direction==='desc'?'descending':'ascending'):'none')+'"><button type="button" class="gf-button" data-variant="ghost" data-size="sm" data-cx-sort="'+key+'"'+(on?' aria-pressed="true"':'')+'>'+label+cxIcon(icon)+'</button></th>';
     };
     html='<div class="gf-table-wrap" id="customerTableWrap"><table class="gf-table" data-gf-responsive="cards"><thead><tr>'
-      +'<th scope="col" data-gf-feature="time_windows"><input type="checkbox" class="cx-cb" id="customerSelectPage" aria-label="Seleziona tutti i clienti della pagina"'+(allSel?' checked':'')+'></th>'
+      +'<th scope="col"><input type="checkbox" class="cx-cb" id="customerSelectPage" aria-label="Seleziona tutti i clienti della pagina"'+(allSel?' checked':'')+'></th>'
       +head('nome','Cliente')+head('indirizzo','Indirizzo')+head('scarico_mattina_da','Fascia di scarico','time_windows')+head('stato_geocodifica','Stato indirizzo')
       +'<th scope="col">Azioni</th></tr></thead><tbody id="customersBody">'
       +visible.map(x=>{
         const id=Number(x.id),on=sel.has(id);
         return '<tr data-cx-row="'+id+'" aria-selected="'+on+'">'
-          +'<td data-label="Seleziona" data-gf-feature="time_windows"><input type="checkbox" class="cx-cb" data-cx-cb="'+id+'" aria-label="Seleziona '+cxEsc(x.nome)+'"'+(on?' checked':'')+'></td>'
+          +'<td data-label="Seleziona"><input type="checkbox" class="cx-cb" data-cx-cb="'+id+'" aria-label="Seleziona '+cxEsc(x.nome)+'"'+(on?' checked':'')+'></td>'
           +'<td data-label="Cliente">'+cxNameCell(x)+'</td><td data-label="Indirizzo">'+cxAddressCell(x)+'</td>'
           +'<td data-label="Fascia di scarico" data-gf-feature="time_windows">'+cxSlotMarkup(x)+'</td><td data-label="Stato indirizzo">'+customerStatusMarkup(x)+'</td><td data-label="Azioni">'+cxActions(x)+'</td></tr>';
       }).join('')+'</tbody></table></div>';
@@ -216,7 +216,7 @@ function renderCustomerDirectory(){
     html='<div class="gf-panel__body gf-grid" data-cols="3" id="customerCards">'+visible.map(x=>{
       const id=Number(x.id),on=sel.has(id);
       return '<article class="gf-card gf-stack" data-cx-row="'+id+'" aria-selected="'+on+'">'
-        +'<label class="gf-check" data-gf-feature="time_windows"><input type="checkbox" class="cx-cb" data-cx-cb="'+id+'" aria-label="Seleziona '+cxEsc(x.nome)+'"'+(on?' checked':'')+'><span>Seleziona</span></label>'
+        +'<label class="gf-check"><input type="checkbox" class="cx-cb" data-cx-cb="'+id+'" aria-label="Seleziona '+cxEsc(x.nome)+'"'+(on?' checked':'')+'><span>Seleziona</span></label>'
         +cxNameCell(x)+cxAddressCell(x)
         +'<div class="gf-cluster"><span data-gf-feature="time_windows">'+cxSlotMarkup(x)+'</span>'+customerStatusMarkup(x)+'</div>'+cxActions(x)+'</article>';
     }).join('')+'</div>';
@@ -371,6 +371,13 @@ function renderCustomerSelection(){
   const bar=cxEl('customerBulkBar');if(!bar)return;
   const n=customerDirectory.selected.size;
   bar.classList.toggle('hidden',n===0);
+  const badge=cxEl('customerSelectionBadge');if(badge)badge.textContent=String(n);
+  const planning=cxEl('customersGoPlanning');
+  if(planning){
+    planning.hidden=!!window.GFCompanyAccess&&!GFCompanyAccess.can('routes.plan');
+    planning.disabled=customerDirectory.busy||customerPlanningTransferBusy||!n;
+    planning.textContent='Vai alla pianificazione ('+n+')';
+  }
   const msg=cxEl('customerSelectedCount');if(msg)msg.textContent=n+(n===1?' cliente selezionato':' clienti selezionati');
   const list=cxBulkMenu()?.querySelector('[data-gf-menu]');
   if(list&&!list.childElementCount)list.innerHTML='<p class="gf-kicker">Imposta per i clienti selezionati</p>'
@@ -378,6 +385,39 @@ function renderCustomerSelection(){
     +'<button type="button" class="gf-button" data-variant="ghost" role="menuitem" data-cx-bulk="clear">Rimuovi la fascia</button>';
   if(!n)closeCustomerBulkMenu();
 }
+
+let customerPlanningTransferBusy=false;
+async function goCustomerPlanning(){
+  if(customerPlanningTransferBusy||customerDirectory.busy)return;
+  if(window.GFCompanyAccess&&!GFCompanyAccess.can('routes.plan')){
+    alert('La pianificazione non è assegnata al tuo account.');return;
+  }
+  const ids=[...customerDirectory.selected];
+  if(!ids.length)return;
+  const selected=ids.map(id=>customerDirectory.all.find(c=>Number(c.id)===id));
+  if(selected.some(c=>!c||!customerIsPlannable(c))){
+    alert('Per pianificare, tutti i clienti selezionati devono avere un indirizzo verificato e coordinate valide. Controlla la selezione.');return;
+  }
+  if(deliveries.length&&!confirm('Sostituire le fermate aperte nel pianificatore con questa selezione? I giri già salvati restano disponibili nello storico.'))return;
+  const stops=selected.map(deliveryFromCustomer);
+  customerPlanningTransferBusy=true;renderCustomerSelection();
+  try{
+    await window.GFOrderPlanning?.flush();
+    // The existing navigation guards must succeed before replacing the workspace.
+    showTab('giro');
+    if(cxEl('tab-giro')?.classList.contains('hidden'))return;
+    clearRouteWorkspace();
+    deliveries=stops;
+    customerDirectoryPlanning=true;
+    renderDeliveries();
+    updateRoutePlanningGateV68();
+  }catch(error){
+    alert(error.message||'Impossibile aprire la pianificazione. La selezione è stata conservata.');
+  }finally{
+    customerPlanningTransferBusy=false;renderCustomerSelection();
+  }
+}
+
 function clearCustomerSelection(){ customerDirectory.selected.clear(); closeCustomerBulkMenu(); renderCustomerDirectory(); }
 function closeCustomerBulkMenu(){ const menu=cxBulkMenu(); if(menu)menu.open=false; }
 function toggleCustomerBulkMenu(event){

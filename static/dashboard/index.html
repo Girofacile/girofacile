@@ -10,7 +10,7 @@
 <meta charset="utf-8">
 <title>GiroFacile</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link href="/static/dashboard/css/core.css?v=gf_base_20261015w" rel="stylesheet">
+<link href="/static/dashboard/css/core.css?v=gf_selection_20261016" rel="stylesheet">
 <link href="/static/password-strength.css?v=password_policy_20261008_1" rel="stylesheet">
 <script src="/api/billing/catalog.js"></script>
 <script src="/static/dashboard/js/billing.js?v=gf_base_20261015u"></script>
@@ -18,9 +18,9 @@
 
 <link rel="stylesheet" href="/static/routing-summary.css?v=driver_shifts_20261013_1">
 <script src="/static/routing-summary.js?v=driver_shifts_20261013_1"></script>
-<link rel="stylesheet" href="/static/dashboard/css/live-gps.css?v=gf_base_20261015w">
+<link rel="stylesheet" href="/static/dashboard/css/live-gps.css?v=gf_selection_20261016">
 <script src="/static/dashboard/js/live-gps.js?v=live_20261006"></script>
-<link rel="stylesheet" href="/static/dashboard/css/electric-vehicles.css?v=gf_base_20261015w">
+<link rel="stylesheet" href="/static/dashboard/css/electric-vehicles.css?v=gf_selection_20261016">
 <script src="/static/dashboard/js/electric-vehicles.js?v=electric_bonus_20261002"></script>
 <link rel="stylesheet" href="/static/pod.css?v=1">
 <script src="/static/pod.js?v=1"></script>
@@ -33,13 +33,13 @@
 <link rel="stylesheet" href="/static/design-system/theme.css?v=gf_base_20261015v">
 <link rel="stylesheet" href="/static/design-system/components.css?v=gf_base_20261015z">
 <link rel="stylesheet" href="/static/design-system/layout.css?v=gf_base_20261015y">
-<link rel="stylesheet" href="/static/design-system/workspace.css?v=gf_base_20261015w">
+<link rel="stylesheet" href="/static/design-system/workspace.css?v=gf_selection_20261016">
 <link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007_reference_2">
 <script src="/static/design-system/design-system.js?v=gf_base_20261015" defer></script>
-<script src="/static/design-system/shell.js?v=gf_base_20261015u" defer></script>
-<link rel="stylesheet" href="/static/dashboard/css/dashboard-real-map.css?v=gf_base_20261015w">
-<link rel="stylesheet" href="/static/dashboard/css/in-progress-reference.css?v=gf_base_20261015w">
-<link rel="stylesheet" href="/static/dashboard/css/company.css?v=gf_base_20261015w">
+<script src="/static/design-system/shell.js?v=gf_selection_20261016" defer></script>
+<link rel="stylesheet" href="/static/dashboard/css/dashboard-real-map.css?v=gf_selection_20261016">
+<link rel="stylesheet" href="/static/dashboard/css/in-progress-reference.css?v=gf_selection_20261016">
+<link rel="stylesheet" href="/static/dashboard/css/company.css?v=gf_selection_20261016">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap">
 </head>
 <body data-gf-surface="workspace" data-gf-layout="base">
@@ -181,7 +181,6 @@
       <div class="gf-sidebar__section">
         <button type="button" data-tab="dashboard" data-workspace-common="1" onclick="showTab('dashboard')" class="gf-sidebar__item" aria-current="page"><svg class="gf-sidebar__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h7v7H3z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7H3z"/></svg><span>Dashboard</span></button>
         <button type="button" data-tab="company" data-workspace-common="1" onclick="showTab('company')" class="gf-sidebar__item"><svg class="gf-sidebar__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V4a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v17 M15 9h4a1 1 0 0 1 1 1v11 M3 21h18 M8 7h3 M8 11h3 M8 15h3"/></svg><span>Azienda</span></button>
-        <button type="button" data-tab="giro" data-workspace-operational="1" onclick="showTab('giro')" class="gf-sidebar__item"><svg class="gf-sidebar__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z M16 3v4 M8 3v4 M4 11h16"/></svg><span>Pianificazione</span></button>
         <button type="button" data-tab="dashboard-scheduled" data-workspace-common="1" onclick="openDashboardScheduledPage()" class="gf-sidebar__item scheduled-nav-entry gf-hidden" data-show-on-tabs="dashboard-scheduled"><svg class="gf-sidebar__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z M16 3v4 M8 3v4 M4 11h16"/></svg><span>Giri programmati</span></button>
         <button type="button" data-tab="ordini" data-workspace-operational="1" onclick="showTab('ordini')" class="gf-sidebar__item"><svg class="gf-sidebar__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6v3H9z M7 5H6a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1h-1 M9 12h6 M9 16h6"/></svg><span>Ordini</span></button>
         <button type="button" data-tab="clienti" data-workspace-operational="1" onclick="showTab('clienti')" class="gf-sidebar__item"><svg class="gf-sidebar__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 20v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1 M9.5 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z M21 20v-1a4 4 0 0 0-3-3.9 M16 4.1a3.5 3.5 0 0 1 0 6.8"/></svg><span>Clienti</span></button>
@@ -225,7 +224,7 @@
       </div>
 
       <div class="gf-header__actions">
-        <button type="button" class="gf-button" data-variant="primary" data-new-route-button data-show-on-tabs="dashboard" onclick="showTab('giro')"><span data-gf-label="new_route">Nuovo giro</span></button>
+        <button type="button" class="gf-button" data-variant="primary" data-new-route-button data-show-on-tabs="dashboard" onclick="openPlanningSelection()"><span data-gf-label="new_route">Nuovo giro</span></button>
         <button id="ordersConnectionsNewSource" class="gf-button gf-hidden" data-show-on-tabs="ordini-collegamenti" data-variant="primary" type="button" onclick="GFOrderSources.createForm('api')" hidden>+ Nuova fonte</button>
         <div id="ordersTopbarActionsHost" class="gf-cluster gf-hidden" data-show-on-tabs="ordini" aria-label="Azioni ordini"></div>
         <div id="orderSourceTopbarActionsHost" class="gf-cluster gf-hidden" data-show-on-tabs="ordine-fonte" aria-label="Azioni fonte ordini"></div>
@@ -521,8 +520,8 @@
         <div id="routePreviewResult" class="gf-stack" data-gap="lg">
           <section class="gf-panel"><div class="gf-empty">
             <h2>Nessuna anteprima calcolata</h2>
-            <p>Vai in Pianificazione, inserisci i dati del giro, seleziona i clienti e calcola il percorso.</p>
-            <button type="button" class="gf-button" data-variant="primary" onclick="showTab('giro')">Vai alla pianificazione</button>
+            <p>Seleziona gli ordini o i clienti da consegnare, poi passa alla pianificazione per configurare e calcolare il giro.</p>
+            <button type="button" class="gf-button" data-variant="primary" onclick="openPlanningSelection()">Seleziona consegne</button>
           </div></section>
         </div>
       </section>
@@ -669,11 +668,14 @@
               <div><button class="gf-button" data-variant="ghost" type="button" onclick="clearCustomerFilters()">Azzera filtri</button></div>
             </div>
             <div class="gf-cluster" id="customerQuickFilters" role="group" aria-label="Filtri rapidi"></div>
-            <div class="gf-alert hidden" data-status="info" id="customerBulkBar" role="region" aria-label="Selezione" data-gf-feature="time_windows">
-              <div class="gf-cluster">
-                <p id="customerSelectedCount"></p>
-                <details class="gf-dropdown" id="customerBulkMenu"><summary class="gf-button" data-variant="primary" data-size="sm" id="customerBulkButton"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 7v5l3 2"/></svg>Imposta fascia di scarico</summary><div data-gf-menu role="menu"></div></details>
-                <button class="gf-button" data-variant="secondary" data-size="sm" type="button" onclick="clearCustomerSelection()">Deseleziona</button>
+            <div class="gf-alert hidden" data-status="info" id="customerBulkBar" role="region" aria-label="Clienti selezionati">
+              <div class="gf-cluster" data-justify="between">
+                <div class="gf-cluster"><span class="gf-badge" data-status="info" id="customerSelectionBadge" aria-hidden="true">0</span><p id="customerSelectedCount" role="status"></p></div>
+                <div class="gf-cluster">
+                <details class="gf-dropdown" id="customerBulkMenu" data-gf-feature="time_windows"><summary class="gf-button" data-variant="secondary" data-size="sm" id="customerBulkButton"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 7v5l3 2"/></svg>Imposta fascia di scarico</summary><div data-gf-menu role="menu"></div></details>
+                <button class="gf-button" data-variant="ghost" data-size="sm" type="button" onclick="clearCustomerSelection()">Deseleziona</button>
+                <button id="customersGoPlanning" class="gf-button" data-variant="primary" data-size="sm" type="button" onclick="goCustomerPlanning()">Vai alla pianificazione</button>
+                </div>
               </div>
             </div>
           </div>
@@ -1002,7 +1004,7 @@
             <p class="gf-kicker">Storico giri</p>
             <h2>Il tuo storico inizia dal primo giro</h2>
             <p>Qui troverai automaticamente percorsi, chilometri, autisti, costi e dettagli dei giri completati. Crea il tuo primo giro per iniziare a tracciare i dati della tua attività.</p>
-            <div><button type="button" class="gf-button" data-variant="primary" onclick="showTab('giro')">+ Nuovo giro</button></div>
+            <div><button type="button" class="gf-button" data-variant="primary" onclick="openPlanningSelection()">+ Nuovo giro</button></div>
             <p class="gf-muted">I giri salvati verranno organizzati qui automaticamente.</p>
           </div>
         </section>
@@ -1140,7 +1142,7 @@
   <nav class="gf-bottom-nav" id="gfMobileBottomNavV62" aria-label="Navigazione mobile">
     <button type="button" class="gf-bottom-nav__item" data-mobile-tab="dashboard" onclick="mobileGoTabV62('dashboard')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h7v7H3z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7H3z"/></svg>Dashboard</button>
     <button type="button" class="gf-bottom-nav__item" data-mobile-tab="dashboard-in-progress" onclick="mobileGoTabV62('dashboard-in-progress')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 6h11v10H2z M13 9h5l3 3v4h-8z M6.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z M17.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/></svg>Giri</button>
-    <button type="button" class="gf-bottom-nav__item main" data-primary onclick="mobileGoTabV62('giro')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14 M5 12h14"/></svg><span>Nuovo giro</span></button>
+    <button type="button" class="gf-bottom-nav__item main" data-primary onclick="closeMobileMoreMenuV62();openPlanningSelection()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14 M5 12h14"/></svg><span>Nuovo giro</span></button>
     <button type="button" class="gf-bottom-nav__item" data-mobile-tab="storico" onclick="mobileGoTabV62('storico')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7 M3 4v5h5 M12 7v5l3 2"/></svg>Storico</button>
     <button type="button" class="gf-bottom-nav__item" onclick="toggleMobileMoreMenuV62()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h.01 M12 12h.01 M19 12h.01"/></svg>Altro</button>
   </nav>
@@ -1424,19 +1426,19 @@
 </div>
 
 <script src="/static/dashboard/js/reports.js?v=gf_base_20261015u"></script>
-<script src="/static/dashboard/js/customers.js?v=gf_base_20261015u"></script>
-<script src="/static/dashboard/js/navigation.js?v=gf_base_20261015v"></script>
+<script src="/static/dashboard/js/customers.js?v=gf_selection_20261016"></script>
+<script src="/static/dashboard/js/navigation.js?v=gf_selection_20261016"></script>
 <script src="/static/dashboard/js/completed.js?v=gf_base_20261015u"></script>
 <script src="/static/password-strength.js?v=password_policy_20261008_1"></script>
-<script src="/static/dashboard/js/collaborators.js?v=gf_base_20261015w"></script>
+<script src="/static/dashboard/js/collaborators.js?v=gf_selection_20261016"></script>
 <script src="/static/dashboard/js/orders.js?v=gf_base_20261015u"></script>
 <script src="/static/dashboard/js/order-import.js?v=gf_base_20261015u"></script>
 <script src="/static/dashboard/js/order-sources.js?v=gf_base_20261015v"></script>
 <script src="/static/dashboard/js/dashboard-real-map.js?v=gf_base_20261015u"></script>
 <script src="/static/dashboard/js/in-progress-reference.js?v=gf_route_recovery_20261015"></script>
-<script src="/static/dashboard/js/core.js?v=gf_base_20261015w"></script>
+<script src="/static/dashboard/js/core.js?v=gf_selection_20261016"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=orders_2"></script>
-<link rel="stylesheet" href="/static/dashboard/css/fleet-review.css?v=gf_base_20261015w">
+<link rel="stylesheet" href="/static/dashboard/css/fleet-review.css?v=gf_selection_20261016">
 <script src="/static/dashboard/js/fleet-review.js?v=gf_base_20261015u"></script>
 <link rel="stylesheet" href="/static/driver-schedule.css?v=20261013_1">
 <script src="/static/driver-schedule.js?v=20261013_1"></script>

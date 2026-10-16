@@ -42,7 +42,6 @@
     {items:[
       {id:'dashboard',label:'Dashboard',icon:'dashboard'},
       {id:'company',label:'Azienda',icon:'company'},
-      {id:'giro',label:'Pianificazione',icon:'calendar'},
       {id:'ordini',label:'Ordini',icon:'orders'},
       {id:'clienti',label:'Clienti',icon:'customers'},
       {id:'collaboratori',label:'Collaboratori',icon:'user'},
