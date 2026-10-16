@@ -140,7 +140,7 @@ def screenshot(page, output, prefix, stage):
     return path.name
 
 
-def run_case(browser, origin, variant, width, height, output):
+def run_case(browser, origin, variant, width, height, output, standalone_dir=None):
     started = perf_counter()
     prefix = f"pianificazione-{variant}-{width}"
     result = {
@@ -153,6 +153,7 @@ def run_case(browser, origin, variant, width, height, output):
         viewport={"width": width, "height": height}, device_scale_factor=1,
         is_mobile=width == 390, has_touch=width <= 768,
         service_workers="block", accept_downloads=False,
+        offline=standalone_dir is not None,
     )
     context.set_default_timeout(5000)
     port = urlsplit(origin).port
@@ -160,11 +161,14 @@ def run_case(browser, origin, variant, width, height, output):
     def intercept(route):
         request = route.request
         parts = urlsplit(request.url)
-        local = parts.scheme == "http" and parts.hostname == "127.0.0.1" and parts.port == port
+        if standalone_dir is not None and parts.scheme in ("file", "data"):
+            route.continue_()
+            return
+        local = standalone_dir is None and parts.scheme == "http" and parts.hostname == "127.0.0.1" and parts.port == port
         if local and allowed_path(parts.path) and request.method == "GET":
             route.continue_()
             return
-        if parts.hostname == "fonts.googleapis.com" and request.resource_type == "stylesheet":
+        if standalone_dir is None and parts.hostname == "fonts.googleapis.com" and request.resource_type == "stylesheet":
             result["external_stylesheets_stubbed"] += 1
             route.fulfill(status=200, content_type="text/css", body="/* Fonts stubbed for isolated tests. */")
             return
@@ -187,8 +191,18 @@ def run_case(browser, origin, variant, width, height, output):
     page.on("pageerror", lambda error: result["page_errors"].append(str(error)))
 
     try:
-        response = page.goto(f"{origin}/anteprime/pianificazione-{variant}.html", wait_until="networkidle")
-        assert response and response.status == 200
+        if standalone_dir is None:
+            response = page.goto(f"{origin}/anteprime/pianificazione-{variant}.html", wait_until="networkidle")
+            assert response and response.status == 200
+        else:
+            page.goto((standalone_dir / f"pianificazione-{variant}.html").as_uri(), wait_until="load")
+            expect(page.locator("body")).to_have_attribute("data-preview-export", "standalone")
+            expect(page.locator("[data-gf-shell]")).to_have_count(1)
+            # The file must work with no sibling CSS/JS and with networking disabled.
+            assets = page.locator("link[href], script[src]").evaluate_all(
+                "nodes => nodes.map(node => node.getAttribute('href') || node.getAttribute('src'))"
+            )
+            assert assets and all(asset.startswith("data:") for asset in assets)
         expect(page.locator("body")).to_have_attribute("data-preview-layout", variant)
         assert page.locator("[style], style").count() == 0, "Prototypes must reuse shared CSS"
         ids = page.locator("[id]").evaluate_all("nodes => nodes.map(node => node.id)")
@@ -309,6 +323,16 @@ def run_case(browser, origin, variant, width, height, output):
         assert not result["unexpected_requests"], result["unexpected_requests"]
         assert not result["page_errors"], result["page_errors"]
         assert not result["console_errors"], result["console_errors"]
+        if standalone_dir is not None:
+            # Links between the delivered files remain usable after extraction.
+            for target in ("a", "b", "c"):
+                with page.expect_navigation(wait_until="load"):
+                    page.locator(f'nav[aria-label="Confronta le anteprime"] a[href="pianificazione-{target}.html"]').click()
+                expect(page.locator("body")).to_have_attribute("data-preview-layout", target)
+                expect(page.locator("[data-gf-shell]")).to_have_count(1)
+            assert not result["unexpected_requests"], result["unexpected_requests"]
+            assert not result["page_errors"], result["page_errors"]
+            assert not result["console_errors"], result["console_errors"]
         result["status"] = "passed"
     except Exception as error:
         result["error"] = f"{type(error).__name__}: {error}"
@@ -325,7 +349,9 @@ def run_case(browser, origin, variant, width, height, output):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output-dir", type=Path, default=ROOT / "test-results" / "planning-previews")
+    parser.add_argument("--standalone-dir", type=Path, help="Check downloaded HTML directly over file:// with no network")
     args = parser.parse_args()
+    standalone_dir = args.standalone_dir.resolve() if args.standalone_dir else None
     output = args.output_dir.resolve()
     output.mkdir(parents=True, exist_ok=True)
     for path in PAGES | PREVIEW_ASSETS:
@@ -336,7 +362,7 @@ def main():
         try:
             for variant in VARIANTS:
                 for width, height in VIEWPORTS:
-                    case = run_case(browser, origin, variant, width, height, output)
+                    case = run_case(browser, origin, variant, width, height, output, standalone_dir)
                     cases.append(case)
                     print(f"{case['status'].upper():6} pianificazione-{variant} {width}px ({case['seconds']}s)", flush=True)
                     if case["status"] != "passed":

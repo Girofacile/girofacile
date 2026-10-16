@@ -41,6 +41,20 @@ Nel checkout aprire uno dei tre file HTML in questa cartella, mantenendo la dire
 In alternativa scaricare l'artifact **planning-layout-previews** dall'esecuzione GitHub Actions, estrarlo interamente e aprire `anteprime/pianificazione-a.html`.
 L'artifact contiene anche gli screenshot a 390, 768, 1024 e 1440 px e il report dei controlli.
 
+## File HTML autonomi da inviare
+
+L'artifact **GiroFacile-tre-versioni-HTML** contiene soltanto i tre file HTML.
+Estrarre lo ZIP e aprire `pianificazione-a.html`, `pianificazione-b.html` o
+`pianificazione-c.html` nel browser: nessuna installazione o cartella di asset richiesta.
+Ogni file incorpora automaticamente gli stessi CSS e JavaScript dei sorgenti;
+i link superiori consentono di passare tra le tre versioni se sono nella stessa cartella.
+La copia scaricata usa i font di sistema già previsti dal tema per funzionare offline.
+Nessun giro viene salvato: selezione, calcolo e programmazione sono dimostrativi.
+
+Generazione: `python scripts/export_planning_previews.py`.
+Verifica dei file scaricabili senza rete:
+`python tests/check_planning_previews.py --standalone-dir test-results/planning-html --output-dir test-results/planning-html-checks`.
+
 ## Verifica
 
 ```sh

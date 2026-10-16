@@ -227,6 +227,26 @@ jobs:
           python -m playwright install --with-deps chromium
       - name: Verify all planning layout proposals at four viewports
         run: python tests/check_planning_previews.py
+      - name: Export three standalone HTML files
+        run: python scripts/export_planning_previews.py
+      - name: Verify downloadable HTML offline at all viewports
+        run: python tests/check_planning_previews.py --standalone-dir test-results/planning-html --output-dir test-results/planning-html-checks
+      - name: Preserve the three downloadable HTML files
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: GiroFacile-tre-versioni-HTML
+          path: test-results/planning-html/*.html
+          if-no-files-found: error
+          retention-days: 14
+      - name: Preserve offline HTML browser checks
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: planning-html-offline-checks
+          path: test-results/planning-html-checks/
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Preserve interactive proposals and responsive screenshots
         if: always()
         uses: actions/upload-artifact@v4
