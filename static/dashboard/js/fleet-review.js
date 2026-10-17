@@ -26,15 +26,16 @@ const names=(plan,i)=>{
 const initials=x=>String(x).split(/\s+/).slice(0,2).map(t=>t.charAt(0).toUpperCase()).join('');
 function totals(plan,assignment,dirty){
  const used=plan.configuration.resources.filter((_,i)=>assignment.includes(i)).length;
+ const approximate=plan.routes.some(r=>['estimated','mixed'].includes(r.result.base_routing_provider)) || (plan.warnings||[]).some(w=>/routing stradale non disponibile/i.test(w));
  const km=plan.routes.reduce((x,r)=>x+Number(r.result.total_km||0),0);
  const cost=plan.routes.reduce((x,r)=>x+Number(r.fuel_cost||0),0);
  const ends=plan.routes.map(r=>r.result.return_time).filter(Boolean).sort();
  const stat=(label,value,sub,warning=false)=>'<div class="gf-stat-strip__cell"><span class="gf-stat-strip__label">'+esc(label)+'</span><strong class="gf-stat-strip__value">'+esc(value)+'</strong><small class="gf-stat-strip__unit">'+(warning?'<span class="gf-badge" data-status="warning">'+esc(sub)+'</span>':esc(sub))+'</small></div>';
  return '<section class="gf-stat-strip" aria-label="Totali della suddivisione">'+
  stat('Consegne',String(assignment.length),assignment.filter(x=>x==null).length+' non assegnate · '+used+' mezzi',assignment.some(x=>x==null))+
- stat('Km totali',dirty?'—':km.toLocaleString('it-IT',{maximumFractionDigits:1})+' km',dirty?'Da ricalcolare':'Somma dei percorsi',dirty)+
+ stat('Km totali',dirty?'—':km.toLocaleString('it-IT',{maximumFractionDigits:1})+' km',dirty?'Da ricalcolare':approximate?'Stima approssimativa':'Somma dei percorsi',dirty||approximate)+
  stat('Carburante / energia',dirty?'—':money(cost),dirty?'Da ricalcolare':'Costo stimato',dirty)+
- stat('Ultimo rientro',dirty?'—':ends.at(-1)||'—',dirty?'Da ricalcolare':'Orario previsto',dirty)+'</section>';
+ stat('Ultimo rientro',dirty?'—':ends.at(-1)||'—',dirty?'Da ricalcolare':approximate?'Stima approssimativa':'Orario previsto',dirty||approximate)+'</section>';
 }
 function stop(plan,assignment,dirty,index,lane){
  const delivery=plan.configuration.consegne[index];
@@ -132,8 +133,7 @@ function render({plan,assignment,dirty,busy,manualAdjusted,permission,onMove,onU
  '<div class="fleet-board" aria-label="Giri e fermate">'+plan.configuration.resources.map((_,i)=>lane(plan,assignment,dirty,i)).join('')+
  (missing?'<section class="gf-panel fleet-lane fleet-lane-unassigned" aria-label="Consegne non assegnate"><header class="gf-panel__header"><div><h2 class="gf-panel__title">Non assegnate</h2><p class="gf-muted">'+missing+' fermate da sistemare</p></div></header><ol class="fleet-deliveries">'+assignment.map((v,i)=>v==null?stop(plan,assignment,dirty,i,null):'').join('')+'</ol>'+
  (plan.status==='preview'?'<div class="gf-panel__body"><label class="gf-check"><input type="checkbox" data-fleet-accept-unassigned> <span>Confermo di programmare soltanto le consegne assegnate</span></label></div>':'')+'</section>':'')+'</div>'+
- '<details class="gf-panel" data-fleet-map-details><summary class="gf-panel__header">Mostra la mappa della suddivisione</summary><div class="gf-panel__body gf-stack"><div class="gf-route-panel__canvas" data-fleet-map role="region" aria-label="Fermate della suddivisione sulla mappa"></div><p class="gf-muted">Collegamenti indicativi, non stradali.</p></div></details>'+
- (plan.warnings?.length?'<details class="gf-panel"><summary class="gf-panel__header">Note sul calcolo</summary><div class="gf-panel__body gf-stack">'+plan.warnings.map(w=>'<p>'+esc(w)+'</p>').join('')+'</div></details>':'')+
+ '<section class="gf-panel"><div class="gf-panel__body"><div class="gf-route-panel__canvas" data-fleet-map role="region" aria-label="Mappa della suddivisione dei giri"></div></div></section>'+
  '<div id="fleetMessage" role="status" tabindex="-1" class="gf-muted"></div>'+
  (dirty?'<div class="gf-savebar" role="region" aria-label="Modifiche in sospeso"><span><b>Assegnazioni modificate</b> · Ricalcola per aggiornare tempi e distanze.</span>'+
  '<button type="button" class="gf-button" data-variant="secondary" data-size="sm" data-fleet-undo>Annulla modifiche</button><button type="button" class="gf-button" data-variant="primary" data-size="sm" data-fleet-recalc '+(busy?'disabled':'')+'>Ricalcola assegnazioni</button></div>':'')+
@@ -156,7 +156,7 @@ function render({plan,assignment,dirty,busy,manualAdjusted,permission,onMove,onU
   el.addEventListener('dragleave',e=>{if(!el.contains(e.relatedTarget))el.classList.remove('over');});
   el.addEventListener('drop',e=>{e.preventDefault();el.classList.remove('over');if(drag!=null){const i=drag;drag=null;move(i,Number(el.dataset.fleetLane));}});
  });
- target.querySelector('[data-fleet-map-details]')?.addEventListener('toggle',event=>{if(event.target.open)drawMap(plan,assignment);else stopMap();});
+ drawMap(plan,assignment);
 }
 return {render,warning,stopMap};
 })();

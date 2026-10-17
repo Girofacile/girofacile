@@ -45,7 +45,8 @@ test('fleet review replica il modello senza sidebar ne dati fittizi',()=>{
  const {control,page,params}=preview();
  control.render(params);
  assert.match(page.innerHTML,/Controlla la suddivisione/);
- assert.match(page.innerHTML,/Mostra la mappa della suddivisione/);
+ assert.match(page.innerHTML,/data-fleet-map role="region"/);
+ assert.doesNotMatch(page.innerHTML,/Note sul calcolo|data-fleet-map-details|Mostra la mappa/);
  assert.doesNotMatch(page.innerHTML,/Controlli sulla suddivisione/);
  assert.match(page.innerHTML,/Suddivisione per giro/);
  assert.match(page.innerHTML,/Alimentari Rossi/);
@@ -84,7 +85,7 @@ test('trasferimenti notificati e mappe solo sul contenuto, senza nuova sidebar',
  assert.doesNotMatch(review,/data-fleet-move/);
  assert.match(review,/data-fleet-lane/);
  assert.match(review,/loadRoadMapLibrary\(\)/);
- assert.match(review,/Collegamenti indicativi, non stradali/);
+ assert.match(review,/drawMap\(plan,assignment\);/);
  // La revisione usa i componenti del sistema; nel foglio dedicato restano solo i segnaposto della mappa.
  assert.match(review,/data-fleet-review/);
  assert.match(css,/\.fleet-review-pin/);
@@ -126,4 +127,13 @@ test('ZTL warning follows the selected vehicle and coexists with the tail lift w
  assert.match(page.innerHTML,/questa consegna richiede la sponda/);
  control.render({...params,assignment:[1,1],dirty:true});
  assert.doesNotMatch(page.innerHTML,/questa consegna è in ZTL|questa consegna richiede la sponda/);
+});
+
+test('approximate road estimates remain clear without a bottom notes panel',()=>{
+ const {control,page,params}=preview();
+ params.plan.routes[0].result.base_routing_provider='mixed';
+ params.plan.warnings=['Routing stradale non disponibile per alcune tratte'];
+ control.render(params);
+ assert.match(page.innerHTML,/Stima approssimativa/);
+ assert.doesNotMatch(page.innerHTML,/Note sul calcolo/);
 });

@@ -91,6 +91,9 @@ def main():
                 page.locator('#routePlanningActions button').click()
                 page.get_by_role('heading',name='Controlla la suddivisione').wait_for()
                 assert page.locator('[data-fleet-stop]').count()==6
+                assert page.locator('[data-fleet-map]').is_visible()
+                assert page.get_by_text('Note sul calcolo',exact=True).count()==0
+                assert page.locator('[data-fleet-map]').evaluate("el=>!el.closest('details')")
                 assert page.locator('.fleet-ztl-warning').count()==1
                 assert 'questo mezzo non è abilitato' in page.locator('.fleet-ztl-warning').inner_text()
                 assert page.locator('.fleet-tail-lift-warning').count()==1
@@ -107,6 +110,7 @@ def main():
                     page.get_by_role('button',name='Sposta comunque',exact=True).click()
                     assert page.locator('[data-fleet-plan]').is_disabled()
                     page.locator('[data-fleet-undo]').click()
+                    page.evaluate('window.scrollTo(0,0)')
                     first_stop=page.locator('[data-fleet-stop]').first
                     source_id=first_stop.locator('xpath=ancestor::*[@data-fleet-lane]').get_attribute('data-fleet-lane')
                     target_lane=page.locator(f'[data-fleet-lane]:not([data-fleet-lane="{source_id}"])').first
