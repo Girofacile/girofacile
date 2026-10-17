@@ -50,6 +50,24 @@ def calculate(planning,rows):
     return response.json(),config
 
 
+def test_selected_stops_visible_before_configuration_without_mutating_selection(planning):
+    ctx, _ = planning
+    client, db, *_ = ctx
+    row = ready(ctx, packages=3, weight_kg=25)
+    selected = client.put('/api/order-planning/selection', json={'version': 0, 'action': 'add', 'order_ids': [row.id]}).json()
+    response = client.get('/api/order-planning/selection?include_stops=true')
+    assert response.status_code == 200, response.text
+    state = response.json()
+    assert state['stops'][0]['order_refs'] == [{'id': row.id, 'version': row.version}]
+    assert state['stops'][0]['colli'] == 3
+    assert state['version'] == selected['version']
+    assert client.get('/api/order-planning/selection').json()['stops'] is None
+    assert db.query(RoutePlan).count() == 0
+    row.status = 'annullato'
+    db.commit()
+    assert client.get('/api/order-planning/selection?include_stops=true').status_code == 409
+
+
 def test_persisted_selection_configuration_preview_without_routing(planning):
     ctx,_=planning;client,db,*_=ctx
     row=ready(ctx,weight_kg=25,packages=3,tail_lift=False,pallet_truck=True,notes='Gate B',time_from='09:00',time_to='10:00')
@@ -61,6 +79,7 @@ def test_persisted_selection_configuration_preview_without_routing(planning):
     assert stop['sponda'] is False and stop['order_operational']['pallet_truck'] is True
     assert client.get('/api/order-planning/selection').json()['configuration']==state['configuration']
     assert client.get('/api/order-planning/selection').json()['stops']==state['stops']
+    assert client.get('/api/order-planning/selection?include_stops=true').json()['stops']==state['stops']
     original=deepcopy(row.original_payload)
     response=client.put('/api/order-planning/snapshot',json={'version':state['version'],'configuration':config,'stops':[]})
     assert response.status_code==200,response.text

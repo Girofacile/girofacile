@@ -118,6 +118,20 @@ def to_stop(order):
                 order_operational={key:values.get(key) for key in ('pallet_truck','pallets','volume_m3','requirements')})
 
 
+def selection_stops(db, row):
+    """Read the selected deliveries before route resources have been configured."""
+    orders = db.query(Order).filter(Order.user_id == row.user_id, Order.id.in_(row.order_ids)).order_by(Order.id).all()
+    if len(orders) != len(row.order_ids) or any(o.status != 'pronto' for o in orders):
+        raise HTTPException(409, 'Uno o più ordini non sono più pronti. Torna a Ordini e aggiorna la selezione.')
+    if row.stops is not None:
+        return row.stops
+    stops = [to_stop(o) for o in orders]
+    if row.configuration.get('group_orders'):
+        from .order_grouping import group_stops
+        stops = group_stops(row.user_id, stops)
+    return stops
+
+
 def preview(db, user, actor, data):
     row = snapshot(db, user.id, actor, data)
     config = row.configuration

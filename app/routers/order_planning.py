@@ -12,8 +12,12 @@ router = APIRouter(prefix='/api/order-planning', tags=['order-planning'])
 
 
 @router.get('/selection')
-def get_selection(request: Request, db: Session = Depends(get_db), user: User = Depends(current_user)):
-    return service.selection_response(db, service.selection(db, user.id, actor_key(request,user)))
+def get_selection(request: Request, include_stops: bool = False, db: Session = Depends(get_db), user: User = Depends(current_user)):
+    row = service.selection(db, user.id, actor_key(request,user))
+    result = service.selection_response(db, row)
+    if include_stops and row and not result['routes']:
+        result['stops'] = service.selection_stops(db, row)
+    return result
 
 
 @router.put('/selection')

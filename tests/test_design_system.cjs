@@ -556,7 +556,7 @@ test('planning fuel KPI stays empty until a vehicle is selected',()=>{
 
   const core=read('static/dashboard/js/core.js');
   const start=core.indexOf('function updateDashboardStats()');
-  const end=core.indexOf('\n}\n\nasync function api',start)+2;
+  const end=core.indexOf('async function api',start);
   const block=core.slice(start,end);
   assert.match(block,/if\(!sv\)\{[\s\S]*setText\("statFuel", ""\)[\s\S]*setText\("statFuelHint", "Seleziona un mezzo"\)/);
   assert.match(block,/const price=electric \? \(document\.getElementById\("electricityPrice"\)/);
