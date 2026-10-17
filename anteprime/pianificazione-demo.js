@@ -125,8 +125,39 @@
     box._timer = setTimeout(() => { box.hidden = true; }, 3200);
   }
 
+  // Nome del giro: titolo ben visibile, modificabile sul posto.
+  function toggleRename(show) {
+    const field = $('[data-demo-rename-field]');
+    if (!field) return;
+    field.hidden = !show;
+    $$('[data-demo-rename]').forEach(b => { b.hidden = show; });
+    if (show) { const input = $('input', field); input.value = $('[data-demo-route-name]').textContent; input.focus(); input.select(); }
+  }
+  function applyRename() {
+    const input = $('[data-demo-rename-field] input');
+    if (input && input.value.trim()) $$('[data-demo-route-name]').forEach(el => { el.textContent = input.value.trim(); });
+    toggleRename(false);
+  }
+
+  // Filtri delle fermate (ZTL, sponda, fascia oraria, da verificare).
+  function filterStops(chip) {
+    const value = chip.dataset.demoFilter;
+    $$('[data-demo-filter]').forEach(c => c.setAttribute('aria-pressed', String(c === chip)));
+    $$('[data-demo-tags]').forEach(item => {
+      item.hidden = value !== 'all' && !item.dataset.demoTags.split(' ').includes(value);
+    });
+  }
+
+  // Autista e mezzo scelti, riportati nel riquadro "equipaggio".
+  function syncCrew() {
+    const text = sel => { const s = $(sel); return s && s.value ? s.options[s.selectedIndex].text.split(' · ')[0] : 'Da scegliere'; };
+    $$('[data-demo-crew-driver]').forEach(el => { el.textContent = text('#demoDriver'); });
+    $$('[data-demo-crew-vehicle]').forEach(el => { el.textContent = text('#demoVehicle'); });
+  }
+
   document.addEventListener('change', event => {
     const t = event.target;
+    if (t.id === 'demoDriver' || t.id === 'demoVehicle') syncCrew();
     if (t.name === 'demoMode') syncMode();
     if (t.name === 'demoPrice') syncPrice();
     if (t.id === 'demoFuelManual') syncPrice();
@@ -144,9 +175,14 @@
     if (t.matches('[data-demo-close]')) closeSpecs();
     if (t.matches('[data-demo-calc]')) toast('Anteprima: qui partirebbe il calcolo del percorso. Nessun dato viene salvato.');
     if (t.matches('[data-demo-toast-text]')) toast(t.dataset.demoToastText);
+    if (t.matches('[data-demo-rename]')) toggleRename(true);
+    if (t.matches('[data-demo-rename-save]')) applyRename();
+    if (t.matches('[data-demo-rename-cancel]')) toggleRename(false);
+    if (t.matches('[data-demo-filter]')) filterStops(t);
   });
   document.addEventListener('keydown', event => {
-    if (event.key === 'Escape') closeSpecs();
+    if (event.key === 'Enter' && event.target.closest?.('[data-demo-rename-field]')) applyRename();
+    if (event.key === 'Escape') { closeSpecs(); toggleRename(false); }
     const tab = event.target.closest?.('[role="tab"]');
     if (tab && (event.key === 'ArrowRight' || event.key === 'ArrowLeft')) {
       const tabs = $$('[role="tab"]', tab.closest('[role="tablist"]'));
@@ -154,5 +190,5 @@
       selectTab(next); next.focus();
     }
   });
-  document.addEventListener('DOMContentLoaded', () => { syncMode(); syncPrice(); showStep(0); check(); });
+  document.addEventListener('DOMContentLoaded', () => { syncMode(); syncPrice(); syncCrew(); showStep(0); check(); });
 })();
