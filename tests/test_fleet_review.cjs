@@ -106,3 +106,13 @@ test('unassigned deliveries stay visible with address, reason and reassignment',
  assert.doesNotMatch(page.innerHTML,/<select|Sposta in un altro giro/);
  assert.match(page.innerHTML,/data-fleet-accept-unassigned/);
 });
+
+test('tail lift warning follows the selected vehicle immediately after a manual move',()=>{
+ const {control,page,params}=preview();
+ params.plan.configuration.consegne[0].sponda=true;
+ params.plan.resource_capabilities=[{has_tail_lift:false},{has_tail_lift:true}];
+ control.render(params);
+ assert.match(page.innerHTML,/questa consegna richiede la sponda, ma questo mezzo non la possiede/);
+ control.render({...params,assignment:[1,1],dirty:true});
+ assert.doesNotMatch(page.innerHTML,/questa consegna richiede la sponda, ma questo mezzo non la possiede/);
+});

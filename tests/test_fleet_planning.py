@@ -114,8 +114,8 @@ def test_road_windows_equipment_and_remaining_availability(fleet):
                       driver_id=r['driver_id'],vehicle_id=r['vehicle_id'],totale_minuti=60,status='programmato')
     db.add(booking);db.commit()
     plan=preview(fleet,data)
-    assert any(stop['index']==0 for stop in plan['unassigned'])
-    assert 'sponda richiesta' in next(stop['reason'] for stop in plan['unassigned'] if stop['index']==0)
+    assert any(0 in route['stop_indexes'] for route in plan['routes'])
+    assert any('sponda' in warning for warning in plan['warnings'])
     assert all(route['result']['total_min']<=40 for route in plan['routes'] if route['resource']==1)
     # A booking later in the morning does not hide a resource available at departure.
     available=ctx[0].get('/api/resources/availability?data_giro=2099-01-15&orario=08:00&preview_minutes=1').json()
@@ -237,3 +237,47 @@ def test_impossible_window_remains_unassigned(fleet):
     assert any(s['index']==0 for s in plan['unassigned'])
     assert 'Fasce orarie' in next(s['reason'] for s in plan['unassigned'] if s['index']==0)
     assert all(0 not in r['stop_indexes'] for r in plan['routes'])
+
+
+@pytest.mark.parametrize('strategy',['efficient','balanced'])
+def test_tail_lift_prefers_equipped_vehicle(fleet,strategy):
+    ctx, original = fleet
+    data=deepcopy(original);data['consegne']=data['consegne'][:2];data['strategy']=strategy
+    ctx[2].needs_tail_lift=True
+    for vehicle in ctx[1].query(Vehicle): vehicle.ha_sponda=False
+    ctx[1].get(Vehicle,data['resources'][1]['vehicle_id']).ha_sponda=True
+    ctx[1].commit()
+    data['consegne'][0]['sponda']=True
+    plan=preview(fleet,data)
+    assert plan['unassigned']==[]
+    assert next(r['resource'] for r in plan['routes'] if 0 in r['stop_indexes'])==1
+    assert plan['resource_capabilities']==[{'has_tail_lift':False},{'has_tail_lift':True}]
+    assert not any('ma il mezzo' in w for w in plan['warnings'])
+    # Manual membership remains valid even when the operator chooses the other vehicle.
+    moved=command(fleet,plan,'revise',assignments=[0,0])
+    assert moved.status_code==200,moved.text
+    assert any('richiede la sponda' in w for w in moved.json()['warnings'])
+
+
+@pytest.mark.parametrize('equipped_but_full',[False,True])
+def test_tail_lift_fallback_warns_and_programs_without_excluding(fleet,equipped_but_full):
+    ctx, original=fleet
+    data=deepcopy(original);data['consegne']=data['consegne'][:2]
+    ctx[2].needs_tail_lift=True
+    for vehicle in ctx[1].query(Vehicle): vehicle.ha_sponda=False
+    if equipped_but_full:
+        vehicle=ctx[1].get(Vehicle,data['resources'][1]['vehicle_id'])
+        vehicle.ha_sponda=True;vehicle.capacita_kg=5
+    ctx[1].commit()
+    data['consegne'][0]['sponda']=True
+    plan=preview(fleet,data)
+    assert plan['unassigned']==[]
+    assert any('richiede la sponda, ma il mezzo non la possiede' in w for w in plan['warnings'])
+    saved=command(fleet,plan,'confirm')
+    assert saved.status_code==200,saved.text
+    programmed=command(fleet,saved.json(),'program')
+    assert programmed.status_code==200,programmed.text
+    assert any('richiede la sponda' in w for w in programmed.json()['warnings'])
+    routes=ctx[1].query(RoutePlan).all()
+    assert sum(len(r.deliveries) for r in routes)==2
+    assert any(d.sponda and 'sponda' in (d.warning or '').lower() for r in routes for d in r.deliveries)
