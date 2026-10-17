@@ -1555,12 +1555,13 @@ function advanceRoutePlanning(){
 }
 
 let customerDirectoryPlanning=false;
-let planningCustomerPickerOpen=false;
 function openPlanningCustomerPicker(){
-  planningCustomerPickerOpen=true;
-  document.getElementById('customerPlanningStep')?.classList.remove('hidden');
+  const dialog=document.getElementById('planningCustomerDialog');
+  if(!dialog)return;
+  set('planningCustomerSearch','');
+  dialog.showModal();
+  document.getElementById('planningCustomerSearch').focus();
   loadCustomerPicker();
-  document.getElementById('customerPlanningStep')?.scrollIntoView({behavior:'smooth',block:'start'});
 }
 function updateRoutePlanningGateV68(){
   const btn = document.getElementById("openCustomerStepBtn");
@@ -1595,7 +1596,6 @@ function updateRoutePlanningGateV68(){
     workbench?.classList.remove("hidden");
   }
   globalThis.GFOrderPlanning?.gate();
-  if(planningCustomerPickerOpen)picker?.classList.remove('hidden');
 }
 
 function openCustomerPlanningStep(){
@@ -1689,7 +1689,6 @@ function updateAutoRouteName(){
 }
 
 function closeCustomerPlanningStep(){
-  planningCustomerPickerOpen = false;
   customerPlanningStepOpenedV68 = false;
   document.getElementById("customerPlanningStep")?.classList.add("hidden");
   document.getElementById("deliveryWorkbenchStep")?.classList.add("hidden");
@@ -2867,18 +2866,27 @@ function requirePlannableCustomer(c){
   return false;
 }
 
+let planningPickerCustomers=new Map();
 async function loadCustomerPicker(){
-  const box = document.getElementById("customerPickerList");
+  const modal=document.getElementById('planningCustomerDialog')?.open;
+  const box = document.getElementById(modal ? 'planningCustomerResults' : 'customerPickerList');
   if(!box) return;
   const params = new URLSearchParams({
-    q: document.getElementById("pickQ")?.value || "",
-    comune: document.getElementById("pickComune")?.value || "",
-    provincia: document.getElementById("pickProvincia")?.value || "",
-    ztl: document.getElementById("pickZtl")?.value || "",
-    sponda: document.getElementById("pickSponda")?.value || "",
+    q: document.getElementById(modal ? "planningCustomerSearch" : "pickQ")?.value || "",
+    comune: modal ? "" : document.getElementById("pickComune")?.value || "",
+    provincia: modal ? "" : document.getElementById("pickProvincia")?.value || "",
+    ztl: modal ? "" : document.getElementById("pickZtl")?.value || "",
+    sponda: modal ? "" : document.getElementById("pickSponda")?.value || "",
     limit: "50", planning_only: "true"
   });
-  const rows = await api("/api/customers?"+params.toString());
+  const request=(loadCustomerPicker.request||0)+1;
+  loadCustomerPicker.request=request;
+  box.textContent='Caricamento clienti…';
+  let rows;
+  try{rows=await api("/api/customers?"+params.toString());}
+  catch(error){if(request===loadCustomerPicker.request)box.textContent=error.message||'Impossibile caricare i clienti. Riprova.';return;}
+  if(request!==loadCustomerPicker.request)return;
+  planningPickerCustomers=new Map(rows.map(c=>[c.id,c]));
   box.innerHTML = rows.filter(customerIsPlannable).map(c=>{
     const already = deliveries.some(d=>String(d.customer_id||"")===String(c.id));
     return `<div class="gf-list-item" data-already-added="${already}">
@@ -2924,7 +2932,7 @@ function addDeliveryObject(payload, message="Consegna aggiunta. Premi Calcola pe
 }
 
 function quickAddCustomerToDelivery(id){
-  const c = customersCache.find(x=>x.id===id);
+  const c = planningPickerCustomers.get(id)||customersCache.find(x=>x.id===id);
   if(c){ if(requirePlannableCustomer(c)) addDeliveryObject(deliveryFromCustomer(c)); return; }
   api("/api/customers?limit=500&planning_only=true").then(rows=>{
     const found = rows.find(x=>x.id===id);
@@ -3268,7 +3276,6 @@ function addExtraStopAfterResult(){
 
 
 function clearRouteWorkspace(){
-  planningCustomerPickerOpen=false;
   customerDirectoryPlanning=false;
   globalThis.GFDriverSchedules?.route({});
   globalThis.GFFleetPlanning?.reset();

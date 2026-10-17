@@ -755,3 +755,10 @@ body[data-gf-surface] #deliveryBody .gf-button {
   font-size:var(--gf-font-sm); padding:var(--gf-space-1) var(--gf-space-2);
   min-width:max-content; flex-shrink:0;
 }
+
+body[data-gf-surface] #planningCustomerDialog {
+  width:var(--gf-dialog-width); box-sizing:border-box;
+}
+body[data-gf-surface] #planningCustomerResults {
+  max-height:var(--gf-stop-list-max-height); overflow-y:auto;
+}
