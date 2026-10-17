@@ -13,6 +13,13 @@
     $$('[data-demo-single]').forEach(el => { el.hidden = !!fleet; });
     $$('[data-demo-fleet]').forEach(el => { el.hidden = !fleet; });
     $$('[data-demo-mode-label]').forEach(el => { el.textContent = fleet ? 'Più mezzi · suddivisione automatica' : 'Un solo mezzo'; });
+    // Card di scelta: quella selezionata usa la variante "info" della card e l'icona colorata.
+    $$('[data-demo-mode-card]').forEach(card => {
+      const on = !!$('input[name="demoMode"]', card)?.checked;
+      if (on) card.dataset.variant = 'info'; else delete card.dataset.variant;
+      const icon = $('[data-demo-mode-icon]', card);
+      if (icon) { if (on) delete icon.dataset.tone; else icon.dataset.tone = 'neutral'; }
+    });
     check();
   }
 
@@ -210,6 +217,14 @@
     if (t.matches('[data-demo-rename-save]')) applyRename();
     if (t.matches('[data-demo-rename-cancel]')) toggleRename(false);
     if (t.matches('[data-demo-filter]')) filterStops(t);
+    if (t.matches('[data-demo-toggle]')) {
+      // Apre/chiude un'area (es. la tabella di tutte le fermate).
+      const area = document.getElementById(t.getAttribute('aria-controls'));
+      const open = t.getAttribute('aria-expanded') !== 'true';
+      if (area) area.hidden = !open;
+      t.setAttribute('aria-expanded', String(open));
+      $('[data-demo-toggle-text]', t).textContent = open ? t.dataset.demoClose : t.dataset.demoOpen;
+    }
   });
   document.addEventListener('keydown', event => {
     if (event.key === 'Enter' && event.target.closest?.('[data-demo-rename-field]')) applyRename();
