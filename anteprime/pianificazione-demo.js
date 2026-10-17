@@ -125,6 +125,36 @@
     box._timer = setTimeout(() => { box.hidden = true; }, 3200);
   }
 
+  // Nome automatico del giro: data · autista · zona più frequente tra le fermate.
+  // Non si imposta in pianificazione: si potrà cambiare dopo il calcolo, nell'anteprima del giro.
+  const ZONE = 'Milano'; // comune più frequente tra le fermate di esempio (5 su 7)
+  function optionName(sel) {
+    const s = $(sel);
+    return s && s.value ? s.options[s.selectedIndex].text.split(' · ')[0] : '';
+  }
+  function syncAutoName() {
+    const value = $('#demoDate')?.value;
+    const date = value ? new Date(value + 'T12:00:00') : null;
+    const short = date ? date.toLocaleDateString('it-IT', { weekday: 'short' }).replace('.', '') : '';
+    const day = date ? short.charAt(0).toUpperCase() + short.slice(1) + ' ' + date.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' }) : 'Data da scegliere';
+    const long = date ? date.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' }) : 'data da scegliere';
+    const fleet = $('input[name="demoMode"][value="fleet"]')?.checked;
+    $$('[data-demo-auto-kicker]').forEach(el => { el.textContent = fleet ? 'Nuovi giri · ' + long + ' · 2 mezzi' : 'Nuovo giro · ' + long; });
+    $$('[data-demo-auto-name]').forEach(el => {
+      if (fleet) {
+        const names = ['#aFleetDriver1', '#aFleetDriver2'].map(optionName).filter(Boolean);
+        el.textContent = names.map(n => day + ' · ' + n).join('  /  ');
+      } else {
+        el.textContent = day + ' · ' + (optionName('#demoDriver') || optionName('#demoVehicle') || 'autista da scegliere') + ' · ' + ZONE;
+      }
+    });
+    $$('[data-demo-auto-hint]').forEach(el => {
+      el.textContent = fleet
+        ? 'Un nome per ogni giro: data · autista · zona, assegnata dopo la suddivisione delle fermate. Potrai cambiarli nella revisione dei giri.'
+        : 'Nome automatico: data · autista · zona più frequente tra le fermate. Potrai cambiarlo dopo il calcolo, nell\'anteprima del giro.';
+    });
+  }
+
   // Nome del giro: titolo ben visibile, modificabile sul posto.
   function toggleRename(show) {
     const field = $('[data-demo-rename-field]');
@@ -158,12 +188,13 @@
   document.addEventListener('change', event => {
     const t = event.target;
     if (t.id === 'demoDriver' || t.id === 'demoVehicle') syncCrew();
+    syncAutoName();
     if (t.name === 'demoMode') syncMode();
     if (t.name === 'demoPrice') syncPrice();
     if (t.id === 'demoFuelManual') syncPrice();
     check();
   });
-  document.addEventListener('input', event => { if (event.target.matches('input,select')) check(); });
+  document.addEventListener('input', event => { if (event.target.matches('input,select')) { check(); syncAutoName(); } });
   document.addEventListener('click', event => {
     const t = event.target.closest('button,[role="tab"]');
     if (!t) { if (event.target.id === 'demoSpecs') closeSpecs(); return; }
@@ -190,5 +221,5 @@
       selectTab(next); next.focus();
     }
   });
-  document.addEventListener('DOMContentLoaded', () => { syncMode(); syncPrice(); syncCrew(); showStep(0); check(); });
+  document.addEventListener('DOMContentLoaded', () => { syncMode(); syncPrice(); syncCrew(); syncAutoName(); showStep(0); check(); });
 })();
