@@ -10,9 +10,10 @@
 <script src="../static/design-system/shell.js" defer></script>
 <script src="pianificazione-demo.js" defer></script>
 </head>
-<!-- Versione C1 · Fermate in primo piano.
-     In alto il pannello giro della Dashboard: nome del giro, schema delle fermate, equipaggio,
-     carico ed elenco. Sotto, affiancati, gli essenziali e il riquadro a schede. -->
+<!-- Versione C1 · Clienti in tabella in primo piano.
+     In alto: nome del giro, totali e la tabella dei clienti/ordini selezionati con i dati di
+     anagrafica e ordine (codice, indirizzo, finestre di scarico, colli, peso, requisiti, note).
+     Sotto, affiancati, gli essenziali e il riquadro a schede. -->
 <body data-gf-surface="workspace" data-gf-layout="base" data-gf-nav-active="ordini"
       data-gf-title="Pianifica giro" data-gf-subtitle="8 ordini selezionati · prima guarda le fermate, poi scegli mezzo e autista"
       data-gf-user-name="Logistica Demo" data-gf-user-role="admin">
@@ -23,11 +24,10 @@
   </div>
 
   <div class="gf-stack" data-gap="lg">
-    <!-- Le fermate in primo piano: schema del percorso, equipaggio, carico ed elenco -->
-    <section class="gf-route-panel" aria-label="Fermate del giro">
-      <div class="gf-route-panel__map">
-        <div class="gf-route-panel__heading">
-          <div class="gf-stack" data-gap="sm">
+    <!-- In alto: i clienti/ordini del giro in tabella, con i dati inseriti in anagrafica e nell'ordine -->
+    <section class="gf-panel" aria-label="Clienti e ordini del giro">
+      <header class="gf-panel__header">
+        <div class="gf-stack" data-gap="sm">
             <p class="gf-kicker">Nuovo giro · sabato 18 ottobre</p>
             <div class="gf-cluster"><h2 class="gf-title" data-demo-route-name>Milano Nord · mattina</h2><button type="button" class="gf-button" data-variant="link" data-demo-rename>Rinomina</button></div>
             <div class="gf-cluster" data-demo-rename-field hidden>
@@ -36,46 +36,26 @@
               <button type="button" class="gf-button" data-variant="ghost" data-size="sm" data-demo-rename-cancel>Annulla</button>
             </div>
           </div>
-          <span class="gf-badge" data-status="neutral" data-dot>Bozza</span>
-        </div>
-          <div class="gf-route-panel__canvas">
-          <svg viewBox="0 0 660 300" role="img" aria-label="Posizione indicativa del deposito e delle 7 fermate selezionate">
-            <g aria-hidden="true"><line class="gf-route-map__grid" x1="0" y1="75" x2="660" y2="75"/><line class="gf-route-map__grid" x1="0" y1="150" x2="660" y2="150"/><line class="gf-route-map__grid" x1="0" y1="225" x2="660" y2="225"/><line class="gf-route-map__grid" x1="165" y1="0" x2="165" y2="300"/><line class="gf-route-map__grid" x1="330" y1="0" x2="330" y2="300"/><line class="gf-route-map__grid" x1="495" y1="0" x2="495" y2="300"/></g>
-            <path class="gf-route-map__todo" d="M60 250 L150 210 L230 120 L320 175 L420 90 L505 150 L560 235 L610 110"/>
-            <g class="gf-route-map__depot"><rect x="34" y="236" width="52" height="28" rx="6"/><text x="60" y="250">DEP</text></g>
-            <g class="gf-route-map__node"><circle cx="150" cy="210" r="14"/><text x="150" y="210">1</text></g>
-            <g class="gf-route-map__node"><circle cx="230" cy="120" r="14"/><text x="230" y="120">2</text></g>
-            <g class="gf-route-map__node is-miss"><circle cx="320" cy="175" r="14"/><text x="320" y="175">3</text></g>
-            <g class="gf-route-map__node"><circle cx="420" cy="90" r="14"/><text x="420" y="90">4</text></g>
-            <g class="gf-route-map__node"><circle cx="505" cy="150" r="14"/><text x="505" y="150">5</text></g>
-            <g class="gf-route-map__node"><circle cx="560" cy="235" r="14"/><text x="560" y="235">6</text></g>
-            <g class="gf-route-map__node"><circle cx="610" cy="110" r="14"/><text x="610" y="110">7</text></g>
-          </svg>
-          </div>
-          <div class="gf-legend"><span><i></i>Fermata</span><span><i data-state="miss"></i>Indirizzo da verificare</span></div>
+        <div class="gf-cluster"><span class="gf-badge" data-status="neutral">7 fermate · 8 ordini</span><span class="gf-badge" data-status="neutral">46 colli · 612 kg</span><span class="gf-badge" data-status="neutral" data-dot>Bozza</span></div>
+      </header>
+      <div class="gf-table-wrap">
+        <table class="gf-table" data-gf-responsive="cards" aria-label="Clienti e ordini selezionati, nell'ordine di inserimento">
+          <thead><tr><th scope="col">#</th><th scope="col">Cliente</th><th scope="col">Ordine</th><th scope="col">Indirizzo</th><th scope="col">Finestra di scarico</th><th scope="col">Scarico</th><th scope="col">Carico</th><th scope="col">Requisiti</th><th scope="col">Note</th><th scope="col"><span class="gf-muted">Specifiche</span></th></tr></thead>
+          <tbody>
+            <tr><td data-label="#"><span class="gf-badge" data-status="neutral">1</span></td><td data-label="Cliente"><strong>Bar Centrale</strong><br><small class="gf-muted">CL-0142</small></td><td data-label="Ordine">ORD-2318</td><td data-label="Indirizzo">Via Padova 41<br><small class="gf-muted">Milano (MI)</small></td><td data-label="Finestra di scarico">Mattina 07:00–10:00</td><td data-label="Scarico">10 min</td><td data-label="Carico">6 colli<br><small class="gf-muted">80 kg</small></td><td data-label="Requisiti"><span class="gf-muted">—</span></td><td data-label="Note">Lasciare al banco</td><td data-label="Specifiche"><button type="button" class="gf-icon-button" data-demo-specs="Bar Centrale" aria-label="Specifiche di Bar Centrale" title="Specifiche di Bar Centrale"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg></button></td></tr>
+            <tr><td data-label="#"><span class="gf-badge" data-status="neutral">2</span></td><td data-label="Cliente"><strong>Farmacia San Marco</strong><br><small class="gf-muted">CL-0087</small></td><td data-label="Ordine">ORD-2321</td><td data-label="Indirizzo">Viale Monza 120<br><small class="gf-muted">Milano (MI)</small></td><td data-label="Finestra di scarico">Mattina 09:00–11:00<br>Pomeriggio 15:00–18:00</td><td data-label="Scarico">5 min</td><td data-label="Carico">3 colli<br><small class="gf-muted">12 kg</small></td><td data-label="Requisiti"><span class="gf-muted">—</span></td><td data-label="Note">Farmaci da frigo</td><td data-label="Specifiche"><button type="button" class="gf-icon-button" data-demo-specs="Farmacia San Marco" aria-label="Specifiche di Farmacia San Marco" title="Specifiche di Farmacia San Marco"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg></button></td></tr>
+            <tr><td data-label="#"><span class="gf-badge" data-status="warning">3</span></td><td data-label="Cliente"><strong>Ristorante Da Gino</strong><br><small class="gf-muted">CL-0219</small></td><td data-label="Ordine">ORD-2324</td><td data-label="Indirizzo">Corso Buenos Aires 15<br><small class="gf-muted">Milano (MI)</small> <span class="gf-badge" data-status="warning">Indirizzo da verificare</span></td><td data-label="Finestra di scarico">Mattina 10:00–11:30</td><td data-label="Scarico">15 min</td><td data-label="Carico">4 colli<br><small class="gf-muted">45 kg</small></td><td data-label="Requisiti"><span class="gf-badge" data-kind="ztl">ZTL</span></td><td data-label="Note">Ingresso dal retro</td><td data-label="Specifiche"><button type="button" class="gf-icon-button" data-demo-specs="Ristorante Da Gino" aria-label="Specifiche di Ristorante Da Gino" title="Specifiche di Ristorante Da Gino"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg></button></td></tr>
+            <tr><td data-label="#"><span class="gf-badge" data-status="neutral">4</span></td><td data-label="Cliente"><strong>Conad Palmanova</strong><br><small class="gf-muted">CL-0033</small></td><td data-label="Ordine">ORD-2325 · ORD-2326</td><td data-label="Indirizzo">Via Palmanova 220<br><small class="gf-muted">Cologno Monzese (MI)</small></td><td data-label="Finestra di scarico">Mattina 06:30–09:00<br>Pomeriggio 14:00–16:00</td><td data-label="Scarico">25 min</td><td data-label="Carico">14 colli<br><small class="gf-muted">260 kg</small></td><td data-label="Requisiti"><span class="gf-badge" data-kind="tail-lift">Sponda</span> <span class="gf-badge" data-status="neutral">Transpallet</span></td><td data-label="Note">Scarico in baia 2</td><td data-label="Specifiche"><button type="button" class="gf-icon-button" data-demo-specs="Conad Palmanova" aria-label="Specifiche di Conad Palmanova" title="Specifiche di Conad Palmanova"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg></button></td></tr>
+            <tr><td data-label="#"><span class="gf-badge" data-status="neutral">5</span></td><td data-label="Cliente"><strong>Hotel Lombardia</strong><br><small class="gf-muted">CL-0175</small></td><td data-label="Ordine">ORD-2329</td><td data-label="Indirizzo">Viale Gramsci 3<br><small class="gf-muted">Sesto San Giovanni (MI)</small></td><td data-label="Finestra di scarico">Pomeriggio 14:00–17:00</td><td data-label="Scarico">10 min</td><td data-label="Carico">8 colli<br><small class="gf-muted">95 kg</small></td><td data-label="Requisiti"><span class="gf-muted">—</span></td><td data-label="Note">Chiedere di Paolo</td><td data-label="Specifiche"><button type="button" class="gf-icon-button" data-demo-specs="Hotel Lombardia" aria-label="Specifiche di Hotel Lombardia" title="Specifiche di Hotel Lombardia"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg></button></td></tr>
+            <tr><td data-label="#"><span class="gf-badge" data-status="neutral">6</span></td><td data-label="Cliente"><strong>Panificio Lombardo</strong><br><small class="gf-muted">CL-0011</small></td><td data-label="Ordine">ORD-2330</td><td data-label="Indirizzo">Via Pallanza 7<br><small class="gf-muted">Milano (MI)</small></td><td data-label="Finestra di scarico">Mattina 05:30–08:30</td><td data-label="Scarico">8 min</td><td data-label="Carico">5 colli<br><small class="gf-muted">60 kg</small></td><td data-label="Requisiti"><span class="gf-muted">—</span></td><td data-label="Note"><span class="gf-muted">—</span></td><td data-label="Specifiche"><button type="button" class="gf-icon-button" data-demo-specs="Panificio Lombardo" aria-label="Specifiche di Panificio Lombardo" title="Specifiche di Panificio Lombardo"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg></button></td></tr>
+            <tr><td data-label="#"><span class="gf-badge" data-status="neutral">7</span></td><td data-label="Cliente"><strong>Ritiro resi</strong><br><small class="gf-muted">Occasionale</small></td><td data-label="Ordine">—</td><td data-label="Indirizzo">Via Mecenate 76<br><small class="gf-muted">Milano (MI)</small></td><td data-label="Finestra di scarico">—</td><td data-label="Scarico">15 min</td><td data-label="Carico">6 colli<br><small class="gf-muted">60 kg</small></td><td data-label="Requisiti"><span class="gf-muted">—</span></td><td data-label="Note">Fermata occasionale</td><td data-label="Specifiche"><button type="button" class="gf-icon-button" data-demo-specs="Ritiro resi" aria-label="Specifiche di Ritiro resi" title="Specifiche di Ritiro resi"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg></button></td></tr>
+          </tbody>
+        </table>
       </div>
-      <div class="gf-route-panel__detail">
-          <div class="gf-crew"><div><small>Autista</small><strong data-demo-crew-driver></strong></div><div><small>Mezzo</small><strong data-demo-crew-vehicle></strong></div></div>
-          <div class="gf-progress">
-            <div class="gf-progress__top"><span><b>612 kg</b> di 1.200 kg</span><span>Peso</span></div>
-            <div class="gf-progress__track" role="img" aria-label="Peso: 612 kg su 1.200 kg, circa metà della portata"><span class="gf-progress__done" data-gf-width="50"></span></div>
-          </div>
-          <div class="gf-progress">
-            <div class="gf-progress__top"><span><b>46 colli</b> di 80</span><span>Volume</span></div>
-            <div class="gf-progress__track" role="img" aria-label="Colli: 46 su 80"><span class="gf-progress__done" data-gf-width="55"></span></div>
-          </div>
-          <div class="gf-alert" data-status="warning" role="status"><div class="gf-alert__body"><p class="gf-alert__title">1 indirizzo da verificare</p><p class="gf-alert__text">Ristorante Da Gino: civico non trovato.</p></div></div>
-          <ol class="gf-stop-list" aria-label="Fermate selezionate">
-            <li class="gf-stop" data-demo-tags="nessuno"><span class="gf-stop__number">1</span><span class="gf-stop__main"><span class="gf-stop__name">Bar Centrale</span><span class="gf-stop__meta">Via Padova 41, Milano · 6 colli · 80 kg </span></span><span class="gf-stop__time"><button type="button" class="gf-button" data-variant="ghost" data-size="sm" data-demo-specs="Bar Centrale">Specifiche</button></span></li>
-            <li class="gf-stop" data-demo-tags="fascia"><span class="gf-stop__number">2</span><span class="gf-stop__main"><span class="gf-stop__name">Farmacia San Marco</span><span class="gf-stop__meta">Viale Monza 120, Milano · 3 colli · 12 kg <span class="gf-badge" data-status="info">9:00–11:00</span></span></span><span class="gf-stop__time"><button type="button" class="gf-button" data-variant="ghost" data-size="sm" data-demo-specs="Farmacia San Marco">Specifiche</button></span></li>
-            <li class="gf-stop is-miss" data-demo-tags="ztl verifica"><span class="gf-stop__number">3</span><span class="gf-stop__main"><span class="gf-stop__name">Ristorante Da Gino</span><span class="gf-stop__meta">Corso Buenos Aires 15 · civico da verificare · 4 colli · 45 kg <span class="gf-badge" data-kind="ztl">ZTL</span> <span class="gf-badge" data-status="warning">Da verificare</span></span></span><span class="gf-stop__time"><button type="button" class="gf-button" data-variant="ghost" data-size="sm" data-demo-specs="Ristorante Da Gino">Specifiche</button></span></li>
-            <li class="gf-stop" data-demo-tags="sponda"><span class="gf-stop__number">4</span><span class="gf-stop__main"><span class="gf-stop__name">Conad Palmanova</span><span class="gf-stop__meta">Via Palmanova 220, Cologno M. · 2 ordini · 14 colli · 260 kg <span class="gf-badge" data-kind="tail-lift">Sponda</span></span></span><span class="gf-stop__time"><button type="button" class="gf-button" data-variant="ghost" data-size="sm" data-demo-specs="Conad Palmanova">Specifiche</button></span></li>
-            <li class="gf-stop" data-demo-tags="nessuno"><span class="gf-stop__number">5</span><span class="gf-stop__main"><span class="gf-stop__name">Hotel Lombardia</span><span class="gf-stop__meta">Viale Gramsci 3, Sesto S. G. · 8 colli · 95 kg </span></span><span class="gf-stop__time"><button type="button" class="gf-button" data-variant="ghost" data-size="sm" data-demo-specs="Hotel Lombardia">Specifiche</button></span></li>
-            <li class="gf-stop" data-demo-tags="fascia"><span class="gf-stop__number">6</span><span class="gf-stop__main"><span class="gf-stop__name">Panificio Lombardo</span><span class="gf-stop__meta">Via Pallanza 7, Milano · 5 colli · 60 kg <span class="gf-badge" data-status="info">entro 8:30</span></span></span><span class="gf-stop__time"><button type="button" class="gf-button" data-variant="ghost" data-size="sm" data-demo-specs="Panificio Lombardo">Specifiche</button></span></li>
-            <li class="gf-stop" data-demo-tags="nessuno"><span class="gf-stop__number">7</span><span class="gf-stop__main"><span class="gf-stop__name">Ritiro resi · fermata occasionale</span><span class="gf-stop__meta">Via Mecenate 76, Milano · 6 colli · 60 kg </span></span><span class="gf-stop__time"><button type="button" class="gf-button" data-variant="ghost" data-size="sm" data-demo-specs="Ritiro resi · fermata occasionale">Specifiche</button></span></li>
-          </ol>
-        <div class="gf-route-panel__footer gf-cluster"><button type="button" class="gf-button" data-variant="secondary" data-size="sm" data-demo-toast-text="Anteprima: si aprirebbe l'elenco Clienti per aggiungere altre fermate.">+ Aggiungi cliente</button><button type="button" class="gf-button" data-variant="secondary" data-size="sm" data-demo-toast-text="Anteprima: si aprirebbe la finestra della fermata occasionale.">+ Fermata occasionale</button></div>
-      </div>
+      <footer class="gf-panel__footer gf-cluster" data-justify="between">
+        <div class="gf-cluster"><button type="button" class="gf-button" data-variant="secondary" data-size="sm" data-demo-toast-text="Anteprima: si aprirebbe l'elenco Clienti per aggiungere altre fermate.">+ Aggiungi cliente</button><button type="button" class="gf-button" data-variant="secondary" data-size="sm" data-demo-toast-text="Anteprima: si aprirebbe la finestra della fermata occasionale.">+ Fermata occasionale</button></div>
+        <p class="gf-muted">Totale: 7 fermate · 46 colli · 612 kg · scarico stimato 1 h 28 min</p>
+      </footer>
     </section>
 
     <div class="gf-grid" data-cols="2">
