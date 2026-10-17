@@ -424,13 +424,11 @@
       </section>
 
       <section id="tab-giro" class="tab hidden gf-stack" data-gap="lg">
-        <section id="orderPlanningBanner" class="gf-alert" data-status="info" hidden><div class="gf-alert__body gf-stack" data-gap="sm"><strong class="gf-alert__title">Ordini selezionati</strong><label class="gf-check" for="orderGroupOrders"><input type="checkbox" id="orderGroupOrders" onchange="GFOrderPlanning.regroup()"> <span>Raggruppa ordini con stessa destinazione e vincoli compatibili</span></label><p id="orderPlanningMessage" role="status"></p><div class="gf-cluster"><button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="GFOrderPlanning.save()">Salva configurazione</button><button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="showTab('ordini')">Torna agli ordini</button></div><p class="gf-muted">La selezione resta salvata finché la svuoti. Le fermate rimosse restano nell’archivio Ordini.</p></div></section>
 
         <!-- Testata del giro: nome automatico, numeri e fermate (tabella apribile) -->
         <section class="gf-panel" aria-labelledby="routeAutoNameTitle">
           <header class="gf-panel__header">
             <div class="gf-stack" data-gap="sm"><p class="gf-kicker" id="routeAutoKicker">Nuovo giro</p><h2 class="gf-title" id="routeAutoNameTitle">Giro consegne</h2></div>
-            <span class="gf-badge" data-status="neutral" data-dot>Bozza</span>
           </header>
           <input type="hidden" id="routeName">
           <div class="gf-panel__body">
@@ -452,7 +450,6 @@
             </div>
             <footer class="gf-panel__footer gf-cluster" data-justify="between">
               <div class="gf-cluster"><button type="button" class="gf-button" data-variant="secondary" aria-expanded="false" aria-controls="deliveryTableArea" onclick="toggleRouteStopsTable(this)">Visiona tutte le fermate</button><span id="deliveryTableCounter" class="gf-badge" data-status="neutral">0 fermate</span><strong id="deliveryFooterCount" class="gf-muted">0 consegne inserite</strong></div>
-              <button type="button" class="gf-button" data-variant="primary" onclick="optimizeRoute()">Calcola percorso</button>
             </footer>
             <p id="routePlanningInlineHint" class="gf-muted hidden">Anteprima calcolata nella schermata dedicata.</p>
           </div>
@@ -545,6 +542,7 @@
           <div class="gf-panel__body gf-stack">
             <div class="gf-stack" data-gap="sm"><h2 class="gf-subtitle" id="planningCompletionTitle">Cosa manca?</h2><div id="planningChecklist" class="gf-cluster"></div><span id="routePlanningGateHint" class="gf-badge" data-status="neutral" role="status"></span></div>
             <div class="gf-cluster" data-justify="between"><div class="gf-field" data-invalid><p id="orderPlanningProceedMessage" class="gf-field__error" role="alert" tabindex="-1" hidden></p></div><button type="button" id="openCustomerStepBtn" class="gf-button" data-variant="primary" onclick="advanceRoutePlanning()">Completa dati giro</button></div>
+            <div class="gf-cluster" data-justify="end"><button type="button" class="gf-button" data-variant="primary" onclick="optimizeRoute()">Calcola percorso</button></div>
           </div>
         </section>
       </section>
@@ -1478,7 +1476,7 @@
 <script src="/static/driver-schedule.js?v=20261013_1"></script>
 <script src="/static/dashboard/js/driver-schedules.js?v=gf_base_20261015u"></script>
 <script src="/static/dashboard/js/fleet-planning.js?v=gf_base_20261015v"></script>
-<script src="/static/dashboard/js/order-planning.js?v=gf_planning_20261017"></script>
+<script src="/static/dashboard/js/order-planning.js?v=gf_planning_20261017b"></script>
 
 <script>
 function toggleLoginPassword(){

@@ -57,9 +57,8 @@
     }catch(e){el('ordersMessage').textContent=e.message;await loadSelection().catch(()=>{});}
     finally{busy=false;controls();GFOrders.refreshSelection?.();}
   }
-  function config(){return {...(globalThis.GFDriverSchedules?.routePayload()||{}),...(globalThis.GFFleetPlanning?.config()||{}),group_orders:!!el('orderGroupOrders')?.checked,nome:val('routeName'),data_giro:val('routeDate'),orario_partenza:val('routeStart'),deposit_id:Number(val('routeDeposit'))||null,vehicle_id:Number(val('routeVehicle'))||null,driver_id:Number(val('routeDriver'))||null,rientro_deposito:boolVal('returnDepot'),energy_price_mode:document.querySelector('input[name="energyPriceMode"]:checked')?.value||'manual',energy_price_primary:Number(val('fuelPrice'))||0,energy_price_electric:Number(val('electricityPrice'))||0};}
+  function config(){return {...(globalThis.GFDriverSchedules?.routePayload()||{}),...(globalThis.GFFleetPlanning?.config()||{}),group_orders:el('orderGroupOrders')?.checked??!!state.configuration.group_orders,nome:val('routeName'),data_giro:val('routeDate'),orario_partenza:val('routeStart'),deposit_id:Number(val('routeDeposit'))||null,vehicle_id:Number(val('routeVehicle'))||null,driver_id:Number(val('routeDriver'))||null,rientro_deposito:boolVal('returnDepot'),energy_price_mode:document.querySelector('input[name="energyPriceMode"]:checked')?.value||'manual',energy_price_primary:Number(val('fuelPrice'))||0,energy_price_electric:Number(val('electricityPrice'))||0};}
   function gate(){
-    const banner=el('orderPlanningBanner');if(banner)banner.hidden=!enabled;
     if(!enabled)return;
     if(loadedStops)el('deliveryWorkbenchStep')?.classList.remove('hidden');
     const button=el('openCustomerStepBtn');if(button){button.textContent=proceeding?'Caricamento fermate…':'Prosegui';button.disabled=proceeding;}
