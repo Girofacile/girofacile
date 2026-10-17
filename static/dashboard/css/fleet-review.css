@@ -48,7 +48,6 @@ body[data-gf-surface] .fleet-drag-handle:active { cursor:grabbing; }
 body[data-gf-surface] .fleet-drag-handle:focus-visible { outline:var(--gf-border-width-strong) solid var(--gf-color-primary); outline-offset:var(--gf-space-1); }
 body[data-gf-surface] .fleet-delivery strong { font-size:var(--gf-font-md); }
 body[data-gf-surface] .fleet-delivery-content > .gf-muted { font-size:var(--gf-font-sm); }
-body[data-gf-surface] .fleet-delivery .gf-select { width:100%; min-width:0; font-size:var(--gf-font-sm); }
 body[data-gf-surface] .fleet-delivery.is-moved { border-color:var(--gf-color-primary); }
 body[data-gf-surface] .fleet-delivery.dragging { opacity:.5; }
 body[data-gf-surface] .fleet-lane.over { border-color:var(--gf-color-primary); background:var(--gf-color-info-bg); }

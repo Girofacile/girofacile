@@ -98,13 +98,15 @@ def main():
                     page.get_by_role('button',name='Sposta comunque',exact=True).click()
                     assert page.locator('[data-fleet-plan]').is_disabled()
                     page.locator('[data-fleet-undo]').click()
-                # Flusso attuale (dal 13/10): sposta una consegna, conferma l'avviso, ricalcola, poi un solo "Pianifica giri".
-                move=page.locator('[data-fleet-move]').first
-                move.select_option(move.locator('option:not([value=""])').first.get_attribute('value'))
-                page.get_by_role('button',name='Sposta comunque',exact=True).click()
-                assert page.locator('[data-fleet-plan]').is_disabled()
-                page.locator('[data-fleet-recalc]').click()
-                page.wait_for_function("document.getElementById('fleetMessage')?.textContent.includes('Nuove fermate')")
+                    first_stop=page.locator('[data-fleet-stop]').first
+                    source_id=first_stop.locator('xpath=ancestor::*[@data-fleet-lane]').get_attribute('data-fleet-lane')
+                    target_lane=page.locator(f'[data-fleet-lane]:not([data-fleet-lane="{source_id}"])').first
+                    first_stop.locator('[data-fleet-drag]').drag_to(target_lane,target_position={'x':15,'y':15})
+                    page.get_by_role('button',name='Sposta comunque',exact=True).click()
+                    assert page.locator('[data-fleet-plan]').is_disabled()
+                    page.locator('[data-fleet-recalc]').click()
+                    page.wait_for_function("document.getElementById('fleetMessage')?.textContent.includes('Nuove fermate')")
+                assert page.locator('[data-fleet-move]').count()==0
                 page.locator('[data-fleet-plan]').click()
                 page.locator('[data-fleet-review] .gf-badge[data-status="success"]',has_text='Giri programmati').wait_for()
                 page.locator('[data-open]').first.click()

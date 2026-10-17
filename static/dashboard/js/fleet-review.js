@@ -39,13 +39,11 @@ function totals(plan,assignment,dirty){
 function stop(plan,assignment,dirty,index,lane){
  const delivery=plan.configuration.consegne[index];
  const moved=oldRoute(plan,index)?.resource!==lane;
- const move=plan.status==='preview'?'<select class="gf-select" data-fleet-move="'+index+'" aria-label="Sposta '+esc(delivery.cliente_nome)+'" ><option value="">Sposta in un altro giro…</option>'+
- plan.configuration.resources.map((_,i)=>i===lane?'':'<option value="'+i+'">Giro '+(i+1)+' · '+esc(names(plan,i).driver)+'</option>').join('')+'</select>':'';
  const reason=lane===null?plan.unassigned?.find(row=>row.index===index)?.reason:null;
  const handle=plan.status==='preview'?'<button type="button" class="fleet-drag-handle" data-fleet-drag draggable="true" title="Trascina in un altro giro" aria-label="Trascina '+esc(delivery.cliente_nome)+'"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14"/></svg></button>':'';
  return '<li class="fleet-delivery'+(moved&&lane!==null?' is-moved':'')+'" data-fleet-stop="'+index+'">'+handle+'<div class="fleet-delivery-content">'+
  '<strong>'+esc(delivery.cliente_nome)+'</strong><span class="gf-muted">'+esc(delivery.indirizzo)+'</span>'+
- (reason?'<details class="fleet-delivery-reason"><summary>Perché non assegnata?</summary><p>'+esc(reason)+'</p></details>':'')+move+'</div></li>';
+ (reason?'<details class="fleet-delivery-reason"><summary>Perché non assegnata?</summary><p>'+esc(reason)+'</p></details>':'')+'</div></li>';
 }
 function lane(plan,assignment,dirty,i){
  const all=ordered(plan,assignment,i),info=names(plan,i),route=info.r;
@@ -126,7 +124,7 @@ function render({plan,assignment,dirty,busy,manualAdjusted,permission,onMove,onU
  (alert?'<div class="gf-alert" data-status="warning" role="status"><div class="gf-alert__body"><strong class="gf-alert__title">'+(dirty?'Ricalcolo necessario':'Suddivisione manuale')+'</strong><p>'+esc(alert)+'</p></div></div>':'')+
  (saved?'<div class="gf-alert" data-status="warning" role="status"><div class="gf-alert__body"><strong class="gf-alert__title">Giri in bozza, programmazione non completata</strong><p>Puoi riprovare con “Pianifica giri”. Non verranno duplicati giri.</p></div></div>':'')+
  totals(plan,assignment,dirty)+
- '<div class="gf-stack" data-gap="sm"><h2 class="gf-subtitle">Suddivisione per giro</h2><p class="gf-muted">Trascina le fermate tra le colonne o scegli un giro dal menu. Dopo gli spostamenti, ricalcola tempi e costi.</p></div>'+
+ '<div class="gf-stack" data-gap="sm"><h2 class="gf-subtitle">Suddivisione per giro</h2><p class="gf-muted">Trascina le fermate tra le colonne usando la maniglia a tre linee. Dopo gli spostamenti, ricalcola tempi e costi.</p></div>'+
  '<div class="fleet-board" aria-label="Giri e fermate">'+plan.configuration.resources.map((_,i)=>lane(plan,assignment,dirty,i)).join('')+
  (missing?'<section class="gf-panel fleet-lane fleet-lane-unassigned" aria-label="Consegne non assegnate"><header class="gf-panel__header"><div><h2 class="gf-panel__title">Non assegnate</h2><p class="gf-muted">'+missing+' fermate da sistemare</p></div></header><ol class="fleet-deliveries">'+assignment.map((v,i)=>v==null?stop(plan,assignment,dirty,i,null):'').join('')+'</ol>'+
  (plan.status==='preview'?'<div class="gf-panel__body"><label class="gf-check"><input type="checkbox" data-fleet-accept-unassigned> <span>Confermo di programmare soltanto le consegne assegnate</span></label></div>':'')+'</section>':'')+'</div>'+
@@ -144,10 +142,6 @@ function render({plan,assignment,dirty,busy,manualAdjusted,permission,onMove,onU
   if(!Number.isInteger(index)||to===assignment[index]||to<0||to>=rows)return;
   onMove(index,to);
  };
- target.querySelectorAll('[data-fleet-move]').forEach(select=>select.addEventListener('change',()=>{
-  if(select.value==='')return;
-  const i=Number(select.dataset.fleetMove),to=Number(select.value);select.value='';move(i,to);
- }));
  target.querySelectorAll('[data-fleet-stop]').forEach(stop=>{
   stop.addEventListener('dragstart',e=>{if(plan.status!=='preview'||busy||!e.target.closest('[data-fleet-drag]')){e.preventDefault();return;}drag=Number(stop.dataset.fleetStop);e.dataTransfer.setData('text/plain',String(drag));e.dataTransfer.effectAllowed='move';e.dataTransfer.setDragImage(stop,20,20);stop.classList.add('dragging');});
   stop.addEventListener('dragend',()=>{drag=null;target.querySelectorAll('.dragging,.over').forEach(el=>el.classList.remove('dragging','over'));});

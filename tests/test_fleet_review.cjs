@@ -81,7 +81,7 @@ test('trasferimenti notificati e mappe solo sul contenuto, senza nuova sidebar',
  const css=read('static/dashboard/css/fleet-review.css');
  const html=read('static/dashboard/index.html');
  assert.match(review,/GiroFacile non può garantire la combinazione più efficiente/);
- assert.match(review,/data-fleet-move/);
+ assert.doesNotMatch(review,/data-fleet-move/);
  assert.match(review,/data-fleet-lane/);
  assert.match(review,/loadRoadMapLibrary\(\)/);
  assert.match(review,/Collegamenti indicativi, non stradali/);
@@ -102,6 +102,7 @@ test('unassigned deliveries stay visible with address, reason and reassignment',
  assert.match(page.innerHTML,/fleet-lane-unassigned/);
  assert.match(page.innerHTML,/Via Napoli 5/);
  assert.match(page.innerHTML,/accesso ZTL richiesto/);
- assert.match(page.innerHTML,/data-fleet-move="1"/);
+ assert.match(page.innerHTML,/data-fleet-drag draggable="true"/);
+ assert.doesNotMatch(page.innerHTML,/<select|Sposta in un altro giro/);
  assert.match(page.innerHTML,/data-fleet-accept-unassigned/);
 });
