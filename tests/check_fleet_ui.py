@@ -94,7 +94,7 @@ def main():
                     source_lane=first_stop.locator('xpath=ancestor::*[@data-fleet-lane]')
                     source_id=source_lane.get_attribute('data-fleet-lane')
                     target_lane=page.locator(f'[data-fleet-lane]:not([data-fleet-lane="{source_id}"])').first
-                    first_stop.drag_to(target_lane,source_position={'x':15,'y':15},target_position={'x':15,'y':15})
+                    first_stop.locator('[data-fleet-drag]').drag_to(target_lane,target_position={'x':15,'y':15})
                     page.get_by_role('button',name='Sposta comunque',exact=True).click()
                     assert page.locator('[data-fleet-plan]').is_disabled()
                     page.locator('[data-fleet-undo]').click()
