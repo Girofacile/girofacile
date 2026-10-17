@@ -19,9 +19,10 @@ def get_plan(db,user,actor,plan_id,lock=False):
     return row
 
 
-def route_data(data,resource,rows,index):
+def route_data(data,resource,rows,index,driver_name=None):
+    # Nome automatico di ogni giro: base (la data) · autista; senza autista resta il numero del giro.
     values=data.model_dump(exclude={'resources','strategy','consegne'})
-    values.update(nome=f'{data.nome or "Giro consegne"} · {index+1}',vehicle_id=resource.vehicle_id,
+    values.update(nome=f'{data.nome or "Giro consegne"} · {driver_name or index+1}',vehicle_id=resource.vehicle_id,
                   driver_id=resource.driver_id,driver_schedule=resource.driver_schedule,consegne=rows,energy_price_mode='manual',
                   energy_price_primary=resource.energy_price_primary,energy_price_electric=resource.energy_price_electric)
     return RoutePlanIn.model_validate(values)
@@ -199,7 +200,9 @@ def confirm(db,user,actor,plan_id,data):
         index=route['resource'];resource=settings.resources[index];result=deepcopy(route['result'])
         opt.validate_vehicle_load(result['ordered'],build_vehicle_dict(vehicles[index]))
         if any((s['sponda'] and not vehicles[index].ha_sponda) or (s['ztl'] and not vehicles[index].accesso_ztl) for s in result['ordered']): raise HTTPException(409,'Attrezzature del mezzo cambiate: ricalcola.')
-        payload=route_data(settings,resource,result['ordered'],index)
+        driver=db.get(Driver,resource.driver_id) if resource.driver_id else None
+        driver_name=' '.join(x for x in (driver.nome,driver.cognome) if x).strip() if driver else None
+        payload=route_data(settings,resource,result['ordered'],index,driver_name)
         start=opt.parse_hhmm(settings.orario_partenza)
         _check_resource_overlap(db,user,payload,start,start+math.ceil(result['total_min']))
         saved=save_route_result(db,user,payload,result,vehicles[index],commit=False)

@@ -1571,6 +1571,8 @@ function updateRoutePlanningGateV68(){
     hint.className = "gf-badge";
     hint.dataset.status = ready ? "success" : "warning";
   }
+  updateAutoRouteName();
+  syncPlanningModeCards();
   renderPlanningCompletion(missing);
   if(customerDirectoryPlanning){
     if(btn)btn.textContent='Modifica selezione clienti';
@@ -1599,6 +1601,83 @@ function openCustomerPlanningStep(){
   updateRoutePlanningGateV68();
   loadCustomerPicker();
   document.getElementById("customerPlanningStep")?.scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+// Pianificazione (layout C4): presentazione collegata ai campi esistenti, nessuna logica nuova di calcolo.
+// Tabella delle fermate apribile dalla testata del giro.
+function toggleRouteStopsTable(button){
+  const area = document.getElementById(button.getAttribute("aria-controls"));
+  const open = button.getAttribute("aria-expanded") !== "true";
+  if(area) area.hidden = !open;
+  button.setAttribute("aria-expanded", String(open));
+  button.textContent = open ? "Nascondi le fermate" : "Visiona tutte le fermate";
+}
+
+// Le due card "Un solo mezzo / Più mezzi" comandano la scelta esistente #planningMode.
+function selectPlanningModeCard(value){
+  const select = document.getElementById("planningMode");
+  if(!select || select.value === value) return syncPlanningModeCards();
+  select.value = value;
+  select.dispatchEvent(new Event("change", {bubbles:true}));
+  syncPlanningModeCards();
+}
+function syncPlanningModeCards(){
+  if(typeof document.querySelectorAll !== "function") return;
+  const mode = val("planningMode") || "single";
+  document.querySelectorAll("[data-planning-mode-card]").forEach(card=>{
+    const radio = card.querySelector('input[name="planningModeChoice"]');
+    const on = radio?.value === mode;
+    if(radio) radio.checked = on;
+    if(on) card.dataset.variant = "info"; else delete card.dataset.variant;
+    const icon = card.querySelector("[data-planning-mode-icon]");
+    if(icon){ if(on) delete icon.dataset.tone; else icon.dataset.tone = "neutral"; }
+  });
+}
+
+// Schede del riquadro "Mezzi, autisti e costi".
+function selectPlanningTab(tab){
+  tab.closest('[role="tablist"]').querySelectorAll('[role="tab"]').forEach(t=>{
+    const on = t === tab;
+    t.setAttribute("aria-selected", String(on));
+    t.tabIndex = on ? 0 : -1;
+    const panel = document.getElementById(t.getAttribute("aria-controls"));
+    if(panel) panel.hidden = !on;
+  });
+}
+
+// Nome automatico del giro: data · autista · zona più frequente tra le fermate.
+// Con più mezzi il nome base è la data: il server aggiunge l'autista di ogni giro.
+function routeZoneLabel(){
+  const counts = new Map();
+  const stops = typeof deliveries !== "undefined" ? deliveries : [];
+  const customers = typeof customersCache !== "undefined" ? customersCache : [];
+  stops.forEach(d=>{
+    let zone = (customers.find(c=>String(c.id)===String(d.customer_id))?.comune || "").trim();
+    if(!zone){
+      const parts = String(d.indirizzo || "").split(",").map(x=>x.trim()).filter(Boolean);
+      zone = (parts.length > 1 ? parts[parts.length - 1] : "").replace(/\b\d{5}\b/g, "").replace(/\b[A-Z]{2}\b$/, "").replace(/\(.*?\)/g, "").trim();
+    }
+    if(zone) counts.set(zone, (counts.get(zone) || 0) + 1);
+  });
+  return [...counts.entries()].sort((a,b)=>b[1]-a[1])[0]?.[0] || "";
+}
+function updateAutoRouteName(){
+  const value = val("routeDate");
+  const date = value ? new Date(value + "T12:00:00") : null;
+  const weekday = date ? date.toLocaleDateString("it-IT", {weekday:"short"}).replace(".", "") : "";
+  const day = date ? weekday.charAt(0).toUpperCase() + weekday.slice(1) + " " + date.toLocaleDateString("it-IT", {day:"2-digit", month:"2-digit"}) : "";
+  const fleet = globalThis.GFFleetPlanning?.active();
+  const drivers = typeof driversCache !== "undefined" ? driversCache : [];
+  const chosen = drivers.find(d=>String(d.id)===String(val("routeDriver")));
+  const driver = chosen && typeof driverFullName === "function" ? driverFullName(chosen) : "";
+  const zone = routeZoneLabel();
+  const name = fleet ? day : [day, driver, zone].filter(Boolean).join(" · ");
+  const input = document.getElementById("routeName");
+  if(input) input.value = name;
+  const title = document.getElementById("routeAutoNameTitle");
+  if(title) title.textContent = fleet ? (day ? day + " · un giro per ogni autista" : "Un giro per ogni autista") : (name || "Giro consegne");
+  const kicker = document.getElementById("routeAutoKicker");
+  if(kicker) kicker.textContent = (fleet ? "Nuovi giri" : "Nuovo giro") + (date ? " · " + date.toLocaleDateString("it-IT", {weekday:"long", day:"numeric", month:"long"}) : "");
 }
 
 function closeCustomerPlanningStep(){
@@ -2967,7 +3046,7 @@ function moveDelivery(i, direction){
 }
 
 function renderDeliveryEmptyRow(){
-  return `<tr><td colspan="5"><div class="gf-empty"><p>Nessuna consegna inserita. Seleziona i clienti dalla lista superiore e premi “+ Aggiungi”.</p></div></td></tr>`;
+  return `<tr><td colspan="10"><div class="gf-empty"><p>Nessuna consegna inserita. Seleziona i clienti dalla lista superiore e premi “+ Aggiungi”.</p></div></td></tr>`;
 }
 
 function deliveryGeoBadge(d){
@@ -2987,8 +3066,20 @@ function deliverySpecsSummary(d){
   return pieces.join(" · ");
 }
 
+function deliveryWindowLabel(d){
+  const morning = d.scarico_mattina_da && d.scarico_mattina_a ? `Mattina ${esc(d.scarico_mattina_da)}–${esc(d.scarico_mattina_a)}` : "";
+  const afternoon = d.scarico_pomeriggio_da && d.scarico_pomeriggio_a ? `Pomeriggio ${esc(d.scarico_pomeriggio_da)}–${esc(d.scarico_pomeriggio_a)}` : "";
+  return [morning, afternoon].filter(Boolean).join("<br>") || '<span class="gf-muted">—</span>';
+}
+function deliveryRequirementBadges(d){
+  const badges = [];
+  if(d.ztl) badges.push('<span class="gf-badge" data-kind="ztl">ZTL</span>');
+  if(d.sponda) badges.push('<span class="gf-badge" data-kind="tail-lift">Sponda</span>');
+  return badges.join(" ") || '<span class="gf-muted">—</span>';
+}
 function renderDeliveries(){
   updateDashboardStats();
+  updateAutoRouteName();
   const body = document.getElementById("deliveryBody");
   if(!body) return;
   const counter = document.getElementById("deliveryTableCounter");
@@ -3001,18 +3092,23 @@ function renderDeliveries(){
   }
   body.innerHTML = deliveries.map((d,i)=>`
     <tr data-delivery-row="${i}" draggable="true" ondragstart="planningStopDragStart(event, ${i})" ondragend="planningStopDragEnd()" ondragover="event.preventDefault()" ondrop="planningStopDrop(event, ${i})">
+      <td data-label="#"><span class="gf-badge" data-status="neutral">${i+1}</span></td>
       <td data-label="Cliente">
         <strong>${esc(d.cliente_nome)}</strong>${globalThis.GFOrderPlanning?.describe(d)||""}${d.customer_id == null ? ' <span class="gf-badge" data-status="neutral">Occasionale</span>' : ''}
         <br><small class="gf-muted">${d.codice_cliente ? `Codice cliente: ${esc(d.codice_cliente)}` : `Fermata #${i+1}`}</small>
       </td>
       <td data-label="Indirizzo">
-        <strong>${esc(d.indirizzo||"")}</strong>
+        ${esc(d.indirizzo||"")}
         ${d.indirizzo_geocodificato && d.indirizzo_geocodificato !== d.indirizzo ? `<br><small class="gf-muted">Verificato come: ${esc(d.indirizzo_geocodificato)}</small>` : ""}
+        <br>${deliveryGeoBadge(d)}
       </td>
-      <td data-label="Stato indirizzo">${deliveryGeoBadge(d)}</td>
+      <td data-label="Finestra di scarico">${deliveryWindowLabel(d)}</td>
+      <td data-label="Scarico">${parseInt(d.tempo_scarico_min ?? 10)} min</td>
+      <td data-label="Carico">${parseInt(d.colli)||0} colli<br><small class="gf-muted">${parseFloat(d.peso_kg)||0} kg</small></td>
+      <td data-label="Requisiti">${deliveryRequirementBadges(d)}</td>
+      <td data-label="Note">${d.note ? esc(d.note) : '<span class="gf-muted">—</span>'}</td>
       <td data-label="Specifiche">
         <button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="${d.customer_id == null ? 'openOccasionalStopModal' : 'openDeliveryDetailsModal'}(${i})">${d.customer_id == null ? 'Modifica' : 'Dettagli'}</button>
-        <br><small class="gf-muted">${esc(deliverySpecsSummary(d) || "Specifiche non inserite")}</small>
       </td>
       <td data-label="Ordine">
         <div class="gf-cluster">

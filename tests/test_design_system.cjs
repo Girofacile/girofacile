@@ -528,14 +528,20 @@ test('planning page uses the shared topbar and dashboard visual language',()=>{
   assert.match(navigation,/giro:\s*\{[\s\S]*title: "Pianificazione giro consegne"[\s\S]*subtitle: "Seleziona clienti, configura risorse e calcola il percorso prima della programmazione\."/);
 
 
-  // Indicatori come card numeriche del sistema con icona neutra; passi del giro come card con stato a badge.
+  // Layout C4: testata con nome automatico e numeri del giro, fermate apribili, scelta con due card,
+  // sezioni a tutta larghezza con badge di stato; nessuna breve descrizione sotto i titoli.
   const html=read('static/dashboard/index.html');
   const planningHtml=html.slice(html.indexOf('<section id="tab-giro"'),html.indexOf('<section id="tab-route-preview"'));
-  assert.match(planningHtml,/<span class="gf-stat-card__label">Consegne pianificate<\/span>/);
-  assert.doesNotMatch(planningHtml,/Consegne<\/span> pianificate/);
-  assert.equal((planningHtml.match(/class="gf-stat-card__icon" data-tone="neutral"/g)||[]).length,4);
-  for(const n of [1,2,3])assert.match(planningHtml,new RegExp('id="planStepStatus'+n+'" class="gf-badge"'));
+  assert.match(planningHtml,/id="routeAutoNameTitle"/);
+  assert.match(planningHtml,/<input type="hidden" id="routeName">/);
+  assert.match(planningHtml,/class="gf-stat-strip" aria-label="Riepilogo pianificazione"/);
+  for(const id of ['statDeliveries','statColli','statWarnings','statFuel'])assert.match(planningHtml,new RegExp('class="gf-stat-strip__value" id="'+id+'"'));
+  assert.match(planningHtml,/aria-controls="deliveryTableArea" onclick="toggleRouteStopsTable\(this\)">Visiona tutte le fermate</);
+  assert.equal((planningHtml.match(/data-planning-mode-card/g)||[]).length,2);
+  assert.match(planningHtml,/<select class="gf-select" id="planningMode" hidden/);
+  for(const n of [1,2])assert.match(planningHtml,new RegExp('id="planStepStatus'+n+'" class="gf-badge"'));
   assert.doesNotMatch(planningHtml,/<h1|page-title-row|style="/);
+  assert.doesNotMatch(planningHtml,/<header class="gf-panel__header"><div><h2 class="gf-panel__title"[^>]*>[^<]*<\/h2><p class="gf-muted">/);
   const core=read('static/dashboard/js/core.js');
   assert.match(core,/badge\.dataset\.status = state === "complete" \? "success"/);
 });

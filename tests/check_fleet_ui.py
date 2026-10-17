@@ -55,7 +55,7 @@ def main():
                 page.evaluate("fixtures=>{vehiclesCache=fixtures.vehicles;driversCache=fixtures.drivers;document.getElementById('routeDeposit').innerHTML='<option value=1>Depot</option>';}",{'vehicles':vehicles,'drivers':drivers})
                 page.locator('#routeDate').fill('2099-01-15');page.locator('#routeStart').fill('08:00');page.locator('#routeStart').blur()
                 page.evaluate('refreshResourceAvailability()')
-                page.locator('#planningMode').select_option('fleet')
+                page.locator('[data-planning-mode-card]').filter(has_text='Più mezzi').click()  # card "Più mezzi" del layout C4
                 for i in range(2):
                     page.locator(f'#fleetVehicle{i}').select_option(str(vehicles[i]['id']))
                     page.locator(f'#fleetDriver{i}').select_option(str(drivers[i]['id']))

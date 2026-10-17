@@ -46,6 +46,8 @@ def test_thirty_deliveries_preview_revise_confirm_idempotent(fleet):
     assert len(saved.json()['route_ids'])==2
     assert command(fleet,plan,'confirm').json()['route_ids']==saved.json()['route_ids']
     assert fleet[0][1].query(RoutePlan).count()==2
+    # Nome automatico: base del piano · autista di ogni giro (non più "· 1", "· 2").
+    assert sorted(r.nome for r in fleet[0][1].query(RoutePlan))==['Consegne · Anna','Consegne · Luca']
     programmed=command(fleet,saved.json(),'program');assert programmed.status_code==200,programmed.text
     assert all(r.status=='programmato' for r in fleet[0][1].query(RoutePlan))
     assert command(fleet,saved.json(),'program').status_code==200
