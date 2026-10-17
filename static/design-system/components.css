@@ -713,3 +713,38 @@ body[data-gf-surface] .gf-hidden{display:none !important}
   body[data-gf-surface] .gf-modal__header,body[data-gf-surface] .gf-modal__body,body[data-gf-surface] .gf-modal__footer{padding-inline:var(--gf-space-4)}
   body[data-gf-surface] .gf-auth__card{padding:var(--gf-space-5)}
 }
+
+/* Scelta del numero di mezzi: tutta la card attiva il radio nativo. */
+body[data-gf-surface] .gf-planning-choice {
+  cursor:pointer; gap:var(--gf-space-3); padding:var(--gf-space-6);
+  border:var(--gf-border-width-strong) solid var(--gf-color-border);
+  box-shadow:none; background:var(--gf-color-surface);
+}
+body[data-gf-surface] .gf-planning-choice:hover {
+  border-color:var(--gf-color-primary); box-shadow:var(--gf-shadow-sm);
+}
+body[data-gf-surface] .gf-planning-choice:has(input:focus-visible) {
+  outline:var(--gf-border-width-strong) solid var(--gf-color-primary);
+  outline-offset:var(--gf-space-1); box-shadow:var(--gf-focus-ring);
+}
+body[data-gf-surface] .gf-planning-choice[data-variant="info"] {
+  background:var(--gf-color-surface-subtle); border-color:var(--gf-color-primary);
+}
+body[data-gf-surface] .gf-planning-choice .gf-stat-card__icon {
+  width:var(--gf-space-12); height:var(--gf-space-12); flex-shrink:0;
+  border-radius:var(--gf-radius-map);
+}
+body[data-gf-surface] .gf-planning-choice[data-variant="info"] .gf-stat-card__icon {
+  color:var(--gf-color-on-primary); background:var(--gf-color-primary);
+}
+body[data-gf-surface] .gf-planning-choice .gf-stat-card__icon svg {
+  width:var(--gf-space-6); height:var(--gf-space-6);
+}
+body[data-gf-surface] .gf-planning-choice__title {
+  font-family:var(--gf-font-display); font-size:var(--gf-font-xl);
+  line-height:var(--gf-line-height-tight);
+}
+body[data-gf-surface] .gf-planning-choice input[type="radio"] {
+  width:var(--gf-control-check); height:var(--gf-control-check);
+  margin:0; accent-color:var(--gf-color-primary); cursor:pointer;
+}

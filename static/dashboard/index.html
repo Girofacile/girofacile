@@ -31,7 +31,7 @@
 
 <!-- Shared GiroFacile design system; legacy sheets retain feature layout. -->
 <link rel="stylesheet" href="/static/design-system/theme.css?v=gf_base_20261015v">
-<link rel="stylesheet" href="/static/design-system/components.css?v=gf_base_20261015z">
+<link rel="stylesheet" href="/static/design-system/components.css?v=gf_planning_cards_20261017">
 <link rel="stylesheet" href="/static/design-system/layout.css?v=gf_base_20261015y">
 <link rel="stylesheet" href="/static/design-system/workspace.css?v=gf_selection_20261016">
 <link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007_reference_2">
@@ -474,26 +474,6 @@
           <div id="customerPickerList"></div>
         </section>
 
-        <!-- Come organizzare le consegne: due card collegate alla scelta esistente (select #planningMode) -->
-        <section class="gf-panel" aria-labelledby="planningModeTitle">
-          <header class="gf-panel__header"><h2 class="gf-panel__title" id="planningModeTitle">Come organizzi le consegne?</h2></header>
-          <div class="gf-panel__body">
-            <div class="gf-grid" data-cols="2" role="radiogroup" aria-labelledby="planningModeTitle">
-              <label class="gf-card gf-stack" data-variant="info" data-planning-mode-card>
-                <span class="gf-cluster" data-justify="between"><span class="gf-stat-card__icon" data-planning-mode-icon><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 6h11v10H2z"/><path d="M13 9h5l3 3v4h-8z"/><circle cx="6.5" cy="17.5" r="1.5"/><circle cx="17.5" cy="17.5" r="1.5"/></svg></span><input type="radio" name="planningModeChoice" value="single" checked aria-label="Un solo mezzo" onchange="selectPlanningModeCard(this.value)"></span>
-                <strong>Un solo mezzo</strong>
-                <span class="gf-muted">Un autista consegna tutte le fermate in un unico giro.</span>
-              </label>
-              <label class="gf-card gf-stack" data-planning-mode-card>
-                <span class="gf-cluster" data-justify="between"><span class="gf-stat-card__icon" data-tone="neutral" data-planning-mode-icon><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M1 4h7v6H1z"/><path d="M8 6h3l2 2v2H8z"/><circle cx="3.5" cy="11" r="1"/><circle cx="10.5" cy="11" r="1"/><path d="M10 13h7v6h-7z"/><path d="M17 15h3l2 2v2h-5z"/><circle cx="12.5" cy="20" r="1"/><circle cx="19.5" cy="20" r="1"/></svg></span><input type="radio" name="planningModeChoice" value="fleet" aria-label="Più mezzi" onchange="selectPlanningModeCard(this.value)"></span>
-                <strong>Più mezzi</strong>
-                <span class="gf-muted">Dividiamo le fermate tra più mezzi, tenendo conto di turni, peso e orari.</span>
-              </label>
-            </div>
-            <select class="gf-select" id="planningMode" hidden aria-hidden="true" tabindex="-1"><option value="single">Un solo mezzo</option><option value="fleet">Suddivisione automatica su più mezzi</option></select>
-          </div>
-        </section>
-
         <!-- Quando e da dove -->
         <section class="gf-panel" aria-labelledby="planStepTitle1">
           <header class="gf-panel__header"><h2 class="gf-panel__title" id="planStepTitle1">Quando e da dove</h2><span id="planStepStatus1" class="gf-badge" role="status"></span></header>
@@ -502,6 +482,26 @@
             <label class="gf-field" for="routeStart"><span class="gf-field__label">Orario partenza</span><input class="gf-input" id="routeStart" type="time"></label>
             <label class="gf-field" for="routeDeposit" data-span="full"><span class="gf-field__label">Deposito</span><select class="gf-select" id="routeDeposit"></select></label>
             <label class="gf-field" for="returnDepot"><span class="gf-field__label">Rientro deposito</span><select class="gf-select" id="returnDepot"><option value="true">Sì, rientro previsto</option><option value="false">No</option></select></label>
+          </div>
+        </section>
+
+        <!-- Come organizzare le consegne: due card collegate alla scelta esistente (select #planningMode) -->
+        <section class="gf-panel" aria-labelledby="planningModeTitle">
+          <header class="gf-panel__header"><h2 class="gf-panel__title" id="planningModeTitle">Come organizzi le consegne?</h2></header>
+          <div class="gf-panel__body">
+            <div class="gf-grid" data-cols="2" role="radiogroup" aria-labelledby="planningModeTitle">
+              <label class="gf-card gf-stack gf-planning-choice" data-variant="info" data-planning-mode-card>
+                <span class="gf-cluster" data-justify="between"><span class="gf-stat-card__icon" data-planning-mode-icon><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 6h11v10H2z"/><path d="M13 9h5l3 3v4h-8z"/><circle cx="6.5" cy="17.5" r="1.5"/><circle cx="17.5" cy="17.5" r="1.5"/></svg></span><input type="radio" name="planningModeChoice" value="single" checked aria-label="Un solo mezzo" onchange="selectPlanningModeCard(this.value)"></span>
+                <strong class="gf-planning-choice__title">Un solo mezzo</strong>
+                <span class="gf-muted">Un unico giro, con un mezzo e un autista per tutte le fermate.</span>
+              </label>
+              <label class="gf-card gf-stack gf-planning-choice" data-planning-mode-card>
+                <span class="gf-cluster" data-justify="between"><span class="gf-stat-card__icon" data-tone="neutral" data-planning-mode-icon><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M1 4h7v6H1z"/><path d="M8 6h3l2 2v2H8z"/><circle cx="3.5" cy="11" r="1"/><circle cx="10.5" cy="11" r="1"/><path d="M10 13h7v6h-7z"/><path d="M17 15h3l2 2v2h-5z"/><circle cx="12.5" cy="20" r="1"/><circle cx="19.5" cy="20" r="1"/></svg></span><input type="radio" name="planningModeChoice" value="fleet" aria-label="Più mezzi" onchange="selectPlanningModeCard(this.value)"></span>
+                <strong class="gf-planning-choice__title">Più mezzi</strong>
+                <span class="gf-muted">Distribuisci le fermate tra più autisti, rispettando carichi, turni e orari.</span>
+              </label>
+            </div>
+            <select class="gf-select" id="planningMode" hidden aria-hidden="true" tabindex="-1"><option value="single">Un solo mezzo</option><option value="fleet">Suddivisione automatica su più mezzi</option></select>
           </div>
         </section>
 

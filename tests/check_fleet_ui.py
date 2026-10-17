@@ -56,9 +56,24 @@ def main():
                 page.locator('#routeDate').fill('2099-01-15');page.locator('#routeStart').fill('08:00');page.locator('#routeStart').blur()
                 page.evaluate('refreshResourceAvailability()')
                 page.locator('[data-planning-mode-card]').filter(has_text='Più mezzi').click()  # card "Più mezzi" del layout C4
+                assert page.locator('#planningMode').input_value()=='fleet'
+                assert page.get_by_role('radio',name='Più mezzi',exact=True).is_checked()
+                assert page.locator('#fleetSetup').is_visible()
+                assert page.evaluate("document.getElementById('planStepTitle1').compareDocumentPosition(document.getElementById('planningModeTitle')) & Node.DOCUMENT_POSITION_FOLLOWING")
                 for i in range(2):
                     page.locator(f'#fleetVehicle{i}').select_option(str(vehicles[i]['id']))
                     page.locator(f'#fleetDriver{i}').select_option(str(drivers[i]['id']))
+                # Il radio nativo permette anche il cambio da tastiera; conserva le risorse.
+                page.get_by_role('radio',name='Più mezzi',exact=True).focus()
+                page.keyboard.press('ArrowLeft')
+                assert page.locator('#planningMode').input_value()=='single'
+                assert page.locator('#singleVehicleField').is_visible()
+                assert page.locator('#fleetSetup').is_hidden()
+                page.keyboard.press('ArrowRight')
+                assert page.locator('#planningMode').input_value()=='fleet'
+                for i in range(2):
+                    assert page.locator(f'#fleetVehicle{i}').input_value()==str(vehicles[i]['id'])
+                    assert page.locator(f'#fleetDriver{i}').input_value()==str(drivers[i]['id'])
                 page.locator('#fleetStrategy').select_option('balanced')
                 assert page.locator('#singleVehicleField').is_hidden()
                 page.locator('#openCustomerStepBtn').click()
