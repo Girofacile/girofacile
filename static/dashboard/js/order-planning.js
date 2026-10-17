@@ -62,7 +62,7 @@
     if(!enabled)return;
     if(loadedStops)el('deliveryWorkbenchStep')?.classList.remove('hidden');
     const button=el('openCustomerStepBtn');if(button){button.textContent=proceeding?'Caricamento fermate…':'Prosegui';button.disabled=proceeding;}
-    if(el('customerPlanningStep'))el('customerPlanningStep').classList.add('hidden');
+    if(el('customerPlanningStep') && !(typeof planningCustomerPickerOpen!=='undefined' && planningCustomerPickerOpen))el('customerPlanningStep').classList.add('hidden');
     if(el('routePlanningGateHint')&&routePlanningDetailsCompleteV68())el('routePlanningGateHint').textContent=loadedStops?'Fermate degli ordini caricate. Verifica i dati e premi Calcola percorso.':'Completa la configurazione e premi Prosegui per caricare gli ordini selezionati.';
   }
   async function cancelSelected(){

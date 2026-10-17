@@ -1555,6 +1555,13 @@ function advanceRoutePlanning(){
 }
 
 let customerDirectoryPlanning=false;
+let planningCustomerPickerOpen=false;
+function openPlanningCustomerPicker(){
+  planningCustomerPickerOpen=true;
+  document.getElementById('customerPlanningStep')?.classList.remove('hidden');
+  loadCustomerPicker();
+  document.getElementById('customerPlanningStep')?.scrollIntoView({behavior:'smooth',block:'start'});
+}
 function updateRoutePlanningGateV68(){
   const btn = document.getElementById("openCustomerStepBtn");
   const hint = document.getElementById("routePlanningGateHint");
@@ -1588,6 +1595,7 @@ function updateRoutePlanningGateV68(){
     workbench?.classList.remove("hidden");
   }
   globalThis.GFOrderPlanning?.gate();
+  if(planningCustomerPickerOpen)picker?.classList.remove('hidden');
 }
 
 function openCustomerPlanningStep(){
@@ -1681,6 +1689,7 @@ function updateAutoRouteName(){
 }
 
 function closeCustomerPlanningStep(){
+  planningCustomerPickerOpen = false;
   customerPlanningStepOpenedV68 = false;
   document.getElementById("customerPlanningStep")?.classList.add("hidden");
   document.getElementById("deliveryWorkbenchStep")?.classList.add("hidden");
@@ -3259,6 +3268,7 @@ function addExtraStopAfterResult(){
 
 
 function clearRouteWorkspace(){
+  planningCustomerPickerOpen=false;
   customerDirectoryPlanning=false;
   globalThis.GFDriverSchedules?.route({});
   globalThis.GFFleetPlanning?.reset();
