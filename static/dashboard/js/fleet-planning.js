@@ -111,15 +111,9 @@
         changedAssignments=false;draftAssignments=null;
         render();notice('Nuove fermate e stime ricalcolate. Controlla il risultato e premi “Pianifica giri”.');
       }else{
-        if(plan.status==='preview'){
-          plan=await api(`/api/fleet-planning/${plan.id}/confirm`,{
-            method:'POST',body:JSON.stringify({version:plan.version,accept_unassigned:!!acceptUnassigned})
-          });
-          render();notice('Assegnazioni salvate. Programmazione definitiva in corso…');
-        }
-        if(plan.status==='saved'){
+        if(plan.status==='preview'||plan.status==='saved'){
           plan=await api(`/api/fleet-planning/${plan.id}/program`,{
-            method:'POST',body:JSON.stringify({version:plan.version})
+            method:'POST',body:JSON.stringify({version:plan.version,accept_unassigned:!!acceptUnassigned})
           });
         }
         render();
@@ -133,10 +127,23 @@
         }
       }
     }catch(e){
+      if(name==='plan'){
+        try{
+          plan=await api(`/api/fleet-planning/${plan.id}`);
+          if(plan.status==='preview'){
+            deliveries=plan.configuration.consegne.map(stop=>({...stop}));
+            if(globalThis.GFOrderPlanning?.active())await GFOrderPlanning.loadSelection();
+            renderDeliveries();
+          }
+        }catch(refreshError){console.warn('Impossibile aggiornare il piano',refreshError);}
+      }
       render();
-      notice(plan?.status==='saved'
-        ?'La programmazione non è stata completata: i giri sono rimasti in bozza e possono essere riprovati senza duplicazioni. '+e.message
-        :e.message);
+      if(plan?.status==='programmed'){
+        globalThis.GFOrderPlanning?.leave();
+        notice('Giri programmati correttamente. La risposta precedente non era arrivata: non sono stati creati duplicati.');
+      }else notice(plan?.status==='saved'
+          ?'Programmazione non completata. Controlla le bozze nello storico prima di riprovare. '+e.message
+          :e.message);
     }finally{
       const lastMessage=el('fleetMessage')?.textContent;
       busy=false;

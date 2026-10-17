@@ -10,6 +10,15 @@ from ..fleet_models import FleetPlan
 from ..schemas import RoutePlanIn
 from ..schemas.fleet_planning import FleetInput
 from . import route_orders
+from ..core.utils import local_now
+
+
+def ensure_future_departure(data_giro, orario):
+    from datetime import date, time
+    day=date.fromisoformat(data_giro) if isinstance(data_giro,str) else data_giro
+    start=time.fromisoformat(orario) if isinstance(orario,str) else orario
+    if datetime.combine(day,start)<local_now().replace(tzinfo=None):
+        raise HTTPException(400,'L’orario di partenza è già passato. Inserisci una data e un orario futuri per pianificare i giri.')
 
 
 def get_plan(db,user,actor,plan_id,lock=False):
@@ -33,6 +42,7 @@ def input_state(db,user,data):
     from .plans import require_active_plan
     require_active_plan(user)
     ensure_not_past_route_date(data.data_giro)
+    ensure_future_departure(data.data_giro,data.orario_partenza)
     rows=[d.model_dump(mode='json') for d in data.consegne]
     deposit,_,_= _validate_route_tenant_scope(db,user,route_data(data,data.resources[0],rows,0),rows)
     _apply_route_preferences(user,rows)
@@ -235,7 +245,66 @@ def confirm(db,user,actor,plan_id,data):
     db.commit();return plan
 
 
+def release_failed_drafts(db,user,actor,plan_id,version):
+    """Release only untouched drafts belonging to this failed batch; retain its audit trail."""
+    import json
+    from ..order_models import Order,OrderPlanningSelection
+    route_orders.lock_company(db,user.id)
+    plan=get_plan(db,user,actor,plan_id,lock=True)
+    if plan.status!='saved' or plan.version!=version:
+        return False
+    rows=db.query(RoutePlan).filter(RoutePlan.user_id==user.id,RoutePlan.id.in_(plan.route_ids)).order_by(RoutePlan.id).with_for_update().populate_existing().all()
+    if len(rows)!=len(plan.route_ids):return False
+    settings=FleetInput.model_validate(plan.configuration)
+    for row,proposal in zip(rows,plan.result['routes']):
+        expected=settings.resources[proposal['resource']]
+        if (row.status!='bozza' or json.loads(row.routing_snapshot_json or '{}').get('revision')!=1
+            or row.vehicle_id!=expected.vehicle_id or row.driver_id!=expected.driver_id
+            or row.data_giro.isoformat()!=settings.data_giro or row.orario_partenza.strftime('%H:%M')!=settings.orario_partenza[:5]):
+            return False
+    for row in rows:
+        route_orders.sync_route_orders(db,row,'cancelled')
+        row.status='annullato';row.cancelled_at=local_now().replace(tzinfo=None)
+    configuration=deepcopy(plan.configuration);result=deepcopy(plan.result)
+    ids={ref['id'] for stop in configuration['consegne'] for ref in stop.get('order_refs',[])}
+    versions={o.id:o.version for o in db.query(Order).filter(Order.user_id==user.id,Order.id.in_(ids))}
+    stops=configuration['consegne']+result.get('validated_stops',[])
+    for route in result['routes']:stops+=route['result']['ordered']
+    for stop in stops:
+        for ref in stop.get('order_refs',[]):
+            if ref['id'] in versions:ref['version']=versions[ref['id']]
+    selection=db.query(OrderPlanningSelection).filter_by(user_id=user.id,actor=actor).with_for_update().first()
+    if selection and selection.stops is not None:
+        selected=deepcopy(selection.stops)
+        for stop in selected:
+            for ref in stop.get('order_refs',[]):
+                if ref['id'] in versions:ref['version']=versions[ref['id']]
+        selection.stops=selected;selection.version+=1;selection.updated_at=utc_now()
+    plan.configuration=configuration;plan.result=result;plan.route_ids=[];plan.status='preview';plan.version+=1
+    db.commit()
+    return True
+
+
 def program(db,user,actor,plan_id,data):
+    """A single programming request compensates any drafts saved before a failure."""
+    from ..schemas.fleet_planning import FleetConfirm
+    plan=get_plan(db,user,actor,plan_id)
+    if plan.status=='programmed':return plan
+    check_version(plan,data.version)
+    version=plan.version
+    try:
+        ensure_future_departure(plan.configuration['data_giro'],plan.configuration['orario_partenza'])
+        if plan.status=='preview':
+            plan=confirm(db,user,actor,plan_id,data)
+            version=plan.version
+        return _program_saved(db,user,actor,plan_id,FleetConfirm(version=version,accept_unassigned=data.accept_unassigned))
+    except Exception:
+        db.rollback()
+        release_failed_drafts(db,user,actor,plan_id,version)
+        raise
+
+
+def _program_saved(db,user,actor,plan_id,data):
     """Enrich saved drafts first, then atomically schedule the entire group."""
     import json
     from ..routers.routes import _check_resource_overlap, computed_route_status, ensure_not_past_route_date, build_vehicle_dict, _require_owned_entity
@@ -276,11 +345,12 @@ def program(db,user,actor,plan_id,data):
         _require_owned_entity(db,Driver,user,row.driver_id,'Autista')
         _require_owned_entity(db,Deposit,user,row.deposit_id,'Deposito')
         ensure_not_past_route_date(row.data_giro)
+        ensure_future_departure(row.data_giro,row.orario_partenza)
         check_daily_route_limit(user,db,row.data_giro,exclude_route_id=row.id)
         resource=next(r for r in settings.resources if r.vehicle_id==row.vehicle_id and r.driver_id==row.driver_id)
         opt.validate_vehicle_load([{'peso_kg':d.peso_kg,'colli':d.colli} for d in row.deliveries],build_vehicle_dict(row.vehicle))
         if math.ceil(row.totale_minuti)>resource.max_minutes or any(json.loads(d.optimizer_details or '{}').get('time_window_violation') for d in row.deliveries):
-            raise HTTPException(409,'I tempi aggiornati non rispettano orari o durata massima. I giri restano in bozza: rivedili prima di programmare.')
+            raise HTTPException(409,'I tempi aggiornati non rispettano orari o durata massima. Rivedi i dati e ricalcola prima di programmare.')
         start=opt.parse_hhmm(settings.orario_partenza)
         _check_resource_overlap(db,user,row,start,start+math.ceil(row.totale_minuti),exclude_route_id=row.id)
     from ..models import RouteToken

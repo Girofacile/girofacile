@@ -90,14 +90,16 @@ def test_atomic_confirmation_rollback(fleet,monkeypatch):
     assert command(fleet,plan,'confirm').status_code==422
     assert fleet[0][1].query(RoutePlan).count()==0
 
-def test_traffic_failure_keeps_all_drafts(fleet):
+def test_traffic_failure_releases_batch_for_replanning(fleet):
     data=deepcopy(fleet[1]);data['consegne']=data['consegne'][:2]
     for resource in data['resources']:resource['max_minutes']=30
     plan=preview(fleet,data)
     saved=command(fleet,plan,'confirm');assert saved.status_code==200,saved.text
     result=command(fleet,saved.json(),'program')
     assert result.status_code==409,result.text
-    assert all(r.status=='bozza' for r in fleet[0][1].query(RoutePlan))
+    assert all(r.status=='annullato' for r in fleet[0][1].query(RoutePlan))
+    restored=fleet[0][0].get(f"/api/fleet-planning/{plan['id']}").json()
+    assert restored['status']=='preview' and restored['route_ids']==[]
 
 
 def test_road_windows_equipment_and_remaining_availability(fleet):
@@ -337,3 +339,85 @@ def test_tail_lift_and_ztl_prefer_vehicle_meeting_both_requirements(fleet):
     plan=preview(fleet,data)
     assert plan['unassigned']==[]
     assert next(r['resource'] for r in plan['routes'] if 0 in r['stop_indexes'])==1
+
+
+@pytest.mark.parametrize('endpoint',['preview','confirm','program'])
+def test_past_departure_rejected_before_any_reservation(fleet,monkeypatch,endpoint):
+    from datetime import datetime
+    from app.services import fleet_planning as service
+    ctx,data=fleet
+    monkeypatch.setattr(service,'local_now',lambda:datetime(2099,1,15,7,59))
+    plan=preview(fleet)
+    monkeypatch.setattr(service,'local_now',lambda:datetime(2099,1,15,8,1))
+    response=ctx[0].post('/api/fleet-planning/preview',json=data) if endpoint=='preview' else command(fleet,plan,endpoint)
+    assert response.status_code==400,response.text
+    assert 'già passato' in response.json()['detail']
+    assert ctx[1].query(RoutePlan).count()==0
+
+
+def order_batch(fleet):
+    from app.routers import orders,order_planning
+    from test_order_planning import ready
+    ctx,original=fleet;client=ctx[0]
+    client.app.include_router(orders.router);client.app.include_router(order_planning.router)
+    orders=[ready(ctx,f'FAIL-{i}',weight_kg=100,packages=2) for i in range(2)]
+    selected=client.put('/api/order-planning/selection',json={'version':0,'action':'add','order_ids':[r.id for r in orders]}).json()
+    configuration={k:original[k] for k in ('nome','data_giro','orario_partenza','deposit_id')}
+    configuration.update(planning_mode='fleet',fleet_resources=original['resources'],fleet_strategy='balanced')
+    stops=client.post('/api/order-planning/preview',json={'version':selected['version'],'configuration':configuration})
+    assert stops.status_code==200,stops.text
+    data=deepcopy(original);data['consegne']=stops.json()['stops']
+    return data,orders
+
+
+@pytest.mark.parametrize('failure',['provider','departure_elapsed'])
+def test_failed_programming_releases_orders_and_can_retry(fleet,monkeypatch,failure):
+    from datetime import datetime
+    from fastapi import HTTPException
+    from app.services import fleet_planning as service,route_enrichment
+    from app.order_models import RouteOrderAssignment
+    ctx,_=fleet;client,db=ctx[:2]
+    monkeypatch.setattr(service,'local_now',lambda:datetime(2099,1,15,7,59))
+    data,orders=order_batch(fleet)
+    plan=preview(fleet,data)
+    original=route_enrichment.enrich_final_route
+    def fail_after_enrichment(*args,**kwargs):
+        original(*args,**kwargs)
+        if failure=='provider':raise HTTPException(503,'Provider non disponibile')
+        monkeypatch.setattr(service,'local_now',lambda:datetime(2099,1,15,8,1))
+    monkeypatch.setattr(route_enrichment,'enrich_final_route',fail_after_enrichment)
+    result=command(fleet,plan,'program')
+    assert result.status_code==(503 if failure=='provider' else 400),result.text
+    assert db.query(RouteOrderAssignment).count()==0
+    assert all(o.status=='pronto' and o.delivery_status=='not_assigned' for o in orders)
+    assert all(r.status=='annullato' for r in db.query(RoutePlan))
+    restored=client.get(f"/api/fleet-planning/{plan['id']}").json()
+    assert restored['status']=='preview' and restored['route_ids']==[]
+    selection=client.get('/api/order-planning/selection').json()
+    versions={o.id:o.version for o in orders}
+    assert all(ref['version']==versions[ref['id']] for stop in selection['stops'] for ref in stop['order_refs'])
+    # Both the existing preview and the ordinary order selection remain reusable.
+    monkeypatch.setattr(route_enrichment,'enrich_final_route',original)
+    monkeypatch.setattr(service,'local_now',lambda:datetime(2099,1,15,7,59))
+    retry=command(fleet,restored,'program')
+    assert retry.status_code==200,retry.text
+    assert db.query(RouteOrderAssignment).count()==2
+    assert all(o.status=='assegnato' and o.delivery_status=='scheduled' for o in orders)
+    assert db.query(RoutePlan).filter_by(status='programmato').count()==2
+
+
+def test_past_departure_releases_preexisting_unmodified_drafts(fleet,monkeypatch):
+    from datetime import datetime
+    from app.services import fleet_planning as service
+    from app.order_models import RouteOrderAssignment
+    ctx,_=fleet
+    monkeypatch.setattr(service,'local_now',lambda:datetime(2099,1,15,7,59))
+    data,orders=order_batch(fleet)
+    plan=preview(fleet,data)
+    saved=command(fleet,plan,'confirm').json()
+    assert ctx[1].query(RouteOrderAssignment).count()==2
+    monkeypatch.setattr(service,'local_now',lambda:datetime(2099,1,15,8,1))
+    result=command(fleet,saved,'program')
+    assert result.status_code==400,result.text
+    assert ctx[1].query(RouteOrderAssignment).count()==0
+    assert all(o.status=='pronto' for o in orders)

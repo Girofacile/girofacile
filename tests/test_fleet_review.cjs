@@ -66,13 +66,13 @@ test('modifiche manuali invalidano stime e disabilitano pianificazione',()=>{
  assert.match(page.innerHTML,/Ricalcola assegnazioni/);
  assert.match(page.innerHTML,/Annulla modifiche/);
 });
-test('un solo pulsante Pianifica giri usa conferma e programmazione backend sequenziale',()=>{
+test('un solo pulsante Pianifica giri usa una richiesta backend di programmazione',()=>{
  const js=read('static/dashboard/js/fleet-planning.js');
  assert.match(js,/onPlan:accept=>action\('plan',accept\)/);
- assert.match(js,/\/confirm/);
+ assert.doesNotMatch(js,/\/confirm/);
  assert.match(js,/\/program/);
- assert.ok(js.indexOf("/confirm")<js.indexOf("/program"));
- assert.match(js,/if\(plan\.status==='saved'\)/);
+
+ assert.match(js,/plan\.status==='saved'/);
  assert.match(js,/plan\.status==='programmed'/);
  assert.match(js,/changedAssignments/);
  assert.doesNotMatch(js,/data-action="confirm"|Salva giri in bozza/);

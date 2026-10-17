@@ -120,6 +120,18 @@ def main():
                     page.locator('[data-fleet-recalc]').click()
                     page.wait_for_function("document.getElementById('fleetMessage')?.textContent.includes('Nuove fermate')")
                 assert page.locator('[data-fleet-move]').count()==0
+                from app.services import route_enrichment
+                from fastapi import HTTPException
+                real_enrich=route_enrichment.enrich_final_route
+                def fail_enrichment(*args,**kwargs):
+                    raise HTTPException(503,'Errore programmazione simulato')
+                mp.setattr(route_enrichment,'enrich_final_route',fail_enrichment)
+                page.locator('[data-fleet-plan]').click()
+                page.wait_for_function("document.getElementById('fleetMessage')?.textContent.includes('Errore programmazione simulato')")
+                assert page.locator('[data-fleet-plan]').is_enabled()
+                from app.models import RoutePlan
+                assert all(r.status=='annullato' for r in db.query(RoutePlan))
+                mp.setattr(route_enrichment,'enrich_final_route',real_enrich)
                 page.locator('[data-fleet-plan]').click()
                 page.locator('[data-fleet-review] .gf-badge[data-status="success"]',has_text='Giri programmati').wait_for()
                 page.locator('[data-open]').first.click()
