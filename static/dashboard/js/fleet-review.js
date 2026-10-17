@@ -42,9 +42,11 @@ function stop(plan,assignment,dirty,index,lane){
  const reason=lane===null?plan.unassigned?.find(row=>row.index===index)?.reason:null;
  const lacksTailLift=lane!==null && delivery.sponda && plan.resource_capabilities?.[lane]?.has_tail_lift===false;
  const tailLiftWarning=lacksTailLift?'<p class="fleet-tail-lift-warning" role="status">Attenzione: questa consegna richiede la sponda, ma questo mezzo non la possiede.</p>':'';
+ const lacksZtlAccess=lane!==null && delivery.ztl && plan.resource_capabilities?.[lane]?.has_ztl_access===false;
+ const ztlWarning=lacksZtlAccess?'<p class="fleet-ztl-warning" role="status">Attenzione: questa consegna è in ZTL, ma questo mezzo non è abilitato all’accesso.</p>':'';
  const handle=plan.status==='preview'?'<button type="button" class="fleet-drag-handle" data-fleet-drag draggable="true" title="Trascina in un altro giro" aria-label="Trascina '+esc(delivery.cliente_nome)+'"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14"/></svg></button>':'';
  return '<li class="fleet-delivery'+(moved&&lane!==null?' is-moved':'')+'" data-fleet-stop="'+index+'">'+handle+'<div class="fleet-delivery-content">'+
- '<strong>'+esc(delivery.cliente_nome)+'</strong><span class="gf-muted">'+esc(delivery.indirizzo)+'</span>'+tailLiftWarning+
+ '<strong>'+esc(delivery.cliente_nome)+'</strong><span class="gf-muted">'+esc(delivery.indirizzo)+'</span>'+tailLiftWarning+ztlWarning+
  (reason?'<details class="fleet-delivery-reason"><summary>Perché non assegnata?</summary><p>'+esc(reason)+'</p></details>':'')+'</div></li>';
 }
 function lane(plan,assignment,dirty,i){

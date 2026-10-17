@@ -96,8 +96,6 @@ def distribute(db,user,data,assignments=None):
         if not sequence: return None
         try: opt.validate_vehicle_load(sequence,vehicle_data[resource])
         except ValueError as exc: return reject(str(exc))
-        if any(s.get('ztl') and not vehicles[resource].accesso_ztl for s in sequence):
-            return reject('Il mezzo non dispone dell’accesso ZTL richiesto.')
         result=opt._evaluate_fixed_sequence(sequence,matrix,points,vehicle_data[resource],data.rientro_deposito,data.orario_partenza,earliest_windows=True)
         if result['violations']:
             return reject('Fasce orarie di consegna o turni e pause non rispettati.')
@@ -119,7 +117,8 @@ def distribute(db,user,data,assignments=None):
                     key=(sum(not r for i,r in enumerate(routes) if i!=resource),max(durations),sum(x*x for x in durations),delta,evaluated['total_km'])
                 else: key=(0 if sequence else 1,delta,evaluated['total_km'])
                 # Prefer an equipped vehicle, but keep the delivery when none can take it.
-                key=(int(bool(row.get('sponda')) and not vehicles[resource].ha_sponda),*key)
+                equipment_penalty=int(bool(row.get('sponda')) and not vehicles[resource].ha_sponda)+int(bool(row.get('ztl')) and not vehicles[resource].accesso_ztl)
+                key=(equipment_penalty,*key)
                 if best is None or key<best[0]: best=(key,resource,candidate,evaluated)
             if failures:
                 reasons.append(f'Giro {resource+1}: '+ ' '.join(sorted(failures)))
@@ -170,8 +169,12 @@ def distribute(db,user,data,assignments=None):
             for index in route['stop_indexes']:
                 if rows[index].get('sponda'):
                     warnings.append(f"Giro {route['resource']+1} · {rows[index]['cliente_nome']}: attenzione, questa consegna richiede la sponda, ma il mezzo non la possiede.")
+        if not vehicles[route['resource']].accesso_ztl:
+            for index in route['stop_indexes']:
+                if rows[index].get('ztl'):
+                    warnings.append(f"Giro {route['resource']+1} · {rows[index]['cliente_nome']}: attenzione, questa consegna è in ZTL, ma il mezzo non è abilitato all’accesso.")
     return {'routes':output,'unassigned':[{'index':i,'reason':reason} for i,reason in sorted(unresolved.items())],
-            'resource_capabilities':[{'has_tail_lift':bool(v.ha_sponda)} for v in vehicles],
+            'resource_capabilities':[{'has_tail_lift':bool(v.ha_sponda),'has_ztl_access':bool(v.accesso_ztl)} for v in vehicles],
             'warnings':warnings,'validated_stops':frozen,'validated_depot':{'id':deposit.id,'indirizzo':deposit.indirizzo,'lat':deposit.lat,'lon':deposit.lon},'source':getattr(matrix,'source','osrm')}
 
 
@@ -221,7 +224,6 @@ def confirm(db,user,actor,plan_id,data):
     for route in plan.result['routes']:
         index=route['resource'];resource=settings.resources[index];result=deepcopy(route['result'])
         opt.validate_vehicle_load(result['ordered'],build_vehicle_dict(vehicles[index]))
-        if any(s['ztl'] and not vehicles[index].accesso_ztl for s in result['ordered']): raise HTTPException(409,'Accesso ZTL del mezzo cambiato: ricalcola.')
         driver=db.get(Driver,resource.driver_id) if resource.driver_id else None
         driver_name=' '.join(x for x in (driver.nome,driver.cognome) if x).strip() if driver else None
         payload=route_data(settings,resource,result['ordered'],index,driver_name)
@@ -279,8 +281,6 @@ def program(db,user,actor,plan_id,data):
         opt.validate_vehicle_load([{'peso_kg':d.peso_kg,'colli':d.colli} for d in row.deliveries],build_vehicle_dict(row.vehicle))
         if math.ceil(row.totale_minuti)>resource.max_minutes or any(json.loads(d.optimizer_details or '{}').get('time_window_violation') for d in row.deliveries):
             raise HTTPException(409,'I tempi aggiornati non rispettano orari o durata massima. I giri restano in bozza: rivedili prima di programmare.')
-        if any(d.ztl and not row.vehicle.accesso_ztl for d in row.deliveries):
-            raise HTTPException(409,'Le attrezzature del mezzo non sono piu compatibili.')
         start=opt.parse_hhmm(settings.orario_partenza)
         _check_resource_overlap(db,user,row,start,start+math.ceil(row.totale_minuti),exclude_route_id=row.id)
     from ..models import RouteToken
@@ -291,7 +291,7 @@ def program(db,user,actor,plan_id,data):
         row.status='programmato'
         route_orders.sync_route_orders(db,row,'scheduled')
     updated=deepcopy(plan.result)
-    updated['resource_capabilities']=[{'has_tail_lift':bool(db.get(Vehicle,r.vehicle_id).ha_sponda)} for r in settings.resources]
+    updated['resource_capabilities']=[{'has_tail_lift':bool(db.get(Vehicle,r.vehicle_id).ha_sponda),'has_ztl_access':bool(db.get(Vehicle,r.vehicle_id).accesso_ztl)} for r in settings.resources]
     for proposal,row in zip(updated['routes'],rows):
         proposal['result'].update(driver_breaks=row.driver_breaks or [],total_min=row.totale_minuti,return_time=row.orario_rientro_stimato.strftime('%H:%M'))
         for stop,delivery in zip(proposal['result']['ordered'],sorted(row.deliveries,key=lambda d:d.ordine)):
@@ -303,6 +303,10 @@ def program(db,user,actor,plan_id,data):
             for delivery in row.deliveries:
                 if delivery.sponda:
                     updated['warnings'].append(f'{delivery.cliente_nome}: attenzione, questa consegna richiede la sponda, ma il mezzo {row.vehicle.nome} non la possiede.')
+        if not row.vehicle.accesso_ztl:
+            for delivery in row.deliveries:
+                if delivery.ztl:
+                    updated['warnings'].append(f'{delivery.cliente_nome}: attenzione, questa consegna è in ZTL, ma il mezzo {row.vehicle.nome} non è abilitato all’accesso.')
     plan.result=updated
     plan.status='programmed';plan.version+=1
     db.commit()

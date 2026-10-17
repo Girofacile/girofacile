@@ -116,3 +116,14 @@ test('tail lift warning follows the selected vehicle immediately after a manual 
  control.render({...params,assignment:[1,1],dirty:true});
  assert.doesNotMatch(page.innerHTML,/questa consegna richiede la sponda, ma questo mezzo non la possiede/);
 });
+
+test('ZTL warning follows the selected vehicle and coexists with the tail lift warning',()=>{
+ const {control,page,params}=preview();
+ Object.assign(params.plan.configuration.consegne[0],{ztl:true,sponda:true});
+ params.plan.resource_capabilities=[{has_tail_lift:false,has_ztl_access:false},{has_tail_lift:true,has_ztl_access:true}];
+ control.render(params);
+ assert.match(page.innerHTML,/questa consegna è in ZTL, ma questo mezzo non è abilitato/);
+ assert.match(page.innerHTML,/questa consegna richiede la sponda/);
+ control.render({...params,assignment:[1,1],dirty:true});
+ assert.doesNotMatch(page.innerHTML,/questa consegna è in ZTL|questa consegna richiede la sponda/);
+});

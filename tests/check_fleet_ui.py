@@ -26,8 +26,10 @@ def main():
                 ctx,data=fleet.__wrapped__(routing_env.__wrapped__(base,mp))
                 client,db,user,_,customer,depot,vehicle,_=ctx
                 user.needs_tail_lift=True
+                user.has_ztl=True
                 db.commit()
                 data['consegne'][0]['sponda']=True
+                data['consegne'][0]['ztl']=True
                 from app.models import Vehicle,Driver
                 vehicles=[dict(id=v.id,nome=v.nome,alimentazione='gasolio',consumo_l_100km=8,available=True) for v in db.query(Vehicle)]
                 drivers=[dict(id=d.id,nome=d.nome,cognome='',full_name=d.nome,available=True) for d in db.query(Driver)]
@@ -89,6 +91,8 @@ def main():
                 page.locator('#routePlanningActions button').click()
                 page.get_by_role('heading',name='Controlla la suddivisione').wait_for()
                 assert page.locator('[data-fleet-stop]').count()==6
+                assert page.locator('.fleet-ztl-warning').count()==1
+                assert 'questo mezzo non è abilitato' in page.locator('.fleet-ztl-warning').inner_text()
                 assert page.locator('.fleet-tail-lift-warning').count()==1
                 assert 'questo mezzo non la possiede' in page.locator('.fleet-tail-lift-warning').inner_text()
                 assert page.locator('[data-fleet-plan]').is_enabled()

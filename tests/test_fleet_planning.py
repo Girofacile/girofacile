@@ -251,7 +251,7 @@ def test_tail_lift_prefers_equipped_vehicle(fleet,strategy):
     plan=preview(fleet,data)
     assert plan['unassigned']==[]
     assert next(r['resource'] for r in plan['routes'] if 0 in r['stop_indexes'])==1
-    assert plan['resource_capabilities']==[{'has_tail_lift':False},{'has_tail_lift':True}]
+    assert [r['has_tail_lift'] for r in plan['resource_capabilities']]==[False,True]
     assert not any('ma il mezzo' in w for w in plan['warnings'])
     # Manual membership remains valid even when the operator chooses the other vehicle.
     moved=command(fleet,plan,'revise',assignments=[0,0])
@@ -281,3 +281,59 @@ def test_tail_lift_fallback_warns_and_programs_without_excluding(fleet,equipped_
     routes=ctx[1].query(RoutePlan).all()
     assert sum(len(r.deliveries) for r in routes)==2
     assert any(d.sponda and 'sponda' in (d.warning or '').lower() for r in routes for d in r.deliveries)
+
+
+@pytest.mark.parametrize('strategy',['efficient','balanced'])
+def test_ztl_prefers_authorized_vehicle_and_allows_manual_override(fleet,strategy):
+    ctx, original=fleet
+    data=deepcopy(original);data['consegne']=data['consegne'][:2];data['strategy']=strategy
+    ctx[2].has_ztl=True
+    for vehicle in ctx[1].query(Vehicle): vehicle.accesso_ztl=False
+    ctx[1].get(Vehicle,data['resources'][1]['vehicle_id']).accesso_ztl=True
+    ctx[1].commit()
+    data['consegne'][0]['ztl']=True
+    plan=preview(fleet,data)
+    assert plan['unassigned']==[]
+    assert next(r['resource'] for r in plan['routes'] if 0 in r['stop_indexes'])==1
+    assert [r['has_ztl_access'] for r in plan['resource_capabilities']]==[False,True]
+    moved=command(fleet,plan,'revise',assignments=[0,0])
+    assert moved.status_code==200,moved.text
+    assert any('in ZTL, ma il mezzo non è abilitato' in w for w in moved.json()['warnings'])
+
+
+@pytest.mark.parametrize('authorized_but_full',[False,True])
+def test_ztl_fallback_warns_and_programs_without_excluding(fleet,authorized_but_full):
+    ctx, original=fleet
+    data=deepcopy(original);data['consegne']=data['consegne'][:2]
+    ctx[2].has_ztl=True
+    for vehicle in ctx[1].query(Vehicle): vehicle.accesso_ztl=False
+    if authorized_but_full:
+        vehicle=ctx[1].get(Vehicle,data['resources'][1]['vehicle_id'])
+        vehicle.accesso_ztl=True;vehicle.capacita_kg=5
+    ctx[1].commit()
+    data['consegne'][0]['ztl']=True
+    plan=preview(fleet,data)
+    assert plan['unassigned']==[]
+    assert any('in ZTL, ma il mezzo non è abilitato' in w for w in plan['warnings'])
+    saved=command(fleet,plan,'confirm')
+    assert saved.status_code==200,saved.text
+    programmed=command(fleet,saved.json(),'program')
+    assert programmed.status_code==200,programmed.text
+    assert any('in ZTL' in w for w in programmed.json()['warnings'])
+    routes=ctx[1].query(RoutePlan).all()
+    assert sum(len(r.deliveries) for r in routes)==2
+    assert any(d.ztl and 'ztl' in (d.warning or '').lower() for r in routes for d in r.deliveries)
+
+
+def test_tail_lift_and_ztl_prefer_vehicle_meeting_both_requirements(fleet):
+    ctx, original=fleet
+    data=deepcopy(original);data['consegne']=data['consegne'][:2]
+    ctx[2].has_ztl=True;ctx[2].needs_tail_lift=True
+    for vehicle in ctx[1].query(Vehicle):
+        vehicle.ha_sponda=True;vehicle.accesso_ztl=False
+    ctx[1].get(Vehicle,data['resources'][1]['vehicle_id']).accesso_ztl=True
+    ctx[1].commit()
+    data['consegne'][0].update(ztl=True,sponda=True)
+    plan=preview(fleet,data)
+    assert plan['unassigned']==[]
+    assert next(r['resource'] for r in plan['routes'] if 0 in r['stop_indexes'])==1
