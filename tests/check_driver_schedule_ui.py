@@ -105,7 +105,8 @@ def main():
                 page.screenshot(path=str(output/f'fleet-setup-{width}.png'),full_page=True)
                 page.evaluate('rows=>{deliveries=rows;renderDeliveries();}',data['consegne'][:6])
                 page.evaluate('optimizeRoute()')
-                page.locator('[data-fleet-lane] .driver-break-card').wait_for()
+                page.locator('.fleet-lane-breaks').first.locator('summary').click()
+                page.locator('.fleet-lane-breaks .driver-break-card').first.wait_for()
                 assert page.locator('[data-fleet-stop]').count()==6
                 assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 2')
                 page.screenshot(path=str(output/f'fleet-{width}.png'),full_page=True)

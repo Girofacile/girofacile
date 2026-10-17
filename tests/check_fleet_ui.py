@@ -86,8 +86,18 @@ def main():
                 page.locator('#routePlanningActions button').click()
                 page.get_by_role('heading',name='Controlla la suddivisione').wait_for()
                 assert page.locator('[data-fleet-stop]').count()==6
+                assert page.locator('[data-fleet-plan]').is_enabled()
                 assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 2')
                 page.evaluate('window.scrollTo(0,0)');page.screenshot(path=str(output/f'preview-{width}.png'),full_page=True)
+                if width>=1024:
+                    first_stop=page.locator('[data-fleet-stop]').first
+                    source_lane=first_stop.locator('xpath=ancestor::*[@data-fleet-lane]')
+                    source_id=source_lane.get_attribute('data-fleet-lane')
+                    target_lane=page.locator(f'[data-fleet-lane]:not([data-fleet-lane="{source_id}"])').first
+                    first_stop.drag_to(target_lane,source_position={'x':15,'y':15},target_position={'x':15,'y':15})
+                    page.get_by_role('button',name='Sposta comunque',exact=True).click()
+                    assert page.locator('[data-fleet-plan]').is_disabled()
+                    page.locator('[data-fleet-undo]').click()
                 # Flusso attuale (dal 13/10): sposta una consegna, conferma l'avviso, ricalcola, poi un solo "Pianifica giri".
                 move=page.locator('[data-fleet-move]').first
                 move.select_option(move.locator('option:not([value=""])').first.get_attribute('value'))

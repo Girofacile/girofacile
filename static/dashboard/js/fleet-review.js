@@ -31,52 +31,33 @@ function totals(plan,assignment,dirty){
  const ends=plan.routes.map(r=>r.result.return_time).filter(Boolean).sort();
  const stat=(label,value,sub,warning=false)=>'<div class="gf-stat-strip__cell"><span class="gf-stat-strip__label">'+esc(label)+'</span><strong class="gf-stat-strip__value">'+esc(value)+'</strong><small class="gf-stat-strip__unit">'+(warning?'<span class="gf-badge" data-status="warning">'+esc(sub)+'</span>':esc(sub))+'</small></div>';
  return '<section class="gf-stat-strip" aria-label="Totali della suddivisione">'+
- stat('Consegne',String(assignment.filter(x=>x!=null).length),'Assegnate a '+used+' mezzi')+
+ stat('Consegne',String(assignment.length),assignment.filter(x=>x==null).length+' non assegnate · '+used+' mezzi',assignment.some(x=>x==null))+
  stat('Km totali',dirty?'—':km.toLocaleString('it-IT',{maximumFractionDigits:1})+' km',dirty?'Da ricalcolare':'Somma dei percorsi',dirty)+
  stat('Carburante / energia',dirty?'—':money(cost),dirty?'Da ricalcolare':'Costo stimato',dirty)+
  stat('Ultimo rientro',dirty?'—':ends.at(-1)||'—',dirty?'Da ricalcolare':'Orario previsto',dirty)+'</section>';
 }
-function checks(plan,assignment,dirty){
- const missing=assignment.filter(x=>x==null).length;
- const numbers=plan.configuration.resources.map((_,i)=>count(assignment,i));
- const warn=plan.warnings?.find(w=>/approssimativ|routing stradale non disponibile/i.test(w));
- const mark=bad=>'<svg class="gf-alert__icon" viewBox="0 0 24 24" aria-hidden="true">'+(bad?'<path d="M12 3 2 21h20L12 3z M12 9v5m0 4h.01"/>':'<circle cx="12" cy="12" r="9"/><path d="m7 12 3 3 6-6"/>')+'</svg>';
- const check=(title,desc,bad=false)=>'<div role="listitem" class="gf-alert" data-status="'+(bad?'warning':'success')+'">'+mark(bad)+'<div class="gf-alert__body"><p class="gf-alert__title">'+esc(title)+'</p><p>'+esc(desc)+'</p></div></div>';
- return (dirty?check('Ricalcolo necessario','Distanze, orari e costi precedenti non sono più validi.',true):'')+
- check(missing?missing+' consegne non assegnate':'Tutte le consegne assegnate',
- missing?'Assegna le consegne oppure conferma esplicitamente le esclusioni.':'Ogni fermata è assegnata a un mezzo.',!!missing)+
- check('Distribuzione tra i mezzi','Da '+Math.min(...numbers)+' a '+Math.max(...numbers)+' fermate per mezzo.',Math.max(...numbers)-Math.min(...numbers)>=5)+
- check('Verifica dei vincoli','Il motore controlla peso, colli, fasce orarie, attrezzature, durata, turni e pause degli autisti.')+
- (warn?check('Tratte da verificare','Alcune distanze possono essere approssimative.',true):'');
-}
 function stop(plan,assignment,dirty,index,lane){
- const delivery=plan.configuration.consegne[index],original=oldRoute(plan,index);
- const moved=original?.resource!==lane,timing=(!dirty&&!moved)?original?.result?.ordered?.[original.stop_indexes.indexOf(index)]:null;
- const move=plan.status==='preview'?'<select class="gf-select" data-fleet-move="'+index+'" aria-label="Sposta '+esc(delivery.cliente_nome)+'"><option value="">Sposta</option>'+
- plan.configuration.resources.map((_,i)=>i===lane?'':'<option value="'+i+'">Mezzo '+(i+1)+'</option>').join('')+'</select>':'';
- return '<li class="gf-stop'+(moved?' is-next':'')+'" data-fleet-stop="'+index+'" draggable="'+(plan.status==='preview')+'">'+
- '<span class="gf-stop__number">'+(ordered(plan,assignment,lane).indexOf(index)+1)+'</span>'+
- '<span class="gf-stop__main"><span class="gf-stop__name">'+esc(delivery.cliente_nome)+'</span><span class="gf-stop__meta">'+esc(delivery.indirizzo)+'</span>'+move+'</span>'+
- '<span class="gf-stop__time">'+esc(timing?.arrivo_stimato||'—')+'<br><small class="gf-muted">'+(dirty?'Da ricalcolare':'Arrivo previsto')+'</small></span></li>';
+ const delivery=plan.configuration.consegne[index];
+ const moved=oldRoute(plan,index)?.resource!==lane;
+ const move=plan.status==='preview'?'<select class="gf-select" data-fleet-move="'+index+'" aria-label="Sposta '+esc(delivery.cliente_nome)+'" ><option value="">Sposta in un altro giro…</option>'+
+ plan.configuration.resources.map((_,i)=>i===lane?'':'<option value="'+i+'">Giro '+(i+1)+' · '+esc(names(plan,i).driver)+'</option>').join('')+'</select>':'';
+ const reason=lane===null?plan.unassigned?.find(row=>row.index===index)?.reason:null;
+ return '<li class="fleet-delivery'+(moved&&lane!==null?' is-moved':'')+'" data-fleet-stop="'+index+'" draggable="'+(plan.status==='preview')+'">'+
+ '<strong>'+esc(delivery.cliente_nome)+'</strong><span class="gf-muted">'+esc(delivery.indirizzo)+'</span>'+
+ (reason?'<details class="fleet-delivery-reason"><summary>Perché non assegnata?</summary><p>'+esc(reason)+'</p></details>':'')+move+'</li>';
 }
 function lane(plan,assignment,dirty,i){
  const all=ordered(plan,assignment,i),info=names(plan,i),route=info.r;
- const invalid=dirty && (!route||route.stop_indexes.length!==all.length||all.some(k=>!route.stop_indexes.includes(k)));
- const max=plan.configuration.resources[i].max_minutes||480;
- const duration=!invalid&&route?Number(route.result.total_min):0;
- const width=invalid?0:Math.max(0,Math.min(100,Math.round(duration/max*20)*5));
- const head='<header class="gf-panel__header"><span class="gf-avatar" aria-hidden="true">'+esc(initials(info.driver))+'</span><div><h3 class="gf-panel__title">'+esc(info.driver)+'</h3><p class="gf-muted">Mezzo '+(i+1)+' · '+esc(info.vehicle)+' '+esc(info.plate)+'</p></div>'+
- (invalid?'<span class="gf-badge" data-status="warning">Da ricalcolare</span>':'')+'</header>';
- const stats='<div class="gf-panel__body gf-stack"><dl class="gf-details"><div class="gf-details__item"><dt>Consegne</dt><dd><strong>'+all.length+'</strong> fermate</dd></div>'+
- '<div class="gf-details__item"><dt>Percorso</dt><dd><strong>'+(!invalid&&route?Number(route.result.total_km).toLocaleString('it-IT',{maximumFractionDigits:1})+' km':'—')+'</strong></dd></div>'+
- '<div class="gf-details__item"><dt>Carburante</dt><dd><strong>'+(!invalid&&route?money(route.fuel_cost):'—')+'</strong></dd></div></dl>';
- const dur='<div class="gf-progress"><div class="gf-progress__top"><span><b>'+(!invalid&&route?Math.round(duration)+' min':'—')+'</b> di giro</span><span>'+(!invalid&&route?'Rientro '+esc(route.result.return_time||'—'):'Massimo '+max+' min')+'</span></div>'+
- '<div class="gf-progress__track" role="img" aria-label="Durata rispetto al massimo"><span class="gf-progress__done" data-gf-width="'+width+'"></span></div></div></div>';
- return '<section class="gf-panel" aria-label="Mezzo '+(i+1)+'">'+head+stats+dur+
- '<ol class="gf-stop-list" data-fleet-lane="'+i+'">'+
- (!dirty&&route?GFDriverBreaks.cards(route.result,0,'li'):'')+(all.length?all.map((k,position)=>stop(plan,assignment,dirty,k,i)+(!dirty&&route?GFDriverBreaks.cards(route.result,position+1,'li'):'')).join(''):'<li class="gf-empty"><p>Nessuna consegna</p><small>Trascina qui una consegna da un altro mezzo.</small></li>')+'</ol>'+
- (plan.status==='programmed'&&route&&plan.route_ids?.[plan.routes.indexOf(route)]
-  ?'<footer class="gf-panel__footer"><button type="button" class="gf-button" data-variant="secondary" data-size="sm" data-open="'+Number(plan.route_ids[plan.routes.indexOf(route)])+'">Apri giro programmato</button></footer>':'')+'</section>';
+ const invalid=dirty;
+ const metric=(value,label)=>'<span><strong>'+esc(value)+'</strong> '+label+'</span>';
+ return '<section class="gf-panel fleet-lane" data-fleet-lane="'+i+'" aria-label="Giro '+(i+1)+'"><header class="gf-panel__header"><div><p class="gf-kicker">Giro '+(i+1)+'</p><h3 class="gf-panel__title">'+esc(info.driver)+'</h3><p class="gf-muted">'+esc(info.vehicle)+' '+esc(info.plate)+'</p></div><span class="gf-badge" data-status="neutral">'+all.length+(all.length===1?' fermata':' fermate')+'</span></header>'+
+ '<div class="fleet-lane-metrics">'+metric(!invalid&&route?Number(route.result.total_km).toLocaleString('it-IT',{maximumFractionDigits:1}):'—','km')+
+ metric(!invalid&&route?Math.round(route.result.total_min):'—','min')+metric(!invalid&&route?money(route.fuel_cost):'—','')+'</div>'+
+ (invalid?'<p class="fleet-lane-notice">Stime da ricalcolare</p>':'')+
+ '<ol class="fleet-deliveries">'+
+ (all.length?all.map(k=>stop(plan,assignment,dirty,k,i)).join(''):'<li class="gf-empty"><p>Nessuna fermata</p><small>Trascina qui una consegna.</small></li>')+'</ol>'+
+ (!dirty&&route&&route.result.driver_breaks?.length?'<details class="fleet-lane-breaks"><summary>Turno e pause</summary>'+GFDriverBreaks.cards(route.result,0,'div')+route.stop_indexes.map((_,j)=>GFDriverBreaks.cards(route.result,j+1,'div')).join('')+'</details>':'')+
+ (plan.status==='programmed'&&route&&plan.route_ids?.[plan.routes.indexOf(route)]?'<footer class="gf-panel__footer"><button type="button" class="gf-button" data-variant="secondary" data-size="sm" data-open="'+Number(plan.route_ids[plan.routes.indexOf(route)])+'">Apri giro programmato</button></footer>':'')+'</section>';
 }
 function stopMap(){epoch++;if(map){map.remove();map=null;}}
 function highlight(index,on){site()?.querySelectorAll('[data-fleet-stop="'+index+'"],[data-fleet-pin="'+index+'"]').forEach(x=>x.classList.toggle(x.matches('[data-fleet-stop]')?'is-highlighted':'hl',on));}
@@ -144,20 +125,11 @@ function render({plan,assignment,dirty,busy,manualAdjusted,permission,onMove,onU
  (alert?'<div class="gf-alert" data-status="warning" role="status"><div class="gf-alert__body"><strong class="gf-alert__title">'+(dirty?'Ricalcolo necessario':'Suddivisione manuale')+'</strong><p>'+esc(alert)+'</p></div></div>':'')+
  (saved?'<div class="gf-alert" data-status="warning" role="status"><div class="gf-alert__body"><strong class="gf-alert__title">Giri in bozza, programmazione non completata</strong><p>Puoi riprovare con “Pianifica giri”. Non verranno duplicati giri.</p></div></div>':'')+
  totals(plan,assignment,dirty)+
- '<div class="gf-grid" data-cols="main-side"><section class="gf-panel"><header class="gf-panel__header"><div><h2 class="gf-panel__title">Distribuzione sulla mappa</h2><p class="gf-muted">Ogni colore è un mezzo. Passa su una fermata per individuarla.</p></div></header>'+
- '<div class="gf-panel__body gf-stack"><div class="gf-route-panel__canvas" data-fleet-map role="region" aria-label="Fermate della suddivisione sulla mappa"></div>'+
- '<div class="gf-legend">'+plan.configuration.resources.map((_,i)=>'<span><i style="background:'+color(i)+';border-color:'+color(i)+'"></i>Mezzo '+(i+1)+'</span>').join('')+
- '<span><i data-state="done"></i>Deposito</span><span><i></i>Collegamenti indicativi, non stradali</span></div></div></section>'+
- '<section class="gf-panel"><header class="gf-panel__header"><h2 class="gf-panel__title">Controlli sulla suddivisione</h2></header><div class="gf-panel__body gf-stack"><div class="gf-stack" data-gap="sm" role="list">'+checks(plan,assignment,dirty)+'</div>'+
- '<details class="gf-panel"><summary class="gf-panel__header">Come leggere le stime</summary><div class="gf-panel__body gf-stack"><p>Traffico e pedaggi saranno verificati alla programmazione. Il costo mostrato riguarda solo carburante ed energia.</p>'+
- '<p>I controlli automatici considerano peso e colli. Verifica separatamente volume, pallet e altri requisiti.</p></div></details></div></section></div>'+
- '<div><h2 class="gf-subtitle">Suddivisione per mezzo</h2><p class="gf-muted">Trascina una consegna su un altro mezzo oppure utilizza il selettore Sposta.</p></div>'+
- '<div class="gf-grid" data-cols="2">'+plan.configuration.resources.map((_,i)=>lane(plan,assignment,dirty,i)).join('')+'</div>'+
- (missing?'<section class="gf-panel"><header class="gf-panel__header"><div><h2 class="gf-panel__title">Consegne non assegnate ('+missing+')</h2><p class="gf-muted">Verifica prima di pianificare.</p></div></header><div class="gf-panel__body gf-stack">'+
- '<div class="gf-stack" data-gap="sm" role="list">'+assignment.map((v,i)=>v==null?'<div role="listitem" class="gf-cluster" data-justify="between"><span>'+esc(plan.configuration.consegne[i]?.cliente_nome||'Consegna')+'</span>'+
- (plan.status==='preview'?'<select class="gf-select" data-fleet-move="'+i+'" aria-label="Assegna '+esc(plan.configuration.consegne[i]?.cliente_nome||'Consegna')+'"><option value="">Assegna a mezzo</option>'+
- plan.configuration.resources.map((_,j)=>'<option value="'+j+'">Mezzo '+(j+1)+'</option>').join('')+'</select>':'')+'</div>':'').join('')+'</div>'+
- (plan.status==='preview'?'<label class="gf-check"><input type="checkbox" data-fleet-accept-unassigned> <span>Confermo che queste consegne rimangano non assegnate</span></label>':'')+'</div></section>':'')+
+ '<div class="gf-stack" data-gap="sm"><h2 class="gf-subtitle">Suddivisione per giro</h2><p class="gf-muted">Trascina le fermate tra le colonne o scegli un giro dal menu. Dopo gli spostamenti, ricalcola tempi e costi.</p></div>'+
+ '<div class="fleet-board" aria-label="Giri e fermate">'+plan.configuration.resources.map((_,i)=>lane(plan,assignment,dirty,i)).join('')+
+ (missing?'<section class="gf-panel fleet-lane fleet-lane-unassigned" aria-label="Consegne non assegnate"><header class="gf-panel__header"><div><h2 class="gf-panel__title">Non assegnate</h2><p class="gf-muted">'+missing+' fermate da sistemare</p></div></header><ol class="fleet-deliveries">'+assignment.map((v,i)=>v==null?stop(plan,assignment,dirty,i,null):'').join('')+'</ol>'+
+ (plan.status==='preview'?'<div class="gf-panel__body"><label class="gf-check"><input type="checkbox" data-fleet-accept-unassigned> <span>Confermo di programmare soltanto le consegne assegnate</span></label></div>':'')+'</section>':'')+'</div>'+
+ '<details class="gf-panel" data-fleet-map-details><summary class="gf-panel__header">Mostra la mappa della suddivisione</summary><div class="gf-panel__body gf-stack"><div class="gf-route-panel__canvas" data-fleet-map role="region" aria-label="Fermate della suddivisione sulla mappa"></div><p class="gf-muted">Collegamenti indicativi, non stradali.</p></div></details>'+
  (plan.warnings?.length?'<details class="gf-panel"><summary class="gf-panel__header">Note sul calcolo</summary><div class="gf-panel__body gf-stack">'+plan.warnings.map(w=>'<p>'+esc(w)+'</p>').join('')+'</div></details>':'')+
  '<div id="fleetMessage" role="status" tabindex="-1" class="gf-muted"></div>'+
  (dirty?'<div class="gf-savebar" role="region" aria-label="Modifiche in sospeso"><span><b>Assegnazioni modificate</b> · Ricalcola per aggiornare tempi e distanze.</span>'+
@@ -172,6 +144,7 @@ function render({plan,assignment,dirty,busy,manualAdjusted,permission,onMove,onU
   onMove(index,to);
  };
  target.querySelectorAll('[data-fleet-move]').forEach(select=>select.addEventListener('change',()=>{
+  if(select.value==='')return;
   const i=Number(select.dataset.fleetMove),to=Number(select.value);select.value='';move(i,to);
  }));
  target.querySelectorAll('[data-fleet-stop]').forEach(stop=>{
@@ -184,7 +157,7 @@ function render({plan,assignment,dirty,busy,manualAdjusted,permission,onMove,onU
   el.addEventListener('dragleave',e=>{if(!el.contains(e.relatedTarget))el.classList.remove('over');});
   el.addEventListener('drop',e=>{e.preventDefault();el.classList.remove('over');if(drag!=null){const i=drag;drag=null;move(i,Number(el.dataset.fleetLane));}});
  });
- drawMap(plan,assignment);
+ target.querySelector('[data-fleet-map-details]')?.addEventListener('toggle',event=>{if(event.target.open)drawMap(plan,assignment);else stopMap();});
 }
 return {render,warning,stopMap};
 })();

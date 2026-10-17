@@ -45,9 +45,9 @@ test('fleet review replica il modello senza sidebar ne dati fittizi',()=>{
  const {control,page,params}=preview();
  control.render(params);
  assert.match(page.innerHTML,/Controlla la suddivisione/);
- assert.match(page.innerHTML,/Distribuzione sulla mappa/);
- assert.match(page.innerHTML,/Controlli sulla suddivisione/);
- assert.match(page.innerHTML,/Suddivisione per mezzo/);
+ assert.match(page.innerHTML,/Mostra la mappa della suddivisione/);
+ assert.doesNotMatch(page.innerHTML,/Controlli sulla suddivisione/);
+ assert.match(page.innerHTML,/Suddivisione per giro/);
  assert.match(page.innerHTML,/Alimentari Rossi/);
  assert.match(page.innerHTML,/Bar Bianchi/);
  assert.match(page.innerHTML,/Furgone A/);
@@ -92,4 +92,16 @@ test('trasferimenti notificati e mappe solo sul contenuto, senza nuova sidebar',
  assert.match(html,/fleet-review\.css\?v=[\w-]+/);
  assert.match(html,/fleet-review\.js\?v=[\w-]+/);
  assert.match(html,/\/static\/design-system\/design-system\.js\?v=[\w-]+/);
+});
+
+test('unassigned deliveries stay visible with address, reason and reassignment',()=>{
+ const {control,page,params}=preview();
+ params.plan.routes=params.plan.routes.slice(0,1);
+ params.plan.unassigned=[{index:1,reason:'Giro 1: accesso ZTL richiesto.'}];
+ control.render({...params,assignment:[0,null]});
+ assert.match(page.innerHTML,/fleet-lane-unassigned/);
+ assert.match(page.innerHTML,/Via Napoli 5/);
+ assert.match(page.innerHTML,/accesso ZTL richiesto/);
+ assert.match(page.innerHTML,/data-fleet-move="1"/);
+ assert.match(page.innerHTML,/data-fleet-accept-unassigned/);
 });

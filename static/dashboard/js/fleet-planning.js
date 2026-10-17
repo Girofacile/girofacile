@@ -47,7 +47,7 @@
     try{
       showTab('route-preview');el('routePreviewResult').innerHTML='<section class="gf-panel"><div class="gf-loading" role="status">Distribuzione delle consegne in corso…</div></section>';
       const data={nome:val('routeName')||'Piano consegne',data_giro:val('routeDate'),orario_partenza:val('routeStart'),deposit_id:Number(val('routeDeposit')),rientro_deposito:boolVal('returnDepot'),strategy:el('fleetStrategy').value,resources,consegne:deliveries};
-      plan=await api('/api/fleet-planning/preview',{method:'POST',body:JSON.stringify(data)});changedAssignments=false;draftAssignments=null;manualAdjusted=false;acknowledgedWarning=false;render();
+      plan=await api('/api/fleet-planning/preview',{method:'POST',body:JSON.stringify(data)});changedAssignments=false;draftAssignments=null;manualAdjusted=false;acknowledgedWarning=false;busy=false;render();
     }catch(e){el('routePreviewResult').innerHTML=`<section class="gf-panel"><div class="gf-panel__body gf-stack"><h2 class="gf-panel__title">Distribuzione non completata</h2><p class="gf-alert" data-status="danger" role="alert">${esc(e.message)}</p><div><button type="button" class="gf-button" data-variant="secondary" onclick="showTab('giro')">Torna alla pianificazione</button></div></div></section>`;}
     finally{busy=false;}
   }
@@ -138,8 +138,10 @@
         ?'La programmazione non è stata completata: i giri sono rimasti in bozza e possono essere riprovati senza duplicazioni. '+e.message
         :e.message);
     }finally{
+      const lastMessage=el('fleetMessage')?.textContent;
       busy=false;
-      el('routePreviewResult')?.querySelectorAll('[data-fleet-plan],[data-fleet-recalc],[data-fleet-back]')?.forEach(b=>{if(b.dataset.fleetPlan!==undefined)b.disabled=changedAssignments||!can('routes.program');else b.disabled=false;});
+      render();
+      if(lastMessage)notice(lastMessage);
     }
   }
   document.addEventListener('change',e=>{

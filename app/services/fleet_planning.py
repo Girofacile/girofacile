@@ -88,21 +88,32 @@ def distribute(db,user,data,assignments=None):
     routes=[[] for _ in vehicles];results=[None for _ in vehicles]
     unresolved={}
 
-    def evaluate(sequence,resource):
+    def evaluate(sequence,resource,failures=None):
+        def reject(reason):
+            if failures is not None:
+                failures.add(reason)
+            return None
         if not sequence: return None
         try: opt.validate_vehicle_load(sequence,vehicle_data[resource])
-        except ValueError: return None
-        if any((s.get('sponda') and not vehicles[resource].ha_sponda) or (s.get('ztl') and not vehicles[resource].accesso_ztl) for s in sequence): return None
+        except ValueError as exc: return reject(str(exc))
+        if any(s.get('sponda') and not vehicles[resource].ha_sponda for s in sequence):
+            return reject('Il mezzo non dispone della sponda richiesta.')
+        if any(s.get('ztl') and not vehicles[resource].accesso_ztl for s in sequence):
+            return reject('Il mezzo non dispone dell’accesso ZTL richiesto.')
         result=opt._evaluate_fixed_sequence(sequence,matrix,points,vehicle_data[resource],data.rientro_deposito,data.orario_partenza,earliest_windows=True)
-        if result['violations'] or math.ceil(result['total_min'])>limits[resource]: return None
+        if result['violations']:
+            return reject('Fasce orarie di consegna o turni e pause non rispettati.')
+        if math.ceil(result['total_min'])>limits[resource]:
+            return reject(f'Tempo disponibile insufficiente: {limits[resource]} minuti, considerando durata massima e altri giri già programmati.')
         return result
 
     def insert(index):
-        row=rows[index];best=None
+        row=rows[index];best=None;reasons=[]
         for resource,sequence in enumerate(routes):
+            failures=set()
             for position in range(len(sequence)+1):
                 candidate=sequence[:position]+[row]+sequence[position:]
-                evaluated=evaluate(candidate,resource)
+                evaluated=evaluate(candidate,resource,failures)
                 if evaluated is None: continue
                 durations=[r['total_min'] if r else 0 for r in results];durations[resource]=evaluated['total_min']
                 delta=evaluated['total_min']-(results[resource]['total_min'] if results[resource] else 0)
@@ -110,8 +121,10 @@ def distribute(db,user,data,assignments=None):
                     key=(sum(not r for i,r in enumerate(routes) if i!=resource),max(durations),sum(x*x for x in durations),delta,evaluated['total_km'])
                 else: key=(0 if sequence else 1,delta,evaluated['total_km'])
                 if best is None or key<best[0]: best=(key,resource,candidate,evaluated)
+            if failures:
+                reasons.append(f'Giro {resource+1}: '+ ' '.join(sorted(failures)))
         if best is None:
-            unresolved[index]='Nessun inserimento compatibile con carico, attrezzature, fasce orarie e tempo disponibile. Modifica risorse o vincoli e riprova.'
+            unresolved[index]='Nessun inserimento compatibile nella suddivisione corrente. '+ ' '.join(reasons)
         else:
             _,resource,sequence,result=best
             routes[resource],results[resource]=sequence,result
@@ -131,8 +144,10 @@ def distribute(db,user,data,assignments=None):
             # Reorder within each manually chosen vehicle; membership is fixed.
             ordered=opt._best_internal_sequence(sequence,matrix,points,vehicle_data[resource],data.rientro_deposito,data.orario_partenza)['ordered']
             routes[resource]=[rows[s['fleet_stop_index']] for s in ordered]
-            results[resource]=evaluate(routes[resource],resource)
-            if results[resource] is None: raise HTTPException(422,f'Giro {resource+1}: lo spostamento viola carico, attrezzature, orari o disponibilita. Modifica l assegnazione.')
+            failures=set()
+            results[resource]=evaluate(routes[resource],resource,failures)
+            if results[resource] is None:
+                raise HTTPException(422,f'Giro {resource+1}: '+ ' '.join(sorted(failures))+' Modifica l’assegnazione e ricalcola.')
     output=[]
     for index,result in enumerate(results):
         if result is None: continue

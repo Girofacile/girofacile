@@ -61,6 +61,8 @@ def test_unassigned_and_invalid_manual_move(fleet):
     data=deepcopy(fleet[1]);data['consegne'][0]['peso_kg']=1000
     plan=preview(fleet,data)
     assert plan['unassigned'][0]['index']==0
+    assert 'Giro 1:' in plan['unassigned'][0]['reason']
+    assert 'Giro 2:' in plan['unassigned'][0]['reason']
     assert command(fleet,plan,'confirm').status_code==422
     invalid=command(fleet,plan,'revise',assignments=[0]*30)
     assert invalid.status_code==422
@@ -113,6 +115,7 @@ def test_road_windows_equipment_and_remaining_availability(fleet):
     db.add(booking);db.commit()
     plan=preview(fleet,data)
     assert any(stop['index']==0 for stop in plan['unassigned'])
+    assert 'sponda richiesta' in next(stop['reason'] for stop in plan['unassigned'] if stop['index']==0)
     assert all(route['result']['total_min']<=40 for route in plan['routes'] if route['resource']==1)
     # A booking later in the morning does not hide a resource available at departure.
     available=ctx[0].get('/api/resources/availability?data_giro=2099-01-15&orario=08:00&preview_minutes=1').json()
@@ -232,4 +235,5 @@ def test_impossible_window_remains_unassigned(fleet):
     data['consegne'][0].update(scarico_mattina_da='07:00',scarico_mattina_a='07:30')
     plan=preview(fleet,data)
     assert any(s['index']==0 for s in plan['unassigned'])
+    assert 'Fasce orarie' in next(s['reason'] for s in plan['unassigned'] if s['index']==0)
     assert all(0 not in r['stop_indexes'] for r in plan['routes'])
