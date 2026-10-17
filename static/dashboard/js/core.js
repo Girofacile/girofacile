@@ -3580,7 +3580,33 @@ async function explainRouteSequenceAIv67(routeId){
   }
 }
 
+function validateRouteCalculation(){
+  const missing = routePlanningMissingFieldsV68();
+  const labels = {
+    data: 'una data valida (oggi o successiva)',
+    'orario partenza': 'l’orario di partenza', deposito: 'il deposito',
+    mezzo: 'il mezzo', autista: 'l’autista',
+    'prezzo carburante': 'un prezzo carburante maggiore di zero',
+    'prezzo energia': 'un prezzo energia maggiore di zero',
+    'turno e pause autista': 'gli orari del turno e delle pause dell’autista',
+    'turni e pause autisti': 'gli orari dei turni e delle pause degli autisti'
+  };
+  if(globalThis.GFFleetPlanning?.active()){
+    labels.mezzo = 'un mezzo diverso per ogni giro';
+    labels.autista = 'un autista diverso per ogni giro';
+  }
+  let text = missing.length ? 'Attenzione: inserisci o correggi '+missing.map(field=>labels[field]||field).join(', ')+' per poter calcolare il percorso.' : '';
+  if(!text && !deliveries.length)text='Attenzione: seleziona almeno un ordine o un cliente da consegnare per poter calcolare il percorso.';
+  const box=document.getElementById('orderPlanningProceedMessage');
+  if(box){
+    box.textContent=text;box.hidden=!text;box.dataset.state='error';
+    if(text){box.scrollIntoView({behavior:'smooth',block:'center'});box.focus({preventScroll:true});}
+  }
+  return !text;
+}
+
 async function optimizeRoute(){
+  if(!validateRouteCalculation())return;
   if(globalThis.GFOrderPlanning && !await GFOrderPlanning.beforeCalculate())return;
   if(globalThis.GFFleetPlanning?.active())return GFFleetPlanning.calculate();
   if(!routePlanningDetailsCompleteV68()){

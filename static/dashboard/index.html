@@ -537,14 +537,10 @@
           </div>
         </section>
 
-        <!-- Cosa manca e prosecuzione (logica esistente) -->
-        <section id="routePlanningGatePanel" class="gf-panel" aria-labelledby="planningCompletionTitle">
-          <div class="gf-panel__body gf-stack">
-            <div class="gf-stack" data-gap="sm"><h2 class="gf-subtitle" id="planningCompletionTitle">Cosa manca?</h2><div id="planningChecklist" class="gf-cluster"></div><span id="routePlanningGateHint" class="gf-badge" data-status="neutral" role="status"></span></div>
-            <div class="gf-cluster" data-justify="between"><div class="gf-field" data-invalid><p id="orderPlanningProceedMessage" class="gf-field__error" role="alert" tabindex="-1" hidden></p></div><button type="button" id="openCustomerStepBtn" class="gf-button" data-variant="primary" onclick="advanceRoutePlanning()">Completa dati giro</button></div>
-            <div class="gf-cluster" data-justify="end"><button type="button" class="gf-button" data-variant="primary" onclick="optimizeRoute()">Calcola percorso</button></div>
-          </div>
-        </section>
+        <div id="routePlanningActions" class="gf-stack" data-gap="sm">
+          <p id="orderPlanningProceedMessage" class="gf-alert" data-status="danger" role="alert" tabindex="-1" hidden></p>
+          <div class="gf-cluster" data-justify="end"><button type="button" class="gf-button" data-variant="primary" onclick="optimizeRoute()">Calcola percorso</button></div>
+        </div>
       </section>
 
       <section id="tab-route-preview" class="tab hidden gf-stack" data-gap="lg">
@@ -1468,7 +1464,7 @@
 <script src="/static/dashboard/js/order-sources.js?v=gf_base_20261015v"></script>
 <script src="/static/dashboard/js/dashboard-real-map.js?v=gf_base_20261015u"></script>
 <script src="/static/dashboard/js/in-progress-reference.js?v=gf_gps_recovery_20261016"></script>
-<script src="/static/dashboard/js/core.js?v=gf_giro_c4_20261017"></script>
+<script src="/static/dashboard/js/core.js?v=gf_calculate_20261017"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=orders_2"></script>
 <link rel="stylesheet" href="/static/dashboard/css/fleet-review.css?v=gf_selection_20261016">
 <script src="/static/dashboard/js/fleet-review.js?v=gf_base_20261015u"></script>

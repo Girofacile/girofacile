@@ -101,7 +101,6 @@ def main():
                 page.locator('#fleetResources [data-schedule-editor] summary').first.click()
                 assert page.locator('#fleetDriverSchedule0Break0Start').input_value()=='08:15'
                 page.locator('#fleetStrategy').select_option('balanced')
-                page.locator('#openCustomerStepBtn').click()
                 assert page.evaluate('routePlanningMissingFieldsV68()')==[]
                 page.screenshot(path=str(output/f'fleet-setup-{width}.png'),full_page=True)
                 page.evaluate('rows=>{deliveries=rows;renderDeliveries();}',data['consegne'][:6])
