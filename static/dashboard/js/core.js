@@ -3094,13 +3094,13 @@ function renderDeliveries(){
     <tr data-delivery-row="${i}" draggable="true" ondragstart="planningStopDragStart(event, ${i})" ondragend="planningStopDragEnd()" ondragover="event.preventDefault()" ondrop="planningStopDrop(event, ${i})">
       <td data-label="#"><span class="gf-badge" data-status="neutral">${i+1}</span></td>
       <td data-label="Cliente">
-        <strong>${esc(d.cliente_nome)}</strong>${globalThis.GFOrderPlanning?.describe(d)||""}${d.customer_id == null ? ' <span class="gf-badge" data-status="neutral">Occasionale</span>' : ''}
-        <br><small class="gf-muted">${d.codice_cliente ? `Codice cliente: ${esc(d.codice_cliente)}` : `Fermata #${i+1}`}</small>
+        <strong>${esc(d.cliente_nome)}</strong>${globalThis.GFOrderPlanning?.describe(d)||""}
+        ${d.codice_cliente ? `<br><small class="gf-muted">Codice cliente: ${esc(d.codice_cliente)}</small>` : ""}
       </td>
       <td data-label="Indirizzo">
         ${esc(d.indirizzo||"")}
         ${d.indirizzo_geocodificato && d.indirizzo_geocodificato !== d.indirizzo ? `<br><small class="gf-muted">Verificato come: ${esc(d.indirizzo_geocodificato)}</small>` : ""}
-        <br>${deliveryGeoBadge(d)}
+        ${(d.stato_geocodifica || (d.lat != null && d.lon != null ? "verificato" : "da_verificare")) === "verificato" ? "" : `<br>${deliveryGeoBadge(d)}`}
       </td>
       <td data-label="Finestra di scarico">${deliveryWindowLabel(d)}</td>
       <td data-label="Scarico">${parseInt(d.tempo_scarico_min ?? 10)} min</td>
@@ -3110,12 +3110,8 @@ function renderDeliveries(){
       <td data-label="Specifiche">
         <button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="${d.customer_id == null ? 'openOccasionalStopModal' : 'openDeliveryDetailsModal'}(${i})">${d.customer_id == null ? 'Modifica' : 'Dettagli'}</button>
       </td>
-      <td data-label="Ordine">
-        <div class="gf-cluster">
-          <button type="button" class="gf-button" data-variant="ghost" data-size="sm" title="Sposta su" aria-label="Sposta su" onclick="moveDelivery(${i}, -1)">↑</button>
-          <button type="button" class="gf-button" data-variant="ghost" data-size="sm" title="Sposta giù" aria-label="Sposta giù" onclick="moveDelivery(${i}, 1)">↓</button>
-          <button type="button" class="gf-button" data-variant="danger" data-size="sm" title="Rimuovi" aria-label="Rimuovi" onclick="removeDelivery(${i})">X</button>
-        </div>
+      <td data-label="Azioni">
+        <button type="button" class="gf-button" data-variant="danger" data-size="sm" onclick="removeDelivery(${i})">Elimina</button>
       </td>
     </tr>`).join("");
 }
