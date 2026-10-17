@@ -211,3 +211,33 @@ jobs:
           path: test-results/gps-browser/
           if-no-files-found: ignore
           retention-days: 7
+
+  fleet-simulations:
+    name: Fleet quality simulations and independent exact references
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      DATABASE_URL: 'sqlite+pysqlite:///:memory:'
+      ALLOW_SQLITE_LEGACY: 'true'
+      APP_ENV: test
+      BILLING_MODE: disabled
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install isolated simulation dependencies
+        run: pip install -r requirements.txt
+      - name: Verify the independent reference and existing fleet scheduling contracts
+        run: python -m pytest tests/test_fleet_quality_reference.py tests/test_fleet_planning.py tests/test_driver_schedule.py -q -ra
+      - name: Simulate the real multi-vehicle planner with frozen matrices
+        run: python tests/run_fleet_simulations.py
+      - name: Preserve reproducible simulation results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fleet-simulation-results
+          path: test-results/fleet-simulations/
+          if-no-files-found: error
+          retention-days: 30
