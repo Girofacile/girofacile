@@ -748,3 +748,10 @@ body[data-gf-surface] .gf-planning-choice input[type="radio"] {
   width:var(--gf-control-check); height:var(--gf-control-check);
   margin:0; accent-color:var(--gf-color-primary); cursor:pointer;
 }
+
+/* Azioni della tabella fermate: etichette intere anche nelle colonne strette. */
+body[data-gf-surface] #deliveryBody .gf-button {
+  white-space:nowrap; overflow-wrap:normal; word-break:normal;
+  font-size:var(--gf-font-sm); padding:var(--gf-space-1) var(--gf-space-2);
+  min-width:max-content; flex-shrink:0;
+}
