@@ -58,6 +58,26 @@
         list.appendChild(badge);
       });
     });
+    // Riepilogo laterale (C5): elenco di controllo con valori e barra di avanzamento.
+    const VALUES = { 'Data': () => $('#demoDate')?.value ? new Date($('#demoDate').value + 'T12:00:00').toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' }) : '',
+      'Orario di partenza': () => $('#demoStart')?.value || '', 'Deposito': () => optionName('#demoDeposit'),
+      'Mezzo': () => optionName('#demoVehicle'), 'Autista': () => optionName('#demoDriver'),
+      'Mezzi e autisti': () => [optionName('#aFleetDriver1'), optionName('#aFleetDriver2')].filter(Boolean).join(' · ') };
+    const ICON_OK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7"/></svg>';
+    const ICON_NO = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8v5M12 16h.01"/><circle cx="12" cy="12" r="9"/></svg>';
+    $$('[data-demo-checklist-list]').forEach(list => {
+      const items = REQUIRED.filter(([, , mode]) => !(mode === 'single' && fleet)).map(([, label]) => label);
+      if (fleet) items.push('Mezzi e autisti');
+      list.innerHTML = items.map(label => {
+        const ok = !missing.includes(label), value = (VALUES[label] || (() => ''))();
+        return '<li class="gf-list-item"><span class="gf-stat-card__icon" data-tone="' + (ok ? 'success' : 'warning') + '">' + (ok ? ICON_OK : ICON_NO) + '</span>'
+          + '<span class="gf-list-item__main"><strong>' + label + '</strong><small>' + (ok ? value : 'Da completare') + '</small></span></li>';
+      }).join('');
+      const total = items.length, done = total - missing.length;
+      const bar = $('[data-demo-ready-bar]'); if (bar) bar.dataset.gfWidth = String(Math.round(done / total * 20) * 5);
+      $$('[data-demo-ready-count]').forEach(el => { el.textContent = done + ' di ' + total; });
+      $$('[data-demo-ready-title]').forEach(el => { el.textContent = !missing.length ? 'Pronto per il calcolo' : missing.length === 1 ? 'Manca 1 dato' : 'Mancano ' + missing.length + ' dati'; });
+    });
     $$('[data-demo-missing]').forEach(el => {
       el.textContent = missing.length ? 'Mancano: ' + missing.join(', ') + '.' : 'Tutto pronto: puoi calcolare il percorso.';
     });
@@ -217,6 +237,12 @@
     if (t.matches('[data-demo-rename-save]')) applyRename();
     if (t.matches('[data-demo-rename-cancel]')) toggleRename(false);
     if (t.matches('[data-demo-filter]')) filterStops(t);
+    if (t.matches('[data-demo-open-stops]')) {
+      // Dal riepilogo: apre la tabella delle fermate e la porta in vista.
+      const toggle = $('[data-demo-toggle]');
+      if (toggle && toggle.getAttribute('aria-expanded') !== 'true') toggle.click();
+      document.getElementById(toggle?.getAttribute('aria-controls'))?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
     if (t.matches('[data-demo-toggle]')) {
       // Apre/chiude un'area (es. la tabella di tutte le fermate).
       const area = document.getElementById(t.getAttribute('aria-controls'));

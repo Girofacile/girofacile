@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Anteprima C5 · Pianifica giro · GiroFacile</title>
+<link rel="stylesheet" href="../static/design-system/theme.css">
+<link rel="stylesheet" href="../static/design-system/components.css">
+<link rel="stylesheet" href="../static/design-system/layout.css">
+<script src="../static/design-system/shell.js" defer></script>
+<script src="pianificazione-demo.js" defer></script>
+</head>
+<!-- Versione C5 · La C4 con icone colorate, card più curate e riepilogo laterale.
+     Solo componenti esistenti e variabili di theme.css. -->
+<body data-gf-surface="workspace" data-gf-layout="base" data-gf-nav-active="ordini"
+      data-gf-title="Pianifica giro" data-gf-subtitle="8 ordini selezionati · scegli come organizzare il giro, poi mezzo, autista e turno"
+      data-gf-user-name="Logistica Demo" data-gf-user-role="admin">
+<main data-gf-shell-content>
+  <div data-gf-slot="header-actions" class="gf-cluster">
+    <nav class="gf-cluster" aria-label="Versioni da confrontare"><a class="gf-button" data-variant="ghost" data-size="sm" href="pianificazione-c.html">C</a><a class="gf-button" data-variant="ghost" data-size="sm" href="pianificazione-c1.html">C1</a><a class="gf-button" data-variant="ghost" data-size="sm" href="pianificazione-c2.html">C2</a><a class="gf-button" data-variant="ghost" data-size="sm" href="pianificazione-c3.html">C3</a><a class="gf-button" data-variant="ghost" data-size="sm" href="pianificazione-c4.html">C4</a><a class="gf-button" data-variant="secondary" data-size="sm" href="pianificazione-c5.html" aria-current="page">C5</a></nav>
+    <button type="button" class="gf-button" data-variant="secondary" data-demo-toast-text="Anteprima: torneresti all'elenco Ordini con la selezione conservata.">← Torna agli ordini</button>
+  </div>
+
+    <ol class="gf-steps" aria-label="Avanzamento della pianificazione">
+      <li class="gf-step is-done"><strong>Fermate</strong><small>7 fermate · 8 ordini</small></li>
+      <li class="gf-step is-done"><strong>Organizzazione</strong><small data-demo-mode-label>Un solo mezzo</small></li>
+      <li class="gf-step is-done"><strong>Quando e da dove</strong><small>Lun 19/10 · 07:30</small></li>
+      <li class="gf-step" aria-current="step"><strong>Mezzi e autisti</strong><small>Scegli e controlla</small></li>
+      <li class="gf-step"><strong>Calcolo</strong><small>Da avviare</small></li>
+    </ol>
+
+  <div class="gf-grid" data-cols="main-side">
+    <div class="gf-stack" data-gap="lg">
+      <section class="gf-panel" aria-label="Il giro">
+      <header class="gf-panel__header"><div class="gf-stack" data-gap="sm">
+            <p class="gf-kicker" data-demo-auto-kicker>Nuovo giro · lunedì 19 ottobre</p>
+            <h2 class="gf-title" data-demo-auto-name>Lun 19/10 · Marco Rossi · Milano</h2>
+            <p class="gf-muted" data-demo-auto-hint>Nome automatico: data · autista · zona più frequente tra le fermate. Potrai cambiarlo dopo il calcolo, nell'anteprima del giro.</p>
+          </div><span class="gf-badge" data-status="neutral" data-dot>Bozza</span></header>
+      <div class="gf-panel__body gf-stack">
+        <div class="gf-grid" data-cols="2" aria-label="Numeri del giro"><article class="gf-stat-card"><span class="gf-stat-card__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></span><span class="gf-stat-card__label">Fermate</span><strong class="gf-stat-card__value">7</strong><small class="gf-stat-card__change">8 ordini raggruppati</small></article><article class="gf-stat-card"><span class="gf-stat-card__icon" data-tone="neutral"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="m3 8 9 5 9-5M12 13v8"/></svg></span><span class="gf-stat-card__label">Carico</span><strong class="gf-stat-card__value">612 kg</strong><small class="gf-stat-card__change">46 colli</small></article><article class="gf-stat-card"><span class="gf-stat-card__icon" data-tone="warning"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9.5 2h5"/></svg></span><span class="gf-stat-card__label">Scarico stimato</span><strong class="gf-stat-card__value">1 h 28 min</strong><small class="gf-stat-card__change">somma dei tempi di scarico</small></article><article class="gf-stat-card"><span class="gf-stat-card__icon" data-tone="success"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><span class="gf-stat-card__label">Con fascia oraria</span><strong class="gf-stat-card__value">6 su 7</strong><small class="gf-stat-card__change">la prima entro le 8:30</small></article></div>
+        <div class="gf-cluster"><span class="gf-badge" data-kind="ztl">1 in ZTL</span><span class="gf-badge" data-kind="tail-lift">1 con sponda</span><span class="gf-badge" data-status="warning">1 indirizzo da verificare</span></div>
+      </div>
+      <div id="c5AllStops" hidden>
+      <div class="gf-table-wrap">
+        <table class="gf-table" data-gf-responsive="cards" aria-label="Clienti e ordini selezionati, nell'ordine di inserimento">
+          <thead><tr><th scope="col">#</th><th scope="col">Cliente</th><th scope="col">Ordine</th><th scope="col">Indirizzo</th><th scope="col">Finestra di scarico</th><th scope="col">Scarico</th><th scope="col">Carico</th><th scope="col">Requisiti</th><th scope="col">Note</th><th scope="col"><span class="gf-muted">Specifiche</span></th></tr></thead>
+          <tbody>
+            <tr><td data-label="#"><span class="gf-badge" data-status="neutral">1</span></td><td data-label="Cliente"><strong>Bar Centrale</strong><br><small class="gf-muted">CL-0142</small></td><td data-label="Ordine">ORD-2318</td><td data-label="Indirizzo">Via Padova 41<br><small class="gf-muted">Milano (MI)</small></td><td data-label="Finestra di scarico">Mattina 07:00–10:00</td><td data-label="Scarico">10 min</td><td data-label="Carico">6 colli<br><small class="gf-muted">80 kg</small></td><td data-label="Requisiti"><span class="gf-muted">—</span></td><td data-label="Note">Lasciare al banco</td><td data-label="Specifiche"><button type="button" class="gf-icon-button" data-demo-specs="Bar Centrale" aria-label="Specifiche di Bar Centrale" title="Specifiche di Bar Centrale"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg></button></td></tr>
+            <tr><td data-label="#"><span class="gf-badge" data-status="neutral">2</span></td><td data-label="Cliente"><strong>Farmacia San Marco</strong><br><small class="gf-muted">CL-0087</small></td><td data-label="Ordine">ORD-2321</td><td data-label="Indirizzo">Viale Monza 120<br><small class="gf-muted">Milano (MI)</small></td><td data-label="Finestra di scarico">Mattina 09:00–11:00<br>Pomeriggio 15:00–18:00</td><td data-label="Scarico">5 min</td><td data-label="Carico">3 colli<br><small class="gf-muted">12 kg</small></td><td data-label="Requisiti"><span class="gf-muted">—</span></td><td data-label="Note">Farmaci da frigo</td><td data-label="Specifiche"><button type="button" class="gf-icon-button" data-demo-specs="Farmacia San Marco" aria-label="Specifiche di Farmacia San Marco" title="Specifiche di Farmacia San Marco"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg></button></td></tr>
+            <tr><td data-label="#"><span class="gf-badge" data-status="warning">3</span></td><td data-label="Cliente"><strong>Ristorante Da Gino</strong><br><small class="gf-muted">CL-0219</small></td><td data-label="Ordine">ORD-2324</td><td data-label="Indirizzo">Corso Buenos Aires 15<br><small class="gf-muted">Milano (MI)</small> <span class="gf-badge" data-status="warning">Indirizzo da verificare</span></td><td data-label="Finestra di scarico">Mattina 10:00–11:30</td><td data-label="Scarico">15 min</td><td data-label="Carico">4 colli<br><small class="gf-muted">45 kg</small></td><td data-label="Requisiti"><span class="gf-badge" data-kind="ztl">ZTL</span></td><td data-label="Note">Ingresso dal retro</td><td data-label="Specifiche"><button type="button" class="gf-icon-button" data-demo-specs="Ristorante Da Gino" aria-label="Specifiche di Ristorante Da Gino" title="Specifiche di Ristorante Da Gino"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg></button></td></tr>
+            <tr><td data-label="#"><span class="gf-badge" data-status="neutral">4</span></td><td data-label="Cliente"><strong>Conad Palmanova</strong><br><small class="gf-muted">CL-0033</small></td><td data-label="Ordine">ORD-2325 · ORD-2326</td><td data-label="Indirizzo">Via Palmanova 220<br><small class="gf-muted">Cologno Monzese (MI)</small></td><td data-label="Finestra di scarico">Mattina 06:30–09:00<br>Pomeriggio 14:00–16:00</td><td data-label="Scarico">25 min</td><td data-label="Carico">14 colli<br><small class="gf-muted">260 kg</small></td><td data-label="Requisiti"><span class="gf-badge" data-kind="tail-lift">Sponda</span> <span class="gf-badge" data-status="neutral">Transpallet</span></td><td data-label="Note">Scarico in baia 2</td><td data-label="Specifiche"><button type="button" class="gf-icon-button" data-demo-specs="Conad Palmanova" aria-label="Specifiche di Conad Palmanova" title="Specifiche di Conad Palmanova"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg></button></td></tr>
+            <tr><td data-label="#"><span class="gf-badge" data-status="neutral">5</span></td><td data-label="Cliente"><strong>Hotel Lombardia</strong><br><small class="gf-muted">CL-0175</small></td><td data-label="Ordine">ORD-2329</td><td data-label="Indirizzo">Viale Gramsci 3<br><small class="gf-muted">Sesto San Giovanni (MI)</small></td><td data-label="Finestra di scarico">Pomeriggio 14:00–17:00</td><td data-label="Scarico">10 min</td><td data-label="Carico">8 colli<br><small class="gf-muted">95 kg</small></td><td data-label="Requisiti"><span class="gf-muted">—</span></td><td data-label="Note">Chiedere di Paolo</td><td data-label="Specifiche"><button type="button" class="gf-icon-button" data-demo-specs="Hotel Lombardia" aria-label="Specifiche di Hotel Lombardia" title="Specifiche di Hotel Lombardia"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg></button></td></tr>
+            <tr><td data-label="#"><span class="gf-badge" data-status="neutral">6</span></td><td data-label="Cliente"><strong>Panificio Lombardo</strong><br><small class="gf-muted">CL-0011</small></td><td data-label="Ordine">ORD-2330</td><td data-label="Indirizzo">Via Pallanza 7<br><small class="gf-muted">Milano (MI)</small></td><td data-label="Finestra di scarico">Mattina 05:30–08:30</td><td data-label="Scarico">8 min</td><td data-label="Carico">5 colli<br><small class="gf-muted">60 kg</small></td><td data-label="Requisiti"><span class="gf-muted">—</span></td><td data-label="Note"><span class="gf-muted">—</span></td><td data-label="Specifiche"><button type="button" class="gf-icon-button" data-demo-specs="Panificio Lombardo" aria-label="Specifiche di Panificio Lombardo" title="Specifiche di Panificio Lombardo"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg></button></td></tr>
+            <tr><td data-label="#"><span class="gf-badge" data-status="neutral">7</span></td><td data-label="Cliente"><strong>Ritiro resi</strong><br><small class="gf-muted">Occasionale</small></td><td data-label="Ordine">—</td><td data-label="Indirizzo">Via Mecenate 76<br><small class="gf-muted">Milano (MI)</small></td><td data-label="Finestra di scarico">—</td><td data-label="Scarico">15 min</td><td data-label="Carico">6 colli<br><small class="gf-muted">60 kg</small></td><td data-label="Requisiti"><span class="gf-muted">—</span></td><td data-label="Note">Fermata occasionale</td><td data-label="Specifiche"><button type="button" class="gf-icon-button" data-demo-specs="Ritiro resi" aria-label="Specifiche di Ritiro resi" title="Specifiche di Ritiro resi"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg></button></td></tr>
+          </tbody>
+        </table>
+      </div>
+      </div>
+      <footer class="gf-panel__footer gf-cluster" data-justify="between">
+        <button type="button" class="gf-button" data-variant="secondary" data-demo-toggle aria-expanded="false" aria-controls="c5AllStops" data-demo-open="Visiona tutte le fermate (7)" data-demo-close="Nascondi le fermate"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h12M9 12h12M9 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg><span data-demo-toggle-text>Visiona tutte le fermate (7)</span></button>
+        <div class="gf-cluster"><button type="button" class="gf-button" data-variant="secondary" data-size="sm" data-demo-toast-text="Anteprima: si aprirebbe l'elenco Clienti."><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Aggiungi cliente</button><button type="button" class="gf-button" data-variant="secondary" data-size="sm" data-demo-toast-text="Anteprima: si aprirebbe la fermata occasionale."><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>Fermata occasionale</button></div>
+      </footer>
+    </section>
+
+    <section class="gf-panel" aria-labelledby="c5OrgTitle">
+      <header class="gf-panel__header"><div><div class="gf-cluster"><span class="gf-stat-card__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="19" r="2.5"/><circle cx="18" cy="5" r="2.5"/><path d="M8.5 19H16a3.5 3.5 0 0 0 0-7H8a3.5 3.5 0 0 1 0-7h7.5"/></svg></span><div><h2 class="gf-panel__title" id="c5OrgTitle">Come organizzi le consegne?</h2><p class="gf-muted">Puoi cambiare idea in qualsiasi momento: i dati inseriti restano.</p></div></div></div></header>
+      <div class="gf-panel__body">
+        <div class="gf-grid" data-cols="2" role="radiogroup" aria-label="Organizzazione delle consegne">
+          <label class="gf-card gf-stack" data-variant="info" data-demo-mode-card>
+            <span class="gf-cluster" data-justify="between"><svg viewBox="0 0 160 70" width="160" height="70" role="img" aria-label="Un percorso unico"><path class="gf-route-map__todo" d="M14 56 C40 30 60 54 84 30 S130 18 146 14"/><g class="gf-route-map__depot"><rect x="4" y="47" width="20" height="18" rx="4"/></g><g class="gf-route-map__node"><circle cx="50" cy="42" r="6"/></g><g class="gf-route-map__node"><circle cx="84" cy="30" r="6"/></g><g class="gf-route-map__node"><circle cx="118" cy="20" r="6"/></g><g class="gf-route-map__node"><circle cx="146" cy="14" r="6"/></g></svg><input type="radio" name="demoMode" value="single" checked aria-label="Un solo mezzo"></span>
+            <strong>Un solo mezzo</strong>
+            <span class="gf-muted">Un autista consegna tutte le 7 fermate in un unico giro.</span>
+            <span class="gf-cluster"><span class="gf-badge" data-status="neutral">1 giro</span><span class="gf-badge" data-status="neutral">1 autista</span></span>
+          </label>
+          <label class="gf-card gf-stack" data-demo-mode-card>
+            <span class="gf-cluster" data-justify="between"><svg viewBox="0 0 160 70" width="160" height="70" role="img" aria-label="Due percorsi"><path class="gf-route-map__todo" d="M14 56 C40 34 70 30 100 18 S140 12 150 12"/><path class="gf-route-map__done" d="M14 56 C50 66 90 58 118 50 S146 44 152 46"/><g class="gf-route-map__depot"><rect x="4" y="47" width="20" height="18" rx="4"/></g><g class="gf-route-map__node"><circle cx="62" cy="34" r="6"/></g><g class="gf-route-map__node"><circle cx="150" cy="12" r="6"/></g><g class="gf-route-map__node is-done"><circle cx="90" cy="58" r="6"/></g><g class="gf-route-map__node is-done"><circle cx="152" cy="46" r="6"/></g></svg><input type="radio" name="demoMode" value="fleet" aria-label="Più mezzi"></span>
+            <strong>Più mezzi</strong>
+            <span class="gf-muted">Dividiamo le fermate tra 2 o più mezzi, tenendo conto di turni, peso e orari.</span>
+            <span class="gf-cluster"><span class="gf-badge" data-status="neutral">2 o più giri</span><span class="gf-badge" data-status="neutral">un nome per giro</span></span>
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <section class="gf-panel" aria-labelledby="c5WhenTitle">
+      <header class="gf-panel__header"><div><div class="gf-cluster"><span class="gf-stat-card__icon" data-tone="success"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16.5" rx="2"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg></span><div><h2 class="gf-panel__title" id="c5WhenTitle">Quando e da dove</h2><p class="gf-muted">Giorno, orario di partenza e deposito: valgono per tutti i mezzi del giro.</p></div></div></div><span class="gf-badge" data-demo-section-status="#demoDate,#demoStart,#demoDeposit"></span></header>
+      <div class="gf-panel__body gf-stack" data-gap="lg">
+        <div class="gf-form-grid">
+          <label class="gf-field" for="demoDate"><span class="gf-field__label">Data del giro</span><input class="gf-input" id="demoDate" type="date" value="2026-10-19"></label>
+          <label class="gf-field" for="demoStart"><span class="gf-field__label">Orario di partenza</span><input class="gf-input" id="demoStart" type="time" value="07:30"></label>
+        </div>
+        <div class="gf-grid" data-cols="2">
+          <div class="gf-card"><div class="gf-list-item"><span class="gf-stat-card__icon" data-tone="neutral"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 4l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></span><span class="gf-list-item__main"><small>Deposito di partenza</small><strong>Deposito centrale</strong><small>Via Roma 1, Milano · 3 mezzi disponibili</small></span></div></div>
+          <label class="gf-field" for="demoDeposit"><span class="gf-field__label">Cambia deposito</span><select class="gf-select" id="demoDeposit"><option value="1">Deposito centrale · Via Roma 1, Milano</option><option value="2">Magazzino Nord · Via Stephenson 94, Milano</option></select></label>
+        </div>
+        <div class="gf-setting">
+          <div class="gf-cluster"><span class="gf-stat-card__icon" data-tone="success"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg></span><div class="gf-setting__copy"><strong>Rientro al deposito a fine giro</strong><p>Il percorso termina dove è iniziato.</p></div></div>
+          <div class="gf-setting__control"><label class="gf-switch"><input type="checkbox" role="switch" checked aria-label="Rientro al deposito"><span class="gf-muted">Attivo</span></label></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="gf-panel" aria-labelledby="c5ResTitle">
+      <header class="gf-panel__header"><div><div class="gf-cluster"><span class="gf-stat-card__icon" data-tone="neutral"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 6.5A1.5 1.5 0 0 1 3.5 5H14v11H2z"/><path d="M14 9h4.2l3.3 3.6V16H14"/><circle cx="6.5" cy="17.5" r="2"/><circle cx="17.5" cy="17.5" r="2"/></svg></span><div><h2 class="gf-panel__title" id="c5ResTitle">Mezzi, autisti e costi</h2><p class="gf-muted">Scegli chi fa il giro guardando i requisiti delle fermate.</p></div></div></div></header>
+      <div class="gf-panel__body gf-stack">
+        <div class="gf-tabs" role="tablist" aria-label="Mezzi, autisti e costi">
+          <button class="gf-button" data-variant="ghost" type="button" role="tab" id="c5TabRes" aria-selected="true" aria-controls="c5PanelRes"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 6.5A1.5 1.5 0 0 1 3.5 5H14v11H2z"/><path d="M14 9h4.2l3.3 3.6V16H14"/><circle cx="6.5" cy="17.5" r="2"/><circle cx="17.5" cy="17.5" r="2"/></svg>Mezzo, autista e turno <span class="gf-badge" data-demo-section-status="#demoVehicle,#demoDriver"></span></button>
+          <button class="gf-button" data-variant="ghost" type="button" role="tab" id="c5TabCost" aria-selected="false" aria-controls="c5PanelCost" tabindex="-1"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16M3 21h12M4 10h10M14 8h2a2 2 0 0 1 2 2v6a1.5 1.5 0 0 0 3 0V8l-3-3"/></svg>Costo carburante</button>
+          <button class="gf-button" data-variant="ghost" type="button" role="tab" id="c5TabOther" aria-selected="false" aria-controls="c5PanelOther" tabindex="-1"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/></svg>Altre opzioni</button>
+        </div>
+        <div role="tabpanel" id="c5PanelRes" aria-labelledby="c5TabRes" class="gf-stack">
+            <div class="gf-grid" data-cols="2">
+              <div class="gf-alert" data-kind="ztl" role="note"><svg class="gf-alert__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg><div class="gf-alert__body"><p class="gf-alert__title">1 fermata in ZTL</p><p class="gf-alert__text">Ristorante Da Gino: serve il permesso ZTL di Milano.</p></div></div>
+              <div class="gf-alert" data-kind="tail-lift" role="note"><svg class="gf-alert__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 6.5A1.5 1.5 0 0 1 3.5 5H14v11H2z"/><path d="M14 9h4.2l3.3 3.6V16H14"/><circle cx="6.5" cy="17.5" r="2"/><circle cx="17.5" cy="17.5" r="2"/></svg><div class="gf-alert__body"><p class="gf-alert__title">1 fermata con sponda</p><p class="gf-alert__text">Conad Palmanova: serve la sponda idraulica.</p></div></div>
+            </div>
+            <div class="gf-stack" data-demo-single>
+              <article class="gf-card gf-stack">
+                <div class="gf-cluster" data-justify="between"><div class="gf-cluster"><span class="gf-stat-card__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 6.5A1.5 1.5 0 0 1 3.5 5H14v11H2z"/><path d="M14 9h4.2l3.3 3.6V16H14"/><circle cx="6.5" cy="17.5" r="2"/><circle cx="17.5" cy="17.5" r="2"/></svg></span><div><strong>Furgone consegne</strong><br><span class="gf-badge" data-status="neutral">AB123CD</span></div></div><span class="gf-badge" data-status="success" data-dot>Disponibile</span></div>
+                <div class="gf-form-grid"><label class="gf-field" for="demoVehicle"><span class="gf-field__label">Mezzo</span><select class="gf-select" id="demoVehicle"><option value="">Scegli un mezzo</option><option value="1" selected>Furgone consegne · AB123CD</option><option value="2">Fiat Ducato · CD456EF</option><option value="3" disabled>Iveco Daily · EF789GH (già in un giro)</option></select></label><label class="gf-field" for="demoDriver"><span class="gf-field__label">Autista</span><select class="gf-select" id="demoDriver"><option value="">Scegli un autista</option><option value="1" selected>Marco Rossi</option><option value="2">Anna Neri</option><option value="3" disabled>Paolo Verdi (in ferie)</option></select></label></div>
+                <div class="gf-cluster" data-justify="between"><div class="gf-cluster"><span class="gf-avatar" aria-hidden="true">MR</span><div><strong data-demo-crew-driver>Marco Rossi</strong><br><small class="gf-muted">Patente C · dal profilo autista</small></div></div><span class="gf-badge" data-status="info"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Turno 07:00–15:00 · pausa 12:00</span></div>
+                <div class="gf-progress"><div class="gf-progress__top"><span><b>612 kg di 1.200 kg</b></span><span>Peso</span></div><div class="gf-progress__track" role="img" aria-label="Peso: 612 kg di 1.200 kg"><span class="gf-progress__done" data-gf-width="50"></span></div></div>
+                <div class="gf-progress"><div class="gf-progress__top"><span><b>46 colli di 80</b></span><span>Volume</span></div><div class="gf-progress__track" role="img" aria-label="Colli: 46 colli di 80"><span class="gf-progress__done" data-gf-width="55"></span></div></div>
+                <div class="gf-cluster"><span class="gf-badge" data-status="success">✓ Permesso ZTL</span><span class="gf-badge" data-status="success">✓ Sponda idraulica</span><span class="gf-badge" data-status="neutral">Gasolio · 8,5 L/100 km</span></div>
+                <details class="gf-panel">
+                <summary class="gf-panel__header">Modifica turno e pause solo per questo giro</summary>
+                <div class="gf-panel__body gf-stack">
+                  <div class="gf-form-grid">
+                    <label class="gf-field" for="aShiftStart"><span class="gf-field__label">Inizio turno</span><input class="gf-input" id="aShiftStart" type="time" value="07:00"></label>
+                    <label class="gf-field" for="aShiftEnd"><span class="gf-field__label">Fine turno</span><input class="gf-input" id="aShiftEnd" type="time" value="15:00"></label>
+                  </div>
+                  <div class="gf-cluster">
+                    <label class="gf-field" for="aBreakStart"><span class="gf-field__label">Pausa 1 · dalle</span><input class="gf-input" id="aBreakStart" type="time" value="12:00"></label>
+                    <label class="gf-field" for="aBreakEnd"><span class="gf-field__label">Alle</span><input class="gf-input" id="aBreakEnd" type="time" value="12:30"></label>
+                    <button type="button" class="gf-button" data-variant="ghost" data-size="sm">Rimuovi</button>
+                  </div>
+                  <div><button type="button" class="gf-button" data-variant="secondary" data-size="sm">Aggiungi pausa</button></div>
+                  <p class="gf-field__hint">Le modifiche valgono solo per questo giro: il profilo dell'autista non cambia.</p>
+                </div>
+              </details>
+              </article>
+            </div>
+            <div class="gf-stack" data-demo-fleet hidden>
+              <div class="gf-grid" data-cols="2">
+              <article class="gf-card gf-stack">
+                <div class="gf-cluster" data-justify="between"><div class="gf-cluster"><span class="gf-stat-card__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 6.5A1.5 1.5 0 0 1 3.5 5H14v11H2z"/><path d="M14 9h4.2l3.3 3.6V16H14"/><circle cx="6.5" cy="17.5" r="2"/><circle cx="17.5" cy="17.5" r="2"/></svg></span><div><strong>Furgone consegne</strong><br><span class="gf-badge" data-status="neutral">AB123CD</span></div></div><span class="gf-badge" data-status="success" data-dot>Disponibile</span></div>
+                <div class="gf-form-grid"><label class="gf-field" for="aFleetVehicle1"><span class="gf-field__label">Mezzo</span><select class="gf-select" id="aFleetVehicle1"><option>Furgone consegne · AB123CD</option></select></label><label class="gf-field" for="aFleetDriver1"><span class="gf-field__label">Autista</span><select class="gf-select" id="aFleetDriver1"><option value="1">Marco Rossi</option></select></label></div>
+                <div class="gf-cluster" data-justify="between"><div class="gf-cluster"><span class="gf-avatar" aria-hidden="true">MR</span><div><strong>Marco Rossi</strong><br><small class="gf-muted">Patente C · dal profilo autista</small></div></div><span class="gf-badge" data-status="info"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>07:00–15:00</span></div>
+                <div class="gf-progress"><div class="gf-progress__top"><span><b>fino a 1.200 kg</b></span><span>Peso</span></div><div class="gf-progress__track" role="img" aria-label="Peso: fino a 1.200 kg"><span class="gf-progress__done" data-gf-width="0"></span></div></div>
+                <div class="gf-progress"><div class="gf-progress__top"><span><b>fino a 80 colli</b></span><span>Volume</span></div><div class="gf-progress__track" role="img" aria-label="Colli: fino a 80 colli"><span class="gf-progress__done" data-gf-width="0"></span></div></div>
+                <div class="gf-cluster"><span class="gf-badge" data-status="success">✓ Permesso ZTL</span></div>
+              </article>
+              <article class="gf-card gf-stack">
+                <div class="gf-cluster" data-justify="between"><div class="gf-cluster"><span class="gf-stat-card__icon" data-tone="neutral"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 6.5A1.5 1.5 0 0 1 3.5 5H14v11H2z"/><path d="M14 9h4.2l3.3 3.6V16H14"/><circle cx="6.5" cy="17.5" r="2"/><circle cx="17.5" cy="17.5" r="2"/></svg></span><div><strong>Fiat Ducato</strong><br><span class="gf-badge" data-status="neutral">CD456EF</span></div></div><span class="gf-badge" data-status="success" data-dot>Disponibile</span></div>
+                <div class="gf-form-grid"><label class="gf-field" for="aFleetVehicle2"><span class="gf-field__label">Mezzo</span><select class="gf-select" id="aFleetVehicle2"><option>Fiat Ducato · CD456EF</option></select></label><label class="gf-field" for="aFleetDriver2"><span class="gf-field__label">Autista</span><select class="gf-select" id="aFleetDriver2"><option value="2">Anna Neri</option></select></label></div>
+                <div class="gf-cluster" data-justify="between"><div class="gf-cluster"><span class="gf-avatar" aria-hidden="true">AN</span><div><strong>Anna Neri</strong><br><small class="gf-muted">Patente C · dal profilo autista</small></div></div><span class="gf-badge" data-status="info"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>08:00–14:00</span></div>
+                <div class="gf-progress"><div class="gf-progress__top"><span><b>fino a 1.400 kg</b></span><span>Peso</span></div><div class="gf-progress__track" role="img" aria-label="Peso: fino a 1.400 kg"><span class="gf-progress__done" data-gf-width="0"></span></div></div>
+                <div class="gf-progress"><div class="gf-progress__top"><span><b>fino a 90 colli</b></span><span>Volume</span></div><div class="gf-progress__track" role="img" aria-label="Colli: fino a 90 colli"><span class="gf-progress__done" data-gf-width="0"></span></div></div>
+                <div class="gf-cluster"><span class="gf-badge" data-status="success">✓ Sponda idraulica</span></div>
+              </article>
+              </div>
+              <div class="gf-cluster" data-justify="between"><button type="button" class="gf-button" data-variant="secondary" data-size="sm"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Aggiungi un altro mezzo</button>
+                <label class="gf-field" for="c5Strategy"><span class="gf-field__label">Come distribuiamo il lavoro?</span><select class="gf-select" id="c5Strategy"><option>Usa meno mezzi, se possibile</option><option>Distribuisci il lavoro tra tutti i mezzi</option></select></label>
+              </div>
+              <p class="gf-muted">Il carico di ogni mezzo si vede dopo la suddivisione delle fermate.</p>
+            </div>
+        </div>
+        <div role="tabpanel" id="c5PanelCost" aria-labelledby="c5TabCost" class="gf-stack" hidden>
+            <div class="gf-cluster" role="radiogroup" aria-label="Prezzo del carburante">
+              <label class="gf-check"><input type="radio" name="demoPrice" value="auto" checked> Prezzo automatico</label>
+              <label class="gf-check"><input type="radio" name="demoPrice" value="manual"> Inserisco io il prezzo</label>
+            </div>
+            <div class="gf-grid"><article class="gf-stat-card"><span class="gf-stat-card__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16M3 21h12M4 10h10M14 8h2a2 2 0 0 1 2 2v6a1.5 1.5 0 0 0 3 0V8l-3-3"/></svg></span><span class="gf-stat-card__label">Prezzo gasolio</span><strong class="gf-stat-card__value"><span data-demo-price-label>1,689 €/L · automatico</span></strong><small class="gf-stat-card__change">media MIMIT del 16/10</small></article><article class="gf-stat-card"><span class="gf-stat-card__icon" data-tone="neutral"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18a8 8 0 1 1 16 0"/><path d="m12 18 4-5"/></svg></span><span class="gf-stat-card__label">Consumo del mezzo</span><strong class="gf-stat-card__value">8,5 L/100 km</strong><small class="gf-stat-card__change">dalla scheda del mezzo</small></article><article class="gf-stat-card"><span class="gf-stat-card__icon" data-tone="success"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 6.5A6.5 6.5 0 1 0 17 17.5M4 10h9M4 14h9"/></svg></span><span class="gf-stat-card__label">Costo stimato</span><strong class="gf-stat-card__value">dopo il calcolo</strong><small class="gf-stat-card__change">km del percorso × consumo</small></article></div>
+            <label class="gf-field" for="demoFuelManual" data-demo-price-manual hidden><span class="gf-field__label">Prezzo gasolio €/L</span><input class="gf-input" id="demoFuelManual" type="number" step="0.001" value="1.650"></label>
+        </div>
+        <div role="tabpanel" id="c5PanelOther" aria-labelledby="c5TabOther" class="gf-stack" hidden>
+            <div class="gf-setting">
+              <div class="gf-cluster"><span class="gf-stat-card__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/></svg></span><div class="gf-setting__copy"><strong>Raggruppa ordini con stessa destinazione</strong><p>Unisce in una fermata gli ordini con vincoli compatibili.</p></div></div>
+              <div class="gf-setting__control"><label class="gf-switch"><input type="checkbox" role="switch" checked aria-label="Raggruppa ordini"><span class="gf-muted">Attivo</span></label></div>
+            </div>
+            <div class="gf-cluster" data-justify="end"><button type="button" class="gf-button" data-variant="secondary" data-size="sm" data-demo-toast-text="Anteprima: la configurazione verrebbe salvata con la selezione."><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h11l3 3v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M7 3v5h8V3M7 21v-7h10v7"/></svg>Salva configurazione per dopo</button></div>
+        </div>
+      </div>
+    </section>
+    </div>
+    <aside class="gf-stack" data-gap="lg" aria-label="Riepilogo">
+      <section class="gf-panel" aria-labelledby="c5SumTitle">
+        <header class="gf-panel__header"><div><p class="gf-kicker">Riepilogo</p><h2 class="gf-panel__title" id="c5SumTitle" data-demo-ready-title>Pronto per il calcolo</h2></div></header>
+        <div class="gf-panel__body gf-stack">
+          <div class="gf-progress"><div class="gf-progress__top"><span><b data-demo-ready-count>5 di 5</b> dati inseriti</span><span>Completamento</span></div><div class="gf-progress__track" role="img" aria-label="Dati inseriti"><span class="gf-progress__done" data-demo-ready-bar data-gf-width="100"></span></div></div>
+          <ul class="gf-list" data-demo-checklist-list aria-label="Dati del giro"></ul>
+        </div>
+        <footer class="gf-panel__footer gf-stack">
+          <button type="button" class="gf-button" data-variant="primary" data-demo-calc><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="19" r="2.5"/><circle cx="18" cy="5" r="2.5"/><path d="M8.5 19H16a3.5 3.5 0 0 0 0-7H8a3.5 3.5 0 0 1 0-7h7.5"/></svg>Calcola percorso</button>
+          <p class="gf-muted" data-demo-missing></p>
+        </footer>
+      </section>
+      <div class="gf-alert" data-status="warning" role="status"><svg class="gf-alert__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg><div class="gf-alert__body"><p class="gf-alert__title">1 indirizzo da verificare</p><p class="gf-alert__text">Ristorante Da Gino, Corso Buenos Aires 15: civico non trovato. Verificalo prima del calcolo.</p><div><button type="button" class="gf-button" data-variant="link" data-demo-open-stops>Visiona la fermata →</button></div></div></div>
+      <div class="gf-alert" data-status="info" role="note"><svg class="gf-alert__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg><div class="gf-alert__body"><p class="gf-alert__title">Suggerimento</p><p class="gf-alert__text">La fermata in ZTL richiede un mezzo con permesso: il Furgone consegne ce l'ha.</p></div></div>
+    </aside>
+  </div>
+
+  <!-- Finestra delle specifiche consegna (uguale in tutte le varianti) -->
+  <div class="gf-overlay" id="demoSpecs" hidden>
+    <section class="gf-modal" role="dialog" aria-modal="true" aria-labelledby="demoSpecsTitle">
+      <header class="gf-modal__header"><h2 class="gf-modal__title" id="demoSpecsTitle">Specifiche</h2><button type="button" class="gf-icon-button" data-demo-close aria-label="Chiudi">✕</button></header>
+      <div class="gf-modal__body gf-stack">
+        <div class="gf-form-grid">
+          <label class="gf-field" for="specMorningFrom"><span class="gf-field__label">Mattina dalle</span><input class="gf-input" id="specMorningFrom" type="time" value="09:00"></label>
+          <label class="gf-field" for="specMorningTo"><span class="gf-field__label">Mattina alle</span><input class="gf-input" id="specMorningTo" type="time" value="11:00"></label>
+          <label class="gf-field" for="specUnload"><span class="gf-field__label">Tempo di scarico (min)</span><input class="gf-input" id="specUnload" type="number" value="10"></label>
+          <label class="gf-field" for="specColli"><span class="gf-field__label">Colli</span><input class="gf-input" id="specColli" type="number" value="3"></label>
+          <label class="gf-field" for="specWeight"><span class="gf-field__label">Peso kg</span><input class="gf-input" id="specWeight" type="number" value="12"></label>
+          <label class="gf-field" for="specZtl"><span class="gf-field__label">ZTL</span><select class="gf-select" id="specZtl"><option>No</option><option>Sì</option></select></label>
+        </div>
+        <label class="gf-field" for="specNotes"><span class="gf-field__label">Note per l'autista</span><textarea class="gf-textarea" id="specNotes" rows="2">Consegna dal retro, citofono "magazzino".</textarea></label>
+      </div>
+      <footer class="gf-modal__footer"><button type="button" class="gf-button" data-variant="secondary" data-demo-close>Annulla</button><button type="button" class="gf-button" data-variant="primary" data-demo-close>Salva specifiche</button></footer>
+    </section>
+  </div>
+</main>
+</body>
+</html>
