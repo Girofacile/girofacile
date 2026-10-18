@@ -57,15 +57,29 @@ const WORKSPACE_TOPBAR_META = {
   }
 };
 
+// Il saluto segue l'ora italiana, indipendentemente dal fuso del computer.
+function dashboardGreetingPrefix(now = new Date()){
+  const hourPart=new Intl.DateTimeFormat("it-IT",{
+    timeZone:"Europe/Rome",
+    hour:"2-digit",
+    hourCycle:"h23"
+  }).formatToParts(now).find(part=>part.type==="hour");
+  const hour=Number(hourPart?.value);
+  if(hour>=5 && hour<12) return "Buongiorno";
+  if(hour>=12 && hour<18) return "Buon pomeriggio";
+  return "Buonasera";
+}
+
 // Il titolo della home saluta l'azienda, non il nome dell'account personale.
-function dashboardGreetingTitle(){
+function dashboardGreetingTitle(now = new Date()){
   const companyName=(typeof currentSessionUser!=="undefined" && currentSessionUser?.company_name) || "";
   const savedCompanyName=localStorage.getItem("girofacile_company_name") || "";
   const accountName=(typeof currentSessionUser!=="undefined" && currentSessionUser?.username)
     || localStorage.getItem("girofacile_account_name") || "";
   // Le vecchie sessioni salvavano talvolta lo username nel campo nome azienda.
   const name=String(companyName || (savedCompanyName !== accountName ? savedCompanyName : "")).trim();
-  return name?`Buongiorno, ${name}`:"Buongiorno";
+  const greeting=dashboardGreetingPrefix(now);
+  return name ? greeting + ", " + name : greeting;
 }
 
 function syncWorkspaceTopbar(name){
@@ -145,6 +159,17 @@ function showTab(name){
 
   if(name === 'dashboard') applyWorkspaceStateV49(gfWorkspaceOperationalV49);
   setTimeout(()=>{syncMobileShellV62();window.GFCompanyAccess?.apply();}, 40);
+}
+
+// Se la Dashboard resta aperta, aggiorna il saluto al cambio della fascia oraria.
+function refreshDashboardGreeting(){
+  const dashboard=document.getElementById("tab-dashboard");
+  if(!dashboard || dashboard.classList.contains("hidden")) return;
+  const title=document.getElementById("workspacePageTitle");
+  if(title) title.textContent=dashboardGreetingTitle();
+}
+if(typeof window!=="undefined" && typeof window.setInterval==="function"){
+  window.setInterval(refreshDashboardGreeting,60_000);
 }
 
 /* New routes start from a delivery selection; the planner remains available for saved routes. */
