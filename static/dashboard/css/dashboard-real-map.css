@@ -172,9 +172,9 @@ body[data-gf-surface="workspace"] #app #tab-dashboard .gf-route-panel__empty-ico
   place-items:center;
   margin-bottom:2px;
   border-radius:22px;
-  background:linear-gradient(145deg,#1f5bff 0%,#3979ff 68%,#76a2ff 100%);
-  box-shadow:0 10px 24px rgba(31,91,255,.22);
-  color:#fff;
+  background:linear-gradient(145deg,var(--gf-color-primary) 0%,var(--gf-color-info) 68%,var(--gf-color-info-bg) 100%);
+  box-shadow:var(--gf-shadow-md);
+  color:var(--gf-color-on-primary);
 }
 body[data-gf-surface="workspace"] #app #tab-dashboard .gf-route-panel__empty-icon svg{
   display:block;
