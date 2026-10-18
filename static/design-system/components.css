@@ -300,6 +300,28 @@ body[data-gf-surface] .gf-stat-strip__value{
   font:var(--gf-weight-bold) var(--gf-font-stat)/1.1 var(--gf-font-display);letter-spacing:var(--gf-letter-spacing-title);
 }
 body[data-gf-surface] .gf-stat-strip__unit{margin-bottom:var(--gf-space-1);color:var(--gf-color-muted);font-size:var(--gf-font-sm)}
+/* Barra con icone (approvata il 18 ottobre 2026): data-icons="side" sulla barra e .gf-stat-strip__icon
+   come primo figlio di ogni voce. Stesso argomento = stessa icona e stesso colore (toni degli avatar). */
+body[data-gf-surface] .gf-stat-strip__icon{
+  display:grid;place-items:center;flex:none;width:var(--gf-control-touch);height:var(--gf-control-touch);
+  border-radius:var(--gf-radius-md);background:var(--gf-color-info-bg);color:var(--gf-color-primary);
+}
+body[data-gf-surface] .gf-stat-strip__icon svg{width:var(--gf-icon-size);height:var(--gf-icon-size);fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+body[data-gf-surface] .gf-stat-strip__icon[data-tone="neutral"]{background:var(--gf-color-bg);color:var(--gf-color-muted)}
+body[data-gf-surface] .gf-stat-strip__icon[data-tone="1"]{background:var(--gf-color-avatar-1-bg);color:var(--gf-color-avatar-1)}
+body[data-gf-surface] .gf-stat-strip__icon[data-tone="2"]{background:var(--gf-color-avatar-2-bg);color:var(--gf-color-avatar-2)}
+body[data-gf-surface] .gf-stat-strip__icon[data-tone="3"]{background:var(--gf-color-avatar-3-bg);color:var(--gf-color-avatar-3)}
+body[data-gf-surface] .gf-stat-strip__icon[data-tone="4"]{background:var(--gf-color-avatar-4-bg);color:var(--gf-color-avatar-4)}
+body[data-gf-surface] .gf-stat-strip__icon[data-tone="5"]{background:var(--gf-color-avatar-5-bg);color:var(--gf-color-avatar-5)}
+body[data-gf-surface] .gf-stat-strip__icon[data-tone="6"]{background:var(--gf-color-avatar-6-bg);color:var(--gf-color-avatar-6)}
+body[data-gf-surface] .gf-stat-strip[data-icons="side"] .gf-stat-strip__cell{grid-template-columns:auto max-content minmax(0,1fr);column-gap:var(--gf-space-3)}
+body[data-gf-surface] .gf-stat-strip[data-icons="side"] .gf-stat-strip__icon{grid-row:1/span 2;align-self:center}
+body[data-gf-surface] .gf-stat-strip[data-icons="side"] .gf-stat-strip__label,
+body[data-gf-surface] .gf-stat-strip[data-icons="side"] .gf-stat-strip__cell>.gf-progress__track{grid-column:2/-1}
+/* Valore testuale (es. il nome del deposito predefinito): va a capo invece di uscire dalla voce. */
+body[data-gf-surface] .gf-stat-strip__value[data-kind="text"]{white-space:normal;overflow-wrap:anywhere;font-size:var(--gf-font-xl)}
+body[data-gf-surface] .gf-stat-strip[data-icons="side"] .gf-stat-strip__value[data-kind="text"],
+body[data-gf-surface] .gf-stat-strip[data-icons="side"] .gf-stat-strip__value[data-kind="text"]+.gf-stat-strip__unit{grid-column:2/-1}
 
 /* --- Tabella dentro un pannello -------------------------------------------- */
 body[data-gf-surface] .gf-table-wrap{max-width:100%;overflow-x:auto}
@@ -485,6 +507,10 @@ body[data-gf-surface] .gf-catalog-section{scroll-margin-top:var(--gf-space-6)}
   body[data-gf-surface] .gf-stat-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
   body[data-gf-surface] .gf-stat-strip__cell{border-left:0;border-top:var(--gf-border);padding:var(--gf-space-3) var(--gf-space-4)}
   body[data-gf-surface] .gf-stat-strip__cell:nth-child(-n+2){border-top:0}
+  /* Barra con icone su smartphone: numero e spiegazione uno sotto l'altro, icona più piccola. */
+  body[data-gf-surface] .gf-stat-strip[data-icons="side"] .gf-stat-strip__cell{grid-template-columns:auto minmax(0,1fr);column-gap:var(--gf-space-2)}
+  body[data-gf-surface] .gf-stat-strip[data-icons="side"] .gf-stat-strip__icon{grid-row:1/span 3;align-self:start;width:var(--gf-control-height-sm);height:var(--gf-control-height-sm)}
+  body[data-gf-surface] .gf-stat-strip[data-icons="side"] :is(.gf-stat-strip__value,.gf-stat-strip__unit){grid-column:2}
   body[data-gf-surface] .gf-route-panel__map{padding:var(--gf-space-4)}
   body[data-gf-surface] .gf-route-panel__canvas{min-height:0}
   body[data-gf-surface] :is(.gf-panel__header,.gf-list-item){padding-inline:var(--gf-space-4)}

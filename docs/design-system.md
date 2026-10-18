@@ -96,6 +96,7 @@ pagina; l'aspetto di un componente deve cambiare nel foglio condiviso.
 | Pulsanti extra | `data-variant="link"`, `data-size="sm"`, `.gf-icon-button`, `.gf-avatar` (con `data-tone="1…6"`: un colore stabile per elemento, es. ogni cliente) |
 | Pannello | `.gf-panel` con `__header`, `__title`, `__meta`, `__body`, `__footer`; righe `.gf-list-item` |
 | Numeri del giorno | `.gf-stat-strip` con celle `__cell`, `__label`, `__value`, `__unit` |
+| Barra dei numeri con icone | `.gf-stat-strip[data-icons="side"]` + `.gf-stat-strip__icon` (con `data-tone` da 1 a 6 oppure `neutral`) come primo elemento di ogni voce; `data-kind="text"` sul valore testuale. Giri e anagrafiche blu (1), in corso verde acqua (2), completati e disponibili viola (3), persone e attese arancio (5), mezzi e dati di servizio grigio (neutral). Usata in Dashboard, Ordini, Clienti, Collaboratori, Agenti, Depositi, Mezzi e Autisti. |
 | Campi | `.gf-form-grid`, `.gf-field` (`__label`, `__hint`, `__error`, `[data-invalid]`), `.gf-fieldset`, `.gf-check`, `.gf-form-actions` |
 | Mappa + fermate | `.gf-route-panel` (`__map`, `__canvas`, `__detail`, `__footer`), `.gf-route-map__*`, `.gf-crew`, `.gf-progress`, `.gf-stop-list` / `.gf-stop.is-done\|is-miss\|is-next` |
 | Avvisi operativi | `.gf-alert[data-kind="ztl\|tail-lift"]` con `__icon`, `__title`, `__text`; badge `.gf-badge[data-kind]` |

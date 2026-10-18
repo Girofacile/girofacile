@@ -31,7 +31,7 @@
 
 <!-- Shared GiroFacile design system; legacy sheets retain feature layout. -->
 <link rel="stylesheet" href="/static/design-system/theme.css?v=gf_avatar_20261018">
-<link rel="stylesheet" href="/static/design-system/components.css?v=gf_avatar_20261018">
+<link rel="stylesheet" href="/static/design-system/components.css?v=gf_stat_icons_20261018">
 <link rel="stylesheet" href="/static/design-system/layout.css?v=gf_base_20261015y">
 <link rel="stylesheet" href="/static/design-system/workspace.css?v=gf_selection_20261016">
 <link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007_reference_2">
@@ -258,11 +258,11 @@
     <main class="gf-shell__content" data-gf-shell-content>
 
       <section id="tab-collaboratori" class="tab hidden gf-stack" data-gap="lg">
-        <div class="gf-stat-strip" aria-label="Riepilogo collaboratori">
-          <div class="gf-stat-strip__cell"><span class="gf-stat-strip__label">Collaboratori</span><strong class="gf-stat-strip__value" id="collaboratorsTotal">0</strong></div>
-          <div class="gf-stat-strip__cell"><span class="gf-stat-strip__label">Attivi</span><strong class="gf-stat-strip__value" id="collaboratorsActive">0</strong></div>
-          <div class="gf-stat-strip__cell"><span class="gf-stat-strip__label">Inviti in attesa</span><strong class="gf-stat-strip__value" id="collaboratorsPending">0</strong></div>
-          <div class="gf-stat-strip__cell"><span class="gf-stat-strip__label">Disattivati</span><strong class="gf-stat-strip__value" id="collaboratorsInactive">0</strong></div>
+        <div class="gf-stat-strip" data-icons="side" aria-label="Riepilogo collaboratori">
+          <div class="gf-stat-strip__cell"><span class="gf-stat-strip__icon" data-tone="1" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M16 20v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1 M9.5 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z M21 20v-1a4 4 0 0 0-3-3.9 M16 4.1a3.5 3.5 0 0 1 0 6.8"/></svg></span><span class="gf-stat-strip__label">Collaboratori</span><strong class="gf-stat-strip__value" id="collaboratorsTotal">0</strong><small class="gf-stat-strip__unit">account dell'azienda</small></div>
+          <div class="gf-stat-strip__cell"><span class="gf-stat-strip__icon" data-tone="3" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M8 12.2l2.8 2.8 5.2-5.6"/></svg></span><span class="gf-stat-strip__label">Attivi</span><strong class="gf-stat-strip__value" id="collaboratorsActive">0</strong><small class="gf-stat-strip__unit">possono accedere</small></div>
+          <div class="gf-stat-strip__cell"><span class="gf-stat-strip__icon" data-tone="5" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 6h18v12H3z M3 7l9 6 9-6"/></svg></span><span class="gf-stat-strip__label">Inviti in attesa</span><strong class="gf-stat-strip__value" id="collaboratorsPending">0</strong><small class="gf-stat-strip__unit">da accettare</small></div>
+          <div class="gf-stat-strip__cell"><span class="gf-stat-strip__icon" data-tone="neutral" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M10 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M2 21a8 8 0 0 1 12.5-6.6 M16 16l5 5 M21 16l-5 5"/></svg></span><span class="gf-stat-strip__label">Disattivati</span><strong class="gf-stat-strip__value" id="collaboratorsInactive">0</strong><small class="gf-stat-strip__unit">senza accesso</small></div>
         </div>
         <section class="gf-panel" aria-labelledby="collaboratorListTitle">
           <header class="gf-panel__header">
@@ -352,12 +352,12 @@
         </div>
 
         <!-- Dashboard: nessun dato dimostrativo. -->
-        <div class="gf-stat-strip" aria-label="Riepilogo di oggi">
-          <button class="gf-stat-strip__cell" type="button" onclick="openDashboardScheduledPage()"><span class="gf-stat-strip__label">Giri programmati</span><strong class="gf-stat-strip__value" id="dashTodayScheduled">0</strong><small class="gf-stat-strip__unit">oggi</small></button>
-          <button class="gf-stat-strip__cell" type="button" onclick="openDashboardInProgressPage()"><span class="gf-stat-strip__label">Giri in corso</span><strong class="gf-stat-strip__value" id="dashTodayProgress">0</strong><small class="gf-stat-strip__unit">attivi adesso</small></button>
-          <div class="gf-stat-strip__cell"><span class="gf-stat-strip__label">Consegne completate</span><strong class="gf-stat-strip__value" id="dashTodayCompletedDeliveries">0</strong><small class="gf-stat-strip__unit">dagli autisti oggi</small></div>
-          <div class="gf-stat-strip__cell"><span class="gf-stat-strip__label">Autisti impegnati</span><strong class="gf-stat-strip__value" id="dashBusyDrivers">0</strong><small class="gf-stat-strip__unit" id="gfRefDriverCountMeta">su 0</small></div>
-          <div class="gf-stat-strip__cell"><span class="gf-stat-strip__label">Mezzi impegnati</span><strong class="gf-stat-strip__value" id="dashBusyVehicles">0</strong><small class="gf-stat-strip__unit" id="gfRefVehicleCountMeta">su 0</small></div>
+        <div class="gf-stat-strip" data-icons="side" aria-label="Riepilogo di oggi">
+          <button class="gf-stat-strip__cell" type="button" onclick="openDashboardScheduledPage()"><span class="gf-stat-strip__icon" data-tone="1" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 5h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z M16 3v4 M8 3v4 M4 11h16"/></svg></span><span class="gf-stat-strip__label">Giri programmati</span><strong class="gf-stat-strip__value" id="dashTodayScheduled">0</strong><small class="gf-stat-strip__unit">oggi</small></button>
+          <button class="gf-stat-strip__cell" type="button" onclick="openDashboardInProgressPage()"><span class="gf-stat-strip__icon" data-tone="2" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M10 8.5v7l5.5-3.5z"/></svg></span><span class="gf-stat-strip__label">Giri in corso</span><strong class="gf-stat-strip__value" id="dashTodayProgress">0</strong><small class="gf-stat-strip__unit">attivi adesso</small></button>
+          <div class="gf-stat-strip__cell"><span class="gf-stat-strip__icon" data-tone="3" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M8 12.2l2.8 2.8 5.2-5.6"/></svg></span><span class="gf-stat-strip__label">Consegne completate</span><strong class="gf-stat-strip__value" id="dashTodayCompletedDeliveries">0</strong><small class="gf-stat-strip__unit">dagli autisti oggi</small></div>
+          <div class="gf-stat-strip__cell"><span class="gf-stat-strip__icon" data-tone="5" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M4 21a8 8 0 0 1 16 0"/></svg></span><span class="gf-stat-strip__label">Autisti impegnati</span><strong class="gf-stat-strip__value" id="dashBusyDrivers">0</strong><small class="gf-stat-strip__unit" id="gfRefDriverCountMeta">su 0</small></div>
+          <div class="gf-stat-strip__cell"><span class="gf-stat-strip__icon" data-tone="neutral" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M2 6h11v10H2z M13 9h5l3 3v4h-8z M6.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z M17.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/></svg></span><span class="gf-stat-strip__label">Mezzi impegnati</span><strong class="gf-stat-strip__value" id="dashBusyVehicles">0</strong><small class="gf-stat-strip__unit" id="gfRefVehicleCountMeta">su 0</small></div>
         </div>
         <section class="gf-route-panel" id="gfRefHeroWrap" aria-label="Area operativa e giro di consegne">
           <div class="gf-route-panel__map">
@@ -574,7 +574,7 @@
       </section>
 
       <section id="tab-ordini" class="tab hidden gf-stack" data-gap="lg">
-        <div id="ordersMetrics" class="gf-grid" data-cols="4" aria-label="Indicatori ordini"></div>
+        <div id="ordersMetrics" class="gf-stat-strip" data-icons="side" aria-label="Indicatori ordini"></div>
 
         <section class="gf-panel" aria-labelledby="ordersListTitle">
           <header class="gf-panel__header">
@@ -684,7 +684,7 @@
         <div id="orderSourceDetail" class="gf-stack" data-gap="lg"></div>
       </section>
       <section id="tab-clienti" class="tab hidden gf-stack" data-gap="lg">
-        <section class="gf-stat-strip" id="customerKpis" aria-label="Riepilogo clienti"></section>
+        <section class="gf-stat-strip" data-icons="side" id="customerKpis" aria-label="Riepilogo clienti"></section>
         <section class="gf-panel" id="customerListPanel" aria-labelledby="customerListTitle">
           <header class="gf-panel__header">
             <div><h2 class="gf-panel__title" id="customerListTitle">Elenco <span data-gf-label="customers">clienti</span></h2><p class="gf-muted">Cerca rapidamente oppure apri i filtri avanzati quando servono.</p></div>
@@ -735,10 +735,10 @@
       </div>
 
       <section id="tab-agenti" class="tab hidden gf-stack" data-gap="lg">
-        <div class="gf-stat-strip" aria-label="Riepilogo agenti">
-          <div class="gf-stat-strip__cell"><span class="gf-stat-strip__label">Totale agenti</span><strong class="gf-stat-strip__value" id="agentMetricTotal">0</strong><small class="gf-stat-strip__unit">Anagrafica commerciale</small></div>
-          <div class="gf-stat-strip__cell"><span class="gf-stat-strip__label">Attivi</span><strong class="gf-stat-strip__value" id="agentMetricActive">0</strong><small class="gf-stat-strip__unit">Disponibili per i clienti</small></div>
-          <div class="gf-stat-strip__cell"><span class="gf-stat-strip__label">Clienti assegnati</span><strong class="gf-stat-strip__value" id="agentMetricClients">0</strong><small class="gf-stat-strip__unit">Collegamenti complessivi</small></div>
+        <div class="gf-stat-strip" data-icons="side" aria-label="Riepilogo agenti">
+          <div class="gf-stat-strip__cell"><span class="gf-stat-strip__icon" data-tone="1" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M4 21a8 8 0 0 1 16 0"/></svg></span><span class="gf-stat-strip__label">Totale agenti</span><strong class="gf-stat-strip__value" id="agentMetricTotal">0</strong><small class="gf-stat-strip__unit">Anagrafica commerciale</small></div>
+          <div class="gf-stat-strip__cell"><span class="gf-stat-strip__icon" data-tone="3" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M8 12.2l2.8 2.8 5.2-5.6"/></svg></span><span class="gf-stat-strip__label">Attivi</span><strong class="gf-stat-strip__value" id="agentMetricActive">0</strong><small class="gf-stat-strip__unit">Disponibili per i clienti</small></div>
+          <div class="gf-stat-strip__cell"><span class="gf-stat-strip__icon" data-tone="2" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1.5 1.5 M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1.5-1.5"/></svg></span><span class="gf-stat-strip__label">Clienti assegnati</span><strong class="gf-stat-strip__value" id="agentMetricClients">0</strong><small class="gf-stat-strip__unit">Collegamenti complessivi</small></div>
         </div>
         <section class="gf-panel" aria-labelledby="agentDirectoryTitle">
           <header class="gf-panel__header">
@@ -888,10 +888,10 @@
       </section>
 
       <section id="tab-depositi" class="tab hidden gf-stack" data-gap="lg">
-        <div class="gf-grid" data-cols="3" aria-label="Riepilogo depositi">
-          <article class="gf-stat-card"><span class="gf-stat-card__icon" data-tone="neutral"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7M5 9v12h14V9M9 21v-8h6v8"/></svg></span><span class="gf-stat-card__label">Totale depositi</span><strong class="gf-stat-card__value" id="depositTotal">—</strong><span class="gf-stat-card__change" id="depositTotalCaption">depositi configurati</span></article>
-          <article class="gf-stat-card"><span class="gf-stat-card__icon" data-tone="neutral"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.8 5.8 6.4.9-4.6 4.5 1.1 6.4-5.7-3-5.7 3 1.1-6.4-4.6-4.5 6.4-.9Z"/></svg></span><span class="gf-stat-card__label">Deposito predefinito</span><strong class="gf-stat-card__value" id="depositDefaultName">Nessun deposito selezionato</strong><span class="gf-stat-card__change" id="depositDefaultAddress">Imposta un deposito come predefinito per i nuovi giri</span></article>
-          <article class="gf-stat-card"><span class="gf-stat-card__icon" data-tone="neutral"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l4 2"/></svg></span><span class="gf-stat-card__label">Ultimo aggiornamento</span><strong class="gf-stat-card__value" id="depositLastUpdate">—</strong><span class="gf-stat-card__change" id="depositLastUpdateTime">Data non disponibile</span></article>
+        <div class="gf-stat-strip" data-icons="side" aria-label="Riepilogo depositi">
+          <div class="gf-stat-strip__cell"><span class="gf-stat-strip__icon" data-tone="1" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 10l9-6 9 6v10H3z M8 20v-6h8v6"/></svg></span><span class="gf-stat-strip__label">Totale depositi</span><strong class="gf-stat-strip__value" id="depositTotal">—</strong><small class="gf-stat-strip__unit" id="depositTotalCaption">depositi configurati</small></div>
+          <div class="gf-stat-strip__cell"><span class="gf-stat-strip__icon" data-tone="5" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l2.8 5.8 6.4.9-4.6 4.5 1.1 6.4L12 17.6l-5.7 3 1.1-6.4-4.6-4.5 6.4-.9z"/></svg></span><span class="gf-stat-strip__label">Deposito predefinito</span><strong class="gf-stat-strip__value" id="depositDefaultName" data-kind="text">Nessun deposito selezionato</strong><small class="gf-stat-strip__unit" id="depositDefaultAddress">Imposta un deposito come predefinito per i nuovi giri</small></div>
+          <div class="gf-stat-strip__cell"><span class="gf-stat-strip__icon" data-tone="neutral" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7 M3 4v5h5 M12 7v5l3 2"/></svg></span><span class="gf-stat-strip__label">Ultimo aggiornamento</span><strong class="gf-stat-strip__value" id="depositLastUpdate" data-kind="text">—</strong><small class="gf-stat-strip__unit" id="depositLastUpdateTime">Data non disponibile</small></div>
         </div>
         <section class="gf-panel" aria-labelledby="depositListTitle">
           <header class="gf-panel__header">
@@ -940,10 +940,10 @@
       </div>
 
       <section id="tab-mezzi" class="tab hidden gf-stack" data-gap="lg">
-        <div class="gf-grid" data-cols="3" aria-label="Riepilogo mezzi">
-          <article class="gf-stat-card"><span class="gf-stat-card__icon" data-tone="neutral"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h12v10H3zM15 10h4l2 3v4h-6"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg></span><span class="gf-stat-card__label">Totale mezzi</span><strong class="gf-stat-card__value" id="fleetMetricTotal">0</strong><span class="gf-stat-card__change">Veicoli registrati</span></article>
-          <article class="gf-stat-card"><span class="gf-stat-card__icon" data-tone="neutral"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg></span><span class="gf-stat-card__label">Disponibili</span><strong class="gf-stat-card__value" id="fleetMetricAvailable">0</strong><span class="gf-stat-card__change">Pronti per nuovi giri</span></article>
-          <article class="gf-stat-card"><span class="gf-stat-card__icon" data-tone="neutral"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h10v8H4zM14 10h4l2 3v3h-6"/><circle cx="7" cy="17" r="1.5"/><circle cx="18" cy="17" r="1.5"/></svg></span><span class="gf-stat-card__label">In uso</span><strong class="gf-stat-card__value" id="fleetMetricBusy">0</strong><span class="gf-stat-card__change">Impegnati nei giri</span></article>
+        <div class="gf-stat-strip" data-icons="side" aria-label="Riepilogo mezzi">
+          <div class="gf-stat-strip__cell"><span class="gf-stat-strip__icon" data-tone="neutral" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M2 6h11v10H2z M13 9h5l3 3v4h-8z M6.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z M17.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/></svg></span><span class="gf-stat-strip__label">Totale mezzi</span><strong class="gf-stat-strip__value" id="fleetMetricTotal">0</strong><small class="gf-stat-strip__unit">Veicoli registrati</small></div>
+          <div class="gf-stat-strip__cell"><span class="gf-stat-strip__icon" data-tone="3" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M8 12.2l2.8 2.8 5.2-5.6"/></svg></span><span class="gf-stat-strip__label">Disponibili</span><strong class="gf-stat-strip__value" id="fleetMetricAvailable">0</strong><small class="gf-stat-strip__unit">Pronti per nuovi giri</small></div>
+          <div class="gf-stat-strip__cell"><span class="gf-stat-strip__icon" data-tone="2" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M10 8.5v7l5.5-3.5z"/></svg></span><span class="gf-stat-strip__label">In uso</span><strong class="gf-stat-strip__value" id="fleetMetricBusy">0</strong><small class="gf-stat-strip__unit">Impegnati nei giri</small></div>
         </div>
         <section class="gf-panel" aria-labelledby="fleetDirectoryTitle">
           <header class="gf-panel__header">
@@ -1019,10 +1019,10 @@
       </section>
 
             <section id="tab-autisti" class="tab hidden gf-stack" data-gap="lg">
-        <div class="gf-grid" data-cols="3" aria-label="Riepilogo autisti">
-          <article class="gf-stat-card"><span class="gf-stat-card__icon" data-tone="neutral"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 19.5c.8-3.4 3.2-5.1 6.5-5.1s5.7 1.7 6.5 5.1"/><path d="M18.2 7.2h2.3"/></svg></span><span class="gf-stat-card__label">Totale autisti</span><strong class="gf-stat-card__value" id="driversTotal">0</strong><span class="gf-stat-card__change">Anagrafica aziendale</span></article>
-          <article class="gf-stat-card"><span class="gf-stat-card__icon" data-tone="neutral"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7.8"/><path d="m8.6 12.3 2.2 2.2 4.8-5"/></svg></span><span class="gf-stat-card__label">Disponibili</span><strong class="gf-stat-card__value" id="driversAvailable">0</strong><span class="gf-stat-card__change">Pronti per nuovi giri</span></article>
-          <article class="gf-stat-card"><span class="gf-stat-card__icon" data-tone="neutral"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.8 14.2h8.5v-4.7H5.7z"/><path d="M12.3 11.8h3.2l2.7 2.7v1.3h-5.9"/><circle cx="7.1" cy="16.6" r="1.6"/><circle cx="16.6" cy="16.6" r="1.6"/></svg></span><span class="gf-stat-card__label">In servizio</span><strong class="gf-stat-card__value" id="driversWorking">0</strong><span class="gf-stat-card__change">Giro attivo oggi</span></article>
+        <div class="gf-stat-strip" data-icons="side" aria-label="Riepilogo autisti">
+          <div class="gf-stat-strip__cell"><span class="gf-stat-strip__icon" data-tone="5" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M4 21a8 8 0 0 1 16 0"/></svg></span><span class="gf-stat-strip__label">Totale autisti</span><strong class="gf-stat-strip__value" id="driversTotal">0</strong><small class="gf-stat-strip__unit">Anagrafica aziendale</small></div>
+          <div class="gf-stat-strip__cell"><span class="gf-stat-strip__icon" data-tone="3" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M8 12.2l2.8 2.8 5.2-5.6"/></svg></span><span class="gf-stat-strip__label">Disponibili</span><strong class="gf-stat-strip__value" id="driversAvailable">0</strong><small class="gf-stat-strip__unit">Pronti per nuovi giri</small></div>
+          <div class="gf-stat-strip__cell"><span class="gf-stat-strip__icon" data-tone="2" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M10 8.5v7l5.5-3.5z"/></svg></span><span class="gf-stat-strip__label">In servizio</span><strong class="gf-stat-strip__value" id="driversWorking">0</strong><small class="gf-stat-strip__unit">Giro attivo oggi</small></div>
         </div>
         <section class="gf-panel" aria-labelledby="driverDirectoryTitle">
           <header class="gf-panel__header">
@@ -1504,12 +1504,12 @@
 </div>
 
 <script src="/static/dashboard/js/reports.js?v=gf_base_20261015u"></script>
-<script src="/static/dashboard/js/customers.js?v=gf_customers_nohead_20261018"></script>
+<script src="/static/dashboard/js/customers.js?v=gf_stat_icons_20261018"></script>
 <script src="/static/dashboard/js/navigation.js?v=gf_dashboard_greeting_20261018"></script>
 <script src="/static/dashboard/js/history.js?v=gf_history_20261018"></script>
 <script src="/static/password-strength.js?v=password_policy_20261008_1"></script>
 <script src="/static/dashboard/js/collaborators.js?v=gf_selection_20261016"></script>
-<script src="/static/dashboard/js/orders.js?v=gf_base_20261015u"></script>
+<script src="/static/dashboard/js/orders.js?v=gf_stat_icons_20261018"></script>
 <script src="/static/dashboard/js/order-import.js?v=gf_base_20261015u"></script>
 <script src="/static/dashboard/js/order-sources.js?v=gf_base_20261015v"></script>
 <script src="/static/dashboard/js/dashboard-real-map.js?v=gf_dashboard_empty_state_20261018b"></script>

@@ -489,18 +489,24 @@ test('resource directories keep titles in the topbar and create actions inside t
 });
 
 
-test('all five directory KPI icons use the same neutral gray dashboard treatment',()=>{
-  // Le anagrafiche usano la card numerica del sistema: icone solo neutre, nessun colore di stato.
+test('every page summary bar uses the shared strip with topic icons and colours',()=>{
+  // Barra dei numeri unica (approvata il 18 ottobre 2026): stessa struttura e icone colorate per argomento.
   const html=read('static/dashboard/index.html');
-  for(const tab of ['clienti','depositi','mezzi','autisti','agenti']){
+  for(const tab of ['dashboard','collaboratori','ordini','clienti','agenti','depositi','mezzi','autisti']){
     const start=html.indexOf('<section id="tab-'+tab+'"');
+    assert.ok(start>=0,tab+' section');
     const section=html.slice(start,html.indexOf('<section id="tab-',start+20));
-    assert.doesNotMatch(section,/gf-stat-card__icon"(?! data-tone="neutral")|gf-stat-card__icon" data-tone="(?!neutral)/,tab+' neutral icons');
+    assert.match(section,/class="gf-stat-strip" data-icons="side"|id="ordersMetrics" class="gf-stat-strip" data-icons="side"|class="gf-stat-strip" data-icons="side" id="customerKpis"/,tab+' summary bar');
+    // Le anagrafiche non hanno più schede numeriche separate: solo la barra.
+    if(tab!=='dashboard')assert.doesNotMatch(section,/gf-stat-card/,tab+' no separate KPI cards');
     assert.doesNotMatch(section,/(customer|deposit|gf-directory)-metric-icon|stat-icon/,tab+' no legacy icons');
   }
   const components=read(assets+'components.css');
-  assert.match(components,/\.gf-stat-card__icon\[data-tone="neutral"\]\{background:var\(--gf-color-bg\);color:var\(--gf-color-muted\)\}/);
-  assert.match(components,/\.gf-stat-card__icon svg\{[^}]*fill:none;stroke:currentColor/);
+  assert.match(components,/\.gf-stat-strip\[data-icons="side"\] \.gf-stat-strip__icon\{grid-row:1\/span 2/);
+  for(let i=1;i<=6;i++)assert.ok(components.includes('.gf-stat-strip__icon[data-tone="'+i+'"]{background:var(--gf-color-avatar-'+i+'-bg)'),'tono '+i);
+  assert.match(components,/\.gf-stat-strip__icon\[data-tone="neutral"\]\{background:var\(--gf-color-bg\);color:var\(--gf-color-muted\)\}/);
+  assert.match(read('static/dashboard/js/orders.js'),/class="gf-stat-strip__icon" data-tone="\$\{meta\.tone\}"/);
+  assert.match(read('static/dashboard/js/customers.js'),/class="gf-stat-strip__icon" data-tone="/);
 });
 
 

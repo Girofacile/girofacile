@@ -259,7 +259,8 @@ def main():
                     assert trigger.get_attribute("aria-expanded") == "false"
                     trigger.click()
                     # The notifications menu overlaps the right-hand KPI in the new header.
-                    page.locator("#tab-dashboard .gf-panel__title").first.click()
+                    # Solo un titolo visibile: il riquadro "Nessun giro in corso" resta nascosto se c'è un giro attivo.
+                    page.locator("#tab-dashboard .gf-panel__title:visible").first.click()
                     assert not page.locator("#notificationDropdown").is_visible()
                     interactions.append(f"{width}: notifications open, Escape and outside close")
                 # Su mobile il menu è la sidebar a scomparsa del layout base condiviso.

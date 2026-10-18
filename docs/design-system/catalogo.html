@@ -6,7 +6,7 @@
 <title>Catalogo componenti · GiroFacile</title>
 <link rel="icon" href="/static/favicon-32x32.png">
 <link rel="stylesheet" href="/static/design-system/theme.css?v=gf_avatar_20261018">
-<link rel="stylesheet" href="/static/design-system/components.css?v=gf_avatar_20261018">
+<link rel="stylesheet" href="/static/design-system/components.css?v=gf_stat_icons_20261018">
 <link rel="stylesheet" href="/static/design-system/layout.css?v=gf_base_20261015y">
 <script src="/static/design-system/design-system.js" defer></script>
 <script src="/static/design-system/shell.js?v=gf_base_20261015u" defer></script>
@@ -141,6 +141,14 @@
     <div class="gf-stat-strip__cell"><span class="gf-stat-strip__label">Consegne completate</span><strong class="gf-stat-strip__value">46</strong><small class="gf-stat-strip__unit">dagli autisti oggi</small></div>
     <div class="gf-stat-strip__cell"><span class="gf-stat-strip__label">Autisti impegnati</span><strong class="gf-stat-strip__value">5</strong><small class="gf-stat-strip__unit">su 7</small></div>
     <div class="gf-stat-strip__cell"><span class="gf-stat-strip__label">Mezzi impegnati</span><strong class="gf-stat-strip__value">4</strong><small class="gf-stat-strip__unit">su 6</small></div>
+  </div>
+  <p class="gf-muted">Con icone (barra dei numeri di ogni pagina): <code>data-icons="side"</code> sulla barra e <code>.gf-stat-strip__icon</code> con <code>data-tone="1…6"</code> o <code>"neutral"</code> come primo elemento di ogni voce. Stesso argomento, stessa icona e stesso colore in tutte le pagine; <code>data-kind="text"</code> sul valore quando è una parola (es. il deposito predefinito).</p>
+<div class="gf-stat-strip" data-icons="side" aria-label="Esempio di barra con icone">
+    <button class="gf-stat-strip__cell" type="button"><span class="gf-stat-strip__icon" data-tone="1" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 5h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z M16 3v4 M8 3v4 M4 11h16"/></svg></span><span class="gf-stat-strip__label">Giri programmati</span><strong class="gf-stat-strip__value">0</strong><small class="gf-stat-strip__unit">oggi</small></button>
+    <button class="gf-stat-strip__cell" type="button"><span class="gf-stat-strip__icon" data-tone="2" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M10 8.5v7l5.5-3.5z"/></svg></span><span class="gf-stat-strip__label">Giri in corso</span><strong class="gf-stat-strip__value">0</strong><small class="gf-stat-strip__unit">attivi adesso</small></button>
+    <div class="gf-stat-strip__cell"><span class="gf-stat-strip__icon" data-tone="3" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M8 12.2l2.8 2.8 5.2-5.6"/></svg></span><span class="gf-stat-strip__label">Consegne completate</span><strong class="gf-stat-strip__value">0</strong><small class="gf-stat-strip__unit">dagli autisti oggi</small></div>
+    <div class="gf-stat-strip__cell"><span class="gf-stat-strip__icon" data-tone="5" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M4 21a8 8 0 0 1 16 0"/></svg></span><span class="gf-stat-strip__label">Autisti impegnati</span><strong class="gf-stat-strip__value">0</strong><small class="gf-stat-strip__unit">su 0</small></div>
+    <div class="gf-stat-strip__cell"><span class="gf-stat-strip__icon" data-tone="neutral" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M2 6h11v10H2z M13 9h5l3 3v4h-8z M6.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z M17.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/></svg></span><span class="gf-stat-strip__label">Mezzi impegnati</span><strong class="gf-stat-strip__value">0</strong><small class="gf-stat-strip__unit">su 0</small></div>
   </div>
   <div class="gf-grid" data-cols="2">
     <section class="gf-panel" aria-labelledby="catalogScheduledTitle">

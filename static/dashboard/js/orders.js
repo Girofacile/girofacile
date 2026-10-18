@@ -2,12 +2,14 @@
 (function(){
   'use strict';
   const labels={nuovo:'Nuovo',da_verificare:'Da verificare',pronto:'Pronto',assegnato:'Assegnato',in_consegna:'In consegna',consegnato:'Consegnato',non_consegnato:'Non consegnato',annullato:'Annullato'};
+  // Stesse icone e stessi colori delle altre barre dei numeri (gf-stat-strip con icone).
   const metricMeta={
-    nuovo:{label:'Nuovi ordini',description:'Ordini appena ricevuti',icon:'<path d="M5 8h14l-1 11H6L5 8Z"/><path d="M8 8a4 4 0 0 1 8 0"/>'},
-    da_verificare:{label:'Da verificare',description:'Controllo dati o indirizzo',icon:'<circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/>'},
-    pronto:{label:'Pronti per piano',description:'Pronti per la pianificazione',icon:'<circle cx="12" cy="12" r="8"/><path d="m8.5 12 2.2 2.2 4.8-5"/>'},
-    assegnato:{label:'Già assegnati',description:'Ordini inseriti in un giro',icon:'<path d="M3 7h11v9H3z"/><path d="M14 10h4l3 3v3h-7"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/>'}
+    nuovo:{label:'Nuovi ordini',description:'Ordini appena ricevuti',tone:'1',icon:'<path d="M5 8h14l-1 12H6L5 8z M8.5 8a3.5 3.5 0 0 1 7 0"/>'},
+    da_verificare:{label:'Da verificare',description:'Controllo dati o indirizzo',tone:'5',icon:'<path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 7v5l3 2"/>'},
+    pronto:{label:'Pronti per piano',description:'Pronti per la pianificazione',tone:'3',icon:'<path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M8 12.2l2.8 2.8 5.2-5.6"/>'},
+    assegnato:{label:'Già assegnati',description:'Ordini inseriti in un giro',tone:'neutral',icon:'<path d="M2 6h11v10H2z M13 9h5l3 3v4h-8z M6.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z M17.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/>'}
   };
+
   const statusTone={nuovo:'info',da_verificare:'warning',pronto:'success',assegnato:'info',in_consegna:'info',consegnato:'success',non_consegnato:'danger',annullato:'neutral'};
   const fields={number:'Numero ordine',recipient_name:'Destinatario',delivery_address:'Indirizzo di consegna',requested_date:'Data richiesta',time_from:'Fascia oraria: dalle',time_to:'Alle',weight_kg:'Peso (kg)',packages:'Colli',pallets:'Pallet',volume_m3:'Volume (m³)',tail_lift:'Sponda',pallet_truck:'Transpallet',ztl:'ZTL',requirements:'Requisiti operativi',notes:'Note'};
   const numeric=['weight_kg','packages','pallets','volume_m3'], bools=['tail_lift','pallet_truck','ztl'];
@@ -50,7 +52,7 @@
       if(window.GFOrderPlanning)await GFOrderPlanning.loadSelection();
       if(request!==sequence)return;
       last=data;
-      el('ordersMetrics').innerHTML=Object.entries(metricMeta).map(([key,meta])=>`<article class="gf-stat-card"><span class="gf-stat-card__icon" data-tone="neutral" aria-hidden="true"><svg viewBox="0 0 24 24">${meta.icon}</svg></span><span class="gf-stat-card__label">${meta.label}</span><strong class="gf-stat-card__value">${Number(data.metrics[key]||0)}</strong><span class="gf-stat-card__change">${meta.description}</span></article>`).join('');
+      el('ordersMetrics').innerHTML=Object.entries(metricMeta).map(([key,meta])=>`<div class="gf-stat-strip__cell"><span class="gf-stat-strip__icon" data-tone="${meta.tone}" aria-hidden="true"><svg viewBox="0 0 24 24">${meta.icon}</svg></span><span class="gf-stat-strip__label">${meta.label}</span><strong class="gf-stat-strip__value">${Number(data.metrics[key]||0)}</strong><small class="gf-stat-strip__unit">${meta.description}</small></div>`).join('');
       const selected=el('ordersSource').value;
       el('ordersSource').innerHTML='<option value="">Tutte le fonti</option>'+data.sources.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');el('ordersSource').value=selected;
       render();
