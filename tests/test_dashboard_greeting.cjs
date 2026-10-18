@@ -46,7 +46,7 @@ function createContext({initialTime = '2026-10-18T09:59:00Z', visible = true, co
   };
 }
 
-test('dashboard greeting follows Italian time boundaries and keeps the company name', () => {
+test('dashboard greeting follows Italian time boundaries', () => {
   const app = createContext();
   const cases = [
     ['2026-10-18T02:59:00Z', 'Buonasera'],       // 04:59 a Roma
@@ -57,9 +57,16 @@ test('dashboard greeting follows Italian time boundaries and keeps the company n
     ['2026-10-18T16:00:00Z', 'Buonasera'],       // 18:00 a Roma
   ];
   for (const [instant, greeting] of cases) {
-    const actual = vm.runInContext('dashboardGreetingTitle(new Date(' + JSON.stringify(instant) + '))', app.context);
-    assert.equal(actual, greeting + ', ALIMENTARI IORIO', instant);
+    const actual = vm.runInContext('dashboardGreetingPrefix(new Date(' + JSON.stringify(instant) + '))', app.context);
+    assert.equal(actual, greeting, instant);
   }
+});
+
+test('dashboard title keeps the company name and current greeting', () => {
+  const app = createContext({initialTime:'2026-10-18T09:59:00Z'});
+  assert.equal(vm.runInContext('dashboardGreetingTitle()', app.context), 'Buongiorno, ALIMENTARI IORIO');
+  app.setNow('2026-10-18T10:00:00Z');
+  assert.equal(vm.runInContext('dashboardGreetingTitle()', app.context), 'Buon pomeriggio, ALIMENTARI IORIO');
 });
 
 test('dashboard greeting refreshes every minute only while the dashboard is visible', () => {

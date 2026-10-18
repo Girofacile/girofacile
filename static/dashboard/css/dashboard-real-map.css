@@ -145,3 +145,70 @@ body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-canvas .leafle
     min-height:var(--gf-map-min-height);
   }
 }
+
+/* Stato vuoto della Dashboard: mappa geografica e invito alla prima pianificazione. */
+body[data-gf-surface="workspace"] #app #tab-dashboard .gf-route-panel__operational{
+  display:flex;
+  flex:1 1 auto;
+  flex-direction:column;
+  min-height:100%;
+}
+body[data-gf-surface="workspace"] #app #tab-dashboard .gf-route-panel__empty{
+  display:flex;
+  flex:1 1 auto;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:var(--gf-space-3);
+  min-width:0;
+  padding:var(--gf-space-6) var(--gf-space-5);
+  text-align:center;
+}
+body[data-gf-surface="workspace"] #app #tab-dashboard .gf-route-panel__empty-icon{
+  display:grid;
+  width:72px;
+  height:72px;
+  flex:none;
+  place-items:center;
+  margin-bottom:2px;
+  border-radius:22px;
+  background:linear-gradient(145deg,#1f5bff 0%,#3979ff 68%,#76a2ff 100%);
+  box-shadow:0 10px 24px rgba(31,91,255,.22);
+  color:#fff;
+}
+body[data-gf-surface="workspace"] #app #tab-dashboard .gf-route-panel__empty-icon svg{
+  display:block;
+  width:46px;
+  height:46px;
+}
+body[data-gf-surface="workspace"] #app #tab-dashboard .gf-route-panel__empty .gf-title{
+  max-width:20rem;
+  margin:0;
+  font-size:clamp(1.05rem,1.35vw,1.3rem);
+  line-height:1.25;
+}
+body[data-gf-surface="workspace"] #app #tab-dashboard .gf-route-panel__empty>p{
+  max-width:23rem;
+  margin:0;
+  line-height:1.55;
+}
+body[data-gf-surface="workspace"] #app #tab-dashboard .gf-route-panel__empty .gf-button{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  margin-top:3px;
+}
+body[data-gf-surface="workspace"] #app #tab-dashboard .gf-route-panel__empty-hint{
+  color:var(--gf-color-muted);
+  font-size:var(--gf-font-xs);
+}
+body[data-gf-surface="workspace"] #app #tab-dashboard .gf-route-panel.is-empty .gf-route-panel__detail{
+  min-height:100%;
+}
+@media(max-width:1024px){
+  body[data-gf-surface="workspace"] #app #tab-dashboard .gf-route-panel__empty{
+    min-height:270px;
+    padding:var(--gf-space-6) var(--gf-space-4);
+  }
+}

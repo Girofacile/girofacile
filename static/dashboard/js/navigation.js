@@ -71,14 +71,14 @@ function dashboardGreetingPrefix(now = new Date()){
 }
 
 // Il titolo della home saluta l'azienda, non il nome dell'account personale.
-function dashboardGreetingTitle(now = new Date()){
+function dashboardGreetingTitle(){
   const companyName=(typeof currentSessionUser!=="undefined" && currentSessionUser?.company_name) || "";
   const savedCompanyName=localStorage.getItem("girofacile_company_name") || "";
   const accountName=(typeof currentSessionUser!=="undefined" && currentSessionUser?.username)
     || localStorage.getItem("girofacile_account_name") || "";
   // Le vecchie sessioni salvavano talvolta lo username nel campo nome azienda.
   const name=String(companyName || (savedCompanyName !== accountName ? savedCompanyName : "")).trim();
-  const greeting=dashboardGreetingPrefix(now);
+  const greeting=dashboardGreetingPrefix();
   return name ? greeting + ", " + name : greeting;
 }
 

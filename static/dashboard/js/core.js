@@ -1749,20 +1749,41 @@ function renderGFReferenceDashboardHero(summary){
   const get=id=>document.getElementById(id);
   const txt=(id,value)=>{const n=get(id);if(n)n.textContent=String(value);};
   const drawing=get("gfRefRouteDrawing"),list=get("gfRefStopList"),bar=get("gfRefProgressBar"),issues=get("gfRefMissed");
+  const emptyState=get("gfRefEmptyState"),operationalDetail=get("gfRefOperationalDetail"),legend=get("gfRefRouteLegend");
   // Ogni apertura/invocazione sostituisce la mappa precedente senza duplicarla.
   const version=(Number(root.dataset.gfRefRenderVersion)||0)+1;
   root.dataset.gfRefRenderVersion=String(version);
   window.GiroFacileDashboardMap?.reset();
   root.classList.toggle("has-route",!!summary);
+  root.classList.toggle("is-empty",!summary);
+  if(emptyState)emptyState.classList.toggle("hidden",!!summary);
+  if(operationalDetail)operationalDetail.classList.toggle("hidden",!summary);
+  if(legend)legend.classList.toggle("hidden",!summary);
   if(!summary){
-    txt("gfRefRouteTitle","Nessun giro in corso");
-    txt("gfRefRouteSubtitle","I percorsi attivi appariranno qui quando un autista avvia un giro");
-    txt("gfRefRouteStatus","In attesa");
+    txt("gfRefRouteTitle","La tua area operativa");
+    txt("gfRefRouteSubtitle","Mappa dell’area operativa dell’azienda");
+    txt("gfRefRouteStatus","Area operativa");
     txt("gfRefDriver","—");txt("gfRefVehicle","—");
     txt("gfRefCompleted","0 su 0");txt("gfRefRemaining","0 da fare");
-    if(drawing)drawing.innerHTML='<div class="gf-empty"><p>Non ci sono giri attivi da visualizzare.</p></div>';
+    if(drawing)drawing.innerHTML='<div class="gf-empty"><p>Caricamento della mappa dell’area operativa…</p></div>';
     if(list)list.innerHTML="";if(bar)bar.innerHTML="";if(issues)issues.innerHTML="";
-    return Promise.resolve();
+    const user=typeof currentSessionUser!=="undefined"?(currentSessionUser||{}):{};
+    const location={city:user.company_city||"",address:user.company_address||"",zip:user.company_zip||"",country:user.company_country||"Italia"};
+    const depositsRequest=typeof api==="function"
+      ? Promise.resolve().then(()=>api("/api/deposits")).catch(()=>[])
+      : Promise.resolve([]);
+    return depositsRequest.then(deposits=>{
+      if(!root.isConnected || root.dataset.gfRefRenderVersion!==String(version) || root.classList.contains("has-route"))return;
+      if(window.GiroFacileDashboardMap?.renderEmpty){
+        return Promise.resolve(window.GiroFacileDashboardMap.renderEmpty(drawing,{...location,deposits:Array.isArray(deposits)?deposits:[]}))
+          .catch(error=>{
+            if(root.dataset.gfRefRenderVersion!==String(version))return;
+            if(drawing)drawing.innerHTML='<div class="gf-empty"><p>Mappa temporaneamente non disponibile.</p></div>';
+            console.warn("Mappa area operativa",error);
+          });
+      }
+      if(drawing)drawing.innerHTML='<div class="gf-empty"><p>Mappa temporaneamente non disponibile.</p></div>';
+    });
   }
   txt("gfRefRouteTitle",summary.nome || "Giro consegne");
   txt("gfRefRouteSubtitle","Mappa geografica del giro, con fermate e stato delle consegne");
