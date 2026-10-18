@@ -118,3 +118,8 @@ test('customer list has no column header bar: sorting lives only in the toolbar 
   assert.doesNotMatch(js,/data-cx-sort|customerSelectPage/);
   assert.match(js,/function reverseCustomerSort\(\)/);
 });
+
+test('verified addresses KPI shows only the count, without "su N"',()=>{
+  const js=fs.readFileSync('static/dashboard/js/customers.js','utf8');
+  assert.match(js,/cell\('pin','all','Indirizzi verificati',ver,/);
+});
