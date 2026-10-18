@@ -37,7 +37,7 @@
 <link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007_reference_2">
 <script src="/static/design-system/design-system.js?v=gf_base_20261015" defer></script>
 <script src="/static/design-system/shell.js?v=gf_selection_20261016" defer></script>
-<link rel="stylesheet" href="/static/dashboard/css/dashboard-real-map.css?v=gf_dashboard_empty_state_20261018b">
+<link rel="stylesheet" href="/static/dashboard/css/dashboard-real-map.css?v=gf_dashboard_start_20261018">
 <link rel="stylesheet" href="/static/dashboard/css/in-progress-reference.css?v=gf_selection_20261016">
 <link rel="stylesheet" href="/static/dashboard/css/company.css?v=gf_selection_20261016">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap">
@@ -366,21 +366,18 @@
             <div class="gf-legend" id="gfRefRouteLegend"><span><i data-state="done"></i>Completata</span><span><i></i>Da fare</span><span><i data-state="miss"></i>Mancata</span></div>
           </div>
           <div class="gf-route-panel__detail">
-            <div class="gf-route-panel__empty hidden" id="gfRefEmptyState" aria-labelledby="gfRefEmptyTitle" aria-live="polite">
-              <span class="gf-route-panel__empty-icon" aria-hidden="true">
-                <svg viewBox="0 0 64 64" focusable="false">
-                  <path d="M12 47c5-7 10-7 15 0s10 7 15 0" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="3 5"/>
-                  <path d="M32 7c-8.8 0-16 7.2-16 16 0 11.5 16 26 16 26s16-14.5 16-26C48 14.2 40.8 7 32 7Z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
-                  <circle cx="32" cy="23" r="5.5" fill="none" stroke="currentColor" stroke-width="3"/>
-                  <circle cx="48" cy="47" r="8" fill="var(--gf-color-warning)"/>
-                  <path d="m44.5 47 2.3 2.3 4.8-5.2" fill="none" stroke="var(--gf-color-nav)" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </span>
-              <span class="gf-badge" data-status="info">Pronto a partire</span>
-              <h3 class="gf-title" id="gfRefEmptyTitle">La tua prossima consegna inizia da qui</h3>
-              <p class="gf-muted" id="gfRefEmptyDescription">Non ci sono giri in corso. Crea un giro per organizzare le consegne e pianificare il percorso.</p>
-              <button type="button" class="gf-button" id="gfRefEmptyAction" data-variant="primary" onclick="dashboardEmptyRouteAction()"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h6v6H4zM14 13h6v6h-6zM10 8h4a2 2 0 0 1 2 2v3M7 11v5a2 2 0 0 0 2 2h5"/></svg><span id="gfRefEmptyActionLabel">Calcola il primo giro</span></button>
-              <p class="gf-route-panel__empty-hint" id="gfRefEmptyHint">Potrai selezionare le fermate e assegnare autista e mezzo.</p>
+            <div class="hidden" id="gfRefEmptyState" aria-labelledby="gfRefEmptyTitle" aria-live="polite">
+              <header class="gf-panel__header"><h3 class="gf-panel__title" id="gfRefEmptyTitle">Nessun giro in corso</h3><span class="gf-badge" data-status="neutral">Oggi</span></header>
+              <div class="gf-panel__body gf-stack" data-gap="sm">
+                <p class="gf-text" id="gfRefEmptyDescription">Quando un autista avvia un giro, qui vedrai mezzo, avanzamento e fermate in tempo reale.</p>
+                <h4 class="gf-subtitle" id="gfRefEmptyChoicesTitle">Da dove vuoi partire?</h4>
+                <div class="gf-cluster" id="gfRefEmptySetup" hidden><button type="button" class="gf-button" id="gfRefEmptyAction" data-variant="primary" onclick="dashboardEmptyRouteAction()"><span id="gfRefEmptyActionLabel">Completa la configurazione</span></button></div>
+              </div>
+              <div class="gf-list" role="group" id="gfRefEmptyChoices" aria-labelledby="gfRefEmptyChoicesTitle">
+                <button type="button" class="gf-list-item" onclick="dashboardEmptyRouteAction('ordini')"><span class="gf-stat-card__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 4h6v3H9z M7 5H6a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1h-1 M9 12h6 M9 16h6"/></svg></span><span class="gf-list-item__main"><strong>Dagli ordini</strong><small>Scegli gli ordini da consegnare: le fermate si compongono da sole.</small></span><span class="gf-muted" aria-hidden="true">›</span></button>
+                <button type="button" class="gf-list-item" onclick="dashboardEmptyRouteAction('clienti')"><span class="gf-stat-card__icon" data-tone="neutral" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M16 20v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1 M9.5 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z M21 20v-1a4 4 0 0 0-3-3.9 M16 4.1a3.5 3.5 0 0 1 0 6.8"/></svg></span><span class="gf-list-item__main"><strong>Dai clienti</strong><small>Scegli i clienti da visitare e aggiungi le consegne a mano.</small></span><span class="gf-muted" aria-hidden="true">›</span></button>
+              </div>
+              <div class="gf-route-panel__footer"><button type="button" class="gf-button" data-variant="link" onclick="openDashboardScheduledPage()">Vedi giri programmati ›</button></div>
             </div>
             <div class="gf-route-panel__operational" id="gfRefOperationalDetail">
             <div class="gf-crew"><div><small>Autista</small><strong id="gfRefDriver">—</strong></div><div><small>Mezzo</small><strong id="gfRefVehicle">—</strong></div></div>
@@ -1517,7 +1514,7 @@
 <script src="/static/dashboard/js/order-sources.js?v=gf_base_20261015v"></script>
 <script src="/static/dashboard/js/dashboard-real-map.js?v=gf_dashboard_empty_state_20261018b"></script>
 <script src="/static/dashboard/js/in-progress-reference.js?v=gf_gps_recovery_20261016"></script>
-<script src="/static/dashboard/js/core.js?v=gf_history_20261018"></script>
+<script src="/static/dashboard/js/core.js?v=gf_dashboard_start_20261018"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=orders_2"></script>
 <link rel="stylesheet" href="/static/dashboard/css/fleet-review.css?v=gf_fleet_ztl_20261017">
 <script src="/static/dashboard/js/fleet-review.js?v=gf_fleet_map_open_20261017"></script>

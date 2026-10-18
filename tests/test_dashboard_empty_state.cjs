@@ -39,7 +39,8 @@ function makeHarness() {
   const ids = [
     'gfRefHeroWrap','gfRefRouteTitle','gfRefRouteSubtitle','gfRefRouteStatus','gfRefRouteDrawing',
     'gfRefDriver','gfRefVehicle','gfRefCompleted','gfRefRemaining','gfRefProgressBar','gfRefMissed',
-    'gfRefEmptyDescription','gfRefEmptyAction','gfRefEmptyActionLabel','gfRefEmptyHint',
+    'gfRefEmptyDescription','gfRefEmptyAction','gfRefEmptyActionLabel','gfRefEmptyChoicesTitle',
+    'gfRefEmptyChoices','gfRefEmptySetup',
     'gfRefStopList','gfRefOtherActive','gfRefEmptyState','gfRefOperationalDetail','gfRefRouteLegend',
   ];
   const nodes = new Map(ids.map(id => [id, makeNode(id, id === 'gfRefEmptyState' ? ['hidden'] : [])]));
@@ -84,16 +85,23 @@ test('when there is no active route, the area map and branded first-route action
   assert.equal(area.city, 'Padova');
   assert.equal(area.deposits[0].lat, 45.4064);
   assert.match(html, /id="gfRefEmptyState"/);
-  assert.match(html, /La tua prossima consegna inizia da qui/);
-  assert.match(html, /onclick="dashboardEmptyRouteAction\(\)"/);
-  assert.match(html, /Calcola il primo giro/);
-  assert.match(core, /function dashboardEmptyRouteAction\(\)/);
+  // Accanto alla mappa: si parte dagli ordini o dai clienti, senza un pulsante "Nuovo giro" ripetuto.
+  assert.equal(get('gfRefEmptyChoicesTitle').textContent, 'Da dove vuoi partire?');
+  assert.equal(get('gfRefEmptyChoices').hidden, false);
+  assert.equal(get('gfRefEmptySetup').hidden, true);
+  assert.match(html, /onclick="dashboardEmptyRouteAction\('ordini'\)"/);
+  assert.match(html, /onclick="dashboardEmptyRouteAction\('clienti'\)"/);
+  assert.match(html, /Dagli ordini/);
+  assert.match(html, /Dai clienti/);
+  const emptyHtml = html.slice(html.indexOf('id="gfRefEmptyState"'), html.indexOf('id="gfRefOperationalDetail"'));
+  assert.doesNotMatch(emptyHtml, /Nuovo giro/);
+  assert.match(core, /function dashboardEmptyRouteAction\(source="ordini"\)/);
   assert.match(mapSource, /async function renderEmpty\(element, area = \{\}\)/);
   assert.match(mapSource, /"padova":\[45\.4064,11\.8768\]/);
   assert.match(mapSource, /tile\.openstreetmap\.org/);
-  assert.match(mapCss, /\.gf-route-panel__empty-icon/);
+  assert.doesNotMatch(mapCss, /\.gf-route-panel__empty/, 'lo stato vuoto usa solo componenti condivisi');
   assert.ok(coreCss.includes('body.workspace-empty-v49-active #tab-dashboard > :not(#workspaceEmptyDashboardV49):not(#gfRefHeroWrap)'), 'la mappa deve restare visibile anche durante la configurazione iniziale');
-  assert.match(html, /gf_dashboard_empty_state_20261018/);
+  assert.match(html, /gf_dashboard_start_20261018/);
 });
 
 test('when an active route exists, the current route detail remains visible', async () => {
@@ -116,17 +124,22 @@ test('an unconfigured account is directed to company setup instead of a blocked 
   await vm.runInContext('renderGFReferenceDashboardHero(null)', app.context);
   assert.equal(app.nodes.get('gfRefEmptyActionLabel').textContent, 'Completa la configurazione');
   assert.match(app.nodes.get('gfRefEmptyDescription').textContent, /Completa il profilo aziendale e le impostazioni/);
+  assert.equal(app.nodes.get('gfRefEmptyChoices').hidden, true);
+  assert.equal(app.nodes.get('gfRefEmptySetup').hidden, false);
   const selected = [];
   const actionContext = vm.createContext({
     isWorkspaceOperationalV49: () => false,
     showTab: tab => selected.push(tab),
+    openPlanningSelection: () => selected.push('ordini'),
   });
-  const actionStart = core.indexOf('function dashboardEmptyRouteAction(){');
+  const actionStart = core.indexOf('function dashboardEmptyRouteAction(');
   const actionEnd = core.indexOf('function renderGFReferenceDashboardHero(summary){', actionStart);
   vm.runInContext(core.slice(actionStart, actionEnd), actionContext);
   vm.runInContext('dashboardEmptyRouteAction()', actionContext);
   assert.equal(selected[0], 'company');
   actionContext.isWorkspaceOperationalV49 = () => true;
-  vm.runInContext('dashboardEmptyRouteAction()', actionContext);
-  assert.equal(selected[1], 'giro');
+  vm.runInContext('dashboardEmptyRouteAction("ordini")', actionContext);
+  assert.equal(selected[1], 'ordini');
+  vm.runInContext('dashboardEmptyRouteAction("clienti")', actionContext);
+  assert.equal(selected[2], 'clienti');
 });

@@ -1743,12 +1743,14 @@ function renderEmptyDashList(text, illustration){
   return `<div class="gf-empty"><img src="/static/design-system/icons/empty.svg" alt="" width="48" height="30"><p><strong>${esc(text)}</strong></p><p>${descriptions[illustration]}</p></div>`;
 }
 function gfWidth5(value){ return Math.max(0, Math.min(100, Math.round((Number(value)||0) / 5) * 5)); }
-function dashboardEmptyRouteAction(){
+// Dal riquadro "Nessun giro in corso" si parte dagli ordini o dai clienti; senza configurazione si va all'Azienda.
+function dashboardEmptyRouteAction(source="ordini"){
   if(typeof isWorkspaceOperationalV49==="function" && !isWorkspaceOperationalV49()){
     showTab("company");
     return;
   }
-  showTab("giro");
+  if(source==="clienti"){showTab("clienti");return;}
+  openPlanningSelection();
 }
 
 function renderGFReferenceDashboardHero(summary){
@@ -1773,12 +1775,13 @@ function renderGFReferenceDashboardHero(summary){
     txt("gfRefRouteStatus","Area operativa");
     const canPlan=typeof isWorkspaceOperationalV49!=="function" || isWorkspaceOperationalV49();
     txt("gfRefEmptyDescription",canPlan
-      ?"Non ci sono giri in corso. Crea un giro per organizzare le consegne e pianificare il percorso."
-      :"Non ci sono giri in corso. Completa il profilo aziendale e le impostazioni per iniziare a pianificare le consegne.");
-    txt("gfRefEmptyActionLabel",canPlan?"Calcola il primo giro":"Completa la configurazione");
-    txt("gfRefEmptyHint",canPlan
-      ?"Potrai selezionare le fermate e assegnare autista e mezzo."
-      :"Dopo la configurazione potrai organizzare le consegne e assegnare le risorse.");
+      ?"Quando un autista avvia un giro, qui vedrai mezzo, avanzamento e fermate in tempo reale."
+      :"Completa il profilo aziendale e le impostazioni per iniziare a pianificare le consegne.");
+    txt("gfRefEmptyChoicesTitle",canPlan?"Da dove vuoi partire?":"Prima di pianificare");
+    txt("gfRefEmptyActionLabel","Completa la configurazione");
+    const choices=get("gfRefEmptyChoices"),setup=get("gfRefEmptySetup");
+    if(choices)choices.hidden=!canPlan;
+    if(setup)setup.hidden=canPlan;
     txt("gfRefDriver","—");txt("gfRefVehicle","—");
     txt("gfRefCompleted","0 su 0");txt("gfRefRemaining","0 da fare");
     if(drawing)drawing.innerHTML='<div class="gf-empty"><p>Caricamento della mappa dell’area operativa…</p></div>';
