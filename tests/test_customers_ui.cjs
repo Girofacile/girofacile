@@ -112,9 +112,10 @@ test('customer avatars get a stable colour from the name across the six avatar t
   assert.doesNotMatch(f.run(`cxAvatar({})`),/data-tone/);
 });
 
-test('customer list has no column header bar: sorting lives only in the toolbar above the list',()=>{
+test('customer list header only describes the columns: no select-all and no sorting buttons',()=>{
   const js=fs.readFileSync('static/dashboard/js/customers.js','utf8');
-  assert.doesNotMatch(js,/<thead>/);
+  assert.match(js,/<thead><tr>'\s*\+'<th scope="col" aria-label="Seleziona"><\/th><th scope="col">Cliente<\/th><th scope="col">Indirizzo<\/th>/);
+  assert.match(js,/<th scope="col" data-gf-feature="time_windows">Fascia di scarico<\/th><th scope="col">Stato indirizzo<\/th><th scope="col">Azioni<\/th>/);
   assert.doesNotMatch(js,/data-cx-sort|customerSelectPage/);
   assert.match(js,/function reverseCustomerSort\(\)/);
 });

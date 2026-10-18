@@ -31,7 +31,7 @@
 
 <!-- Shared GiroFacile design system; legacy sheets retain feature layout. -->
 <link rel="stylesheet" href="/static/design-system/theme.css?v=gf_avatar_20261018">
-<link rel="stylesheet" href="/static/design-system/components.css?v=gf_stat_icons_20261018">
+<link rel="stylesheet" href="/static/design-system/components.css?v=gf_actionbar_20261018b">
 <link rel="stylesheet" href="/static/design-system/layout.css?v=gf_base_20261015y">
 <link rel="stylesheet" href="/static/design-system/workspace.css?v=gf_selection_20261016">
 <link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007_reference_2">
@@ -39,7 +39,7 @@
 <script src="/static/design-system/shell.js?v=gf_selection_20261016" defer></script>
 <link rel="stylesheet" href="/static/dashboard/css/dashboard-real-map.css?v=gf_dashboard_start_20261018">
 <link rel="stylesheet" href="/static/dashboard/css/in-progress-reference.css?v=gf_selection_20261016">
-<link rel="stylesheet" href="/static/dashboard/css/company.css?v=gf_selection_20261016">
+<link rel="stylesheet" href="/static/dashboard/css/company.css?v=gf_actionbar_20261018">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap">
 </head>
 <body data-gf-surface="workspace" data-gf-layout="base">
@@ -217,7 +217,7 @@
       <button type="button" id="workspaceTopbarBack" class="gf-icon-button gf-header__back" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6 M9 12h10"/></svg></button>
       <div class="gf-header__titles" data-hide-on-tabs="route-preview dashboard-in-progress"><h1 class="gf-header__title" id="workspacePageTitle">Buongiorno</h1><span id="workspacePageBadge" class="gf-badge" hidden></span><p class="gf-header__subtitle" id="workspacePageSubtitle">Panoramica operativa delle consegne e dell’attività aziendale.</p></div>
 
-      <div id="companySaveBar" class="gf-savebar hidden" role="status" aria-live="polite">
+      <div id="companySaveBar" class="gf-savebar hidden" data-floating role="status" aria-live="polite">
         <span>Modifiche non salvate</span>
         <button id="companyDiscardChangesBtn" type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="cancelCompanyProfileChanges()">Annulla</button>
         <button id="companySaveChangesBtn" type="button" class="gf-button" data-variant="primary" data-size="sm" onclick="saveCompanyProfile()">Salva modifiche</button>
@@ -228,10 +228,6 @@
         <button id="ordersConnectionsNewSource" class="gf-button gf-hidden" data-show-on-tabs="ordini-collegamenti" data-variant="primary" type="button" onclick="GFOrderSources.createForm('api')" hidden>+ Nuova fonte</button>
         <div id="ordersTopbarActionsHost" class="gf-cluster gf-hidden" data-show-on-tabs="ordini" aria-label="Azioni ordini"></div>
         <div id="orderSourceTopbarActionsHost" class="gf-cluster gf-hidden" data-show-on-tabs="ordine-fonte" aria-label="Azioni fonte ordini"></div>
-        <div id="customersTopbarActionsHost" class="gf-cluster gf-hidden" data-show-on-tabs="clienti" aria-label="Azioni clienti">
-          <button type="button" class="gf-button" data-variant="secondary" onclick="openCustomerImportModal()"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12 M7 10l5 5 5-5 M5 21h14"/></svg>Importa clienti</button>
-          <button type="button" class="gf-button" data-variant="primary" onclick="openCustomerDrawer(null,'new')"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14 M5 12h14"/></svg>Nuovo <span data-gf-label="customer">cliente</span></button>
-        </div>
         <div id="companyTopbarStatus" class="gf-cluster gf-hidden" data-show-on-tabs="company" aria-live="polite">
           <span id="companyConfiguredBadge" class="gf-badge hidden" data-status="success">✓ Profilo configurato</span>
           <button id="showOnboardingBtn" type="button" class="gf-button hidden" data-variant="secondary" onclick="openOnboardingPanel()">Configurazione guidata</button>
@@ -612,18 +608,12 @@
               <label class="gf-field" for="ordersDirection"><span class="gf-field__label">Direzione</span><select class="gf-select" id="ordersDirection" onchange="GFOrders.load(true)"><option value="desc">Decrescente</option><option value="asc">Crescente</option></select></label>
             </div>
 
-            <section id="ordersSelection" class="gf-alert" data-status="info" hidden>
-              <div class="gf-stack" data-gap="sm">
-                <div class="gf-cluster" data-justify="between">
-                  <div class="gf-cluster"><span class="gf-badge" data-status="info" data-orders-selection-count aria-hidden="true">0</span><p id="ordersSelectionCount" role="status"></p></div>
-                  <div class="gf-cluster">
-                    <button class="gf-button" data-variant="ghost" data-size="sm" data-order-selection-action type="button" onclick="GFOrderPlanning.clear()">Deseleziona</button>
-                    <button class="gf-button" data-variant="danger" data-size="sm" data-order-selection-action type="button" onclick="GFOrderPlanning.cancelSelected()">Elimina</button>
-                    <button id="ordersGoPlanning" class="gf-button" data-variant="primary" data-size="sm" type="button" onclick="GFOrderPlanning.go()">Vai alla pianificazione</button>
-                  </div>
-                </div>
-                <div id="ordersSelectionRoutes" class="gf-cluster"></div>
-              </div>
+            <section id="ordersSelection" class="gf-savebar" data-floating hidden aria-label="Ordini selezionati">
+              <span class="gf-badge" data-status="info" data-orders-selection-count aria-hidden="true">0</span><p id="ordersSelectionCount" role="status"></p>
+              <div id="ordersSelectionRoutes" class="gf-cluster"></div>
+              <button class="gf-button" data-variant="ghost" data-size="sm" data-order-selection-action type="button" onclick="GFOrderPlanning.clear()">Deseleziona</button>
+              <button class="gf-button" data-variant="danger" data-size="sm" data-order-selection-action type="button" onclick="GFOrderPlanning.cancelSelected()">Elimina</button>
+              <button id="ordersGoPlanning" class="gf-button" data-variant="primary" data-size="sm" type="button" onclick="GFOrderPlanning.go()">Vai alla pianificazione</button>
             </section>
           </div>
 
@@ -688,6 +678,10 @@
         <section class="gf-panel" id="customerListPanel" aria-labelledby="customerListTitle">
           <header class="gf-panel__header">
             <div><h2 class="gf-panel__title" id="customerListTitle">Elenco <span data-gf-label="customers">clienti</span></h2><p class="gf-muted">Cerca rapidamente oppure apri i filtri avanzati quando servono.</p></div>
+            <div id="customersPanelActions" class="gf-cluster">
+              <button type="button" class="gf-button" data-variant="secondary" onclick="openCustomerImportModal()"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12 M7 10l5 5 5-5 M5 21h14"/></svg>Importa clienti</button>
+              <button type="button" class="gf-button" data-variant="primary" onclick="openCustomerDrawer(null,'new')"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14 M5 12h14"/></svg>Nuovo <span data-gf-label="customer">cliente</span></button>
+            </div>
           </header>
           <div class="gf-panel__body gf-stack">
             <div class="gf-cluster">
@@ -715,15 +709,11 @@
               <div><button class="gf-button" data-variant="ghost" type="button" onclick="clearCustomerFilters()">Azzera filtri</button></div>
             </div>
             <div class="gf-cluster" id="customerQuickFilters" role="group" aria-label="Filtri rapidi"></div>
-            <div class="gf-alert hidden" data-status="info" id="customerBulkBar" role="region" aria-label="Clienti selezionati">
-              <div class="gf-cluster" data-justify="between">
-                <div class="gf-cluster"><span class="gf-badge" data-status="info" id="customerSelectionBadge" aria-hidden="true">0</span><p id="customerSelectedCount" role="status"></p></div>
-                <div class="gf-cluster">
-                <details class="gf-dropdown" id="customerBulkMenu" data-gf-feature="time_windows"><summary class="gf-button" data-variant="secondary" data-size="sm" id="customerBulkButton"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 7v5l3 2"/></svg>Imposta fascia di scarico</summary><div data-gf-menu role="menu"></div></details>
-                <button class="gf-button" data-variant="ghost" data-size="sm" type="button" onclick="clearCustomerSelection()">Deseleziona</button>
-                <button id="customersGoPlanning" class="gf-button" data-variant="primary" data-size="sm" type="button" onclick="goCustomerPlanning()">Vai alla pianificazione</button>
-                </div>
-              </div>
+            <div class="gf-savebar hidden" data-floating id="customerBulkBar" role="region" aria-label="Clienti selezionati">
+              <span class="gf-badge" data-status="info" id="customerSelectionBadge" aria-hidden="true">0</span><p id="customerSelectedCount" role="status"></p>
+              <details class="gf-dropdown" id="customerBulkMenu" data-gf-feature="time_windows"><summary class="gf-button" data-variant="secondary" data-size="sm" id="customerBulkButton"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 7v5l3 2"/></svg>Imposta fascia di scarico</summary><div data-gf-menu role="menu"></div></details>
+              <button class="gf-button" data-variant="ghost" data-size="sm" type="button" onclick="clearCustomerSelection()">Deseleziona</button>
+              <button id="customersGoPlanning" class="gf-button" data-variant="primary" data-size="sm" type="button" onclick="goCustomerPlanning()">Vai alla pianificazione</button>
             </div>
           </div>
           <div id="customerResults"></div>
@@ -881,7 +871,7 @@
             </div>
           </div>
         </details>
-        <div id="settingsSaveBar" class="gf-savebar hidden">
+        <div id="settingsSaveBar" class="gf-savebar hidden" data-floating>
           <span id="settingsSaveState" role="status" aria-live="polite">Impostazioni azienda sincronizzate.</span>
           <button id="settingsSaveBtnV893" class="gf-button" data-variant="primary" data-size="sm" type="button" onclick="saveAllSettingsV893()" disabled>Salva modifiche</button>
         </div>
@@ -1504,7 +1494,7 @@
 </div>
 
 <script src="/static/dashboard/js/reports.js?v=gf_base_20261015u"></script>
-<script src="/static/dashboard/js/customers.js?v=gf_customers_verified_20261018b"></script>
+<script src="/static/dashboard/js/customers.js?v=gf_actionbar_20261018"></script>
 <script src="/static/dashboard/js/navigation.js?v=gf_dashboard_greeting_20261018"></script>
 <script src="/static/dashboard/js/history.js?v=gf_history_20261018"></script>
 <script src="/static/password-strength.js?v=password_policy_20261008_1"></script>
@@ -1517,7 +1507,7 @@
 <script src="/static/dashboard/js/core.js?v=gf_dashboard_loading_20261018"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=orders_2"></script>
 <link rel="stylesheet" href="/static/dashboard/css/fleet-review.css?v=gf_fleet_ztl_20261017">
-<script src="/static/dashboard/js/fleet-review.js?v=gf_fleet_map_open_20261017"></script>
+<script src="/static/dashboard/js/fleet-review.js?v=gf_actionbar_20261018"></script>
 <link rel="stylesheet" href="/static/driver-schedule.css?v=20261013_1">
 <script src="/static/driver-schedule.js?v=20261013_1"></script>
 <script src="/static/dashboard/js/driver-schedules.js?v=gf_base_20261015u"></script>

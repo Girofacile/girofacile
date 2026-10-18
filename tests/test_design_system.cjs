@@ -207,14 +207,14 @@ test('company profile uses the workspace topbar and keeps billing addresses alwa
   assert.match(navigation,/syncWorkspaceTopbar\(name\)/);
 
   // Il titolo è nell'intestazione condivisa; il pulsante "Nuovo giro" non compare su Azienda.
-  assert.match(html,/id="companySaveBar" class="gf-savebar hidden"/);
+  assert.match(html,/id="companySaveBar" class="gf-savebar hidden" data-floating/);
   assert.match(html,/data-variant="primary" data-new-route-button data-show-on-tabs="dashboard"/);
 });
 
 
 test('company edits are saved from the topbar and bottom save actions are removed',()=>{
   const html=read('static/dashboard/index.html');
-  assert.match(html,/id="companySaveBar" class="gf-savebar hidden"/);
+  assert.match(html,/id="companySaveBar" class="gf-savebar hidden" data-floating/);
   assert.match(html,/id="companySaveChangesBtn"[^>]*onclick="saveCompanyProfile\(\)"/);
   assert.match(html,/id="companyDiscardChangesBtn"[^>]*onclick="cancelCompanyProfileChanges\(\)"/);
   assert.doesNotMatch(html,/class="company-save-actions"/);
@@ -448,8 +448,9 @@ test('resource directories keep titles in the topbar and create actions inside t
   }
 
   const customers=html.slice(html.indexOf('<section id="tab-clienti"'),html.indexOf('<section id="tab-depositi"'));
-  // Clienti: importazione e nuovo cliente restano nell'intestazione della pagina, come nel disegno originale.
-  assert.match(html,/id="customersTopbarActionsHost"[^>]*data-show-on-tabs="clienti"[^]*?openCustomerImportModal\(\)[^]*?openCustomerDrawer\(null,'new'\)/);
+  // Clienti: importazione e nuovo cliente stanno nell'intestazione dell'elenco, come in Ordini.
+  assert.doesNotMatch(html,/customersTopbarActionsHost/);
+  assert.match(customers,/id="customerListTitle"[^]*?id="customersPanelActions"[^]*?openCustomerImportModal\(\)[^]*?openCustomerDrawer\(null,'new'\)[^]*?<\/header>/);
   const deposits=html.slice(html.indexOf('<section id="tab-depositi"'),html.indexOf('id="depositOverlay"'));
   assert.match(deposits,/class="gf-panel__header"[^]*\+ Nuovo deposito/);
   const vehicles=html.slice(html.indexOf('<section id="tab-mezzi"'),html.indexOf('<section id="tab-autisti"'));
@@ -610,4 +611,17 @@ test('every stylesheet resolves its referenced custom properties',()=>{
     for(const match of css.matchAll(/var\(\s*(--[\w-]+)/g))
       assert.ok(defined.has(match[1]),name+': undefined '+match[1]);
   }
+});
+
+test('selection and unsaved-change bars share the floating savebar of the company profile',()=>{
+  const html=read('static/dashboard/index.html');
+  for(const id of ['companySaveBar','settingsSaveBar','customerBulkBar','ordersSelection'])
+    assert.match(html,new RegExp('id="'+id+'"[^>]*|class="gf-savebar[^"]*"[^>]*id="'+id+'"'),id);
+  for(const re of [/id="companySaveBar" class="gf-savebar hidden" data-floating/,/id="settingsSaveBar" class="gf-savebar hidden" data-floating/,/class="gf-savebar hidden" data-floating id="customerBulkBar"/,/id="ordersSelection" class="gf-savebar" data-floating/])assert.match(html,re);
+  assert.match(read('static/dashboard/js/fleet-review.js'),/class="gf-savebar" data-floating/);
+  const components=read(assets+'components.css');
+  assert.match(components,/\.gf-savebar\[data-floating\]\{\s*position:fixed/);
+  assert.match(components,/\.gf-savebar\[data-floating\] \.gf-dropdown \[data-gf-menu\]\{top:auto;bottom:/);
+  // Lo stile non è più scritto solo per la pagina Azienda.
+  assert.doesNotMatch(read('static/dashboard/css/company.css'),/#companySaveBar/);
 });

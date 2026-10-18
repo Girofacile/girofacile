@@ -135,7 +135,7 @@ function render({plan,assignment,dirty,busy,manualAdjusted,permission,onMove,onU
  (plan.status==='preview'?'<div class="gf-panel__body"><label class="gf-check"><input type="checkbox" data-fleet-accept-unassigned> <span>Confermo di programmare soltanto le consegne assegnate</span></label></div>':'')+'</section>':'')+'</div>'+
  '<section class="gf-panel"><div class="gf-panel__body"><div class="gf-route-panel__canvas" data-fleet-map role="region" aria-label="Mappa della suddivisione dei giri"></div></div></section>'+
  '<div id="fleetMessage" role="status" tabindex="-1" class="gf-muted"></div>'+
- (dirty?'<div class="gf-savebar" role="region" aria-label="Modifiche in sospeso"><span><b>Assegnazioni modificate</b> · Ricalcola per aggiornare tempi e distanze.</span>'+
+ (dirty?'<div class="gf-savebar" data-floating role="region" aria-label="Modifiche in sospeso"><span><b>Assegnazioni modificate</b> · Ricalcola per aggiornare tempi e distanze.</span>'+
  '<button type="button" class="gf-button" data-variant="secondary" data-size="sm" data-fleet-undo>Annulla modifiche</button><button type="button" class="gf-button" data-variant="primary" data-size="sm" data-fleet-recalc '+(busy?'disabled':'')+'>Ricalcola assegnazioni</button></div>':'')+
  '</section>';
  target.querySelector('[data-fleet-back]')?.addEventListener('click',onBack);

@@ -582,6 +582,27 @@ body[data-gf-surface] .gf-savebar{
 }
 /* Con la barra mobile in basso (fino a 1024 px) i pulsanti della barra di salvataggio hanno l'altezza touch. */
 @media (max-width:1024px){body[data-gf-surface] .gf-savebar .gf-button{min-height:var(--gf-control-touch) !important}}
+/* Barra flottante (approvata il 18 ottobre 2026): compare dal basso quando ci sono modifiche da salvare
+   o elementi selezionati con un'azione per continuare. Stesso stile del Profilo azienda. */
+body[data-gf-surface] .gf-savebar[data-floating]{
+  position:fixed;bottom:var(--gf-space-5);left:calc(50% + var(--gf-sidebar-width) / 2);transform:translateX(-50%);
+  z-index:calc(var(--gf-z-drawer) - 2);width:max-content;max-width:calc(100vw - var(--gf-sidebar-width) - var(--gf-space-8));
+  padding:var(--gf-space-3) var(--gf-space-3) var(--gf-space-3) var(--gf-space-4);
+  border:var(--gf-border-width) solid var(--gf-color-nav-divider);border-radius:var(--gf-radius-lg);
+  background:var(--gf-color-nav);color:var(--gf-color-on-nav);box-shadow:var(--gf-shadow-dialog);
+}
+body[data-gf-surface] .gf-savebar[data-floating]>:is(p,span,b,strong){margin:0;color:inherit}
+body[data-gf-surface] .gf-savebar[data-floating] .gf-badge{color:var(--gf-color-info)}
+body[data-gf-surface] .gf-savebar[data-floating]>.gf-button[data-variant="ghost"]{color:var(--gf-color-nav-text) !important}
+body[data-gf-surface] .gf-savebar[data-floating]>.gf-button[data-variant="ghost"]:hover:not(:disabled){background:var(--gf-color-nav-hover-bg) !important;color:var(--gf-color-on-nav) !important}
+/* I menu dentro la barra si aprono verso l'alto. */
+body[data-gf-surface] .gf-savebar[data-floating] .gf-dropdown [data-gf-menu]{top:auto;bottom:calc(100% + var(--gf-space-2));color:var(--gf-color-text)}
+@media (max-width:820px){
+  body[data-gf-surface] .gf-savebar[data-floating]{
+    left:var(--gf-space-3);right:var(--gf-space-3);transform:none;width:auto;max-width:none;justify-content:flex-end;
+    bottom:calc(var(--gf-bottom-nav-height) + var(--gf-space-6) + env(safe-area-inset-bottom,0px));
+  }
+}
 /* Finestra sovrapposta e pannello laterale -------------------------------- */
 body[data-gf-surface] .gf-overlay{
   position:fixed;inset:0;z-index:var(--gf-z-dialog);display:grid;place-items:center;padding:var(--gf-space-4);

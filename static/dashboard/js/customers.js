@@ -209,8 +209,11 @@ function renderCustomerDirectory(){
       +(none?'<button type="button" class="gf-button" data-variant="primary" data-size="sm" onclick="openCustomerDrawer(null,\'new\')">'+cxIcon('plus')+'Nuovo cliente</button>'
             :'<button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="clearCustomerListAllFilters()">Azzera ricerca e filtri</button>')+'</div>';
   }else if(state.view==='list'){
-    // Niente riga di intestazione: ordinamento e verso stanno già nella barra sopra l'elenco.
-    html='<div class="gf-table-wrap" id="customerTableWrap"><table class="gf-table" data-gf-responsive="cards" aria-label="Elenco clienti"><tbody id="customersBody">'
+    // Intestazione solo descrittiva, come in Ordini: niente "seleziona tutti", l'ordinamento sta nella barra sopra.
+    html='<div class="gf-table-wrap" id="customerTableWrap"><table class="gf-table" data-gf-responsive="cards" aria-label="Elenco clienti"><thead><tr>'
+      +'<th scope="col" aria-label="Seleziona"></th><th scope="col">Cliente</th><th scope="col">Indirizzo</th>'
+      +'<th scope="col" data-gf-feature="time_windows">Fascia di scarico</th><th scope="col">Stato indirizzo</th><th scope="col">Azioni</th>'
+      +'</tr></thead><tbody id="customersBody">'
       +visible.map(x=>{
         const id=Number(x.id),on=sel.has(id);
         return '<tr data-cx-row="'+id+'" aria-selected="'+on+'">'
