@@ -100,6 +100,7 @@ test('when there is no active route, the area map and branded first-route action
   assert.match(html, /Dai clienti/);
   const emptyHtml = html.slice(html.indexOf('id="gfRefEmptyState"'), html.indexOf('id="gfRefOperationalDetail"'));
   assert.doesNotMatch(emptyHtml, /Nuovo giro/);
+  assert.doesNotMatch(emptyHtml, /Vedi giri programmati/);
   assert.match(core, /function dashboardEmptyRouteAction\(source="ordini"\)/);
   assert.match(mapSource, /async function renderEmpty\(element, area = \{\}\)/);
   assert.match(mapSource, /"padova":\[45\.4064,11\.8768\]/);
