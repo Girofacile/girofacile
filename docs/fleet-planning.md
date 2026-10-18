@@ -62,3 +62,5 @@ Questa modifica non richiede migrazioni né nuove chiavi API e non ricalcola gir
 La diagnostica `search.route_refinement` indica metodo, permutazioni valutate, miglioramento ed eventuale prova dell'ordine per ogni giro, con ambito `fixed-membership-and-resource`. `search.global_optimum_proven` continua a riferirsi all'intera assegnazione: non diventa vero perché tutti i singoli giri sono stati riordinati esattamente.
 
 Regressioni aggiuntive: `tests/test_fleet_route_exact.py`, `tests/test_fleet_route_exact_api.py`, `tests/test_fleet_route_evaluator.py`. Il benchmark separato `python tests/run_fleet_route_exact_benchmark.py` misura 50 consegne suddivise in `6×8+2`, il caso misto `5×8+9+1` e il flusso completo con una sola matrice; non modifica il conteggio storico delle 512 simulazioni.
+
+Risultati misurati e differenze di comportamento: [riordino completo fino a 8 fermate](fleet-route-exact-results.md).
