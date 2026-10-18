@@ -10,7 +10,7 @@
 #app.hidden{display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important}
 
 /* Account senza dati operativi: nella home resta solo il pannello iniziale. */
-body.workspace-empty-v49-active #tab-dashboard > :not(#workspaceEmptyDashboardV49){display:none!important}
+body.workspace-empty-v49-active #tab-dashboard > :not(#workspaceEmptyDashboardV49):not(#gfRefHeroWrap){display:none!important}
 
 /* Funzioni non consentite al collaboratore (permessi assegnati dal titolare). */
 .collaborator-denied{display:none!important}

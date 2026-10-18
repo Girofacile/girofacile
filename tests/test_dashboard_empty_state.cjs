@@ -7,6 +7,7 @@ const core = fs.readFileSync('static/dashboard/js/core.js', 'utf8');
 const html = fs.readFileSync('static/dashboard/index.html', 'utf8');
 const mapSource = fs.readFileSync('static/dashboard/js/dashboard-real-map.js', 'utf8');
 const mapCss = fs.readFileSync('static/dashboard/css/dashboard-real-map.css', 'utf8');
+const coreCss = fs.readFileSync('static/dashboard/css/core.css', 'utf8');
 const heroStart = core.indexOf('function renderGFReferenceDashboardHero(summary){');
 const heroEnd = core.indexOf('\nasync function loadDashboardHome(){', heroStart);
 assert.ok(heroStart >= 0 && heroEnd > heroStart, 'la funzione della dashboard deve essere presente');
@@ -88,6 +89,7 @@ test('when there is no active route, the area map and branded first-route action
   assert.match(mapSource, /"padova":\[45\.4064,11\.8768\]/);
   assert.match(mapSource, /tile\.openstreetmap\.org/);
   assert.match(mapCss, /\.gf-route-panel__empty-icon/);
+  assert.ok(coreCss.includes('body.workspace-empty-v49-active #tab-dashboard > :not(#workspaceEmptyDashboardV49):not(#gfRefHeroWrap)'), 'la mappa deve restare visibile anche durante la configurazione iniziale');
   assert.match(html, /gf_dashboard_empty_state_20261018/);
 });
 
