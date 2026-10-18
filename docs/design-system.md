@@ -93,7 +93,7 @@ pagina; l'aspetto di un componente deve cambiare nel foglio condiviso.
 | Page header | `.gf-page-header`: titolo, descrizione e azione principale |
 | Disposizione | `.gf-stack[data-gap]`, `.gf-cluster[data-justify]`, `.gf-grid[data-cols="2\|3\|4\|7\|main-side"]` (7: una colonna per giorno della settimana) |
 | Testo | `.gf-title`, `.gf-subtitle`, `.gf-text`, `.gf-muted`, `.gf-kicker` |
-| Pulsanti extra | `data-variant="link"`, `data-size="sm"`, `.gf-icon-button`, `.gf-avatar` |
+| Pulsanti extra | `data-variant="link"`, `data-size="sm"`, `.gf-icon-button`, `.gf-avatar` (con `data-tone="1…6"`: un colore stabile per elemento, es. ogni cliente) |
 | Pannello | `.gf-panel` con `__header`, `__title`, `__meta`, `__body`, `__footer`; righe `.gf-list-item` |
 | Numeri del giorno | `.gf-stat-strip` con celle `__cell`, `__label`, `__value`, `__unit` |
 | Campi | `.gf-form-grid`, `.gf-field` (`__label`, `__hint`, `__error`, `[data-invalid]`), `.gf-fieldset`, `.gf-check`, `.gf-form-actions` |

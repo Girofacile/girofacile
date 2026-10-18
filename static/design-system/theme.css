@@ -59,6 +59,21 @@
   --gf-color-tail-lift: var(--gf-color-info);
   --gf-color-tail-lift-bg: var(--gf-color-info-bg);
 
+  /* --- Avatar con iniziali (un colore per elemento, es. ogni cliente) --- */
+  /* Approvati il 18 ottobre 2026: gli stessi toni della vecchia pagina Clienti. */
+  --gf-color-avatar-1: #1f5bff;
+  --gf-color-avatar-1-bg: #e4ecff;
+  --gf-color-avatar-2: #0b8a7c;
+  --gf-color-avatar-2-bg: #e0f2ef;
+  --gf-color-avatar-3: #7b4fe0;
+  --gf-color-avatar-3-bg: #ebe5ff;
+  --gf-color-avatar-4: #c2255c;
+  --gf-color-avatar-4-bg: #fae3ed;
+  --gf-color-avatar-5: #d9480f;
+  --gf-color-avatar-5-bg: #fceadf;
+  --gf-color-avatar-6: #2b8a3e;
+  --gf-color-avatar-6-bg: #e0f1e6;
+
   /* --- Font e testo ---------------------------------------------------- */
   --gf-font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
   --gf-font-family: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;

@@ -100,3 +100,14 @@ test('customer deletion is available only inside edit modal',()=>{
  assert.match(core,/Questa operazione è irreversibile/);
  assert.doesNotMatch(core,/async function deleteAllCustomers/);
 });
+
+test('customer avatars get a stable colour from the name across the six avatar tones',()=>{
+  const f=fixture();
+  const names=['Alimentari Oplonti','Bar Pompei Scavi','Cash & Carry Nocera','Gastronomia Pagani','Hotel Cava Centro','Hotel Porto del Miglio','Market Sarno Sud','Minimarket La Vesuviana'];
+  const tones=names.map(n=>f.run(`cxAvatarTone(${JSON.stringify(n)})`));
+  tones.forEach(t=>assert.ok(t>=1&&t<=6));
+  assert.ok(new Set(tones).size>=4,'clienti diversi devono avere colori diversi');
+  assert.equal(f.run(`cxAvatarTone('  alimentari OPLONTI ')`),tones[0]);
+  assert.match(f.run(`cxAvatar({nome:'Bar Pompei Scavi'})`),new RegExp(`class="gf-avatar" data-tone="${tones[1]}"`));
+  assert.doesNotMatch(f.run(`cxAvatar({})`),/data-tone/);
+});

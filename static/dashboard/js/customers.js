@@ -149,8 +149,19 @@ function cxActions(x){
   return '<div class="gf-cluster"><button type="button" class="gf-icon-button" data-cx-edit="'+id+'" title="Modifica" aria-label="Modifica '+cxEsc(x.nome)+'">'+cxIcon('edit')+'</button>'
     +'<button type="button" class="gf-button" data-variant="secondary" data-size="sm" data-cx-open="'+id+'">'+cxIcon('eye')+'Dettagli</button></div>';
 }
+// Ogni cliente ha sempre lo stesso colore: deriva dal nome (6 toni di gf-avatar).
+function cxAvatarTone(name){
+  // FNV-1a con mescolamento finale: nomi simili ("Hotel …") finiscono comunque su colori diversi.
+  let hash=2166136261;
+  for(const ch of String(name||'').trim().toLocaleLowerCase('it')){hash^=ch.codePointAt(0);hash=Math.imul(hash,16777619)>>>0;}
+  hash=(hash^(hash>>>16))>>>0;
+  hash=Math.imul(hash,2246822507)>>>0;
+  hash=(hash^(hash>>>13))>>>0;
+  return hash%6+1;
+}
 function cxAvatar(x){
-  return '<span class="gf-avatar" aria-hidden="true">'+cxEsc(x.nome?cxInitials(x.nome):'+')+'</span>';
+  const tone=x.nome?' data-tone="'+cxAvatarTone(x.nome)+'"':'';
+  return '<span class="gf-avatar"'+tone+' aria-hidden="true">'+cxEsc(x.nome?cxInitials(x.nome):'+')+'</span>';
 }
 function cxNameCell(x){
   return '<div class="gf-cluster">'+cxAvatar(x)+'<div><b>'+cxEsc(x.nome)+'</b><br><small class="gf-muted">'+cxEsc(x.codice_cliente||'Senza codice')+'</small></div></div>';
