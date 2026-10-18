@@ -1760,6 +1760,9 @@ function renderGFReferenceDashboardHero(summary){
   const txt=(id,value)=>{const n=get(id);if(n)n.textContent=String(value);};
   const drawing=get("gfRefRouteDrawing"),list=get("gfRefStopList"),bar=get("gfRefProgressBar"),issues=get("gfRefMissed");
   const emptyState=get("gfRefEmptyState"),operationalDetail=get("gfRefOperationalDetail"),legend=get("gfRefRouteLegend");
+  // Finché i dati non arrivano la colonna mostra solo "Caricamento": niente valori vuoti del giro in corso.
+  const loading=get("gfRefDetailLoading");
+  if(loading)loading.classList.add("hidden");
   // Ogni apertura/invocazione sostituisce la mappa precedente senza duplicarla.
   const version=(Number(root.dataset.gfRefRenderVersion)||0)+1;
   root.dataset.gfRefRenderVersion=String(version);
@@ -1953,7 +1956,11 @@ async function loadDashboardHome(){
       }
     }
     renderGFReferenceDashboardHero(progress[0]||null);
-  }catch(e){ console.warn(e); }
+  }catch(e){
+    console.warn(e);
+    const loading=document.getElementById("gfRefDetailLoading");
+    if(loading && !loading.classList.contains("hidden")) loading.textContent="Dati non disponibili. Ricarica la pagina per riprovare.";
+  }
 }
 
 const ROUTE_STATUS_TONE = {bozza:"neutral", programmato:"warning", in_corso:"info", da_completare:"warning", completato:"success", annullato:"danger"};

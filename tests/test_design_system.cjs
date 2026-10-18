@@ -163,7 +163,7 @@ test('dashboard reference view shares tokens and retains live API connections',(
   for(const id of ['dashTodayScheduled','dashTodayProgress','dashTodayCompletedDeliveries','dashBusyDrivers','dashBusyVehicles','dashScheduledBadge','dashInProgressBadge','dashCompletedBadge','dashScheduledList','dashCompletedList','dashVehicleStatus','dashDriverStatus','gfRefRouteDrawing','gfRefStopList']){
     assert.equal((dashboard.match(new RegExp('id="'+id+'"','g'))||[]).length,1,'Missing or duplicate dashboard '+id);
   }
-  for(const phrase of ['class="gf-stat-strip"','class="gf-route-panel" id="gfRefHeroWrap"','class="gf-stop-list" id="gfRefStopList"','class="gf-legend"'])
+  for(const phrase of ['class="gf-stat-strip"','class="gf-route-panel" id="gfRefHeroWrap"','class="gf-stop-list" id="gfRefStopList"','class="gf-legend hidden" id="gfRefRouteLegend"'])
     assert.match(dashboard,new RegExp(phrase));
   assert.match(dashboard,/onclick="openDashboardInProgressPage\(\)"/);
   // Il vecchio foglio reference-theme.css è stato eliminato: la home usa solo i componenti.

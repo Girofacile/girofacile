@@ -40,7 +40,7 @@ function makeHarness() {
     'gfRefHeroWrap','gfRefRouteTitle','gfRefRouteSubtitle','gfRefRouteStatus','gfRefRouteDrawing',
     'gfRefDriver','gfRefVehicle','gfRefCompleted','gfRefRemaining','gfRefProgressBar','gfRefMissed',
     'gfRefEmptyDescription','gfRefEmptyAction','gfRefEmptyActionLabel','gfRefEmptyChoicesTitle',
-    'gfRefEmptyChoices','gfRefEmptySetup',
+    'gfRefEmptyChoices','gfRefEmptySetup','gfRefDetailLoading',
     'gfRefStopList','gfRefOtherActive','gfRefEmptyState','gfRefOperationalDetail','gfRefRouteLegend',
   ];
   const nodes = new Map(ids.map(id => [id, makeNode(id, id === 'gfRefEmptyState' ? ['hidden'] : [])]));
@@ -86,6 +86,11 @@ test('when there is no active route, the area map and branded first-route action
   assert.equal(area.deposits[0].lat, 45.4064);
   assert.match(html, /id="gfRefEmptyState"/);
   // Accanto alla mappa: si parte dagli ordini o dai clienti, senza un pulsante "Nuovo giro" ripetuto.
+  // Durante il caricamento la colonna mostra solo "Caricamento": i dati del giro in corso partono nascosti.
+  assert.equal(get('gfRefDetailLoading').classList.contains('hidden'), true);
+  assert.match(html, /id="gfRefDetailLoading"/);
+  assert.match(html, /class="gf-route-panel__operational hidden" id="gfRefOperationalDetail"/);
+  assert.match(html, /class="gf-legend hidden" id="gfRefRouteLegend"/);
   assert.equal(get('gfRefEmptyChoicesTitle').textContent, 'Da dove vuoi partire?');
   assert.equal(get('gfRefEmptyChoices').hidden, false);
   assert.equal(get('gfRefEmptySetup').hidden, true);
