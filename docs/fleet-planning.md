@@ -4,10 +4,12 @@ La schermata Pianificazione conserva i tre passaggi Dati del giro, Risorse e Rie
 In Risorse si sceglie Un solo mezzo oppure Suddivisione automatica su più mezzi.
 Nel secondo caso compaiono le coppie mezzo/autista disponibili e la strategia:
 
-- Usa meno mezzi, se possibile: preferisce inserire consegne sui mezzi già utilizzati.
-- Distribuisci il lavoro tra tutti i mezzi: preferisce utilizzare tutte le risorse compatibili e bilanciare la durata, comprese attese e scarico.
+- Usa meno mezzi, se possibile: a parità di consegne e avvisi, minimizza i mezzi usati, poi la somma delle durate e infine i chilometri.
+- Distribuisci il lavoro tra tutti i mezzi: a parità di consegne e avvisi, utilizza più risorse e minimizza la durata massima, poi lo squilibrio delle durate (somma dei quadrati), la durata totale e i chilometri.
 
-Le strategie sono euristiche deterministiche su una matrice stradale condivisa: non certificano un ottimo globale né l'impossibilità matematica di una diversa soluzione.
+Entrambe danno prima priorità al numero di consegne assegnate e poi alla riduzione degli avvisi per sponda/ZTL. Sponda e accesso ZTL restano preferenze: se non è possibile rispettarle il motore conserva la consegna e avvisa l'operatore; anche le assegnazioni manuali restano consentite.
+
+La ricerca usa una sola matrice stradale condivisa. Fino a 7 fermate e 3 coppie confronta tutti i sottoinsiemi, gli ordini e le assegnazioni, compresa la possibilità di lasciare fermate non assegnate. Sceglie il migliore secondo la strategia selezionata, che non coincide necessariamente con i chilometri minimi. Oltre questi limiti usa una ricerca deterministica con budget: raggruppamenti geografici flessibili, riordino, trasferimenti e scambi tra mezzi. Mantiene il piano dell'inserimento precedente come soglia di qualità e non certifica un ottimo globale sui casi grandi.
 L'operatore può indicare la durata massima di ciascun giro e i prezzi energetici nei dettagli della coppia. La disponibilità iniziale verifica la partenza; il calcolo considera anche gli impegni successivi già programmati e i giri in corso.
 
 ## Percorso operativo
@@ -21,13 +23,17 @@ L'operatore può indicare la durata massima di ciascun giro e i prezzi energetic
 
 Le bozze si trovano nello storico. Aprire un singolo giro torna alla normale modifica su un mezzo. Dopo modifiche individuali il gruppo non può più essere programmato in blocco: si usano i comandi ordinari dei singoli giri.
 
-## Vincoli della prima versione
+## Vincoli e configurazione
 
 Massimo 100 fermate e 10 coppie, minimo 2 coppie distinte. Un autista e un mezzo non possono essere selezionati due volte. Deposito, giorno e partenza sono comuni; i giri devono terminare nella stessa giornata. La durata massima iniziale è 480 minuti.
 
-Controlli automatici: kg, colli, sponda, accesso ZTL, fasce di consegna abilitate, impegni esistenti e durata massima. Le preferenze aziendali continuano a governare i vincoli dei clienti; i requisiti espliciti degli ordini vengono preservati. Peso/colli mancanti non consentono una verifica fisica completa. Turni e pause fisse dichiarate vengono considerati durante guida, scarico, attesa e rientro, come descritto in [driver-schedules.md](driver-schedules.md). Volume, pallet, transpallet e altri requisiti richiedono valutazione dell'operatore.
+Vincoli bloccanti: kg, colli, fasce di consegna abilitate, turni, pause, impegni esistenti e durata massima. Preferenze con avviso: sponda e accesso ZTL. Le preferenze aziendali continuano a governare i vincoli dei clienti; i requisiti espliciti degli ordini vengono preservati. Peso/colli mancanti non consentono una verifica fisica completa. Turni e pause fisse dichiarate vengono considerati durante guida, scarico, attesa e rientro, come descritto in [driver-schedules.md](driver-schedules.md). Volume, pallet, transpallet e altri requisiti richiedono valutazione dell'operatore.
 
 Il costo dell'anteprima è carburante/energia, non costo complessivo del servizio. Traffico e pedaggi si applicano alla programmazione secondo i provider già configurati. Se la matrice usa stime approssimative viene segnalato. Email di acquisizione ordini resta in sviluppo, senza modifiche.
+
+Il budget aggiuntivo per i problemi grandi è configurabile con `FLEET_MAX_CANDIDATES`: predefinito tra 5.000 e 20.000 valutazioni, in funzione delle fermate, massimo configurabile 100.000. Il valore 0 mantiene soltanto l'inserimento iniziale per questi casi. Non tronca la ricerca esatta dei casi piccoli. Tutte le proposte usano la stessa matrice; nessuna richiesta Google/Mapbox/OSRM per combinazione. I dati diagnostici `search` della preview indicano metodo, valutazioni e limite raggiunto.
+
+Le zone sono proposte di partenza, non confini obbligatori o nuovi dati da configurare. Le fermate possono passare a un altro giro quando migliora copertura, compatibilità o obiettivo. Le assegnazioni manuali mantengono i gruppi scelti dall'operatore e non applicano riallocazioni automatiche.
 
 ## Persistenza e verifica
 
@@ -38,4 +44,9 @@ Verifiche: `tests/test_fleet_planning.py` (motore reale, provider simulati, ness
 
 ## Verifica della qualità della distribuzione
 
-Il [rapporto delle simulazioni multi-mezzo](fleet-simulation-results.md) confronta entrambe le strategie con riferimenti esatti su piccoli scenari e controlli indipendenti su casi fino a 100 fermate e 10 risorse. Pause rispettate non implicano un'assegnazione globale ottima: sono documentati casi con km evitabili e consegne non assegnate pur esistendo una ripartizione completa. Il benchmark è riproducibile con `python tests/run_fleet_simulations.py`, senza provider o database operativo.
+Il [rapporto iniziale delle simulazioni multi-mezzo](fleet-simulation-results.md) documenta la versione precedente e confronta entrambe le strategie con riferimenti esatti su piccoli scenari e controlli indipendenti su casi fino a 100 fermate e 10 risorse. Pause rispettate non implicano un'assegnazione globale ottima: sono documentati casi con km evitabili e consegne non assegnate pur esistendo una ripartizione completa. Il benchmark è riproducibile con `python tests/run_fleet_simulations.py`, senza provider o database operativo.
+
+
+Il miglioramento è verificabile con `python tests/run_fleet_before_after.py`: esegue gli stessi 512 input prima sullo snapshot dell'inserimento precedente e poi sul motore corrente, senza dati operativi o provider. L'artifact conserva confronti, piani, input e tempi separati. I test di regressione aggiuntivi sono in `tests/test_fleet_search.py`.
+
+Questa modifica non richiede migrazioni né nuove chiavi API e non ricalcola giri storici o anteprime già salvate. Per ottenere la nuova distribuzione si richiede un nuovo calcolo. Le funzioni di conferma, programmazione, traffico, pedaggi e invio notifiche restano quelle esistenti.

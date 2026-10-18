@@ -421,3 +421,14 @@ def test_past_departure_releases_preexisting_unmodified_drafts(fleet,monkeypatch
     assert result.status_code==400,result.text
     assert ctx[1].query(RouteOrderAssignment).count()==0
     assert all(o.status=='pronto' for o in orders)
+
+
+def test_manual_revision_preserves_selected_vehicle_membership(fleet):
+    data=deepcopy(fleet[1]);data['consegne']=data['consegne'][:6];data['strategy']='efficient'
+    plan=preview(fleet,data)
+    assert len(plan['routes'])==1
+    revised=command(fleet,plan,'revise',assignments=[0,0,0,1,1,1])
+    assert revised.status_code==200,revised.text
+    routes={route['resource']:set(route['stop_indexes']) for route in revised.json()['routes']}
+    assert routes=={0:{0,1,2},1:{3,4,5}}
+    assert revised.json()['unassigned']==[]

@@ -1,4 +1,4 @@
-"""Constrained fleet insertion on one shared road matrix, with private persisted previews."""
+"""Fleet-wide search on one shared road matrix, with private persisted previews."""
 from copy import deepcopy
 from datetime import datetime, timedelta
 from ..core.clock import utc_now
@@ -98,7 +98,7 @@ def distribute(db,user,data,assignments=None):
     routes=[[] for _ in vehicles];results=[None for _ in vehicles]
     unresolved={}
 
-    def evaluate(sequence,resource,failures=None):
+    def evaluate(sequence,resource,failures=None,include_details=False):
         def reject(reason):
             if failures is not None:
                 failures.add(reason)
@@ -106,10 +106,10 @@ def distribute(db,user,data,assignments=None):
         if not sequence: return None
         try: opt.validate_vehicle_load(sequence,vehicle_data[resource])
         except ValueError as exc: return reject(str(exc))
-        result=opt._evaluate_fixed_sequence(sequence,matrix,points,vehicle_data[resource],data.rientro_deposito,data.orario_partenza,earliest_windows=True)
+        result=opt._evaluate_fixed_sequence(sequence,matrix,points,vehicle_data[resource],data.rientro_deposito,data.orario_partenza,include_details=include_details,earliest_windows=True)
         if result['violations']:
             return reject('Fasce orarie di consegna o turni e pause non rispettati.')
-        if math.ceil(result['total_min'])>limits[resource]:
+        if math.ceil(result['_objective'][1])>limits[resource]:
             return reject(f'Tempo disponibile insufficiente: {limits[resource]} minuti, considerando durata massima e altri giri già programmati.')
         return result
 
@@ -142,7 +142,39 @@ def distribute(db,user,data,assignments=None):
         # Constrained/heavy jobs first; deterministic ordering for repeatability.
         order=sorted(range(len(rows)),key=lambda i:(not(rows[i]['sponda'] or rows[i]['ztl']),not bool(opt.delivery_windows(rows[i])),-rows[i]['peso_kg'],-rows[i]['colli'],i))
         for index in order: insert(index)
+        from .fleet_search import optimize_fleet
+        import json
+        def equipment(sequence, resource):
+            return sum(
+                int(bool(rows[i].get('sponda')) and not vehicles[resource].ha_sponda)
+                + int(bool(rows[i].get('ztl')) and not vehicles[resource].accesso_ztl)
+                for i in sequence)
+        signature_fields=('driver_schedule','ha_sponda','accesso_ztl','capacita_kg','capacita_colli')
+        signatures=[json.dumps({key:v.get(key) for key in signature_fields},sort_keys=True,default=str)+':'+str(limit)
+                    for v,limit in zip(vehicle_data,limits)]
+        proposed,_,search=optimize_fleet(
+            rows,len(vehicles),
+            lambda sequence,resource:evaluate([rows[i] for i in sequence],resource),
+            data.strategy,initial_routes=[
+                [row['fleet_stop_index'] for row in route] for route in routes],
+            initial_results=results,matrix=matrix,points=points,
+            equipment_penalty=equipment,resource_signatures=signatures,
+            return_depot=data.rientro_deposito)
+        routes=[[rows[i] for i in sequence] for sequence in proposed]
+        assigned={i for sequence in proposed for i in sequence}
+        unresolved={}
+        for index in range(len(rows)):
+            if index in assigned: continue
+            reasons=[]
+            for resource,sequence in enumerate(routes):
+                failures=set()
+                for position in range(len(sequence)+1):
+                    evaluate(sequence[:position]+[rows[index]]+sequence[position:],resource,failures)
+                if failures:
+                    reasons.append(f'Giro {resource+1}: '+ ' '.join(sorted(failures)))
+            unresolved[index]='Nessun inserimento compatibile trovato nella suddivisione corrente. '+ ' '.join(reasons)
     else:
+        search={'method':'manual-membership','equipment_policy':'prefer-compatible-with-warning-fallback'}
         if len(assignments)!=len(rows) or any(a is not None and (a<0 or a>=len(routes)) for a in assignments):
             raise HTTPException(422,'Assegna ogni consegna una sola volta a una risorsa valida.')
         for index,resource in enumerate(assignments):
@@ -157,6 +189,9 @@ def distribute(db,user,data,assignments=None):
             results[resource]=evaluate(routes[resource],resource,failures)
             if results[resource] is None:
                 raise HTTPException(422,f'Giro {resource+1}: '+ ' '.join(sorted(failures))+' Modifica l’assegnazione e ricalcola.')
+    # Generate complete ETA and diagnostic details only for selected final routes.
+    results=[evaluate(sequence,index,include_details=True) if sequence else None
+             for index,sequence in enumerate(routes)]
     output=[]
     for index,result in enumerate(results):
         if result is None: continue
@@ -184,7 +219,7 @@ def distribute(db,user,data,assignments=None):
                 if rows[index].get('ztl'):
                     warnings.append(f"Giro {route['resource']+1} · {rows[index]['cliente_nome']}: attenzione, questa consegna è in ZTL, ma il mezzo non è abilitato all’accesso.")
     return {'routes':output,'unassigned':[{'index':i,'reason':reason} for i,reason in sorted(unresolved.items())],
-            'resource_capabilities':[{'has_tail_lift':bool(v.ha_sponda),'has_ztl_access':bool(v.accesso_ztl)} for v in vehicles],
+            'search':search,'resource_capabilities':[{'has_tail_lift':bool(v.ha_sponda),'has_ztl_access':bool(v.accesso_ztl)} for v in vehicles],
             'warnings':warnings,'validated_stops':frozen,'validated_depot':{'id':deposit.id,'indirizzo':deposit.indirizzo,'lat':deposit.lat,'lon':deposit.lon},'source':getattr(matrix,'source','osrm')}
 
 
@@ -192,7 +227,7 @@ def public(plan):
     return {'id':plan.id,'version':plan.version,'status':plan.status,'configuration':plan.configuration,
             'routes':[{k:v for k,v in r.items()} for r in plan.result['routes']],
             'unassigned':plan.result['unassigned'],'warnings':plan.result['warnings'],'route_ids':plan.route_ids,
-            'resource_capabilities':plan.result.get('resource_capabilities',[])}
+            'resource_capabilities':plan.result.get('resource_capabilities',[]),'search':plan.result.get('search',{})}
 
 
 def check_version(plan,version):

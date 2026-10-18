@@ -323,8 +323,12 @@ def summarize(records, cases, deterministic, reorder_changes):
 
 
 def markdown(summary, examples, metadata):
+    before=metadata.get("fleet_implementation")=="before"
+    method=("Baseline congelata: inserimento progressivo senza riallocazione globale."
+            if before else "Ricerca esatta sui piccoli casi e ricerca limitata con raggruppamenti geografici e scambi sui grandi.")
     lines = [
         "# Simulazioni della distribuzione multi-mezzo", "",
+        method, "",
         f"Commit eseguito: {metadata['tested_commit']}.",
         f"Generato: {metadata['generated_at_utc']}. Matrici congelate e dati fittizi; nessun dato operativo.", "",
         f"Scenari distinti: **{summary['unique_scenarios']}**. Esecuzioni: **{summary['total_runs']}**; "
@@ -365,11 +369,11 @@ def markdown(summary, examples, metadata):
         f"Stress: mediana {summary['stress_runtime_ms']['median']:.1f} ms, p95 {summary['stress_runtime_ms']['p95']:.1f} ms, "
         f"massimo {summary['stress_runtime_ms']['max']:.1f} ms per distribuzione.",
         "Tempi del solo motore, senza database/provider, su runner CI: non sono tempi garantiti in produzione.",
-        "La flotta automatica usa inserimento progressivo, senza riallocazione globale. Efficient preferisce "
-        "mezzi già usati e incremento minuti; balanced impiega risorse e bilancia durata. Nessuna certifica i km minimi.",
+        "Il confronto valuta copertura, avvisi e obiettivo di ogni strategia separatamente. "
+        "Gli obiettivi non equivalgono alla sola minimizzazione dei km.",
         "Partenza/deposito/giornata comuni; pause fisse dichiarate. Niente ricerca di partenze differenziate "
         "né verifica automatica normativa ore guida. Sponda/ZTL sono preferenze con avviso; volume/pallet "
-        "non sono capacità rigide. Algoritmo, prezzi, database e pagine non sono stati modificati.",
+        "non sono capacità rigide. La campagna usa solo dati fittizi e matrici congelate.",
         "Il benchmark testa il nucleo della distribuzione. Persistenza, autorizzazioni e traffico sono coperti "
         "dai test applicativi separati. Il traffico reale futuro non è certificabile con matrici congelate.", "",
         "## Riproduzione", "",
@@ -469,6 +473,7 @@ def main():
         commit = "unknown"
     paths = ("app/optimizer.py", "app/services/fleet_planning.py",
              "app/services/driver_schedule.py", "app/services/optimizer_search.py",
+             "app/services/fleet_search.py",
              "tests/run_fleet_simulations.py", "tests/fleet_quality_reference.py",
              "tests/fleet_simulation_cases.py")
     metadata = {
