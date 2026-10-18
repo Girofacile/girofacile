@@ -4164,64 +4164,172 @@ async function openDashboardScheduledPage(routeId=null){
   await loadDashboardScheduledPage(routeId);
 }
 
+// Settimana a 7 card in alto, tabella dei giri del giorno scelto e dettaglio del giro nel pannello laterale.
+let dashboardScheduledRoutes = [];
+let dashboardScheduledDay = null;
+const DASH_SCHEDULED_DAY_NAMES = ['Domenica','Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato'];
+const DASH_SCHEDULED_MONTHS = ['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];
+
 async function loadDashboardScheduledPage(routeId=null){
   const page = document.getElementById('dashboardScheduledPage');
   if(page) page.innerHTML = `<div class="gf-loading" role="status"><strong>Caricamento giri programmati...</strong><p>Sto recuperando i giri non ancora avviati.</p></div>`;
   try{
     const rows = await api('/api/routes/operativi');
     const scheduled = rows.filter(r=>r.status==='programmato');
-    const selectedId = routeId || dashboardScheduledSelectedId || (scheduled[0] && scheduled[0].id);
-    let selected = scheduled.find(r=>Number(r.id)===Number(selectedId)) || scheduled[0] || null;
-    if(selected) selected = await api(`/api/routes/${selected.id}`);
+    // Il dettaglio si apre solo quando è richiesto un giro preciso (Dashboard, aggiornamento ETA).
+    const wanted = routeId ? scheduled.find(r=>Number(r.id)===Number(routeId)) : null;
+    const selected = wanted ? await api(`/api/routes/${wanted.id}`) : null;
     renderDashboardScheduledSubpage(scheduled, selected);
   }catch(e){ if(page) page.innerHTML = `<div class="gf-alert" data-status="danger"><div class="gf-alert__body"><strong class="gf-alert__title">Errore</strong><p>${esc(e.message)}</p></div></div>`; }
+}
+
+function dashScheduledDate(iso){ const d = new Date(`${iso}T00:00:00`); return Number.isNaN(d.getTime()) ? null : d; }
+function dashScheduledIso(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function dashScheduledAddDays(iso, days){ const d = dashScheduledDate(iso); d.setDate(d.getDate()+days); return dashScheduledIso(d); }
+function dashScheduledMonday(iso){ const d = dashScheduledDate(iso); return dashScheduledAddDays(iso, -((d.getDay()+6)%7)); }
+function dashScheduledDayLabel(iso){ const d = dashScheduledDate(iso); return `${DASH_SCHEDULED_DAY_NAMES[d.getDay()]} ${d.getDate()} ${DASH_SCHEDULED_MONTHS[d.getMonth()]}`; }
+function dashScheduledMinutes(value){ const m = Math.round(Number(value||0)); return m >= 60 ? `${Math.floor(m/60)} h ${String(m%60).padStart(2,'0')} min` : `${m} min`; }
+function dashScheduledMoney(value){ return value === null || value === undefined || value === '' ? '-' : '€ '+Number(value).toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function dashScheduledRoutesOf(iso){ return dashboardScheduledRoutes.filter(r=>r.data_giro===iso).sort((a,b)=>String(a.orario_partenza||'').localeCompare(String(b.orario_partenza||''))); }
+
+function selectDashboardScheduledDay(iso){
+  dashboardScheduledDay = iso;
+  renderDashboardScheduledSubpage(dashboardScheduledRoutes, null);
+}
+function shiftDashboardScheduledWeek(weeks){
+  const base = dashScheduledMonday(dashboardScheduledDay || todayIso());
+  selectDashboardScheduledDay(weeks ? dashScheduledAddDays(base, weeks*7) : todayIso());
+}
+async function openDashboardScheduledRoute(routeId){
+  dashboardScheduledSelectedId = routeId;
+  try{ renderDashboardScheduledSubpage(dashboardScheduledRoutes, await api(`/api/routes/${routeId}`)); }
+  catch(e){ toast(e.message); }
+}
+function closeDashboardScheduledRoute(){ document.getElementById('dashboardScheduledDialog')?.close?.(); }
+
+function dashboardScheduledWeekHtml(){
+  const monday = dashScheduledMonday(dashboardScheduledDay);
+  const days = Array.from({length:7},(_,i)=>dashScheduledAddDays(monday,i));
+  const first = dashScheduledDate(days[0]), last = dashScheduledDate(days[6]);
+  const range = first.getMonth()===last.getMonth()
+    ? `${first.getDate()} – ${last.getDate()} ${DASH_SCHEDULED_MONTHS[last.getMonth()]} ${last.getFullYear()}`
+    : `${first.getDate()} ${DASH_SCHEDULED_MONTHS[first.getMonth()]} – ${last.getDate()} ${DASH_SCHEDULED_MONTHS[last.getMonth()]} ${last.getFullYear()}`;
+  const cards = days.map(iso=>{
+    const d = dashScheduledDate(iso);
+    const list = dashScheduledRoutesOf(iso);
+    const items = list.length
+      ? list.map(r=>`<li><button type="button" class="gf-list-item" onclick="openDashboardScheduledRoute(${Number(r.id)})"><span class="gf-list-item__main"><strong>${esc(r.orario_partenza || '-')}</strong><small>${esc(r.nome || 'Giro consegne')}</small></span></button></li>`).join('')
+      : '<li class="gf-list-item"><span class="gf-muted">Nessun giro</span></li>';
+    return `<section class="gf-panel" aria-label="${esc(dashScheduledDayLabel(iso))}">
+      <header class="gf-panel__header"><button type="button" class="gf-chip" aria-pressed="${iso===dashboardScheduledDay}" onclick="selectDashboardScheduledDay('${iso}')">${DASH_SCHEDULED_DAY_NAMES[d.getDay()]}&nbsp;${d.getDate()} <span class="gf-chip__count">${list.length}</span></button></header>
+      <ul class="gf-list">${items}</ul>
+    </section>`;
+  }).join('');
+  return `<section class="gf-stack" aria-labelledby="scheduledWeekTitle">
+    <div class="gf-cluster" data-justify="between"><h2 class="gf-title" id="scheduledWeekTitle">Settimana ${esc(range)}</h2>
+      <div class="gf-cluster"><button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="shiftDashboardScheduledWeek(-1)">‹ Precedente</button><button type="button" class="gf-button" data-variant="ghost" data-size="sm" onclick="shiftDashboardScheduledWeek(0)">Oggi</button><button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="shiftDashboardScheduledWeek(1)">Successiva ›</button><button type="button" class="gf-button" data-variant="primary" data-size="sm" onclick="openPlanningSelection()">Pianifica giro</button></div>
+    </div>
+    <div class="gf-grid" data-cols="7">${cards}</div>
+  </section>`;
+}
+
+function dashboardScheduledDayHtml(){
+  const list = dashScheduledRoutesOf(dashboardScheduledDay);
+  const stops = list.reduce((sum,r)=>sum+Number(r.consegne_count||0),0);
+  const meta = list.length ? `${list.length} ${list.length===1?'giro programmato':'giri programmati'} · ${stops} ${stops===1?'fermata':'fermate'}` : '';
+  const rowHtml = r=>{
+    const vehicleParts = String(r.vehicle_name || '-').split(' · ');
+    const count = Number(r.consegne_count||0);
+    return `<tr>
+      <td data-label="Orario"><span class="gf-badge" data-status="warning" data-dot>${esc(r.orario_partenza || '-')} – ${esc(r.rientro_stimato_aggiornato || r.orario_rientro_stimato || '-')}</span></td>
+      <td data-label="Giro"><strong>${esc(r.nome || 'Giro consegne')}</strong></td>
+      <td data-label="Fermate">${count} ${count===1?'fermata':'fermate'}</td>
+      <td data-label="Autista">${esc(r.driver_name || 'Non assegnato')}</td>
+      <td data-label="Mezzo"><span class="gf-list-item__main"><strong>${esc(vehicleParts[0])}</strong>${vehicleParts.length>1?`<small>${esc(vehicleParts.slice(1).join(' · '))}</small>`:''}</span></td>
+      <td data-label="Km previsti">${esc(r.totale_km ?? '-')} km</td>
+      <td data-label="Guida">${dashScheduledMinutes(r.totale_minuti)}</td>
+      <td data-label="Costo stimato">${dashScheduledMoney(r.costo_carburante)}</td>
+      <td data-label="Azioni"><button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="openDashboardScheduledRoute(${Number(r.id)})">Apri giro</button></td>
+    </tr>`;
+  };
+  const body = list.length
+    ? `<div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards">
+        <thead><tr><th scope="col">Orario</th><th scope="col">Giro</th><th scope="col">Fermate</th><th scope="col">Autista</th><th scope="col">Mezzo</th><th scope="col">Km previsti</th><th scope="col">Guida</th><th scope="col">Costo stimato</th><th scope="col">Azioni</th></tr></thead>
+        <tbody>${list.map(rowHtml).join('')}</tbody>
+      </table></div>`
+    : `<div class="gf-empty"><h3 class="gf-subtitle">Nessun giro programmato</h3><p>In questa giornata non ci sono giri assegnati.</p><button type="button" class="gf-button" data-variant="secondary" onclick="openPlanningSelection()">Pianifica un giro</button></div>`;
+  return `<section class="gf-panel" aria-labelledby="scheduledDayTitle">
+    <header class="gf-panel__header"><h2 class="gf-panel__title" id="scheduledDayTitle">${esc(dashScheduledDayLabel(dashboardScheduledDay))}</h2><span class="gf-panel__meta">${esc(meta)}</span></header>
+    ${body}
+  </section>`;
+}
+
+function dashboardScheduledStopsHtml(r){
+  const rows = r.consegne || [];
+  if(!rows.length) return `<div class="gf-empty"><p>Nessuna fermata collegata a questo giro.</p></div>`;
+  const breaks = after => (r.driver_breaks || []).filter(b=>b.after_order===after).map(b=>`<li class="gf-stop"><span class="gf-stop__number" aria-label="Pausa">Ⅱ</span><span class="gf-stop__main"><span class="gf-stop__name">Pausa autista dalle ${esc(b.start)} alle ${esc(b.end)}</span><span class="gf-stop__meta">Riposo pianificato · ${Number(b.duration_min)} minuti</span></span></li>`).join('');
+  return `<ol class="gf-stop-list" data-height="auto" aria-label="Fermate del giro">${breaks(0)}${rows.map((d, idx)=>{
+    const note = d.note_operatore || d.note_autista || d.note || '';
+    return `<li class="gf-stop"><span class="gf-stop__number">${esc(d.ordine || idx+1)}</span>
+      <span class="gf-stop__main"><span class="gf-stop__name">${esc(d.cliente_nome || '-')}</span>
+        <span class="gf-stop__meta">${esc(d.indirizzo || '-')}${d.ztl?' <span class="gf-badge" data-kind="ztl">ZTL</span>':''}${d.sponda?' <span class="gf-badge" data-kind="tail-lift">Sponda</span>':''}</span>
+        <span class="gf-stop__meta">${deliverySignatureAction(d, r.driver_name)} ${trackingButton(d, r)}${note ? ` <button type="button" class="gf-button" data-variant="ghost" data-size="sm" data-note="${esc(String(note))}" onclick="alert(this.dataset.note)">Note</button>` : ''}</span>
+      </span><span class="gf-stop__time">${esc(gfPlannedArrival(d))}</span></li>${breaks(idx+1)}`;
+  }).join('')}</ol>`;
+}
+
+function dashboardScheduledDialogHtml(r){
+  const rows = r.consegne || [];
+  const energy = gfRouteEnergyMetric(r);
+  const item = (label, value) => `<div class="gf-details__item"><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`;
+  return `<dialog class="gf-modal" id="dashboardScheduledDialog" data-position="side" data-size="lg" aria-labelledby="scheduledDialogTitle">
+    <header class="gf-modal__header">
+      <div><p class="gf-kicker">Giro programmato · ${esc(r.data_giro ? dashScheduledDayLabel(r.data_giro).toLowerCase() : '-')}</p><h2 class="gf-modal__title" id="scheduledDialogTitle">${esc(r.nome || 'Giro consegne')}</h2></div>
+      <span class="gf-badge" data-status="warning" data-dot>Programmato</span>
+      <button type="button" class="gf-icon-button" aria-label="Chiudi" onclick="closeDashboardScheduledRoute()"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12 M18 6L6 18"/></svg></button>
+    </header>
+    <div class="gf-modal__body gf-stack">
+      ${r.driver_schedule_error ? `<p class="gf-alert" data-status="danger" role="alert">${esc(r.driver_schedule_error)}</p>` : ''}
+      <div class="gf-crew"><div><small>Autista</small><strong>${esc(r.driver_name || 'Non assegnato')}</strong></div><div><small>Mezzo</small><strong>${esc(r.vehicle_name || '-')}</strong></div></div>
+      <dl class="gf-details">
+        ${item('Partenza', r.orario_partenza || '-')}${item('Rientro previsto', r.rientro_stimato_aggiornato || r.orario_rientro_stimato || '-')}
+        ${item('Km previsti', (r.totale_km ?? '-')+' km')}${item('Tempo previsto', dashScheduledMinutes(r.totale_minuti))}
+        ${item(energy.label, energy.value)}${item(energy.costLabel, dashScheduledMoney(r.costo_carburante))}
+        ${item('Pedaggio stimato', r.toll_estimated_eur == null ? 'Non disponibile' : dashScheduledMoney(r.toll_estimated_eur))}${item('Costo operativo stimato', dashScheduledMoney(r.costo_totale ?? r.costo_carburante))}
+      </dl>
+      <h3 class="gf-subtitle">${rows.length} ${rows.length===1?'fermata':'fermate'} in ordine di consegna</h3>
+      ${dashboardScheduledStopsHtml(r)}
+      <p class="gf-alert" data-status="info">${esc(r.eta_label || 'ETA storico salvato')}${r.traffic_status==='unavailable' ? '. Traffico non disponibile: usati i tempi stradali salvati.' : ''}</p>
+    </div>
+    <footer class="gf-modal__footer">
+      <button type="button" class="gf-button" data-variant="secondary" onclick="refreshRouteTraffic(${Number(r.id)}, 'dashboardScheduledPage', 'scheduled')">Aggiorna ETA con traffico</button>
+      <button type="button" class="gf-button" data-variant="primary" onclick="openProgrammedRouteForEdit(${Number(r.id)}, true)">Modifica dalla pianificazione</button>
+    </footer>
+  </dialog>`;
 }
 
 function renderDashboardScheduledSubpage(routes, selectedRoute){
   const page = document.getElementById('dashboardScheduledPage');
   if(!page) return;
-  if(!routes.length){
+  dashboardScheduledRoutes = routes || [];
+  if(!dashboardScheduledRoutes.length){
     page.innerHTML = `<div class="gf-empty"><h2>Nessun giro programmato</h2><p>I giri salvati e assegnati compariranno qui finché l’autista non li avvia.</p><button type="button" class="gf-button" data-variant="primary" onclick="openPlanningSelection()">Pianifica un giro</button></div>`;
     return;
   }
-  const r = selectedRoute || routes[0];
-  dashboardScheduledSelectedId = r.id;
-  const rows = r.consegne || [];
-  const completed = rows.filter(d=>(d.delivery_status || d.status) === 'completata').length;
-  const missed = rows.filter(d=>(d.delivery_status || d.status) === 'mancata').length;
-  const pending = Math.max(rows.length - completed - missed, 0);
-  const metrics = [
-    ['Km previsti', (r.totale_km ?? '-')+' km'],
-    ['Tempo previsto', Math.round(Number(r.totale_minuti||0))+' min'],
-    ['Consegne', completed+'/'+rows.length, missed+' mancate · '+pending+' da fare'],
-    [gfRouteEnergyMetric(r).label, gfRouteEnergyMetric(r).value],
-    ['Costo stimato', '€ '+(r.costo_carburante ?? '-')],
-    ['Rientro previsto', r.rientro_stimato_aggiornato || r.orario_rientro_stimato || '-']
-  ];
-  const vehicleParts = String(r.vehicle_name || '-').split(' · ');
-  const item = (label, value, detail) => `<div class="gf-details__item"><dt>${esc(label)}</dt><dd><strong>${esc(value)}</strong>${detail ? '<br><small class="gf-muted">'+esc(detail)+'</small>' : ''}</dd></div>`;
-  page.innerHTML = `
-    ${routes.length > 1 ? dashboardRoutePicker(routes, r.id, 'openDashboardScheduledPage', 'Seleziona giro programmato') : ''}
-    <section class="gf-panel" aria-label="Giro programmato">
-      <div class="gf-panel__body gf-cluster" data-justify="between">
-        <div><p class="gf-kicker">Giro programmato</p><h2 class="gf-title">${esc(r.nome || 'Giro consegne')}</h2><small class="gf-muted">${esc(r.data_giro || '-')}</small></div>
-        <dl class="gf-details">${item('Autista', r.driver_name || 'Non assegnato')}${item('Mezzo', vehicleParts[0], vehicleParts.slice(1).join(' · '))}</dl>
-        <span class="gf-badge" data-status="warning" data-dot>Programmato</span>
-        <button type="button" class="gf-button" data-variant="primary" onclick="openProgrammedRouteForEdit(${Number(r.id)}, true)">Modifica dalla pianificazione</button>
-      </div>
-    </section>
-    <div class="gf-stat-strip">${metrics.map(([label,value,detail])=>`<div class="gf-stat-strip__cell"><span class="gf-stat-strip__label">${esc(label)}</span><strong class="gf-stat-strip__value">${esc(value)}</strong>${detail ? '<small class="gf-stat-strip__unit">'+esc(detail)+'</small>' : ''}</div>`).join('')}</div>
-    ${window.GiroFacileRouting.summaryHtml(r, `refreshRouteTraffic(${Number(r.id)}, 'dashboardScheduledPage', 'scheduled')`)}
-    <div class="gf-grid" data-cols="main-side">
-      <section class="gf-panel" aria-labelledby="scheduledStopsTitle">
-        <header class="gf-panel__header"><div><h2 class="gf-panel__title" id="scheduledStopsTitle">Fermate programmate</h2><p class="gf-muted">Sequenza prevista prima dell'avvio del giro. La colonna reale resta vuota finché l'autista non gestisce la tappa.</p></div></header>
-        ${dashboardStopRowsUnified(r, 'scheduled')}
-      </section>
-      <aside class="gf-panel" aria-labelledby="scheduledSummaryTitle">
-        <header class="gf-panel__header"><div><h2 class="gf-panel__title" id="scheduledSummaryTitle">Riepilogo giro</h2><p class="gf-muted">Totali e informazioni principali</p></div></header>
-        <div class="gf-panel__body"><dl class="gf-details">${metrics.map(([label,value,detail])=>item(label, value, detail)).join('')}${item('Orario di partenza', r.orario_partenza || '-')}</dl></div>
-      </aside>
-    </div>`;
+  if(selectedRoute && selectedRoute.data_giro) dashboardScheduledDay = selectedRoute.data_giro;
+  if(!dashboardScheduledDay){
+    // Si parte da oggi; se oggi non ha giri, dal primo giorno successivo che ne ha.
+    const today = todayIso();
+    const next = dashboardScheduledRoutes.map(r=>r.data_giro).filter(d=>d && d >= today).sort()[0];
+    dashboardScheduledDay = dashboardScheduledRoutes.some(r=>r.data_giro===today) || !next ? today : next;
+  }
+  if(selectedRoute) dashboardScheduledSelectedId = selectedRoute.id;
+  page.innerHTML = dashboardScheduledWeekHtml() + dashboardScheduledDayHtml() + (selectedRoute ? dashboardScheduledDialogHtml(selectedRoute) : '');
+  const dialog = selectedRoute ? document.getElementById('dashboardScheduledDialog') : null;
+  if(dialog && typeof dialog.showModal === 'function' && !dialog.open){
+    dialog.addEventListener('click', event => { if(event.target === dialog) dialog.close(); });
+    dialog.showModal();
+  }
 }
 
 async function openDashboardCompletedPage(routeId=null){

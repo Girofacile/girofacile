@@ -220,6 +220,8 @@ body[data-gf-surface] .gf-grid[data-size="sm"]{gap:var(--gf-space-4);grid-templa
 body[data-gf-surface] .gf-grid[data-cols="2"]{grid-template-columns:repeat(2,minmax(0,1fr))}
 body[data-gf-surface] .gf-grid[data-cols="3"]{grid-template-columns:repeat(3,minmax(0,1fr))}
 body[data-gf-surface] .gf-grid[data-cols="4"]{grid-template-columns:repeat(4,minmax(0,1fr))}
+/* 7 colonne strette (una per giorno della settimana): 4 sotto i 1024 px, 2 su smartphone. Approvata il 18 ottobre 2026. */
+body[data-gf-surface] .gf-grid[data-cols="7"]{gap:var(--gf-space-3);grid-template-columns:repeat(7,minmax(0,1fr))}
 body[data-gf-surface] .gf-grid[data-cols="main-side"]{grid-template-columns:minmax(0,1.7fr) minmax(280px,1fr)}
 body[data-gf-surface] .gf-grid[data-cols="side-main"]{grid-template-columns:minmax(220px,1fr) minmax(0,2.4fr)}
 
@@ -475,9 +477,11 @@ body[data-gf-surface] .gf-catalog-section{scroll-margin-top:var(--gf-space-6)}
   body[data-gf-surface] .gf-route-panel__map{border-right:0;border-bottom:var(--gf-border)}
   body[data-gf-surface] .gf-grid:is([data-cols="3"],[data-cols="4"]){grid-template-columns:repeat(2,minmax(0,1fr))}
   body[data-gf-surface] .gf-grid:is([data-cols="main-side"],[data-cols="side-main"]){grid-template-columns:minmax(0,1fr)}
+  body[data-gf-surface] .gf-grid[data-cols="7"]{grid-template-columns:repeat(4,minmax(0,1fr))}
 }
 @media (max-width:640px){
   body[data-gf-surface] .gf-grid:is([data-cols="2"],[data-cols="3"],[data-cols="4"]){grid-template-columns:minmax(0,1fr)}
+  body[data-gf-surface] .gf-grid[data-cols="7"]{grid-template-columns:repeat(2,minmax(0,1fr))}
   body[data-gf-surface] .gf-stat-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
   body[data-gf-surface] .gf-stat-strip__cell{border-left:0;border-top:var(--gf-border);padding:var(--gf-space-3) var(--gf-space-4)}
   body[data-gf-surface] .gf-stat-strip__cell:nth-child(-n+2){border-top:0}

@@ -13,18 +13,22 @@ function fixture(){
   vm.runInContext(core.slice(core.indexOf('function gfRouteEnergyMetric('),core.indexOf('function updateDashboardStats(')),ctx);
   vm.runInContext(fs.readFileSync('static/routing-summary.js','utf8'),ctx);
   vm.runInContext(fs.readFileSync('static/tracking/company.js','utf8'),ctx);
-  const parts=[core.slice(core.indexOf('function esc('),core.indexOf('\n',core.indexOf('function esc('))),core.slice(core.indexOf('function deliveryStatusPill('),core.indexOf('function signatureDateLabel(')),core.slice(core.indexOf('function gfTimeFromIso('),core.indexOf('function renderDashboardInProgressSubpage(')),core.slice(core.indexOf('function renderDashboardScheduledSubpage('),core.indexOf('async function openDashboardCompletedPage(')),core.slice(core.indexOf('async function openProgrammedRouteForEdit('),core.indexOf('function renderRouteResult('))];
+  const parts=[core.slice(core.indexOf('function esc('),core.indexOf('\n',core.indexOf('function esc('))),core.slice(core.indexOf('function deliveryStatusPill('),core.indexOf('function signatureDateLabel(')),core.slice(core.indexOf('function gfTimeFromIso('),core.indexOf('function renderDashboardInProgressSubpage(')),core.slice(core.indexOf('async function openDashboardScheduledPage('),core.indexOf('async function openDashboardCompletedPage(')),core.slice(core.indexOf('async function openProgrammedRouteForEdit('),core.indexOf('function renderRouteResult('))];
   vm.runInContext(parts.join('\n'),ctx);
   ctx.route=route;
   return {node,fields,tabs,errors,ctx,route,run:code=>vm.runInContext(code,ctx)};
 }
-test('scheduled overview preserves selection, delivery counts, zero metrics and escaped notes',()=>{
+test('scheduled week shows seven days, the day table and the route drawer with escaped notes',()=>{
   const f=fixture();f.run('renderDashboardScheduledSubpage([route],route)');const html=f.node.innerHTML;
-  // Sei indicatori nella striscia numeri del sistema.
-  assert.equal((html.match(/class="gf-stat-strip__cell"/g)||[]).length,6);
-  for(const text of ['1/3','1 mancate · 1 da fare','0 km','0 min','Cliente &lt;test&gt;','data-note="All&#39;ingresso &quot;laterale&quot;','alert(this.dataset.note)','openProgrammedRouteForEdit(42, true)']) assert.ok(html.includes(text),text);
-  assert.doesNotMatch(html,/onchange="openDashboardScheduledPage/);
-  f.run('renderDashboardScheduledSubpage([route,{...route,id:43}],route)');assert.match(f.node.innerHTML,/openDashboardScheduledPage/);
+  // Sette card dei giorni affiancate, con giorno e data sempre sulla stessa riga.
+  assert.match(html,/class="gf-grid" data-cols="7"/);
+  assert.equal((html.match(/class="gf-chip"/g)||[]).length,7);
+  assert.match(html,/Martedì&nbsp;29 <span class="gf-chip__count">1<\/span>/);
+  assert.match(html,/Settimana 28 settembre – 4 ottobre 2026/);
+  for(const text of ['Giro selezionato','3 fermate','0 km','0 min','Cliente &lt;test&gt;','data-note="All&#39;ingresso &quot;laterale&quot;','alert(this.dataset.note)','openProgrammedRouteForEdit(42, true)',"refreshRouteTraffic(42, 'dashboardScheduledPage', 'scheduled')",'openDashboardScheduledRoute(42)','id="dashboardScheduledDialog"']) assert.ok(html.includes(text),text);
+  f.run('selectDashboardScheduledDay("2026-09-30")');
+  assert.match(f.node.innerHTML,/In questa giornata non ci sono giri/);
+  assert.doesNotMatch(f.node.innerHTML,/dashboardScheduledDialog/);
   f.run('renderDashboardScheduledSubpage([],null)');assert.match(f.node.innerHTML,/Nessun giro programmato/);
 });
 test('direct edit hydrates the selected scheduled route and stays in planning',async()=>{
