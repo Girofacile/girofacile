@@ -234,9 +234,11 @@ jobs:
       - name: Install isolated simulation dependencies
         run: pip install -r requirements.txt
       - name: Verify the independent reference and existing fleet scheduling contracts
-        run: python -m pytest tests/test_fleet_quality_reference.py tests/test_fleet_planning.py tests/test_driver_schedule.py tests/test_fleet_search.py tests/test_fleet_search_budget.py tests/test_fleet_before_after.py -q -ra
+        run: python -m pytest tests/test_fleet_quality_reference.py tests/test_fleet_planning.py tests/test_driver_schedule.py tests/test_fleet_search.py tests/test_fleet_search_budget.py tests/test_fleet_before_after.py tests/test_fleet_route_exact.py tests/test_fleet_route_exact_api.py tests/test_fleet_route_evaluator.py -q -ra
       - name: Compare previous and current multi-vehicle planner with frozen matrices
         run: python tests/run_fleet_before_after.py
+      - name: Verify complete route orders for 50-delivery fleets
+        run: python tests/run_fleet_route_exact_benchmark.py
       - name: Preserve reproducible simulation results
         if: always()
         uses: actions/upload-artifact@v4

@@ -156,7 +156,7 @@ def distribute(db,user,data,assignments=None):
         signature_fields=('driver_schedule','ha_sponda','accesso_ztl','capacita_kg','capacita_colli')
         signatures=[json.dumps({key:v.get(key) for key in signature_fields},sort_keys=True,default=str)+':'+str(limit)
                     for v,limit in zip(vehicle_data,limits)]
-        proposed,_,search=optimize_fleet(
+        proposed,optimized_results,search=optimize_fleet(
             rows,len(vehicles),
             lambda sequence,resource:evaluate([rows[i] for i in sequence],resource),
             data.strategy,initial_routes=[
@@ -165,7 +165,45 @@ def distribute(db,user,data,assignments=None):
             equipment_penalty=equipment,resource_signatures=signatures,
             return_depot=data.rientro_deposito)
         routes=[[rows[i] for i in sequence] for sequence in proposed]
-        assigned={i for sequence in proposed for i in sequence}
+        results=list(optimized_results)
+    else:
+        search={'method':'manual-membership','equipment_policy':'prefer-compatible-with-warning-fallback'}
+        if len(assignments)!=len(rows) or any(a is not None and (a<0 or a>=len(routes)) for a in assignments):
+            raise HTTPException(422,'Assegna ogni consegna una sola volta a una risorsa valida.')
+        for index,resource in enumerate(assignments):
+            if resource is None: unresolved[index]='Lasciata non assegnata dall operatore.'
+            else: routes[resource].append(rows[index])
+        for resource,sequence in enumerate(routes):
+            if not sequence: continue
+            # Keep the existing classic search above eight stops. Smaller
+            # memberships are ordered exhaustively in the common final pass.
+            if len(sequence)>8:
+                ordered=opt._best_internal_sequence(sequence,matrix,points,vehicle_data[resource],data.rientro_deposito,data.orario_partenza)['ordered']
+                routes[resource]=[rows[s['fleet_stop_index']] for s in ordered]
+            failures=set()
+            results[resource]=evaluate(routes[resource],resource,failures)
+            if len(sequence)>8 and results[resource] is None:
+                raise HTTPException(422,f'Giro {resource+1}: '+ ' '.join(sorted(failures))+' Modifica l’assegnazione e ricalcola.')
+    from .fleet_search import refine_routes
+    from .fleet_route_evaluator import FixedRouteEvaluator
+    sequences=tuple(tuple(row['fleet_stop_index'] for row in route) for route in routes)
+    refined,results,refinement=refine_routes(
+        sequences,results,
+        lambda sequence,resource:evaluate([rows[i] for i in sequence],resource),
+        global_exact=bool(search.get('global_optimum_proven')),
+        prepare=lambda sequence,resource:FixedRouteEvaluator(
+            rows,sequence,matrix,points,vehicle_data[resource],data.rientro_deposito,
+            data.orario_partenza,limits[resource]))
+    search.update(refinement)
+    routes=[[rows[i] for i in sequence] for sequence in refined]
+    for resource,sequence in enumerate(routes):
+        if sequence and results[resource] is None:
+            failures=set()
+            evaluate(sequence,resource,failures)
+            raise HTTPException(422,f'Giro {resource+1}: '+ ' '.join(sorted(failures))+
+                                ' Nessun ordine compatibile per le consegne assegnate. Modifica l’assegnazione e ricalcola.')
+    if assignments is None:
+        assigned={i for sequence in refined for i in sequence}
         unresolved={}
         for index in range(len(rows)):
             if index in assigned: continue
@@ -176,23 +214,7 @@ def distribute(db,user,data,assignments=None):
                     evaluate(sequence[:position]+[rows[index]]+sequence[position:],resource,failures)
                 if failures:
                     reasons.append(f'Giro {resource+1}: '+ ' '.join(sorted(failures)))
-            unresolved[index]='Nessun inserimento compatibile trovato nella suddivisione corrente. '+ ' '.join(reasons)
-    else:
-        search={'method':'manual-membership','equipment_policy':'prefer-compatible-with-warning-fallback'}
-        if len(assignments)!=len(rows) or any(a is not None and (a<0 or a>=len(routes)) for a in assignments):
-            raise HTTPException(422,'Assegna ogni consegna una sola volta a una risorsa valida.')
-        for index,resource in enumerate(assignments):
-            if resource is None: unresolved[index]='Lasciata non assegnata dall operatore.'
-            else: routes[resource].append(rows[index])
-        for resource,sequence in enumerate(routes):
-            if not sequence: continue
-            # Reorder within each manually chosen vehicle; membership is fixed.
-            ordered=opt._best_internal_sequence(sequence,matrix,points,vehicle_data[resource],data.rientro_deposito,data.orario_partenza)['ordered']
-            routes[resource]=[rows[s['fleet_stop_index']] for s in ordered]
-            failures=set()
-            results[resource]=evaluate(routes[resource],resource,failures)
-            if results[resource] is None:
-                raise HTTPException(422,f'Giro {resource+1}: '+ ' '.join(sorted(failures))+' Modifica l’assegnazione e ricalcola.')
+            unresolved[index]='Consegna non assegnata nella suddivisione corrente. '+ ' '.join(reasons)
     # Generate complete ETA and diagnostic details only for selected final routes.
     results=[evaluate(sequence,index,include_details=True) if sequence else None
              for index,sequence in enumerate(routes)]

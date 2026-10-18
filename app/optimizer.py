@@ -334,14 +334,14 @@ def _has_strong_constraints(deliveries):
     return False
 
 
-def _earliest_feasible_candidate(clock, leg, delivery):
+def _earliest_feasible_candidate(clock, leg, delivery, *, windows=None, service_min=None):
     """Earliest feasible service for the exact feasibility fallback (same-day windows)."""
-    windows = delivery_windows(delivery)
+    windows = delivery_windows(delivery) if windows is None else windows
     arrival = clock + leg["min"]
-    service = float(delivery.get("tempo_scarico_min") or 0)
+    service = float(delivery.get("tempo_scarico_min") or 0) if service_min is None else service_min
     slots = [(max(arrival, a), b) for a, b in windows if max(arrival, a) + service <= b]
     if not windows or not slots:
-        return evaluate_candidate(clock, leg, delivery)
+        return evaluate_candidate(clock, leg, delivery, windows=windows)
     start, end = min(slots)
     wait = start - arrival
     return {"feasible": True, "service_start": start, "wait": wait, "window_end": end,

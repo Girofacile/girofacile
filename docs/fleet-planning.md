@@ -10,6 +10,12 @@ Nel secondo caso compaiono le coppie mezzo/autista disponibili e la strategia:
 Entrambe danno prima priorità al numero di consegne assegnate e poi alla riduzione degli avvisi per sponda/ZTL. Sponda e accesso ZTL restano preferenze: se non è possibile rispettarle il motore conserva la consegna e avvisa l'operatore; anche le assegnazioni manuali restano consentite.
 
 La ricerca usa una sola matrice stradale condivisa. Fino a 7 fermate e 3 coppie confronta tutti i sottoinsiemi, gli ordini e le assegnazioni, compresa la possibilità di lasciare fermate non assegnate. Sceglie il migliore secondo la strategia selezionata, che non coincide necessariamente con i chilometri minimi. Oltre questi limiti usa una ricerca deterministica con budget: raggruppamenti geografici flessibili, riordino, trasferimenti e scambi tra mezzi. Mantiene il piano dell'inserimento precedente come soglia di qualità e non certifica un ottimo globale sui casi grandi.
+Dopo la suddivisione, ogni giro fino a **8 fermate** riceve un riordino completo su tutti gli ordini possibili (`8! = 40.320`). La soglia riguarda il singolo giro: vale anche con 50 o 100 consegne totali. Consegne e mezzo assegnati rimangono fissi; si minimizza la durata, poi i km, coerentemente con la strategia della flotta a composizione fissa. Le pause e le finestre continuano a essere verificate per ogni ordine.
+
+La matrice stradale globale è già completa e viene riutilizzata: non si richiede una nuova matrice o un provider per ogni permutazione. Un valutatore preparato riusa gli stessi selettori di finestre e l'aritmetica delle pause del valutatore canonico. Il vincitore viene verificato e poi ricostruito con tutti i dettagli ETA. La verifica canonica del vincitore non sostituisce i test di equivalenza esaustivi sul valutatore preparato.
+
+Per i giri oltre 8 fermate resta l'ordine trovato dall'euristica attuale. Non si forza la creazione di più giri soltanto per rientrare nella soglia. L'ottimo dell'ordine di un gruppo assegnato non certifica l'ottimo della suddivisione dell'intera flotta; la prova globale fino a 7 fermate e 3 risorse rimane distinta e viene riutilizzata per evitare lavoro ridondante.
+
 L'operatore può indicare la durata massima di ciascun giro e i prezzi energetici nei dettagli della coppia. La disponibilità iniziale verifica la partenza; il calcolo considera anche gli impegni successivi già programmati e i giri in corso.
 
 ## Percorso operativo
@@ -31,9 +37,9 @@ Vincoli bloccanti: kg, colli, fasce di consegna abilitate, turni, pause, impegni
 
 Il costo dell'anteprima è carburante/energia, non costo complessivo del servizio. Traffico e pedaggi si applicano alla programmazione secondo i provider già configurati. Se la matrice usa stime approssimative viene segnalato. Email di acquisizione ordini resta in sviluppo, senza modifiche.
 
-Il budget aggiuntivo per i problemi grandi è configurabile con `FLEET_MAX_CANDIDATES`: predefinito tra 5.000 e 20.000 valutazioni, in funzione delle fermate, massimo configurabile 100.000. Il valore 0 mantiene soltanto l'inserimento iniziale per questi casi. Non tronca la ricerca esatta dei casi piccoli. Tutte le proposte usano la stessa matrice; nessuna richiesta Google/Mapbox/OSRM per combinazione. I dati diagnostici `search` della preview indicano metodo, valutazioni e limite raggiunto.
+Il budget aggiuntivo per i problemi grandi è configurabile con `FLEET_MAX_CANDIDATES`: predefinito tra 5.000 e 20.000 valutazioni, in funzione delle fermate, massimo configurabile 100.000. Il valore 0 mantiene l'inserimento iniziale per l'assegnazione euristica. Non tronca la ricerca globale esatta dei piccoli casi né il riordino completo dei singoli giri fino a 8 fermate: quest'ultimo viene sempre completato. Tutte le proposte usano la stessa matrice; nessuna richiesta Google/Mapbox/OSRM per combinazione. I dati diagnostici `search` della preview indicano metodo, valutazioni e limite raggiunto.
 
-Le zone sono proposte di partenza, non confini obbligatori o nuovi dati da configurare. Le fermate possono passare a un altro giro quando migliora copertura, compatibilità o obiettivo. Le assegnazioni manuali mantengono i gruppi scelti dall'operatore e non applicano riallocazioni automatiche.
+Le zone sono proposte di partenza, non confini obbligatori o nuovi dati da configurare. Le fermate possono passare a un altro giro quando migliora copertura, compatibilità o obiettivo. Le assegnazioni manuali mantengono i gruppi scelti dall'operatore e non applicano riallocazioni automatiche. Fino a 8 fermate il riordino manuale usa ora la stessa priorità della flotta (durata, poi km) e la stessa gestione delle finestre dell'automatico; oltre 8 fermate resta il solutore classico. Questa è una differenza rispetto al precedente riordino manuale, che sotto soglia usava distanza prima della durata.
 
 ## Persistenza e verifica
 
@@ -52,3 +58,7 @@ Il [rapporto del miglioramento](fleet-search-improvements.md) riporta il confron
 Il miglioramento è verificabile con `python tests/run_fleet_before_after.py`: esegue gli stessi 512 input prima sullo snapshot dell'inserimento precedente e poi sul motore corrente, senza dati operativi o provider. L'artifact conserva confronti, piani, input e tempi separati. I test di regressione aggiuntivi sono in `tests/test_fleet_search.py`.
 
 Questa modifica non richiede migrazioni né nuove chiavi API e non ricalcola giri storici o anteprime già salvate. Per ottenere la nuova distribuzione si richiede un nuovo calcolo. Le funzioni di conferma, programmazione, traffico, pedaggi e invio notifiche restano quelle esistenti.
+
+La diagnostica `search.route_refinement` indica metodo, permutazioni valutate, miglioramento ed eventuale prova dell'ordine per ogni giro, con ambito `fixed-membership-and-resource`. `search.global_optimum_proven` continua a riferirsi all'intera assegnazione: non diventa vero perché tutti i singoli giri sono stati riordinati esattamente.
+
+Regressioni aggiuntive: `tests/test_fleet_route_exact.py`, `tests/test_fleet_route_exact_api.py`, `tests/test_fleet_route_evaluator.py`. Il benchmark separato `python tests/run_fleet_route_exact_benchmark.py` misura 50 consegne suddivise in `6×8+2`, il caso misto `5×8+9+1` e il flusso completo con una sola matrice; non modifica il conteggio storico delle 512 simulazioni.

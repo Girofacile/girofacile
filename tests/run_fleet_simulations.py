@@ -256,6 +256,7 @@ def execute(case, strategy):
         "metrics": compact(metrics), "invariant_errors": errors,
         "runtime_ms": elapsed_ms, "cpu_ms": cpu_ms, "matrix_requests": len(calls),
         "external_requests": 0, "unassigned": output["unassigned"], "warnings": output["warnings"],
+        "search": output.get("search", {}),
     }
 
 
@@ -325,7 +326,7 @@ def summarize(records, cases, deterministic, reorder_changes):
 def markdown(summary, examples, metadata):
     before=metadata.get("fleet_implementation")=="before"
     method=("Baseline congelata: inserimento progressivo senza riallocazione globale."
-            if before else "Ricerca esatta sui piccoli casi e ricerca limitata con raggruppamenti geografici e scambi sui grandi.")
+            if before else "Ricerca globale esatta sui piccoli casi; raggruppamenti e scambi limitati sui grandi, seguiti dal riordino completo di ogni giro fino a 8 fermate.")
     lines = [
         "# Simulazioni della distribuzione multi-mezzo", "",
         method, "",
@@ -473,7 +474,7 @@ def main():
         commit = "unknown"
     paths = ("app/optimizer.py", "app/services/fleet_planning.py",
              "app/services/driver_schedule.py", "app/services/optimizer_search.py",
-             "app/services/fleet_search.py",
+             "app/services/fleet_search.py", "app/services/fleet_route_evaluator.py",
              "tests/run_fleet_simulations.py", "tests/fleet_quality_reference.py",
              "tests/fleet_simulation_cases.py")
     metadata = {

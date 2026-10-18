@@ -362,3 +362,67 @@ def optimize_fleet(rows, resource_count, evaluate, strategy, *,
         "equipment_policy": "prefer-compatible-with-warning-fallback",
     }
     return best_routes, best_results, diagnostics
+
+
+def refine_routes(routes, results, evaluate, *, global_exact=False, prepare=None):
+    """Find each <=8-stop route's best order with fixed membership and resource.
+
+    This final pass is independent of the fleet heuristic candidate budget.
+    Larger routes retain their existing heuristic order. A fleet-wide optimum
+    and an optimum within a chosen group are deliberately separate claims.
+    """
+    routes = tuple(tuple(order) for order in routes)
+    refined, scores = list(routes), list(results)
+    details, evaluations = [], 0
+    for resource, order in enumerate(routes):
+        size = len(order)
+        info = {"resource": resource, "stops": size, "evaluations": 0,
+                "scope": "fixed-membership-and-resource", "improved": False,
+                "order_optimum_proven": False}
+        if not order:
+            info["method"] = "empty"
+        elif size > 8:
+            info["method"] = "existing-heuristic"
+        elif global_exact and scores[resource] is not None:
+            info.update(method="global-exact-reuse", order_optimum_proven=True)
+        else:
+            score = prepare(order, resource) if prepare is not None else (
+                lambda candidate, r=resource: evaluate(candidate, r))
+            best_order, best_result = order, scores[resource]
+            initial = best_result
+            for candidate in permutations(order):
+                result = score(candidate)
+                info["evaluations"] += 1
+                if result is not None and (best_result is None or
+                                          _better(_numbers(result), _numbers(best_result))):
+                    best_order, best_result = candidate, result
+            info["method"] = "exact-permutations"
+            # Verify compiled scoring against the canonical evaluator. An
+            # unexpected discrepancy falls back to a complete canonical pass.
+            if prepare is not None:
+                verified = evaluate(best_order, resource) if best_result is not None else None
+                info["canonical_verifications"] = int(best_result is not None)
+                agrees = (verified is not None and best_result is not None
+                          and not _better(_numbers(verified), _numbers(best_result))
+                          and not _better(_numbers(best_result), _numbers(verified)))
+                if agrees:
+                    best_result = verified
+                else:
+                    best_order, best_result = order, initial
+                    for candidate in permutations(order):
+                        result = evaluate(candidate, resource)
+                        info["evaluations"] += 1
+                        if result is not None and (best_result is None or
+                                                  _better(_numbers(result), _numbers(best_result))):
+                            best_order, best_result = candidate, result
+                    info["method"] = "exact-permutations-canonical-fallback"
+                    info["canonical_fallback_evaluations"] = math.factorial(size)
+            refined[resource], scores[resource] = best_order, best_result
+            info["order_optimum_proven"] = best_result is not None
+            info["all_orders_infeasible"] = best_result is None
+            info["improved"] = (best_result is not None and (
+                initial is None or _better(_numbers(best_result), _numbers(initial))))
+        evaluations += info["evaluations"]
+        details.append(info)
+    return tuple(refined), tuple(scores), {
+        "route_refinement": details, "exact_route_evaluations": evaluations}
