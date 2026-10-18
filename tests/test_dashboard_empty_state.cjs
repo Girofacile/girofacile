@@ -39,6 +39,7 @@ function makeHarness() {
   const ids = [
     'gfRefHeroWrap','gfRefRouteTitle','gfRefRouteSubtitle','gfRefRouteStatus','gfRefRouteDrawing',
     'gfRefDriver','gfRefVehicle','gfRefCompleted','gfRefRemaining','gfRefProgressBar','gfRefMissed',
+    'gfRefEmptyDescription','gfRefEmptyAction','gfRefEmptyHint',
     'gfRefStopList','gfRefOtherActive','gfRefEmptyState','gfRefOperationalDetail','gfRefRouteLegend',
   ];
   const nodes = new Map(ids.map(id => [id, makeNode(id, id === 'gfRefEmptyState' ? ['hidden'] : [])]));
@@ -47,6 +48,7 @@ function makeHarness() {
   const context = vm.createContext({
     document: {getElementById: id => nodes.get(id) || null},
     currentSessionUser: {company_city:'Padova',company_address:'Via Roma 1',company_zip:'35100',company_country:'Italia'},
+    isWorkspaceOperationalV49: () => true,
     api: async path => {
       if (path === '/api/deposits') return deposits;
       if (path === '/api/routes/42') return {consegne:[]};
@@ -83,8 +85,9 @@ test('when there is no active route, the area map and branded first-route action
   assert.equal(area.deposits[0].lat, 45.4064);
   assert.match(html, /id="gfRefEmptyState"/);
   assert.match(html, /La tua prossima consegna inizia da qui/);
-  assert.match(html, /onclick="showTab\('giro'\)"/);
+  assert.match(html, /onclick="dashboardEmptyRouteAction\(\)"/);
   assert.match(html, /Calcola il primo giro/);
+  assert.match(core, /function dashboardEmptyRouteAction\(\)/);
   assert.match(mapSource, /async function renderEmpty\(element, area = \{\}\)/);
   assert.match(mapSource, /"padova":\[45\.4064,11\.8768\]/);
   assert.match(mapSource, /tile\.openstreetmap\.org/);
@@ -105,4 +108,25 @@ test('when an active route exists, the current route detail remains visible', as
   assert.equal(get('gfRefRouteLegend').classList.contains('hidden'), false);
   assert.equal(get('gfRefRouteTitle').textContent, 'Giro demo');
   assert.equal(app.mapCalls.filter(call => call.type === 'renderEmpty').length, 0);
+});
+
+test('an unconfigured account is directed to company setup instead of a blocked planner', async () => {
+  const app = makeHarness();
+  app.context.isWorkspaceOperationalV49 = () => false;
+  await vm.runInContext('renderGFReferenceDashboardHero(null)', app.context);
+  assert.equal(app.nodes.get('gfRefEmptyAction').textContent, 'Completa la configurazione');
+  assert.match(app.nodes.get('gfRefEmptyDescription').textContent, /Completa il profilo aziendale e le impostazioni/);
+  const selected = [];
+  const actionContext = vm.createContext({
+    isWorkspaceOperationalV49: () => false,
+    showTab: tab => selected.push(tab),
+  });
+  const actionStart = core.indexOf('function dashboardEmptyRouteAction(){');
+  const actionEnd = core.indexOf('function renderGFReferenceDashboardHero(summary){', actionStart);
+  vm.runInContext(core.slice(actionStart, actionEnd), actionContext);
+  vm.runInContext('dashboardEmptyRouteAction()', actionContext);
+  assert.equal(selected[0], 'company');
+  actionContext.isWorkspaceOperationalV49 = () => true;
+  vm.runInContext('dashboardEmptyRouteAction()', actionContext);
+  assert.equal(selected[1], 'giro');
 });
