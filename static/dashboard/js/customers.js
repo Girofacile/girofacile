@@ -206,16 +206,8 @@ function renderCustomerDirectory(){
       +(none?'<button type="button" class="gf-button" data-variant="primary" data-size="sm" onclick="openCustomerDrawer(null,\'new\')">'+cxIcon('plus')+'Nuovo cliente</button>'
             :'<button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="clearCustomerListAllFilters()">Azzera ricerca e filtri</button>')+'</div>';
   }else if(state.view==='list'){
-    const allSel=visible.every(x=>sel.has(Number(x.id)));
-    const head=(key,label,feature)=>{
-      const on=state.sort===key;
-      const icon=on?(state.direction==='desc'?'down':'up'):'sort';
-      return '<th scope="col"'+(feature?' data-gf-feature="'+feature+'"':'')+' aria-sort="'+(on?(state.direction==='desc'?'descending':'ascending'):'none')+'"><button type="button" class="gf-button" data-variant="ghost" data-size="sm" data-cx-sort="'+key+'"'+(on?' aria-pressed="true"':'')+'>'+label+cxIcon(icon)+'</button></th>';
-    };
-    html='<div class="gf-table-wrap" id="customerTableWrap"><table class="gf-table" data-gf-responsive="cards"><thead><tr>'
-      +'<th scope="col"><input type="checkbox" class="cx-cb" id="customerSelectPage" aria-label="Seleziona tutti i clienti della pagina"'+(allSel?' checked':'')+'></th>'
-      +head('nome','Cliente')+head('indirizzo','Indirizzo')+head('scarico_mattina_da','Fascia di scarico','time_windows')+head('stato_geocodifica','Stato indirizzo')
-      +'<th scope="col">Azioni</th></tr></thead><tbody id="customersBody">'
+    // Niente riga di intestazione: ordinamento e verso stanno già nella barra sopra l'elenco.
+    html='<div class="gf-table-wrap" id="customerTableWrap"><table class="gf-table" data-gf-responsive="cards" aria-label="Elenco clienti"><tbody id="customersBody">'
       +visible.map(x=>{
         const id=Number(x.id),on=sel.has(id);
         return '<tr data-cx-row="'+id+'" aria-selected="'+on+'">'
@@ -233,8 +225,6 @@ function renderCustomerDirectory(){
     }).join('')+'</div>';
   }
   target.innerHTML=html;
-  const pageCheck=cxEl('customerSelectPage');
-  if(pageCheck)pageCheck.indeterminate=!pageCheck.checked&&visible.some(x=>sel.has(Number(x.id)));
   const count=cxEl('customerCount');
   if(count)count.textContent=rows.length?('Mostrati '+(from+1)+'–'+(from+visible.length)+' di '+rows.length+' clienti'):'0 clienti';
   const pager=cxEl('customerPagination');
@@ -504,7 +494,6 @@ if(typeof document!=='undefined'&&document.addEventListener){
       return;
     }
     const page=t.closest('[data-cx-page]');if(page&&!page.disabled){customerGoPage(Number(page.dataset.cxPage));return;}
-    const sort=t.closest('[data-cx-sort]');if(sort){toggleCustomerSort(sort.dataset.cxSort);return;}
     const slot=t.closest('[data-cx-slot]');if(slot){openCustomerDrawer(Number(slot.dataset.cxSlot),'view',true);return;}
     const edit=t.closest('[data-cx-edit]');if(edit){openCustomerDrawer(Number(edit.dataset.cxEdit),'edit');return;}
     const open=t.closest('[data-cx-open]');if(open){openCustomerDrawer(Number(open.dataset.cxOpen),'view');return;}
@@ -514,13 +503,6 @@ if(typeof document!=='undefined'&&document.addEventListener){
   });
   document.addEventListener('change',event=>{
     const t=event.target;if(!t||!t.closest||!t.closest('#tab-clienti'))return;
-    if(t.id==='customerSelectPage'){
-      const from=(customerDirectory.page-1)*customerDirectory.size;
-      customerDirectory.rows.slice(from,from+customerDirectory.size).forEach(x=>{
-        if(t.checked)customerDirectory.selected.add(Number(x.id));else customerDirectory.selected.delete(Number(x.id));
-      });
-      renderCustomerDirectory();return;
-    }
     if(t.dataset&&t.dataset.cxCb){
       const id=Number(t.dataset.cxCb);
       if(t.checked)customerDirectory.selected.add(id);else customerDirectory.selected.delete(id);

@@ -111,3 +111,10 @@ test('customer avatars get a stable colour from the name across the six avatar t
   assert.match(f.run(`cxAvatar({nome:'Bar Pompei Scavi'})`),new RegExp(`class="gf-avatar" data-tone="${tones[1]}"`));
   assert.doesNotMatch(f.run(`cxAvatar({})`),/data-tone/);
 });
+
+test('customer list has no column header bar: sorting lives only in the toolbar above the list',()=>{
+  const js=fs.readFileSync('static/dashboard/js/customers.js','utf8');
+  assert.doesNotMatch(js,/<thead>/);
+  assert.doesNotMatch(js,/data-cx-sort|customerSelectPage/);
+  assert.match(js,/function reverseCustomerSort\(\)/);
+});
