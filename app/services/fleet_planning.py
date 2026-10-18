@@ -111,6 +111,10 @@ def distribute(db,user,data,assignments=None):
             return reject('Fasce orarie di consegna o turni e pause non rispettati.')
         if math.ceil(result['_objective'][1])>limits[resource]:
             return reject(f'Tempo disponibile insufficiente: {limits[resource]} minuti, considerando durata massima e altri giri già programmati.')
+        if not include_details:
+            # Search memoization retains scalar scores, never thousands of
+            # complete copies of stops. Final routes are replayed with details.
+            return {key:result[key] for key in ('total_km','total_min','_objective')}
         return result
 
     def insert(index):
