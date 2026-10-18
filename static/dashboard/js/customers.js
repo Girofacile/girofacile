@@ -372,8 +372,7 @@ async function saveCustomerDrawer(){
   }
 }
 
-/* ---------- Selezione multipla e fascia per più clienti ---------- */
-function cxBulkMenu(){return cxEl('customerBulkMenu');}
+/* ---------- Selezione multipla ---------- */
 function renderCustomerSelection(){
   const bar=cxEl('customerBulkBar');if(!bar)return;
   const n=customerDirectory.selected.size;
@@ -386,11 +385,6 @@ function renderCustomerSelection(){
     planning.textContent='Vai alla pianificazione ('+n+')';
   }
   const msg=cxEl('customerSelectedCount');if(msg)msg.textContent=n+(n===1?' cliente selezionato':' clienti selezionati');
-  const list=cxBulkMenu()?.querySelector('[data-gf-menu]');
-  if(list&&!list.childElementCount)list.innerHTML='<p class="gf-kicker">Imposta per i clienti selezionati</p>'
-    +CX_PRESETS.map((p,i)=>'<button type="button" class="gf-button" data-variant="ghost" role="menuitem" data-cx-bulk="'+i+'">'+p[0]+' <small>'+p[1]+' – '+p[2]+'</small></button>').join('')
-    +'<button type="button" class="gf-button" data-variant="ghost" role="menuitem" data-cx-bulk="clear">Rimuovi la fascia</button>';
-  if(!n)closeCustomerBulkMenu();
 }
 
 let customerPlanningTransferBusy=false;
@@ -425,52 +419,13 @@ async function goCustomerPlanning(){
   }
 }
 
-function clearCustomerSelection(){ customerDirectory.selected.clear(); closeCustomerBulkMenu(); renderCustomerDirectory(); }
-function closeCustomerBulkMenu(){ const menu=cxBulkMenu(); if(menu)menu.open=false; }
-function toggleCustomerBulkMenu(event){
-  event?.stopPropagation?.();
-  const menu=cxBulkMenu(); if(menu)menu.open=!menu.open;
-}
-async function applyCustomerBulkSlot(choice){
-  if(customerDirectory.busy)return;
-  // Mattina e giornata usano la prima fascia, pomeriggio la seconda; "Rimuovi" le azzera entrambe.
-  const spec={0:{scarico_mattina_da:'06:00',scarico_mattina_a:'12:00'},1:{scarico_pomeriggio_da:'14:00',scarico_pomeriggio_a:'18:00'},2:{scarico_mattina_da:'06:00',scarico_mattina_a:'18:00'},clear:{}}[choice];
-  if(!spec)return;
-  const selected=customerDirectory.all.filter(x=>customerDirectory.selected.has(Number(x.id)));
-  if(!selected.length)return;
-  closeCustomerBulkMenu();
-  customerDirectory.busy=true;
-  let done=0,error=null;
-  try{
-    for(const x of selected){
-      const payload=Object.fromEntries(CX_FIELDS.map(k=>[k,x[k]??null]));
-      if(payload.tempo_scarico_min==null)payload.tempo_scarico_min=10;
-      ['ztl','sponda','transpallet'].forEach(k=>payload[k]=Boolean(payload[k]));
-      ['scarico_mattina_da','scarico_mattina_a','scarico_pomeriggio_da','scarico_pomeriggio_a'].forEach(k=>payload[k]=spec[k]||null);
-      try{
-        await api('/api/customers/'+Number(x.id),{method:'PUT',body:JSON.stringify(payload)});
-        customerDirectory.selected.delete(Number(x.id));done++;
-      }catch(e){error=e;break;}
-    }
-    await refreshCustomerDirectory();
-    if(done&&typeof loadCustomerPicker==='function')await loadCustomerPicker();
-    if(typeof toast==='function'){
-      const label=choice==='clear'?'Fascia rimossa':'Fascia '+CX_PRESETS[choice][1]+' – '+CX_PRESETS[choice][2]+' impostata';
-      toast(error?'Aggiornati '+done+' clienti. Errore: '+(error.message||'salvataggio non riuscito')+'. Gli altri restano selezionati.'
-        :label+' per '+done+(done===1?' cliente':' clienti'));
-    }
-  }finally{customerDirectory.busy=false;}
-}
-function openCustomerBulkSlotDialog(){ toggleCustomerBulkMenu(); }
+function clearCustomerSelection(){ customerDirectory.selected.clear(); renderCustomerDirectory(); }
 
 /* ---------- Eventi ---------- */
 if(typeof document!=='undefined'&&document.addEventListener){
   document.addEventListener('click',event=>{
     const t=event.target;
     if(!t||!t.closest)return;
-    if(cxBulkMenu()?.open&&!t.closest('#customerBulkMenu'))closeCustomerBulkMenu();
-    const bulk=t.closest('#customerBulkMenu [data-cx-bulk]');
-    if(bulk){applyCustomerBulkSlot(bulk.dataset.cxBulk==='clear'?'clear':Number(bulk.dataset.cxBulk));return;}
     const drawer=t.closest('#customerDrawer');
     if(drawer){
       if(t.closest('[data-cx-close],[data-cx-cancel]')){
@@ -517,7 +472,6 @@ if(typeof document!=='undefined'&&document.addEventListener){
   });
   document.addEventListener('keydown',event=>{
     if(event.key!=='Escape')return;
-    if(cxBulkMenu()?.open){closeCustomerBulkMenu();return;}
     if(customerDrawer.current)closeCustomerDrawer();
   });
   document.addEventListener('DOMContentLoaded',()=>{

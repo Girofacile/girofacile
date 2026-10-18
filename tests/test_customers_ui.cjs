@@ -44,18 +44,18 @@ test('directory loads beyond one API batch and discards stale responses',async()
   let resolve;f.ctx.api=()=>new Promise(r=>resolve=r);
   const old=f.run('refreshCustomerDirectory()');f.ctx.api=async()=>[{id:2000}];await f.run('refreshCustomerDirectory()');resolve([{id:3}]);await old;assert.equal(f.ctx.customersCache[0].id,2000);
 });
-test('customer selection supports planning and keeps unloading windows feature-gated',()=>{
+test('customer selection supports planning without bulk unloading-window actions',()=>{
   const html=fs.readFileSync('static/dashboard/index.html','utf8');
   const js=fs.readFileSync('static/dashboard/js/customers.js','utf8');
   const bulkBar=html.match(/<div\b[^>]*id="customerBulkBar"[^>]*>/)?.[0];
   assert.ok(bulkBar,'Shared customer selection bar');
   assert.doesNotMatch(bulkBar,/data-gf-feature=/);
-  assert.match(html,/id="customerBulkMenu"[^>]*data-gf-feature="time_windows"/);
+  // Niente fascia di scarico in blocco dalla selezione: pulsante e funzione rimossi.
+  assert.doesNotMatch(html,/customerBulkMenu|Imposta fascia di scarico/);
   assert.match(html,/id="customersGoPlanning"[^>]*onclick="goCustomerPlanning\(\)"/);
   assert.match(html,/id="customerDrawer"/);
   assert.match(js,/function clearCustomerSelection/);
-  assert.match(js,/function applyCustomerBulkSlot/);
-  assert.match(js,/data-cx-bulk="clear"/);
+  assert.doesNotMatch(js,/applyCustomerBulkSlot|data-cx-bulk|customerBulkMenu/);
 });
 
 test('drawer saves keep every stored field and reset geocoding when the address changes',async()=>{
