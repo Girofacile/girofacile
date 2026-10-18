@@ -47,6 +47,8 @@ Verifiche: `tests/test_fleet_planning.py` (motore reale, provider simulati, ness
 Il [rapporto iniziale delle simulazioni multi-mezzo](fleet-simulation-results.md) documenta la versione precedente e confronta entrambe le strategie con riferimenti esatti su piccoli scenari e controlli indipendenti su casi fino a 100 fermate e 10 risorse. Pause rispettate non implicano un'assegnazione globale ottima: sono documentati casi con km evitabili e consegne non assegnate pur esistendo una ripartizione completa. Il benchmark è riproducibile con `python tests/run_fleet_simulations.py`, senza provider o database operativo.
 
 
+Il [rapporto del miglioramento](fleet-search-improvements.md) riporta il confronto eseguito sul nuovo motore e i limiti rimasti.
+
 Il miglioramento è verificabile con `python tests/run_fleet_before_after.py`: esegue gli stessi 512 input prima sullo snapshot dell'inserimento precedente e poi sul motore corrente, senza dati operativi o provider. L'artifact conserva confronti, piani, input e tempi separati. I test di regressione aggiuntivi sono in `tests/test_fleet_search.py`.
 
 Questa modifica non richiede migrazioni né nuove chiavi API e non ricalcola giri storici o anteprime già salvate. Per ottenere la nuova distribuzione si richiede un nuovo calcolo. Le funzioni di conferma, programmazione, traffico, pedaggi e invio notifiche restano quelle esistenti.
