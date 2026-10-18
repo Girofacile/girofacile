@@ -242,9 +242,13 @@ test('company edits are saved from the topbar and bottom save actions are remove
 
 test('dashboard salutation uses company name and never silently substitutes username',()=>{
   const navigation=read('static/dashboard/js/navigation.js');
+  const FixedDate=class extends Date{
+    constructor(...args){super(...(args.length?args:['2026-10-18T07:00:00Z']));}
+  };
   const greeting=(user,companyCache='')=>vm.runInNewContext(
     navigation+';dashboardGreetingTitle()',
     {
+      Date:FixedDate,
       currentSessionUser:user,
       localStorage:{getItem:key=>key==='girofacile_company_name'?companyCache:
         key==='girofacile_account_name'?'Mario':null}
