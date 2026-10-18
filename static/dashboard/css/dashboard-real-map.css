@@ -129,3 +129,16 @@ body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-canvas .leafle
     max-width:calc(100% - 50px);
   }
 }
+
+/* Dashboard desktop: la mappa occupa lo spazio libero fino alla legenda,
+   evitando la fascia vuota sotto il riquadro cartografico. */
+@media (min-width:1025px){
+  body[data-gf-surface="workspace"] #app #tab-dashboard .gf-route-panel__map{
+    display:flex;
+    flex-direction:column;
+  }
+  body[data-gf-surface="workspace"] #app #tab-dashboard .gf-route-panel__canvas{
+    flex:1 1 auto;
+    min-height:var(--gf-map-min-height);
+  }
+}
