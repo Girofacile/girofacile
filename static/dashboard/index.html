@@ -1059,14 +1059,37 @@
           </div>
         </section>
 
-        <section id="historyDataPanel" class="gf-panel hidden">
-          <header class="gf-panel__header">
-            <div><h2 class="gf-panel__title">Archivio giri</h2><p class="gf-muted">Consulta e riapri i percorsi già salvati.</p></div>
-            <button type="button" onclick="loadRoutes()" class="gf-button" data-variant="primary" data-size="sm">Aggiorna storico</button>
-          </header>
-          <div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards"><thead><tr><th>Data</th><th>Nome</th><th>Partenza</th><th>Rientro</th><th>Autista</th><th>Km</th><th>Costo carburante</th><th>Azioni</th></tr></thead><tbody id="routesBody"></tbody></table></div>
-          <div id="historyResult"></div>
-        </section>
+        <div id="historyPage" class="gf-stack" data-gap="lg" hidden>
+          <section class="gf-stack" data-gap="sm" aria-label="Ricerca nello storico">
+            <div class="gf-cluster">
+              <input class="gf-input" id="historySearch" type="search" placeholder="Cerca per nome del giro, mezzo o targa" aria-label="Cerca per nome del giro, mezzo o targa">
+              <button type="button" class="gf-button" data-variant="secondary" onclick="GFHistory.openFilters()">Filtri <span class="gf-chip__count" id="historyFilterCount" hidden>0</span></button>
+              <button type="button" class="gf-button" data-variant="secondary" onclick="GFHistory.exportRoutes()">Esporta</button>
+            </div>
+            <div class="gf-cluster" id="historyActiveFilters" hidden></div>
+          </section>
+          <section class="gf-stack" id="historyWeekSection" aria-labelledby="historyWeekTitle">
+            <div class="gf-cluster" data-justify="between"><h2 class="gf-title" id="historyWeekTitle">Settimana</h2>
+              <div class="gf-cluster"><button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="GFHistory.week(-1)">‹ Precedente</button><button type="button" class="gf-button" data-variant="ghost" data-size="sm" onclick="GFHistory.week(0)">Ultima settimana</button><button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="GFHistory.week(1)">Successiva ›</button></div>
+            </div>
+            <div id="historyWeek"></div>
+          </section>
+          <section class="gf-panel" id="historyDaySection" aria-labelledby="historyDayTitle">
+            <header class="gf-panel__header"><h2 class="gf-panel__title" id="historyDayTitle"></h2><span class="gf-panel__meta" id="historyDayMeta"></span></header>
+            <div id="historyDayList"></div>
+          </section>
+          <section class="gf-panel" id="historyResultsSection" aria-labelledby="historyResultsTitle" hidden>
+            <header class="gf-panel__header"><h2 class="gf-panel__title" id="historyResultsTitle">Risultati della ricerca</h2><span class="gf-panel__meta" id="historyResultsMeta"></span></header>
+            <div id="historyResultsList"></div>
+          </section>
+        </div>
+        <dialog class="gf-modal" id="historyRouteDialog" data-position="side" data-size="lg" aria-labelledby="historyRouteTitle"></dialog>
+        <dialog class="gf-modal" id="historyFilterDialog" aria-labelledby="historyFilterTitle">
+          <header class="gf-modal__header"><div><p class="gf-kicker">Storico giri</p><h2 class="gf-modal__title" id="historyFilterTitle">Filtra i giri</h2></div><button type="button" class="gf-button" data-variant="ghost" onclick="this.closest('dialog').close()">Chiudi</button></header>
+          <div class="gf-modal__body gf-form-grid" id="historyFilterFields"></div>
+          <footer class="gf-modal__footer"><button type="button" class="gf-button" data-variant="secondary" onclick="GFHistory.clear()">Azzera filtri</button><button type="button" class="gf-button" data-variant="primary" onclick="GFHistory.applyFilters()">Mostra i giri</button></footer>
+        </dialog>
+      </section>
       </section>
 
       <section id="tab-plan-account" class="tab hidden gf-stack" data-gap="lg">
@@ -1486,7 +1509,7 @@
 <script src="/static/dashboard/js/reports.js?v=gf_base_20261015u"></script>
 <script src="/static/dashboard/js/customers.js?v=gf_selection_20261016"></script>
 <script src="/static/dashboard/js/navigation.js?v=gf_dashboard_greeting_20261018"></script>
-<script src="/static/dashboard/js/completed.js?v=gf_base_20261015u"></script>
+<script src="/static/dashboard/js/history.js?v=gf_history_20261018"></script>
 <script src="/static/password-strength.js?v=password_policy_20261008_1"></script>
 <script src="/static/dashboard/js/collaborators.js?v=gf_selection_20261016"></script>
 <script src="/static/dashboard/js/orders.js?v=gf_base_20261015u"></script>
@@ -1494,7 +1517,7 @@
 <script src="/static/dashboard/js/order-sources.js?v=gf_base_20261015v"></script>
 <script src="/static/dashboard/js/dashboard-real-map.js?v=gf_dashboard_empty_state_20261018b"></script>
 <script src="/static/dashboard/js/in-progress-reference.js?v=gf_gps_recovery_20261016"></script>
-<script src="/static/dashboard/js/core.js?v=gf_scheduled_week_20261018"></script>
+<script src="/static/dashboard/js/core.js?v=gf_history_20261018"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=orders_2"></script>
 <link rel="stylesheet" href="/static/dashboard/css/fleet-review.css?v=gf_fleet_ztl_20261017">
 <script src="/static/dashboard/js/fleet-review.js?v=gf_fleet_map_open_20261017"></script>

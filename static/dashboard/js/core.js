@@ -3704,37 +3704,13 @@ async function optimizeRoute(){
       </div></div>`;
   }
 }
+// Lo Storico (settimana, ricerca, filtri e dettaglio dei giri conclusi) è disegnato da history.js.
 async function loadRoutes(){
-  const rows = await api("/api/routes");
-  const body = document.getElementById("routesBody");
-  const emptyState = document.getElementById("historyEmptyState");
-  const dataPanel = document.getElementById("historyDataPanel");
-  const historyResult = document.getElementById("historyResult");
-
-  if(body) body.innerHTML = "";
-  if(historyResult) historyResult.innerHTML = "";
-
-  const hasRoutes = Array.isArray(rows) && rows.length > 0;
-  if(emptyState) emptyState.classList.toggle("hidden", hasRoutes);
-  if(dataPanel) dataPanel.classList.toggle("hidden", !hasRoutes);
-
-  if(!hasRoutes) return;
-
-  rows.forEach(r=>{
-    if(!body) return;
-    body.innerHTML += `<tr><td data-label="Data">${esc(r.data_giro)}</td><td data-label="Nome"><strong>${esc(r.nome)}</strong></td><td data-label="Partenza">${r.orario_partenza||""}</td><td data-label="Rientro">${r.orario_rientro_stimato||""}</td><td data-label="Autista">${esc(r.driver_name||"-")}</td><td data-label="Km">${r.totale_km}</td><td data-label="Costo carburante">€ ${r.costo_totale ?? r.costo_carburante}</td><td data-label="Azioni"><div class="gf-cluster"><button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="openSavedRoute(${r.id})">Apri giro</button>${r.google_maps_url?`<a class="gf-button" data-variant="ghost" data-size="sm" target="_blank" href="${r.google_maps_url}">Maps</a><button type="button" class="gf-button" data-variant="ghost" data-size="sm" onclick="copyText('${String(r.google_maps_url).replace(/'/g,"\\'")}', 'Link Google Maps copiato')">Condividi</button>`:""}</div></td></tr>`;
-  });
+  await window.GFHistory.load();
 }
 async function openSavedRoute(id){
-  try{
-    const r = await api(`/api/routes/${id}`);
-    renderUnifiedRouteView(r, "historyResult", "history");
-    document.getElementById("historyResult").scrollIntoView({behavior:"smooth", block:"start"});
-  }catch(e){ alert(e.message); }
+  try{ await window.GFHistory.load(id); }catch(e){ alert(e.message); }
 }
-
-
-
 
 function formatDateTimeLabel(value){
   if(!value) return "-";
@@ -4332,27 +4308,15 @@ function renderDashboardScheduledSubpage(routes, selectedRoute){
   }
 }
 
+// "Giri completati" confluisce nello Storico: si apre lo Storico con il pannello del giro scelto.
 async function openDashboardCompletedPage(routeId=null){
   dashboardCompletedSelectedId = routeId || dashboardCompletedSelectedId;
-  showTab('dashboard-completed');
-  await loadDashboardCompletedPage(routeId);
+  showTab('storico');
+  try{ await window.GFHistory.load(routeId); }catch(e){ toast(e.message); }
 }
 
 async function loadDashboardCompletedPage(routeId=null){
-  const page = document.getElementById('dashboardCompletedPage');
-  if(page) page.innerHTML = `<div class="gf-loading" role="status"><strong>Caricamento giri completati...</strong><p>Sto recuperando lo storico operativo.</p></div>`;
-  try{
-    const rows = await api('/api/routes');
-    const completed = rows.filter(r=>r.status==='completato');
-    const selectedId = routeId || dashboardCompletedSelectedId || (completed[0] && completed[0].id);
-    let selected = completed.find(r=>Number(r.id)===Number(selectedId)) || completed[0] || null;
-    if(selected) selected = await api(`/api/routes/${selected.id}`);
-    renderDashboardCompletedSubpage(completed, selected);
-  }catch(e){ if(page) page.innerHTML = `<div class="gf-alert" data-status="danger"><div class="gf-alert__body"><strong class="gf-alert__title">Errore</strong><p>${esc(e.message)}</p></div></div>`; }
-}
-
-function renderDashboardCompletedSubpage(routes, selectedRoute){
-  window.GFCompleted.render(routes, selectedRoute);
+  await openDashboardCompletedPage(routeId);
 }
 
 

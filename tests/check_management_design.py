@@ -179,30 +179,44 @@ def main():
                         assert page.locator('#tab-giro').is_visible()
                         page.evaluate("showTab('route-preview')")
                         interactions.append(f'{width}: preview costs, full-width stops, map, actions and navigation')
-                    if name == "dashboard-completed":
-                        page.locator('#completedSearch').wait_for(state='visible')
-                        page.evaluate("""r => {
-                            const demo={...r, consegne:Array.from({length:23},(_,i)=>({...r.consegne[0], id:100+i, ordine:i+1, cliente_nome:'Cliente '+(i+1), delivery_status:i%2?'mancata':'completata', motivo_mancata:i%2?'assente':null}))};
-                            renderDashboardCompletedSubpage([demo],demo);
-                        }""", ROUTES[2])
-                        assert page.locator('#completedTable tbody tr:visible').count() == 10
-                        page.get_by_role('button', name='Pagina successiva', exact=True).click()
-                        assert page.locator('#completedTable tbody tr:visible').first.inner_text().startswith('11')
-                        page.locator('#completedSize').select_option('25')
-                        assert page.locator('#completedTable tbody tr:visible').count() == 23
-                        page.locator('#completedStatus').select_option('mancata')
-                        assert page.locator('#completedTable tbody tr:visible').count() == 11
-                        page.locator('#completedSearch').fill('Cliente 22')
-                        assert page.locator('#completedTable tbody tr:visible').count() == 1
+                    if name == "storico":
+                        # Storico: settimana a 7 card, tabella del giorno, ricerca, filtri, CSV e pannello del giro.
+                        history=page.locator('#tab-storico')
+                        page.locator('#historySearch').wait_for(state='visible')
+                        assert history.locator('#historyWeek .gf-grid[data-cols="7"] > .gf-panel').count() == 7
+                        assert history.locator('#historyDayList tbody tr').count() == len(ROUTES)
+                        page.locator('#historySearch').fill('Milano 3')
+                        assert history.locator('#historyWeekSection').is_hidden()
+                        assert history.locator('#historyResultsList tbody tr').count() == 1
+                        history.locator('#historyActiveFilters .gf-chip').click()
+                        assert history.locator('#historyWeekSection').is_visible()
+                        history.get_by_role('button', name='Filtri').click()
+                        page.locator('#historyFilterDialog').wait_for(state='visible')
+                        page.locator('#historyStatus').select_option('completato')
+                        page.locator('#historyFilterDialog').get_by_role('button', name='Mostra i giri').click()
+                        assert page.locator('#historyFilterCount').inner_text() == '1'
+                        assert history.locator('#historyResultsList tbody tr').count() == 1
                         with page.expect_download() as download:
-                            page.locator('#completedExport').click()
+                            history.get_by_role('button', name='Esporta', exact=True).click()
                         content=Path(download.value.path()).read_text(encoding='utf-8-sig')
-                        assert 'Cliente 22' in content and 'Cliente 20' not in content
-                        page.locator('#completedSearch').fill('nessuna corrispondenza')
-                        assert page.locator('#completedTable tbody tr:visible').count() == 0
-                        assert page.locator('#completedNoMatches').is_visible()
-                        page.evaluate('r=>renderDashboardCompletedSubpage([r],r)',ROUTES[2])
-                        interactions.append(f'{width}: completed pagination, search, status and filtered CSV')
+                        assert 'Giro Milano 3' in content and 'Giro Milano 1' not in content
+                        history.get_by_role('button', name='Azzera tutto').click()
+                        assert history.locator('#historyWeekSection').is_visible()
+                        history.locator('#historyDayList').get_by_role('button', name='Apri giro').first.click()
+                        dialog=page.locator('#historyRouteDialog')
+                        dialog.wait_for(state='visible')
+                        assert 'Cliente Demo' in dialog.inner_text()
+                        with page.expect_download() as download:
+                            dialog.get_by_role('button', name='Esporta fermate (CSV)').click()
+                        assert 'Cliente Demo' in Path(download.value.path()).read_text(encoding='utf-8-sig')
+                        dialog.get_by_role('button', name='Chiudi').click()
+                        assert dialog.is_hidden()
+                        # "Giri completati" dalla Dashboard porta allo Storico con il giro già aperto.
+                        page.evaluate('openDashboardCompletedPage(3)')
+                        dialog.wait_for(state='visible')
+                        assert page.locator('#tab-storico').is_visible()
+                        dialog.get_by_role('button', name='Chiudi').click()
+                        interactions.append(f'{width}: storico settimana, ricerca, filtri, CSV e pannello del giro')
                     if name in REFERENCE:
                         styles = page.evaluate("""() => [...document.querySelectorAll('#app *')].filter(el=>el.getClientRects().length && getComputedStyle(el).visibility!=='hidden').map(el=>{
                           const s=getComputedStyle(el), r=el.getBoundingClientRect();
