@@ -182,7 +182,7 @@ function renderCustomerKpis(){
     cell('customers','all','Totale clienti',t,'Tutti i clienti registrati',false,null,'','customerMetricTotal')+
     cell('pin','all','Indirizzi verificati',ver,'Indirizzi con verifica completata',false,null,'','customerMetricVerified')+
     cell('alert','unverified','Da verificare',un,'Indirizzi ancora da verificare',un>0,null,'','customerMetricPending')+
-    cell('clock','noSlot','Con fascia di scarico',wf+'<small> su '+t+'</small>',wf<t?(t-wf)+' da impostare':'Tutte impostate',wf<t,t?Math.round(wf/t*100):0,'time_windows','customerMetricWithSlot');
+    cell('clock','noSlot','Con fascia di scarico',wf,wf<t?(t-wf)+' da impostare':'Tutte impostate',wf<t,t?Math.round(wf/t*100):0,'time_windows','customerMetricWithSlot');
 }
 function renderCustomerQuick(){
   const root=cxEl('customerQuickFilters');
