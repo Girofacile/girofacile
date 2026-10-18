@@ -133,6 +133,9 @@ body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-canvas .leafle
 /* Dashboard desktop: la mappa occupa lo spazio libero fino alla legenda,
    evitando la fascia vuota sotto il riquadro cartografico. */
 @media (min-width:1025px){
+  body[data-gf-surface="workspace"] #app #tab-dashboard .gf-route-panel{
+    min-height:28.25rem;
+  }
   body[data-gf-surface="workspace"] #app #tab-dashboard .gf-route-panel__map{
     display:flex;
     flex-direction:column;

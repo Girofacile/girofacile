@@ -147,6 +147,7 @@ test('dashboard map fills the available card height on desktop',()=>{
   const css=read('static/dashboard/css/dashboard-real-map.css');
   const html=read('static/dashboard/index.html');
   assert.match(css,/@media\s*\(min-width:\s*1025px\)[\s\S]*?\.gf-route-panel__map\s*\{[\s\S]*?display:\s*flex;[\s\S]*?flex-direction:\s*column;/);
+  assert.match(css,/@media\s*\(min-width:\s*1025px\)[\s\S]*?\.gf-route-panel\s*\{\s*min-height:\s*28\.25rem;\s*\}/);
   assert.match(css,/\.gf-route-panel__canvas\s*\{\s*flex:\s*1 1 auto;\s*min-height:\s*var\(--gf-map-min-height\);\s*\}/);
-  assert.match(html,/dashboard-real-map\.css\?v=gf_dashboard_map_fill_20261018/);
+  assert.match(html,/dashboard-real-map\.css\?v=gf_dashboard_map_stable_height_20261018/);
 });
