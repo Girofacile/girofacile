@@ -39,7 +39,7 @@ function makeHarness() {
   const ids = [
     'gfRefHeroWrap','gfRefRouteTitle','gfRefRouteSubtitle','gfRefRouteStatus','gfRefRouteDrawing',
     'gfRefDriver','gfRefVehicle','gfRefCompleted','gfRefRemaining','gfRefProgressBar','gfRefMissed',
-    'gfRefEmptyDescription','gfRefEmptyAction','gfRefEmptyHint',
+    'gfRefEmptyDescription','gfRefEmptyAction','gfRefEmptyActionLabel','gfRefEmptyHint',
     'gfRefStopList','gfRefOtherActive','gfRefEmptyState','gfRefOperationalDetail','gfRefRouteLegend',
   ];
   const nodes = new Map(ids.map(id => [id, makeNode(id, id === 'gfRefEmptyState' ? ['hidden'] : [])]));
@@ -114,7 +114,7 @@ test('an unconfigured account is directed to company setup instead of a blocked 
   const app = makeHarness();
   app.context.isWorkspaceOperationalV49 = () => false;
   await vm.runInContext('renderGFReferenceDashboardHero(null)', app.context);
-  assert.equal(app.nodes.get('gfRefEmptyAction').textContent, 'Completa la configurazione');
+  assert.equal(app.nodes.get('gfRefEmptyActionLabel').textContent, 'Completa la configurazione');
   assert.match(app.nodes.get('gfRefEmptyDescription').textContent, /Completa il profilo aziendale e le impostazioni/);
   const selected = [];
   const actionContext = vm.createContext({

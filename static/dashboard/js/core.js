@@ -1775,7 +1775,7 @@ function renderGFReferenceDashboardHero(summary){
     txt("gfRefEmptyDescription",canPlan
       ?"Non ci sono giri in corso. Crea un giro per organizzare le consegne e pianificare il percorso."
       :"Non ci sono giri in corso. Completa il profilo aziendale e le impostazioni per iniziare a pianificare le consegne.");
-    txt("gfRefEmptyAction",canPlan?"Calcola il primo giro":"Completa la configurazione");
+    txt("gfRefEmptyActionLabel",canPlan?"Calcola il primo giro":"Completa la configurazione");
     txt("gfRefEmptyHint",canPlan
       ?"Potrai selezionare le fermate e assegnare autista e mezzo."
       :"Dopo la configurazione potrai organizzare le consegne e assegnare le risorse.");
