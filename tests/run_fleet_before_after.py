@@ -4,6 +4,7 @@ import argparse
 from copy import deepcopy
 import hashlib
 import json
+import math
 from pathlib import Path
 import sys
 from types import ModuleType
@@ -38,7 +39,8 @@ def load_baseline(path):
 
 
 def row_key(row):
-    return row["case_id"], row["strategy"], row["stage"], tuple(row.get("permutation") or ())
+    return (row["case_id"], row["strategy"], row["stage"], row.get("variant", row["stage"]),
+            tuple(row.get("permutation") or ()))
 
 
 def index_rows(result):
@@ -49,6 +51,25 @@ def index_rows(result):
             raise ValueError(f"Duplicate run identity: {identity}")
         rows[identity] = row
     return rows
+
+
+def objective_order(actual, reference, strategy):
+    """Compare raw objectives; ignore arithmetic noise, never UI rounding."""
+    aa, rr = audit.key(actual, strategy), audit.key(reference, strategy)
+    for index, (a, r) in enumerate(zip(aa, rr)):
+        if index < 3:
+            if a != r:
+                return 1 if a > r else -1
+            continue
+        a, r = float(a), float(r)
+        if not math.isfinite(a) or not math.isfinite(r):
+            raise ValueError("Non-finite objective metric")
+        noise = max(1e-9, 512 * max(math.ulp(a), math.ulp(r)))
+        if a > r + noise:
+            return 1
+        if a < r - noise:
+            return -1
+    return 0
 
 
 def compare_results(before, after):
@@ -64,11 +85,12 @@ def compare_results(before, after):
         aa, bb = row["actual"]["metrics"], updated["actual"]["metrics"]
         pairs.append(dict(
             case_id=row["case_id"], strategy=row["strategy"], stage=row["stage"],
-            permutation=row.get("permutation"), before=deepcopy(aa), after=deepcopy(bb),
+            variant=row.get("variant",row["stage"]), permutation=row.get("permutation"),
+            before=deepcopy(aa), after=deepcopy(bb),
             delta={field: bb[field] - aa[field] for field in FIELDS},
             coverage_regression=bb["served"] < aa["served"],
-            objective_regression=audit.worse(bb, aa, row["strategy"]),
-            objective_improvement=audit.worse(aa, bb, row["strategy"]),
+            objective_regression=objective_order(bb, aa, row["strategy"]) > 0,
+            objective_improvement=objective_order(bb, aa, row["strategy"]) < 0,
             before_runtime_ms=row["actual"]["runtime_ms"],
             after_runtime_ms=updated["actual"]["runtime_ms"]))
     summary = dict(paired_runs=len(pairs),
@@ -186,6 +208,9 @@ def main():
     (output / "report.md").write_text(report, encoding="utf-8")
     print("FLEET_BEFORE_AFTER_SUMMARY " + json.dumps(comparison["summary"], ensure_ascii=False), flush=True)
     print("FLEET_BEFORE_AFTER_EXAMPLES " + json.dumps(comparison["examples"], ensure_ascii=False), flush=True)
+    print("FLEET_BEFORE_AFTER_REGRESSIONS " + json.dumps(
+        [row for row in comparison["pairs"] if row["coverage_regression"] or row["objective_regression"]],
+        ensure_ascii=False), flush=True)
     print("FLEET_BEFORE_AFTER_REPORT " + json.dumps(
         dict(markdown=report, metadata=comparison["metadata"]), ensure_ascii=False), flush=True)
     summary = comparison["summary"]

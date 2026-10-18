@@ -59,9 +59,10 @@ def test_lower_time_and_distance_is_measured_at_equal_service():
     assert values["equal_service_km_after"]==44
 
 
-def test_subprecision_changes_are_not_quality_regressions():
+def test_real_subprecision_changes_are_still_quality_regressions():
     summary=compare_results(fixture_result(),fixture_result(km=44.001,minutes=88.001))["summary"]
-    assert summary["objective_regressions"]==summary["objective_improvements"]==0
+    assert summary["objective_regressions"]==1
+    assert summary["objective_improvements"]==0
 
 
 def test_missing_variant_is_rejected():
@@ -86,3 +87,41 @@ def test_modified_baseline_is_rejected_before_execution(tmp_path):
     source=tmp_path/"baseline.py";source.write_text("raise AssertionError('must never execute')\n",encoding="utf-8")
     with pytest.raises(ValueError,match="Baseline does not match"):
         load_baseline(source)
+
+
+@pytest.mark.parametrize("gain",[0.02,0.001,0.000001])
+def test_small_real_time_gain_precedes_distance_even_if_not_visible_in_ui(gain):
+    summary=compare_results(fixture_result(),fixture_result(minutes=88.0-gain,km=47.0))["summary"]
+    assert summary["objective_improvements"]==1
+    assert summary["objective_regressions"]==0
+
+
+def test_floating_time_noise_does_not_hide_distance_regression():
+    summary=compare_results(fixture_result(),fixture_result(minutes=88.0-1e-14,km=47.0))["summary"]
+    assert summary["objective_regressions"]==1
+    assert summary["objective_improvements"]==0
+
+
+@pytest.mark.parametrize("loss",[0.02,0.001,0.000001])
+def test_true_time_loss_is_not_hidden_by_distance_savings(loss):
+    summary=compare_results(fixture_result(),fixture_result(minutes=88.0+loss,km=41.0))["summary"]
+    assert summary["objective_regressions"]==1
+    assert summary["objective_improvements"]==0
+
+
+@pytest.mark.parametrize("gain",[0.02,0.001,0.000001])
+def test_balanced_makespan_precedes_total_time_and_distance(gain):
+    summary=compare_results(fixture_result("balanced"),
+        fixture_result("balanced",makespan=44.0-gain,sumsq=4000,minutes=90,km=47))["summary"]
+    assert summary["objective_improvements"]==1
+    assert summary["objective_regressions"]==0
+
+
+def test_equal_permutations_from_distinct_variant_attempts_are_both_compared():
+    before=fixture_result()
+    row=before["runs"][0];row.update(stage="reordered",variant="reverse",permutation=[1,0])
+    other=deepcopy(row);other["variant"]="shuffle"
+    before["runs"].append(other)
+    summary=compare_results(before,deepcopy(before))["summary"]
+    assert summary["paired_runs"]==2
+    assert summary["objective_regressions"]==0

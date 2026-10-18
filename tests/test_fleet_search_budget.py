@@ -66,3 +66,12 @@ def test_resource_alias_reuses_only_explicit_semantic_equivalence():
                                   resource_signatures=["equivalent", "equivalent"])
     assert len(calls) == 15  # 3 singletons, 6 pairs and 6 complete permutations.
     assert sorted(index for order in orders for index in order) == [0, 1, 2]
+
+
+def test_floating_time_noise_does_not_prefer_more_kilometres():
+    def evaluate(order, resource):
+        duration=10.0 if order==(0,1) else 10.0-1e-14
+        km=2.0 if order==(0,1) else 9.0
+        return {"total_min":duration,"total_km":km,"_objective":(km,duration,0,0)}
+    orders,_,_=optimize_fleet([{},{}],1,evaluate,"efficient")
+    assert orders==((0,1),)

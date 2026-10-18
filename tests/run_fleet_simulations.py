@@ -397,10 +397,10 @@ def main():
     deterministic, reorder_changes = [], []
     started = perf_counter()
     with (output / "runs.jsonl").open("w", encoding="utf-8") as log:
-        def record(case, strategy, actual, stage="base", refs=None, permutation=None):
+        def record(case, strategy, actual, stage="base", refs=None, permutation=None, variant_name=None):
             row = {
                 "case_id": case["id"], "family": case["family"], "seed": case.get("seed"),
-                "strategy": strategy, "stage": stage, "stops": len(case["stops"]),
+                "strategy": strategy, "stage": stage, "variant": variant_name or stage, "stops": len(case["stops"]),
                 "resources": len(case["resources"]), "return_depot": case["return_depot"],
                 "permutation": permutation, "actual": actual, "reference": refs,
                 "comparison": comparisons(actual["metrics"], refs, strategy),
@@ -448,7 +448,7 @@ def main():
                 refs = remap_references(references[case["id"]], permutation)
                 for strategy in STRATEGIES:
                     actual = execute(variant, strategy)
-                    record(variant, strategy, actual, "reordered", refs, permutation)
+                    record(variant, strategy, actual, "reordered", refs, permutation, variant_name=name)
                     before, after = baselines[case["id"], strategy]["metrics"], actual["metrics"]
                     changed = any(abs(before[field] - after[field]) > (
                         KM_EPS if field == "km" else MIN_EPS if field in ("minutes", "makespan") else 0

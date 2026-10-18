@@ -17,6 +17,17 @@ def candidate_limit(stop_count):
         return default
 
 
+def _better(left, right):
+    """Compare objectives without letting floating representation noise win."""
+    for a, b in zip(left, right):
+        noise = max(1e-9, 512 * max(math.ulp(float(a)), math.ulp(float(b))))
+        if a < b - noise:
+            return True
+        if a > b + noise:
+            return False
+    return False
+
+
 def _numbers(result):
     if result is None:
         return 0.0, 0.0
@@ -87,7 +98,7 @@ def optimize_fleet(rows, resource_count, evaluate, strategy, *,
     def consider(routes, results):
         nonlocal best_routes, best_results, best_key
         key = plan_key(routes, results)
-        if key < best_key:
+        if _better(key, best_key):
             best_routes = tuple(tuple(route) for route in routes)
             best_results = tuple(results)
             best_key = key
@@ -112,7 +123,7 @@ def optimize_fleet(rows, resource_count, evaluate, strategy, *,
                         continue
                     duration, distance = _numbers(result)
                     key = (duration, distance)
-                    if winner is None or key < winner[0]:
+                    if winner is None or _better(key, winner[0]):
                         winner = (key, order, result)
                 if winner is not None:
                     choices[mask] = (winner[1], winner[2])
@@ -184,7 +195,7 @@ def optimize_fleet(rows, resource_count, evaluate, strategy, *,
                     changed_routes, changed_results = list(routes), list(results)
                     changed_routes[resource], changed_results[resource] = order, result
                     key = plan_key(changed_routes, changed_results)
-                    if candidate_best is None or key < candidate_best[0]:
+                    if candidate_best is None or _better(key, candidate_best[0]):
                         candidate_best = key, tuple(changed_routes), tuple(changed_results)
             return candidate_best
 
@@ -340,7 +351,7 @@ def optimize_fleet(rows, resource_count, evaluate, strategy, *,
                             consider(changed_routes, changed_results)
                         if used >= round_end:
                             break
-            if best_key >= round_key:
+            if not _better(best_key, round_key):
                 break
 
     diagnostics = {
