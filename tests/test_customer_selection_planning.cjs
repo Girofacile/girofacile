@@ -6,10 +6,23 @@ const controller=customers.slice(customers.indexOf('let customerPlanningTransfer
 function fixture(options={}){
   const valid={id:1,nome:'A',stato_geocodifica:'verificato',lat:0,lon:0};
   const context={
-    window:{GFCompanyAccess:{can:()=>!options.denied},GFOrderPlanning:{flush:async()=>{context.flushes++;if(options.flushError)throw Error('Salvataggio non riuscito');if(options.pause)await options.pause;}}},
+    window:{GFCompanyAccess:{can:()=>!options.denied},
+      GFCustomerAddresses:{verify:async ids=>{
+        context.verifications.push([...ids]);
+        if(options.verifyError)throw Error('Verifica non riuscita');
+        if(options.unresolved)return false;
+        if(options.autoVerify){
+          for(const id of ids){
+            const customer=context.customerDirectory.all.find(c=>c.id===id);
+            if(customer){customer.stato_geocodifica='verificato';customer.lat=40.5;customer.lon=14.1;}
+          }
+        }
+        return true;
+      }},
+      GFOrderPlanning:{flush:async()=>{context.flushes++;if(options.flushError)throw Error('Salvataggio non riuscito');if(options.pause)await options.pause;}}},
     customerDirectory:{busy:!!options.busy,selected:new Set(options.ids||[1,2]),all:[valid,{...valid,id:2,nome:'B'},...(options.invalid?[{...valid,id:3,stato_geocodifica:'da_verificare'}]:[])]},
     deliveries:options.existing?[{customer_id:99}]:[],customerDirectoryPlanning:false,
-    flushes:0,clears:0,renders:0,gates:0,alerts:[],navigations:[],
+    flushes:0,clears:0,renders:0,gates:0,alerts:[],navigations:[],verifications:[],
     alert:m=>context.alerts.push(m),confirm:()=>!options.cancel,
     renderCustomerSelection:()=>{},
     customerIsPlannable:c=>!!c&&c.stato_geocodifica==='verificato'&&Number.isFinite(c.lat)&&Number.isFinite(c.lon),
@@ -32,7 +45,7 @@ test('selected customers transfer once in selection order through the existing m
 });
 for(const [name,options] of Object.entries({
   empty:{ids:[]},denied:{denied:true},busy:{busy:true},missing:{ids:[9]},
-  unverified:{ids:[1,3],invalid:true},cancelled:{existing:true,cancel:true},
+  unverified:{ids:[1,3],invalid:true},unresolved:{unresolved:true},cancelled:{existing:true,cancel:true},
   navigationBlocked:{existing:true,blocked:true},saveFailed:{existing:true,flushError:true}
 })){
   test('preserves workspace and selection when '+name,async()=>{
@@ -42,6 +55,22 @@ for(const [name,options] of Object.entries({
     assert.deepEqual([...f.context.customerDirectory.selected],ids);
   });
 }
+test('automatically verifies selected unverified customers and keeps their selection order',async()=>{
+  const f=fixture({ids:[3,1],invalid:true,autoVerify:true});
+  await f.run();
+  assert.deepEqual(f.context.verifications,[[3,1]]);
+  assert.deepEqual(f.context.deliveries.map(x=>x.customer_id),[3,1]);
+  assert.equal(f.context.clears,1);
+});
+
+test('verification errors never replace the current planning workspace',async()=>{
+  const f=fixture({existing:true,verifyError:true});
+  await f.run();
+  assert.equal(f.context.clears,0);
+  assert.equal(f.context.deliveries[0].customer_id,99);
+  assert.equal(f.context.alerts.at(-1),'Verifica non riuscita');
+});
+
 test('double click while saving does not transfer twice',async()=>{
   let release;const pause=new Promise(resolve=>release=resolve);
   const f=fixture({pause});const first=f.run();await f.run();release();await first;

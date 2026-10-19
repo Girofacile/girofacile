@@ -390,21 +390,30 @@ function renderCustomerSelection(){
 }
 
 let customerPlanningTransferBusy=false;
-async function goCustomerPlanning(){
+async function goCustomerPlanning(resume=false){
   if(customerPlanningTransferBusy||customerDirectory.busy)return;
   if(window.GFCompanyAccess&&!GFCompanyAccess.can('routes.plan')){
     alert('La pianificazione non è assegnata al tuo account.');return;
   }
   const ids=[...customerDirectory.selected];
   if(!ids.length)return;
-  const selected=ids.map(id=>customerDirectory.all.find(c=>Number(c.id)===id));
-  if(selected.some(c=>!c||!customerIsPlannable(c))){
-    alert('Per pianificare, tutti i clienti selezionati devono avere un indirizzo verificato e coordinate valide. Controlla la selezione.');return;
+  if(ids.some(id=>!customerDirectory.all.some(c=>Number(c.id)===id))){
+    alert('La selezione clienti è cambiata. Ricarica la pagina e riprova.');return;
   }
-  if(deliveries.length&&!confirm('Sostituire le fermate aperte nel pianificatore con questa selezione? I giri già salvati restano disponibili nello storico.'))return;
-  const stops=selected.map(deliveryFromCustomer);
+  if(deliveries.length&&!resume&&!confirm('Sostituire le fermate aperte nel pianificatore con questa selezione? I giri già salvati restano disponibili nello storico.'))return;
   customerPlanningTransferBusy=true;renderCustomerSelection();
   try{
+    // Come per gli ordini: verifica soltanto i selezionati, poi risolvi le anomalie nel dialog.
+    if(!await window.GFCustomerAddresses.verify(ids))return;
+    // Rileggi l'anagrafica dopo la geocodifica: mai utilizzare vecchie coordinate.
+    if(ids.some(id=>!customerDirectory.selected.has(id))){
+      alert('La selezione clienti è cambiata durante la verifica. Riprova.');return;
+    }
+    const selected=ids.map(id=>customerDirectory.all.find(c=>Number(c.id)===id));
+    if(selected.some(c=>!c||!customerIsPlannable(c))){
+      alert('Alcuni indirizzi risultano ancora da verificare. Riprova la verifica dalla selezione.');return;
+    }
+    const stops=selected.map(deliveryFromCustomer);
     await window.GFOrderPlanning?.flush();
     // The existing navigation guards must succeed before replacing the workspace.
     showTab('giro');
