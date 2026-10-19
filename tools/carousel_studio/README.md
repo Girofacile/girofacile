@@ -5,6 +5,15 @@ successivo; non richiede pacchetti, database o accesso al pannello aziendale.
 
 ## Avvio
 
+Su Mac fai doppio clic su **Apri Carousel Studio.command**, in questa cartella.
+Si apre una finestra di Terminale che mantiene attivo il server e viene aperto
+il browser. Lascia il Terminale aperto mentre lavori; premi Ctrl+C per fermare
+il generatore. Un secondo doppio clic riapre il server già attivo.
+
+Il collegamento web funziona soltanto mentre il server è in esecuzione:
+`ERR_CONNECTION_REFUSED` indica normalmente che il server è spento. Riapri
+il comando e poi ricarica la pagina. Questo avvio è indipendente dalla chat.
+
 Dalla cartella del repository:
 
 ```sh
