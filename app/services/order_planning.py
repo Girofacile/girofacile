@@ -1,4 +1,4 @@
-from .ztl import detect_ztl
+from .ztl import detect_ztl, detect_pedestrian
 """Persistent actor selections and conversion into the existing planning schema."""
 from datetime import datetime
 from ..core.clock import utc_now
@@ -114,6 +114,7 @@ def to_stop(order):
                 scarico_mattina_da=values.get('time_from'), scarico_mattina_a=values.get('time_to'),
                 scarico_pomeriggio_da=None, scarico_pomeriggio_a=None, tempo_scarico_min=10,
                 sponda=values.get('tail_lift') is True, ztl=(values.get('ztl') is True or detect_ztl(verified.get('lat'), verified.get('lon'))['detected']),
+                pedestrian_area=detect_pedestrian(verified.get('lat'), verified.get('lon'))['detected'],
                 note=values.get('notes'), order_refs=[{'id':order.id,'version':order.version}],
                 order_stop_key=stop_key(order.user_id, order.id), order_numbers=[order.number],
                 order_operational={key:values.get(key) for key in ('pallet_truck','pallets','volume_m3','requirements')})
