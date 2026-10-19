@@ -155,7 +155,10 @@ def run_migrations(engine):
                     conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261013_02', 'now': utc_now()})
             if '20261020_01' not in applied:
                 with engine.begin() as conn:
+                    tables = set(inspect(conn).get_table_names())
                     for table in ('customers', 'deliveries'):
+                        if table not in tables:
+                            continue  # Database legacy parziale, come nelle migrazioni precedenti.
                         columns = {c['name'] for c in inspect(conn).get_columns(table)}
                         if 'pedestrian_area' not in columns:
                             conn.execute(text(f'ALTER TABLE {table} ADD COLUMN pedestrian_area BOOLEAN NOT NULL DEFAULT FALSE'))
