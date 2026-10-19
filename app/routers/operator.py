@@ -61,6 +61,7 @@ def delivery_to_operator_dict(delivery: Delivery, status: DeliveryStatus | None)
         "scarico_pomeriggio_a": time_to_hhmm(delivery.scarico_pomeriggio_a),
         "tempo_scarico_min": delivery.tempo_scarico_min,
         "ztl": delivery.ztl,
+        "pedestrian_area": delivery.pedestrian_area,
         "sponda": delivery.sponda,
         "note": delivery.note,
         "arrivo_stimato": time_to_hhmm(delivery.arrivo_stimato),
