@@ -111,7 +111,9 @@ function syncWorkspaceTopbar(name){
   document.querySelectorAll("[data-hide-on-tabs]").forEach(el=>el.classList.toggle("gf-hidden",el.dataset.hideOnTabs.split(" ").includes(name)));
   if(document.body){
     document.body.classList.toggle("gf-company-page-active",company);
+    document.body.classList.toggle("gf-dashboard-page-active",name==="dashboard");
   }
+  if(name==="dashboard")window.GFDashboardMobile?.syncHeader();
 }
 
 // Voce attiva della sidebar del layout base (aria-current, come in shell.js).
@@ -167,6 +169,7 @@ function refreshDashboardGreeting(){
   if(!dashboard || dashboard.classList.contains("hidden")) return;
   const title=document.getElementById("workspacePageTitle");
   if(title) title.textContent=dashboardGreetingTitle();
+  window.GFDashboardMobile?.syncHeader();
 }
 if(typeof window!=="undefined" && typeof window.setInterval==="function"){
   window.setInterval(refreshDashboardGreeting,60_000);

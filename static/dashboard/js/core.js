@@ -1772,6 +1772,7 @@ function renderGFReferenceDashboardHero(summary){
   if(emptyState)emptyState.classList.toggle("hidden",!!summary);
   if(operationalDetail)operationalDetail.classList.toggle("hidden",!summary);
   if(legend)legend.classList.toggle("hidden",!summary);
+  window.GFDashboardMobile?.renderHero(summary,typeof isWorkspaceOperationalV49!=="function"||isWorkspaceOperationalV49());
   if(!summary){
     txt("gfRefRouteTitle","La tua area operativa");
     txt("gfRefRouteSubtitle","Mappa dell’area operativa dell’azienda");
@@ -1796,6 +1797,7 @@ function renderGFReferenceDashboardHero(summary){
       : Promise.resolve([]);
     return depositsRequest.then(deposits=>{
       if(!root.isConnected || root.dataset.gfRefRenderVersion!==String(version) || root.classList.contains("has-route"))return;
+      window.GFDashboardMobile?.updateDepot(Array.isArray(deposits)?deposits:[],location);
       if(window.GiroFacileDashboardMap?.renderEmpty){
         return Promise.resolve(window.GiroFacileDashboardMap.renderEmpty(drawing,{...location,deposits:Array.isArray(deposits)?deposits:[]}))
           .catch(error=>{
@@ -1875,6 +1877,7 @@ function renderGFReferenceDashboardHero(summary){
 async function loadDashboardHome(){
   const dash = document.getElementById("tab-dashboard");
   if(!dash) return;
+  window.GFDashboardMobile?.loading();
   try{
     const [routes, operational, vehicles, drivers, completedDeliveriesSummary] = await Promise.all([
       api("/api/routes"),
@@ -1903,6 +1906,7 @@ async function loadDashboardHome(){
     setText("gfRefDriverCountMeta", `su ${drivers.length}`);
     setText("dashBusyVehicles", busyVehicles);
     setText("gfRefVehicleCountMeta", `su ${vehicles.length}`);
+    window.GFDashboardMobile?.updateResources(drivers,vehicles);
 
     // Dashboard semplificata: grafici e attività recenti rimossi per ridurre confusione.
 
@@ -1958,6 +1962,7 @@ async function loadDashboardHome(){
     renderGFReferenceDashboardHero(progress[0]||null);
   }catch(e){
     console.warn(e);
+    window.GFDashboardMobile?.loadError();
     const loading=document.getElementById("gfRefDetailLoading");
     if(loading && !loading.classList.contains("hidden")) loading.textContent="Dati non disponibili. Ricarica la pagina per riprovare.";
   }
@@ -3957,7 +3962,8 @@ function dashRouteItem(r, type){
   if(type === 'scheduled') click = `openDashboardScheduledPage(${r.id})`;
   if(type === 'progress') click = `openDashboardInProgressPage(${r.id})`;
   if(type === 'completed') click = `openDashboardCompletedPage(${r.id})`;
-  return `<div class="gf-list-item" role="button" tabindex="0" onkeydown="if(event.target===this &amp;&amp; (event.key==='Enter' || event.key===' ')){event.preventDefault();this.click()}" onclick="${click}">
+  return `<div class="gf-list-item gf-dashboard-route-item" role="button" tabindex="0" onkeydown="if(event.target===this &amp;&amp; (event.key==='Enter' || event.key===' ')){event.preventDefault();this.click()}" onclick="${click}">
+    <span class="gf-dashboard-route-icon gf-dashboard-mobile-only" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m7 17 10-10 M7 7h10v10"/></svg></span>
     <div class="gf-list-item__main gf-stack" data-gap="sm">
       <strong>${esc(r.nome||"Giro consegne")}</strong>
       ${isProgress?`
@@ -3967,9 +3973,9 @@ function dashRouteItem(r, type){
           <div class="gf-progress__track" role="img" aria-label="${completed} consegne completate su ${total}"><span class="gf-progress__done" data-gf-width="${gfWidth5(completedPercent)}"></span><span class="gf-progress__miss" data-gf-width="${gfWidth5(missedPercent)}"></span></div>
         </div>
         ${issues.length?`<div class="gf-cluster">${issues.join('')}</div>`:""}
-      `:`<small class="gf-muted">${meta}</small>`}
+      `:`<small class="gf-muted gf-dashboard-desktop-copy">${meta}</small><small class="gf-muted gf-dashboard-mobile-only">${esc(window.GFDashboardMobile?.routeMeta(r)||'')}</small>`}
     </div>
-    <div class="gf-cluster">${pill}<span aria-hidden="true">›</span></div>
+    <div class="gf-cluster"><span class="gf-dashboard-desktop-copy">${pill}</span><span class="gf-dashboard-mobile-only">${type==='scheduled'?'<span class="gf-badge" data-status="warning" aria-label="Programmato">Prog.</span>':pill}</span><span aria-hidden="true">›</span></div>
   </div>`;
 }
 

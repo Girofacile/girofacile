@@ -175,7 +175,7 @@ test('dashboard reference view shares tokens and retains live API connections',(
   assert.match(core,/completedToday\.slice\(0,3\)\.map/);
   assert.match(core,/progress\.slice\(1,3\)\.map/);
   const routeItem=core.slice(core.indexOf('function dashRouteItem'),core.indexOf('function gfTimeFromIso'));
-  assert.match(routeItem,/class="gf-list-item" role="button"/);
+  assert.match(routeItem,/class="gf-list-item gf-dashboard-route-item" role="button"/);
   assert.match(routeItem,/class="gf-progress__top"/);
   assert.match(routeItem,/issues\.length\?`<div class="gf-cluster">/);
   new vm.Script(core);
@@ -384,7 +384,7 @@ test('dashboard completed-deliveries KPI has fixed copy and uses actual completi
   const html=read('static/dashboard/index.html');
   const dashboard=html.slice(html.indexOf('<section id="tab-dashboard"'),html.indexOf('<section id="tab-dashboard-scheduled"'));
   assert.match(dashboard,/>Consegne completate<\/span><strong class="gf-stat-strip__value" id="dashTodayCompletedDeliveries">0<\/strong>/);
-  assert.match(dashboard,/id="dashTodayCompletedDeliveries">0<\/strong><small class="gf-stat-strip__unit">dagli autisti oggi<\/small>/);
+  assert.match(dashboard,/id="dashTodayCompletedDeliveries">0<\/strong><small class="gf-stat-strip__unit gf-dashboard-desktop-copy">dagli autisti oggi<\/small>/);
   assert.doesNotMatch(dashboard,/Consegne<\/span> merce/);
 
   const core=read('static/dashboard/js/core.js');
