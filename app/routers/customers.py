@@ -1,8 +1,12 @@
-from ..services.customer_planning import planning_customer_filters
+from ..services.customer_planning import planning_customer_filters, customer_is_plannable
 from datetime import datetime
 from ..core.clock import utc_now
 import time
 from pathlib import Path
+import math
+
+from pydantic import BaseModel, Field
+from typing import Literal
 
 import pandas as pd
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
@@ -16,7 +20,7 @@ from ..services.customer_import import read_customer_import, preflight_customer_
 from ..models import Agent, Customer, User
 from ..routers.agents import agent_full_name
 from ..schemas import CustomerIn
-from ..services.geocoding import apply_geocode, geocode_customer
+from ..services.geocoding import apply_geocode, geocode_customer, geocode_address, GeocodingUnavailable
 from ..services.ztl import customer_ztl
 from ..services import distance_cache as dc
 from ..services.plans import check_customer_limit
@@ -253,6 +257,116 @@ def verify_customer_address_preview(data: CustomerIn, db: Session = Depends(get_
             "google_place_id": result.get("place_id"),
         },
     }
+
+
+
+class SelectedCustomerVerification(BaseModel):
+    customer_ids: list[int] = Field(min_length=1, max_length=3)
+
+
+class SelectedCustomerResolution(BaseModel):
+    customer_id: int
+    action: Literal["correct", "manual"]
+    original_address: str
+    original_comune: str = ""
+    address: str = Field(min_length=1, max_length=500)
+    comune: str = Field(min_length=1, max_length=200)
+    provincia: str | None = Field(default=None, max_length=100)
+    lat: float | None = None
+    lon: float | None = None
+
+
+def selected_customer_issue(customer, message, kind="address", candidate=None):
+    return {
+        "id": customer.id, "recipient_name": customer.nome,
+        "address": customer.indirizzo or "", "comune": customer.comune or "",
+        "provincia": customer.provincia or "", "message": message,
+        "kind": kind, "candidate": candidate,
+    }
+
+
+@router.post("/verify-selected")
+def verify_selected_customer_addresses(
+    data: SelectedCustomerVerification,
+    db: Session = Depends(get_db), user: User = Depends(current_user),
+):
+    """Verifica solo i clienti selezionati, a piccoli lotti come gli ordini.
+
+    Nessun controllo su indirizzi gia' confermati e nessun blocco del giro
+    finche' non si apre l'editor per i soli indirizzi problematici.
+    """
+    ids = list(dict.fromkeys(data.customer_ids))
+    customers = owned(db.query(Customer), Customer, user).filter(Customer.id.in_(ids)).all()
+    by_id = {customer.id: customer for customer in customers}
+    if len(by_id) != len(ids):
+        raise HTTPException(404, "Uno o piu' clienti selezionati non sono disponibili.")
+    issues = []
+    aborted = False
+    for cid in ids:
+        customer = by_id[cid]
+        if customer_is_plannable(customer):
+            continue
+        if not (customer.indirizzo or "").strip():
+            issues.append(selected_customer_issue(customer, "Completa l'indirizzo del cliente."))
+            continue
+        try:
+            result = geocode_address(
+                customer.indirizzo, customer.comune or "", customer.provincia or "",
+                db=db, user_id=user.id, strict=True,
+            )
+        except GeocodingUnavailable as exc:
+            # Interrompi il lotto per non ripetere chiamate a pagamento in caso di guasto.
+            issues.extend(selected_customer_issue(by_id[rest], str(exc), "service")
+                          for rest in ids[ids.index(cid):] if not customer_is_plannable(by_id[rest]))
+            aborted = True
+            break
+        apply_geocode(customer, result)
+        dc.invalidate_key(db, dc.customer_key(cid, user_id=user.id), user_id=user.id)
+        if not customer_is_plannable(customer):
+            candidate = ({"lat": customer.lat, "lon": customer.lon}
+                         if customer.lat is not None and customer.lon is not None else None)
+            message = ("Google ha trovato una posizione da confermare sulla mappa."
+                       if candidate else "Indirizzo non trovato. Correggilo o scegli la posizione sulla mappa.")
+            issues.append(selected_customer_issue(customer, message, candidate=candidate))
+    db.commit()
+    return {"issues": issues, "aborted": aborted}
+
+
+@router.post("/resolve-selected-address")
+def resolve_selected_customer_address(
+    data: SelectedCustomerResolution,
+    db: Session = Depends(get_db), user: User = Depends(current_user),
+):
+    """Correzione mirata del cliente, senza modificare fascia, note o altri campi."""
+    customer = owned(db.query(Customer), Customer, user).filter(Customer.id == data.customer_id).first()
+    if customer is None:
+        raise HTTPException(404, "Cliente non trovato")
+    if (customer.indirizzo or "") != data.original_address or (customer.comune or "") != data.original_comune:
+        raise HTTPException(409, "L'indirizzo e' stato modificato. Ricarica la selezione.")
+    address, city = data.address.strip(), data.comune.strip()
+    if not address or not city:
+        raise HTTPException(422, "Inserisci indirizzo e comune.")
+    if data.action == "manual":
+        if data.lat is None or data.lon is None or not all((
+            math.isfinite(data.lat), math.isfinite(data.lon),
+            -90 <= data.lat <= 90, -180 <= data.lon <= 180,
+        )):
+            raise HTTPException(422, "Scegli una posizione valida sulla mappa.")
+    customer.indirizzo = address
+    customer.comune = city
+    customer.provincia = (data.provincia or "").strip() or None
+    if data.action == "correct":
+        apply_geocode(customer, {"status": "da_verificare"})
+    else:
+        apply_geocode(customer, {
+            "status": "verificato", "lat": data.lat, "lon": data.lon,
+            "formatted": ", ".join(x for x in [address, city, customer.provincia] if x),
+            "source": "manuale", "confidence": None, "place_id": None,
+        })
+    dc.invalidate_key(db, dc.customer_key(customer.id, user_id=user.id), user_id=user.id)
+    db.commit()
+    db.refresh(customer)
+    return {"customer": customer_to_dict(customer)}
 
 
 @router.post("/{item_id}/verify-address")
