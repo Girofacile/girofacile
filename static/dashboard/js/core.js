@@ -2962,6 +2962,7 @@ function deliveryFromCustomer(c){
     scarico_pomeriggio_a:c.scarico_pomeriggio_a || null,
     tempo_scarico_min:parseInt(c.tempo_scarico_min || 10),
     ztl:!!c.ztl,
+    pedestrian_area:!!c.pedestrian_area,
     sponda:!!c.sponda,
     note:c.note || "",
     lat:c.lat ?? null,
@@ -3129,6 +3130,7 @@ function deliverySpecsSummary(d){
   const pieces = [];
   pieces.push(`${parseInt(d.tempo_scarico_min ?? 10)} min scarico`);
   if(d.ztl) pieces.push("ZTL");
+  if(d.pedestrian_area) pieces.push("Area pedonale");
   if(d.sponda) pieces.push("Sponda");
   if(parseFloat(d.peso_kg)||0) pieces.push(`${parseFloat(d.peso_kg)} kg`);
   if(parseInt(d.colli)||0) pieces.push(`${parseInt(d.colli)} colli`);
@@ -3142,7 +3144,8 @@ function deliveryWindowLabel(d){
 }
 function deliveryRequirementBadges(d){
   const badges = [];
-  if(d.ztl) badges.push('<span class="gf-badge" data-kind="ztl" title="Verifica i permessi di accesso del mezzo">ZTL</span><small class="gf-muted">Verifica i permessi del mezzo</small>');
+  if(d.ztl) badges.push('<span class="gf-badge" data-kind="ztl" title="Attenzione: cliente in zona ZTL">ZTL</span>');
+  if(d.pedestrian_area) badges.push('<span class="gf-badge" data-status="warning" title="Attenzione: cliente in area pedonale">Area pedonale</span>');
   if(d.sponda) badges.push('<span class="gf-badge" data-kind="tail-lift">Sponda</span>');
   return badges.join(" ") || '<span class="gf-muted">—</span>';
 }
@@ -3156,7 +3159,7 @@ function renderDeliveries(){
   if(counter) counter.textContent = `${deliveries.length} ${deliveries.length===1 ? "fermata" : "fermate"}`;
   if(footer) footer.textContent = `${deliveries.length} ${deliveries.length===1 ? "consegna inserita" : "consegne inserite"}`;
   const ztlCredit = document.getElementById("ztlDataAttribution");
-  if(ztlCredit) ztlCredit.hidden = !deliveries.some(d=>d.ztl);
+  if(ztlCredit) ztlCredit.hidden = !deliveries.some(d=>d.ztl||d.pedestrian_area);
   if(!deliveries.length){
     body.innerHTML = renderDeliveryEmptyRow();
     return;
@@ -3176,7 +3179,7 @@ function renderDeliveries(){
       <td data-label="Finestra di scarico">${deliveryWindowLabel(d)}</td>
       <td data-label="Scarico">${parseInt(d.tempo_scarico_min ?? 10)} min</td>
       <td data-label="Carico">${parseInt(d.colli)||0} colli<br><small class="gf-muted">${parseFloat(d.peso_kg)||0} kg</small></td>
-      <td data-label="Requisiti">${deliveryRequirementBadges(d)}</td>
+      <td data-label="Avvisi e requisiti">${deliveryRequirementBadges(d)}</td>
       <td data-label="Note">${d.note ? esc(d.note) : '<span class="gf-muted">—</span>'}</td>
       <td data-label="Specifiche">
         <button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="${d.customer_id == null ? 'openOccasionalStopModal' : 'openDeliveryDetailsModal'}(${i})">${d.customer_id == null ? 'Modifica' : 'Dettagli'}</button>
@@ -3247,12 +3250,13 @@ function removeDelivery(i){
 }
 
 function warnTypeCounts(consegne){
-  const counts = {sponda:0, ztl:0, attesa:0, critici:0};
+  const counts = {sponda:0, ztl:0, pedonale:0, attesa:0, critici:0};
   (consegne||[]).forEach(d=>{
     const w = (d.warning||"").toLowerCase();
-    if(w) counts.critici++;
+    if(w.split(";").some(part=>part.trim()&&!part.includes("cliente in zona ztl")&&!part.includes("cliente in area pedonale")&&!part.includes("cliente in ztl"))) counts.critici++;
     if(w.includes("sponda")) counts.sponda++;
-    if(w.includes("ztl")) counts.ztl++;
+    if(d.ztl||w.includes("ztl")) counts.ztl++;
+    if(d.pedestrian_area||w.includes("pedonale")) counts.pedonale++;
     if((parseFloat(d.attesa_min)||0)>0 || w.includes("attesa") || w.includes("apertura")) counts.attesa++;
   });
   return counts;
@@ -3275,7 +3279,7 @@ function cleanDeliveryForPayload(d){
     peso_kg: parseFloat(d.peso_kg)||0, colli: parseInt(d.colli)||0,
     scarico_mattina_da: d.scarico_mattina_da || null, scarico_mattina_a: d.scarico_mattina_a || null,
     scarico_pomeriggio_da: d.scarico_pomeriggio_da || null, scarico_pomeriggio_a: d.scarico_pomeriggio_a || null,
-    tempo_scarico_min: parseInt(d.tempo_scarico_min ?? 10), ztl: !!d.ztl, sponda: !!d.sponda, note: d.note || null
+    tempo_scarico_min: parseInt(d.tempo_scarico_min ?? 10), ztl: !!d.ztl, pedestrian_area: !!d.pedestrian_area, sponda: !!d.sponda, note: d.note || null
   };
 }
 function routePayloadFromResult(){
@@ -3470,14 +3474,15 @@ function renderRouteResult(r, targetId="routeResult", fromHistory=false){
       ${metric(gfRouteEnergyMetric(r).label, gfRouteEnergyMetric(r).value)}
       ${metric(gfRouteEnergyMetric(r).costLabel, `€ ${r.costo_carburante ?? "-"}`)}
     </div>
-    ${violationsCount || counts.sponda || counts.ztl || counts.attesa || counts.critici ? `<section class="gf-stack" data-preview-alerts aria-label="Avvisi principali">
+    ${violationsCount || counts.sponda || counts.ztl || counts.pedonale || counts.attesa || counts.critici ? `<section class="gf-stack" data-preview-alerts aria-label="Avvisi principali">
       <h3 class="gf-subtitle">Avvisi principali</h3>
       <div class="gf-grid" data-cols="2">
         ${violationsCount > 0 ? alert("danger", "Finestre orarie non rispettate", `${violationsCount} fermate · ${Number(r.total_lateness_min||0).toFixed(1)} min di ritardo totale`, "Verifica le fermate prima di programmare. Puoi comunque confermare il giro.") : ""}
         ${counts.sponda ? alert("danger", "🚚 Sponda richiesta non disponibile", `${counts.sponda} fermate`) : ""}
-        ${counts.ztl ? alert("warning", "🏙 Consegne in zona ZTL", `${counts.ztl} fermate`, "Verifica i permessi di accesso del tuo mezzo. La pianificazione non viene bloccata.") : ""}
+        ${counts.ztl ? alert("warning", "Consegne in zona ZTL", `${counts.ztl} fermate`, "Avviso informativo: verifica le condizioni di accesso. Il giro non viene modificato.") : ""}
+        ${counts.pedonale ? alert("warning", "Consegne in area pedonale", `${counts.pedonale} fermate`, "Avviso informativo: verifica le modalità di consegna. Il giro non viene modificato.") : ""}
         ${counts.attesa ? alert("warning", "🕒 Arrivo prima dell'apertura / attesa", `${counts.attesa} fermate`) : ""}
-        ${counts.critici && !counts.sponda && !counts.ztl && !counts.attesa ? alert("warning", "Fermate da verificare", `${counts.critici} fermate con avvisi: consulta il dettaglio nella tabella.`) : ""}
+        ${counts.critici && !counts.sponda && !counts.ztl && !counts.pedonale && !counts.attesa ? alert("warning", "Fermate da verificare", `${counts.critici} fermate con avvisi: consulta il dettaglio nella tabella.`) : ""}
       </div>
     </section>` : ""}
     <section class="gf-panel" data-preview-stops aria-labelledby="previewStopsTitle">
@@ -4268,7 +4273,7 @@ function dashboardScheduledStopsHtml(r){
     const note = d.note_operatore || d.note_autista || d.note || '';
     return `<li class="gf-stop"><span class="gf-stop__number">${esc(d.ordine || idx+1)}</span>
       <span class="gf-stop__main"><span class="gf-stop__name">${esc(d.cliente_nome || '-')}</span>
-        <span class="gf-stop__meta">${esc(d.indirizzo || '-')}${d.ztl?' <span class="gf-badge" data-kind="ztl">ZTL</span>':''}${d.sponda?' <span class="gf-badge" data-kind="tail-lift">Sponda</span>':''}</span>
+        <span class="gf-stop__meta">${esc(d.indirizzo || '-')}${d.ztl?' <span class="gf-badge" data-kind="ztl">ZTL</span>':''}${d.pedestrian_area?' <span class="gf-badge" data-status="warning">Area pedonale</span>':''}${d.sponda?' <span class="gf-badge" data-kind="tail-lift">Sponda</span>':''}</span>
         <span class="gf-stop__meta">${deliverySignatureAction(d, r.driver_name)} ${trackingButton(d, r)}${note ? ` <button type="button" class="gf-button" data-variant="ghost" data-size="sm" data-note="${esc(String(note))}" onclick="alert(this.dataset.note)">Note</button>` : ''}</span>
       </span><span class="gf-stop__time">${esc(gfPlannedArrival(d))}</span></li>${breaks(idx+1)}`;
   }).join('')}</ol>`;
