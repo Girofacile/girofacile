@@ -148,7 +148,7 @@ rule("POST", ["/api/order-sources/{source_id}/upload", "/api/order-sources/{sour
 rule("POST", ["/api/order-sources/{source_id}/runs/{run_id}/commit"], "orders.import")
 rule("GET", ["/api/order-planning/selection"], "orders.plan")
 rule("PUT", ["/api/order-planning/selection", "/api/order-planning/snapshot"], "orders.plan")
-rule("POST", ["/api/order-planning/preview"], "orders.plan")
+rule("POST", ["/api/order-planning/preview", "/api/order-planning/verify-selected", "/api/order-planning/resolve-address"], "orders.plan")
 rule("GET", ["/api/orders", "/api/orders/{order_id}"], "orders.read")
 rule("POST", ["/api/orders"], "orders.create")
 rule("PUT", ["/api/orders/{order_id}"], "orders.update")

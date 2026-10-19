@@ -15,6 +15,10 @@ from sqlalchemy.orm import Session
 from ..services.platform_settings import google_geocoding_enabled, google_maps_api_key
 
 
+class GeocodingUnavailable(RuntimeError):
+    pass
+
+
 def normalize_address(value: str) -> str:
     text_value = " ".join(str(value or "").replace("\n", " ").split()).strip()
     for old, new in [
@@ -27,11 +31,12 @@ def normalize_address(value: str) -> str:
     return text_value
 
 
-def _google_geocode(query: str, limit: int = 5, db: Session | None = None, user_id=None) -> list:
+def _google_geocode(query: str, limit: int = 5, db: Session | None = None, user_id=None, strict=False) -> list:
     """Esegue una richiesta Google Geocoding e normalizza i risultati."""
     api_key = google_maps_api_key(db)
     if not google_geocoding_enabled(db) or not api_key:
         print("[GEOCODING] Google disattivato o chiave Google mancante")
+        if strict: raise GeocodingUnavailable('Servizio di verifica indirizzi non disponibile. Riprova più tardi.')
         return []
 
     started, outcome, message = time.perf_counter(), "failed", "Geocodifica non disponibile"
@@ -51,6 +56,8 @@ def _google_geocode(query: str, limit: int = 5, db: Session | None = None, user_
         status = data.get("status")
         message = str(status or "unknown")[:80]
         outcome = "success" if status in ("OK", "ZERO_RESULTS") else "failed"
+        if strict and status not in ('OK','ZERO_RESULTS'):
+            raise GeocodingUnavailable('Servizio di verifica indirizzi temporaneamente non disponibile. Riprova.')
         if status != "OK":
             print(f"[GEOCODING] Google status={status} query={query}")
             return []
@@ -96,6 +103,7 @@ def _google_geocode(query: str, limit: int = 5, db: Session | None = None, user_
         print(f"[GEOCODING] Google risultati={len(results)} query={query}")
         return results
     except Exception as e:
+        if strict: raise GeocodingUnavailable('Servizio di verifica indirizzi temporaneamente non disponibile. Riprova.') from e
         print(f"[GEOCODING] Errore Google: {type(e).__name__}")
         return []
     finally:
@@ -105,7 +113,7 @@ def _google_geocode(query: str, limit: int = 5, db: Session | None = None, user_
                           status=outcome, message=message, response_ms=int((time.perf_counter() - started) * 1000))
 
 
-def geocode_address(indirizzo: str, comune: str = "", provincia: str = "", db: Session | None = None, user_id=None) -> dict:
+def geocode_address(indirizzo: str, comune: str = "", provincia: str = "", db: Session | None = None, user_id=None, strict=False) -> dict:
     """
     Geocodifica un indirizzo usando solo Google.
     Ritorna dict con: status, lat, lon, formatted, source, confidence.
@@ -114,7 +122,8 @@ def geocode_address(indirizzo: str, comune: str = "", provincia: str = "", db: S
         x for x in [normalize_address(indirizzo), comune, provincia, "Italia"] if x
     )
 
-    results = _google_geocode(query, limit=5, db=db, user_id=user_id)
+    options={'strict':True} if strict else {}
+    results = _google_geocode(query, limit=5, db=db, user_id=user_id, **options)
     if not results:
         return {"status": "non_trovato", "source": "google"}
 

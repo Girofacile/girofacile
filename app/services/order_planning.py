@@ -41,10 +41,10 @@ def check_version(row, version):
 
 
 def filtered_ready(db, user_id, filters):
-    query = db.query(Order).filter_by(user_id=user_id, status='pronto')
+    query = db.query(Order).filter(Order.user_id==user_id,Order.status.in_(('nuovo','da_verificare','pronto')))
     query = query.filter(~Order.id.in_(db.query(RouteOrderAssignment.order_id)))
-    if filters.status and filters.status != 'pronto':
-        return query.filter(False)
+    if filters.status:
+        query=query.filter(Order.status==filters.status)
     if filters.q.strip():
         value = '%' + filters.q.strip().replace('\\','\\\\').replace('%','\\%').replace('_','\\_') + '%'
         query = query.filter(or_(*(c.ilike(value, escape='\\') for c in (Order.number, Order.recipient_name, Order.delivery_address))))
@@ -66,7 +66,7 @@ def change_selection(db, user_id, actor, data):
         if data.action == 'add': query = query.filter(Order.id.in_(data.order_ids))
         added = {o.id for o in query.order_by(Order.id).limit(MAX_SELECTION + 1)}
         if data.action == 'add' and added != set(data.order_ids):
-            raise HTTPException(409, 'Seleziona solo ordini pronti e non già riservati a un giro.')
+            raise HTTPException(409, 'Seleziona solo ordini modificabili e non già riservati a un giro.')
         ids |= added
         if len(ids) > MAX_SELECTION:
             raise HTTPException(422, f'Prepara al massimo {MAX_SELECTION} ordini per selezione. Restringi i filtri e prepara più giri.')

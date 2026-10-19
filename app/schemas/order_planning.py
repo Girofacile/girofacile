@@ -64,3 +64,22 @@ class SelectionSnapshot(BaseModel):
     version: int = Field(ge=1)
     configuration: PlanningConfiguration
     stops: list[DeliveryIn] | None = Field(default=None, max_length=MAX_SELECTION)
+
+
+class SelectionVerify(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    version: int = Field(ge=1)
+    order_ids: list[int] = Field(min_length=1,max_length=3)
+    retry: bool = False
+
+
+class SelectionAddressResolution(BaseModel):
+    model_config = ConfigDict(extra='forbid',str_strip_whitespace=True)
+    version: int = Field(ge=1)
+    order_id: int = Field(gt=0)
+    order_version: int = Field(ge=1)
+    action: Literal['correct','manual','exclude']
+    address: str = Field(default='',max_length=500)
+    recipient_name: str = Field(default='',max_length=200)
+    lat: float | None = Field(default=None,ge=-90,le=90,allow_inf_nan=False)
+    lon: float | None = Field(default=None,ge=-180,le=180,allow_inf_nan=False)

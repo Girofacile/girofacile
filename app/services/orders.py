@@ -81,7 +81,7 @@ def update_order(db, order, data, actor):
     touch(order)
     if address_is_verified(db, order):
         order.status = 'pronto'
-        order.verification_status = 'verified'
+        order.verification_status = 'manual' if (order.address_verification or {}).get('confirmed_manually') else 'verified'
     record(db, order, actor, 'corrected', changes)
     return order
 
@@ -123,15 +123,15 @@ def _mark_verified(db, order, proof, address, actor, method):
         raise HTTPException(422, 'Impossibile confermare le coordinate della consegna.')
     before = order.status
     order.address_verification = {**proof, 'input_address': address}
-    order.verification_status = 'verified'
+    order.verification_status = 'manual' if proof.get('confirmed_manually') else 'verified'
     order.status = 'pronto'
     touch(order)
     record(db, order, actor, 'address_verified', {'address': address, 'method': method})
     if before != 'pronto':
-        record(db, order, actor, 'status_changed', {'before': before, 'after': 'pronto', 'method': 'automatic'})
+        record(db, order, actor, 'status_changed', {'before': before, 'after': 'pronto', 'method': 'manual' if proof.get('confirmed_manually') else 'automatic'})
 
 
-def verify_address(db, order, version, actor, reusable=None):
+def verify_address(db, order, version, actor, reusable=None, strict=False):
     editable(db, order, version)
     values = order.operational_data or {}
     address = values.get('delivery_address')
@@ -148,7 +148,7 @@ def verify_address(db, order, version, actor, reusable=None):
             proof = reusable
             method = 'reused_batch'
     if proof is None:
-        proof = verify_stop_address(db, order.user_id, address)
+        proof = verify_stop_address(db, order.user_id, address, **({'strict':True} if strict else {}))
     # Geocoding usage logging may commit. Reacquire and recheck after the call.
     order = get_order(db, order.user_id, order.id, lock=True)
     editable(db, order, version)

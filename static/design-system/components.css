@@ -820,3 +820,7 @@ body[data-gf-surface] #planningCustomerDialog {
 body[data-gf-surface] #planningCustomerResults {
   max-height:var(--gf-stop-list-max-height); overflow-y:auto;
 }
+
+body[data-gf-surface] #selectedAddressesDialog { width:var(--gf-dialog-width); box-sizing:border-box; }
+body[data-gf-surface] #selectedAddressesList { max-height:var(--gf-stop-list-max-height); overflow-y:auto; }
+body[data-gf-surface] #selectedAddressMap { min-height:var(--gf-stop-list-max-height); }

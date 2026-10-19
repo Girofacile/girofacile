@@ -183,8 +183,8 @@
             ${allowed?'<div><button type="button" class="gf-button" data-variant="primary" data-size="sm" onclick="GFOrders.action(\'verify-address\')">Verifica indirizzo ora</button></div>':''}
         </div></section>`
       :`<section class="gf-alert" data-status="success"><div class="gf-alert__body">
-            <strong class="gf-alert__title">✓ Verifica completata</strong>
-            <p>L’indirizzo di consegna è stato verificato ed è pronto per la pianificazione.</p>
+            <strong class="gf-alert__title">${o.address_verification?.confirmed_manually?'Posizione confermata manualmente':'✓ Verifica completata'}</strong>
+            <p>${o.address_verification?.confirmed_manually?'La posizione è stata scelta e confermata da un operatore.':'L’indirizzo di consegna è stato verificato ed è pronto per la pianificazione.'}</p>
         </div></section>`;
     const readyButton=''; // Verification makes the order ready without confirmation.
     const editButton=allowed?'<button type="button" class="gf-button" data-variant="primary" onclick="GFOrders.edit()">Modifica dati</button>':'';

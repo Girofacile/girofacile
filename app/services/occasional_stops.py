@@ -12,7 +12,7 @@ from fastapi import HTTPException
 
 from ..core.config import APP_SECRET
 from .customer_planning import has_verified_coordinates
-from .geocoding import geocode_address
+from .geocoding import geocode_address, GeocodingUnavailable
 
 STOP_VERIFICATION_FIELDS = ("geocoding_token", "stato_geocodifica", "indirizzo_geocodificato")
 VERIFICATION_ERROR = "Verifica l'indirizzo della fermata occasionale prima di inserirla nel giro."
@@ -24,9 +24,16 @@ def sign_stop_address(user_id, address, lat, lon):
     return hmac.new(APP_SECRET.encode(), value.encode(), hashlib.sha256).hexdigest()
 
 
-def verify_stop_address(db, user_id, address):
-    result = geocode_address(address, db=db, user_id=user_id)
+def verify_stop_address(db, user_id, address, strict=False):
+    try:
+        result = geocode_address(address, db=db, user_id=user_id, **({'strict':True} if strict else {}))
+    except GeocodingUnavailable as exc:
+        raise HTTPException(503,str(exc)) from exc
     if not has_verified_coordinates(result.get("status"), result.get("lat"), result.get("lon")):
+        if strict:
+            candidate=({k:result.get(k) for k in ('lat','lon','formatted')}
+                       if has_verified_coordinates('verificato',result.get('lat'),result.get('lon')) else None)
+            raise HTTPException(422,{'kind':'address','message':'Indirizzo non verificato correttamente. Correggilo o conferma una posizione sulla mappa.','candidate':candidate})
         raise HTTPException(400, "Indirizzo non verificato. Completa via, numero civico e comune e riprova.")
     address = result.get("formatted") or address.strip()
     lat, lon = float(result["lat"]), float(result["lon"])

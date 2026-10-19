@@ -27,7 +27,7 @@ from check_management_design import ME,LIMITS,VEHICLES,DRIVERS,DEPOSITS,USAGE
 
 def select_ready(page):
     """Seleziona gli ordini pronti aspettando ogni salvataggio, anche su mobile."""
-    box=page.get_by_role('checkbox',name='Seleziona ordini pronti di questa pagina',exact=True)
+    box=page.get_by_role('checkbox',name='Seleziona ordini di questa pagina',exact=True)
     # Sulle schede mobili l'intestazione resta nel DOM ma ridotta a 1 pixel.
     header_visible=box.count() and box.evaluate("el=>el.closest('thead').getBoundingClientRect().width>2")
     if header_visible:
@@ -96,7 +96,7 @@ def main():
                         page.get_by_role('button',name='Apri il menu',exact=True).click()
                     page.locator('button.gf-sidebar__item[data-tab="ordini"]').click()
                     page.wait_for_function("document.getElementById('ordersMessage').textContent.includes('Nessun ordine')")
-                    assert page.locator('#ordersVerifyAll').is_visible()
+                    assert page.locator('#ordersVerifyAll').count()==0
                     page.locator('#ordersNew').click()
                     page.locator('#orderField-number').fill('ORD-001')
                     page.locator('#orderField-recipient_name').fill('Destinatario <script>test</script>')
@@ -313,6 +313,60 @@ def main():
                     page.evaluate("showTab('clienti')")
                     page.locator('#tab-clienti').wait_for(state='visible')
                     assert page.locator('#customerResults input[data-cx-cb="101"]').is_checked()
+                    # Lazy verification starts only for the chosen orders, then resolves in one dialog.
+                    from unittest.mock import patch
+                    from fastapi import HTTPException
+                    from app.services import orders as order_service
+                    calls=[]
+                    def lazy_geocode(db_session,user_id,address,**kwargs):
+                        calls.append(address)
+                        if address.startswith('Ambiguous'):
+                            raise HTTPException(422,{'kind':'address','message':'Indirizzo non verificato correttamente','candidate':{'lat':45.2,'lon':9.2,'formatted':address}})
+                        return {'indirizzo':address,'stato_geocodifica':'verificato','lat':45.2,'lon':9.2,'geocoding_token':sign_stop_address(user_id,address,45.2,9.2)}
+                    with patch.object(order_service,'verify_stop_address',lazy_geocode):
+                        page.evaluate("clearRouteWorkspace();showTab('ordini')")
+                        page.evaluate('GFOrderPlanning.clear()')
+                        created=[]
+                        for number,address in [('AUTO-OK','Via valida 1'),('AUTO-BAD','Ambiguous 1'),('AUTO-UNSELECTED','Via non selezionata')]:
+                            created.append(client.post('/api/orders',json={'number':number,'recipient_name':'Destinatario','delivery_address':address}).json())
+                        page.evaluate("['ordersSearch','ordersStatus','ordersSource','ordersFrom','ordersTo'].forEach(id=>document.getElementById(id).value='');document.getElementById('ordersSearch').value='AUTO-';GFOrders.load()")
+                        for number in ['AUTO-OK','AUTO-BAD']:
+                            box=page.get_by_role('checkbox',name='Seleziona ordine '+number,exact=True)
+                            box.check();expect(box).to_be_checked();expect(box).to_be_enabled()
+                        assert calls==[]
+                        page.locator('#ordersGoPlanning').click()
+                        page.locator('#selectedAddressesDialog').wait_for(state='visible')
+                        assert calls==['Via valida 1','Ambiguous 1']
+                        assert client.get('/api/orders/'+str(created[2]['id'])).json()['address_verification'] is None
+                        page.locator('#selectedAddressesList').get_by_role('button',name='Correggi o scegli posizione',exact=True).click()
+                        page.locator('#selectedAddressText').fill('Via valida 1')
+                        page.get_by_role('button',name='Verifica indirizzo corretto',exact=True).click()
+                        expect(page.locator('#selectedAddressesContinue')).to_be_enabled()
+                        assert len(calls)==2  # The corrected identical address reuses the first proof.
+                        page.screenshot(path=str(output/f'address-resolution-{width}.png'),full_page=True)
+                        page.locator('#selectedAddressesContinue').click()
+                        page.locator('#tab-giro').wait_for(state='visible')
+                        assert page.evaluate('deliveries.length')==2
+                        assert len(calls)==2
+                        page.evaluate("showTab('ordini')")
+                        manual=client.post('/api/orders',json={'number':'AUTO-MANUAL','recipient_name':'Manual recipient','delivery_address':'Ambiguous 2'}).json()
+                        page.evaluate('GFOrders.load()')
+                        box=page.get_by_role('checkbox',name='Seleziona ordine AUTO-MANUAL',exact=True)
+                        box.check();expect(box).to_be_enabled()
+                        page.once('dialog',lambda dialog:dialog.accept())
+                        page.locator('#ordersGoPlanning').click()
+                        page.locator('#selectedAddressesDialog').wait_for(state='visible')
+                        # Leaflet is stubbed to test the explicit confirmation without external tiles.
+                        page.evaluate("""window.L={map:host=>({setView(){return this},on(){return this},remove(){host.replaceChildren()},invalidateSize(){}}),tileLayer:()=>({addTo(){}}),marker:()=>({addTo(){return this},on(){return this},setLatLng(){return this},getLatLng(){return {lat:45.2,lng:9.2}}})};""")
+                        page.locator('#selectedAddressesList').get_by_role('button',name='Correggi o scegli posizione',exact=True).click()
+                        expect(page.locator('#selectedAddressManual')).to_be_enabled()
+                        page.locator('#selectedAddressManual').click()
+                        expect(page.locator('#selectedAddressesContinue')).to_be_enabled()
+                        result=client.get('/api/orders/'+str(manual['id'])).json()
+                        assert result['verification_status']=='manual' and result['address_verification']['confirmed_manually']
+                        page.locator('#selectedAddressesContinue').click()
+                        page.locator('#tab-giro').wait_for(state='visible')
+                        assert page.evaluate('deliveries.length')==3
                     assert not errors,errors
                     context.close()
             engine.dispose()
