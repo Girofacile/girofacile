@@ -166,8 +166,14 @@ function cxAvatar(x){
 function cxNameCell(x){
   return '<div class="gf-cluster">'+cxAvatar(x)+'<div><b>'+cxEsc(x.nome)+'</b><br><small class="gf-muted">'+cxEsc(x.codice_cliente||'Senza codice')+'</small></div></div>';
 }
+function cxAccessBadges(x){
+  const marks=[];
+  if(x.ztl)marks.push('<span class="gf-badge" data-kind="ztl" title="Attenzione: cliente in zona ZTL. Verifica le condizioni di accesso.">ZTL</span>');
+  if(x.pedestrian_area)marks.push('<span class="gf-badge" data-status="warning" title="Attenzione: cliente in area pedonale. Verifica le modalità di consegna.">Area pedonale</span>');
+  return marks.length?'<div class="gf-cluster" data-gap="xs" aria-label="Avvisi geografici">'+marks.join(' ')+'</div>':'';
+}
 function cxAddressCell(x){
-  return '<div><b>'+cxEsc(x.indirizzo||'—')+'</b><br><small class="gf-muted">'+cxEsc(cxPlace(x)||'Comune non indicato')+'</small></div>';
+  return '<div><b>'+cxEsc(x.indirizzo||'—')+'</b><br><small class="gf-muted">'+cxEsc(cxPlace(x)||'Comune non indicato')+'</small>'+cxAccessBadges(x)+'</div>';
 }
 function renderCustomerKpis(){
   const root=cxEl('customerKpis');if(!root)return;
@@ -301,7 +307,7 @@ function openCustomerDrawer(id,mode,focusSlot){
     if(c.email)rows.push(['Email',c.email]);
     rows.push(['Tempo di scarico',(c.tempo_scarico_min??10)+' min']);
     if(typeof agentsFeatureEnabled==='function'&&agentsFeatureEnabled())rows.push(['Agente',c.agent_name||'Cliente interno']);
-    const flags=[c.ztl?'<span class="gf-badge" data-kind="ztl" title="Verifica i permessi di accesso del mezzo">ZTL'+(c.ztl_source==='osm'?' · automatica':'')+'</span>':'',c.sponda?'<span class="gf-badge" data-kind="tail-lift" data-gf-feature="tail_lift">Sponda</span>':'',c.transpallet?'<span class="gf-badge" data-status="neutral">Transpallet</span>':''].join('');
+    const flags=[cxAccessBadges(c),c.sponda?'<span class="gf-badge" data-kind="tail-lift" data-gf-feature="tail_lift">Sponda</span>':'',c.transpallet?'<span class="gf-badge" data-status="neutral">Transpallet</span>':''].join('');
     extra='<section class="gf-stack"><h3 class="gf-subtitle">Contatti e vincoli</h3><dl class="gf-details">'+rows.map(r=>'<div class="gf-details__item"><dt>'+r[0]+'</dt><dd>'+cxEsc(r[1])+'</dd></div>').join('')+'</dl>'
       +(flags?'<div class="gf-cluster">'+flags+'</div>':'')+(c.note?'<p class="gf-muted">'+cxEsc(c.note)+'</p>':'')+'</section>';
   }
