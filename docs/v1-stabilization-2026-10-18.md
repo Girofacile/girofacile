@@ -83,3 +83,14 @@ fa fede la relativa esecuzione CI, inclusi gli eventuali skip e fallimenti.
   prova di ottimalità dell'intera flotta o del traffico futuro.
 - L'acquisto autonomo con pagamenti reali richiede un rilascio commerciale separato;
   non è stato attivato da questo intervento.
+
+## File coinvolti
+
+- **Accessi e permessi**: `app/core/dependencies.py`, `app/core/http_security.py`, `app/core/security.py`, `app/routers/admin_profile.py`, `app/routers/auth.py`, `app/services/sessions.py`, `tests/test_audit_security.py`, `tests/test_password_reset_identity.py`, `tests/test_rate_limit_sensitive.py`.
+- **Giri, scheduler e provider**: `app/routers/driver.py`, `app/routers/operator.py`, `app/services/fleet_planning.py`, `app/services/optimizer_search.py`, `app/services/route_enrichment.py`, `app/services/route_execution.py`, `app/services/route_schedule.py`, `app/services/route_start.py`, `app/services/usage_limits.py`, `tests/test_delivery_tracking.py`, `tests/test_optimizer_scaling.py`, `tests/test_order_planning.py`, `tests/test_route_enrichment_concurrency.py`, `tests/test_route_execution_start.py`, `tests/test_route_execution_start_postgres.py`, `tests/test_route_schedule.py`, `tests/test_routing_architecture.py`.
+- **Storico, interfacce e controlli UI**: `app/routers/routes.py`, `static/dashboard/index.html`, `static/dashboard/js/core.js`, `static/dashboard/js/history.js`, `static/design-system/components.css`, `static/driver/index.html`, `static/mobile/index.html`, `static/mobile/mobile.js`, `tests/check_v1_ui_regressions.py`, `tests/test_occasional_stops_ui.cjs`, `tests/test_route_history.py`, `tests/test_v1_ui_regressions.cjs`.
+- **POD, fatture, prova e costi**: `app/routers/billing.py`, `app/services/ai_assistant.py`, `app/services/api_usage.py`, `app/services/billing.py`, `app/services/delivery_pod.py`, `static/landing/index.html`, `tests/test_api_costs.py`, `tests/test_billing.py`, `tests/test_delivery_pod.py`, `tests/test_electric_landing_ui.cjs`.
+
+CI: `.github/workflows/tests.yml`, `tests/requirements-v1-audit.txt`.
+Non sono necessarie nuove migrazioni del database o chiavi di produzione per
+queste correzioni; la normale procedura di migrazione versionata resta invariata.

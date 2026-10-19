@@ -2,6 +2,7 @@
 import pytest
 from fastapi import HTTPException
 from test_agents_feature import env
+from test_audit_postgres import pg
 
 
 @pytest.fixture
@@ -88,3 +89,41 @@ def test_owner_email_edit_consumes_all_outstanding_owner_reset_links(reset_accou
         assert reset.used_at is not None
         with pytest.raises(HTTPException):
             get_password_reset_info(reset.token, db)
+
+
+def test_concurrent_sibling_resets_have_one_winner_on_postgres(pg):
+    from concurrent.futures import ThreadPoolExecutor
+    from threading import Barrier
+    from sqlalchemy.orm import Session
+    from app.database import Base
+    from app.models import PasswordResetToken, User
+    from app.routers.auth import _create_reset_token, confirm_password_reset
+    from app.core.security import verify_password
+    Base.metadata.create_all(pg)
+    with Session(pg) as db:
+        owner = User(username="reset-race", email="reset-race@example.test", password_hash="old")
+        db.add(owner)
+        db.flush()
+        tokens = [_create_reset_token(db, "user", owner.id, owner.email).token for _ in range(2)]
+        db.commit()
+        account_id = owner.id
+    barrier = Barrier(2)
+    passwords = ["Silver&Falcon93Maple!", "Copper!Tiger82Birch&"]
+    def reset(index):
+        with Session(pg, autoflush=False) as db:
+            # Both transactions locate a different usable token before racing.
+            assert db.query(PasswordResetToken).filter_by(token=tokens[index]).one().used_at is None
+            barrier.wait(timeout=10)
+            try:
+                confirm_password_reset({"token": tokens[index], "password": passwords[index]}, db)
+                return 200, index
+            except HTTPException as exc:
+                db.rollback()
+                return exc.status_code, index
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        results = list(pool.map(reset, range(2)))
+    assert sorted(code for code, _ in results) == [200, 400]
+    winner = next(index for code, index in results if code == 200)
+    with Session(pg) as db:
+        assert verify_password(passwords[winner], db.get(User, account_id).password_hash)
+        assert db.query(PasswordResetToken).filter(PasswordResetToken.used_at.is_(None)).count() == 0

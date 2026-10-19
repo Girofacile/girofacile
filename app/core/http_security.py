@@ -105,7 +105,8 @@ async def _login_identifier(request):
         return None
     if not isinstance(payload, dict):
         return None
-    value = payload.get("username") or payload.get("email")
+    value = (payload.get("email") if request.url.path in {"/api/driver/login", "/api/agent/login"}
+             else payload.get("username") or payload.get("email"))
     if not isinstance(value, str) or not value.strip() or len(value) > 512:
         return None
     return hashlib.sha256(value.strip().lower().encode()).hexdigest()

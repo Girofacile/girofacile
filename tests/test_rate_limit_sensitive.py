@@ -113,3 +113,14 @@ def test_inspecting_identity_preserves_endpoint_body():
         response = client.post("/api/login", json=payload)
     assert response.status_code == 200
     assert response.json() == payload
+
+
+@pytest.mark.parametrize('path', ['/api/driver/login', '/api/agent/login'])
+def test_email_only_endpoints_ignore_extra_username_for_rate_key(path):
+    def request(index):
+        req = _request(path)
+        async def body():
+            return {'email': 'target@example.test', 'username': f'ignored-{index}'}
+        req.json = body
+        return req
+    assert [_call(request(i), status=401).status_code for i in range(4)] == [401, 401, 401, 429]

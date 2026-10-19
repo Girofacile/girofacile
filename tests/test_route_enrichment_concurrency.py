@@ -27,7 +27,7 @@ def test_overlapping_enrichment_reuses_one_attempt(pg, monkeypatch, force):
     monkeypatch.setattr(re.road_routing, "road_route", lambda *args, **kwargs: {"geometries": ["saved-road"]})
     monkeypatch.setattr(re, "get_toll_calculator", lambda db: SimpleNamespace(
         estimate=lambda *args, **kwargs: {"provider": "internal-osm", "status": "estimated", "amount_eur": .3, "version": 1}))
-    with Session(pg) as db:
+    with Session(pg, autoflush=False) as db:
         owner = User(username="enrichment-owner", password_hash="test")
         db.add(owner)
         db.flush()
@@ -70,7 +70,7 @@ def test_overlapping_enrichment_reuses_one_attempt(pg, monkeypatch, force):
     monkeypatch.setattr(re, "get_traffic_provider", lambda db: Provider())
 
     def enrich(worker):
-        with Session(pg) as db:
+        with Session(pg, autoflush=False) as db:
             db.execute(text("SET LOCAL statement_timeout = '10000ms'"))
             plan = db.get(RoutePlan, route_id)
             assert plan.traffic_calculated_at == (old_at if force else None)
@@ -108,17 +108,17 @@ def test_overlapping_enrichment_reuses_one_attempt(pg, monkeypatch, force):
         results = [f.result(timeout=10) for f in futures]
     assert results == [("updated", 1, calculated_at)] * 2
     assert calls == [route_id]
-    with Session(pg) as db:
+    with Session(pg, autoflush=False) as db:
         saved = db.get(RoutePlan, route_id)
         assert saved.totale_minuti == saved.deliveries[0].minuti_tappa == 20
         assert db.query(ApiUsageLog).count() == 1
     if force:
         later = calculated_at + timedelta(seconds=1)
         monkeypatch.setattr(re, "utc_now", lambda: later)
-        with Session(pg) as db:
+        with Session(pg, autoflush=False) as db:
             re.enrich_final_route(db, db.get(RoutePlan, route_id), force=True)
             db.commit()
         assert calls == [route_id, route_id]
-        with Session(pg) as db:
+        with Session(pg, autoflush=False) as db:
             assert db.get(RoutePlan, route_id).traffic_calculated_at == later
             assert db.query(ApiUsageLog).count() == 2

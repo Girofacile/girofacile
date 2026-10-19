@@ -150,3 +150,27 @@ def test_superadmin_owner_password_rotation_and_legacy_cookie_fail_closed(env, m
     legacy = f"{legacy_body}.{security._sign(legacy_body)}"
     assert security.verify_superadmin_token(legacy) == username
     assert read_superadmin_session(legacy, db) is None
+
+
+def test_superadmin_login_issues_only_the_credential_it_verified(env, monkeypatch):
+    from app.core.security import hash_password
+    from app.models import SuperAdminCollaborator
+    from app.routers import auth
+    _, db, *_ = env
+    before = hash_password("Orbit!River47Cedar#")
+    account = SuperAdminCollaborator(full_name="Audit Login", email="sa-login@example.test",
+                                     password_hash=before, permissions_json="{}")
+    db.add(account)
+    db.commit()
+    captured = []
+    monkeypatch.setattr(auth, "make_superadmin_collaborator_token",
+                        lambda identity, credential: captured.append(credential) or "test-cookie")
+    commit = db.commit
+    def rotate_after_login_commit():
+        commit()
+        account.password_hash = hash_password("Silver&Falcon93Maple!")
+        commit()
+    monkeypatch.setattr(db, "commit", rotate_after_login_commit)
+    auth.superadmin_login({"email": account.email, "password": "Orbit!River47Cedar#"}, Response(), db)
+    assert captured == [before]
+    assert account.password_hash != before

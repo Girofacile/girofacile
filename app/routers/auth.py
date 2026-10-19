@@ -169,12 +169,13 @@ def superadmin_login(payload: dict, response: Response, db: Session = Depends(ge
 
     collaborator = db.query(SuperAdminCollaborator).filter(func.lower(SuperAdminCollaborator.email) == identifier_norm).first()
     if collaborator and collaborator.is_active and verify_password(password, collaborator.password_hash):
+        authenticated_hash = collaborator.password_hash
         collaborator.last_access_at = utc_now()
         db.commit()
         response.delete_cookie("session", path="/", domain=COOKIE_DOMAIN)
         response.delete_cookie("driver_session", path="/", domain=COOKIE_DOMAIN)
         response.delete_cookie("agent_session", path="/", domain=COOKIE_DOMAIN)
-        response.set_cookie("superadmin_session", make_superadmin_collaborator_token(collaborator.id, collaborator.password_hash), **cookie_options(60 * 60 * 24 * 7))
+        response.set_cookie("superadmin_session", make_superadmin_collaborator_token(collaborator.id, authenticated_hash), **cookie_options(60 * 60 * 24 * 7))
         return {"ok": True, "role": "collaborator", "redirect_url": "/admin"}
 
     raise HTTPException(401, "Credenziali Super Admin non corrette")
