@@ -12,7 +12,7 @@ In installazione locale:
 python -m scripts.update_ztl_osm
 ```
 
-In un'installazione Docker Compose:
+In un'installazione Docker Compose, il servizio dedicato `ztl-updater` recupera l'archivio al suo avvio e poi automaticamente ogni **7 giorni** (riprovando dopo 12 ore in caso di errore). Per aggiornare manualmente senza aspettare il ciclo:
 
 ```bash
 docker compose exec girofacile python -m scripts.update_ztl_osm
@@ -20,7 +20,7 @@ docker compose exec girofacile python -m scripts.update_ztl_osm
 
 Il comando scarica le geometrie ZTL italiane da Overpass (fonte OpenStreetMap), genera `data/ztl/ztl_osm.geojson` e sostituisce atomicamente il file precedente **solo se** sono state recuperate geometrie valide. In Docker la directory e' montata dal filesystem host, quindi il file persiste al riavvio/ricreazione del container. Lo stesso archivio viene condiviso da tutte le aziende; non contiene indirizzi o dati personali.
 
-Eseguire l'aggiornamento **approssimativamente una volta a settimana** con scheduler di sistema (cron o timer), preferibilmente in orari di basso carico. Non eseguire l'aggiornamento a ogni richiesta e rispettare le policy/limitazioni dell'istanza pubblica Overpass; in caso di problemi la versione precedente viene mantenuta. L'endpoint Overpass puo' essere configurato con `GF_ZTL_OVERPASS_URL`, e l'User-Agent con `GF_ZTL_USER_AGENT`. Percorso alternativo: `GIROFACILE_ZTL_GEOJSON`.
+In installazione locale non-Docker, predisporre l'aggiornamento **approssimativamente una volta a settimana** con scheduler di sistema (cron o timer), preferibilmente in orari di basso carico. Non eseguire l'aggiornamento a ogni richiesta e rispettare le policy/limitazioni dell'istanza pubblica Overpass; in caso di problemi la versione precedente viene mantenuta. L'endpoint Overpass puo' essere configurato con `GF_ZTL_OVERPASS_URL`, e l'User-Agent con `GF_ZTL_USER_AGENT`. Percorso alternativo: `GIROFACILE_ZTL_GEOJSON`.
 
 ## Dove compare l'avviso
 
