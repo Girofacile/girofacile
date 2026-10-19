@@ -21,7 +21,7 @@ class RouteEvaluator:
         self.start = opt._start_clock(start_time)
         self.windows = {d['_matrix_index']: opt.delivery_windows(d) for d in deliveries}
         self.service = {d['_matrix_index']: float(d.get('tempo_scarico_min') or 0) for d in deliveries}
-        self.warnings = {d['_matrix_index']: len(opt.delivery_warnings(d, vehicle)) for d in deliveries}
+        self.warnings = {d['_matrix_index']: sum(not w.startswith('Attenzione: cliente in ') for w in opt.delivery_warnings(d, vehicle)) for d in deliveries}
         self.constrained = {d['_matrix_index']: opt._has_strong_constraints([d]) for d in deliveries}
         self.timing_cache = {}
         self.candidates = 0
