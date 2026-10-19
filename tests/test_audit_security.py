@@ -89,3 +89,64 @@ def test_platform_permission_does_not_grant_service_keys(env):
     with pytest.raises(HTTPException) as error:
         admin_update_platform_settings({'openai_api_key': 'fake'}, db, collaborator)
     assert error.value.status_code == 403
+
+
+@pytest.mark.parametrize("enabled", [True, False])
+def test_platform_settings_requires_maintenance_permission_before_any_write(env, enabled):
+    from app.models import SaaSPlatformSetting
+    from app.routers.admin_profile import admin_update_platform_settings
+    _, db, *_ = env
+    restricted = {"role": "collaborator", "permissions": {"manage_platform": True}}
+    with pytest.raises(HTTPException) as error:
+        admin_update_platform_settings({"platform_name": "Must not persist", "maintenance_mode": enabled}, db, restricted)
+    assert error.value.status_code == 403
+    assert db.query(SaaSPlatformSetting).filter(SaaSPlatformSetting.key.in_(["platform_name", "maintenance_mode"])).count() == 0
+    permitted = {"role": "collaborator", "permissions": {"manage_platform": True, "toggle_maintenance": True}}
+    result = admin_update_platform_settings({"maintenance_mode": enabled}, db, permitted)
+    assert result["maintenance_mode"] == ("true" if enabled else "false")
+
+
+def test_superadmin_reinvite_invalidates_existing_cookie(env, monkeypatch):
+    from app.core.dependencies import current_superadmin
+    from app.core.security import make_superadmin_collaborator_token
+    from app.models import SuperAdminCollaborator
+    from app.routers import admin_profile, auth
+    from app.services.sessions import read_superadmin_session
+    _, db, *_ = env
+    actor = SuperAdminCollaborator(full_name="Audit Operator", email="sa-audit@example.test",
+                                  password_hash="old-hash", permissions_json='{"view_revenue":true}')
+    db.add(actor)
+    db.commit()
+    old = make_superadmin_collaborator_token(actor.id, actor.password_hash)
+    request = Request({"type": "http", "headers": [(b"cookie", f"superadmin_session={old}".encode())]})
+    assert current_superadmin(request, db)["collaborator_id"] == actor.id
+    assert auth.superadmin_me(request, db)["authenticated"] is True
+    monkeypatch.setattr(admin_profile, "send_superadmin_collaborator_invitation", lambda *args: True)
+    admin_profile.admin_resend_collaborator(actor.id, db, {"role": "superadmin", "permissions": {"all": True}})
+    assert read_superadmin_session(old, db) is None
+    assert auth.superadmin_me(request, db)["authenticated"] is False
+    with pytest.raises(HTTPException) as error:
+        current_superadmin(request, db)
+    assert error.value.status_code == 401
+    fresh = make_superadmin_collaborator_token(actor.id, actor.password_hash)
+    assert read_superadmin_session(fresh, db) == f"collab:{actor.id}"
+
+
+def test_superadmin_owner_password_rotation_and_legacy_cookie_fail_closed(env, monkeypatch):
+    import base64
+    import app.core.security as security
+    from app.core import config
+    from app.services.sessions import read_superadmin_session
+    _, db, *_ = env
+    username = config.SUPERADMIN_USERNAME
+    monkeypatch.setattr(config, "SUPERADMIN_PASSWORD", "synthetic-before")
+    old = security.make_superadmin_token(username, config.SUPERADMIN_PASSWORD)
+    assert read_superadmin_session(old, db) == username
+    monkeypatch.setattr(config, "SUPERADMIN_PASSWORD", "synthetic-after")
+    assert read_superadmin_session(old, db) is None
+    fresh = security.make_superadmin_token(username, config.SUPERADMIN_PASSWORD)
+    assert read_superadmin_session(fresh, db) == username
+    legacy_body = base64.urlsafe_b64encode(f"superadmin:{username}:{int(security.time.time())}:old-nonce".encode()).decode()
+    legacy = f"{legacy_body}.{security._sign(legacy_body)}"
+    assert security.verify_superadmin_token(legacy) == username
+    assert read_superadmin_session(legacy, db) is None

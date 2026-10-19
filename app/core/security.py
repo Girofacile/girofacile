@@ -302,19 +302,25 @@ def verify_token(token: str | None) -> int | None:
 # -----------------------------------------------------------------------
 # Token sessione Super Admin SaaS
 # -----------------------------------------------------------------------
-def make_superadmin_token(username: str) -> str:
-    raw = f"superadmin:{username}:{int(time.time())}:{secrets.token_hex(16)}"
+def _make_superadmin_token(kind: str, identity: str, credential: str) -> str:
+    binding = _sign(f"{kind}:{identity}:{credential}")
+    raw = f"{kind}:{identity}:{int(time.time())}:{secrets.token_hex(16)}:{binding}"
     token = base64.urlsafe_b64encode(raw.encode()).decode()
     return f"{token}.{_sign(token)}"
 
 
-def make_superadmin_collaborator_token(collaborator_id: int) -> str:
-    raw = f"superadmin_collaborator:{int(collaborator_id)}:{int(time.time())}:{secrets.token_hex(16)}"
-    token = base64.urlsafe_b64encode(raw.encode()).decode()
-    return f"{token}.{_sign(token)}"
+def make_superadmin_token(username: str, password: str | None = None) -> str:
+    if password is None:
+        from .config import SUPERADMIN_PASSWORD
+        password = SUPERADMIN_PASSWORD
+    return _make_superadmin_token("superadmin", username, password)
 
 
-def verify_superadmin_token(token: str | None) -> str | None:
+def make_superadmin_collaborator_token(collaborator_id: int, password_hash: str = "") -> str:
+    return _make_superadmin_token("superadmin_collaborator", str(int(collaborator_id)), password_hash)
+
+
+def verify_superadmin_token(token: str | None, credential: str | None = None) -> str | None:
     if not token or "." not in token:
         return None
     body, sig = token.rsplit(".", 1)
@@ -322,10 +328,15 @@ def verify_superadmin_token(token: str | None) -> str | None:
         return None
     try:
         raw = base64.urlsafe_b64decode(body.encode()).decode()
-        kind, username, ts, *_nonce = raw.split(":")
+        parts = raw.split(":")
+        kind, username, ts, *_rest = parts
         if kind not in ("superadmin", "superadmin_collaborator"):
             return None
         if not 0 <= int(time.time()) - int(ts) < 60 * 60 * 24 * 7:
+            return None
+        # Legacy cookies remain recognizable for logout only.
+        if credential is not None and (len(parts) != 5 or not hmac.compare_digest(
+                parts[4], _sign(f"{kind}:{username}:{credential}"))):
             return None
         if kind == "superadmin_collaborator":
             return f"collab:{username}"

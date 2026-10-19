@@ -4,7 +4,7 @@ from ..core.clock import utc_now
 from hashlib import sha256
 
 from ..core.security import read_account_token, verify_superadmin_token
-from ..models import User, Driver, DriverAccount, Agent, AgentAccount, RevokedSession, CompanyCollaborator
+from ..models import User, Driver, DriverAccount, Agent, AgentAccount, RevokedSession, CompanyCollaborator, SuperAdminCollaborator
 
 
 def active_identity(account, db):
@@ -40,6 +40,25 @@ def read_session(raw, role, db):
     if not account or not active_identity(account, db):
         return None
     return account if read_account_token(raw, role, credential(account)) else None
+
+
+def read_superadmin_session(raw, db):
+    """Re-read credentials so password rotation invalidates every older cookie."""
+    from ..core import config
+    identity = verify_superadmin_token(raw)
+    if not identity or revoked(raw, db):
+        return None
+    if str(identity).startswith("collab:"):
+        try:
+            account = db.get(SuperAdminCollaborator, int(identity.split(":", 1)[1]))
+        except (ValueError, TypeError):
+            return None
+        if not account or not account.is_active:
+            return None
+        return identity if verify_superadmin_token(raw, account.password_hash) else None
+    if identity.strip().lower() != (config.SUPERADMIN_USERNAME or "admin").strip().lower():
+        return None
+    return identity if verify_superadmin_token(raw, config.SUPERADMIN_PASSWORD) else None
 
 
 def logout_sessions(request, response, db, names=('session', 'driver_session', 'agent_session')):

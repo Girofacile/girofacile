@@ -1,6 +1,6 @@
 from ..services.identity import ensure_login_email_available
 from ..services.platform_policy import require_registration, trial_days, default_plan
-from ..services.sessions import read_session, active_identity, logout_sessions, revoked, credential
+from ..services.sessions import read_session, active_identity, logout_sessions, read_superadmin_session, credential
 from ..core.security import make_account_token
 from datetime import datetime, timedelta
 from ..core.clock import utc_now
@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 from ..core.config import APP_BASE_URL, APP_USER, SUPERADMIN_USERNAME, SUPERADMIN_PASSWORD, TRIAL_DAYS, ERROR_NOTIFICATIONS_EMAIL
 from ..core.http_security import cookie_options, COOKIE_DOMAIN
 from ..core.dependencies import current_user, is_admin_user
-from ..core.security import hash_password, make_token, make_superadmin_token, make_superadmin_collaborator_token, password_needs_rehash, validate_password_strength, verify_password, verify_token, verify_superadmin_token
+from ..core.security import hash_password, make_token, make_superadmin_token, make_superadmin_collaborator_token, password_needs_rehash, validate_password_strength, verify_password, verify_token
 from ..database import get_db
 from ..models import CompanyCollaborator, Agent, AgentAccount, Customer, Deposit, Driver, DriverAccount, PasswordResetToken, RoutePlan, User, Vehicle, SuperAdminCollaborator, SuperAdminProfile
 from ..schemas import SignupIn
@@ -164,7 +164,7 @@ def superadmin_login(payload: dict, response: Response, db: Session = Depends(ge
         response.delete_cookie("session", path="/", domain=COOKIE_DOMAIN)
         response.delete_cookie("driver_session", path="/", domain=COOKIE_DOMAIN)
         response.delete_cookie("agent_session", path="/", domain=COOKIE_DOMAIN)
-        response.set_cookie("superadmin_session", make_superadmin_token(SUPERADMIN_USERNAME), **cookie_options(60 * 60 * 24 * 7))
+        response.set_cookie("superadmin_session", make_superadmin_token(SUPERADMIN_USERNAME, SUPERADMIN_PASSWORD), **cookie_options(60 * 60 * 24 * 7))
         return {"ok": True, "role": "superadmin", "redirect_url": "/admin"}
 
     collaborator = db.query(SuperAdminCollaborator).filter(func.lower(SuperAdminCollaborator.email) == identifier_norm).first()
@@ -174,7 +174,7 @@ def superadmin_login(payload: dict, response: Response, db: Session = Depends(ge
         response.delete_cookie("session", path="/", domain=COOKIE_DOMAIN)
         response.delete_cookie("driver_session", path="/", domain=COOKIE_DOMAIN)
         response.delete_cookie("agent_session", path="/", domain=COOKIE_DOMAIN)
-        response.set_cookie("superadmin_session", make_superadmin_collaborator_token(collaborator.id), **cookie_options(60 * 60 * 24 * 7))
+        response.set_cookie("superadmin_session", make_superadmin_collaborator_token(collaborator.id, collaborator.password_hash), **cookie_options(60 * 60 * 24 * 7))
         return {"ok": True, "role": "collaborator", "redirect_url": "/admin"}
 
     raise HTTPException(401, "Credenziali Super Admin non corrette")
@@ -188,8 +188,8 @@ def superadmin_logout(response: Response, request: Request, db: Session = Depend
 
 @router.get("/api/admin/me")
 def superadmin_me(request: Request, db: Session = Depends(get_db)):
-    username = verify_superadmin_token(request.cookies.get("superadmin_session"))
-    if not username or revoked(request.cookies.get("superadmin_session"), db):
+    username = read_superadmin_session(request.cookies.get("superadmin_session"), db)
+    if not username:
         return {"authenticated": False, "role": None}
     if str(username).startswith("collab:"):
         try:
@@ -234,7 +234,7 @@ async def login(payload: dict, response: Response, db: Session = Depends(get_db)
         response.delete_cookie("session", path="/", domain=COOKIE_DOMAIN)
         response.delete_cookie("driver_session", path="/", domain=COOKIE_DOMAIN)
         response.delete_cookie("agent_session", path="/", domain=COOKIE_DOMAIN)
-        response.set_cookie("superadmin_session", make_superadmin_token(SUPERADMIN_USERNAME), **cookie_options(60 * 60 * 24 * 7))
+        response.set_cookie("superadmin_session", make_superadmin_token(SUPERADMIN_USERNAME, SUPERADMIN_PASSWORD), **cookie_options(60 * 60 * 24 * 7))
         return {"ok": True, "role": "superadmin", "redirect_url": "/admin"}
 
     # 1) Account azienda / amministratore
@@ -482,15 +482,48 @@ def _password_context_for_account(account_type: str, account, db: Session) -> li
     return [getattr(account, "email", "") or ""]
 
 
-def _create_reset_token(db: Session, account_type: str, account_id: int, email: str) -> PasswordResetToken:
+RESET_ACCOUNT_MODELS = {
+    "user": User,
+    "driver": DriverAccount,
+    "agent": AgentAccount,
+    "collaborator": CompanyCollaborator,
+}
+
+
+def _lock_reset_account(db: Session, account_type: str, account_id: int):
+    model = RESET_ACCOUNT_MODELS.get(account_type)
+    if model is None:
+        return None
+    # Account first, then token rows, for issuance, reset and owner edits.
+    return db.query(model).filter_by(id=account_id).with_for_update().populate_existing().first()
+
+
+def _reset_account_matches(account, email: str, db: Session) -> bool:
+    return bool(
+        account
+        and active_identity(account, db)
+        and (email or "").strip().lower()
+        and (email or "").strip().lower() == (account.email or "").strip().lower()
+    )
+
+
+def _invalidate_reset_tokens(db: Session, account_type: str, account_id: int) -> None:
+    db.query(PasswordResetToken).filter(
+        PasswordResetToken.account_type == account_type,
+        PasswordResetToken.account_id == account_id,
+        PasswordResetToken.used_at.is_(None),
+    ).update({"used_at": utc_now()}, synchronize_session="fetch")
+
+
+def _create_reset_token(db: Session, account_type: str, account_id: int, email: str) -> PasswordResetToken | None:
+    account = _lock_reset_account(db, account_type, account_id)
+    if not _reset_account_matches(account, email, db):
+        return None
     token = secrets.token_urlsafe(48)
     prt = PasswordResetToken(
-        account_type=account_type,
-        account_id=account_id,
-        email=email.strip().lower(),
-        token=token,
-        expires_at=utc_now() + timedelta(hours=1),
-        used_at=None,
+        account_type=account_type, account_id=account_id,
+        email=email.strip().lower(), token=token,
+        expires_at=utc_now() + timedelta(hours=1), used_at=None,
     )
     db.add(prt)
     return prt
@@ -525,6 +558,8 @@ def request_password_reset(payload: dict, db: Session = Depends(get_db)):
         from ..services.email import send_password_reset
         for account_type, account in accounts:
             prt = _create_reset_token(db, account_type, account.id, email)
+            if prt is None:
+                continue
             display_name, account_label = _reset_display_for_account(account_type, account, db)
             reset_url = f"{APP_BASE_URL}/reset-password/{prt.token}"
             try:
@@ -546,21 +581,14 @@ def legacy_password_reset_request(payload: dict, db: Session = Depends(get_db)):
 @router.get("/api/password-reset/{token}")
 def get_password_reset_info(token: str, db: Session = Depends(get_db)):
     prt = db.query(PasswordResetToken).filter(PasswordResetToken.token == token).first()
-    if not prt or prt.used_at or utc_now() > prt.expires_at:
+    if not prt or prt.used_at or utc_now() >= prt.expires_at:
         raise HTTPException(404, "Link non valido o scaduto")
-    model = {"user": User, "driver": DriverAccount, "agent": AgentAccount, "collaborator": CompanyCollaborator}.get(prt.account_type)
+    model = RESET_ACCOUNT_MODELS.get(prt.account_type)
     account = db.get(model, prt.account_id) if model else None
-    if not account:
-        raise HTTPException(404, "Account non trovato")
-    if prt.account_type == "collaborator" and (
-        not active_identity(account, db)
-        or (prt.email or "").strip().lower() != account.email.strip().lower()
-    ):
+    if not _reset_account_matches(account, prt.email, db):
         raise HTTPException(404, "Link non valido o scaduto")
     return {
-        "ok": True,
-        "email": prt.email,
-        "account_type": prt.account_type,
+        "ok": True, "email": prt.email, "account_type": prt.account_type,
         "password_context": _password_context_for_account(prt.account_type, account, db),
     }
 
@@ -570,45 +598,29 @@ def confirm_password_reset(payload: dict, db: Session = Depends(get_db)):
     token = (payload.get("token") or "").strip()
     password = payload.get("password") or ""
     prt = db.query(PasswordResetToken).filter(PasswordResetToken.token == token).first()
-    if not prt or prt.used_at or utc_now() > prt.expires_at:
+    if not prt:
         raise HTTPException(400, "Link non valido o scaduto")
-
-    if prt.account_type == "user":
-        account = db.get(User, prt.account_id)
-        if not account:
-            raise HTTPException(404, "Account non trovato")
-    elif prt.account_type == "driver":
-        account = db.get(DriverAccount, prt.account_id)
-        if not account or not active_identity(account, db):
-            raise HTTPException(404, "Account autista non attivo")
-    elif prt.account_type == "agent":
-        account = db.get(AgentAccount, prt.account_id)
-        if not account or not active_identity(account, db):
-            raise HTTPException(404, "Account agente non attivo")
-    elif prt.account_type == "collaborator":
-        # Use the same actor-first locking order as invitations and owner edits.
-        # A reset already in flight cannot overwrite a new recipient's password.
-        account = db.query(CompanyCollaborator).filter_by(id=prt.account_id).with_for_update().populate_existing().first()
-        prt = db.query(PasswordResetToken).filter_by(id=prt.id).with_for_update().populate_existing().first()
-        if not prt or prt.used_at or utc_now() > prt.expires_at:
-            raise HTTPException(400, "Link non valido o scaduto")
-        if not account or not active_identity(account, db):
-            raise HTTPException(404, "Account collaboratore non attivo")
-        if (prt.email or "").strip().lower() != account.email.strip().lower():
-            raise HTTPException(400, "Link non valido o scaduto")
-    else:
-        raise HTTPException(400, "Tipo account non supportato")
-
+    token_id, account_type, account_id = prt.id, prt.account_type, prt.account_id
+    account = _lock_reset_account(db, account_type, account_id)
+    prt = db.query(PasswordResetToken).filter_by(id=token_id).with_for_update().populate_existing().first()
+    if (
+        not prt or prt.used_at or utc_now() >= prt.expires_at
+        or prt.account_type != account_type or prt.account_id != account_id
+    ):
+        raise HTTPException(400, "Link non valido o scaduto")
+    if not account or not active_identity(account, db):
+        raise HTTPException(404, "Account non attivo")
+    if not _reset_account_matches(account, prt.email, db):
+        raise HTTPException(400, "Link non valido o scaduto")
     try:
         validate_password_strength(
             password,
-            context_values=_password_context_for_account(prt.account_type, account, db),
+            context_values=_password_context_for_account(account_type, account, db),
         )
     except ValueError as exc:
         raise HTTPException(400, str(exc))
-
     account.password_hash = hash_password(password)
-    prt.used_at = utc_now()
+    _invalidate_reset_tokens(db, account_type, account_id)
     db.commit()
     return {"ok": True, "message": "Password aggiornata correttamente. Ora puoi accedere con la nuova password."}
 
@@ -666,6 +678,11 @@ def get_account_profile(user: User = Depends(current_user)):
 
 @router.put("/api/account-profile")
 def update_account_profile(payload: dict, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    expected_password_hash = user.password_hash
+    user = _lock_reset_account(db, "user", user.id)
+    if not user or user.password_hash != expected_password_hash:
+        raise HTTPException(401, "Accedi di nuovo per aggiornare il profilo.")
+    previous_email = (user.email or "").strip().lower()
     username = (payload.get("username") or user.username or "").strip()
     email = (payload.get("email") or "").strip().lower() or None
 
@@ -695,6 +712,8 @@ def update_account_profile(payload: dict, user: User = Depends(current_user), db
 
     user.username = username
     user.email = email
+    if previous_email != (email or ""):
+        _invalidate_reset_tokens(db, "user", user.id)
     db.commit()
     db.refresh(user)
     return {
@@ -714,6 +733,9 @@ def change_account_password(
     user: User = Depends(current_user),
     db: Session = Depends(get_db),
 ):
+    user = _lock_reset_account(db, "user", user.id)
+    if not user:
+        raise HTTPException(401, "Accedi di nuovo per cambiare la password.")
     current_password = payload.get("current_password") or ""
     new_password = payload.get("new_password") or ""
     confirm_password = payload.get("confirm_password") or ""
@@ -735,12 +757,7 @@ def change_account_password(
         raise HTTPException(400, str(exc))
 
     user.password_hash = hash_password(new_password)
-    now = utc_now()
-    db.query(PasswordResetToken).filter(
-        PasswordResetToken.account_type == "user",
-        PasswordResetToken.account_id == user.id,
-        PasswordResetToken.used_at.is_(None),
-    ).update({"used_at": now}, synchronize_session=False)
+    _invalidate_reset_tokens(db, "user", user.id)
     db.commit()
 
     # Le sessioni sono legate all'hash della credenziale: cambiando password,

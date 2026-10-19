@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import ipaddress
+import hashlib
+import json
 import os
 import threading
 import time
@@ -93,12 +95,24 @@ def _client_ip(request: Request) -> str:
     return direct or "unknown"
 
 
-async def login_rate_limit_middleware(request: Request, call_next):
-    """Limite in memoria per i tentativi sui login sensibili.
+async def _login_identifier(request):
+    """Hash normalized login identity without retaining personal data."""
+    if request.url.path not in LOGIN_PATHS - {"/api/collaborator-invitations/accept"}:
+        return None
+    try:
+        payload = await request.json()
+    except (ValueError, TypeError, AttributeError, json.JSONDecodeError):
+        return None
+    if not isinstance(payload, dict):
+        return None
+    value = payload.get("username") or payload.get("email")
+    if not isinstance(value, str) or not value.strip() or len(value) > 512:
+        return None
+    return hashlib.sha256(value.strip().lower().encode()).hexdigest()
 
-    È volutamente indipendente dal database. In installazioni con più processi o
-    più server va affiancato da un rate limiter condiviso (ad es. Redis/proxy).
-    """
+
+async def login_rate_limit_middleware(request: Request, call_next):
+    """In-memory guard; multi-process deployments also need a shared limiter."""
     if (
         not LOGIN_RATE_LIMIT_ENABLED
         or request.method.upper() != "POST"
@@ -107,22 +121,36 @@ async def login_rate_limit_middleware(request: Request, call_next):
         return await call_next(request)
 
     now = time.monotonic()
-    key = f"{_client_ip(request)}:{request.url.path}"
+    ip_key = f"ip:{_client_ip(request)}:{request.url.path}"
+    identifier = await _login_identifier(request)
+    credential_login = request.url.path in LOGIN_PATHS - {"/api/collaborator-invitations/accept"}
+    if identifier:
+        identity_key = f"account:{ip_key}:{identifier}"
+        rules = ((identity_key, LOGIN_RATE_LIMIT_ATTEMPTS),
+                 (ip_key, LOGIN_RATE_LIMIT_ATTEMPTS * 10))
+        clear_key = identity_key
+    else:
+        rules = ((ip_key, LOGIN_RATE_LIMIT_ATTEMPTS),)
+        clear_key = ip_key if request.url.path in LOGIN_PATHS and not credential_login else None
     retry_after = 0
     with _attempts_lock:
-        bucket = _attempts.get(key)
-        if bucket is None:
-            bucket = _attempts[key] = deque()
-        _attempts.move_to_end(key)
+        buckets = []
+        for key, maximum in rules:
+            bucket = _attempts.get(key)
+            if bucket is None:
+                bucket = _attempts[key] = deque()
+            _attempts.move_to_end(key)
+            threshold = now - LOGIN_RATE_LIMIT_WINDOW_SECONDS
+            while bucket and bucket[0] <= threshold:
+                bucket.popleft()
+            if len(bucket) >= maximum:
+                retry_after = max(retry_after, 1, int(LOGIN_RATE_LIMIT_WINDOW_SECONDS - (now - bucket[0])))
+            buckets.append(bucket)
+        if not retry_after:
+            for bucket in buckets:
+                bucket.append(now)
         while len(_attempts) > MAX_TRACKED_KEYS:
             _attempts.popitem(last=False)
-        threshold = now - LOGIN_RATE_LIMIT_WINDOW_SECONDS
-        while bucket and bucket[0] <= threshold:
-            bucket.popleft()
-        if len(bucket) >= LOGIN_RATE_LIMIT_ATTEMPTS:
-            retry_after = max(1, int(LOGIN_RATE_LIMIT_WINDOW_SECONDS - (now - bucket[0])))
-        else:
-            bucket.append(now)
 
     if retry_after:
         return JSONResponse(
@@ -130,10 +158,8 @@ async def login_rate_limit_middleware(request: Request, call_next):
             content={"detail": "Troppi tentativi. Riprova più tardi."},
             headers={"Retry-After": str(retry_after)},
         )
-
     response = await call_next(request)
-    # Un login riuscito azzera il contatore per l'IP e l'endpoint.
-    if request.url.path in LOGIN_PATHS and 200 <= response.status_code < 300:
+    if clear_key and 200 <= response.status_code < 300:
         with _attempts_lock:
-            _attempts.pop(key, None)
+            _attempts.pop(clear_key, None)
     return response

@@ -54,9 +54,9 @@ def owned(query, model, user: User):
 # Super Admin SaaS
 # -----------------------------------------------------------------------
 def current_superadmin(request: Request, db: Session = Depends(get_db)) -> dict:
-    username = verify_superadmin_token(request.cookies.get("superadmin_session"))
-    from ..services.sessions import revoked
-    if not username or revoked(request.cookies.get("superadmin_session"), db):
+    from ..services.sessions import read_superadmin_session
+    username = read_superadmin_session(request.cookies.get("superadmin_session"), db)
+    if not username:
         raise HTTPException(status_code=401, detail="Accesso Super Admin richiesto")
     if str(username).startswith("collab:"):
         try:

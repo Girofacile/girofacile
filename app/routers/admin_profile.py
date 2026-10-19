@@ -120,6 +120,8 @@ def admin_update_platform_settings(payload: dict, db: Session = Depends(get_db),
     }
     if {"openai_api_key", "google_maps_api_key", "mapbox_access_token", "stripe_secret_key"}.intersection(payload):
         _require_perm(superadmin, "manage_service_keys")
+    if "maintenance_mode" in payload:
+        _require_perm(superadmin, "toggle_maintenance")
     for key in allowed:
         if key not in payload:
             continue
@@ -248,7 +250,7 @@ def admin_update_collaborator(collaborator_id: int, payload: dict, db: Session =
 @router.post("/collaborators/{collaborator_id}/resend")
 def admin_resend_collaborator(collaborator_id: int, db: Session = Depends(get_db), superadmin: dict = Depends(require_superadmin)):
     _require_perm(superadmin, "manage_collaborators")
-    collab = db.get(SuperAdminCollaborator, collaborator_id)
+    collab = db.query(SuperAdminCollaborator).filter_by(id=collaborator_id).with_for_update().populate_existing().first()
     if not collab:
         raise HTTPException(404, "Collaboratore non trovato")
     temporary = _temporary_password()
