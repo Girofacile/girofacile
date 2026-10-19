@@ -319,12 +319,15 @@ test('account profile modal follows the workspace design system',()=>{
 
 
 test('workspace sidebar uses the GiroFacile brand artwork',()=>{
-  const html=read('static/dashboard/index.html');
-  // Marchio del layout base: simbolo SVG con i colori del tema e nome GiroFacile.
-  const brand=html.slice(html.indexOf('<a class="gf-sidebar__brand"'),html.indexOf('<nav class="gf-sidebar__nav"'));
-  assert.match(brand,/class="gf-sidebar__mark"[^>]*aria-label="Logo GiroFacile"/);
-  assert.match(brand,/class="gf-sidebar__brand-name">GiroFacile<\/span>/);
-  assert.doesNotMatch(brand,/#[0-9a-f]{3,6}\b/i);
+  for(const page of ['dashboard','admin']){
+    const html=read('static/'+page+'/index.html');
+    const brand=html.slice(html.indexOf('<a class="gf-sidebar__brand"'),html.indexOf('<nav class="gf-sidebar__nav"'));
+    assert.match(brand,/<img class="gf-sidebar__mark"[^>]*src="\/static\/girofacile-logo\.png"[^>]*alt=""/);
+    assert.match(brand,/class="gf-sidebar__brand-name">GiroFacile<\/span>/);
+    assert.doesNotMatch(brand,/<svg/);
+    assert.doesNotMatch(brand,/#[0-9a-f]{3,6}\b/i);
+  }
+  assert.ok(fs.existsSync(path.join(root,'static/girofacile-logo.png')));
 });
 
 

@@ -79,21 +79,14 @@
     return svg;
   }
   function brandMark(){
-    const svg = doc.createElementNS(SVG,'svg');
-    svg.setAttribute('viewBox','0 0 34 34');
-    svg.setAttribute('class','gf-sidebar__mark');
-    svg.setAttribute('aria-hidden','true');
-    const rect = doc.createElementNS(SVG,'rect');
-    rect.setAttribute('width','34');rect.setAttribute('height','34');rect.setAttribute('rx','9');
-    rect.setAttribute('class','gf-sidebar__mark-bg');
-    const path = doc.createElementNS(SVG,'path');
-    path.setAttribute('d','M24 12.2A8.2 8.2 0 1 0 25 17.5H17.5');
-    path.setAttribute('class','gf-sidebar__mark-g');
-    const dot = doc.createElementNS(SVG,'circle');
-    dot.setAttribute('cx','24.2');dot.setAttribute('cy','9.6');dot.setAttribute('r','2.4');
-    dot.setAttribute('class','gf-sidebar__mark-dot');
-    svg.append(rect,path,dot);
-    return svg;
+    const image = doc.createElement('img');
+    image.setAttribute('class','gf-sidebar__mark');
+    image.setAttribute('src','/static/girofacile-logo.png');
+    image.setAttribute('alt','');
+    image.setAttribute('aria-hidden','true');
+    image.setAttribute('width','36');
+    image.setAttribute('height','36');
+    return image;
   }
   function initials(name){
     return String(name || '').trim().split(/\s+/).slice(0,2).map(part => part.charAt(0).toUpperCase()).join('') || 'GF';
