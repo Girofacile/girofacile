@@ -236,10 +236,19 @@ def verify_multiple(db, user_id, actor, *, after_id=0, limit=10, q='', source_id
     return result
 
 def summary(order, source_name):
+    from .ztl import detect_ztl, detect_pedestrian
+    from .customer_planning import has_verified_coordinates
+    proof = order.address_verification or {}
+    current = (proof.get('input_address') == order.delivery_address
+               and has_verified_coordinates(proof.get('stato_geocodifica'), proof.get('lat'), proof.get('lon')))
+    ztl_auto = detect_ztl(proof.get('lat'), proof.get('lon'))['detected'] if current else False
+    pedestrian_auto = detect_pedestrian(proof.get('lat'), proof.get('lon'))['detected'] if current else False
     return {key: getattr(order, key) for key in ('id', 'number', 'recipient_name', 'delivery_address',
             'requested_date', 'status', 'received_at', 'updated_at', 'version')} | {
         'source_name': source_name, 'source_id': order.source_id,
-        'weight_kg': order.operational_data.get('weight_kg'), 'packages': order.operational_data.get('packages')}
+        'weight_kg': order.operational_data.get('weight_kg'), 'packages': order.operational_data.get('packages'),
+        'ztl_notice': bool((order.operational_data or {}).get('ztl')) or ztl_auto,
+        'pedestrian_area': pedestrian_auto}
 
 
 def detail(db, order):
