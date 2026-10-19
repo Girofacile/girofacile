@@ -10,6 +10,7 @@ from functools import lru_cache
 from pathlib import Path
 
 DEFAULT_FILE = Path(__file__).resolve().parents[2] / "data" / "ztl" / "ztl_osm.geojson"
+PEDESTRIAN_FILE = DEFAULT_FILE.with_name("pedestrian_osm.geojson")
 WARNING = "Attenzione: consegna in zona ZTL. Verifica i permessi di accesso del tuo mezzo."
 
 
@@ -67,23 +68,18 @@ def _read_zones(filename, stamp):
     return zones
 
 
-def detect_ztl(lat, lon):
-    """Tre stati: rilevata, non_rilevata, non_disponibile.
-
-    'non_rilevata' NON prova che l'indirizzo sia fuori da ogni ZTL.
-    Mantiene sempre la segnalazione manuale separata dal risultato automatico.
-    """
+def _detect_area(lat, lon, path):
+    """Controllo geometrico locale: nessuna chiamata API e nessun vincolo al routing."""
     try:
         if lat is None or lon is None:
             return {"detected": False, "status": "non_disponibile", "zone": None}
         y, x = float(lat), float(lon)
         if not (math.isfinite(y) and math.isfinite(x) and -90 <= y <= 90 and -180 <= x <= 180):
             raise ValueError("Coordinate non valide")
-        path = Path(os.environ.get("GIROFACILE_ZTL_GEOJSON") or DEFAULT_FILE)
         if not path.is_file():
             return {"detected": False, "status": "non_disponibile", "zone": None}
-        stat = path.stat()
-        zones = _read_zones(str(path), (stat.st_mtime_ns, stat.st_size))
+        stamp = path.stat()
+        zones = _read_zones(str(path), (stamp.st_mtime_ns, stamp.st_size))
         if not zones:
             return {"detected": False, "status": "non_disponibile", "zone": None}
         for west, south, east, north, polygon, name in zones:
@@ -94,13 +90,27 @@ def detect_ztl(lat, lon):
         return {"detected": False, "status": "non_disponibile", "zone": None}
 
 
+def detect_ztl(lat, lon):
+    """Non_rilevata non dimostra che il cliente sia fuori da qualsiasi ZTL."""
+    return _detect_area(lat, lon, Path(os.environ.get("GIROFACILE_ZTL_GEOJSON") or DEFAULT_FILE))
+
+
+def detect_pedestrian(lat, lon):
+    """Aree pedonali OSM con geometria poligonale esplicita: niente marciapiedi."""
+    return _detect_area(lat, lon, Path(os.environ.get("GIROFACILE_PEDESTRIAN_GEOJSON") or PEDESTRIAN_FILE))
+
+
 def customer_ztl(customer):
     """Compatibilita': Customer.ztl rimane il segnale manuale preesistente."""
     automatic = detect_ztl(getattr(customer, "lat", None), getattr(customer, "lon", None))
+    pedestrian = detect_pedestrian(getattr(customer, "lat", None), getattr(customer, "lon", None))
     manual = bool(getattr(customer, "ztl", False))
     return {
         "ztl": manual or automatic["detected"],
         "ztl_manual": manual,
         "ztl_source": "manuale" if manual else ("osm" if automatic["detected"] else automatic["status"]),
         "ztl_zone": automatic["zone"] if automatic["detected"] else None,
+        "pedestrian_area": pedestrian["detected"],
+        "pedestrian_source": "osm" if pedestrian["detected"] else pedestrian["status"],
+        "pedestrian_zone": pedestrian["zone"] if pedestrian["detected"] else None,
     }
