@@ -319,3 +319,37 @@ def test_reconciliation_preserves_referenced_recent_and_unrelated_objects(env, s
     reconcile(storage, db, delete=True, now=now)
     assert orphan not in storage.objects
     assert referenced in storage.objects and recent in storage.objects and 'unrelated.txt' in storage.objects
+
+
+@pytest.mark.parametrize('portal', ['driver', 'operator'])
+@pytest.mark.parametrize('signer', ['omitted', None, '', '   '])
+def test_signature_requires_signer_without_server_error_or_upload(env, storage, portal, signer):
+    from app.models import DeliveryStatus
+    client, db, owner, _, delivery, _ = setup_portals(env)
+    owner.delivery_signature_enabled = True
+    db.commit()
+    payload = {'signature_data': image_data()}
+    if signer != 'omitted':
+        payload['signed_by_name'] = signer
+    prefix = '/api/driver' if portal == 'driver' else '/api/operator/test-route'
+    response = client.post(f'{prefix}/delivery/{delivery.id}/complete', json=payload)
+    assert response.status_code == 400
+    assert response.json()['detail'] == 'Nome firmatario mancante'
+    assert storage.uploads == 0 and not storage.objects
+    assert db.query(DeliveryStatus).filter_by(delivery_id=delivery.id).first() is None
+
+
+def test_palette_signature_transparency_preserves_strokes_and_white_background():
+    from app.services.delivery_pod import normalize_image
+    image = Image.new('P', (40, 30), 0)
+    image.putpalette([0, 0, 0, 0, 0, 0] + [255, 255, 255] * 254)
+    image.putpixel((10, 10), 1)
+    stream = io.BytesIO()
+    image.save(stream, format='PNG', transparency=0)
+    data = 'data:image/png;base64,' + base64.b64encode(stream.getvalue()).decode()
+    normalized = normalize_image(data, 'signature')
+    with Image.open(io.BytesIO(normalized)) as result:
+        assert result.mode == 'RGB'
+        assert result.getpixel((0, 0)) == (255, 255, 255)
+        assert result.getpixel((10, 10)) == (0, 0, 0)
+        assert not result.info.get('transparency') and not result.getexif()

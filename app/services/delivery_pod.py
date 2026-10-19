@@ -40,10 +40,9 @@ def normalize_image(value, kind):
             image.thumbnail((1600, 1600) if kind != 'signature' else (2000, 1000))
             # Flatten transparency and strip EXIF/GPS/other untrusted metadata.
             canvas = Image.new('RGB', image.size, 'white')
-            if 'A' in image.getbands():
-                canvas.paste(image.convert('RGB'), mask=image.getchannel('A'))
-            else:
-                canvas.paste(image.convert('RGB'))
+            # Palette PNGs can carry transparency without an alpha band.
+            rgba = image.convert('RGBA')
+            canvas.paste(rgba.convert('RGB'), mask=rgba.getchannel('A'))
             out = io.BytesIO()
             canvas.save(out, format='PNG' if kind == 'signature' else 'JPEG', **({} if kind == 'signature' else {'quality': 82, 'optimize': True}))
             return out.getvalue()
@@ -171,7 +170,7 @@ def save_delivery_evidence(db, route, delivery, status, payload, owner, action):
         raise HTTPException(400, 'Firma cliente non attiva per questa azienda')
     signature_raw = normalize_image(signature, 'signature') if signature else None
     photo_raw = normalize_image(photo, 'delivery_photo') if photo else None
-    if signature and not payload.get('signed_by_name', '').strip():
+    if signature and not (payload.get('signed_by_name') or '').strip():
         raise HTTPException(400, 'Nome firmatario mancante')
     if owner.delivery_signature_enabled and not (signature_raw or (evidence_metadata(status)['has_signature'] and status.signed_by_name)):
         raise HTTPException(400, 'Firma cliente e nome firmatario richiesti prima di confermare la consegna')
