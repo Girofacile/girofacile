@@ -164,6 +164,11 @@ def apply_geocode(customer, result: dict):
     customer.google_place_id = result.get("place_id")
     customer.affidabilita_geocodifica = result.get("confidence")
     customer.geocodificato_il = utc_now()
+    # L’avviso pedonale si registra assieme alla posizione confermata.
+    # Il controllo usa solo l’archivio locale: nessuna chiamata Google aggiuntiva.
+    from .ztl import detect_pedestrian
+    customer.pedestrian_area = (result.get("status") == "verificato"
+                                and detect_pedestrian(customer.lat, customer.lon)["detected"])
 
 
 def search_address_autocomplete(
