@@ -80,3 +80,30 @@ def test_osm_relation_way_segments_and_inner_ring():
     features = build_features([element])
     assert len(features) == 1
     assert len(features[0]["geometry"]["coordinates"][0]) == 2
+
+def test_route_customer_enrichment_preserves_ztl_flags(monkeypatch, tmp_path):
+    """La pianificazione deve ereditare ZTL OSM e segnalazioni manuali."""
+    fixture(monkeypatch, tmp_path)
+    from app.routers import routes
+
+    customers = {
+        1: SimpleNamespace(lat=40.2, lon=10.2, ztl=False,
+                           stato_geocodifica="verificato", indirizzo_geocodificato="Interno ZTL"),
+        2: SimpleNamespace(lat=42.0, lon=12.0, ztl=True,
+                           stato_geocodifica="verificato", indirizzo_geocodificato="ZTL manuale"),
+    }
+    monkeypatch.setattr(routes, "validate_occasional_stops", lambda *_: None)
+    monkeypatch.setattr(routes, "_owned_customer_map", lambda *_: customers)
+    stops = [{"customer_id": 1, "ztl": False}, {"customer_id": 2, "ztl": False}]
+    routes._enrich_owned_deliveries(None, SimpleNamespace(id=7), stops)
+    assert [stop["ztl"] for stop in stops] == [True, True]
+    assert stops[0]["lat"] == 40.2
+    assert stops[1]["lon"] == 12.0
+
+    # Il rilevamento automatico rimane visibile anche se la preferenza ZTL è OFF.
+    routes._apply_route_preferences(
+        SimpleNamespace(has_time_windows=True, has_ztl=False, needs_tail_lift=True),
+        [stops[0]],
+    )
+    assert stops[0]["ztl"] is True
+
