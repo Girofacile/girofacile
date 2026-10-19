@@ -43,7 +43,7 @@ def check_version(row, version):
 def filtered_ready(db, user_id, filters):
     query = db.query(Order).filter(Order.user_id==user_id,Order.status.in_(('nuovo','da_verificare','pronto')))
     query = query.filter(~Order.id.in_(db.query(RouteOrderAssignment.order_id)))
-    if filters.status:
+    if filters.status and filters.status != 'da_pianificare':
         query=query.filter(Order.status==filters.status)
     if filters.q.strip():
         value = '%' + filters.q.strip().replace('\\','\\\\').replace('%','\\%').replace('_','\\_') + '%'

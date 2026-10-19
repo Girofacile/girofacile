@@ -1,16 +1,16 @@
 /* Server-paginated order archive. All imported/customer text is escaped. */
 (function(){
   'use strict';
-  const labels={nuovo:'Nuovo',da_verificare:'Da verificare',pronto:'Pronto',assegnato:'Assegnato',in_consegna:'In consegna',consegnato:'Consegnato',non_consegnato:'Non consegnato',annullato:'Annullato'};
+  const labels={nuovo:'Da pianificare',da_verificare:'Da pianificare',pronto:'Da pianificare',assegnato:'Assegnato',in_consegna:'In consegna',consegnato:'Consegnato',non_consegnato:'Non consegnato',annullato:'Annullato'};
   // Stesse icone e stessi colori delle altre barre dei numeri (gf-stat-strip con icone).
   const metricMeta={
-    nuovo:{label:'Nuovi ordini',description:'Ordini appena ricevuti',tone:'1',icon:'<path d="M5 8h14l-1 12H6L5 8z M8.5 8a3.5 3.5 0 0 1 7 0"/>'},
-    da_verificare:{label:'Da verificare',description:'Controllo dati o indirizzo',tone:'5',icon:'<path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 7v5l3 2"/>'},
-    pronto:{label:'Pronti per piano',description:'Pronti per la pianificazione',tone:'3',icon:'<path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M8 12.2l2.8 2.8 5.2-5.6"/>'},
+    arrivati:{label:'Ordini arrivati',description:'Totale ordini ricevuti',tone:'1',icon:'<path d="M5 8h14l-1 12H6L5 8z M8.5 8a3.5 3.5 0 0 1 7 0"/>'},
+    da_pianificare:{label:'Ordini da pianificare',description:'Ordini non ancora inseriti in un giro',tone:'1',icon:'<path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 7v5l3 2"/>'},
+    annullato:{label:'Ordini annullati',description:'Ordini esclusi dalla pianificazione',tone:'neutral',icon:'<path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M9 9l6 6 M15 9l-6 6"/>'},
     assegnato:{label:'Già assegnati',description:'Ordini inseriti in un giro',tone:'neutral',icon:'<path d="M2 6h11v10H2z M13 9h5l3 3v4h-8z M6.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z M17.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/>'}
   };
 
-  const statusTone={nuovo:'info',da_verificare:'warning',pronto:'success',assegnato:'info',in_consegna:'info',consegnato:'success',non_consegnato:'danger',annullato:'neutral'};
+  const statusTone={nuovo:'info',da_verificare:'info',pronto:'info',assegnato:'info',in_consegna:'info',consegnato:'success',non_consegnato:'danger',annullato:'neutral'};
   const fields={number:'Numero ordine',recipient_name:'Destinatario',delivery_address:'Indirizzo di consegna',requested_date:'Data richiesta',time_from:'Fascia oraria: dalle',time_to:'Alle',weight_kg:'Peso (kg)',packages:'Colli',pallets:'Pallet',volume_m3:'Volume (m³)',tail_lift:'Sponda',pallet_truck:'Transpallet',ztl:'ZTL',requirements:'Requisiti operativi',notes:'Note'};
   const numeric=['weight_kg','packages','pallets','volume_m3'], bools=['tail_lift','pallet_truck','ztl'];
   let page=1, sequence=0, detailSequence=0, view='table', current=null, last=null, timer, modalScrollY=0, bulkVerifying=false, stopBulkVerification=false;

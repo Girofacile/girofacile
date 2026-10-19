@@ -203,3 +203,27 @@ def test_bulk_verification_is_bounded_scoped_and_reuses_identical_addresses(orde
     alien=client.post('/api/orders/verify-addresses',json={})
     assert alien.status_code==200 and alien.json()['processed']==0
 
+
+
+def test_planning_metrics_and_filter_group_editable_states(orders):
+    client,db,owner,other=orders
+    from app.order_models import Order
+    states=['nuovo','da_verificare','pronto','assegnato','annullato','consegnato']
+    ids=[]
+    for index,status in enumerate(states):
+        row=create(client,number=f'METRIC-{index}')
+        db.get(Order,row['id']).status=status
+        ids.append(row['id'])
+    db.commit()
+    result=client.get('/api/orders?status=da_pianificare').json()
+    assert {row['id'] for row in result['items']}==set(ids[:3])
+    assert result['metrics']['arrivati']==6
+    assert result['metrics']['da_pianificare']==3
+    assert result['metrics']['annullato']==1
+    assert result['metrics']['assegnato']==1
+    from app.routers.order_planning import router
+    client.app.include_router(router)
+    selected=client.put('/api/order-planning/selection',json={
+        'version':0,'action':'all_filtered','filters':{'status':'da_pianificare'}})
+    assert selected.status_code==200,selected.text
+    assert set(selected.json()['order_ids'])==set(ids[:3])

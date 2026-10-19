@@ -26,7 +26,7 @@ def list_orders(q: str = Query('', max_length=200), status: str | None = None,
                 direction: Literal['asc', 'desc'] = 'desc', page: int = Query(1, ge=1, le=1000000),
                 page_size: int = Query(25, ge=1, le=100),
                 db: Session = Depends(get_db), user: User = Depends(current_user)):
-    if status and status not in service.STATUSES:
+    if status and status not in (*service.STATUSES, 'da_pianificare'):
         raise HTTPException(422, 'Stato ordine non valido')
     if date_from and date_to and date_from > date_to:
         raise HTTPException(422, 'La data iniziale deve precedere la data finale')
@@ -35,7 +35,8 @@ def list_orders(q: str = Query('', max_length=200), status: str | None = None,
         value = '%' + q.strip().replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_') + '%'
         query = query.filter(or_(*(field.ilike(value, escape='\\') for field in
                                   (Order.number, Order.recipient_name, Order.delivery_address))))
-    if status: query = query.filter(Order.status == status)
+    if status == 'da_pianificare': query = query.filter(Order.status.in_(service.EDITABLE))
+    elif status: query = query.filter(Order.status == status)
     if source_id is not None: query = query.filter(Order.source_id == source_id)
     if date_from: query = query.filter(Order.requested_date >= date_from)
     if date_to: query = query.filter(Order.requested_date <= date_to)
@@ -47,7 +48,9 @@ def list_orders(q: str = Query('', max_length=200), status: str | None = None,
     counts = dict(db.query(Order.status, func.count(Order.id)).filter(Order.user_id == user.id).group_by(Order.status).all())
     return {'items': [service.summary(row, sources[row.source_id]) for row in rows],
             'total': total, 'page': page, 'page_size': page_size,
-            'metrics': {key: counts.get(key, 0) for key in ('nuovo', 'da_verificare', 'pronto', 'assegnato')},
+            'metrics': {key: counts.get(key, 0) for key in service.STATUSES} | {
+                'arrivati': sum(counts.values()),
+                'da_pianificare': sum(counts.get(key, 0) for key in service.EDITABLE)},
             'sources': [{'id': key, 'name': value} for key, value in sources.items()]}
 
 
