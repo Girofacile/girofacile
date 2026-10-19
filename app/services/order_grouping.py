@@ -18,7 +18,7 @@ def destination(row):
     op = row.get('order_operational') or {}
     return (normalize(row.get('cliente_nome')), normalize(row.get('indirizzo')),
             round(float(row.get('lat',0)),7),round(float(row.get('lon',0)),7),
-            row.get('sponda'),row.get('ztl'),op.get('pallet_truck'),normalize(op.get('requirements')))
+            row.get('sponda'),op.get('pallet_truck'),normalize(op.get('requirements')))
 
 
 def windows(row):
@@ -50,6 +50,9 @@ def merge(user_id, rows):
     result['order_stop_key']=group_key(user_id,[r['id'] for r in result['order_refs']])
     for field in ('peso_kg','colli'): result[field]=sum(row.get(field) or 0 for row in rows)
     result['tempo_scarico_min']=max(row.get('tempo_scarico_min') or 10 for row in rows)
+    # Le segnalazioni geografiche non separano ordini altrimenti raggruppabili.
+    result['ztl']=any(bool(row.get('ztl')) for row in rows)
+    result['pedestrian_area']=any(bool(row.get('pedestrian_area')) for row in rows)
     result['note']='\n'.join(f"{', '.join(row['order_numbers'])}: {row['note']}" for row in rows if row.get('note')) or None
     for key in ('pallets','volume_m3'):
         values=[row['order_operational'].get(key) for row in rows]
