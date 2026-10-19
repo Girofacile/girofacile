@@ -183,10 +183,9 @@ def delivery_warnings(selected, vehicle=None):
         else:
             warnings.append("Sponda richiesta")
     if truthy_flag(selected.get("ztl")):
-        if vehicle and not truthy_flag(vehicle.get("accesso_ztl")):
-            warnings.append("Cliente in ZTL: verificare accesso mezzo")
-        else:
-            warnings.append("Cliente in ZTL")
+        warnings.append("Attenzione: cliente in zona ZTL")
+    if truthy_flag(selected.get("pedestrian_area")):
+        warnings.append("Attenzione: cliente in area pedonale")
     return warnings
 
 
@@ -329,7 +328,7 @@ def _has_strong_constraints(deliveries):
             return True
         if float(d.get("tempo_scarico_min") or 0) > 0:
             return True
-        if truthy_flag(d.get("ztl")) or truthy_flag(d.get("sponda")):
+        if truthy_flag(d.get("sponda")):
             return True
     return False
 
@@ -490,8 +489,8 @@ def _evaluate_fixed_sequence(sequence, matrix, points, vehicle=None, return_depo
 
         if not ev.get("feasible", True):
             violations += 1
-        if warnings:
-            warning_count += len(warnings)
+        # Solo i vincoli operativi entrano nel punteggio; ZTL e pedonale sono avvisi.
+        warning_count += len(warnings) - sum(w.startswith("Attenzione: cliente in ") for w in warnings)
 
         service_start = ev["service_start"]
         service_end = service_start + float(selected.get("tempo_scarico_min") or 0)
