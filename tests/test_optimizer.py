@@ -275,7 +275,7 @@ def test_ztl_and_tail_lift_remain_warnings():
     assert result["violations"] == 0
     assert "sponda" in result["ordered"][0]["warning"]
     assert "ZTL" in result["ordered"][0]["warning"]
-    assert result["score"] == 10*10 + 2*25 + 2
+    assert result["score"] == 10*10 + 1*25 + 2  # La ZTL e' solo un avviso.
 
 
 def test_distance_savings_also_improve_historical_score_in_this_fixture():
