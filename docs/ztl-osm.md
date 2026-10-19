@@ -1,46 +1,96 @@
-# Rilevamento ZTL informativo con OpenStreetMap
+# GiroFacile: avvisi informativi ZTL e area pedonale
 
-GiroFacile segnala le consegne le cui **coordinate gia' verificate** ricadono nei perimetri ZTL disponibili in OpenStreetMap (`boundary=limited_traffic_zone`). Non determina diritti di accesso, orari, deroghe o autorizzazioni. L'avviso **non impedisce la pianificazione** e non modifica il percorso stradale.
+GiroFacile mostra **due soli avvisi non bloccanti** per indirizzi con coordinate verificate:
 
-## Prima attivazione e aggiornamento
+- **Attenzione: cliente in zona ZTL.** Verifica le condizioni di accesso.
+- **Attenzione: cliente in area pedonale.** Verifica le modalità di consegna.
 
-L'archivio di perimetri non e' incluso nel codice: prima dell'utilizzo e' necessario caricare i dati geografici OpenStreetMap.
+Non sono condizioni di fattibilità: **non modificano ordine delle fermate, punteggi,
+criteri di raggruppamento, distanza, orari né accesso del mezzo**. Non indicano permessi
+o deroghe, né sono una certificazione giuridica. Una ZTL può essere attiva solo in certi
+giorni/orari; l'avviso resta volutamente informativo.
 
-In installazione locale:
+## Fonti e copertura
 
-```bash
-python -m scripts.update_ztl_osm
-```
+- **ZTL OSM:** geometrie con \`boundary=limited_traffic_zone\`.
+- **Aree pedonali OSM:** superfici poligonali \`highway=pedestrian + area=yes\`,
+  \`area:highway=pedestrian\` e multipoligoni pedonali. Escludiamo
+  \`highway=footway\` e vie mappate solo come linee: una linea senza larghezza non
+  dimostra che un indirizzo cada al suo interno. Queste esclusioni possono produrre
+  falsi negativi, ma evitano di confondere marciapiedi e aree pedonali.
+- **GeoJSON comunali opzionali:** \`ztl_official.geojson\` e
+  \`pedestrian_official.geojson\` nella stessa cartella; vengono interrogati per
+  primi quando presenti, con fallback OSM. Inserire **solo** dati pubblicati e
+  riutilizzabili commercialmente secondo la specifica licenza. GiroFacile non
+  scarica né presume disponibili automaticamente i dati dei Comuni.
 
-In un'installazione Docker Compose, il servizio dedicato `ztl-updater` recupera l'archivio al suo avvio e poi automaticamente ogni **7 giorni** (riprovando dopo 12 ore in caso di errore). Per aggiornare manualmente senza aspettare il ciclo:
+Un punto non trovato significa **"nessuna limitazione rilevata nei dati presenti"**,
+non "accesso libero". Una posizione non verificata o un archivio mancante produce
+\`non_disponibile\`, distinto da \`non_rilevata\`. Ogni fonte può essere incompleta
+o non aggiornata. In particolare, i dati OSM non garantiscono tutte le ZTL d'Italia.
 
-```bash
-docker compose exec girofacile python -m scripts.update_ztl_osm
-```
+Le geometrie sono memorizzate una volta per installazione, sono condivise fra
+aziende e **non contengono indirizzi, utenti o clienti**. La geocodifica Google
+di indirizzi non viene ripetuta per queste segnalazioni; si usano solo coordinate
+già acquisite durante il normale flusso di verifica cliente/ordine.
 
-Il comando scarica le geometrie ZTL italiane da Overpass (fonte OpenStreetMap), genera `data/ztl/ztl_osm.geojson` e sostituisce atomicamente il file precedente **solo se** sono state recuperate geometrie valide. In Docker la directory e' montata dal filesystem host, quindi il file persiste al riavvio/ricreazione del container. Lo stesso archivio viene condiviso da tutte le aziende; non contiene indirizzi o dati personali.
+## Prima attivazione e aggiornamenti
 
-In installazione locale non-Docker, predisporre l'aggiornamento **approssimativamente una volta a settimana** con scheduler di sistema (cron o timer), preferibilmente in orari di basso carico. Non eseguire l'aggiornamento a ogni richiesta e rispettare le policy/limitazioni dell'istanza pubblica Overpass; in caso di problemi la versione precedente viene mantenuta. L'endpoint Overpass puo' essere configurato con `GF_ZTL_OVERPASS_URL`, e l'User-Agent con `GF_ZTL_USER_AGENT`. Percorso alternativo: `GIROFACILE_ZTL_GEOJSON`.
+In locale Windows (dalla cartella di GiroFacile):
 
-## Dove compare l'avviso
+\`\`\`powershell
+.\.venv\Scripts\python.exe -m scripts.update_ztl_osm
+\`\`\`
 
-- Cliente: il campo `ztl` preesistente resta la marcatura **manuale**; l'API espone la marcatura effettiva (`ztl = manuale OR rilevamento OSM`), l'origine e il nome dell'area quando presente.
-- Ordine indipendente dal cliente: usa la posizione confermata nell'`address_verification`; la marcatura operativa manuale resta valida.
-- Pianificazione e anteprima: mostra l'avviso «Verifica i permessi di accesso del tuo mezzo». Non cambia routing, fasce orarie o blocchi di pianificazione.
-- Indirizzi senza latitudine/longitudine verificata: **nessuna chiamata automatica a Google** viene aggiunta. Il rilevamento parte con le coordinate che il flusso esistente acquisisce durante la normale verifica dell'indirizzo.
+Il comando aggiorna **entrambi** gli archivi locali indipendenti:
 
-La presenza di un poligono fa scattare una segnalazione. L'assenza di una corrispondenza **non garantisce** l'assenza di una ZTL: la mappatura OpenStreetMap e' collaborativa e puo' essere incompleta, imprecisa o non aggiornata. Il sistema distingue tra `non_rilevata` e `non_disponibile` (file o coordinate mancanti). Chi ha informazioni locali puo' continuare a utilizzare il flag manuale preesistente.
+- \`data/ztl/ztl_osm.geojson\`
+- \`data/ztl/pedestrian_osm.geojson\`
 
-## Licenza, attribuzione e limiti
+**Importante per installazioni preesistenti:** se il BAT controlla soltanto
+l'età di \`ztl_osm.geojson\` e questo è recente, non scaricherà l'archivio pedonale
+fino al successivo ciclo settimanale. Eseguire il comando sopra **una volta**
+dopo l'aggiornamento; non occorre modificare il BAT.
 
-Fonte unica dei perimetri: **© OpenStreetMap contributors**, dati disponibili secondo la **Open Database License (ODbL)**. Vedere https://www.openstreetmap.org/copyright. Conservare l'attribuzione e valutare gli obblighi di condivisione/derivazione della ODbL qualora si distribuiscano database derivati.
+In Docker Compose, l'updater separato \`ztl-updater\` richiama lo stesso script
+all'avvio e ogni **sette giorni**, con riprova a 12 ore in caso di errore. L'app
+e l'updater condividono \`./data/ztl\`. In caso di download fallito l'archivio
+precedente resta intatto; le altre funzionalità di GiroFacile continuano a operare.
 
-La classificazione usata e' `boundary=limited_traffic_zone`. Non tutte le restrizioni di accesso sono mappate con quel tag e non tutte le geometrie OSM disponibili garantiscono la chiusura completa del poligono. Il convertitore ignora le geometrie incomplete, non prova a inferire perimetri da segmenti incompleti e non sostituisce alcuna verifica normativa delle ZTL.
+Lo scarico usa Overpass pubblico con due query distinte e rispettose delle
+limitazioni del servizio; nessuna richiesta esterna viene effettuata durante la
+pianificazione. Gli endpoint possono essere configurati con
+\`GF_ZTL_OVERPASS_URL\` e \`GF_ZTL_USER_AGENT\`. Sono ammessi percorsi alternativi
+tramite \`GIROFACILE_ZTL_GEOJSON\`, \`GIROFACILE_PEDESTRIAN_GEOJSON\`,
+\`GIROFACILE_ZTL_OFFICIAL_GEOJSON\` e \`GIROFACILE_PEDESTRIAN_OFFICIAL_GEOJSON\`.
 
-## Verifiche
+## Visualizzazione e storicizzazione
 
-```bash
-python -m pytest tests/test_ztl_detection.py -q
-```
+- **Anagrafica:** badge ZTL e area pedonale vicino all'indirizzo e nel dettaglio.
+- **Verifica:** al momento in cui la posizione viene verificata si memorizza
+  l'indicazione pedonale sul cliente. Le API la ricalcolano anche quando cambia
+  l'archivio, così una nuova mappa aggiorna i badge senza nuove chiamate Google.
+  Il flag ZTL manuale dell'anagrafica resta separato dal rilevamento automatico.
+- **Ordini:** i due avvisi vengono calcolati sulle coordinate confermate
+  indipendentemente da eventuali associazioni ordine-cliente.
+- **Pianificazione / riepilogo:** due badge separati, avvisi in anteprima e
+  indicatori salvati sulle fermate dei giri. Gli avvisi non bloccano la creazione
+  del giro o le opzioni di ottimizzazione.
 
-In un ambiente reale verificare indirizzi noti dentro e fuori ZTL con il file aggiornato, oltre al comportamento con un archivio assente.
+## Licenze
+
+© OpenStreetMap contributors, Open Database License (ODbL 1.0),
+https://www.openstreetmap.org/copyright. Conservare l'attribuzione e valutare
+gli obblighi della ODbL qualora si distribuiscano banche dati derivate.
+Ogni GeoJSON comunale conserva la propria licenza ed eventuali condizioni
+di attribuzione, che vanno verificate separatamente prima di installarlo.
+
+## Test
+
+\`\`\`bash
+python -m pytest tests/test_ztl_detection.py tests/test_pedestrian_detection.py -q
+\`\`\`
+
+Il primo caso reale consigliato è Piazza Giovanni Leone 22 a Pomigliano d'Arco.
+**Non si può affermare che risulti rilevata senza aver verificato l'archivio
+effettivo e le coordinate precise dell'indirizzo geocodificato**.
