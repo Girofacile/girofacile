@@ -9,7 +9,7 @@ import math
 from typing import Any
 
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import case, func
 
 from ..models import ApiUsageLog, SaaSPlatformSetting, User
 
@@ -227,10 +227,10 @@ API_COST_DEFAULTS = {
         "unit_label": "chiamate",
         "quota_period": "monthly",
         "free_quota": 0,
-        "currency": "USD",
+        "currency": "EUR",
         "billing_model": "logged_cost",
         "tiers": [],
-        "pricing_note": "Costo calcolato dai token restituiti dal provider per il modello configurato.",
+        "pricing_note": "Stime interne in EUR dai token dei modelli censiti; costo non disponibile per modelli non censiti. Nessuna conversione valutaria.",
         "source_updated": "2026-10-06",
     },
     "mycarplate": {
@@ -298,6 +298,10 @@ def _deep_merge_profile(default: dict, override: dict | None) -> dict:
             merged["tiers"] = clean_tiers
     merged["free_quota"] = int(_coerce_number(merged.get("free_quota"), 0))
     merged["currency"] = str(merged.get("currency") or default.get("currency") or "EUR").upper()[:8]
+    if default.get("billing_model") == "logged_cost":
+        # The stored estimates have an explicit currency; changing a label is
+        # not an exchange-rate conversion, including for saved legacy profiles.
+        merged["currency"] = default.get("currency") or "EUR"
     merged["quota_period"] = str(merged.get("quota_period") or default.get("quota_period") or "monthly")
     return merged
 
@@ -367,12 +371,14 @@ def _tiered_cost(total_units: int, profile: dict) -> float:
     return round(cost, 6)
 
 
-def _cost_for_profile(total_units: int, profile: dict, logged_cost: float = 0.0) -> float | None:
+def _cost_for_profile(total_units: int, profile: dict, logged_cost: float = 0.0, unpriced_calls: int = 0) -> float | None:
     contact_sales_after = profile.get("contact_sales_after")
     if contact_sales_after and int(total_units or 0) > int(contact_sales_after):
         return None
     model = profile.get("billing_model")
     if model == "logged_cost":
+        if unpriced_calls:
+            return None
         return round(max(0.0, float(logged_cost or 0)), 6)
     if model == "tiered":
         return _tiered_cost(total_units, profile)
@@ -418,6 +424,12 @@ def api_cost_dashboard(db: Session, month: str = "") -> dict:
     ref = _month_key(month, now)
     month_start, month_end = _month_bounds(ref)
     profiles = get_api_cost_profiles(db)
+    # Metadata is serialized centrally by log_api_usage with json.dumps. Keep a
+    # count in the existing SQL aggregates instead of loading token logs into RAM.
+    unpriced_requests = func.sum(case(
+        (ApiUsageLog.meta_json.contains('"cost_status": "unknown_model"'), ApiUsageLog.request_count),
+        else_=0,
+    ))
 
     service_to_profile = {
         service: key
@@ -432,15 +444,16 @@ def api_cost_dashboard(db: Session, month: str = "") -> dict:
             ApiUsageLog.status,
             func.sum(ApiUsageLog.request_count),
             func.sum(ApiUsageLog.estimated_cost_eur),
+            unpriced_requests,
         )
         .filter(ApiUsageLog.created_at >= month_start, ApiUsageLog.created_at < month_end)
         .group_by(ApiUsageLog.service, ApiUsageLog.user_id, ApiUsageLog.status)
         .all()
     )
 
-    usage = {key: {"calls": 0, "errors": 0, "logged_cost": 0.0, "by_company": {}} for key in profiles}
+    usage = {key: {"calls": 0, "errors": 0, "logged_cost": 0.0, "unpriced_calls": 0, "by_company": {}} for key in profiles}
     user_ids = set()
-    for service, user_id, status, calls, logged_cost in rows:
+    for service, user_id, status, calls, logged_cost, unpriced in rows:
         profile_key = service_to_profile.get(service)
         if not profile_key:
             continue
@@ -448,6 +461,7 @@ def api_cost_dashboard(db: Session, month: str = "") -> dict:
         item = usage[profile_key]
         item["calls"] += calls
         item["logged_cost"] += float(logged_cost or 0)
+        item["unpriced_calls"] += int(unpriced or 0)
         if status != "success":
             item["errors"] += calls
         if user_id:
@@ -486,10 +500,10 @@ def api_cost_dashboard(db: Session, month: str = "") -> dict:
         remaining = max(0, free - period_usage) if free else 0
         billable = max(0, period_usage - free) if profile.get("billing_model") != "subscription" else max(0, period_usage - free)
         percent = round(period_usage / free * 100, 1) if free else None
-        cost = _cost_for_profile(calls, profile, item["logged_cost"])
+        cost = _cost_for_profile(calls, profile, item["logged_cost"], item["unpriced_calls"])
         projected_calls = int(round(calls / elapsed_days * days_in_month)) if is_current_month else calls
         projected_logged = item["logged_cost"] / elapsed_days * days_in_month if is_current_month else item["logged_cost"]
-        projected_cost = _cost_for_profile(projected_calls, profile, projected_logged)
+        projected_cost = _cost_for_profile(projected_calls, profile, projected_logged, item["unpriced_calls"])
         currency = profile.get("currency") or "EUR"
         if cost is not None:
             cost_totals[currency] = round(cost_totals.get(currency, 0) + cost, 6)
@@ -511,6 +525,8 @@ def api_cost_dashboard(db: Session, month: str = "") -> dict:
             "unit_label": profile.get("unit_label"),
             "currency": currency,
             "estimated_cost": cost,
+            "unpriced_calls": item["unpriced_calls"],
+            "known_cost_subtotal": round(item["logged_cost"], 6) if profile.get("billing_model") == "logged_cost" else None,
             "projected_calls": projected_calls,
             "projected_cost": projected_cost,
             "status": _status_from_percent(percent, billable),
@@ -533,7 +549,7 @@ def api_cost_dashboard(db: Session, month: str = "") -> dict:
         for key, company_calls in raw["by_service"].items():
             total_service_calls = max(1, usage[key]["calls"])
             service_profile = profiles[key]
-            service_cost = _cost_for_profile(usage[key]["calls"], service_profile, usage[key]["logged_cost"])
+            service_cost = _cost_for_profile(usage[key]["calls"], service_profile, usage[key]["logged_cost"], usage[key]["unpriced_calls"])
             if service_cost is not None:
                 currency = service_profile.get("currency") or "EUR"
                 attributed[currency] = round(
@@ -554,22 +570,23 @@ def api_cost_dashboard(db: Session, month: str = "") -> dict:
     for _ in range(6):
         hist_start, hist_end = _month_bounds(cursor)
         hist_rows = (
-            db.query(ApiUsageLog.service, func.sum(ApiUsageLog.request_count), func.sum(ApiUsageLog.estimated_cost_eur))
+            db.query(ApiUsageLog.service, func.sum(ApiUsageLog.request_count), func.sum(ApiUsageLog.estimated_cost_eur), unpriced_requests)
             .filter(ApiUsageLog.created_at >= hist_start, ApiUsageLog.created_at < hist_end)
             .group_by(ApiUsageLog.service)
             .all()
         )
-        profile_usage = {key: {"calls": 0, "logged_cost": 0.0} for key in profiles}
-        for service, calls, logged_cost in hist_rows:
+        profile_usage = {key: {"calls": 0, "logged_cost": 0.0, "unpriced_calls": 0} for key in profiles}
+        for service, calls, logged_cost, unpriced in hist_rows:
             key = service_to_profile.get(service)
             if key:
                 profile_usage[key]["calls"] += int(calls or 0)
                 profile_usage[key]["logged_cost"] += float(logged_cost or 0)
+                profile_usage[key]["unpriced_calls"] += int(unpriced or 0)
         costs = {}
         total_calls = 0
         for key, hist_item in profile_usage.items():
             total_calls += hist_item["calls"]
-            price = _cost_for_profile(hist_item["calls"], profiles[key], hist_item["logged_cost"])
+            price = _cost_for_profile(hist_item["calls"], profiles[key], hist_item["logged_cost"], hist_item["unpriced_calls"])
             if price is not None:
                 currency = profiles[key].get("currency") or "EUR"
                 costs[currency] = round(costs.get(currency, 0) + price, 6)
@@ -585,6 +602,12 @@ def api_cost_dashboard(db: Session, month: str = "") -> dict:
     )
     alerts = []
     for service in services:
+        if service.get("unpriced_calls"):
+            alerts.append({
+                "level": "warning",
+                "service": service["label"],
+                "message": f"{service['unpriced_calls']} chiamate senza tariffa del modello: costo non stimabile.",
+            })
         if service["status"] == "paid":
             alerts.append({
                 "level": "danger",
@@ -605,6 +628,8 @@ def api_cost_dashboard(db: Session, month: str = "") -> dict:
         "elapsed_days": elapsed_days,
         "total_calls": total_calls,
         "estimated_costs": cost_totals,
+        "cost_estimate_complete": not any(item["unpriced_calls"] for item in usage.values()),
+        "unpriced_calls": sum(item["unpriced_calls"] for item in usage.values()),
         "projected_costs": projected_totals,
         "services": services,
         "companies": companies[:30],

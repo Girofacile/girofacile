@@ -28,10 +28,13 @@ def billing_state(user):
 
 
 @router.get("/catalog.js", include_in_schema=False)
-def public_catalog_script():
+def public_catalog_script(db: Session = Depends(get_db)):
     import json
     from fastapi.responses import Response
-    catalog = {key: {**limits, "price_eur": PLAN_PRICES[key]["price_eur"]} for key, limits in PLAN_LIMITS.items()}
+    from ..services.platform_policy import trial_days
+    days = trial_days(db)
+    catalog = {key: {**limits, "price_eur": PLAN_PRICES[key]["price_eur"], "trial_days": days}
+               for key, limits in PLAN_LIMITS.items()}
     return Response("window.GF_PLANS = " + json.dumps(catalog) + ";", media_type="application/javascript",
                     headers={"Cache-Control": "no-cache"})
 

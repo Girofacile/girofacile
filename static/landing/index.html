@@ -333,7 +333,7 @@ footer{background:#0f172a;color:#e2e8f0;padding:60px 6% 28px;}
     <p class="hero-sub">Ottimizza percorsi, assegna autisti e monitora le consegne in tempo reale da un'unica piattaforma intuitiva.</p>
     <div class="hero-actions">
       <a href="https://girofacile.it/login" class="btn-hero">
-        Inizia gratis
+        <span data-public-trial-action>Scopri i piani</span>
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
       </a>
       <a href="#funzionalita" class="btn-hero-ghost">
@@ -343,7 +343,7 @@ footer{background:#0f172a;color:#e2e8f0;padding:60px 6% 28px;}
     </div>
     <div class="hero-note">
       <div class="hero-note-dot"></div>
-      14 giorni gratuiti &nbsp;·&nbsp; Nessuna carta richiesta &nbsp;·&nbsp; Attivo in 2 minuti
+      <span data-public-trial-copy="hero">Piani per organizzare le tue consegne</span> &nbsp;·&nbsp; Attivo in 2 minuti
     </div>
   </div>
 
@@ -448,7 +448,7 @@ footer{background:#0f172a;color:#e2e8f0;padding:60px 6% 28px;}
       <div class="stat-icon" style="background:#ede9fe">
         <svg width="20" height="20" fill="none" stroke="#7c3aed" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
       </div>
-      <div><div class="stat-val" style="color:#7c3aed">14 gg</div><div class="stat-lbl">Prova gratuita senza impegno</div></div>
+      <div><div class="stat-val" style="color:#7c3aed" data-public-trial-stat>—</div><div class="stat-lbl" data-public-trial-copy="stat">Scopri i piani</div></div>
     </div>
   </div>
 </div>
@@ -674,7 +674,7 @@ footer{background:#0f172a;color:#e2e8f0;padding:60px 6% 28px;}
   <div class="sec-inner">
     <div class="sec-tag">Piani e prezzi</div>
     <h2 class="sec-title">Scegli il piano più adatto a te</h2>
-    <p class="sec-sub">Piani semplici e trasparenti, senza costi nascosti. 14 giorni di prova gratuita su tutti i piani.</p>
+    <p class="sec-sub" data-public-trial-copy="pricing">Piani semplici e trasparenti per organizzare le consegne.</p>
     <div class="pricing-grid" id="publicPricing"></div>
     <script src="/api/billing/catalog.js"></script>
     <script src="/static/dashboard/js/billing.js?v=gf_base_20261015u"></script>
@@ -689,13 +689,40 @@ footer{background:#0f172a;color:#e2e8f0;padding:60px 6% 28px;}
     function electricBonusLabel(bonus) {
       return '+' + bonus + ' ' + (bonus === 1 ? 'veicolo elettrico' : 'veicoli elettrici') + ' bonus';
     }
+    function publicTrialDays() {
+      const configured = window.GF_TRIAL_DAYS ?? Object.values(window.GF_PLANS || {})[0]?.trial_days;
+      const days = Number(configured);
+      return configured != null && Number.isInteger(days) && days >= 0 && days <= 365 ? days : null;
+    }
+    function publicTrialAction() {
+      const days = publicTrialDays();
+      return days > 0 ? 'Prova gratis per ' + days + (days === 1 ? ' giorno' : ' giorni') : 'Scopri il piano';
+    }
+    function renderPublicTrial() {
+      const days = publicTrialDays();
+      const period = days + (days === 1 ? ' giorno' : ' giorni');
+      const enabled = days > 0;
+      const copy = {
+        hero: enabled ? period + ' di prova gratuita · Nessuna carta richiesta' : 'Piani per organizzare le tue consegne',
+        pricing: enabled ? 'Piani semplici e trasparenti. ' + period + ' di prova gratuita su tutti i piani.' : 'Piani semplici e trasparenti per organizzare le consegne.',
+        note: enabled ? '✓ ' + period + ' di prova gratuita su tutti i piani · Nessuna carta di credito · Disdici quando vuoi' : 'Consulta i piani e le condizioni di attivazione.',
+        cta: enabled ? 'Inizia la prova gratuita di ' + period + '. Nessuna carta di credito richiesta.' : 'Scopri il piano adatto alle tue consegne.',
+        stat: enabled ? 'Prova gratuita senza impegno' : 'Piani disponibili',
+      };
+      for (const node of document.querySelectorAll?.('[data-public-trial-copy]') || [])
+        node.textContent = copy[node.dataset.publicTrialCopy] || '';
+      for (const node of document.querySelectorAll?.('[data-public-trial-action]') || [])
+        node.textContent = publicTrialAction();
+      for (const node of document.querySelectorAll?.('[data-public-trial-stat]') || [])
+        node.textContent = enabled ? days + ' gg' : '—';
+    }
     function renderPublicPlans() {
       const plans = Object.entries(window.GF_PLANS || {});
       document.getElementById('publicPricing').innerHTML = plans.map(([key, p]) => {
         const f = planFeatures(key);
         const bonus = electricBonusForPlan(p);
         const bonusHtml = bonus ? '<div class="pricing-electric-bonus"><span aria-hidden="true">⚡</span><div>' + electricBonusLabel(bonus) + '<small>Slot aggiuntivi riservati ai mezzi elettrici</small></div></div>' : '';
-        return '<div class="pricing-card"><div class="pricing-name">' + escapePublicPlan(p.name) + '</div>' + '<div class="pricing-price"><span class="cur">€</span><span class="amt">' + escapePublicPlan(p.price_eur) + '</span><span class="per">/mese</span></div>' + bonusHtml + '<ul class="pricing-list">' + f.features.map(label => '<li><span aria-hidden="true">✓</span><span>' + escapePublicPlan(label) + '</span></li>').join('') + '</ul>' + '<a class="btn-plan btn-outline" href="/login?plan=' + encodeURIComponent(key) + '">Prova gratis per 14 giorni</a></div>';
+        return '<div class="pricing-card"><div class="pricing-name">' + escapePublicPlan(p.name) + '</div>' + '<div class="pricing-price"><span class="cur">€</span><span class="amt">' + escapePublicPlan(p.price_eur) + '</span><span class="per">/mese</span></div>' + bonusHtml + '<ul class="pricing-list">' + f.features.map(label => '<li><span aria-hidden="true">✓</span><span>' + escapePublicPlan(label) + '</span></li>').join('') + '</ul>' + '<a class="btn-plan btn-outline" href="/login?plan=' + encodeURIComponent(key) + '">' + escapePublicPlan(publicTrialAction()) + '</a></div>';
       }).join('');
       document.getElementById('electricPlanBonuses').innerHTML = plans.map(([, p]) => {
         const bonus = electricBonusForPlan(p);
@@ -703,17 +730,18 @@ footer{background:#0f172a;color:#e2e8f0;padding:60px 6% 28px;}
       }).join('');
     }
     renderPublicPlans();
+    renderPublicTrial();
     </script>
-    <p class="pricing-note">✓ 14 giorni gratuiti su tutti i piani &nbsp;·&nbsp; Nessuna carta di credito &nbsp;·&nbsp; Disdici quando vuoi</p>
+    <p class="pricing-note" data-public-trial-copy="note">Consulta i piani e le condizioni di attivazione.</p>
   </div>
 </section>
 
 <!-- CTA -->
 <div class="cta-sec">
   <h2>Pronto a semplificare le tue consegne?</h2>
-  <p>Inizia la prova gratuita di 14 giorni. Nessuna carta di credito richiesta.</p>
+  <p data-public-trial-copy="cta">Scopri il piano adatto alle tue consegne.</p>
   <div class="cta-btns">
-    <a href="https://girofacile.it/login" class="btn-white">Inizia gratis →</a>
+    <a href="https://girofacile.it/login" class="btn-white"><span data-public-trial-action>Scopri i piani</span> →</a>
     <a href="mailto:info@girofacile.it" class="btn-ghost-white">Contattaci</a>
   </div>
 </div>
@@ -771,5 +799,6 @@ footer{background:#0f172a;color:#e2e8f0;padding:60px 6% 28px;}
   </div>
 </footer>
 
+<script>renderPublicTrial();</script>
 </body>
 </html>

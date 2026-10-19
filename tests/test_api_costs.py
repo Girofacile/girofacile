@@ -45,3 +45,16 @@ def test_profile_override_keeps_non_editable_metadata():
     assert merged["services"] == ["google_geocoding"]
     assert merged["free_quota"] == 20_000
     assert merged["tiers"][0]["price_per_1000"] == 4.5
+
+
+def test_unknown_ai_model_is_not_charged_at_another_models_tariff():
+    from app.services.ai_assistant import estimate_ai_cost
+    assert estimate_ai_cost('uncatalogued-model', 1000000, 1000000) is None
+    assert estimate_ai_cost('gpt-4o-mini', 1000000, 1000000) == 0.75
+    assert _cost_for_profile(1, API_COST_DEFAULTS['openai'], 0, unpriced_calls=1) is None
+
+
+def test_logged_ai_estimates_keep_eur_currency_even_with_legacy_usd_override():
+    profile = _deep_merge_profile(API_COST_DEFAULTS['openai'], {'currency': 'USD'})
+    assert profile['currency'] == 'EUR'
+    assert _cost_for_profile(1, profile, 0.25) == 0.25

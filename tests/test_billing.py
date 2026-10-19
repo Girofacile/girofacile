@@ -404,3 +404,102 @@ def test_sdk_resources_are_normalized_recursively(billing_env, monkeypatch):
         'total_taxes': None, 'status_transitions': {'paid_at': 1700000000}}, 'sk_test_fake')
     sync_invoice(db, user, invoice)
     db.flush()
+
+
+@pytest.mark.parametrize('line', [
+    {'price': {'id': 'price_starter'}},
+    {'pricing': {'price_details': {'price': 'price_starter'}}},
+])
+def test_invoice_plan_comes_from_historical_price_after_upgrade(billing_env, monkeypatch, line):
+    from app.services.billing import sync_invoice
+    from app.models import BillingInvoice
+    _, db, user, *_ = billing_env
+    configure_prices(monkeypatch)
+    user.stripe_customer_id = 'cus_test'
+    user.plan = 'starter'
+    invoice = {'id': 'in_historical', 'customer': 'cus_test', 'livemode': False,
+               'status': 'paid', 'lines': {'data': [line]}, 'total': 2900}
+    sync_invoice(db, user, invoice)
+    db.commit()
+    user.plan = 'pro'
+    db.commit()
+    sync_invoice(db, user, invoice)
+    db.commit()
+    assert db.query(BillingInvoice).one().plan_name == 'Starter'
+    # A historical document first imported after the upgrade is identified too.
+    invoice['id'] = 'in_first_import_after_upgrade'
+    sync_invoice(db, user, invoice)
+    db.commit()
+    assert {row.plan_name for row in db.query(BillingInvoice).all()} == {'Starter'}
+
+
+def test_invoice_missing_price_preserves_snapshot_without_guessing_current_plan(billing_env):
+    from app.services.billing import sync_invoice
+    from app.models import BillingInvoice
+    _, db, user, *_ = billing_env
+    user.stripe_customer_id = 'cus_test'
+    user.plan = 'pro'
+    invoice = {'id': 'in_unknown_plan', 'customer': 'cus_test', 'livemode': False, 'status': 'paid'}
+    sync_invoice(db, user, invoice)
+    db.commit()
+    row = db.query(BillingInvoice).one()
+    assert row.plan_name == 'Abbonamento'
+    row.plan_name = 'Starter'
+    db.commit()
+    sync_invoice(db, user, invoice)
+    db.commit()
+    assert row.plan_name == 'Starter'
+
+
+def test_proration_invoice_lists_both_historical_plans(monkeypatch):
+    from app.services.billing import invoice_plan_name
+    configure_prices(monkeypatch)
+    assert invoice_plan_name({'lines': {'data': [
+        {'price': {'id': 'price_starter'}},
+        {'pricing': {'price_details': {'price': {'id': 'price_pro'}}}},
+    ]}}) == 'Starter / Pro'
+
+
+@pytest.mark.parametrize('days', [0, 1, 7, 14, 30])
+def test_public_javascript_catalogue_uses_runtime_trial_days(billing_env, days):
+    from app.models import SaaSPlatformSetting
+    import json
+    client, db, *_ = billing_env
+    db.add(SaaSPlatformSetting(key='trial_days', value=str(days)))
+    db.commit()
+    response = client.get('/api/billing/catalog.js')
+    assert response.status_code == 200
+    script = response.text
+    catalogue = json.loads(script.split('window.GF_PLANS = ', 1)[1].split(';', 1)[0])
+    assert all(plan['trial_days'] == days for plan in catalogue.values())
+    assert 'no-cache' in response.headers['cache-control']
+
+
+def test_ai_monitor_marks_unknown_models_instead_of_showing_free_calls(billing_env, monkeypatch):
+    import json
+    from app.services import ai_assistant as ai
+    from app.services.api_usage import api_cost_dashboard
+    from app.models import ApiUsageLog
+    _, db, user, *_ = billing_env
+    monkeypatch.setattr(ai, 'ai_enabled', lambda _: True)
+    monkeypatch.setattr(ai, 'get_ai_key', lambda _: 'test-only-key')
+    model = ['uncatalogued-model']
+    monkeypatch.setattr(ai, 'get_ai_model', lambda _: model[0])
+    monkeypatch.setattr(ai.requests, 'post', lambda *a, **kw: SimpleNamespace(
+        status_code=200, json=lambda: {'choices': [{'message': {'content': 'Testo'}}],
+                                     'usage': {'prompt_tokens': 1000000, 'completion_tokens': 1000000}}))
+    result = ai.run_ai_text(db, task='report_summary', system_prompt='test', user_prompt='test', user_id=user.id)
+    assert result['estimated_cost_eur'] is None
+    log = db.query(ApiUsageLog).filter_by(provider='openai').one()
+    assert json.loads(log.meta_json)['cost_status'] == 'unknown_model'
+    model[0] = 'gpt-4o-mini'
+    assert ai.run_ai_text(db, task='report_summary', system_prompt='test', user_prompt='test', user_id=user.id)['estimated_cost_eur'] == 0.75
+    dashboard = api_cost_dashboard(db)
+    service = next(row for row in dashboard['services'] if row['key'] == 'openai')
+    assert service['calls_month'] == 2 and service['errors_month'] == 0
+    assert service['estimated_cost'] is None and service['projected_cost'] is None
+    assert service['unpriced_calls'] == 1 and service['known_cost_subtotal'] == 0.75
+    assert service['currency'] == 'EUR'
+    assert dashboard['cost_estimate_complete'] is False
+    assert dashboard['unpriced_calls'] == 1
+    assert any('senza tariffa' in alert['message'] for alert in dashboard['alerts'])

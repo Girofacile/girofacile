@@ -8,15 +8,22 @@ const inlineScripts = [...landing.matchAll(/<script>([\s\S]*?)<\/script>/g)].map
 const billing = fs.readFileSync('static/dashboard/js/billing.js', 'utf8');
 
 function plan(name, bonus, price = 29) {
-  return {name, electric_vehicle_bonus: bonus, price_eur: price, max_customers: 100,
+  return {name, electric_vehicle_bonus: bonus, price_eur: price, trial_days: 14, max_customers: 100,
     max_routes_per_month: 20, max_deliveries_per_month: 500, max_deposits: 1,
     max_vehicles: 10, max_drivers: 10};
 }
 function render(plans) {
-  const nodes = {publicPricing: {innerHTML: ''}, electricPlanBonuses: {innerHTML: ''}};
+  const nodes = {publicPricing: {innerHTML: ''}, electricPlanBonuses: {innerHTML: ''},
+    heroTrialCopy: {dataset: {publicTrialCopy: 'hero'}, textContent: ''},
+    ctaTrialCopy: {dataset: {publicTrialCopy: 'cta'}, textContent: ''},
+    trialAction: {textContent: ''}, trialStat: {textContent: ''}};
   const context = vm.createContext({
     window: {GF_PLANS: plans},
-    document: {getElementById: id => nodes[id]},
+    document: {getElementById: id => nodes[id], querySelectorAll: selector => ({
+      '[data-public-trial-copy]': [nodes.heroTrialCopy, nodes.ctaTrialCopy],
+      '[data-public-trial-action]': [nodes.trialAction],
+      '[data-public-trial-stat]': [nodes.trialStat],
+    }[selector] || [])},
     fetch() { throw new Error('Landing must reuse the existing catalogue without new requests'); },
   });
   vm.runInContext(billing, context);
@@ -84,4 +91,25 @@ test('electric section and price cards share responsive styles without hiding be
 
 test('every inline public script parses', () => {
   for (const script of inlineScripts) new vm.Script(script);
+});
+
+
+test('public trial copy follows runtime duration including a disabled trial', () => {
+  const {nodes, context} = render({starter: {...plan('Starter', 1), trial_days: 7}});
+  assert.match(nodes.publicPricing.innerHTML, /Prova gratis per 7 giorni/);
+  assert.match(nodes.heroTrialCopy.textContent, /7 giorni di prova gratuita/);
+  assert.match(nodes.ctaTrialCopy.textContent, /7 giorni/);
+  assert.equal(nodes.trialStat.textContent, '7 gg');
+  assert.doesNotMatch(nodes.publicPricing.innerHTML, /14 giorni/);
+  context.window.GF_PLANS.starter.trial_days = 0;
+  vm.runInContext('renderPublicPlans(); renderPublicTrial()', context);
+  assert.match(nodes.publicPricing.innerHTML, /Scopri il piano/);
+  assert.doesNotMatch(nodes.publicPricing.innerHTML, /Prova gratis/);
+  assert.doesNotMatch(nodes.heroTrialCopy.textContent, /gratuit|prova/);
+  assert.doesNotMatch(nodes.ctaTrialCopy.textContent, /gratuit|prova/);
+  assert.equal(nodes.trialAction.textContent, 'Scopri il piano');
+  assert.equal(nodes.trialStat.textContent, '—');
+  context.window.GF_PLANS.starter.trial_days = 1;
+  vm.runInContext('renderPublicPlans()', context);
+  assert.match(nodes.publicPricing.innerHTML, /Prova gratis per 1 giorno</);
 });

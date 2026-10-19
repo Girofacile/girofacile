@@ -127,6 +127,24 @@ def sync_subscription(db, user, sub):
     return user
 
 
+def invoice_plan_name(invoice):
+    """Use the invoice's own prices, including Stripe's current pricing shape.
+
+    Proration documents may contain more than one plan. Never relabel an old
+    document from the company's current entitlement and never make API requests.
+    """
+    labels = []
+    for line in (invoice.get("lines") or {}).get("data") or []:
+        price = line.get("price") or ((line.get("pricing") or {}).get("price_details") or {}).get("price")
+        price_id = object_id(price)
+        for key, info in PLAN_PRICES.items():
+            if price_id and info.get("stripe_price_id") == price_id:
+                label = PLAN_LIMITS[key]["name"]
+                if label not in labels:
+                    labels.append(label)
+    return " / ".join(labels) or None
+
+
 def sync_invoice(db, user, invoice):
     invoice = assert_test(invoice)
     if object_id(invoice.get("customer")) != user.stripe_customer_id:
@@ -138,7 +156,7 @@ def sync_invoice(db, user, invoice):
     row.invoice_number = invoice.get("number") or invoice["id"]
     row.invoice_date = utc(invoice.get("created")) or utc_now()
     row.period_start, row.period_end = utc(invoice.get("period_start")), utc(invoice.get("period_end"))
-    row.plan_name = PLAN_LIMITS[user.plan]["name"]
+    row.plan_name = invoice_plan_name(invoice) or row.plan_name or "Abbonamento"
     row.subtotal, row.total = (invoice.get("subtotal") or 0) / 100, (invoice.get("total") or 0) / 100
     row.vat_amount = sum(t.get("amount", 0) for t in (invoice.get("total_taxes") or invoice.get("total_tax_amounts") or [])) / 100
     row.currency, row.status, row.pdf_path, row.is_test = invoice.get("currency", "eur").upper(), invoice.get("status", "open"), invoice.get("invoice_pdf"), True

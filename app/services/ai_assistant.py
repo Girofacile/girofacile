@@ -59,8 +59,12 @@ def ensure_company_ai_allowed(user: User, db: Session):
         raise HTTPException(403, "Funzione AI disponibile solo nel piano Pro")
 
 
-def estimate_ai_cost(model: str, input_tokens: int, output_tokens: int) -> float:
-    rates = AI_COSTS_EUR_PER_1M.get(model, AI_COSTS_EUR_PER_1M.get("gpt-4o-mini"))
+def estimate_ai_cost(model: str, input_tokens: int, output_tokens: int) -> float | None:
+    # These are internal EUR estimates, not a conversion of a provider invoice.
+    # An uncatalogued model must never inherit another model's tariff.
+    rates = AI_COSTS_EUR_PER_1M.get(model)
+    if rates is None:
+        return None
     return round((max(0, input_tokens) / 1_000_000) * rates["input"] + (max(0, output_tokens) / 1_000_000) * rates["output"], 6)
 
 
@@ -132,7 +136,7 @@ def run_ai_text(db: Session, *, task: str, system_prompt: str, user_prompt: str,
         input_tokens = int(usage.get("prompt_tokens") or 0)
         output_tokens = int(usage.get("completion_tokens") or 0)
         cost = estimate_ai_cost(model, input_tokens, output_tokens)
-        log_api_usage(db, user_id=user_id, provider="openai", service=f"openai_{task}", action="Chiamata AI", endpoint="/v1/chat/completions", request_count=1, status="success", message=f"{input_tokens} input token, {output_tokens} output token", response_ms=response_ms, estimated_cost_eur=cost, meta={"task": task, "model": model, "input_tokens": input_tokens, "output_tokens": output_tokens})
+        log_api_usage(db, user_id=user_id, provider="openai", service=f"openai_{task}", action="Chiamata AI", endpoint="/v1/chat/completions", request_count=1, status="success", message=f"{input_tokens} input token, {output_tokens} output token", response_ms=response_ms, estimated_cost_eur=cost or 0, meta={"task": task, "model": model, "input_tokens": input_tokens, "output_tokens": output_tokens, "cost_status": "estimated" if cost is not None else "unknown_model", "cost_currency": "EUR"})
         return {"text": text.strip(), "model": model, "configured": True, "fallback": False, "input_tokens": input_tokens, "output_tokens": output_tokens, "estimated_cost_eur": cost}
     except HTTPException:
         raise
