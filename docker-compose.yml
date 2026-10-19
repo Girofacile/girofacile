@@ -62,6 +62,7 @@ services:
       BACKUP_DIR: /app/backups
     volumes:
       - ./backups:/app/backups
+      - ./data/ztl:/app/data/ztl
 
 volumes:
   postgres_data:
