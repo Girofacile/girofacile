@@ -469,3 +469,37 @@ def test_traffic_refresh_preserves_ztl_and_tail_lift_warnings(routing_env):
     warning = programmed.json()["consegne"][0]["warning"]
     assert "Serve sponda ma il mezzo selezionato non la possiede" in warning
     assert "Cliente in ZTL: verificare accesso mezzo" in warning
+
+
+@pytest.mark.parametrize("unavailable", [False, True])
+def test_refresh_coalesces_overlapping_attempt_but_later_refresh_retries(routing_env, monkeypatch, unavailable):
+    from datetime import timedelta
+    from app.services.route_enrichment import enrich_final_route
+    ctx = routing_env
+    draft = saved_route(ctx)
+    db = ctx[1]
+    plan = db.get(RoutePlan, draft["id"])
+    calls = []
+    original = traffic_provider.MapboxTrafficProvider.calculate
+    def calculate(self, *args, **kwargs):
+        calls.append(1)
+        if unavailable:
+            raise traffic_provider.TrafficUnavailable("Simulated traffic failure")
+        return original(self, *args, **kwargs)
+    monkeypatch.setattr(traffic_provider.MapboxTrafficProvider, "calculate", calculate)
+    enrich_final_route(db, plan)
+    db.commit()
+    calculated_at = plan.traffic_calculated_at
+    assert len(calls) == 1
+    assert plan.traffic_status == ("unavailable" if unavailable else "updated")
+    enrich_final_route(db, plan, force=True, requested_at=calculated_at - timedelta(seconds=1))
+    db.commit()
+    assert len(calls) == 1
+    enrich_final_route(db, plan, force=True, requested_at=calculated_at + timedelta(microseconds=1))
+    db.commit()
+    assert len(calls) == 2
+    plan.traffic_version = 0
+    db.commit()
+    enrich_final_route(db, plan, force=True, requested_at=calculated_at - timedelta(seconds=1))
+    db.commit()
+    assert len(calls) == 3

@@ -379,7 +379,8 @@ def _program_saved(db,user,actor,plan_id,data):
     settings=FleetInput.model_validate(plan.configuration)
 
     def drafts():
-        rows=db.query(RoutePlan).filter(RoutePlan.user_id==user.id,RoutePlan.id.in_(plan.route_ids)).order_by(RoutePlan.id).populate_existing().all()
+        # Refresh draft generations under row locks before provider enrichment.
+        rows=db.query(RoutePlan).filter(RoutePlan.user_id==user.id,RoutePlan.id.in_(plan.route_ids)).order_by(RoutePlan.id).with_for_update().populate_existing().all()
         if len(rows)!=len(plan.route_ids): raise HTTPException(409,'Un giro e stato eliminato.')
         for row,proposal in zip(rows,plan.result['routes']):
             expected=settings.resources[proposal['resource']]
@@ -390,7 +391,7 @@ def _program_saved(db,user,actor,plan_id,data):
                 raise HTTPException(409,'Un giro e stato modificato o programmato separatamente: gestiscilo dallo storico.')
         return rows
     for row in drafts(): enrich_final_route(db,row)
-    db.commit()  # Provider accounting may commit too: only drafts exist at this point.
+    db.commit()  # Persist timing and provider accounting before releasing route locks.
     route_orders.lock_company(db,user.id)
     plan=get_plan(db,user,actor,plan_id,lock=True)
     if plan.status=='programmed': return plan

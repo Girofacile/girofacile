@@ -164,3 +164,50 @@ def test_duplicate_customer_labels_do_not_lose_matrix_identity():
     result = opt._best_internal_sequence(rows, matrix, [])
     assert len(result['ordered']) == 16
     assert opt.solution_key(result) <= opt.solution_key(legacy._best_internal_sequence(rows, matrix, []))
+
+
+@pytest.mark.parametrize('n', [9, 16])
+@pytest.mark.parametrize('back', [False, True])
+@pytest.mark.parametrize('schedule', [
+    {'start': '08:00', 'end': '09:30', 'breaks': [
+        {'start': '08:15', 'end': '08:45'}, {'start': '09:00', 'end': '09:10'}]},
+    {'start': '08:01', 'end': '09:00', 'breaks': []},
+    {'breaks': [{'start': '08:15', 'end': '08:45'}]},
+])
+def test_score_only_large_route_matches_canonical_shift_and_pause_model(n, back, schedule):
+    rng = random.Random(8801 + n)
+    rows = deliveries(n)
+    for i, row in enumerate(rows):
+        row.update(tempo_scarico_min=(i % 3) * 4.25, sponda=i == 1, ztl=i == 3)
+        if i % 2:
+            row.update(scarico_mattina_da='08:00', scarico_mattina_a='08:40',
+                       scarico_pomeriggio_da='09:00', scarico_pomeriggio_a='10:00')
+    matrix = {(i, j): {'km': rng.random() * 5, 'min': rng.random() * 12}
+              for i in range(n + 1) for j in range(n + 1) if i != j}
+    vehicle = {'ha_sponda': False, 'accesso_ztl': False, 'driver_schedule': deepcopy(schedule)}
+    evaluator = RouteEvaluator(rows, matrix, [], vehicle, back, '08:00')
+    original = deepcopy(rows)
+    for _ in range(12):
+        order = rng.sample(rows, len(rows))
+        actual = evaluator.evaluate(order, include_details=False)
+        expected = opt._evaluate_fixed_sequence(order, matrix, [], vehicle, back, '08:00', include_details=False)
+        for field in ('total_km', 'total_min', 'total_wait', 'total_lateness_min',
+                      'violations', 'score', '_objective', 'driver_schedule_error', 'driver_breaks'):
+            assert actual[field] == expected[field], field
+        assert opt.solution_key(actual) == opt.solution_key(expected)
+    assert rows == original
+
+
+def test_pause_can_make_score_only_large_route_window_infeasible():
+    rows = deliveries(9)
+    for row in rows:
+        row['tempo_scarico_min'] = 0
+    rows[0].update(tempo_scarico_min=10, scarico_mattina_da='08:00', scarico_mattina_a='08:40')
+    matrix = constant_matrix(9, km=0, minutes=0)
+    matrix[0, 1] = {'km': 5, 'min': 20}
+    vehicle = {'driver_schedule': {'start': '08:00', 'end': '17:00',
+               'breaks': [{'start': '08:15', 'end': '08:45'}]}}
+    result = RouteEvaluator(rows, matrix, [], vehicle, False, '08:00').evaluate(rows, include_details=False)
+    assert result['total_min'] == 60
+    assert result['violations'] == 1
+    assert result['total_lateness_min'] == 20

@@ -143,12 +143,29 @@ def _persist_timing(plan, result, departure):
     plan.orario_rientro_stimato = parse_time_value(result["return_time"])
 
 
-def enrich_final_route(db, plan, *, force=False):
-    """Caller owns the transaction/row lock. One traffic request per valid segment."""
+def enrich_final_route(db, plan, *, force=False, requested_at=None):
+    """Serialize provider attempts; coalesce requests that overlap a saved result.
+
+    requested_at is UTC-naive and captured before caller-side row locks.
+    A later explicit refresh still retries, including after provider failure.
+    """
+    from ..models import RoutePlan
     from ..optimizer import _route_departure_time_iso
+    observed_attempt = (plan.traffic_version, plan.traffic_calculated_at, plan.traffic_result_json)
+    # Preserve caller changes with autoflush=False before refreshing under lock.
+    # Provider accounting uses savepoints with commit=False.
+    db.flush()
+    plan = (db.query(RoutePlan).filter_by(id=plan.id, user_id=plan.user_id)
+            .with_for_update().populate_existing().one())
     snapshot = json_data(plan.routing_snapshot_json) or _legacy_snapshot(plan)
     revision = int(snapshot.get("revision") or 1)
-    if not force and plan.traffic_version == revision and plan.traffic_status in ("updated", "unavailable", "disabled"):
+    current_attempt = (plan.traffic_version, plan.traffic_calculated_at, plan.traffic_result_json)
+    current_result = (plan.traffic_version == revision
+                      and plan.traffic_status in ("updated", "unavailable", "disabled"))
+    refreshed_while_waiting = current_attempt != observed_attempt
+    refreshed_since_request = (requested_at is not None and plan.traffic_calculated_at is not None
+                               and plan.traffic_calculated_at >= requested_at)
+    if current_result and (not force or refreshed_while_waiting or refreshed_since_request):
         return
     departure = _route_departure_time_iso(plan.orario_partenza, plan.data_giro)
     points = snapshot.get("points") or []

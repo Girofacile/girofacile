@@ -16,6 +16,8 @@ class RouteEvaluator:
         self.opt = opt
         self.matrix, self.points, self.vehicle = matrix, points, vehicle
         self.return_depot, self.start_time = return_depot, start_time
+        schedule = (vehicle or {}).get('driver_schedule') or {}
+        self.has_schedule = bool(schedule.get('start') or schedule.get('end') or schedule.get('breaks'))
         self.start = opt._start_clock(start_time)
         self.windows = {d['_matrix_index']: opt.delivery_windows(d) for d in deliveries}
         self.service = {d['_matrix_index']: float(d.get('tempo_scarico_min') or 0) for d in deliveries}
@@ -27,7 +29,8 @@ class RouteEvaluator:
     def evaluate(self, sequence, *args, include_details=True, earliest_windows=False):
         self.candidates += 1
         opt = self.opt
-        if include_details or earliest_windows:
+        # Search comparisons share the canonical shift and pause scheduler.
+        if include_details or earliest_windows or self.has_schedule:
             result = opt._evaluate_fixed_sequence(sequence, self.matrix, self.points, self.vehicle,
                 self.return_depot, self.start_time, include_details=include_details, earliest_windows=earliest_windows)
             result['_search_order'] = tuple(d['_matrix_index'] for d in sequence)
