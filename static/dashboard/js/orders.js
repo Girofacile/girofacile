@@ -63,14 +63,20 @@
     }catch(err){if(request===sequence){el('ordersResults').replaceChildren();error('ordersMessage',err);}}
     finally{if(request===sequence)el('ordersResults').setAttribute('aria-busy','false');}
   }
+  function accessBadges(o){
+    const badges=[];
+    if(o.ztl_notice)badges.push('<span class="gf-badge" data-kind="ztl" title="Attenzione: cliente in zona ZTL">ZTL</span>');
+    if(o.pedestrian_area)badges.push('<span class="gf-badge" data-status="warning" title="Attenzione: cliente in area pedonale">Area pedonale</span>');
+    return badges.length?'<div class="gf-cluster" data-gap="xs">'+badges.join(' ')+'</div>':'';
+  }
   function render(){
     if(!last)return;
     const open=o=>`<button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="GFOrders.open(${o.id})" aria-label="Apri ordine ${esc(o.number)}">Apri</button>`;
     if(view==='cards'){
-      el('ordersResults').innerHTML='<div class="gf-panel__body gf-grid" data-cols="3">'+last.items.map(o=>`<article class="gf-card gf-stack" aria-selected="${!!window.GFOrderPlanning?.isSelected(o.id)}"><div class="gf-cluster" data-justify="between"><span>${window.GFOrderPlanning?.checkbox(o)||""}</span>${statusBadge(o.status)}</div><h2 class="gf-subtitle">${esc(o.number)}</h2><p><strong>${esc(display(o.recipient_name))}</strong></p><p>${esc(display(o.delivery_address))}</p><p class="gf-muted">${esc(o.source_name)} · ${esc(display(o.requested_date))}</p><p class="gf-muted">${esc(display(o.packages))} colli · ${esc(display(o.weight_kg))} kg</p><div>${open(o)}</div></article>`).join('')+'</div>';
+      el('ordersResults').innerHTML='<div class="gf-panel__body gf-grid" data-cols="3">'+last.items.map(o=>`<article class="gf-card gf-stack" aria-selected="${!!window.GFOrderPlanning?.isSelected(o.id)}"><div class="gf-cluster" data-justify="between"><span>${window.GFOrderPlanning?.checkbox(o)||""}</span>${statusBadge(o.status)}</div><h2 class="gf-subtitle">${esc(o.number)}</h2><p><strong>${esc(display(o.recipient_name))}</strong></p><p>${esc(display(o.delivery_address))}</p>${accessBadges(o)}<p class="gf-muted">${esc(o.source_name)} · ${esc(display(o.requested_date))}</p><p class="gf-muted">${esc(display(o.packages))} colli · ${esc(display(o.weight_kg))} kg</p><div>${open(o)}</div></article>`).join('')+'</div>';
     }else{
       const selectAll=window.GFOrderPlanning?.headerCheckbox(last.items)||'';
-      el('ordersResults').innerHTML='<div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards"><thead><tr><th scope="col" aria-label="Seleziona">'+selectAll+'</th><th scope="col">Numero ordine</th><th scope="col">Ricevuto</th><th scope="col">Cliente / destinatario</th><th scope="col">Indirizzo</th><th scope="col">Stato</th><th scope="col">Azioni</th></tr></thead><tbody>'+last.items.map(o=>`<tr aria-selected="${!!window.GFOrderPlanning?.isSelected(o.id)}"><td data-label="Seleziona">${window.GFOrderPlanning?.checkbox(o)||""}</td><td data-label="Numero ordine"><strong>${esc(o.number)}</strong></td><td data-label="Ricevuto">${esc(receivedDate(o.received_at))}</td><td data-label="Cliente / destinatario"><strong>${esc(display(o.recipient_name))}</strong></td><td data-label="Indirizzo">${esc(display(o.delivery_address))}</td><td data-label="Stato">${statusBadge(o.status)}</td><td data-label="Azioni">${open(o)}</td></tr>`).join('')+'</tbody></table></div>';
+      el('ordersResults').innerHTML='<div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards"><thead><tr><th scope="col" aria-label="Seleziona">'+selectAll+'</th><th scope="col">Numero ordine</th><th scope="col">Ricevuto</th><th scope="col">Cliente / destinatario</th><th scope="col">Indirizzo</th><th scope="col">Stato</th><th scope="col">Azioni</th></tr></thead><tbody>'+last.items.map(o=>`<tr aria-selected="${!!window.GFOrderPlanning?.isSelected(o.id)}"><td data-label="Seleziona">${window.GFOrderPlanning?.checkbox(o)||""}</td><td data-label="Numero ordine"><strong>${esc(o.number)}</strong></td><td data-label="Ricevuto">${esc(receivedDate(o.received_at))}</td><td data-label="Cliente / destinatario"><strong>${esc(display(o.recipient_name))}</strong></td><td data-label="Indirizzo">${esc(display(o.delivery_address))}${accessBadges(o)}</td><td data-label="Stato">${statusBadge(o.status)}</td><td data-label="Azioni">${open(o)}</td></tr>`).join('')+'</tbody></table></div>';
     }
     const totalPages=Math.max(1,Math.ceil(last.total/25));
     el('ordersPage').textContent=String(page);
@@ -206,7 +212,7 @@
             <section class="gf-panel">
               <header class="gf-panel__header"><h3 class="gf-panel__title">Dati di consegna</h3></header>
               <div class="gf-panel__body"><dl class="gf-details">
-                ${item('Destinatario',esc(display(data.recipient_name)))}${item('Indirizzo di consegna',addressText)}${item('Data richiesta',requested)}${item('Fascia oraria',timeRange)}
+                ${item('Destinatario',esc(display(data.recipient_name)))}${item('Indirizzo di consegna',addressText+accessBadges(o))}${item('Data richiesta',requested)}${item('Fascia oraria',timeRange)}
               </dl></div>
             </section>
             <section class="gf-panel">
