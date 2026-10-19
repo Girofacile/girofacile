@@ -96,7 +96,8 @@ def _enrich_owned_deliveries(db, user: User, deliveries: list[dict]) -> None:
             continue
         customer = customer_map[int(customer_id)]
         # Segnalazione ZTL indipendente dalle autorizzazioni del mezzo.
-        # Mantieni anche una segnalazione ZTL aggiunta manualmente alla fermata.\n        delivery["ztl"] = bool(delivery.get("ztl")) or customer_ztl(customer)["ztl"]
+        # Mantieni anche una segnalazione ZTL aggiunta manualmente alla fermata.
+        delivery["ztl"] = bool(delivery.get("ztl")) or customer_ztl(customer)["ztl"]
         if customer.lat is not None and customer.lon is not None:
             delivery["lat"] = customer.lat
             delivery["lon"] = customer.lon
