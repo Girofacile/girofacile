@@ -1,5 +1,6 @@
 """Selected customers use the same lazy verification/correction workflow as orders."""
 from app.models import Customer
+from test_routing_architecture import routing_env
 
 
 def new_customer(db, owner, name="Da verificare"):
