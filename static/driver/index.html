@@ -137,6 +137,7 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
 .di-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
 .di-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;}
 .db-ztl{background:#fee2e2;color:#991b1b;}
+.db-pedestrian{background:#fef3c7;color:#92400e;}
 .db-sponda{background:#fef3c7;color:#92400e;}
 .db-time{background:#dbeafe;color:#1e40af;}
 .di-status-icon{font-size:22px;}
@@ -816,6 +817,7 @@ function renderExecution(data) {
           <div class="di-addr">${gfIcon('pin')} ${esc(c.indirizzo)}</div>
           <div class="di-badges">
             ${c.ztl?'<span class="di-badge db-ztl">'+gfIcon('alert')+' ZTL</span>':''}
+             ${c.pedestrian_area?'<span class="di-badge db-pedestrian">'+gfIcon('alert')+' Area pedonale</span>':''}
             ${c.sponda?'<span class="di-badge db-sponda">'+gfIcon('tool')+' Sponda</span>':''}
             ${c.tempo_scarico_min?`<span class="di-badge db-time">${gfIcon('timer')} ${c.tempo_scarico_min} min</span>`:''}
           </div>
