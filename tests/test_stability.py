@@ -205,7 +205,7 @@ def test_manual_route_respects_same_optional_preferences(env):
     rows=[{'scarico_mattina_da':'08:00','ztl':True,'sponda':True}]
     _apply_route_preferences(owner,rows)
     assert rows[0]['scarico_mattina_da'] is None
-    assert rows[0]['ztl'] is False and rows[0]['sponda'] is False
+    assert rows[0]['ztl'] is True and rows[0]['sponda'] is False  # Avviso ZTL sempre informativo.
 
 
 def test_backup_discovery_supports_dump_and_legacy_files(tmp_path,monkeypatch):
