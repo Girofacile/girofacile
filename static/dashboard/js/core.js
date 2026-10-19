@@ -3155,6 +3155,8 @@ function renderDeliveries(){
   const footer = document.getElementById("deliveryFooterCount");
   if(counter) counter.textContent = `${deliveries.length} ${deliveries.length===1 ? "fermata" : "fermate"}`;
   if(footer) footer.textContent = `${deliveries.length} ${deliveries.length===1 ? "consegna inserita" : "consegne inserite"}`;
+  const ztlCredit = document.getElementById("ztlDataAttribution");
+  if(ztlCredit) ztlCredit.hidden = !deliveries.some(d=>d.ztl);
   if(!deliveries.length){
     body.innerHTML = renderDeliveryEmptyRow();
     return;
