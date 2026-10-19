@@ -53,6 +53,22 @@ Le bozze restano in memoria nel browser finché non salvi il JSON. Ricaricare o
 chiudere la pagina perde le modifiche non salvate. Nessuna pubblicazione social.
 Il JSON riaperto usa la grafica corrente del repository.
 
+### Tre layout da confrontare
+
+Dopo la generazione, **Scegli lo stile del carosello** mostra la slide corrente
+in tre composizioni diverse, tutte con logo, palette e font del progetto:
+
+- **Percorso**: titoli ampi e linea di percorso, suggerito per TOFU.
+- **Editoriale**: fondo chiaro, numero in evidenza e area testo separata, suggerito per MOFU.
+- **Focus**: pannelli distinti per titolo e contenuto, CTA evidenziata, suggerito per BOFU.
+
+Sono suggerimenti editoriali: ogni stile è disponibile per qualsiasi funnel.
+La scelta si applica a tutte le slide del solo carosello selezionato e conserva
+testi e caption. Cambiando slide o testo si aggiornano anche le tre anteprime.
+PNG e ZIP usano il layout selezionato; il JSON conserva una scelta per ciascun
+carosello. Le bozze precedenti senza layout mantengono lo stile originale Percorso.
+Entrambi i formati, verticale e quadrato, supportano tutti e tre i layout.
+
 ### Modalità locale e AI
 
 **Locale:** impagina i punti senza riscriverli. Un punto per riga, massimo 360
