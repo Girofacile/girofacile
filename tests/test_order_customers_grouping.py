@@ -83,6 +83,9 @@ def test_grouping_lifecycle_and_partial_regroup(planning):
     assert len({link.stop_key for link in db.query(RouteOrderAssignment)})==2
     from app.services.route_execution import apply_delivery_update
     delivery=db.query(Delivery).filter_by(route_plan_id=rid).order_by(Delivery.ordine).first()
+    from app.core.utils import local_today
+    db.get(RoutePlan,rid).data_giro=local_today()
+    db.flush()
     apply_delivery_update(db,delivery,{},'complete');db.commit()
     assert sorted([a.status,b.status])==['consegnato','in_consegna']
     assert a.original_payload==original
@@ -112,6 +115,9 @@ def test_group_delivery_updates_every_original_order(planning):
     delivery=db.query(Delivery).filter_by(route_plan_id=response.json()['id']).one()
     from app.routers.operator import delivery_to_operator_dict
     assert delivery_to_operator_dict(delivery,None)['order_numbers']==['A','B']
+    from app.core.utils import local_today
+    db.get(RoutePlan,delivery.route_plan_id).data_giro=local_today()
+    db.flush()
     apply_delivery_update(db,delivery,{},'complete');db.commit()
     assert a.status==b.status=='consegnato'
     assert db.query(RouteOrderAssignment).count()==2

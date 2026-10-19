@@ -158,6 +158,9 @@ def test_capacity_and_plan_quota_include_occasional_stops(routing_env, monkeypat
     result=client.post('/api/routes/optimize',json=data)
     assert result.status_code==200,result.text
     route=db.get(RoutePlan,result.json()['id'])
+    from app.core.utils import local_today
+    route.data_giro=local_today()
+    db.flush()
     monkeypatch.setattr(usage_limits,'usage_summary',lambda *a:{'routes':{'used':0,'limit':10},'deliveries':{'used':10,'limit':10}})
     with pytest.raises(HTTPException) as error:usage_limits.start_route_usage(db,route)
     assert error.value.status_code==403

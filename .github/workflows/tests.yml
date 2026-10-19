@@ -158,7 +158,7 @@ jobs:
         with:
           node-version: '22'
       - name: Verify selection controller regressions
-        run: node --test tests/test_customer_selection_planning.cjs tests/test_customer_planning_ui.cjs tests/test_planning_ui.cjs
+        run: node --test tests/test_customer_selection_planning.cjs tests/test_customer_planning_ui.cjs tests/test_planning_ui.cjs tests/test_v1_ui_regressions.cjs
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'

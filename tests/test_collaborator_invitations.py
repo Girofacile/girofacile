@@ -177,8 +177,16 @@ def test_pending_identity_cannot_login_use_a_session_or_reset_its_password(compa
     result = client.post("/api/password-reset/request", json={"email": actor.email})
     assert result.status_code == 200
     assert db.query(PasswordResetToken).count() == before
-    # A pre-existing or manually inserted reset token cannot bypass setup.
-    reset = _create_reset_token(db, "collaborator", actor.id, actor.email)
+    # Normal issuance refuses a pending identity without persisting a reset row.
+    assert _create_reset_token(db, "collaborator", actor.id, actor.email) is None
+    assert db.query(PasswordResetToken).count() == before
+    # Simulate a token persisted by a legacy deployment.
+    reset = PasswordResetToken(
+        account_type="collaborator", account_id=actor.id, email=actor.email,
+        token="legacy-pending-identity-reset", expires_at=utc_now() + timedelta(hours=1),
+        used_at=None,
+    )
+    db.add(reset)
     db.commit()
     assert client.post("/api/password-reset/confirm", json={
         "token": reset.token, "password": STRONG_PASSWORD,

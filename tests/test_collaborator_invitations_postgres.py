@@ -348,9 +348,16 @@ def test_stale_password_and_reset_requests_cannot_overwrite_a_new_email_invitati
         assert not verify_password(PASSWORD, actor.password_hash)
         assert not verify_password(obsolete_replacement, actor.password_hash)
         assert db.query(PasswordResetToken).filter_by(token=old_reset_token).one().used_at is not None
-        # A recovery request started earlier may persist its old-email token
-        # after revocation. An unused token still cannot target a new address.
-        late_reset = _create_reset_token(db, "collaborator", actor.id, "noemi@example.test")
+        # Current issuance rejects an obsolete recipient.
+        assert _create_reset_token(db, "collaborator", actor.id, "noemi@example.test") is None
+        # Simulate an unused old-email token persisted by a legacy deployment.
+        from datetime import timedelta
+        late_reset = PasswordResetToken(
+            account_type="collaborator", account_id=actor.id, email="noemi@example.test",
+            token="legacy-stale-recipient-reset", expires_at=utc_now() + timedelta(hours=1),
+            used_at=None,
+        )
+        db.add(late_reset)
         db.commit()
         assert late_reset.used_at is None
         with pytest.raises(HTTPException) as denied_metadata:
