@@ -1035,6 +1035,10 @@
       </section>
 
             <section id="tab-storico" class="tab hidden gf-stack" data-gap="lg">
+        <div id="historyLoading" class="gf-loading" role="status" hidden>Caricamento storico giri…</div>
+        <div id="historyError" class="gf-alert" data-status="danger" role="alert" hidden>
+          <div class="gf-alert__body gf-stack"><p id="historyErrorMessage"></p><div><button type="button" class="gf-button" data-variant="secondary" onclick="GFHistory.load()">Riprova</button></div></div>
+        </div>
         <section id="historyEmptyState" class="gf-panel hidden" aria-live="polite">
           <div class="gf-empty gf-stack">
             <p class="gf-kicker">Storico giri</p>
@@ -1495,7 +1499,7 @@
 <script src="/static/dashboard/js/reports.js?v=gf_base_20261015u"></script>
 <script src="/static/dashboard/js/customers.js?v=gf_no_bulk_slot_20261018"></script>
 <script src="/static/dashboard/js/navigation.js?v=gf_dashboard_greeting_20261018"></script>
-<script src="/static/dashboard/js/history.js?v=gf_history_20261018"></script>
+<script src="/static/dashboard/js/history.js?v=gf_v1_history_20261018"></script>
 <script src="/static/password-strength.js?v=password_policy_20261008_1"></script>
 <script src="/static/dashboard/js/collaborators.js?v=gf_no_bulk_slot_20261018"></script>
 <script src="/static/dashboard/js/orders.js?v=gf_stat_icons_20261018"></script>

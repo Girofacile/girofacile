@@ -626,7 +626,7 @@ function renderRouteCard(r, today) {
     </div>`;
   } else if(r.can_start) {
     actionsHtml = `<div class="rc-actions">
-      <button class="btn-start" onclick="tryStartRoute(${r.id}, ${r.before_time}, '${esc(r.orario_partenza||'')}', '${esc(r.nome||'')}')">▶ Avvia giro</button>
+      <button class="btn-start" data-start-route="${Number(r.id)}" data-before-time="${r.before_time ? 'true' : 'false'}" data-start-time="${esc(r.orario_partenza||'')}" data-start-name="${esc(r.nome||'')}">▶ Avvia giro</button>
       <button class="btn-view" onclick="openExecution(${r.id})">Dettaglio</button>
     </div>`;
   } else if(r.is_future) {
@@ -669,6 +669,14 @@ function renderRouteCard(r, today) {
 // AVVIO GIRO
 // ============================================================
 let pendingStartRouteId = null;
+
+function handleRouteListClick(event) {
+  const button = event.target.closest('[data-start-route]');
+  if(!button) return;
+  tryStartRoute(Number(button.dataset.startRoute), button.dataset.beforeTime === 'true',
+    button.dataset.startTime, button.dataset.startName);
+}
+document.getElementById('routesList').addEventListener('click', handleRouteListClick);
 
 function tryStartRoute(routeId, beforeTime, orario, nome) {
   if(beforeTime) {

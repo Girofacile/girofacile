@@ -211,7 +211,9 @@ function renderMobileRouteDetails(r, targetId="routeResult"){
 }
 async function viewRouteDetail(id){
   try{
-    renderMobileRouteDetails(await api(`/api/routes/${id}`),"dashRouteDetail");
+    const route = await api(`/api/routes/${id}`);
+    showView("dashboard", document.querySelector(".bnav-btn"));
+    renderMobileRouteDetails(route,"dashRouteDetail");
     document.getElementById("dashRouteDetail").scrollIntoView({behavior:"smooth"});
   }catch(e){alert(e.message);}
 }
@@ -232,12 +234,31 @@ async function programMobileRoute(id, targetId="routeResult"){
 }
 
 // ---- STORICO ----
+async function loadMobileHistory(from, to){
+  const rows = [];
+  let page = 1;
+  while(page){
+    const params = new URLSearchParams({page, page_size:100, with_meta:true});
+    if(from) params.set('date_from', from);
+    if(to) params.set('date_to', to);
+    const data = await api('/api/routes?'+params);
+    const items = Array.isArray(data) ? data : data?.items;
+    if(!Array.isArray(items)) throw new Error('Impossibile leggere lo storico. Riprova.');
+    rows.push(...items);
+    const next = Array.isArray(data) ? null : data.next_page;
+    if(next != null && (!items.length || !Number.isInteger(next) || next <= page)){
+      throw new Error('Caricamento dello storico incompleto. Riprova.');
+    }
+    page = next;
+  }
+  return rows;
+}
 async function loadStorico(){
   const from=mval("storicoFrom"),to=mval("storicoTo");
   const box=document.getElementById("storicoList");
   box.innerHTML=`<div style="text-align:center;padding:24px;color:#6b7280">Caricamento...</div>`;
   try{
-    const rows=await api("/api/routes");
+    const rows=await loadMobileHistory(from, to);
     const filtered=rows.filter(r=>{
       if(from && r.data_giro<from) return false;
       if(to && r.data_giro>to) return false;

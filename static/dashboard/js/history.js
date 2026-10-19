@@ -4,7 +4,7 @@ window.GFHistory = (() => {
   const PERIODS = {'':'Qualsiasi data','7':'Ultimi 7 giorni','30':'Ultimi 30 giorni','month':'Questo mese','last-month':'Mese scorso','90':'Ultimi 3 mesi','custom':'Date a scelta'};
   const STATES = {'':'Tutti gli stati','completato':'Completati','annullato':'Annullati'};
   const state = {routes:[], day:null, query:'', period:'', from:'', to:'', driver:'', vehicle:'', status:''};
-  let route = null, request = 0;
+  let route = null, request = 0, detailRequest = 0;
   const $ = id => document.getElementById(id);
   const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
   const shortDate = iso => iso ? String(iso).split('-').reverse().join('/') : '—';
@@ -198,8 +198,11 @@ window.GFHistory = (() => {
       </footer>`;
   }
   async function open(id){
+    const ticket = ++detailRequest;
     try{
-      route = await api(`/api/routes/${id}`);
+      const loaded = await api(`/api/routes/${id}`);
+      if(ticket !== detailRequest) return;
+      route = loaded;
       if(route.data_giro && !searching()){ state.day = route.data_giro; render(); }
       const dialog = $('historyRouteDialog');
       dialog.innerHTML = dialogHtml(route);
@@ -208,7 +211,11 @@ window.GFHistory = (() => {
   }
 
   /* --- Esportazioni CSV ------------------------------------------------------------ */
-  const cell = value => '"'+String(value ?? '').replace(/^[=+@-]/,"'$&").replace(/"/g,'""')+'"';
+  const cell = value => {
+    const text = String(value ?? '');
+    const safe = typeof value === 'string' && /^[\s\u0000-\u001f]*[=+@-]/.test(text) ? "'"+text : text;
+    return '"'+safe.replace(/"/g,'""')+'"';
+  };
   function download(name, data){
     const url = URL.createObjectURL(new Blob(['﻿'+data.map(row => row.map(cell).join(';')).join('\r\n')],{type:'text/csv;charset=utf-8'}));
     const a = document.createElement('a'); a.href = url; a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
@@ -227,15 +234,39 @@ window.GFHistory = (() => {
   // Ogni caricamento annulla quelli precedenti ancora in corso: vince l'ultima richiesta.
   async function load(routeId=null){
     const ticket = ++request;
-    const rows = await api('/api/routes');
-    if(ticket !== request) return;
-    state.routes = Array.isArray(rows) ? rows : [];
-    const today = todayIso();
-    if(!state.day || !state.routes.some(r => r.data_giro === state.day)){
-      state.day = state.routes.map(r => r.data_giro).filter(d => d && d <= today).sort().pop() || today;
+    $('historyLoading').hidden = false;
+    $('historyError').hidden = true;
+    $('historyPage').hidden = true;
+    $('historyEmptyState').classList.add('hidden');
+    try{
+      const rows = [];
+      let page = 1;
+      while(page){
+        const data = await api(`/api/routes?page=${page}&page_size=100&with_meta=true`);
+        if(ticket !== request) return;
+        const items = Array.isArray(data) ? data : data?.items;
+        if(!Array.isArray(items)) throw new Error('Impossibile leggere lo storico. Riprova.');
+        rows.push(...items);
+        const next = Array.isArray(data) ? null : data.next_page;
+        if(next != null && (!items.length || !Number.isInteger(next) || next <= page)){
+          throw new Error('Caricamento dello storico incompleto. Riprova.');
+        }
+        page = next;
+      }
+      state.routes = rows;
+      const today = todayIso();
+      if(!state.day || !state.routes.some(r => r.data_giro === state.day)){
+        state.day = state.routes.map(r => r.data_giro).filter(d => d && d <= today).sort().pop() || today;
+      }
+      render();
+      if(routeId) await open(routeId);
+    }catch(error){
+      if(ticket !== request) return;
+      $('historyErrorMessage').textContent = error.message || 'Impossibile caricare lo storico.';
+      $('historyError').hidden = false;
+    }finally{
+      if(ticket === request) $('historyLoading').hidden = true;
     }
-    render();
-    if(routeId) await open(routeId);
   }
   function bind(){
     const search = $('historySearch');
@@ -243,12 +274,13 @@ window.GFHistory = (() => {
     search.dataset.bound = '1';
     search.addEventListener('input', () => { state.query = search.value; render(); });
     $('historyRouteDialog').addEventListener('click', e => { if(e.target === e.currentTarget) e.currentTarget.close(); });
+    $('historyRouteDialog').addEventListener('close', () => { ++detailRequest; route = null; });
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind); else bind();
 
   return {
     load, open, render, exportRoutes, exportStops, openFilters, applyFilters, remove:removeFilter, clear:clearFilters,
-    close(){ $('historyRouteDialog').close(); },
+    close(){ ++detailRequest; route = null; $('historyRouteDialog').close(); },
     day(iso){ state.day = iso; render(); },
     week(step){ state.day = step ? dashScheduledAddDays(dashScheduledMonday(state.day), step*7) : (state.routes.map(r => r.data_giro).filter(d => d && d <= todayIso()).sort().pop() || todayIso()); render(); }
   };

@@ -6,12 +6,13 @@ from ..models import DeliveryTrackingLink
 from ..services.occasional_stops import verify_stop_address, validate_occasional_stops, STOP_VERIFICATION_FIELDS
 from ..services.customer_planning import customer_is_plannable, PLANNING_ADDRESS_ERROR
 from ..services.delivery_pod import evidence_metadata, evidence_response
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from ..core.clock import utc_now
 import time
 
 from fastapi import Response, APIRouter, Depends, HTTPException, Request, Query
-from sqlalchemy.orm import Session
+from sqlalchemy import func, or_
+from sqlalchemy.orm import Session, joinedload
 
 from ..core.dependencies import current_user, owned
 from ..core.utils import local_now, local_today, local_today_iso, minutes_from_hhmm, parse_date_value, parse_time_value, date_to_iso, time_to_hhmm
@@ -937,13 +938,14 @@ def program_route(
 
 @router.post("/api/routes/{route_id}/refresh-traffic")
 def refresh_route_traffic(route_id: int, db: Session = Depends(get_db), user: User = Depends(current_user)):
+    requested_at = utc_now()
     plan = owned(db.query(RoutePlan), RoutePlan, user).filter(RoutePlan.id == route_id).with_for_update().first()
     if not plan:
         raise HTTPException(404, "Giro non trovato")
     if computed_route_status(plan) not in ("bozza", "programmato"):
         raise HTTPException(409, "Aggiorna il traffico prima di avviare il giro")
     try:
-        enrich_final_route(db, plan, force=True)
+        enrich_final_route(db, plan, force=True, requested_at=requested_at)
     except ValueError as exc:
         raise HTTPException(400, str(exc))
     db.commit()
@@ -1048,22 +1050,67 @@ def get_route(route_id: int, db: Session = Depends(get_db), user: User = Depends
 
 
 @router.get("/api/routes")
-def list_routes(db: Session = Depends(get_db), user: User = Depends(current_user)):
-    rows = owned(db.query(RoutePlan), RoutePlan, user).order_by(RoutePlan.created_at.desc()).limit(200).all()
-    closed_rows = [r for r in rows if computed_route_status(r) in ("completato", "annullato")][:100]
-    return [{
+def list_routes(
+    response: Response,
+    db: Session = Depends(get_db),
+    user: User = Depends(current_user),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(100, ge=1, le=100),
+    with_meta: bool = False,
+    q: str | None = Query(None, max_length=200),
+    date_from: date | None = None,
+    date_to: date | None = None,
+    status: str | None = Query(None, pattern="^(completato|annullato)$"),
+    driver_id: int | None = Query(None, ge=1),
+    vehicle_id: int | None = Query(None, ge=1),
+):
+    """Closed routes, filtered before pagination; arrays remain the default."""
+    if date_from and date_to and date_from > date_to:
+        raise HTTPException(422, "La data iniziale deve precedere quella finale")
+    query = owned(db.query(RoutePlan), RoutePlan, user).filter(
+        func.lower(RoutePlan.status).in_(("completato", "annullato"))
+    )
+    if status:
+        query = query.filter(func.lower(RoutePlan.status) == status)
+    if date_from:
+        query = query.filter(RoutePlan.data_giro >= date_from)
+    if date_to:
+        query = query.filter(RoutePlan.data_giro <= date_to)
+    if driver_id:
+        query = query.filter(RoutePlan.driver_id == driver_id)
+    if vehicle_id:
+        query = query.filter(RoutePlan.vehicle_id == vehicle_id)
+    if q and q.strip():
+        term = q.strip()
+        query = query.outerjoin(RoutePlan.vehicle).filter(or_(
+            RoutePlan.nome.icontains(term, autoescape=True),
+            Vehicle.nome.icontains(term, autoescape=True),
+            Vehicle.targa.icontains(term, autoescape=True),
+        ))
+    total = query.count()
+    rows = (query.options(joinedload(RoutePlan.driver), joinedload(RoutePlan.vehicle))
+            .order_by(RoutePlan.created_at.desc(), RoutePlan.id.desc())
+            .offset((page - 1) * page_size).limit(page_size).all())
+    counts = dict(db.query(Delivery.route_plan_id, func.count(Delivery.id))
+                  .filter(Delivery.route_plan_id.in_([r.id for r in rows]))
+                  .group_by(Delivery.route_plan_id).all()) if rows else {}
+    items = [{
         "id": r.id, "nome": r.nome, "data_giro": date_to_iso(r.data_giro),
         "orario_partenza": time_to_hhmm(r.orario_partenza), "orario_rientro_stimato": time_to_hhmm(r.orario_rientro_stimato),
-        "totale_km": r.totale_km, "costo_carburante": r.costo_carburante,
+        "totale_km": r.totale_km, "totale_minuti": r.totale_minuti, "costo_carburante": r.costo_carburante,
         **routing_metadata(r),
-        "google_maps_url": r.google_maps_url, "consegne_count": len(r.deliveries or []),
+        "google_maps_url": r.google_maps_url, "consegne_count": counts.get(r.id, 0),
         "driver_id": r.driver_id,
         "driver_name": ((r.driver.nome + (" " + r.driver.cognome if r.driver.cognome else "")) if r.driver else ""),
         "vehicle_id": r.vehicle_id,
-        "vehicle_name": ((r.vehicle.nome + (" · " + r.vehicle.targa if r.vehicle and r.vehicle.targa else "")) if r.vehicle else ""),
+        "vehicle_name": ((r.vehicle.nome + (" · " + r.vehicle.targa if r.vehicle.targa else "")) if r.vehicle else ""),
         "status": computed_route_status(r), "status_label": route_status_label(computed_route_status(r)),
-    } for r in closed_rows]
-
+    } for r in rows]
+    response.headers["X-Total-Count"] = str(total)
+    if with_meta:
+        return {"items": items, "total": total, "page": page, "page_size": page_size,
+                "next_page": page + 1 if page * page_size < total else None}
+    return items
 
 @router.get('/api/deliveries/{delivery_id}/evidence/{kind}')
 def company_evidence(delivery_id: int, kind: str, user: User = Depends(current_user), db: Session = Depends(get_db)):
