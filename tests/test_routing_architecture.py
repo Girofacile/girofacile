@@ -468,7 +468,7 @@ def test_traffic_refresh_preserves_ztl_and_tail_lift_warnings(routing_env):
     assert programmed.status_code == 200, programmed.text
     warning = programmed.json()["consegne"][0]["warning"]
     assert "Serve sponda ma il mezzo selezionato non la possiede" in warning
-    assert "Cliente in ZTL: verificare accesso mezzo" in warning
+    assert "Attenzione: cliente in zona ZTL" in warning
 
 
 @pytest.mark.parametrize("unavailable", [False, True])
