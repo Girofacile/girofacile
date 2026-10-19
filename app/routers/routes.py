@@ -5,6 +5,7 @@ from ..services.route_schedule import live_route_schedule, route_schedule_dateti
 from ..models import DeliveryTrackingLink
 from ..services.occasional_stops import verify_stop_address, validate_occasional_stops, STOP_VERIFICATION_FIELDS
 from ..services.customer_planning import customer_is_plannable, PLANNING_ADDRESS_ERROR
+from ..services.ztl import customer_ztl, detect_ztl
 from ..services.delivery_pod import evidence_metadata, evidence_response
 from datetime import date, datetime, timedelta
 from ..core.clock import utc_now
@@ -90,8 +91,12 @@ def _enrich_owned_deliveries(db, user: User, deliveries: list[dict]) -> None:
     for delivery in deliveries:
         customer_id = delivery.get("customer_id")
         if customer_id is None:
+            if delivery.get("order_refs") and detect_ztl(delivery.get("lat"), delivery.get("lon"))["detected"]:
+                delivery["ztl"] = True
             continue
         customer = customer_map[int(customer_id)]
+        # Segnalazione ZTL indipendente dalle autorizzazioni del mezzo.
+        delivery["ztl"] = customer_ztl(customer)["ztl"]
         if customer.lat is not None and customer.lon is not None:
             delivery["lat"] = customer.lat
             delivery["lon"] = customer.lon
@@ -131,10 +136,6 @@ def _apply_route_preferences(user, deliveries):
             delivery["scarico_mattina_a"] = None
             delivery["scarico_pomeriggio_da"] = None
             delivery["scarico_pomeriggio_a"] = None
-    if not bool(getattr(user, "has_ztl", False)):
-        for delivery in deliveries:
-            if delivery.get("order_refs"): continue  # Explicit order requirements take precedence.
-            delivery["ztl"] = False
     if not bool(getattr(user, "needs_tail_lift", False)):
         for delivery in deliveries:
             if delivery.get("order_refs"): continue  # Explicit order requirements take precedence.
