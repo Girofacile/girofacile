@@ -10,6 +10,7 @@ from .services.geocoding import geocode_address
 from .services.platform_settings import google_geocoding_enabled, google_maps_api_key
 from .services import road_routing
 from .services import distance_cache as dc
+from .services.ztl import WARNING as ZTL_WARNING
 
 NOMINATIM_URL = os.getenv("NOMINATIM_URL", "https://nominatim.openstreetmap.org").rstrip("/")
 
@@ -183,10 +184,8 @@ def delivery_warnings(selected, vehicle=None):
         else:
             warnings.append("Sponda richiesta")
     if truthy_flag(selected.get("ztl")):
-        if vehicle and not truthy_flag(vehicle.get("accesso_ztl")):
-            warnings.append("Cliente in ZTL: verificare accesso mezzo")
-        else:
-            warnings.append("Cliente in ZTL")
+        # La ZTL e' solo informativa: nessuna validazione dei permessi del mezzo.
+        warnings.append(ZTL_WARNING)
     return warnings
 
 
@@ -329,7 +328,7 @@ def _has_strong_constraints(deliveries):
             return True
         if float(d.get("tempo_scarico_min") or 0) > 0:
             return True
-        if truthy_flag(d.get("ztl")) or truthy_flag(d.get("sponda")):
+        if truthy_flag(d.get("sponda")):
             return True
     return False
 
@@ -491,7 +490,7 @@ def _evaluate_fixed_sequence(sequence, matrix, points, vehicle=None, return_depo
         if not ev.get("feasible", True):
             violations += 1
         if warnings:
-            warning_count += len(warnings)
+            warning_count += sum(w != ZTL_WARNING for w in warnings)
 
         service_start = ev["service_start"]
         service_end = service_start + float(selected.get("tempo_scarico_min") or 0)
