@@ -2819,7 +2819,7 @@ function editCustomer(id, fromModal=false){
   const c = customersCache.find(x=>x.id===id); if(!c) return;
   set("cId",c.id); set("cCodice",c.codice_cliente); set("cNome",c.nome); set("cIndirizzo",c.indirizzo); set("cComune",c.comune); set("cProvincia",c.provincia); set("cTelefono",c.telefono); set("cEmail",c.email); set("cReferente",c.referente); set("cAgent", c.agent_id || "");
   set("cMattinaDa",c.scarico_mattina_da); set("cMattinaA",c.scarico_mattina_a); set("cPomeriggioDa",c.scarico_pomeriggio_da); set("cPomeriggioA",c.scarico_pomeriggio_a);
-  set("cScarico",c.tempo_scarico_min); set("cZtl",c.ztl?"true":"false"); set("cSponda",c.sponda?"true":"false"); set("cNote",c.note);
+  set("cScarico",c.tempo_scarico_min); set("cZtl",c.ztl_manual?"true":"false"); set("cSponda",c.sponda?"true":"false"); set("cNote",c.note);
   set("cLat", c.lat ?? ""); set("cLon", c.lon ?? ""); set("cGeoStatus", c.stato_geocodifica || "da_verificare"); set("cGeoProvider", c.fonte_geocodifica || "");
   set("cGeoConfidence", c.affidabilita_geocodifica ?? ""); set("cGooglePlaceId", c.google_place_id || ""); set("cGeocodedAddress", c.indirizzo_geocodificato || "");
   if(c.stato_geocodifica === "verificato") setCustomerAddressStatus("Indirizzo già verificato con Google.", "ok");
@@ -3142,7 +3142,7 @@ function deliveryWindowLabel(d){
 }
 function deliveryRequirementBadges(d){
   const badges = [];
-  if(d.ztl) badges.push('<span class="gf-badge" data-kind="ztl">ZTL</span>');
+  if(d.ztl) badges.push('<span class="gf-badge" data-kind="ztl" title="Verifica i permessi di accesso del mezzo">ZTL</span><small class="gf-muted">Verifica i permessi del mezzo</small>');
   if(d.sponda) badges.push('<span class="gf-badge" data-kind="tail-lift">Sponda</span>');
   return badges.join(" ") || '<span class="gf-muted">—</span>';
 }
@@ -3473,7 +3473,7 @@ function renderRouteResult(r, targetId="routeResult", fromHistory=false){
       <div class="gf-grid" data-cols="2">
         ${violationsCount > 0 ? alert("danger", "Finestre orarie non rispettate", `${violationsCount} fermate · ${Number(r.total_lateness_min||0).toFixed(1)} min di ritardo totale`, "Verifica le fermate prima di programmare. Puoi comunque confermare il giro.") : ""}
         ${counts.sponda ? alert("danger", "🚚 Sponda richiesta non disponibile", `${counts.sponda} fermate`) : ""}
-        ${counts.ztl ? alert("warning", "🏙 Cliente in ZTL", `${counts.ztl} fermate`) : ""}
+        ${counts.ztl ? alert("warning", "🏙 Consegne in zona ZTL", `${counts.ztl} fermate`, "Verifica i permessi di accesso del tuo mezzo. La pianificazione non viene bloccata.") : ""}
         ${counts.attesa ? alert("warning", "🕒 Arrivo prima dell'apertura / attesa", `${counts.attesa} fermate`) : ""}
         ${counts.critici && !counts.sponda && !counts.ztl && !counts.attesa ? alert("warning", "Fermate da verificare", `${counts.critici} fermate con avvisi: consulta il dettaglio nella tabella.`) : ""}
       </div>
