@@ -1,0 +1,3 @@
+# Test-only dependencies; production requirements and prices stay unchanged.
+-r requirements-routing-benchmark.txt
+pypdf==6.1.1
