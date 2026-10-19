@@ -17,6 +17,7 @@ from ..models import Agent, Customer, User
 from ..routers.agents import agent_full_name
 from ..schemas import CustomerIn
 from ..services.geocoding import apply_geocode, geocode_customer
+from ..services.ztl import customer_ztl
 from ..services import distance_cache as dc
 from ..services.plans import check_customer_limit
 from ..services.agents_feature import agents_enabled
@@ -70,6 +71,7 @@ def customer_to_dict(customer) -> dict:
         "scarico_pomeriggio_a": time_to_hhmm(customer.scarico_pomeriggio_a),
         "tempo_scarico_min": customer.tempo_scarico_min,
         "ztl": customer.ztl,
+        **customer_ztl(customer),
         "sponda": customer.sponda,
         "transpallet": customer.transpallet,
         "note": customer.note,
@@ -124,11 +126,16 @@ def list_customers(
             query = query.filter(Customer.agent_id == int(agent_id))
         except Exception:
             pass
-    if ztl in ["true", "false"]:
-        query = query.filter(Customer.ztl == (ztl == "true"))
     if sponda in ["true", "false"]:
         query = query.filter(Customer.sponda == (sponda == "true"))
-    rows = query.order_by(Customer.nome.asc(), Customer.id.asc()).offset(max(0, offset)).limit(max(10, min(limit, 1000))).all()
+    query = query.order_by(Customer.nome.asc(), Customer.id.asc())
+    if ztl in ["true", "false"]:
+        # Il segnale automatico e' derivato dalle coordinate, non dal campo manuale DB.
+        all_rows = query.all()
+        filtered = [row for row in all_rows if customer_ztl(row)["ztl"] == (ztl == "true")]
+        rows = filtered[max(0, offset):max(0, offset) + max(10, min(limit, 1000))]
+    else:
+        rows = query.offset(max(0, offset)).limit(max(10, min(limit, 1000))).all()
     return [customer_to_dict(x) for x in rows]
 
 
