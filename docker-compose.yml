@@ -17,6 +17,14 @@ services:
       retries: 8
       start_period: 60s
 
+  # Un unico aggiornamento OSM per installazione, indipendente dalle consegne.
+  # Non rallenta l'avvio dell'app: se Overpass non risponde riprova ogni 12 ore.
+  ztl-updater:
+    build: .
+    restart: unless-stopped
+    command: ["sh", "-c", "while true; do if python -m scripts.update_ztl_osm; then sleep 604800; else sleep 43200; fi; done"]
+    volumes:
+      - ./data/ztl:/app/data/ztl
   postgres:
     image: postgres:16
     container_name: girofacile-postgres
