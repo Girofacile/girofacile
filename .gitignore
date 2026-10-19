@@ -29,6 +29,7 @@ ENV/
 *.osm.pbf
 *.osrm*
 data/osrm/
+data/ztl/*.geojson
 data/*.db
 data/*.sqlite*
 
