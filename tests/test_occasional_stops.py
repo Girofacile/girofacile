@@ -87,7 +87,7 @@ def test_route_round_trip_program_history_and_features(routing_env, endpoint, mi
     row=next(d for d in saved['consegne'] if d['customer_id'] is None)
     for field in ['cliente_nome','indirizzo','lat','lon','peso_kg','colli','tempo_scarico_min','note','geocoding_token']:
         assert row[field]==stop[field]
-    assert row['scarico_mattina_da'] is None and not row['ztl'] and not row['sponda']
+    assert row['scarico_mattina_da'] is None and row['ztl'] and not row['sponda']
     assert row['ordine'] and row['arrivo_stimato'] and row['km_tappa']>0 and row['minuti_tappa']>0
     assert saved['google_maps_url'] and saved['traffic_status']=='updated'
     assert db.query(Customer).count()==before
