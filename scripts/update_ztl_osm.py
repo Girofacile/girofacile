@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import requests
-from app.services.ztl import DEFAULT_FILE, _in_ring
+from app.services.ztl import DEFAULT_FILE, PEDESTRIAN_FILE, _in_ring
 
 OVERPASS_URL = os.environ.get("GF_ZTL_OVERPASS_URL", "https://overpass-api.de/api/interpreter")
 QUERY = """[out:json][timeout:240];
@@ -19,6 +19,17 @@ area["ISO3166-1"="IT"]["admin_level"="2"]->.italy;
 (
   way["boundary"="limited_traffic_zone"](area.italy);
   relation["boundary"="limited_traffic_zone"](area.italy);
+);
+out geom;"""
+
+
+PEDESTRIAN_QUERY = """[out:json][timeout:240];
+area["ISO3166-1"="IT"]["admin_level"="2"]->.italy;
+(
+  way["highway"="pedestrian"]["area"="yes"](area.italy);
+  way["area:highway"="pedestrian"](area.italy);
+  relation["highway"="pedestrian"]["type"="multipolygon"](area.italy);
+  relation["area:highway"="pedestrian"](area.italy);
 );
 out geom;"""
 
@@ -92,34 +103,79 @@ def build_features(elements):
     return features
 
 
-def main():
-    response = requests.post(
-        OVERPASS_URL, data={"data": QUERY}, timeout=300,
-        headers={"User-Agent": os.environ.get("GF_ZTL_USER_AGENT", "GiroFacile-ZTL-OSM-Updater/1.0")},
-    )
-    response.raise_for_status()
-    payload = response.json()
-    features = build_features(payload.get("elements") or [])
+def build_pedestrian_features(elements):
+    """Only explicitly mapped pedestrian polygons, not linear streets or sidewalks."""
+    features = []
+    for e in elements:
+        tags = e.get("tags") or {}
+        recognized = (
+            tags.get("area:highway") == "pedestrian"
+            or (tags.get("highway") == "pedestrian"
+                and (tags.get("area") == "yes"
+                     or (e.get("type") == "relation" and tags.get("type") == "multipolygon")))
+        )
+        if not recognized:
+            continue
+        polygons = geometries(e)
+        if not polygons:
+            continue
+        features.append({
+            "type": "Feature",
+            "properties": {"osm_type": e.get("type"), "osm_id": e.get("id"),
+                           "name": tags.get("name") or tags.get("ref"), "kind": "pedestrian"},
+            "geometry": {"type": "MultiPolygon", "coordinates": polygons},
+        })
+    return features
+
+
+def write_archive(target, features, label):
     if not features:
-        raise RuntimeError("Nessun perimetro ZTL valido da OpenStreetMap; archivio esistente mantenuto")
-    data = {
+        raise RuntimeError(f"Nessun perimetro {label} valido da OpenStreetMap; archivio precedente mantenuto")
+    payload = {
         "type": "FeatureCollection",
         "metadata": {"source": "OpenStreetMap contributors", "license": "ODbL 1.0",
                      "source_url": "https://www.openstreetmap.org/copyright",
-                     "updated_at": datetime.now(timezone.utc).isoformat(), "count": len(features)},
+                     "updated_at": datetime.now(timezone.utc).isoformat(),
+                     "kind": label, "count": len(features)},
         "features": features,
     }
-    target = Path(os.environ.get("GIROFACILE_ZTL_GEOJSON") or DEFAULT_FILE)
     target.parent.mkdir(parents=True, exist_ok=True)
-    fd, tmp = tempfile.mkstemp(prefix="ztl-", suffix=".geojson", dir=target.parent)
+    fd, tmp = tempfile.mkstemp(prefix=label+"-", suffix=".geojson", dir=target.parent)
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as stream:
-            json.dump(data, stream, ensure_ascii=False, separators=(",", ":"))
+            json.dump(payload, stream, ensure_ascii=False, separators=(",", ":"))
         os.replace(tmp, target)
     finally:
         if os.path.exists(tmp):
             os.unlink(tmp)
-    print(f"Archivio ZTL aggiornato: {len(features)} aree, file {target}")
+    print(f"Archivio {label} aggiornato: {len(features)} aree, file {target}")
+
+
+def overpass(query):
+    response = requests.post(
+        OVERPASS_URL, data={"data": query}, timeout=300,
+        headers={"User-Agent": os.environ.get("GF_ZTL_USER_AGENT", "GiroFacile-OSM-Area-Updater/1.1")},
+    )
+    response.raise_for_status()
+    return response.json().get("elements") or []
+
+
+def main():
+    """A weekly update of two independent data archives; failures retain old files."""
+    errors = []
+    for label, query, converter, env_name, default in (
+        ("ztl", QUERY, build_features, "GIROFACILE_ZTL_GEOJSON", DEFAULT_FILE),
+        ("pedestrian", PEDESTRIAN_QUERY, build_pedestrian_features,
+         "GIROFACILE_PEDESTRIAN_GEOJSON", PEDESTRIAN_FILE),
+    ):
+        try:
+            target = Path(os.environ.get(env_name) or default)
+            write_archive(target, converter(overpass(query)), label)
+        except Exception as exc:
+            errors.append((label, exc))
+            print(f"ATTENZIONE: aggiornamento {label} non riuscito: {exc}")
+    if errors:
+        raise RuntimeError("Aggiornamento incompleto: "+", ".join(label for label, _ in errors))
 
 
 if __name__ == "__main__":
