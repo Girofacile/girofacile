@@ -34,3 +34,14 @@ test('dashboard loads cache-busted scripts and describes both GeoJSON sources',(
  assert.match(html,/core\.js\?v=gf_access_notices_20261020/);
  assert.match(html,/Avvisi ZTL \/ area pedonale indicativi/);
 });
+
+test('driver and operator portals display pedestrian flag alongside existing ZTL',()=>{
+ const driver=fs.readFileSync('static/driver/index.html','utf8');
+ const operator=fs.readFileSync('static/operator/index.html','utf8');
+ const drvApi=fs.readFileSync('app/routers/driver.py','utf8');
+ const opApi=fs.readFileSync('app/routers/operator.py','utf8');
+ assert.match(driver,/c\.pedestrian_area/);
+ assert.match(operator,/c\.pedestrian_area/);
+ assert.match(drvApi,/"pedestrian_area": d\.pedestrian_area/);
+ assert.match(opApi,/"pedestrian_area": delivery\.pedestrian_area/);
+});
