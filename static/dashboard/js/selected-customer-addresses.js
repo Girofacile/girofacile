@@ -21,10 +21,10 @@ window.GFCustomerAddresses=(()=>{
   el('selectedCustomerAddressesDialog').querySelectorAll('button,input').forEach(node=>node.disabled=value);
   if(!value){el('selectedCustomerAddressManual').disabled=!point;drawIssues();}
  }
- async function verify(ids=null){
+ async function verify(ids=null,retain=false){
   if(busy)return false;
-  const original=selection();
-  if(ids===null){issues.clear();ids=original;cancelEdit();}
+  if(!retain){issues.clear();cancelEdit();}
+  if(ids===null)ids=selection();
   lock(true);
   let completed=0;
   try{
@@ -102,7 +102,7 @@ window.GFCustomerAddresses=(()=>{
    await refreshCustomerDirectory();
   }catch(error){message(error.message||'Correzione non riuscita.');return;}
   finally{lock(false);}
-  if(action==='correct')await verify([id]).catch(error=>message(error.message));
+  if(action==='correct')await verify([id],true).catch(error=>message(error.message));
   else message(issues.size?`${issues.size} indirizzi da risolvere.`:'Puoi continuare alla pianificazione.');
  }
  document.addEventListener('click',event=>{
