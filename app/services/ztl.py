@@ -9,7 +9,7 @@ import os
 from functools import lru_cache
 from pathlib import Path
 
-DEFAULT_FILE = Path(__file__).resolve().parents[2] / "data" / "ztl_osm.geojson"
+DEFAULT_FILE = Path(__file__).resolve().parents[2] / "data" / "ztl" / "ztl_osm.geojson"
 WARNING = "Attenzione: consegna in zona ZTL. Verifica i permessi di accesso del tuo mezzo."
 
 
