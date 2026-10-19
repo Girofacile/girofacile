@@ -113,6 +113,14 @@ window.GFCustomerAddresses=(()=>{
  });
  document.addEventListener('DOMContentLoaded',()=>{
   el('selectedCustomerAddressesDialog')?.addEventListener('cancel',event=>{if(busy)event.preventDefault();else cancelEdit();});
+  ['selectedCustomerAddressText','selectedCustomerAddressCity','selectedCustomerAddressProvince'].forEach(id=>{
+   el(id)?.addEventListener('input',()=>{
+    if(!point)return;
+    point=null;if(marker){marker.remove();marker=null;}
+    el('selectedCustomerAddressManual').disabled=true;
+    el('selectedCustomerAddressPosition').textContent='Indirizzo modificato: scegli nuovamente la posizione sulla mappa oppure verifica l’indirizzo corretto.';
+   });
+  });
  });
  return {verify,cancelEdit,correct:()=>resolve('correct'),manual:()=>resolve('manual'),
   close(){if(busy)return;cancelEdit();el('selectedCustomerAddressesDialog').close();},
