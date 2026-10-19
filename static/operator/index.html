@@ -66,6 +66,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 .dc-meta{display:flex;gap:8px;flex-wrap:wrap;}
 .dc-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;}
 .dc-badge.ztl{background:#fee2e2;color:var(--red);}
+.dc-badge.pedestrian{background:#fef3c7;color:#92400e;}
 .dc-badge.sponda{background:#fef3c7;color:#92400e;}
 .dc-badge.time{background:var(--blue-light);color:var(--blue);}
 .dc-status{flex-shrink:0;}
@@ -388,6 +389,7 @@ function render() {
           <div class="dc-addr">${gfIcon('pin')} ${esc(c.indirizzo)}</div>
           <div class="dc-meta">
             ${c.ztl ? '<span class="dc-badge ztl">'+gfIcon('alert')+' ZTL</span>' : ''}
+             ${c.pedestrian_area ? '<span class="dc-badge pedestrian">'+gfIcon('alert')+' Area pedonale</span>' : ''}
             ${c.sponda ? '<span class="dc-badge sponda">'+gfIcon('tool')+' Sponda</span>' : ''}
             ${c.arrivo_stimato ? `<span class="dc-badge time">${gfIcon('clock')} Arrivo est. ${c.arrivo_stimato}</span>` : ''}
           </div>
