@@ -130,7 +130,6 @@ class CustomerIn(TimeWindowsMixin, BaseModel):
     scarico_pomeriggio_a: Optional[str] = None
     tempo_scarico_min: UnloadMinutes = 10
     ztl: bool = False
-    pedestrian_area: bool = False
     sponda: bool = False
     transpallet: bool = False
     note: Optional[str] = None
