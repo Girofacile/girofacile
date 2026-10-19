@@ -91,7 +91,7 @@ def _legacy_snapshot(plan):
     for d in sorted(plan.deliveries or [], key=lambda d: d.ordine or 0):
         item = {name: getattr(d, name) for name in (
             "customer_id", "cliente_nome", "indirizzo", "tempo_scarico_min", "peso_kg", "colli",
-            "ztl", "sponda", "ordine", "km_tappa", "minuti_tappa", "attesa_min")}
+            "ztl", "pedestrian_area", "sponda", "ordine", "km_tappa", "minuti_tappa", "attesa_min")}
         for name in ("scarico_mattina_da", "scarico_mattina_a", "scarico_pomeriggio_da", "scarico_pomeriggio_a"):
             item[name] = time_to_hhmm(getattr(d, name))
         saved = json_data(d.optimizer_details)
