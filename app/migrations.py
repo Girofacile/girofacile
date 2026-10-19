@@ -3,7 +3,7 @@ from datetime import datetime
 from .core.clock import utc_now
 from sqlalchemy import inspect, text
 
-LATEST = '20261013_02'
+LATEST = '20261020_01'
 LOCK_ID = 7640152404
 
 
@@ -152,6 +152,13 @@ def run_migrations(engine):
                         existing={c['name'] for c in inspect(conn).get_columns(table)}
                         for column in columns:
                             if column not in existing: conn.execute(text(f'ALTER TABLE {table} ADD COLUMN {column} JSON'))
+                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261013_02', 'now': utc_now()})
+            if '20261020_01' not in applied:
+                with engine.begin() as conn:
+                    for table in ('customers', 'deliveries'):
+                        columns = {c['name'] for c in inspect(conn).get_columns(table)}
+                        if 'pedestrian_area' not in columns:
+                            conn.execute(text(f'ALTER TABLE {table} ADD COLUMN pedestrian_area BOOLEAN NOT NULL DEFAULT FALSE'))
                     conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': LATEST, 'now': utc_now()})
         finally:
             if postgres:
