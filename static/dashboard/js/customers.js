@@ -301,7 +301,7 @@ function openCustomerDrawer(id,mode,focusSlot){
     if(c.email)rows.push(['Email',c.email]);
     rows.push(['Tempo di scarico',(c.tempo_scarico_min??10)+' min']);
     if(typeof agentsFeatureEnabled==='function'&&agentsFeatureEnabled())rows.push(['Agente',c.agent_name||'Cliente interno']);
-    const flags=[c.ztl?'<span class="gf-badge" data-kind="ztl" data-gf-feature="ztl">ZTL</span>':'',c.sponda?'<span class="gf-badge" data-kind="tail-lift" data-gf-feature="tail_lift">Sponda</span>':'',c.transpallet?'<span class="gf-badge" data-status="neutral">Transpallet</span>':''].join('');
+    const flags=[c.ztl?'<span class="gf-badge" data-kind="ztl" title="Verifica i permessi di accesso del mezzo">ZTL'+(c.ztl_source==='osm'?' · automatica':'')+'</span>':'',c.sponda?'<span class="gf-badge" data-kind="tail-lift" data-gf-feature="tail_lift">Sponda</span>':'',c.transpallet?'<span class="gf-badge" data-status="neutral">Transpallet</span>':''].join('');
     extra='<section class="gf-stack"><h3 class="gf-subtitle">Contatti e vincoli</h3><dl class="gf-details">'+rows.map(r=>'<div class="gf-details__item"><dt>'+r[0]+'</dt><dd>'+cxEsc(r[1])+'</dd></div>').join('')+'</dl>'
       +(flags?'<div class="gf-cluster">'+flags+'</div>':'')+(c.note?'<p class="gf-muted">'+cxEsc(c.note)+'</p>':'')+'</section>';
   }
@@ -340,6 +340,8 @@ async function saveCustomerDrawer(){
   const payload=Object.fromEntries(CX_FIELDS.map(k=>[k,c[k]??null]));
   if(payload.tempo_scarico_min==null)payload.tempo_scarico_min=10;
   ['ztl','sponda','transpallet'].forEach(k=>payload[k]=Boolean(payload[k]));
+  // Non trasformare un rilevamento OSM in un flag manuale permanente.
+  payload.ztl=Boolean(c.ztl_manual ?? c.ztl);
   if(customerDrawer.mode!=='view'){
     const value=id=>(cxEl(id)?.value||'').trim();
     const required=['cxName','cxAddress','cxCity'];
