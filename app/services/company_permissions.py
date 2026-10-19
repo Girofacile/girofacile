@@ -170,6 +170,8 @@ rule("DELETE", ["/api/deliveries/{delivery_id}/tracking"], "routes.tracking")
 rule("POST", ["/api/customers/import"], "customers.create")
 rule("POST", ["/api/customers/verify-address-preview"], "customers.create", "customers.update")
 rule("POST", ["/api/customers/{item_id}/verify-address", "/api/customers/verify-pending"], "customers.update")
+rule("POST", ["/api/customers/verify-selected"], "routes.plan")
+rule("POST", ["/api/customers/resolve-selected-address"], "customers.update")
 rule("GET", ["/api/vehicles/usage", "/api/vehicles/fuel-prices/current"], "vehicles.read")
 rule("GET", ["/api/vehicles/lookup-plate/{plate}"], "vehicles.create", "vehicles.update")
 for resource in ("agents", "drivers"):
