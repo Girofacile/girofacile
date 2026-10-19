@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import base64
 import io
+from html import unescape
 import json
 import os
 from pathlib import Path
@@ -41,6 +42,32 @@ def git(*args):
     return subprocess.check_output(["git", "-C", str(ROOT), *args], text=True, timeout=15).strip()
 
 
+def project_brief(landing):
+    """Extract editorial inputs from public product copy, never from customer data."""
+    def plain(fragment):
+        fragment = re.sub(r"<svg\b.*?</svg>", "", fragment, flags=re.S)
+        return " ".join(unescape(re.sub(r"<[^>]+>", " ", fragment)).split())
+
+    title = re.search(r"<h1\b[^>]*>(.*?)</h1>", landing, re.S)
+    features = re.findall(r'<div class="feat-card">.*?<h3[^>]*>(.*?)</h3>\s*<p[^>]*>(.*?)</p>', landing, re.S)
+    action = re.search(r'<a\b[^>]*href="(https://[^"\s]+)"[^>]*class="btn-hero"[^>]*>(.*?)</a>', landing, re.S)
+    if not title or not features or not action:
+        raise ValueError("La landing è cambiata: aggiorna l'estrazione del brief automatico.")
+    points = [f"{plain(heading)}: {plain(body)}" for heading, body in features]
+    selected = points[:6]
+    brief = {"topic": plain(title.group(1)),
+             "audience": "responsabili aziendali che organizzano le consegne e coordinano gli autisti",
+             "facts": "\n".join(selected), "cta": f"{plain(action.group(2))}: {unescape(action.group(1))}",
+             "stage": "ALL", "count": max(5, len(selected) + 3), "mode": "local", "format": 1350}
+    # Fail visibly when changed source copy exceeds the renderer's supported limits.
+    brief_input(brief)
+    if any(len(point) > 360 for point in selected):
+        raise ValueError("Una descrizione della landing supera 360 caratteri: sintetizzala per il brief automatico.")
+    return {"brief": brief, "features": points,
+            "source_note": f"Argomento, {len(selected)} funzioni su {len(points)} e CTA estratti da static/landing/index.html. "
+                           "Pubblico dedotto dalle attività descritte; percorso TOFU/MOFU/BOFU e formato verticale proposti dallo studio."}
+
+
 def brand_profile():
     theme_path = "static/design-system/theme.css"
     css = (ROOT / theme_path).read_text()
@@ -52,6 +79,7 @@ def brand_profile():
     fonts = {"display": tokens["gf-font-display"].split(',')[0].strip(' "'),
              "body": tokens["gf-font-family"].split(',')[0].strip(' "')}
     landing = (ROOT / "static/landing/index.html").read_text()
+    extracted = project_brief(landing)
     headings = re.findall(r"<h[13]\b[^>]*>(.*?)</h[13]>", landing, re.S)
     facts = [re.sub(r"<[^>]+>", "", h).strip() for h in headings][:12]
     logo = "static/girofacile-logo.png"
@@ -63,7 +91,9 @@ def brand_profile():
         revision = "non disponibile"
     return {"name": "GiroFacile", "colors": colors, "fonts": fonts, "logo": "/brand/logo",
             "revision": revision, "sources": [theme_path, logo, "docs/design-system.md", "static/landing/index.html"],
-            "facts": facts, "tone": "Chiaro, concreto, competente, vicino al lavoro quotidiano.",
+            "facts": facts + extracted["features"], "default_brief": extracted["brief"],
+            "brief_source_note": extracted["source_note"],
+            "tone": "Chiaro, concreto, competente, vicino al lavoro quotidiano.",
             "tone_status": "Proposta editoriale: non è un manuale di tono ufficiale.",
             "note": "Profilo ricavato dalla copia locale del repository GitHub. I token del design system hanno precedenza sui vecchi stili della landing.",
             "ai_available": bool(os.getenv("OPENAI_API_KEY")), "funnels": FUNNELS}

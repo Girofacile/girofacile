@@ -77,7 +77,13 @@ function render() {
 }
 async function run(button, action) { button.disabled=true; try { await action(); } catch(error) {status(error.message,true);} finally {button.disabled=false;} }
 $('briefForm').onsubmit=event=>{event.preventDefault();run($('generate'),async()=>{status('Preparazione dei caroselli…');const next=await api('/api/generate',brief());project=next;active=0;slideIndex=0;render();status(`${project.carousels.length} caroselli pronti. Testi e caption sono modificabili. ${fontWarning}`);});};
-$('example').onclick=()=>{ $('topic').value='Dai fogli sparsi a un giro di consegne organizzato';$('audience').value='responsabili di piccole flotte e attività con consegne locali';$('facts').value='GiroFacile permette di pianificare le consegne.\nPuoi gestire gli autisti e seguire le missioni.\nI report aiutano a consultare le informazioni del lavoro svolto.';$('count').value='6';status('Esempio caricato dalle funzioni presenti nella landing. Premi Genera i caroselli.'); };
+function fillProjectBrief() {
+  for (const id of ['topic','audience','facts','cta','stage','count','mode','format']) $(id).value=String(brand.default_brief[id]);
+  $('mode').dispatchEvent(new Event('change'));
+  $('briefSources').textContent=brand.brief_source_note;
+  status('Brief GiroFacile già compilato dal progetto. Premi “Genera i caroselli” per creare TOFU, MOFU e BOFU.');
+}
+$('example').onclick=()=>{if(brand)fillProjectBrief();};
 $('mode').onchange=()=>{$('modeHelp').textContent=$('mode').value==='ai'?'Il brief e le informazioni pubbliche del brand saranno inviati a OpenAI. La chiamata usa la chiave API del server e può avere un costo.':'La modalità locale conserva i tuoi punti e usa strutture editoriali predefinite. Non riscrive il brief con AI.';};
 $('exportPrompt').onclick=()=>run($('exportPrompt'),async()=>{const result=await api('/api/prompt',brief());saveText(result.prompt,'girofacile-prompt.txt');status('Prompt con brand, brief e regole del funnel scaricato.');});
 for(const [id,key] of [['slideTitle','title'],['slideBody','body']]) $(id).oninput=()=>{current().slides[slideIndex][key]=$(id).value;try{draw($('preview'),current().slides[slideIndex],slideIndex,current().slides.length,current().stage);draw($('thumbnails').children[slideIndex].firstChild,current().slides[slideIndex],slideIndex,current().slides.length,current().stage);}catch(error){status(error.message,true);}};
@@ -103,6 +109,7 @@ async function init() {
   $('generate').disabled=true;
   try {
     const response=await fetch('/api/brand');if(!response.ok)throw new Error('Impossibile leggere il brand.');brand=await response.json();token=brand.token;
+    fillProjectBrief();
     const card=$('brandCard');card.replaceChildren();const heading=document.createElement('h3');heading.textContent='Il tuo brand, già riconosciuto';card.append(heading);const swatches=document.createElement('div');swatches.className='swatches';
     for(const value of Object.values(brand.colors)){const swatch=document.createElement('span');swatch.style.background=value;swatch.title=value;swatches.append(swatch);}card.append(swatches);
     for(const text of [`${brand.fonts.display} + ${brand.fonts.body}`,`Repository Girofacile/girofacile · ${brand.revision}`,brand.tone_status]){const p=document.createElement('p');p.textContent=text;card.append(p);}

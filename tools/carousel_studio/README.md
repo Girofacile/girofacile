@@ -34,6 +34,15 @@ modifica ai file del brand. La revisione letta è visibile nello studio.
 
 ## Utilizzo
 
+All'apertura tutti i campi sono già compilati: argomento dal titolo della
+landing, sei funzioni con descrizioni e CTA con il collegamento presente nel
+progetto. Il pubblico è dedotto dalle attività descritte e indicato come tale.
+Lo studio propone tutti e tre i funnel, nove slide e formato 1080 × 1350.
+Puoi premere subito **Genera i caroselli** senza inserire alcun dato.
+Il pulsante **Ripristina brief GiroFacile** recupera i valori iniziali dopo
+le modifiche manuali. La modalità predefinita resta locale anche se l'AI è
+disponibile, per non attivare chiamate a pagamento senza una scelta esplicita.
+
 1. Inserisci argomento, pubblico e informazioni confermate.
 2. Scegli TOFU, MOFU, BOFU o tutti e tre; scegli da 5 a 9 slide.
 3. Genera e modifica titoli, testi e caption nell'anteprima.

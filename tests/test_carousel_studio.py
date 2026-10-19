@@ -26,6 +26,23 @@ class CarouselTests(unittest.TestCase):
         self.assertTrue((studio.ROOT / brand["sources"][1]).is_file())
         self.assertIn("Proposta", brand["tone_status"])
 
+    def test_default_brief_is_ready_without_user_input(self):
+        brand = studio.brand_profile()
+        brief = brand["default_brief"]
+        self.assertEqual(len(brief["facts"].splitlines()), 6)
+        self.assertEqual(brief["count"], 9)
+        self.assertIn("https://girofacile.it/login", brief["cta"])
+        result = studio.generate(brief)
+        studio.validate_output(result, studio.brief_input(brief))
+        self.assertEqual(len(result["carousels"]), 3)
+
+    def test_brief_tracks_source_copy_changes(self):
+        landing = (studio.ROOT / "static/landing/index.html").read_text()
+        changed = landing.replace("Pianificazione intelligente", "Pianificazione verificata")
+        self.assertIn("Pianificazione verificata", studio.project_brief(changed)["brief"]["facts"])
+        with self.assertRaises(ValueError):
+            studio.project_brief("<h1>Landing incompleta</h1>")
+
     def test_all_counts_stages_and_cta_separation(self):
         for count in range(5, 10):
             result = studio.generate(self.brief(count=count, cta="Richiedi una valutazione"))
