@@ -301,7 +301,7 @@ def get_driver_route_detail(route_id: int, da: DriverAccount = Depends(get_curre
             "colli": d.colli, "peso_kg": d.peso_kg,
             "scarico_mattina_da": time_to_hhmm(d.scarico_mattina_da), "scarico_mattina_a": time_to_hhmm(d.scarico_mattina_a),
             "scarico_pomeriggio_da": time_to_hhmm(d.scarico_pomeriggio_da), "scarico_pomeriggio_a": time_to_hhmm(d.scarico_pomeriggio_a),
-            "tempo_scarico_min": d.tempo_scarico_min, "ztl": d.ztl, "sponda": d.sponda,
+            "tempo_scarico_min": d.tempo_scarico_min, "ztl": d.ztl, "pedestrian_area": d.pedestrian_area, "sponda": d.sponda,
             "note": d.note, "arrivo_stimato": time_to_hhmm(d.arrivo_stimato), "partenza_stimata": time_to_hhmm(d.partenza_stimata),
             "km_tappa": d.km_tappa, "warning": d.warning,
             **{k: v for k, v in json_data(d.optimizer_details).items() if k in (*TIMING_DETAILS, "order_numbers", "order_operational")},
