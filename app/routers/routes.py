@@ -5,7 +5,7 @@ from ..services.route_schedule import live_route_schedule, route_schedule_dateti
 from ..models import DeliveryTrackingLink
 from ..services.occasional_stops import verify_stop_address, validate_occasional_stops, STOP_VERIFICATION_FIELDS
 from ..services.customer_planning import customer_is_plannable, PLANNING_ADDRESS_ERROR
-from ..services.ztl import customer_ztl, detect_ztl
+from ..services.ztl import customer_ztl, detect_ztl, detect_pedestrian
 from ..services.delivery_pod import evidence_metadata, evidence_response
 from datetime import date, datetime, timedelta
 from ..core.clock import utc_now
@@ -91,13 +91,17 @@ def _enrich_owned_deliveries(db, user: User, deliveries: list[dict]) -> None:
     for delivery in deliveries:
         customer_id = delivery.get("customer_id")
         if customer_id is None:
-            if delivery.get("order_refs") and detect_ztl(delivery.get("lat"), delivery.get("lon"))["detected"]:
-                delivery["ztl"] = True
+            # Ordini e fermate occasionali: avvisi geografici, mai vincoli.
+            detection = detect_ztl(delivery.get("lat"), delivery.get("lon"))
+            pedestrian = detect_pedestrian(delivery.get("lat"), delivery.get("lon"))
+            delivery["ztl"] = bool(delivery.get("ztl")) or detection["detected"]
+            delivery["pedestrian_area"] = pedestrian["detected"]
             continue
         customer = customer_map[int(customer_id)]
-        # Segnalazione ZTL indipendente dalle autorizzazioni del mezzo.
-        # Mantieni anche una segnalazione ZTL aggiunta manualmente alla fermata.
-        delivery["ztl"] = bool(delivery.get("ztl")) or customer_ztl(customer)["ztl"]
+        access = customer_ztl(customer)
+        # Segnali informativi: i flag del cliente non cambiano la sequenza del giro.
+        delivery["ztl"] = bool(delivery.get("ztl")) or access["ztl"]
+        delivery["pedestrian_area"] = access["pedestrian_area"]
         if customer.lat is not None and customer.lon is not None:
             delivery["lat"] = customer.lat
             delivery["lon"] = customer.lon
@@ -137,14 +141,8 @@ def _apply_route_preferences(user, deliveries):
             delivery["scarico_mattina_a"] = None
             delivery["scarico_pomeriggio_da"] = None
             delivery["scarico_pomeriggio_a"] = None
-    if not bool(getattr(user, "has_ztl", False)):
-        for delivery in deliveries:
-            if delivery.get("order_refs"):
-                continue  # Gli ordini conservano gli avvisi espliciti.
-            # Il flag manuale continua a rispettare la preferenza aziendale,
-            # ma un rilevamento OSM avvisa sempre, anche con funzione opzionale OFF.
-            detection = detect_ztl(delivery.get("lat"), delivery.get("lon"))
-            delivery["ztl"] = detection["detected"]
+    # ZTL e area pedonale sono SEMPRE avvisi, indipendenti dalla preferenza
+    # opzionale dell'azienda. Non eliminarli prima del calcolo.
     if not bool(getattr(user, "needs_tail_lift", False)):
         for delivery in deliveries:
             if delivery.get("order_refs"): continue  # Explicit order requirements take precedence.
@@ -421,7 +419,7 @@ def serialize_route(plan):
             "peso_kg": d.peso_kg, "colli": d.colli,
             "scarico_mattina_da": time_to_hhmm(d.scarico_mattina_da), "scarico_mattina_a": time_to_hhmm(d.scarico_mattina_a),
             "scarico_pomeriggio_da": time_to_hhmm(d.scarico_pomeriggio_da), "scarico_pomeriggio_a": time_to_hhmm(d.scarico_pomeriggio_a),
-            "tempo_scarico_min": d.tempo_scarico_min, "ztl": d.ztl, "sponda": d.sponda, "note": d.note,
+            "tempo_scarico_min": d.tempo_scarico_min, "ztl": d.ztl, "pedestrian_area": d.pedestrian_area, "sponda": d.sponda, "note": d.note,
             "ordine": d.ordine, "km_tappa": d.km_tappa, "minuti_tappa": d.minuti_tappa,
             "arrivo_stimato": time_to_hhmm(d.arrivo_stimato), "partenza_stimata": time_to_hhmm(d.partenza_stimata),
             "arrivo_stimato_aggiornato": live_delivery_times.get(d.id) or time_to_hhmm(d.arrivo_stimato),
@@ -720,7 +718,7 @@ nel giro calcolato, adattando il linguaggio al settore aziendale.
             "minutes_from_previous": d.minuti_tappa,
             "wait_minutes": d.attesa_min,
             "time_windows": windows,
-            "ztl": bool(d.ztl),
+            "ztl": bool(d.ztl), "pedestrian_area": bool(d.pedestrian_area),
             "tail_lift": bool(d.sponda),
             "warning": d.warning or "",
         })
