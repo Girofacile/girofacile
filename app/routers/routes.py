@@ -136,6 +136,14 @@ def _apply_route_preferences(user, deliveries):
             delivery["scarico_mattina_a"] = None
             delivery["scarico_pomeriggio_da"] = None
             delivery["scarico_pomeriggio_a"] = None
+    if not bool(getattr(user, "has_ztl", False)):
+        for delivery in deliveries:
+            if delivery.get("order_refs"):
+                continue  # Gli ordini conservano gli avvisi espliciti.
+            # Il flag manuale continua a rispettare la preferenza aziendale,
+            # ma un rilevamento OSM avvisa sempre, anche con funzione opzionale OFF.
+            detection = detect_ztl(delivery.get("lat"), delivery.get("lon"))
+            delivery["ztl"] = detection["detected"]
     if not bool(getattr(user, "needs_tail_lift", False)):
         for delivery in deliveries:
             if delivery.get("order_refs"): continue  # Explicit order requirements take precedence.
