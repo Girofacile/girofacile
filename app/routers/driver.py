@@ -268,12 +268,7 @@ def start_route(route_id: int, da: DriverAccount = Depends(get_current_driver), 
         raise HTTPException(404, 'Giro non trovato')
     if route.status in ('annullato', 'completato'):
         raise HTTPException(409, 'Il giro è già chiuso')
-    if route.status != 'in_corso' and route.data_giro > local_today():
-        raise HTTPException(409, 'Non puoi avviare un giro programmato per una data futura')
-    from ..services.route_execution import ensure_no_running_resource_conflict
     from ..services.usage_limits import start_route_usage
-    if route.status != 'in_corso':
-        ensure_no_running_resource_conflict(db, route)
     start_route_usage(db, route)
     db.commit()
     return {'ok': True}

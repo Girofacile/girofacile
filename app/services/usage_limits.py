@@ -3,7 +3,8 @@ from datetime import datetime, timezone
 from sqlalchemy import func
 from fastapi import HTTPException
 from ..core.utils import local_now
-from ..models import User, RouteUsage
+from ..models import User, RoutePlan, RouteUsage
+from .route_start import ensure_new_route_can_start
 from .plans import get_plan_limits, require_active_plan, vehicle_usage
 
 
@@ -52,9 +53,10 @@ def usage_summary(db, user):
 
 
 def start_route_usage(db, route):
+    # Lock order: company -> route -> driver/vehicle -> orders.
     owner = db.query(User).filter(User.id == route.user_id).with_for_update().populate_existing().one()
-    if route.status == "annullato":
-        raise HTTPException(409, "Il giro è annullato")
+    route = db.query(RoutePlan).filter_by(id=route.id, user_id=owner.id).with_for_update().populate_existing().one()
+    ensure_new_route_can_start(db, route)
     if db.get(RouteUsage, route.id):
         return  # A running route can always be completed, even after expiry.
     legacy_started = bool(route.started_at or route.status in ("in_corso", "completato"))

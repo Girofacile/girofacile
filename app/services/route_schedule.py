@@ -27,6 +27,7 @@ def route_schedule_datetimes(plan, status_map=None, now=None):
         shift = updated - start
         source = 'execution'
     deliveries = {}
+    planned = {}
 
     def next_time(value, after):
         minutes = minutes_from_hhmm(value)
@@ -40,6 +41,7 @@ def route_schedule_datetimes(plan, status_map=None, now=None):
     for delivery in sorted(plan.deliveries or [], key=lambda d: (d.ordine or 0, d.id or 0)):
         arrival = next_time(delivery.arrivo_stimato, cursor)
         departure = next_time(delivery.partenza_stimata or delivery.arrivo_stimato, arrival or cursor)
+        planned[delivery.id] = {'arrival': arrival, 'departure': departure, 'previous_departure': cursor}
         ds = statuses.get(delivery.id)
         closed = ds and ds.status in ('completata', 'mancata') and ds.completata_il
         if closed:
@@ -56,43 +58,70 @@ def route_schedule_datetimes(plan, status_map=None, now=None):
     if returned is None:
         returned = start + timedelta(minutes=float(plan.totale_minuti or 0))
     result = {'deliveries': deliveries, 'return_at': returned + shift}
-    if (getattr(plan,'driver_schedule',None) or {}).get('breaks') and (shift or source=='execution'):
-        _project_shift(plan,statuses,result,start,started)
+    if shift or source == 'execution':
+        _project_shift(plan, statuses, result, start, started, planned, returned)
     _apply_gps(plan, statuses, result, now or datetime.now(LOCAL))
     return result
 
 
-def _project_shift(plan,statuses,result,start,started):
-    """Keep fixed breaks fixed when actual departure/completions change the ETA."""
+def _project_shift(plan, statuses, result, start, started, planned, planned_return):
+    """Reapply opening waits and fixed breaks after actual execution."""
     import json
     from ..optimizer import _evaluate_fixed_sequence
-    from .driver_schedule import travel_end,intervals
-    cursor=started.replace(tzinfo=LOCAL) if plan.status=='in_corso' and started else start
-    changed=cursor if started else None
-    for delivery in sorted(plan.deliveries or [],key=lambda d:(d.ordine or 0,d.id or 0)):
-        status=statuses.get(delivery.id)
-        if status and status.status in ('completata','mancata') and status.completata_il:
-            cursor=status.completata_il.replace(tzinfo=LOCAL);changed=cursor;continue
-        if not changed:continue
-        schedule=plan.driver_schedule if cursor.date()==plan.data_giro else {}
-        row={field:getattr(delivery,field) for field in ('tempo_scarico_min','scarico_mattina_da','scarico_mattina_a','scarico_pomeriggio_da','scarico_pomeriggio_a')}
-        row['_matrix_index']=1
-        evaluation=_evaluate_fixed_sequence([row],{(0,1):{'km':delivery.km_tappa or 0,'min':delivery.minuti_tappa or 0}},[],
-            {'driver_schedule':schedule},False,cursor.strftime('%H:%M'))
-        timing=evaluation['ordered'][0]
-        wait=float(timing.get('attesa_min') or 0)
-        arrival=cursor+timedelta(minutes=float(delivery.minuti_tappa or 0)+float(timing.get('pause_travel_min') or 0)+wait)
-        result['deliveries'][delivery.id]={'arrival':arrival,'source':'execution','updated_at':changed}
-        cursor+=timedelta(minutes=evaluation['total_min'])
-    if changed:
-        if plan.rientro_deposito:
-            snapshot=json.loads(plan.routing_snapshot_json or '{}');traffic=json.loads(plan.traffic_result_json or '{}')
-            legs=traffic.get('legs') or []
-            back=float(legs[-1]['duration'])/60 if legs else float((snapshot.get('base_legs') or [{}])[-1].get('min') or 0)
-            minute=cursor.hour*60+cursor.minute+cursor.second/60
-            pauses=intervals(plan.driver_schedule) if cursor.date()==plan.data_giro else []
-            cursor+=timedelta(minutes=travel_end(minute,back,pauses)-minute)
-        result['return_at']=cursor
+    from .driver_schedule import travel_end, intervals
+
+    cursor = started.replace(tzinfo=LOCAL) if plan.status == 'in_corso' and started else start
+    changed = cursor if plan.status == 'in_corso' and started else None
+    previous_departure = start
+    for delivery in sorted(plan.deliveries or [], key=lambda d: (d.ordine or 0, d.id or 0)):
+        baseline = planned[delivery.id]
+        previous_departure = baseline['departure'] or baseline['arrival'] or previous_departure
+        status = statuses.get(delivery.id)
+        if status and status.status in ('completata', 'mancata') and status.completata_il:
+            cursor = status.completata_il.replace(tzinfo=LOCAL)
+            changed = cursor
+            continue
+        if not changed:
+            continue
+        travel = float(delivery.minuti_tappa or 0)
+        if not travel and baseline['arrival']:
+            details = json.loads(delivery.optimizer_details or '{}')
+            elapsed = (baseline['arrival'] - baseline['previous_departure']).total_seconds() / 60
+            travel = max(0, elapsed - float(delivery.attesa_min or 0) - float(details.get('pause_travel_min') or 0))
+        if not baseline['arrival'] and not travel:
+            break
+        schedule = (getattr(plan, 'driver_schedule', None) or {}) if cursor.date() == plan.data_giro else {}
+        row = {field: getattr(delivery, field) for field in (
+            'tempo_scarico_min', 'scarico_mattina_da', 'scarico_mattina_a',
+            'scarico_pomeriggio_da', 'scarico_pomeriggio_a')}
+        row['_matrix_index'] = 1
+        projection_start = cursor.replace(second=0, microsecond=0)
+        leg_minutes = travel + (cursor - projection_start).total_seconds() / 60
+        evaluation = _evaluate_fixed_sequence(
+            [row], {(0, 1): {'km': delivery.km_tappa or 0, 'min': leg_minutes}}, [],
+            {'driver_schedule': schedule}, False, projection_start.strftime('%H:%M'))
+        timing = evaluation['ordered'][0]
+        arrival = projection_start + timedelta(minutes=leg_minutes + float(timing.get('pause_travel_min') or 0)
+                                               + float(timing.get('attesa_min') or 0))
+        result['deliveries'][delivery.id] = {'arrival': arrival, 'source': 'execution', 'updated_at': changed}
+        cursor = projection_start + timedelta(minutes=evaluation['total_min'])
+    else:
+        if changed:
+            if plan.rientro_deposito:
+                snapshot = json.loads(plan.routing_snapshot_json or '{}')
+                traffic = json.loads(plan.traffic_result_json or '{}')
+                legs = traffic.get('legs') or []
+                base_legs = snapshot.get('base_legs') or []
+                if legs:
+                    back = float(legs[-1]['duration']) / 60
+                elif base_legs:
+                    back = float(base_legs[-1].get('min') or 0)
+                else:
+                    back = max(0, (planned_return - previous_departure).total_seconds() / 60)
+                minute = cursor.hour * 60 + cursor.minute + cursor.second / 60
+                pauses = intervals(getattr(plan, 'driver_schedule', None)) if cursor.date() == plan.data_giro else []
+                cursor += timedelta(minutes=travel_end(minute, back, pauses) - minute)
+            result['return_at'] = cursor
 
 
 def _apply_gps(plan, statuses, result, now):

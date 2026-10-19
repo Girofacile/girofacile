@@ -144,6 +144,9 @@ def test_delay_from_start_and_previous_stop_is_shared_with_dashboard(tracking_en
 @pytest.mark.parametrize('action,status', [('complete','completata'), ('missed','mancata')])
 def test_driver_updates_are_visible_without_copying_state(tracking_env, action, status):
     client, db, _, plan, first, second, _ = tracking_env
+    from app.core.utils import local_today
+    plan.data_giro = local_today()
+    db.commit()
     token = issue(client, first)
     # Use the real driver mutation endpoint, with storage replaced by a test fake.
     response = client.post(f'/api/driver/delivery/{first.id}/{action}', json={})

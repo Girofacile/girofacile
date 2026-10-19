@@ -144,6 +144,9 @@ def test_delivery_completion_and_manual_close_never_invent_delivery(planning):
     ctx,_=planning;client,db,*_=ctx
     first=ready(ctx,'First');second=ready(ctx,'Second')
     route,_=calculate(planning,[first,second]);plan=db.get(RoutePlan,route['id'])
+    from app.core.utils import local_today
+    plan.data_giro=local_today()
+    db.flush()
     start_route_usage(db,plan);db.commit()
     assert first.status==second.status=='in_consegna'
     delivery=next(d for d in plan.deliveries if str(first.id) in d.optimizer_details and 'First' in d.optimizer_details)
