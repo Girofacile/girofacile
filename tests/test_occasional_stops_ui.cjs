@@ -86,3 +86,32 @@ test('planning markup exposes occasional edit badge, responsive dialog and touch
   assert.match(core,/planningStopDrop\(event, \$\{i\}\)/);assert.match(core,/moveDelivery\(\$\{i\}, -1\)/);
   assert.match(core,/Occasionale<\/span>/);
 });
+
+
+test('touch reorder renders controls and preserves verified stop identity', () => {
+  const nodes = {deliveryBody: {innerHTML: ''}, deliveryTableCounter: {}, deliveryFooterCount: {}};
+  const invalidations = [];
+  const context = vm.createContext({
+    document: {getElementById: id => nodes[id]},
+    deliveries: [
+      {customer_id: null, cliente_nome: 'Cantiere', geocoding_token: 'proof-a', lat: 1, lon: 2},
+      {customer_id: 12, cliente_nome: 'Cliente', geocoding_token: 'proof-b', lat: 3, lon: 4},
+    ],
+    updateDashboardStats(){}, updateAutoRouteName(){},
+    deliveryWindowLabel: () => '', deliveryRequirementBadges: () => '',
+    deliveryGeoBadge: () => '', esc: value => String(value || ''),
+    markRouteNeedsRecalculation: message => invalidations.push(message),
+  });
+  vm.runInContext(core.slice(core.indexOf('function moveDelivery('), core.indexOf('function renderDeliveryEmptyRow(')), context);
+  vm.runInContext(core.slice(core.indexOf('function renderDeliveries('), core.indexOf('function openDeliveryDetailsModal(')), context);
+  vm.runInContext('renderDeliveries()', context);
+  assert.match(nodes.deliveryBody.innerHTML, /onclick="moveDelivery\(0, 1\)"/);
+  assert.match(nodes.deliveryBody.innerHTML, /onclick="moveDelivery\(0, -1\)" disabled/);
+  assert.match(nodes.deliveryBody.innerHTML, /Occasionale<\/span>/);
+  vm.runInContext('moveDelivery(0, 1)', context);
+  assert.equal(context.deliveries[1].geocoding_token, 'proof-a');
+  assert.equal(context.deliveries[0].customer_id, 12);
+  assert.equal(invalidations.length, 1);
+  vm.runInContext('moveDelivery(0, -1)', context);
+  assert.equal(invalidations.length, 1);
+});

@@ -3158,7 +3158,7 @@ function renderDeliveries(){
     <tr data-delivery-row="${i}" draggable="true" ondragstart="planningStopDragStart(event, ${i})" ondragend="planningStopDragEnd()" ondragover="event.preventDefault()" ondrop="planningStopDrop(event, ${i})">
       <td data-label="#"><span class="gf-badge" data-status="neutral">${i+1}</span></td>
       <td data-label="Cliente">
-        <strong>${esc(d.cliente_nome)}</strong>${globalThis.GFOrderPlanning?.describe(d)||""}
+        <strong>${esc(d.cliente_nome)}</strong>${d.customer_id == null ? ' <span class="gf-badge" data-status="neutral">Occasionale</span>' : ''}${globalThis.GFOrderPlanning?.describe(d)||""}
         ${d.codice_cliente ? `<br><small class="gf-muted">Codice cliente: ${esc(d.codice_cliente)}</small>` : ""}
       </td>
       <td data-label="Indirizzo">
@@ -3175,6 +3175,8 @@ function renderDeliveries(){
         <button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="${d.customer_id == null ? 'openOccasionalStopModal' : 'openDeliveryDetailsModal'}(${i})">${d.customer_id == null ? 'Modifica' : 'Dettagli'}</button>
       </td>
       <td data-label="Azioni">
+        <button type="button" class="gf-button" data-variant="ghost" data-size="sm" aria-label="Sposta fermata ${i+1} su" onclick="moveDelivery(${i}, -1)" ${i === 0 ? "disabled" : ""}>↑</button>
+        <button type="button" class="gf-button" data-variant="ghost" data-size="sm" aria-label="Sposta fermata ${i+1} giù" onclick="moveDelivery(${i}, 1)" ${i === deliveries.length-1 ? "disabled" : ""}>↓</button>
         <button type="button" class="gf-button" data-variant="danger" data-size="sm" onclick="removeDelivery(${i})">Elimina</button>
       </td>
     </tr>`).join("");
