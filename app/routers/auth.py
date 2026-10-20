@@ -4,7 +4,9 @@ from ..services.sessions import read_session, active_identity, logout_sessions, 
 from ..core.security import make_account_token
 from datetime import datetime, timedelta
 from ..core.clock import utc_now
+import base64
 import hashlib
+import io
 import secrets
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
@@ -792,6 +794,32 @@ def get_company_profile(user: User = Depends(current_user)):
     return _company_payload(user)
 
 
+COMPANY_LOGO_MAX_BYTES = 1_500_000
+COMPANY_LOGO_FORMATS = {"PNG": "png", "JPEG": "jpeg", "WEBP": "webp"}
+
+
+def _validated_company_logo(value):
+    """Logo aziendale: immagine PNG, JPEG o WebP incorporata (data URL), oppure vuoto per rimuoverlo."""
+    if not value:
+        return None
+    error = HTTPException(400, "Logo non valido: carica un'immagine PNG, JPEG, WebP o SVG di massimo 1,5 MB.")
+    if not isinstance(value, str) or not value.startswith("data:image/") or ";base64," not in value:
+        raise error
+    try:
+        raw = base64.b64decode(value.split(",", 1)[1], validate=True)
+        if len(raw) > COMPANY_LOGO_MAX_BYTES:
+            raise ValueError
+        from PIL import Image
+        with Image.open(io.BytesIO(raw)) as image:
+            fmt = image.format
+            image.verify()
+    except Exception:
+        raise error from None
+    if fmt not in COMPANY_LOGO_FORMATS:
+        raise error
+    return f"data:image/{COMPANY_LOGO_FORMATS[fmt]};base64," + base64.b64encode(raw).decode()
+
+
 @router.put("/api/company-profile")
 def update_company_profile(payload: dict, user: User = Depends(current_user), db: Session = Depends(get_db)):
     allowed = {
@@ -803,6 +831,8 @@ def update_company_profile(payload: dict, user: User = Depends(current_user), db
         "has_time_windows", "needs_signature", "needs_photo_proof",
         "has_refrigerated_goods", "has_ztl", "needs_tail_lift"
     }
+    if "company_logo_url" in payload and payload.get("company_logo_url") != user.company_logo_url:
+        payload = {**payload, "company_logo_url": _validated_company_logo(payload.get("company_logo_url"))}
     for key in allowed:
         if key in payload:
             value = payload.get(key)

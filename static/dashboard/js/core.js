@@ -385,6 +385,34 @@ function handleImageUpload(ev, targetId, previewId, fallback){
   };
   reader.readAsDataURL(file);
 }
+// Logo aziendale: qualsiasi immagine leggibile dal browser (anche SVG o foto dal telefono) diventa
+// un PNG dritto, con la trasparenza, al massimo 512 px: identico nel gestionale e nel PDF di consegna.
+const GF_LOGO_MAX_SIDE = 512;
+async function handleLogoUpload(ev){
+  const input = ev?.target, file = input?.files?.[0];
+  if(!file) return;
+  const url = URL.createObjectURL(file);
+  try{
+    const img = new Image();
+    img.src = url;
+    await img.decode();
+    const w = img.naturalWidth || GF_LOGO_MAX_SIDE, h = img.naturalHeight || GF_LOGO_MAX_SIDE;
+    // Un SVG è vettoriale: lo si porta direttamente a 512 px; le immagini vengono solo ridotte.
+    const fit = GF_LOGO_MAX_SIDE / Math.max(w, h);
+    const scale = file.type === "image/svg+xml" ? fit : Math.min(1, fit);
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(w * scale));
+    canvas.height = Math.max(1, Math.round(h * scale));
+    canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+    set("companyLogoUrl", canvas.toDataURL("image/png"));
+    setImagePreview("companyLogoPreview", "companyLogoUrl", "GF");
+  }catch(e){
+    toast("Formato non leggibile: carica il logo in PNG, JPEG, WebP o SVG.");
+  }finally{
+    URL.revokeObjectURL(url);
+    input.value = "";
+  }
+}
 function clearFileInput(id){ const el=document.getElementById(id); if(el) el.value=""; }
 
 function fascia(d){

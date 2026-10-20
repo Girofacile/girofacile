@@ -1,7 +1,7 @@
 """PDF della prova di consegna (POD): una sola pagina A4, layout "documento aziendale".
 
 In alto logo e dati dell'azienda, numero del documento ed esito; poi destinatario e
-data di consegna, i dettagli su due colonne e, affiancate, firma e foto. Testi lunghi
+data di consegna, i dettagli su due colonne e firma e foto, se acquisite. Testi lunghi
 vengono accorciati e i riquadri delle immagini si adattano allo spazio rimasto, così
 il documento non passa mai a una seconda pagina.
 """
@@ -17,9 +17,10 @@ from .route_enrichment import json_data
 PRIMARY, TEXT, MUTED, BORDER, BG = '#1665ff', '#16213a', '#5a6680', '#dce1eb', '#edf0f6'
 SUCCESS, SUCCESS_BG, INFO_BG = '#127a52', '#ddf3e8', '#e4f0ff'
 GIROFACILE_LOGO = Path(__file__).resolve().parents[2] / 'static' / 'girofacile-logo.png'
-LEGAL = ('Documento generato automaticamente da GiroFacile al momento della conferma della consegna. '
-         'Gli hash SHA-256 garantiscono l’integrità dei file; non costituiscono firma digitale qualificata '
-         'o certificazione legale.')
+GENERATED = 'Documento generato automaticamente da GiroFacile al momento della conferma della consegna.'
+LEGAL = (GENERATED + ' Gli hash SHA-256 garantiscono l’integrità dei file; non costituiscono firma digitale '
+         'qualificata o certificazione legale.')
+NO_EVIDENCE = 'Consegna confermata dall’autista tramite GiroFacile, senza firma né foto del destinatario.'
 
 
 def _clip(value, limit):
@@ -107,14 +108,10 @@ def generate_pod(route, delivery, status, owner, signature=None, photo=None):
         _, height = t.wrap(width, H)
         return t, height
 
-    def picture(image, x, y, width, height, background='white', empty=''):
+    def picture(image, x, y, width, height, background='white'):
         c.setFillColor(colors.white if background == 'white' else C[background])
         c.setStrokeColor(C['border']); c.setLineWidth(0.8)
         c.roundRect(x, y, width, height, 2 * mm, stroke=1, fill=1)
-        if image is None:
-            c.setFillColor(C['muted']); c.setFont('Helvetica', 9)
-            c.drawCentredString(x + width / 2, y + height / 2, empty)
-            return
         pad = 2 * mm
         iw, ih = image.getSize()
         scale = min((width - 2 * pad) / iw, (height - 2 * pad) / ih)
@@ -201,21 +198,29 @@ def generate_pod(route, delivery, status, owner, signature=None, photo=None):
     t2.drawOn(c, x2, y - h2)
     y -= max(h1, h2) + 8 * mm
 
-    # Firma e foto affiancate: il riquadro usa lo spazio rimasto sopra il piè di pagina.
-    draw('FIRMA DEL CLIENTE', M, y, col, size=7.5, color='muted', bold=True)
-    draw('FOTO DELLA CONSEGNA', x2, y, col, size=7.5, color='muted', bold=True)
-    box = max(35 * mm, min(88 * mm, y - 5 * mm - 40 * mm))
-    picture(load(signature), M, y - 5 * mm - box, col, box, empty='Firma non acquisita')
-    picture(load(photo), x2, y - 5 * mm - box, col, box, background='bg', empty='Foto non acquisita')
-    caption = [f'{escape(_clip(signer, 60))} · {_when(status.signed_at)}' if signer else '',
-               f'Nota firma: {escape(_clip(status.signature_note, 160))}' if status.signature_note else '']
-    if any(caption):
-        draw('<br/>'.join(line for line in caption if line), M, y - 5 * mm - box - 3 * mm, col,
-             size=8, color='muted', leading=10.5)
+    # Firma e foto: solo quelle acquisite (affiancate, o una a tutta larghezza); il riquadro usa
+    # lo spazio rimasto sopra il piè di pagina. Senza nessuna delle due resta una ricevuta compatta.
+    evidence = [(title, image, background) for title, image, background in (
+        ('FIRMA DEL CLIENTE', load(signature), 'white'), ('FOTO DELLA CONSEGNA', load(photo), 'bg')) if image]
+    if evidence:
+        width = col if len(evidence) == 2 else W - 2 * M
+        box = max(35 * mm, min(88 * mm, y - 5 * mm - 40 * mm))
+        for index, (title, image, background) in enumerate(evidence):
+            x = M + index * (col + 8 * mm)
+            draw(title, x, y, width, size=7.5, color='muted', bold=True)
+            picture(image, x, y - 5 * mm - box, width, box, background=background)
+        caption = [f'{escape(_clip(signer, 60))} · {_when(status.signed_at)}' if signer else '',
+                   f'Nota firma: {escape(_clip(status.signature_note, 160))}' if status.signature_note else '']
+        if signature and any(caption):
+            draw('<br/>'.join(line for line in caption if line), M, y - 5 * mm - box - 3 * mm, width,
+                 size=8, color='muted', leading=10.5)
+    else:
+        c.setFillColor(C['bg']); c.roundRect(M, y - 11 * mm, W - 2 * M, 11 * mm, 2 * mm, stroke=0, fill=1)
+        draw(NO_EVIDENCE, M + 4 * mm, y - 3.6 * mm, W - 2 * M - 8 * mm, size=8.6, color='muted')
 
     # Piè di pagina: avviso, GiroFacile, numero, data di generazione e impronte dei file.
     c.setStrokeColor(C['border']); c.setLineWidth(0.6); c.line(M, 20 * mm, W - M, 20 * mm)
-    draw(LEGAL, M, 18 * mm, W - 2 * M - 40 * mm, size=6.6, color='muted', leading=8.4)
+    draw(LEGAL if signature or photo else GENERATED, M, 18 * mm, W - 2 * M - 40 * mm, size=6.6, color='muted', leading=8.4)
     gf_logo = _girofacile_logo()
     if gf_logo:
         c.drawImage(ImageReader(gf_logo), W - M - 5 * mm, 12.2 * mm, 5 * mm, 5 * mm, mask='auto')

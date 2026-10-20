@@ -256,7 +256,7 @@ def test_pdf_text_and_long_notes(env, storage):
     assert 'Nota lunga ' * 40 not in text
 
 
-def test_pdf_without_signature_photo_or_logo_stays_on_one_page(env, storage):
+def test_pdf_without_signature_photo_or_logo_is_a_compact_receipt(env, storage):
     from app.services.delivery_pod import generate_pod
     from types import SimpleNamespace
     PdfReader = pytest.importorskip("pypdf").PdfReader
@@ -267,8 +267,14 @@ def test_pdf_without_signature_photo_or_logo_stays_on_one_page(env, storage):
     reader = PdfReader(io.BytesIO(generate_pod(route, delivery, state, owner)))
     assert len(reader.pages) == 1
     text = reader.pages[0].extract_text()
-    assert 'Firma non acquisita' in text and 'Foto non acquisita' in text
+    # Firma e foto non richieste: niente riquadri vuoti né avviso sugli hash, solo una riga.
+    assert 'senza firma né foto' in text
+    assert 'FIRMA DEL CLIENTE' not in text and 'FOTO DELLA CONSEGNA' not in text and 'SHA-256' not in text
     assert 'Trasporti Bianchi' in text and 'TB' in text
+    # Solo la foto: un unico riquadro, senza quello della firma.
+    photo = base64.b64decode(image_data('JPEG').split(',')[1])
+    text = PdfReader(io.BytesIO(generate_pod(route, delivery, state, owner, None, photo))).pages[0].extract_text()
+    assert 'FOTO DELLA CONSEGNA' in text and 'FIRMA DEL CLIENTE' not in text and 'SHA-256' in text
 
 
 def test_signature_replacement_cleans_only_after_commit_and_retains_legacy(env, storage):
