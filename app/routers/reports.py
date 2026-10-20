@@ -19,6 +19,11 @@ import json
 router = APIRouter(prefix="/api/reports", tags=["reports"])
 
 
+def _it_decimal(value: float, digits: int = 2) -> str:
+    """Numero con virgola decimale, come nel resto del report (es. 3,6 → "3,60")."""
+    return f"{value:.{digits}f}".replace(".", ",")
+
+
 def _report_label_agent(customer) -> str:
     if customer and customer.agent:
         from ..routers.agents import agent_full_name
@@ -311,8 +316,8 @@ def build_report_data(
         "metric_policy": "Fermate previste nei giri chiusi, incluse mancate e non gestite. Km, ore e costi filtrati/per agente sono ripartiti in proporzione al numero di fermate. Ore storiche senza timestamp UTC affidabili: stima di pianificazione.",
         "insights": [
             {"titolo": "Esiti fermate", "testo": f"{outcome_counts['completata']} consegnate, {outcome_counts['mancata']} mancate, {outcome_counts['in_attesa']} non gestite."},
-            {"titolo": "Media consegne per giro", "testo": f"{round(total_deliveries / total_routes, 2) if total_routes else 0} consegne medie per giro nel periodo selezionato."},
-            {"titolo": "Costo medio consegna", "testo": f"€ {round(total_cost / total_deliveries, 2) if total_deliveries else 0} di energia stimata per consegna (personale, pedaggi e manutenzione esclusi)."},
+            {"titolo": "Media fermate per giro", "testo": f"{_it_decimal(total_deliveries / total_routes if total_routes else 0)} fermate medie per giro nel periodo selezionato."},
+            {"titolo": "Costo medio per fermata", "testo": f"€ {_it_decimal(total_cost / total_deliveries if total_deliveries else 0)} di energia stimata per fermata (personale, pedaggi e manutenzione esclusi)."},
             {"titolo": "Utilizzo risorse", "testo": f"{len(by_driver)} autisti e {len(by_vehicle)} mezzi presenti nei giri completati filtrati."},
         ],
     }

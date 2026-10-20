@@ -192,11 +192,11 @@ function gfRouteEnergyMetric(route){
     if(qty == null && r.totale_km != null && r.energy_consumption_electric != null){
       qty = Number(r.totale_km) * Number(r.energy_consumption_electric) / 100;
     }
-    const value = qty == null || Number.isNaN(Number(qty)) ? "—" : Number(qty).toFixed(2);
+    const value = qty == null || Number.isNaN(Number(qty)) ? "—" : gfDecimal(qty);
     return {electric:true,label:"Consumo energia",value:value+" kWh",costLabel:"Costo energia"};
   }
   const liters = r.litri_stimati;
-  const value = liters == null || Number.isNaN(Number(liters)) ? "—" : String(liters);
+  const value = liters == null || Number.isNaN(Number(liters)) ? "—" : gfDecimal(liters);
   return {electric:false,label:"Litri stimati",value:value+" L",costLabel:"Costo carburante"};
 }
 window.gfRouteEnergyMetric = gfRouteEnergyMetric;
@@ -1028,7 +1028,7 @@ function printStopsTable(){
     <div class="meta">
       <strong>Giro:</strong> ${esc(r.nome || val("routeName") || "Giro consegne")}<br>
       <strong>Data:</strong> ${esc(r.data_giro || val("routeDate") || "-")} · <strong>Partenza:</strong> ${esc(r.orario_partenza || "-")} · <strong>Rientro stimato:</strong> ${esc(r.orario_rientro_stimato || "-")}<br>
-      <strong>Km totali:</strong> ${r.totale_km ?? "-"} km · <strong>Tempo totale:</strong> ${Math.round(r.totale_minuti || 0)} min · <strong>Costo carburante:</strong> € ${r.costo_carburante ?? "-"}
+      <strong>Km totali:</strong> ${gfKm(r.totale_km)} · <strong>Tempo totale:</strong> ${Math.round(r.totale_minuti || 0)} min · <strong>Costo carburante:</strong> € ${r.costo_carburante ?? "-"}
     </div>
     <table><thead><tr><th>Ordine</th><th>Cliente</th><th>Indirizzo</th><th>Arrivo</th><th>Ripartenza</th><th>Attesa</th><th>Km tappa</th><th>Avvisi</th></tr></thead><tbody>${rows}</tbody></table>
     <div class="footer">Stampa generata da GiroFacile</div>
@@ -1662,7 +1662,8 @@ function routeZoneLabel(){
   stops.forEach(d=>{
     let zone = (customers.find(c=>String(c.id)===String(d.customer_id))?.comune || "").trim();
     if(!zone){
-      const parts = String(d.indirizzo || "").split(",").map(x=>x.trim()).filter(Boolean);
+      // Gli indirizzi geocodificati finiscono con il Paese ("…, 84016 Pagani SA, Italia"): la zona è la parte prima.
+      const parts = String(d.indirizzo || "").split(",").map(x=>x.trim()).filter(x=>x && !/^(italia|italy)$/i.test(x));
       zone = (parts.length > 1 ? parts[parts.length - 1] : "").replace(/\b\d{5}\b/g, "").replace(/\b[A-Z]{2}\b$/, "").replace(/\(.*?\)/g, "").trim();
     }
     if(zone) counts.set(zone, (counts.get(zone) || 0) + 1);
@@ -1910,7 +1911,12 @@ async function loadDashboardHome(){
 
     // Dashboard semplificata: grafici e attività recenti rimossi per ridurre confusione.
 
-    const scheduled = operational.filter(r=>r.status==='programmato');
+    // Solo i giri da oggi in poi, dal più vicino: quelli di date passate mai avviati
+    // non sono "programmati" e vengono segnalati a parte.
+    const programmed = operational.filter(r=>r.status==='programmato');
+    const scheduled = programmed.filter(r=>!r.data_giro || r.data_giro>=today)
+      .sort((a,b)=>`${a.data_giro||'9999'} ${a.orario_partenza||''}`.localeCompare(`${b.data_giro||'9999'} ${b.orario_partenza||''}`));
+    const overdueScheduled = programmed.length - scheduled.length;
     const progress = inProgressRoutes;
     setText("dashScheduledBadge", scheduled.length);
     setText("dashInProgressBadge", progress.length);
@@ -1919,7 +1925,8 @@ async function loadDashboardHome(){
     const progressBox=document.getElementById("dashProgressList");
     const completedBox=document.getElementById("dashCompletedList");
     renderLogisticsDashboardV50([...(operational || []), ...(routes || [])]);
-    if(scheduledBox) scheduledBox.innerHTML = scheduled.slice(0,3).map(r=>dashRouteItem(r,'scheduled')).join("") || renderEmptyDashList("Nessun giro programmato.", "scheduled");
+    if(scheduledBox) scheduledBox.innerHTML = (scheduled.slice(0,3).map(r=>dashRouteItem(r,'scheduled')).join("") || renderEmptyDashList("Nessun giro programmato.", "scheduled"))
+      + (overdueScheduled ? `<div class="gf-alert" data-status="warning"><div class="gf-alert__body"><p>${overdueScheduled} ${overdueScheduled===1?'giro di una data passata non è mai stato avviato':'giri di date passate non sono mai stati avviati'}. Aprili da “Vedi tutti i giri” per riprogrammarli o eliminarli.</p></div></div>` : "");
     if(progressBox) progressBox.innerHTML = progress.slice(1,3).map(r=>dashRouteItem(r,'progress')).join("");
     document.getElementById("gfRefOtherActive")?.classList.toggle("hidden", progress.length <= 1);
     if(completedBox) completedBox.innerHTML = completedToday.slice(0,3).map(r=>dashRouteItem(r,'completed')).join("") || renderEmptyDashList("Nessun giro completato oggi.", "completed");
@@ -2217,7 +2224,7 @@ function deleteDepositFromModal(){
 
 const GF_FUEL_LABELS_V895={gasolio:"Gasolio",benzina:"Benzina",gpl:"GPL",metano:"Metano",elettrico:"Elettrico",ibrido_benzina:"Ibrido benzina",ibrido_diesel:"Ibrido diesel",ibrido_plugin_benzina:"Ibrido plug-in benzina",ibrido_plugin_diesel:"Ibrido plug-in diesel"};
 function fuelBaseTypeV895(type){if(["ibrido_benzina","ibrido_plugin_benzina"].includes(type))return "benzina";if(["ibrido_diesel","ibrido_plugin_diesel"].includes(type))return "gasolio";return type;}
-function energyConsumptionLabelV895(v){const t=v.alimentazione||"gasolio", p=Number(v.consumo_primario_100km??v.consumo_l_100km??0), e=Number(v.consumo_kwh_100km||0);if(t==="elettrico")return `${e} kWh/100 km`;if(t==="metano")return `${p} kg/100 km`;if(t.startsWith("ibrido_plugin"))return `${p} L + ${e} kWh/100 km`;return `${p} L/100 km`;}
+function energyConsumptionLabelV895(v){const t=v.alimentazione||"gasolio", p=Number(v.consumo_primario_100km??v.consumo_l_100km??0), e=Number(v.consumo_kwh_100km||0);if(t==="elettrico")return `${gfDecimal(e)} kWh/100 km`;if(t==="metano")return `${gfDecimal(p)} kg/100 km`;if(t.startsWith("ibrido_plugin"))return `${gfDecimal(p)} L + ${gfDecimal(e)} kWh/100 km`;return `${gfDecimal(p)} L/100 km`;}
 function updateVehicleEnergyFieldsV895(){const t=val("vFuelType")||"gasolio";const p=document.getElementById("vPrimaryConsumptionWrap"),e=document.getElementById("vElectricConsumptionWrap"),l=document.getElementById("vPrimaryConsumptionLabel");if(p)p.classList.toggle("hidden",t==="elettrico");if(e)e.classList.toggle("hidden",!(t==="elettrico"||t.startsWith("ibrido_plugin")));if(l)l.textContent=t==="metano"?"Consumo kg/100 km":"Consumo L/100 km";updateVehicleBonusHint();}
 let gfFuelPricesV895=null;
 async function loadAutomaticFuelPricesV895(){try{gfFuelPricesV895=await api("/api/vehicles/fuel-prices/current");}catch(e){gfFuelPricesV895={};}return gfFuelPricesV895;}
@@ -3469,7 +3476,7 @@ function renderRouteResult(r, targetId="routeResult", fromHistory=false){
     <div class="gf-stat-strip" data-preview-metrics>
       ${metric("Partenza", esc(r.orario_partenza||"-"))}
       ${metric("Rientro stimato", esc(r.orario_rientro_stimato||"-"))}
-      ${metric("Km totali", `${r.totale_km ?? "-"} km`)}
+      ${metric("Km totali", gfKm(r.totale_km))}
       ${metric("Tempo totale", `${Math.round(r.totale_minuti||0)} min`)}
       ${metric(gfRouteEnergyMetric(r).label, gfRouteEnergyMetric(r).value)}
       ${metric(gfRouteEnergyMetric(r).costLabel, `€ ${r.costo_carburante ?? "-"}`)}
@@ -3708,7 +3715,7 @@ async function optimizeRoute(){
     renderDeliveries();
     renderRouteResult(r, "routePreviewResult", false);
     const setText = (id,val)=>{ const el=document.getElementById(id); if(el) el.textContent=val; };
-    setText("summaryKm", r.totale_km + " km");
+    setText("summaryKm", gfKm(r.totale_km));
     setText("summaryTime", Math.round(r.totale_minuti) + " min");
     setText("summaryCost", "€ " + (r.costo_totale ?? r.costo_carburante));
     loadRoutes();
@@ -3852,7 +3859,7 @@ function renderDriverChatThreadList(){
       <span class="gf-avatar" aria-hidden="true">${driverChatAvatar(t)}</span>
       <span class="gf-list-item__main">
         <strong>${esc(t.driver_name||'Autista')}</strong>
-        <small>${esc(t.route_name || 'Chat libera')} · ${esc(chatTimeLabel(t.last_message_at) || t.date || '')}</small>
+        <small>${[t.route_name || 'Chat libera', chatTimeLabel(t.last_message_at) || t.date].filter(Boolean).map(esc).join(' · ')}</small>
         <small>${last}</small>
       </span>
       ${unread?`<span class="gf-badge" data-status="info">${unread}</span>`:''}
@@ -3957,7 +3964,7 @@ function dashRouteItem(r, type){
   const progressBase = Math.max(1, total);
   const completedPercent = Math.min(100, completed / progressBase * 100);
   const missedPercent = Math.min(100 - completedPercent, missed / progressBase * 100);
-  const meta = `${esc(r.data_giro||"-")} · ${r.consegne_count||0} consegne${r.totale_km?` · ${r.totale_km} km`:""}`;
+  const meta = `${esc(gfDateIt(r.data_giro)||"-")} · ${r.consegne_count||0} ${Number(r.consegne_count)===1?"consegna":"consegne"}${r.totale_km?` · ${gfKm(r.totale_km)}`:""}`;
   const pill = routeStatusBadge(r.status, r.status_label);
   const unread = Math.max(0, Number(r.unread_driver_messages||0));
   const isProgress = type === 'progress';
@@ -4049,7 +4056,7 @@ function dashboardRouteSummaryCards(r, rows){
   const pending = Math.max(rows.length - completed - missed, 0);
   const cell = (label, value, unit='') => `<div class="gf-stat-strip__cell"><span class="gf-stat-strip__label">${label}</span><strong class="gf-stat-strip__value">${value}</strong>${unit?`<small class="gf-stat-strip__unit">${unit}</small>`:''}</div>`;
   return `<div class="gf-stat-strip">
-    ${cell('Km previsti', `${esc(r.totale_km ?? '-')}`, 'km')}
+    ${cell('Km previsti', `${esc(r.totale_km == null ? '-' : gfDecimal(r.totale_km))}`, 'km')}
     ${cell('Tempo previsto', `${Math.round(Number(r.totale_minuti||0)) || '-'}`, 'min')}
     ${cell('Consegne', `${completed}/${rows.length}`, `${missed} mancate · ${pending} da fare`)}
     ${cell(esc(gfRouteEnergyMetric(r).label), esc(gfRouteEnergyMetric(r).value))}
@@ -4247,7 +4254,7 @@ function dashboardScheduledDayHtml(){
       <td data-label="Fermate">${count} ${count===1?'fermata':'fermate'}</td>
       <td data-label="Autista">${esc(r.driver_name || 'Non assegnato')}</td>
       <td data-label="Mezzo"><span class="gf-list-item__main"><strong>${esc(vehicleParts[0])}</strong>${vehicleParts.length>1?`<small>${esc(vehicleParts.slice(1).join(' · '))}</small>`:''}</span></td>
-      <td data-label="Km previsti">${esc(r.totale_km ?? '-')} km</td>
+      <td data-label="Km previsti">${esc(gfKm(r.totale_km))}</td>
       <td data-label="Guida">${dashScheduledMinutes(r.totale_minuti)}</td>
       <td data-label="Costo stimato">${dashScheduledMoney(r.costo_carburante)}</td>
       <td data-label="Azioni"><button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="openDashboardScheduledRoute(${Number(r.id)})">Apri giro</button></td>
@@ -4294,7 +4301,7 @@ function dashboardScheduledDialogHtml(r){
       <div class="gf-crew"><div><small>Autista</small><strong>${esc(r.driver_name || 'Non assegnato')}</strong></div><div><small>Mezzo</small><strong>${esc(r.vehicle_name || '-')}</strong></div></div>
       <dl class="gf-details">
         ${item('Partenza', r.orario_partenza || '-')}${item('Rientro previsto', r.rientro_stimato_aggiornato || r.orario_rientro_stimato || '-')}
-        ${item('Km previsti', (r.totale_km ?? '-')+' km')}${item('Tempo previsto', dashScheduledMinutes(r.totale_minuti))}
+        ${item('Km previsti', gfKm(r.totale_km))}${item('Tempo previsto', dashScheduledMinutes(r.totale_minuti))}
         ${item(energy.label, energy.value)}${item(energy.costLabel, dashScheduledMoney(r.costo_carburante))}
         ${item('Pedaggio stimato', r.toll_estimated_eur == null ? 'Non disponibile' : dashScheduledMoney(r.toll_estimated_eur))}${item('Costo operativo stimato', dashScheduledMoney(r.costo_totale ?? r.costo_carburante))}
       </dl>

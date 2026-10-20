@@ -3,7 +3,7 @@ from datetime import datetime
 from .core.clock import utc_now
 from sqlalchemy import inspect, text
 
-LATEST = '20261020_01'
+LATEST = '20261020_02'
 LOCK_ID = 7640152404
 
 
@@ -162,6 +162,21 @@ def run_migrations(engine):
                         columns = {c['name'] for c in inspect(conn).get_columns(table)}
                         if 'pedestrian_area' not in columns:
                             conn.execute(text(f'ALTER TABLE {table} ADD COLUMN pedestrian_area BOOLEAN NOT NULL DEFAULT FALSE'))
+                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261020_01', 'now': utc_now()})
+            if '20261020_02' not in applied:
+                # Targhe salvate prima della normalizzazione ("gr 552 gg"): stesso formato
+                # usato oggi al salvataggio. Se due mezzi dell'azienda collidono, restano invariati.
+                with engine.begin() as conn:
+                    if 'vehicles' in set(inspect(conn).get_table_names()):
+                        rows = conn.execute(text('SELECT id, user_id, targa FROM vehicles WHERE targa IS NOT NULL')).all()
+                        taken = {(r.user_id, r.targa) for r in rows}
+                        for r in rows:
+                            plate = ''.join(ch for ch in r.targa.upper() if ch.isalnum()) or None
+                            if plate == r.targa or (r.user_id, plate) in taken:
+                                continue
+                            conn.execute(text('UPDATE vehicles SET targa=:t WHERE id=:id'), {'t': plate, 'id': r.id})
+                            taken.discard((r.user_id, r.targa))
+                            taken.add((r.user_id, plate))
                     conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': LATEST, 'now': utc_now()})
         finally:
             if postgres:

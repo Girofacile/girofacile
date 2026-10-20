@@ -49,7 +49,7 @@ html[data-gf-agents="off"] [data-gf-agents-only]{display:none!important}
 .report-svg.line .hover-point circle{transition:var(--gf-motion-duration) ease}
 .report-svg.line .hover-point:hover circle{r:7}
 .report-svg.line .axis-title{font-size:var(--gf-font-xs);font-weight:var(--gf-weight-bold);fill:var(--gf-color-muted)}
-.report-svg.bar rect{fill:url(#fuelBarGradient);color:var(--gf-color-primary);transition:var(--gf-motion-duration) ease}
+.report-svg.bar rect{fill:var(--gf-color-primary);transition:var(--gf-motion-duration) ease}
 .report-svg.bar .bar-item:hover rect{opacity:.86}
 .report-svg.bar .legend rect{fill:var(--gf-color-primary)}
 .report-svg.donut{height:260px}

@@ -111,7 +111,7 @@ window.GFHistory = (() => {
         <td data-label="Stato">${statusBadge(r)}</td>
         <td data-label="Autista">${esc(r.driver_name || 'Non assegnato')}</td>
         <td data-label="Mezzo">${vehicleCell(r.vehicle_name)}</td>
-        <td data-label="Km">${esc(r.totale_km ?? '-')} km</td>
+        <td data-label="Km">${esc(gfKm(r.totale_km))}</td>
         <td data-label="Costo">${money(r.costo_totale ?? r.costo_carburante)}</td>
         <td data-label="Azioni"><button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="GFHistory.open(${Number(r.id)})">Apri giro</button></td>
       </tr>`).join('')}</tbody>
@@ -184,7 +184,7 @@ window.GFHistory = (() => {
         <div class="gf-crew"><div><small>Autista</small><strong>${esc(r.driver_name || 'Non assegnato')}</strong></div><div><small>Mezzo</small><strong>${esc(r.vehicle_name || '-')}</strong></div></div>
         <dl class="gf-details">
           ${item('Partenza', gfTimeFromIso(r.started_at) || r.orario_partenza || '-')}${item('Rientro', gfTimeFromIso(r.completed_at) || r.rientro_stimato_aggiornato || r.orario_rientro_stimato || '-')}
-          ${item('Km previsti', `${r.totale_km ?? '-'} km`)}${item('Tempo previsto', dashScheduledMinutes(r.totale_minuti))}
+          ${item('Km previsti', gfKm(r.totale_km))}${item('Tempo previsto', dashScheduledMinutes(r.totale_minuti))}
           ${item(energy.label, energy.value)}${item('Costo stimato', money(r.costo_totale ?? r.costo_carburante))}
         </dl>
         <h3 class="gf-subtitle">Esito</h3>

@@ -188,7 +188,7 @@ function svgLineChart(id, rows){
     const val=Math.round(maxK-(maxK*i/4));
     return `<text x="${w-pR+10}" y="${y+4}" text-anchor="start">${val}</text>`;
   }).join("");
-  const points=rows.map((r,i)=>`<g class="hover-point"><circle cx="${x(i)}" cy="${yC(r.consegne)}" r="5"><title>${r.data}: ${r.consegne} consegne</title></circle><circle class="km" cx="${x(i)}" cy="${yK(r.km)}" r="5"><title>${r.data}: ${fmtNumber(r.km,2)} km</title></circle></g>`).join("");
+  const points=rows.map((r,i)=>`<g class="hover-point"><circle cx="${x(i)}" cy="${yC(r.consegne)}" r="5"><title>${r.data}: ${r.consegne} fermate</title></circle><circle class="km" cx="${x(i)}" cy="${yK(r.km)}" r="5"><title>${r.data}: ${fmtNumber(r.km,2)} km</title></circle></g>`).join("");
   el.innerHTML = `<svg viewBox="0 0 ${w} ${h}" class="report-svg line improved">
     <defs>
       <linearGradient id="reportTrendFill" x1="0" x2="0" y1="0" y2="1">
@@ -200,8 +200,8 @@ function svgLineChart(id, rows){
     <path class="area-consegne" d="${areaC}"/>
     <path class="line-consegne" d="${pathC}"/><path class="line-km" d="${pathK}"/>
     ${points}${labels}
-    <g class="legend"><circle cx="58" cy="20" r="5"/><text x="70" y="24">Consegne</text><circle class="km" cx="165" cy="20" r="5"/><text x="177" y="24">Km pianificati</text></g>
-    <text class="axis-title left" x="${pL}" y="18">Consegne</text>
+    <g class="legend"><circle cx="${pL+90}" cy="20" r="5"/><text x="${pL+102}" y="24">Fermate</text><circle class="km" cx="${pL+180}" cy="20" r="5"/><text x="${pL+192}" y="24">Km pianificati</text></g>
+    <text class="axis-title left" x="${pL}" y="18">Fermate</text>
     <text class="axis-title right" x="${w-pR}" y="18" text-anchor="end">Km</text>
   </svg>`;
 }
@@ -228,12 +228,6 @@ function svgBarChart(id, rows, key="costo", suffix="€"){
     return `<g class="bar-item"><rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="10"><title>${r.data||r.nome}: ${fmtMoney(val)}</title></rect><text x="${x+bw/2}" y="${h-16}" text-anchor="middle">${esc(compactDateLabel(r.data||r.nome))}</text></g>`;
   }).join("");
   el.innerHTML=`<svg viewBox="0 0 ${w} ${h}" class="report-svg bar improved">
-    <defs>
-      <linearGradient id="fuelBarGradient" x1="0" x2="0" y1="0" y2="1">
-        <stop offset="0%" stop-opacity="1"></stop>
-        <stop offset="100%" stop-opacity=".72"></stop>
-      </linearGradient>
-    </defs>
     <g class="grid">${grid}</g>${bars}
     <g class="legend"><rect x="46" y="14" width="12" height="12" rx="3"></rect><text x="66" y="24">Costo energetico stimato (€)</text></g>
   </svg>`;
@@ -253,10 +247,10 @@ function svgDonutChart(id, rows){
     const dash=`${len} ${c-len}`;
     const off=-acc;
     acc+=len;
-    return `<circle class="slice s${i}" cx="${cx}" cy="${cy}" r="${r}" stroke-dasharray="${dash}" stroke-dashoffset="${off}"><title>${row.nome}: ${val} consegne</title></circle>`;
+    return `<circle class="slice s${i}" cx="${cx}" cy="${cy}" r="${r}" stroke-dasharray="${dash}" stroke-dashoffset="${off}"><title>${row.nome}: ${val} fermate</title></circle>`;
   }).join("");
   const legend=rows.map((r,i)=>`<div><span class="donut-dot s${i}"></span><strong>${esc(r.nome)}</strong><small>${Math.round((r.consegne/total)*100)}%</small></div>`).join("");
-  el.innerHTML=`<div class="report-donut-wrap"><svg viewBox="0 0 260 260" class="report-svg donut"><circle class="base" cx="${cx}" cy="${cy}" r="${r}"></circle>${slices}<text x="${cx}" y="${cy-5}" text-anchor="middle">${fmtNumber(total)}</text><text x="${cx}" y="${cy+18}" text-anchor="middle">consegne</text></svg><div class="report-donut-legend">${legend}</div></div>`;
+  el.innerHTML=`<div class="report-donut-wrap"><svg viewBox="0 0 260 260" class="report-svg donut"><circle class="base" cx="${cx}" cy="${cy}" r="${r}"></circle>${slices}<text x="${cx}" y="${cy-5}" text-anchor="middle">${fmtNumber(total)}</text><text x="${cx}" y="${cy+18}" text-anchor="middle">fermate</text></svg><div class="report-donut-legend">${legend}</div></div>`;
 }
 
 function svgHorizontalBars(id, rows, key="consegne", suffix=""){
@@ -294,16 +288,16 @@ function renderReportTables(){
   const s=reportSort.drivers || {key:"consegne", dir:-1};
   drivers.sort((a,b)=>((a[s.key]>b[s.key])?1:-1)*s.dir);
   const driverBody=document.getElementById("reportDriversBody");
-  if(driverBody) driverBody.innerHTML=drivers.map(r=>`<tr><td data-label="Autista"><strong>${esc(r.nome)}</strong></td><td data-label="Giri">${r.giri}</td><td data-label="Consegne">${r.consegne}</td><td data-label="Km">${fmtNumber(r.km,2)}</td><td data-label="Ore">${fmtNumber(r.ore,2)}</td><td data-label="Costo">${fmtMoney(r.costo)}</td><td data-label="Consegne/giro">${fmtNumber(r.consegne_per_giro,2)}</td></tr>`).join("") || `<tr><td colspan="7"><div class="gf-empty"><p>Nessun dato</p></div></td></tr>`;
+  if(driverBody) driverBody.innerHTML=drivers.map(r=>`<tr><td data-label="Autista"><strong>${esc(r.nome)}</strong></td><td data-label="Giri">${r.giri}</td><td data-label="Fermate">${r.consegne}</td><td data-label="Km">${fmtNumber(r.km,2)}</td><td data-label="Ore">${fmtNumber(r.ore,2)}</td><td data-label="Costo">${fmtMoney(r.costo)}</td><td data-label="Fermate/giro">${fmtNumber(r.consegne_per_giro,2)}</td></tr>`).join("") || `<tr><td colspan="7"><div class="gf-empty"><p>Nessun dato</p></div></td></tr>`;
 
   const agentBody=document.getElementById("reportAgentsBody");
   const agents=t.agenti||[];
-  if(agentBody) agentBody.innerHTML=agents.map(r=>`<tr><td data-label="Agente"><strong>${esc(r.nome)}</strong></td><td data-label="Giri">${r.giri}</td><td data-label="Consegne">${r.consegne}</td><td data-label="Km">${fmtNumber(r.km,2)}</td><td data-label="Costo">${fmtMoney(r.costo)}</td><td data-label="Consegne/giro">${fmtNumber(r.consegne_per_giro,2)}</td></tr>`).join("") || `<tr><td colspan="6"><div class="gf-empty"><p>Nessun dato</p></div></td></tr>`;
+  if(agentBody) agentBody.innerHTML=agents.map(r=>`<tr><td data-label="Agente"><strong>${esc(r.nome)}</strong></td><td data-label="Giri">${r.giri}</td><td data-label="Fermate">${r.consegne}</td><td data-label="Km">${fmtNumber(r.km,2)}</td><td data-label="Costo">${fmtMoney(r.costo)}</td><td data-label="Fermate/giro">${fmtNumber(r.consegne_per_giro,2)}</td></tr>`).join("") || `<tr><td colspan="6"><div class="gf-empty"><p>Nessun dato</p></div></td></tr>`;
 
   const customerQ=(document.getElementById("reportCustomersSearch")?.value || "").toLowerCase();
   const customerBody=document.getElementById("reportCustomersBody");
   const customers=(t.clienti||[]).filter(r=>!customerQ || String(r.nome||"").toLowerCase().includes(customerQ)).slice(0,80);
-  if(customerBody) customerBody.innerHTML=customers.map(r=>`<tr><td data-label="Cliente"><strong>${esc(r.nome||"Cliente")}</strong></td><td data-label="Consegne">${r.consegne}</td><td data-label="Giri">${r.giri}</td><td data-label="Km tappe">${fmtNumber(r.km_tappe,2)} km</td></tr>`).join("") || `<tr><td colspan="4"><div class="gf-empty"><p>Nessun cliente trovato</p></div></td></tr>`;
+  if(customerBody) customerBody.innerHTML=customers.map(r=>`<tr><td data-label="Cliente"><strong>${esc(r.nome||"Cliente")}</strong></td><td data-label="Fermate">${r.consegne}</td><td data-label="Giri">${r.giri}</td><td data-label="Km tappe">${fmtNumber(r.km_tappe,2)} km</td></tr>`).join("") || `<tr><td colspan="4"><div class="gf-empty"><p>Nessun cliente trovato</p></div></td></tr>`;
 }
 
 function renderReportInsights(rows){

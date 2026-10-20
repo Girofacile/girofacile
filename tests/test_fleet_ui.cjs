@@ -3,6 +3,7 @@ function fixture(){
  const nodes={};const node=id=>nodes[id]??={value:'',innerHTML:'',textContent:'',attributes:{},classList:{toggle(){}},setAttribute(k,v){this.attributes[k]=v}};
  const ctx=vm.createContext({document:{getElementById:node},vehiclesCache:[],esc:s=>String(s??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;')});
  const core=fs.readFileSync('static/dashboard/js/core.js','utf8');
+ vm.runInContext(fs.readFileSync('static/dashboard/js/format.js','utf8'),ctx);
  vm.runInContext(core.slice(core.indexOf('const GF_FUEL_LABELS'),core.indexOf('function updateVehicleEnergyFieldsV895'))+'\n'+fs.readFileSync('static/dashboard/js/vehicles.js','utf8'),ctx);
  return {ctx,node,run:s=>vm.runInContext(s,ctx)};
 }

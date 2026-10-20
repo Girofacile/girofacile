@@ -224,7 +224,7 @@
             </section>
             <div class="gf-grid" data-cols="2">
               <section class="gf-panel">
-                <header class="gf-panel__header"><h3 class="gf-panel__title">Distinta articoli</h3><span class="gf-panel__meta">${o.items?.length||0} righe</span></header>
+                <header class="gf-panel__header"><h3 class="gf-panel__title">Distinta articoli</h3><span class="gf-panel__meta">${o.items?.length||0} ${(o.items?.length||0)===1?'riga':'righe'}</span></header>
                 <div class="gf-panel__body"><dl class="gf-details">${items}</dl></div>
               </section>
               <section class="gf-panel">

@@ -70,7 +70,10 @@
     const required=[
       ['companyNameInput','Nome azienda'],['companyPhoneInput','Telefono'],['companyEmailInput','Email aziendale'],
       ['companyAddressInput','Indirizzo sede'],['companyCityInput','Città'],['companyZipInput','CAP'],
-      ['companyCountryInput','Paese'],['companyVatInput','Partita IVA'],['companyActivityTypeInput','Descrizione attività']
+      ['companyCountryInput','Paese'],['companyVatInput','Partita IVA'],['companyFiscalCodeInput','Codice fiscale'],
+      // Per la fatturazione elettronica basta uno dei due recapiti.
+      ['companySdiInput','Codice SDI o PEC',val=>val('companySdiInput')||val('companyPecInput')],
+      ['companyActivityTypeInput','Descrizione attività']
     ];
     function sync(){
       const val=id=>(byId(id)?.value||'').trim();
@@ -91,7 +94,7 @@
         if(!text||/Seleziona|Consegne medie/.test(text))return;
         const item=document.createElement('span');item.innerHTML=svg(icons[ic]);item.append(document.createTextNode(text));facts.append(item);
       });
-      const missing=required.filter(([id])=>!val(id)),pct=Math.round((required.length-missing.length)*100/required.length);
+      const missing=required.filter(([id,,filled])=>!(filled?filled(val):val(id))),pct=Math.round((required.length-missing.length)*100/required.length);
       byId('gfRefPercent').textContent=pct+'%';
       byId('gfRefMeter').dataset.gfWidth=String(Math.round(pct/5)*5);
       byId('gfRefMissingTitle').textContent=missing.length?'Mancano '+missing.length+' '+(missing.length===1?'elemento':'elementi')+'.':'Dati principali completi.';

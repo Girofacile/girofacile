@@ -8,6 +8,7 @@ function render(violation, overrides={}, fromHistory=false){
   const context=vm.createContext({document:{getElementById:()=>node},esc:x=>String(x??'').replaceAll('<','&lt;'),
     mapsAddressUrl:()=>'',deliverySignatureAction:()=>'',currentSessionUser:null,setTimeout:()=>{}});
   context.window=context;
+  vm.runInContext(fs.readFileSync('static/dashboard/js/format.js','utf8'),context);
   vm.runInContext(fs.readFileSync('static/driver-schedule.js','utf8'),context);
   vm.runInContext(core.slice(core.indexOf('function gfRouteEnergyMetric('),core.indexOf('function updateDashboardStats(')),context);
   vm.runInContext(fs.readFileSync('static/routing-summary.js','utf8'),context);
@@ -34,7 +35,7 @@ test('clean preview uses six full-width metrics and keeps map, print and schedul
   assert.equal((metrics.match(/class="gf-stat-strip__cell"/g)||[]).length,6);
   assert.ok(html.indexOf('data-preview-metrics') < html.indexOf('data-preview-layout'));
   assert.doesNotMatch(html,/data-preview-alerts/);
-  for(const text of ['89.59 km','7.62 L','Programma giro','Visualizza su mappa','Apri in Google Maps','Ricarica mappa','Stampa dettaglio fermate','Copia indirizzo']) assert.ok(html.includes(text),text);
+  for(const text of ['89,59 km','7,62 L','Programma giro','Visualizza su mappa','Apri in Google Maps','Ricarica mappa','Stampa dettaglio fermate','Copia indirizzo']) assert.ok(html.includes(text),text);
 });
 
 test('saved history cannot schedule or reorder stops and routes without IDs do not load a map',()=>{

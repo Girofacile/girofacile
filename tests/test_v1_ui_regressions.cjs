@@ -36,7 +36,9 @@ function historyFixture(api){
     URL:{createObjectURL:blob=>{downloads.push(blob.parts.join(''));return 'blob:test';},revokeObjectURL(){}},
     setTimeout(){},toast(){},
   };
-  vm.runInNewContext(historySource,context);
+  vm.createContext(context);
+  vm.runInContext(fs.readFileSync('static/dashboard/js/format.js','utf8'),context);
+  vm.runInContext(historySource,context);
   return {history:context.window.GFHistory,node,nodes,downloads,context};
 }
 function closed(id,name='Giro '+id){
