@@ -237,11 +237,38 @@ def test_pdf_text_and_long_notes(env, storage):
     from datetime import datetime
     state = SimpleNamespace(completata_il=datetime(2026,10,4,10,30), signed_by_name='Mario Rossi',
         signed_at=datetime(2026,10,4,10,29), note_operatore='merce ricevuta', signature_note='<script> & ' + 'Nota lunga ' * 150)
+    owner.company_name, owner.company_vat = 'Distribuzioni Rossi Srl', 'IT01234567890'
+    owner.company_address, owner.company_city, owner.company_zip = 'Via Roma 1', 'Napoli', '80100'
+    owner.company_logo_url = image_data('PNG', (120, 120))
+    delivery.colli, delivery.peso_kg, delivery.ordine = 3, 24.5, 1
     raw = generate_pod(route, delivery, state, owner, base64.b64decode(image_data().split(',')[1]),
-                       base64.b64decode(image_data('JPEG').split(',')[1]))
-    text = '\n'.join(page.extract_text() for page in PdfReader(io.BytesIO(raw)).pages)
+                       base64.b64decode(image_data('JPEG', (2400, 1800)).split(',')[1]))
+    reader = PdfReader(io.BytesIO(raw))
+    # Sempre una pagina, anche con note lunghissime (vengono accorciate).
+    assert len(reader.pages) == 1
+    text = reader.pages[0].extract_text()
     assert 'Consegna completata' in text and 'Mario Rossi' in text and 'merce ricevuta' in text
-    assert 'certificazione legale' in text
+    assert 'certificazione legale' in text and 'Pagina 1 di 1' in text
+    assert f'POD-{route.id}-{delivery.id}' in text
+    assert 'Distribuzioni Rossi Srl' in text and 'P. IVA IT01234567890' in text and '80100 Napoli' in text
+    assert '04/10/2026 alle 10:30' in text and '3 colli · 24,5 kg' in text
+    assert '<script>' in text and '…' in text  # testo dell'utente mostrato come testo, accorciato
+    assert 'Nota lunga ' * 40 not in text
+
+
+def test_pdf_without_signature_photo_or_logo_stays_on_one_page(env, storage):
+    from app.services.delivery_pod import generate_pod
+    from types import SimpleNamespace
+    PdfReader = pytest.importorskip("pypdf").PdfReader
+    _, db, owner, route, delivery, _ = setup_portals(env)
+    owner.company_name, owner.company_logo_url = 'Trasporti Bianchi', 'data:image/png;base64,non-valido'
+    state = SimpleNamespace(completata_il=None, signed_by_name=None, signed_at=None,
+                            note_operatore='x' * 5000, signature_note=None)
+    reader = PdfReader(io.BytesIO(generate_pod(route, delivery, state, owner)))
+    assert len(reader.pages) == 1
+    text = reader.pages[0].extract_text()
+    assert 'Firma non acquisita' in text and 'Foto non acquisita' in text
+    assert 'Trasporti Bianchi' in text and 'TB' in text
 
 
 def test_signature_replacement_cleans_only_after_commit_and_retains_legacy(env, storage):

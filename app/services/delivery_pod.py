@@ -4,7 +4,6 @@ import binascii
 import hashlib
 import io
 import logging
-from html import escape
 
 from fastapi import HTTPException
 from fastapi.responses import Response
@@ -15,6 +14,7 @@ from sqlalchemy.orm import Session
 from ..core.utils import local_now
 from ..models import DeliveryStatus
 from . import object_storage
+from .pod_pdf import generate_pod  # PDF della prova di consegna (una pagina)
 
 logger = logging.getLogger(__name__)
 MAX_PHOTO_BYTES = 12_000_000
@@ -113,54 +113,6 @@ def read_evidence(storage, route, delivery, status, kind):
     if hashlib.sha256(raw).hexdigest() != getattr(status, kind + '_sha256'):
         raise object_storage.unavailable()
     return raw
-
-
-def generate_pod(route, delivery, status, owner, signature=None, photo=None):
-    from reportlab.lib import colors
-    from reportlab.lib.styles import getSampleStyleSheet
-    from reportlab.lib.units import mm
-    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, KeepTogether, Image as PDFImage
-    stream = io.BytesIO()
-    styles = getSampleStyleSheet()
-    styles['BodyText'].spaceBefore = 0
-    styles['BodyText'].spaceAfter = 0
-    story = [Paragraph('GiroFacile - Prova di consegna', styles['Title']),
-             Paragraph('Consegna completata', styles['Heading2'])]
-    driver = route.driver
-    vehicle = route.vehicle
-    rows = [('Azienda', owner.company_name or owner.username),
-            ('Giro', f'{route.id} - {route.nome or ""}'), ('Consegna', delivery.id),
-            ('Cliente', delivery.cliente_nome), ('Indirizzo', delivery.indirizzo),
-            ('Data e ora (Europe/Rome)', status.completata_il),
-            ('Autista', ' '.join(filter(None, [driver.nome, driver.cognome])) if driver else '-'),
-            ('Mezzo / targa', f'{vehicle.nome or ""} / {vehicle.targa or ""}' if vehicle else '-'),
-            ('Colli / peso kg', f'{delivery.colli or 0} / {delivery.peso_kg or 0}'),
-            ('Firmatario', status.signed_by_name or '-'), ('Data firma', status.signed_at or '-'),
-            ('Note consegna', status.note_operatore or '-'), ('Note firma', status.signature_note or '-')]
-    for label, value in rows:
-        text = escape(str(value or '-')).replace('\n', '<br/>')
-        story.append(Paragraph(f'<b>{label}:</b> {text}', styles['BodyText']))
-        story.append(Spacer(1, 2 * mm))
-    for label, raw, width, height in [('Firma cliente', signature, 130*mm, 45*mm),
-                                     ('Foto della consegna', photo, 160*mm, 75*mm)]:
-        group = [Paragraph(label + ('' if raw else ': non acquisita'), styles['Heading3'])]
-        if raw:
-            image = PDFImage(io.BytesIO(raw))
-            scale = min(width / image.imageWidth, height / image.imageHeight)
-            image.drawWidth = image.imageWidth * scale
-            image.drawHeight = image.imageHeight * scale
-            image.hAlign = 'LEFT'
-            group.append(image)
-        story.append(KeepTogether(group))
-    story.append(Spacer(1, 5*mm))
-    story.append(Paragraph('Gli hash SHA-256 sono controlli di integrità dei file; non costituiscono firma digitale qualificata o certificazione legale.', styles['BodyText']))
-    def footer(canvas, doc):
-        canvas.setFillColor(colors.grey)
-        canvas.setFont('Helvetica', 9)
-        canvas.drawString(20*mm, 12*mm, f'GiroFacile | POD {delivery.id} | Pagina {doc.page}')
-    SimpleDocTemplate(stream, pagesize=(210*mm, 297*mm), leftMargin=20*mm, rightMargin=20*mm,
-                      topMargin=18*mm, bottomMargin=22*mm).build(story, onFirstPage=footer, onLaterPages=footer)
-    return stream.getvalue()
 
 
 def save_delivery_evidence(db, route, delivery, status, payload, owner, action):

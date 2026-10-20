@@ -3,7 +3,7 @@
 Firma, foto e PDF nuovi vengono salvati in un bucket S3-compatible. PostgreSQL
 conserva chiavi, MIME, dimensioni, SHA-256 e date; `signature_data` resta disponibile
 soltanto per le firme legacy. Nessuna migrazione cancella le firme esistenti.
-Il PDF riporta firma e foto, quando disponibili, oltre ai dati della consegna.
+Il PDF (`app/services/pod_pdf.py`) è sempre di una sola pagina A4: in alto logo e dati dell'azienda dal profilo (iniziali se manca il logo), numero `POD-<giro>-<consegna>` ed esito; poi destinatario e data, i dettagli su due colonne e, affiancate, firma e foto. I testi lunghi vengono accorciati e il piè di pagina riporta "Generato con GiroFacile" e le impronte SHA-256 di firma e foto.
 SHA-256 verifica l'integrità: non è una firma digitale qualificata o una certificazione legale.
 
 ## Configurazione Hetzner
