@@ -4090,7 +4090,7 @@ function dashboardStopRowsUnified(r, mode='live'){
             <td data-label="Arrivo previsto"><strong>${esc(planned)}</strong></td>
             <td data-label="Arrivo reale">${real ? `<strong>${esc(real)}</strong>` : '<span class="gf-muted">-</span>'}</td>
             <td data-label="Differenza">${gfDeltaBadge(plannedDates[idx], realDate)}</td>
-            <td data-label="Stato">${deliveryStatusPill(st)}${d.motivo_mancata?`<br><small class="gf-muted">${esc(d.motivo_mancata)}</small>`:''}</td>
+            <td data-label="Stato">${deliveryStatusPill(st)}${d.motivo_mancata?`<br><small class="gf-muted">${esc(gfMissedReason(d.motivo_mancata))}</small>`:''}</td>
             <td data-label="Documenti e tracking">${deliverySignatureAction(d, r.driver_name)} ${trackingButton(d, r)}</td>
             <td data-label="Note">${note ? `<button type="button" class="gf-button" data-variant="ghost" data-size="sm" data-note="${esc(String(note))}" onclick="alert(this.dataset.note)">Note</button>` : '<span class="gf-muted">-</span>'}</td>
           </tr>`+GFDriverBreaks.table(r,idx+1,9);

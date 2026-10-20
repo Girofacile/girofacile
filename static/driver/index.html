@@ -259,7 +259,7 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
 @keyframes spin{to{transform:rotate(360deg)}}
 </style>
 <link rel="stylesheet" href="/static/routing-summary.css?v=driver_shifts_20261013_1">
-<script src="/static/format.js?v=gf_format_20261020"></script>
+<script src="/static/format.js?v=gf_driver_flow_20261020"></script>
 <script src="/static/routing-summary.js?v=gf_flow_20261020"></script>
 <link rel="stylesheet" href="/static/live-gps.css?v=20261005">
 <script src="/static/live-gps.js?v=20261005"></script>
@@ -336,7 +336,7 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
     <div id="view-execution" class="view">
       <div class="exec-header">
         <button class="back-btn" onclick="exitExecution()">‹ Giri</button>
-        <div class="exec-title" id="execTitle">Giro in corso</div>
+        <div class="exec-title" id="execTitle">Caricamento giro…</div>
       </div>
       <div class="exec-progress-bar"><div class="exec-progress-fill" id="execProgressBar" style="width:0%"></div></div>
       <div class="progress-strip">
@@ -661,7 +661,7 @@ function renderRouteCard(r, today) {
     ${r.n_consegne > 0 && (r.status === 'in_corso' || r.status === 'completato') ? `
     <div class="rc-progress">
       <div class="rc-progress-track"><div class="rc-progress-fill" style="width:${pct}%"></div></div>
-      <div class="rc-progress-label"><span>${r.completate} consegnate · ${r.mancate} mancate</span><span>${pct}%</span></div>
+      <div class="rc-progress-label"><span>${gfCount(r.completate,'consegnata','consegnate')} · ${gfCount(r.mancate,'mancata','mancate')}</span><span>${pct}%</span></div>
     </div>` : ''}
     ${actionsHtml}
   </div>`;
@@ -696,6 +696,17 @@ async function startRoute(routeId) {
     await api(`/api/driver/routes/${routeId}/start`, {method:'POST', body:'{}'});
     await openExecution(routeId);
   } catch(e) { alert(e.message); }
+}
+
+// Avvio dal dettaglio: stessa verifica dell'elenco (conferma se prima dell'orario previsto).
+function startFromDetail() {
+  const route = currentRouteData?.route;
+  if(!route) return;
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  const hhmm = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  const beforeTime = route.data_giro === today && !!route.orario_partenza && hhmm < route.orario_partenza;
+  tryStartRoute(Number(route.id), beforeTime, route.orario_partenza || '', route.nome || 'Giro');
 }
 
 function closePopup() {
@@ -756,6 +767,7 @@ function renderExecution(data) {
   list.classList.remove('hidden');
 
   const mapsUrl = encodeURIComponent;
+  const notStarted = ['programmato','bozza'].includes(route.status);
   list.innerHTML = GFDriverBreaks.cards(route,0)+consegne.map((c, i) => {
     const isActive = c.status === 'in_attesa' && i === progress.prossima_idx;
     const isDone = c.status === 'completata';
@@ -792,7 +804,12 @@ function renderExecution(data) {
     }
 
     let actionsHtml = '';
-    if(isActive) {
+    // Giro non ancora avviato: prima l'avvio (con la conferma se in anticipo), poi gli esiti.
+    if(isActive && notStarted) {
+      actionsHtml = `<div class="di-actions">
+        <button class="btn-start" onclick="startFromDetail()">▶ Avvia giro per registrare le consegne</button>
+      </div>`;
+    } else if(isActive) {
       actionsHtml = `<div class="di-actions">
         <a class="btn-navigate" href="${navUrl}" target="_blank">
           <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
@@ -1056,8 +1073,8 @@ async function loadStorico() {
         </div>
         <div class="hi-stats">
           <span>${gfIcon('pin')} ${gfCount(r.n_consegne,'fermata','fermate')}</span>
-          <span>${gfIcon('checkCircle')} ${r.completate} consegnate</span>
-          <span>${gfIcon('xCircle')} ${r.mancate} mancate</span>
+          <span>${gfIcon('checkCircle')} ${gfCount(r.completate,'consegnata','consegnate')}</span>
+          <span>${gfIcon('xCircle')} ${gfCount(r.mancate,'mancata','mancate')}</span>
           ${r.totale_km?`<span>${gfIcon('route')} ${fmt(r.totale_km)} km</span>`:''}
         </div>
       </div>`).join('');

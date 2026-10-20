@@ -77,7 +77,8 @@
     else if(risks.indexOf("repeated") >= 0) message = "Evita caratteri o gruppi ripetuti troppe volte";
     else if(!acceptable) message = "La password è ancora troppo debole: rendila meno prevedibile";
 
-    return {acceptable:acceptable,level:level,label:label,score:points,checks:checks,risks:risks,message:message};
+    // Campo ancora vuoto: nessun errore prima che l'utente inizi a scrivere.
+    return {acceptable:acceptable,level:level,label:label,score:points,checks:checks,risks:risks,message:message,empty:!password};
   }
 
   function escapeHtml(value){
@@ -99,7 +100,7 @@
         '<span class="'+(result.checks.lowercase?'ok':'')+'">1 minuscola</span>'+
         '<span class="'+(result.checks.special?'ok':'')+'">1 carattere speciale</span>'+
       '</div>'+
-      '<div class="gf-password-meter-message '+(result.acceptable?'ok':'')+'">'+escapeHtml(result.message)+'</div>';
+      '<div class="gf-password-meter-message '+(result.acceptable?'ok':'')+'">'+(result.empty?'':escapeHtml(result.message))+'</div>';
   }
 
   const controllers = [];

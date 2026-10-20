@@ -162,7 +162,7 @@ window.GFHistory = (() => {
       return `<li class="gf-stop${st === 'completata' ? ' is-done' : st === 'mancata' ? ' is-miss' : ''}"><span class="gf-stop__number">${esc(d.ordine || idx+1)}</span>
         <span class="gf-stop__main"><span class="gf-stop__name">${esc(d.cliente_nome || '-')}</span>
           <span class="gf-stop__meta">${esc(d.indirizzo || '-')} · previsto ${esc(gfPlannedArrival(d))}${real ? ` · reale ${esc(real)}` : ''} ${gfDeltaBadge(planned[idx], gfRealArrivalDate(d))}</span>
-          <span class="gf-stop__meta">${deliveryStatusPill(st)}${d.motivo_mancata ? ` <small>${esc(d.motivo_mancata)}</small>` : ''} ${deliverySignatureAction(d, r.driver_name)} ${trackingButton(d, r)}${note ? ` <button type="button" class="gf-button" data-variant="ghost" data-size="sm" data-note="${esc(String(note))}" onclick="alert(this.dataset.note)">Note</button>` : ''}</span>
+          <span class="gf-stop__meta">${deliveryStatusPill(st)}${d.motivo_mancata ? ` <small>${esc(gfMissedReason(d.motivo_mancata))}</small>` : ''} ${deliverySignatureAction(d, r.driver_name)} ${trackingButton(d, r)}${note ? ` <button type="button" class="gf-button" data-variant="ghost" data-size="sm" data-note="${esc(String(note))}" onclick="alert(this.dataset.note)">Note</button>` : ''}</span>
         </span><span class="gf-stop__time">${esc(real || gfPlannedArrival(d))}</span></li>${breaks(idx+1)}`;
     }).join('')}</ol>`;
   }
@@ -187,7 +187,7 @@ window.GFHistory = (() => {
         <td data-label="Previsto">${esc(gfPlannedArrival(d))}</td>
         <td data-label="Reale">${esc(real || '—')}</td>
         <td data-label="Differenza">${gfDeltaBadge(planned[idx], gfRealArrivalDate(d))}</td>
-        <td data-label="Esito">${deliveryStatusPill(st)}${d.motivo_mancata ? `<br><small class="gf-muted">${esc(d.motivo_mancata)}</small>` : ''}</td>
+        <td data-label="Esito">${deliveryStatusPill(st)}${d.motivo_mancata ? `<br><small class="gf-muted">${esc(gfMissedReason(d.motivo_mancata))}</small>` : ''}</td>
         <td data-label="Prova e note"><div class="gf-cluster">${deliverySignatureAction(d, r.driver_name)} ${trackingButton(d, r)}${note ? `<button type="button" class="gf-button" data-variant="ghost" data-size="sm" data-note="${esc(String(note))}" onclick="alert(this.dataset.note)">Note</button>` : ''}</div></td>
       </tr>`;
     }).join('');
@@ -261,7 +261,7 @@ window.GFHistory = (() => {
   function exportStops(){
     if(!route) return;
     download(`giro-${route.id}-fermate.csv`, [['Ordine','Cliente','Indirizzo','Arrivo previsto','Arrivo reale','Stato','Motivo','Note'],
-      ...(route.consegne || []).map(d => [d.ordine, d.cliente_nome, d.indirizzo, gfPlannedArrival(d), gfRealArrival(d), status(d), d.motivo_mancata, d.note_operatore || d.note_autista || d.note])]);
+      ...(route.consegne || []).map(d => [d.ordine, d.cliente_nome, d.indirizzo, gfPlannedArrival(d), gfRealArrival(d), status(d), gfMissedReason(d.motivo_mancata), d.note_operatore || d.note_autista || d.note])]);
   }
 
   /* --- Caricamento ------------------------------------------------------------------ */

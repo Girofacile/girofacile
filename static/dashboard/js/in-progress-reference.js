@@ -72,7 +72,7 @@ window.GFInProgressReference=(()=>{
       '<td data-label="Arrivo previsto">'+esc(gfPlannedArrival(d)||'—')+'</td><td data-label="Arrivo reale">'+esc(time||'—')+'</td>'+
       '<td data-label="Differenza">'+gfDeltaBadge(planned[i],gfRealArrivalDate(d))+'</td>'+
       '<td data-label="Stato">'+chip(title,tone)+
-      (d.motivo_mancata?'<br><small class="gf-muted">'+esc(d.motivo_mancata)+'</small>':'')+'</td>'+
+      (d.motivo_mancata?'<br><small class="gf-muted">'+esc(gfMissedReason(d.motivo_mancata))+'</small>':'')+'</td>'+
       '<td data-label="Documenti e tracking"><div class="gf-cluster">'+deliverySignatureAction(d,r.driver_name)+' '+trackingButton(d,r)+
       (notes?'<button type="button" class="gf-button" data-variant="ghost" data-size="sm" data-ip-note="'+esc(notes)+'">Note</button>':'')+
       '</div></td></tr>';

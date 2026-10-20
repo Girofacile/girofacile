@@ -25,7 +25,8 @@ from check_management_design import ME, LIMITS, USAGE
 from check_orders_ui import select_ready
 
 API_PREFIXES = ('/api/orders', '/api/order-planning', '/api/routes', '/api/resources',
-                '/api/vehicles', '/api/drivers', '/api/deposits')
+                '/api/vehicles', '/api/drivers', '/api/deposits', '/api/driver/')
+DRIVER_PASSWORD = 'E2e-Collaudo-9x!'
 # Numeri con il punto decimale accanto a un'unità: nel gestionale vanno con la virgola.
 DOT_DECIMAL = re.compile(r'\b\d+\.\d+\s?(km|kWh|L|kg|min)\b|€\s?\d+\.\d')
 WRONG_PLURAL = re.compile(r'\b1 (fermate|consegne|ordini|colli|mezzi)\b')
@@ -57,6 +58,7 @@ def run(browser, width, output):
         from app.order_models import Order
         tomorrow = (date.today() + timedelta(days=1)).isoformat()
         order = ready(planning_ctx, 'E2E-1', packages=1, weight_kg=12.5, requested_date=tomorrow)
+        ready(planning_ctx, 'E2E-2', delivery_address='Second address', packages=2, weight_kg=8, requested_date=tomorrow)
 
         page = browser.new_page(viewport={'width': width, 'height': 900})
         errors, api_failures = [], []
@@ -78,7 +80,7 @@ def run(browser, width, output):
                 route.fulfill(content_type='application/javascript',
                               body='window.GF_PLANS=' + json.dumps({k: dict(LIMITS, name=k, price_eur=29) for k in ('starter', 'business', 'pro')})); return
             if not path.startswith('/api/'):
-                file = (ROOT / ('static/dashboard/index.html' if path == '/dashboard' else path.lstrip('/'))).resolve()
+                file = (ROOT / {'/dashboard': 'static/dashboard/index.html', '/driver': 'static/driver/index.html'}.get(path, path.lstrip('/'))).resolve()
                 if file.is_relative_to(ROOT) and file.is_file(): route.fulfill(path=str(file))
                 else: route.fulfill(status=404, body='')
                 return
@@ -120,7 +122,7 @@ def run(browser, width, output):
         # 3. Anteprima: contenuti e formati.
         preview = page.locator('#tab-route-preview')
         preview.wait_for(state='visible')
-        expect(preview).to_contain_text('1 fermata pianificata')
+        expect(preview).to_contain_text('2 fermate pianificate')
         check_text('anteprima', preview.inner_text())
         assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 2'), 'scroll orizzontale in anteprima'
         page.screenshot(path=str(output / f'preview-{width}.png'), full_page=True)
@@ -158,6 +160,49 @@ def run(browser, width, output):
         expect(page.locator('#ordersSelection')).to_be_hidden()
         page.screenshot(path=str(output / f'scheduled-{width}.png'), full_page=True)
 
+        # 6. Portale autista (telefono): prima dell'avvio solo "Avvia giro", poi esiti, chiusura e storico.
+        if width <= 400:
+            from datetime import time as dtime
+            from app.models import DriverAccount
+            from app.core.security import hash_password
+            from app.routers import driver as driver_routes
+            client.app.include_router(driver_routes.router)
+            driver.email = 'autista@e2e.test'
+            db.add(DriverAccount(driver_id=driver.id, email=driver.email, password_hash=hash_password(DRIVER_PASSWORD), is_active=True))
+            # Il giro passa a oggi alle 23:59: avviabile, ma "in anticipo" (serve la conferma).
+            route.data_giro = date.today(); route.orario_partenza = dtime(23, 59)
+            db.commit()
+            dialogs = []
+            page.on('dialog', lambda d: (dialogs.append(d.message), d.accept()))
+            # Accesso reale dell'autista (la pagina di login è comune ai portali): il cookie resta nel client.
+            login = client.post('/api/driver/login', json={'email': driver.email, 'password': DRIVER_PASSWORD})
+            assert login.status_code == 200, login.text
+            page.goto('http://flow.test/driver', wait_until='networkidle')
+            page.get_by_role('button', name='Dettaglio').first.click()
+            start = page.get_by_role('button', name='▶ Avvia giro per registrare le consegne')
+            expect(start).to_be_visible()
+            assert page.get_by_role('button', name='Consegnato', exact=True).count() == 0, 'esiti disponibili prima dell’avvio'
+            start.click()
+            expect(page.locator('#popupEarly')).to_be_visible()
+            page.locator('#popupConfirmBtn').click()
+            page.get_by_role('button', name='Consegnato', exact=True).click()
+            page.get_by_role('button', name='10 min').first.click()
+            page.get_by_role('button', name='Conferma consegna').click()
+            page.get_by_role('button', name='Mancata', exact=True).click()
+            page.get_by_role('button', name='Cliente assente').click()
+            page.get_by_role('button', name='Conferma mancata consegna').click()
+            expect(page.get_by_text('Giro completato!')).to_be_visible()
+            db.refresh(route)
+            assert route.status == 'completato', route.status
+            page.get_by_role('button', name='Storico').click()
+            history = page.locator('body')
+            expect(history).to_contain_text('1 consegnata')
+            expect(history).to_contain_text('1 mancata')
+            check_text('storico autista', history.inner_text())
+            assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 2'), 'scroll orizzontale nel portale autista'
+            assert not dialogs, dialogs
+            page.screenshot(path=str(output / f'driver-history-{width}.png'), full_page=True)
+
         assert not errors, errors
         assert not api_failures, api_failures
         page.close()
@@ -170,8 +215,9 @@ def main():
         for width in (1280, 390):
             run(browser, width, output)
         browser.close()
-    print('Flusso ordine → giro: selezione, data richiesta, configurazione, anteprima (formati e plurali), '
-          'programmazione, ordine assegnato e selezione svuotata superati a 1280 e 390px')
+    print('Flusso ordine → giro → autista: selezione, data richiesta, configurazione, anteprima (formati e plurali), '
+          'programmazione, dettaglio del giro, avvio dal portale autista, consegna, mancata, chiusura e storico '
+          'superati a 1280 e 390px')
 
 
 if __name__ == '__main__':
