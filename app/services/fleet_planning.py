@@ -455,11 +455,12 @@ def _program_saved(db,user,actor,plan_id,data):
                 data_giro=row.data_giro.isoformat(),orario_partenza=row.orario_partenza.strftime('%H:%M'),
                 n_consegne=len(row.deliveries),km_totali=float(row.totale_km or 0),
                 portal_url=os.getenv('APP_BASE_URL','https://app.girofacile.it').rstrip('/')+'/driver')
-            if not sent: failed.append(row.id)
+            if not sent: failed.append(row)
         except Exception:
-            failed.append(row.id)
+            failed.append(row)
     if failed:
         updated=deepcopy(plan.result)
-        updated['warnings'].append('Giri programmati, ma email non inviata per: '+', '.join(map(str,failed))+'. Avvisa gli autisti dal portale.')
+        names=[f"{r.nome} ({(r.driver.nome+' '+(r.driver.cognome or '')).strip()})" for r in failed]
+        updated['warnings'].append('Giri programmati, ma email non inviata per: '+'; '.join(names)+'. Avvisa gli autisti dal portale.')
         plan.result=updated;db.commit()
     return plan

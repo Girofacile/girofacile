@@ -32,7 +32,7 @@ function totals(plan,assignment,dirty){
  const ends=plan.routes.map(r=>r.result.return_time).filter(Boolean).sort();
  const stat=(label,value,sub,warning=false)=>'<div class="gf-stat-strip__cell"><span class="gf-stat-strip__label">'+esc(label)+'</span><strong class="gf-stat-strip__value">'+esc(value)+'</strong><small class="gf-stat-strip__unit">'+(warning?'<span class="gf-badge" data-status="warning">'+esc(sub)+'</span>':esc(sub))+'</small></div>';
  return '<section class="gf-stat-strip" aria-label="Totali della suddivisione">'+
- stat('Consegne',String(assignment.length),assignment.filter(x=>x==null).length+' non assegnate · '+used+' mezzi',assignment.some(x=>x==null))+
+ stat('Consegne',String(assignment.length),assignment.filter(x=>x==null).length+' non assegnate · '+gfCount(used,'mezzo','mezzi'),assignment.some(x=>x==null))+
  stat('Km totali',dirty?'—':km.toLocaleString('it-IT',{maximumFractionDigits:1})+' km',dirty?'Da ricalcolare':approximate?'Stima approssimativa':'Somma dei percorsi',dirty||approximate)+
  stat('Carburante / energia',dirty?'—':money(cost),dirty?'Da ricalcolare':'Costo stimato',dirty)+
  stat('Ultimo rientro',dirty?'—':ends.at(-1)||'—',dirty?'Da ricalcolare':approximate?'Stima approssimativa':'Orario previsto',dirty||approximate)+'</section>';

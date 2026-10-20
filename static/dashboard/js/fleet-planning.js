@@ -123,6 +123,7 @@
             ?'Giri programmati. Attenzione: '+issues.join(' ') 
             :'Giri programmati correttamente. Le consegne sono ora disponibili nel portale degli autisti.');
           globalThis.GFOrderPlanning?.leave();
+          await globalThis.GFOrderPlanning?.afterProgram?.().catch(()=>{});
           await loadRoutes();
         }
       }

@@ -17,6 +17,7 @@ function preview(){
  };
  const sandbox={window:{},document,console,requestAnimationFrame(){},setTimeout(){}};
  sandbox.GFDriverBreaks=vm.runInNewContext(read('static/driver-schedule.js')+';window.GFDriverBreaks',{window:{}});
+ vm.runInNewContext(read('static/dashboard/js/format.js'),sandbox);
  vm.runInNewContext(read('static/dashboard/js/fleet-review.js'),sandbox);
  const plan={
   id:15,version:1,status:'preview',

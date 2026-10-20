@@ -20,6 +20,19 @@ SMTP_FROM_NAME = os.getenv("SMTP_FROM_NAME", "GiroFacile")
 _EMAIL_FAILURE_LOGGING = False
 
 
+def _console(message: str) -> None:
+    """Log su console che non può far fallire l'invio.
+
+    Su Windows la console usa spesso cp1252 e non rappresenta le emoji degli
+    oggetti email: un print() fallito non deve trasformare un'email già
+    consegnata in un errore.
+    """
+    try:
+        print(message)
+    except UnicodeEncodeError:
+        print(message.encode("ascii", "replace").decode("ascii"))
+
+
 def _log_email_failure(subject: str, to_email: str, reason: str, severity: str = "critical") -> None:
     """Registra nel Super Admin anche i problemi SMTP.
 
@@ -64,7 +77,7 @@ def _log_email_failure(subject: str, to_email: str, reason: str, severity: str =
         finally:
             db.close()
     except Exception as monitor_exc:
-        print(f"[EMAIL_MONITOR] Impossibile registrare errore SMTP: {monitor_exc}")
+        _console(f"[EMAIL_MONITOR] Impossibile registrare errore SMTP: {monitor_exc}")
     finally:
         _EMAIL_FAILURE_LOGGING = False
 
@@ -73,7 +86,7 @@ def _send(to_email: str, subject: str, html_body: str) -> bool:
     """Invia una email HTML. Ritorna True se ok, False se errore."""
     if not SMTP_USER or not SMTP_PASSWORD:
         reason = "SMTP non configurato correttamente: SMTP_USER o SMTP_PASSWORD mancante"
-        print(f"[EMAIL] {reason} — email a {to_email} non inviata")
+        _console(f"[EMAIL] {reason} — email a {to_email} non inviata")
         _log_email_failure(subject, to_email, reason, severity="critical")
         return False
     try:
@@ -88,13 +101,13 @@ def _send(to_email: str, subject: str, html_body: str) -> bool:
             server.starttls()
             server.login(SMTP_USER, SMTP_PASSWORD)
             server.sendmail(SMTP_FROM, [to_email], msg.as_string())
-        print(f"[EMAIL] Inviata a {to_email}: {subject}")
-        return True
     except Exception as e:
         reason = f"Errore invio email: {e}"
-        print(f"[EMAIL] Errore invio a {to_email}: {e}")
+        _console(f"[EMAIL] Errore invio a {to_email}: {e}")
         _log_email_failure(subject, to_email, reason, severity="critical")
         return False
+    _console(f"[EMAIL] Inviata a {to_email}: {subject}")
+    return True
 
 
 def _base_template(content: str) -> str:

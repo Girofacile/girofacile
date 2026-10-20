@@ -164,7 +164,7 @@ def preview(db, user, actor, data):
     warnings = []
     for order in orders:
         if order.requested_date and order.requested_date.isoformat() != config['data_giro']:
-            raise HTTPException(422, f'Ordine {order.number}: la data richiesta è {order.requested_date.isoformat()}. Modifica la selezione o correggi esplicitamente l’ordine.')
+            raise HTTPException(422, f'Ordine {order.number}: la data richiesta è {order.requested_date.strftime('%d/%m/%Y')}. Modifica la selezione o correggi esplicitamente l’ordine.')
         if order.operational_data.get('weight_kg') is None or order.operational_data.get('packages') is None:
             warnings.append(f'Ordine {order.number}: peso o colli non indicati; verifica il carico prima del calcolo.')
         if any(order.operational_data.get(k) for k in ('pallet_truck','pallets','volume_m3','requirements')):

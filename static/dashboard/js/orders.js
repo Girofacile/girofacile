@@ -174,8 +174,9 @@
     const data=o.operational_data||{};
     const allowed=can('orders.update') && ['nuovo','da_verificare','pronto'].includes(o.status) && !o.assignments.length;
     const verified=!!o.address_verification&&!o.anomalies?.some(a=>a.code==='verification');
-    const requested=data.requested_date?esc(data.requested_date):'Non indicata';
-    const timeRange=data.time_from||data.time_to?`${esc(data.time_from||'—')} – ${esc(data.time_to||'—')}`:'Non indicata';
+    const requested=data.requested_date?esc(gfDateIt(data.requested_date)):'Non indicata';
+    const hhmm=t=>String(t||'—').slice(0,5);
+    const timeRange=data.time_from||data.time_to?`${esc(hhmm(data.time_from))} – ${esc(hhmm(data.time_to))}`:'Non indicata';
     const boolValue=value=>value===true?'Sì':value===false?'No':'N/D';
     const sourceChip=`<span class="gf-badge" data-status="neutral">${esc(o.source_name)}</span>`;
     const items=o.items?.length?o.items.map((item,index)=>`<div class="gf-details__item"><dt>${esc(item.description||item.name||`Articolo ${index+1}`)}</dt><dd><strong>${esc(display(item.quantity))}</strong></dd></div>`).join(''):'<p class="gf-muted">Nessun articolo indicato.</p>';

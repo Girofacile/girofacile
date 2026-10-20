@@ -105,7 +105,12 @@
       showTab('giro');
       if(saved.data_giro){
         for(const [id,key] of [['routeName','nome'],['routeDate','data_giro'],['routeStart','orario_partenza'],['routeDeposit','deposit_id'],['returnDepot','rientro_deposito'],['fuelPrice','energy_price_primary'],['electricityPrice','energy_price_electric']])set(id,saved[key]??'');
-        await refreshResourceAvailability();set('routeVehicle',saved.vehicle_id||'');set('routeDriver',saved.driver_id||'');
+        // La data richiesta dagli ordini prevale su quella di una configurazione precedente.
+        if(state.requested_dates?.length===1)set('routeDate',state.requested_dates[0]);
+        await refreshResourceAvailability();
+        // Non riproporre risorse ormai occupate nell'orario scelto.
+        const free=(list,id)=>id&&(list||[]).find(r=>String(r.id)===String(id))?.available!==false?id:'';
+        set('routeVehicle',free(resourcesAvailabilityCache.vehicles,saved.vehicle_id));set('routeDriver',free(resourcesAvailabilityCache.drivers,saved.driver_id));
         const mode=document.querySelector(`input[name="energyPriceMode"][value="${saved.energy_price_mode||'manual'}"]`);if(mode)mode.checked=true;
         await updateRouteEnergyPricingV895();
       }
@@ -149,6 +154,13 @@
     if(dirty)await flush();
   }
   async function beforeCalculate(){try{await flush();return enabled?!!await proceed():true;}catch(e){message(e.message);alert('Salva la selezione prima del calcolo: '+e.message);return false;}}
+  // Dopo la programmazione gli ordini sono assegnati: se non resta alcuna bozza aperta
+  // la selezione si svuota, così si può pianificare subito il giro successivo.
+  async function afterProgram(){
+    if(!allowed())return;
+    await loadSelection();
+    if(state.order_ids.length&&state.routes.length&&!state.routes.some(r=>r.status==='bozza'))await change('clear');
+  }
   function leave(){feedback('');editingRouteId=null;enabled=false;loadedStops=false;dirty=false;regeneratePending=false;clearTimeout(timer);gate();}
   function describe(row){
     if(!row.order_refs?.length)return '';
@@ -161,7 +173,7 @@
   }
   document.addEventListener('change',e=>{if(ids.includes(e.target.id)||e.target.name==='energyPriceMode')changed();});
   window.addEventListener('beforeunload',e=>{if(enabled&&(dirty||saving)){e.preventDefault();e.returnValue='';}});
-  window.GFOrderPlanning={selection:()=>state,acceptSelection:value=>{state=value;controls();},loadSelection,checkbox,headerCheckbox,isSelected,controls,metadata,describe,active:()=>enabled,gate,go,proceed,changed,flush,beforeCalculate,leave,cancelSelected,
+  window.GFOrderPlanning={selection:()=>state,acceptSelection:value=>{state=value;controls();},loadSelection,checkbox,headerCheckbox,isSelected,controls,metadata,describe,active:()=>enabled,gate,go,proceed,changed,flush,beforeCalculate,leave,afterProgram,cancelSelected,
     regroup(){if(loadedStops && !confirm('Rigenerare le fermate dai dati degli ordini? Le modifiche alle sole fermate verranno sostituite.')){el('orderGroupOrders').checked=!el('orderGroupOrders').checked;return;}changed();proceed(true);},
     save:()=>flush().catch(e=>message(e.message)),
     select:(id,checked)=>change(checked?'add':'remove',[id]),

@@ -249,7 +249,7 @@ window.GFInProgressReference=(()=>{
               <button type="button" data-ip-action="zoom-out" aria-label="Riduci">−</button>
               <button type="button" data-ip-action="follow" aria-label="Segui il mezzo" aria-pressed="false" disabled>${icon('target')}</button>
             </div>
-            <div class="gf-ip-map-stats"><span>${s.total} fermate</span><span>${esc(km(detail.totale_km))}</span><span class="gf-ip-map-gps">GPS in attesa</span></div>
+            <div class="gf-ip-map-stats"><span>${gfCount(s.total,"fermata","fermate")}</span><span>${esc(km(detail.totale_km))}</span><span class="gf-ip-map-gps">GPS in attesa</span></div>
             <div class="gf-ip-map-warning" role="status"></div>
           </div>
           <div class="gf-legend"><span>${svgIcon('target')}Mezzo GPS</span><span><i data-state="done"></i>Completata</span><span><i></i>Da fare</span><span><i data-state="miss"></i>Mancata</span></div>

@@ -1013,7 +1013,7 @@ function printStopsTable(){
       <td>${esc(d.arrivo_stimato || "-")}</td>
       <td>${esc(d.partenza_stimata || "-")}</td>
       <td>${Math.round(parseFloat(d.attesa_min)||0)} min</td>
-      <td>${d.km_tappa ?? "-"}</td>
+      <td>${d.km_tappa == null ? "-" : gfDecimal(d.km_tappa)}</td>
       <td>${esc(d.warning || "OK")}</td>
     </tr>`+GFDriverBreaks.table(r,i+1,8)).join("");
   const html = `<!doctype html><html><head><meta charset="utf-8"><title>Stampa dettaglio fermate - GiroFacile</title>
@@ -2441,7 +2441,7 @@ async function loadDrivers(){
   renderResourceSelects();
   renderDrivers();
 }
-function driverFullName(d){ return `${d.nome||""} ${d.cognome||""}`.trim() || "Autista"; }
+function driverFullName(d){ return `${d.nome||""} ${d.cognome||""}`.replace(/\s+/g," ").trim() || "Autista"; }
 function driverInitials(d){ return driverFullName(d).split(" ").map(x=>x[0]).join("").slice(0,2).toUpperCase() || "A"; }
 function updateDriverPreview(){
   const d = {nome:val("drNome"), cognome:val("drCognome"), patente:val("drPatente")};
@@ -3377,6 +3377,7 @@ async function programCurrentRoute(){
   try{
     await api(`/api/routes/${lastRouteResult.id}/program`, {method:"POST", body:"{}"});
     toast("Giro programmato correttamente. Lo trovi in Giri programmati.");
+    await globalThis.GFOrderPlanning?.afterProgram?.().catch(()=>{});
     clearRouteWorkspace();
     await loadDashboardHome();
     await loadRoutes();
@@ -3461,7 +3462,7 @@ function renderRouteResult(r, targetId="routeResult", fromHistory=false){
       <td data-label="Arrivo">${esc(d.arrivo_fisico||"-")}<br><small class="gf-muted">Inizio scarico: ${esc(d.inizio_servizio||d.arrivo_stimato||"-")}</small></td>
       <td data-label="Partenza">${esc(d.partenza_stimata||"-")}</td>
       <td data-label="Attesa">${Math.round(parseFloat(d.attesa_min)||0)} min</td>
-      <td data-label="Km tappa">${d.km_tappa ?? "-"}</td>
+      <td data-label="Km tappa">${d.km_tappa == null ? "-" : gfDecimal(d.km_tappa)}</td>
       <td data-label="Avvisi">${warningBadges(d.warning)}</td>
       <td data-label="Azioni"><details class="gf-dropdown" data-preview-stop-actions><summary class="gf-icon-button" aria-label="Azioni fermata ${idx+1}">›</summary><div data-gf-menu data-preview-stop-tools><a class="gf-button" data-variant="ghost" target="_blank" rel="noopener" href="${mapsAddressUrl(d.indirizzo)}" title="Apri fermata su Maps">📍 Apri su Maps</a><button type="button" class="gf-button" data-variant="ghost" onclick="copyText('${esc(d.indirizzo).replace(/'/g,"\\'")}', 'Indirizzo copiato')" title="Copia indirizzo">⧉ Copia indirizzo</button>${deliverySignatureAction(d, r.driver_name)} ${trackingButton(d, r)}</div></details></td>
     </tr>`+GFDriverBreaks.table(r,idx+1,9);
@@ -3479,21 +3480,21 @@ function renderRouteResult(r, targetId="routeResult", fromHistory=false){
       ${metric("Km totali", gfKm(r.totale_km))}
       ${metric("Tempo totale", `${Math.round(r.totale_minuti||0)} min`)}
       ${metric(gfRouteEnergyMetric(r).label, gfRouteEnergyMetric(r).value)}
-      ${metric(gfRouteEnergyMetric(r).costLabel, `€ ${r.costo_carburante ?? "-"}`)}
+      ${metric(gfRouteEnergyMetric(r).costLabel, r.costo_carburante == null ? "€ -" : `€ ${gfDecimal(r.costo_carburante)}`)}
     </div>
     ${violationsCount || counts.sponda || counts.ztl || counts.pedonale || counts.attesa || counts.critici ? `<section class="gf-stack" data-preview-alerts aria-label="Avvisi principali">
       <h3 class="gf-subtitle">Avvisi principali</h3>
       <div class="gf-grid" data-cols="2">
-        ${violationsCount > 0 ? alert("danger", "Finestre orarie non rispettate", `${violationsCount} fermate · ${Number(r.total_lateness_min||0).toFixed(1)} min di ritardo totale`, "Verifica le fermate prima di programmare. Puoi comunque confermare il giro.") : ""}
-        ${counts.sponda ? alert("danger", "🚚 Sponda richiesta non disponibile", `${counts.sponda} fermate`) : ""}
-        ${counts.ztl ? alert("warning", "Consegne in zona ZTL", `${counts.ztl} fermate`, "Avviso informativo: verifica le condizioni di accesso. Il giro non viene modificato.") : ""}
-        ${counts.pedonale ? alert("warning", "Consegne in area pedonale", `${counts.pedonale} fermate`, "Avviso informativo: verifica le modalità di consegna. Il giro non viene modificato.") : ""}
-        ${counts.attesa ? alert("warning", "🕒 Arrivo prima dell'apertura / attesa", `${counts.attesa} fermate`) : ""}
+        ${violationsCount > 0 ? alert("danger", "Finestre orarie non rispettate", `${gfCount(violationsCount,"fermata","fermate")} · ${gfDecimal(r.total_lateness_min||0,1)} min di ritardo totale`, "Verifica le fermate prima di programmare. Puoi comunque confermare il giro.") : ""}
+        ${counts.sponda ? alert("danger", "🚚 Sponda richiesta non disponibile", gfCount(counts.sponda,"fermata","fermate")) : ""}
+        ${counts.ztl ? alert("warning", "Consegne in zona ZTL", gfCount(counts.ztl,"fermata","fermate"), "Avviso informativo: verifica le condizioni di accesso. Il giro non viene modificato.") : ""}
+        ${counts.pedonale ? alert("warning", "Consegne in area pedonale", gfCount(counts.pedonale,"fermata","fermate"), "Avviso informativo: verifica le modalità di consegna. Il giro non viene modificato.") : ""}
+        ${counts.attesa ? alert("warning", "🕒 Arrivo prima dell'apertura / attesa", gfCount(counts.attesa,"fermata","fermate")) : ""}
         ${counts.critici && !counts.sponda && !counts.ztl && !counts.pedonale && !counts.attesa ? alert("warning", "Fermate da verificare", `${counts.critici} fermate con avvisi: consulta il dettaglio nella tabella.`) : ""}
       </div>
     </section>` : ""}
     <section class="gf-panel" data-preview-stops aria-labelledby="previewStopsTitle">
-      <header class="gf-panel__header"><div><h3 class="gf-panel__title" id="previewStopsTitle">Dettaglio fermate</h3><p class="gf-muted">${consegne.length} fermate pianificate</p></div>${r.id ? `<button type="button" class="gf-button" data-variant="secondary" data-preview-map-jump onclick="document.getElementById('routeGoogleMapV74_${r.id}').scrollIntoView({behavior:'smooth',block:'center'})">${icon('map').replace('<svg ','<svg class="gf-icon" ')}Visualizza su mappa</button>` : ''}</header>
+      <header class="gf-panel__header"><div><h3 class="gf-panel__title" id="previewStopsTitle">Dettaglio fermate</h3><p class="gf-muted">${gfCount(consegne.length,"fermata pianificata","fermate pianificate")}</p></div>${r.id ? `<button type="button" class="gf-button" data-variant="secondary" data-preview-map-jump onclick="document.getElementById('routeGoogleMapV74_${r.id}').scrollIntoView({behavior:'smooth',block:'center'})">${icon('map').replace('<svg ','<svg class="gf-icon" ')}Visualizza su mappa</button>` : ''}</header>
       <div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards"><thead><tr><th scope="col">#</th><th scope="col">Cliente</th><th scope="col">Indirizzo</th><th scope="col">Arrivo</th><th scope="col">Partenza</th><th scope="col">Attesa</th><th scope="col">Km tappa</th><th scope="col">Avvisi</th><th scope="col">Azioni</th></tr></thead><tbody>${rows}</tbody></table></div>
     </section>
     <div class="gf-grid" data-cols="main-side" data-preview-layout>

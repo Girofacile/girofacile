@@ -57,6 +57,7 @@ function harness(){
     console:{warn(){}}
   };
   context.GFDriverBreaks=vm.runInNewContext(read('static/driver-schedule.js')+';window.GFDriverBreaks',{window:{}});
+  vm.runInNewContext(read('static/dashboard/js/format.js'),context);
   vm.runInNewContext(read('static/dashboard/js/in-progress-reference.js'),context);
   return {page,picker,count,route:selectedRoute,controller:context.window.GFInProgressReference,context,handlers};
 }

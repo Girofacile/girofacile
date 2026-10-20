@@ -1,6 +1,7 @@
 (function(global){
   "use strict";
   const escape = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const qty = value => Number(value).toLocaleString("it-IT", {maximumFractionDigits:2});
   const money = value => value === null || value === undefined ? "Non disponibile" : "€ " + Number(value).toLocaleString("it-IT", {minimumFractionDigits:2,maximumFractionDigits:2});
   function summaryHtml(route, refreshAction=""){
     const toll = route.toll_estimated_eur;
@@ -17,8 +18,8 @@
       (route.traffic_status === "unavailable" ? '<small>Traffico non disponibile; utilizzati i tempi stradali salvati.</small>' : '') +
       (canRefresh ? '<button type="button" class="btn-secondary" onclick="' + escape(refreshAction) + '">Aggiorna ETA con traffico</button>' : '') + '</div>' +
       '<div class="gf-routing-costs"><div><span>Carburante / energia stimata</span><strong>' + money(route.costo_carburante) + '</strong>' +
-      (route.energy_quantity_primary != null ? '<small>' + (energyUnit === "kWh" ? escape(route.energy_quantity_electric) + " kWh" : escape(route.energy_quantity_primary) + " " + escape(energyUnit) +
-      (Number(route.energy_quantity_electric) > 0 ? " + " + escape(route.energy_quantity_electric) + " kWh" : "")) + '</small>' : '') + '</div>' +
+      (route.energy_quantity_primary != null ? '<small>' + (energyUnit === "kWh" ? escape(qty(route.energy_quantity_electric)) + " kWh" : escape(qty(route.energy_quantity_primary)) + " " + escape(energyUnit) +
+      (Number(route.energy_quantity_electric) > 0 ? " + " + escape(qty(route.energy_quantity_electric)) + " kWh" : "")) + '</small>' : '') + '</div>' +
       '<div><span>Pedaggio stimato</span><strong>' + money(toll) + '</strong>' + (note ? '<small>' + escape(note) + '</small>' : '') + '</div>' +
       '<div><span>Costo operativo stimato</span><strong>' + money(route.costo_totale ?? route.costo_carburante) + '</strong>' +
       (route.operating_cost_status === "partial" ? '<small>Totale parziale: pedaggi incompleti</small>' : '') + '</div></div></section>';
