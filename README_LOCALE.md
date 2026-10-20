@@ -146,3 +146,19 @@ Da mobile sono accessibili dal menu **Altro** del pannello admin.
 ## v72 - PostgreSQL obbligatorio
 
 Da v72 GiroFacile usa PostgreSQL come database ufficiale. Prima di avviare in locale eseguire `setup_postgres_locale.bat` e controllare `DATABASE_URL` nel file `.env`.
+
+## Firma, foto e PDF di consegna in locale
+
+Per provare firma, foto e PDF della consegna senza l'archivio Hetzner non serve Docker. Nel file `.env`:
+
+```env
+OBJECT_STORAGE_ENABLED=true
+OBJECT_STORAGE_BACKEND=local
+OBJECT_STORAGE_LOCAL_PATH=data/pod_storage
+OBJECT_STORAGE_LOCAL_SECRET=una-stringa-locale-lunga-e-casuale
+OBJECT_STORAGE_SIGNED_URL_SECONDS=900
+```
+
+Verifica: `.venv\Scripts\python.exe -m app.services.object_storage` deve rispondere `Archivio POD configurato e verificato: local`.
+
+I file finiscono in `data/pod_storage/` (esclusa da Git) e si aprono con link firmati che scadono come quelli S3. L'archivio locale funziona solo con `APP_ENV` di sviluppo: in produzione viene rifiutato e resta obbligatorio S3.

@@ -353,3 +353,82 @@ def test_palette_signature_transparency_preserves_strokes_and_white_background()
         assert result.getpixel((0, 0)) == (255, 255, 255)
         assert result.getpixel((10, 10)) == (0, 0, 0)
         assert not result.info.get('transparency') and not result.getexif()
+
+
+@pytest.fixture
+def local_storage(monkeypatch, tmp_path):
+    monkeypatch.setenv('APP_ENV', 'development')
+    monkeypatch.setenv('OBJECT_STORAGE_ENABLED', 'true')
+    monkeypatch.setenv('OBJECT_STORAGE_BACKEND', 'local')
+    monkeypatch.setenv('OBJECT_STORAGE_LOCAL_PATH', str(tmp_path / 'pod'))
+    monkeypatch.setenv('OBJECT_STORAGE_LOCAL_SECRET', 'local-test-secret')
+    return tmp_path / 'pod'
+
+
+def _local_link(url):
+    from urllib.parse import parse_qs, urlsplit
+    assert url.startswith('/api/pod-local?')
+    params = {k: v[0] for k, v in parse_qs(urlsplit(url).query).items()}
+    return params['key'], int(params['exp']), int(params['dl']), params['sig']
+
+
+def test_local_archive_stores_reads_and_serves_signed_links(local_storage):
+    from app.services import object_storage
+    assert object_storage.configured() is True
+    storage = object_storage.get_storage()
+    assert isinstance(storage, object_storage.LocalObjectStorage)
+    storage.verify_configuration()
+    key = object_storage.object_key(1, 2, 3, 'signature')
+    storage.upload(key, b'png-bytes', 'image/png')
+    assert storage.read(key) == b'png-bytes'
+    assert (local_storage / key).read_bytes() == b'png-bytes'
+    key_, exp, dl, sig = _local_link(storage.signed_url(key, 'image/png'))
+    response = object_storage.serve_local_object(key_, exp, dl, sig)
+    assert response.media_type == 'image/png' and response.headers['cache-control'] == 'no-store'
+    assert response.headers['content-disposition'].startswith('inline')
+    # Link manomesso, scaduto o con chiave fuori dall'archivio: nessun file servito.
+    with pytest.raises(HTTPException) as exc:
+        object_storage.serve_local_object(key_, exp, 1, sig)
+    assert exc.value.status_code == 404
+    expired = int(__import__('time').time()) - 5
+    with pytest.raises(HTTPException) as exc:
+        object_storage.serve_local_object(key_, expired, dl, object_storage._local_signature(b'local-test-secret', key_, expired, dl))
+    assert exc.value.status_code == 410
+    with pytest.raises(HTTPException):
+        storage.upload('companies/1/routes/2/deliveries/3/../../../../escape.png', b'x', 'image/png')
+    storage.delete(key)
+    with pytest.raises(HTTPException) as exc:
+        storage.read(key)
+    assert exc.value.status_code == 404
+
+
+def test_local_archive_is_refused_in_production(local_storage, monkeypatch):
+    from app.services import object_storage
+    monkeypatch.setenv('APP_ENV', 'production')
+    assert object_storage.configured() is False
+    with pytest.raises(HTTPException) as exc:
+        object_storage.get_storage()
+    assert exc.value.status_code == 503
+    with pytest.raises(HTTPException) as exc:
+        object_storage.serve_local_object('companies/1/routes/2/deliveries/3/signature-' + 'a' * 32 + '.png', 9999999999, 0, 'x')
+    assert exc.value.status_code == 404
+
+
+def test_driver_completion_saves_signature_photo_and_pod_in_local_archive(env, local_storage):
+    from app.models import DeliveryStatus
+    from app.services import object_storage
+    client, db, owner, route, delivery, _ = setup_portals(env)
+    owner.needs_photo_proof = True
+    db.commit()
+    payload = {'signature_data': image_data(), 'signed_by_name': 'Mario',
+               'delivery_photo_data': image_data('JPEG', (800, 600))}
+    response = client.post(f'/api/driver/delivery/{delivery.id}/complete', json=payload)
+    assert response.status_code == 200, response.text
+    state = db.query(DeliveryStatus).filter_by(delivery_id=delivery.id).one()
+    for kind in ('signature', 'delivery_photo', 'pod'):
+        key = getattr(state, kind + '_object_key')
+        assert (local_storage / key).is_file()
+        url = client.get(f'/api/driver/delivery/{delivery.id}/evidence/{kind}').json()['url']
+        served = object_storage.serve_local_object(*_local_link(url))
+        assert served.headers['content-disposition'].startswith('attachment' if kind == 'pod' else 'inline')
+    assert (local_storage / state.pod_object_key).read_bytes().startswith(b'%PDF')

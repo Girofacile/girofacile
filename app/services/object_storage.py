@@ -1,9 +1,18 @@
-"""Private S3 evidence storage. No client or network access at import time."""
+"""Private delivery-evidence storage. No client or network access at import time.
+
+Production uses S3-compatible object storage. Development may use a local
+filesystem archive (OBJECT_STORAGE_BACKEND=local) to test signatures, photos
+and POD PDFs without external services.
+"""
 import hashlib
+import hmac
 import json
 import logging
 import os
 import re
+import time
+from pathlib import Path
+from urllib.parse import urlencode
 from uuid import uuid4
 
 from fastapi import HTTPException
@@ -17,6 +26,14 @@ class StorageUnavailable(HTTPException):
 
 def enabled():
     return os.getenv('OBJECT_STORAGE_ENABLED', 'false').lower() in ('true', '1', 'yes')
+
+
+def backend():
+    return (os.getenv('OBJECT_STORAGE_BACKEND', 's3') or 's3').strip().lower()
+
+
+def _is_development():
+    return os.getenv('APP_ENV', 'development').strip().lower() in ('development', 'dev', 'test', 'testing')
 
 
 def unavailable():
@@ -41,9 +58,31 @@ def _configuration_values():
     return values, seconds
 
 
+def local_root():
+    raw = os.getenv('OBJECT_STORAGE_LOCAL_PATH', '').strip()
+    root = Path(raw).expanduser() if raw else Path('data') / 'pod_storage'
+    if not root.is_absolute():
+        root = Path(__file__).resolve().parent.parent.parent / root
+    return root.resolve()
+
+
+def _local_configuration_values():
+    """Local archive: development only, never in production."""
+    secret = os.getenv('OBJECT_STORAGE_LOCAL_SECRET', '').strip() or os.getenv('APP_SECRET', '').strip()
+    try:
+        seconds = int(os.getenv('OBJECT_STORAGE_SIGNED_URL_SECONDS', '900'))
+    except (TypeError, ValueError):
+        return None
+    if not enabled() or not _is_development() or not secret or not 60 <= seconds <= 900:
+        return None
+    return secret.encode('utf-8'), seconds
+
+
 def configured():
     """True only when optional POD generation has a complete local configuration."""
-    return _configuration_values() is not None
+    if backend() == 'local':
+        return _local_configuration_values() is not None
+    return backend() == 's3' and _configuration_values() is not None
 
 
 def configuration():
@@ -155,17 +194,118 @@ class ObjectStorage:
 
     def delete(self, key):
         # Callers validate scope; this extra guard excludes arbitrary bucket objects.
-        if not re.fullmatch(r'companies/\d+/routes/\d+/deliveries/\d+/(signature|delivery_photo|pod)-[a-f0-9]{32}\.(png|jpg|pdf)', key):
+        if not EVIDENCE_KEY_RE.fullmatch(key):
             raise ValueError('Invalid evidence key')
         self.client.delete_object(Bucket=self.bucket, Key=key)
 
 
+EVIDENCE_KEY_RE = re.compile(r'companies/\d+/routes/\d+/deliveries/\d+/(signature|delivery_photo|pod)-[a-f0-9]{32}\.(png|jpg|pdf)')
+
+
+def _generic_key(key):
+    if not isinstance(key, str) or not EVIDENCE_KEY_RE.fullmatch(key):
+        raise HTTPException(404, 'Documento non trovato')
+    return key
+
+
+def _local_signature(secret, key, expires, download):
+    return hmac.new(secret, f'{key}|{expires}|{download}'.encode('utf-8'), hashlib.sha256).hexdigest()
+
+
+class LocalObjectStorage:
+    """Development-only private filesystem archive.
+
+    Files stay outside the database and open through short-lived HMAC links
+    served by GiroFacile itself, like the S3 temporary links.
+    """
+
+    def __init__(self):
+        values = _local_configuration_values()
+        if values is None:
+            raise unavailable()
+        self._secret, self.seconds = values
+        self.root = local_root()
+
+    def verify_configuration(self):
+        try:
+            self.root.mkdir(parents=True, exist_ok=True)
+            probe = self.root / '.write-test'
+            probe.write_bytes(b'ok')
+            probe.unlink()
+        except Exception:
+            raise unavailable() from None
+
+    def _path(self, key):
+        path = (self.root / _generic_key(key)).resolve()
+        if not path.is_relative_to(self.root):
+            raise HTTPException(404, 'Documento non trovato')
+        return path
+
+    def upload(self, key, raw, content_type):
+        path = self._path(key)
+        try:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            tmp = path.with_name(path.name + '.part' + uuid4().hex[:8])
+            tmp.write_bytes(raw)
+            tmp.replace(path)
+        except Exception:
+            raise unavailable() from None
+
+    def read(self, key):
+        path = self._path(key)
+        try:
+            raw = path.read_bytes()
+        except FileNotFoundError:
+            raise HTTPException(404, 'Documento non trovato') from None
+        except Exception:
+            raise unavailable() from None
+        if len(raw) > 12_000_000:
+            raise unavailable()
+        return raw
+
+    def signed_url(self, key, content_type, download=False):
+        _generic_key(key)
+        expires, dl = int(time.time()) + self.seconds, 1 if download else 0
+        return '/api/pod-local?' + urlencode({'key': key, 'exp': expires, 'dl': dl,
+                                             'sig': _local_signature(self._secret, key, expires, dl)})
+
+    def delete(self, key):
+        self._path(key).unlink(missing_ok=True)
+
+
+def serve_local_object(key, exp, dl, sig):
+    """Serve a file of the local archive through its expiring signed link."""
+    values = _local_configuration_values()
+    if backend() != 'local' or values is None:
+        raise HTTPException(404, 'Documento non trovato')
+    _generic_key(key)
+    download = 1 if dl else 0
+    if not hmac.compare_digest(_local_signature(values[0], key, exp, download), str(sig or '')):
+        raise HTTPException(404, 'Documento non trovato')
+    if exp < int(time.time()):
+        raise HTTPException(410, 'Link documento scaduto')
+    path = LocalObjectStorage()._path(key)
+    if not path.is_file():
+        raise HTTPException(404, 'Documento non trovato')
+    from fastapi.responses import FileResponse
+    content_type = {'.png': 'image/png', '.jpg': 'image/jpeg', '.pdf': 'application/pdf'}[path.suffix]
+    disposition = 'attachment' if download else 'inline'
+    return FileResponse(path, media_type=content_type, headers={
+        'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff',
+        'Content-Disposition': f'{disposition}; filename="{path.name}"'})
+
+
 def get_storage():
-    return ObjectStorage()
+    selected = backend()
+    if selected == 'local':
+        return LocalObjectStorage()
+    if selected == 's3':
+        return ObjectStorage()
+    raise unavailable()
 
 
 if __name__ == '__main__':
     from ..core.config import load_local_env
     load_local_env()
     get_storage().verify_configuration()
-    print('Archivio POD configurato e bucket privato verificato')
+    print('Archivio POD configurato e verificato:', backend())

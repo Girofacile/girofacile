@@ -35,7 +35,7 @@ test('report export is implemented and unfinished features cannot be enabled in 
 
 test('account password change stays inline and separate from profile save', () => {
   const html=readFileSync('static/dashboard/index.html','utf8');
-  const core=readFileSync('static/dashboard/js/core.js','utf8');
+  const core=readFileSync('static/dashboard/js/core.js','utf8').replace(/\r\n/g,'\n'); // anche con checkout Windows (CRLF)
   assert.match(html,/id="profilePasswordChangePanel"[^>]*hidden/);
   assert.match(html,/id="profileCurrentPassword"/);
   assert.match(html,/id="profileNewPassword"/);

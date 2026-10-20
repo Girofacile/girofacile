@@ -50,6 +50,14 @@ Documentazione ufficiale:
 [bucket privati](https://docs.hetzner.com/storage/object-storage/faq/buckets-objects/),
 [URL temporanei Boto3](https://docs.aws.amazon.com/boto3/latest/guide/s3-presigned-urls.html).
 
+## Archivio locale per lo sviluppo
+
+Con `OBJECT_STORAGE_BACKEND=local` (solo con `APP_ENV` di sviluppo) firme, foto e PDF vengono salvati in
+`OBJECT_STORAGE_LOCAL_PATH` (predefinito `data/pod_storage/`) e aperti tramite `/api/pod-local`, con link
+firmati HMAC (`OBJECT_STORAGE_LOCAL_SECRET`, altrimenti `APP_SECRET`) che scadono dopo
+`OBJECT_STORAGE_SIGNED_URL_SECONDS`. In produzione questo archivio viene rifiutato. La configurazione è
+descritta in `README_LOCALE.md`.
+
 ## Comportamento e limiti
 
 - Nessuna connessione allo storage all'avvio. Con storage disabilitato e nessuna prova
