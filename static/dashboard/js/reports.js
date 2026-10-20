@@ -188,7 +188,7 @@ function svgLineChart(id, rows){
     const val=Math.round(maxK-(maxK*i/4));
     return `<text x="${w-pR+10}" y="${y+4}" text-anchor="start">${val}</text>`;
   }).join("");
-  const points=rows.map((r,i)=>`<g class="hover-point"><circle cx="${x(i)}" cy="${yC(r.consegne)}" r="5"><title>${r.data}: ${r.consegne} fermate</title></circle><circle class="km" cx="${x(i)}" cy="${yK(r.km)}" r="5"><title>${r.data}: ${fmtNumber(r.km,2)} km</title></circle></g>`).join("");
+  const points=rows.map((r,i)=>`<g class="hover-point"><circle cx="${x(i)}" cy="${yC(r.consegne)}" r="5"><title>${r.data}: ${gfCount(r.consegne,'fermata','fermate')}</title></circle><circle class="km" cx="${x(i)}" cy="${yK(r.km)}" r="5"><title>${r.data}: ${fmtNumber(r.km,2)} km</title></circle></g>`).join("");
   el.innerHTML = `<svg viewBox="0 0 ${w} ${h}" class="report-svg line improved">
     <defs>
       <linearGradient id="reportTrendFill" x1="0" x2="0" y1="0" y2="1">
@@ -247,7 +247,7 @@ function svgDonutChart(id, rows){
     const dash=`${len} ${c-len}`;
     const off=-acc;
     acc+=len;
-    return `<circle class="slice s${i}" cx="${cx}" cy="${cy}" r="${r}" stroke-dasharray="${dash}" stroke-dashoffset="${off}"><title>${row.nome}: ${val} fermate</title></circle>`;
+    return `<circle class="slice s${i}" cx="${cx}" cy="${cy}" r="${r}" stroke-dasharray="${dash}" stroke-dashoffset="${off}"><title>${row.nome}: ${gfCount(val,'fermata','fermate')}</title></circle>`;
   }).join("");
   const legend=rows.map((r,i)=>`<div><span class="donut-dot s${i}"></span><strong>${esc(r.nome)}</strong><small>${Math.round((r.consegne/total)*100)}%</small></div>`).join("");
   el.innerHTML=`<div class="report-donut-wrap"><svg viewBox="0 0 260 260" class="report-svg donut"><circle class="base" cx="${cx}" cy="${cy}" r="${r}"></circle>${slices}<text x="${cx}" y="${cy-5}" text-anchor="middle">${fmtNumber(total)}</text><text x="${cx}" y="${cy+18}" text-anchor="middle">fermate</text></svg><div class="report-donut-legend">${legend}</div></div>`;
@@ -319,7 +319,7 @@ async function printReport(){
     const params=reportParams();
     const data=await api('/api/reports/summary?' + params.toString());
     const filters=Array.from(params.entries()).filter(([,v])=>v).map(([k,v])=>`${esc(k)}: ${esc(v)}`).join(' · ');
-    const rows=(data.tables?.giri||[]).map(r=>`<tr><td>${esc(r.data_giro)}</td><td>${esc(r.nome)}</td><td>${esc(r.driver_name)}</td><td>${r.consegne}</td><td>${fmtNumber(r.km,2)}</td><td>${fmtNumber(r.ore,2)}</td><td>${fmtMoney(r.costo)}</td></tr>`).join('');
+    const rows=(data.tables?.giri||[]).map(r=>`<tr><td>${esc(gfDateIt(r.data_giro))}</td><td>${esc(r.nome)}</td><td>${esc(r.driver_name)}</td><td>${r.consegne}</td><td>${fmtNumber(r.km,2)}</td><td>${fmtNumber(r.ore,2)}</td><td>${fmtMoney(r.costo)}</td></tr>`).join('');
     popup.document.open();
     popup.document.write(`<!doctype html><html lang="it"><head><meta charset="utf-8"><title>Report GiroFacile</title><style>body{font:14px Arial;padding:24px;color:#172033}table{border-collapse:collapse;width:100%}th,td{padding:8px;text-align:left;border-bottom:1px solid #ccc}thead{display:table-header-group}tr{break-inside:avoid}small{color:#475569}@media print{button{display:none}@page{size:A4 landscape;margin:12mm}}</style></head><body><h1>Report GiroFacile</h1><p>${filters||'Tutti i giri completati'}</p><p>${data.metrics.giri_effettuati} giri · ${data.metrics.consegne_totali} fermate previste · ${fmtNumber(data.metrics.km_totali,2)} km pianificati · ${fmtMoney(data.metrics.costo_carburante)} di energia stimata</p><small>Le fermate previste comprendono consegnate, mancate e non gestite. Km, ore e costi dei giri filtrati sono ripartiti per numero di fermate. Km, consumi e costi energetici sono stime. Le ore sono rilevate quando disponibili, altrimenti stimate. Personale, pedaggi e manutenzione esclusi.</small><table><thead><tr><th>Data</th><th>Giro</th><th>Autista</th><th>Fermate previste</th><th>Km pianificati</th><th>Ore rilevate/stimate</th><th>Energia stimata</th></tr></thead><tbody>${rows||'<tr><td colspan="7">Nessun giro nel periodo</td></tr>'}</tbody></table><button id="printButton">Stampa / Salva PDF</button></body></html>`);
     popup.document.close();

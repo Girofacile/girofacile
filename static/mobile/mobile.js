@@ -13,7 +13,7 @@ const api=async(url,opts={})=>{
 };
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
 const todayIso=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`};
-const fmt=(n,dec=1)=>n==null?"—":parseFloat(n).toFixed(dec);
+const fmt=(n,dec=1)=>n==null?"—":Number(n).toLocaleString("it-IT",{minimumFractionDigits:dec,maximumFractionDigits:dec});
 const mval=id=>{const el=document.getElementById(id);return el?el.value.trim():""};
 const mcheck=id=>{const el=document.getElementById(id);return el?el.checked:false};
 
@@ -162,10 +162,10 @@ async function loadDashboard(){
     box.innerHTML=routes.slice(0,8).map(r=>`
       <div class="route-history-card">
         <div class="rh-head">
-          <div><div class="rh-name">${esc(r.nome)}</div><div class="rh-date">${esc(r.data_giro)} · ${esc(r.orario_partenza||"")} · ${esc(r.driver_name||"Autista n/a")}</div></div>
+          <div><div class="rh-name">${esc(r.nome)}</div><div class="rh-date">${esc(gfDateIt(r.data_giro))} · ${esc(r.orario_partenza||"")} · ${esc(r.driver_name||"Autista n/a")}</div></div>
           <span class="badge ${r.status||"programmato"}">${esc(r.status_label||r.status||"")}</span>
         </div>
-        <div class="rh-meta"><span>${gfIcon('pin')} ${r.consegne_count||0} fermate</span><span>${gfIcon('route')} ${fmt(r.totale_km)} km</span></div>
+        <div class="rh-meta"><span>${gfIcon('pin')} ${gfCount(r.consegne_count,'fermata','fermate')}</span><span>${gfIcon('route')} ${fmt(r.totale_km)} km</span></div>
         <div class="rh-actions">
           ${r.status==="programmato"||r.status==="in_corso"?`<button class="mini-btn green" onclick="completeRoute(${r.id})">${gfIcon('check')} Completa</button>`:``}
           ${r.status!=="completato"&&r.status!=="annullato"?`<button class="mini-btn red" onclick="cancelRoute(${r.id})">${gfIcon('x')} Annulla</button>`:``}
@@ -267,10 +267,10 @@ async function loadStorico(){
     box.innerHTML=filtered.length?filtered.map(r=>`
       <div class="route-history-card">
         <div class="rh-head">
-          <div><div class="rh-name">${esc(r.nome)}</div><div class="rh-date">${esc(r.data_giro)} · ${esc(r.driver_name||"Autista n/a")}</div></div>
+          <div><div class="rh-name">${esc(r.nome)}</div><div class="rh-date">${esc(gfDateIt(r.data_giro))} · ${esc(r.driver_name||"Autista n/a")}</div></div>
           <span class="badge ${r.status||"programmato"}">${esc(r.status_label||"")}</span>
         </div>
-        <div class="rh-meta"><span>${gfIcon('pin')} ${r.consegne_count||0} fermate</span><span>${gfIcon('route')} ${fmt(r.totale_km)} km</span><span>${gfIcon('euro')} €${fmt(r.costo_totale??r.costo_carburante,2)}</span></div>
+        <div class="rh-meta"><span>${gfIcon('pin')} ${gfCount(r.consegne_count,'fermata','fermate')}</span><span>${gfIcon('route')} ${fmt(r.totale_km)} km</span><span>${gfIcon('euro')} € ${fmt(r.costo_totale??r.costo_carburante,2)}</span></div>
         <div class="rh-actions">
           ${r.status==="programmato"||r.status==="in_corso"?`<button class="mini-btn green" onclick="completeRoute(${r.id});loadStorico()">${gfIcon('check')} Completa</button>`:""}
           ${r.status!=="completato"&&r.status!=="annullato"?`<button class="mini-btn red" onclick="cancelRoute(${r.id});loadStorico()">${gfIcon('x')} Annulla</button>`:""}
@@ -484,7 +484,7 @@ async function showSubView(name){
       html=(window.GiroFacileElectricVehicles?.summaryHtml(usage)||"")+`<button class="btn-primary" onclick="openAddVehicle()">+ Nuovo mezzo</button>`+
         rows.map(v=>`<div class="route-history-card">
           <div class="rh-head">
-            <div><div class="rh-name">${esc(v.nome)}${v.targa?" · "+esc(v.targa):""}</div><div class="rh-date">${v.capacita_kg}kg · ${v.capacita_colli}colli · ${esc(GF_MOBILE_FUEL_LABELS[v.alimentazione||"gasolio"]||v.alimentazione||"Gasolio")}${v.ha_sponda?" · Sponda":""}</div></div>
+            <div><div class="rh-name">${esc(v.nome)}${v.targa?" · "+esc(v.targa):""}</div><div class="rh-date">${fmt(v.capacita_kg,0)} kg · ${gfCount(v.capacita_colli,"collo","colli")} · ${esc(GF_MOBILE_FUEL_LABELS[v.alimentazione||"gasolio"]||v.alimentazione||"Gasolio")}${v.ha_sponda?" · Sponda":""}</div></div>
             <span class="badge verificato">${esc(v.stato||"Disponibile")}</span>
           </div>
           <div class="rh-actions"><button class="mini-btn" onclick="openEditVehicle(${v.id})">Modifica</button></div>
@@ -509,7 +509,7 @@ async function showSubView(name){
       html=`<button class="btn-primary" onclick="openAddAgent()">+ Nuovo agente</button>`+
         rows.map(a=>`<div class="route-history-card">
           <div class="rh-head">
-            <div><div class="rh-name">${esc(a.full_name||a.nome)}</div><div class="rh-date">${esc(a.zona||"—")} · ${a.clienti_assegnati||0} clienti</div></div>
+            <div><div class="rh-name">${esc(a.full_name||a.nome)}</div><div class="rh-date">${esc(a.zona||"—")} · ${gfCount(a.clienti_assegnati,"cliente","clienti")}</div></div>
             <span class="badge ${a.attivo?"verificato":"da_verificare"}">${a.attivo?"Attivo":"Non attivo"}</span>
           </div>
           <div class="rh-actions"><button class="mini-btn" onclick="openEditAgent(${a.id})">Modifica</button></div>

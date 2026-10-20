@@ -259,6 +259,7 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
 @keyframes spin{to{transform:rotate(360deg)}}
 </style>
 <link rel="stylesheet" href="/static/routing-summary.css?v=driver_shifts_20261013_1">
+<script src="/static/format.js?v=gf_format_20261020"></script>
 <script src="/static/routing-summary.js?v=gf_flow_20261020"></script>
 <link rel="stylesheet" href="/static/live-gps.css?v=20261005">
 <script src="/static/live-gps.js?v=20261005"></script>
@@ -509,7 +510,7 @@ let chatPollInterval = null;
 let execPollInterval = null;
 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-const fmt = (n, d=1) => n == null ? '—' : parseFloat(n).toFixed(d);
+const fmt = (n, d=1) => n == null ? '—' : Number(n).toLocaleString('it-IT', {minimumFractionDigits:d, maximumFractionDigits:d});
 
 async function api(url, opts={}) {
   const r = await fetch(url, {headers:{'Content-Type':'application/json'}, credentials:'same-origin', ...opts});
@@ -650,7 +651,7 @@ function renderRouteCard(r, today) {
         <div class="rc-name">${esc(r.nome)}</div>
         <div class="rc-meta">
           <span>${gfIcon('clock')} ${esc(r.orario_partenza||'—')}</span>
-          <span>${gfIcon('pin')} ${r.n_consegne} fermate</span>
+          <span>${gfIcon('pin')} ${gfCount(r.n_consegne,'fermata','fermate')}</span>
           ${r.totale_km?`<span>${gfIcon('route')} ${fmt(r.totale_km)} km</span>`:''}
           ${r.deposit_nome?`<span>${gfIcon('warehouse')} ${esc(r.deposit_nome)}</span>`:''}
         </div>
@@ -813,7 +814,7 @@ function renderExecution(data) {
       <div class="di-head">
         <div class="di-num ${numClass}">${i+1}</div>
         <div class="di-info">
-          <div class="di-name">${esc(c.cliente_nome)}</div>${c.order_numbers?.length?`<details><summary>${c.order_numbers.length} ordini · ${esc(c.colli??0)} colli</summary><p>${c.order_numbers.map(esc).join(', ')}</p></details>`:''}
+          <div class="di-name">${esc(c.cliente_nome)}</div>${c.order_numbers?.length?`<details><summary>${gfCount(c.order_numbers.length,'ordine','ordini')} · ${gfCount(c.colli,'collo','colli')}</summary><p>${c.order_numbers.map(esc).join(', ')}</p></details>`:''}
           <div class="di-addr">${gfIcon('pin')} ${esc(c.indirizzo)}</div>
           <div class="di-badges">
             ${c.ztl?'<span class="di-badge db-ztl">'+gfIcon('alert')+' ZTL</span>':''}
@@ -1049,12 +1050,12 @@ async function loadStorico() {
         <div class="hi-head">
           <div>
             <div class="hi-name">${esc(r.nome)}</div>
-            <div class="hi-date">${esc(r.data_giro)} · ${esc(r.orario_partenza||'')}</div>
+            <div class="hi-date">${esc(gfDateIt(r.data_giro))} · ${esc(r.orario_partenza||'')}</div>
           </div>
           <span class="rc-badge ${r.status==='completato'?'rb-done':'rb-prog'}">${r.status==='completato'?'Completato':'—'}</span>
         </div>
         <div class="hi-stats">
-          <span>${gfIcon('pin')} ${r.n_consegne} fermate</span>
+          <span>${gfIcon('pin')} ${gfCount(r.n_consegne,'fermata','fermate')}</span>
           <span>${gfIcon('checkCircle')} ${r.completate} consegnate</span>
           <span>${gfIcon('xCircle')} ${r.mancate} mancate</span>
           ${r.totale_km?`<span>${gfIcon('route')} ${fmt(r.totale_km)} km</span>`:''}

@@ -1028,7 +1028,7 @@ function printStopsTable(){
     <div class="meta">
       <strong>Giro:</strong> ${esc(r.nome || val("routeName") || "Giro consegne")}<br>
       <strong>Data:</strong> ${esc(r.data_giro || val("routeDate") || "-")} · <strong>Partenza:</strong> ${esc(r.orario_partenza || "-")} · <strong>Rientro stimato:</strong> ${esc(r.orario_rientro_stimato || "-")}<br>
-      <strong>Km totali:</strong> ${gfKm(r.totale_km)} · <strong>Tempo totale:</strong> ${Math.round(r.totale_minuti || 0)} min · <strong>Costo carburante:</strong> € ${r.costo_carburante ?? "-"}
+      <strong>Km totali:</strong> ${gfKm(r.totale_km)} · <strong>Tempo totale:</strong> ${Math.round(r.totale_minuti || 0)} min · <strong>Costo carburante:</strong> € ${r.costo_carburante == null ? "-" : gfDecimal(r.costo_carburante)}
     </div>
     <table><thead><tr><th>Ordine</th><th>Cliente</th><th>Indirizzo</th><th>Arrivo</th><th>Ripartenza</th><th>Attesa</th><th>Km tappa</th><th>Avvisi</th></tr></thead><tbody>${rows}</tbody></table>
     <div class="footer">Stampa generata da GiroFacile</div>
@@ -1849,7 +1849,7 @@ function renderGFReferenceDashboardHero(summary){
       list.innerHTML=shown.map((d,i)=>{
         const st=status(d),name=d.cliente_nome||`Fermata ${i+1}`;
         return `<li class="gf-stop${st==="todo"?"":" is-"+st}" data-gf-ref-stop="${i}" tabindex="0"><span class="gf-stop__number">${st==="done"?"✓":i+1}</span><span class="gf-stop__main"><span class="gf-stop__name">${esc(name)}</span></span><span class="gf-badge" data-status="${st==="done"?"success":st==="miss"?"danger":"neutral"}">${st==="done"?"Completata":st==="miss"?"Mancata":"Da fare"}</span></li>`;
-      }).join("")+(rows.length>maxShown?`<li class="gf-stop"><span class="gf-stop__main"><span class="gf-stop__meta">Altre ${rows.length-maxShown} fermate disponibili nel controllo giro</span></span></li>`:"");
+      }).join("")+(rows.length>maxShown?`<li class="gf-stop"><span class="gf-stop__main"><span class="gf-stop__meta">Altre ${gfCount(rows.length-maxShown,"fermata disponibile","fermate disponibili")} nel controllo giro</span></span></li>`:"");
     }
     const highlight=(id,on)=>root.querySelectorAll(`[data-gf-ref-stop="${id}"]`).forEach(el=>el.classList.toggle(el.classList.contains("gf-stop")?"is-highlighted":"hl",on));
     root.querySelectorAll("[data-gf-ref-stop]").forEach(el=>{
@@ -3139,8 +3139,8 @@ function deliverySpecsSummary(d){
   if(d.ztl) pieces.push("ZTL");
   if(d.pedestrian_area) pieces.push("Area pedonale");
   if(d.sponda) pieces.push("Sponda");
-  if(parseFloat(d.peso_kg)||0) pieces.push(`${parseFloat(d.peso_kg)} kg`);
-  if(parseInt(d.colli)||0) pieces.push(`${parseInt(d.colli)} colli`);
+  if(parseFloat(d.peso_kg)||0) pieces.push(`${gfDecimal(d.peso_kg)} kg`);
+  if(parseInt(d.colli)||0) pieces.push(gfCount(parseInt(d.colli),"collo","colli"));
   return pieces.join(" · ");
 }
 
@@ -3185,7 +3185,7 @@ function renderDeliveries(){
       </td>
       <td data-label="Finestra di scarico">${deliveryWindowLabel(d)}</td>
       <td data-label="Scarico">${parseInt(d.tempo_scarico_min ?? 10)} min</td>
-      <td data-label="Carico">${parseInt(d.colli)||0} colli<br><small class="gf-muted">${parseFloat(d.peso_kg)||0} kg</small></td>
+      <td data-label="Carico">${gfCount(parseInt(d.colli)||0,"collo","colli")}<br><small class="gf-muted">${gfDecimal(parseFloat(d.peso_kg)||0)} kg</small></td>
       <td data-label="Avvisi e requisiti">${deliveryRequirementBadges(d)}</td>
       <td data-label="Note">${d.note ? esc(d.note) : '<span class="gf-muted">—</span>'}</td>
       <td data-label="Specifiche">
@@ -3490,7 +3490,7 @@ function renderRouteResult(r, targetId="routeResult", fromHistory=false){
         ${counts.ztl ? alert("warning", "Consegne in zona ZTL", gfCount(counts.ztl,"fermata","fermate"), "Avviso informativo: verifica le condizioni di accesso. Il giro non viene modificato.") : ""}
         ${counts.pedonale ? alert("warning", "Consegne in area pedonale", gfCount(counts.pedonale,"fermata","fermate"), "Avviso informativo: verifica le modalità di consegna. Il giro non viene modificato.") : ""}
         ${counts.attesa ? alert("warning", "🕒 Arrivo prima dell'apertura / attesa", gfCount(counts.attesa,"fermata","fermate")) : ""}
-        ${counts.critici && !counts.sponda && !counts.ztl && !counts.pedonale && !counts.attesa ? alert("warning", "Fermate da verificare", `${counts.critici} fermate con avvisi: consulta il dettaglio nella tabella.`) : ""}
+        ${counts.critici && !counts.sponda && !counts.ztl && !counts.pedonale && !counts.attesa ? alert("warning", "Fermate da verificare", `${gfCount(counts.critici,"fermata","fermate")} con avvisi: consulta il dettaglio nella tabella.`) : ""}
       </div>
     </section>` : ""}
     <section class="gf-panel" data-preview-stops aria-labelledby="previewStopsTitle">
@@ -3518,7 +3518,7 @@ function renderRouteResult(r, targetId="routeResult", fromHistory=false){
                 ${summary("Mezzo", esc(r.vehicle_name||"Nessun mezzo"))}
                 ${summary("Avvisi critici", counts.critici)}
                 ${summary("Soste con attesa", counts.attesa)}
-                ${summary("Costo operativo stimato", `€ ${r.costo_totale ?? r.costo_carburante ?? "-"}`)}
+                ${summary("Costo operativo stimato", (r.costo_totale ?? r.costo_carburante) == null ? "€ -" : `€ ${gfDecimal(r.costo_totale ?? r.costo_carburante)}`)}
               </dl>
               <button type="button" class="gf-button" data-variant="secondary" onclick="printStopsTable()">Stampa dettaglio fermate</button>
               ${r.id && currentSessionUser?.limits?.has_ai ? `<button type="button" class="gf-button" data-variant="secondary" onclick="explainRouteSequenceAIv67(${r.id})">Spiega sequenza giro AI</button><div id="routeAiExplanationV67" class="gf-alert hidden" data-status="info"></div>` : ""}
@@ -3985,7 +3985,7 @@ function dashRouteItem(r, type){
         <small class="gf-muted">${context}</small>
         <div class="gf-progress">
           <div class="gf-progress__top"><span><b>${completed}/${total}</b> completate</span><span>${remaining} da fare</span></div>
-          <div class="gf-progress__track" role="img" aria-label="${completed} consegne completate su ${total}"><span class="gf-progress__done" data-gf-width="${gfWidth5(completedPercent)}"></span><span class="gf-progress__miss" data-gf-width="${gfWidth5(missedPercent)}"></span></div>
+          <div class="gf-progress__track" role="img" aria-label="${completed} su ${total} consegne completate"><span class="gf-progress__done" data-gf-width="${gfWidth5(completedPercent)}"></span><span class="gf-progress__miss" data-gf-width="${gfWidth5(missedPercent)}"></span></div>
         </div>
         ${issues.length?`<div class="gf-cluster">${issues.join('')}</div>`:""}
       `:`<small class="gf-muted gf-dashboard-desktop-copy">${meta}</small><small class="gf-muted gf-dashboard-mobile-only">${esc(window.GFDashboardMobile?.routeMeta(r)||'')}</small>`}
@@ -4061,7 +4061,7 @@ function dashboardRouteSummaryCards(r, rows){
     ${cell('Tempo previsto', `${Math.round(Number(r.totale_minuti||0)) || '-'}`, 'min')}
     ${cell('Consegne', `${completed}/${rows.length}`, `${missed} mancate · ${pending} da fare`)}
     ${cell(esc(gfRouteEnergyMetric(r).label), esc(gfRouteEnergyMetric(r).value))}
-    ${cell('Costo stimato', `€ ${esc(r.costo_carburante ?? '-')}`)}
+    ${cell('Costo stimato', `€ ${esc(r.costo_carburante == null ? '-' : gfDecimal(r.costo_carburante))}`)}
     ${cell('Rientro previsto', esc(r.orario_rientro_stimato || '-'))}
   </div>`;
 }

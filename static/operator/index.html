@@ -139,6 +139,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 .deposit-card .btn-dep-nav{display:inline-flex;align-items:center;gap:6px;margin-top:10px;background:rgba(255,255,255,.2);color:#fff;border:1.5px solid rgba(255,255,255,.4);padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;}
 </style>
 <link rel="stylesheet" href="/static/routing-summary.css?v=driver_shifts_20261013_1">
+<script src="/static/format.js?v=gf_format_20261020"></script>
 <script src="/static/routing-summary.js?v=gf_flow_20261020"></script>
 <link rel="stylesheet" href="/static/live-gps.css?v=20261005">
 <script src="/static/live-gps.js?v=20261005"></script>
@@ -282,7 +283,7 @@ let selectedTempo = null;
 let selectedMotivo = null;
 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-const fmt = (n, d=1) => n == null ? '—' : parseFloat(n).toFixed(d);
+const fmt = (n, d=1) => n == null ? '—' : Number(n).toLocaleString('it-IT', {minimumFractionDigits:d, maximumFractionDigits:d});
 
 async function api(url, opts = {}) {
   const r = await fetch(url, { headers: { 'Content-Type': 'application/json' }, ...opts });
@@ -385,7 +386,7 @@ function render() {
       <div class="dc-header">
         <div class="${numClass}">${i + 1}</div>
         <div class="dc-info">
-          <div class="dc-name">${esc(c.cliente_nome)}</div>${c.order_numbers?.length?`<details><summary>${c.order_numbers.length} ordini · ${esc(c.colli??0)} colli</summary><p>${c.order_numbers.map(esc).join(', ')}</p></details>`:''}
+          <div class="dc-name">${esc(c.cliente_nome)}</div>${c.order_numbers?.length?`<details><summary>${gfCount(c.order_numbers.length,'ordine','ordini')} · ${gfCount(c.colli,'collo','colli')}</summary><p>${c.order_numbers.map(esc).join(', ')}</p></details>`:''}
           <div class="dc-addr">${gfIcon('pin')} ${esc(c.indirizzo)}</div>
           <div class="dc-meta">
             ${c.ztl ? '<span class="dc-badge ztl">'+gfIcon('alert')+' ZTL</span>' : ''}

@@ -256,7 +256,7 @@ def main():
                     page.locator('#routeDriver').select_option('1')
                     page.evaluate('updateRouteEnergyPricingV895()')
                     page.locator('#routePlanningActions button').click()
-                    page.wait_for_function("document.getElementById('orderPlanningProceedMessage').textContent.includes('2099-01-16')")
+                    page.wait_for_function("document.getElementById('orderPlanningProceedMessage').textContent.includes('16/01/2099')")
                     assert page.locator('#orderPlanningProceedMessage').is_visible()
                     assert page.locator('#routePlanningActions button').is_enabled()
                     page.screenshot(path=str(output/f'planning-error-{width}.png'),full_page=True)

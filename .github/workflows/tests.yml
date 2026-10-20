@@ -46,6 +46,8 @@ jobs:
           python tests/check_electric_responsive.py
       - name: Verify orders against isolated API at desktop and mobile widths
         run: python tests/check_orders_ui.py
+      - name: Verify the order-to-route flow end to end (planning, preview formats, programming)
+        run: python tests/check_route_flow_e2e.py
       - name: Preserve orders responsive screenshots
         if: always()
         uses: actions/upload-artifact@v4

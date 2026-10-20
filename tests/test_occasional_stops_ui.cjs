@@ -18,6 +18,7 @@ function fixture(){
     api:async()=>{calls++;return {...proof};},addDeliveryObject:d=>context.deliveries.push(d),
     renderDeliveries(){},markRouteNeedsRecalculation(){invalidations++;},updateDashboardStats(){},
     gfUniversalFeaturesV891:{has_time_windows:true,has_ztl:true,needs_tail_lift:true}});
+  vm.runInContext(fs.readFileSync('static/format.js','utf8'),context);
   vm.runInContext(core.slice(core.indexOf('function customerIsPlannable('),core.indexOf('function requirePlannableCustomer(')),context);
   vm.runInContext(core.slice(core.indexOf('function cleanDeliveryForPayload('),core.indexOf('function routePayloadFromResult(')),context);
   vm.runInContext(core.slice(core.indexOf('function updateDeliveryField('),core.indexOf('function moveDelivery(')),context);
@@ -102,6 +103,7 @@ test('touch reorder renders controls and preserves verified stop identity', () =
     deliveryGeoBadge: () => '', esc: value => String(value || ''),
     markRouteNeedsRecalculation: message => invalidations.push(message),
   });
+  vm.runInContext(fs.readFileSync('static/format.js','utf8'), context);
   vm.runInContext(core.slice(core.indexOf('function moveDelivery('), core.indexOf('function renderDeliveryEmptyRow(')), context);
   vm.runInContext(core.slice(core.indexOf('function renderDeliveries('), core.indexOf('function openDeliveryDetailsModal(')), context);
   vm.runInContext('renderDeliveries()', context);

@@ -9,7 +9,7 @@ function fixture(){
       setAttribute(name,value){attributes[name]=String(value);},getAttribute:name=>attributes[name]??null};
   };
   const ctx=vm.createContext({document:{getElementById:node},driversCache:[],driverFullName:d=>[d.nome,d.cognome].filter(Boolean).join(' '),driverInitials:d=>(d.nome||'A')[0],esc:v=>String(v??'').replaceAll('<','&lt;').replaceAll('"','&quot;')});
-  vm.runInContext(fs.readFileSync('static/dashboard/js/format.js','utf8'),ctx);
+  vm.runInContext(fs.readFileSync('static/format.js','utf8'),ctx);
   vm.runInContext(fs.readFileSync('static/dashboard/js/drivers.js','utf8'),ctx);
   return {ctx,node,run:s=>vm.runInContext(s,ctx)};
 }

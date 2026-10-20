@@ -85,7 +85,7 @@
       state=await api('/api/order-planning/selection',{method:'PUT',body:JSON.stringify({version:state.version,action:'clear',order_ids:[],filters:{}})});
       enabled=false;loadedStops=false;dirty=false;gate();
       await GFOrders.load();
-      el('ordersMessage').textContent=skipped?`${cancelled} ordini annullati. ${skipped} non erano eliminabili perché già assegnati o non modificabili.`:`${cancelled} ordini annullati.`;
+      el('ordersMessage').textContent=skipped?`${gfCount(cancelled,'ordine annullato','ordini annullati')}. ${gfCount(skipped,'ordine non era eliminabile','ordini non erano eliminabili')} perché già assegnati o non modificabili.`:`${gfCount(cancelled,'ordine annullato','ordini annullati')}.`;
     }catch(e){el('ordersMessage').textContent=e.message||'Non è stato possibile eliminare gli ordini selezionati.';}
     finally{busy=false;controls();GFOrders.refreshSelection?.();}
   }
@@ -117,7 +117,7 @@
       globalThis.GFFleetPlanning?.restore(saved);
       globalThis.GFDriverSchedules?.route(saved.driver_schedule??GFDriverSchedules.defaults(saved.driver_id));
       if(!saved.data_giro&&state.requested_dates?.length===1)set('routeDate',state.requested_dates[0]);
-      feedback('');updateRoutePlanningGateV68();gate();message(`${state.order_ids.length} ordini selezionati.${state.requested_dates?.length?' Date richieste: '+state.requested_dates.join(', ')+'.':''} Completa la configurazione del giro.`);
+      feedback('');updateRoutePlanningGateV68();gate();message(`${gfCount(state.order_ids.length,'ordine selezionato','ordini selezionati')}.${state.requested_dates?.length?' Date richieste: '+state.requested_dates.map(gfDateIt).join(', ')+'.':''} Completa la configurazione del giro.`);
     }catch(e){alert(e.message);}finally{opening=false;controls();GFOrders.refreshSelection?.();}
   }
   async function proceed(regenerate=false){
@@ -169,7 +169,7 @@
     if(values.pallets!=null)parts.push('Pallet: '+values.pallets);
     if(values.volume_m3!=null)parts.push('Volume: '+values.volume_m3+' m³');
     if(values.requirements)parts.push(values.requirements);
-    return `<details><summary>${row.order_refs.length} ${row.order_refs.length===1?'ordine':'ordini'} · ${esc(row.colli??0)} colli</summary><p>${esc((row.order_numbers||row.order_refs.map(r=>'#'+r.id)).join(', '))}</p></details>${parts.length?'<small>'+esc(parts.join(' · '))+'</small>':''}`;
+    return `<details><summary>${row.order_refs.length} ${row.order_refs.length===1?'ordine':'ordini'} · ${gfCount(row.colli,'collo','colli')}</summary><p>${esc((row.order_numbers||row.order_refs.map(r=>'#'+r.id)).join(', '))}</p></details>${parts.length?'<small>'+esc(parts.join(' · '))+'</small>':''}`;
   }
   document.addEventListener('change',e=>{if(ids.includes(e.target.id)||e.target.name==='energyPriceMode')changed();});
   window.addEventListener('beforeunload',e=>{if(enabled&&(dirty||saving)){e.preventDefault();e.returnValue='';}});
