@@ -396,8 +396,11 @@ body[data-gf-surface] .gf-route-panel__map{position:relative;min-width:0;padding
 body[data-gf-surface] .gf-route-panel__heading{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:var(--gf-space-4)}
 body[data-gf-surface] .gf-route-panel__canvas{
   position:relative;min-height:var(--gf-map-min-height);margin-top:var(--gf-space-3);overflow:hidden;
-  border-radius:var(--gf-radius-map);background:var(--gf-color-map-bg);
+  border-radius:var(--gf-radius-map);background:var(--gf-color-map-bg);isolation:isolate;
 }
+/* Leaflet dà ai suoi livelli z-index da 400 a 1000: senza isolamento la mappa
+   copre pop-up, menu e pannelli (z-index 40-100) aperti sopra la pagina. */
+body[data-gf-surface] .leaflet-container{isolation:isolate}
 body[data-gf-surface] .gf-route-panel__canvas>svg{display:block;width:100%;height:auto;aspect-ratio:660/300}
 body[data-gf-surface] .gf-route-panel__detail{min-width:0;display:flex;flex-direction:column}
 body[data-gf-surface] .gf-route-panel__detail>.gf-progress{padding:var(--gf-space-4) var(--gf-space-5) var(--gf-space-1)}
