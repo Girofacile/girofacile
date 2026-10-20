@@ -260,16 +260,16 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
 </style>
 <link rel="stylesheet" href="/static/routing-summary.css?v=driver_shifts_20261013_1">
 <script src="/static/format.js?v=gf_driver_flow_20261020"></script>
-<script src="/static/routing-summary.js?v=gf_flow_20261020"></script>
+<script src="/static/routing-summary.js?v=gf_driver_fix_20261020"></script>
 <link rel="stylesheet" href="/static/live-gps.css?v=20261005">
 <script src="/static/live-gps.js?v=20261005"></script>
-<link rel="stylesheet" href="/static/pod.css?v=1">
-<script src="/static/pod.js?v=1"></script>
+<link rel="stylesheet" href="/static/pod.css?v=gf_driver_fix_20261020">
+<script src="/static/pod.js?v=gf_driver_fix_20261020"></script>
 
 <link rel="stylesheet" href="/static/design-system/theme.css?v=gf_base_20261015v">
 <link rel="stylesheet" href="/static/design-system/components.css?v=gf_mapfix_20261020b">
 <link rel="stylesheet" href="/static/design-system/layout.css?v=gf_audit_20261020">
-<link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007">
+<link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261020_notice">
 <script src="/static/design-system/design-system.js?v=ds_20261007" defer></script>
 <link rel="stylesheet" href="/static/driver-schedule.css?v=20261013_1"><script src="/static/driver-schedule.js?v=20261013_1"></script>
 <script src="/static/design-system/gf-icons.js?v=gf_unified_20261014_1"></script>
@@ -328,7 +328,7 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
 
     <!-- DASHBOARD GIRI -->
     <div id="view-dashboard" class="view active">
-      <div class="page-head"><h2>I miei giri</h2><p id="dashDriverName">Bentornato</p></div>
+      <div class="page-head"><h2>I miei giri</h2><p id="dashDriverName">I giri assegnati a te</p></div>
       <div id="routesList" style="padding:0 12px 12px"></div>
     </div>
 
@@ -429,7 +429,7 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
         <button type="button" class="btn-signature-open" onclick="openSignatureModal()">Firma avvenuta consegna</button>
       </div>
 
-      <div class="pod-photo-input"><label for="podDeliveryPhoto">Foto merce consegnata (JPEG, PNG o WebP)</label><input id="podDeliveryPhoto" type="file" accept="image/jpeg,image/png,image/webp"><small>Puoi scattare una foto o sceglierla dalla galleria. Massimo 12 MB.</small></div>
+      <div class="gf-upload" data-pod-photo><span class="gf-upload__preview" id="podPhotoPreview" aria-hidden="true"></span><div class="gf-upload__copy"><span class="gf-field__label">Foto merce consegnata</span><label class="gf-button gf-upload__button" data-variant="secondary">Scatta o scegli la foto<input id="podDeliveryPhoto" type="file" accept="image/jpeg,image/png,image/webp" aria-label="Foto merce consegnata" onchange="podPhotoChanged(this)"></label><p class="gf-field__hint" id="podPhotoHint">JPEG, PNG o WebP, massimo 12 MB.</p></div></div>
       <button class="btn-confirm green" onclick="confirmDone()">Conferma consegna</button>
     </div>
   </div>
@@ -512,6 +512,26 @@ let execPollInterval = null;
 const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const fmt = (n, d=1) => n == null ? '—' : Number(n).toLocaleString('it-IT', {minimumFractionDigits:d, maximumFractionDigits:d});
 
+// Messaggi all'autista nello stile del gestionale: dentro la finestra aperta, altrimenti in cima alla schermata.
+function clearDriverNotice() {
+  document.querySelectorAll('[data-portal-notice]').forEach(n => n.remove());
+}
+function driverNotice(message) {
+  clearDriverNotice();
+  const host = [...document.querySelectorAll('.modal-overlay:not(.hidden) .modal-body, .popup-overlay:not(.hidden) .popup-card')].pop()
+    || document.querySelector('.view.active .page-head') || document.body;
+  const notice = document.createElement('div');
+  notice.className = 'gf-alert';
+  notice.dataset.status = 'danger';
+  notice.dataset.portalNotice = '';
+  notice.setAttribute('role', 'alert');
+  notice.textContent = message;
+  // Nelle finestre il messaggio sta sopra il pulsante di conferma, dove l'autista sta guardando.
+  const action = host.querySelector(':scope > :is(.btn-confirm,.popup-actions)');
+  if(action) action.before(notice); else if(host.matches('.page-head')) host.append(notice); else host.prepend(notice);
+  notice.scrollIntoView({block:'nearest'});
+}
+
 async function api(url, opts={}) {
   const r = await fetch(url, {headers:{'Content-Type':'application/json'}, credentials:'same-origin', ...opts});
   const d = await r.json().catch(()=>({}));
@@ -556,7 +576,7 @@ async function openApp() {
   document.getElementById('loginScreen').classList.add('hidden');
   document.getElementById('driverApp').classList.remove('hidden');
   document.getElementById('headerDriverName').textContent = me.driver_name;
-  document.getElementById('dashDriverName').textContent = `Bentornato, ${me.driver_name}`;
+  document.getElementById('dashDriverName').textContent = `Ciao ${me.driver_name}, ecco i giri assegnati a te`;
   await loadRoutes();
   populateChatSelect();
   startChatBadgePoll();
@@ -695,7 +715,7 @@ async function startRoute(routeId) {
   try {
     await api(`/api/driver/routes/${routeId}/start`, {method:'POST', body:'{}'});
     await openExecution(routeId);
-  } catch(e) { alert(e.message); }
+  } catch(e) { driverNotice(e.message); }
 }
 
 // Avvio dal dettaglio: stessa verifica dell'elenco (conferma se prima dell'orario previsto).
@@ -745,7 +765,7 @@ async function loadExecution() {
 function renderExecution(data) {
   const { route, consegne, progress } = data;
   GiroFacileGPS.sync({status:route.status, statusUrl:`/api/driver/routes/${route.id}/position`, uploadUrl:`/api/driver/routes/${route.id}/position`});
-  document.getElementById("driverRoutingSummary").innerHTML = window.GiroFacileRouting.summaryHtml(route);
+  document.getElementById("driverRoutingSummary").innerHTML = window.GiroFacileRouting.summaryHtml(route, "", {costs:false});
   document.getElementById('execTitle').textContent = route.nome;
   document.getElementById('execRouteName').textContent = route.nome;
   document.getElementById('execPercent').textContent = progress.percentuale + '%';
@@ -919,7 +939,7 @@ function updateSignatureRequestCard(){
 }
 
 function openSignatureModal(){
-  if(!currentDeliveryId){ alert('Seleziona prima la consegna.'); return; }
+  if(!currentDeliveryId){ driverNotice('Seleziona prima la consegna.'); return; }
   document.getElementById('modalSignature')?.classList.remove('hidden');
   if(document.getElementById('signedByName')) document.getElementById('signedByName').value = currentSignatureDraft?.signed_by_name || '';
   if(document.getElementById('signatureNote')) document.getElementById('signatureNote').value = currentSignatureDraft?.signature_note || '';
@@ -927,6 +947,7 @@ function openSignatureModal(){
 }
 
 function closeSignatureModal(){
+  clearDriverNotice();
   document.getElementById('modalSignature')?.classList.add('hidden');
 }
 
@@ -934,8 +955,8 @@ async function saveSignatureFromModal(){
   const signature_data = getSignatureData();
   const signed_by_name = (document.getElementById('signedByName')?.value || '').trim();
   const signature_note = (document.getElementById('signatureNote')?.value || '').trim();
-  if(!signed_by_name){ alert('Inserisci il nome del firmatario.'); return; }
-  if(!signature_data){ alert('Fai firmare il cliente nel riquadro firma.'); return; }
+  if(!signed_by_name){ driverNotice('Inserisci il nome del firmatario.'); return; }
+  if(!signature_data){ driverNotice('Fai firmare il cliente nel riquadro firma.'); return; }
   currentSignatureDraft = {signature_data, signed_by_name, signature_note};
   try{
     await api(`/api/driver/delivery/${currentDeliveryId}/signature`, {
@@ -943,7 +964,7 @@ async function saveSignatureFromModal(){
     });
   }catch(e){
     // In caso di rete lenta manteniamo comunque la firma nella conferma: verrà inviata anche alla chiusura consegna.
-    alert(e.message + ' La firma resta in questa schermata; riprova prima di uscire.');
+    driverNotice(e.message + ' La firma resta in questa schermata; riprova prima di uscire.');
     return;
   }
   closeSignatureModal();
@@ -956,7 +977,7 @@ async function saveSignatureFromModal(){
 function openDone(id) {
   currentDeliveryId = id;
   selectedTempo = null;
-  document.getElementById('podDeliveryPhoto').value = '';
+  podResetPhoto();
   signaturePadDirty = false;
   const existing = (currentRouteData?.consegne || []).find(x => Number(x.id) === Number(id));
   currentSignatureDraft = existing?.has_signature ? {
@@ -978,7 +999,7 @@ function selectTempo(val, btn) {
   btn.classList.add('sel');
 }
 async function confirmDone() {
-  if(!selectedTempo) { alert('Seleziona il tempo di scarico'); return; }
+  if(!selectedTempo) { driverNotice('Seleziona il tempo di scarico'); return; }
   const sigEnabled = !!currentRouteData?.settings?.delivery_signature_enabled;
   const payload = {
     tempo_scarico:selectedTempo,
@@ -986,7 +1007,7 @@ async function confirmDone() {
   };
   if(sigEnabled){
     if(!(currentSignatureDraft?.signature_data || currentSignatureDraft?.has_signature)){
-      alert('Devi prima acquisire la firma del cliente.');
+      driverNotice('Devi prima acquisire la firma del cliente.');
       return;
     }
     payload.signature_data = currentSignatureDraft.signature_data;
@@ -999,7 +1020,7 @@ async function confirmDone() {
       method:'POST', body:JSON.stringify(payload)
     });
     closeModal(); await loadExecution();
-  } catch(e) { alert(e.message); }
+  } catch(e) { driverNotice(e.message); }
 }
 
 // ============================================================
@@ -1021,13 +1042,13 @@ function selectMotivo(val, btn) {
   btn.classList.add('sel');
 }
 async function confirmMissed() {
-  if(!selectedMotivo) { alert('Seleziona il motivo'); return; }
+  if(!selectedMotivo) { driverNotice('Seleziona il motivo'); return; }
   try {
     await api(`/api/driver/delivery/${currentDeliveryId}/missed`, {
       method:'POST', body:JSON.stringify({motivo:selectedMotivo, note:document.getElementById('noteMissed').value})
     });
     closeModal(); await loadExecution();
-  } catch(e) { alert(e.message); }
+  } catch(e) { driverNotice(e.message); }
 }
 
 // ============================================================
@@ -1045,10 +1066,11 @@ async function confirmNote() {
       method:'POST', body:JSON.stringify({note:document.getElementById('noteText').value})
     });
     closeModal(); await loadExecution();
-  } catch(e) { alert(e.message); }
+  } catch(e) { driverNotice(e.message); }
 }
 
 function closeModal() {
+  clearDriverNotice();
   document.querySelectorAll('.modal-overlay').forEach(m => m.classList.add('hidden'));
 }
 
@@ -1133,7 +1155,7 @@ async function sendMessage() {
   try {
     await api('/api/driver/chat/direct', {method:'POST', body:JSON.stringify({message:msg})});
     await fetchChatMessages(true);
-  } catch(e) { alert(e.message); }
+  } catch(e) { driverNotice(e.message); }
 }
 
 // Enter to send

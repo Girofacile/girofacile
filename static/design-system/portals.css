@@ -186,3 +186,5 @@ body[data-gf-surface="public"] :is(.hero,.access-grid,.pricing-grid,.electric-in
 body[data-gf-surface="public"] .hero-sub {font-size:var(--gf-font-lg)}
 body[data-gf-portal] :is(.login-footer,.chat-empty,.di-time-lbl,.kpi-mini-lbl,.chat-time) {color:var(--gf-color-muted)}
 body[data-gf-surface="public"] .cta-sec .gf-button[data-variant="ghost"] {color:var(--gf-color-on-primary) !important;border-color:var(--gf-color-on-primary) !important}
+/* Messaggio di validazione o errore nei portali (autista): dentro la finestra, sopra il pulsante di conferma. */
+body[data-gf-portal] .gf-alert[data-portal-notice] {margin-block:var(--gf-space-3)}

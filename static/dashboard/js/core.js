@@ -1668,7 +1668,8 @@ function routeZoneLabel(){
     }
     if(zone) counts.set(zone, (counts.get(zone) || 0) + 1);
   });
-  return [...counts.entries()].sort((a,b)=>b[1]-a[1])[0]?.[0] || "";
+  // A parità di fermate vince l'ordine alfabetico: l'ottimizzazione che riordina le tappe non cambia il nome.
+  return [...counts.entries()].sort((a,b)=>b[1]-a[1] || a[0].localeCompare(b[0], "it"))[0]?.[0] || "";
 }
 function updateAutoRouteName(){
   const value = val("routeDate");

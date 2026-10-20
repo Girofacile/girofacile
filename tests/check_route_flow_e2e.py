@@ -178,6 +178,9 @@ def run(browser, width, output):
             login = client.post('/api/driver/login', json={'email': driver.email, 'password': DRIVER_PASSWORD})
             assert login.status_code == 200, login.text
             page.goto('http://flow.test/driver', wait_until='networkidle')
+            expect(page.locator('#dashDriverName')).to_contain_text('ecco i giri assegnati a te')
+            detail_api = client.get(f'/api/driver/routes/{route.id}').json()['route']
+            assert not {'costo_totale', 'costo_carburante', 'toll_estimated_eur'} & detail_api.keys(), 'costi esposti all’autista'
             page.get_by_role('button', name='Dettaglio').first.click()
             start = page.get_by_role('button', name='▶ Avvia giro per registrare le consegne')
             expect(start).to_be_visible()
@@ -185,7 +188,13 @@ def run(browser, width, output):
             start.click()
             expect(page.locator('#popupEarly')).to_be_visible()
             page.locator('#popupConfirmBtn').click()
+            assert page.locator('.gf-routing-costs').count() == 0, 'costi visibili nel portale autista'
             page.get_by_role('button', name='Consegnato', exact=True).click()
+            expect(page.locator('#modalDone .gf-upload[data-pod-photo]')).to_be_visible()
+            # Validazione nello stile del gestionale, dentro la finestra (nessun avviso del browser).
+            page.get_by_role('button', name='Conferma consegna').click()
+            expect(page.locator('#modalDone [data-portal-notice]')).to_contain_text('Seleziona il tempo di scarico')
+            page.screenshot(path=str(output / f'driver-done-modal-{width}.png'))
             page.get_by_role('button', name='10 min').first.click()
             page.get_by_role('button', name='Conferma consegna').click()
             page.get_by_role('button', name='Mancata', exact=True).click()

@@ -140,11 +140,11 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 </style>
 <link rel="stylesheet" href="/static/routing-summary.css?v=driver_shifts_20261013_1">
 <script src="/static/format.js?v=gf_driver_flow_20261020"></script>
-<script src="/static/routing-summary.js?v=gf_flow_20261020"></script>
+<script src="/static/routing-summary.js?v=gf_driver_fix_20261020"></script>
 <link rel="stylesheet" href="/static/live-gps.css?v=20261005">
 <script src="/static/live-gps.js?v=20261005"></script>
-<link rel="stylesheet" href="/static/pod.css?v=1">
-<script src="/static/pod.js?v=1"></script>
+<link rel="stylesheet" href="/static/pod.css?v=gf_driver_fix_20261020">
+<script src="/static/pod.js?v=gf_driver_fix_20261020"></script>
 
 <link rel="stylesheet" href="/static/design-system/theme.css?v=gf_base_20261015v">
 <link rel="stylesheet" href="/static/design-system/components.css?v=gf_mapfix_20261020b">
@@ -238,7 +238,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
         <canvas id="operatorSignatureCanvas" width="600" height="200" aria-label="Riquadro firma cliente" style="width:100%;height:160px;background:white;border:1px solid #cbd5e1;touch-action:none"></canvas>
         <button type="button" class="btn-note" onclick="clearOperatorSignature()">Cancella firma</button>
       </div>
-      <div class="pod-photo-input"><label for="podDeliveryPhoto">Foto merce consegnata (JPEG, PNG o WebP)</label><input id="podDeliveryPhoto" type="file" accept="image/jpeg,image/png,image/webp"><small>Puoi scattare una foto o sceglierla dalla galleria. Massimo 12 MB.</small></div>
+      <div class="gf-upload" data-pod-photo><span class="gf-upload__preview" id="podPhotoPreview" aria-hidden="true"></span><div class="gf-upload__copy"><span class="gf-field__label">Foto merce consegnata</span><label class="gf-button gf-upload__button" data-variant="secondary">Scatta o scegli la foto<input id="podDeliveryPhoto" type="file" accept="image/jpeg,image/png,image/webp" aria-label="Foto merce consegnata" onchange="podPhotoChanged(this)"></label><p class="gf-field__hint" id="podPhotoHint">JPEG, PNG o WebP, massimo 12 MB.</p></div></div>
       <button class="btn-confirm green" onclick="confirmDone()">Conferma consegna</button>
     </div>
   </div>
@@ -470,7 +470,7 @@ function render() {
 function openDone(id) {
   currentDeliveryId = id;
   selectedTempo = null;
-  document.getElementById('podDeliveryPhoto').value = '';
+  podResetPhoto();
   document.getElementById('noteDone').value = '';
   clearOperatorSignature();
   document.getElementById('operatorSignatureBox').classList.toggle('hidden', !routeData.delivery_signature_enabled);

@@ -273,6 +273,11 @@ def start_route(route_id: int, da: DriverAccount = Depends(get_current_driver), 
     db.commit()
     return {'ok': True}
 
+# Costi, pedaggi ed energia sono dati aziendali: l'autista vede solo percorso e orari.
+DRIVER_HIDDEN_COSTS = {"costo_carburante", "costo_totale", "operating_cost_status", "toll_estimated_eur",
+                       "toll_details", "toll_status", "toll_provider", "toll_label"}
+
+
 @router.get("/routes/{route_id}")
 def get_driver_route_detail(route_id: int, da: DriverAccount = Depends(get_current_driver), db: Session = Depends(get_db)):
     """Dettaglio giro per l'autista."""
@@ -318,7 +323,7 @@ def get_driver_route_detail(route_id: int, da: DriverAccount = Depends(get_curre
 
     return {
         "route": {
-            **routing_metadata(r),
+            **{k: v for k, v in routing_metadata(r).items() if k not in DRIVER_HIDDEN_COSTS},
             **driver_schedule_metadata(r),
             "id": r.id, "nome": r.nome, "data_giro": date_to_iso(r.data_giro),
             "orario_partenza": time_to_hhmm(r.orario_partenza), "orario_rientro_stimato": time_to_hhmm(r.orario_rientro_stimato),

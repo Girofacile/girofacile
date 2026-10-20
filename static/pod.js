@@ -1,4 +1,28 @@
 // Shared by desktop and both mobile delivery portals.
+const POD_PHOTO_HINT = 'JPEG, PNG o WebP, massimo 12 MB.';
+// Anteprima e nome della foto scelta nel campo .gf-upload della consegna.
+function podPhotoChanged(input) {
+  const file = input?.files?.[0];
+  const preview = document.getElementById('podPhotoPreview');
+  const hint = document.getElementById('podPhotoHint');
+  if(preview) {
+    preview.replaceChildren();
+    if(file && file.type.startsWith('image/')) {
+      const img = document.createElement('img');
+      img.alt = '';
+      img.src = URL.createObjectURL(file);
+      img.onload = () => URL.revokeObjectURL(img.src);
+      preview.append(img);
+    }
+  }
+  if(hint) hint.textContent = file ? `Foto scelta: ${file.name}` : POD_PHOTO_HINT;
+}
+function podResetPhoto() {
+  const input = document.getElementById('podDeliveryPhoto');
+  if(input) input.value = '';
+  podPhotoChanged(input);
+}
+
 async function podPhotoPayload(required=false) {
   const file = document.getElementById('podDeliveryPhoto')?.files?.[0];
   if(!file) {

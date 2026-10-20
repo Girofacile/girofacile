@@ -89,7 +89,7 @@ pagina; l'aspetto di un componente deve cambiare nel foglio condiviso.
 | Pagination/tabs | `.gf-pagination`, `.gf-tabs`; stato e ruoli espliciti |
 | Toolbar/filters/search | `.gf-toolbar`, `.gf-search` |
 | Empty/loading | `.gf-empty`, `.gf-loading[role="status"]` |
-| Alert/toast | `.gf-alert[data-status]`, `.gf-toast[role="status"]` |
+| Alert/toast | `.gf-alert[data-status]`, `.gf-toast[role="status"]`; nei portali gli errori di convalida usano `.gf-alert[data-status="danger"][data-portal-notice]` dentro la finestra aperta, al posto degli avvisi del browser |
 | Page header | `.gf-page-header`: titolo, descrizione e azione principale |
 | Disposizione | `.gf-stack[data-gap]`, `.gf-cluster[data-justify]`, `.gf-grid[data-cols="2\|3\|4\|7\|main-side"]` (7: una colonna per giorno della settimana) |
 | Testo | `.gf-title`, `.gf-subtitle`, `.gf-text`, `.gf-muted`, `.gf-kicker` |
