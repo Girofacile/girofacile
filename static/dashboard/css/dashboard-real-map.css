@@ -1,21 +1,21 @@
 /* Solo la mappa centrale della nuova dashboard. Sidebar e resto del tema invariati. */
 
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-canvas{
+body[data-gf-surface="workspace"] #app :is(#tab-dashboard,#tab-dashboard-scheduled,#tab-storico) .gf-ref-map-canvas{
   position:absolute;
   inset:0;
   height:100%;
   width:100%;
   background:var(--gf-color-map-bg);
 }
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-canvas.leaflet-container{
+body[data-gf-surface="workspace"] #app :is(#tab-dashboard,#tab-dashboard-scheduled,#tab-storico) .gf-ref-map-canvas.leaflet-container{
   font-family:var(--gf-font-family);
   font-size:13px;
 }
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-canvas .leaflet-tile-pane{
+body[data-gf-surface="workspace"] #app :is(#tab-dashboard,#tab-dashboard-scheduled,#tab-storico) .gf-ref-map-canvas .leaflet-tile-pane{
   filter:saturate(.84);
 }
 /* L'antico grafico SVG aveva un rapporto fisso: non applicarlo alle polilinee Leaflet. */
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-ready .leaflet-overlay-pane svg{
+body[data-gf-surface="workspace"] #app :is(#tab-dashboard,#tab-dashboard-scheduled,#tab-storico) .gf-ref-map-ready .leaflet-overlay-pane svg{
   width:auto!important;
   height:auto!important;
   aspect-ratio:auto!important;
@@ -23,11 +23,11 @@ body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-ready .leaflet
 /* Isola i contenuti Leaflet dai selettori generici SVG/immagini della dashboard.
    L'attribuzione contiene normalmente un'icona SVG: non deve diventare grande
    quanto il vecchio grafico del percorso. */
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-canvas.leaflet-container img{
+body[data-gf-surface="workspace"] #app :is(#tab-dashboard,#tab-dashboard-scheduled,#tab-storico) .gf-ref-map-canvas.leaflet-container img{
   max-width:none!important;
   max-height:none!important;
 }
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-canvas .leaflet-control-attribution svg{
+body[data-gf-surface="workspace"] #app :is(#tab-dashboard,#tab-dashboard-scheduled,#tab-storico) .gf-ref-map-canvas .leaflet-control-attribution svg{
   display:inline-block!important;
   width:12px!important;
   height:8px!important;
@@ -36,7 +36,7 @@ body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-canvas .leafle
   aspect-ratio:3/2!important;
   vertical-align:middle;
 }
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-canvas .leaflet-control-attribution{
+body[data-gf-surface="workspace"] #app :is(#tab-dashboard,#tab-dashboard-scheduled,#tab-storico) .gf-ref-map-canvas .leaflet-control-attribution{
   padding:4px 8px;
   background:var(--gf-color-surface);
   border-top-left-radius:7px;
@@ -44,19 +44,19 @@ body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-canvas .leafle
   font:500 10.5px/1.3 var(--gf-font-family);
   box-shadow:none;
 }
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-canvas .leaflet-control-attribution a{
+body[data-gf-surface="workspace"] #app :is(#tab-dashboard,#tab-dashboard-scheduled,#tab-storico) .gf-ref-map-canvas .leaflet-control-attribution a{
   color:var(--gf-color-muted);
   text-decoration:none;
 }
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-canvas .leaflet-control-attribution a:hover{
+body[data-gf-surface="workspace"] #app :is(#tab-dashboard,#tab-dashboard-scheduled,#tab-storico) .gf-ref-map-canvas .leaflet-control-attribution a:hover{
   color:var(--gf-color-primary);
   text-decoration:underline;
 }
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-marker{
+body[data-gf-surface="workspace"] #app :is(#tab-dashboard,#tab-dashboard-scheduled,#tab-storico) .gf-ref-map-marker{
   border:none;
   background:transparent;
 }
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-pin{
+body[data-gf-surface="workspace"] #app :is(#tab-dashboard,#tab-dashboard-scheduled,#tab-storico) .gf-ref-map-pin{
   display:grid;
   width:34px;
   height:34px;
@@ -69,23 +69,23 @@ body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-pin{
   font:700 12px/1 var(--gf-font-family);
   transition:box-shadow .15s ease,transform .15s ease;
 }
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-pin.is-done{
+body[data-gf-surface="workspace"] #app :is(#tab-dashboard,#tab-dashboard-scheduled,#tab-storico) .gf-ref-map-pin.is-done{
   color:var(--gf-color-on-primary);
   background:var(--gf-color-primary);
   border-color:var(--gf-color-primary);
 }
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-pin.depot{
+body[data-gf-surface="workspace"] #app :is(#tab-dashboard,#tab-dashboard-scheduled,#tab-storico) .gf-ref-map-pin.depot{
   background:var(--gf-color-nav);
   color:var(--gf-color-on-primary);
   border-color:var(--gf-color-on-primary);
   font-size:13px;
 }
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-pin.hl,
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-marker:focus-visible .gf-ref-map-pin{
+body[data-gf-surface="workspace"] #app :is(#tab-dashboard,#tab-dashboard-scheduled,#tab-storico) .gf-ref-map-pin.hl,
+body[data-gf-surface="workspace"] #app :is(#tab-dashboard,#tab-dashboard-scheduled,#tab-storico) .gf-ref-map-marker:focus-visible .gf-ref-map-pin{
   transform:scale(1.12);
   box-shadow:var(--gf-focus-ring),var(--gf-shadow-md);
 }
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-notice{
+body[data-gf-surface="workspace"] #app :is(#tab-dashboard,#tab-dashboard-scheduled,#tab-storico) .gf-ref-map-notice{
   position:absolute;
   bottom:12px;
   left:12px;
@@ -103,27 +103,27 @@ body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-notice{
   line-height:1.45;
   pointer-events:none;
 }
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-popup strong{
+body[data-gf-surface="workspace"] #app :is(#tab-dashboard,#tab-dashboard-scheduled,#tab-storico) .gf-ref-map-popup strong{
   display:block;
   margin-bottom:3px;
   color:var(--gf-color-text);
 }
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-popup small{
+body[data-gf-surface="workspace"] #app :is(#tab-dashboard,#tab-dashboard-scheduled,#tab-storico) .gf-ref-map-popup small{
   display:block;
   margin-top:4px;
   color:var(--gf-color-muted);
 }
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-canvas .leaflet-control-zoom{
+body[data-gf-surface="workspace"] #app :is(#tab-dashboard,#tab-dashboard-scheduled,#tab-storico) .gf-ref-map-canvas .leaflet-control-zoom{
   border:1px solid var(--gf-color-border);
   border-radius:9px;
   overflow:hidden;
   box-shadow:var(--gf-shadow-md);
 }
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-canvas .leaflet-control-zoom a{
+body[data-gf-surface="workspace"] #app :is(#tab-dashboard,#tab-dashboard-scheduled,#tab-storico) .gf-ref-map-canvas .leaflet-control-zoom a{
   color:var(--gf-color-text);
 }
 @media(max-width:560px){
-  body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-notice{
+  body[data-gf-surface="workspace"] #app :is(#tab-dashboard,#tab-dashboard-scheduled,#tab-storico) .gf-ref-map-notice{
     left:8px;
     bottom:8px;
     max-width:calc(100% - 50px);
@@ -133,27 +133,32 @@ body[data-gf-surface="workspace"] #app #tab-dashboard .gf-ref-map-canvas .leafle
 /* Dashboard desktop: la mappa occupa lo spazio libero fino alla legenda,
    evitando la fascia vuota sotto il riquadro cartografico. */
 @media (min-width:1025px){
-  body[data-gf-surface="workspace"] #app #tab-dashboard .gf-route-panel{
+  body[data-gf-surface="workspace"] #app :is(#tab-dashboard,#tab-dashboard-scheduled,#tab-storico) .gf-route-panel{
     min-height:28.25rem;
   }
-  body[data-gf-surface="workspace"] #app #tab-dashboard .gf-route-panel__map{
+  body[data-gf-surface="workspace"] #app :is(#tab-dashboard,#tab-dashboard-scheduled,#tab-storico) .gf-route-panel__map{
     display:flex;
     flex-direction:column;
   }
-  body[data-gf-surface="workspace"] #app #tab-dashboard .gf-route-panel__canvas{
+  body[data-gf-surface="workspace"] #app :is(#tab-dashboard,#tab-dashboard-scheduled,#tab-storico) .gf-route-panel__canvas{
     flex:1 1 auto;
     min-height:var(--gf-map-min-height);
   }
 }
 
 /* Stato vuoto della Dashboard: la colonna accanto alla mappa usa solo componenti condivisi. */
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-route-panel__operational{
+body[data-gf-surface="workspace"] #app :is(#tab-dashboard,#tab-dashboard-scheduled,#tab-storico) .gf-route-panel__operational{
   display:flex;
   flex:1 1 auto;
   flex-direction:column;
   min-height:100%;
 }
-body[data-gf-surface="workspace"] #app #tab-dashboard .gf-route-panel.is-empty .gf-route-panel__detail{
+body[data-gf-surface="workspace"] #app :is(#tab-dashboard,#tab-dashboard-scheduled,#tab-storico) .gf-route-panel.is-empty .gf-route-panel__detail{
   min-height:100%;
 }
 
+/* Dettaglio giro (Giri programmati, Storico): la mappa reale è posizionata in assoluto,
+   quindi il riquadro mantiene l'altezza minima della mappa anche su smartphone. */
+body[data-gf-surface="workspace"] #app :is(#tab-dashboard-scheduled,#tab-storico) .gf-route-panel__canvas[data-route-map]{
+  min-height:var(--gf-map-min-height);
+}

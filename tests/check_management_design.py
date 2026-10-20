@@ -203,20 +203,23 @@ def main():
                         history.get_by_role('button', name='Azzera tutto').click()
                         assert history.locator('#historyWeekSection').is_visible()
                         history.locator('#historyDayList').get_by_role('button', name='Apri giro').first.click()
-                        dialog=page.locator('#historyRouteDialog')
-                        dialog.wait_for(state='visible')
-                        assert 'Cliente Demo' in dialog.inner_text()
+                        # Il giro si apre a pagina intera al posto della settimana.
+                        detail=page.locator('#historyRouteDetail')
+                        detail.wait_for(state='visible')
+                        assert history.locator('#historyPage').is_hidden()
+                        assert 'Cliente Demo' in detail.inner_text()
+                        assert detail.locator('.gf-stat-strip[data-icons="side"] .gf-stat-strip__icon').count() == 5
                         with page.expect_download() as download:
-                            dialog.get_by_role('button', name='Esporta fermate (CSV)').click()
+                            detail.get_by_role('button', name='Esporta fermate (CSV)').click()
                         assert 'Cliente Demo' in Path(download.value.path()).read_text(encoding='utf-8-sig')
-                        dialog.get_by_role('button', name='Chiudi').click()
-                        assert dialog.is_hidden()
+                        page.locator('#workspaceTopbarBack').click()
+                        assert detail.is_hidden() and history.locator('#historyPage').is_visible()
                         # "Giri completati" dalla Dashboard porta allo Storico con il giro già aperto.
                         page.evaluate('openDashboardCompletedPage(3)')
-                        dialog.wait_for(state='visible')
+                        detail.wait_for(state='visible')
                         assert page.locator('#tab-storico').is_visible()
-                        dialog.get_by_role('button', name='Chiudi').click()
-                        interactions.append(f'{width}: storico settimana, ricerca, filtri, CSV e pannello del giro')
+                        page.locator('#workspaceTopbarBack').click()
+                        interactions.append(f'{width}: storico settimana, ricerca, filtri, CSV e pagina del giro')
                     if name in REFERENCE:
                         styles = page.evaluate("""() => [...document.querySelectorAll('#app *')].filter(el=>el.getClientRects().length && getComputedStyle(el).visibility!=='hidden').map(el=>{
                           const s=getComputedStyle(el), r=el.getBoundingClientRect();

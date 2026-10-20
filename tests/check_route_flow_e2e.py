@@ -133,6 +133,24 @@ def run(browser, width, output):
         assert route.status == 'programmato', route.status
         expect(page.locator('#tab-dashboard-scheduled')).to_contain_text(route.nome)
         check_text('giri programmati', page.locator('#tab-dashboard-scheduled').inner_text())
+        # 5. Dettaglio del giro programmato a pagina intera: barra con icone, mappa, fermate, tabella.
+        page.locator('#tab-dashboard-scheduled').get_by_role('button', name='Apri giro').first.click()
+        detail = page.locator('[data-scheduled-detail]')
+        detail.wait_for(state='visible')
+        assert detail.locator('.gf-stat-strip[data-icons="side"] .gf-stat-strip__icon').count() == 5
+        assert detail.locator('[data-route-map]').count() == 1
+        expect(detail.locator('.gf-stop-list')).to_contain_text('Recipient')
+        table = detail.locator('#scheduledStopsTable')
+        expect(table).to_be_hidden()
+        detail.get_by_role('button', name='Mostra tabella').click()
+        expect(table).to_be_visible()
+        check_text('dettaglio giro programmato', detail.inner_text())
+        assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 2'), 'scroll orizzontale nel dettaglio'
+        page.screenshot(path=str(output / f'scheduled-detail-{width}.png'), full_page=True)
+        back = page.locator('#workspaceTopbarBack')
+        expect(back).to_have_attribute('aria-label', 'Torna ai giri programmati')
+        back.click()
+        page.locator('#tab-dashboard-scheduled [data-cols="7"]').wait_for(state='visible')
         db.refresh(order)
         assert client.get('/api/order-planning/selection').json()['order_ids'] == [], 'selezione non svuotata'
         page.evaluate("showTab('ordini')")

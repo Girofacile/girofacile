@@ -4214,7 +4214,12 @@ async function openDashboardScheduledRoute(routeId){
   try{ renderDashboardScheduledSubpage(dashboardScheduledRoutes, await api(`/api/routes/${routeId}`)); }
   catch(e){ toast(e.message); }
 }
-function closeDashboardScheduledRoute(){ document.getElementById('dashboardScheduledDialog')?.close?.(); }
+function closeDashboardScheduledRoute(){
+  dashboardScheduledSelectedId = null;
+  window.GiroFacileDashboardMap?.reset();
+  renderDashboardScheduledSubpage(dashboardScheduledRoutes, null);
+  if(typeof syncWorkspaceTopbar === 'function') syncWorkspaceTopbar('dashboard-scheduled');
+}
 
 function dashboardScheduledWeekHtml(){
   const monday = dashScheduledMonday(dashboardScheduledDay);
@@ -4273,11 +4278,11 @@ function dashboardScheduledDayHtml(){
   </section>`;
 }
 
-function dashboardScheduledStopsHtml(r){
+function dashboardScheduledStopsHtml(r, autoHeight=true){
   const rows = r.consegne || [];
   if(!rows.length) return `<div class="gf-empty"><p>Nessuna fermata collegata a questo giro.</p></div>`;
   const breaks = after => (r.driver_breaks || []).filter(b=>b.after_order===after).map(b=>`<li class="gf-stop"><span class="gf-stop__number" aria-label="Pausa">Ⅱ</span><span class="gf-stop__main"><span class="gf-stop__name">Pausa autista dalle ${esc(b.start)} alle ${esc(b.end)}</span><span class="gf-stop__meta">Riposo pianificato · ${Number(b.duration_min)} minuti</span></span></li>`).join('');
-  return `<ol class="gf-stop-list" data-height="auto" aria-label="Fermate del giro">${breaks(0)}${rows.map((d, idx)=>{
+  return `<ol class="gf-stop-list"${autoHeight ? ' data-height="auto"' : ''} aria-label="Fermate del giro">${breaks(0)}${rows.map((d, idx)=>{
     const note = d.note_operatore || d.note_autista || d.note || '';
     return `<li class="gf-stop"><span class="gf-stop__number">${esc(d.ordine || idx+1)}</span>
       <span class="gf-stop__main"><span class="gf-stop__name">${esc(d.cliente_nome || '-')}</span>
@@ -4287,34 +4292,109 @@ function dashboardScheduledStopsHtml(r){
   }).join('')}</ol>`;
 }
 
-function dashboardScheduledDialogHtml(r){
+/* Dettaglio giro a pagina intera (Giri programmati e Storico): barra numeri con icone come la
+   Dashboard, mappa stradale salvata con fermate a fianco e tabella completa apribile. */
+const GF_STAT_ICONS = {
+  home:'M3 11l9-7 9 7 M5 10v10h14V10 M10 20v-6h4v6',
+  clock:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 7v5l3 2',
+  route:'M6 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4z M18 9a2 2 0 1 0 0-4 2 2 0 0 0 0 4z M8 17h6a3 3 0 0 0 0-6h-4a3 3 0 0 1 0-6h6',
+  pin:'M12 21s-7-6.5-7-12a7 7 0 0 1 14 0c0 5.5-7 12-7 12z M12 11a2 2 0 1 0 0-4 2 2 0 0 0 0 4z',
+  euro:'M17 6.5A7 7 0 1 0 17 17.5 M4 10h10 M4 14h10',
+  check:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M8 12.2l2.8 2.8 5.2-5.6'
+};
+// kind "text": valori lunghi (es. un intervallo orario) che possono andare a capo.
+function gfStatCell(icon, tone, label, value, unit, kind=''){
+  return `<div class="gf-stat-strip__cell"><span class="gf-stat-strip__icon" data-tone="${tone}" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="${GF_STAT_ICONS[icon]}"/></svg></span><span class="gf-stat-strip__label">${esc(label)}</span><strong class="gf-stat-strip__value"${kind ? ` data-kind="${kind}"` : ''}>${esc(value)}</strong><small class="gf-stat-strip__unit">${esc(unit||'')}</small></div>`;
+}
+function gfToggleArea(button){
+  const area = document.getElementById(button.getAttribute('aria-controls'));
+  const open = button.getAttribute('aria-expanded') !== 'true';
+  if(area) area.hidden = !open;
+  button.setAttribute('aria-expanded', String(open));
+  button.textContent = open ? 'Nascondi tabella' : 'Mostra tabella';
+}
+function gfRouteLoad(rows){
+  const colli = rows.reduce((s,d)=>s+(parseInt(d.colli)||0),0), kg = rows.reduce((s,d)=>s+(parseFloat(d.peso_kg)||0),0);
+  return `${gfCount(colli,'collo','colli')} · ${gfDecimal(kg)} kg`;
+}
+// Mappa stradale salvata del giro, con lo stesso modulo della Dashboard (nessun ricalcolo).
+function gfDrawRouteMap(route, container){
+  const element = container?.querySelector('[data-route-map]');
+  if(element && route?.id) window.GiroFacileDashboardMap?.render(route.id, route.consegne || [], element);
+}
+// Intestazione del dettaglio: il pulsante "indietro" resta quello unico della barra in alto.
+function gfRouteDetailHeader(kicker, title, badge){
+  return `<div class="gf-cluster" data-justify="between">
+    <div><p class="gf-kicker">${esc(kicker)}</p><h2 class="gf-title">${esc(title)}</h2></div>
+    ${badge}
+  </div>`;
+}
+// Con un giro aperto la freccia della barra in alto torna all'elenco; chiudendolo si ripristina.
+function gfRouteDetailBack(label, go){
+  const back = document.getElementById('workspaceTopbarBack');
+  if(!back) return;
+  back.hidden = false;
+  back.onclick = go;
+  back.setAttribute('aria-label', label);
+  back.title = label;
+  document.body?.classList.add('gf-has-topbar-back');
+}
+
+function dashboardScheduledDetailHtml(r){
   const rows = r.consegne || [];
   const energy = gfRouteEnergyMetric(r);
-  const item = (label, value) => `<div class="gf-details__item"><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`;
-  return `<dialog class="gf-modal" id="dashboardScheduledDialog" data-position="side" data-size="lg" aria-labelledby="scheduledDialogTitle">
-    <header class="gf-modal__header">
-      <div><p class="gf-kicker">Giro programmato · ${esc(r.data_giro ? dashScheduledDayLabel(r.data_giro).toLowerCase() : '-')}</p><h2 class="gf-modal__title" id="scheduledDialogTitle">${esc(r.nome || 'Giro consegne')}</h2></div>
-      <span class="gf-badge" data-status="warning" data-dot>Programmato</span>
-      <button type="button" class="gf-icon-button" aria-label="Chiudi" onclick="closeDashboardScheduledRoute()"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12 M18 6L6 18"/></svg></button>
-    </header>
-    <div class="gf-modal__body gf-stack">
-      ${r.driver_schedule_error ? `<p class="gf-alert" data-status="danger" role="alert">${esc(r.driver_schedule_error)}</p>` : ''}
-      <div class="gf-crew"><div><small>Autista</small><strong>${esc(r.driver_name || 'Non assegnato')}</strong></div><div><small>Mezzo</small><strong>${esc(r.vehicle_name || '-')}</strong></div></div>
-      <dl class="gf-details">
-        ${item('Partenza', r.orario_partenza || '-')}${item('Rientro previsto', r.rientro_stimato_aggiornato || r.orario_rientro_stimato || '-')}
-        ${item('Km previsti', gfKm(r.totale_km))}${item('Tempo previsto', dashScheduledMinutes(r.totale_minuti))}
-        ${item(energy.label, energy.value)}${item(energy.costLabel, dashScheduledMoney(r.costo_carburante))}
-        ${item('Pedaggio stimato', r.toll_estimated_eur == null ? 'Non disponibile' : dashScheduledMoney(r.toll_estimated_eur))}${item('Costo operativo stimato', dashScheduledMoney(r.costo_totale ?? r.costo_carburante))}
-      </dl>
-      <h3 class="gf-subtitle">${rows.length} ${rows.length===1?'fermata':'fermate'} in ordine di consegna</h3>
-      ${dashboardScheduledStopsHtml(r)}
-      <p class="gf-alert" data-status="info">${esc(r.eta_label || 'ETA storico salvato')}${r.traffic_status==='unavailable' ? '. Traffico non disponibile: usati i tempi stradali salvati.' : ''}</p>
+  const day = r.data_giro ? dashScheduledDayLabel(r.data_giro).toLowerCase() : '-';
+  const total = r.costo_totale ?? r.costo_carburante;
+  const warnings = [
+    [rows.filter(d=>d.ztl).length,'ZTL'], [rows.filter(d=>d.sponda).length,'sponda richiesta'],
+    [rows.filter(d=>d.pedestrian_area).length,'area pedonale'], [rows.filter(d=>Number(d.attesa_min)>0).length,'attesa prima dell’apertura']
+  ].filter(([n])=>n>0).map(([n,label])=>`${gfCount(n,'fermata','fermate')} con ${label}`);
+  const tableRows = rows.map((d, idx)=>{
+    const note = d.note_operatore || d.note_autista || d.note || '';
+    return `<tr>
+      <td data-label="#">${esc(d.ordine || idx+1)}</td>
+      <td data-label="Cliente"><strong>${esc(d.cliente_nome || '-')}</strong><br><small class="gf-muted">${esc(d.indirizzo || '-')}</small></td>
+      <td data-label="Arrivo previsto">${esc(gfPlannedArrival(d))}${Number(d.attesa_min)>0?`<br><span class="gf-badge" data-status="warning">Attesa ${Math.round(Number(d.attesa_min))} min</span>`:''}</td>
+      <td data-label="Finestra">${deliveryWindowLabel(d)}</td>
+      <td data-label="Carico">${gfCount(parseInt(d.colli)||0,'collo','colli')} · ${gfDecimal(parseFloat(d.peso_kg)||0)} kg</td>
+      <td data-label="Requisiti">${deliveryRequirementBadges(d) || '<span class="gf-muted">—</span>'}</td>
+      <td data-label="Tracking e note"><div class="gf-cluster">${trackingButton(d, r)}${note ? `<button type="button" class="gf-button" data-variant="ghost" data-size="sm" data-note="${esc(String(note))}" onclick="alert(this.dataset.note)">Note</button>` : ''}</div></td>
+    </tr>`;
+  }).join('');
+  return `<div class="gf-stack" data-gap="lg" data-scheduled-detail>
+    ${gfRouteDetailHeader(`Giro programmato · ${day}`, r.nome || 'Giro consegne', '<span class="gf-badge" data-status="warning" data-dot>Programmato</span>')}
+    <div class="gf-stat-strip" data-icons="side" aria-label="Numeri del giro">
+      ${gfStatCell('home','neutral','Partenza', r.orario_partenza || '-', 'dal deposito')}
+      ${gfStatCell('clock','1','Rientro previsto', r.rientro_stimato_aggiornato || r.orario_rientro_stimato || '-', dashScheduledMinutes(r.totale_minuti)+' di giro')}
+      ${gfStatCell('route','2','Percorso', r.totale_km == null ? '-' : gfDecimal(r.totale_km), 'km pianificati')}
+      ${gfStatCell('pin','4','Fermate', String(rows.length), gfRouteLoad(rows))}
+      ${gfStatCell('euro','5','Costo operativo', dashScheduledMoney(total), r.toll_estimated_eur == null ? `${energy.label}: ${energy.value}` : `pedaggi ${dashScheduledMoney(r.toll_estimated_eur)} inclusi`)}
     </div>
-    <footer class="gf-modal__footer">
-      <button type="button" class="gf-button" data-variant="secondary" onclick="refreshRouteTraffic(${Number(r.id)}, 'dashboardScheduledPage', 'scheduled')">Aggiorna ETA con traffico</button>
-      <button type="button" class="gf-button" data-variant="primary" onclick="openProgrammedRouteForEdit(${Number(r.id)}, true)">Modifica dalla pianificazione</button>
-    </footer>
-  </dialog>`;
+    <section class="gf-route-panel" aria-label="Percorso e fermate del giro">
+      <div class="gf-route-panel__map">
+        <div class="gf-route-panel__heading"><div><h3 class="gf-title">Percorso del giro</h3><p class="gf-muted">${esc(r.eta_label || 'ETA storico salvato')}${r.traffic_status==='unavailable' ? ' · traffico non disponibile, usati i tempi stradali salvati' : ''}</p></div></div>
+        <div class="gf-route-panel__canvas" data-route-map></div>
+        <div class="gf-legend"><span><i></i>Da fare</span><span><span class="gf-badge" data-kind="ztl">ZTL</span>Accesso limitato</span><span><span class="gf-badge" data-kind="tail-lift">Sponda</span>Richiesta</span></div>
+      </div>
+      <div class="gf-route-panel__detail">
+        <div class="gf-crew"><div><small>Autista</small><strong>${esc(r.driver_name || 'Non assegnato')}</strong></div><div><small>Mezzo</small><strong>${esc(r.vehicle_name || '-')}</strong></div></div>
+        ${r.driver_schedule_error ? `<div class="gf-alert" data-status="danger" role="alert"><div class="gf-alert__body"><p class="gf-alert__text">${esc(r.driver_schedule_error)}</p></div></div>` : ''}
+        ${warnings.length ? `<div class="gf-alert" data-status="warning"><div class="gf-alert__body"><p class="gf-alert__title">Da verificare prima della partenza</p><p class="gf-alert__text">${esc(warnings.join(' · '))}</p></div></div>` : ''}
+        ${dashboardScheduledStopsHtml(r, false)}
+        <div class="gf-route-panel__footer gf-cluster">
+          <button type="button" class="gf-button" data-variant="secondary" onclick="refreshRouteTraffic(${Number(r.id)}, 'dashboardScheduledPage', 'scheduled')">Aggiorna ETA con traffico</button>
+          <button type="button" class="gf-button" data-variant="primary" onclick="openProgrammedRouteForEdit(${Number(r.id)}, true)">Modifica dalla pianificazione</button>
+        </div>
+      </div>
+    </section>
+    <section class="gf-panel" aria-labelledby="scheduledStopsTitle">
+      <header class="gf-panel__header"><div><h3 class="gf-panel__title" id="scheduledStopsTitle">Dettaglio completo delle fermate</h3><p class="gf-muted">Finestre di scarico, carico, requisiti, tracking e note</p></div>
+        <button type="button" class="gf-button" data-variant="secondary" aria-controls="scheduledStopsTable" aria-expanded="false" onclick="gfToggleArea(this)">Mostra tabella</button></header>
+      <div id="scheduledStopsTable" hidden>${rows.length ? `<div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards">
+        <thead><tr><th scope="col">#</th><th scope="col">Cliente</th><th scope="col">Arrivo previsto</th><th scope="col">Finestra</th><th scope="col">Carico</th><th scope="col">Requisiti</th><th scope="col">Tracking e note</th></tr></thead>
+        <tbody>${tableRows}</tbody></table></div>` : '<div class="gf-empty"><p>Nessuna fermata collegata a questo giro.</p></div>'}</div>
+    </section>
+  </div>`;
 }
 
 function renderDashboardScheduledSubpage(routes, selectedRoute){
@@ -4332,13 +4412,16 @@ function renderDashboardScheduledSubpage(routes, selectedRoute){
     const next = dashboardScheduledRoutes.map(r=>r.data_giro).filter(d=>d && d >= today).sort()[0];
     dashboardScheduledDay = dashboardScheduledRoutes.some(r=>r.data_giro===today) || !next ? today : next;
   }
-  if(selectedRoute) dashboardScheduledSelectedId = selectedRoute.id;
-  page.innerHTML = dashboardScheduledWeekHtml() + dashboardScheduledDayHtml() + (selectedRoute ? dashboardScheduledDialogHtml(selectedRoute) : '');
-  const dialog = selectedRoute ? document.getElementById('dashboardScheduledDialog') : null;
-  if(dialog && typeof dialog.showModal === 'function' && !dialog.open){
-    dialog.addEventListener('click', event => { if(event.target === dialog) dialog.close(); });
-    dialog.showModal();
+  if(selectedRoute){
+    // Il giro scelto si apre a pagina intera; il pulsante indietro torna alla settimana.
+    dashboardScheduledSelectedId = selectedRoute.id;
+    page.innerHTML = dashboardScheduledDetailHtml(selectedRoute);
+    gfRouteDetailBack('Torna ai giri programmati', closeDashboardScheduledRoute);
+    window.scrollTo?.(0, 0);
+    gfDrawRouteMap(selectedRoute, page);
+    return;
   }
+  page.innerHTML = dashboardScheduledWeekHtml() + dashboardScheduledDayHtml();
 }
 
 // "Giri completati" confluisce nello Storico: si apre lo Storico con il pannello del giro scelto.

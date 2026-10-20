@@ -107,7 +107,7 @@ test('when there is no active route, the area map and branded first-route action
   assert.match(mapSource, /tile\.openstreetmap\.org/);
   assert.doesNotMatch(mapCss, /\.gf-route-panel__empty/, 'lo stato vuoto usa solo componenti condivisi');
   assert.ok(coreCss.includes('body.workspace-empty-v49-active #tab-dashboard > :not(#workspaceEmptyDashboardV49):not(#gfRefHeroWrap)'), 'la mappa deve restare visibile anche durante la configurazione iniziale');
-  assert.match(html, /gf_dashboard_start_20261018/);
+  assert.match(html, /gf_route_detail_20261020/);
 });
 
 test('when an active route exists, the current route detail remains visible', async () => {

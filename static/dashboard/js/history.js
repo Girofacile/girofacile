@@ -131,7 +131,7 @@ window.GFHistory = (() => {
   function render(){
     const empty = !state.routes.length;
     $('historyEmptyState').classList.toggle('hidden', !empty);
-    $('historyPage').hidden = empty;
+    $('historyPage').hidden = empty || detailOpen();
     if(empty) return;
     chipsHtml();
     const results = searching();
@@ -152,12 +152,12 @@ window.GFHistory = (() => {
   }
 
   /* --- Pannello del giro -------------------------------------------------------- */
-  function stopsHtml(r){
+  function stopsHtml(r, autoHeight=true){
     const rows = r.consegne || [];
     if(!rows.length) return '<div class="gf-empty"><p>Nessuna fermata collegata a questo giro.</p></div>';
     const planned = gfPlannedArrivalDates(r, rows);
     const breaks = after => (r.driver_breaks || []).filter(b => b.after_order === after).map(b => `<li class="gf-stop"><span class="gf-stop__number" aria-label="Pausa">Ⅱ</span><span class="gf-stop__main"><span class="gf-stop__name">Pausa autista dalle ${esc(b.start)} alle ${esc(b.end)}</span><span class="gf-stop__meta">Riposo pianificato · ${Number(b.duration_min)} minuti</span></span></li>`).join('');
-    return `<ol class="gf-stop-list" data-height="auto" aria-label="Fermate del giro">${breaks(0)}${rows.map((d, idx) => {
+    return `<ol class="gf-stop-list"${autoHeight ? ' data-height="auto"' : ''} aria-label="Fermate del giro">${breaks(0)}${rows.map((d, idx) => {
       const st = status(d), note = d.note_operatore || d.note_autista || d.note || '', real = gfRealArrival(d);
       return `<li class="gf-stop${st === 'completata' ? ' is-done' : st === 'mancata' ? ' is-miss' : ''}"><span class="gf-stop__number">${esc(d.ordine || idx+1)}</span>
         <span class="gf-stop__main"><span class="gf-stop__name">${esc(d.cliente_nome || '-')}</span>
@@ -166,37 +166,66 @@ window.GFHistory = (() => {
         </span><span class="gf-stop__time">${esc(real || gfPlannedArrival(d))}</span></li>${breaks(idx+1)}`;
     }).join('')}</ol>`;
   }
-  function dialogHtml(r){
+  // Dettaglio a pagina intera: barra numeri con icone, mappa con fermate ed esito, tabella apribile.
+  function detailHtml(r){
     const rows = r.consegne || [];
     const done = rows.filter(d => status(d) === 'completata').length, missed = rows.filter(d => status(d) === 'mancata').length;
     const absent = rows.filter(d => status(d) === 'mancata' && d.motivo_mancata === 'assente').length;
     const closed = rows.filter(d => status(d) === 'mancata' && d.motivo_mancata === 'chiuso').length;
     const energy = gfRouteEnergyMetric(r);
-    const item = (label, value) => `<div class="gf-details__item"><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`;
     const outcome = [[`${done} consegnate`,'success'], [plural(missed,'mancata','mancate'),'danger', missed], [plural(absent,'cliente assente','clienti assenti'),'warning', absent], [plural(closed,'locale chiuso','locali chiusi'),'warning', closed], [`${rows.length-done-missed} non gestite`,'info', rows.length-done-missed]]
       .filter(([, , show]) => show === undefined || show > 0).map(([text, tone]) => `<span class="gf-badge" data-status="${tone}">${esc(text)}</span>`).join('');
-    return `<header class="gf-modal__header">
-        <div><p class="gf-kicker">${r.status === 'annullato' ? 'Giro annullato' : 'Giro completato'} · ${esc(r.data_giro ? dashScheduledDayLabel(r.data_giro).toLowerCase() : '-')}</p><h2 class="gf-modal__title" id="historyRouteTitle">${esc(r.nome || 'Giro consegne')}</h2></div>
-        ${statusBadge(r)}
-        <button type="button" class="gf-icon-button" aria-label="Chiudi" onclick="GFHistory.close()"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12 M18 6L6 18"/></svg></button>
-      </header>
-      <div class="gf-modal__body gf-stack">
-        <div class="gf-crew"><div><small>Autista</small><strong>${esc(r.driver_name || 'Non assegnato')}</strong></div><div><small>Mezzo</small><strong>${esc(r.vehicle_name || '-')}</strong></div></div>
-        <dl class="gf-details">
-          ${item('Partenza', gfTimeFromIso(r.started_at) || r.orario_partenza || '-')}${item('Rientro', gfTimeFromIso(r.completed_at) || r.rientro_stimato_aggiornato || r.orario_rientro_stimato || '-')}
-          ${item('Km previsti', gfKm(r.totale_km))}${item('Tempo previsto', dashScheduledMinutes(r.totale_minuti))}
-          ${item(energy.label, energy.value)}${item('Costo stimato', money(r.costo_totale ?? r.costo_carburante))}
-        </dl>
-        <h3 class="gf-subtitle">Esito</h3>
-        <div class="gf-cluster">${outcome}</div>
-        <h3 class="gf-subtitle">${plural(rows.length,'fermata','fermate')}</h3>
-        ${stopsHtml(r)}
+    const start = gfTimeFromIso(r.started_at) || r.orario_partenza || '-';
+    const end = gfTimeFromIso(r.completed_at) || r.rientro_stimato_aggiornato || r.orario_rientro_stimato || '-';
+    const realMinutes = r.started_at && r.completed_at ? Math.round((new Date(r.completed_at) - new Date(r.started_at)) / 60000) : null;
+    const planned = gfPlannedArrivalDates(r, rows);
+    const tableRows = rows.map((d, idx) => {
+      const st = status(d), note = d.note_operatore || d.note_autista || d.note || '', real = gfRealArrival(d);
+      return `<tr>
+        <td data-label="#">${esc(d.ordine || idx+1)}</td>
+        <td data-label="Cliente"><strong>${esc(d.cliente_nome || '-')}</strong><br><small class="gf-muted">${esc(d.indirizzo || '-')}</small></td>
+        <td data-label="Previsto">${esc(gfPlannedArrival(d))}</td>
+        <td data-label="Reale">${esc(real || '—')}</td>
+        <td data-label="Differenza">${gfDeltaBadge(planned[idx], gfRealArrivalDate(d))}</td>
+        <td data-label="Esito">${deliveryStatusPill(st)}${d.motivo_mancata ? `<br><small class="gf-muted">${esc(d.motivo_mancata)}</small>` : ''}</td>
+        <td data-label="Prova e note"><div class="gf-cluster">${deliverySignatureAction(d, r.driver_name)} ${trackingButton(d, r)}${note ? `<button type="button" class="gf-button" data-variant="ghost" data-size="sm" data-note="${esc(String(note))}" onclick="alert(this.dataset.note)">Note</button>` : ''}</div></td>
+      </tr>`;
+    }).join('');
+    return `<div class="gf-stack" data-gap="lg">
+      ${gfRouteDetailHeader(`${r.status === 'annullato' ? 'Giro annullato' : 'Giro completato'} · ${r.data_giro ? dashScheduledDayLabel(r.data_giro).toLowerCase() : '-'}`, r.nome || 'Giro consegne', statusBadge(r))}
+      <div class="gf-stat-strip" data-icons="side" aria-label="Numeri del giro">
+        ${gfStatCell('check','3','Consegnate', `${done}/${rows.length}`, missed ? plural(missed,'mancata','mancate') : 'nessuna mancata')}
+        ${gfStatCell('clock','1','Orario', `${start}–${end}`, `previsto ${r.orario_partenza || '-'}–${r.orario_rientro_stimato || '-'}`, 'text')}
+        ${gfStatCell('route','2','Percorso', r.totale_km == null ? '-' : gfDecimal(r.totale_km), 'km pianificati')}
+        ${gfStatCell('pin','4','Durata', realMinutes != null && realMinutes >= 0 ? dashScheduledMinutes(realMinutes) : dashScheduledMinutes(r.totale_minuti), 'prevista '+dashScheduledMinutes(r.totale_minuti))}
+        ${gfStatCell('euro','5', energy.costLabel, money(r.costo_totale ?? r.costo_carburante), `${energy.label}: ${energy.value}`)}
       </div>
-      <footer class="gf-modal__footer">
-        ${r.google_maps_url ? `<a class="gf-button" data-variant="secondary" target="_blank" rel="noopener" href="${esc(r.google_maps_url)}">Apri Maps</a>` : ''}
-        <button type="button" class="gf-button" data-variant="secondary" onclick="GFHistory.exportStops()">Esporta fermate (CSV)</button>
-      </footer>`;
+      <section class="gf-route-panel" aria-label="Percorso ed esito delle fermate">
+        <div class="gf-route-panel__map">
+          <div class="gf-route-panel__heading"><div><h3 class="gf-title">Percorso effettuato</h3><p class="gf-muted">Esito registrato dall’autista per ogni fermata</p></div></div>
+          <div class="gf-route-panel__canvas" data-route-map></div>
+          <div class="gf-legend"><span><i data-state="done"></i>Consegnata</span><span><i data-state="miss"></i>Mancata</span><span><i></i>Non gestita</span></div>
+        </div>
+        <div class="gf-route-panel__detail">
+          <div class="gf-crew"><div><small>Autista</small><strong>${esc(r.driver_name || 'Non assegnato')}</strong></div><div><small>Mezzo</small><strong>${esc(r.vehicle_name || '-')}</strong></div></div>
+          <div class="gf-cluster">${outcome}</div>
+          ${stopsHtml(r, false)}
+          <div class="gf-route-panel__footer gf-cluster">
+            ${r.google_maps_url ? `<a class="gf-button" data-variant="secondary" target="_blank" rel="noopener" href="${esc(r.google_maps_url)}">Apri Maps</a>` : ''}
+            <button type="button" class="gf-button" data-variant="primary" onclick="GFHistory.exportStops()">Esporta fermate (CSV)</button>
+          </div>
+        </div>
+      </section>
+      <section class="gf-panel" aria-labelledby="historyStopsTitle">
+        <header class="gf-panel__header"><div><h3 class="gf-panel__title" id="historyStopsTitle">Dettaglio completo delle fermate</h3><p class="gf-muted">Arrivi previsti e reali, esito, prove di consegna e note dell’autista</p></div>
+          <button type="button" class="gf-button" data-variant="secondary" aria-controls="historyStopsTable" aria-expanded="false" onclick="gfToggleArea(this)">Mostra tabella</button></header>
+        <div id="historyStopsTable" hidden>${rows.length ? `<div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards">
+          <thead><tr><th scope="col">#</th><th scope="col">Cliente</th><th scope="col">Previsto</th><th scope="col">Reale</th><th scope="col">Differenza</th><th scope="col">Esito</th><th scope="col">Prova e note</th></tr></thead>
+          <tbody>${tableRows}</tbody></table></div>` : '<div class="gf-empty"><p>Nessuna fermata collegata a questo giro.</p></div>'}</div>
+      </section>
+    </div>`;
   }
+  const detailOpen = () => !!$('historyRouteDetail') && !$('historyRouteDetail').hidden;
   async function open(id){
     const ticket = ++detailRequest;
     try{
@@ -204,9 +233,14 @@ window.GFHistory = (() => {
       if(ticket !== detailRequest) return;
       route = loaded;
       if(route.data_giro && !searching()){ state.day = route.data_giro; render(); }
-      const dialog = $('historyRouteDialog');
-      dialog.innerHTML = dialogHtml(route);
-      if(typeof dialog.showModal === 'function' && !dialog.open) dialog.showModal();
+      // Il giro si apre a pagina intera al posto della settimana; "indietro" torna all'elenco.
+      const detail = $('historyRouteDetail');
+      detail.innerHTML = detailHtml(route);
+      detail.hidden = false;
+      $('historyPage').hidden = true;
+      window.scrollTo?.(0, 0);
+      gfRouteDetailBack('Torna allo storico', () => window.GFHistory.close());
+      gfDrawRouteMap(route, detail);
     }catch(e){ toast(e.message); }
   }
 
@@ -234,6 +268,8 @@ window.GFHistory = (() => {
   // Ogni caricamento annulla quelli precedenti ancora in corso: vince l'ultima richiesta.
   async function load(routeId=null){
     const ticket = ++request;
+    // Aprendo lo Storico dal menu si torna all'elenco; con un giro indicato si apre il suo dettaglio.
+    if(!routeId && detailOpen()){ ++detailRequest; route = null; window.GiroFacileDashboardMap?.reset(); $('historyRouteDetail').hidden = true; $('historyRouteDetail').replaceChildren(); }
     $('historyLoading').hidden = false;
     $('historyError').hidden = true;
     $('historyPage').hidden = true;
@@ -273,14 +309,19 @@ window.GFHistory = (() => {
     if(!search || search.dataset.bound) return;
     search.dataset.bound = '1';
     search.addEventListener('input', () => { state.query = search.value; render(); });
-    $('historyRouteDialog').addEventListener('click', e => { if(e.target === e.currentTarget) e.currentTarget.close(); });
-    $('historyRouteDialog').addEventListener('close', () => { ++detailRequest; route = null; });
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind); else bind();
 
   return {
     load, open, render, exportRoutes, exportStops, openFilters, applyFilters, remove:removeFilter, clear:clearFilters,
-    close(){ ++detailRequest; route = null; $('historyRouteDialog').close(); },
+    close(){
+      ++detailRequest; route = null;
+      window.GiroFacileDashboardMap?.reset();
+      $('historyRouteDetail').hidden = true;
+      $('historyRouteDetail').replaceChildren();
+      if(typeof syncWorkspaceTopbar === 'function') syncWorkspaceTopbar('storico');
+      render();
+    },
     day(iso){ state.day = iso; render(); },
     week(step){ state.day = step ? dashScheduledAddDays(dashScheduledMonday(state.day), step*7) : (state.routes.map(r => r.data_giro).filter(d => d && d <= todayIso()).sort().pop() || todayIso()); render(); }
   };

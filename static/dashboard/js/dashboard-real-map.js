@@ -46,7 +46,8 @@
   }
 
   function highlight(index, active) {
-    const root = document.getElementById('gfRefHeroWrap');
+    // Il riquadro della mappa attiva: Dashboard, giro programmato o giro dello Storico.
+    const root = host?.closest('.gf-route-panel') || document.getElementById('gfRefHeroWrap');
     if (!root) return;
     root.querySelectorAll('[data-gf-ref-stop="' + index + '"]').forEach(node => {
       node.classList.toggle('hl', !!active);
