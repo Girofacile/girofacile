@@ -156,7 +156,7 @@ window.GFHistory = (() => {
     const rows = r.consegne || [];
     if(!rows.length) return '<div class="gf-empty"><p>Nessuna fermata collegata a questo giro.</p></div>';
     const planned = gfPlannedArrivalDates(r, rows);
-    const breaks = after => (r.driver_breaks || []).filter(b => b.after_order === after).map(b => `<li class="gf-stop"><span class="gf-stop__number" aria-label="Pausa">Ⅱ</span><span class="gf-stop__main"><span class="gf-stop__name">Pausa autista dalle ${esc(b.start)} alle ${esc(b.end)}</span><span class="gf-stop__meta">Riposo pianificato · ${Number(b.duration_min)} minuti</span></span></li>`).join('');
+    const breaks = after => GFDriverBreaks.cards(r, after, 'li');
     return `<ol class="gf-stop-list"${autoHeight ? ' data-height="auto"' : ''} aria-label="Fermate del giro">${breaks(0)}${rows.map((d, idx) => {
       const st = status(d), note = d.note_operatore || d.note_autista || d.note || '', real = gfRealArrival(d);
       return `<li class="gf-stop${st === 'completata' ? ' is-done' : st === 'mancata' ? ' is-miss' : ''}"><span class="gf-stop__number">${esc(d.ordine || idx+1)}</span>
@@ -189,7 +189,7 @@ window.GFHistory = (() => {
         <td data-label="Differenza">${gfDeltaBadge(planned[idx], gfRealArrivalDate(d))}</td>
         <td data-label="Esito">${deliveryStatusPill(st)}${d.motivo_mancata ? `<br><small class="gf-muted">${esc(gfMissedReason(d.motivo_mancata))}</small>` : ''}</td>
         <td data-label="Prova e note"><div class="gf-cluster">${deliverySignatureAction(d, r.driver_name)} ${trackingButton(d, r)}${note ? `<button type="button" class="gf-button" data-variant="ghost" data-size="sm" data-note="${esc(String(note))}" onclick="alert(this.dataset.note)">Note</button>` : ''}</div></td>
-      </tr>`;
+      </tr>`+GFDriverBreaks.table(r, idx+1, 7);
     }).join('');
     return `<div class="gf-stack" data-gap="lg">
       ${gfRouteDetailHeader(`${r.status === 'annullato' ? 'Giro annullato' : 'Giro completato'} · ${r.data_giro ? dashScheduledDayLabel(r.data_giro).toLowerCase() : '-'}`, r.nome || 'Giro consegne', statusBadge(r))}
@@ -221,7 +221,7 @@ window.GFHistory = (() => {
           <button type="button" class="gf-button" data-variant="secondary" aria-controls="historyStopsTable" aria-expanded="false" onclick="gfToggleArea(this)">Mostra tabella</button></header>
         <div id="historyStopsTable" hidden>${rows.length ? `<div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards">
           <thead><tr><th scope="col">#</th><th scope="col">Cliente</th><th scope="col">Previsto</th><th scope="col">Reale</th><th scope="col">Differenza</th><th scope="col">Esito</th><th scope="col">Prova e note</th></tr></thead>
-          <tbody>${tableRows}</tbody></table></div>` : '<div class="gf-empty"><p>Nessuna fermata collegata a questo giro.</p></div>'}</div>
+          <tbody>${GFDriverBreaks.table(r, 0, 7)}${tableRows}</tbody></table></div>` : '<div class="gf-empty"><p>Nessuna fermata collegata a questo giro.</p></div>'}</div>
       </section>
     </div>`;
   }

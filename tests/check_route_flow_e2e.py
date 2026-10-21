@@ -141,11 +141,14 @@ def run(browser, width, output):
         detail.wait_for(state='visible')
         assert detail.locator('.gf-stat-strip[data-icons="side"] .gf-stat-strip__icon').count() == 5
         assert detail.locator('[data-route-map]').count() == 1
-        expect(detail.locator('.gf-stop-list')).to_contain_text('Recipient')
+        # Accanto alla mappa solo gli avvisi del giro, non di nuovo l'elenco delle fermate.
+        assert detail.locator('.gf-stop-list').count() == 0
+        expect(detail.locator('[data-route-notices]')).to_contain_text('in totale per questo giro')
+        # La tabella completa delle fermate è sempre aperta, senza pulsante.
         table = detail.locator('#scheduledStopsTable')
-        expect(table).to_be_hidden()
-        detail.get_by_role('button', name='Mostra tabella').click()
         expect(table).to_be_visible()
+        assert detail.get_by_role('button', name='Mostra tabella').count() == 0
+        expect(detail.locator('[data-route-costs]')).to_contain_text('Totale')
         check_text('dettaglio giro programmato', detail.inner_text())
         assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 2'), 'scroll orizzontale nel dettaglio'
         page.screenshot(path=str(output / f'scheduled-detail-{width}.png'), full_page=True)

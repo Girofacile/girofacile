@@ -328,7 +328,7 @@
       if (version !== generation || !element.isConnected) return;
       if (map) {map.remove();map=null;}
       stopMarkers.clear();
-      showMessage(element,'Mappa temporaneamente non disponibile. Le fermate restano consultabili a destra.');
+      showMessage(element,'Mappa temporaneamente non disponibile. Le fermate del giro restano consultabili nella pagina.');
       console.warn('Mappa dashboard',error);
     }
   }

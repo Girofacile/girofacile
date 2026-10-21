@@ -4310,7 +4310,7 @@ function dashboardScheduledDayHtml(){
 function dashboardScheduledStopsHtml(r, autoHeight=true){
   const rows = r.consegne || [];
   if(!rows.length) return `<div class="gf-empty"><p>Nessuna fermata collegata a questo giro.</p></div>`;
-  const breaks = after => (r.driver_breaks || []).filter(b=>b.after_order===after).map(b=>`<li class="gf-stop"><span class="gf-stop__number" aria-label="Pausa">Ⅱ</span><span class="gf-stop__main"><span class="gf-stop__name">Pausa autista dalle ${esc(b.start)} alle ${esc(b.end)}</span><span class="gf-stop__meta">Riposo pianificato · ${Number(b.duration_min)} minuti</span></span></li>`).join('');
+  const breaks = after => GFDriverBreaks.cards(r, after, 'li');
   return `<ol class="gf-stop-list"${autoHeight ? ' data-height="auto"' : ''} aria-label="Fermate del giro">${breaks(0)}${rows.map((d, idx)=>{
     const note = d.note_operatore || d.note_autista || d.note || '';
     return `<li class="gf-stop"><span class="gf-stop__number">${esc(d.ordine || idx+1)}</span>
@@ -4332,8 +4332,21 @@ const GF_STAT_ICONS = {
   check:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M8 12.2l2.8 2.8 5.2-5.6'
 };
 // kind "text": valori lunghi (es. un intervallo orario) che possono andare a capo.
-function gfStatCell(icon, tone, label, value, unit, kind=''){
-  return `<div class="gf-stat-strip__cell"><span class="gf-stat-strip__icon" data-tone="${tone}" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="${GF_STAT_ICONS[icon]}"/></svg></span><span class="gf-stat-strip__label">${esc(label)}</span><strong class="gf-stat-strip__value"${kind ? ` data-kind="${kind}"` : ''}>${esc(value)}</strong><small class="gf-stat-strip__unit">${esc(unit||'')}</small></div>`;
+function gfStatCell(icon, tone, label, value, unit, kind='', size=''){
+  return `<div class="gf-stat-strip__cell"${size ? ` data-size="${size}"` : ''}><span class="gf-stat-strip__icon" data-tone="${tone}" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="${GF_STAT_ICONS[icon]}"/></svg></span><span class="gf-stat-strip__label">${esc(label)}</span><strong class="gf-stat-strip__value"${kind ? ` data-kind="${kind}"` : ''}>${esc(value)}</strong><small class="gf-stat-strip__unit">${esc(unit||'')}</small></div>`;
+}
+// Dettaglio dei costi accanto alla mappa: carburante o energia, pedaggi se presenti, totale.
+function gfRouteCostsHtml(route){
+  const energy = gfRouteEnergyMetric(route);
+  const toll = Number(route.toll_estimated_eur) > 0 ? Number(route.toll_estimated_eur) : 0;
+  const fuel = route.costo_carburante;
+  const total = route.costo_totale ?? (fuel == null ? null : Number(fuel) + toll);
+  const row = (label, value) => `<div class="gf-details__item"><dt>${label}</dt><dd>${value}</dd></div>`;
+  return `<div class="gf-panel__body gf-stack" data-gap="sm" data-route-costs><h4 class="gf-subtitle">Costo operativo</h4><dl class="gf-details" data-layout="rows">
+    ${row(esc(`${energy.electric ? 'Energia' : 'Carburante'} · ${energy.value}`), esc(dashScheduledMoney(fuel)))}
+    ${toll ? row('Pedaggi', esc(dashScheduledMoney(toll))) : ''}
+    ${row('<strong>Totale</strong>', `<strong>${esc(dashScheduledMoney(total))}</strong>`)}
+  </dl></div>`;
 }
 function gfToggleArea(button){
   const area = document.getElementById(button.getAttribute('aria-controls'));
@@ -4369,15 +4382,36 @@ function gfRouteDetailBack(label, go){
   document.body?.classList.add('gf-has-topbar-back');
 }
 
+// Avvisi accanto alla mappa: solo informazioni utili prima della partenza, senza confronti con il mezzo.
+// ZTL, area pedonale e sponda elencano i clienti interessati; i colli sono il totale del giro.
+const GF_NOTICE_ICONS = {
+  ztl:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M5.6 5.6l12.8 12.8',
+  walk:'M13 4a2 2 0 1 0 0-.01 M9 21l2-7 3 3v5 M7 12l3-4 4 2 3 3',
+  lift:'M2 6h11v10H2z M13 9h5l3 3v4h-8z M15 19h7',
+  box:'M3 7l9-4 9 4v10l-9 4-9-4z M3 7l9 4 9-4 M12 11v10'
+};
+function gfRouteNoticesHtml(rows){
+  const names = list => [...new Set(list.map(d=>d.cliente_nome || 'Cliente senza nome'))];
+  const item = (icon, tone, title, text) => `<div class="gf-list-item"><span class="gf-stat-strip__icon" data-tone="${tone}" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="${GF_NOTICE_ICONS[icon]}"/></svg></span><span class="gf-list-item__main"><strong>${esc(title)}</strong>${text ? `<small>${esc(text)}</small>` : ''}</span></div>`;
+  const clients = (list, icon, tone, where) => {
+    const found = names(list);
+    return found.length ? item(icon, tone, `${gfCount(found.length,'cliente','clienti')} ${typeof where==='function' ? where(found.length) : where}`, found.join(' · ')) : '';
+  };
+  const colli = rows.reduce((sum,d)=>sum+(parseInt(d.colli)||0),0);
+  return `<div class="gf-panel__body"><h4 class="gf-subtitle">Prima della partenza</h4></div>
+    <div class="gf-list" data-route-notices aria-label="Avvisi del giro">
+      ${clients(rows.filter(d=>d.ztl), 'ztl', '5', 'in zona ZTL')}
+      ${clients(rows.filter(d=>d.pedestrian_area), 'walk', '4', 'in area pedonale')}
+      ${clients(rows.filter(d=>d.sponda), 'lift', '2', n=>n===1 ? 'richiede la sponda' : 'richiedono la sponda')}
+      ${item('box', '3', `${gfCount(colli,'collo','colli')} in totale per questo giro`, '')}
+    </div>`;
+}
+
 function dashboardScheduledDetailHtml(r){
   const rows = r.consegne || [];
   const energy = gfRouteEnergyMetric(r);
   const day = r.data_giro ? dashScheduledDayLabel(r.data_giro).toLowerCase() : '-';
   const total = r.costo_totale ?? r.costo_carburante;
-  const warnings = [
-    [rows.filter(d=>d.ztl).length,'ZTL'], [rows.filter(d=>d.sponda).length,'sponda richiesta'],
-    [rows.filter(d=>d.pedestrian_area).length,'area pedonale'], [rows.filter(d=>Number(d.attesa_min)>0).length,'attesa prima dell’apertura']
-  ].filter(([n])=>n>0).map(([n,label])=>`${gfCount(n,'fermata','fermate')} con ${label}`);
   const tableRows = rows.map((d, idx)=>{
     const note = d.note_operatore || d.note_autista || d.note || '';
     return `<tr>
@@ -4388,16 +4422,16 @@ function dashboardScheduledDetailHtml(r){
       <td data-label="Carico">${gfCount(parseInt(d.colli)||0,'collo','colli')} · ${gfDecimal(parseFloat(d.peso_kg)||0)} kg</td>
       <td data-label="Requisiti">${deliveryRequirementBadges(d) || '<span class="gf-muted">—</span>'}</td>
       <td data-label="Tracking e note"><div class="gf-cluster">${trackingButton(d, r)}${note ? `<button type="button" class="gf-button" data-variant="ghost" data-size="sm" data-note="${esc(String(note))}" onclick="alert(this.dataset.note)">Note</button>` : ''}</div></td>
-    </tr>`;
+    </tr>`+GFDriverBreaks.table(r,idx+1,7);
   }).join('');
   return `<div class="gf-stack" data-gap="lg" data-scheduled-detail>
     ${gfRouteDetailHeader(`Giro programmato · ${day}`, r.nome || 'Giro consegne', '<span class="gf-badge" data-status="warning" data-dot>Programmato</span>')}
-    <div class="gf-stat-strip" data-icons="side" aria-label="Numeri del giro">
+    <div class="gf-stat-strip" data-icons="side" data-fit aria-label="Numeri del giro">
       ${gfStatCell('home','neutral','Partenza', r.orario_partenza || '-', 'dal deposito')}
-      ${gfStatCell('clock','1','Rientro previsto', r.rientro_stimato_aggiornato || r.orario_rientro_stimato || '-', dashScheduledMinutes(r.totale_minuti)+' di giro')}
-      ${gfStatCell('route','2','Percorso', r.totale_km == null ? '-' : gfDecimal(r.totale_km), 'km pianificati')}
-      ${gfStatCell('pin','4','Fermate', String(rows.length), gfRouteLoad(rows))}
-      ${gfStatCell('euro','5','Costo operativo', dashScheduledMoney(total), r.toll_estimated_eur == null ? `${energy.label}: ${energy.value}` : `pedaggi ${dashScheduledMoney(r.toll_estimated_eur)} inclusi`)}
+      ${gfStatCell('clock','1','Rientro previsto', r.rientro_stimato_aggiornato || r.orario_rientro_stimato || '-', 'dopo '+dashScheduledMinutes(r.totale_minuti))}
+      ${gfStatCell('route','2','Percorso', r.totale_km == null ? '-' : gfDecimal(r.totale_km), 'km')}
+      ${gfStatCell('pin','4','Fermate', String(rows.length), '', '', 'sm')}
+      ${gfStatCell('euro','5','Costo operativo', dashScheduledMoney(total), Number(r.toll_estimated_eur) > 0 ? 'pedaggi inclusi' : (energy.electric ? 'energia' : 'carburante'))}
     </div>
     <section class="gf-route-panel" aria-label="Percorso e fermate del giro">
       <div class="gf-route-panel__map">
@@ -4408,8 +4442,8 @@ function dashboardScheduledDetailHtml(r){
       <div class="gf-route-panel__detail">
         <div class="gf-crew"><div><small>Autista</small><strong>${esc(r.driver_name || 'Non assegnato')}</strong></div><div><small>Mezzo</small><strong>${esc(r.vehicle_name || '-')}</strong></div></div>
         ${r.driver_schedule_error ? `<div class="gf-alert" data-status="danger" role="alert"><div class="gf-alert__body"><p class="gf-alert__text">${esc(r.driver_schedule_error)}</p></div></div>` : ''}
-        ${warnings.length ? `<div class="gf-alert" data-status="warning"><div class="gf-alert__body"><p class="gf-alert__title">Da verificare prima della partenza</p><p class="gf-alert__text">${esc(warnings.join(' · '))}</p></div></div>` : ''}
-        ${dashboardScheduledStopsHtml(r, false)}
+        ${gfRouteCostsHtml(r)}
+        ${gfRouteNoticesHtml(rows)}
         <div class="gf-route-panel__footer gf-cluster">
           <button type="button" class="gf-button" data-variant="secondary" onclick="refreshRouteTraffic(${Number(r.id)}, 'dashboardScheduledPage', 'scheduled')">Aggiorna ETA con traffico</button>
           <button type="button" class="gf-button" data-variant="primary" onclick="openProgrammedRouteForEdit(${Number(r.id)}, true)">Modifica dalla pianificazione</button>
@@ -4417,11 +4451,10 @@ function dashboardScheduledDetailHtml(r){
       </div>
     </section>
     <section class="gf-panel" aria-labelledby="scheduledStopsTitle">
-      <header class="gf-panel__header"><div><h3 class="gf-panel__title" id="scheduledStopsTitle">Dettaglio completo delle fermate</h3><p class="gf-muted">Finestre di scarico, carico, requisiti, tracking e note</p></div>
-        <button type="button" class="gf-button" data-variant="secondary" aria-controls="scheduledStopsTable" aria-expanded="false" onclick="gfToggleArea(this)">Mostra tabella</button></header>
-      <div id="scheduledStopsTable" hidden>${rows.length ? `<div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards">
+      <header class="gf-panel__header"><div><h3 class="gf-panel__title" id="scheduledStopsTitle">Dettaglio completo delle fermate</h3><p class="gf-muted">Finestre di scarico, carico, requisiti, tracking e note</p></div></header>
+      <div id="scheduledStopsTable">${rows.length ? `<div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards">
         <thead><tr><th scope="col">#</th><th scope="col">Cliente</th><th scope="col">Arrivo previsto</th><th scope="col">Finestra</th><th scope="col">Carico</th><th scope="col">Requisiti</th><th scope="col">Tracking e note</th></tr></thead>
-        <tbody>${tableRows}</tbody></table></div>` : '<div class="gf-empty"><p>Nessuna fermata collegata a questo giro.</p></div>'}</div>
+        <tbody>${GFDriverBreaks.table(r,0,7)}${tableRows}</tbody></table></div>` : '<div class="gf-empty"><p>Nessuna fermata collegata a questo giro.</p></div>'}</div>
     </section>
   </div>`;
 }

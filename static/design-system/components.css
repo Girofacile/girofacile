@@ -327,6 +327,13 @@ body[data-gf-surface] .gf-stat-strip[data-icons="side"] .gf-stat-strip__label,
 body[data-gf-surface] .gf-stat-strip[data-icons="side"] .gf-stat-strip__cell>.gf-progress__track{grid-column:2/-1}
 /* Valore testuale (es. il nome del deposito predefinito): va a capo invece di uscire dalla voce. */
 body[data-gf-surface] .gf-stat-strip__value[data-kind="text"]{white-space:normal;overflow-wrap:anywhere;font-size:var(--gf-font-xl)}
+/* Barra a larghezze diverse (approvata il 21 ottobre 2026): con data-fit le voci si dividono lo spazio
+   in base al contenuto; data-size="sm" rende più stretta una voce che mostra solo un numero.
+   Su smartphone torna la griglia a due colonne. */
+body[data-gf-surface] .gf-stat-strip[data-fit]{display:flex}
+body[data-gf-surface] .gf-stat-strip[data-fit]>.gf-stat-strip__cell{flex:1 1 0;min-width:0}
+body[data-gf-surface] .gf-stat-strip[data-fit]>.gf-stat-strip__cell[data-size="sm"]{flex:.6 1 0}
+@media (max-width:640px){body[data-gf-surface] .gf-stat-strip[data-fit]{display:grid}}
 body[data-gf-surface] .gf-stat-strip[data-icons="side"] .gf-stat-strip__value[data-kind="text"],
 body[data-gf-surface] .gf-stat-strip[data-icons="side"] .gf-stat-strip__value[data-kind="text"]+.gf-stat-strip__unit{grid-column:2/-1}
 

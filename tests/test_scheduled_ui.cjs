@@ -30,7 +30,11 @@ test('scheduled week shows seven days and the day table; a route opens as a full
   // Il giro scelto si apre a pagina intera (variante B): barra con icone, mappa, fermate, tabella apribile.
   f.run('renderDashboardScheduledSubpage([route],route)');html=f.node.innerHTML;
   assert.doesNotMatch(html,/<dialog|data-cols="7"/);
-  for(const text of ['<strong class="gf-stat-strip__value">3</strong>','data-scheduled-detail','class="gf-stat-strip" data-icons="side"','class="gf-stat-strip__icon"','data-route-map','class="gf-route-panel"','Giro selezionato','Cliente &lt;test&gt;','data-note="All&#39;ingresso &quot;laterale&quot;','alert(this.dataset.note)','openProgrammedRouteForEdit(42, true)',"refreshRouteTraffic(42, 'dashboardScheduledPage', 'scheduled')",'aria-controls="scheduledStopsTable" aria-expanded="false"','id="scheduledStopsTable" hidden']) assert.ok(html.includes(text),text);
+  for(const text of ['<strong class="gf-stat-strip__value">3</strong>','data-scheduled-detail','class="gf-stat-strip" data-icons="side"','class="gf-stat-strip__icon"','data-route-map','class="gf-route-panel"','Giro selezionato','Cliente &lt;test&gt;','data-note="All&#39;ingresso &quot;laterale&quot;','alert(this.dataset.note)','openProgrammedRouteForEdit(42, true)',"refreshRouteTraffic(42, 'dashboardScheduledPage', 'scheduled')",'id="scheduledStopsTable"']) assert.ok(html.includes(text),text);
+  // Accanto alla mappa solo gli avvisi (niente elenco fermate ripetuto): clienti in ZTL, area pedonale, sponda e colli.
+  assert.doesNotMatch(html,/class="gf-stop-list"/);
+  assert.match(html,/data-route-notices/);
+  assert.match(html,/colli in totale per questo giro|collo in totale per questo giro/);
   // La freccia unica della barra in alto riporta alla settimana.
   assert.equal(f.node.onclick,f.ctx.closeDashboardScheduledRoute);
   f.run('closeDashboardScheduledRoute()');
@@ -86,4 +90,44 @@ test('completed delivery delay handles midnight rollover and same-day early arri
     completata_il:'2026-10-05T09:45:00'
   }];
   assert.match(early.run('dashboardStopRowsUnified(route,"completed")'),/-15 min/);
+});
+
+test('route notices name the clients in ZTL, pedestrian areas and needing a tail lift, plus total parcels',()=>{
+  const f=fixture();
+  const html=f.run(`gfRouteNoticesHtml([
+    {cliente_nome:'Bar Sole',ztl:true,colli:6},{cliente_nome:'Hotel Marina',ztl:true,sponda:true,colli:9},
+    {cliente_nome:'Pizzeria <Nola>',pedestrian_area:true,colli:'5'},{cliente_nome:'Market',colli:10}
+  ])`);
+  assert.match(html,/<strong>2 clienti in zona ZTL<\/strong><small>Bar Sole · Hotel Marina<\/small>/);
+  assert.match(html,/<strong>1 cliente in area pedonale<\/strong><small>Pizzeria &lt;Nola&gt;<\/small>/);
+  assert.match(html,/<strong>1 cliente richiedono la sponda<\/strong>|<strong>1 cliente richiede la sponda<\/strong>/);
+  assert.match(html,/<strong>30 colli in totale per questo giro<\/strong>/);
+  assert.doesNotMatch(f.run(`gfRouteNoticesHtml([{cliente_nome:'Market',colli:3}])`),/ZTL|area pedonale|sponda/);
+});
+
+test('route numbers mirror the Dashboard strip; costs sit beside the map; stops table always open',()=>{
+  const f=fixture();
+  f.run('renderDashboardScheduledSubpage([route],route)');const html=f.node.innerHTML;
+  assert.match(html,/class="gf-stat-strip" data-icons="side" data-fit/);
+  assert.match(html,/<div class="gf-stat-strip__cell" data-size="sm">[^]*?<span class="gf-stat-strip__label">Fermate<\/span><strong class="gf-stat-strip__value">3<\/strong><small class="gf-stat-strip__unit"><\/small>/);
+  assert.match(html,/data-route-costs/);
+  assert.match(html,/id="scheduledStopsTable">/);
+  assert.doesNotMatch(html,/Mostra tabella|scheduledStopsTable" hidden/);
+  const costs=f.run(`gfRouteCostsHtml({costo_carburante:8.9,costo_totale:14.62,toll_estimated_eur:5.72,litri_stimati:10.4})`);
+  assert.match(costs,/<dt>Carburante · 10.4 L<\/dt><dd>€ 8,90<\/dd>/);
+  assert.match(costs,/<dt>Pedaggi<\/dt><dd>€ 5,72<\/dd>/);
+  assert.match(costs,/<strong>€ 14,62<\/strong>/);
+  assert.doesNotMatch(f.run(`gfRouteCostsHtml({costo_carburante:6.5,toll_estimated_eur:null})`),/Pedaggi/);
+});
+
+test('driver break is an unnumbered yellow row between stops in the scheduled table',()=>{
+  const f=fixture();
+  f.route.driver_breaks=[{after_order:2,start:'14:00',end:'14:30',duration_min:30}];
+  f.run('renderDashboardScheduledSubpage([route],route)');
+  const html=f.node.innerHTML;
+  const table=html.slice(html.indexOf('id="scheduledStopsTable"'));
+  assert.match(table,/<tr class="driver-break-row" data-break-after="2"><td aria-hidden="true"><\/td><td colspan="6"><strong>Pausa del turno dalle 14:00 alle 14:30<\/strong><small>30 minuti di riposo per l’autista<\/small><\/td><\/tr>/);
+  // Tra la seconda e la terza fermata, senza numero.
+  assert.ok(table.indexOf('Secondo')<table.indexOf('Pausa del turno') && table.indexOf('Pausa del turno')<table.indexOf('Terzo'));
+  assert.doesNotMatch(html,/Ⅱ/);
 });
