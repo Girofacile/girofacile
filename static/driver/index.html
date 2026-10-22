@@ -265,6 +265,7 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
 <script src="/static/live-gps.js?v=20261005"></script>
 <link rel="stylesheet" href="/static/pod.css?v=gf_driver_fix_20261020">
 <script src="/static/pod.js?v=gf_driver_fix_20261020"></script>
+<script src="/static/driver-outbox.js?v=gf_outbox_20261022"></script>
 
 <link rel="stylesheet" href="/static/design-system/theme.css?v=gf_base_20261015v">
 <link rel="stylesheet" href="/static/design-system/components.css?v=gf_mapfix_20261020b">
@@ -350,6 +351,10 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
           <div class="ps-stat"><div class="ps-val red" id="psMissed">0</div><div class="ps-lbl">Mancate</div></div>
           <div class="ps-stat"><div class="ps-val blue" id="psRemaining">0</div><div class="ps-lbl">Rimanenti</div></div>
         </div>
+      </div>
+      <div id="outboxBanner" class="gf-alert hidden" data-status="warning" role="status">
+        <p id="outboxBannerText"></p>
+        <button type="button" class="btn-note-small" onclick="flushOutbox(true)">Invia ora</button>
       </div>
       <section class="gf-gps-status" data-gps-status data-state="idle" aria-label="Condivisione posizione">
         <div class="gf-gps-heading"><span class="gf-gps-dot" aria-hidden="true"></span>Posizione durante il giro</div>
@@ -516,13 +521,13 @@ const fmt = (n, d=1) => n == null ? '—' : Number(n).toLocaleString('it-IT', {m
 function clearDriverNotice() {
   document.querySelectorAll('[data-portal-notice]').forEach(n => n.remove());
 }
-function driverNotice(message) {
+function driverNotice(message, status='danger') {
   clearDriverNotice();
   const host = [...document.querySelectorAll('.modal-overlay:not(.hidden) .modal-body, .popup-overlay:not(.hidden) .popup-card')].pop()
     || document.querySelector('.view.active .page-head') || document.body;
   const notice = document.createElement('div');
   notice.className = 'gf-alert';
-  notice.dataset.status = 'danger';
+  notice.dataset.status = status;
   notice.dataset.portalNotice = '';
   notice.setAttribute('role', 'alert');
   notice.textContent = message;
@@ -533,10 +538,77 @@ function driverNotice(message) {
 }
 
 async function api(url, opts={}) {
-  const r = await fetch(url, {headers:{'Content-Type':'application/json'}, credentials:'same-origin', ...opts});
+  let r;
+  try {
+    r = await fetch(url, {headers:{'Content-Type':'application/json'}, credentials:'same-origin', ...opts});
+  } catch(e) {
+    const offline = new Error('Connessione assente.');
+    offline.offline = true;
+    throw offline;
+  }
   const d = await r.json().catch(()=>({}));
-  if(!r.ok) throw new Error(d.detail || 'Errore di rete');
+  if(!r.ok) {
+    const error = new Error(typeof d.detail === 'string' ? d.detail : 'Errore di rete');
+    error.status = r.status;
+    throw error;
+  }
   return d;
+}
+
+// ============================================================
+// ESITI IN ATTESA DI RETE
+// ============================================================
+let outbox = null;
+
+function setupOutbox() {
+  let storage = null;
+  try { storage = window.localStorage; } catch(e) {}
+  outbox = GFDriverOutbox.create({
+    storage,
+    key: 'gf-driver-outbox-' + me.driver_id,
+    send: item => api(item.url, {method:'POST', body:JSON.stringify(item.body)}),
+    onChange: renderOutboxBanner,
+  });
+  window.addEventListener('online', () => flushOutbox());
+  setInterval(() => { if(!document.hidden) flushOutbox(); }, 20000);
+  renderOutboxBanner();
+  flushOutbox();
+}
+
+function renderOutboxBanner() {
+  const banner = document.getElementById('outboxBanner');
+  if(!banner || !outbox) return;
+  const count = outbox.count();
+  banner.classList.toggle('hidden', count === 0);
+  document.getElementById('outboxBannerText').textContent = count === 1
+    ? '1 esito salvato sul telefono: verrà inviato appena torna la rete. Non uscire dal portale.'
+    : `${count} esiti salvati sul telefono: verranno inviati appena torna la rete. Non uscire dal portale.`;
+}
+
+async function flushOutbox(manual=false) {
+  if(!outbox || !outbox.count()) return;
+  const before = outbox.count();
+  const rejected = await outbox.flush();
+  if(rejected.length) {
+    driverNotice(rejected.map(r => `Esito per ${r.item.label || 'una consegna'} non accettato: ${r.message}`).join(' '));
+  } else if(manual && outbox.count() === before) {
+    driverNotice('Ancora nessuna connessione. Gli esiti restano salvati sul telefono.', 'warning');
+  }
+  if(currentRoute && before !== outbox.count()) await loadExecution();
+}
+
+// Invia subito; se manca la rete l'esito resta sul telefono e parte dopo.
+async function submitOutcome(kind, url, body) {
+  try {
+    await api(url, {method:'POST', body:JSON.stringify(body)});
+    return 'sent';
+  } catch(e) {
+    if(!outbox || !GFDriverOutbox.isRetryable(e)) throw e;
+    const delivery = (currentRouteData?.consegne || []).find(x => Number(x.id) === Number(currentDeliveryId));
+    const persisted = outbox.add({kind, url, body, routeId: currentRoute, deliveryId: currentDeliveryId, label: delivery?.cliente_nome || ''});
+    if(!persisted) driverNotice('Esito salvato solo in questa schermata: tieni aperto il portale finché torna la rete.', 'warning');
+    return 'queued';
+  }
 }
 
 // ============================================================
@@ -577,6 +649,7 @@ async function openApp() {
   document.getElementById('driverApp').classList.remove('hidden');
   document.getElementById('headerDriverName').textContent = me.driver_name;
   document.getElementById('dashDriverName').textContent = `Ciao ${me.driver_name}, ecco i giri assegnati a te`;
+  setupOutbox();
   await loadRoutes();
   populateChatSelect();
   startChatBadgePoll();
@@ -756,10 +829,14 @@ function exitExecution() {
 
 async function loadExecution() {
   try {
-    const data = await api(`/api/driver/routes/${currentRoute}`);
+    const data = GFDriverOutbox.overlay(await api(`/api/driver/routes/${currentRoute}`), outbox ? outbox.pending(currentRoute) : []);
     currentRouteData = data;
     renderExecution(data);
-  } catch(e) { console.error(e); }
+  } catch(e) {
+    // Senza rete mostra comunque gli esiti salvati sul telefono sull'ultimo giro caricato.
+    if(currentRouteData && outbox) renderExecution(GFDriverOutbox.overlay(currentRouteData, outbox.pending(currentRoute)));
+    else console.error(e);
+  }
 }
 
 function renderExecution(data) {
@@ -963,9 +1040,11 @@ async function saveSignatureFromModal(){
       method:'POST', body:JSON.stringify(currentSignatureDraft)
     });
   }catch(e){
-    // In caso di rete lenta manteniamo comunque la firma nella conferma: verrà inviata anche alla chiusura consegna.
-    driverNotice(e.message + ' La firma resta in questa schermata; riprova prima di uscire.');
-    return;
+    // Senza rete la firma resta nella conferma: viene inviata insieme all'esito della consegna.
+    if(!GFDriverOutbox.isRetryable(e)) {
+      driverNotice(e.message + ' La firma resta in questa schermata; riprova prima di uscire.');
+      return;
+    }
   }
   closeSignatureModal();
   updateSignatureRequestCard();
@@ -1016,9 +1095,7 @@ async function confirmDone() {
   }
   try {
     Object.assign(payload, await podPhotoPayload(!!currentRouteData?.settings?.delivery_photo_required));
-    await api(`/api/driver/delivery/${currentDeliveryId}/complete`, {
-      method:'POST', body:JSON.stringify(payload)
-    });
+    await submitOutcome('complete', `/api/driver/delivery/${currentDeliveryId}/complete`, payload);
     closeModal(); await loadExecution();
   } catch(e) { driverNotice(e.message); }
 }
@@ -1044,9 +1121,8 @@ function selectMotivo(val, btn) {
 async function confirmMissed() {
   if(!selectedMotivo) { driverNotice('Seleziona il motivo'); return; }
   try {
-    await api(`/api/driver/delivery/${currentDeliveryId}/missed`, {
-      method:'POST', body:JSON.stringify({motivo:selectedMotivo, note:document.getElementById('noteMissed').value})
-    });
+    await submitOutcome('missed', `/api/driver/delivery/${currentDeliveryId}/missed`,
+      {motivo:selectedMotivo, note:document.getElementById('noteMissed').value});
     closeModal(); await loadExecution();
   } catch(e) { driverNotice(e.message); }
 }
@@ -1062,9 +1138,8 @@ function openNote(id) {
 }
 async function confirmNote() {
   try {
-    await api(`/api/driver/delivery/${currentDeliveryId}/note`, {
-      method:'POST', body:JSON.stringify({note:document.getElementById('noteText').value})
-    });
+    await submitOutcome('note', `/api/driver/delivery/${currentDeliveryId}/note`,
+      {note:document.getElementById('noteText').value});
     closeModal(); await loadExecution();
   } catch(e) { driverNotice(e.message); }
 }

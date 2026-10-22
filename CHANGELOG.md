@@ -5,6 +5,9 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Portale autista: senza rete gli esiti (consegnata, mancata, nota) restano
+  salvati sul telefono, compaiono subito nel giro e partono da soli quando la
+  connessione torna. Un riquadro indica quanti esiti attendono l'invio.
 - Ordini: tolta dalle fonti la scheda "Email", non ancora disponibile. Shopify,
   WooCommerce, file e API standard restano attivi.
 - Configurazione: aggiunto `.env.example` con tutte le impostazioni del server.

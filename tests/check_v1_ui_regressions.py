@@ -29,7 +29,7 @@ def main():
     driver_route = dict(ROUTES[0], id=42, nome='Giro d\'Italia "Nord"', can_start=True,
                         before_time=True, is_future=False, n_consegne=1, completate=0, mancate=0)
     customers = [dict(c, stato_geocodifica="verificato") for c in CUSTOMERS]
-    state = dict(surface="dashboard", fail_history=False, history_pages=[], starts=[])
+    state = dict(surface="dashboard", fail_history=False, history_pages=[], starts=[], offline=False, outcomes=[])
     errors, checks = [], []
 
     def handle(route):
@@ -40,6 +40,9 @@ def main():
                        for key, price in (("starter", 29), ("business", 59), ("pro", 99))}
             route.fulfill(content_type="application/javascript", body="window.GF_PLANS="+json.dumps(catalog))
         elif path.startswith("/api/"):
+            if state["offline"] and path.startswith("/api/driver/") and path != "/api/driver/me":
+                route.abort("internetdisconnected")
+                return
             if path == "/api/routes":
                 if state["fail_history"]:
                     route.fulfill(status=503, content_type="application/json",
@@ -51,6 +54,10 @@ def main():
                 data = (dict(items=items, total=len(archive), page=page, page_size=size,
                              next_page=page+1 if page*size<len(archive) else None)
                         if params.get("with_meta") == ["true"] else items)
+            elif path.startswith("/api/driver/delivery/") and path.endswith("/missed"):
+                assert route.request.method == "POST"
+                state["outcomes"].append(dict(path=path, body=json.loads(route.request.post_data)))
+                data = dict(ok=True)
             elif path == "/api/driver/routes/42/start":
                 assert route.request.method == "POST"
                 state["starts"].append(path)
@@ -179,6 +186,25 @@ def main():
                 page.locator("#view-execution").wait_for(state="visible")
                 assert state["starts"] == ["/api/driver/routes/42/start"]
                 checks.append("driver: apostrophe/quotes preserved through confirmation and POST")
+                # Rete assente: l'esito resta sul telefono, il giro lo mostra, poi parte al ritorno della rete.
+                page.locator("#deliveryList .btn-missed").first.wait_for(state="visible")
+                state["offline"] = True
+                page.locator("#deliveryList .btn-missed").first.click()
+                page.locator("#motivoList .motivo-btn").first.click()
+                page.locator("#modalMissed .btn-confirm").click()
+                page.locator("#outboxBanner").wait_for(state="visible")
+                assert page.locator("#modalMissed").is_hidden()
+                assert "1 esito salvato" in page.locator("#outboxBannerText").inner_text()
+                assert page.locator("#psMissed").inner_text() == "1"
+                assert page.evaluate("JSON.parse(localStorage.getItem('gf-driver-outbox-undefined')).length") == 1
+                assert state["outcomes"] == []
+                page.screenshot(path=str(output/"driver-offline-outcome-390.png"), full_page=True)
+                state["offline"] = False
+                page.evaluate("window.dispatchEvent(new Event('online'))")
+                page.locator("#outboxBanner").wait_for(state="hidden")
+                assert [o["body"]["motivo"] for o in state["outcomes"]] == ["assente"], state["outcomes"]
+                assert page.evaluate("JSON.parse(localStorage.getItem('gf-driver-outbox-undefined')).length") == 0
+                checks.append("driver: missed outcome kept offline and sent when back online")
                 page.close()
             finally:
                 browser.close()
