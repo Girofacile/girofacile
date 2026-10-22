@@ -82,7 +82,7 @@ def main():
                     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 2')
                     page.screenshot(path=str(output/f'connector-shopify-{width}.png'),full_page=True)
                     page.evaluate("showTab('ordini-collegamenti')")
-                    assert page.get_by_role('button',name='In fase di sviluppo',exact=True).is_disabled()
+                    assert page.locator('#sourceCategories').get_by_text('Email',exact=True).count()==0
                     page.wait_for_function("document.getElementById('sourceMessage').textContent===''")
                     page.evaluate("GFOrderSources.unavailable('email')")
                     assert page.locator('#sourceWizard').get_by_text('Email · In fase di sviluppo',exact=True).is_visible()

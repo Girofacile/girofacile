@@ -261,6 +261,11 @@ def main():
                         page.evaluate("name=>showTab(name)",name)
                         page.wait_for_timeout(100)
                         # Il pulsante principale è il componente gf-button (nella sezione o nell'intestazione condivisa).
+                        # Sul telefono "Nuovo giro" della Dashboard sta nella barra di navigazione in basso.
+                        if name == "dashboard" and width < 768:
+                            assert page.locator('#gfMobileBottomNavV62 [data-primary]').is_visible(),(name,width)
+                            capture(page,"workspace-"+name,width)
+                            continue
                         primary_button = page.locator('#app .gf-button[data-variant="primary"]:visible').first
                         assert styles(primary_button,BUTTON_PROPERTIES) == primary,(name,width,styles(primary_button,BUTTON_PROPERTIES),primary)
                         capture(page,"workspace-"+name,width)
