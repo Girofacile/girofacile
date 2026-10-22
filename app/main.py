@@ -104,6 +104,18 @@ app.mount("/static", StaticFiles(directory=static_dir), name="static")
 def pod_local_file(key: str, exp: int, dl: int = 0, sig: str = ""):
     return serve_local_object(key, exp, dl, sig)
 
+
+# Stato del servizio per healthcheck Docker e monitor esterni: nessun dettaglio interno.
+@app.get("/health", include_in_schema=False)
+def health():
+    headers = {"Cache-Control": "no-store"}
+    try:
+        with engine.connect() as connection:
+            connection.execute(text("SELECT 1"))
+    except Exception:
+        return JSONResponse(status_code=503, content={"status": "unavailable"}, headers=headers)
+    return JSONResponse(content={"status": "ok"}, headers=headers)
+
 # -----------------------------------------------------------------------
 # Include router
 # -----------------------------------------------------------------------

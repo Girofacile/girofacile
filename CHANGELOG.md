@@ -9,3 +9,8 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
   WooCommerce, file e API standard restano attivi.
 - Configurazione: aggiunto `.env.example` con tutte le impostazioni del server.
 - Repository: changelog storici spostati in `docs/storico`.
+- Produzione: l'avvio si blocca anche con SQLite, `APP_BASE_URL` non https o
+  archivio prove di consegna locale/incompleto; email, avvisi errori e altre
+  impostazioni mancanti compaiono come avvisi nel log.
+- Produzione: nuovo `/health` (app + database), healthcheck Docker, proxy HTTPS
+  Caddy in `deploy/caddy` e guida in `deploy/README.md`.

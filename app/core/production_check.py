@@ -7,7 +7,10 @@ superadmin di default espone l'intera piattaforma.
 """
 from __future__ import annotations
 
+import logging
 import os
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_SECRETS = {"dev-secret-change-me", "change-me", "changeme", "secret"}
 WEAK_ADMIN_PASSWORDS = {
@@ -17,6 +20,8 @@ WEAK_ADMIN_PASSWORDS = {
 MIN_SECRET_LENGTH = 32
 MIN_ADMIN_PASSWORD_LENGTH = 12
 PRODUCTION_ENVS = {"production", "prod"}
+LOCAL_URLS = ("http://localhost", "http://127.0.0.1")
+S3_SETTINGS = tuple("OBJECT_STORAGE_" + name for name in ("ENDPOINT", "REGION", "BUCKET", "ACCESS_KEY", "SECRET_KEY"))
 
 
 def is_production(env: dict | None = None) -> bool:
@@ -52,7 +57,47 @@ def production_config_problems(env: dict | None = None) -> list[str]:
     if (env.get("COOKIE_SECURE") or "").strip().lower() in {"0", "false", "no", "off"}:
         problems.append("COOKIE_SECURE disattivato")
 
+    database_url = (env.get("DATABASE_URL") or "").strip().lower()
+    if database_url.startswith("sqlite") or _is_true(env.get("ALLOW_SQLITE_LEGACY")):
+        problems.append("SQLite non è ammesso in produzione")
+
+    base_url = (env.get("APP_BASE_URL") or "").strip().lower()
+    if base_url.startswith("http://") and not base_url.startswith(LOCAL_URLS):
+        problems.append("APP_BASE_URL deve usare https")
+
+    if _is_true(env.get("OBJECT_STORAGE_ENABLED")):
+        backend = (env.get("OBJECT_STORAGE_BACKEND") or "s3").strip().lower()
+        if backend != "s3":
+            problems.append("archivio prove di consegna locale non ammesso in produzione (usa OBJECT_STORAGE_BACKEND=s3)")
+        else:
+            missing = [name for name in S3_SETTINGS if not (env.get(name) or "").strip()]
+            if missing:
+                problems.append("archivio prove di consegna incompleto: manca " + ", ".join(missing))
+
     return problems
+
+
+def production_config_warnings(env: dict | None = None) -> list[str]:
+    """Impostazioni assenti che non impediscono l'avvio ma disattivano funzioni."""
+    env = os.environ if env is None else env
+    warnings: list[str] = []
+    if not (env.get("DATABASE_URL") or "").strip():
+        warnings.append("DATABASE_URL non impostato: viene usato il database locale di sviluppo")
+    if not all((env.get(name) or "").strip() for name in ("SMTP_HOST", "SMTP_USER", "SMTP_PASSWORD")):
+        warnings.append("email SMTP non configurata: inviti e recupero password non partono")
+    if not (env.get("ERROR_NOTIFICATIONS_EMAIL") or "").strip():
+        warnings.append("ERROR_NOTIFICATIONS_EMAIL non impostata: nessun avviso sugli errori")
+    if not _is_true(env.get("OBJECT_STORAGE_ENABLED")):
+        warnings.append("archivio prove di consegna disattivato: firme e foto non vengono salvate come file")
+    if not (env.get("PASSWORD_PEPPER") or "").strip():
+        warnings.append("PASSWORD_PEPPER non impostato")
+    if not (env.get("ORDER_CONNECTOR_KEY") or "").strip():
+        warnings.append("ORDER_CONNECTOR_KEY non impostata: i negozi online non si possono collegare")
+    return warnings
+
+
+def _is_true(value) -> bool:
+    return (value or "").strip().lower() in {"1", "true", "yes", "si", "sì", "on"}
 
 
 def require_production_config(env: dict | None = None) -> None:
@@ -64,3 +109,5 @@ def require_production_config(env: dict | None = None) -> None:
         raise RuntimeError(
             "Avvio in produzione bloccato, configurazione non sicura: " + "; ".join(problems)
         )
+    for warning in production_config_warnings(env):
+        logger.warning("Configurazione produzione: %s", warning)

@@ -2,7 +2,9 @@ import asyncio
 
 import pytest
 
-from app.core.production_check import production_config_problems, require_production_config
+from app.core.production_check import (
+    production_config_problems, production_config_warnings, require_production_config,
+)
 
 STRONG = {
     "APP_ENV": "production",
@@ -24,6 +26,11 @@ def test_strong_production_config_is_accepted():
     ({"SUPERADMIN_PASSWORD": "admin123"}, "default o comune"),
     ({"SUPERADMIN_PASSWORD": "Breve1!"}, "troppo corta"),
     ({"COOKIE_SECURE": "false"}, "COOKIE_SECURE"),
+    ({"DATABASE_URL": "sqlite:///girofacile.db"}, "SQLite"),
+    ({"ALLOW_SQLITE_LEGACY": "true"}, "SQLite"),
+    ({"APP_BASE_URL": "http://app.esempio.it"}, "https"),
+    ({"OBJECT_STORAGE_ENABLED": "true", "OBJECT_STORAGE_BACKEND": "local"}, "locale non ammesso"),
+    ({"OBJECT_STORAGE_ENABLED": "true", "OBJECT_STORAGE_BUCKET": "pod"}, "OBJECT_STORAGE_ENDPOINT"),
 ])
 def test_weak_production_config_blocks_startup(changes, expected):
     env = {**STRONG, **changes}
@@ -55,3 +62,34 @@ def test_lifespan_refuses_production_with_default_secret(monkeypatch):
 
     with pytest.raises(RuntimeError, match="APP_SECRET"):
         asyncio.run(start())
+
+
+def test_complete_s3_storage_and_https_are_accepted():
+    env = {**STRONG, "APP_BASE_URL": "https://app.esempio.it", "OBJECT_STORAGE_ENABLED": "true",
+           **{"OBJECT_STORAGE_" + k: "x" for k in ("ENDPOINT", "REGION", "BUCKET", "ACCESS_KEY", "SECRET_KEY")}}
+    assert production_config_problems(env) == []
+
+
+def test_missing_optional_services_only_warn(caplog):
+    warnings = production_config_warnings(STRONG)
+    assert any("SMTP" in w for w in warnings)
+    assert any("ERROR_NOTIFICATIONS_EMAIL" in w for w in warnings)
+    with caplog.at_level("WARNING"):
+        require_production_config(STRONG)
+    assert "SMTP" in caplog.text
+
+
+def test_health_reports_database_state(monkeypatch):
+    from fastapi.testclient import TestClient
+    from app import main
+
+    class Broken:
+        def connect(self):
+            raise RuntimeError("database down")
+
+    client = TestClient(main.app)
+    monkeypatch.setattr(main, "engine", Broken())
+    response = client.get("/health")
+    assert response.status_code == 503
+    assert response.json() == {"status": "unavailable"}
+    assert response.headers["cache-control"] == "no-store"

@@ -1,0 +1,45 @@
+# GiroFacile — proxy HTTPS con Caddy (certificati Let's Encrypt automatici).
+# Installazione: copia questo file in /etc/caddy/Caddyfile, sostituisci i domini
+# e ricarica con: sudo systemctl reload caddy
+# L'app Docker ascolta solo su 127.0.0.1:8000 (vedi docker-compose.yml).
+# Nel .env dell'app: APP_BASE_URL=https://app.esempio.it, COOKIE_SECURE=true,
+# TRUST_PROXY_HEADERS=true.
+
+app.esempio.it {
+	encode zstd gzip
+
+	# Limite del corpo richiesta: una foto di consegna arriva a 12 MB, in base64 circa 16 MB.
+	request_body {
+		max_size 25MB
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		# "?" imposta il valore solo se l'app non ne ha già scelto uno più restrittivo.
+		?X-Content-Type-Options "nosniff"
+		?Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	reverse_proxy 127.0.0.1:8000 {
+		# Il client non può falsificare l'IP: Caddy sovrascrive questi header.
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Real-IP {remote_host}
+		health_uri /health
+		health_interval 30s
+	}
+
+	log {
+		output file /var/log/caddy/girofacile.log {
+			roll_size 50MiB
+			roll_keep 10
+		}
+	}
+}
+
+# Dominio principale: landing e accesso.
+esempio.it, www.esempio.it {
+	encode zstd gzip
+	header Strict-Transport-Security "max-age=31536000; includeSubDomains"
+	reverse_proxy 127.0.0.1:8000
+}
