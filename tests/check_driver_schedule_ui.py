@@ -94,7 +94,7 @@ def main():
                 page.evaluate("clearRouteWorkspace();showTab('giro')")
                 page.locator('#routeDate').fill('2099-01-16');page.locator('#routeStart').fill('08:00');page.locator('#routeStart').blur()
                 page.evaluate('refreshResourceAvailability()')
-                page.locator('[data-planning-mode-card]').filter(has_text='Più mezzi').click()  # card "Più mezzi" del layout C4
+                page.locator('[data-planning-mode-card]').filter(has_text='Più mezzi').click()  # chip "Più mezzi" (variante B)
                 for i in range(2):
                     page.locator(f'#fleetVehicle{i}').select_option(str(vehicles[i]['id']))
                     page.locator(f'#fleetDriver{i}').select_option(str(drivers[i]['id']))

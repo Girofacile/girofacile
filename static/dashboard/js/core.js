@@ -1649,7 +1649,7 @@ function toggleRouteStopsTable(button){
   button.textContent = open ? "Nascondi le fermate" : "Visiona tutte le fermate";
 }
 
-// Le due card "Un solo mezzo / Più mezzi" comandano la scelta esistente #planningMode.
+// I due chip "Un solo mezzo / Più mezzi" comandano la scelta esistente #planningMode.
 function selectPlanningModeCard(value){
   const select = document.getElementById("planningMode");
   if(!select || select.value === value) return syncPlanningModeCards();
@@ -1660,13 +1660,8 @@ function selectPlanningModeCard(value){
 function syncPlanningModeCards(){
   if(typeof document.querySelectorAll !== "function") return;
   const mode = val("planningMode") || "single";
-  document.querySelectorAll("[data-planning-mode-card]").forEach(card=>{
-    const radio = card.querySelector('input[name="planningModeChoice"]');
-    const on = radio?.value === mode;
-    if(radio) radio.checked = on;
-    if(on) card.dataset.variant = "info"; else delete card.dataset.variant;
-    const icon = card.querySelector("[data-planning-mode-icon]");
-    if(icon){ if(on) delete icon.dataset.tone; else icon.dataset.tone = "neutral"; }
+  document.querySelectorAll("[data-planning-mode-card]").forEach(chip=>{
+    chip.setAttribute("aria-pressed", String(chip.dataset.planningModeCard === mode));
   });
 }
 
@@ -3188,6 +3183,7 @@ function deliveryRequirementBadges(d){
 function renderDeliveries(){
   updateDashboardStats();
   updateAutoRouteName();
+  renderPlanningCustomersMap();
   const body = document.getElementById("deliveryBody");
   if(!body) return;
   const counter = document.getElementById("deliveryTableCounter");
@@ -3226,6 +3222,45 @@ function renderDeliveries(){
         <button type="button" class="gf-button" data-variant="danger" data-size="sm" onclick="removeDelivery(${i})">Elimina</button>
       </td>
     </tr>`).join("");
+}
+
+// Mappa "Dove sono i clienti": solo le posizioni delle consegne prima del calcolo (nessun percorso).
+let planningCustomersMap = null, planningCustomersLayer = null, planningCustomersBounds = null;
+async function renderPlanningCustomersMap(){
+  const host = typeof document.getElementById === "function" ? document.getElementById("planningCustomersMap") : null;
+  if(!host) return;
+  const stops = deliveries.map((d,i)=>({d,i})).filter(({d})=>d.lat != null && d.lon != null);
+  host.hidden = !stops.length;
+  if(!stops.length){ planningCustomersBounds = null; return; }
+  try{ await loadRoadMapLibrary(); }catch(e){ host.hidden = true; return; }
+  // La mappa è un aiuto visivo: se la libreria non è completa non deve fermare la pianificazione.
+  if(!["map","tileLayer","layerGroup","marker","divIcon","latLngBounds"].every(k=>typeof window.L?.[k] === "function")){ host.hidden = true; return; }
+  try{
+  if(!planningCustomersMap){
+    planningCustomersMap = L.map(host, {scrollWheelZoom:false});
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {maxZoom:18, attribution:"© OpenStreetMap"}).addTo(planningCustomersMap);
+    planningCustomersLayer = L.layerGroup().addTo(planningCustomersMap);
+    // La scheda può essere nascosta quando la mappa nasce: si riadatta appena diventa visibile.
+    if(typeof ResizeObserver === "function") new ResizeObserver(()=>{
+      if(!host.offsetWidth) return;
+      planningCustomersMap.invalidateSize();
+      if(planningCustomersBounds) planningCustomersMap.fitBounds(planningCustomersBounds, {padding:[24,24]});
+    }).observe(host);
+  }
+  planningCustomersLayer.clearLayers();
+  const points = stops.map(({d,i})=>{
+    const icon = L.divIcon({className:"", html:`<span class="gf-stop__number">${i+1}</span>`, iconSize:[28,28], iconAnchor:[14,14]});
+    L.marker([d.lat, d.lon], {icon}).bindPopup(`<strong>${esc(d.cliente_nome||"Cliente")}</strong><br>${esc(d.indirizzo||"")}<br>${gfCount(parseInt(d.colli)||0,"collo","colli")}`).addTo(planningCustomersLayer);
+    return [d.lat, d.lon];
+  });
+  const depot = depositsCache.find(x=>String(x.id)===String(val("routeDeposit")));
+  if(depot && depot.lat != null && depot.lon != null){
+    L.marker([depot.lat, depot.lon], {icon:L.divIcon({className:"", html:'<span class="gf-badge" data-status="info">Deposito</span>', iconSize:null})}).addTo(planningCustomersLayer);
+    points.push([depot.lat, depot.lon]);
+  }
+  planningCustomersBounds = L.latLngBounds(points);
+  if(host.offsetWidth){ planningCustomersMap.invalidateSize(); planningCustomersMap.fitBounds(planningCustomersBounds, {padding:[24,24]}); }
+  }catch(e){ host.hidden = true; console.warn("GiroFacile: mappa dei clienti non disponibile", e); }
 }
 
 function openDeliveryDetailsModal(i){

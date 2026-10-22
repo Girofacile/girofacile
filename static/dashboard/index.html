@@ -450,38 +450,55 @@
 
       <section id="tab-giro" class="tab hidden gf-stack" data-gap="lg">
 
-        <!-- Testata del giro: nome automatico, numeri e fermate (tabella apribile) -->
+        <!-- Area di lavoro (variante B): giro in alto, chi fa le consegne con una card per mezzo,
+             consegne larghe con mappa e costo accanto, barra fissa con il riepilogo e il calcolo. -->
         <section class="gf-panel" aria-labelledby="routeAutoNameTitle">
           <header class="gf-panel__header">
             <div class="gf-stack" data-gap="sm"><p class="gf-kicker" id="routeAutoKicker">Nuovo giro</p><h2 class="gf-title" id="routeAutoNameTitle">Giro consegne</h2></div>
+            <span id="planStepStatus1" class="gf-badge" role="status"></span>
           </header>
           <input type="hidden" id="routeName">
-          <div class="gf-panel__body">
-            <div class="gf-stat-strip" aria-label="Riepilogo pianificazione">
-              <div class="gf-stat-strip__cell"><span class="gf-stat-strip__label"><span data-gf-label="deliveries">Consegne</span></span><strong class="gf-stat-strip__value" id="statDeliveries">0</strong></div>
-              <div class="gf-stat-strip__cell"><span class="gf-stat-strip__label">Colli</span><strong class="gf-stat-strip__value" id="statColli">0</strong></div>
-              <div class="gf-stat-strip__cell"><span class="gf-stat-strip__label">Attese / avvisi</span><strong class="gf-stat-strip__value" id="statWarnings">0</strong><small class="gf-stat-strip__unit">da verificare</small></div>
-              <div class="gf-stat-strip__cell"><span class="gf-stat-strip__label">Carburante</span><strong class="gf-stat-strip__value" id="statFuel"></strong><small class="gf-stat-strip__unit" id="statFuelHint">Seleziona un mezzo</small></div>
-            </div>
+          <div class="gf-panel__body gf-form-grid">
+            <label class="gf-field" for="routeDate"><span class="gf-field__label">Data</span><input class="gf-input" id="routeDate" type="date"></label>
+            <label class="gf-field" for="routeStart"><span class="gf-field__label">Orario partenza</span><input class="gf-input" id="routeStart" type="time"></label>
+            <label class="gf-field" for="routeDeposit"><span class="gf-field__label">Deposito</span><select class="gf-select" id="routeDeposit"></select></label>
+            <label class="gf-field" for="returnDepot"><span class="gf-field__label">Rientro deposito</span><select class="gf-select" id="returnDepot"><option value="true">Sì, rientro previsto</option><option value="false">No</option></select></label>
           </div>
-          <div id="deliveryWorkbenchStep" class="hidden">
-            <div id="deliveryTableArea" hidden>
-              <div class="gf-panel__body gf-cluster">
-                <button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="openOccasionalStopModal()">Aggiungi fermata occasionale</button>
-                <button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="openPlanningCustomerPicker()">Aggiungi cliente</button>
+        </section>
+
+        <!-- Chi fa le consegne: i due chip comandano la scelta esistente #planningMode -->
+        <section class="gf-panel" aria-labelledby="planningModeTitle">
+          <header class="gf-panel__header">
+            <h2 class="gf-panel__title" id="planningModeTitle">Chi fa le consegne?</h2>
+            <span class="gf-cluster" role="group" aria-label="Come organizzi le consegne?">
+              <span id="planStepStatus2" class="gf-badge" role="status"></span>
+              <button type="button" class="gf-chip" aria-pressed="true" data-planning-mode-card="single" onclick="selectPlanningModeCard('single')">Un solo mezzo</button>
+              <button type="button" class="gf-chip" aria-pressed="false" data-planning-mode-card="fleet" onclick="selectPlanningModeCard('fleet')">Più mezzi</button>
+            </span>
+          </header>
+          <div class="gf-panel__body gf-stack">
+            <select class="gf-select" id="planningMode" hidden aria-hidden="true" tabindex="-1"><option value="single">Un solo mezzo</option><option value="fleet">Suddivisione automatica su più mezzi</option></select>
+            <div id="singleVehicleField" class="gf-grid" data-cols="3">
+              <article class="gf-card gf-stack" data-gap="sm" aria-label="Mezzo e autista del giro">
+                <span class="gf-cluster"><span class="gf-stop__number">1</span><strong>Mezzo e autista</strong></span>
+                <div class="gf-field"><label class="gf-field__label" for="routeVehicle" data-gf-label="vehicle">Mezzo</label><select class="gf-select" id="routeVehicle" disabled></select><span id="vehicleAvailabilityHint" class="gf-badge" data-status="neutral">Seleziona prima data e orario di partenza</span></div>
+                <div id="singleDriverField" class="gf-field"><label class="gf-field__label" for="routeDriver" data-gf-label="driver">Autista</label><select class="gf-select" id="routeDriver" disabled></select><span id="driverAvailabilityHint" class="gf-badge" data-status="neutral">Seleziona prima data e orario di partenza</span>
+                  <details data-schedule-editor><summary class="gf-button" data-variant="ghost" data-size="sm">Modifica turno e pause di oggi</summary><div class="gf-stack"><small class="gf-field__hint">Valgono solo per questo giro: la scheda dell’autista non cambia.</small><div id="routeDriverSchedule"></div></div></details>
+                </div>
+              </article>
+              <div class="gf-card gf-stack" data-gap="sm">
+                <strong>Tante consegne oggi?</strong>
+                <span class="gf-muted">Con più mezzi dividiamo noi le consegne tra gli autisti, rispettando carichi, turni e orari.</span>
+                <span><button type="button" class="gf-button" data-variant="secondary" onclick="selectPlanningModeCard('fleet')">Usa più mezzi</button></span>
               </div>
-          <div class="gf-table-wrap">
-            <table class="gf-table" data-gf-responsive="cards">
-              <thead><tr><th scope="col">#</th><th scope="col">Cliente</th><th scope="col">Indirizzo</th><th scope="col">Finestra di scarico</th><th scope="col">Scarico</th><th scope="col">Carico</th><th scope="col">Requisiti</th><th scope="col">Note</th><th scope="col">Specifiche</th><th scope="col" aria-label="Azioni"></th></tr></thead>
-              <tbody id="deliveryBody"></tbody>
-            </table>
-          </div>
-          <small id="ztlDataAttribution" class="gf-muted" hidden>Avvisi ZTL / area pedonale indicativi · dati automatici: <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap contributors</a>. Verifica sempre le regole locali.</small>
             </div>
-            <footer class="gf-panel__footer gf-cluster" data-justify="between">
-              <div class="gf-cluster"><button type="button" class="gf-button" data-variant="secondary" aria-expanded="false" aria-controls="deliveryTableArea" onclick="toggleRouteStopsTable(this)">Visiona tutte le fermate</button><span id="deliveryTableCounter" class="gf-badge" data-status="neutral">0 fermate</span><strong id="deliveryFooterCount" class="gf-muted">0 consegne inserite</strong></div>
-            </footer>
-            <p id="routePlanningInlineHint" class="gf-muted hidden">Anteprima calcolata nella schermata dedicata.</p>
+            <section id="fleetSetup" class="gf-stack" hidden aria-label="Mezzi e autisti della giornata">
+              <div id="fleetResources" class="gf-grid" data-cols="3"></div>
+              <div class="gf-cluster" data-justify="between">
+                <small class="gf-field__hint">Consideriamo durata dei giri, peso, colli, orari di consegna e attrezzature. Potrai spostare le consegne prima di confermare.</small>
+                <label class="gf-field" for="fleetStrategy"><span class="gf-field__label">Come distribuiamo il lavoro?</span><select class="gf-select" id="fleetStrategy"><option value="efficient">Usa meno mezzi, se possibile</option><option value="balanced">Distribuisci il lavoro tra tutti i mezzi</option></select></label>
+              </div>
+            </section>
           </div>
         </section>
 
@@ -504,72 +521,57 @@
           <div id="customerPickerList"></div>
         </section>
 
-        <!-- Quando e da dove -->
-        <section class="gf-panel" aria-labelledby="planStepTitle1">
-          <header class="gf-panel__header"><h2 class="gf-panel__title" id="planStepTitle1">Quando e da dove</h2><span id="planStepStatus1" class="gf-badge" role="status"></span></header>
-          <div class="gf-panel__body gf-form-grid">
-            <label class="gf-field" for="routeDate"><span class="gf-field__label">Data</span><input class="gf-input" id="routeDate" type="date"></label>
-            <label class="gf-field" for="routeStart"><span class="gf-field__label">Orario partenza</span><input class="gf-input" id="routeStart" type="time"></label>
-            <label class="gf-field" for="routeDeposit" data-span="full"><span class="gf-field__label">Deposito</span><select class="gf-select" id="routeDeposit"></select></label>
-            <label class="gf-field" for="returnDepot"><span class="gf-field__label">Rientro deposito</span><select class="gf-select" id="returnDepot"><option value="true">Sì, rientro previsto</option><option value="false">No</option></select></label>
-          </div>
-        </section>
-
-        <!-- Come organizzare le consegne: due card collegate alla scelta esistente (select #planningMode) -->
-        <section class="gf-panel" aria-labelledby="planningModeTitle">
-          <header class="gf-panel__header"><h2 class="gf-panel__title" id="planningModeTitle">Come organizzi le consegne?</h2></header>
-          <div class="gf-panel__body">
-            <div class="gf-grid" data-cols="2" role="radiogroup" aria-labelledby="planningModeTitle">
-              <label class="gf-card gf-stack gf-planning-choice" data-variant="info" data-planning-mode-card>
-                <span class="gf-cluster" data-justify="between"><span class="gf-stat-card__icon" data-planning-mode-icon><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 6h11v10H2z"/><path d="M13 9h5l3 3v4h-8z"/><circle cx="6.5" cy="17.5" r="1.5"/><circle cx="17.5" cy="17.5" r="1.5"/></svg></span><input type="radio" name="planningModeChoice" value="single" checked aria-label="Un solo mezzo" onchange="selectPlanningModeCard(this.value)"></span>
-                <strong class="gf-planning-choice__title">Un solo mezzo</strong>
-                <span class="gf-muted">Un unico giro, con un mezzo e un autista per tutte le fermate.</span>
-              </label>
-              <label class="gf-card gf-stack gf-planning-choice" data-planning-mode-card>
-                <span class="gf-cluster" data-justify="between"><span class="gf-stat-card__icon" data-tone="neutral" data-planning-mode-icon><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M1 4h7v6H1z"/><path d="M8 6h3l2 2v2H8z"/><circle cx="3.5" cy="11" r="1"/><circle cx="10.5" cy="11" r="1"/><path d="M10 13h7v6h-7z"/><path d="M17 15h3l2 2v2h-5z"/><circle cx="12.5" cy="20" r="1"/><circle cx="19.5" cy="20" r="1"/></svg></span><input type="radio" name="planningModeChoice" value="fleet" aria-label="Più mezzi" onchange="selectPlanningModeCard(this.value)"></span>
-                <strong class="gf-planning-choice__title">Più mezzi</strong>
-                <span class="gf-muted">Distribuisci le fermate tra più autisti, rispettando carichi, turni e orari.</span>
-              </label>
+        <!-- Consegne del giro: a tutta larghezza e sempre aperte mentre si scelgono mezzi e autisti -->
+          <section id="deliveryWorkbenchStep" class="gf-panel hidden" aria-labelledby="deliveryWorkbenchTitle">
+            <header class="gf-panel__header"><h2 class="gf-panel__title" id="deliveryWorkbenchTitle">Consegne del giro</h2><span class="gf-cluster"><span id="deliveryTableCounter" class="gf-badge" data-status="neutral">0 fermate</span><strong id="deliveryFooterCount" class="gf-panel__meta">0 consegne inserite</strong></span></header>
+            <div id="deliveryTableArea">
+              <div class="gf-table-wrap">
+                <table class="gf-table" data-gf-responsive="cards">
+                  <thead><tr><th scope="col">#</th><th scope="col">Cliente</th><th scope="col">Indirizzo</th><th scope="col">Finestra di scarico</th><th scope="col">Scarico</th><th scope="col">Carico</th><th scope="col">Requisiti</th><th scope="col">Note</th><th scope="col">Specifiche</th><th scope="col" aria-label="Azioni"></th></tr></thead>
+                  <tbody id="deliveryBody"></tbody>
+                </table>
+              </div>
+              <footer class="gf-panel__footer gf-cluster" data-justify="between">
+                <button type="button" class="gf-button" data-variant="link" onclick="openOccasionalStopModal()">Aggiungi fermata occasionale</button>
+                <button type="button" class="gf-button" data-variant="link" onclick="openPlanningCustomerPicker()">Aggiungi cliente</button>
+              </footer>
+              <small id="ztlDataAttribution" class="gf-muted" hidden>Avvisi ZTL / area pedonale indicativi · dati automatici: <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap contributors</a>. Verifica sempre le regole locali.</small>
             </div>
-            <select class="gf-select" id="planningMode" hidden aria-hidden="true" tabindex="-1"><option value="single">Un solo mezzo</option><option value="fleet">Suddivisione automatica su più mezzi</option></select>
-          </div>
-        </section>
-
-        <!-- Mezzi, autisti e costi: riquadro a schede a tutta larghezza -->
-        <section class="gf-panel" aria-labelledby="planStepTitle2">
-          <header class="gf-panel__header"><h2 class="gf-panel__title" id="planStepTitle2">Mezzi, autisti e costi</h2><span id="planStepStatus2" class="gf-badge" role="status"></span></header>
-          <div class="gf-panel__body gf-stack">
-            <div class="gf-tabs" role="tablist" aria-label="Mezzi, autisti e costi" data-planning-tabs>
-              <button class="gf-button" data-variant="ghost" type="button" role="tab" id="planningTabResources" aria-selected="true" aria-controls="planningPanelResources" onclick="selectPlanningTab(this)">Mezzo, autista e turno</button>
-              <button class="gf-button" data-variant="ghost" type="button" role="tab" id="planningTabCost" aria-selected="false" aria-controls="planningPanelCost" tabindex="-1" onclick="selectPlanningTab(this)">Costo carburante</button>
-            </div>
-            <div role="tabpanel" id="planningPanelResources" aria-labelledby="planningTabResources" class="gf-stack">
-              <div class="gf-form-grid"><div id="singleVehicleField" class="gf-field"><label class="gf-field__label" for="routeVehicle" data-gf-label="vehicle">Mezzo</label><select class="gf-select" id="routeVehicle" disabled></select><span id="vehicleAvailabilityHint" class="gf-badge" data-status="neutral">Seleziona prima data e orario di partenza</span></div><div id="singleDriverField" class="gf-field"><label class="gf-field__label" for="routeDriver" data-gf-label="driver">Autista</label><select class="gf-select" id="routeDriver" disabled></select><span id="driverAvailabilityHint" class="gf-badge" data-status="neutral">Seleziona prima data e orario di partenza</span><details class="gf-panel" data-schedule-editor><summary class="gf-panel__header">Turno e pause per questo giro (solo questo giro)</summary><div class="gf-panel__body gf-stack"><div id="routeDriverSchedule"></div></div></details></div></div>
-          <section id="fleetSetup" class="gf-stack" hidden aria-labelledby="fleetSetupTitle"><h2 class="gf-subtitle" id="fleetSetupTitle">Mezzi e autisti disponibili</h2>
-            <div id="fleetResources" class="gf-grid" data-cols="2"></div>
-            <div><button type="button" class="gf-button" data-variant="secondary" id="fleetAdd">Aggiungi mezzo e autista</button></div>
-            <label class="gf-field" for="fleetStrategy"><span class="gf-field__label">Come distribuiamo il lavoro?</span><select class="gf-select" id="fleetStrategy"><option value="efficient">Usa meno mezzi, se possibile</option><option value="balanced">Distribuisci il lavoro tra tutti i mezzi</option></select></label>
-            <small class="gf-field__hint">Consideriamo durata dei giri, peso, colli, orari di consegna e attrezzature. Potrai spostare le consegne prima di confermare.</small>
+            <p id="routePlanningInlineHint" class="gf-muted hidden">Anteprima calcolata nella schermata dedicata.</p>
           </section>
-            </div>
-            <div role="tabpanel" id="planningPanelCost" aria-labelledby="planningTabCost" class="gf-stack" hidden>
-          <section id="routeEnergyPriceBoxV895" class="gf-card gf-stack hidden" aria-labelledby="routeEnergyPriceTitleV895">
-            <h3 class="gf-subtitle" id="routeEnergyPriceTitleV895">Costo del giro</h3>
-            <p id="routeEnergyVehicleInfo" class="gf-muted">Seleziona un mezzo</p>
-            <div class="gf-cluster" role="radiogroup" aria-label="Modalità prezzo"><label class="gf-check"><input type="radio" name="energyPriceMode" value="automatic" onchange="updateRouteEnergyPricingV895()"> <span>Automatico</span></label><label class="gf-check"><input type="radio" name="energyPriceMode" value="manual" checked onchange="updateRouteEnergyPricingV895()"> <span>Manuale</span></label></div>
-            <div class="gf-form-grid">
-              <div id="primaryEnergyPriceWrap" class="gf-field"><label class="gf-field__label" id="primaryEnergyPriceLabel" for="fuelPrice">Prezzo carburante €/L</label><input class="gf-input" id="fuelPrice" type="number" step="0.001" value="1.75"></div>
-              <div id="electricEnergyPriceWrap" class="gf-field hidden"><label class="gf-field__label" for="electricityPrice">Prezzo energia €/kWh</label><input class="gf-input" id="electricityPrice" type="number" step="0.001" value="0.30"></div>
-            </div>
-            <small id="automaticFuelPriceInfo" class="gf-field__hint"></small>
-          </section>
-            </div>
-          </div>
-        </section>
 
-        <div id="routePlanningActions" class="gf-stack" data-gap="sm">
-          <p id="orderPlanningProceedMessage" class="gf-alert" data-status="danger" role="alert" tabindex="-1" hidden></p>
-          <div class="gf-cluster" data-justify="end"><button type="button" class="gf-button" data-variant="primary" onclick="optimizeRoute()">Calcola percorso</button></div>
+        <!-- Mappa dei clienti e costo del giro, affiancati -->
+        <div class="gf-grid" data-cols="2">
+            <section class="gf-panel" aria-labelledby="planningMapTitle">
+              <header class="gf-panel__header"><h2 class="gf-panel__title" id="planningMapTitle">Dove sono i clienti</h2><span class="gf-badge" data-status="info">Prima del calcolo</span></header>
+              <div class="gf-panel__body gf-stack" data-gap="sm">
+                <div class="gf-route-panel__canvas" id="planningCustomersMap" role="region" aria-label="Mappa dei clienti del giro" hidden></div>
+                <p class="gf-muted" id="planningCustomersMapHint">Le consegne con indirizzo verificato compaiono qui: utile per vedere le zone del giro e un indirizzo fuori posto.</p>
+              </div>
+            </section>
+
+            <!-- Costo del giro: compare quando è scelto un mezzo -->
+            <section id="routeEnergyPriceBoxV895" class="gf-panel hidden" aria-labelledby="routeEnergyPriceTitleV895">
+              <header class="gf-panel__header"><h2 class="gf-panel__title" id="routeEnergyPriceTitleV895">Costo del giro</h2></header>
+              <div class="gf-panel__body gf-stack">
+                <p id="routeEnergyVehicleInfo" class="gf-muted">Seleziona un mezzo</p>
+                <div class="gf-cluster" role="radiogroup" aria-label="Modalità prezzo"><label class="gf-check"><input type="radio" name="energyPriceMode" value="automatic" onchange="updateRouteEnergyPricingV895()"> <span>Automatico</span></label><label class="gf-check"><input type="radio" name="energyPriceMode" value="manual" checked onchange="updateRouteEnergyPricingV895()"> <span>Manuale</span></label></div>
+                <div class="gf-form-grid">
+                  <div id="primaryEnergyPriceWrap" class="gf-field"><label class="gf-field__label" id="primaryEnergyPriceLabel" for="fuelPrice">Prezzo carburante €/L</label><input class="gf-input" id="fuelPrice" type="number" step="0.001" value="1.75"></div>
+                  <div id="electricEnergyPriceWrap" class="gf-field hidden"><label class="gf-field__label" for="electricityPrice">Prezzo energia €/kWh</label><input class="gf-input" id="electricityPrice" type="number" step="0.001" value="0.30"></div>
+                </div>
+                <small id="automaticFuelPriceInfo" class="gf-field__hint"></small>
+              </div>
+            </section>
+        </div>
+
+        <p id="orderPlanningProceedMessage" class="gf-alert" data-status="danger" role="alert" tabindex="-1" hidden></p>
+
+        <!-- Barra fissa: numeri del giro e calcolo del percorso -->
+        <div id="routePlanningActions" class="gf-savebar" data-floating role="region" aria-label="Riepilogo e calcolo del percorso">
+          <span><strong id="statDeliveries">0</strong> consegne · <strong id="statColli">0</strong> colli · <strong id="statWarnings">0</strong> con ZTL o sponda</span>
+          <span>Carburante <strong id="statFuel"></strong> <small id="statFuelHint">Seleziona un mezzo</small></span>
+          <button type="button" class="gf-button" data-variant="primary" onclick="optimizeRoute()">Calcola percorso</button>
         </div>
       </section>
 
@@ -1555,7 +1557,7 @@
 <script src="/static/dashboard/js/order-sources.js?v=gf_base_20261015v"></script>
 <script src="/static/dashboard/js/dashboard-real-map.js?v=gf_route_notices_20261021"></script>
 <script src="/static/dashboard/js/in-progress-reference.js?v=gf_driver_flow_20261020"></script>
-<script src="/static/dashboard/js/core.js?v=gf_break_row_20261021"></script>
+<script src="/static/dashboard/js/core.js?v=gf_plan_area_20261022b"></script>
 <script src="/static/dashboard/js/dashboard-mobile.js?v=gf_dashboard_mobile_20261019"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=orders_2"></script>
 <link rel="stylesheet" href="/static/dashboard/css/fleet-review.css?v=gf_fleet_ztl_20261017">
@@ -1563,7 +1565,7 @@
 <link rel="stylesheet" href="/static/driver-schedule.css?v=gf_break_row_20261021">
 <script src="/static/driver-schedule.js?v=gf_break_row_20261021"></script>
 <script src="/static/dashboard/js/driver-schedules.js?v=gf_base_20261015u"></script>
-<script src="/static/dashboard/js/fleet-planning.js?v=gf_format_20261020"></script>
+<script src="/static/dashboard/js/fleet-planning.js?v=gf_plan_area_20261022"></script>
 <script src="/static/dashboard/js/selected-addresses.js?v=gf_selected_addresses_20261019"></script>
 <script src="/static/dashboard/js/selected-customer-addresses.js?v=gf_customer_selected_addresses_20261020"></script>
 <script src="/static/dashboard/js/order-planning.js?v=gf_format_20261020"></script>

@@ -152,7 +152,8 @@ def main():
                     expect(page.locator('#statDeliveries')).to_have_text('2')
                     expect(page.locator('#statColli')).to_have_text('8')
                     assert page.locator('#deliveryWorkbenchStep').is_visible()
-                    page.get_by_role('button',name='Visiona tutte le fermate',exact=True).click()
+                    # Le consegne sono sempre visibili accanto alla scelta di mezzi e autisti.
+                    assert page.locator('#deliveryTableArea').is_visible()
                     expect(page.locator('#deliveryBody tr')).to_have_count(2)
                     expect(page.locator('#deliveryBody')).to_contain_text('ORD-002')
                     assert page.locator('#routeStart').input_value()==''
