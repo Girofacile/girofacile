@@ -3234,16 +3234,6 @@ function updateDeliveryField(i, field, value){
   markRouteNeedsRecalculation("Una consegna è stata modificata. Premi Calcola percorso per aggiornare il risultato.");
 }
 
-function moveDelivery(i, direction){
-  const target = i + direction;
-  if(target < 0 || target >= deliveries.length) return;
-  const temp = deliveries[i];
-  deliveries[i] = deliveries[target];
-  deliveries[target] = temp;
-  renderDeliveries();
-  markRouteNeedsRecalculation("L'ordine delle consegne è stato modificato. Premi Calcola percorso per aggiornare il risultato.");
-}
-
 function renderDeliveryEmptyRow(){
   return `<tr><td colspan="10"><div class="gf-empty"><p>Nessuna consegna inserita. Seleziona i clienti dalla lista superiore e premi “+ Aggiungi”.</p></div></td></tr>`;
 }
@@ -3315,8 +3305,6 @@ function renderDeliveries(){
         <button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="${d.customer_id == null ? 'openOccasionalStopModal' : 'openDeliveryDetailsModal'}(${i})">${d.customer_id == null ? 'Modifica' : 'Dettagli'}</button>
       </td>
       <td data-label="Azioni">
-        <button type="button" class="gf-button" data-variant="ghost" data-size="sm" aria-label="Sposta fermata ${i+1} su" onclick="moveDelivery(${i}, -1)" ${i === 0 ? "disabled" : ""}>↑</button>
-        <button type="button" class="gf-button" data-variant="ghost" data-size="sm" aria-label="Sposta fermata ${i+1} giù" onclick="moveDelivery(${i}, 1)" ${i === deliveries.length-1 ? "disabled" : ""}>↓</button>
         <button type="button" class="gf-button" data-variant="danger" data-size="sm" onclick="removeDelivery(${i})">Elimina</button>
       </td>
     </tr>`).join("");

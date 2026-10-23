@@ -21,7 +21,7 @@ function fixture(){
   vm.runInContext(fs.readFileSync('static/format.js','utf8'),context);
   vm.runInContext(core.slice(core.indexOf('function customerIsPlannable('),core.indexOf('function requirePlannableCustomer(')),context);
   vm.runInContext(core.slice(core.indexOf('function cleanDeliveryForPayload('),core.indexOf('function routePayloadFromResult(')),context);
-  vm.runInContext(core.slice(core.indexOf('function updateDeliveryField('),core.indexOf('function moveDelivery(')),context);
+  vm.runInContext(core.slice(core.indexOf('function updateDeliveryField('),core.indexOf('function renderDeliveryEmptyRow(')),context);
   vm.runInContext(code,context);
   return {node,context,proof,run:s=>vm.runInContext(s,context),calls:()=>calls,invalidations:()=>invalidations};
 }
@@ -84,12 +84,12 @@ test('planning markup exposes occasional edit badge, responsive dialog and touch
   assert.match(html,/<dialog id="occasionalStopDialog" class="gf-modal"/);
   assert.match(css,/@media\(max-width:640px\) \{ body\[data-gf-surface\] \.gf-button \{ min-height:var\(--gf-control-touch\) !important; \}/);
   assert.match(fs.readFileSync('static/design-system/theme.css','utf8'),/--gf-control-touch:\s*44px/);
-  assert.match(core,/planningStopDrop\(event, \$\{i\}\)/);assert.match(core,/moveDelivery\(\$\{i\}, -1\)/);
+  assert.match(core,/planningStopDrop\(event, \$\{i\}\)/);assert.doesNotMatch(core,/\bmoveDelivery/);
   assert.match(core,/Occasionale<\/span>/);
 });
 
 
-test('touch reorder renders controls and preserves verified stop identity', () => {
+test('planning stops keep drag and delete without up/down arrows', () => {
   const nodes = {deliveryBody: {innerHTML: ''}, deliveryTableCounter: {}, deliveryFooterCount: {}};
   const invalidations = [];
   const context = vm.createContext({
@@ -104,16 +104,12 @@ test('touch reorder renders controls and preserves verified stop identity', () =
     markRouteNeedsRecalculation: message => invalidations.push(message),
   });
   vm.runInContext(fs.readFileSync('static/format.js','utf8'), context);
-  vm.runInContext(core.slice(core.indexOf('function moveDelivery('), core.indexOf('function renderDeliveryEmptyRow(')), context);
+  vm.runInContext(core.slice(core.indexOf('function renderDeliveryEmptyRow('), core.indexOf('function renderDeliveries(')), context);
   vm.runInContext(core.slice(core.indexOf('function renderDeliveries('), core.indexOf('function openDeliveryDetailsModal(')), context);
   vm.runInContext('renderDeliveries()', context);
-  assert.match(nodes.deliveryBody.innerHTML, /onclick="moveDelivery\(0, 1\)"/);
-  assert.match(nodes.deliveryBody.innerHTML, /onclick="moveDelivery\(0, -1\)" disabled/);
+  assert.doesNotMatch(nodes.deliveryBody.innerHTML, /\bmoveDelivery|Sposta fermata/);
+  assert.match(nodes.deliveryBody.innerHTML, /ondrop="planningStopDrop\(event, 1\)"/);
+  assert.match(nodes.deliveryBody.innerHTML, /onclick="removeDelivery\(0\)"/);
   assert.match(nodes.deliveryBody.innerHTML, /Occasionale<\/span>/);
-  vm.runInContext('moveDelivery(0, 1)', context);
-  assert.equal(context.deliveries[1].geocoding_token, 'proof-a');
-  assert.equal(context.deliveries[0].customer_id, 12);
-  assert.equal(invalidations.length, 1);
-  vm.runInContext('moveDelivery(0, -1)', context);
-  assert.equal(invalidations.length, 1);
+  assert.equal(invalidations.length, 0);
 });
