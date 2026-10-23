@@ -377,6 +377,7 @@ def reports_export(
     driver_id: str = "", vehicle_id: str = "", status: str = "",
     db: Session = Depends(get_db), user: User = Depends(current_user),
 ):
+    require_feature(user, "has_reports")
     require_feature(user, "has_export")
     data = build_report_data(db, user, date_from, date_to, agent_id, customer_id, driver_id, vehicle_id, status)
     output = io.StringIO()

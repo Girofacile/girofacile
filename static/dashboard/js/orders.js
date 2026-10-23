@@ -52,6 +52,7 @@
       if(window.GFOrderPlanning)await GFOrderPlanning.loadSelection();
       if(request!==sequence)return;
       last=data;
+      if(window.refreshMonthlyOrderUsage)refreshMonthlyOrderUsage();
       el('ordersMetrics').innerHTML=Object.entries(metricMeta).map(([key,meta])=>`<div class="gf-stat-strip__cell"><span class="gf-stat-strip__icon" data-tone="${meta.tone}" aria-hidden="true"><svg viewBox="0 0 24 24">${meta.icon}</svg></span><span class="gf-stat-strip__label">${meta.label}</span><strong class="gf-stat-strip__value">${Number(data.metrics[key]||0)}</strong><small class="gf-stat-strip__unit">${meta.description}</small></div>`).join('');
       const selected=el('ordersSource').value;
       el('ordersSource').innerHTML='<option value="">Tutte le fonti</option>'+data.sources.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');el('ordersSource').value=selected;

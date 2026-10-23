@@ -276,7 +276,7 @@ def test_downgrade_excess_accepts_bonus_fleet_and_rejects_non_electric_excess(fl
     assert downgrade_excess(ctx[1], ctx[2], "starter")
 
 
-def test_preventive_downgrade_blocks_before_calling_stripe_schedule(fleet_env, monkeypatch):
+def test_downgrade_warns_and_schedules_without_removing_excess_vehicles(fleet_env, monkeypatch):
     from app.services import billing
     ctx = fleet_env
     setup_stripe_catalog(ctx, monkeypatch)
@@ -285,12 +285,22 @@ def test_preventive_downgrade_blocks_before_calling_stripe_schedule(fleet_env, m
     ctx[2].billing_source = "stripe_test"
     ctx[1].commit()
     sub = stripe_subscription(ctx, "business")
-    fake = SimpleNamespace(Subscription=SimpleNamespace(retrieve=lambda *a, **k: sub))
+    scheduled = []
+    fake = SimpleNamespace(
+        Subscription=SimpleNamespace(retrieve=lambda *a, **k: sub),
+        SubscriptionSchedule=SimpleNamespace(
+            create=lambda **kwargs: {'id': 'sched-fleet', 'current_phase': {'start_date': 1}},
+            modify=lambda sid, **kwargs: scheduled.append((sid, kwargs))))
     monkeypatch.setattr(billing, "stripe_client", lambda *a: fake)
     monkeypatch.setattr(billing, "price_for", lambda *a: "price-starter")
-    rejected = ctx[0].post("/api/billing/change-plan", json={"plan": "starter"})
-    assert rejected.status_code == 409
-    assert ctx[2].plan == "business" and ctx[2].billing_pending_plan is None
+    preview = ctx[0].post("/api/billing/change-preview", json={"plan": "starter"})
+    assert preview.status_code == 200
+    assert preview.json()['resources_over_limit']
+    changed = ctx[0].post("/api/billing/change-plan", json={"plan": "starter"})
+    assert changed.status_code == 200, changed.text
+    assert ctx[2].plan == "business" and ctx[2].billing_pending_plan == "starter"
+    assert len(scheduled) == 1
+    assert scheduled[0][1]['phases'][1]['items'] == [{'price': 'price-starter', 'quantity': 1}]
     assert usage(ctx)["total_used"] == 4
 
 

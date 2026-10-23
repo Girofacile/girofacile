@@ -3,7 +3,7 @@ from datetime import datetime
 from .core.clock import utc_now
 from sqlalchemy import inspect, text
 
-LATEST = '20261020_02'
+LATEST = '20261023_01'
 LOCK_ID = 7640152404
 
 
@@ -177,6 +177,29 @@ def run_migrations(engine):
                             conn.execute(text('UPDATE vehicles SET targa=:t WHERE id=:id'), {'t': plate, 'id': r.id})
                             taken.discard((r.user_id, r.targa))
                             taken.add((r.user_id, plate))
+                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261020_02', 'now': utc_now()})
+            if '20261023_01' not in applied:
+                from collections import Counter
+                from datetime import timezone
+                from zoneinfo import ZoneInfo
+                from .order_models import Order, OrderMonthlyUsage
+                with engine.begin() as conn:
+                    OrderMonthlyUsage.__table__.create(conn, checkfirst=True)
+                    rome = ZoneInfo('Europe/Rome')
+                    counts = Counter()
+                    rows = (conn.execute(Order.__table__.select().with_only_columns(Order.user_id, Order.received_at))
+                            if inspect(conn).has_table('orders') else ())
+                    for uid, received in rows:
+                        instant = received.replace(tzinfo=timezone.utc) if received.tzinfo is None else received
+                        counts[uid, instant.astimezone(rome).strftime('%Y-%m')] += 1
+                    for (uid, month), used in counts.items():
+                        existing = conn.execute(OrderMonthlyUsage.__table__.select().where(
+                            OrderMonthlyUsage.user_id == uid, OrderMonthlyUsage.month == month)).first()
+                        if existing is None:
+                            conn.execute(OrderMonthlyUsage.__table__.insert().values(user_id=uid, month=month, used=used))
+                        elif existing.used < used:
+                            conn.execute(OrderMonthlyUsage.__table__.update().where(
+                                OrderMonthlyUsage.user_id == uid, OrderMonthlyUsage.month == month).values(used=used))
                     conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': LATEST, 'now': utc_now()})
         finally:
             if postgres:

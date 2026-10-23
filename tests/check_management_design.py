@@ -23,8 +23,12 @@ REFERENCE = ["dashboard", "clienti", "company", "depositi"]
 PAGES = REFERENCE + ["giro", "route-preview", "dashboard-scheduled", "dashboard-in-progress",
                      "dashboard-completed", "report", "mezzi", "autisti", "storico",
                      "chat-autisti", "settings", "agenti", "plan-account", "billing-account"]
-LIMITS = dict(max_customers=500, max_vehicles=10, max_drivers=10, max_deposits=5,
-              has_reports=True, has_driver_chat=True, has_agents=True, has_ai=True,
+LIMITS = dict(max_customers=500, max_vehicles=10, max_drivers=10, max_deposits=3,
+              max_orders_per_month=1200, max_collaborators=5,
+              has_reports=True, has_driver_chat=True, has_agents=True, has_ai=False,
+              has_fleet_planning=True, has_customer_tracking=True,
+              has_delivery_signature=True, has_photo_proof=True, has_pod_pdf=True,
+              has_order_integrations=True, has_collaborators=True,
               electric_vehicle_bonus=2)
 ME = dict(authenticated=True, role="admin", username="demo", company_name="Logistica Demo",
           company_sector="distribution", workspace_operational=True, onboarding_completed=True,

@@ -21,10 +21,16 @@ def test_catalog_matches_approved_offer(billing_env):
     assert [p['limits']['max_customers'] for p in plans] == [150, 500, 5000]
     assert [p['limits']['max_drivers'] for p in plans] == [3, 10, 50]
     assert [p['limits']['max_deposits'] for p in plans] == [1, 3, 20]
-    assert [p['limits']['max_routes_per_month'] for p in plans] == [100, 400, 1500]
-    assert [p['limits']['max_deliveries_per_month'] for p in plans] == [2000, 10000, 30000]
+    assert [p['limits']['max_orders_per_month'] for p in plans] == [300, 1200, 6000]
+    assert [p['limits']['max_collaborators'] for p in plans] == [2, 5, 10]
+    assert all(p['limits']['max_routes_per_month'] is None for p in plans)
+    assert all(p['limits']['max_deliveries_per_month'] is None for p in plans)
     assert [p['limits']['has_ai'] for p in plans] == [False, False, True]
-    assert all(p['limits']['has_export'] for p in plans)
+    for feature in ('has_export', 'has_geocoding', 'has_mobile', 'has_collaborators'):
+        assert all(p['limits'][feature] for p in plans)
+    for feature in ('has_driver_chat','has_agents','has_reports','has_order_integrations','has_fleet_planning',
+                    'has_customer_tracking','has_delivery_signature','has_photo_proof','has_pod_pdf'):
+        assert [p['limits'][feature] for p in plans] == [False, True, True]
 
 
 def test_old_plan_endpoint_cannot_activate_or_extend_trial(billing_env):
@@ -109,33 +115,32 @@ def make_route(db, user, deliveries=1, status='bozza'):
     return route
 
 
-def test_monthly_quota_counts_first_start_only_and_survives_deletion(billing_env, monkeypatch):
+def test_routes_have_no_monthly_commercial_quota(billing_env, monkeypatch):
     from app.services.usage_limits import start_route_usage, usage_summary
     from app.services.plan_catalog import PLAN_LIMITS
     _, db, user, *_ = billing_env
     monkeypatch.setitem(PLAN_LIMITS['business'],'max_routes_per_month',1)
     route=make_route(db,user)
-    assert usage_summary(db,user)['routes']['used']==0
+    assert 'routes' not in usage_summary(db,user)
     start_route_usage(db,route);db.commit()
     start_route_usage(db,route);db.commit()
-    assert usage_summary(db,user)['routes']['used']==1
     route.status='annullato';db.commit();db.delete(route);db.commit()
-    assert usage_summary(db,user)['routes']['used']==1
     # SQLite may reuse IDs, so choose a distinct ID as PostgreSQL sequences do.
     next_route=make_route(db,user);next_route.id=500;db.commit()
-    with pytest.raises(HTTPException): start_route_usage(db,next_route)
+    start_route_usage(db,next_route);db.commit()
+    assert next_route.status=='in_corso'
 
 
-def test_delivery_quota_and_expiry_preserve_in_progress_routes(billing_env, monkeypatch):
+def test_deliveries_have_no_monthly_cap_and_expiry_preserves_running_routes(billing_env, monkeypatch):
     from app.services.usage_limits import start_route_usage
     from app.services.plan_catalog import PLAN_LIMITS
     _, db, user, *_ = billing_env
     monkeypatch.setitem(PLAN_LIMITS['business'],'max_deliveries_per_month',1)
     route=make_route(db,user,2)
-    with pytest.raises(HTTPException): start_route_usage(db,route)
-    db.rollback()
+    start_route_usage(db,route);db.commit()
     user.plan_status='expired';db.commit()
-    with pytest.raises(HTTPException): start_route_usage(db,route)
+    next_route=make_route(db,user,2)
+    with pytest.raises(HTTPException): start_route_usage(db,next_route)
     db.rollback()
     legacy=make_route(db,user,status='in_corso')
     start_route_usage(db,legacy);db.commit()

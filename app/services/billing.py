@@ -250,7 +250,7 @@ def checkout(db, user, plan):
 
 
 def downgrade_excess(db, user, plan):
-    from .plans import vehicle_usage
+    from .plans import vehicle_usage, collaborator_usage
     result = []
     for model, key, label in ((Customer, "max_customers", "clienti"),
                               (Driver, "max_drivers", "autisti"), (Deposit, "max_deposits", "depositi")):
@@ -265,6 +265,9 @@ def downgrade_excess(db, user, plan):
             f"{fleet['non_electric_used']}/{fleet['standard_limit']} non elettrici "
             f"({fleet['electric_bonus']} bonus elettrici)"
         )
+    collaborators = collaborator_usage(user, db, plan=plan)
+    if collaborators["over_limit"]:
+        result.append(f"collaboratori: {collaborators['used']}/{collaborators['limit']}")
     return result
 
 
@@ -280,9 +283,8 @@ def change_preview(db, user, plan):
     item = sub["items"]["data"][0]
     if PLAN_PRICES[plan]["price_cents"] < PLAN_PRICES[current]["price_cents"]:
         excess = downgrade_excess(db, user, plan)
-        if excess:
-            raise HTTPException(409, "Riduci prima le risorse: " + "; ".join(excess))
-        return {"direction": "downgrade", "amount_due_cents": 0, "effective_at": item.get("current_period_end"), "subscription": sub}
+        return {"direction": "downgrade", "amount_due_cents": 0, "effective_at": item.get("current_period_end"),
+                "subscription": sub, "resources_over_limit": excess}
     timestamp = int(datetime.now(timezone.utc).timestamp())
     invoice = stripe.Invoice.create_preview(customer=user.stripe_customer_id, subscription=sub["id"],
         subscription_details={"items": [{"id": item["id"], "price": price}], "proration_date": timestamp, "proration_behavior": "always_invoice"})
@@ -301,9 +303,6 @@ def change_plan(db, user, plan, preview):
     if current == plan:
         raise HTTPException(409, "Piano già attivo")
     if PLAN_PRICES[plan]["price_cents"] < PLAN_PRICES[current]["price_cents"]:
-        excess = downgrade_excess(db, user, plan)
-        if excess:
-            raise HTTPException(409, "Riduci prima le risorse: " + "; ".join(excess))
         if user.billing_pending_plan != plan or not user.billing_change_key:
             user.billing_change_key = uuid4().hex
         user.billing_pending_plan = plan

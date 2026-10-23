@@ -51,7 +51,7 @@ test('downgrade and inactive subscription remain visible without promising unava
 });
 test('plan cards take configured bonus values from catalogue and expose a dedicated benefit',()=>{
   const context=vm.createContext({window:{GF_PLANS:{starter:{name:'Starter',price_eur:29,max_vehicles:3,max_drivers:3,
-    max_customers:150,max_routes_per_month:100,max_deliveries_per_month:2000,max_deposits:1,electric_vehicle_bonus:7}}}});
+    max_customers:150,max_orders_per_month:300,max_collaborators:2,max_deposits:1,electric_vehicle_bonus:7}}}});
   vm.runInContext(fs.readFileSync('static/dashboard/js/billing.js','utf8'),context);
   const plan=vm.runInContext("planFeatures('starter')",context);
   assert.equal(plan.electricBenefit,'⚡ +7 veicoli elettrici bonus');
@@ -60,7 +60,8 @@ test('plan cards take configured bonus values from catalogue and expose a dedica
   assert.equal(component().planBenefit({electric_vehicle_bonus:0}),'');
   const dashboard=fs.readFileSync('static/dashboard/js/core.js','utf8');
   assert.match(dashboard,/f.electricBenefit/);
-  assert.match(dashboard,/"⚡ Veicoli elettrici bonus", "electric_vehicle_bonus"/);
+  assert.match(fs.readFileSync('static/dashboard/js/billing.js','utf8'),/['"]⚡ Veicoli elettrici bonus['"],\s*['"]electric_vehicle_bonus['"]/);
+  assert.match(dashboard,/planComparisonRows\(\)/);
   assert.match(fs.readFileSync('static/mobile/index.html','utf8'),/planBenefit\(p\)/);
 });
 function mobileFixture(fields){

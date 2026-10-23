@@ -15,6 +15,7 @@ from ..schemas.order_sources import Acquisition, MAX_BYTES
 from ..services import order_ingestion as service
 from ..services import order_connectors as adapter
 from ..services.order_source_security import throttle_ip
+from ..services.plans import require_feature
 
 router = APIRouter(tags=['order-connectors'])
 
@@ -33,7 +34,8 @@ def create(data:ConnectorCreate,request:Request,db:Session=Depends(get_db),user:
         raise HTTPException(403,'Il titolare configura i collegamenti automatici.')
     if data.provider=='email':
         raise HTTPException(503, 'Inoltro email in fase di sviluppo: configurazione non ancora disponibile.')
-    db.query(User).filter_by(id=user.id).with_for_update().one()
+    user=db.query(User).filter_by(id=user.id).with_for_update().populate_existing().one()
+    require_feature(user,'has_order_integrations')
     if db.query(OrderSource).filter(OrderSource.user_id==user.id,OrderSource.kind.in_(('api','file'))).count()>=100:
         raise HTTPException(422,'Massimo 100 fonti per azienda.')
     key='c'+secrets.token_hex(12)
@@ -67,8 +69,7 @@ def locked_source(db,key):
     src=service.source(db,hint.user_id,hint.id,lock=True)
     if src.status!='active':
         raise HTTPException(503,'Collegamento in pausa.')
-    from ..services.plans import require_active_plan
-    require_active_plan(db.get(User,src.user_id))
+    require_feature(db.get(User,src.user_id),'has_order_integrations')
     return src
 
 
@@ -86,11 +87,13 @@ def receive(db,src,body,event_id,raw,parse):
         rows=parse(body)
         data=Acquisition(batch_id='connector',orders=rows)
         service.execute(db,src,item,data.orders,{k:k for k in adapter.FIELDS},'source:'+str(src.id))
-    except (ValueError,TypeError,KeyError,AttributeError,HTTPException,ValidationError):
+    except (ValueError,TypeError,KeyError,AttributeError,HTTPException,ValidationError) as exc:
         item.status='failed'
         error='Ordine da verificare nel negozio: controlla identificativo, destinatario, indirizzo di spedizione e articoli.'
         if src.configuration['connector']=='email':
             error='Email da verificare nella casella originale. Usa CSV/Excel o righe Numero ordine: / Destinatario: / Indirizzo:. PDF e testo libero richiedono inserimento manuale.'
+        if isinstance(exc,HTTPException) and exc.status_code==403 and isinstance(exc.detail,str) and exc.detail.startswith('Quota mensile ordini raggiunta:'):
+            error=exc.detail
         item.report={'total':1,'invalid':1,'error':error}
     item.report={**item.report,'provider_event':event_id[:500]}
     if src.configuration['connector']=='email':

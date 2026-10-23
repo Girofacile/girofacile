@@ -20,7 +20,8 @@ from ..core.security import hash_password, make_token, make_superadmin_token, ma
 from ..database import get_db
 from ..models import CompanyCollaborator, Agent, AgentAccount, Customer, Deposit, Driver, DriverAccount, PasswordResetToken, RoutePlan, User, Vehicle, SuperAdminCollaborator, SuperAdminProfile
 from ..schemas import SignupIn
-from ..services.plans import user_plan_info
+from ..services.plans import user_plan_info, get_plan_limits, require_feature
+from ..services.plan_features import delivery_preferences, feature_enabled
 from ..services.agents_feature import require_agents_enabled
 from ..services.sector_config import get_sector_config, normalize_sector_key, public_sector_options
 
@@ -61,6 +62,7 @@ def signup(data: SignupIn, response: Response, db: Session = Depends(get_db)):
     selected_plan = (getattr(data, "plan", None) or default_plan(db)).strip().lower()
     if selected_plan not in {"starter", "business", "pro"}:
         selected_plan = "starter"
+    selected_limits = get_plan_limits(selected_plan)
     # Numero cliente commerciale progressivo, separato dall'ID tecnico.
     # PostgreSQL è il DB ufficiale: il lock serializza le registrazioni concorrenti.
     if db.bind is not None and db.bind.dialect.name == "postgresql":
@@ -88,13 +90,13 @@ def signup(data: SignupIn, response: Response, db: Session = Depends(get_db)):
         company_size=(data.company_size or "").strip() or None,
         daily_deliveries=(data.daily_deliveries or "").strip() or None,
         has_time_windows=bool(data.has_time_windows),
-        needs_signature=bool(data.needs_signature),
-        needs_photo_proof=bool(data.needs_photo_proof),
+        needs_signature=bool(data.needs_signature and selected_limits.get('has_delivery_signature')),
+        needs_photo_proof=bool(data.needs_photo_proof and selected_limits.get('has_photo_proof')),
         has_refrigerated_goods=bool(data.has_refrigerated_goods),
         has_ztl=bool(data.has_ztl),
         needs_tail_lift=bool(data.needs_tail_lift),
         universal_features_initialized=True,
-        delivery_signature_enabled=bool(data.needs_signature),
+        delivery_signature_enabled=bool(data.needs_signature and selected_limits.get('has_delivery_signature')),
         password_hash=hash_password(password),
         plan=selected_plan,
         plan_status="trial",
@@ -654,8 +656,9 @@ def _company_payload(user: User) -> dict:
         "company_size": getattr(user, "company_size", None) or "",
         "daily_deliveries": getattr(user, "daily_deliveries", None) or "",
         "has_time_windows": bool(getattr(user, "has_time_windows", True)),
-        "needs_signature": bool(getattr(user, "needs_signature", False)),
-        "needs_photo_proof": bool(getattr(user, "needs_photo_proof", False)),
+        "needs_signature": bool(feature_enabled(user, 'has_delivery_signature') and getattr(user, "needs_signature", False)),
+        "needs_photo_proof": delivery_preferences(user)['delivery_photo_required'],
+        "features": delivery_preferences(user)['features'],
         "has_refrigerated_goods": bool(getattr(user, "has_refrigerated_goods", False)),
         "has_ztl": bool(getattr(user, "has_ztl", False)),
         "needs_tail_lift": bool(getattr(user, "needs_tail_lift", False)),
@@ -822,6 +825,9 @@ def _validated_company_logo(value):
 
 @router.put("/api/company-profile")
 def update_company_profile(payload: dict, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    for preference, feature in (('needs_signature', 'has_delivery_signature'), ('needs_photo_proof', 'has_photo_proof')):
+        if payload.get(preference):
+            require_feature(user, feature)
     allowed = {
         "company_name", "company_logo_url", "company_email", "company_phone",
         "company_vat", "company_fiscal_code", "company_pec", "company_sdi",

@@ -22,6 +22,7 @@ from ..core.http_security import cookie_options
 from ..core.security import hash_password as secure_hash_password, password_needs_rehash, validate_password_strength, verify_password
 from ..core.utils import local_now, local_today, date_to_iso, time_to_hhmm, minutes_from_hhmm
 from ..services.plans import require_feature
+from ..services.plan_features import delivery_preferences
 from ..models import (
     ChatMessage, Customer, Delivery, DeliveryStatus,
     Driver, DriverAccount, DriverSetupToken, RoutePlan, User
@@ -198,6 +199,7 @@ def driver_me(da: DriverAccount = Depends(get_current_driver), db: Session = Dep
         "email": da.email,
         "telefono": driver.telefono if driver else None,
         "is_admin_driver": bool(driver and getattr(driver, "is_admin_driver", False)),
+        "features": delivery_preferences(db.get(User, driver.user_id) if driver else None)['features'],
     }
 
 
@@ -340,8 +342,7 @@ def get_driver_route_detail(route_id: int, da: DriverAccount = Depends(get_curre
             "percentuale": round((completate + mancate) / len(deliveries) * 100) if deliveries else 0,
         },
         "settings": {
-            "delivery_photo_required": bool(getattr(db.get(User, r.user_id), "needs_photo_proof", False)),
-            "delivery_signature_enabled": bool(getattr(db.get(User, r.user_id), "delivery_signature_enabled", False)) if r.user_id else False,
+            **delivery_preferences(db.get(User, r.user_id)),
         },
         "tempo_scarico_options": TEMPO_SCARICO_OPTIONS,
         "motivi_mancata": MOTIVI_MANCATA,

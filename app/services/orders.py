@@ -49,14 +49,16 @@ def project(order, values):
 
 def create_order(db, user_id, data, actor):
     # Serializes first-source creation; the uniqueness constraint is a second guard.
-    db.query(User).filter_by(id=user_id).with_for_update().one()
+    from .plans import consume_order_quota
+    owner = db.query(User).filter_by(id=user_id).with_for_update().populate_existing().one()
+    received_at = consume_order_quota(owner, db)
     source = db.query(OrderSource).filter_by(user_id=user_id, key='manual').first()
     if source is None:
         source = OrderSource(user_id=user_id, key='manual', name='Inserimento manuale', kind='manual', status='active')
         db.add(source); db.flush()
     original = data.model_dump(mode='json')
     order = Order(user_id=user_id, source_id=source.id, external_id=str(uuid4()),
-                  original_payload=original, operational_data={}, number=data.number)
+                  original_payload=original, operational_data={}, number=data.number, received_at=received_at)
     project(order, data.model_dump(mode='json', exclude={'items'}))
     db.add(order); db.flush()
     for index, item in enumerate(original['items'], 1):

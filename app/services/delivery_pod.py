@@ -12,8 +12,10 @@ from sqlalchemy import event
 from sqlalchemy.orm import Session
 
 from ..core.utils import local_now
-from ..models import DeliveryStatus
+from ..models import DeliveryStatus, User
 from . import object_storage
+from .plan_features import delivery_preferences, feature_enabled
+from .plans import require_feature
 from .pod_pdf import generate_pod  # PDF della prova di consegna (una pagina)
 
 logger = logging.getLogger(__name__)
@@ -115,21 +117,33 @@ def read_evidence(storage, route, delivery, status, kind):
     return raw
 
 
+def require_evidence_access(owner, payload, action):
+    if action == 'signature' or payload.get('signature_data'):
+        require_feature(owner, 'has_delivery_signature')
+    if payload.get('delivery_photo_data'):
+        require_feature(owner, 'has_photo_proof')
+
+
 def save_delivery_evidence(db, route, delivery, status, payload, owner, action):
+    require_evidence_access(owner, payload, action)
+    preferences = delivery_preferences(owner)
+    signature_enabled = preferences['delivery_signature_enabled']
+    photo_required = preferences['delivery_photo_required']
     signature = payload.get('signature_data')
     photo = payload.get('delivery_photo_data')
-    if signature and not owner.delivery_signature_enabled:
+    if signature and not signature_enabled:
         raise HTTPException(400, 'Firma cliente non attiva per questa azienda')
     signature_raw = normalize_image(signature, 'signature') if signature else None
     photo_raw = normalize_image(photo, 'delivery_photo') if photo else None
     if signature and not (payload.get('signed_by_name') or '').strip():
         raise HTTPException(400, 'Nome firmatario mancante')
-    if owner.delivery_signature_enabled and not (signature_raw or (evidence_metadata(status)['has_signature'] and status.signed_by_name)):
+    if signature_enabled and not (signature_raw or (evidence_metadata(status)['has_signature'] and status.signed_by_name)):
         raise HTTPException(400, 'Firma cliente e nome firmatario richiesti prima di confermare la consegna')
-    if action == 'complete' and owner.needs_photo_proof and not (photo_raw or status.delivery_photo_object_key):
+    if action == 'complete' and photo_required and not (photo_raw or status.delivery_photo_object_key):
         raise HTTPException(400, 'Foto della consegna obbligatoria')
-    needs_storage = bool(signature_raw or photo_raw or (action == 'complete' and (
-        object_storage.configured() or owner.delivery_signature_enabled or owner.needs_photo_proof or status.signature_object_key or status.delivery_photo_object_key)))
+    pod_enabled = feature_enabled(owner, 'has_pod_pdf')
+    needs_storage = bool(signature_raw or photo_raw or (action == 'complete' and pod_enabled and (
+        object_storage.configured() or signature_enabled or photo_required or status.signature_object_key or status.delivery_photo_object_key)))
     if not needs_storage:
         return
     storage = object_storage.get_storage()
@@ -140,7 +154,7 @@ def save_delivery_evidence(db, route, delivery, status, payload, owner, action):
         status.signed_at = local_now().replace(tzinfo=None)
     if photo_raw:
         store_evidence(db, storage, route, delivery, status, 'delivery_photo', photo_raw, 'image/jpeg')
-    if action == 'complete':
+    if action == 'complete' and pod_enabled:
         signature_raw = signature_raw or read_evidence(storage, route, delivery, status, 'signature')
         photo_raw = photo_raw or read_evidence(storage, route, delivery, status, 'delivery_photo')
         raw = generate_pod(route, delivery, status, owner, signature_raw, photo_raw)
@@ -151,6 +165,9 @@ def save_delivery_evidence(db, route, delivery, status, payload, owner, action):
 def evidence_response(db, route, delivery, kind):
     if kind not in ('signature', 'delivery_photo', 'pod') or delivery.route_plan_id != route.id:
         raise HTTPException(404, 'Documento non trovato')
+    require_feature(db.get(User, route.user_id), {
+        'signature': 'has_delivery_signature', 'delivery_photo': 'has_photo_proof', 'pod': 'has_pod_pdf',
+    }[kind])
     status = db.query(DeliveryStatus).filter_by(route_plan_id=route.id, delivery_id=delivery.id).first()
     if not status:
         raise HTTPException(404, 'Documento non trovato')

@@ -2,14 +2,16 @@
 Servizio piani abbonamento.
 Definisce i limiti per piano e le funzioni di controllo.
 """
-from datetime import datetime
+from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 from ..core.clock import utc_now
 from fastapi import HTTPException
 from ..core.utils import parse_date_value
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from ..models import User, Customer, Vehicle, Driver, Deposit, RoutePlan
+from ..models import User, Customer, Vehicle, Driver, Deposit, RoutePlan, CompanyCollaborator
+from ..order_models import Order, OrderMonthlyUsage
 from ..core.utils import local_today_iso
 
 # -----------------------------------------------------------------------
@@ -71,11 +73,85 @@ def require_feature(user: User, feature: str):
         )
 
 
+def lock_plan_owner(user: User, db: Session) -> User:
+    """Serialize allocations and refresh the company's current entitlement."""
+    return db.query(User).filter(User.id == user.id).with_for_update().populate_existing().one()
+
+
+def order_quota_period(reference: datetime | None = None) -> tuple[str, datetime, datetime]:
+    """Italian calendar month, with UTC-naive bounds matching stored timestamps."""
+    instant = reference or utc_now()
+    if instant.tzinfo is None:
+        instant = instant.replace(tzinfo=timezone.utc)
+    local = instant.astimezone(ZoneInfo("Europe/Rome"))
+    start = local.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    end = start.replace(year=start.year + 1, month=1) if start.month == 12 else start.replace(month=start.month + 1)
+    return (start.strftime("%Y-%m"), start.astimezone(timezone.utc).replace(tzinfo=None),
+            end.astimezone(timezone.utc).replace(tzinfo=None))
+
+
+def monthly_order_usage(user: User, db: Session, reference: datetime | None = None) -> dict:
+    month, start, end = order_quota_period(reference)
+    recorded = db.get(OrderMonthlyUsage, (user.id, month))
+    # Count legacy archives too; the durable counter can only grow.
+    archived = db.query(func.count(Order.id)).filter(
+        Order.user_id == user.id, Order.received_at >= start, Order.received_at < end).scalar()
+    used = max(int(archived or 0), recorded.used if recorded else 0)
+    maximum = get_plan_limits(user.plan or "starter")["max_orders_per_month"]
+    return {"month": month, "used": used, "limit": maximum,
+            "remaining": max(0, maximum - used) if maximum is not None else None,
+            "percent": round(100 * used / maximum, 1) if maximum else 0,
+            "warning": maximum is not None and used >= maximum * .8,
+            "over_limit": maximum is not None and used > maximum}
+
+
+def consume_order_quota(user: User, db: Session, additional: int = 1,
+                        received_at: datetime | None = None) -> datetime:
+    """Reserve only new orders, in the same transaction as their acquisition."""
+    if additional <= 0:
+        return received_at or utc_now()
+    user = lock_plan_owner(user, db)
+    require_active_plan(user)
+    instant = received_at or utc_now()
+    usage = monthly_order_usage(user, db, instant)
+    if usage["limit"] is not None and usage["used"] + additional > usage["limit"]:
+        raise HTTPException(403,
+            f"Quota mensile ordini raggiunta: {usage['used']}/{usage['limit']} ordini utilizzati "
+            f"nel mese {usage['month']}. L'operazione richiede {additional} nuovi ordini. "
+            "Gli ordini esistenti restano disponibili; scegli un piano superiore o attendi il prossimo mese.")
+    counter = db.get(OrderMonthlyUsage, (user.id, usage["month"]))
+    if counter is None:
+        counter = OrderMonthlyUsage(user_id=user.id, month=usage["month"], used=0)
+        db.add(counter)
+    counter.used = usage["used"] + additional
+    db.flush()
+    return instant
+
+
+def collaborator_usage(user: User, db: Session, plan: str | None = None) -> dict:
+    maximum = get_plan_limits(plan or user.plan or "starter")["max_collaborators"]
+    used = db.query(CompanyCollaborator).filter_by(user_id=user.id, is_active=True).count()
+    return {"used": used, "limit": maximum, "remaining": max(0, maximum - used),
+            "percent": round(100 * used / maximum, 1) if maximum else 0,
+            "warning": used >= maximum * .8, "over_limit": used > maximum}
+
+
+def check_collaborator_limit(user: User, db: Session):
+    user = lock_plan_owner(user, db)
+    require_feature(user, "has_collaborators")
+    usage = collaborator_usage(user, db)
+    if usage["used"] >= usage["limit"]:
+        raise HTTPException(403,
+            f"Hai raggiunto il limite di {usage['limit']} collaboratori attivi del piano "
+            f"{get_plan_limits(user.plan or 'starter')['name']}. Gli inviti in attesa occupano un posto. "
+            "Disattiva un collaboratore o scegli un piano superiore. Il titolare non occupa un posto.")
+
+
 def check_customer_limit(user: User, db: Session, additional: int = 1):
     """Controlla se l'utente ha raggiunto il limite clienti del piano."""
+    user = lock_plan_owner(user, db)
     require_active_plan(user)
     limits = get_plan_limits(user.plan or "starter")
-    db.query(User).filter(User.id == user.id).with_for_update().first()
     max_c = limits.get("max_customers")
     if max_c is None:
         return  # illimitato
@@ -88,8 +164,8 @@ def check_customer_limit(user: User, db: Session, additional: int = 1):
 
 
 def check_deposit_limit(user: User, db: Session):
+    user = lock_plan_owner(user, db)
     require_active_plan(user)
-    db.query(User).filter(User.id == user.id).with_for_update().first()
     limits = get_plan_limits(user.plan or "starter")
     max_d = limits.get("max_deposits")
     if max_d is None:
@@ -226,8 +302,8 @@ def check_vehicle_limit(user: User, db: Session, alimentazione: str = "gasolio",
 
 
 def check_driver_limit(user: User, db: Session):
+    user = lock_plan_owner(user, db)
     require_active_plan(user)
-    db.query(User).filter(User.id == user.id).with_for_update().first()
     limits = get_plan_limits(user.plan or "starter")
     max_dr = limits.get("max_drivers")
     if max_dr is None:
@@ -241,9 +317,9 @@ def check_driver_limit(user: User, db: Session):
 
 
 def check_daily_route_limit(user: User, db: Session, data_giro: str, exclude_route_id: int | None = None):
+    user = lock_plan_owner(user, db)
     require_active_plan(user)
     limits = get_plan_limits(user.plan or "starter")
-    db.query(User).filter(User.id == user.id).with_for_update().first()
     max_r = limits.get("max_routes_per_day")
     if max_r is None:
         return

@@ -154,10 +154,10 @@ function renderFeatureLockedTab(name, cfg){
         'Export CSV'
       ])}
       ${premiumPlanCard('pro','Pro',`€${window.GF_PLANS.pro.price_eur}`,'Completo',[
-        `${window.GF_PLANS.pro.max_customers} clienti · ${window.GF_PLANS.pro.max_routes_per_month} giri/mese`,
+        `${window.GF_PLANS.pro.max_orders_per_month} ordini/mese · ${window.GF_PLANS.pro.max_customers} clienti`,
         'Tutte le funzioni Business',
         `${window.GF_PLANS.pro.max_vehicles} mezzi · ${window.GF_PLANS.pro.max_drivers} autisti`,
-        'Funzioni AI senza quota mensile'
+        'Integrazione AI'
       ])}
     </aside>
   </div>`;
@@ -315,7 +315,8 @@ async function loadSettingsV41(){
     settingsV41 = await api('/api/settings');
     applyAgentsFeature();
     const toggle = document.getElementById('settingDeliverySignature');
-    if(toggle) toggle.checked = !!settingsV41.delivery_signature_enabled;
+    if(toggle) toggle.checked = !!settingsV41.delivery_signature_enabled && planFeatureEnabled('has_delivery_signature');
+    applyPlanFeatureControls();
     const state = document.getElementById('settingsSaveState');
     if(state) state.textContent = settingsV41.delivery_signature_enabled ? 'Firma cliente attiva nel portale autista.' : 'Firma cliente disattivata nel portale autista.';
   }catch(e){
@@ -330,7 +331,7 @@ async function saveSettingsV41(){
   const state = document.getElementById('settingsSaveState');
   if(state) state.textContent = 'Salvataggio impostazioni...';
   try{
-    settingsV41 = await api('/api/settings', {method:'PUT', body:JSON.stringify({delivery_signature_enabled: !!toggle?.checked, agents_enabled: !!document.getElementById('settingAgentsEnabled')?.checked})});
+    settingsV41 = await api('/api/settings', {method:'PUT', body:JSON.stringify({delivery_signature_enabled: planFeatureEnabled('has_delivery_signature') && !!toggle?.checked, agents_enabled: !!document.getElementById('settingAgentsEnabled')?.checked})});
     if(state) state.textContent = settingsV41.delivery_signature_enabled ? 'Firma cliente attivata nel portale autista.' : 'Firma cliente disattivata nel portale autista.';
     await refreshAgentsFeature();
     toast('Impostazioni salvate.');
@@ -615,6 +616,8 @@ async function loadPlanInfo(){
     currentSessionUser = {...(currentSessionUser || {}), ...me};
     setSectorConfigV47(me);
     updatePremiumNavState();
+    applyPlanFeatureControls();
+    applyUniversalFeaturesV891();
     document.querySelectorAll('[onclick="generateReportAIv67()"]').forEach(el=>el.classList.toggle("hidden", !limits.has_ai));
 
     // Badge piano
@@ -672,9 +675,12 @@ async function loadPlanInfo(){
         api("/api/deposits"),
       ]);
       renderVehicleUsage(vehicleUsage);
+      renderOrderUsage(planUsage.usage);
       const usageRows = document.getElementById("planUsageRows");
       if(usageRows){
         const rows = [
+          {label:"Ordini del mese", used:planUsage.usage.orders?.used || 0, max:limits.max_orders_per_month},
+          {label:"Collaboratori", used:planUsage.usage.resources.collaborators?.used || 0, max:limits.max_collaborators},
           {label:"Clienti", used: planUsage.usage.resources.customers.used, max: limits.max_customers},
           {label:"Mezzi standard", used: vehicleUsage.standard_used, max: vehicleUsage.standard_limit},
           {label:"Bonus elettrici", used: vehicleUsage.bonus_used, max: vehicleUsage.electric_bonus},
@@ -863,21 +869,21 @@ function renderUpgradeCards(){
   const descriptions = {
     starter:"Per iniziare con le funzioni essenziali di pianificazione.",
     business:"Per aziende operative che gestiscono più risorse e consegne.",
-    pro:"Per flotte fino a 50 autisti, con funzioni AI incluse."
+    pro:"Più capacità operativa e Integrazione AI inclusa."
   };
   document.getElementById("upgradePlanCards").innerHTML = plans.map(p => {
     const f = PLAN_FEATURES[p];
     const isCurrent = p === _currentPlan;
     const isSelected = p === _selectedUpgradePlan;
-    const preview = f.features.slice(0,4);
+    const preview = [...f.resourceFeatures.map(label=>[true,label]), ...planFeatureGroups(p)];
     return `<article class="gf-card gf-stack">
       <div class="gf-cluster" data-justify="between">
         <div><h3 class="gf-subtitle">${f.name}</h3><p class="gf-muted">${descriptions[p]}</p></div>
-        ${isCurrent?'<span class="gf-badge" data-status="success">Piano attuale</span>':''}
+        ${isCurrent?'<span class="gf-badge" data-status="success">Piano attuale</span>':p==='business'?'<span class="gf-badge" data-status="info">Consigliato</span>':''}
       </div>
       <p><strong class="gf-subtitle">${f.price}</strong> <span class="gf-muted">${f.period}</span></p>
       ${f.electricBenefit ? `<div class="gf-electric-benefit">${esc(f.electricBenefit)}</div>` : ""}
-      <div class="gf-stack" data-gap="sm">${preview.map(x=>`<span>✓ ${x}</span>`).join("")}</div>
+      <div class="gf-stack" data-gap="sm">${preview.map(([included,label])=>`<span${included?'':' class="gf-muted"'}><span role="img" aria-label="${included?'Incluso':'Non incluso'}">${included?'✓':'✕'}</span> ${esc(label)}</span>`).join("")}</div>
       <div><button type="button" class="gf-button" data-variant="${isSelected?'primary':'secondary'}" aria-pressed="${isSelected}" onclick="selectUpgradePlan('${p}')">${isCurrent?'Attivo':(isSelected?'Selezionato':'Seleziona piano')}</button></div>
     </article>`;
   }).join("");
@@ -903,13 +909,8 @@ function renderUpgradeFeatures(plan){
 function renderPlanComparisonV875(){
   const box = document.getElementById("planComparisonV875");
   if(!box) return;
-  const rows = [
-    ["Clienti", "max_customers"], ["Giri al mese", "max_routes_per_month"],
-    ["Consegne al mese", "max_deliveries_per_month"], ["Depositi", "max_deposits"],
-    ["Autisti", "max_drivers"], ["Mezzi standard", "max_vehicles"], ["⚡ Veicoli elettrici bonus", "electric_vehicle_bonus"], ["Agenti", "has_agents"],
-    ["Report", "has_reports"], ["Export dati", "has_export"], ["AI", "has_ai"]
-  ].map(([label,key])=>[label,...["starter","business","pro"].map(p=>
-    typeof window.GF_PLANS[p][key] === 'boolean' ? (window.GF_PLANS[p][key]?'Incluso':'—') : window.GF_PLANS[p][key])]);
+  const rows = planComparisonRows().map(([label,key])=>[label,...["starter","business","pro"].map(p=>
+    key==='has_driver_portal' ? 'Incluso' : typeof window.GF_PLANS[p][key] === 'boolean' ? (window.GF_PLANS[p][key]?'Incluso':'Non incluso') : window.GF_PLANS[p][key])]);
 
   box.innerHTML = `<header class="gf-panel__header"><div><p class="gf-kicker">Confronto completo</p><h2 class="gf-panel__title">Funzionalità incluse</h2></div><p class="gf-muted">Una vista unica per confrontare rapidamente i tre livelli.</p></header>
   <div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards"><thead><tr><th scope="col">Funzionalità</th><th scope="col">Starter</th><th scope="col">Business</th><th scope="col">Pro</th></tr></thead><tbody>${rows.map(r=>`<tr><td data-label="Funzionalità">${r[0]}</td><td data-label="Starter">${r[1]}</td><td data-label="Business">${r[2]}</td><td data-label="Pro">${r[3]}</td></tr>`).join("")}</tbody></table></div>`;
@@ -1096,6 +1097,7 @@ function toggleSignup(show){
   if(signupPanel) signupPanel.classList.toggle("hidden", !show);
   if(show){
     fillSectorSelectV47("signupSector", val("signupSector"));
+    updateSignupPlanFeatures();
     setSignupWizardStep(1);
   }
   // Quando apro la registrazione nascondo il recupero password.
@@ -1199,6 +1201,22 @@ function getSelectedPlan(){
   const select = document.getElementById("signupPlanSelect");
   if(select && select.value) return select.value;
   return "business";
+}
+function updateSignupPlanFeatures(){
+  const select=document.getElementById('signupPlanSelect');
+  if(select && !select.dataset.planInitialized){
+    const requested=new URLSearchParams(window.location.search).get('plan');
+    if(Object.hasOwn(window.GF_PLANS || {},requested))select.value=requested;
+    select.dataset.planInitialized='true';
+  }
+  const plan=window.GF_PLANS[getSelectedPlan()] || {};
+  for(const [id,key] of [['signupNeedsSignature','has_delivery_signature'],['signupNeedsPhotoProof','has_photo_proof']]) {
+    const input=document.getElementById(id);if(!input) continue;
+    input.disabled=plan[key]!==true;if(input.disabled)input.checked=false;
+    input.title=input.disabled?'Disponibile dal piano Business':'';
+  }
+  const summary=document.getElementById('signupPlanSummary');
+  if(summary)summary.textContent=`${plan.name}: ${plan.max_orders_per_month} ordini/mese, ${plan.max_customers} clienti, ${plan.max_collaborators} collaboratori. Portale autista e GPS inclusi.${plan.has_delivery_signature?'':' Firma e foto sono disponibili dal piano Business.'}`;
 }
 function signupBool(id){
   return !!document.getElementById(id)?.checked;
@@ -1326,8 +1344,8 @@ async function signup(){
       company_size: val("signupCompanySize"),
       daily_deliveries: val("signupDailyDeliveries"),
       has_time_windows: signupBool("signupHasTimeWindows"),
-      needs_signature: signupBool("signupNeedsSignature"),
-      needs_photo_proof: signupBool("signupNeedsPhotoProof"),
+      needs_signature: window.GF_PLANS[plan]?.has_delivery_signature === true && signupBool("signupNeedsSignature"),
+      needs_photo_proof: window.GF_PLANS[plan]?.has_photo_proof === true && signupBool("signupNeedsPhotoProof"),
       has_refrigerated_goods: signupBool("signupRefrigerated"),
       has_ztl: signupBool("signupZtl"),
       needs_tail_lift: signupBool("signupTailLift")
@@ -1652,6 +1670,7 @@ function toggleRouteStopsTable(button){
 // I due chip "Un solo mezzo / Più mezzi" comandano la scelta esistente #planningMode.
 function selectPlanningModeCard(value){
   const select = document.getElementById("planningMode");
+  if(value==='fleet' && !requirePlanFeature('has_fleet_planning','La suddivisione automatica su più mezzi')) return;
   if(!select || select.value === value) return syncPlanningModeCards();
   select.value = value;
   select.dispatchEvent(new Event("change", {bubbles:true}));
@@ -5386,12 +5405,12 @@ async function saveAllSettingsV893(){
   if(state) state.textContent='Salvataggio impostazioni...';
   const features={
     has_time_windows:!!document.getElementById('featureTimeWindowsV89')?.checked,
-    needs_photo_proof:!!document.getElementById('featurePhotoProofV89')?.checked,
+    needs_photo_proof:planFeatureEnabled('has_photo_proof') && !!document.getElementById('featurePhotoProofV89')?.checked,
     has_ztl:!!document.getElementById('featureZtlV89')?.checked,
     needs_tail_lift:!!document.getElementById('featureTailLiftV89')?.checked,
     has_refrigerated_goods:!!document.getElementById('featureRefrigeratedV89')?.checked
   };
-  const signature=!!document.getElementById('settingDeliverySignature')?.checked;
+  const signature=planFeatureEnabled('has_delivery_signature') && !!document.getElementById('settingDeliverySignature')?.checked;
   try{
     await api('/api/company-profile',{method:'PUT',body:JSON.stringify(features)});
     settingsV41=await api('/api/settings',{method:'PUT',body:JSON.stringify({delivery_signature_enabled:signature,agents_enabled:!!document.getElementById('settingAgentsEnabled')?.checked})});
@@ -5424,7 +5443,7 @@ function applyUniversalFeaturesV891(){
   root.dataset.gfTimeWindows=f.has_time_windows?'on':'off';
   root.dataset.gfZtl=f.has_ztl?'on':'off';
   root.dataset.gfTailLift=f.needs_tail_lift?'on':'off';
-  root.dataset.gfPhotoProof=f.needs_photo_proof?'on':'off';
+  root.dataset.gfPhotoProof=f.needs_photo_proof && planFeatureEnabled('has_photo_proof')?'on':'off';
   root.dataset.gfRefrigerated=f.has_refrigerated_goods?'on':'off';
 
   // Pulisce filtri disattivati: una funzione OFF non deve continuare a influenzare le query.
@@ -5450,13 +5469,14 @@ async function loadUniversalFeaturesV89(){
     const map={featureTimeWindowsV89:'has_time_windows',featurePhotoProofV89:'needs_photo_proof',featureZtlV89:'has_ztl',featureTailLiftV89:'needs_tail_lift',featureRefrigeratedV89:'has_refrigerated_goods'};
     Object.entries(map).forEach(([id,key])=>{const el=document.getElementById(id);if(el)el.checked=!!gfUniversalFeaturesV891[key];});
     applyUniversalFeaturesV891();
+    applyPlanFeatureControls();
   }catch(e){ console.warn('Funzionalità opzionali',e); }
 }
 async function saveUniversalFeaturesV89(){
   const state=document.getElementById('settingsSaveState'); if(state)state.textContent='Salvataggio funzionalità...';
   const payload={
     has_time_windows:!!document.getElementById('featureTimeWindowsV89')?.checked,
-    needs_photo_proof:!!document.getElementById('featurePhotoProofV89')?.checked,
+    needs_photo_proof:planFeatureEnabled('has_photo_proof') && !!document.getElementById('featurePhotoProofV89')?.checked,
     has_ztl:!!document.getElementById('featureZtlV89')?.checked,
     needs_tail_lift:!!document.getElementById('featureTailLiftV89')?.checked,
     has_refrigerated_goods:!!document.getElementById('featureRefrigeratedV89')?.checked

@@ -122,6 +122,10 @@
 
   let records=[], catalog=[], presets=[], dependencies={}, editId=null;
   const setupRequired=record=>record.password_setup_required===true;
+  const seatLimit=()=>Number(window.GFPlanAccess?.limits().max_collaborators ?? window.GF_PLANS?.[currentSessionUser?.plan]?.max_collaborators ?? 0);
+  const usedSeats=()=>records.filter(record=>record.is_active).length;
+  function quotaMessage(){return `Limite di ${seatLimit()} collaboratori raggiunto. Gli inviti in attesa occupano un posto. Disattiva un accesso o scegli un piano superiore.`;}
+
   const accessState=record=>!record.is_active?'inactive':(setupRequired(record)?'pending':'active');
   function invitationDescription(record){
     if(!record.is_active) return 'Accesso disattivato. Gli eventuali link di invito precedenti non sono utilizzabili.';
@@ -145,6 +149,12 @@
     const state=document.getElementById('collaboratorStatus').value;
     const rows=records.filter(r=>(`${r.full_name} ${r.email}`).toLocaleLowerCase().includes(term) && (!state || accessState(r)===state));
     document.getElementById('collaboratorsTotal').textContent=records.length;
+    const used=usedSeats(),limit=seatLimit(),full=used>=limit;
+    const quota=document.getElementById('collaboratorQuota');
+    if(quota){quota.dataset.status=full?'warning':'info';quota.textContent=`${used} / ${limit} collaboratori utilizzati (titolare escluso). Attivi e inviti in attesa occupano un posto.${full?' '+quotaMessage():''}`;}
+    const invite=document.getElementById('collaboratorInviteNew');
+    if(invite){invite.disabled=full;invite.title=full?quotaMessage():'';}
+
     document.getElementById('collaboratorsActive').textContent=records.filter(r=>accessState(r)==='active').length;
     document.getElementById('collaboratorsPending').textContent=records.filter(r=>accessState(r)==='pending').length;
     document.getElementById('collaboratorsInactive').textContent=records.filter(r=>!r.is_active).length;
@@ -186,7 +196,9 @@
   }
   function edit(id){
     if(!catalog.length){toast('Attendi il caricamento dei permessi.');return;}
-    const record=records.find(r=>r.id===id);editId=record?.id || null;
+    const record=records.find(r=>r.id===id);
+    if(!record && usedSeats()>=seatLimit()){toast(quotaMessage());return;}
+    editId=record?.id || null;
     document.getElementById('collaboratorForm').reset();
     document.getElementById('collaboratorFormTitle').textContent=record?'Gestisci collaboratore':'Invita collaboratore';
     document.getElementById('collaboratorSave').textContent=record?'Salva modifiche':'Invia invito';
@@ -213,6 +225,8 @@
   async function save(event){
     event.preventDefault();const button=document.getElementById('collaboratorSave');button.disabled=true;
     try{
+      const record=records.find(item=>item.id===editId);
+      if(document.getElementById('collaboratorActive').checked && !record?.is_active && usedSeats()>=seatLimit())throw new Error(quotaMessage());
       expand();const payload={full_name:document.getElementById('collaboratorName').value,email:document.getElementById('collaboratorEmail').value,
         is_active:document.getElementById('collaboratorActive').checked,permissions:[...document.querySelectorAll('#collaboratorPermissions input:checked')].map(el=>el.value)};
       const result=await api('/api/collaborators'+(editId?'/'+editId:''),{method:editId?'PUT':'POST',body:JSON.stringify(payload)});

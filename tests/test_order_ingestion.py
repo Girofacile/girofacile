@@ -13,6 +13,9 @@ CSV='NOrdine;RagioneSociale;IndSped;Pedana;NColli\nEXT-1;Recipient;Via Roma 1;No
 def ingestion(orders):
     from app.routers.order_sources import router
     from app.services.order_source_security import _attempts
+    # These scenarios exercise both API and file sources; API intake is Business+.
+    orders[2].plan = orders[3].plan = 'business'
+    orders[1].commit()
     _attempts.clear();orders[0].app.include_router(router)
     return orders
 

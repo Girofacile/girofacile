@@ -18,7 +18,7 @@
   document.querySelectorAll('.plan-card[data-plan]').forEach(el=>{
     const p=window.GF_PLANS?.[el.dataset.plan];if(!p)return;
     el.querySelector('.plan-price').textContent=`€${p.price_eur}/mese`;
-    el.querySelector('.plan-desc').textContent=`${p.max_customers} clienti · ${p.max_vehicles} mezzi standard`;
+    el.querySelector('.plan-desc').textContent=`${p.max_orders_per_month} ordini/mese · ${p.max_customers} clienti · ${p.max_vehicles} mezzi · ${p.max_drivers} autisti · ${p.max_collaborators} collaboratori`;
     const bonus=document.createElement('div');bonus.className='gf-electric-benefit';
     bonus.textContent=window.GiroFacileElectricVehicles?.planBenefit(p)||'';
     if(bonus.textContent)el.appendChild(bonus);
@@ -30,7 +30,7 @@
 <link rel="stylesheet" href="/static/dashboard/css/electric-vehicles.css?v=gf_base_20261015w">
 <script src="/static/dashboard/js/electric-vehicles.js?v=electric_bonus_20261002"></script>
 <link rel="stylesheet" href="/static/tracking/company.css?v=20261004_design">
-<script src="/static/tracking/company.js?v=20261004_design"></script>
+<script src="/static/tracking/company.js?v=gf_plans_20261023"></script>
 
 <link rel="stylesheet" href="/static/design-system/theme.css?v=gf_base_20261015v">
 <link rel="stylesheet" href="/static/design-system/components.css?v=gf_mapfix_20261020b">
@@ -64,10 +64,11 @@
     <div class="form-group"><label>Password</label><input id="mSignupPass" type="password" autocomplete="new-password" placeholder="Almeno 8 caratteri, maiuscola e simbolo"><div id="mSignupPasswordMeter" class="gf-password-meter" aria-live="polite"></div></div>
     <div class="plan-label">Scegli il piano <span>· 14 giorni gratuiti</span></div>
     <div class="plan-grid">
-      <div class="plan-card" data-plan="starter" onclick="mSelectPlan(this)"><div class="plan-name">Starter</div><div class="plan-price">€29<span>/mese</span></div><div class="plan-desc">150 clienti</div></div>
-      <div class="plan-card selected" data-plan="business" onclick="mSelectPlan(this)"><div class="plan-badge">Top</div><div class="plan-name">Business</div><div class="plan-price">€59<span>/mese</span></div><div class="plan-desc">500 clienti</div></div>
-      <div class="plan-card" data-plan="pro" onclick="mSelectPlan(this)"><div class="plan-name">Pro</div><div class="plan-price">€99<span>/mese</span></div><div class="plan-desc">5.000 clienti</div></div>
+      <div class="plan-card" data-plan="starter" onclick="mSelectPlan(this)"><div class="plan-name">Starter</div><div class="plan-price">€29<span>/mese</span></div><div class="plan-desc">300 ordini/mese · 150 clienti</div></div>
+      <div class="plan-card selected" data-plan="business" onclick="mSelectPlan(this)"><div class="plan-badge">Consigliato</div><div class="plan-name">Business</div><div class="plan-price">€59<span>/mese</span></div><div class="plan-desc">1.200 ordini/mese · 500 clienti</div></div>
+      <div class="plan-card" data-plan="pro" onclick="mSelectPlan(this)"><div class="plan-name">Pro</div><div class="plan-price">€99<span>/mese</span></div><div class="plan-desc">6.000 ordini/mese · 5.000 clienti</div></div>
     </div>
+    <p class="gf-muted">Prezzi mensili IVA esclusa.</p>
     <button class="btn-primary" id="mSignupBtn" onclick="mobileSignup()">Crea account →</button>
     <div id="signupError" class="error-msg"></div>
     <div class="auth-switch">Hai già un account? <button onclick="mobileToggleSignup(false)">Accedi</button></div>

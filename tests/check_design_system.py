@@ -33,6 +33,7 @@ EXECUTION = dict(
     consegne=[dict(ROUTES[0]["consegne"][0], status="in_attesa", cliente_nome="Cliente Demo")],
     progress=dict(percentuale=0, totale=1, completate=0, mancate=0, rimanenti=1, prossima_idx=0),
     settings=dict(delivery_signature_enabled=True), delivery_signature_enabled=True,
+    features=dict(has_delivery_signature=True, has_photo_proof=True, has_pod_pdf=True),
     tempo_scarico_options=[10, 15, 20, 30], motivi_mancata=["assente", "chiuso", "altro"],
 )
 ADMIN_USER = dict(id=1, username="demo", email="demo@example.test", company_name="Logistica Demo",
@@ -150,7 +151,8 @@ def main():
             "/api/billing/my-plan": dict(ME,billing={},usage={"resources":{"customers":{"used":1}}}),
             "/api/billing/overview": dict(plan=dict(name="Business",status="active"),company={},invoices=[],payments=[]),
             "/api/reports/summary": dict(metrics={},charts={},insights=[],drivers=[],customers=[],agents=[]),
-            "/api/driver/me": dict(authenticated=True,driver_name="Marco Rossi",company_name="Logistica Demo"),
+            "/api/driver/me": dict(authenticated=True,driver_name="Marco Rossi",company_name="Logistica Demo",
+                                   features=dict(has_driver_chat=True)),
             "/api/driver/routes": [ROUTES[0]],
             "/api/agent/me": dict(authenticated=True,agent_name="Agente Demo",company_name="Logistica Demo"),
             "/api/agent/customers": CUSTOMERS,

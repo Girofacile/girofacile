@@ -73,8 +73,8 @@ def authenticated(db,sid,token,rate=False):
     if src.kind!='api' or not src.credential_hash or not hmac.compare_digest(src.credential_hash,token_hash(token)):
         raise HTTPException(401,'Credenziale della fonte non valida.')
     if src.status!='active': raise HTTPException(403,'La fonte è in pausa o non è attiva.')
-    from .plans import require_active_plan
-    require_active_plan(db.get(User,src.user_id))
+    from .plans import require_feature
+    require_feature(db.get(User,src.user_id),'has_order_integrations')
     if rate:
         now=utc_now();config=dict(src.configuration)
         start=datetime.fromisoformat(config.get('_rate_start',now.isoformat()));count=config.get('_rate_count',0)

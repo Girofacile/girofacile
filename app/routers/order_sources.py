@@ -14,9 +14,15 @@ from ..schemas.order_sources import SourceCreate,SourceUpdate,SourceFields,Sourc
 from ..services import order_ingestion as service
 from ..services.order_files import read_file,suggestions,FIELDS,validate_rows
 from ..services.order_source_security import issue,credential,authenticated,throttle_ip
+from ..services.plans import require_feature
 from .orders import actor_key
 
 router=APIRouter(tags=['order-sources'])
+
+
+def require_source_feature(user,src):
+    if src.kind=='api':
+        require_feature(user,'has_order_integrations')
 
 
 async def bounded_json(request):
@@ -36,7 +42,8 @@ def list_sources(offset:int=Query(0,ge=0),db:Session=Depends(get_db),user:User=D
 
 @router.post('/api/order-sources',status_code=201)
 def create_source(data:SourceCreate,db:Session=Depends(get_db),user:User=Depends(current_user)):
-    db.query(User).filter_by(id=user.id).with_for_update().one()
+    user=db.query(User).filter_by(id=user.id).with_for_update().populate_existing().one()
+    if data.kind=='api': require_feature(user,'has_order_integrations')
     if db.query(OrderSource).filter(OrderSource.user_id==user.id,OrderSource.kind.in_(('file','api'))).count()>=100: raise HTTPException(422,'Limite tecnico: massimo 100 fonti per azienda.')
     src=OrderSource(user_id=user.id,key='source-'+str(uuid4()),name=data.name,kind=data.kind,status='draft',configuration={'software':data.software,'mapping':{}})
     db.add(src);db.commit();return service.public_source(db,src)
@@ -45,6 +52,7 @@ def create_source(data:SourceCreate,db:Session=Depends(get_db),user:User=Depends
 @router.put('/api/order-sources/{source_id}')
 def configure(source_id:int,data:SourceUpdate,db:Session=Depends(get_db),user:User=Depends(current_user)):
     src=service.source(db,user.id,source_id,lock=True)
+    require_source_feature(user,src)
     if src.version!=data.version: raise HTTPException(409,'Fonte modificata: ricarica la pagina.')
     if src.status=='removed': raise HTTPException(409,'La fonte è stata rimossa.')
     if src.configuration.get('connector'): raise HTTPException(422,'Le associazioni del connettore sono automatiche.')
@@ -57,6 +65,7 @@ def configure(source_id:int,data:SourceUpdate,db:Session=Depends(get_db),user:Us
 @router.put('/api/order-sources/{source_id}/fields')
 def configure_fields(source_id:int,data:SourceFields,request:Request,db:Session=Depends(get_db),user:User=Depends(current_user)):
     src=service.source(db,user.id,source_id,lock=True)
+    require_source_feature(user,src)
     if src.version!=data.version: raise HTTPException(409,'Fonte modificata: ricarica la pagina.')
     if src.status=='removed': raise HTTPException(409,'La fonte è stata rimossa.')
     excluded=set(data.excluded_fields)
@@ -73,6 +82,7 @@ def configure_fields(source_id:int,data:SourceFields,request:Request,db:Session=
 @router.post('/api/order-sources/{source_id}/action')
 def source_action(source_id:int,data:SourceAction,request:Request,response:Response,db:Session=Depends(get_db),user:User=Depends(current_user)):
     src=service.source(db,user.id,source_id,lock=True)
+    if data.action in ('activate','resume','rotate'): require_source_feature(user,src)
     if src.version!=data.version: raise HTTPException(409,'Fonte modificata: ricarica la pagina.')
     if src.status=='removed': raise HTTPException(409,'La fonte è rimossa; gli ordini restano disponibili.')
     if src.configuration.get('connector')=='email' and data.action in ('activate','resume'):
@@ -134,12 +144,13 @@ async def upload(source_id:int,file:UploadFile=File(...),db:Session=Depends(get_
 
 @router.post('/api/order-sources/{source_id}/sample')
 async def sample(source_id:int,request:Request,db:Session=Depends(get_db),user:User=Depends(current_user)):
+    src=service.source(db,user.id,source_id,lock=True)
+    require_source_feature(user,src)
     data=await bounded_json(request)
     rows=data.get('orders') if isinstance(data,dict) else None
     if not isinstance(rows,list) or not 1<=len(rows)<=MAX_ROWS or any(not isinstance(r,dict) for r in rows): raise HTTPException(422,'Fornisci un oggetto JSON con orders: elenco di 1–1000 ordini.')
     headers=list(dict.fromkeys(k for row in rows for k in row))
     validate_rows(headers,rows)
-    src=service.source(db,user.id,source_id,lock=True)
     if src.kind!='api': raise HTTPException(422,'Il campione JSON è previsto per le fonti API.')
     item=service.stage(db,src,headers,rows);db.commit()
     return {'run_id':item.id,'headers':headers,'sample':rows[:5],'total':len(rows),'suggested_mapping':suggestions(headers)}
@@ -147,7 +158,9 @@ async def sample(source_id:int,request:Request,db:Session=Depends(get_db),user:U
 
 @router.post('/api/order-sources/{source_id}/runs/{run_id}/preview')
 def preview(source_id:int,run_id:int,db:Session=Depends(get_db),user:User=Depends(current_user)):
-    src=service.source(db,user.id,source_id,lock=True);item=service.run(db,user.id,source_id,run_id)
+    src=service.source(db,user.id,source_id,lock=True)
+    require_source_feature(user,src)
+    item=service.run(db,user.id,source_id,run_id)
     if item.status=='completed': raise HTTPException(409,'Questa importazione è già completata.')
     service.preview(db,src,item);db.commit();return service.public_run(item)
 
@@ -155,7 +168,9 @@ def preview(source_id:int,run_id:int,db:Session=Depends(get_db),user:User=Depend
 @router.post('/api/order-sources/{source_id}/runs/{run_id}/commit')
 def commit_import(source_id:int,run_id:int,data:RunConfirm,request:Request,db:Session=Depends(get_db),user:User=Depends(current_user)):
     try:
-        src=service.source(db,user.id,source_id,lock=True);item=service.run(db,user.id,source_id,run_id)
+        src=service.source(db,user.id,source_id,lock=True)
+        require_source_feature(user,src)
+        item=service.run(db,user.id,source_id,run_id)
         service.commit_file(db,src,item,actor_key(request,user));db.commit()
         return JSONResponse(jsonable_encoder(service.public_run(item)),status_code=422 if item.status=='failed' else 200)
     except Exception:

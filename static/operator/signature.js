@@ -31,7 +31,7 @@ operatorCanvas.addEventListener('pointermove', event=>{
   operatorCanvas.addEventListener(name, ()=>{operatorDrawing=false;}));
 
 function operatorSignaturePayload(){
-  if(!routeData.delivery_signature_enabled) return {};
+  if(!podFeatureEnabled('has_delivery_signature', routeData) || !routeData.delivery_signature_enabled) return {};
   const name = document.getElementById('operatorSigner').value.trim();
   if(!operatorSignatureDrawn || !name) throw Error('Inserisci il nome del firmatario e raccogli la firma');
   return {signature_data:operatorCanvas.toDataURL('image/png'), signed_by_name:name};

@@ -5,6 +5,7 @@ documenta errori corretti, controlli eseguiti e rischi ancora aperti.
 
 Per l'installazione locale vedere [README_LOCALE.md](README_LOCALE.md).
 Per gli accessi delegati vedere [Collaboratori aziendali](docs/company-collaborators.md).
+Quote e funzioni sono descritte in [Piani GiroFacile](docs/piani-abbonamento.md).
 Le istruzioni sul routing sono in [README_ROUTING.md](README_ROUTING.md).
 
 ## Avvio e aggiornamenti database

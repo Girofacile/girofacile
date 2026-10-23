@@ -3,7 +3,7 @@
   'use strict';
   const el=id=>document.getElementById(id);
   let resources=[],plan=null,busy=false,changedAssignments=false,draftAssignments=null,manualAdjusted=false,acknowledgedWarning=false;
-  const active=()=>el('planningMode')?.value==='fleet';
+  const active=()=>window.GFPlanAccess?.has('has_fleet_planning')===true && el('planningMode')?.value==='fleet';
   const blank=()=>({vehicle_id:0,driver_id:0,max_minutes:480,energy_price_primary:1.75,energy_price_electric:0.30});
   const can=permission=>!window.GFCompanyAccess||GFCompanyAccess.can(permission);
   const config=()=>({planning_mode:active()?'fleet':'single',fleet_strategy:el('fleetStrategy')?.value||'efficient',fleet_resources:active()?resources.filter(r=>r.vehicle_id&&r.driver_id):[]});
@@ -23,6 +23,7 @@
     globalThis.GFDriverSchedules?.fleet(resources);
   }
   function modeChanged(notify=true){
+    if(!window.GFPlanAccess?.has('has_fleet_planning'))el('planningMode').value='single';
     if(active()&&!resources.length)resources=[blank(),blank()];
     el('fleetSetup').hidden=!active();el('singleVehicleField').hidden=active();el('singleDriverField').hidden=active();
     refresh();updateRoutePlanningGateV68();updateDashboardStats();
@@ -39,10 +40,11 @@
     if(resources.some(r=>globalThis.GFDriverSchedules?.error(r.driver_schedule??GFDriverSchedules.defaults(r.driver_id))))result.push("turni e pause autisti");
     return result;
   }
-  function restore(saved={}){el('planningMode').value=saved.planning_mode||'single';el('fleetStrategy').value=saved.fleet_strategy||'efficient';resources=(saved.fleet_resources||[]).map(r=>({...blank(),...r}));modeChanged(false);}
+  function restore(saved={}){el('planningMode').value=window.GFPlanAccess?.has('has_fleet_planning') ? (saved.planning_mode||'single') : 'single';el('fleetStrategy').value=saved.fleet_strategy||'efficient';resources=(saved.fleet_resources||[]).map(r=>({...blank(),...r}));modeChanged(false);}
   function reset(){plan=null;changedAssignments=false;draftAssignments=null;manualAdjusted=false;acknowledgedWarning=false;window.GFFleetReview?.stopMap();restore();}
   function notice(text){const box=el('fleetMessage');if(box){box.textContent=text;box.scrollIntoView({block:'nearest'});}}
   async function calculate(){
+    if(!window.GFPlanAccess?.require('has_fleet_planning','La suddivisione automatica su più mezzi'))return;
     if(busy)return;
     const gaps=routePlanningMissingFieldsV68();if(gaps.length){alert('Completa: '+gaps.join(', '));return;}
     if(!deliveries.length){alert('Aggiungi almeno una consegna.');return;}
@@ -93,6 +95,7 @@
   }
   async function action(name,acceptUnassigned=false){
     if(busy||!plan)return;
+    if(!window.GFPlanAccess?.require('has_fleet_planning','La suddivisione automatica su più mezzi'))return;
     if(name==='plan'&&plan.status==='preview'&&changedAssignments){
       notice('Ricalcola le assegnazioni prima di pianificare i giri.');return;
     }

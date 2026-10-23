@@ -308,9 +308,9 @@ def send_trial_expiring(
     <p>La tua prova gratuita di GiroFacile scade tra <strong>{giorni_rimasti} giorni</strong>.</p>
     <p>Per continuare ad usare GiroFacile senza interruzioni, scegli il piano più adatto alla tua attività:</p>
     <div class="info-box">
-      <div class="info-row"><span class="info-label">Starter</span><strong>€{PLAN_PRICES["starter"]["price_eur"]}/mese — {PLAN_LIMITS["starter"]["max_customers"]} clienti, {PLAN_LIMITS["starter"]["max_routes_per_month"]} giri/mese</strong></div>
-      <div class="info-row"><span class="info-label">Business</span><strong>€{PLAN_PRICES["business"]["price_eur"]}/mese — {PLAN_LIMITS["business"]["max_customers"]} clienti, {PLAN_LIMITS["business"]["max_routes_per_month"]} giri/mese</strong></div>
-      <div class="info-row"><span class="info-label">Pro</span><strong>€{PLAN_PRICES["pro"]["price_eur"]}/mese — {PLAN_LIMITS["pro"]["max_customers"]} clienti, {PLAN_LIMITS["pro"]["max_routes_per_month"]} giri/mese</strong></div>
+      <div class="info-row"><span class="info-label">Starter</span><strong>€{PLAN_PRICES["starter"]["price_eur"]}/mese — {PLAN_LIMITS["starter"]["max_customers"]} clienti, {PLAN_LIMITS["starter"]["max_orders_per_month"]} ordini/mese</strong></div>
+      <div class="info-row"><span class="info-label">Business</span><strong>€{PLAN_PRICES["business"]["price_eur"]}/mese — {PLAN_LIMITS["business"]["max_customers"]} clienti, {PLAN_LIMITS["business"]["max_orders_per_month"]} ordini/mese</strong></div>
+      <div class="info-row"><span class="info-label">Pro</span><strong>€{PLAN_PRICES["pro"]["price_eur"]}/mese — {PLAN_LIMITS["pro"]["max_customers"]} clienti, {PLAN_LIMITS["pro"]["max_orders_per_month"]} ordini/mese</strong></div>
     </div>
     <a class="btn" href="{upgrade_url}">⬆️ Scegli il tuo piano</a>
     <p>Hai domande? Scrivici a <a href="mailto:info@girofacile.it">info@girofacile.it</a> — siamo felici di aiutarti.</p>

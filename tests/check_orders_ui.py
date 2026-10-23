@@ -53,7 +53,7 @@ def main():
             engine=create_engine('sqlite://',poolclass=StaticPool,connect_args={'check_same_thread':False})
             Base.metadata.create_all(engine)
             with Session(engine) as db:
-                user=User(username='browser-test',password_hash='test',plan_status='active');db.add(user);db.commit()
+                user=User(username='browser-test',password_hash='test',plan='business',plan_status='active');db.add(user);db.commit()
                 db.add_all([Deposit(user_id=user.id,nome='Depot',indirizzo='Via Roma 1',lat=45.46,lon=9.19),Vehicle(user_id=user.id,nome='Van'),Driver(user_id=user.id,nome='Driver')]);db.commit()
                 app=FastAPI();app.include_router(router);app.include_router(planning_router);app.include_router(sources_router)
                 app.dependency_overrides[get_db]=lambda:db

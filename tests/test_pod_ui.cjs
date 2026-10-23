@@ -2,6 +2,7 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs'),vm=require('node:vm');
 const source=fs.readFileSync('static/pod.js','utf8');
+const paidFeatures={has_delivery_signature:true,has_photo_proof:true,has_pod_pdf:true};
 
 test('desktop and mobile portals load evidence controls and parse',()=>{
   for(const path of ['static/dashboard/index.html','static/driver/index.html','static/operator/index.html']){
@@ -19,7 +20,7 @@ test('desktop and mobile portals load evidence controls and parse',()=>{
 });
 
 test('evidence buttons show only available documents',()=>{
-  const ctx=vm.createContext({});vm.runInContext(source,ctx);
+  const ctx=vm.createContext({currentSessionUser:{limits:paidFeatures}});vm.runInContext(source,ctx);
   assert.equal(ctx.podEvidenceButtons({},'/evidence'),'');
   const result=ctx.podEvidenceButtons({has_signature:true,has_delivery_photo:true,has_pod:true},'/evidence');
   assert.match(result,/Visualizza firma/);assert.match(result,/Visualizza foto/);assert.match(result,/Scarica POD/);
@@ -28,7 +29,7 @@ test('evidence buttons show only available documents',()=>{
 
 test('photo validation, required policy and resize retain the selected file',async()=>{
   const input={files:[]};let closed=false,canvas;
-  const ctx=vm.createContext({document:{getElementById:()=>input,createElement:()=>canvas={getContext:()=>({fillRect(){},drawImage(){}}),toDataURL:()=> 'data:image/jpeg;base64,photo'}},
+  const ctx=vm.createContext({currentSessionUser:{limits:paidFeatures},document:{getElementById:()=>input,createElement:()=>canvas={getContext:()=>({fillRect(){},drawImage(){}}),toDataURL:()=> 'data:image/jpeg;base64,photo'}},
     createImageBitmap:async()=>({width:4000,height:3000,close(){closed=true}})});
   vm.runInContext(source,ctx);
   await assert.rejects(ctx.podPhotoPayload(true),/obbligatoria/);

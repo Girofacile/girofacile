@@ -1,10 +1,19 @@
 /* Shared customer-link controls for company desktop and mobile portals. */
+function customerTrackingEnabled() {
+  const account = typeof currentSessionUser !== 'undefined' ? currentSessionUser : (typeof me !== 'undefined' ? me : null);
+  return account?.limits?.has_customer_tracking === true;
+}
 function trackingButton(delivery, route) {
-  if (!delivery?.id || route?.status === 'bozza') return '';
+  if (!customerTrackingEnabled() || !delivery?.id || route?.status === 'bozza') return '';
   return `<button type="button" class="btn-secondary mini-btn customer-tracking-trigger" onclick="openCustomerTracking(${Number(delivery.id)})">Tracking cliente</button>`;
 }
 
 async function openCustomerTracking(deliveryId) {
+  if(!customerTrackingEnabled()) {
+    const message = 'Il tracking cliente è disponibile dal piano Business.';
+    if(typeof toast === 'function') toast(message); else alert(message);
+    return;
+  }
   document.getElementById('customerTrackingDialog')?.remove();
   const dialog = document.createElement('dialog');
   dialog.id = 'customerTrackingDialog';

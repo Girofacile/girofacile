@@ -6,11 +6,13 @@ from ..models import User
 from ..core.dependencies import current_user
 from ..schemas.fleet_planning import FleetInput,FleetRevision,FleetConfirm
 from ..services import fleet_planning as service,route_orders
+from ..services.plans import require_feature
 from .orders import actor_key
 
 router=APIRouter(prefix='/api/fleet-planning',tags=['fleet-planning'])
 
 def permission(request,user,db,configuration):
+    require_feature(user,'has_fleet_planning')
     route_orders.require_planning_permission(request,configuration['consegne'],db)
 
 @router.post('/preview')

@@ -144,7 +144,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 <link rel="stylesheet" href="/static/live-gps.css?v=20261005">
 <script src="/static/live-gps.js?v=20261005"></script>
 <link rel="stylesheet" href="/static/pod.css?v=gf_driver_fix_20261020">
-<script src="/static/pod.js?v=gf_driver_fix_20261020"></script>
+<script src="/static/pod.js?v=gf_plans_20261023"></script>
 
 <link rel="stylesheet" href="/static/design-system/theme.css?v=gf_base_20261015v">
 <link rel="stylesheet" href="/static/design-system/components.css?v=gf_mapfix_20261020b">
@@ -315,6 +315,8 @@ async function load() {
 
 function render() {
   const { route, consegne, progress, tempo_scarico_options, motivi_mancata } = routeData;
+  podConfigurePhoto(routeData);
+  document.getElementById('operatorSignatureBox').classList.toggle('hidden', !(podFeatureEnabled('has_delivery_signature', routeData) && routeData.delivery_signature_enabled));
   document.getElementById('operatorStartGPS').hidden = !['programmato','bozza'].includes(route.status);
   GiroFacileGPS.sync({status:route.status, statusUrl:`/api/operator/${token}/position`, uploadUrl:`/api/operator/${token}/position`});
   document.getElementById("operatorRoutingSummary").innerHTML = window.GiroFacileRouting.summaryHtml(route);
@@ -419,7 +421,7 @@ function render() {
         html += `<div class="dc-warning">${gfIcon('alert')} ${esc(c.warning.split('|').join(' · '))}</div>`;
       }
       if (isDone) {
-        html += `<div class="dc-done-info">${gfIcon('checkCircle')} Consegnato${c.tempo_scarico_effettivo ? ` in ${c.tempo_scarico_effettivo} min` : ''}${podEvidenceButtons(c, `/api/operator/${token}/delivery/${c.id}/evidence`)}${c.note_operatore ? ` · "${esc(c.note_operatore)}"` : ''}</div>`;
+        html += `<div class="dc-done-info">${gfIcon('checkCircle')} Consegnato${c.tempo_scarico_effettivo ? ` in ${c.tempo_scarico_effettivo} min` : ''}${podEvidenceButtons(c, `/api/operator/${token}/delivery/${c.id}/evidence`, routeData)}${c.note_operatore ? ` · "${esc(c.note_operatore)}"` : ''}</div>`;
       }
       if (isMissed) {
         const motiviLabels = {assente:'Cliente assente',chiuso:'Attività chiusa',rifiutato:'Consegna rifiutata',altro:'Altro'};
@@ -471,9 +473,10 @@ function openDone(id) {
   currentDeliveryId = id;
   selectedTempo = null;
   podResetPhoto();
+  podConfigurePhoto(routeData);
   document.getElementById('noteDone').value = '';
   clearOperatorSignature();
-  document.getElementById('operatorSignatureBox').classList.toggle('hidden', !routeData.delivery_signature_enabled);
+  document.getElementById('operatorSignatureBox').classList.toggle('hidden', !(podFeatureEnabled('has_delivery_signature', routeData) && routeData.delivery_signature_enabled));
   const grid = document.getElementById('tempoGrid');
   grid.innerHTML = routeData.tempo_scarico_options.map(t => `
     <button class="tempo-btn" onclick="selectTempo(${t}, this)">${t < 60 ? t + ' min' : t === 60 ? '1 ora' : t + ' min'}</button>
@@ -490,7 +493,7 @@ async function confirmDone() {
   try {
     await api(`/api/operator/${token}/delivery/${currentDeliveryId}/complete`, {
       method: 'POST',
-      body: JSON.stringify({ tempo_scarico: selectedTempo, note: document.getElementById('noteDone').value, ...operatorSignaturePayload(), ...await podPhotoPayload(!!routeData.delivery_photo_required) })
+      body: JSON.stringify({ tempo_scarico: selectedTempo, note: document.getElementById('noteDone').value, ...operatorSignaturePayload(), ...await podPhotoPayload(!!routeData.delivery_photo_required, routeData) })
     });
     closeModals();
     await load();
@@ -551,6 +554,6 @@ function closeModals() {
 setInterval(() => { if (!document.hidden) load(); }, 30000);
 load();
 </script>
-<script src="/static/operator/signature.js?v=stability_1"></script>
+<script src="/static/operator/signature.js?v=gf_plans_20261023"></script>
 </body>
 </html>

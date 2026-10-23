@@ -85,7 +85,7 @@ async function main() {
           revoked = route.request().method() === 'DELETE';
           data = revoked ? {ok:true} : {url,expires_at:'2026-10-12T00:00:00Z'};
         } else if (pathname === '/api/me') data = {authenticated:true,username:'test',company_name:'Test',
-          role:'admin',onboarding_completed:true,workspace_operational:true,plan:'business',plan_status:'active',limits:{}};
+          role:'admin',onboarding_completed:true,workspace_operational:true,plan:'business',plan_status:'active',limits:{has_customer_tracking:true}};
         else if (pathname.endsWith('catalog.js')) {
           return route.fulfill({contentType:'application/javascript',body:'window.GF_PLANS = {};'});
         } else if (pathname.includes('profile') || pathname.includes('settings') || pathname.includes('status') || pathname.includes('my-plan')) data = {completed:true,workspace_operational:true};

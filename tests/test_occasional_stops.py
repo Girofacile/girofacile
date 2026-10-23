@@ -148,7 +148,7 @@ def test_driver_lifecycle_and_pod_for_occasional_delivery(routing_env, storage, 
         assert delivery.cliente_nome in text and delivery.indirizzo in text
 
 
-def test_capacity_and_plan_quota_include_occasional_stops(routing_env, monkeypatch):
+def test_occasional_stops_respect_capacity_without_monthly_delivery_cap(routing_env, monkeypatch):
     from app.services import usage_limits
     client,db,owner,_,_,_,vehicle,_=routing_env
     vehicle.capacita_kg=10;db.commit()
@@ -162,6 +162,10 @@ def test_capacity_and_plan_quota_include_occasional_stops(routing_env, monkeypat
     route.data_giro=local_today()
     db.flush()
     monkeypatch.setattr(usage_limits,'usage_summary',lambda *a:{'routes':{'used':0,'limit':10},'deliveries':{'used':10,'limit':10}})
-    with pytest.raises(HTTPException) as error:usage_limits.start_route_usage(db,route)
-    assert error.value.status_code==403
-    assert db.get(RouteUsage,route.id) is None
+    usage_limits.start_route_usage(db,route)
+    db.commit()
+    assert route.status == 'in_corso'
+    assert db.get(RouteUsage,route.id).deliveries == 1
+    usage_limits.start_route_usage(db,route)
+    db.commit()
+    assert db.query(RouteUsage).filter_by(route_id=route.id).count() == 1

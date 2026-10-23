@@ -264,7 +264,7 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
 <link rel="stylesheet" href="/static/live-gps.css?v=20261005">
 <script src="/static/live-gps.js?v=20261005"></script>
 <link rel="stylesheet" href="/static/pod.css?v=gf_driver_fix_20261020">
-<script src="/static/pod.js?v=gf_driver_fix_20261020"></script>
+<script src="/static/pod.js?v=gf_plans_20261023"></script>
 <script src="/static/driver-outbox.js?v=gf_outbox_20261022"></script>
 
 <link rel="stylesheet" href="/static/design-system/theme.css?v=gf_base_20261015v">
@@ -316,7 +316,7 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
       </div>
     </div>
     <div class="header-right">
-      <button class="notif-btn" onclick="showView('chat', document.querySelector('.bnav-btn:nth-child(4)'))">
+      <button class="notif-btn" data-driver-feature="has_driver_chat" onclick="showView('chat', document.querySelector('.bnav-btn:nth-child(3)'))">
         <svg width="22" height="22" fill="none" stroke="#6b7280" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         <span class="notif-badge hidden" id="chatBadge">0</span>
       </button>
@@ -360,7 +360,7 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
         <div class="gf-gps-heading"><span class="gf-gps-dot" aria-hidden="true"></span>Posizione durante il giro</div>
         <p data-gps-message role="status">Il GPS si attiva quando avvii il giro.</p>
         <p>Con Google Maps aperto, soprattutto su iPhone, gli aggiornamenti possono fermarsi. Riprendono quando torni al portale.</p>
-        <details><summary>Come viene usata la posizione</summary><p>Solo durante il giro: la tua azienda vede l’ultima posizione e l’ora del rilevamento. Ai clienti arriva solo la stima di consegna. Nessuno storico degli spostamenti; le coordinate vengono rimosse alla chiusura del giro.</p></details>
+        <details><summary>Come viene usata la posizione</summary><p>Solo durante il giro: la tua azienda vede l’ultima posizione e l’ora del rilevamento. Nessuno storico degli spostamenti; le coordinate vengono rimosse alla chiusura del giro.</p></details>
         <button type="button" data-gps-retry hidden>Riprova GPS</button>
       </section>
 <div id="driverRoutingSummary"></div>
@@ -408,7 +408,7 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
       <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
       <span>Storico</span>
     </button>
-    <button class="bnav-btn" onclick="showView('chat',this)">
+    <button class="bnav-btn" data-driver-feature="has_driver_chat" onclick="showView('chat',this)">
       <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       <span>Chat</span>
     </button>
@@ -649,16 +649,25 @@ async function openApp() {
   document.getElementById('driverApp').classList.remove('hidden');
   document.getElementById('headerDriverName').textContent = me.driver_name;
   document.getElementById('dashDriverName').textContent = `Ciao ${me.driver_name}, ecco i giri assegnati a te`;
+  document.querySelectorAll('[data-driver-feature]').forEach(control => {
+    const enabled = me?.features?.[control.dataset.driverFeature] === true;
+    control.hidden = !enabled;
+    control.classList.toggle('hidden', !enabled);
+  });
   setupOutbox();
   await loadRoutes();
   populateChatSelect();
-  startChatBadgePoll();
+  if(me?.features?.has_driver_chat) startChatBadgePoll();
 }
 
 // ============================================================
 // NAVIGATION
 // ============================================================
 function showView(name, btn) {
+  if(name === 'chat' && me?.features?.has_driver_chat !== true) {
+    driverNotice('La chat autista è disponibile dal piano Business. Contatta il responsabile della tua azienda.');
+    return;
+  }
   if(name !== 'execution') {
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     document.getElementById('view-'+name).classList.add('active');
@@ -841,6 +850,8 @@ async function loadExecution() {
 
 function renderExecution(data) {
   const { route, consegne, progress } = data;
+  podConfigurePhoto(data);
+  updateSignatureRequestCard();
   GiroFacileGPS.sync({status:route.status, statusUrl:`/api/driver/routes/${route.id}/position`, uploadUrl:`/api/driver/routes/${route.id}/position`});
   document.getElementById("driverRoutingSummary").innerHTML = window.GiroFacileRouting.summaryHtml(route, "", {costs:false});
   document.getElementById('execTitle').textContent = route.nome;
@@ -887,9 +898,9 @@ function renderExecution(data) {
       if(c.note) detailsHtml += `<div class="di-note-box">${gfIcon('note')} ${esc(c.note)}</div>`;
       if(c.warning) detailsHtml += `<div class="di-warn-box">${gfIcon('alert')} ${esc(c.warning.split('|').join(' · '))}</div>`;
       if(isDone) {
-        detailsHtml += podEvidenceButtons(c, `/api/driver/delivery/${c.id}/evidence`);
+        detailsHtml += podEvidenceButtons(c, `/api/driver/delivery/${c.id}/evidence`, data);
         detailsHtml += `<div class="di-done-box">${gfIcon('checkCircle')} Consegnato${c.tempo_scarico_effettivo?` in ${c.tempo_scarico_effettivo} min`:''}${c.note_operatore?` · "${esc(c.note_operatore)}"`:''}</div>`;
-        if(c.signed_by_name || c.signed_at){
+        if(podFeatureEnabled('has_delivery_signature', data) && (c.signed_by_name || c.signed_at)){
           detailsHtml += `<div class="di-signature-box">${gfIcon('pen')} Firma raccolta${c.signed_by_name?`: ${esc(c.signed_by_name)}`:''}</div>`;
         }
       }
@@ -1001,7 +1012,7 @@ function getSignatureData(){
 }
 
 function updateSignatureRequestCard(){
-  const sigEnabled = !!currentRouteData?.settings?.delivery_signature_enabled;
+  const sigEnabled = podFeatureEnabled('has_delivery_signature', currentRouteData) && !!currentRouteData?.settings?.delivery_signature_enabled;
   const card = document.getElementById('signatureRequestCard');
   const status = document.getElementById('signatureRequestStatus');
   if(!card) return;
@@ -1016,6 +1027,7 @@ function updateSignatureRequestCard(){
 }
 
 function openSignatureModal(){
+  if(!podFeatureEnabled('has_delivery_signature', currentRouteData) || !currentRouteData?.settings?.delivery_signature_enabled) return;
   if(!currentDeliveryId){ driverNotice('Seleziona prima la consegna.'); return; }
   document.getElementById('modalSignature')?.classList.remove('hidden');
   if(document.getElementById('signedByName')) document.getElementById('signedByName').value = currentSignatureDraft?.signed_by_name || '';
@@ -1029,6 +1041,7 @@ function closeSignatureModal(){
 }
 
 async function saveSignatureFromModal(){
+  if(!podFeatureEnabled('has_delivery_signature', currentRouteData) || !currentRouteData?.settings?.delivery_signature_enabled) return;
   const signature_data = getSignatureData();
   const signed_by_name = (document.getElementById('signedByName')?.value || '').trim();
   const signature_note = (document.getElementById('signatureNote')?.value || '').trim();
@@ -1057,6 +1070,7 @@ function openDone(id) {
   currentDeliveryId = id;
   selectedTempo = null;
   podResetPhoto();
+  podConfigurePhoto(currentRouteData);
   signaturePadDirty = false;
   const existing = (currentRouteData?.consegne || []).find(x => Number(x.id) === Number(id));
   currentSignatureDraft = existing?.has_signature ? {
@@ -1079,7 +1093,7 @@ function selectTempo(val, btn) {
 }
 async function confirmDone() {
   if(!selectedTempo) { driverNotice('Seleziona il tempo di scarico'); return; }
-  const sigEnabled = !!currentRouteData?.settings?.delivery_signature_enabled;
+  const sigEnabled = podFeatureEnabled('has_delivery_signature', currentRouteData) && !!currentRouteData?.settings?.delivery_signature_enabled;
   const payload = {
     tempo_scarico:selectedTempo,
     note:document.getElementById('noteDone').value
@@ -1094,7 +1108,7 @@ async function confirmDone() {
     payload.signature_note = currentSignatureDraft.signature_note || '';
   }
   try {
-    Object.assign(payload, await podPhotoPayload(!!currentRouteData?.settings?.delivery_photo_required));
+    Object.assign(payload, await podPhotoPayload(!!currentRouteData?.settings?.delivery_photo_required, currentRouteData));
     await submitOutcome('complete', `/api/driver/delivery/${currentDeliveryId}/complete`, payload);
     closeModal(); await loadExecution();
   } catch(e) { driverNotice(e.message); }
@@ -1187,6 +1201,7 @@ function populateChatSelect() {
 }
 
 async function loadChat() {
+  if(me?.features?.has_driver_chat !== true) return;
   chatLastId = 0;
   await fetchChatMessages(true);
   if(chatPollInterval) clearInterval(chatPollInterval);
@@ -1194,6 +1209,7 @@ async function loadChat() {
 }
 
 async function fetchChatMessages(scroll) {
+  if(me?.features?.has_driver_chat !== true) return;
   try {
     const msgs = await api(`/api/driver/chat/direct?since_id=${chatLastId}`);
     if(!msgs.length && chatLastId === 0) {
@@ -1223,6 +1239,7 @@ async function fetchChatMessages(scroll) {
 }
 
 async function sendMessage() {
+  if(me?.features?.has_driver_chat !== true) return;
   const input = document.getElementById('chatInput');
   const msg = input.value.trim();
   if(!msg) return;
@@ -1242,7 +1259,9 @@ document.getElementById('chatInput').addEventListener('keydown', e => {
 // CHAT BADGE (unread counter)
 // ============================================================
 async function startChatBadgePoll() {
+  if(me?.features?.has_driver_chat !== true) return;
   setInterval(async () => {
+    if(me?.features?.has_driver_chat !== true) return;
     try {
       // Controlla messaggi non letti su tutti i giri
       const activeRoutes = allRoutes.filter(r => r.status === 'in_corso' || r.status === 'programmato');

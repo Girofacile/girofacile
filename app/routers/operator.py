@@ -16,6 +16,7 @@ from ..core.dependencies import current_user
 from ..core.utils import date_to_iso, time_to_hhmm
 from ..database import get_db
 from ..services.delivery_pod import evidence_metadata, evidence_response, commit_delivery_update
+from ..services.plan_features import delivery_preferences
 from ..models import (
     Customer, Delivery, DeliveryStatus, RoutePlan, RouteToken, User
 )
@@ -199,8 +200,7 @@ def get_operator_route(token: str, db: Session = Depends(get_db)):
             "prossima_idx": prossima_idx,
             "percentuale": round((completate + mancate) / len(deliveries) * 100) if deliveries else 0,
         },
-        "delivery_photo_required": bool(getattr(db.get(User, plan.user_id), "needs_photo_proof", False)),
-        "delivery_signature_enabled": bool(getattr(db.get(User, plan.user_id), "delivery_signature_enabled", False)),
+        **delivery_preferences(db.get(User, plan.user_id)),
         "tempo_scarico_options": TEMPO_SCARICO_OPTIONS,
         "motivi_mancata": MOTIVI_MANCATA,
     }

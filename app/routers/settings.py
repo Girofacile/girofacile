@@ -6,6 +6,7 @@ from ..database import get_db
 from ..models import User
 from ..services.agents_feature import agents_enabled
 from ..services.plans import require_feature
+from ..services.plan_features import delivery_preferences
 from pydantic import BaseModel, StrictBool
 
 router = APIRouter(prefix="/api/settings", tags=["settings"])
@@ -19,13 +20,15 @@ class SettingsUpdate(BaseModel):
 @router.get("")
 def get_settings(user: User = Depends(current_user)):
     return {
-        "delivery_signature_enabled": bool(getattr(user, "delivery_signature_enabled", False)),
+        **delivery_preferences(user),
         "agents_enabled": agents_enabled(user),
     }
 
 
 @router.put("")
 def update_settings(payload: SettingsUpdate, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    if payload.delivery_signature_enabled is True:
+        require_feature(user, "has_delivery_signature")
     if payload.agents_enabled is True:
         require_feature(user, "has_agents")
     for field, value in payload.model_dump(exclude_none=True).items():
@@ -34,6 +37,6 @@ def update_settings(payload: SettingsUpdate, user: User = Depends(current_user),
     db.refresh(user)
     return {
         "ok": True,
-        "delivery_signature_enabled": bool(user.delivery_signature_enabled),
+        **delivery_preferences(user),
         "agents_enabled": agents_enabled(user),
     }

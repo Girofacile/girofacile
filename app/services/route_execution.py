@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field, ValidationError
 
 from ..core.utils import local_now
 from ..models import RoutePlan, DeliveryStatus, User, Customer
-from .delivery_pod import save_delivery_evidence, commit_delivery_update
+from .delivery_pod import save_delivery_evidence, commit_delivery_update, require_evidence_access
 from .route_start import lock_route_resources, ensure_no_running_resource_conflict
 
 
@@ -75,6 +75,8 @@ def _apply_delivery_update(db, delivery, payload, action):
         raise HTTPException(409, 'Le fermate sono cambiate: ricarica il giro')
     if route.status == 'annullato':
         raise HTTPException(409, 'Il giro è annullato')
+    owner = db.get(User, route.user_id)
+    require_evidence_access(owner, data, action)
     status = db.query(DeliveryStatus).filter_by(delivery_id=delivery.id, route_plan_id=route.id).first()
     target = {'complete': 'completata', 'missed': 'mancata'}.get(action)
     if target and status and status.status == target:
@@ -83,7 +85,6 @@ def _apply_delivery_update(db, delivery, payload, action):
         raise HTTPException(409, 'La consegna o il giro è già chiuso')
     if status is None:
         status = DeliveryStatus(delivery_id=delivery.id, route_plan_id=route.id, status='in_attesa')
-    owner = db.get(User, route.user_id)
     if action in ('complete', 'signature'):
         if action == 'signature' and not owner.delivery_signature_enabled:
             raise HTTPException(400, 'Firma cliente non attiva per questa azienda')

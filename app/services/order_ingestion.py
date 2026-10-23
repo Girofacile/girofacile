@@ -22,7 +22,7 @@ def digest(value):
 
 
 def source(db,uid,sid,lock=False):
-    if lock: db.query(User).filter_by(id=uid).with_for_update().one()
+    if lock: db.query(User).filter_by(id=uid).with_for_update().populate_existing().one()
     query=db.query(OrderSource).filter_by(user_id=uid,id=sid)
     if lock: query=query.with_for_update().populate_existing()
     row=query.first()
@@ -119,14 +119,15 @@ def preview(db,src,item):
     db.flush();return item
 
 
-def apply_orders(db,src,parsed,actor,report):
+def apply_orders(db,src,parsed,actor,report,received_at=None):
     for data,entry in zip(parsed,report['rows']):
         if entry['action']=='unchanged': continue
         values={k:v for k,v in data.items() if k not in ('external_id','external_customer_id','items')}
         order=db.query(Order).filter_by(user_id=src.user_id,source_id=src.id,external_id=data['external_id']).first()
         if order is None:
             order=Order(user_id=src.user_id,source_id=src.id,external_id=data['external_id'],external_customer_id=data.get('external_customer_id'),
-                        number=data['number'],original_payload=data,ingested_payload=data,operational_data={},status='da_verificare')
+                        number=data['number'],original_payload=data,ingested_payload=data,operational_data={},status='da_verificare',
+                        received_at=received_at or utc_now())
             project(order,values);db.add(order);db.flush()
             record(db,order,actor,'received',{'source_id':src.id})
         else:
@@ -152,11 +153,19 @@ def apply_orders(db,src,parsed,actor,report):
 
 
 def execute(db,src,item,rows,mapping,actor,expected=None):
+    # Every source shares the owner's lock with manual creation, so the last
+    # available order cannot be spent by two sources at once.
+    owner=db.query(User).filter_by(id=src.user_id).with_for_update().populate_existing().one()
     report,parsed=preflight(db,src,rows,mapping,expected)
     if report['invalid']:
         item.status='failed';item.report=report;return item
     try:
-        with db.begin_nested(): apply_orders(db,src,parsed,actor,report)
+        with db.begin_nested():
+            from .plans import consume_order_quota
+            received_at=consume_order_quota(owner,db,report['new'])
+            apply_orders(db,src,parsed,actor,report,received_at)
+    except HTTPException:
+        raise
     except Exception:
         # No payload/credentials in the error report; savepoint rolls back every order.
         report={'total':len(rows),'invalid':len(rows),'new':0,'updated':0,'unchanged':0,'error':'Importazione annullata per un errore interno. Nessun ordine modificato. Riprova con una nuova richiesta.'}

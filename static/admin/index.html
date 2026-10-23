@@ -666,6 +666,22 @@ function renderUsers(users) {
   `).join('');
 }
 
+function adminPlanSummary(plan) {
+  const p = window.GF_PLANS?.[plan];
+  if (!p) return '<p class="gf-muted">Catalogo del piano non disponibile.</p>';
+  const count = value => value == null ? '—' : escapeHtml(Number(value).toLocaleString('it-IT'));
+  const rows = [
+    ['Ordini al mese', count(p.max_orders_per_month)], ['Clienti in anagrafica', count(p.max_customers)],
+    ['Depositi', count(p.max_deposits)], ['Mezzi standard', count(p.max_vehicles)],
+    ['Autisti', count(p.max_drivers)], ['Collaboratori aggiuntivi', count(p.max_collaborators)],
+    ['Bonus mezzi elettrici', '+' + count(p.electric_vehicle_bonus)], ['Integrazione AI', p.has_ai ? 'Inclusa' : 'Non inclusa'],
+  ];
+  return '<div class="gf-stack" data-gap="sm"><strong>Limiti e funzioni del piano ' + escapeHtml(p.name) + '</strong><dl class="gf-details">' + rows.map(([label, value]) => '<div class="gf-details__item"><dt>' + label + '</dt><dd>' + value + '</dd></div>').join('') + '</dl><p class="gf-muted">Prezzi mensili IVA esclusa. Portale e GPS autista inclusi. Tracking clienti, distribuzione automatica su più mezzi, chat, agenti, prove di consegna, integrazioni e report avanzati: ' + (['has_customer_tracking','has_fleet_planning','has_order_integrations','has_driver_chat','has_agents','has_reports','has_delivery_signature','has_photo_proof','has_pod_pdf'].every(flag=>p[flag]===true) ? 'inclusi.' : 'non inclusi.') + '</p></div>';
+}
+function updateAdminPlanSummary(plan) {
+  const box = document.getElementById('adminPlanSummary');
+  if (box) box.innerHTML = adminPlanSummary(plan);
+}
 async function openUserModal(userId) {
   currentUserId = userId;
   document.getElementById('modal-user-body').innerHTML = '<div class="gf-loading" role="status">Caricamento…</div>';
@@ -684,7 +700,7 @@ async function openUserModal(userId) {
         </dl>
         <div class="gf-form-grid">
           <label class="gf-field" for="edit-plan"><span class="gf-field__label">Piano</span>
-            <select class="gf-select" id="edit-plan">
+            <select class="gf-select" id="edit-plan" onchange="updateAdminPlanSummary(this.value)">
               <option value="starter" ${u.plan==='starter'?'selected':''}>Starter — €${window.GF_PLANS.starter.price_eur}/mese</option>
               <option value="business" ${u.plan==='business'?'selected':''}>Business — €${window.GF_PLANS.business.price_eur}/mese</option>
               <option value="pro" ${u.plan==='pro'?'selected':''}>Pro — €${window.GF_PLANS.pro.price_eur}/mese</option>
@@ -697,6 +713,7 @@ async function openUserModal(userId) {
               <option value="cancelled" ${u.plan_status==='cancelled'?'selected':''}>Cancellato</option>
             </select></label>
         </div>
+        <section id="adminPlanSummary" class="gf-card" aria-live="polite">${adminPlanSummary(u.plan)}</section>
         ${u.trial_ends_at ? `<p class="gf-alert" data-status="warning">⏱ Trial scade: ${fmtDate(u.trial_ends_at)}</p>` : ''}
         ${u.stripe_subscription_id ? `<p class="gf-muted">Stripe: ${u.stripe_subscription_id}</p>` : ''}
         <div class="gf-cluster">

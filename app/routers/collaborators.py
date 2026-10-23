@@ -15,7 +15,7 @@ from ..core.http_security import COOKIE_DOMAIN
 from ..services.company_permissions import CATALOG, DEPENDENCIES, normalize_permissions, permissions_for, permission_presets
 from ..services.identity import ensure_login_email_available
 from ..services.sessions import active_identity, credential, read_session
-from ..services.plans import user_plan_info
+from ..services.plans import user_plan_info, lock_plan_owner, check_collaborator_limit
 from ..services.collaborator_invitations import (PRIVATE_HEADERS, confirm_invitation, invitation_fields,
     invitation_info, issue_invitation, latest_invitation, revoke_invitations)
 
@@ -73,6 +73,7 @@ def listing(owner: User = Depends(current_user), db: Session = Depends(get_db)):
             .order_by(CompanyCollaborator.full_name, CompanyCollaborator.id).all()]
 
 def save(data, owner, db, actor=None):
+    owner = lock_plan_owner(owner, db)
     email = data.email.strip().lower()
     if email.count("@") != 1 or any(char.isspace() for char in email) or not all(email.split("@")):
         raise HTTPException(422, "Inserisci un indirizzo email valido")
@@ -86,6 +87,8 @@ def save(data, owner, db, actor=None):
     created = actor is None
     email_changed = not created and actor.email != email
     reactivated = not created and not actor.is_active and data.is_active
+    if data.is_active and (created or reactivated):
+        check_collaborator_limit(owner, db)
     revoke = not created and (email_changed or (actor.is_active and not data.is_active))
     if created:
         # This marker cannot be verified as a password. Only the invite recipient
@@ -124,6 +127,7 @@ def create(data: CollaboratorIn, owner: User = Depends(current_user), db: Sessio
 
 @router.put("/api/collaborators/{collaborator_id}")
 def update(collaborator_id: int, data: CollaboratorIn, owner: User = Depends(current_user), db: Session = Depends(get_db)):
+    owner = lock_plan_owner(owner, db)
     actor = db.query(CompanyCollaborator).filter_by(id=collaborator_id, user_id=owner.id).with_for_update().populate_existing().first()
     if not actor:
         raise HTTPException(404, "Collaboratore non trovato")
@@ -132,6 +136,7 @@ def update(collaborator_id: int, data: CollaboratorIn, owner: User = Depends(cur
 
 @router.post("/api/collaborators/{collaborator_id}/invite")
 def invite(collaborator_id: int, owner: User = Depends(current_user), db: Session = Depends(get_db)):
+    owner = lock_plan_owner(owner, db)
     actor = db.query(CompanyCollaborator).filter_by(id=collaborator_id, user_id=owner.id).with_for_update().populate_existing().first()
     if not actor:
         raise HTTPException(404, "Collaboratore non trovato")
@@ -169,8 +174,11 @@ def account(actor=Depends(actor_account)):
 @router.get("/api/collaborator/context")
 def context(actor=Depends(actor_account), db: Session = Depends(get_db)):
     owner = db.get(User, actor.user_id)
-    return {key: bool(getattr(owner, key, False)) for key in
-            ("has_time_windows", "needs_photo_proof", "has_ztl", "needs_tail_lift", "has_refrigerated_goods")}
+    from ..services.plan_features import feature_enabled
+    result = {key: bool(getattr(owner, key, False)) for key in
+              ("has_time_windows", "needs_photo_proof", "has_ztl", "needs_tail_lift", "has_refrigerated_goods")}
+    result["needs_photo_proof"] = result["needs_photo_proof"] and feature_enabled(owner, "has_photo_proof")
+    return result
 
 
 @router.put("/api/collaborator/account")

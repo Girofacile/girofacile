@@ -22,6 +22,7 @@ test('settings save applies agent visibility and clears stale filters only when 
     document: {documentElement: root, getElementById: id => elements.get(id)},
     URLSearchParams,
     featureLockedForTab: () => null,
+    planFeatureEnabled: () => true,
     set: (id, value) => { if(elements.has(id)) elements.get(id).value = value; },
     val: id => elements.get(id)?.value || '',
     updateReportFilterSummary: () => {},

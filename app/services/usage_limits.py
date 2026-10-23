@@ -1,11 +1,10 @@
-"""Calendar-month operational quotas, independent from invoices and draft routes."""
+"""Order acquisitions and company resources, independent from invoices."""
 from datetime import datetime, timezone
-from sqlalchemy import func
-from fastapi import HTTPException
 from ..core.utils import local_now
 from ..models import User, RoutePlan, RouteUsage
 from .route_start import ensure_new_route_can_start
-from .plans import get_plan_limits, require_active_plan, vehicle_usage
+from .plans import (get_plan_limits, require_active_plan, vehicle_usage,
+                    monthly_order_usage, collaborator_usage)
 
 
 def backfill_started_routes(db):
@@ -28,13 +27,15 @@ def backfill_started_routes(db):
 
 
 def usage_summary(db, user):
-    month = local_now().strftime("%Y-%m")
-    routes, deliveries = db.query(func.count(RouteUsage.route_id), func.coalesce(func.sum(RouteUsage.deliveries), 0)).filter(
-        RouteUsage.user_id == user.id, RouteUsage.month == month).one()
+    orders = monthly_order_usage(user, db)
     limits = get_plan_limits(user.plan)
     def quota(used, maximum):
-        return {"used": int(used), "limit": maximum, "percent": round(100 * used / maximum, 1), "warning": used >= maximum * .8}
-    from ..models import Customer, Vehicle, Driver, Deposit
+        return {"used": int(used), "limit": maximum,
+                "remaining": max(0, maximum - used) if maximum is not None else None,
+                "percent": round(100 * used / maximum, 1) if maximum else 0,
+                "warning": maximum is not None and used >= maximum * .8,
+                "over_limit": maximum is not None and used > maximum}
+    from ..models import Customer, Driver, Deposit
     resources = {}
     for model, key in ((Customer, "customers"), (Driver, "drivers"), (Deposit, "deposits")):
         count = db.query(model).filter(model.user_id == user.id, model.deleted_at.is_(None)).count()
@@ -48,8 +49,8 @@ def usage_summary(db, user):
             maximum is not None and fleet["total_used"] >= maximum * .8
         ),
     }
-    return {"month": month, "routes": quota(routes, limits["max_routes_per_month"]),
-            "deliveries": quota(deliveries, limits["max_deliveries_per_month"]), "resources": resources}
+    resources["collaborators"] = collaborator_usage(user, db)
+    return {"month": orders["month"], "orders": orders, "resources": resources}
 
 
 def start_route_usage(db, route):
@@ -62,11 +63,6 @@ def start_route_usage(db, route):
     legacy_started = bool(route.started_at or route.status in ("in_corso", "completato"))
     if not legacy_started:
         require_active_plan(owner)
-        usage = usage_summary(db, owner)
-        if usage["routes"]["used"] + 1 > usage["routes"]["limit"]:
-            raise HTTPException(403, "Quota mensile giri raggiunta: i giri già avviati restano operativi")
-        if usage["deliveries"]["used"] + len(route.deliveries) > usage["deliveries"]["limit"]:
-            raise HTTPException(403, "Il giro supera le consegne disponibili questo mese")
     started = route.started_at or local_now().replace(tzinfo=None)
     if not route.started_at:
         route.started_at_utc = datetime.now(timezone.utc).replace(tzinfo=None)

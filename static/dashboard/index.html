@@ -13,7 +13,7 @@
 <link href="/static/dashboard/css/core.css?v=gf_audit_20261020" rel="stylesheet">
 <link href="/static/password-strength.css?v=password_policy_20261008_1" rel="stylesheet">
 <script src="/api/billing/catalog.js"></script>
-<script src="/static/dashboard/js/billing.js?v=gf_base_20261015u"></script>
+<script src="/static/dashboard/js/billing.js?v=gf_plans_20261023"></script>
 
 
 <link rel="stylesheet" href="/static/routing-summary.css?v=driver_shifts_20261013_1">
@@ -23,9 +23,9 @@
 <link rel="stylesheet" href="/static/dashboard/css/electric-vehicles.css?v=gf_selection_20261016">
 <script src="/static/dashboard/js/electric-vehicles.js?v=electric_bonus_20261002"></script>
 <link rel="stylesheet" href="/static/pod.css?v=gf_driver_fix_20261020">
-<script src="/static/pod.js?v=gf_driver_fix_20261020"></script>
+<script src="/static/pod.js?v=gf_plans_20261023_gf_driver_fix_20261020"></script>
 <link rel="stylesheet" href="/static/tracking/company.css?v=20261004_design">
-<script src="/static/tracking/company.js?v=20261004_design"></script>
+<script src="/static/tracking/company.js?v=gf_plans_20261023"></script>
 <script src="/static/format.js?v=gf_driver_flow_20261020"></script>
 <script src="/static/dashboard/js/vehicles.js?v=gf_base_20261015u"></script>
 <script src="/static/dashboard/js/drivers.js?v=gf_audit_20261020"></script>
@@ -146,14 +146,15 @@
         <div><h3 class="gf-subtitle">Come lavori con le consegne?</h3><p class="gf-muted">Configura solo le funzioni utili alla tua attività. Potrai cambiarle in qualsiasi momento dalle Impostazioni.</p></div>
         <div class="gf-form-grid">
           <label class="gf-field" for="signupDailyDeliveries"><span class="gf-field__label">Consegne medie al giorno</span><select class="gf-select" id="signupDailyDeliveries"><option value="">Seleziona</option><option value="1-10">1-10</option><option value="11-30">11-30</option><option value="31-80">31-80</option><option value="81-150">81-150</option><option value="150+">Oltre 150</option></select></label>
-          <label class="gf-field" for="signupPlanSelect"><span class="gf-field__label">Piano iniziale</span><select class="gf-select" id="signupPlanSelect"><option value="starter">Starter</option><option value="business" selected>Business</option><option value="pro">Pro</option></select></label>
+          <label class="gf-field" for="signupPlanSelect"><span class="gf-field__label">Piano iniziale</span><select class="gf-select" id="signupPlanSelect" onchange="updateSignupPlanFeatures()"><option value="starter">Starter</option><option value="business" selected>Business</option><option value="pro">Pro</option></select></label>
           <label class="gf-field" data-span="full" for="signupActivityType"><span class="gf-field__label">Descrizione attività <span class="gf-muted">(opzionale)</span></span><input class="gf-input" id="signupActivityType" placeholder="Es. distribuzione alimentare, ricambi, consegne e-commerce..."></label>
         </div>
+        <p id="signupPlanSummary" class="gf-alert" data-status="info" role="status"></p>
         <fieldset class="gf-fieldset"><legend>Funzioni utili</legend>
           <div class="gf-grid" data-cols="2">
             <label class="gf-check"><input type="checkbox" id="signupHasTimeWindows" checked> Finestre orarie di consegna</label>
             <label class="gf-check"><input type="checkbox" id="signupNeedsSignature"> Firma alla consegna</label>
-            <label class="gf-check"><input type="checkbox" id="signupNeedsPhotoProof" disabled title="Funzione in sviluppo"> Foto prova consegna (in sviluppo)</label>
+            <label class="gf-check"><input type="checkbox" id="signupNeedsPhotoProof"> Foto prova consegna</label>
             <label class="gf-check"><input type="checkbox" id="signupRefrigerated" disabled title="Funzione in sviluppo"> Merce refrigerata/surgelata (in sviluppo)</label>
             <label class="gf-check"><input type="checkbox" id="signupZtl"> Consegne in ZTL o zone difficili</label>
             <label class="gf-check"><input type="checkbox" id="signupTailLift"> Sponda idraulica / transpallet</label>
@@ -228,7 +229,7 @@
 
       <div class="gf-header__actions">
         <button type="button" class="gf-button" data-variant="primary" data-new-route-button data-show-on-tabs="dashboard" onclick="openPlanningSelection()"><span data-gf-label="new_route">Nuovo giro</span></button>
-        <button id="ordersConnectionsNewSource" class="gf-button gf-hidden" data-show-on-tabs="ordini-collegamenti" data-variant="primary" type="button" onclick="GFOrderSources.createForm('api')" hidden>+ Nuova fonte</button>
+        <button id="ordersConnectionsNewSource" class="gf-button gf-hidden" data-show-on-tabs="ordini-collegamenti" data-variant="primary" type="button" onclick="GFOrderSources.createForm()" hidden>+ Nuova fonte</button>
         <div id="ordersTopbarActionsHost" class="gf-cluster gf-hidden" data-show-on-tabs="ordini" aria-label="Azioni ordini"></div>
         <div id="orderSourceTopbarActionsHost" class="gf-cluster gf-hidden" data-show-on-tabs="ordine-fonte" aria-label="Azioni fonte ordini"></div>
         <div id="companyTopbarStatus" class="gf-cluster gf-hidden" data-show-on-tabs="company" aria-live="polite">
@@ -263,10 +264,11 @@
           <div class="gf-stat-strip__cell"><span class="gf-stat-strip__icon" data-tone="5" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 6h18v12H3z M3 7l9 6 9-6"/></svg></span><span class="gf-stat-strip__label">Inviti in attesa</span><strong class="gf-stat-strip__value" id="collaboratorsPending">0</strong><small class="gf-stat-strip__unit">da accettare</small></div>
           <div class="gf-stat-strip__cell"><span class="gf-stat-strip__icon" data-tone="neutral" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M10 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M2 21a8 8 0 0 1 12.5-6.6 M16 16l5 5 M21 16l-5 5"/></svg></span><span class="gf-stat-strip__label">Disattivati</span><strong class="gf-stat-strip__value" id="collaboratorsInactive">0</strong><small class="gf-stat-strip__unit">senza accesso</small></div>
         </div>
+        <p id="collaboratorQuota" class="gf-alert" data-status="info" role="status"></p>
         <section class="gf-panel" aria-labelledby="collaboratorListTitle">
           <header class="gf-panel__header">
             <h2 class="gf-panel__title" id="collaboratorListTitle">Elenco collaboratori</h2>
-            <button type="button" class="gf-button" data-variant="primary" onclick="GFCollaborators.edit()">+ Invita collaboratore</button>
+            <button type="button" class="gf-button" data-variant="primary" id="collaboratorInviteNew" onclick="GFCollaborators.edit()">+ Invita collaboratore</button>
           </header>
           <div class="gf-panel__body gf-cluster">
             <input class="gf-input" id="collaboratorSearch" type="search" placeholder="Cerca per nome o email" aria-label="Cerca collaboratori" oninput="GFCollaborators.render()">
@@ -473,10 +475,11 @@
             <span class="gf-cluster" role="group" aria-label="Come organizzi le consegne?">
               <span id="planStepStatus2" class="gf-badge" role="status"></span>
               <button type="button" class="gf-chip" aria-pressed="true" data-planning-mode-card="single" onclick="selectPlanningModeCard('single')">Un solo mezzo</button>
-              <button type="button" class="gf-chip" aria-pressed="false" data-planning-mode-card="fleet" onclick="selectPlanningModeCard('fleet')">Più mezzi</button>
+              <button type="button" class="gf-chip" aria-pressed="false" data-planning-mode-card="fleet" data-plan-feature="has_fleet_planning" onclick="selectPlanningModeCard('fleet')">Più mezzi</button>
             </span>
           </header>
           <div class="gf-panel__body gf-stack">
+            <p id="fleetPlanUpgradeNotice" class="gf-alert" data-status="info" hidden>La suddivisione automatica su più mezzi è disponibile dal piano Business. Puoi pianificare un giro con un solo mezzo.</p>
             <select class="gf-select" id="planningMode" hidden aria-hidden="true" tabindex="-1"><option value="single">Un solo mezzo</option><option value="fleet">Suddivisione automatica su più mezzi</option></select>
             <div id="singleVehicleField" class="gf-grid" data-cols="3">
               <article class="gf-card gf-stack" data-gap="sm" aria-label="Mezzo e autista del giro">
@@ -489,7 +492,7 @@
               <div class="gf-card gf-stack" data-gap="sm">
                 <strong>Tante consegne oggi?</strong>
                 <span class="gf-muted">Con più mezzi dividiamo noi le consegne tra gli autisti, rispettando carichi, turni e orari.</span>
-                <span><button type="button" class="gf-button" data-variant="secondary" onclick="selectPlanningModeCard('fleet')">Usa più mezzi</button></span>
+                <span><button type="button" class="gf-button" data-variant="secondary" data-plan-feature="has_fleet_planning" onclick="selectPlanningModeCard('fleet')">Usa più mezzi</button></span>
               </div>
             </div>
             <section id="fleetSetup" class="gf-stack" hidden aria-label="Mezzi e autisti della giornata">
@@ -587,6 +590,7 @@
       </section>
 
       <section id="tab-ordini" class="tab hidden gf-stack" data-gap="lg">
+        <div data-monthly-order-usage hidden></div>
         <div id="ordersMetrics" class="gf-stat-strip" data-icons="side" aria-label="Indicatori ordini"></div>
 
         <section class="gf-panel" aria-labelledby="ordersListTitle">
@@ -649,12 +653,13 @@
       </dialog>
       <section id="tab-ordini-collegamenti" class="tab hidden gf-stack" data-gap="lg">
         <div class="gf-field" data-invalid><p id="sourceMessage" role="status" class="gf-field__error"></p></div>
+        <p id="sourcePlanUpgradeNotice" class="gf-alert" data-status="info" hidden>API, Shopify e WooCommerce sono disponibili dal piano Business. L’importazione da file CSV/Excel è inclusa nel tuo piano.</p>
         <div id="sourceCategories" class="gf-grid" data-cols="3">
             <article class="gf-card gf-stack" data-source-option>
               <span class="gf-stat-card__icon" data-tone="neutral" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="5" rx="1"/><rect x="4" y="14" width="16" height="5" rx="1"/><path d="M8 7.5h.01M8 16.5h.01M16 7.5h2M16 16.5h2"/></svg></span>
               <h2 class="gf-subtitle">Gestionale aziendale</h2>
               <p class="gf-muted">File esportato o API standard. Un gestionale personalizzato richiede un adattatore tecnico.</p>
-              <div><button type="button" class="gf-button" data-variant="primary" onclick="GFOrderSources.createForm('api')">Configura gestionale</button></div>
+              <div><button type="button" class="gf-button" data-variant="primary" data-plan-feature="has_order_integrations" onclick="GFOrderSources.createForm('api')">Configura gestionale</button></div>
             </article>
             <article class="gf-card gf-stack" data-source-option>
               <span class="gf-stat-card__icon" data-tone="neutral" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v5h5"/><path d="M8.5 15h7M8.5 18h5"/></svg></span>
@@ -666,7 +671,7 @@
               <span class="gf-stat-card__icon" data-tone="neutral" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 5h2l2 11h10l2-8H6"/><circle cx="9" cy="19" r="1"/><circle cx="17" cy="19" r="1"/></svg></span>
               <h2 class="gf-subtitle">E-commerce</h2>
               <p class="gf-muted">Collega Shopify o WooCommerce per ricevere automaticamente i nuovi ordini.</p>
-              <div><button type="button" class="gf-button" data-variant="primary" onclick="GFOrderSources.unavailable('ecommerce')">Collega negozio</button></div>
+              <div><button type="button" class="gf-button" data-variant="primary" data-plan-feature="has_order_integrations" onclick="GFOrderSources.unavailable('ecommerce')">Collega negozio</button></div>
             </article>
           </div>
         <section id="sourceWizard" class="gf-panel" hidden></section>
@@ -1114,7 +1119,7 @@
             <div><p class="gf-kicker">Confronta i piani</p><h2 class="gf-panel__title" id="planChooseTitle">Scegli il piano più adatto</h2></div>
             <p class="gf-muted">Seleziona un piano per vedere subito cosa include.</p>
           </header>
-          <div class="gf-panel__body gf-stack"><div class="gf-grid" data-cols="3" id="upgradePlanCards"></div></div>
+          <div class="gf-panel__body gf-stack"><div class="gf-grid" data-cols="3" id="upgradePlanCards"></div><p class="gf-muted">Prezzi mensili IVA esclusa.</p></div>
         </section>
 
         <div class="gf-grid" data-cols="main-side">
@@ -1545,13 +1550,13 @@
 <script src="/static/dashboard/js/navigation.js?v=gf_dashboard_mobile_20261019"></script>
 <script src="/static/dashboard/js/history.js?v=gf_break_row_20261021"></script>
 <script src="/static/password-strength.js?v=gf_driver_flow_20261020"></script>
-<script src="/static/dashboard/js/collaborators.js?v=gf_no_bulk_slot_20261018"></script>
-<script src="/static/dashboard/js/orders.js?v=gf_format_20261020"></script>
+<script src="/static/dashboard/js/collaborators.js?v=gf_plans_20261023"></script>
+<script src="/static/dashboard/js/orders.js?v=gf_plans_20261023"></script>
 <script src="/static/dashboard/js/order-import.js?v=gf_base_20261015u"></script>
-<script src="/static/dashboard/js/order-sources.js?v=gf_base_20261015v"></script>
+<script src="/static/dashboard/js/order-sources.js?v=gf_plans_20261023"></script>
 <script src="/static/dashboard/js/dashboard-real-map.js?v=gf_route_notices_20261021"></script>
 <script src="/static/dashboard/js/in-progress-reference.js?v=gf_driver_flow_20261020"></script>
-<script src="/static/dashboard/js/core.js?v=gf_plan_area_20261022b"></script>
+<script src="/static/dashboard/js/core.js?v=gf_plans_20261023"></script>
 <script src="/static/dashboard/js/dashboard-mobile.js?v=gf_dashboard_mobile_20261019"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=orders_2"></script>
 <link rel="stylesheet" href="/static/dashboard/css/fleet-review.css?v=gf_fleet_ztl_20261017">
@@ -1559,7 +1564,7 @@
 <link rel="stylesheet" href="/static/driver-schedule.css?v=gf_break_row_20261021">
 <script src="/static/driver-schedule.js?v=gf_break_row_20261021"></script>
 <script src="/static/dashboard/js/driver-schedules.js?v=gf_base_20261015u"></script>
-<script src="/static/dashboard/js/fleet-planning.js?v=gf_plan_area_20261022"></script>
+<script src="/static/dashboard/js/fleet-planning.js?v=gf_plans_20261023"></script>
 <script src="/static/dashboard/js/selected-addresses.js?v=gf_selected_addresses_20261019"></script>
 <script src="/static/dashboard/js/selected-customer-addresses.js?v=gf_customer_selected_addresses_20261020"></script>
 <script src="/static/dashboard/js/order-planning.js?v=gf_format_20261020"></script>

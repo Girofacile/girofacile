@@ -14,7 +14,9 @@ from zoneinfo import ZoneInfo
 from fastapi import HTTPException
 
 from ..core.config import APP_SECRET, LOCAL_TIMEZONE
-from ..models import Delivery, DeliveryStatus, DeliveryTrackingLink, RoutePlan
+from ..models import Delivery, DeliveryStatus, DeliveryTrackingLink, RoutePlan, User
+from .plan_features import feature_enabled
+from .plans import require_feature
 from .route_schedule import route_schedule_datetimes
 
 LOCAL = ZoneInfo(LOCAL_TIMEZONE)
@@ -51,6 +53,7 @@ def owned_delivery(db, user, delivery_id):
 
 
 def ensure_link(db, delivery, plan):
+    require_feature(db.get(User, plan.user_id), 'has_customer_tracking')
     if plan.status not in ('programmato', 'in_corso', 'completato', 'annullato'):
         raise HTTPException(409, 'Programma il giro prima di condividere il tracking')
     existing = db.query(DeliveryTrackingLink).filter_by(delivery_id=delivery.id).first()
@@ -76,7 +79,7 @@ def resolve_link(db, token):
     if not link or not hmac.compare_digest(credential(link), token) or link.expires_at <= utcnow():
         raise error
     row = db.query(Delivery, RoutePlan).join(RoutePlan, Delivery.route_plan_id == RoutePlan.id).filter(Delivery.id == link.delivery_id).first()
-    if not row or row[1].status == 'bozza':
+    if not row or row[1].status == 'bozza' or not feature_enabled(db.get(User, row[1].user_id), 'has_customer_tracking'):
         raise error
     return row
 

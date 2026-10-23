@@ -179,7 +179,7 @@ section{padding:80px 6%;}
 /* PRICING */
 .pricing-grid{max-width:960px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
 .pricing-card{background:#fff;border:1.5px solid var(--border);border-radius:16px;padding:32px 28px;position:relative;}
-.pricing-card.feat{border-color:var(--blue);box-shadow:0 8px 40px rgba(37,99,235,.15);}
+.pricing-card.feat,.pricing-card[data-recommended="true"]{border-color:var(--blue);box-shadow:0 8px 40px rgba(37,99,235,.15);}
 .pricing-pill{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:var(--blue);color:#fff;font-size:11px;font-weight:700;padding:4px 16px;border-radius:20px;white-space:nowrap;}
 .pricing-name{font-size:22px;font-weight:900;margin-bottom:8px;}
 .pricing-desc{font-size:13px;color:var(--muted);margin-bottom:22px;line-height:1.5;}
@@ -190,6 +190,11 @@ section{padding:80px 6%;}
 .pricing-list{list-style:none;margin-bottom:28px;display:flex;flex-direction:column;gap:10px;}
 .pricing-list li{display:flex;align-items:flex-start;gap:10px;font-size:13.5px;}
 .pricing-list li svg{flex-shrink:0;margin-top:2px;}
+.pricing-list li[data-included="false"]{color:var(--muted);}
+.pricing-list li>[aria-hidden]{flex:0 0 15px;font-weight:700;}
+.pricing-list [role="img"]{flex:0 0 15px;font-weight:700;}
+.pricing-card{display:flex;flex-direction:column;}
+.pricing-card .btn-plan{margin-top:auto;box-sizing:border-box;}
 .btn-plan{display:block;width:100%;padding:13px;border-radius:9px;font-size:14px;font-weight:700;text-align:center;text-decoration:none;transition:all .15s;cursor:pointer;border:none;}
 .btn-outline{border:1.5px solid var(--border);color:var(--text);background:transparent;}
 .btn-outline:hover{border-color:var(--blue);color:var(--blue);}
@@ -677,7 +682,7 @@ footer{background:#0f172a;color:#e2e8f0;padding:60px 6% 28px;}
     <p class="sec-sub" data-public-trial-copy="pricing">Piani semplici e trasparenti per organizzare le consegne.</p>
     <div class="pricing-grid" id="publicPricing"></div>
     <script src="/api/billing/catalog.js"></script>
-    <script src="/static/dashboard/js/billing.js?v=gf_base_20261015u"></script>
+    <script src="/static/dashboard/js/billing.js?v=gf_plans_20261023"></script>
     <script>
     function escapePublicPlan(value) {
       return String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
@@ -719,10 +724,13 @@ footer{background:#0f172a;color:#e2e8f0;padding:60px 6% 28px;}
     function renderPublicPlans() {
       const plans = Object.entries(window.GF_PLANS || {});
       document.getElementById('publicPricing').innerHTML = plans.map(([key, p]) => {
-        const f = planFeatures(key);
+        const resources = planFeatures(key).resourceFeatures;
+        const capabilities = planFeatureGroups(key);
         const bonus = electricBonusForPlan(p);
         const bonusHtml = bonus ? '<div class="pricing-electric-bonus"><span aria-hidden="true">⚡</span><div>' + electricBonusLabel(bonus) + '<small>Slot aggiuntivi riservati ai mezzi elettrici</small></div></div>' : '';
-        return '<div class="pricing-card"><div class="pricing-name">' + escapePublicPlan(p.name) + '</div>' + '<div class="pricing-price"><span class="cur">€</span><span class="amt">' + escapePublicPlan(p.price_eur) + '</span><span class="per">/mese</span></div>' + bonusHtml + '<ul class="pricing-list">' + f.features.map(label => '<li><span aria-hidden="true">✓</span><span>' + escapePublicPlan(label) + '</span></li>').join('') + '</ul>' + '<a class="btn-plan btn-outline" href="/login?plan=' + encodeURIComponent(key) + '">' + escapePublicPlan(publicTrialAction()) + '</a></div>';
+        const resourceHtml = resources.map(label => '<li><span aria-hidden="true">✓</span><span>' + escapePublicPlan(label) + '</span></li>').join('');
+        const capabilityHtml = capabilities.map(([included, label]) => '<li data-included="' + Boolean(included) + '"><span role="img" aria-label="' + (included ? 'Incluso' : 'Non incluso') + '">' + (included ? '✓' : '✕') + '</span><span>' + escapePublicPlan(label) + '</span></li>').join('');
+        return '<div class="pricing-card" data-recommended="' + (key === 'business') + '">' + (key === 'business' ? '<span class="pricing-pill">Consigliato</span>' : '') + '<div class="pricing-name">' + escapePublicPlan(p.name) + '</div>' + '<div class="pricing-price"><span class="cur">€</span><span class="amt">' + escapePublicPlan(p.price_eur) + '</span><span class="per">/mese</span></div>' + bonusHtml + '<ul class="pricing-list">' + resourceHtml + capabilityHtml + '</ul>' + '<a class="btn-plan ' + (key === 'business' ? 'btn-filled' : 'btn-outline') + '" href="/login?plan=' + encodeURIComponent(key) + '">' + escapePublicPlan(publicTrialAction()) + '</a></div>';
       }).join('');
       document.getElementById('electricPlanBonuses').innerHTML = plans.map(([, p]) => {
         const bonus = electricBonusForPlan(p);
@@ -732,6 +740,8 @@ footer{background:#0f172a;color:#e2e8f0;padding:60px 6% 28px;}
     renderPublicPlans();
     renderPublicTrial();
     </script>
+    <p class="pricing-note">Prezzi mensili IVA esclusa.</p>
+    <p class="pricing-note">Tutti i piani includono inserimento manuale e importazione CSV/Excel degli ordini, pianificazione su un mezzo, storico ed esportazione dati. I collaboratori sono accessi aggiuntivi al titolare.</p>
     <p class="pricing-note" data-public-trial-copy="note">Consulta i piani e le condizioni di attivazione.</p>
   </div>
 </section>

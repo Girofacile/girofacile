@@ -1,5 +1,23 @@
 // Shared by desktop and both mobile delivery portals.
 const POD_PHOTO_HINT = 'JPEG, PNG o WebP, massimo 12 MB.';
+// The server exposes current entitlements separately from saved preferences.
+// Historical evidence can exist after a downgrade without remaining accessible.
+function podFeatureEnabled(feature, context) {
+  let features;
+  if(context) features = context.features || context.settings?.features || context.limits || context;
+  else if(typeof currentSessionUser !== 'undefined' && currentSessionUser) features = currentSessionUser.limits;
+  return features?.[feature] === true;
+}
+
+function podConfigurePhoto(context) {
+  const enabled = podFeatureEnabled('has_photo_proof', context);
+  document.querySelectorAll('[data-pod-photo]').forEach(field => {
+    field.hidden = !enabled;
+    field.classList.toggle('hidden', !enabled);
+    field.querySelector('input')?.toggleAttribute('disabled', !enabled);
+  });
+  if(!enabled) podResetPhoto();
+}
 // Anteprima e nome della foto scelta nel campo .gf-upload della consegna.
 function podPhotoChanged(input) {
   const file = input?.files?.[0];
@@ -23,7 +41,8 @@ function podResetPhoto() {
   podPhotoChanged(input);
 }
 
-async function podPhotoPayload(required=false) {
+async function podPhotoPayload(required=false, context) {
+  if(!podFeatureEnabled('has_photo_proof', context)) return {};
   const file = document.getElementById('podDeliveryPhoto')?.files?.[0];
   if(!file) {
     if(required) throw Error('Scatta o seleziona la foto della consegna obbligatoria');
@@ -45,9 +64,9 @@ async function podPhotoPayload(required=false) {
   } finally { bitmap.close(); }
 }
 
-function podEvidenceButtons(delivery, base) {
-  return [['signature','has_signature','Visualizza firma'],['delivery_photo','has_delivery_photo','Visualizza foto'],['pod','has_pod','Scarica POD']]
-    .filter(([,flag])=>delivery[flag]).map(([kind,,label])=>
+function podEvidenceButtons(delivery, base, context) {
+  return [['signature','has_signature','Visualizza firma','has_delivery_signature'],['delivery_photo','has_delivery_photo','Visualizza foto','has_photo_proof'],['pod','has_pod','Scarica POD','has_pod_pdf']]
+    .filter(([,flag,,feature])=>delivery[flag] && podFeatureEnabled(feature, context)).map(([kind,,label])=>
       `<button type="button" class="btn-mini pod-evidence-action" onclick="podOpenEvidence('${base}/${kind}')">${label}</button>`).join(' ');
 }
 

@@ -67,6 +67,15 @@ class OrderItem(Base):
     __table_args__ = (UniqueConstraint('order_id', 'line_number'),)
 
 
+class OrderMonthlyUsage(Base):
+    """Committed acquisitions only; cancellation/deletion never returns a credit."""
+    __tablename__ = 'order_monthly_usage'
+    __table_args__ = (CheckConstraint('used >= 0', name='ck_order_monthly_usage_nonnegative'),)
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), primary_key=True)
+    month: Mapped[str] = mapped_column(String(7), primary_key=True)
+    used: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+
+
 class OrderEvent(Base):
     __tablename__ = 'order_events'
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -123,7 +132,8 @@ class RouteOrderAssignment(Base):
 
 
 ORDER_TABLES = [OrderSource.__table__, Order.__table__, OrderItem.__table__, OrderEvent.__table__,
-                OrderImportRun.__table__, CustomerSourceMapping.__table__, RouteOrderAssignment.__table__]
+                OrderImportRun.__table__, CustomerSourceMapping.__table__, RouteOrderAssignment.__table__,
+                OrderMonthlyUsage.__table__]
 
 
 class OrderPlanningSelection(Base):
