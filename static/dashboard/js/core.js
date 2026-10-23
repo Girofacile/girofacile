@@ -742,35 +742,83 @@ async function loadBillingOverviewV63(){
     const plan = data.plan || {};
     const company = data.company || {};
     const method = data.payment_method || {};
+    const billing = data.billing || {};
+    const payments = data.payments || [];
     const setText=(id,v)=>{ const el=document.getElementById(id); if(el) el.textContent=v; };
-    setText("billingPlanNameV63", plan.name || "—");
-    setText("billingPlanStatusV63", billingStatusLabelV63(plan.status));
-    setText("billingNextChargeV63", plan.next_charge_amount ? fmtEuroV63(plan.next_charge_amount) : "—");
-    setText("billingNextChargeDateV63", plan.next_charge_at ? `Previsto il ${fmtDateV63(plan.next_charge_at)}` : "Nessun addebito programmato");
-    const methodLabel = method.label || "Non configurato";
-    setText("billingPaymentMethodV63", methodLabel);
-    setText("billingMethodCardLabelV876", method.label || "Nessun metodo configurato");
-    setText("billingMethodCardSubV876", method.details || (method.label ? "Metodo utilizzato per il rinnovo del piano." : "Aggiungi un metodo per i rinnovi automatici."));
-    const hasMethod = !!method.configured;
-    const defBadge = document.getElementById("billingMethodDefaultV876");
-    if(defBadge) defBadge.classList.toggle("hidden", !hasMethod);
-    setText("billingPaymentStatusV876", ["overdue","failed","past_due","incomplete","expired"].includes(plan.status) ? "Da verificare" : "Regolare");
-    setText("billingPaymentStatusHintV876", ["overdue","failed","past_due","incomplete","expired"].includes(plan.status) ? "Controlla il metodo di pagamento" : "Nessuna azione richiesta");
-    set("billingCompanyNameV63", company.company_name || "");
-    set("billingCompanyEmailV63", company.billing_email || company.company_email || "");
-    set("billingCompanyVatV63", company.company_vat || "");
-    set("billingCompanyFiscalCodeV63", company.company_fiscal_code || "");
-    set("billingCompanyPecV63", company.company_pec || "");
-    set("billingCompanySdiV63", company.company_sdi || "");
-    set("billingCompanyLegalAddressV63", company.company_legal_address || "");
-    set("billingCompanyBillingAddressV63", company.company_billing_address || "");
+    const longDate = value => value ? new Date(value).toLocaleDateString("it-IT",{day:"numeric",month:"long",year:"numeric"}) : "—";
+    const price = plan.monthly_price ? `${fmtEuroV63(plan.monthly_price)} + IVA al mese` : "";
+    const planLine = [plan.name ? `Piano ${plan.name}` : "", price].filter(Boolean);
+    let title = "Nessun addebito programmato";
+    if(plan.next_charge_at){ title = `Prossimo addebito il ${longDate(plan.next_charge_at)}`; planLine.push("rinnovo automatico"); }
+    else if(plan.status === "trial"){ title = `Prova gratuita fino al ${longDate(plan.trial_ends_at)}`; planLine.push("nessun addebito automatico alla fine della prova"); }
+    else if(billing.cancel_at_period_end && plan.plan_expires_at){ title = `Attivo fino al ${longDate(plan.plan_expires_at)}`; planLine.push("disdetta registrata"); }
+    else if(["expired","cancelled","incomplete"].includes(plan.status)) title = "Abbonamento scaduto";
+    setText("billingNextTitleV9", title);
+    setText("billingNextChargeDateV63", planLine.join(" · ") || "—");
+    const toCheck = ["overdue","failed","past_due","incomplete","expired"].includes(plan.status);
+    const badge = document.getElementById("billingPaymentStatusV876");
+    if(badge){
+      badge.textContent = toCheck ? "Da verificare" : plan.status === "trial" ? "Prova gratuita" : "Pagamenti regolari";
+      badge.dataset.status = toCheck ? "warning" : plan.status === "trial" ? "info" : "success";
+    }
+    setText("billingPaymentMethodV63", method.provider ? `Carta gestita da ${method.provider}` : "Nessuna carta collegata");
+    setText("billingPaymentMethodHintV876", toCheck ? "Controlla il metodo di pagamento" : method.provider ? "Usata per i rinnovi automatici" : "Si collega al primo acquisto");
+    setText("billingInvoiceEmailV9", company.billing_email || company.company_email || "Email non indicata");
+    const last = payments[0];
+    const lastOk = last && last.status === "paid";
+    setText("billingLastPaymentV9", !last ? "Nessun pagamento registrato" : lastOk ? "Ultimo pagamento riuscito" : `Ultimo pagamento: ${billingStatusLabelV63(last.status).toLowerCase()}`);
+    setText("billingLastPaymentHintV9", last ? `${fmtDateV63(last.paid_at || last.created_at)} · ${fmtEuroV63(last.amount)}` : "Comparirà qui dopo il primo addebito");
+    const lastIcon = document.getElementById("billingLastPaymentIconV9");
+    if(lastIcon) lastIcon.dataset.tone = !last ? "neutral" : lastOk ? "success" : (BILLING_STATUS_TONE_V63[last.status] || "warning");
+    _billingCompanyV9 = company;
+    renderBillingDetailsV9(company);
+    editBillingDetailsV9(false);
     renderBillingInvoicesV63(data.invoices || []);
-    renderBillingPaymentsV63(data.payments || []);
+    renderBillingPaymentsV63(payments);
+    setText("billingTabInvoicesV9", `Fatture (${(data.invoices || []).length})`);
+    setText("billingTabPaymentsV9", `Pagamenti (${payments.length})`);
     if(loading) loading.classList.add("hidden");
     if(content) content.classList.remove("hidden");
   }catch(e){
     if(loading) loading.innerHTML = `<div class="gf-alert" data-status="danger"><div class="gf-alert__body"><strong class="gf-alert__title">Errore caricamento fatturazione</strong><p>${esc(e.message)}</p></div></div>`;
   }
+}
+// Dati fiscali: lettura, modifica con barra di salvataggio, controllo per la fattura elettronica.
+let _billingCompanyV9 = {};
+const BILLING_DETAILS_V9 = [
+  ["billingCompanyNameV63","Ragione sociale",c=>c.company_name],
+  ["billingCompanyEmailV63","Email per le fatture",c=>c.billing_email || c.company_email],
+  ["billingCompanyVatV63","Partita IVA",c=>c.company_vat],
+  ["billingCompanyFiscalCodeV63","Codice fiscale",c=>c.company_fiscal_code],
+  ["billingCompanySdiV63","Codice SDI",c=>c.company_sdi],
+  ["billingCompanyPecV63","PEC",c=>c.company_pec],
+  ["billingCompanyLegalAddressV63","Sede legale",c=>c.company_legal_address],
+  ["billingCompanyBillingAddressV63","Indirizzo di fatturazione",c=>c.company_billing_address]
+];
+function renderBillingDetailsV9(company){
+  const view = document.getElementById("billingDetailsViewV9");
+  if(view) view.innerHTML = BILLING_DETAILS_V9.map(([,label,get])=>`<div class="gf-details__item"><dt>${label}</dt><dd>${esc(get(company) || "—")}</dd></div>`).join("");
+  const missing = [];
+  if(!company.company_name) missing.push("ragione sociale");
+  if(!company.company_vat && !company.company_fiscal_code) missing.push("partita IVA o codice fiscale");
+  if(!company.company_sdi && !company.company_pec) missing.push("codice SDI o PEC");
+  if(!company.company_billing_address && !company.company_legal_address) missing.push("indirizzo");
+  const check = document.getElementById("billingDetailsCheckV9");
+  if(check) check.innerHTML = missing.length
+    ? `<div class="gf-alert" data-status="warning"><div class="gf-alert__body"><strong class="gf-alert__title">Dati incompleti per la fattura elettronica</strong><p>Mancano: ${missing.join(", ")}.</p></div></div>`
+    : `<div class="gf-alert" data-status="success"><div class="gf-alert__body"><strong class="gf-alert__title">Dati completi per la fattura elettronica</strong><p>Intestazione, codice fiscale o partita IVA, recapito SDI o PEC e indirizzo sono presenti.</p></div></div>`;
+}
+function editBillingDetailsV9(on){
+  if(!on) BILLING_DETAILS_V9.forEach(([id,,get])=>set(id, get(_billingCompanyV9) || ""));
+  document.getElementById("billingDetailsViewV9")?.classList.toggle("hidden", on);
+  document.getElementById("billingDetailsFormV9")?.classList.toggle("hidden", !on);
+  document.getElementById("billingDetailsEditV9")?.classList.toggle("hidden", on);
+  document.getElementById("billingSaveBarV9")?.classList.add("hidden");
+  if(on) document.getElementById("billingCompanyNameV63")?.focus();
+}
+function markBillingDetailsDirtyV9(){
+  const dirty = BILLING_DETAILS_V9.some(([id,,get])=>val(id) !== (get(_billingCompanyV9) || ""));
+  document.getElementById("billingSaveBarV9")?.classList.toggle("hidden", !dirty);
 }
 const BILLING_STATUS_TONE_V63 = {paid:"success", active:"success", trial:"info", pending:"warning", overdue:"danger", failed:"danger", expired:"danger", refunded:"neutral", cancelled:"neutral"};
 function billingEmptyRowV63(columns, title, text){
@@ -780,14 +828,14 @@ function renderBillingInvoicesV63(invoices){
   const host=document.getElementById("billingInvoicesV63");
   if(!host) return;
   if(!invoices.length){
-    host.innerHTML = billingEmptyRowV63(4, "Nessuna fattura emessa", "Le fatture compariranno qui quando saranno generati i primi addebiti del piano.");
+    host.innerHTML = billingEmptyRowV63(4, "Nessuna fattura emessa", "Le fatture compariranno qui dopo il primo addebito del piano.");
     return;
   }
   host.innerHTML = invoices.map(inv => `
     <tr>
       <td data-label="Documento"><strong>${inv.is_test ? "Documento di prova" : "Fattura"} ${esc(inv.number || "—")}</strong><br><small class="gf-muted">${fmtDateV63(inv.date)}</small></td>
-      <td data-label="Periodo">${fmtDateV63(inv.period_start)} - ${fmtDateV63(inv.period_end)}</td>
-      <td data-label="Importo / Stato"><strong>${fmtEuroV63(inv.total)}</strong> <span class="gf-badge" data-status="${BILLING_STATUS_TONE_V63[inv.status] || "neutral"}">${billingStatusLabelV63(inv.status)}</span></td>
+      <td data-label="Descrizione">Piano ${esc(inv.plan_name || "—")}<br><small class="gf-muted">${fmtDateV63(inv.period_start)} – ${fmtDateV63(inv.period_end)}</small></td>
+      <td data-label="Importo IVA inclusa"><strong>${fmtEuroV63(inv.total)}</strong> <span class="gf-badge" data-status="${BILLING_STATUS_TONE_V63[inv.status] || "neutral"}">${billingStatusLabelV63(inv.status)}</span></td>
       <td data-label="PDF"><button type="button" class="gf-button" data-variant="secondary" data-size="sm" ${inv.pdf_available ? "" : "disabled"} onclick="${inv.pdf_available ? `window.open('/api/billing/invoices/${inv.id}/download','_blank')` : "toast('PDF fattura in preparazione')"}">Scarica PDF</button></td>
     </tr>`).join("");
 }
@@ -795,19 +843,22 @@ function renderBillingPaymentsV63(payments){
   const host=document.getElementById("billingPaymentsV63");
   if(!host) return;
   if(!payments.length){
-    host.innerHTML = billingEmptyRowV63(3, "Nessun pagamento registrato", "I pagamenti appariranno qui quando verrà collegato il sistema di pagamento.");
+    host.innerHTML = billingEmptyRowV63(4, "Nessun pagamento registrato", "I pagamenti compariranno qui dopo il primo addebito del piano.");
     return;
   }
+  const outcome = {paid:"Riuscito", failed:"Non riuscito", pending:"In attesa", refunded:"Rimborsato"};
+  const method = value => ({card:"Carta", sepa_debit:"Addebito SEPA"})[value] || value || "Metodo non indicato";
   host.innerHTML = payments.map(pay => `
     <tr>
-      <td data-label="Data / Esito"><strong>${pay.is_test ? "Prova — " : ""}${billingStatusLabelV63(pay.status)}</strong><br><small class="gf-muted">${fmtDateV63(pay.paid_at || pay.created_at)}</small></td>
-      <td data-label="Metodo">${esc(pay.method || "Metodo non indicato")}</td>
-      <td data-label="Importo"><strong>${fmtEuroV63(pay.amount)}</strong><br><small class="gf-muted">${esc(pay.transaction_id || "")}</small></td>
+      <td data-label="Data">${fmtDateV63(pay.paid_at || pay.created_at)}</td>
+      <td data-label="Esito"><span class="gf-badge" data-status="${BILLING_STATUS_TONE_V63[pay.status] || "neutral"}" data-dot>${pay.is_test ? "Prova · " : ""}${outcome[pay.status] || billingStatusLabelV63(pay.status)}</span>${pay.transaction_id ? `<br><small class="gf-muted">${esc(pay.transaction_id)}</small>` : ""}</td>
+      <td data-label="Metodo">${esc(method(pay.method))}</td>
+      <td data-label="Importo"><strong>${fmtEuroV63(pay.amount)}</strong></td>
     </tr>`).join("");
 }
 async function saveBillingDetailsV63(){
   try{
-    await api("/api/billing/billing-details", {method:"PUT", body:JSON.stringify({
+    const result = await api("/api/billing/billing-details", {method:"PUT", body:JSON.stringify({
       company_name: val("billingCompanyNameV63"),
       company_email: val("billingCompanyEmailV63"),
       company_vat: val("billingCompanyVatV63"),
@@ -818,6 +869,7 @@ async function saveBillingDetailsV63(){
       company_billing_address: val("billingCompanyBillingAddressV63"),
     })});
     toast("Dati fatturazione salvati");
+    if(result?.company){ _billingCompanyV9 = result.company; renderBillingDetailsV9(result.company); editBillingDetailsV9(false); }
     loadCompanyProfile?.();
   }catch(e){ alert(e.message); }
 }

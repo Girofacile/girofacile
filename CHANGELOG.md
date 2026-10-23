@@ -5,6 +5,12 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Fatturazione: pagina ridisegnata. In alto il prossimo addebito con stato,
+  carta, email per le fatture e ultimo pagamento (niente più fila di quattro
+  riquadri); fatture e pagamenti in un pannello a schede; dati fiscali in
+  lettura con "Modifica" e barra di salvataggio, e controllo dei dati per la
+  fattura elettronica. Tolto il riquadro "Notifiche di pagamento", che
+  indicava come attivi invii email non presenti.
 - Piani e abbonamento: pagina ridisegnata. In alto il piano attuale con stato,
   prezzo, scadenza e consumi del mese; sotto tre card da scegliere con limiti e
   funzioni (✓ incluse, ✕ non incluse; firma, foto e prova di consegna in una

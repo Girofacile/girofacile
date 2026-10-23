@@ -1140,79 +1140,78 @@
       </section>
 
       <section id="tab-billing-account" class="tab hidden gf-stack" data-gap="lg">
-        <div class="gf-cluster" data-justify="between">
+        <div class="gf-cluster">
           <button type="button" class="gf-button" data-variant="ghost" onclick="returnFromBillingPageV876()">← Torna a Piani e abbonamento</button>
-          <button type="button" class="gf-button" data-variant="secondary" onclick="showTab('support')">Assistenza pagamenti</button>
         </div>
 
         <div id="billingLoadingV63" class="gf-loading" role="status">Caricamento area fatturazione...</div>
 
         <div id="billingContentV63" class="gf-stack hidden" data-gap="lg">
-          <div class="gf-grid" data-cols="4" aria-label="Riepilogo fatturazione">
-            <article class="gf-stat-card"><span class="gf-stat-card__label">Piano attivo</span><strong class="gf-stat-card__value" id="billingPlanNameV63">—</strong><span class="gf-stat-card__change" id="billingPlanStatusV63">—</span><div><button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="openPlanAccountPage()">Gestisci piano</button></div></article>
-            <article class="gf-stat-card"><span class="gf-stat-card__label">Prossimo addebito</span><strong class="gf-stat-card__value" id="billingNextChargeV63">—</strong><span class="gf-stat-card__change" id="billingNextChargeDateV63">—</span></article>
-            <article class="gf-stat-card"><span class="gf-stat-card__label">Metodo principale</span><strong class="gf-stat-card__value" id="billingPaymentMethodV63">—</strong><span class="gf-stat-card__change" id="billingPaymentMethodHintV876">Usato per i rinnovi automatici</span><div><button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="managePaymentMethodsV876()">Gestisci metodo</button></div></article>
-            <article class="gf-stat-card"><span class="gf-stat-card__label">Stato pagamenti</span><strong class="gf-stat-card__value" id="billingPaymentStatusV876">Regolare</strong><span class="gf-stat-card__change" id="billingPaymentStatusHintV876">Nessuna azione richiesta</span></article>
-          </div>
-
-          <div class="gf-grid" data-cols="main-side">
-            <section class="gf-panel" aria-labelledby="billingDetailsTitle">
-              <header class="gf-panel__header">
-                <div><p class="gf-kicker">Dati fiscali</p><h2 class="gf-panel__title" id="billingDetailsTitle">Dati di fatturazione</h2><p class="gf-muted">Informazioni utilizzate per intestare fatture e documenti contabili.</p></div>
-                <button type="button" class="gf-button" data-variant="primary" onclick="saveBillingDetailsV63()">Salva dati</button>
-              </header>
-              <div class="gf-panel__body gf-form-grid">
-                <label class="gf-field" for="billingCompanyNameV63"><span class="gf-field__label">Ragione sociale</span><input class="gf-input" id="billingCompanyNameV63"></label>
-                <label class="gf-field" for="billingCompanyEmailV63"><span class="gf-field__label">Email fatturazione</span><input class="gf-input" id="billingCompanyEmailV63" type="email"></label>
-                <label class="gf-field" for="billingCompanyVatV63"><span class="gf-field__label">Partita IVA</span><input class="gf-input" id="billingCompanyVatV63"></label>
-                <label class="gf-field" for="billingCompanyFiscalCodeV63"><span class="gf-field__label">Codice fiscale</span><input class="gf-input" id="billingCompanyFiscalCodeV63"></label>
-                <label class="gf-field" for="billingCompanyPecV63"><span class="gf-field__label">PEC</span><input class="gf-input" id="billingCompanyPecV63" type="email"></label>
-                <label class="gf-field" for="billingCompanySdiV63"><span class="gf-field__label">Codice SDI</span><input class="gf-input" id="billingCompanySdiV63"></label>
-                <label class="gf-field" for="billingCompanyLegalAddressV63" data-span="full"><span class="gf-field__label">Sede legale</span><input class="gf-input" id="billingCompanyLegalAddressV63"></label>
-                <label class="gf-field" for="billingCompanyBillingAddressV63" data-span="full"><span class="gf-field__label">Indirizzo di fatturazione</span><input class="gf-input" id="billingCompanyBillingAddressV63"></label>
+          <!-- Prossimo addebito: stessa testata di Piani e abbonamento -->
+          <section class="gf-panel" aria-labelledby="billingNextTitleV9">
+            <header class="gf-panel__header">
+              <div class="gf-stack" data-gap="sm">
+                <p class="gf-kicker">Fatturazione GiroFacile</p>
+                <div class="gf-cluster"><h2 class="gf-title" id="billingNextTitleV9">—</h2><span id="billingPaymentStatusV876" class="gf-badge" data-status="success" data-dot>Pagamenti regolari</span></div>
+                <p class="gf-muted" id="billingNextChargeDateV63">—</p>
               </div>
-            </section>
-
-            <aside class="gf-stack">
-              <section class="gf-panel" aria-labelledby="billingMethodsTitle">
-                <header class="gf-panel__header"><div><p class="gf-kicker">Pagamenti</p><h2 class="gf-panel__title" id="billingMethodsTitle">Metodi di pagamento</h2></div></header>
-                <div class="gf-panel__body gf-stack">
-                  <div class="gf-cluster">
-                    <span class="gf-avatar" aria-hidden="true">CARD</span>
-                    <div><strong id="billingMethodCardLabelV876">Nessun metodo configurato</strong><br><span class="gf-muted" id="billingMethodCardSubV876">Aggiungi un metodo per i rinnovi automatici.</span></div>
-                    <span id="billingMethodDefaultV876" class="gf-badge hidden" data-status="success">Predefinito</span>
-                  </div>
-                  <div><button type="button" class="gf-button" data-variant="secondary" onclick="managePaymentMethodsV876()">+ Aggiungi o modifica metodo</button></div>
-                  <p class="gf-muted">I dati completi della carta non vengono salvati in GiroFacile: saranno gestiti dal provider di pagamento quando il collegamento sarà attivo.</p>
-                </div>
-              </section>
-
-              <section class="gf-panel" aria-labelledby="billingNotificationsTitle">
-                <header class="gf-panel__header"><div><p class="gf-kicker">Comunicazioni</p><h2 class="gf-panel__title" id="billingNotificationsTitle">Notifiche di pagamento</h2></div></header>
-                <div class="gf-panel__body">
-                  <div class="gf-setting"><div class="gf-setting__copy"><strong>Ricevute e fatture</strong><p>Invio all'email di fatturazione</p></div><div class="gf-setting__control"><span class="gf-badge" data-status="success">Attivo</span></div></div>
-                  <div class="gf-setting"><div class="gf-setting__copy"><strong>Pagamento non riuscito</strong><p>Avviso automatico all'amministratore</p></div><div class="gf-setting__control"><span class="gf-badge" data-status="success">Attivo</span></div></div>
-                </div>
-              </section>
-            </aside>
-          </div>
-
-          <section class="gf-panel" aria-labelledby="billingInvoicesTitle">
-            <header class="gf-panel__header"><div><p class="gf-kicker">Documenti</p><h2 class="gf-panel__title" id="billingInvoicesTitle">Storico fatture</h2><p class="gf-muted">Consulta e scarica i documenti emessi per il tuo abbonamento.</p></div></header>
-            <div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards"><thead><tr><th scope="col">Documento</th><th scope="col">Periodo</th><th scope="col">Importo / Stato</th><th scope="col">PDF</th></tr></thead><tbody id="billingInvoicesV63"></tbody></table></div>
-          </section>
-
-          <section class="gf-panel" aria-labelledby="billingPaymentsTitle">
-            <header class="gf-panel__header"><div><p class="gf-kicker">Movimenti</p><h2 class="gf-panel__title" id="billingPaymentsTitle">Storico pagamenti</h2><p class="gf-muted">Controlla addebiti completati, in attesa o non riusciti.</p></div></header>
-            <div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards"><thead><tr><th scope="col">Data / Esito</th><th scope="col">Metodo</th><th scope="col">Importo</th></tr></thead><tbody id="billingPaymentsV63"></tbody></table></div>
-          </section>
-
-          <section class="gf-panel">
-            <div class="gf-panel__body gf-cluster" data-justify="between">
-              <div><strong>Hai bisogno di assistenza su una fattura o un pagamento?</strong><p class="gf-muted">Apri una richiesta al supporto indicando il documento o l'addebito interessato.</p></div>
-              <button type="button" class="gf-button" data-variant="secondary" onclick="showTab('support')">Contatta supporto</button>
+              <div class="gf-cluster"><button type="button" class="gf-button" data-variant="secondary" onclick="openPlanAccountPage()">Cambia piano</button><button type="button" class="gf-button" data-variant="primary" onclick="managePaymentMethodsV876()">Gestisci carta</button></div>
+            </header>
+            <div class="gf-panel__body gf-grid" data-cols="3">
+              <div class="gf-cluster"><span class="gf-stat-card__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18v12H3z"/><path d="M3 10h18 M7 15h3"/></svg></span><div><strong id="billingPaymentMethodV63">—</strong><br><small class="gf-muted" id="billingPaymentMethodHintV876">Usata per i rinnovi automatici</small></div></div>
+              <div class="gf-cluster"><span class="gf-stat-card__icon" data-tone="neutral" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18v12H3z"/><path d="M3 7l9 6 9-6"/></svg></span><div><strong id="billingInvoiceEmailV9">—</strong><br><small class="gf-muted">Email per le fatture</small></div></div>
+              <div class="gf-cluster"><span class="gf-stat-card__icon" data-tone="success" id="billingLastPaymentIconV9" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg></span><div><strong id="billingLastPaymentV9">—</strong><br><small class="gf-muted" id="billingLastPaymentHintV9">—</small></div></div>
             </div>
           </section>
+
+          <!-- Fatture e pagamenti nello stesso pannello, a schede -->
+          <section class="gf-panel" aria-labelledby="billingDocsTitleV9">
+            <header class="gf-panel__header"><div><p class="gf-kicker">Documenti</p><h2 class="gf-panel__title" id="billingDocsTitleV9">Fatture e pagamenti</h2></div></header>
+            <div class="gf-panel__body gf-stack">
+              <div class="gf-tabs" role="tablist" aria-label="Documenti">
+                <button class="gf-button" data-variant="ghost" id="billingTabInvoicesV9" type="button" role="tab" aria-selected="true" aria-controls="billingPanelInvoicesV9" onclick="selectPlanningTab(this)">Fatture</button>
+                <button class="gf-button" data-variant="ghost" id="billingTabPaymentsV9" type="button" role="tab" aria-selected="false" aria-controls="billingPanelPaymentsV9" tabindex="-1" onclick="selectPlanningTab(this)">Pagamenti</button>
+              </div>
+              <div id="billingPanelInvoicesV9" role="tabpanel" aria-labelledby="billingTabInvoicesV9">
+                <div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards"><thead><tr><th scope="col">Documento</th><th scope="col">Descrizione</th><th scope="col">Importo IVA inclusa</th><th scope="col">PDF</th></tr></thead><tbody id="billingInvoicesV63"></tbody></table></div>
+              </div>
+              <div id="billingPanelPaymentsV9" role="tabpanel" aria-labelledby="billingTabPaymentsV9" hidden>
+                <div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards"><thead><tr><th scope="col">Data</th><th scope="col">Esito</th><th scope="col">Metodo</th><th scope="col">Importo</th></tr></thead><tbody id="billingPaymentsV63"></tbody></table></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Dati fiscali: in lettura; con "Modifica" diventano un modulo -->
+          <section class="gf-panel" aria-labelledby="billingDetailsTitle">
+            <header class="gf-panel__header">
+              <div><p class="gf-kicker">Dati fiscali</p><h2 class="gf-panel__title" id="billingDetailsTitle">Intestazione delle fatture</h2><p class="gf-muted">Usati per intestare fatture e documenti contabili.</p></div>
+              <button type="button" class="gf-button" data-variant="secondary" id="billingDetailsEditV9" onclick="editBillingDetailsV9(true)">Modifica</button>
+            </header>
+            <div class="gf-panel__body gf-stack">
+              <div id="billingDetailsCheckV9" aria-live="polite"></div>
+              <dl class="gf-details" data-layout="rows" id="billingDetailsViewV9"></dl>
+              <div class="gf-form-grid hidden" id="billingDetailsFormV9">
+                <label class="gf-field" for="billingCompanyNameV63"><span class="gf-field__label">Ragione sociale</span><input class="gf-input" id="billingCompanyNameV63" oninput="markBillingDetailsDirtyV9()"></label>
+                <label class="gf-field" for="billingCompanyEmailV63"><span class="gf-field__label">Email per le fatture</span><input class="gf-input" id="billingCompanyEmailV63" type="email" oninput="markBillingDetailsDirtyV9()"></label>
+                <label class="gf-field" for="billingCompanyVatV63"><span class="gf-field__label">Partita IVA</span><input class="gf-input" id="billingCompanyVatV63" oninput="markBillingDetailsDirtyV9()"></label>
+                <label class="gf-field" for="billingCompanyFiscalCodeV63"><span class="gf-field__label">Codice fiscale</span><input class="gf-input" id="billingCompanyFiscalCodeV63" oninput="markBillingDetailsDirtyV9()"></label>
+                <label class="gf-field" for="billingCompanySdiV63"><span class="gf-field__label">Codice SDI</span><input class="gf-input" id="billingCompanySdiV63" oninput="markBillingDetailsDirtyV9()"><span class="gf-field__hint">Per la fattura elettronica: codice SDI oppure PEC.</span></label>
+                <label class="gf-field" for="billingCompanyPecV63"><span class="gf-field__label">PEC</span><input class="gf-input" id="billingCompanyPecV63" type="email" oninput="markBillingDetailsDirtyV9()"></label>
+                <label class="gf-field" for="billingCompanyLegalAddressV63" data-span="full"><span class="gf-field__label">Sede legale</span><input class="gf-input" id="billingCompanyLegalAddressV63" oninput="markBillingDetailsDirtyV9()"></label>
+                <label class="gf-field" for="billingCompanyBillingAddressV63" data-span="full"><span class="gf-field__label">Indirizzo di fatturazione</span><input class="gf-input" id="billingCompanyBillingAddressV63" oninput="markBillingDetailsDirtyV9()"></label>
+              </div>
+            </div>
+          </section>
+
+          <p class="gf-muted">Un addebito non ti torna? <button type="button" class="gf-button" data-variant="link" onclick="showTab('support')">Scrivi al Supporto</button> indicando il numero della fattura.</p>
+        </div>
+
+        <div id="billingSaveBarV9" class="gf-savebar hidden" data-floating role="status" aria-live="polite">
+          <span>Modifiche non salvate</span>
+          <button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="editBillingDetailsV9(false)">Annulla</button>
+          <button type="button" class="gf-button" data-variant="primary" data-size="sm" onclick="saveBillingDetailsV63()">Salva modifiche</button>
+        </div>
+      </section>
         </div>
       </section>
 
@@ -1560,7 +1559,7 @@
 <script src="/static/dashboard/js/order-sources.js?v=gf_plans_20261023"></script>
 <script src="/static/dashboard/js/dashboard-real-map.js?v=gf_route_notices_20261021"></script>
 <script src="/static/dashboard/js/in-progress-reference.js?v=gf_driver_flow_20261020"></script>
-<script src="/static/dashboard/js/core.js?v=gf_planpage_20261023"></script>
+<script src="/static/dashboard/js/core.js?v=gf_billingpage_20261023"></script>
 <script src="/static/dashboard/js/dashboard-mobile.js?v=gf_dashboard_mobile_20261019"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=orders_2"></script>
 <link rel="stylesheet" href="/static/dashboard/css/fleet-review.css?v=gf_fleet_ztl_20261017">
