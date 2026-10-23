@@ -59,8 +59,8 @@ test('plan cards take configured bonus values from catalogue and expose a dedica
   assert.equal(component().planBenefit({electric_vehicle_bonus:1}),'⚡ +1 veicolo elettrico bonus');
   assert.equal(component().planBenefit({electric_vehicle_bonus:0}),'');
   const dashboard=fs.readFileSync('static/dashboard/js/core.js','utf8');
-  assert.match(dashboard,/f.electricBenefit/);
-  assert.match(fs.readFileSync('static/dashboard/js/billing.js','utf8'),/['"]⚡ Veicoli elettrici bonus['"],\s*['"]electric_vehicle_bonus['"]/);
+  assert.match(dashboard,/GF_PLANS\[p\]\.electric_vehicle_bonus/);
+  assert.match(fs.readFileSync('static/dashboard/js/billing.js','utf8'),/['"]Veicoli elettrici bonus['"],\s*['"]electric_vehicle_bonus['"]/);
   assert.match(dashboard,/planComparisonRows\(\)/);
   assert.match(fs.readFileSync('static/mobile/index.html','utf8'),/planBenefit\(p\)/);
 });

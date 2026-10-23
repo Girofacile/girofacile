@@ -13,7 +13,7 @@
 <link href="/static/dashboard/css/core.css?v=gf_audit_20261020" rel="stylesheet">
 <link href="/static/password-strength.css?v=password_policy_20261008_1" rel="stylesheet">
 <script src="/api/billing/catalog.js"></script>
-<script src="/static/dashboard/js/billing.js?v=gf_plans_20261023"></script>
+<script src="/static/dashboard/js/billing.js?v=gf_planpage_20261023"></script>
 
 
 <link rel="stylesheet" href="/static/routing-summary.css?v=driver_shifts_20261013_1">
@@ -1103,35 +1103,39 @@
           <button type="button" class="gf-button" data-variant="secondary" onclick="openBillingPanel()">Fatturazione</button>
         </div>
 
+        <!-- Piano attuale e consumi del mese -->
         <section class="gf-panel" aria-labelledby="planPageCurrentNameV874">
-          <div class="gf-panel__body gf-cluster" data-justify="between">
+          <header class="gf-panel__header">
             <div class="gf-stack" data-gap="sm">
-              <p class="gf-kicker">Il tuo piano attuale</p>
-              <div class="gf-cluster"><h2 class="gf-subtitle" id="planPageCurrentNameV874">Piano attivo</h2><span id="planPageBadgeV874" class="gf-badge" data-status="info">—</span></div>
+              <p class="gf-kicker">Il tuo piano GiroFacile</p>
+              <div class="gf-cluster"><h2 class="gf-title" id="planPageCurrentNameV874">Piano attivo</h2><span id="planPageBadgeV874" class="gf-badge" data-status="info" data-dot>—</span></div>
               <p class="gf-muted" id="planPageCurrentStatusV874">Caricamento informazioni piano...</p>
             </div>
-            <dl class="gf-details"><div class="gf-details__item"><dt>Stato abbonamento</dt><dd><strong>Attivo</strong><br><small class="gf-muted">Gestisci pagamenti e documenti dalla sezione Fatturazione.</small></dd></div></dl>
-          </div>
-        </section>
-
-        <section class="gf-panel" aria-labelledby="planChooseTitle">
-          <header class="gf-panel__header">
-            <div><p class="gf-kicker">Confronta i piani</p><h2 class="gf-panel__title" id="planChooseTitle">Scegli il piano più adatto</h2></div>
-            <p class="gf-muted">Seleziona un piano per vedere subito cosa include.</p>
           </header>
-          <div class="gf-panel__body gf-stack"><div class="gf-grid" data-cols="3" id="upgradePlanCards"></div><p class="gf-muted">Prezzi mensili IVA esclusa.</p></div>
+          <div class="gf-panel__body gf-stack" id="subscriptionControls" aria-live="polite"></div>
         </section>
 
-        <div class="gf-grid" data-cols="main-side">
-          <section id="upgradeFeatures" class="gf-panel" aria-live="polite"></section>
-          <aside class="gf-alert" data-status="info"><div class="gf-alert__body"><strong class="gf-alert__title">Hai dubbi sul piano?</strong><p>Puoi confrontare le funzionalità qui sotto oppure contattare il supporto prima di cambiare abbonamento.</p></div></aside>
+        <!-- Scelta del piano: tre card con radio -->
+        <section class="gf-panel" aria-labelledby="planChooseTitle">
+          <header class="gf-panel__header"><div><p class="gf-kicker">Cresci con GiroFacile</p><h2 class="gf-panel__title" id="planChooseTitle">Scegli il piano per la tua flotta</h2><p class="gf-muted">Prezzi mensili IVA esclusa. Puoi cambiare piano quando vuoi.</p></div></header>
+          <div class="gf-panel__body"><div class="gf-grid" data-cols="3" role="radiogroup" aria-labelledby="planChooseTitle" id="upgradePlanCards"></div></div>
+        </section>
+
+        <details class="gf-panel" id="planComparisonV875"></details>
+
+        <div class="gf-grid" data-cols="3">
+          <article class="gf-stat-card"><span class="gf-stat-card__icon" data-tone="success" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg></span><span class="gf-stat-card__label">Pagamento sicuro</span><strong>Carta di credito con Stripe</strong><span class="gf-stat-card__change">GiroFacile non vede i dati della carta</span></article>
+          <article class="gf-stat-card"><span class="gf-stat-card__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5 M10 13h6 M10 17h6"/></svg></span><span class="gf-stat-card__label">Fatture e pagamenti</span><strong>Sempre a disposizione</strong><span class="gf-stat-card__change">Nella sezione Fatturazione</span></article>
+          <article class="gf-stat-card"><span class="gf-stat-card__icon" data-tone="warning" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/><path d="M16 3v4 M8 3v4 M4 11h16"/></svg></span><span class="gf-stat-card__label">Nessun vincolo</span><strong>Disdici quando vuoi</strong><span class="gf-stat-card__change">Resti attivo fino a fine periodo</span></article>
         </div>
 
-        <section class="gf-panel" id="planComparisonV875"></section>
+        <p class="gf-muted">Hai dubbi? <button type="button" class="gf-button" data-variant="link" onclick="openSupportPanelV49()">Scrivi al Supporto</button> · <a class="gf-button" data-variant="link" href="/api/billing/data-export">Esporta i tuoi dati</a></p>
 
-        <div class="gf-cluster" data-justify="end">
-          <button type="button" class="gf-button" data-variant="secondary" onclick="returnFromPlanAccount()">Torna al profilo</button>
-          <button type="button" class="gf-button" data-variant="primary" id="btnConfirmUpgrade" onclick="confirmUpgrade()" disabled>Caricamento disponibilità acquisti…</button>
+        <!-- Barra flottante: compare quando scegli un piano diverso da quello attuale -->
+        <div class="gf-savebar" data-floating id="planChangeBar" hidden role="region" aria-label="Cambio piano">
+          <span id="planChangeSummary"></span>
+          <button type="button" class="gf-button" data-variant="ghost" data-size="sm" onclick="selectUpgradePlan(_currentPlan)">Annulla</button>
+          <button type="button" class="gf-button" data-variant="primary" data-size="sm" id="btnConfirmUpgrade" onclick="confirmUpgrade()" disabled>Caricamento disponibilità acquisti…</button>
         </div>
       </section>
 
@@ -1556,7 +1560,7 @@
 <script src="/static/dashboard/js/order-sources.js?v=gf_plans_20261023"></script>
 <script src="/static/dashboard/js/dashboard-real-map.js?v=gf_route_notices_20261021"></script>
 <script src="/static/dashboard/js/in-progress-reference.js?v=gf_driver_flow_20261020"></script>
-<script src="/static/dashboard/js/core.js?v=gf_plans_20261023"></script>
+<script src="/static/dashboard/js/core.js?v=gf_planpage_20261023"></script>
 <script src="/static/dashboard/js/dashboard-mobile.js?v=gf_dashboard_mobile_20261019"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=orders_2"></script>
 <link rel="stylesheet" href="/static/dashboard/css/fleet-review.css?v=gf_fleet_ztl_20261017">

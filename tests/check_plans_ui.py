@@ -116,16 +116,25 @@ def main():
                         await loadSettingsV41(); await loadUniversalFeaturesV89(); await loadPlanInfo();
                         openPlanAccountPage();
                     }''', owner)
-                    page.locator('#upgradePlanCards article').first.wait_for(state='visible')
-                    assert page.locator('#upgradePlanCards article').count() == 3
+                    page.locator('#upgradePlanCards [data-plan-card]').first.wait_for(state='visible')
+                    assert page.locator('#upgradePlanCards [data-plan-card]').count() == 3
                     meter = page.locator('#subscriptionControls [role="progressbar"]')
                     assert meter.get_attribute('aria-valuemax') == str(limits['max_orders_per_month'])
                     assert meter.get_attribute('aria-valuenow') == str(used)
                     assert '80%' in page.locator('#subscriptionControls').inner_text()
+                    page.locator('#planComparisonV875 summary').click()
                     rows = page.locator('#planComparisonV875 tr')
-                    assert rows.filter(has_text='Ordini al mese').inner_text().split()[-3:] == ['300', '1200', '6000']
+                    assert rows.filter(has_text='Ordini al mese').inner_text().split()[-3:] == ['300', '1.200', '6.000']
                     ai_row = rows.filter(has_text='Integrazione AI')
                     assert ai_row.locator('td').all_text_contents() == ['Integrazione AI', 'Non incluso', 'Non incluso', 'Incluso']
+                    starter = page.locator('#upgradePlanCards [data-plan-card="starter"]')
+                    assert starter.locator('.gf-muted', has_text='Firma, foto e prova di consegna').count() == 1
+                    assert 'Pianificazione giri' not in page.locator('#tab-plan-account').inner_text()
+                    assert page.locator('#planChangeBar').is_hidden()
+                    other = 'starter' if plan == 'pro' else 'pro'
+                    page.locator(f'#upgradePlanCards [data-plan-card="{other}"]').click()
+                    assert page.locator('#planChangeBar').is_visible()
+                    assert page.locator(f'#upgradePlanCards [data-plan-card="{other}"]').get_attribute('data-variant') == 'info'
                     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth+2')
                     page.screenshot(path=str(output / f'account-{plan}-{width}.png'), full_page=True)
 

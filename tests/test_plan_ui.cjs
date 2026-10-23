@@ -51,8 +51,8 @@ test('landing and account use the same compact capability groups derived from ca
   assert.equal(f.run("planFeatureGroups('pro').filter(([included])=>included).length"),6);
   f.ctx.window.GF_PLANS.pro.has_ai=false;
   assert.equal(f.run("planFeatureGroups('pro').at(-1)[0]"),false);
-  for(const path of ['static/dashboard/js/core.js','static/landing/index.html'])
-    assert.match(fs.readFileSync(path,'utf8'),/planFeatureGroups\(/);
+  assert.match(fs.readFileSync('static/landing/index.html','utf8'),/planFeatureGroups\(/);
+  assert.match(fs.readFileSync('static/dashboard/js/core.js','utf8'),/planPageFeatures\(/);
 });
 test('monthly orders meter shows remaining quota, warns at 80 percent and never goes negative',()=>{
   const f=fixture();
@@ -125,4 +125,16 @@ test('existing automatic sources show their locked availability after downgrade 
   assert.match(f.node('sourceList').innerHTML,/Business richiesto/);
   assert.doesNotMatch(f.node('sourceList').innerHTML,/Pronta a ricevere richieste autenticate/);
   assert.match(f.node('sourceList').innerHTML,/GFOrderImport.start\(2\)/);
+});
+
+test('plans page lists every capability with signature, photo and PDF as one entry',()=>{
+  const f=fixture();
+  const labels=plan=>f.run(`planPageFeatures('${plan}')`);
+  assert.equal(labels('starter').filter(([included])=>included).length,2);
+  assert.equal(labels('business').filter(([included])=>!included).map(([,label])=>label).join(),'Integrazione AI');
+  assert.ok(labels('pro').every(([included])=>included));
+  assert.ok(labels('pro').some(([,label])=>label==='Firma, foto e prova di consegna'));
+  assert.ok(!labels('pro').some(([,label])=>/Pianificazione giri|Foto prova consegna/.test(label)));
+  f.ctx.window.GF_PLANS.business.has_photo_proof=false;
+  assert.equal(labels('business').find(([,label])=>label==='Firma, foto e prova di consegna')[0],false);
 });

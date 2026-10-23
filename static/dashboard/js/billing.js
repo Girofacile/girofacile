@@ -14,8 +14,25 @@ const GF_PLAN_FEATURES = [
 function planComparisonRows() {
   return [['Ordini al mese','max_orders_per_month'], ['Clienti','max_customers'],
     ['Depositi','max_deposits'], ['Autisti','max_drivers'], ['Mezzi standard','max_vehicles'],
-    ['⚡ Veicoli elettrici bonus','electric_vehicle_bonus'], ['Collaboratori aziendali','max_collaborators'],
+    ['Veicoli elettrici bonus','electric_vehicle_bonus'], ['Collaboratori aziendali','max_collaborators'],
     ['Portale autista e GPS','has_driver_portal'], ...GF_PLAN_FEATURES.map(([key,label])=>[label,key])];
+}
+// Funzioni della pagina Piani: firma, foto e PDF di consegna formano una sola voce.
+const GF_PLAN_PAGE_FEATURES = [
+  ['Portale autista e GPS autista', () => true],
+  ['Importazione CSV/Excel ed esportazione dati', () => true],
+  ['Tracking clienti', p => p.has_customer_tracking === true],
+  ['Suddivisione automatica su più mezzi', p => p.has_fleet_planning === true],
+  ['Chat autisti', p => p.has_driver_chat === true],
+  ['Agenti commerciali e portale', p => p.has_agents === true],
+  ['Firma, foto e prova di consegna', p => p.has_delivery_signature === true && p.has_photo_proof === true && p.has_pod_pdf === true],
+  ['API, Shopify e WooCommerce', p => p.has_order_integrations === true],
+  ['Report avanzati', p => p.has_reports === true],
+  ['Integrazione AI', p => p.has_ai === true]
+];
+function planPageFeatures(plan) {
+  const p = window.GF_PLANS[plan];
+  return GF_PLAN_PAGE_FEATURES.map(([label, included]) => [included(p), label]);
 }
 function planFeatureGroups(plan) {
   const p=window.GF_PLANS[plan];
@@ -85,6 +102,37 @@ function monthlyOrderUsageMarkup(usage) {
   return `<section class="gf-card gf-stack" data-gap="sm" aria-label="Utilizzo ordini mensili"><div class="gf-cluster" data-justify="between"><strong>Ordini del mese · ${esc(usage.month || '')}</strong><span>${used.toLocaleString('it-IT')} / ${limit.toLocaleString('it-IT')}</span></div><div class="gf-progress__track" role="progressbar" aria-label="Ordini utilizzati nel mese" aria-valuemin="0" aria-valuemax="${limit}" aria-valuenow="${Math.min(used,limit)}" aria-valuetext="${used} ordini utilizzati su ${limit}"><span class="gf-progress__done" data-gf-width="${Math.round(percent/5)*5}"></span></div><p class="gf-muted">${remaining.toLocaleString('it-IT')} ordini ancora disponibili questo mese. La quota si rinnova ogni mese.</p>${warning?`<p class="gf-alert" data-status="warning" role="status">${remaining===0?'Quota mensile ordini esaurita.':'Hai utilizzato almeno l’80% degli ordini mensili.'} Puoi valutare un piano superiore.</p>`:''}</section>`;
 }
 
+// Consumi del mese nella pagina Piani: barra dei numeri con icone, come nelle altre pagine.
+function planUsageStripMarkup(usage) {
+  const r=usage.resources || {},orders=usage.orders,fmt=n=>Number(n||0).toLocaleString('it-IT',{useGrouping:'always'});
+  const width=(used,limit)=>limit?Math.round(Math.min(100,used/limit*100)/5)*5:0;
+  const icons={orders:'M9 4h6v3H9z M7 5H6a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1h-1 M9 12h6 M9 16h6',
+    customers:'M16 20v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1 M9.5 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z M21 20v-1a4 4 0 0 0-3-3.9 M16 4.1a3.5 3.5 0 0 1 0 6.8',
+    vehicles:'M2 6h11v10H2z M13 9h5l3 3v4h-8z M6.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z M17.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z',
+    drivers:'M3 5h18a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z M5 16h4 M14 10h5 M14 14h5 M7 11.5a1.5 1.5 0 1 0 0-.01'};
+  const cell=(icon,tone,label,used,limit,unit,meter='')=>`<div class="gf-stat-strip__cell"><span class="gf-stat-strip__icon" data-tone="${tone}" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="${icons[icon]}"/></svg></span><span class="gf-stat-strip__label">${label}</span><strong class="gf-stat-strip__value">${fmt(used)}</strong><small class="gf-stat-strip__unit">${unit}</small>${meter || `<span class="gf-progress__track" aria-hidden="true"><span class="gf-progress__done" data-gf-width="${width(used,limit)}"></span></span>`}</div>`;
+  const cells=[];
+  if(orders){
+    const used=Math.max(0,Number(orders.used)||0),limit=Math.max(0,Number(orders.limit)||0);
+    cells.push(cell('orders','1','Ordini del mese',used,limit,`su ${fmt(limit)}`,`<span class="gf-progress__track" role="progressbar" aria-label="Ordini utilizzati nel mese" aria-valuemin="0" aria-valuemax="${limit}" aria-valuenow="${Math.min(used,limit)}" aria-valuetext="${used} ordini utilizzati su ${limit}"><span class="gf-progress__done" data-gf-width="${width(used,limit)}"></span></span>`));
+  }
+  if(r.customers) cells.push(cell('customers','1','Clienti',r.customers.used,r.customers.limit,`su ${r.customers.limit==null?'∞':fmt(r.customers.limit)}`));
+  const v=r.vehicles;
+  if(v) {
+    const standard=v.standard_used ?? v.used, limit=v.standard_limit ?? v.limit, bonus=Number(v.electric_bonus||0);
+    cells.push(cell('vehicles','neutral','Mezzi',standard,limit,`su ${limit==null?'∞':fmt(limit)}${bonus?` · elettrici bonus ${fmt(v.bonus_used)} su ${fmt(bonus)}`:''}`));
+  }
+  if(r.drivers) cells.push(cell('drivers','5','Autisti',r.drivers.used,r.drivers.limit,`su ${r.drivers.limit==null?'∞':fmt(r.drivers.limit)}`));
+  const extra=[['Depositi',r.deposits],['Collaboratori (attivi e inviti in attesa)',r.collaborators]].filter(([,q])=>q)
+    .map(([label,q])=>`${label} ${fmt(q.used)} su ${q.limit==null?'∞':fmt(q.limit)}`);
+  const remaining=orders?Math.max(0,Number(orders.limit||0)-Number(orders.used||0)):0;
+  const warning=orders && (orders.warning || (orders.limit>0 && orders.used>=orders.limit*.8));
+  return `${cells.length?`<div class="gf-stat-strip" data-icons="side" aria-label="Consumi del piano · ${esc(usage.month || '')}">${cells.join('')}</div>`:''}
+    ${extra.length||orders?`<p class="gf-muted">${extra.join(' · ')}${extra.length&&orders?'. ':''}${orders?`${fmt(remaining)} ordini ancora disponibili questo mese: la quota si rinnova ogni mese.`:''}</p>`:''}
+    ${warning?`<p class="gf-alert" data-status="warning" role="status">${remaining===0?'Quota mensile ordini esaurita.':'Hai utilizzato almeno l’80% degli ordini mensili.'} Puoi valutare un piano superiore.</p>`:''}
+    ${v?.over_limit?`<p class="gf-alert" data-status="warning" role="status">${esc(v.message||'La flotta supera i limiti del piano. I mezzi esistenti sono conservati.')}</p>`:''}`;
+}
+
 function renderOrderUsage(usage) {
   document.querySelectorAll('[data-monthly-order-usage]').forEach(box=>{
     box.innerHTML=monthlyOrderUsageMarkup(usage || {});box.hidden=!usage?.orders;
@@ -111,15 +159,13 @@ function renderSubscriptionControls(data) {
   if (b.pending_plan) messages.push(`Piano ${b.pending_plan} programmato dal prossimo rinnovo.`);
   if (status === 'past_due') messages.push(`Pagamento da completare. Tolleranza fino al ${fmtDateV63(b.grace_until)}.`);
   if (['expired','cancelled','incomplete'].includes(status)) messages.push('Puoi consultare ed esportare i dati e terminare i giri già avviati. Nuovi giri non disponibili.');
-  box.innerHTML = `${monthlyOrderUsageMarkup(usage)}<div class="gf-alert" data-status="info"><div class="gf-stack" data-gap="sm">${messages.map(m=>`<p>${esc(m)}</p>`).join('')}
-    <p><a href="/api/billing/data-export">Esporta i tuoi dati (CSV in ZIP)</a></p>
-    ${Object.entries(usage.resources || {}).map(([key,value])=>key==='vehicles' && value.standard_used!=null ? `<p>Mezzi standard: <strong>${value.standard_used} / ${value.standard_limit??'∞'}</strong> · ⚡ Bonus elettrici: <strong>${value.bonus_used} / ${value.electric_bonus??0}</strong></p>${value.over_limit?`<p><strong>${esc(value.message||'La flotta supera i limiti del piano. I mezzi esistenti sono conservati.')}</strong></p>`:''}`:`<p>${({customers:'Clienti',vehicles:'Mezzi',drivers:'Autisti',deposits:'Depositi',collaborators:'Collaboratori (attivi e inviti in attesa)'})[key] || esc(key)}: ${value.used} / ${value.limit??'∞'}${value.warning?' — Quota utilizzata almeno all’80%':''}</p>`).join('')}
-    <div class="gf-cluster">${b.checkout_enabled ? `<button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="subscriptionAction('sync')">Aggiorna stato</button>
-      <button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="subscriptionAction('cancel-checkout')">Annulla checkout aperto</button>` : ''}
-    ${b.checkout_enabled && b.subscription ? `<button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="managePaymentMethodsV876()">Metodo di pagamento e documenti</button>
-      <button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="subscriptionAction('${b.cancel_at_period_end?'resume':'cancel'}')">${b.cancel_at_period_end?'Ripristina rinnovo':'Disdici a fine periodo'}</button>`:''}</div></div></div>`;
+  box.innerHTML = `${planUsageStripMarkup(usage)}${messages.length?`<div class="gf-alert" data-status="info"><div class="gf-alert__body">${messages.map(m=>`<p>${esc(m)}</p>`).join('')}</div></div>`:''}
+    ${b.checkout_enabled ? `<div class="gf-cluster"><button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="subscriptionAction('sync')">Aggiorna stato</button>
+      <button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="subscriptionAction('cancel-checkout')">Annulla checkout aperto</button>
+    ${b.subscription ? `<button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="managePaymentMethodsV876()">Metodo di pagamento e documenti</button>
+      <button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="subscriptionAction('${b.cancel_at_period_end?'resume':'cancel'}')">${b.cancel_at_period_end?'Ripristina rinnovo':'Disdici a fine periodo'}</button>`:''}</div>` : ''}`;
   const button = document.getElementById('btnConfirmUpgrade');
-  if (button) { button.disabled = !b.checkout_enabled; button.textContent = b.subscription ? 'Modifica piano di prova' : 'Acquista in modalità di prova'; }
+  if (button) { button.disabled = !b.checkout_enabled; button.textContent = b.subscription ? 'Modifica piano di prova' : 'Acquista in modalità di prova'; button.title = b.checkout_enabled ? '' : 'Acquisti non ancora disponibili'; }
 }
 
 async function subscriptionAction(action) {

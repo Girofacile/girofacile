@@ -837,12 +837,22 @@ function getVisibleTabV874(){
 function syncPlanPageHeaderV874(){
   const names = {starter:"Starter",business:"Business",pro:"Pro"};
   const name = names[_currentPlan] || (_currentPlan || "—");
+  const me = typeof currentSessionUser === "undefined" ? null : currentSessionUser;
   const badge = document.getElementById("planPageBadgeV874");
   const title = document.getElementById("planPageCurrentNameV874");
   const status = document.getElementById("planPageCurrentStatusV874");
-  if(title) title.textContent = `Piano ${name}`;
-  if(badge){ badge.textContent=name; badge.dataset.status=_currentPlan==="pro"?"success":_currentPlan==="business"?"info":"neutral"; }
-  if(status) status.textContent = "Gestisci il tuo abbonamento e confrontalo con gli altri piani disponibili.";
+  const state = {trial:["In prova","info"],active:["Attivo","success"],past_due:["Pagamento da completare","warning"],
+    expired:["Scaduto","danger"],cancelled:["Scaduto","danger"],incomplete:["Scaduto","danger"]}[me?.plan_status] || ["—","neutral"];
+  if(title) title.textContent = name;
+  if(badge){ badge.textContent=state[0]; badge.dataset.status=state[1]; }
+  if(status){
+    const price = window.GF_PLANS?.[_currentPlan]?.price_eur;
+    const parts = price != null ? [`${fmtEuroV63(price)}/mese + IVA`] : [];
+    const date = value => value ? new Date(value).toLocaleDateString("it-IT",{day:"numeric",month:"long",year:"numeric"}) : "";
+    if(me?.plan_status === "trial" && me.trial_ends_at) parts.push(`prova gratuita fino al ${date(me.trial_ends_at)}`);
+    else if(me?.plan_expires_at) parts.push(`${me.cancel_at_period_end?"attivo fino al":"rinnovo il"} ${date(me.plan_expires_at)}`);
+    status.textContent = parts.join(" · ") || "Gestisci il tuo abbonamento e confrontalo con gli altri piani disponibili.";
+  }
 }
 function openPlanAccountPage(plan){
   if(window.GFCompanyAccess?.isCollaborator()) return;
@@ -863,57 +873,74 @@ function returnFromPlanAccount(){
 function openUpgradePanel(){ openPlanAccountPage(); }
 function openUpgradePanelFor(plan){ if(window.GFCompanyAccess?.isCollaborator()) return; openPlanAccountPage(plan || "business"); }
 function closeUpgradePanel(){ returnFromPlanAccount(); }
+// Icone dei piani (tratto come il menu): furgone, percorso, razzo.
+const PLAN_ICONS_V9 = {
+  starter:'<path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.62l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/>',
+  business:'<circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/>',
+  pro:'<path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-.68 1-2c.56-1.65 2-1 2-1"/><path d="M12 15v5s.68-.55 2-1c1.65-.56 1-2 1-2"/>'
+};
 function renderUpgradeCards(){
   if(window.GFCompanyAccess?.isCollaborator()) return;
   const plans = ["starter","business","pro"];
   const descriptions = {
-    starter:"Per iniziare con le funzioni essenziali di pianificazione.",
-    business:"Per aziende operative che gestiscono più risorse e consegne.",
-    pro:"Più capacità operativa e Integrazione AI inclusa."
+    starter:"Per chi parte con pochi mezzi.",
+    business:"Per aziende con più mezzi e consegne ogni giorno.",
+    pro:"Per flotte grandi e più depositi, con l'AI."
   };
+  const item = ([included,label]) => included
+    ? `<span><span class="gf-badge" data-status="success" role="img" aria-label="Incluso">✓</span> ${esc(label)}</span>`
+    : `<span class="gf-muted"><span class="gf-badge" data-status="neutral" role="img" aria-label="Non incluso">✕</span> ${esc(label)}</span>`;
   document.getElementById("upgradePlanCards").innerHTML = plans.map(p => {
     const f = PLAN_FEATURES[p];
     const isCurrent = p === _currentPlan;
     const isSelected = p === _selectedUpgradePlan;
-    const preview = [...f.resourceFeatures.map(label=>[true,label]), ...planFeatureGroups(p)];
-    return `<article class="gf-card gf-stack">
-      <div class="gf-cluster" data-justify="between">
-        <div><h3 class="gf-subtitle">${f.name}</h3><p class="gf-muted">${descriptions[p]}</p></div>
-        ${isCurrent?'<span class="gf-badge" data-status="success">Piano attuale</span>':p==='business'?'<span class="gf-badge" data-status="info">Consigliato</span>':''}
-      </div>
-      <p><strong class="gf-subtitle">${f.price}</strong> <span class="gf-muted">${f.period}</span></p>
-      ${f.electricBenefit ? `<div class="gf-electric-benefit">${esc(f.electricBenefit)}</div>` : ""}
-      <div class="gf-stack" data-gap="sm">${preview.map(([included,label])=>`<span${included?'':' class="gf-muted"'}><span role="img" aria-label="${included?'Incluso':'Non incluso'}">${included?'✓':'✕'}</span> ${esc(label)}</span>`).join("")}</div>
-      <div><button type="button" class="gf-button" data-variant="${isSelected?'primary':'secondary'}" aria-pressed="${isSelected}" onclick="selectUpgradePlan('${p}')">${isCurrent?'Attivo':(isSelected?'Selezionato':'Seleziona piano')}</button></div>
-    </article>`;
+    const bonus = Number(window.GF_PLANS[p].electric_vehicle_bonus || 0);
+    const q = window.GF_PLANS[p], n = value => Number(value).toLocaleString("it-IT",{useGrouping:"always"});
+    const limits = [`${n(q.max_orders_per_month)} ordini/mese`, `${n(q.max_customers)} clienti`,
+      `${n(q.max_deposits)} ${Number(q.max_deposits)===1?"deposito":"depositi"}`, `${n(q.max_vehicles)} mezzi · ${n(q.max_drivers)} autisti`,
+      `${n(q.max_collaborators)} collaboratori aziendali`, ...(bonus ? [`+${bonus} ${bonus===1?"veicolo elettrico":"veicoli elettrici"} bonus`] : [])];
+    const badge = isCurrent ? '<span class="gf-badge" data-status="success">Piano attuale</span>'
+      : p === "business" ? '<span class="gf-badge" data-status="info">Consigliato</span>'
+      : p === "pro" ? '<span class="gf-badge" data-status="info">Più capacità</span>' : "";
+    return `<label class="gf-card gf-stack gf-planning-choice" data-plan-card="${p}"${isSelected?' data-variant="info"':''}>
+      <span class="gf-cluster" data-justify="between"><span class="gf-stat-card__icon"${isSelected?'':' data-tone="neutral"'}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${PLAN_ICONS_V9[p]}</svg></span><span class="gf-cluster">${badge}<input type="radio" name="upgradePlan" value="${p}" aria-label="${f.name}"${isSelected?' checked':''} onchange="selectUpgradePlan('${p}')"></span></span>
+      <strong class="gf-planning-choice__title">${f.name}</strong>
+      <span class="gf-muted">${descriptions[p]}</span>
+      <p><strong class="gf-stat-card__value">${f.price}</strong> <span class="gf-muted">${f.period}</span></p>
+      <div class="gf-stack" data-gap="sm"><p class="gf-kicker">Limiti</p>${limits.map(label=>item([true,label])).join("")}</div>
+      <div class="gf-stack" data-gap="sm"><p class="gf-kicker">Funzioni</p>${planPageFeatures(p).map(item).join("")}</div>
+    </label>`;
   }).join("");
   api("/api/billing/my-plan").then(renderSubscriptionControls).catch(e=>toast(e.message));
-  renderUpgradeFeatures(_selectedUpgradePlan || _currentPlan);
+  renderPlanChangeBar();
   renderPlanComparisonV875();
 }
 function selectUpgradePlan(plan){
   _selectedUpgradePlan = plan;
   renderUpgradeCards();
 }
-function renderUpgradeFeatures(plan){
-  const f = PLAN_FEATURES[plan];
-  if(!f) return;
-  const box = document.getElementById("upgradeFeatures");
-  box.innerHTML = `<header class="gf-panel__header"><div><p class="gf-kicker">Piano selezionato</p><h3 class="gf-panel__title">${f.name}</h3></div><strong class="gf-subtitle">${f.price} <small class="gf-muted">${f.period}</small></strong></header>
-    <div class="gf-panel__body gf-grid" data-cols="2">
-      ${f.features.map(x=>`<div class="gf-cluster"><span class="gf-badge" data-status="success" aria-label="Incluso">✓</span><span>${x}</span></div>`).join("")}
-      ${f.missing.map(x=>`<div class="gf-cluster"><span class="gf-badge" data-status="neutral" aria-label="Non incluso">✕</span><span>${x}</span></div>`).join("")}
-    </div>`;
+// Barra flottante del cambio piano: compare solo con un piano diverso da quello attuale.
+function renderPlanChangeBar(){
+  const bar = document.getElementById("planChangeBar");
+  if(!bar) return;
+  const plan = window.GF_PLANS?.[_selectedUpgradePlan], current = window.GF_PLANS?.[_currentPlan];
+  bar.hidden = !plan || _selectedUpgradePlan === _currentPlan;
+  if(bar.hidden) return;
+  const when = current && plan.price_eur < current.price_eur ? "dal prossimo rinnovo" : "conguaglio calcolato alla conferma";
+  document.getElementById("planChangeSummary").textContent = `${plan.name} · ${fmtEuroV63(plan.price_eur)}/mese + IVA · ${when}`;
 }
 
 function renderPlanComparisonV875(){
   const box = document.getElementById("planComparisonV875");
   if(!box) return;
-  const rows = planComparisonRows().map(([label,key])=>[label,...["starter","business","pro"].map(p=>
-    key==='has_driver_portal' ? 'Incluso' : typeof window.GF_PLANS[p][key] === 'boolean' ? (window.GF_PLANS[p][key]?'Incluso':'Non incluso') : window.GF_PLANS[p][key])]);
-
-  box.innerHTML = `<header class="gf-panel__header"><div><p class="gf-kicker">Confronto completo</p><h2 class="gf-panel__title">Funzionalità incluse</h2></div><p class="gf-muted">Una vista unica per confrontare rapidamente i tre livelli.</p></header>
-  <div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards"><thead><tr><th scope="col">Funzionalità</th><th scope="col">Starter</th><th scope="col">Business</th><th scope="col">Pro</th></tr></thead><tbody>${rows.map(r=>`<tr><td data-label="Funzionalità">${r[0]}</td><td data-label="Starter">${r[1]}</td><td data-label="Business">${r[2]}</td><td data-label="Pro">${r[3]}</td></tr>`).join("")}</tbody></table></div>`;
+  const plans = ["starter","business","pro"];
+  const limits = planComparisonRows().filter(([,key])=>!key.startsWith("has_")).map(([label,key])=>[label,...plans.map(p=>esc(Number(window.GF_PLANS[p][key]).toLocaleString("it-IT",{useGrouping:"always"})))]);
+  const features = GF_PLAN_PAGE_FEATURES.map(([label])=>[label,...plans.map(p=>planPageFeatures(p).find(([,name])=>name===label)[0]
+    ? '<span class="gf-badge" data-status="success">Incluso</span>' : '<span class="gf-muted">Non incluso</span>')]);
+  const open = box.open;
+  box.innerHTML = `<summary class="gf-panel__header"><div><h2 class="gf-panel__title">Confronto completo delle funzioni</h2><p class="gf-muted">Tutti i limiti e le funzioni dei tre piani in una tabella.</p></div></summary>
+  <div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards"><thead><tr><th scope="col">Funzione</th><th scope="col">Starter</th><th scope="col">Business</th><th scope="col">Pro</th></tr></thead><tbody>${[...limits,...features].map(r=>`<tr><td data-label="Funzione">${r[0]}</td><td data-label="Starter">${r[1]}</td><td data-label="Business">${r[2]}</td><td data-label="Pro">${r[3]}</td></tr>`).join("")}</tbody></table></div>`;
+  box.open = open;
 }
 async function confirmUpgrade(){ return checkoutOrChangePlan(); }
 

@@ -5,6 +5,10 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Piani e abbonamento: pagina ridisegnata. In alto il piano attuale con stato,
+  prezzo, scadenza e consumi del mese; sotto tre card da scegliere con limiti e
+  funzioni (✓ incluse, ✕ non incluse; firma, foto e prova di consegna in una
+  sola voce), confronto completo apribile e barra flottante per il cambio piano.
 - Portale autista: senza rete gli esiti (consegnata, mancata, nota) restano
   salvati sul telefono, compaiono subito nel giro e partono da soli quando la
   connessione torna. Un riquadro indica quanti esiti attendono l'invio.
