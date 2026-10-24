@@ -91,6 +91,10 @@ def main():
                 assert tab.locator('#billingDetailsFormV9').is_hidden()
                 assert not page.locator('.gf-grid[data-cols="4"]', has=page.locator('#billingPaymentMethodV63')).count()
                 assert page.evaluate('document.documentElement.scrollWidth <= innerWidth+2')
+                # La pagina non deve chiudere in anticipo il layout: la barra mobile resta nel layout base
+                # e compare solo su smartphone.
+                assert page.evaluate("document.getElementById('gfMobileBottomNavV62').parentElement.id") == 'app'
+                assert page.locator('#gfMobileBottomNavV62').is_visible() == (width < 1024)
                 page.screenshot(path=str(output / f'billing-{width}.png'), full_page=True)
 
                 tab.locator('#billingDetailsEditV9').click()

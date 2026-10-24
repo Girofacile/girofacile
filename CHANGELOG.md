@@ -5,6 +5,12 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Anteprima giro (un mezzo): pagina ridisegnata come il dettaglio dei giri
+  programmati. Testata con nome e stato, numeri con icone, tabella delle
+  fermate in alto e, sotto, mappa con autista, mezzo, costi, avvisi "Prima
+  della partenza" e "Programma giro". Stampa e spiegazione AI in "Altre azioni".
+- Corretto: la barra di navigazione del telefono compariva anche su computer,
+  per due chiusure in più lasciate nella pagina Fatturazione.
 - Fatturazione: pagina ridisegnata. In alto il prossimo addebito con stato,
   carta, email per le fatture e ultimo pagamento (niente più fila di quattro
   riquadri); fatture e pagamenti in un pannello a schede; dati fiscali in

@@ -3617,73 +3617,72 @@ function renderRouteResult(r, targetId="routeResult", fromHistory=false){
       <td data-label="Azioni"><details class="gf-dropdown" data-preview-stop-actions><summary class="gf-icon-button" aria-label="Azioni fermata ${idx+1}">›</summary><div data-gf-menu data-preview-stop-tools><a class="gf-button" data-variant="ghost" target="_blank" rel="noopener" href="${mapsAddressUrl(d.indirizzo)}" title="Apri fermata su Maps">📍 Apri su Maps</a><button type="button" class="gf-button" data-variant="ghost" onclick="copyText('${esc(d.indirizzo).replace(/'/g,"\\'")}', 'Indirizzo copiato')" title="Copia indirizzo">⧉ Copia indirizzo</button>${deliverySignatureAction(d, r.driver_name)} ${trackingButton(d, r)}</div></details></td>
     </tr>`+GFDriverBreaks.table(r,idx+1,9);
   });
-  const metric = (label, value) => `<div class="gf-stat-strip__cell"><span class="gf-stat-strip__label">${label}</span><strong class="gf-stat-strip__value">${value}</strong></div>`;
-  const summary = (label, value) => `<div class="gf-details__item"><dt>${label}</dt><dd><strong>${value}</strong></dd></div>`;
   const alert = (status, title, text, extra="") => `<div class="gf-alert" data-status="${status}"${status==="danger"?' role="alert"':''}><div class="gf-alert__body"><strong class="gf-alert__title">${title}</strong><p>${text}</p>${extra?`<small>${extra}</small>`:""}</div></div>`;
+  // ZTL, area pedonale e sponda richiesta sono elencate in "Prima della partenza": qui solo i problemi.
+  const otherWarnings = counts.critici && !counts.sponda && !counts.attesa && !counts.ztl && !counts.pedonale;
+  const day = r.data_giro ? dashScheduledDayLabel(r.data_giro).toLowerCase() : "";
+  const kicker = [fromHistory ? "Giro salvato" : "Anteprima", day].filter(Boolean).join(" · ");
+  const badge = isProgrammable
+    ? (routeStatus === "programmato" ? '<span class="gf-badge" data-status="warning" data-dot>Programmato</span>' : '<span class="gf-badge" data-status="info" data-dot>Da programmare</span>')
+    : `<span class="gf-badge" data-status="neutral" data-dot>${fromHistory ? "Salvato" : "Bozza"}</span>`;
+  const energy = gfRouteEnergyMetric(r);
+  const total = r.costo_totale ?? r.costo_carburante;
+  const canRefresh = !fromHistory && r.id && ["bozza","programmato"].includes(routeStatus);
+  const etaNote = r.traffic_status === "unavailable" ? " · traffico non disponibile, usati i tempi stradali salvati" : "";
+  const tollNote = r.toll_estimated_eur == null
+    ? `<p class="gf-muted">Pedaggi: ${r.traffic_status === "not_requested" ? "calcolati alla programmazione, se i dati stradali lo consentono" : "dati non disponibili"}.</p>`
+    : (r.toll_status === "partial" ? '<p class="gf-muted">Pedaggi: copertura parziale dei tratti.</p>' : "");
+  const mapsLink = r.google_maps_url ? `<a class="gf-button" data-variant="secondary" target="_blank" rel="noopener noreferrer" href="${esc(r.google_maps_url)}">${icon("map").replace('<svg ','<svg class="gf-icon" ')}<span>Apri in Google Maps</span></a>` : "";
+  const detail = `<div class="gf-route-panel__detail" data-preview-summary>
+        <div class="gf-crew"><div><small>Autista</small><strong>${esc(r.driver_name || "Non assegnato")}</strong></div><div><small>Mezzo</small><strong>${esc(r.vehicle_name || "Nessun mezzo")}</strong></div></div>
+        ${gfRouteCostsHtml(r)}
+        ${tollNote ? `<div class="gf-panel__body">${tollNote}</div>` : ""}
+        ${gfRouteNoticesHtml(consegne)}
+        <div id="routeAiExplanationV67" class="gf-alert hidden" data-status="info"></div>
+        <div class="gf-route-panel__footer gf-cluster">
+          ${r.id ? "" : mapsLink}
+          ${canRefresh ? `<button type="button" class="gf-button" data-variant="secondary" onclick="refreshRouteTraffic(${Number(r.id)}, '${targetId}', 'preview')">Aggiorna ETA con traffico</button>` : ""}
+          <button type="button" class="gf-button" data-variant="secondary" data-preview-back onclick="showTab('giro')">Torna alla pianificazione</button>
+          ${isProgrammable ? '<button type="button" class="gf-button" data-variant="primary" data-preview-program onclick="programCurrentRoute()">Programma giro</button>' : ''}
+        </div>
+      </div>`;
   target.innerHTML = `<section class="gf-stack" data-gap="lg" data-route-preview>
-    <nav class="gf-cluster" aria-label="Percorso"><button type="button" class="gf-button" data-variant="link" onclick="showTab('giro')">Pianificazione</button><span aria-hidden="true">›</span><span class="gf-muted">${fromHistory ? "Giro salvato" : "Nuovo giro"}</span></nav>
-    <div><h2 class="gf-title">${title}</h2><p class="gf-muted">Verifica il percorso, le fermate e le informazioni principali${fromHistory ? " del giro salvato" : ""}.</p></div>
-    ${window.GiroFacileRouting.summaryHtml(r, `refreshRouteTraffic(${Number(r.id)}, '${targetId}', 'preview')`)}
-    <div class="gf-stat-strip" data-preview-metrics>
-      ${metric("Partenza", esc(r.orario_partenza||"-"))}
-      ${metric("Rientro stimato", esc(r.orario_rientro_stimato||"-"))}
-      ${metric("Km totali", gfKm(r.totale_km))}
-      ${metric("Tempo totale", `${Math.round(r.totale_minuti||0)} min`)}
-      ${metric(gfRouteEnergyMetric(r).label, gfRouteEnergyMetric(r).value)}
-      ${metric(gfRouteEnergyMetric(r).costLabel, r.costo_carburante == null ? "€ -" : `€ ${gfDecimal(r.costo_carburante)}`)}
+    ${gfRouteDetailHeader(kicker, r.nome || title, badge)}
+    ${r.driver_schedule_error ? `<div class="gf-alert" data-status="danger" role="alert"><div class="gf-alert__body"><p class="gf-alert__text">${esc(r.driver_schedule_error)}</p></div></div>` : ""}
+    <div class="gf-stat-strip" data-icons="side" data-fit data-preview-metrics aria-label="Numeri del giro">
+      ${gfStatCell("home","neutral","Partenza", r.orario_partenza || "-", "dal deposito")}
+      ${gfStatCell("clock","1","Rientro previsto", r.orario_rientro_stimato || "-", "dopo "+dashScheduledMinutes(r.totale_minuti))}
+      ${gfStatCell("route","2","Percorso", r.totale_km == null ? "-" : gfDecimal(r.totale_km), "km")}
+      ${gfStatCell("pin","4","Fermate", String(consegne.length), "", "", "sm")}
+      ${gfStatCell("euro","5","Costo operativo", dashScheduledMoney(total), Number(r.toll_estimated_eur) > 0 ? "pedaggi inclusi" : (energy.electric ? "energia" : "carburante"))}
     </div>
-    ${violationsCount || counts.sponda || counts.ztl || counts.pedonale || counts.attesa || counts.critici ? `<section class="gf-stack" data-preview-alerts aria-label="Avvisi principali">
-      <h3 class="gf-subtitle">Avvisi principali</h3>
-      <div class="gf-grid" data-cols="2">
+    ${violationsCount || counts.sponda || counts.attesa || otherWarnings ? `<section class="gf-grid" data-cols="2" data-preview-alerts aria-label="Avvisi principali">
         ${violationsCount > 0 ? alert("danger", "Finestre orarie non rispettate", `${gfCount(violationsCount,"fermata","fermate")} · ${gfDecimal(r.total_lateness_min||0,1)} min di ritardo totale`, "Verifica le fermate prima di programmare. Puoi comunque confermare il giro.") : ""}
-        ${counts.sponda ? alert("danger", "🚚 Sponda richiesta non disponibile", gfCount(counts.sponda,"fermata","fermate")) : ""}
-        ${counts.ztl ? alert("warning", "Consegne in zona ZTL", gfCount(counts.ztl,"fermata","fermate"), "Avviso informativo: verifica le condizioni di accesso. Il giro non viene modificato.") : ""}
-        ${counts.pedonale ? alert("warning", "Consegne in area pedonale", gfCount(counts.pedonale,"fermata","fermate"), "Avviso informativo: verifica le modalità di consegna. Il giro non viene modificato.") : ""}
-        ${counts.attesa ? alert("warning", "🕒 Arrivo prima dell'apertura / attesa", gfCount(counts.attesa,"fermata","fermate")) : ""}
-        ${counts.critici && !counts.sponda && !counts.ztl && !counts.pedonale && !counts.attesa ? alert("warning", "Fermate da verificare", `${gfCount(counts.critici,"fermata","fermate")} con avvisi: consulta il dettaglio nella tabella.`) : ""}
-      </div>
+        ${counts.sponda ? alert("danger", "Sponda richiesta non disponibile", gfCount(counts.sponda,"fermata","fermate")) : ""}
+        ${counts.attesa ? alert("warning", "Arrivo prima dell'apertura / attesa", gfCount(counts.attesa,"fermata","fermate")) : ""}
+        ${otherWarnings ? alert("warning", "Fermate da verificare", `${gfCount(counts.critici,"fermata","fermate")} con avvisi: consulta il dettaglio nella tabella.`) : ""}
     </section>` : ""}
     <section class="gf-panel" data-preview-stops aria-labelledby="previewStopsTitle">
-      <header class="gf-panel__header"><div><h3 class="gf-panel__title" id="previewStopsTitle">Dettaglio fermate</h3><p class="gf-muted">${gfCount(consegne.length,"fermata pianificata","fermate pianificate")}</p></div>${r.id ? `<button type="button" class="gf-button" data-variant="secondary" data-preview-map-jump onclick="document.getElementById('routeGoogleMapV74_${r.id}').scrollIntoView({behavior:'smooth',block:'center'})">${icon('map').replace('<svg ','<svg class="gf-icon" ')}Visualizza su mappa</button>` : ''}</header>
+      <header class="gf-panel__header"><div><h3 class="gf-panel__title" id="previewStopsTitle">Dettaglio delle fermate</h3><p class="gf-muted">${gfCount(consegne.length,"fermata pianificata","fermate pianificate")} · ${esc(r.eta_label || "orari stimati")}${etaNote}</p></div>
+        <span class="gf-cluster">
+          ${r.id ? `<button type="button" class="gf-button" data-variant="secondary" data-preview-map-jump onclick="document.getElementById('routeGoogleMapV74_${r.id}').scrollIntoView({behavior:'smooth',block:'center'})">${icon('map').replace('<svg ','<svg class="gf-icon" ')}Visualizza su mappa</button>` : ''}
+          <details class="gf-dropdown" data-preview-extra><summary class="gf-button" data-variant="ghost">Altre azioni</summary><div data-gf-menu>
+            <button type="button" class="gf-button" data-variant="ghost" onclick="printStopsTable()">Stampa dettaglio fermate</button>
+            ${r.id && currentSessionUser?.limits?.has_ai ? `<button type="button" class="gf-button" data-variant="ghost" onclick="explainRouteSequenceAIv67(${r.id})">Spiega sequenza giro AI</button>` : ""}
+          </div></details>
+        </span>
+      </header>
       <div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards"><thead><tr><th scope="col">#</th><th scope="col">Cliente</th><th scope="col">Indirizzo</th><th scope="col">Arrivo</th><th scope="col">Partenza</th><th scope="col">Attesa</th><th scope="col">Km tappa</th><th scope="col">Avvisi</th><th scope="col">Azioni</th></tr></thead><tbody>${rows}</tbody></table></div>
     </section>
-    <div class="gf-grid" data-cols="main-side" data-preview-layout>
-      ${r.id ? `<section class="gf-panel" data-preview-map aria-labelledby="previewMapTitle">
-        <header class="gf-panel__header"><div><h3 class="gf-panel__title" id="previewMapTitle">Mappa del giro</h3><p class="gf-muted">Percorso stradale con ordine delle fermate.</p></div></header>
-        <div class="gf-panel__body gf-stack">
-          <div id="routeGoogleMapV74_${r.id}" class="gf-route-panel__canvas"><div class="gf-loading" role="status">Caricamento mappa...</div></div>
-          <small class="gf-muted">La mappa visualizza la sequenza calcolata. <button type="button" class="gf-button" data-variant="link" data-size="sm" onclick="renderRouteGoogleMapV74(${r.id}, 'routeGoogleMapV74_${r.id}')">Ricarica mappa</button></small>
-        </div>
-      </section>` : ``}
-      <aside class="gf-panel" data-preview-summary aria-labelledby="previewSummaryTitle">
-        <header class="gf-panel__header"><div><h3 class="gf-panel__title" id="previewSummaryTitle">Azioni rapide</h3><p class="gf-muted">Strumenti per verificare e procedere.</p></div></header>
-        <div class="gf-panel__body gf-stack">
-          ${r.google_maps_url ? `<a class="gf-button" data-variant="secondary" target="_blank" rel="noopener noreferrer" href="${esc(r.google_maps_url)}">${icon("map").replace('<svg ','<svg class="gf-icon" ')}<span>Apri in Google Maps</span> ↗</a>` : ``}
-          ${isProgrammable ? '<button type="button" class="gf-button" data-variant="primary" data-preview-program onclick="programCurrentRoute()"><span aria-hidden="true">▷</span> Programma giro</button>' : ''}
-          <button type="button" class="gf-button" data-variant="secondary" data-preview-back onclick="showTab('giro')"><span aria-hidden="true">←</span> Torna alla pianificazione</button>
-          <details class="gf-panel" data-preview-extra><summary class="gf-panel__header">Risorse e altre azioni</summary>
-            <div class="gf-panel__body gf-stack">
-              <dl class="gf-details">
-                ${summary("Autista", esc(r.driver_name||"Non assegnato"))}
-                ${summary("Mezzo", esc(r.vehicle_name||"Nessun mezzo"))}
-                ${summary("Avvisi critici", counts.critici)}
-                ${summary("Soste con attesa", counts.attesa)}
-                ${summary("Costo operativo stimato", (r.costo_totale ?? r.costo_carburante) == null ? "€ -" : `€ ${gfDecimal(r.costo_totale ?? r.costo_carburante)}`)}
-              </dl>
-              <button type="button" class="gf-button" data-variant="secondary" onclick="printStopsTable()">Stampa dettaglio fermate</button>
-              ${r.id && currentSessionUser?.limits?.has_ai ? `<button type="button" class="gf-button" data-variant="secondary" onclick="explainRouteSequenceAIv67(${r.id})">Spiega sequenza giro AI</button><div id="routeAiExplanationV67" class="gf-alert hidden" data-status="info"></div>` : ""}
-            </div>
-          </details>
-        </div>
-      </aside>
-    </div>
+    ${r.id ? `<section class="gf-route-panel" data-preview-layout aria-label="Percorso e riepilogo del giro">
+      <div class="gf-route-panel__map" data-preview-map>
+        <div class="gf-route-panel__heading"><div><h3 class="gf-title">Percorso calcolato</h3><p class="gf-muted">Ordine delle fermate ottimizzato</p></div>${mapsLink}</div>
+        <div id="routeGoogleMapV74_${r.id}" class="gf-route-panel__canvas"><div class="gf-loading" role="status">Caricamento mappa...</div></div>
+        <small class="gf-muted">La mappa visualizza la sequenza calcolata. <button type="button" class="gf-button" data-variant="link" data-size="sm" onclick="renderRouteGoogleMapV74(${r.id}, 'routeGoogleMapV74_${r.id}')">Ricarica mappa</button></small>
+      </div>
+      ${detail}
+    </section>` : `<section class="gf-panel" data-preview-layout aria-label="Riepilogo del giro">${detail}</section>`}
   </section>`;
-  // Come nel disegno precedente: l'ETA del riepilogo condiviso va tra le azioni rapide e nei dettagli.
-  const side = target.querySelector?.("[data-preview-summary] .gf-panel__body");
-  const eta = target.querySelector?.(".gf-routing-eta");
-  const refresh = eta?.querySelector("button");
-  if(side && refresh) side.insertBefore(refresh, side.querySelector("[data-preview-program],[data-preview-back]"));
-  if(eta) target.querySelector?.("[data-preview-extra] .gf-panel__body")?.append(eta);
   if(r.id){ setTimeout(()=>renderRouteGoogleMapV74(r.id, `routeGoogleMapV74_${r.id}`), 120); }
 }
 

@@ -166,12 +166,12 @@ def main():
                         interactions.append(f'{width}: giro in corso, indicatori, controlli mappa, chat e filtro esiti')
                     if name == 'route-preview':
                         preview=page.locator('#routePreviewResult')
-                        assert preview.locator('.gf-routing-costs > div').count() == 3
-                        assert preview.locator('[data-preview-metrics] .gf-stat-strip__cell').count() == 6
+                        assert preview.locator('[data-preview-summary] [data-route-costs]').count() == 1
+                        assert preview.locator('[data-preview-metrics] .gf-stat-strip__cell').count() == 5
                         assert preview.locator('[data-preview-layout] > [data-preview-map]').count() == 1
                         assert preview.locator('[data-preview-summary] [data-preview-program]').is_visible()
                         assert preview.locator('[data-preview-summary] button', has_text='Aggiorna ETA').is_visible()
-                        assert preview.locator('[data-preview-summary] a', has_text='Apri in Google Maps').get_attribute('href').startswith('https://www.google.com/maps/')
+                        assert preview.locator('[data-preview-map] a', has_text='Apri in Google Maps').get_attribute('href').startswith('https://www.google.com/maps/')
                         stops=preview.locator('[data-preview-stops]').bounding_box()
                         layout=preview.locator('[data-preview-layout]').bounding_box()
                         assert stops['y']+stops['height'] <= layout['y']+1
