@@ -46,6 +46,14 @@
   --gf-color-on-nav: #ffffff;
   --gf-color-brand-accent: #9cc0ff;
 
+  /* Sidebar Blu strutturata: scoped to the company workspace. */
+  --gf-color-structured-nav: #13233c;
+  --gf-color-structured-nav-text: #d9e4f3;
+  --gf-color-structured-nav-muted: #96aac5;
+  --gf-color-structured-nav-hover: #203450;
+  --gf-color-structured-nav-divider: #2c3d56;
+  --gf-color-structured-nav-selected: #2869e8;
+
   /* --- Mappa del giro e avvisi operativi ------------------------------- */
   --gf-color-route-done: var(--gf-color-primary);
   --gf-color-route-todo: var(--gf-color-muted);

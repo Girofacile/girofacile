@@ -119,7 +119,12 @@ function syncWorkspaceTopbar(name){
 // Voce attiva della sidebar del layout base (aria-current, come in shell.js).
 function setActiveNavItem(name){
   document.querySelectorAll(".gf-sidebar__item[data-tab]").forEach(x=>{
-    if(x.dataset.tab===name) x.setAttribute("aria-current","page"); else x.removeAttribute("aria-current");
+    if(x.dataset.tab===name){
+      x.setAttribute("aria-current","page");
+      // Keep the current page visible when navigation starts outside the sidebar.
+      const group = x.closest("details.gf-sidebar__group");
+      if(group) group.open = true;
+    }else x.removeAttribute("aria-current");
   });
 }
 
