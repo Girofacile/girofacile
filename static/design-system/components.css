@@ -627,6 +627,8 @@ body[data-gf-surface] .gf-savebar[data-floating]>:is(p,span,b,strong){margin:0;c
 body[data-gf-surface] .gf-savebar[data-floating] .gf-badge{color:var(--gf-color-info)}
 body[data-gf-surface] .gf-savebar[data-floating]>.gf-button[data-variant="ghost"]{color:var(--gf-color-nav-text) !important}
 body[data-gf-surface] .gf-savebar[data-floating]>.gf-button[data-variant="ghost"]:hover:not(:disabled){background:var(--gf-color-nav-hover-bg) !important;color:var(--gf-color-on-nav) !important}
+/* Il contenitore lascia in fondo lo spazio della barra visibile: l'ultimo contenuto non finisce sotto. */
+body[data-gf-surface] .gf-stack:has(>.gf-savebar[data-floating]:not([hidden]):not(.hidden)){padding-bottom:calc(var(--gf-space-12) * 2 + var(--gf-space-5))}
 /* Dentro una finestra la barra resta sopra lo sfondo scuro, centrata sulla finestra. */
 body[data-gf-surface] .gf-overlay .gf-savebar[data-floating]{z-index:calc(var(--gf-z-dialog) + 1);left:50%}
 /* I menu dentro la barra si aprono verso l'alto. */
