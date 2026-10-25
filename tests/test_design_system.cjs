@@ -301,7 +301,10 @@ test('account profile modal follows the workspace design system',()=>{
   assert.match(profile,/class="gf-modal" data-size="lg" role="dialog" aria-modal="true"/);
   assert.match(profile,/aria-labelledby="profileIdentityHeading"/);
   assert.match(profile,/aria-labelledby="profilePlanHeading"/);
-  assert.match(profile,/id="planStatusBox" class="gf-alert" data-status="info"/);
+  assert.match(profile,/id="planStatusBox" class="gf-badge" data-status="info"/);
+  // Nessun pulsante Salva fisso: la barra compare solo dopo una modifica, come in Profilo azienda.
+  assert.doesNotMatch(profile,/Salva profilo/);
+  assert.match(profile,/id="profileSaveBar" class="gf-savebar hidden" data-floating/);
   assert.match(profile,/id="btnPlanActive"[^>]*onclick="openPlanAccountPage\(\)"/);
   assert.match(profile,/onclick="openBillingPanel\(\)">Fatturazione</);
   assert.doesNotMatch(profile,/\sstyle="/);
@@ -310,7 +313,7 @@ test('account profile modal follows the workspace design system',()=>{
   assert.match(core,/const setPlanStatusTone = \(tone, icon\)/);
   assert.match(core,/setPlanStatusTone\("is-success", "✓"\)/);
   assert.doesNotMatch(core,/statusBox\.style\.background/);
-  assert.match(core,/<div class="gf-details__item"><dt>\$\{r\.label\}<\/dt><dd>\$\{maxLabel\}<\/dd><\/div>/);
+  assert.match(core,/<span class="gf-bar-chart__value">\$\{label\(r\)\}<\/span>/);
 
   const components=read(assets+'components.css');
   assert.match(components,/\.gf-modal\[data-size="lg"\]\{/);
@@ -402,8 +405,8 @@ test('dashboard completed-deliveries KPI has fixed copy and uses actual completi
 test('account password UI stays compact and uses shared visual tokens',()=>{
   const html=read('static/dashboard/index.html');
   const profile=html.slice(html.indexOf('<div id="profileOverlay"'),html.indexOf('<!-- COOKIE NOTICE'));
-  assert.match(profile,/class="gf-setting"[\s\S]*<strong>Cambio password<\/strong>/);
-  assert.match(profile,/id="profileSecurityOpenBtn"[^>]*>Modifica<\/button>/);
+  assert.match(profile,/class="gf-setting"[\s\S]*<strong>Password<\/strong>/);
+  assert.match(profile,/id="profileSecurityOpenBtn"[^>]*>Cambia<\/button>/);
   assert.match(profile,/id="profilePasswordChangePanel" class="gf-card gf-stack hidden"/);
   assert.doesNotMatch(profile,/Credenziali protette|Password dimenticata|profile-password-help|profile-password-collapse/);
 

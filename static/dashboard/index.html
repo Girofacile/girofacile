@@ -32,7 +32,7 @@
 
 <!-- Shared GiroFacile design system; legacy sheets retain feature layout. -->
 <link rel="stylesheet" href="/static/design-system/theme.css?v=gf_sidebar_20261025">
-<link rel="stylesheet" href="/static/design-system/components.css?v=gf_route_progress_20261025">
+<link rel="stylesheet" href="/static/design-system/components.css?v=gf_profile_20261025">
 <link rel="stylesheet" href="/static/design-system/layout.css?v=gf_sidebar_fit_20261025">
 <link rel="stylesheet" href="/static/design-system/workspace.css?v=gf_selection_20261016">
 <link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007_reference_2">
@@ -1489,32 +1489,26 @@
 <div id="profileOverlay" class="gf-overlay hidden" onclick="closeProfilePanel(event)">
   <div class="gf-modal" data-size="lg" role="dialog" aria-modal="true" aria-labelledby="profileModalTitle" onclick="event.stopPropagation()">
     <header class="gf-modal__header">
-      <div><h2 class="gf-modal__title" id="profileModalTitle">Profilo account</h2><p class="gf-muted">Gestisci identità, accesso e piano collegati a GiroFacile.</p></div>
+      <div><h2 class="gf-modal__title" id="profileModalTitle">Profilo account</h2><p class="gf-muted" id="profileCompanyName">GiroFacile</p></div>
       <button class="gf-icon-button" type="button" onclick="closeProfilePanel()" aria-label="Chiudi profilo account"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12 M18 6L6 18"/></svg></button>
     </header>
 
-    <div class="gf-modal__body gf-stack" data-gap="lg">
-    <section class="gf-stack" aria-labelledby="profileIdentityHeading">
-      <div><h3 class="gf-subtitle" id="profileIdentityHeading">Identità e accesso</h3><p class="gf-muted">Dati personali dell’operatore e credenziali dell’account.</p></div>
-
-      <div class="gf-upload">
-        <span id="profilePreview" class="gf-upload__preview">A</span>
-        <div class="gf-upload__copy">
-          <label class="gf-button gf-upload__button" data-variant="secondary" for="profilePhoto">Fotografia profilo<input id="profilePhoto" type="file" accept="image/*" onchange="previewProfilePhoto(event)"></label>
-          <p class="gf-field__hint">La foto resta associata a questo browser.</p>
-        </div>
-      </div>
-
-      <div class="gf-form-grid">
-        <label class="gf-field" for="profileName"><span class="gf-field__label">Nome account</span><input class="gf-input" id="profileName" placeholder="Admin"><span class="gf-field__hint">Sincronizzato su tutti i dispositivi.</span></label>
-        <label class="gf-field" for="profileEmail"><span class="gf-field__label">Email account</span><input class="gf-input" id="profileEmail" type="email" placeholder="nome@email.it"><span class="gf-field__hint">Usata per accesso, recupero password e comunicazioni.</span></label>
-        <label class="gf-field" for="profileRole"><span class="gf-field__label">Ruolo</span><input class="gf-input" id="profileRole" value="Amministratore" readonly></label>
-      </div>
-      <div class="gf-setting">
-        <div class="gf-setting__copy"><strong>Cambio password</strong><p>Aggiorna la password di accesso all'account.</p></div>
-        <div class="gf-setting__control"><button type="button" id="profileSecurityOpenBtn" class="gf-button" data-variant="secondary" data-size="sm" aria-controls="profilePasswordChangePanel" aria-expanded="false" onclick="toggleProfilePasswordPanel(true)">Modifica</button></div>
-      </div>
-
+    <!-- Due colonne: a sinistra l'account, a destra il piano. Le modifiche si salvano dalla barra in basso. -->
+    <div class="gf-modal__body">
+      <div class="gf-grid" data-cols="2">
+        <section class="gf-stack" aria-labelledby="profileIdentityHeading">
+          <h3 class="gf-hidden" id="profileIdentityHeading">Account</h3>
+          <div class="gf-cluster">
+            <span id="profilePreview" class="gf-avatar" data-tone="1" aria-hidden="true">A</span>
+            <div><span id="profileRoleBadge" class="gf-badge" data-status="info">Amministratore</span><br>
+              <label class="gf-button" data-variant="link" data-size="sm" for="profilePhoto">Cambia foto</label><input id="profilePhoto" class="gf-hidden" type="file" accept="image/*" onchange="previewProfilePhoto(event)"></div>
+          </div>
+          <label class="gf-field" for="profileName"><span class="gf-field__label">Nome</span><input class="gf-input" id="profileName" placeholder="Admin" oninput="updateProfileSaveBar()"></label>
+          <label class="gf-field" for="profileEmail"><span class="gf-field__label">Email di accesso</span><input class="gf-input" id="profileEmail" type="email" placeholder="nome@email.it" oninput="updateProfileSaveBar()"></label>
+          <div class="gf-setting">
+            <div class="gf-setting__copy"><strong>Password</strong><p>Aggiorna la password di accesso</p></div>
+            <div class="gf-setting__control"><button type="button" id="profileSecurityOpenBtn" class="gf-button" data-variant="secondary" data-size="sm" aria-controls="profilePasswordChangePanel" aria-expanded="false" onclick="toggleProfilePasswordPanel(true)">Cambia</button></div>
+          </div>
       <div id="profilePasswordChangePanel" class="gf-card gf-stack hidden" aria-labelledby="profilePasswordChangeTitle">
         <h4 class="gf-subtitle" id="profilePasswordChangeTitle">Cambio password</h4>
         <div class="gf-form-grid">
@@ -1527,30 +1521,33 @@
           <button type="button" id="profileChangePasswordBtn" class="gf-button" data-variant="primary" onclick="changeProfilePassword()">Aggiorna password</button>
         </div>
       </div>
-    </section>
+        </section>
 
-    <section class="gf-stack" aria-labelledby="profilePlanHeading">
-      <div class="gf-cluster" data-justify="between">
-        <div><h3 class="gf-subtitle" id="profilePlanHeading">Il mio piano</h3><p class="gf-muted">Stato dell’abbonamento e utilizzo delle risorse incluse.</p></div>
-        <span id="planBadge" class="gf-badge" data-status="info">—</span>
+        <section class="gf-card gf-stack profile-plan-section" aria-labelledby="profilePlanHeading">
+          <div class="gf-cluster" data-justify="between">
+            <div><p class="gf-kicker" id="profilePlanHeading">Il mio piano</p><strong id="planBadge" class="gf-subtitle">—</strong></div>
+            <span id="planStatusBox" class="gf-badge" data-status="info" data-dot><span id="planStatusLabel">Caricamento...</span></span>
+          </div>
+          <p id="planStatusDesc" class="gf-muted"></p>
+          <div id="planUsageRows" class="gf-stack" data-gap="sm"></div>
+          <div class="gf-cluster">
+            <button type="button" id="btnPlanActive" class="gf-button" data-variant="secondary" data-size="sm" onclick="openPlanAccountPage()">Gestisci piano</button>
+            <button type="button" class="gf-button" data-variant="ghost" data-size="sm" data-billing-button onclick="openBillingPanel()">Fatturazione</button>
+          </div>
+        </section>
       </div>
-      <div id="planStatusBox" class="gf-alert" data-status="info">
-        <span id="planStatusIcon" class="gf-alert__icon" aria-hidden="true">…</span>
-        <div class="gf-alert__body"><p id="planStatusLabel" class="gf-alert__title">Caricamento...</p><p id="planStatusDesc" class="gf-alert__text"></p></div>
-      </div>
-      <dl id="planUsageRows" class="gf-details" data-layout="rows"></dl>
-      <div class="gf-cluster">
-        <button type="button" id="btnPlanActive" class="gf-button" data-variant="primary" onclick="openPlanAccountPage()">Piano attivo</button>
-        <button type="button" class="gf-button" data-variant="secondary" data-billing-button onclick="openBillingPanel()">Fatturazione</button>
-      </div>
-    </section>
     </div>
 
     <footer class="gf-modal__footer">
-      <button id="logoutBtn" class="gf-button hidden" data-variant="ghost" type="button"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4 M16 17l5-5-5-5 M21 12H9"/></svg>Esci dall'account</button>
+      <button id="logoutBtn" class="gf-button hidden" data-variant="ghost" type="button"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4 M16 17l5-5-5-5 M21 12H9"/></svg>Esci</button>
       <button class="gf-button" data-variant="secondary" type="button" onclick="closeProfilePanel()">Chiudi</button>
-      <button class="gf-button" data-variant="primary" type="button" onclick="saveProfilePanel()">Salva profilo</button>
     </footer>
+  </div>
+
+  <div id="profileSaveBar" class="gf-savebar hidden" data-floating role="status" aria-live="polite" onclick="event.stopPropagation()">
+    <span>Modifiche non salvate</span>
+    <button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="resetProfileChanges()">Annulla</button>
+    <button type="button" class="gf-button" data-variant="primary" data-size="sm" onclick="saveProfilePanel()">Salva modifiche</button>
   </div>
 </div>
 
@@ -1575,7 +1572,7 @@
 <script src="/static/dashboard/js/order-sources.js?v=gf_plans_20261023"></script>
 <script src="/static/dashboard/js/dashboard-real-map.js?v=gf_priority_hero_20261025"></script>
 <script src="/static/dashboard/js/in-progress-reference.js?v=gf_driver_flow_20261020"></script>
-<script src="/static/dashboard/js/core.js?v=gf_sidebar_fit_20261025"></script>
+<script src="/static/dashboard/js/core.js?v=gf_profile_20261025"></script>
 <script src="/static/dashboard/js/dashboard-mobile.js?v=gf_dashboard_mobile_20261019"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=orders_2"></script>
 <link rel="stylesheet" href="/static/dashboard/css/fleet-review.css?v=gf_fleet_ztl_20261017">

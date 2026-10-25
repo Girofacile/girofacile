@@ -594,6 +594,8 @@ function loadProfilePanel(){
   const preview = document.getElementById("profilePreview");
   if(preview){ preview.innerHTML = photo ? `<img src="${photo}" alt="Profilo">` : initials; }
   set("profileName", accountName); set("profileEmail", email); set("profileRole", role);
+  setText("profileRoleBadge", role);
+  setText("profileCompanyName", companyName);
 }
 async function loadPlanInfo(){
   if(window.GFCompanyAccess?.isCollaborator()){GFCompanyAccess.apply();return;}
@@ -630,7 +632,7 @@ async function loadPlanInfo(){
     }
     const planActiveBtn = document.getElementById("btnPlanActive");
     if(planActiveBtn){
-      planActiveBtn.textContent = "Piano attivo";
+      planActiveBtn.textContent = "Gestisci piano";
       planActiveBtn.title = `Piano attuale: ${planNames[plan] || plan}. Apri per confrontare gli altri piani.`;
       planActiveBtn.setAttribute("aria-label", `Piano attivo: ${planNames[plan] || plan}. Visualizza gli altri piani disponibili`);
     }
@@ -649,19 +651,19 @@ async function loadPlanInfo(){
       const trialEnd = me.trial_ends_at ? new Date(me.trial_ends_at) : null;
       const daysLeft = trialEnd ? Math.max(0, Math.ceil((trialEnd - new Date()) / (1000*60*60*24))) : 0;
       setPlanStatusTone(daysLeft <= 3 ? "is-warning" : "is-info", daysLeft <= 3 ? "!" : "i");
-      if(statusLabel) statusLabel.textContent = `Prova gratuita — ${daysLeft} giorni rimanenti`;
+      if(statusLabel) statusLabel.textContent = `Prova · ${daysLeft} giorni`;
       if(statusDesc) statusDesc.textContent = `La tua prova scade il ${trialEnd ? trialEnd.toLocaleDateString("it-IT") : "—"}. Effettua l'upgrade per continuare senza interruzioni.`;
     } else if(status === "active"){
       setPlanStatusTone("is-success", "✓");
-      if(statusLabel) statusLabel.textContent = `Piano ${planNames[plan]} attivo`;
-      if(statusDesc) statusDesc.textContent = "Il tuo abbonamento è attivo. Grazie per usare GiroFacile!";
+      if(statusLabel) statusLabel.textContent = "Attivo";
+      if(statusDesc) statusDesc.textContent = "";
     } else if(status === "past_due"){
       setPlanStatusTone("is-warning", "!");
-      if(statusLabel) statusLabel.textContent = "Pagamento da completare — tolleranza di 7 giorni";
+      if(statusLabel) statusLabel.textContent = "Pagamento da completare";
       if(statusDesc) statusDesc.textContent = "Aggiorna il metodo di pagamento nella sezione abbonamento.";
     } else if(status === "expired" || status === "cancelled" || status === "incomplete"){
       setPlanStatusTone("is-danger", "×");
-      if(statusLabel) statusLabel.textContent = "Piano scaduto";
+      if(statusLabel) statusLabel.textContent = "Scaduto";
       if(statusDesc) statusDesc.textContent = "Il tuo piano è scaduto. Effettua l'upgrade per riprendere ad usare GiroFacile.";
     } else {
       setPlanStatusTone("is-info", "i");
@@ -688,10 +690,12 @@ async function loadPlanInfo(){
           {label:"Autisti", used: drivers.length, max: limits.max_drivers},
           {label:"Depositi", used: deposits.length, max: limits.max_deposits},
         ];
-        usageRows.innerHTML = rows.map(r => {
-          const maxLabel = r.max != null ? `${r.used} / ${r.max}` : `${r.used} / ∞`;
-          return `<div class="gf-details__item"><dt>${r.label}</dt><dd>${maxLabel}</dd></div>`;
-        }).join("");
+        const fmt = v => Number(v||0).toLocaleString("it-IT",{useGrouping:"always"});
+        const label = r => `${fmt(r.used)} / ${r.max != null ? fmt(r.max) : "∞"}`;
+        const width = r => r.max ? Math.max(5, Math.round(Math.min(100, (r.used||0)/r.max*100)/5)*5) : 0;
+        const main = ["Ordini del mese","Clienti","Mezzi standard","Autisti"];
+        usageRows.innerHTML = `<ul class="gf-bar-chart">${rows.filter(r=>main.includes(r.label)).map(r=>`<li class="gf-bar-chart__row"><span class="gf-bar-chart__label">${r.label === "Mezzi standard" ? "Mezzi" : r.label}</span><span class="gf-bar-chart__track"><span class="gf-bar-chart__fill" data-gf-width="${width(r)}"></span></span><span class="gf-bar-chart__value">${label(r)}</span></li>`).join("")}</ul>
+          <p class="gf-muted">${rows.filter(r=>!main.includes(r.label)).map(r=>`${r.label} ${label(r)}`).join(" · ")}</p>`;
       }
     }catch(e){ console.warn('GiroFacile: operazione non completata', e); }
 
@@ -1031,15 +1035,34 @@ function toggleProfilePasswordPanel(show){
   }
 }
 
+// Profilo: come in Profilo azienda, la barra "Salva modifiche" compare solo dopo una modifica.
+let profileBaselineV9 = null;
+function profileSnapshotV9(){ return JSON.stringify([val("profileName"), val("profileEmail"), !!profilePhotoData]); }
+function updateProfileSaveBar(){
+  const dirty = profileBaselineV9 !== null && profileSnapshotV9() !== profileBaselineV9;
+  document.getElementById("profileSaveBar")?.classList.toggle("hidden", !dirty);
+}
+function resetProfileChanges(){
+  profilePhotoData = null;
+  const photo = document.getElementById("profilePhoto"); if(photo) photo.value = "";
+  loadProfilePanel();
+  profileBaselineV9 = profileSnapshotV9();
+  updateProfileSaveBar();
+}
 async function openProfilePanel(){
   document.getElementById("logoutBtn")?.classList.remove("hidden");
+  profilePhotoData = null;
   await loadAccountProfileV81();
+  profileBaselineV9 = profileSnapshotV9();
+  updateProfileSaveBar();
   loadPlanInfo();
   toggleProfilePasswordPanel(false);
   const el=document.getElementById("profileOverlay"); if(el) el.classList.remove("hidden");
 }
 function closeProfilePanel(ev){
   const el=document.getElementById("profileOverlay"); if(el) el.classList.add("hidden");
+  // Chiudere senza salvare annulla le modifiche, come "Annulla" nella barra.
+  if(profileBaselineV9 !== null && profileSnapshotV9() !== profileBaselineV9) resetProfileChanges();
   toggleProfilePasswordPanel(false);
 }
 function previewProfilePhoto(event){
@@ -1050,6 +1073,7 @@ function previewProfilePhoto(event){
     profilePhotoData = reader.result;
     const preview = document.getElementById("profilePreview");
     if(preview) preview.innerHTML = `<img src="${profilePhotoData}" alt="Profilo">`;
+    updateProfileSaveBar();
   };
   reader.readAsDataURL(file);
 }
@@ -1066,8 +1090,10 @@ async function saveProfilePanel(){
     localStorage.setItem("girofacile_profile_role", account.role || "Amministratore");
     if(profilePhotoData) localStorage.setItem("girofacile_profile_photo", profilePhotoData);
     currentSessionUser = {...(currentSessionUser || {}), username:account.username, email:account.email};
+    profilePhotoData = null;
     loadProfilePanel();
-    closeProfilePanel();
+    profileBaselineV9 = profileSnapshotV9();
+    updateProfileSaveBar();
     toast("Profilo account aggiornato nel database");
   }catch(e){
     alert(e.message || "Errore salvataggio profilo account");

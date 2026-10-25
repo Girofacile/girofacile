@@ -5,6 +5,11 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Profilo account: finestra più compatta a due colonne. A sinistra avatar,
+  ruolo, nome, email e password; a destra il piano con stato, barre di
+  utilizzo e i pulsanti Gestisci piano e Fatturazione. Niente più "Salva
+  profilo": come in Profilo azienda la barra "Salva modifiche" compare solo
+  dopo una modifica; chiudere senza salvare annulla le modifiche.
 - Sidebar: la pagina misura lo spazio libero e ingrandisce le voci (36, 40, 44
   o 48 px, testo più grande da 40 px) senza mai far comparire la barra di
   scorrimento; si ricalcola quando si apre o chiude un gruppo e quando cambia
