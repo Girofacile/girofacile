@@ -219,7 +219,10 @@
     showMessage(element, 'Caricamento mappa stradale…');
     try {
       // L'endpoint restituisce dati salvati, senza nuove chiamate OSRM o Mapbox.
-      const data = await api('/api/routes/' + Number(routeId) + '/map-data');
+      const [data] = await Promise.all([
+        api('/api/routes/' + Number(routeId) + '/map-data'),
+        loadRoadMapLibrary()
+      ]);
       if (version !== generation || !element.isConnected) return;
       const depot = validPosition(data.depot);
       const orderedStops = Array.isArray(data.stops) ? data.stops : [];
@@ -253,7 +256,6 @@
         return;
       }
 
-      await loadRoadMapLibrary();
       if (version !== generation || !element.isConnected) return;
       element.replaceChildren();
       element.classList.add('gf-ref-map-ready');

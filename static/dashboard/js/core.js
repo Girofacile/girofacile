@@ -2012,6 +2012,7 @@ function renderGFReferenceDashboardHero(summary){
       }
     });
   }).catch(e=>{
+    if(!root.isConnected || root.dataset.gfRefRenderVersion!==String(version))return;
     if(drawing)drawing.innerHTML='<div class="gf-empty"><p>Dettaglio fermate temporaneamente non disponibile. Apri il controllo giro per riprovare.</p></div>';
     console.warn("Dettaglio dashboard",e);
   });
@@ -2020,15 +2021,29 @@ function renderGFReferenceDashboardHero(summary){
 async function loadDashboardHome(startupResources = {}){
   const dash = document.getElementById("tab-dashboard");
   if(!dash) return;
+  const request = (loadDashboardHome.request || 0) + 1;
+  loadDashboardHome.request = request;
   window.GFDashboardMobile?.loading();
   try{
+    const operationalRequest = api("/api/routes/operativi");
+    // The active route has its own critical path: do not wait for history or KPIs.
+    operationalRequest.then(operational => {
+      if(request !== loadDashboardHome.request) return;
+      return renderGFReferenceDashboardHero(operational.find(route => route.status === 'in_corso') || null);
+    }).catch(error => {
+      if(request !== loadDashboardHome.request) return;
+      console.warn("Giro operativo dashboard", error);
+      const loading = document.getElementById("gfRefDetailLoading");
+      if(loading && !loading.classList.contains("hidden")) loading.textContent = "Giro non disponibile. Ricarica la pagina per riprovare.";
+    });
     const [routes, operational, vehicles, drivers, completedDeliveriesSummary] = await Promise.all([
       api("/api/routes"),
-      api("/api/routes/operativi"),
+      operationalRequest,
       startupResources.vehicles ?? api("/api/vehicles"),
       startupResources.drivers ?? api("/api/drivers"),
       api("/api/dashboard/completed-deliveries-today")
     ]);
+    if(request !== loadDashboardHome.request) return;
     const today = todayIso();
     const todayScheduled = operational.filter(r=>r.status==='programmato' && r.data_giro===today);
     const inProgressRoutes = operational.filter(r=>r.status==='in_corso');
@@ -2108,12 +2123,12 @@ async function loadDashboardHome(startupResources = {}){
         subtitle.textContent=`${day.charAt(0).toUpperCase()+day.slice(1)}: lo stato delle consegne e delle risorse di oggi`;
       }
     }
-    renderGFReferenceDashboardHero(progress[0]||null);
+
   }catch(e){
+    if(request !== loadDashboardHome.request) return;
     console.warn(e);
     window.GFDashboardMobile?.loadError();
-    const loading=document.getElementById("gfRefDetailLoading");
-    if(loading && !loading.classList.contains("hidden")) loading.textContent="Dati non disponibili. Ricarica la pagina per riprovare.";
+
   }
 }
 
