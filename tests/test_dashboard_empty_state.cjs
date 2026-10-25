@@ -9,7 +9,7 @@ const mapSource = fs.readFileSync('static/dashboard/js/dashboard-real-map.js', '
 const mapCss = fs.readFileSync('static/dashboard/css/dashboard-real-map.css', 'utf8');
 const coreCss = fs.readFileSync('static/dashboard/css/core.css', 'utf8');
 const heroStart = core.indexOf('function renderGFReferenceDashboardHero(summary){');
-const heroEnd = core.indexOf('\nasync function loadDashboardHome(){', heroStart);
+const heroEnd = core.indexOf('\nasync function loadDashboardHome(', heroStart);
 assert.ok(heroStart >= 0 && heroEnd > heroStart, 'la funzione della dashboard deve essere presente');
 const heroSource = core.slice(heroStart, heroEnd);
 

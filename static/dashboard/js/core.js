@@ -1462,19 +1462,39 @@ async function initApp(){
   }
   document.getElementById("fuelPrice")?.addEventListener("input", updateDashboardStats);
   initRoutePlanningGateV68();
-  await loadSettingsV41();
-  await loadUniversalFeaturesV89();
+  await Promise.all([loadSettingsV41(), loadUniversalFeaturesV89()]);
   loadProfilePanel();
   initAddressAutocomplete();
   initResourceAvailabilityControls();
-  await loadDeposits(); await loadVehicles(); await loadDrivers();
-  if(agentsFeatureEnabled()) await loadAgents();
-  await loadCustomers(); await loadCustomerPicker();
-  await refreshResourceAvailability();
-  await loadDashboardHome();
-  await loadCompanyProfile(false);
-  await loadOnboardingStatus(true);
-  await loadNotificationsV30(false);
+  // Share only this startup's responses; later refreshes always request fresh data.
+  const startupResources = {
+    vehicles: api("/api/vehicles"),
+    drivers: api("/api/drivers")
+  };
+  const dashboardReady = loadDashboardHome(startupResources);
+  const resourcesReady = Promise.allSettled([
+    loadDeposits(), loadVehicles(startupResources.vehicles), loadDrivers(startupResources.drivers)
+  ]).then(async results => {
+    await refreshResourceAvailability();
+    const failed = results.find(result => result.status === "rejected");
+    if(failed) throw failed.reason;
+  });
+  const customersReady = (async () => {
+    if(agentsFeatureEnabled()) await loadAgents();
+    await Promise.all([loadCustomers(), loadCustomerPicker()]);
+  })();
+  const companyReady = (async () => {
+    await loadCompanyProfile(false);
+    await loadOnboardingStatus(true);
+  })();
+  // A slow secondary section must not delay rendering the dashboard or the others.
+  const results = await Promise.allSettled([
+    dashboardReady, resourcesReady, customersReady, companyReady, loadNotificationsV30(false)
+  ]);
+  if(results.some(result => result.status === "rejected")){
+    console.warn("Caricamento iniziale parziale", results.filter(result => result.status === "rejected"));
+    toast("Alcuni dati non sono stati caricati. Riapri la sezione interessata per riprovare.");
+  }
   if(notificationsPollV30) clearInterval(notificationsPollV30);
   notificationsPollV30 = setInterval(()=>loadNotificationsV30(false), 60000);
   updateDashboardStats();
@@ -1997,7 +2017,7 @@ function renderGFReferenceDashboardHero(summary){
   });
 }
 
-async function loadDashboardHome(){
+async function loadDashboardHome(startupResources = {}){
   const dash = document.getElementById("tab-dashboard");
   if(!dash) return;
   window.GFDashboardMobile?.loading();
@@ -2005,8 +2025,8 @@ async function loadDashboardHome(){
     const [routes, operational, vehicles, drivers, completedDeliveriesSummary] = await Promise.all([
       api("/api/routes"),
       api("/api/routes/operativi"),
-      api("/api/vehicles"),
-      api("/api/drivers"),
+      startupResources.vehicles ?? api("/api/vehicles"),
+      startupResources.drivers ?? api("/api/drivers"),
       api("/api/dashboard/completed-deliveries-today")
     ]);
     const today = todayIso();
@@ -2431,9 +2451,9 @@ async function loadVehicleUsage(){
   renderVehicleUsage(usage);
   return usage;
 }
-async function loadVehicles(){
+async function loadVehicles(initialData){
   try{
-    vehiclesCache = await api("/api/vehicles");
+    vehiclesCache = await (initialData ?? api("/api/vehicles"));
     renderFleetDirectory();
     renderResourceSelects();
     await loadVehicleUsage();
@@ -2551,9 +2571,9 @@ async function saveVehicle(){
 }
 async function deleteVehicle(id){ if(confirm("Eliminare mezzo?")){ try{await api(`/api/vehicles/${id}`, {method:"DELETE"});await loadVehicles();}catch(e){alert(e.message);} } }
 
-async function loadDrivers(){
+async function loadDrivers(initialData){
   try{
-    driversCache = await api("/api/drivers");
+    driversCache = await (initialData ?? api("/api/drivers"));
     document.getElementById('driverDirectoryError')?.classList.add('hidden');
   }catch(e){
     const status=document.getElementById('driverDirectoryError');
