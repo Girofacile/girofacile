@@ -358,6 +358,7 @@ def route_response(plan, result):
         "orario_partenza": time_to_hhmm(plan.orario_partenza), "orario_rientro_stimato": time_to_hhmm(plan.orario_rientro_stimato),
         "started_at": (plan.started_at.isoformat() if getattr(plan, "started_at", None) else None),
         "completed_at": (plan.completed_at.isoformat() if getattr(plan, "completed_at", None) else None),
+        "cancelled_at": (plan.cancelled_at.isoformat() if getattr(plan, "cancelled_at", None) else None),
         "rientro_stimato_aggiornato": live_sched.get("rientro_stimato_aggiornato"),
         "deposit_id": plan.deposit_id, "vehicle_id": plan.vehicle_id, "driver_id": plan.driver_id,
         "vehicle_name": ((plan.vehicle.nome + (" · " + plan.vehicle.targa if plan.vehicle.targa else "")) if plan.vehicle else None),
@@ -398,6 +399,7 @@ def serialize_route(plan):
         "orario_partenza": time_to_hhmm(plan.orario_partenza), "orario_rientro_stimato": time_to_hhmm(plan.orario_rientro_stimato),
         "started_at": (plan.started_at.isoformat() if getattr(plan, "started_at", None) else None),
         "completed_at": (plan.completed_at.isoformat() if getattr(plan, "completed_at", None) else None),
+        "cancelled_at": (plan.cancelled_at.isoformat() if getattr(plan, "cancelled_at", None) else None),
         "rientro_stimato_aggiornato": live_sched.get("rientro_stimato_aggiornato"),
         "deposit_id": plan.deposit_id, "vehicle_id": plan.vehicle_id, "driver_id": plan.driver_id,
         "vehicle_name": ((plan.vehicle.nome + (" · " + plan.vehicle.targa if plan.vehicle.targa else "")) if plan.vehicle else None),
@@ -786,7 +788,7 @@ def dashboard_completed_deliveries_today(
 
 
 @router.get("/api/routes/operativi")
-def list_operational_routes(db: Session = Depends(get_db), user: User = Depends(current_user)):
+def list_operational_routes(include_cancelled: bool = False, db: Session = Depends(get_db), user: User = Depends(current_user)):
     from_date = (local_today() - timedelta(days=7))
     # Running routes keep resources occupied regardless of age. Never hide them
     # behind the date window or the limit for scheduled routes.
@@ -804,11 +806,20 @@ def list_operational_routes(db: Session = Depends(get_db), user: User = Depends(
         .limit(150)
         .all()
     )
-    rows = running + scheduled
+    # La pagina Giri programmati mostra anche i giri annullati, in rosso sbiadito.
+    cancelled = (
+        owned(db.query(RoutePlan), RoutePlan, user)
+        .filter(RoutePlan.status == "annullato")
+        .filter(RoutePlan.data_giro >= from_date)
+        .order_by(RoutePlan.data_giro.asc(), RoutePlan.orario_partenza.asc())
+        .limit(150)
+        .all()
+    ) if include_cancelled else []
+    rows = running + scheduled + cancelled
     result = []
     for r in rows:
         status = computed_route_status(r)
-        if status in ("bozza", "completato", "annullato"):
+        if status in ("bozza", "completato") or (status == "annullato" and not include_cancelled):
             continue
         delivery_ids = [d.id for d in (r.deliveries or [])]
         d_statuses = db.query(DeliveryStatus).filter(DeliveryStatus.route_plan_id == r.id).all() if delivery_ids else []
@@ -835,6 +846,7 @@ def list_operational_routes(db: Session = Depends(get_db), user: User = Depends(
             "id": r.id, "nome": r.nome, "data_giro": date_to_iso(r.data_giro),
             "orario_partenza": time_to_hhmm(r.orario_partenza), "orario_rientro_stimato": time_to_hhmm(r.orario_rientro_stimato),
             "started_at": (r.started_at.isoformat() if getattr(r, "started_at", None) else None),
+            "cancelled_at": (r.cancelled_at.isoformat() if getattr(r, "cancelled_at", None) else None),
             "rientro_stimato_aggiornato": live_sched.get("rientro_stimato_aggiornato"),
             "driver_name": ((r.driver.nome + (" " + r.driver.cognome if r.driver.cognome else "")) if r.driver else ""),
             "vehicle_id": r.vehicle_id, "vehicle_name": (r.vehicle.nome if r.vehicle else ""),

@@ -94,7 +94,7 @@ pagina; l'aspetto di un componente deve cambiare nel foglio condiviso.
 | Disposizione | `.gf-stack[data-gap]`, `.gf-cluster[data-justify]`, `.gf-grid[data-cols="2\|3\|4\|7\|main-side"]` (7: una colonna per giorno della settimana) |
 | Testo | `.gf-title`, `.gf-subtitle`, `.gf-text`, `.gf-muted`, `.gf-kicker` |
 | Pulsanti extra | `data-variant="link"`, `data-size="sm"`, `.gf-icon-button`, `.gf-avatar` (con `data-tone="1…6"`: un colore stabile per elemento, es. ogni cliente) |
-| Pannello | `.gf-panel` con `__header`, `__title`, `__meta`, `__body`, `__footer`; righe `.gf-list-item` |
+| Pannello | `.gf-panel` con `__header`, `__title`, `__meta`, `__body`, `__footer`; righe `.gf-list-item` (`[data-status="danger"]`, anche su `.gf-table tr`: elemento annullato, rosso e sbiadito, es. giro annullato nei Giri programmati) |
 | Numeri del giorno | `.gf-stat-strip` con celle `__cell`, `__label`, `__value`, `__unit` |
 | Barra dei numeri con icone | `.gf-stat-strip[data-icons="side"]` + `.gf-stat-strip__icon` (con `data-tone` da 1 a 6 oppure `neutral`) come primo elemento di ogni voce; `data-kind="text"` sul valore testuale. Giri e anagrafiche blu (1), in corso verde acqua (2), completati e disponibili viola (3), persone e attese arancio (5), mezzi e dati di servizio grigio (neutral). Usata in Dashboard, Ordini, Clienti, Collaboratori, Agenti, Depositi, Mezzi e Autisti. |
 | Barra a larghezze diverse | `.gf-stat-strip[data-fit]`: le voci si dividono lo spazio; `data-size="sm"` su una voce la rende più stretta (es. Fermate, solo un numero). Su smartphone torna la griglia a due colonne. Usata nel dettaglio del giro programmato. |

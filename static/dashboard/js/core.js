@@ -4399,8 +4399,9 @@ async function loadDashboardScheduledPage(routeId=null){
   const page = document.getElementById('dashboardScheduledPage');
   if(page) page.innerHTML = `<div class="gf-loading" role="status"><strong>Caricamento giri programmati...</strong><p>Sto recuperando i giri non ancora avviati.</p></div>`;
   try{
-    const rows = await api('/api/routes/operativi');
-    const scheduled = rows.filter(r=>r.status==='programmato');
+    const rows = await api('/api/routes/operativi?include_cancelled=true');
+    // I giri annullati restano visibili nel loro giorno, in rosso sbiadito.
+    const scheduled = rows.filter(r=>r.status==='programmato' || r.status==='annullato');
     // Il dettaglio si apre solo quando è richiesto un giro preciso (Dashboard, aggiornamento ETA).
     const wanted = routeId ? scheduled.find(r=>Number(r.id)===Number(routeId)) : null;
     const selected = wanted ? await api(`/api/routes/${wanted.id}`) : null;
@@ -4416,6 +4417,7 @@ function dashScheduledDayLabel(iso){ const d = dashScheduledDate(iso); return `$
 function dashScheduledMinutes(value){ const m = Math.round(Number(value||0)); return m >= 60 ? `${Math.floor(m/60)} h ${String(m%60).padStart(2,'0')} min` : `${m} min`; }
 function dashScheduledMoney(value){ return value === null || value === undefined || value === '' ? '-' : '€ '+Number(value).toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function dashScheduledRoutesOf(iso){ return dashboardScheduledRoutes.filter(r=>r.data_giro===iso).sort((a,b)=>String(a.orario_partenza||'').localeCompare(String(b.orario_partenza||''))); }
+function dashScheduledCancelled(r){ return r.status === 'annullato'; }
 
 function selectDashboardScheduledDay(iso){
   dashboardScheduledDay = iso;
@@ -4429,6 +4431,19 @@ async function openDashboardScheduledRoute(routeId){
   dashboardScheduledSelectedId = routeId;
   try{ renderDashboardScheduledSubpage(dashboardScheduledRoutes, await api(`/api/routes/${routeId}`)); }
   catch(e){ toast(e.message); }
+}
+// Annulla un giro programmato: resta visibile nella settimana come annullato.
+async function cancelScheduledRoute(routeId){
+  const route = dashboardScheduledRoutes.find(r=>Number(r.id)===Number(routeId)) || {};
+  const day = route.data_giro ? dashScheduledDayLabel(route.data_giro).toLowerCase() : 'questa data';
+  const who = route.driver_name ? ` di ${route.driver_name}` : '';
+  if(!confirm(`Annullare il giro di ${day}${who}?\n\nGli ordini collegati torneranno da pianificare e il giro sparirà dall'app dell'autista. L'operazione non si può annullare.`)) return;
+  try{
+    await api(`/api/routes/${Number(routeId)}/cancel`, {method:"POST", body:"{}"});
+    toast("Giro annullato. Resta visibile nei giri programmati come annullato.");
+    await loadDashboardScheduledPage(routeId);
+    Promise.allSettled([loadDashboardHome(), refreshResourceAvailability()]);
+  }catch(e){ alert(e.message || "Errore durante l'annullamento del giro."); }
 }
 function closeDashboardScheduledRoute(){
   dashboardScheduledSelectedId = null;
@@ -4447,11 +4462,12 @@ function dashboardScheduledWeekHtml(){
   const cards = days.map(iso=>{
     const d = dashScheduledDate(iso);
     const list = dashScheduledRoutesOf(iso);
+    const active = list.filter(r=>!dashScheduledCancelled(r)).length;
     const items = list.length
-      ? list.map(r=>`<li><button type="button" class="gf-list-item" onclick="openDashboardScheduledRoute(${Number(r.id)})"><span class="gf-list-item__main"><strong>${esc(r.orario_partenza || '-')}</strong><small>${esc(r.nome || 'Giro consegne')}</small></span></button></li>`).join('')
+      ? list.map(r=>`<li><button type="button" class="gf-list-item"${dashScheduledCancelled(r)?' data-status="danger"':''} onclick="openDashboardScheduledRoute(${Number(r.id)})"><span class="gf-list-item__main"><strong>${esc(r.orario_partenza || '-')}</strong><small>${esc(r.nome || 'Giro consegne')}${dashScheduledCancelled(r)?' · Annullato':''}</small></span></button></li>`).join('')
       : '<li class="gf-list-item"><span class="gf-muted">Nessun giro</span></li>';
     return `<section class="gf-panel" aria-label="${esc(dashScheduledDayLabel(iso))}">
-      <header class="gf-panel__header"><button type="button" class="gf-chip" aria-pressed="${iso===dashboardScheduledDay}" onclick="selectDashboardScheduledDay('${iso}')">${DASH_SCHEDULED_DAY_NAMES[d.getDay()]}&nbsp;${d.getDate()} <span class="gf-chip__count">${list.length}</span></button></header>
+      <header class="gf-panel__header"><button type="button" class="gf-chip" aria-pressed="${iso===dashboardScheduledDay}" onclick="selectDashboardScheduledDay('${iso}')">${DASH_SCHEDULED_DAY_NAMES[d.getDay()]}&nbsp;${d.getDate()} <span class="gf-chip__count">${active}</span></button></header>
       <ul class="gf-list">${items}</ul>
     </section>`;
   }).join('');
@@ -4465,13 +4481,20 @@ function dashboardScheduledWeekHtml(){
 
 function dashboardScheduledDayHtml(){
   const list = dashScheduledRoutesOf(dashboardScheduledDay);
-  const stops = list.reduce((sum,r)=>sum+Number(r.consegne_count||0),0);
-  const meta = list.length ? `${list.length} ${list.length===1?'giro programmato':'giri programmati'} · ${stops} ${stops===1?'fermata':'fermate'}` : '';
+  const active = list.filter(r=>!dashScheduledCancelled(r));
+  const cancelled = list.length - active.length;
+  const stops = active.reduce((sum,r)=>sum+Number(r.consegne_count||0),0);
+  const meta = [
+    active.length ? `${active.length} ${active.length===1?'giro programmato':'giri programmati'} · ${stops} ${stops===1?'fermata':'fermate'}` : '',
+    cancelled ? `${cancelled} ${cancelled===1?'annullato':'annullati'}` : ''
+  ].filter(Boolean).join(' · ');
   const rowHtml = r=>{
     const vehicleParts = String(r.vehicle_name || '-').split(' · ');
     const count = Number(r.consegne_count||0);
-    return `<tr>
-      <td data-label="Orario"><span class="gf-badge" data-status="warning" data-dot>${esc(r.orario_partenza || '-')} – ${esc(r.rientro_stimato_aggiornato || r.orario_rientro_stimato || '-')}</span></td>
+    const time = `${esc(r.orario_partenza || '-')} – ${esc(r.rientro_stimato_aggiornato || r.orario_rientro_stimato || '-')}`;
+    return dashScheduledCancelled(r) ? `<tr data-status="danger">
+      <td data-label="Orario"><span class="gf-badge" data-status="danger">Annullato</span> ${time}</td>` : `<tr>
+      <td data-label="Orario"><span class="gf-badge" data-status="warning" data-dot>${time}</span></td>
       <td data-label="Giro"><strong>${esc(r.nome || 'Giro consegne')}</strong></td>
       <td data-label="Fermate">${count} ${count===1?'fermata':'fermate'}</td>
       <td data-label="Autista">${esc(r.driver_name || 'Non assegnato')}</td>
@@ -4596,6 +4619,7 @@ function gfRouteNoticesHtml(rows){
 
 function dashboardScheduledDetailHtml(r){
   const rows = r.consegne || [];
+  const cancelled = r.status === 'annullato';
   const energy = gfRouteEnergyMetric(r);
   const day = r.data_giro ? dashScheduledDayLabel(r.data_giro).toLowerCase() : '-';
   const total = r.costo_totale ?? r.costo_carburante;
@@ -4612,7 +4636,9 @@ function dashboardScheduledDetailHtml(r){
     </tr>`+GFDriverBreaks.table(r,idx+1,7);
   }).join('');
   return `<div class="gf-stack" data-gap="lg" data-scheduled-detail>
-    ${gfRouteDetailHeader(`Giro programmato · ${day}`, r.nome || 'Giro consegne', '<span class="gf-badge" data-status="warning" data-dot>Programmato</span>')}
+    ${cancelled
+      ? gfRouteDetailHeader(`Giro annullato · ${day}`, r.nome || 'Giro consegne', '<span class="gf-badge" data-status="danger" data-dot>Annullato</span>')
+      : gfRouteDetailHeader(`Giro programmato · ${day}`, r.nome || 'Giro consegne', '<span class="gf-badge" data-status="warning" data-dot>Programmato</span>')}
     <div class="gf-stat-strip" data-icons="side" data-fit aria-label="Numeri del giro">
       ${gfStatCell('home','neutral','Partenza', r.orario_partenza || '-', 'dal deposito')}
       ${gfStatCell('clock','1','Rientro previsto', r.rientro_stimato_aggiornato || r.orario_rientro_stimato || '-', 'dopo '+dashScheduledMinutes(r.totale_minuti))}
@@ -4631,10 +4657,11 @@ function dashboardScheduledDetailHtml(r){
         ${r.driver_schedule_error ? `<div class="gf-alert" data-status="danger" role="alert"><div class="gf-alert__body"><p class="gf-alert__text">${esc(r.driver_schedule_error)}</p></div></div>` : ''}
         ${gfRouteCostsHtml(r)}
         ${gfRouteNoticesHtml(rows)}
-        <div class="gf-route-panel__footer gf-cluster">
+        ${cancelled ? `<div class="gf-alert" data-status="danger" role="status"><div class="gf-alert__body"><p class="gf-alert__text">Giro annullato${r.cancelled_at ? ' il '+esc(new Date(r.cancelled_at).toLocaleString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})) : ''}. Gli ordini collegati sono tornati da pianificare.</p></div></div>` : `<div class="gf-route-panel__footer gf-cluster">
+          <button type="button" class="gf-button" data-variant="danger" onclick="cancelScheduledRoute(${Number(r.id)})">Annulla giro</button>
           <button type="button" class="gf-button" data-variant="secondary" onclick="refreshRouteTraffic(${Number(r.id)}, 'dashboardScheduledPage', 'scheduled')">Aggiorna ETA con traffico</button>
           <button type="button" class="gf-button" data-variant="primary" onclick="openProgrammedRouteForEdit(${Number(r.id)}, true)">Modifica dalla pianificazione</button>
-        </div>
+        </div>`}
       </div>
     </section>
     <section class="gf-panel" aria-labelledby="scheduledStopsTitle">

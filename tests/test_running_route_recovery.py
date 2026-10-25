@@ -39,6 +39,11 @@ def test_old_running_route_remains_visible_and_cancel_releases_driver(env):
     assert response.json()['status'] == 'annullato'
     assert evidence.status == 'completata' and evidence.note_operatore == 'Esito conservato'
     assert {r['id'] for r in client.get('/api/routes/operativi').json()} == {next_route.id}
+    # Giri programmati: anche gli annullati recenti, mai quelli di altre aziende o troppo vecchi.
+    with_cancelled = client.get('/api/routes/operativi?include_cancelled=true').json()
+    cancelled = [r for r in with_cancelled if r['status'] == 'annullato']
+    assert len(cancelled) == 150 and all(r['cancelled_at'] is None for r in cancelled)
+    assert {r['id'] for r in with_cancelled} - {r['id'] for r in cancelled} == {next_route.id}
     assert client.post(f'/api/driver/routes/{next_route.id}/start').status_code == 200
 
 

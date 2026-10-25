@@ -285,6 +285,10 @@ body[data-gf-surface] button.gf-list-item+button.gf-list-item{border-top:var(--g
 body[data-gf-surface] button.gf-list-item:hover{background:var(--gf-color-surface-subtle)}
 body[data-gf-surface] .gf-list-item[aria-current="true"]{background:var(--gf-color-info-bg)}
 body[data-gf-surface] .gf-list-item__main{flex:1;min-width:0;display:grid;gap:2px}
+/* Elemento annullato (es. giro annullato): resta in elenco, rosso e sbiadito. */
+body[data-gf-surface] :is(.gf-list-item,.gf-table tr)[data-status="danger"]{background:var(--gf-color-danger-bg);opacity:.6}
+body[data-gf-surface] :is(.gf-list-item,.gf-table tr)[data-status="danger"] :is(strong,small,td){color:var(--gf-color-danger)}
+body[data-gf-surface] button.gf-list-item[data-status="danger"]:hover{background:var(--gf-color-danger-bg);opacity:.8}
 body[data-gf-surface] .gf-list-item__main strong{font-size:var(--gf-font-md);font-weight:var(--gf-weight-semibold);overflow-wrap:anywhere}
 body[data-gf-surface] .gf-list-item__main small{color:var(--gf-color-muted);font-size:var(--gf-font-sm)}
 
