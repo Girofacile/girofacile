@@ -515,11 +515,8 @@ def _program_saved(db,user,actor,plan_id,data):
     if plan.status=='programmed': return plan
     check_version(plan,data.version)
     rows=drafts()
+    # Come per il giro singolo, uno scarico fuori fascia non blocca: resta un avviso sui giri programmati.
     problems=traffic_window_problems(rows)
-    if problems:
-        raise HTTPException(409,'Con il traffico aggiornato alcuni clienti verrebbero serviti fuori orario: '
-                            +'; '.join(problems)+'. Sposta queste consegne in un altro giro, allarga la loro fascia oraria '
-                            'o anticipa la partenza, poi ricalcola.')
     for row in rows:
         from .driver_schedule import ensure_shift
         ensure_shift(row.driver_schedule,row.orario_partenza,row.totale_minuti)
@@ -552,6 +549,8 @@ def _program_saved(db,user,actor,plan_id,data):
             stop.update(arrivo_stimato=delivery.arrivo_stimato.strftime('%H:%M'),partenza_stimata=delivery.partenza_stimata.strftime('%H:%M'))
     updated['warnings']=['Giri programmati. Apri ciascun giro per traffico, pedaggi e costi aggiornati.',
                          'Capacità verificate: peso e colli. Verifica separatamente gli altri requisiti.']
+    if problems:
+        updated['warnings'].insert(0,'Programmati con clienti fuori orario per il traffico: '+'; '.join(problems)+'.')
     for row in rows:
         if not row.vehicle.ha_sponda:
             for delivery in row.deliveries:

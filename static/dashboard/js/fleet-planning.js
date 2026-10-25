@@ -137,7 +137,7 @@
         }
         render();
         if(plan.status==='programmed'){
-          const issues=(plan.warnings||[]).filter(x=>/email non inviata|notifiche? non inviate?/i.test(x));
+          const issues=(plan.warnings||[]).filter(x=>/email non inviata|notifiche? non inviate?|fuori orario/i.test(x));
           notice(issues.length
             ?'Giri programmati. Attenzione: '+issues.join(' ') 
             :'Giri programmati correttamente. Le consegne sono ora disponibili nel portale degli autisti.');

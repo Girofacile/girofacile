@@ -487,3 +487,16 @@ def test_traffic_margin_lengthens_times_on_a_copy():
     longer=apply_traffic_margin(matrix,1.15)
     assert longer[(0,1)]=={'km':10,'min':pytest.approx(23)} and longer.source=='osrm'
     assert matrix[(0,1)]['min']==20 and apply_traffic_margin(matrix,1) is matrix
+
+
+def test_late_customers_are_programmed_with_a_warning(fleet,monkeypatch):
+    # Come per il giro singolo: uno scarico fuori fascia con il traffico non blocca la programmazione.
+    from app.services import fleet_planning
+    monkeypatch.setattr(fleet_planning,'traffic_window_problems',
+                        lambda rows:['Bar Luna (giro di Anna): scarico fino alle 10:22, fascia 07:00–10:00, 22 min oltre'])
+    plan=preview(fleet)
+    saved=command(fleet,plan,'confirm');assert saved.status_code==200,saved.text
+    result=command(fleet,saved.json(),'program');assert result.status_code==200,result.text
+    assert result.json()['status']=='programmed'
+    assert result.json()['warnings'][0].startswith('Programmati con clienti fuori orario per il traffico: Bar Luna')
+    assert all(r.status=='programmato' for r in fleet[0][1].query(RoutePlan))
