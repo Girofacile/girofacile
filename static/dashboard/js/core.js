@@ -1462,16 +1462,17 @@ async function initApp(){
   }
   document.getElementById("fuelPrice")?.addEventListener("input", updateDashboardStats);
   initRoutePlanningGateV68();
-  await Promise.all([loadSettingsV41(), loadUniversalFeaturesV89()]);
-  loadProfilePanel();
-  initAddressAutocomplete();
-  initResourceAvailabilityControls();
   // Share only this startup's responses; later refreshes always request fresh data.
   const startupResources = {
     vehicles: api("/api/vehicles"),
     drivers: api("/api/drivers")
   };
   const dashboardReady = loadDashboardHome(startupResources);
+  await Promise.all([loadSettingsV41(), loadUniversalFeaturesV89()]);
+  loadProfilePanel();
+  initAddressAutocomplete();
+  initResourceAvailabilityControls();
+
   const resourcesReady = Promise.allSettled([
     loadDeposits(), loadVehicles(startupResources.vehicles), loadDrivers(startupResources.drivers)
   ]).then(async results => {
@@ -1974,7 +1975,13 @@ function renderGFReferenceDashboardHero(summary){
   if(list)list.innerHTML="";
   const routeId=Number(summary.id);
   if(!Number.isSafeInteger(routeId) || routeId<=0)return Promise.resolve();
-  return api(`/api/routes/${routeId}`).then(route=>{
+  const routeRequest = api(`/api/routes/${routeId}`);
+  // Start map data and the library now, while the delivery detail is in flight.
+  if(drawing && window.GiroFacileDashboardMap?.render){
+    const deliveriesRequest = routeRequest.then(route => Array.isArray(route.consegne) ? route.consegne : []);
+    window.GiroFacileDashboardMap.render(routeId, deliveriesRequest, drawing);
+  }
+  return routeRequest.then(route=>{
     if(!root.isConnected || !root.classList.contains("has-route") || root.dataset.gfRefRenderVersion!==String(version))return;
     const rows=Array.isArray(route.consegne)?route.consegne.slice():[];
     rows.sort((a,b)=>(Number(a.ordine)||0)-(Number(b.ordine)||0));
@@ -1986,7 +1993,6 @@ function renderGFReferenceDashboardHero(summary){
     const status=d=>["completata","consegnata","completed"].includes(String(d.delivery_status||d.status||"").toLowerCase())?"done":["mancata","non_consegnata","missed"].includes(String(d.delivery_status||d.status||"").toLowerCase())?"miss":"todo";
     // La mappa disegna solo strade salvate e coordinate autentiche.
     // La lista operativa continua a utilizzare i dati/stati del giro.
-    if(drawing) window.GiroFacileDashboardMap?.render(routeId,rows,drawing);
     if(list){
       list.innerHTML=shown.map((d,i)=>{
         const st=status(d),name=d.cliente_nome||`Fermata ${i+1}`;

@@ -219,14 +219,15 @@
     showMessage(element, 'Caricamento mappa stradale…');
     try {
       // L'endpoint restituisce dati salvati, senza nuove chiamate OSRM o Mapbox.
-      const [data] = await Promise.all([
+      const [data, deliveryRows] = await Promise.all([
         api('/api/routes/' + Number(routeId) + '/map-data'),
+        routeDeliveries,
         loadRoadMapLibrary()
       ]);
       if (version !== generation || !element.isConnected) return;
       const depot = validPosition(data.depot);
       const orderedStops = Array.isArray(data.stops) ? data.stops : [];
-      const deliveries = new Map((Array.isArray(routeDeliveries) ? routeDeliveries : [])
+      const deliveries = new Map((Array.isArray(deliveryRows) ? deliveryRows : [])
         .map(d => [String(d.id),d]));
       const positions = [];
       if (depot) positions.push([depot.lat,depot.lon]);

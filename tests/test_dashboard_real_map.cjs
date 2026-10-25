@@ -60,7 +60,7 @@ function harness(payload){
     window:{}, document, L,
     api:async url => {calls.requests.push(url);return payload;},
     decodeGooglePolylineV75:()=>[{lat:41.1,lng:12.4},{lat:41.2,lng:12.5}],
-    loadRoadMapLibrary:async()=>true,
+    loadRoadMapLibrary:async()=>{calls.libraryStarted=true;return true;},
     requestAnimationFrame:()=>{},
     setTimeout:()=>1,clearTimeout:()=>{},
     console
@@ -133,7 +133,7 @@ test('switching routes disposes old map and does not change any sidebar styling'
   assert.equal(calls.maps.length,2);
   const core=read('static/dashboard/js/core.js');
   const html=read('static/dashboard/index.html');
-  assert.match(core,/GiroFacileDashboardMap\?\.render\(routeId,rows,drawing\)/);
+  assert.match(core,/GiroFacileDashboardMap\.render\(routeId, deliveriesRequest, drawing\)/);
   assert.doesNotMatch(core,/Schema non geografico delle prime/);
   assert.match(html,/dashboard-real-map\.js\?v=[\w-]+/);
   assert.match(html,/\/static\/design-system\/design-system\.js\?v=[\w-]+/);
@@ -150,4 +150,18 @@ test('dashboard map fills the available card height on desktop',()=>{
   assert.match(css,/@media\s*\(min-width:\s*1025px\)[\s\S]*?\.gf-route-panel\s*\{\s*min-height:\s*28\.25rem;\s*\}/);
   assert.match(css,/\.gf-route-panel__canvas\s*\{\s*flex:\s*1 1 auto;\s*min-height:\s*var\(--gf-map-min-height\);\s*\}/);
   assert.match(html,/dashboard-real-map\.css\?v=gf_route_detail_20261020b/);
+});
+
+test('map data and library start while delivery detail is still pending',async()=>{
+  const {control,calls,container}=harness({depot:{lat:41.1,lon:12.4},stops:[{id:91,lat:41.2,lon:12.5}],road_polyline:null});
+  let resolve;
+  const pending=new Promise(done=>{resolve=done;});
+  const rendering=control.render(23,pending,container);
+  assert.deepEqual(calls.requests,['/api/routes/23/map-data']);
+  assert.equal(calls.libraryStarted,true);
+  assert.equal(calls.maps.length,0);
+  resolve([{id:91,status:'completata'}]);
+  await rendering;
+  assert.equal(calls.maps.length,1);
+  assert.match(calls.markers[1].options.icon.html,/is-done/);
 });

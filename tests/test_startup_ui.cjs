@@ -28,7 +28,9 @@ function fixture(){
 }
 test('dashboard renders while slow customers remain pending; resources are requested once',async()=>{
  const f=fixture();const done=f.ctx.initApp();
- f.settings.resolve();await tick();assert.equal(f.calls.length,0);
+ await tick();assert.ok(f.calls.includes('dashboard rendered'));
+ assert.ok(!f.calls.includes('agents'),'permission-dependent data still waits for settings');
+ f.settings.resolve();await tick();
  f.features.resolve();await tick();
  assert.ok(f.calls.includes('dashboard rendered'));
  assert.ok(f.calls.includes('notifications'));
