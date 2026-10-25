@@ -147,7 +147,7 @@ function showTab(name){
   if(name==="company") { loadCompanyProfile(); if(!window.GFCompanyAccess?.isCollaborator()) loadOnboardingStatus(false); }
   if(name!=="ordini-collegamenti") window.GFOrderSources?.hideSecret();
   if(name==="ordini-collegamenti") window.GFOrderSources?.load();
-  if(name==="ordini") GFOrders.load();
+  if(name==="ordini"){ GFOrders.load(); markOrdersSeenV30(); }
   if(name==="collaboratori") GFCollaborators.load();
   if(name==="dashboard-scheduled") loadDashboardScheduledPage();
   if(name==="dashboard-in-progress") loadDashboardInProgressPage();

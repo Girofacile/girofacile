@@ -8,7 +8,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from ..core.clock import utc_now
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from ..core.dependencies import current_user
@@ -25,8 +25,13 @@ from ..models import (
     RoutePlan,
     User,
 )
+from ..order_models import Order, OrderSource
 
 router = APIRouter(prefix="/api/notifications", tags=["notifications"])
+
+# Ordini caricati dall'utente stesso (a mano o da file) non generano notifiche:
+# servono solo per quelli che arrivano da soli (API, negozi collegati).
+ORDER_SOURCES_WITHOUT_NOTIFICATION = ("manual", "file")
 
 
 def _driver_name(driver: Driver | None) -> str:
@@ -134,6 +139,32 @@ def sync_operational_notifications(db: Session, user: User) -> None:
             "chat-autisti",
             "Apri chat",
             msg.created_at,
+        )
+
+    # Nuovi ordini arrivati in automatico da una fonte collegata.
+    new_orders = (
+        db.query(Order, OrderSource)
+        .join(OrderSource, (OrderSource.user_id == Order.user_id) & (OrderSource.id == Order.source_id))
+        .filter(Order.user_id == user_id, Order.status == "nuovo", Order.received_at >= since)
+        .filter(OrderSource.kind.notin_(ORDER_SOURCES_WITHOUT_NOTIFICATION))
+        .order_by(Order.received_at.desc(), Order.id.desc())
+        .limit(100)
+        .all()
+    )
+    for order, source in new_orders:
+        recipient = f" per {order.recipient_name}" if order.recipient_name else ""
+        _ensure_notification(
+            db,
+            user_id,
+            f"order_new:{order.id}",
+            "order_new",
+            "Nuovo ordine",
+            f"L'ordine {order.number} è arrivato da {source.name}{recipient}.",
+            "order",
+            order.id,
+            "ordini",
+            "Apri ordini",
+            order.received_at,
         )
 
     # Clienti creati/associati ad agenti.
@@ -247,8 +278,10 @@ def list_notifications(
     if unread_only:
         q = q.filter(Notification.is_read.is_(False))
     rows = q.order_by(Notification.is_read.asc(), Notification.created_at.desc()).limit(max(1, min(limit, 100))).all()
-    unread = q.filter(Notification.is_read.is_(False)).count()
-    return {"unread": unread, "items": [_notif_payload(n) for n in rows]}
+    unread_q = q.filter(Notification.is_read.is_(False))
+    unread = unread_q.count()
+    orders_unread = unread_q.filter(Notification.type == "order_new").count()
+    return {"unread": unread, "orders_unread": orders_unread, "items": [_notif_payload(n) for n in rows]}
 
 
 @router.get("/count")
@@ -273,8 +306,15 @@ def mark_notification_read(notification_id: int, db: Session = Depends(get_db), 
 
 
 @router.post("/read-all")
-def mark_all_notifications_read(db: Session = Depends(get_db), user: User = Depends(current_user)):
-    rows = db.query(Notification).filter(Notification.user_id == user.id, Notification.is_read.is_(False)).all()
+def mark_all_notifications_read(
+    type_: str | None = Query(None, alias="type", max_length=60),
+    db: Session = Depends(get_db),
+    user: User = Depends(current_user),
+):
+    q = db.query(Notification).filter(Notification.user_id == user.id, Notification.is_read.is_(False))
+    if type_:
+        q = q.filter(Notification.type == type_)
+    rows = q.all()
     now = utc_now()
     for n in rows:
         n.is_read = True

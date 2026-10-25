@@ -1525,8 +1525,7 @@ async function initApp(){
     console.warn("Caricamento iniziale parziale", results.filter(result => result.status === "rejected"));
     toast("Alcuni dati non sono stati caricati. Riapri la sezione interessata per riprovare.");
   }
-  if(notificationsPollV30) clearInterval(notificationsPollV30);
-  notificationsPollV30 = setInterval(()=>loadNotificationsV30(false), 60000);
+  startNotificationsPollV30();
   updateDashboardStats();
 }
 
@@ -4960,6 +4959,18 @@ async function completeOnboarding(){
 // -----------------------------------------------------------------------------
 let notificationsCacheV30 = [];
 let notificationsPollV30 = null;
+// Ogni quanto la Dashboard chiede al server notifiche e nuovi ordini.
+const NOTIFICATIONS_POLL_MS = 30000;
+
+// Avvia (o riavvia) il controllo periodico. Con la scheda del browser nascosta
+// non interroga il server; al ritorno sulla scheda aggiorna subito.
+function startNotificationsPollV30(){
+  if(notificationsPollV30) clearInterval(notificationsPollV30);
+  notificationsPollV30 = setInterval(()=>{ if(!document.hidden) loadNotificationsV30(false); }, NOTIFICATIONS_POLL_MS);
+}
+document.addEventListener("visibilitychange", ()=>{
+  if(!document.hidden && notificationsPollV30) loadNotificationsV30(false);
+});
 
 function notificationTimeLabelV30(value){
   if(!value) return "";
@@ -4981,6 +4992,7 @@ function notificationIconV30(type){
     route_started: "▶️",
     route_completed: "✅",
     delivery_missed: "⚠️",
+    order_new: "📦",
     address: "📍"
   };
   return map[type] || "🔔";
@@ -4996,6 +5008,7 @@ async function loadNotificationsV30(openDropdown=false){
     renderNotificationBadgeV30(data.unread || 0);
     renderNotificationsDropdownV30(data.unread || 0);
     if(openDropdown) showNotificationsDropdownV30(true);
+    await renderOrdersBadgeV30(data.orders_unread || 0);
   }catch(e){
     // Non bloccare mai la dashboard per le notifiche.
     console.warn("Errore notifiche", e);
@@ -5013,6 +5026,41 @@ function renderNotificationBadgeV30(unread){
   }else{
     badge.classList.add("hidden");
   }
+}
+
+function ordersTabOpenV30(){
+  const tab = document.getElementById("tab-ordini");
+  return !!tab && !tab.classList.contains("hidden") && !document.hidden;
+}
+
+// Contatore "nuovi ordini" accanto alla voce Ordini del menu. Se l'utente sta
+// già guardando gli ordini, la lista si aggiorna da sola e gli ordini sono visti.
+async function renderOrdersBadgeV30(count){
+  const badge = document.getElementById("sidebarOrdersBadge");
+  if(count > 0 && ordersTabOpenV30()){
+    await GFOrders.load();
+    await markOrdersSeenV30(true);
+    return;
+  }
+  if(!badge) return;
+  if(count > 0){
+    badge.textContent = count > 99 ? "99+" : String(count);
+    badge.setAttribute("aria-label", count === 1 ? "1 nuovo ordine" : `${count} nuovi ordini`);
+    badge.classList.remove("hidden");
+  }else{
+    badge.classList.add("hidden");
+  }
+}
+
+// Aprendo la sezione Ordini i nuovi ordini contano come visti.
+async function markOrdersSeenV30(force=false){
+  const badge = document.getElementById("sidebarOrdersBadge");
+  if(!force && (!badge || badge.classList.contains("hidden"))) return;
+  if(badge) badge.classList.add("hidden");
+  try{
+    await api("/api/notifications/read-all?type=order_new", {method:"POST", body:"{}"});
+    await loadNotificationsV30(false);
+  }catch(e){ console.warn("GiroFacile: operazione non completata", e); }
 }
 
 function renderNotificationsDropdownV30(unread){

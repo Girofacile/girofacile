@@ -103,10 +103,10 @@
       ['agents.read',()=>agentsFeatureEnabled()?loadAgents():Promise.resolve()],['customers.read',loadCustomers],
       ['routes.plan',loadCustomerPicker]
     ]) if(can(permission)) await loader();
-    if(notificationsPollV30) clearInterval(notificationsPollV30);
+    if(notificationsPollV30){clearInterval(notificationsPollV30);notificationsPollV30=null;}
     if(can('notifications.read')){
       await loadNotificationsV30(false);
-      notificationsPollV30=setInterval(()=>loadNotificationsV30(false),60000);
+      startNotificationsPollV30();
     }
     apply(); startObserver();
     const preferred=['dashboard','giro','clienti','depositi','mezzi','autisti','agenti','storico','report','chat-autisti','company','settings'];
