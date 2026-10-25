@@ -31,9 +31,9 @@
 <script src="/static/dashboard/js/drivers.js?v=gf_audit_20261020"></script>
 
 <!-- Shared GiroFacile design system; legacy sheets retain feature layout. -->
-<link rel="stylesheet" href="/static/design-system/theme.css?v=gf_avatar_20261018">
+<link rel="stylesheet" href="/static/design-system/theme.css?v=gf_sidebar_20261025">
 <link rel="stylesheet" href="/static/design-system/components.css?v=gf_route_strip_20261021">
-<link rel="stylesheet" href="/static/design-system/layout.css?v=gf_audit_20261020">
+<link rel="stylesheet" href="/static/design-system/layout.css?v=gf_sidebar_20261025">
 <link rel="stylesheet" href="/static/design-system/workspace.css?v=gf_selection_20261016">
 <link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007_reference_2">
 <script src="/static/design-system/design-system.js?v=gf_base_20261015" defer></script>
@@ -183,7 +183,7 @@
     <nav class="gf-sidebar__nav" aria-label="Sezioni del gestionale">
       <button type="button" data-tab="dashboard" data-workspace-common="1" onclick="showTab('dashboard')" class="gf-sidebar__item" aria-current="page"><svg class="gf-sidebar__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h7v7H3z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7H3z"/></svg><span>Dashboard</span></button>
       <details class="gf-sidebar__group" data-sidebar-group="attivita" open>
-        <summary class="gf-sidebar__summary"><span>Attività</span><svg class="gf-sidebar__chevron" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg></summary>
+        <summary class="gf-sidebar__summary"><span>Attività</span><svg class="gf-sidebar__chevron" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg></summary>
         <div class="gf-sidebar__section">
           <button type="button" data-tab="dashboard-scheduled" data-workspace-common="1" onclick="openDashboardScheduledPage()" class="gf-sidebar__item scheduled-nav-entry gf-hidden" data-show-on-tabs="dashboard-scheduled"><svg class="gf-sidebar__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z M16 3v4 M8 3v4 M4 11h16"/></svg><span>Giri programmati</span></button>
           <button type="button" data-tab="ordini" data-workspace-operational="1" onclick="showTab('ordini')" class="gf-sidebar__item"><svg class="gf-sidebar__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6v3H9z M7 5H6a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1h-1 M9 12h6 M9 16h6"/></svg><span>Ordini</span></button>
@@ -192,7 +192,7 @@
         </div>
       </details>
       <details class="gf-sidebar__group" data-sidebar-group="persone" open>
-        <summary class="gf-sidebar__summary"><span>Persone</span><svg class="gf-sidebar__chevron" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg></summary>
+        <summary class="gf-sidebar__summary"><span>Persone</span><svg class="gf-sidebar__chevron" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg></summary>
         <div class="gf-sidebar__section">
           <button type="button" data-tab="clienti" data-workspace-operational="1" onclick="showTab('clienti')" class="gf-sidebar__item"><svg class="gf-sidebar__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 20v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1 M9.5 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z M21 20v-1a4 4 0 0 0-3-3.9 M16 4.1a3.5 3.5 0 0 1 0 6.8"/></svg><span>Clienti</span></button>
           <button type="button" data-tab="agenti" data-workspace-operational="1" onclick="showTab('agenti')" class="gf-sidebar__item"><svg class="gf-sidebar__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M4 21a8 8 0 0 1 16 0"/></svg><span>Agenti</span></button>
@@ -200,7 +200,7 @@
         </div>
       </details>
       <details class="gf-sidebar__group" data-sidebar-group="risorse" open>
-        <summary class="gf-sidebar__summary"><span>Risorse</span><svg class="gf-sidebar__chevron" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg></summary>
+        <summary class="gf-sidebar__summary"><span>Risorse</span><svg class="gf-sidebar__chevron" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg></summary>
         <div class="gf-sidebar__section">
           <button type="button" data-tab="depositi" data-workspace-operational="1" onclick="showTab('depositi')" class="gf-sidebar__item"><svg class="gf-sidebar__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10l9-6 9 6v10H3z M8 20v-6h8v6"/></svg><span>Depositi</span></button>
           <button type="button" data-tab="mezzi" data-workspace-operational="1" onclick="showTab('mezzi')" class="gf-sidebar__item"><svg class="gf-sidebar__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 6h11v10H2z M13 9h5l3 3v4h-8z M6.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z M17.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/></svg><span>Mezzi</span></button>
@@ -208,7 +208,7 @@
         </div>
       </details>
       <details class="gf-sidebar__group" data-sidebar-group="sistema">
-        <summary class="gf-sidebar__summary"><span>Azienda e sistema</span><svg class="gf-sidebar__chevron" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg></summary>
+        <summary class="gf-sidebar__summary"><span>Azienda e sistema</span><svg class="gf-sidebar__chevron" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg></summary>
         <div class="gf-sidebar__section">
           <button type="button" data-tab="company" data-workspace-common="1" onclick="showTab('company')" class="gf-sidebar__item"><svg class="gf-sidebar__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V4a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v17 M15 9h4a1 1 0 0 1 1 1v11 M3 21h18 M8 7h3 M8 11h3 M8 15h3"/></svg><span>Azienda</span></button>
           <button type="button" data-tab="chat-autisti" data-workspace-operational="1" onclick="showTab('chat-autisti')" class="gf-sidebar__item"><svg class="gf-sidebar__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg><span>Chat autisti</span><span id="sidebarChatBadge" class="gf-sidebar__count hidden">0</span></button>
@@ -1560,7 +1560,7 @@
 
 <script src="/static/dashboard/js/reports.js?v=gf_format_20261020"></script>
 <script src="/static/dashboard/js/customers.js?v=gf_access_notices_20261020"></script>
-<script src="/static/dashboard/js/navigation.js?v=gf_dashboard_mobile_20261019"></script>
+<script src="/static/dashboard/js/navigation.js?v=gf_sidebar_20261025"></script>
 <script src="/static/dashboard/js/history.js?v=gf_break_row_20261021"></script>
 <script src="/static/password-strength.js?v=gf_driver_flow_20261020"></script>
 <script src="/static/dashboard/js/collaborators.js?v=gf_plans_20261023"></script>
