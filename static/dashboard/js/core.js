@@ -1161,6 +1161,7 @@ async function checkLogin(){
       showGestionaleAfterLogin(false);
       updatePremiumNavState();
       renderSidebarUpgrade(me.plan || "starter");
+      window.GFSidebarFit?.();
       document.getElementById("logoutBtn").classList.remove("hidden");
       document.getElementById("notificationBellBtn")?.classList.remove("hidden");
       if(me.username) localStorage.setItem("girofacile_account_name", me.username);
@@ -5477,6 +5478,42 @@ function syncMobileShellV62(){
     else if(['giro','dashboard-scheduled','dashboard-completed'].includes(active)) nav.querySelector('button.main')?.setAttribute('aria-current','page');
   }catch(e){ console.warn('syncMobileShellV62', e); }
 }
+// Sidebar: voci grandi quanto lo spazio permette, senza barra di scorrimento. Misura l'altezza
+// naturale della barra con voci da 32 px e distribuisce lo spazio libero sulle voci visibili.
+function sidebarFit(){
+  const bar=document.querySelector('.gf-sidebar[data-sidebar-variant="structured"]');
+  if(!bar || !bar.offsetHeight || !matchMedia('(pointer:fine)').matches) return;
+  const natural=()=>{
+    const cs=getComputedStyle(bar);
+    let total=parseFloat(cs.paddingTop)+parseFloat(cs.paddingBottom);
+    for(const child of bar.children){
+      const st=getComputedStyle(child);
+      if(st.display==='none' || st.position==='fixed') continue;
+      // Il margine superiore automatico (riquadro e piè di pagina) è spazio libero, non occupato.
+      total+=child.offsetHeight+(parseFloat(st.marginBottom)||0);
+    }
+    return total;
+  };
+  delete bar.dataset.rowSize;
+  bar.dataset.upgradeFit='yes';
+  const margin=12;
+  if(natural()+margin>bar.clientHeight){ bar.dataset.upgradeFit='no'; return; }
+  for(const size of [48,44,40,36]){
+    bar.dataset.rowSize=String(size);
+    if(natural()+margin<=bar.clientHeight) return;
+  }
+  delete bar.dataset.rowSize;
+}
+(function initSidebarFit(){
+  let timer=null;
+  const schedule=()=>{ clearTimeout(timer); timer=setTimeout(sidebarFit,60); };
+  window.addEventListener('resize',schedule);
+  document.addEventListener('toggle',e=>{ if(e.target.closest?.('.gf-sidebar')) schedule(); },true);
+  document.addEventListener('DOMContentLoaded',schedule);
+  window.addEventListener('load',schedule);
+  document.fonts?.ready?.then(schedule);
+  window.GFSidebarFit=schedule;
+})();
 (function initMobileShellV62(){
   window.addEventListener('resize', syncMobileShellV62);
   document.addEventListener('DOMContentLoaded', syncMobileShellV62);

@@ -60,6 +60,10 @@ def main():
                     footer = page.locator('.gf-sidebar__footer').bounding_box()
                     box = card.bounding_box()
                     assert box['y'] + box['height'] <= footer['y'] + 1
+                    # Le voci usano lo spazio libero senza mai far scorrere la barra.
+                    page.wait_for_timeout(150)
+                    assert page.evaluate("(()=>{const s=document.querySelector('.gf-sidebar');return s.scrollHeight<=s.clientHeight})()")
+                    assert page.locator('.gf-sidebar').get_attribute('data-row-size') in ('36', '40', '44', '48')
                     page.locator('.gf-sidebar').screenshot(path=str(output / f'{plan}.png'))
                     page.locator('[data-sidebar-group="sistema"] > summary').click()
                     assert card.is_hidden()

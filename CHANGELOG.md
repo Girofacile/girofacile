@@ -5,10 +5,11 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
-- Sidebar: sugli schermi alti le voci crescono (fino a 48 px, testo più
-  grande) e sfruttano lo spazio libero; tutto resta visibile senza scorrere
-  da 800 px di altezza in su. Sotto gli 800 px il riquadro di upgrade si
-  nasconde.
+- Sidebar: la pagina misura lo spazio libero e ingrandisce le voci (36, 40, 44
+  o 48 px, testo più grande da 40 px) senza mai far comparire la barra di
+  scorrimento; si ricalcola quando si apre o chiude un gruppo e quando cambia
+  la finestra. Se non c'è posto nemmeno con voci da 32 px, il riquadro di
+  upgrade si nasconde.
 - Sidebar: in fondo un riquadro blu invita al piano successivo (Starter →
   Business, Business → Pro) e apre Piani e abbonamento. Non compare con Pro,
   per i collaboratori e quando è aperto "Azienda e sistema". Nuovo componente

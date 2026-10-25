@@ -100,6 +100,7 @@ function renderSidebarUpgrade(plan) {
   const next={starter:'business',business:'pro'}[plan];
   const target=window.GF_PLANS?.[next];
   box.classList.toggle('gf-hidden',!target || !!window.GFCompanyAccess?.isCollaborator());
+  window.GFSidebarFit?.();
   if(!target) return;
   const n=value=>Number(value).toLocaleString('it-IT',{useGrouping:'always'});
   document.getElementById('sidebarUpgradeTitle').textContent=`Passa a ${target.name}`;
