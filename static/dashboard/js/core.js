@@ -1160,6 +1160,7 @@ async function checkLogin(){
       setSectorConfigV47(me);
       showGestionaleAfterLogin(false);
       updatePremiumNavState();
+      renderSidebarUpgrade(me.plan || "starter");
       document.getElementById("logoutBtn").classList.remove("hidden");
       document.getElementById("notificationBellBtn")?.classList.remove("hidden");
       if(me.username) localStorage.setItem("girofacile_account_name", me.username);

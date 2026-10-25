@@ -44,7 +44,8 @@ def main():
 
                 page.route('**/*', handle)
                 page.goto('http://upgrade.test/dashboard', wait_until='networkidle')
-                page.evaluate('async owner => { currentSessionUser=owner; showGestionaleAfterLogin(); acceptCookieNotice(); await loadPlanInfo(); document.getElementById("onboardingOverlay")?.classList.add("hidden"); }', owner)
+                # Avvio reale della Dashboard dopo l'accesso: il riquadro deve comparire senza aprire il profilo.
+                page.evaluate('async () => { acceptCookieNotice(); await checkLogin(); document.getElementById("onboardingOverlay")?.classList.add("hidden"); }')
                 card = page.locator('#sidebarUpgrade')
                 if plan == 'pro':
                     assert card.is_hidden()
