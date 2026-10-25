@@ -43,9 +43,14 @@ def add_order(db, user, kind, number, status='nuovo'):
 
 def test_automatic_orders_notify_and_badge_clears_by_type(notifications):
     client,db,owner,other=notifications
+    from datetime import timedelta
+    from app.core.clock import utc_now
     add_order(db, owner, 'api', 'WEB-1')
-    add_order(db, owner, 'api', 'WEB-2')
-    add_order(db, owner, 'api', 'WEB-3', status='pronto')
+    # Gli ordini via API arrivano già «da verificare» (controllo indirizzo).
+    add_order(db, owner, 'api', 'WEB-2', status='da_verificare')
+    add_order(db, owner, 'api', 'WEB-3', status='assegnato')
+    vecchio = add_order(db, owner, 'api', 'WEB-OLD', status='da_verificare')
+    vecchio.received_at = utc_now() - timedelta(days=5); db.commit()
     add_order(db, owner, 'manual', 'MAN-1')
     add_order(db, owner, 'file', 'CSV-1')
     add_order(db, other, 'api', 'ALTRO-1')

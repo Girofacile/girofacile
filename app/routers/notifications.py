@@ -32,6 +32,11 @@ router = APIRouter(prefix="/api/notifications", tags=["notifications"])
 # Ordini caricati dall'utente stesso (a mano o da file) non generano notifiche:
 # servono solo per quelli che arrivano da soli (API, negozi collegati).
 ORDER_SOURCES_WITHOUT_NOTIFICATION = ("manual", "file")
+# Ordini ancora da pianificare: appena arrivati diventano subito «da verificare»
+# (controllo indirizzo) o «pronto», raramente restano «nuovo».
+ORDER_STATUSES_TO_NOTIFY = ("nuovo", "da_verificare", "pronto")
+# Notifica solo gli arrivi recenti (copre un fine settimana), non l'arretrato.
+NEW_ORDER_WINDOW = timedelta(days=3)
 
 
 def _driver_name(driver: Driver | None) -> str:
@@ -145,7 +150,8 @@ def sync_operational_notifications(db: Session, user: User) -> None:
     new_orders = (
         db.query(Order, OrderSource)
         .join(OrderSource, (OrderSource.user_id == Order.user_id) & (OrderSource.id == Order.source_id))
-        .filter(Order.user_id == user_id, Order.status == "nuovo", Order.received_at >= since)
+        .filter(Order.user_id == user_id, Order.status.in_(ORDER_STATUSES_TO_NOTIFY),
+                Order.received_at >= utc_now() - NEW_ORDER_WINDOW)
         .filter(OrderSource.kind.notin_(ORDER_SOURCES_WITHOUT_NOTIFICATION))
         .order_by(Order.received_at.desc(), Order.id.desc())
         .limit(100)
