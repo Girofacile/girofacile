@@ -3381,6 +3381,23 @@ function renderDeliveries(){
 
 // Mappa "Dove sono i clienti": solo le posizioni delle consegne prima del calcolo (nessun percorso).
 let planningCustomersMap = null, planningCustomersLayer = null, planningCustomersBounds = null;
+const PLANNING_MAP_FIT = {padding:[24,24], maxZoom:15};
+function planningKm(a, b){
+  const rad = Math.PI / 180, dLat = (b[0]-a[0]) * rad, dLon = (b[1]-a[1]) * rad;
+  const h = Math.sin(dLat/2)**2 + Math.cos(a[0]*rad) * Math.cos(b[0]*rad) * Math.sin(dLon/2)**2;
+  return 12742 * Math.asin(Math.sqrt(h));
+}
+// Clienti molto lontani dagli altri (di solito un indirizzo geolocalizzato male):
+// restano sulla mappa ma non allargano l'inquadratura fino a renderla illeggibile.
+function planningMapOutliers(points, center){
+  if(points.length < 4) return new Set();
+  const median = list => { const s = [...list].sort((a,b)=>a-b); return s[Math.floor(s.length/2)]; };
+  const ref = center || [median(points.map(p=>p[0])), median(points.map(p=>p[1]))];
+  const dist = points.map(p=>planningKm(ref, p));
+  const limit = Math.max(40, median(dist) * 4);
+  const far = new Set(dist.map((d,i)=>d > limit ? i : -1).filter(i=>i >= 0));
+  return far.size <= points.length / 3 ? far : new Set();
+}
 async function renderPlanningCustomersMap(){
   const host = typeof document.getElementById === "function" ? document.getElementById("planningCustomersMap") : null;
   if(!host) return;
@@ -3399,22 +3416,33 @@ async function renderPlanningCustomersMap(){
     if(typeof ResizeObserver === "function") new ResizeObserver(()=>{
       if(!host.offsetWidth) return;
       planningCustomersMap.invalidateSize();
-      if(planningCustomersBounds) planningCustomersMap.fitBounds(planningCustomersBounds, {padding:[24,24]});
+      if(planningCustomersBounds) planningCustomersMap.fitBounds(planningCustomersBounds, PLANNING_MAP_FIT);
     }).observe(host);
   }
   planningCustomersLayer.clearLayers();
+  const depot = depositsCache.find(x=>String(x.id)===String(val("routeDeposit")));
+  const depotPoint = depot && depot.lat != null && depot.lon != null ? [Number(depot.lat), Number(depot.lon)] : null;
+  const far = planningMapOutliers(stops.map(({d})=>[Number(d.lat), Number(d.lon)]), depotPoint);
   const points = stops.map(({d,i})=>{
     const icon = L.divIcon({className:"", html:`<span class="gf-stop__number">${i+1}</span>`, iconSize:[28,28], iconAnchor:[14,14]});
     L.marker([d.lat, d.lon], {icon}).bindPopup(`<strong>${esc(d.cliente_nome||"Cliente")}</strong><br>${esc(d.indirizzo||"")}<br>${gfCount(parseInt(d.colli)||0,"collo","colli")}`).addTo(planningCustomersLayer);
     return [d.lat, d.lon];
   });
-  const depot = depositsCache.find(x=>String(x.id)===String(val("routeDeposit")));
-  if(depot && depot.lat != null && depot.lon != null){
-    L.marker([depot.lat, depot.lon], {icon:L.divIcon({className:"", html:'<span class="gf-badge" data-status="info">Deposito</span>', iconSize:null})}).addTo(planningCustomersLayer);
-    points.push([depot.lat, depot.lon]);
+  const framed = points.filter((p,k)=>!far.has(k));
+  if(depotPoint){
+    L.marker(depotPoint, {icon:L.divIcon({className:"", html:'<span class="gf-badge" data-status="info">Deposito</span>', iconSize:null})}).addTo(planningCustomersLayer);
+    framed.push(depotPoint);
   }
-  planningCustomersBounds = L.latLngBounds(points);
-  if(host.offsetWidth){ planningCustomersMap.invalidateSize(); planningCustomersMap.fitBounds(planningCustomersBounds, {padding:[24,24]}); }
+  const outliers = document.getElementById("planningCustomersMapOutliers");
+  if(outliers){
+    const names = [...far].map(k=>`${stops[k].i+1} · ${stops[k].d.cliente_nome || "Cliente"} (${stops[k].d.indirizzo || "indirizzo mancante"})`);
+    outliers.hidden = !names.length;
+    outliers.querySelector(".gf-alert__text").textContent = names.length
+      ? `${names.length === 1 ? "Questo cliente è" : "Questi clienti sono"} molto lontano dalla zona del giro e ${names.length === 1 ? "resta" : "restano"} fuori dall'inquadratura: controlla l'indirizzo. ${names.join(" · ")}`
+      : "";
+  }
+  planningCustomersBounds = L.latLngBounds(framed);
+  if(host.offsetWidth){ planningCustomersMap.invalidateSize(); planningCustomersMap.fitBounds(planningCustomersBounds, PLANNING_MAP_FIT); }
   }catch(e){ host.hidden = true; console.warn("GiroFacile: mappa dei clienti non disponibile", e); }
 }
 
