@@ -410,7 +410,9 @@ body[data-gf-surface] .gf-route-panel__canvas{
 body[data-gf-surface] .leaflet-container{isolation:isolate}
 body[data-gf-surface] .gf-route-panel__canvas>svg{display:block;width:100%;height:auto;aspect-ratio:660/300}
 body[data-gf-surface] .gf-route-panel__detail{min-width:0;display:flex;flex-direction:column}
-body[data-gf-surface] .gf-route-panel__detail>.gf-progress{padding:var(--gf-space-4) var(--gf-space-5) var(--gf-space-1)}
+body[data-gf-surface] .gf-route-panel__detail>.gf-progress,
+body[data-gf-surface] .gf-route-panel__operational>.gf-progress{min-width:0;max-width:100%;box-sizing:border-box;padding:var(--gf-space-4) var(--gf-space-5) var(--gf-space-1)}
+body[data-gf-surface] .gf-route-panel__operational>.gf-progress .gf-progress__top{flex-wrap:wrap}
 body[data-gf-surface] .gf-route-panel__detail>.gf-alert{margin:var(--gf-space-3) var(--gf-space-5) 0}
 body[data-gf-surface] .gf-route-panel__footer{
   display:flex;justify-content:flex-end;margin-top:auto;padding:var(--gf-space-2) var(--gf-space-4);border-top:var(--gf-border);
