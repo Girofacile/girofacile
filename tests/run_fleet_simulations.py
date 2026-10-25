@@ -202,6 +202,9 @@ def execute(case, strategy):
         stack.enter_context(patch.object(opt, "geocode_deposit",
                                         lambda *args: {"lat": depot.lat, "lon": depot.lon}))
         stack.enter_context(patch.object(opt, "build_distance_matrix", matrix_fixture))
+        # Il simulatore misura la ricerca sulle matrici di riferimento: niente margine né traffico in anteprima.
+        stack.enter_context(patch.object(fleet, "traffic_margin", lambda db: 1.0))
+        stack.enter_context(patch.object(fleet, "preview_traffic", lambda *args: {"status": "disabled"}))
         stack.enter_context(patch.object(requests.sessions.Session, "request", forbidden))
         stack.enter_context(patch.object(requests, "get", forbidden))
         stack.enter_context(patch.object(socket.socket, "connect", forbidden))

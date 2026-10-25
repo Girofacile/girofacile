@@ -145,8 +145,11 @@ def _persist_timing(plan, result, departure):
     plan.orario_rientro_stimato = parse_time_value(result["return_time"])
 
 
-def enrich_final_route(db, plan, *, force=False, requested_at=None):
+def enrich_final_route(db, plan, *, force=False, requested_at=None, cached_traffic=None):
     """Serialize provider attempts; coalesce requests that overlap a saved result.
+
+    cached_traffic: tratte con traffico già calcolate in anteprima e ancora recenti;
+    se presenti non si interroga di nuovo il fornitore.
 
     requested_at is UTC-naive and captured before caller-side row locks.
     A later explicit refresh still retries, including after provider failure.
@@ -192,7 +195,9 @@ def enrich_final_route(db, plan, *, force=False, requested_at=None):
             partial = evaluate_legs(snapshot, legs, plan, return_depot=False)
             return (datetime.fromisoformat(departure.replace("Z", "+00:00")) +
                     timedelta(minutes=partial["total_min"])).isoformat()
-        if points and snapshot.get("deliveries"):
+        if cached_traffic and points and len(cached_traffic.get("legs") or []) == len(points) - 1:
+            traffic = cached_traffic
+        elif points and snapshot.get("deliveries"):
             traffic = provider.calculate(points, departure, db=db, user_id=plan.user_id,
                                          route_id=plan.id, advance_departure=advance)
         elif provider.name != "none":

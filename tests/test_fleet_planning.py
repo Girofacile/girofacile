@@ -446,3 +446,44 @@ def test_traffic_window_message_names_customer_driver_and_delay():
         NS(ordine=2,cliente_nome='Bar Luna',optimizer_details=json.dumps(late)),
         NS(ordine=1,cliente_nome='Puntuale',optimizer_details='{}')])
     assert traffic_window_problems([row])==['Bar Luna (giro di Anna Neri): scarico fino alle 10:22, fascia 07:00–10:00, 22 min oltre']
+
+
+def mapbox_calls(fleet):
+    return sum('api.mapbox.com' in url for url,_ in fleet[0][-1])
+
+
+def test_preview_traffic_is_reused_when_programming(fleet):
+    plan=preview(fleet)
+    assert plan['routes'] and all(r['traffic']['status']=='updated' for r in plan['routes'])
+    # Le tratte restano sul server: l'anteprima inviata al browser non le contiene.
+    assert all(r['traffic']['legs'] is None for r in plan['routes'])
+    assert 'Tempi con traffico aggiornato' in plan['warnings'][0]
+    before=mapbox_calls(fleet)
+    saved=command(fleet,plan,'confirm');assert saved.status_code==200,saved.text
+    result=command(fleet,saved.json(),'program');assert result.status_code==200,result.text
+    assert mapbox_calls(fleet)==before
+    assert all(r.traffic_status=='updated' for r in fleet[0][1].query(RoutePlan))
+
+
+def test_stale_preview_traffic_is_recalculated_when_programming(fleet):
+    from datetime import timedelta
+    from app.core.clock import utc_now
+    from app.fleet_models import FleetPlan
+    plan=preview(fleet)
+    row=fleet[0][1].get(FleetPlan,plan['id']);result=deepcopy(row.result)
+    for route in result['routes']:
+        route['traffic']['calculated_at']=(utc_now()-timedelta(hours=2)).isoformat()+'+00:00'
+    row.result=result;fleet[0][1].commit()
+    before=mapbox_calls(fleet)
+    saved=command(fleet,plan,'confirm');assert saved.status_code==200,saved.text
+    assert command(fleet,saved.json(),'program').status_code==200
+    assert mapbox_calls(fleet)>before
+
+
+def test_traffic_margin_lengthens_times_on_a_copy():
+    from app.services.fleet_planning import apply_traffic_margin
+    from app.services.road_routing import RoadMatrix
+    matrix=RoadMatrix({(0,1):{'km':10,'min':20}},source='osrm')
+    longer=apply_traffic_margin(matrix,1.15)
+    assert longer[(0,1)]=={'km':10,'min':pytest.approx(23)} and longer.source=='osrm'
+    assert matrix[(0,1)]['min']==20 and apply_traffic_margin(matrix,1) is matrix

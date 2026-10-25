@@ -16,6 +16,8 @@ La matrice stradale globale è già completa e viene riutilizzata: non si richie
 
 Per i giri oltre 8 fermate resta l'ordine trovato dall'euristica attuale. Non si forza la creazione di più giri soltanto per rientrare nella soglia. L'ottimo dell'ordine di un gruppo assegnato non certifica l'ottimo della suddivisione dell'intera flotta; la prova globale fino a 7 fermate e 3 risorse rimane distinta e viene riutilizzata per evitare lavoro ridondante.
 
+La ricerca usa i tempi stradali allungati di un margine prudente (`fleet_traffic_margin`, predefinito 1.15 = +15%). Finita la ricerca, i giri proposti vengono verificati con il traffico reale (una richiesta al fornitore per giro, anche a ogni ricalcolo): la revisione mostra minuti e rientro con traffico e segnala in rosso le consegne che finirebbero fuori fascia. Alla programmazione il traffico dell'anteprima viene riusato se ha meno di 60 minuti ed è per la stessa partenza; altrimenti viene richiesto di nuovo.
+
 L'operatore può indicare i prezzi energetici nei dettagli della coppia; non esiste una durata massima del giro impostata a mano: il limite è dato da turno e pause dell'autista, impegni già programmati e fine della giornata. La disponibilità iniziale verifica la partenza; il calcolo considera anche gli impegni successivi già programmati e i giri in corso.
 
 ## Percorso operativo

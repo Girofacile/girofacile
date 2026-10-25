@@ -55,6 +55,87 @@ def input_state(db,user,data):
     return deposit,rows,vehicles,drivers
 
 
+# Traffico calcolato in anteprima: riusato alla programmazione se ha meno di 60 minuti.
+TRAFFIC_REUSE_MINUTES=60
+
+
+def traffic_margin(db):
+    """Margine prudente sui tempi stradali usato dalla ricerca (1.15 = viaggi più lunghi del 15%)."""
+    from .platform_settings import routing_number
+    return routing_number(db,'fleet_traffic_margin',1.15,1)
+
+
+def apply_traffic_margin(matrix,margin):
+    """Copia della matrice con i tempi allungati del margine; distanze, fonte e cache restano invariate."""
+    if margin<=1: return matrix
+    from .road_routing import RoadMatrix
+    return RoadMatrix({key:{**leg,'min':float(leg.get('min') or 0)*margin} for key,leg in matrix.items()},
+                      source=getattr(matrix,'source','osrm'))
+
+
+def _traffic_snapshot(result,return_depot):
+    """Punti e tratte come in initialize_snapshot, così le tratte con traffico restano riutilizzabili."""
+    ordered=[dict(d) for d in result['ordered']]
+    depot=result.get('depot_coord')
+    points=[depot]+[d.get('coord') or {'lat':d.get('lat'),'lon':d.get('lon')} for d in ordered]
+    if any(not p or p.get('lat') is None or p.get('lon') is None for p in points): return None
+    if return_depot and ordered: points.append(dict(depot))
+    base_legs=[{'km':d.get('km_tappa') or 0,'min':d.get('minuti_tappa') or 0} for d in ordered]
+    if return_depot and ordered:
+        base_legs.append(result.get('base_return_leg') or {'km':0,'min':0})
+    return {'points':points,'deliveries':ordered,'base_legs':base_legs}
+
+
+def preview_traffic(db,user,data,route,vehicle,resource):
+    """Traffico reale sul giro proposto: orari aggiornati e clienti fuori fascia, senza cambiare l'ordine."""
+    from types import SimpleNamespace
+    from .traffic_provider import get_traffic_provider, TrafficUnavailable
+    from .route_enrichment import evaluate_legs
+    snapshot=_traffic_snapshot(route['result'],data.rientro_deposito)
+    if not snapshot: return {'status':'unavailable'}
+    plan=SimpleNamespace(rientro_deposito=data.rientro_deposito,vehicle=vehicle,orario_partenza=data.orario_partenza,
+                         driver_schedule=resource.driver_schedule.model_dump() if resource.driver_schedule else {})
+    departure=opt._route_departure_time_iso(data.orario_partenza,data.data_giro)
+    try:
+        provider=get_traffic_provider(db)
+        def advance(legs):
+            partial=evaluate_legs(snapshot,legs,plan,return_depot=False)
+            return (datetime.fromisoformat(departure.replace('Z','+00:00'))+timedelta(minutes=partial['total_min'])).isoformat()
+        traffic=provider.calculate(snapshot['points'],departure,db=db,user_id=user.id,advance_departure=advance)
+    except (TrafficUnavailable,ValueError,KeyError,TypeError):
+        return {'status':'unavailable'}
+    if not traffic: return {'status':'disabled'}
+    # Si conservano solo le durate: geometrie e passi di Mapbox pesano centinaia di KB per giro.
+    legs=[{'duration':leg['duration'],'distance':leg.get('distance')} for leg in traffic['legs']]
+    timed=evaluate_legs(snapshot,legs,plan)
+    late=[]
+    for position,stop in enumerate(timed['ordered']):
+        issue=stop.get('time_window_violation')
+        if not issue: continue
+        window=issue.get('window') or {}
+        late.append({'stop_index':route['stop_indexes'][position],'cliente_nome':stop.get('cliente_nome'),
+                     'fine_servizio':issue.get('fine_servizio'),'window':{'start':window.get('start'),'end':window.get('end')},
+                     'lateness_min':round(float(issue.get('lateness_min') or 0))})
+    return {'status':'updated','provider':traffic['provider'],'departure_time':departure,
+            'calculated_at':traffic['calculated_at'],'legs':legs,'total_min':timed['total_min'],
+            'return_time':timed.get('return_time'),'late':late}
+
+
+def reusable_traffic(proposal,row):
+    """Tratte con traffico dell'anteprima, se recenti e calcolate per la stessa partenza e gli stessi punti."""
+    from .route_enrichment import json_data
+    traffic=(proposal or {}).get('traffic') or {}
+    if traffic.get('status')!='updated' or not traffic.get('legs'): return None
+    try: calculated=datetime.fromisoformat(traffic['calculated_at'].replace('Z','+00:00'))
+    except (KeyError,ValueError,AttributeError): return None
+    if (utc_now()-calculated.replace(tzinfo=None))>timedelta(minutes=TRAFFIC_REUSE_MINUTES): return None
+    if traffic.get('departure_time')!=opt._route_departure_time_iso(row.orario_partenza,row.data_giro): return None
+    points=json_data(row.routing_snapshot_json).get('points') or []
+    if len(points)-1!=len(traffic['legs']): return None
+    return {'provider':traffic.get('provider','mapbox'),'status':'updated','legs':traffic['legs'],'geometries':[],
+            'departure_time':traffic['departure_time'],'calculated_at':traffic['calculated_at'],'version':1,'reused':True}
+
+
 def day_minutes_left(orario_partenza):
     """Minuti dalla partenza alla fine della giornata: i giri si chiudono in giornata."""
     return max(0,24*60-opt.parse_hhmm(orario_partenza))
@@ -117,6 +198,8 @@ def distribute(db,user,data,assignments=None):
     keys=[point_key(deposit_id=deposit.id,lat=depot['lat'],lon=depot['lon'],user_id=user.id)]+[
         point_key(customer_id=r.get('customer_id'),lat=r['coord']['lat'],lon=r['coord']['lon'],user_id=user.id) for r in rows]
     matrix=opt.build_distance_matrix(db,user.id,points,keys,start_time=data.orario_partenza,route_date=data.data_giro)
+    margin=traffic_margin(db)
+    matrix=apply_traffic_margin(matrix,margin)
     vehicle_data=[build_vehicle_dict(v,r.driver_schedule.model_dump()) for v,r in zip(vehicles,data.resources)]
     routes=[[] for _ in vehicles];results=[None for _ in vehicles]
     unresolved={}
@@ -253,8 +336,19 @@ def distribute(db,user,data,assignments=None):
         output.append({'resource':index,'vehicle_name':vehicles[index].nome,'driver_name':(drivers[index].nome+' '+(drivers[index].cognome or '')).strip(),
                        'stop_indexes':indexes,'result':result,'fuel_cost':fuel_cost(vehicles[index],data.resources[index],result['total_km']),
                        'weight_kg':sum(rows[i]['peso_kg'] for i in indexes),'packages':sum(rows[i]['colli'] for i in indexes)})
-    warnings=['Stima su tempi stradali; traffico e pedaggi saranno verificati alla programmazione. Costi mostrati: solo energia/carburante.',
-              'Capacita automatiche: peso e colli. Verifica separatamente volume, pallet, transpallet e altri requisiti.']
+    for route in output:
+        route['traffic']=preview_traffic(db,user,data,route,vehicles[route['resource']],data.resources[route['resource']])
+    statuses={route['traffic']['status'] for route in output}
+    late=[item for route in output for item in route['traffic'].get('late',[])]
+    if output and statuses=={'updated'}:
+        timing='Tempi con traffico aggiornato: verranno riusati alla programmazione se non passa più di un’ora. Pedaggi calcolati alla programmazione. Costi mostrati: solo energia/carburante.'
+    else:
+        timing=(f'Traffico non disponibile per uno o più giri: tempi stradali con margine prudente del {round((margin-1)*100)}%; '
+                'il traffico sarà verificato alla programmazione. Costi mostrati: solo energia/carburante.')
+    warnings=[timing,'Capacita automatiche: peso e colli. Verifica separatamente volume, pallet, transpallet e altri requisiti.']
+    if late:
+        warnings.insert(0,f'Con il traffico {len(late)} {"cliente sarebbe servito" if len(late)==1 else "clienti sarebbero serviti"} fuori orario: '
+                        'spostali in un altro giro o allarga la loro fascia, poi ricalcola.')
     if getattr(matrix,'source','osrm') in ('estimated','mixed'):
         warnings.insert(0,'Routing stradale non disponibile per alcune tratte: tempi e distanze approssimativi, da verificare.')
     if data.strategy=='balanced' and len(output)<len(data.resources): warnings.append('Non tutte le risorse hanno ricevuto consegne: controlla le disponibilita e le consegne non assegnate.')
@@ -274,7 +368,7 @@ def distribute(db,user,data,assignments=None):
 
 def public(plan):
     return {'id':plan.id,'version':plan.version,'status':plan.status,'configuration':plan.configuration,
-            'routes':[{k:v for k,v in r.items()} for r in plan.result['routes']],
+            'routes':[{k:({**v,'legs':None} if k=='traffic' and isinstance(v,dict) else v) for k,v in r.items()} for r in plan.result['routes']],
             'unassigned':plan.result['unassigned'],'warnings':plan.result['warnings'],'route_ids':plan.route_ids,
             'resource_capabilities':plan.result.get('resource_capabilities',[]),'search':plan.result.get('search',{})}
 
@@ -413,7 +507,8 @@ def _program_saved(db,user,actor,plan_id,data):
                 or row.vehicle_id!=expected.vehicle_id or row.driver_id!=expected.driver_id):
                 raise HTTPException(409,'Un giro e stato modificato o programmato separatamente: gestiscilo dallo storico.')
         return rows
-    for row in drafts(): enrich_final_route(db,row)
+    for row,proposal in zip(drafts(),plan.result['routes']):
+        enrich_final_route(db,row,cached_traffic=reusable_traffic(proposal,row))
     db.commit()  # Persist timing and provider accounting before releasing route locks.
     route_orders.lock_company(db,user.id)
     plan=get_plan(db,user,actor,plan_id,lock=True)
