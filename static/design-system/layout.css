@@ -243,6 +243,24 @@ body[data-gf-layout="base"] [data-sidebar-variant="structured"] .gf-sidebar__ite
   body[data-gf-layout="base"] [data-sidebar-variant="structured"] .gf-sidebar__summary{min-height:var(--gf-control-height-sm);padding-block:var(--gf-space-1)}
   body[data-gf-layout="base"] [data-sidebar-variant="structured"] .gf-sidebar__footer{padding-top:var(--gf-space-2);flex-shrink:0}
 }
+/* Riquadro di upgrade in fondo alla sidebar (approvato il 25 ottobre 2026): blu GiroFacile, appena
+   sopra il piè di pagina. Si nasconde quando è aperto il gruppo "Azienda e sistema", per non
+   allungare la barra. */
+body[data-gf-layout="base"] .gf-sidebar-upgrade{
+  display:grid;gap:var(--gf-space-2);margin:auto 0 var(--gf-space-3);padding:var(--gf-space-4);flex-shrink:0;
+  border:var(--gf-border-width) solid var(--gf-color-primary);border-radius:var(--gf-radius-lg);
+  background:var(--gf-color-primary);color:var(--gf-color-on-primary);font-size:var(--gf-font-xs);
+}
+body[data-gf-layout="base"] .gf-sidebar-upgrade__icon{
+  display:grid;place-items:center;width:var(--gf-space-8);height:var(--gf-space-8);border-radius:var(--gf-radius-md);
+  background:var(--gf-color-on-primary);color:var(--gf-color-primary);
+}
+body[data-gf-layout="base"] .gf-sidebar-upgrade__icon svg{width:var(--gf-icon-size);height:var(--gf-icon-size);fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+body[data-gf-layout="base"] .gf-sidebar-upgrade__title{margin:0;color:var(--gf-color-on-primary);font:var(--gf-weight-bold) var(--gf-font-md)/var(--gf-line-height-tight) var(--gf-font-display)}
+body[data-gf-layout="base"] .gf-sidebar-upgrade__text{margin:0;color:var(--gf-color-on-primary);line-height:1.45}
+body[data-gf-layout="base"] .gf-sidebar-upgrade .gf-button{width:100%;justify-content:center;background:var(--gf-color-on-primary) !important;color:var(--gf-color-primary) !important;border-color:var(--gf-color-on-primary) !important}
+body[data-gf-layout="base"] .gf-sidebar:not(:has(.gf-sidebar__group[data-sidebar-group="sistema"][open])) .gf-sidebar-upgrade:not(.gf-hidden)+.gf-sidebar__footer{margin-top:0}
+body[data-gf-layout="base"] .gf-sidebar:has(.gf-sidebar__group[data-sidebar-group="sistema"][open]) .gf-sidebar-upgrade{display:none}
 /* Do not leave empty group headings after permissions or feature flags hide every item. */
 body[data-gf-layout="base"] .gf-sidebar__group:not(:has(.gf-sidebar__item:not(.hidden):not(.gf-hidden):not(.collaborator-denied):not([hidden]))){display:none}
 @media (pointer:coarse){

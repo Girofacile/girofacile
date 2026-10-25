@@ -618,6 +618,7 @@ async function loadPlanInfo(){
     updatePremiumNavState();
     applyPlanFeatureControls();
     applyUniversalFeaturesV891();
+    renderSidebarUpgrade(plan);
     document.querySelectorAll('[onclick="generateReportAIv67()"]').forEach(el=>el.classList.toggle("hidden", !limits.has_ai));
 
     // Badge piano

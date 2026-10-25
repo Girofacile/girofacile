@@ -5,6 +5,10 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Sidebar: in fondo un riquadro blu invita al piano successivo (Starter →
+  Business, Business → Pro) e apre Piani e abbonamento. Non compare con Pro,
+  per i collaboratori e quando è aperto "Azienda e sistema". Nuovo componente
+  `.gf-sidebar-upgrade` nel catalogo.
 - Anteprima giro (un mezzo): pagina ridisegnata come il dettaglio dei giri
   programmati. Testata con nome e stato, numeri con icone, tabella delle
   fermate in alto e, sotto, mappa con autista, mezzo, costi, avvisi "Prima

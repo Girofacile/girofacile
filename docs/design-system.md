@@ -103,7 +103,7 @@ pagina; l'aspetto di un componente deve cambiare nel foglio condiviso.
 | Mappa + fermate | `.gf-route-panel` (`__map`, `__canvas`, `__detail`, `__footer`), `.gf-route-map__*`, `.gf-crew`, `.gf-progress`, `.gf-stop-list` / `.gf-stop.is-done\|is-miss\|is-next` |
 | Avvisi operativi | `.gf-alert[data-kind="ztl\|tail-lift"]` con `__icon`, `__title`, `__text`; badge `.gf-badge[data-kind]` |
 | Filtri | `.gf-filters` con campi `.gf-field` e `.gf-chip[aria-pressed]` |
-| Layout base esteso | `.gf-sidebar__count`, `.gf-notifications` (+ `__panel`, `.gf-notification[data-unread]`), `.gf-bottom-nav` (`__item`, `[data-primary]`), `.gf-header__back`, `.gf-savebar` |
+| Layout base esteso | `.gf-sidebar__count`, `.gf-notifications` (+ `__panel`, `.gf-notification[data-unread]`), `.gf-bottom-nav` (`__item`, `[data-primary]`), `.gf-header__back`, `.gf-savebar`, `.gf-sidebar-upgrade` (`__icon`, `__title`, `__text`: riquadro blu di upgrade in fondo alla sidebar, nascosto con Pro, per i collaboratori e con "Azienda e sistema" aperto) |
 | Finestre | `.gf-overlay` (`[data-position="side"]` per il pannello laterale) con `.gf-modal` (`__header`, `__title`, `__body`, `__footer`, `[data-size="lg"]`) |
 | Dati | `.gf-details` (`[data-layout="rows"]`), `.gf-setting` (`__copy`, `__control`), `.gf-stat-card` (`__icon[data-tone]`, `__label`, `__value`, `__change[data-trend]`), `.gf-bar-chart` |
 | Flussi | `.gf-steps` / `.gf-step.is-done\|[aria-current="step"]`, `.gf-chat` + `.gf-message[data-from="me"]`, `.gf-upload` |

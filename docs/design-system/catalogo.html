@@ -7,7 +7,7 @@
 <link rel="icon" href="/static/favicon-32x32.png">
 <link rel="stylesheet" href="/static/design-system/theme.css?v=gf_avatar_20261018">
 <link rel="stylesheet" href="/static/design-system/components.css?v=gf_route_strip_20261021">
-<link rel="stylesheet" href="/static/design-system/layout.css?v=gf_original_logo_20261019">
+<link rel="stylesheet" href="/static/design-system/layout.css?v=gf_sidebar_upgrade_20261025">
 <script src="/static/design-system/design-system.js" defer></script>
 <script src="/static/design-system/shell.js?v=gf_original_logo_20261019" defer></script>
 <script type="application/json" id="gf-shell-nav">
@@ -330,6 +330,18 @@
     <section class="gf-panel" aria-labelledby="p1-title">
       <header class="gf-panel__header"><h3 class="gf-panel__title" id="p1-title">Contatore nel menu</h3><span class="gf-panel__meta">.gf-sidebar__count</span></header>
       <div class="gf-panel__body gf-stack"><p class="gf-text">Visibile nella sidebar di questa pagina, accanto a "Menu, notifiche, barra mobile". Nel gestionale: Chat autisti, Ticket, Errori sistema.</p><p class="gf-muted">shell.js lo mostra con la proprietà <code>count</code> della voce; le pagine aggiornano il numero nel nodo esistente.</p></div>
+    </section>
+    <section class="gf-panel" aria-labelledby="p1b-title">
+      <header class="gf-panel__header"><h3 class="gf-panel__title" id="p1b-title">Upgrade nella sidebar</h3><span class="gf-panel__meta">.gf-sidebar-upgrade</span></header>
+      <div class="gf-panel__body gf-stack">
+        <section class="gf-sidebar-upgrade" aria-label="Esempio riquadro upgrade">
+          <span class="gf-sidebar-upgrade__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-.68 1-2c.56-1.65 2-1 2-1"/><path d="M12 15v5s.68-.55 2-1c1.65-.56 1-2 1-2"/></svg></span>
+          <p class="gf-sidebar-upgrade__title">Passa a Pro</p>
+          <p class="gf-sidebar-upgrade__text">Integrazione AI, 6.000 ordini al mese e fino a 50 mezzi.</p>
+          <button type="button" class="gf-button" data-size="sm">Scopri i piani</button>
+        </section>
+        <p class="gf-muted">In fondo alla sidebar della Dashboard, sopra il piè di pagina. Propone il piano successivo (Starter → Business, Business → Pro); non compare con Pro, per i collaboratori e quando è aperto il gruppo "Azienda e sistema".</p>
+      </div>
     </section>
     <section class="gf-panel" aria-labelledby="p2-title">
       <header class="gf-panel__header"><h3 class="gf-panel__title" id="p2-title">Menu notifiche</h3><span class="gf-panel__meta">.gf-notifications</span></header>

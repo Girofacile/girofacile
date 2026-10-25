@@ -93,6 +93,22 @@ function applyPlanFeatureControls() {
 }
 window.GFPlanAccess={limits:planAccessLimits,has:planFeatureEnabled,require:requirePlanFeature,apply:applyPlanFeatureControls};
 
+// Riquadro di upgrade in fondo alla sidebar: solo per il titolare, propone il piano successivo; con Pro non compare.
+function renderSidebarUpgrade(plan) {
+  const box=document.getElementById('sidebarUpgrade');
+  if(!box) return;
+  const next={starter:'business',business:'pro'}[plan];
+  const target=window.GF_PLANS?.[next];
+  box.classList.toggle('gf-hidden',!target || !!window.GFCompanyAccess?.isCollaborator());
+  if(!target) return;
+  const n=value=>Number(value).toLocaleString('it-IT',{useGrouping:'always'});
+  document.getElementById('sidebarUpgradeTitle').textContent=`Passa a ${target.name}`;
+  document.getElementById('sidebarUpgradeText').textContent=next==='pro'
+    ? `Integrazione AI, ${n(target.max_orders_per_month)} ordini al mese e fino a ${n(target.max_vehicles)} mezzi.`
+    : `Più mezzi, firma e foto di consegna, Shopify e WooCommerce.`;
+  document.getElementById('sidebarUpgradeButton').dataset.plan=next;
+}
+
 function monthlyOrderUsageMarkup(usage) {
   const orders=usage.orders;
   if(!orders) return '';

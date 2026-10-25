@@ -13,7 +13,7 @@
 <link href="/static/dashboard/css/core.css?v=gf_audit_20261020" rel="stylesheet">
 <link href="/static/password-strength.css?v=password_policy_20261008_1" rel="stylesheet">
 <script src="/api/billing/catalog.js"></script>
-<script src="/static/dashboard/js/billing.js?v=gf_planpage_20261023"></script>
+<script src="/static/dashboard/js/billing.js?v=gf_sidebar_upgrade_20261025"></script>
 
 
 <link rel="stylesheet" href="/static/routing-summary.css?v=driver_shifts_20261013_1">
@@ -33,7 +33,7 @@
 <!-- Shared GiroFacile design system; legacy sheets retain feature layout. -->
 <link rel="stylesheet" href="/static/design-system/theme.css?v=gf_sidebar_20261025">
 <link rel="stylesheet" href="/static/design-system/components.css?v=gf_route_progress_20261025">
-<link rel="stylesheet" href="/static/design-system/layout.css?v=gf_sidebar_compact_20261025">
+<link rel="stylesheet" href="/static/design-system/layout.css?v=gf_sidebar_upgrade_20261025">
 <link rel="stylesheet" href="/static/design-system/workspace.css?v=gf_selection_20261016">
 <link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007_reference_2">
 <script src="/static/design-system/design-system.js?v=gf_base_20261015" defer></script>
@@ -217,6 +217,12 @@
         </div>
       </details>
     </nav>
+    <section id="sidebarUpgrade" class="gf-sidebar-upgrade gf-hidden" aria-labelledby="sidebarUpgradeTitle">
+      <span class="gf-sidebar-upgrade__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-.68 1-2c.56-1.65 2-1 2-1"/><path d="M12 15v5s.68-.55 2-1c1.65-.56 1-2 1-2"/></svg></span>
+      <p class="gf-sidebar-upgrade__title" id="sidebarUpgradeTitle">Passa a un piano superiore</p>
+      <p class="gf-sidebar-upgrade__text" id="sidebarUpgradeText"></p>
+      <button type="button" class="gf-button" data-size="sm" id="sidebarUpgradeButton" onclick="openUpgradePanelFor(this.dataset.plan)">Scopri i piani</button>
+    </section>
     <div class="gf-sidebar__footer">
       <span>© 2026 GiroFacile · v3.11.0</span>
       <div class="gf-sidebar__links"><a href="/privacy-policy" target="_blank" rel="noopener">Privacy</a><a href="/termini-condizioni" target="_blank" rel="noopener">Termini</a><a href="/cookie-policy" target="_blank" rel="noopener">Cookie</a></div>
@@ -1569,7 +1575,7 @@
 <script src="/static/dashboard/js/order-sources.js?v=gf_plans_20261023"></script>
 <script src="/static/dashboard/js/dashboard-real-map.js?v=gf_priority_hero_20261025"></script>
 <script src="/static/dashboard/js/in-progress-reference.js?v=gf_driver_flow_20261020"></script>
-<script src="/static/dashboard/js/core.js?v=gf_priority_hero_20261025"></script>
+<script src="/static/dashboard/js/core.js?v=gf_sidebar_upgrade_20261025"></script>
 <script src="/static/dashboard/js/dashboard-mobile.js?v=gf_dashboard_mobile_20261019"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=orders_2"></script>
 <link rel="stylesheet" href="/static/dashboard/css/fleet-review.css?v=gf_fleet_ztl_20261017">
