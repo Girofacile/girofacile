@@ -38,10 +38,11 @@ def public_account(actor, invitation=None):
 
 
 def collaborator_session(actor, owner):
+    from .auth import company_logo_src
     return {"ok": True, "authenticated": True, "role": "admin", "is_admin": False,
             "is_collaborator": True, "collaborator_id": actor.id,
             "username": actor.full_name, "email": actor.email,
-            "company_name": owner.company_name, "company_logo_url": owner.company_logo_url,
+            "company_name": owner.company_name, "company_logo_url": company_logo_src(owner),
             "company_sector": owner.company_sector, "workspace_operational": True,
             "onboarding_completed": True, "onboarding_dismissed": True,
             "permissions": sorted(permissions_for(actor)), "redirect_url": "/dashboard",

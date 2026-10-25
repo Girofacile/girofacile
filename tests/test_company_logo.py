@@ -62,3 +62,22 @@ def test_logo_removal_and_unchanged_logo_never_block_profile_save(profile):
     assert client.put('/api/company-profile', json={'company_logo_url': ''}).status_code == 200
     db.refresh(owner)
     assert owner.company_logo_url is None and owner.company_name == 'Nuovo nome'
+
+
+def test_logo_travels_once_from_cached_address(profile):
+    client, db, owner = profile
+    logo = data_url('PNG')
+    assert client.put('/api/company-profile', json={'company_logo_url': logo}).status_code == 200
+    src = client.get('/api/company-profile').json()['company_logo_url']
+    assert src.startswith('/api/company-logo?v=') and len(src) < 60
+    image = client.get(src)
+    assert image.status_code == 200 and image.headers['content-type'] == 'image/png'
+    assert 'immutable' in image.headers['cache-control']
+    assert image.content == base64.b64decode(logo.split(',', 1)[1])
+    # Il modulo rimanda l'indirizzo: il logo salvato resta quello originale.
+    response = client.put('/api/company-profile', json={'company_name': 'Altro nome', 'company_logo_url': src})
+    assert response.status_code == 200, response.text
+    db.refresh(owner)
+    assert owner.company_logo_url == logo
+    assert client.put('/api/company-profile', json={'company_logo_url': ''}).status_code == 200
+    assert client.get('/api/company-logo').status_code == 404

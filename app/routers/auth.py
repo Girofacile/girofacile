@@ -258,7 +258,7 @@ async def login(payload: dict, response: Response, db: Session = Depends(get_db)
             "username": user.username,
             "email": user.email,
             "company_name": user.company_name,
-            "company_logo_url": user.company_logo_url,
+            "company_logo_url": company_logo_src(user),
             "company_email": user.company_email,
             "company_phone": user.company_phone,
             "company_vat": user.company_vat,
@@ -360,7 +360,7 @@ def me(request: Request, db: Session = Depends(get_db)):
             "username": user.username,
             "email": user.email,
             "company_name": user.company_name,
-            "company_logo_url": user.company_logo_url,
+            "company_logo_url": company_logo_src(user),
             "company_email": user.company_email,
             "company_phone": user.company_phone,
             "company_vat": user.company_vat,
@@ -636,7 +636,7 @@ def confirm_password_reset(payload: dict, db: Session = Depends(get_db)):
 def _company_payload(user: User) -> dict:
     return {
         "company_name": user.company_name or user.username,
-        "company_logo_url": user.company_logo_url or "",
+        "company_logo_url": company_logo_src(user),
         "company_email": user.company_email or user.email or "",
         "company_phone": user.company_phone or "",
         "company_vat": user.company_vat or "",
@@ -801,6 +801,34 @@ COMPANY_LOGO_MAX_BYTES = 1_500_000
 COMPANY_LOGO_FORMATS = {"PNG": "png", "JPEG": "jpeg", "WEBP": "webp"}
 
 
+def company_logo_src(user: User) -> str:
+    """Indirizzo del logo da mostrare nel gestionale.
+
+    Il logo incorporato (data URL, fino a 1,5 MB) non viaggia più dentro sessione e
+    profilo: il browser lo scarica una volta da /api/company-logo e lo tiene in cache.
+    Il parametro v cambia solo quando cambia il logo.
+    """
+    logo = user.company_logo_url or ""
+    if logo.startswith("data:"):
+        return "/api/company-logo?v=" + hashlib.sha256(logo.encode()).hexdigest()[:16]
+    return logo
+
+
+@router.get("/api/company-logo")
+def get_company_logo(user: User = Depends(current_user)):
+    logo = user.company_logo_url or ""
+    if not logo.startswith("data:image/") or ";base64," not in logo:
+        raise HTTPException(404, "Logo non presente")
+    header, encoded = logo.split(",", 1)
+    try:
+        raw = base64.b64decode(encoded)
+    except ValueError:
+        raise HTTPException(404, "Logo non presente") from None
+    return Response(raw, media_type=header[5:].split(";", 1)[0],
+                    headers={"Cache-Control": "private, max-age=31536000, immutable",
+                             "X-Content-Type-Options": "nosniff"})
+
+
 def _validated_company_logo(value):
     """Logo aziendale: immagine PNG, JPEG o WebP incorporata (data URL), oppure vuoto per rimuoverlo."""
     if not value:
@@ -837,6 +865,9 @@ def update_company_profile(payload: dict, user: User = Depends(current_user), db
         "has_time_windows", "needs_signature", "needs_photo_proof",
         "has_refrigerated_goods", "has_ztl", "needs_tail_lift"
     }
+    if payload.get("company_logo_url") == company_logo_src(user):
+        # Il modulo rimanda l'indirizzo del logo già salvato: nessuna modifica.
+        payload = {key: value for key, value in payload.items() if key != "company_logo_url"}
     if "company_logo_url" in payload and payload.get("company_logo_url") != user.company_logo_url:
         payload = {**payload, "company_logo_url": _validated_company_logo(payload.get("company_logo_url"))}
     for key in allowed:
