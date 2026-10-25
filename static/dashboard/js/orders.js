@@ -3,11 +3,13 @@
   'use strict';
   const labels={nuovo:'Da pianificare',da_verificare:'Da pianificare',pronto:'Da pianificare',assegnato:'Assegnato',in_consegna:'In consegna',consegnato:'Consegnato',non_consegnato:'Non consegnato',annullato:'Annullato'};
   // Stesse icone e stessi colori delle altre barre dei numeri (gf-stat-strip con icone).
+  // Colori come nelle altre pagine: arrivati blu, da pianificare arancio (in attesa),
+  // annullati rosso, già assegnati verde acqua (in un giro).
   const metricMeta={
     arrivati:{label:'Ordini arrivati',description:'Totale ordini ricevuti',tone:'1',icon:'<path d="M5 8h14l-1 12H6L5 8z M8.5 8a3.5 3.5 0 0 1 7 0"/>'},
-    da_pianificare:{label:'Ordini da pianificare',description:'Ordini non ancora inseriti in un giro',tone:'1',icon:'<path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 7v5l3 2"/>'},
-    annullato:{label:'Ordini annullati',description:'Ordini esclusi dalla pianificazione',tone:'neutral',icon:'<path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M9 9l6 6 M15 9l-6 6"/>'},
-    assegnato:{label:'Già assegnati',description:'Ordini inseriti in un giro',tone:'neutral',icon:'<path d="M2 6h11v10H2z M13 9h5l3 3v4h-8z M6.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z M17.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/>'}
+    da_pianificare:{label:'Ordini da pianificare',description:'Ordini non ancora inseriti in un giro',tone:'5',icon:'<path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 7v5l3 2"/>'},
+    annullato:{label:'Ordini annullati',description:'Ordini esclusi dalla pianificazione',tone:'4',icon:'<path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M9 9l6 6 M15 9l-6 6"/>'},
+    assegnato:{label:'Già assegnati',description:'Ordini inseriti in un giro',tone:'2',icon:'<path d="M2 6h11v10H2z M13 9h5l3 3v4h-8z M6.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z M17.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/>'}
   };
 
   const statusTone={nuovo:'info',da_verificare:'info',pronto:'info',assegnato:'info',in_consegna:'info',consegnato:'success',non_consegnato:'danger',annullato:'neutral'};
@@ -52,7 +54,6 @@
       if(window.GFOrderPlanning)await GFOrderPlanning.loadSelection();
       if(request!==sequence)return;
       last=data;
-      if(window.refreshMonthlyOrderUsage)refreshMonthlyOrderUsage();
       el('ordersMetrics').innerHTML=Object.entries(metricMeta).map(([key,meta])=>`<div class="gf-stat-strip__cell"><span class="gf-stat-strip__icon" data-tone="${meta.tone}" aria-hidden="true"><svg viewBox="0 0 24 24">${meta.icon}</svg></span><span class="gf-stat-strip__label">${meta.label}</span><strong class="gf-stat-strip__value">${Number(data.metrics[key]||0)}</strong><small class="gf-stat-strip__unit">${meta.description}</small></div>`).join('');
       const selected=el('ordersSource').value;
       el('ordersSource').innerHTML='<option value="">Tutte le fonti</option>'+data.sources.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');el('ordersSource').value=selected;
