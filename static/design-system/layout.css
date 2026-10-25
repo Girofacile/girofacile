@@ -234,6 +234,15 @@ body[data-gf-layout="base"] .gf-sidebar__group[open] > .gf-sidebar__summary .gf-
 body[data-gf-layout="base"] [data-sidebar-variant="structured"] .gf-sidebar__item{font-size:var(--gf-font-sm)}
 body[data-gf-layout="base"] [data-sidebar-variant="structured"] .gf-sidebar__item[aria-current="page"]{font-weight:var(--gf-weight-semibold)}
 body[data-gf-layout="base"] [data-sidebar-variant="structured"] .gf-sidebar__item[aria-current="page"]::before{content:none}
+/* Compact desktop spacing keeps every expanded group and the legal footer in view. */
+@media (pointer:fine){
+  body[data-gf-layout="base"] .gf-sidebar[data-sidebar-variant="structured"]{padding-top:var(--gf-space-4);padding-bottom:var(--gf-space-3)}
+  body[data-gf-layout="base"] [data-sidebar-variant="structured"] .gf-sidebar__brand{margin-bottom:var(--gf-space-1);padding-bottom:var(--gf-space-2)}
+  body[data-gf-layout="base"] [data-sidebar-variant="structured"] .gf-sidebar__nav{gap:var(--gf-space-1);padding-top:var(--gf-space-1);padding-bottom:var(--gf-space-2);flex-shrink:0}
+  body[data-gf-layout="base"] [data-sidebar-variant="structured"] .gf-sidebar__item,
+  body[data-gf-layout="base"] [data-sidebar-variant="structured"] .gf-sidebar__summary{min-height:var(--gf-control-height-sm);padding-block:var(--gf-space-1)}
+  body[data-gf-layout="base"] [data-sidebar-variant="structured"] .gf-sidebar__footer{padding-top:var(--gf-space-2);flex-shrink:0}
+}
 /* Do not leave empty group headings after permissions or feature flags hide every item. */
 body[data-gf-layout="base"] .gf-sidebar__group:not(:has(.gf-sidebar__item:not(.hidden):not(.gf-hidden):not(.collaborator-denied):not([hidden]))){display:none}
 @media (pointer:coarse){
