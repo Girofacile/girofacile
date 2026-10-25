@@ -104,6 +104,9 @@ function syncWorkspaceTopbar(name){
     if(target){back.setAttribute("aria-label",target.label);back.title=target.label;}
     document.body?.classList.toggle("gf-has-topbar-back",!!target);
   }
+  // «Annulla giro» compare solo con il dettaglio di un giro programmato aperto.
+  const cancelRoute=document.getElementById("scheduledCancelRouteBtn");
+  if(cancelRoute) cancelRoute.hidden=true;
   const badge=document.getElementById("workspacePageBadge");
   if(badge){badge.hidden=true;badge.textContent="";badge.className="gf-badge";delete badge.dataset.status;}
   // Elementi legati a una sezione (azioni dell'intestazione, voci di menu): visibili solo lì.

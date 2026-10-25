@@ -4658,7 +4658,6 @@ function dashboardScheduledDetailHtml(r){
         ${gfRouteCostsHtml(r)}
         ${gfRouteNoticesHtml(rows)}
         ${cancelled ? `<div class="gf-alert" data-status="danger" role="status"><div class="gf-alert__body"><p class="gf-alert__text">Giro annullato${r.cancelled_at ? ' il '+esc(new Date(r.cancelled_at).toLocaleString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})) : ''}. Gli ordini collegati sono tornati da pianificare.</p></div></div>` : `<div class="gf-route-panel__footer gf-cluster">
-          <button type="button" class="gf-button" data-variant="danger" onclick="cancelScheduledRoute(${Number(r.id)})">Annulla giro</button>
           <button type="button" class="gf-button" data-variant="secondary" onclick="refreshRouteTraffic(${Number(r.id)}, 'dashboardScheduledPage', 'scheduled')">Aggiorna ETA con traffico</button>
           <button type="button" class="gf-button" data-variant="primary" onclick="openProgrammedRouteForEdit(${Number(r.id)}, true)">Modifica dalla pianificazione</button>
         </div>`}
@@ -4688,6 +4687,8 @@ function renderDashboardScheduledSubpage(routes, selectedRoute){
     const next = dashboardScheduledRoutes.map(r=>r.data_giro).filter(d=>d && d >= today).sort()[0];
     dashboardScheduledDay = dashboardScheduledRoutes.some(r=>r.data_giro===today) || !next ? today : next;
   }
+  const cancelRoute = document.getElementById('scheduledCancelRouteBtn');
+  if(cancelRoute) cancelRoute.hidden = !selectedRoute || selectedRoute.status === 'annullato';
   if(selectedRoute){
     // Il giro scelto si apre a pagina intera; il pulsante indietro torna alla settimana.
     dashboardScheduledSelectedId = selectedRoute.id;
