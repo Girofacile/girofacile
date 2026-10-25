@@ -55,13 +55,19 @@ def input_state(db,user,data):
     return deposit,rows,vehicles,drivers
 
 
+def day_minutes_left(orario_partenza):
+    """Minuti dalla partenza alla fine della giornata: i giri si chiudono in giornata."""
+    return max(0,24*60-opt.parse_hhmm(orario_partenza))
+
+
 def work_limits(db,user,data):
+    """Tempo utilizzabile da ogni coppia prima di altri giri già programmati o della fine della giornata."""
     from ..routers.routes import _check_resource_overlap
     start=opt.parse_hhmm(data.orario_partenza)
     limits=[]
     for index,r in enumerate(data.resources):
         route=route_data(data,r,[],index)
-        low,high=0,r.max_minutes
+        low,high=0,day_minutes_left(data.orario_partenza)
         while low<high:
             middle=(low+high+1)//2
             try: _check_resource_overlap(db,user,route,start,start+middle)
@@ -110,7 +116,7 @@ def distribute(db,user,data,assignments=None):
         if result['violations']:
             return reject('Fasce orarie di consegna o turni e pause non rispettati.')
         if math.ceil(result['_objective'][1])>limits[resource]:
-            return reject(f'Tempo disponibile insufficiente: {limits[resource]} minuti, considerando durata massima e altri giri già programmati.')
+            return reject(f'Tempo disponibile insufficiente: {limits[resource]} minuti, considerando altri giri già programmati e la fine della giornata.')
         if not include_details:
             # Search memoization retains scalar scores, never thousands of
             # complete copies of stops. Final routes are replayed with details.
@@ -409,10 +415,9 @@ def _program_saved(db,user,actor,plan_id,data):
         ensure_not_past_route_date(row.data_giro)
         ensure_future_departure(row.data_giro,row.orario_partenza)
         check_daily_route_limit(user,db,row.data_giro,exclude_route_id=row.id)
-        resource=next(r for r in settings.resources if r.vehicle_id==row.vehicle_id and r.driver_id==row.driver_id)
         opt.validate_vehicle_load([{'peso_kg':d.peso_kg,'colli':d.colli} for d in row.deliveries],build_vehicle_dict(row.vehicle))
-        if math.ceil(row.totale_minuti)>resource.max_minutes or any(json.loads(d.optimizer_details or '{}').get('time_window_violation') for d in row.deliveries):
-            raise HTTPException(409,'I tempi aggiornati non rispettano orari o durata massima. Rivedi i dati e ricalcola prima di programmare.')
+        if math.ceil(row.totale_minuti)>day_minutes_left(settings.orario_partenza) or any(json.loads(d.optimizer_details or '{}').get('time_window_violation') for d in row.deliveries):
+            raise HTTPException(409,'I tempi aggiornati non rispettano gli orari o superano la giornata. Rivedi i dati e ricalcola prima di programmare.')
         start=opt.parse_hhmm(settings.orario_partenza)
         _check_resource_overlap(db,user,row,start,start+math.ceil(row.totale_minuti),exclude_route_id=row.id)
     from ..models import RouteToken

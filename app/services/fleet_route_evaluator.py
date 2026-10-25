@@ -8,13 +8,13 @@ import math
 
 class FixedRouteEvaluator:
     def __init__(self, rows, sequence, matrix, points, vehicle, return_depot,
-                 start_time, max_minutes):
+                 start_time, available_minutes):
         from .. import optimizer as opt
         from . import driver_schedule as shifts
         self.opt, self.shifts = opt, shifts
         self.start = opt._start_clock(start_time)
         self.return_depot = return_depot
-        self.max_minutes = max_minutes
+        self.available_minutes = available_minutes
         self.rows = {index: rows[index] for index in sequence}
         self.windows = {index: opt.delivery_windows(row) for index, row in self.rows.items()}
         self.service = {index: float(row.get("tempo_scarico_min") or 0)
@@ -63,7 +63,7 @@ class FixedRouteEvaluator:
             km += back["km"]
             clock = shifts.travel_end(clock, back["min"], pauses)
         duration = clock-self.start
-        if (self.shift and clock > self.shift[1]) or math.ceil(duration) > self.max_minutes:
+        if (self.shift and clock > self.shift[1]) or math.ceil(duration) > self.available_minutes:
             return None
         return {"total_km": round(km, 2), "total_min": round(duration, 1),
                 "_objective": (km, duration, 0.0, 0)}

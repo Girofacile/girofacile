@@ -10,9 +10,15 @@ class FleetResource(BaseModel):
     model_config=ConfigDict(extra='forbid')
     vehicle_id: int=Field(gt=0)
     driver_id: int=Field(gt=0)
-    max_minutes: int=Field(default=480,ge=1,le=1440)
     energy_price_primary: float=Field(default=1.75,ge=0,le=10000,allow_inf_nan=False)
     energy_price_electric: float=Field(default=0.30,ge=0,le=10000,allow_inf_nan=False)
+    @model_validator(mode='before')
+    @classmethod
+    def drop_removed_fields(cls,value):
+        # La durata massima del giro non esiste più: i piani salvati prima la contengono ancora.
+        if isinstance(value,dict) and 'max_minutes' in value:
+            value={key:item for key,item in value.items() if key!='max_minutes'}
+        return value
 
 class FleetStop(DeliveryIn):
     peso_kg: float=Field(default=0,ge=0,le=100000000,allow_inf_nan=False)
@@ -44,8 +50,6 @@ class FleetInput(RoutePlanIn):
         for key in ('driver_id','vehicle_id'):
             if len({getattr(r,key) for r in self.resources})!=len(self.resources):
                 raise ValueError('Seleziona ogni mezzo e autista una sola volta')
-        if any(clock.hour*60+clock.minute+r.max_minutes>1440 for r in self.resources):
-            raise ValueError('Il termine del lavoro deve essere entro la giornata')
         return self
 
 class FleetRevision(BaseModel):

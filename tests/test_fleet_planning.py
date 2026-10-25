@@ -17,7 +17,7 @@ def fleet(routing_env):
     vehicle.capacita_kg=150;vehicle.capacita_colli=15
     db.add_all([second,*drivers]);db.commit()
     data={'nome':'Consegne','data_giro':'2099-01-15','orario_partenza':'08:00','deposit_id':depot.id,
-          'strategy':'balanced','resources':[{'vehicle_id':v.id,'driver_id':d.id,'max_minutes':480} for v,d in zip([vehicle,second],drivers)],
+          'strategy':'balanced','resources':[{'vehicle_id':v.id,'driver_id':d.id} for v,d in zip([vehicle,second],drivers)],
           'consegne':[verified_stop(owner.id,cliente_nome=f'Cliente {i}',indirizzo=f'Via {i}',lat=45.1+i*.001,lon=9.1,peso_kg=10,colli=1,tempo_scarico_min=5) for i in range(30)]}
     return ctx,data
 
@@ -92,11 +92,12 @@ def test_atomic_confirmation_rollback(fleet,monkeypatch):
 
 def test_traffic_failure_releases_batch_for_replanning(fleet):
     data=deepcopy(fleet[1]);data['consegne']=data['consegne'][:2]
-    for resource in data['resources']:resource['max_minutes']=30
+    # Turno brevissimo: il traffico aggiornato al momento di programmare lo supera.
+    for resource in data['resources']:resource['driver_schedule']={'start':'08:00','end':'08:30'}
     plan=preview(fleet,data)
     saved=command(fleet,plan,'confirm');assert saved.status_code==200,saved.text
     result=command(fleet,saved.json(),'program')
-    assert result.status_code==409,result.text
+    assert result.status_code==422 and 'turno' in result.json()['detail'],result.text
     assert all(r.status=='annullato' for r in fleet[0][1].query(RoutePlan))
     restored=fleet[0][0].get(f"/api/fleet-planning/{plan['id']}").json()
     assert restored['status']=='preview' and restored['route_ids']==[]
@@ -135,8 +136,10 @@ def test_invalid_windows_and_resource_duration(fleet):
     for update in ({'scarico_mattina_da':'09:00'},{'scarico_mattina_da':'11:00','scarico_mattina_a':'09:00'}):
         data=deepcopy(fleet[1]);data['consegne'][0].update(update)
         assert fleet[0][0].post('/api/fleet-planning/preview',json=data).status_code==422
+    # La durata massima del giro non esiste più: i piani salvati che la contengono restano validi.
     data=deepcopy(fleet[1]);data['resources'][0]['max_minutes']=1200
-    assert fleet[0][0].post('/api/fleet-planning/preview',json=data).status_code==422
+    plan=preview(fleet,data)
+    assert all('max_minutes' not in r for r in plan['configuration']['resources'])
 
 
 def test_saved_batch_rejects_individual_edits(fleet):

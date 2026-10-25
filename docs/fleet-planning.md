@@ -16,7 +16,7 @@ La matrice stradale globale è già completa e viene riutilizzata: non si richie
 
 Per i giri oltre 8 fermate resta l'ordine trovato dall'euristica attuale. Non si forza la creazione di più giri soltanto per rientrare nella soglia. L'ottimo dell'ordine di un gruppo assegnato non certifica l'ottimo della suddivisione dell'intera flotta; la prova globale fino a 7 fermate e 3 risorse rimane distinta e viene riutilizzata per evitare lavoro ridondante.
 
-L'operatore può indicare la durata massima di ciascun giro e i prezzi energetici nei dettagli della coppia. La disponibilità iniziale verifica la partenza; il calcolo considera anche gli impegni successivi già programmati e i giri in corso.
+L'operatore può indicare i prezzi energetici nei dettagli della coppia; non esiste una durata massima del giro impostata a mano: il limite è dato da turno e pause dell'autista, impegni già programmati e fine della giornata. La disponibilità iniziale verifica la partenza; il calcolo considera anche gli impegni successivi già programmati e i giri in corso.
 
 ## Percorso operativo
 
@@ -31,9 +31,9 @@ Le bozze si trovano nello storico. Aprire un singolo giro torna alla normale mod
 
 ## Vincoli e configurazione
 
-Massimo 100 fermate e 10 coppie, minimo 2 coppie distinte. Un autista e un mezzo non possono essere selezionati due volte. Deposito, giorno e partenza sono comuni; i giri devono terminare nella stessa giornata. La durata massima iniziale è 480 minuti.
+Massimo 100 fermate e 10 coppie, minimo 2 coppie distinte. Un autista e un mezzo non possono essere selezionati due volte. Deposito, giorno e partenza sono comuni; i giri devono terminare nella stessa giornata. I piani salvati con il vecchio campo `max_minutes` restano validi: il campo viene ignorato.
 
-Vincoli bloccanti: kg, colli, fasce di consegna abilitate, turni, pause, impegni esistenti e durata massima. Preferenze con avviso: sponda e accesso ZTL. Le preferenze aziendali continuano a governare i vincoli dei clienti; i requisiti espliciti degli ordini vengono preservati. Peso/colli mancanti non consentono una verifica fisica completa. Turni e pause fisse dichiarate vengono considerati durante guida, scarico, attesa e rientro, come descritto in [driver-schedules.md](driver-schedules.md). Volume, pallet, transpallet e altri requisiti richiedono valutazione dell'operatore.
+Vincoli bloccanti: kg, colli, fasce di consegna abilitate, turni, pause, impegni esistenti e fine della giornata. Preferenze con avviso: sponda e accesso ZTL. Le preferenze aziendali continuano a governare i vincoli dei clienti; i requisiti espliciti degli ordini vengono preservati. Peso/colli mancanti non consentono una verifica fisica completa. Turni e pause fisse dichiarate vengono considerati durante guida, scarico, attesa e rientro, come descritto in [driver-schedules.md](driver-schedules.md). Volume, pallet, transpallet e altri requisiti richiedono valutazione dell'operatore.
 
 Il costo dell'anteprima è carburante/energia, non costo complessivo del servizio. Traffico e pedaggi si applicano alla programmazione secondo i provider già configurati. Se la matrice usa stime approssimative viene segnalato. Email di acquisizione ordini resta in sviluppo, senza modifiche.
 

@@ -27,8 +27,8 @@ function preview(){
     {cliente_nome:'Bar Bianchi',indirizzo:'Via Napoli 5',lat:40.9,lon:14.5}
    ],
    resources:[
-    {vehicle_id:1,driver_id:1,max_minutes:480},
-    {vehicle_id:2,driver_id:2,max_minutes:480}
+    {vehicle_id:1,driver_id:1},
+    {vehicle_id:2,driver_id:2}
    ]
   },
   routes:[
