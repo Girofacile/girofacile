@@ -3598,10 +3598,8 @@ async function programCurrentRoute(){
     toast("Giro programmato correttamente. Lo trovi in Giri programmati.");
     await globalThis.GFOrderPlanning?.afterProgram?.().catch(()=>{});
     clearRouteWorkspace();
-    await loadDashboardHome();
-    await loadRoutes();
-    await loadVehicles();
-    await loadDrivers();
+    // Sezioni indipendenti: si aggiornano insieme invece che una dopo l'altra.
+    await Promise.allSettled([loadDashboardHome(), loadRoutes(), loadVehicles(), loadDrivers()]);
     await refreshResourceAvailability();
     showTab("dashboard-scheduled");
   }catch(e){
@@ -4961,6 +4959,9 @@ let notificationsCacheV30 = [];
 let notificationsPollV30 = null;
 // Ogni quanto la Dashboard chiede al server notifiche e nuovi ordini.
 const NOTIFICATIONS_POLL_MS = 30000;
+// Tornando sulla scheda si aggiorna subito, ma non più di una volta ogni 10 secondi.
+const NOTIFICATIONS_REFRESH_MIN_MS = 10000;
+let notificationsLoadedAtV30 = 0;
 
 // Avvia (o riavvia) il controllo periodico. Con la scheda del browser nascosta
 // non interroga il server; al ritorno sulla scheda aggiorna subito.
@@ -4969,7 +4970,7 @@ function startNotificationsPollV30(){
   notificationsPollV30 = setInterval(()=>{ if(!document.hidden) loadNotificationsV30(false); }, NOTIFICATIONS_POLL_MS);
 }
 document.addEventListener("visibilitychange", ()=>{
-  if(!document.hidden && notificationsPollV30) loadNotificationsV30(false);
+  if(!document.hidden && notificationsPollV30 && Date.now() - notificationsLoadedAtV30 > NOTIFICATIONS_REFRESH_MIN_MS) loadNotificationsV30(false);
 });
 
 function notificationTimeLabelV30(value){
@@ -5002,6 +5003,7 @@ async function loadNotificationsV30(openDropdown=false){
   const bell = document.getElementById("notificationBellBtn");
   if(!bell) return;
   bell.classList.remove("hidden");
+  notificationsLoadedAtV30 = Date.now();
   try{
     const data = await api("/api/notifications?limit=25");
     notificationsCacheV30 = data.items || [];

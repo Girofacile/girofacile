@@ -372,7 +372,7 @@ def route_response(plan, result):
         "totale_km": plan.totale_km, "totale_minuti": plan.totale_minuti,
         "litri_stimati": plan.litri_stimati, "costo_carburante": plan.costo_carburante,
         "costo_totale": plan.costo_totale, "google_maps_url": plan.google_maps_url,
-        **routing_metadata(plan),
+        **routing_metadata(plan, include_legs=True),
         **shifts.metadata(plan),
         "status": computed_route_status(plan), "status_label": route_status_label(computed_route_status(plan)),
         "consegne": result["ordered"],
@@ -411,7 +411,7 @@ def serialize_route(plan):
         "totale_km": plan.totale_km, "totale_minuti": plan.totale_minuti,
         "litri_stimati": plan.litri_stimati, "costo_carburante": plan.costo_carburante,
         "costo_totale": plan.costo_totale, "google_maps_url": plan.google_maps_url,
-        **routing_metadata(plan),
+        **routing_metadata(plan, include_legs=True),
         **shifts.metadata(plan),
         "status": computed_route_status(plan), "status_label": route_status_label(computed_route_status(plan)),
         "consegne": [{

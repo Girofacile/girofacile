@@ -61,21 +61,23 @@ def initialize_snapshot(plan, result):
     plan.toll_details_json = None
 
 
-def routing_metadata(plan):
+def routing_metadata(plan, include_legs=False):
+    # Le tratte con traffico pesano centinaia di KB per giro: solo il calcolo
+    # del giro le restituisce, liste e app autista ne fanno a meno.
     status = plan.traffic_status or "legacy"
     base = plan.base_routing_provider or "legacy"
     traffic = status == "updated"
     label = ("ETA con traffico aggiornato" if traffic else
              "Tempi approssimativi: routing stradale non disponibile" if base in ("estimated", "mixed") else
              "ETA storico salvato" if base == "legacy" else "Tempi stradali stimati senza traffico")
-    result = json_data(plan.traffic_result_json)
+    legs = (json_data(plan.traffic_result_json).get("legs") or []) if include_legs else []
     toll = json_data(plan.toll_details_json)
     calculated_at = plan.traffic_calculated_at
     return {
         "base_routing_provider": base, "traffic_provider": plan.traffic_provider or "none",
         "traffic_status": status, "traffic_calculated_at": (calculated_at.isoformat() + "Z") if calculated_at else None,
         "traffic_departure_at": plan.traffic_departure_at.isoformat() if plan.traffic_departure_at else None,
-        "traffic_version": plan.traffic_version or 0, "traffic_legs": result.get("legs") or [],
+        "traffic_version": plan.traffic_version or 0, "traffic_legs": legs,
         "eta_type": "traffic" if traffic else ("approximate" if base in ("estimated", "mixed") else "road" if base == "osrm" else "legacy"),
         "eta_label": label, "toll_provider": plan.toll_provider or "internal-osm",
         "toll_status": plan.toll_status or "unavailable", "toll_estimated_eur": plan.toll_estimated_eur,
