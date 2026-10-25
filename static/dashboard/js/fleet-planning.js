@@ -138,12 +138,18 @@
         render();
         if(plan.status==='programmed'){
           const issues=(plan.warnings||[]).filter(x=>/email non inviata|notifiche? non inviate?|fuori orario/i.test(x));
-          notice(issues.length
-            ?'Giri programmati. Attenzione: '+issues.join(' ') 
-            :'Giri programmati correttamente. Le consegne sono ora disponibili nel portale degli autisti.');
+          const message=issues.length
+            ?'Giri programmati. Attenzione: '+issues.join(' ')
+            :'Giri programmati correttamente. Le consegne sono ora disponibili nel portale degli autisti.';
+          notice(message);
           globalThis.GFOrderPlanning?.leave();
           await globalThis.GFOrderPlanning?.afterProgram?.().catch(()=>{});
           await loadRoutes();
+          // Come per il giro singolo: si apre Giri programmati sul giorno dei giri appena creati.
+          toast(message);
+          dashboardScheduledDay=plan.configuration.data_giro;
+          Promise.allSettled([loadDashboardHome(),refreshResourceAvailability()]);
+          showTab('dashboard-scheduled');
         }
       }
     }catch(e){
