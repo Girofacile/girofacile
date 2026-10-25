@@ -4492,9 +4492,10 @@ function dashboardScheduledDayHtml(){
     const vehicleParts = String(r.vehicle_name || '-').split(' · ');
     const count = Number(r.consegne_count||0);
     const time = `${esc(r.orario_partenza || '-')} – ${esc(r.rientro_stimato_aggiornato || r.orario_rientro_stimato || '-')}`;
-    return dashScheduledCancelled(r) ? `<tr data-status="danger">
-      <td data-label="Orario"><span class="gf-badge" data-status="danger">Annullato</span> ${time}</td>` : `<tr>
-      <td data-label="Orario"><span class="gf-badge" data-status="warning" data-dot>${time}</span></td>
+    // Giro annullato: stessi dati degli altri, riga rossa sbiadita e «Annullato» in fondo.
+    const cancelled = dashScheduledCancelled(r);
+    return `<tr${cancelled ? ' data-status="danger"' : ''}>
+      <td data-label="Orario">${cancelled ? time : `<span class="gf-badge" data-status="warning" data-dot>${time}</span>`}</td>
       <td data-label="Giro"><strong>${esc(r.nome || 'Giro consegne')}</strong></td>
       <td data-label="Fermate">${count} ${count===1?'fermata':'fermate'}</td>
       <td data-label="Autista">${esc(r.driver_name || 'Non assegnato')}</td>
@@ -4502,7 +4503,7 @@ function dashboardScheduledDayHtml(){
       <td data-label="Km previsti">${esc(gfKm(r.totale_km))}</td>
       <td data-label="Guida">${dashScheduledMinutes(r.totale_minuti)}</td>
       <td data-label="Costo stimato">${dashScheduledMoney(r.costo_carburante)}</td>
-      <td data-label="Azioni"><button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="openDashboardScheduledRoute(${Number(r.id)})">Apri giro</button></td>
+      <td data-label="Azioni"><div class="gf-cluster"><button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="openDashboardScheduledRoute(${Number(r.id)})">Apri giro</button>${cancelled ? '<span class="gf-badge" data-status="danger">Annullato</span>' : ''}</div></td>
     </tr>`;
   };
   const body = list.length
