@@ -7,9 +7,23 @@
   const blank=()=>({vehicle_id:0,driver_id:0,max_minutes:480,energy_price_primary:1.75,energy_price_electric:0.30});
   const can=permission=>!window.GFCompanyAccess||GFCompanyAccess.can(permission);
   const config=()=>({planning_mode:active()?'fleet':'single',fleet_strategy:el('fleetStrategy')?.value||'efficient',fleet_resources:active()?resources.filter(r=>r.vehicle_id&&r.driver_id):[]});
-  function options(type,id){
+  // Un mezzo o un autista già scelto in un'altra card non si può scegliere di nuovo.
+  function options(type,id,index){
     const rows=resourcesAvailabilityCache?.[type]||[];
-    return '<option value="">Seleziona '+(type==='vehicles'?'mezzo':'autista')+'</option>'+rows.map(r=>`<option value="${r.id}" ${r.id===Number(id)?'selected':''} ${r.available===false?'disabled':''}>${esc(type==='vehicles'?r.nome:(r.full_name||[r.nome,r.cognome].filter(Boolean).join(' ')))}${r.available===false?' · Non disponibile':''}</option>`).join('');
+    const key=type==='vehicles'?'vehicle_id':'driver_id';
+    const takenBy=rid=>resources.findIndex((r,i)=>i!==index&&Number(r[key])===rid);
+    return '<option value="">Seleziona '+(type==='vehicles'?'mezzo':'autista')+'</option>'+rows.map(r=>{
+      const taken=r.id===Number(id)?-1:takenBy(r.id);
+      const note=r.available===false?' · Non disponibile':taken>=0?` · Già scelto nel mezzo ${taken+1}`:'';
+      return `<option value="${r.id}" ${r.id===Number(id)?'selected':''} ${r.available===false||taken>=0?'disabled':''}>${esc(type==='vehicles'?r.nome:(r.full_name||[r.nome,r.cognome].filter(Boolean).join(' ')))}${note}</option>`;
+    }).join('');
+  }
+  // Aggiorna gli elenchi delle card senza ridisegnarle (turni e costi aperti restano aperti).
+  function syncChoices(){
+    el('fleetResources')?.querySelectorAll('select[data-field="vehicle_id"],select[data-field="driver_id"]').forEach(select=>{
+      const i=Number(select.dataset.index),field=select.dataset.field;
+      select.innerHTML=options(field==='vehicle_id'?'vehicles':'drivers',resources[i][field],i);
+    });
   }
   const vehicleName=id=>(resourcesAvailabilityCache?.vehicles||[]).find(v=>v.id===Number(id))?.nome||'Nuovo mezzo';
   function refresh(){
@@ -17,7 +31,7 @@
     const field=(id,label,control)=>`<label class="gf-field" for="${id}"><span class="gf-field__label">${label}</span>${control}</label>`;
     // Una card per mezzo (variante B): turno, pause, durata e costi restano chiusi finché servono.
     const remove=i=>`<button type="button" class="gf-icon-button" data-remove="${i}" aria-label="Rimuovi mezzo e autista ${i+1}" title="Rimuovi"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>`;
-    el('fleetResources').innerHTML=resources.map((r,i)=>`<article class="gf-card gf-stack" data-gap="sm" aria-label="Mezzo e autista ${i+1}"><header class="gf-cluster" data-justify="between"><span class="gf-cluster"><span class="gf-stop__number">${i+1}</span><strong data-fleet-name>${esc(vehicleName(r.vehicle_id))}</strong></span>${resources.length>2?remove(i):''}</header>${field('fleetVehicle'+i,'Mezzo',`<select class="gf-select" id="fleetVehicle${i}" data-index="${i}" data-field="vehicle_id">${options('vehicles',r.vehicle_id)}</select>`)}${field('fleetDriver'+i,'Autista',`<select class="gf-select" id="fleetDriver${i}" data-index="${i}" data-field="driver_id">${options('drivers',r.driver_id)}</select>`)}<details data-schedule-editor><summary class="gf-button" data-variant="ghost" data-size="sm">Modifica turno e pause di oggi</summary><div id="fleetDriverSchedule${i}"></div></details><details><summary class="gf-button" data-variant="ghost" data-size="sm">Durata e costi · massimo ${r.max_minutes} minuti</summary><div class="gf-form-grid">${field('fleetDuration'+i,'Durata massima del giro (minuti)',`<input class="gf-input" id="fleetDuration${i}" type="number" min="1" max="1440" data-index="${i}" data-field="max_minutes" value="${r.max_minutes}">`)}${field('fleetFuel'+i,'Carburante (€/litro o €/kg)',`<input class="gf-input" id="fleetFuel${i}" type="number" min="0.01" step="0.01" data-index="${i}" data-field="energy_price_primary" value="${r.energy_price_primary}">`)}${field('fleetElectric'+i,'Energia elettrica (€/kWh)',`<input class="gf-input" id="fleetElectric${i}" type="number" min="0.01" step="0.01" data-index="${i}" data-field="energy_price_electric" value="${r.energy_price_electric}">`)}</div></details></article>`).join('')
+    el('fleetResources').innerHTML=resources.map((r,i)=>`<article class="gf-card gf-stack" data-gap="sm" aria-label="Mezzo e autista ${i+1}"><header class="gf-cluster" data-justify="between"><span class="gf-cluster"><span class="gf-stop__number">${i+1}</span><strong data-fleet-name>${esc(vehicleName(r.vehicle_id))}</strong></span>${resources.length>2?remove(i):''}</header>${field('fleetVehicle'+i,'Mezzo',`<select class="gf-select" id="fleetVehicle${i}" data-index="${i}" data-field="vehicle_id">${options('vehicles',r.vehicle_id,i)}</select>`)}${field('fleetDriver'+i,'Autista',`<select class="gf-select" id="fleetDriver${i}" data-index="${i}" data-field="driver_id">${options('drivers',r.driver_id,i)}</select>`)}<details data-schedule-editor><summary class="gf-button" data-variant="ghost" data-size="sm">Modifica turno e pause di oggi</summary><div id="fleetDriverSchedule${i}"></div></details><details><summary class="gf-button" data-variant="ghost" data-size="sm">Durata e costi · massimo ${r.max_minutes} minuti</summary><div class="gf-form-grid">${field('fleetDuration'+i,'Durata massima del giro (minuti)',`<input class="gf-input" id="fleetDuration${i}" type="number" min="1" max="1440" data-index="${i}" data-field="max_minutes" value="${r.max_minutes}">`)}${field('fleetFuel'+i,'Carburante (€/litro o €/kg)',`<input class="gf-input" id="fleetFuel${i}" type="number" min="0.01" step="0.01" data-index="${i}" data-field="energy_price_primary" value="${r.energy_price_primary}">`)}${field('fleetElectric'+i,'Energia elettrica (€/kWh)',`<input class="gf-input" id="fleetElectric${i}" type="number" min="0.01" step="0.01" data-index="${i}" data-field="energy_price_electric" value="${r.energy_price_electric}">`)}</div></details></article>`).join('')
       +`<div class="gf-card gf-stack" data-variant="info" data-gap="sm"><strong>Un altro mezzo?</strong><span class="gf-muted">Aggiungi una card vuota e scegli tu mezzo e autista.</span><span><button type="button" class="gf-button" data-variant="secondary" id="fleetAdd">+ Aggiungi mezzo</button></span></div>`;
     el('fleetAdd').disabled=resources.length>=10;
     globalThis.GFDriverSchedules?.fleet(resources);
@@ -161,7 +175,7 @@
   }
   document.addEventListener('change',e=>{
     if(e.target.id==='planningMode'){modeChanged();refreshResourceAvailability();}
-    if(e.target.dataset.field&&el('fleetResources').contains(e.target)){resources[Number(e.target.dataset.index)][e.target.dataset.field]=Number(e.target.value);if(e.target.dataset.field==='vehicle_id'){const title=e.target.closest('article')?.querySelector('[data-fleet-name]');if(title)title.textContent=vehicleName(e.target.value);}if(e.target.dataset.field==='driver_id'){resources[Number(e.target.dataset.index)].driver_schedule=null;GFDriverSchedules.fleet(resources);}updateRoutePlanningGateV68();globalThis.GFOrderPlanning?.changed();}
+    if(e.target.dataset.field&&el('fleetResources').contains(e.target)){resources[Number(e.target.dataset.index)][e.target.dataset.field]=Number(e.target.value);if(e.target.dataset.field==='vehicle_id'){const title=e.target.closest('article')?.querySelector('[data-fleet-name]');if(title)title.textContent=vehicleName(e.target.value);}if(e.target.dataset.field==='driver_id'){resources[Number(e.target.dataset.index)].driver_schedule=null;GFDriverSchedules.fleet(resources);}if(['vehicle_id','driver_id'].includes(e.target.dataset.field))syncChoices();updateRoutePlanningGateV68();globalThis.GFOrderPlanning?.changed();}
     if(e.target.id==='fleetStrategy')globalThis.GFOrderPlanning?.changed();
     if(e.target.dataset.stop!==undefined&&el('routePreviewResult').contains(e.target)){changedAssignments=true;notice('Assegnazioni modificate: premi Ricalcola assegnazioni per verificare i nuovi giri.');}
   });
