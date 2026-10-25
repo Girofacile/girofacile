@@ -62,8 +62,9 @@
   --gf-color-map-bg: var(--gf-color-surface-subtle);
   --gf-color-map-grid: var(--gf-color-border);
   --gf-color-depot: var(--gf-color-nav);
-  --gf-color-ztl: var(--gf-color-warning);
-  --gf-color-ztl-bg: var(--gf-color-warning-bg);
+  /* ZTL: giallino, distinto dal beige degli avvisi (testo 5,2:1 sullo sfondo). */
+  --gf-color-ztl: #806000;
+  --gf-color-ztl-bg: #fff3b0;
   --gf-color-tail-lift: var(--gf-color-info);
   --gf-color-tail-lift-bg: var(--gf-color-info-bg);
 
