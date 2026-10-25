@@ -76,6 +76,8 @@ body[data-gf-surface] :is(.gf-badge,.gf-alert)[data-status="success"] { backgrou
 body[data-gf-surface] :is(.gf-badge,.gf-alert)[data-status="warning"] { background: var(--gf-color-warning-bg) !important; color: var(--gf-color-warning) !important; }
 body[data-gf-surface] :is(.gf-badge,.gf-alert)[data-status="danger"] { background: var(--gf-color-danger-bg) !important; color: var(--gf-color-danger) !important; }
 body[data-gf-surface] :is(.gf-badge,.gf-alert)[data-status="info"] { background: var(--gf-color-info-bg) !important; color: var(--gf-color-info) !important; }
+/* In attesa di un'azione (es. ordine da pianificare): giallino, distinto da info e warning. */
+body[data-gf-surface] .gf-badge[data-status="pending"] { background: var(--gf-color-pending-bg) !important; color: var(--gf-color-pending) !important; }
 body[data-gf-surface] .gf-card {
   min-width: 0; border: 1px solid var(--gf-color-border);
   border-radius: var(--gf-radius-lg); background: var(--gf-color-surface);

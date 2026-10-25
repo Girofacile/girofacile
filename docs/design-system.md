@@ -80,7 +80,7 @@ pagina; l'aspetto di un componente deve cambiare nel foglio condiviso.
 | Button | `.gf-button`, `data-variant="primary\|secondary\|ghost\|danger"` |
 | Input/select/textarea | `.gf-input`, `.gf-select`, `.gf-textarea`; label associata |
 | Switch/checkbox | `.gf-switch` con checkbox nativa `role="switch"`; stati/focus nativi |
-| Badge | `.gf-badge`, `data-status="success\|warning\|danger\|info\|neutral"` |
+| Badge | `.gf-badge`, `data-status="success\|warning\|danger\|info\|neutral\|pending"` (`pending`: giallino, in attesa di un'azione, es. ordine da pianificare) |
 | Card | `.gf-card`, `data-variant="standard\|stat\|action\|info\|warning"` |
 | Stat card | `.gf-stat` |
 | Table/lista mobile | `.gf-table`, `data-gf-responsive="cards"`, celle `data-label` |
