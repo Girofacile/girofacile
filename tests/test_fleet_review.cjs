@@ -49,9 +49,12 @@ test('fleet review replica il modello senza sidebar ne dati fittizi',()=>{
  assert.match(page.innerHTML,/data-fleet-map role="region"/);
  assert.doesNotMatch(page.innerHTML,/Note sul calcolo|data-fleet-map-details|Mostra la mappa/);
  assert.doesNotMatch(page.innerHTML,/Controlli sulla suddivisione/);
- assert.match(page.innerHTML,/Suddivisione per giro/);
+ // Variante C: tabella di confronto dei giri, il giro scelto con mappa e fermate, "Da sistemare" a lato.
+ assert.match(page.innerHTML,/Confronto dei giri/);
+ assert.match(page.innerHTML,/Da sistemare/);
+ assert.match(page.innerHTML,/data-fleet-select="1"/);
  assert.match(page.innerHTML,/Alimentari Rossi/);
- assert.match(page.innerHTML,/Bar Bianchi/);
+ assert.doesNotMatch(page.innerHTML,/Bar Bianchi/);
  assert.match(page.innerHTML,/Furgone A/);
  assert.match(page.innerHTML,/Furgone B/);
  assert.match(page.innerHTML,/>Pianifica giri<\/button>/);
@@ -101,7 +104,7 @@ test('unassigned deliveries stay visible with address, reason and reassignment',
  params.plan.routes=params.plan.routes.slice(0,1);
  params.plan.unassigned=[{index:1,reason:'Giro 1: accesso ZTL richiesto.'}];
  control.render({...params,assignment:[0,null]});
- assert.match(page.innerHTML,/fleet-lane-unassigned/);
+ assert.match(page.innerHTML,/data-fleet-assign="1"[^>]*>Assegna al giro 1</);
  assert.match(page.innerHTML,/Via Napoli 5/);
  assert.match(page.innerHTML,/accesso ZTL richiesto/);
  assert.match(page.innerHTML,/data-fleet-drag draggable="true"/);
@@ -114,9 +117,9 @@ test('tail lift warning follows the selected vehicle immediately after a manual 
  params.plan.configuration.consegne[0].sponda=true;
  params.plan.resource_capabilities=[{has_tail_lift:false},{has_tail_lift:true}];
  control.render(params);
- assert.match(page.innerHTML,/questa consegna richiede la sponda, ma questo mezzo non la possiede/);
+ assert.match(page.innerHTML,/data-fleet-warning="tail-lift" title="Questa consegna richiede la sponda, ma questo mezzo non la possiede/);
  control.render({...params,assignment:[1,1],dirty:true});
- assert.doesNotMatch(page.innerHTML,/questa consegna richiede la sponda, ma questo mezzo non la possiede/);
+ assert.doesNotMatch(page.innerHTML,/data-fleet-warning="tail-lift"/);
 });
 
 test('ZTL warning follows the selected vehicle and coexists with the tail lift warning',()=>{
@@ -124,10 +127,10 @@ test('ZTL warning follows the selected vehicle and coexists with the tail lift w
  Object.assign(params.plan.configuration.consegne[0],{ztl:true,sponda:true});
  params.plan.resource_capabilities=[{has_tail_lift:false,has_ztl_access:false},{has_tail_lift:true,has_ztl_access:true}];
  control.render(params);
- assert.match(page.innerHTML,/questa consegna è in ZTL, ma questo mezzo non è abilitato/);
- assert.match(page.innerHTML,/questa consegna richiede la sponda/);
+ assert.match(page.innerHTML,/data-fleet-warning="ztl" title="Questa consegna è in ZTL, ma questo mezzo non è abilitato/);
+ assert.match(page.innerHTML,/data-fleet-warning="tail-lift"/);
  control.render({...params,assignment:[1,1],dirty:true});
- assert.doesNotMatch(page.innerHTML,/questa consegna è in ZTL|questa consegna richiede la sponda/);
+ assert.doesNotMatch(page.innerHTML,/data-fleet-warning="(ztl|tail-lift)"/);
 });
 
 test('approximate road estimates remain clear without a bottom notes panel',()=>{

@@ -30,7 +30,8 @@ Nella Dashboard restano, oltre ai fogli del sistema, solo:
   funzionalità disattivate, permessi del collaboratore), pulsanti `btn-secondary` /
   `btn-mini` generati dai moduli condivisi, grafici SVG del Report;
 - `dashboard-real-map.css`, `in-progress-reference.css`, `live-gps.css`,
-  `fleet-review.css`: segnaposto e controlli delle mappe Leaflet;
+  `fleet-review.css`: segnaposto e controlli delle mappe Leaflet (in `fleet-review.css` anche
+  l'evidenza della riga su cui si rilascia una fermata trascinata);
 - `company.css`: anteprima del colore del brand nella pagina Azienda;
 - `electric-vehicles.css`: condiviso con il portale mobile.
 

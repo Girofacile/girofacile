@@ -7,59 +7,7 @@
 #app #routePreviewResult.fleet-review-page .fleet-review-pin.depot{background:var(--gf-color-nav)}
 #app #routePreviewResult.fleet-review-page .fleet-review-pin.hl{border-color:var(--gf-color-text);transform:scale(1.14)}
 
-/* Keep move labels available to assistive technology without crowding stops. */
-
-
-/* Una colonna per giro, fermate essenziali e comandi vicini al contenuto. */
-body[data-gf-surface] .fleet-board {
- display:grid; grid-auto-flow:column; grid-auto-columns:minmax(280px,1fr);
- gap:var(--gf-space-4); align-items:start; overflow-x:auto; padding-bottom:var(--gf-space-3);
-}
-body[data-gf-surface] .fleet-lane { min-width:0; overflow:hidden; }
-body[data-gf-surface] .fleet-lane .gf-panel__header { align-items:start; gap:var(--gf-space-2); }
-body[data-gf-surface] .fleet-lane .gf-panel__header .gf-badge { flex-shrink:0; }
-body[data-gf-surface] .fleet-lane-metrics {
- display:flex; flex-wrap:wrap; gap:var(--gf-space-3); padding:var(--gf-space-3) var(--gf-space-4);
- background:var(--gf-color-surface-subtle); font-size:var(--gf-font-sm);
-}
-body[data-gf-surface] .fleet-deliveries {
- list-style:none; margin:0; padding:var(--gf-space-3); display:flex; flex-direction:column;
- gap:var(--gf-space-2); min-height:var(--gf-space-12);
-}
-body[data-gf-surface] .fleet-delivery {
- display:flex; align-items:flex-start; gap:var(--gf-space-2); padding:var(--gf-space-3);
- background:var(--gf-color-surface); border:var(--gf-border); border-radius:var(--gf-radius-md);
- overflow-wrap:anywhere;
-}
-body[data-gf-surface] .fleet-delivery-content {
- display:flex; flex:1; min-width:0; flex-direction:column; gap:var(--gf-space-2);
-}
-body[data-gf-surface] .fleet-drag-handle {
- display:grid; place-items:center; flex-shrink:0; width:var(--gf-control-height-sm); height:var(--gf-control-height-sm);
- padding:var(--gf-space-1); border:0; border-radius:var(--gf-radius-xs);
- color:var(--gf-color-muted); background:var(--gf-color-surface-subtle); cursor:grab;
-}
-body[data-gf-surface] .fleet-drag-handle svg {
- width:var(--gf-icon-size); height:var(--gf-icon-size); fill:none; stroke:currentColor;
- stroke-width:2; stroke-linecap:round; pointer-events:none;
-}
-body[data-gf-surface] .fleet-drag-handle:hover { color:var(--gf-color-primary); background:var(--gf-color-info-bg); }
-body[data-gf-surface] .fleet-drag-handle:active { cursor:grabbing; }
-body[data-gf-surface] .fleet-drag-handle:focus-visible { outline:var(--gf-border-width-strong) solid var(--gf-color-primary); outline-offset:var(--gf-space-1); }
-body[data-gf-surface] .fleet-delivery strong { font-size:var(--gf-font-md); }
-body[data-gf-surface] .fleet-delivery-content > .gf-muted { font-size:var(--gf-font-sm); }
-body[data-gf-surface] .fleet-delivery.is-moved { border-color:var(--gf-color-primary); }
-body[data-gf-surface] .fleet-delivery.dragging { opacity:.5; }
-body[data-gf-surface] .fleet-lane.over { border-color:var(--gf-color-primary); background:var(--gf-color-info-bg); }
-body[data-gf-surface] .fleet-delivery.is-highlighted { outline:var(--gf-border-width-strong) solid var(--gf-color-primary); }
-body[data-gf-surface] .fleet-lane-unassigned { border-color:var(--gf-color-warning); }
-body[data-gf-surface] .fleet-delivery-reason { font-size:var(--gf-font-sm); color:var(--gf-color-warning); }
-body[data-gf-surface] .fleet-lane-notice,body[data-gf-surface] .fleet-lane-breaks { margin:var(--gf-space-3) var(--gf-space-4); font-size:var(--gf-font-sm); }
-@media(max-width:640px) {
- body[data-gf-surface] .fleet-board { grid-auto-flow:row; grid-template-columns:minmax(0,1fr); grid-auto-columns:auto; }
-}
-
-body[data-gf-surface] :is(.fleet-tail-lift-warning,.fleet-ztl-warning) {
- margin:0; padding:var(--gf-space-2); color:var(--gf-color-warning);
- background:var(--gf-color-warning-bg); border-radius:var(--gf-radius-xs); font-size:var(--gf-font-sm);
-}
+/* Trascinamento: la riga del giro (o il pannello) su cui si sta per rilasciare la fermata. */
+#app #routePreviewResult.fleet-review-page [data-fleet-lane][aria-dropeffect]{background:var(--gf-color-info-bg);outline:var(--gf-border-width-strong) solid var(--gf-color-primary)}
+#app #routePreviewResult.fleet-review-page [data-fleet-drag]{cursor:grab}
+#app #routePreviewResult.fleet-review-page .fleet-lane-breaks{margin:var(--gf-space-3) var(--gf-space-4);font-size:var(--gf-font-sm)}

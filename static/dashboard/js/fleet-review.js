@@ -1,11 +1,11 @@
 window.GFFleetReview=(()=>{
 'use strict';
-let map=null,epoch=0,drag=null,dialog=null;
-const palette=['#1F5BFF','#0B8A7C','#7B4FE0','#B7791F','#B73863','#1983A7','#487B4E','#8359A4','#C45D32','#3A7796'];
-const color=i=>palette[i%palette.length];
+let map=null,epoch=0,drag=null,dialog=null,selected=0,selectedPlan=null;
+// Un colore per giro: gli stessi toni degli avatar di theme.css, in tabella e sulla mappa.
+const tone=i=>String(i%6+1);
+const color=i=>getComputedStyle(document.body).getPropertyValue('--gf-color-avatar-'+tone(i)).trim()||'#1F5BFF';
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money=x=>x==null?'—':'€ '+Number(x).toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2});
-const count=(a,i)=>a.filter(v=>v===i).length;
 const site=()=>document.getElementById('routePreviewResult');
 const oldRoute=(plan,index)=>plan.routes.find(r=>r.stop_indexes.includes(index));
 const ordered=(plan,assignment,lane)=>{
@@ -29,6 +29,18 @@ const withTraffic=r=>r?.traffic?.status==='updated';
 const routeMinutes=r=>withTraffic(r)?r.traffic.total_min:r.result.total_min;
 const routeReturn=r=>withTraffic(r)&&r.traffic.return_time?r.traffic.return_time:r.result.return_time;
 const lateStops=plan=>plan.routes.flatMap(r=>withTraffic(r)?r.traffic.late||[]:[]);
+const duration=min=>{const m=Math.round(Number(min)||0);return m>=60?Math.floor(m/60)+' h '+(m%60?m%60+' min':''):m+' min';};
+// Avvisi di una fermata nel giro in cui si trova ora (sponda e ZTL seguono subito il mezzo scelto).
+function warnings(plan,dirty,index,lane){
+ const delivery=plan.configuration.consegne[index],caps=lane===null?null:plan.resource_capabilities?.[lane];
+ return {
+  tailLift:lane!==null&&delivery.sponda&&caps?.has_tail_lift===false,
+  ztl:lane!==null&&delivery.ztl&&caps?.has_ztl_access===false,
+  late:!dirty&&lane!==null?lateStops(plan).find(item=>item.stop_index===index):null
+ };
+}
+const ICONS={box:'M3 7l9-4 9 4-9 4-9-4z M3 7v10l9 4 9-4V7 M12 11v10',road:'M4 20 9 4 M20 20 15 4 M12 6v2 M12 11v2 M12 16v2',
+ fuel:'M4 20V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v15 M3 20h12 M7 8h4 M14 9h3l3 3v6a1.5 1.5 0 0 1-3 0v-3h-3',clock:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 7v5l3 2'};
 function totals(plan,assignment,dirty){
  const used=plan.configuration.resources.filter((_,i)=>assignment.includes(i)).length;
  const approximate=plan.routes.some(r=>['estimated','mixed'].includes(r.result.base_routing_provider)) || (plan.warnings||[]).some(w=>/routing stradale non disponibile/i.test(w));
@@ -36,40 +48,69 @@ function totals(plan,assignment,dirty){
  const cost=plan.routes.reduce((x,r)=>x+Number(r.fuel_cost||0),0);
  const ends=plan.routes.map(routeReturn).filter(Boolean).sort();
  const traffic=plan.routes.length&&plan.routes.every(withTraffic);
- const stat=(label,value,sub,warning=false)=>'<div class="gf-stat-strip__cell"><span class="gf-stat-strip__label">'+esc(label)+'</span><strong class="gf-stat-strip__value">'+esc(value)+'</strong><small class="gf-stat-strip__unit">'+(warning?'<span class="gf-badge" data-status="warning">'+esc(sub)+'</span>':esc(sub))+'</small></div>';
- return '<section class="gf-stat-strip" aria-label="Totali della suddivisione">'+
- stat('Consegne',String(assignment.length),assignment.filter(x=>x==null).length+' non assegnate · '+gfCount(used,'mezzo','mezzi'),assignment.some(x=>x==null))+
- stat('Km totali',dirty?'—':km.toLocaleString('it-IT',{maximumFractionDigits:1})+' km',dirty?'Da ricalcolare':approximate?'Stima approssimativa':'Somma dei percorsi',dirty||approximate)+
- stat('Carburante / energia',dirty?'—':money(cost),dirty?'Da ricalcolare':'Costo stimato',dirty)+
- stat('Ultimo rientro',dirty?'—':ends.at(-1)||'—',dirty?'Da ricalcolare':traffic?'Con traffico':approximate?'Stima approssimativa':'Stima senza traffico',dirty||(approximate&&!traffic))+'</section>';
+ const stat=(icon,t,label,value,sub,warning=false)=>'<div class="gf-stat-strip__cell"><span class="gf-stat-strip__icon" data-tone="'+t+'" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="'+ICONS[icon]+'"/></svg></span><span class="gf-stat-strip__label">'+esc(label)+'</span><strong class="gf-stat-strip__value">'+esc(value)+'</strong><small class="gf-stat-strip__unit">'+(warning?'<span class="gf-badge" data-status="warning">'+esc(sub)+'</span>':esc(sub))+'</small></div>';
+ return '<section class="gf-stat-strip" data-icons="side" aria-label="Totali della suddivisione">'+
+ stat('box','1','Consegne',String(assignment.length),assignment.filter(x=>x==null).length+' non assegnate · '+gfCount(used,'mezzo','mezzi'),assignment.some(x=>x==null))+
+ stat('road','2','Km totali',dirty?'—':km.toLocaleString('it-IT',{maximumFractionDigits:1})+' km',dirty?'Da ricalcolare':approximate?'Stima approssimativa':'Somma dei percorsi',dirty||approximate)+
+ stat('fuel','3','Carburante / energia',dirty?'—':money(cost),dirty?'Da ricalcolare':'Costo stimato',dirty)+
+ stat('clock','neutral','Ultimo rientro',dirty?'—':ends.at(-1)||'—',dirty?'Da ricalcolare':traffic?'Con traffico':approximate?'Stima approssimativa':'Stima senza traffico',dirty||(approximate&&!traffic))+'</section>';
 }
-function stop(plan,assignment,dirty,index,lane){
+function stop(plan,dirty,index,lane,position){
  const delivery=plan.configuration.consegne[index];
- const moved=oldRoute(plan,index)?.resource!==lane;
- const reason=lane===null?plan.unassigned?.find(row=>row.index===index)?.reason:null;
- const lacksTailLift=lane!==null && delivery.sponda && plan.resource_capabilities?.[lane]?.has_tail_lift===false;
- const tailLiftWarning=lacksTailLift?'<p class="fleet-tail-lift-warning" role="status">Attenzione: questa consegna richiede la sponda, ma questo mezzo non la possiede.</p>':'';
- const lacksZtlAccess=lane!==null && delivery.ztl && plan.resource_capabilities?.[lane]?.has_ztl_access===false;
- const ztlWarning=lacksZtlAccess?'<p class="fleet-ztl-warning" role="status">Attenzione: questa consegna è in ZTL, ma questo mezzo non è abilitato all’accesso.</p>':'';
- const late=!dirty&&lane!==null?lateStops(plan).find(item=>item.stop_index===index):null;
- const lateWarning=late?'<p class="gf-alert" data-status="danger" role="status">Con il traffico lo scarico finisce alle '+esc(late.fine_servizio)+', oltre la fascia '+esc(late.window.start)+'–'+esc(late.window.end)+' ('+esc(late.lateness_min)+' min). Puoi spostarla in un altro giro, allargare la fascia o programmare comunque.</p>':'';
- const handle=plan.status==='preview'?'<button type="button" class="fleet-drag-handle" data-fleet-drag draggable="true" title="Trascina in un altro giro" aria-label="Trascina '+esc(delivery.cliente_nome)+'"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14"/></svg></button>':'';
- return '<li class="fleet-delivery'+(moved&&lane!==null?' is-moved':'')+'" data-fleet-stop="'+index+'">'+handle+'<div class="fleet-delivery-content">'+
- '<strong>'+esc(delivery.cliente_nome)+'</strong><span class="gf-muted">'+esc(delivery.indirizzo)+'</span>'+lateWarning+tailLiftWarning+ztlWarning+
- (reason?'<details class="fleet-delivery-reason"><summary>Perché non assegnata?</summary><p>'+esc(reason)+'</p></details>':'')+'</div></li>';
+ const route=oldRoute(plan,index),moved=route?.resource!==lane;
+ const w=warnings(plan,dirty,index,lane);
+ const timing=!dirty&&!moved?route?.result?.ordered?.[route.stop_indexes.indexOf(index)]:null;
+ const badges=(w.late?'<span class="gf-badge" data-status="danger" data-fleet-warning="late" title="Con il traffico lo scarico finisce alle '+esc(w.late.fine_servizio)+', oltre la fascia '+esc(w.late.window.start)+'–'+esc(w.late.window.end)+'.">Fuori orario · fine '+esc(w.late.fine_servizio)+' (+'+esc(w.late.lateness_min)+' min)</span>':'')+
+ (w.tailLift?'<span class="gf-badge" data-kind="tail-lift" data-fleet-warning="tail-lift" title="Questa consegna richiede la sponda, ma questo mezzo non la possiede.">Sponda mancante</span>':'')+
+ (w.ztl?'<span class="gf-badge" data-kind="ztl" data-fleet-warning="ztl" title="Questa consegna è in ZTL, ma questo mezzo non è abilitato all’accesso.">ZTL senza permesso</span>':'')+
+ (moved&&lane!==null?'<span class="gf-badge" data-status="info">Spostata</span>':'');
+ const handle=plan.status==='preview'?'<button type="button" class="gf-icon-button" data-fleet-drag draggable="true" title="Trascina su un giro della tabella" aria-label="Trascina '+esc(delivery.cliente_nome)+'"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14"/></svg></button>':'';
+ return '<li class="gf-stop" data-fleet-stop="'+index+'"><span class="gf-stop__number">'+(position+1)+'</span><span class="gf-stop__main"><span class="gf-stop__name">'+esc(delivery.cliente_nome)+'</span><span class="gf-stop__meta">'+esc(delivery.indirizzo)+badges+'</span></span>'+
+ '<span class="gf-stop__time">'+esc(timing?.arrivo_stimato||'')+'</span>'+handle+'</li>';
 }
+// Tabella di confronto: una riga per giro, che è anche il punto in cui rilasciare una fermata trascinata.
+function table(plan,assignment,dirty){
+ return '<section class="gf-panel" aria-labelledby="fleetCompareTitle"><header class="gf-panel__header"><div><h2 class="gf-panel__title" id="fleetCompareTitle">Confronto dei giri</h2><p class="gf-muted">Scegli un giro per vederlo sulla mappa. Per spostare una fermata, trascinala sulla riga di un altro giro.</p></div></header>'+
+ '<div class="gf-table-wrap"><table class="gf-table"><thead><tr><th>Giro</th><th>Fermate</th><th>Km</th><th>Costo</th><th>Rientro</th><th>Avvisi</th><th><span class="gf-hidden">Azione</span></th></tr></thead><tbody>'+
+ plan.configuration.resources.map((_,i)=>{
+  const info=names(plan,i),route=info.r,stops=ordered(plan,assignment,i);
+  const alerts=stops.filter(k=>{const w=warnings(plan,dirty,k,i);return w.tailLift||w.ztl||w.late;}).length;
+  const valid=!dirty&&route;
+  return '<tr data-fleet-lane="'+i+'"><td><div class="gf-cluster"><span class="gf-avatar" data-tone="'+tone(i)+'" aria-hidden="true">'+esc(initials(info.driver))+'</span><div><strong>Giro '+(i+1)+' · '+esc(info.driver)+'</strong><br><span class="gf-muted">'+esc([info.vehicle,info.plate].filter(Boolean).join(' · '))+'</span></div></div></td>'+
+  '<td>'+stops.length+'</td><td>'+(valid?Number(route.result.total_km).toLocaleString('it-IT',{maximumFractionDigits:1}):'—')+'</td><td>'+(valid?money(route.fuel_cost):'—')+'</td><td>'+esc(valid?routeReturn(route)||'—':'—')+'</td>'+
+  '<td>'+(alerts?'<span class="gf-badge" data-status="warning" data-dot>'+alerts+'</span>':'<span class="gf-badge" data-status="success" data-dot>0</span>')+'</td>'+
+  '<td><button type="button" class="gf-button" data-variant="ghost" data-size="sm" data-fleet-select="'+i+'" aria-pressed="'+(i===selected)+'">Vedi</button></td></tr>';
+ }).join('')+'</tbody></table></div></section>';
+}
+// Il giro scelto: mappa e fermate in ordine, con gli avvisi del mezzo come etichette.
 function lane(plan,assignment,dirty,i){
- const all=ordered(plan,assignment,i),info=names(plan,i),route=info.r;
- const invalid=dirty;
- const metric=(value,label)=>'<span><strong>'+esc(value)+'</strong> '+label+'</span>';
- return '<section class="gf-panel fleet-lane" data-fleet-lane="'+i+'" aria-label="Giro '+(i+1)+'"><header class="gf-panel__header"><div><p class="gf-kicker">Giro '+(i+1)+'</p><h3 class="gf-panel__title">'+esc(info.driver)+'</h3><p class="gf-muted">'+esc(info.vehicle)+' '+esc(info.plate)+'</p></div><span class="gf-badge" data-status="neutral">'+all.length+(all.length===1?' fermata':' fermate')+'</span></header>'+
- '<div class="fleet-lane-metrics">'+metric(!invalid&&route?Number(route.result.total_km).toLocaleString('it-IT',{maximumFractionDigits:1}):'—','km')+
- metric(!invalid&&route?Math.round(routeMinutes(route)):'—',withTraffic(route)&&!invalid?'min con traffico':'min')+metric(!invalid&&route?money(route.fuel_cost):'—','')+'</div>'+
- (invalid?'<p class="fleet-lane-notice">Stime da ricalcolare</p>':'')+
- '<ol class="fleet-deliveries">'+
- (all.length?all.map(k=>stop(plan,assignment,dirty,k,i)).join(''):'<li class="gf-empty"><p>Nessuna fermata</p><small>Trascina qui una consegna.</small></li>')+'</ol>'+
- (!dirty&&route&&route.result.driver_breaks?.length?'<details class="fleet-lane-breaks"><summary>Turno e pause</summary>'+GFDriverBreaks.cards(route.result,0,'div')+route.stop_indexes.map((_,j)=>GFDriverBreaks.cards(route.result,j+1,'div')).join('')+'</details>':'')+
- (plan.status==='programmed'&&route&&plan.route_ids?.[plan.routes.indexOf(route)]?'<footer class="gf-panel__footer"><button type="button" class="gf-button" data-variant="secondary" data-size="sm" data-open="'+Number(plan.route_ids[plan.routes.indexOf(route)])+'">Apri giro programmato</button></footer>':'')+'</section>';
+ const all=ordered(plan,assignment,i),info=names(plan,i),route=info.r,valid=!dirty&&route;
+ const metrics=valid?[Number(route.result.total_km).toLocaleString('it-IT',{maximumFractionDigits:1})+' km',duration(routeMinutes(route))+(withTraffic(route)?' con traffico':''),money(route.fuel_cost),'rientro '+(routeReturn(route)||'—')].join(' · '):'Stime da ricalcolare';
+ const routeId=plan.status==='programmed'&&route?plan.route_ids?.[plan.routes.indexOf(route)]:null;
+ return '<section class="gf-panel" data-fleet-lane="'+i+'" aria-labelledby="fleetLaneTitle"><header class="gf-panel__header"><div><h2 class="gf-panel__title" id="fleetLaneTitle">Giro '+(i+1)+' · '+esc(info.driver)+'</h2><p class="gf-muted">'+esc([info.vehicle,info.plate].filter(Boolean).join(' · '))+' · '+esc(metrics)+'</p></div><span class="gf-badge" data-status="info" data-dot>'+gfCount(all.length,'fermata','fermate')+'</span></header>'+
+ '<div class="gf-panel__body"><div class="gf-route-panel__canvas" data-fleet-map role="region" aria-label="Mappa della suddivisione dei giri"></div></div>'+
+ '<ol class="gf-stop-list" data-height="auto" aria-label="Fermate del giro '+(i+1)+'">'+
+ (all.length?all.map((k,j)=>stop(plan,dirty,k,i,j)).join(''):'<li class="gf-empty"><p>Nessuna fermata</p><small>Trascina qui una consegna.</small></li>')+'</ol>'+
+ (valid&&route.result.driver_breaks?.length?'<details class="fleet-lane-breaks"><summary>Turno e pause</summary>'+GFDriverBreaks.cards(route.result,0,'div')+route.stop_indexes.map((_,j)=>GFDriverBreaks.cards(route.result,j+1,'div')).join('')+'</details>':'')+
+ (routeId?'<footer class="gf-panel__footer"><button type="button" class="gf-button" data-variant="secondary" data-size="sm" data-open="'+Number(routeId)+'">Apri giro programmato</button></footer>':'')+'</section>';
+}
+// "Da sistemare": solo consegne non assegnate e fuori orario.
+function fixes(plan,assignment,dirty){
+ const missing=assignment.map((v,i)=>v==null?i:null).filter(i=>i!==null);
+ const late=dirty?[]:lateStops(plan).filter(item=>assignment[item.stop_index]!=null);
+ const target=names(plan,selected);
+ const rows=missing.map(i=>{
+  const d=plan.configuration.consegne[i],reason=plan.unassigned?.find(row=>row.index===i)?.reason;
+  return '<li class="gf-list-item" data-fleet-stop="'+i+'"><div class="gf-list-item__main"><strong>'+esc(d.cliente_nome)+'</strong><small>Non assegnata · '+esc(d.indirizzo)+'</small>'+(reason?'<small>'+esc(reason)+'</small>':'')+'</div>'+
+  (plan.status==='preview'?'<button type="button" class="gf-button" data-variant="secondary" data-size="sm" data-fleet-assign="'+i+'">Assegna al giro '+(selected+1)+'</button>':'<span class="gf-badge" data-status="warning">Non assegnata</span>')+'</li>';
+ }).concat(late.map(item=>{
+  const lane=assignment[item.stop_index],d=plan.configuration.consegne[item.stop_index];
+  return '<li class="gf-list-item" data-fleet-late="'+item.stop_index+'"><span class="gf-avatar" data-tone="'+tone(lane)+'" aria-label="Giro '+(lane+1)+'">'+(lane+1)+'</span><div class="gf-list-item__main"><strong>'+esc(d.cliente_nome)+'</strong><small>Giro '+(lane+1)+' · con il traffico lo scarico finisce alle '+esc(item.fine_servizio)+', oltre la fascia '+esc(item.window.start)+'–'+esc(item.window.end)+'</small></div>'+
+  '<span class="gf-badge" data-status="danger">+'+esc(item.lateness_min)+' min</span></li>';
+ }));
+ return '<section class="gf-panel" aria-labelledby="fleetFixTitle"><header class="gf-panel__header"><div><h2 class="gf-panel__title" id="fleetFixTitle">Da sistemare</h2><p class="gf-muted">'+(rows.length?'Consegne non assegnate e fuori orario':'Tutto a posto')+'</p></div>'+(rows.length?'<span class="gf-badge" data-status="warning">'+rows.length+'</span>':'')+'</header>'+
+ (rows.length?'<ul class="gf-list">'+rows.join('')+'</ul>':'<div class="gf-empty"><p>Nessuna consegna da sistemare</p><small>Tutte le consegne sono assegnate e in orario.</small></div>')+
+ (missing.length&&plan.status==='preview'?'<div class="gf-panel__body gf-stack" data-gap="sm"><p class="gf-muted">«Assegna» la sposta nel giro che stai guardando ('+esc(target.driver)+').</p><label class="gf-check"><input type="checkbox" data-fleet-accept-unassigned> <span>Confermo di programmare soltanto le consegne assegnate</span></label></div>':'')+'</section>';
 }
 function stopMap(){epoch++;if(map){map.remove();map=null;}}
 function highlight(index,on){site()?.querySelectorAll('[data-fleet-stop="'+index+'"],[data-fleet-pin="'+index+'"]').forEach(x=>x.classList.toggle(x.matches('[data-fleet-stop]')?'is-highlighted':'hl',on));}
@@ -89,22 +130,24 @@ async function drawMap(plan,assignment){
   await loadRoadMapLibrary();if(token!==epoch||!host.isConnected)return;
   map=L.map(host,{scrollWheelZoom:false});map.attributionControl.setPrefix('');
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'}).addTo(map);
-  const bounds=L.latLngBounds(coords.filter(Boolean));
+  const focus=ordered(plan,assignment,selected).map(i=>coords[i]).filter(Boolean);
+  const bounds=L.latLngBounds(focus.length?focus:coords.filter(Boolean));
+  // Tutti i giri sulla mappa; quello scelto in evidenza, gli altri attenuati.
   plan.configuration.resources.forEach((_,lane)=>{
-   const positions=ordered(plan,assignment,lane),path=positions.map(i=>coords[i]).filter(Boolean);
-   if(path.length>1)L.polyline(path,{color:color(lane),weight:2.4,opacity:.65,dashArray:'3 8'}).addTo(map);
+   const on=lane===selected,positions=ordered(plan,assignment,lane),path=positions.map(i=>coords[i]).filter(Boolean);
+   if(path.length>1)L.polyline(path,{color:color(lane),weight:on?3:2,opacity:on?.8:.25,dashArray:'3 8'}).addTo(map);
    positions.forEach((i,j)=>{
     if(!coords[i])return;
-    const pin=L.marker(coords[i],{icon:L.divIcon({className:'fleet-review-pin-icon',html:'<span class="fleet-review-pin" style="--lane:'+color(lane)+'" data-fleet-pin="'+i+'">'+(j+1)+'</span>',iconSize:[30,30],iconAnchor:[15,15]})}).addTo(map);
+    const pin=L.marker(coords[i],{opacity:on?1:.45,zIndexOffset:on?500:0,icon:L.divIcon({className:'fleet-review-pin-icon',html:'<span class="fleet-review-pin" style="--lane:'+color(lane)+'" data-fleet-pin="'+i+'">'+(j+1)+'</span>',iconSize:[30,30],iconAnchor:[15,15]})}).addTo(map);
     const pop=document.createElement('div'),a=document.createElement('strong'),b=document.createElement('div');
-    a.textContent=plan.configuration.consegne[i].cliente_nome;b.textContent=plan.configuration.consegne[i].indirizzo;pop.append(a,b);pin.bindPopup(pop);
+    a.textContent=plan.configuration.consegne[i].cliente_nome;b.textContent='Giro '+(lane+1)+' · '+plan.configuration.consegne[i].indirizzo;pop.append(a,b);pin.bindPopup(pop);
     pin.on('mouseover',()=>highlight(i,true));pin.on('mouseout',()=>highlight(i,false));
    });
   });
   const depot=plan.routes.find(r=>r.result?.depot_coord)?.result?.depot_coord;
   if(depot?.lat!=null&&depot?.lon!=null){const d=[Number(depot.lat),Number(depot.lon)];bounds.extend(d);
    L.marker(d,{icon:L.divIcon({className:'fleet-review-pin-icon',html:'<span class="fleet-review-pin depot">D</span>',iconSize:[30,30],iconAnchor:[15,15]})}).addTo(map);}
-  map.fitBounds(bounds,{padding:[22,22],maxZoom:12,animate:false});requestAnimationFrame(()=>map?.invalidateSize());
+  map.fitBounds(bounds,{padding:[22,22],maxZoom:13,animate:false});requestAnimationFrame(()=>map?.invalidateSize());
   setTimeout(()=>{if(token===epoch)map?.invalidateSize();},400);
  }catch(err){if(token!==epoch)return;host.textContent='Mappa temporaneamente non disponibile.';console.warn(err);}
 }
@@ -121,12 +164,17 @@ function warning(onConfirm){
  next.querySelector('[data-accept]').onclick=()=>{close();onConfirm();};
  next.addEventListener('close',close,{once:true});
 }
-function render({plan,assignment,dirty,busy,manualAdjusted,permission,onMove,onUndo,onRecalc,onPlan,onBack}){
+function render(params){
+ const {plan,assignment,dirty,busy,manualAdjusted,permission,onMove,onUndo,onRecalc,onPlan,onBack}=params;
  stopMap();if(dialog){dialog.remove();dialog=null;}
  const target=site();if(!target)return;
- const planned=plan.status==='programmed',saved=plan.status==='saved',missing=assignment.filter(v=>v==null).length,rows=plan.configuration.resources.length;
+ const planned=plan.status==='programmed',saved=plan.status==='saved',rows=plan.configuration.resources.length;
+ // Il giro scelto resta lo stesso tra un ricalcolo e l'altro dello stesso piano.
+ if(selectedPlan!==plan.id){selectedPlan=plan.id;selected=0;}
+ if(selected>=rows)selected=0;
  const alert=dirty?'Hai modificato la distribuzione. Le stime precedenti non sono valide: ricalcola prima di pianificare.':
  manualAdjusted?'Suddivisione personalizzata: GiroFacile ottimizza le fermate all’interno dei mezzi scelti, ma non garantisce la migliore combinazione globale.':'';
+ const assigned=assignment.filter(v=>v!=null).length;
  // Classe di ambito per i segnaposto della mappa (ancora sul vecchio foglio, in attesa di un componente mappa).
  target.classList.add('fleet-review-page');
  target.innerHTML='<section class="gf-stack" data-gap="lg" data-fleet-review>'+
@@ -134,15 +182,12 @@ function render({plan,assignment,dirty,busy,manualAdjusted,permission,onMove,onU
  '<h1 class="gf-title">Controlla la suddivisione</h1><p class="gf-muted">Verifica le consegne distribuite fra i mezzi. Puoi spostarle prima di pianificare i giri.</p></div>'+
  '<div class="gf-cluster"><button type="button" class="gf-button" data-variant="secondary" data-fleet-back>← Torna alla pianificazione</button>'+
  (planned?'<span class="gf-badge" data-status="success">Giri programmati</span>':'<button type="button" class="gf-button" data-variant="primary" data-fleet-plan '+(busy||dirty||!permission?'disabled':'')+'>Pianifica giri</button>')+'</div></div>'+
- (alert?'<div class="gf-alert" data-status="warning" role="status"><div class="gf-alert__body"><strong class="gf-alert__title">'+(dirty?'Ricalcolo necessario':'Suddivisione manuale')+'</strong><p>'+esc(alert)+'</p></div></div>':'')+
+ (alert?'<div class="gf-alert" data-status="warning" role="status"><div class="gf-alert__body"><strong class="gf-alert__title">'+(dirty?'Ricalcolo necessario':'Suddivisione manuale')+'</strong><p>'+esc(alert)+'</p></div></div>':
+  plan.status==='preview'?'<div class="gf-alert" data-status="info" role="note"><div class="gf-alert__body"><p class="gf-alert__title">GiroFacile ha distribuito '+gfCount(assigned,'consegna','consegne')+' su '+gfCount(plan.configuration.resources.filter((_,i)=>assignment.includes(i)).length,'mezzo','mezzi')+'</p><p class="gf-alert__text">Rispettando fasce orarie, capienza e traffico previsto. Controlla gli avvisi e, se serve, sposta le fermate fra i giri.</p></div></div>':'')+
  (!dirty&&plan.status==='preview'&&lateStops(plan).length?'<div class="gf-alert" data-status="danger" role="status"><div class="gf-alert__body"><strong class="gf-alert__title">Clienti fuori orario con il traffico</strong><p>'+gfCount(lateStops(plan).length,'consegna verrebbe servita','consegne verrebbero servite')+' oltre la fascia oraria. '+(lateStops(plan).length===1?'Puoi spostarla in un altro giro o allargare la sua fascia e ricalcolare':'Puoi spostarle in altri giri o allargare la loro fascia e ricalcolare')+', oppure programmare comunque: i giri verranno salvati con l’avviso.</p></div></div>':'')+
  (saved?'<div class="gf-alert" data-status="warning" role="status"><div class="gf-alert__body"><strong class="gf-alert__title">Giri in bozza, programmazione non completata</strong><p>Puoi riprovare con “Pianifica giri”. Non verranno duplicati giri.</p></div></div>':'')+
  totals(plan,assignment,dirty)+
- '<div class="gf-stack" data-gap="sm"><h2 class="gf-subtitle">Suddivisione per giro</h2><p class="gf-muted">Trascina le fermate tra le colonne usando la maniglia a tre linee. Dopo gli spostamenti, ricalcola tempi e costi.</p></div>'+
- '<div class="fleet-board" aria-label="Giri e fermate">'+plan.configuration.resources.map((_,i)=>lane(plan,assignment,dirty,i)).join('')+
- (missing?'<section class="gf-panel fleet-lane fleet-lane-unassigned" aria-label="Consegne non assegnate"><header class="gf-panel__header"><div><h2 class="gf-panel__title">Non assegnate</h2><p class="gf-muted">'+missing+' fermate da sistemare</p></div></header><ol class="fleet-deliveries">'+assignment.map((v,i)=>v==null?stop(plan,assignment,dirty,i,null):'').join('')+'</ol>'+
- (plan.status==='preview'?'<div class="gf-panel__body"><label class="gf-check"><input type="checkbox" data-fleet-accept-unassigned> <span>Confermo di programmare soltanto le consegne assegnate</span></label></div>':'')+'</section>':'')+'</div>'+
- '<section class="gf-panel"><div class="gf-panel__body"><div class="gf-route-panel__canvas" data-fleet-map role="region" aria-label="Mappa della suddivisione dei giri"></div></div></section>'+
+ '<div class="gf-grid" data-cols="main-side"><div class="gf-stack">'+table(plan,assignment,dirty)+lane(plan,assignment,dirty,selected)+'</div>'+fixes(plan,assignment,dirty)+'</div>'+
  '<div id="fleetMessage" role="status" tabindex="-1" class="gf-muted"></div>'+
  (dirty?'<div class="gf-savebar" data-floating role="region" aria-label="Modifiche in sospeso"><span><b>Assegnazioni modificate</b> · Ricalcola per aggiornare tempi e distanze.</span>'+
  '<button type="button" class="gf-button" data-variant="secondary" data-size="sm" data-fleet-undo>Annulla modifiche</button><button type="button" class="gf-button" data-variant="primary" data-size="sm" data-fleet-recalc '+(busy?'disabled':'')+'>Ricalcola assegnazioni</button></div>':'')+
@@ -155,15 +200,18 @@ function render({plan,assignment,dirty,busy,manualAdjusted,permission,onMove,onU
   if(!Number.isInteger(index)||to===assignment[index]||to<0||to>=rows)return;
   onMove(index,to);
  };
+ target.querySelectorAll('[data-fleet-select]').forEach(button=>button.addEventListener('click',()=>{selected=Number(button.dataset.fleetSelect);render(params);}));
+ target.querySelectorAll('[data-fleet-assign]').forEach(button=>button.addEventListener('click',()=>{if(!busy)move(Number(button.dataset.fleetAssign),selected);}));
  target.querySelectorAll('[data-fleet-stop]').forEach(stop=>{
-  stop.addEventListener('dragstart',e=>{if(plan.status!=='preview'||busy||!e.target.closest('[data-fleet-drag]')){e.preventDefault();return;}drag=Number(stop.dataset.fleetStop);e.dataTransfer.setData('text/plain',String(drag));e.dataTransfer.effectAllowed='move';e.dataTransfer.setDragImage(stop,20,20);stop.classList.add('dragging');});
-  stop.addEventListener('dragend',()=>{drag=null;target.querySelectorAll('.dragging,.over').forEach(el=>el.classList.remove('dragging','over'));});
+  stop.addEventListener('dragstart',e=>{if(plan.status!=='preview'||busy||!e.target.closest('[data-fleet-drag]')){e.preventDefault();return;}drag=Number(stop.dataset.fleetStop);e.dataTransfer.setData('text/plain',String(drag));e.dataTransfer.effectAllowed='move';e.dataTransfer.setDragImage(stop,20,20);stop.classList.add('is-highlighted');});
+  stop.addEventListener('dragend',()=>{drag=null;stop.classList.remove('is-highlighted');target.querySelectorAll('[data-fleet-lane][aria-dropeffect]').forEach(el=>el.removeAttribute('aria-dropeffect'));});
   stop.addEventListener('mouseenter',()=>highlight(stop.dataset.fleetStop,true));stop.addEventListener('mouseleave',()=>highlight(stop.dataset.fleetStop,false));
  });
+ // Le righe della tabella (e il pannello del giro scelto) accolgono le fermate trascinate.
  target.querySelectorAll('[data-fleet-lane]').forEach(el=>{
-  el.addEventListener('dragover',e=>{if(drag==null)return;e.preventDefault();el.classList.add('over');});
-  el.addEventListener('dragleave',e=>{if(!el.contains(e.relatedTarget))el.classList.remove('over');});
-  el.addEventListener('drop',e=>{e.preventDefault();el.classList.remove('over');if(drag!=null){const i=drag;drag=null;move(i,Number(el.dataset.fleetLane));}});
+  el.addEventListener('dragover',e=>{if(drag==null)return;e.preventDefault();el.setAttribute('aria-dropeffect','move');});
+  el.addEventListener('dragleave',e=>{if(!el.contains(e.relatedTarget))el.removeAttribute('aria-dropeffect');});
+  el.addEventListener('drop',e=>{e.preventDefault();el.removeAttribute('aria-dropeffect');if(drag!=null){const i=drag;drag=null;move(i,Number(el.dataset.fleetLane));}});
  });
  drawMap(plan,assignment);
 }

@@ -5,6 +5,13 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Più mezzi, "Controlla la suddivisione": nuovo layout. In alto la tabella di
+  confronto dei giri (autista, mezzo, fermate, km, costo, rientro, avvisi);
+  sotto il giro scelto con la mappa (gli altri giri attenuati, un colore per
+  giro come l'avatar) e le fermate in ordine, con sponda, ZTL e fuori orario
+  come etichette. A destra "Da sistemare" elenca solo le consegne non assegnate
+  e quelle fuori orario; «Assegna al giro N» sposta una non assegnata nel giro
+  che si sta guardando. Le fermate si trascinano sulla riga di un altro giro.
 - Profilo account: finestra più compatta a due colonne. A sinistra avatar,
   ruolo, nome, email e password; a destra il piano con stato, barre di
   utilizzo e i pulsanti Gestisci piano e Fatturazione. Niente più "Salva

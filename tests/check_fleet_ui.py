@@ -89,19 +89,28 @@ def main():
                 page.evaluate('rows=>{deliveries=rows;renderDeliveries();}',data['consegne'][:6])
                 page.locator('#routePlanningActions button').click()
                 page.get_by_role('heading',name='Controlla la suddivisione').wait_for()
-                assert page.locator('[data-fleet-stop]').count()==6
+                # Variante C: si vede un giro alla volta; la somma delle fermate dei giri è 6.
+                counts=[]
+                for lane in range(page.locator('[data-fleet-select]').count()):
+                    page.locator(f'[data-fleet-select="{lane}"]').click()
+                    counts.append(page.locator('[data-fleet-review] .gf-stop[data-fleet-stop]').count())
+                assert sum(counts)==6,counts
+                page.locator('[data-fleet-select="0"]').click()
                 assert page.locator('[data-fleet-map]').is_visible()
                 assert page.get_by_text('Note sul calcolo',exact=True).count()==0
                 assert page.locator('[data-fleet-map]').evaluate("el=>!el.closest('details')")
-                assert page.locator('.fleet-ztl-warning').count()==1
-                assert 'questo mezzo non è abilitato' in page.locator('.fleet-ztl-warning').inner_text()
-                assert page.locator('.fleet-tail-lift-warning').count()==1
-                assert 'questo mezzo non la possiede' in page.locator('.fleet-tail-lift-warning').inner_text()
+                # La prima consegna (sponda e ZTL) è nel primo giro: i suoi avvisi sono etichette sulla fermata.
+                ztl=page.locator('[data-fleet-warning="ztl"]');tail=page.locator('[data-fleet-warning="tail-lift"]')
+                assert ztl.count()==1 and 'non è abilitato' in ztl.get_attribute('title')
+                assert tail.count()==1 and 'non la possiede' in tail.get_attribute('title')
+                # "Da sistemare" mostra solo consegne non assegnate e fuori orario, non sponda o ZTL.
+                assert page.locator('#fleetFixTitle').is_visible()
+                assert page.locator('[data-fleet-review] .gf-list [data-fleet-warning]').count()==0
                 assert page.locator('[data-fleet-plan]').is_enabled()
                 assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 2')
                 page.evaluate('window.scrollTo(0,0)');page.screenshot(path=str(output/f'preview-{width}.png'),full_page=True)
                 if width>=1024:
-                    first_stop=page.locator('[data-fleet-stop]').first
+                    first_stop=page.locator('.gf-stop[data-fleet-stop]').first
                     source_lane=first_stop.locator('xpath=ancestor::*[@data-fleet-lane]')
                     source_id=source_lane.get_attribute('data-fleet-lane')
                     target_lane=page.locator(f'[data-fleet-lane]:not([data-fleet-lane="{source_id}"])').first
@@ -110,7 +119,7 @@ def main():
                     assert page.locator('[data-fleet-plan]').is_disabled()
                     page.locator('[data-fleet-undo]').click()
                     page.evaluate('window.scrollTo(0,0)')
-                    first_stop=page.locator('[data-fleet-stop]').first
+                    first_stop=page.locator('.gf-stop[data-fleet-stop]').first
                     source_id=first_stop.locator('xpath=ancestor::*[@data-fleet-lane]').get_attribute('data-fleet-lane')
                     target_lane=page.locator(f'[data-fleet-lane]:not([data-fleet-lane="{source_id}"])').first
                     first_stop.locator('[data-fleet-drag]').drag_to(target_lane,target_position={'x':15,'y':15})
