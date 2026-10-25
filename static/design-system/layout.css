@@ -243,6 +243,26 @@ body[data-gf-layout="base"] [data-sidebar-variant="structured"] .gf-sidebar__ite
   body[data-gf-layout="base"] [data-sidebar-variant="structured"] .gf-sidebar__summary{min-height:var(--gf-control-height-sm);padding-block:var(--gf-space-1)}
   body[data-gf-layout="base"] [data-sidebar-variant="structured"] .gf-sidebar__footer{padding-top:var(--gf-space-2);flex-shrink:0}
 }
+/* Su schermi alti le voci crescono a scaglioni e sfruttano lo spazio libero. Le soglie garantiscono
+   che tutto resti visibile senza scorrere, sia con il riquadro di upgrade sia con tutti i gruppi aperti
+   (con voci da 32 px servono circa 775 px; ogni px in più per voce ne chiede circa 18). */
+@media (pointer:fine) and (min-height:840px){
+  body[data-gf-layout="base"] [data-sidebar-variant="structured"] .gf-sidebar__item,
+  body[data-gf-layout="base"] [data-sidebar-variant="structured"] .gf-sidebar__summary{min-height:calc((var(--gf-control-height-sm) + var(--gf-control-height)) / 2)}
+}
+@media (pointer:fine) and (min-height:900px){
+  body[data-gf-layout="base"] [data-sidebar-variant="structured"] .gf-sidebar__item,
+  body[data-gf-layout="base"] [data-sidebar-variant="structured"] .gf-sidebar__summary{min-height:var(--gf-control-height)}
+  body[data-gf-layout="base"] [data-sidebar-variant="structured"] .gf-sidebar__item{font-size:var(--gf-font-md)}
+}
+@media (pointer:fine) and (min-height:980px){
+  body[data-gf-layout="base"] [data-sidebar-variant="structured"] .gf-sidebar__item,
+  body[data-gf-layout="base"] [data-sidebar-variant="structured"] .gf-sidebar__summary{min-height:var(--gf-control-touch)}
+}
+@media (pointer:fine) and (min-height:1040px){
+  body[data-gf-layout="base"] [data-sidebar-variant="structured"] .gf-sidebar__item,
+  body[data-gf-layout="base"] [data-sidebar-variant="structured"] .gf-sidebar__summary{min-height:var(--gf-space-12)}
+}
 /* Riquadro di upgrade in fondo alla sidebar (approvato il 25 ottobre 2026): blu GiroFacile, appena
    sopra il piè di pagina. Si nasconde quando è aperto il gruppo "Azienda e sistema", per non
    allungare la barra. */
@@ -259,8 +279,10 @@ body[data-gf-layout="base"] .gf-sidebar-upgrade__icon svg{width:var(--gf-icon-si
 body[data-gf-layout="base"] .gf-sidebar-upgrade__title{margin:0;color:var(--gf-color-on-primary);font:var(--gf-weight-bold) var(--gf-font-md)/var(--gf-line-height-tight) var(--gf-font-display)}
 body[data-gf-layout="base"] .gf-sidebar-upgrade__text{margin:0;color:var(--gf-color-on-primary);line-height:1.45}
 body[data-gf-layout="base"] .gf-sidebar-upgrade .gf-button{width:100%;justify-content:center;background:var(--gf-color-on-primary) !important;color:var(--gf-color-primary) !important;border-color:var(--gf-color-on-primary) !important}
-body[data-gf-layout="base"] .gf-sidebar:not(:has(.gf-sidebar__group[data-sidebar-group="sistema"][open])) .gf-sidebar-upgrade:not(.gf-hidden)+.gf-sidebar__footer{margin-top:0}
+@media (min-height:800px){body[data-gf-layout="base"] .gf-sidebar:not(:has(.gf-sidebar__group[data-sidebar-group="sistema"][open])) .gf-sidebar-upgrade:not(.gf-hidden)+.gf-sidebar__footer{margin-top:0}}
 body[data-gf-layout="base"] .gf-sidebar:has(.gf-sidebar__group[data-sidebar-group="sistema"][open]) .gf-sidebar-upgrade{display:none}
+/* Su schermi bassi lo spazio serve al menu. */
+@media (max-height:799px){body[data-gf-layout="base"] .gf-sidebar-upgrade{display:none}}
 /* Do not leave empty group headings after permissions or feature flags hide every item. */
 body[data-gf-layout="base"] .gf-sidebar__group:not(:has(.gf-sidebar__item:not(.hidden):not(.gf-hidden):not(.collaborator-denied):not([hidden]))){display:none}
 @media (pointer:coarse){
