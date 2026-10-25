@@ -12,8 +12,8 @@
     assegnato:{label:'Già assegnati',description:'Ordini inseriti in un giro',tone:'2',icon:'<path d="M2 6h11v10H2z M13 9h5l3 3v4h-8z M6.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z M17.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/>'}
   };
 
-  // Da pianificare in giallino, così non si confonde con «Assegnato» (azzurro).
-  const statusTone={nuovo:'pending',da_verificare:'pending',pronto:'pending',assegnato:'info',in_consegna:'info',consegnato:'success',non_consegnato:'danger',annullato:'neutral'};
+  // Da pianificare in giallino, così non si confonde con «Assegnato» (azzurro); annullato in rosso chiaro.
+  const statusTone={nuovo:'pending',da_verificare:'pending',pronto:'pending',assegnato:'info',in_consegna:'info',consegnato:'success',non_consegnato:'danger',annullato:'danger'};
   const fields={number:'Numero ordine',recipient_name:'Destinatario',delivery_address:'Indirizzo di consegna',requested_date:'Data richiesta',time_from:'Fascia oraria: dalle',time_to:'Alle',weight_kg:'Peso (kg)',packages:'Colli',pallets:'Pallet',volume_m3:'Volume (m³)',tail_lift:'Sponda',pallet_truck:'Transpallet',ztl:'ZTL',requirements:'Requisiti operativi',notes:'Note'};
   const numeric=['weight_kg','packages','pallets','volume_m3'], bools=['tail_lift','pallet_truck','ztl'];
   let page=1, sequence=0, detailSequence=0, view='table', current=null, last=null, timer, modalScrollY=0, bulkVerifying=false, stopBulkVerification=false;
