@@ -806,10 +806,13 @@ def list_operational_routes(include_cancelled: bool = False, db: Session = Depen
         .limit(150)
         .all()
     )
-    # La pagina Giri programmati mostra anche i giri annullati, in rosso sbiadito.
+    # La pagina Giri programmati mostra anche i giri annullati, in rosso sbiadito: solo quelli
+    # programmati davvero (con link autista), non le bozze scartate da una programmazione fallita.
+    from ..models import RouteToken
     cancelled = (
         owned(db.query(RoutePlan), RoutePlan, user)
         .filter(RoutePlan.status == "annullato")
+        .filter(db.query(RouteToken.id).filter(RouteToken.route_plan_id == RoutePlan.id).exists())
         .filter(RoutePlan.data_giro >= from_date)
         .order_by(RoutePlan.data_giro.asc(), RoutePlan.orario_partenza.asc())
         .limit(150)

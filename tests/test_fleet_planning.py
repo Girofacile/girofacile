@@ -435,3 +435,14 @@ def test_manual_revision_preserves_selected_vehicle_membership(fleet):
     routes={route['resource']:set(route['stop_indexes']) for route in revised.json()['routes']}
     assert routes=={0:{0,1,2},1:{3,4,5}}
     assert revised.json()['unassigned']==[]
+
+
+def test_traffic_window_message_names_customer_driver_and_delay():
+    import json
+    from types import SimpleNamespace as NS
+    from app.services.fleet_planning import traffic_window_problems
+    late={'time_window_violation':{'window':{'start':'07:00','end':'10:00'},'fine_servizio':'10:22','lateness_min':22.48}}
+    row=NS(driver=NS(nome='Anna',cognome='Neri'),deliveries=[
+        NS(ordine=2,cliente_nome='Bar Luna',optimizer_details=json.dumps(late)),
+        NS(ordine=1,cliente_nome='Puntuale',optimizer_details='{}')])
+    assert traffic_window_problems([row])==['Bar Luna (giro di Anna Neri): scarico fino alle 10:22, fascia 07:00–10:00, 22 min oltre']

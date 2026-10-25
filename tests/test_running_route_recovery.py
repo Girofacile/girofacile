@@ -39,8 +39,15 @@ def test_old_running_route_remains_visible_and_cancel_releases_driver(env):
     assert response.json()['status'] == 'annullato'
     assert evidence.status == 'completata' and evidence.note_operatore == 'Esito conservato'
     assert {r['id'] for r in client.get('/api/routes/operativi').json()} == {next_route.id}
-    # Giri programmati: anche gli annullati recenti, mai quelli di altre aziende o troppo vecchi.
+    # Giri programmati: anche gli annullati recenti che erano stati programmati (link autista),
+    # mai quelli di altre aziende, troppo vecchi o bozze mai programmate.
+    from app.models import RouteToken
+    programmed = db.query(RoutePlan).filter(RoutePlan.status == 'annullato', RoutePlan.nome.like('Chiuso %')).order_by(RoutePlan.id).all()
+    db.add_all([RouteToken(route_plan_id=r.id, token=f'tok-{r.id}') for r in programmed[:150]])
+    db.add(RoutePlan(user_id=owner.id, nome='Bozza scartata', data_giro=local_today(), orario_partenza=time(9), status='annullato'))
+    db.commit()
     with_cancelled = client.get('/api/routes/operativi?include_cancelled=true').json()
+    assert 'Bozza scartata' not in {r['nome'] for r in with_cancelled}
     cancelled = [r for r in with_cancelled if r['status'] == 'annullato']
     assert len(cancelled) == 150 and all(r['cancelled_at'] is None for r in cancelled)
     assert {r['id'] for r in with_cancelled} - {r['id'] for r in cancelled} == {next_route.id}

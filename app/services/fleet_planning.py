@@ -60,6 +60,23 @@ def day_minutes_left(orario_partenza):
     return max(0,24*60-opt.parse_hhmm(orario_partenza))
 
 
+def traffic_window_problems(rows):
+    """Clienti che, con i tempi aggiornati al traffico, finiscono fuori dalla loro fascia oraria."""
+    import json
+    problems=[]
+    for row in rows:
+        driver=row.driver
+        who=' '.join(filter(None,[driver.nome,driver.cognome])) if driver else 'senza autista'
+        for d in sorted(row.deliveries,key=lambda d:d.ordine or 0):
+            issue=json.loads(d.optimizer_details or '{}').get('time_window_violation')
+            if not issue: continue
+            window=issue.get('window') or {}
+            late=round(float(issue.get('lateness_min') or 0))
+            problems.append(f"{d.cliente_nome} (giro di {who}): scarico fino alle {issue.get('fine_servizio','—')}, "
+                            f"fascia {window.get('start','—')}–{window.get('end','—')}, {late} min oltre")
+    return problems
+
+
 def work_limits(db,user,data):
     """Tempo utilizzabile da ogni coppia prima di altri giri già programmati o della fine della giornata."""
     from ..routers.routes import _check_resource_overlap
@@ -403,6 +420,11 @@ def _program_saved(db,user,actor,plan_id,data):
     if plan.status=='programmed': return plan
     check_version(plan,data.version)
     rows=drafts()
+    problems=traffic_window_problems(rows)
+    if problems:
+        raise HTTPException(409,'Con il traffico aggiornato alcuni clienti verrebbero serviti fuori orario: '
+                            +'; '.join(problems)+'. Sposta queste consegne in un altro giro, allarga la loro fascia oraria '
+                            'o anticipa la partenza, poi ricalcola.')
     for row in rows:
         from .driver_schedule import ensure_shift
         ensure_shift(row.driver_schedule,row.orario_partenza,row.totale_minuti)
@@ -416,8 +438,8 @@ def _program_saved(db,user,actor,plan_id,data):
         ensure_future_departure(row.data_giro,row.orario_partenza)
         check_daily_route_limit(user,db,row.data_giro,exclude_route_id=row.id)
         opt.validate_vehicle_load([{'peso_kg':d.peso_kg,'colli':d.colli} for d in row.deliveries],build_vehicle_dict(row.vehicle))
-        if math.ceil(row.totale_minuti)>day_minutes_left(settings.orario_partenza) or any(json.loads(d.optimizer_details or '{}').get('time_window_violation') for d in row.deliveries):
-            raise HTTPException(409,'I tempi aggiornati non rispettano gli orari o superano la giornata. Rivedi i dati e ricalcola prima di programmare.')
+        if math.ceil(row.totale_minuti)>day_minutes_left(settings.orario_partenza):
+            raise HTTPException(409,'Con il traffico aggiornato un giro supera la fine della giornata. Anticipa la partenza o sposta alcune consegne, poi ricalcola.')
         start=opt.parse_hhmm(settings.orario_partenza)
         _check_resource_overlap(db,user,row,start,start+math.ceil(row.totale_minuti),exclude_route_id=row.id)
     from ..models import RouteToken
