@@ -5,6 +5,17 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Giri in bozza: lasciando la pianificazione (pre-pianificazione, anteprima o
+  "Controlla la suddivisione") con un giro non ancora programmato compare
+  l'avviso "stai per mandare questo giro in bozza". Confermando, il giro
+  (ordini o clienti scelti, configurazione, mezzi e fermate) viene salvato come
+  bozza e il pianificatore si svuota: aprendo Ordini o Clienti la selezione non
+  resta più spuntata. Le bozze compaiono in Dashboard e in Ordini nella sezione
+  "Giri in bozza" (nascosta quando non ce ne sono), con "Riprendi" ed
+  "Elimina"; ci sono anche i giri già calcolati e non ancora programmati, con
+  "Apri". Riprendendo una bozza da ordini, quelli non più da pianificare
+  (annullati o già in un giro) vengono esclusi. Nuova tabella planning_drafts e
+  API /api/planning-drafts.
 - Storico, vista settimana: ogni giorno mostra al massimo 3 giri; sotto,
   "Mostra altri N" seleziona quel giorno e porta alla tabella in basso con
   l'elenco completo (la colonna del giorno non si allunga).

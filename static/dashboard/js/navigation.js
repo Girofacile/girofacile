@@ -135,6 +135,8 @@ function setActiveNavItem(name){
 
 function showTab(name){
   if(window.GFCompanyAccess && !GFCompanyAccess.allowedTab(name)){toast("Funzione non assegnata al tuo account");return;}
+  // Lasciando la pianificazione il giro va in bozza, dopo una conferma.
+  if(window.GFPlanningDrafts?.guard(name)) return;
   if(name!=="dashboard-in-progress")window.GFInProgressReference?.suspend();
   if(name==='integrations') name='dashboard';
   if(name !== "company" && typeof blockCompanyNavigationForUnsavedChanges === "function" && blockCompanyNavigationForUnsavedChanges()) return;
@@ -153,6 +155,7 @@ function showTab(name){
   if(name!=="ordini-collegamenti") window.GFOrderSources?.hideSecret();
   if(name==="ordini-collegamenti") window.GFOrderSources?.load();
   if(name==="ordini"){ GFOrders.load(); markOrdersSeenV30(); }
+  if(name==="ordini"||name==="dashboard") window.GFPlanningDrafts?.load();
   if(name==="collaboratori") GFCollaborators.load();
   if(name==="dashboard-scheduled") loadDashboardScheduledPage();
   if(name==="dashboard-in-progress") loadDashboardInProgressPage();

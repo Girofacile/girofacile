@@ -21,6 +21,7 @@ from app.models import User, Deposit, Vehicle, Driver, Customer
 from app.core.dependencies import current_user
 from app.routers.orders import router
 from app.routers.order_planning import router as planning_router
+from app.routers.planning_drafts import router as drafts_router
 from app.routers.order_sources import router as sources_router
 from check_management_design import ME,LIMITS,VEHICLES,DRIVERS,DEPOSITS,USAGE
 
@@ -55,7 +56,7 @@ def main():
             with Session(engine) as db:
                 user=User(username='browser-test',password_hash='test',plan='business',plan_status='active');db.add(user);db.commit()
                 db.add_all([Deposit(user_id=user.id,nome='Depot',indirizzo='Via Roma 1',lat=45.46,lon=9.19),Vehicle(user_id=user.id,nome='Van'),Driver(user_id=user.id,nome='Driver')]);db.commit()
-                app=FastAPI();app.include_router(router);app.include_router(planning_router);app.include_router(sources_router)
+                app=FastAPI();app.include_router(router);app.include_router(planning_router);app.include_router(drafts_router);app.include_router(sources_router)
                 app.dependency_overrides[get_db]=lambda:db
                 app.dependency_overrides[current_user]=lambda:user
                 with TestClient(app) as client:
@@ -65,7 +66,7 @@ def main():
                     def handle(route):
                         parsed=urlparse(route.request.url);path=parsed.path
                         if parsed.hostname!='orders.test':route.abort();return
-                        if path.startswith(('/api/orders','/api/order-planning','/api/order-sources')):
+                        if path.startswith(('/api/orders','/api/order-planning','/api/order-sources','/api/planning-drafts')):
                             # Exercise selection latency beyond the former 150 ms polling delay.
                             if path=='/api/order-planning/selection' and route.request.method=='PUT':
                                 sleep(0.25)
@@ -193,8 +194,15 @@ def main():
                     assert page.locator('#customerPlanningStep').is_hidden()
                     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 2')
                     page.screenshot(path=str(output/f'planning-{width}.png'),full_page=True)
+                    # Lasciando la pianificazione il giro va in bozza: la selezione si svuota e compare in "Giri in bozza".
+                    messages=[]
+                    page.once('dialog',lambda dialog:(messages.append(dialog.message),dialog.accept()))
                     page.evaluate("showTab('ordini')")
-                    page.wait_for_function("document.querySelector('.order-select')?.checked")
+                    page.locator('#tab-ordini').wait_for(state='visible')
+                    assert 'in bozza' in messages[0]
+                    page.locator('[data-planning-drafts="ordini"]').get_by_role('button',name='Riprendi',exact=True).wait_for()
+                    assert client.get('/api/order-planning/selection').json()['order_ids']==[]
+                    assert len(client.get('/api/planning-drafts').json()['drafts'])==1
                     page.locator('#ordersSearch').fill('inesistente')
                     page.wait_for_function("document.getElementById('ordersMessage').textContent.includes('Nessun ordine')")
                     page.get_by_role('button',name='Collega i tuoi ordini',exact=True).click()
@@ -236,13 +244,11 @@ def main():
                     imported=db.query(Order).filter_by(external_id='IMPORT-001').one()
                     imported.status='pronto';imported.address_verification={'input_address':imported.delivery_address,'indirizzo':imported.delivery_address,'stato_geocodifica':'verificato','lat':45.47,'lon':9.2,'geocoding_token':sign_stop_address(user.id,imported.delivery_address,45.47,9.2)}
                     db.commit()
-                    page.get_by_role('button',name='Deseleziona',exact=True).click()
                     page.wait_for_function("document.getElementById('ordersSelectionCount').textContent.startsWith('0 ordini')")
                     page.evaluate('GFOrders.load()')
                     page.locator('#ordersView-table').click()
                     select_ready(page)
                     page.wait_for_function("document.getElementById('ordersSelectionCount').textContent.startsWith('1 ordine')")
-                    page.once('dialog',lambda dialog:dialog.accept())
                     page.locator('#ordersGoPlanning').click()
                     page.locator('#tab-giro').wait_for(state='visible')
                     expect(page.locator('#orderPlanningBanner')).to_have_count(0)
@@ -272,7 +278,9 @@ def main():
                     assert page.locator('#deliveryWorkbenchStep').is_visible()
                     expect(page.locator('#orderPlanningProceedMessage')).to_be_hidden()
                     assert page.locator('#customerPlanningStep').is_hidden()
+                    page.once('dialog',lambda dialog:dialog.accept())  # il giro aperto va in bozza
                     page.evaluate("showTab('ordini-collegamenti')")
+                    page.locator('#tab-ordini-collegamenti').wait_for(state='visible')
                     page.get_by_role('button',name='Configura gestionale',exact=True).click()
                     page.locator('#sourceName').fill('API gestionale')
                     page.get_by_role('button',name='Crea fonte e prosegui',exact=True).click()
@@ -303,7 +311,6 @@ def main():
                     page.locator('#customersGoPlanning').click()
                     assert page.locator('#tab-clienti').is_visible()
                     page.locator('#customerResults input[data-cx-cb="102"]').uncheck()
-                    page.once('dialog',lambda dialog:dialog.accept())
                     page.locator('#customersGoPlanning').click()
                     page.wait_for_function("deliveries.length===1 && deliveries[0].customer_id===101")
                     assert page.locator('#tab-giro').is_visible()
@@ -311,9 +318,12 @@ def main():
                     assert page.evaluate("deliveries[0].tempo_scarico_min===15")
                     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 2')
                     page.screenshot(path=str(output/f'customer-planning-{width}.png'),full_page=True)
+                    page.once('dialog',lambda dialog:dialog.accept())  # il giro dai clienti va in bozza
                     page.evaluate("showTab('clienti')")
                     page.locator('#tab-clienti').wait_for(state='visible')
-                    assert page.locator('#customerResults input[data-cx-cb="101"]').is_checked()
+                    # La selezione è passata al pianificatore (ora in bozza): tornando in Clienti non resta spuntata.
+                    assert not page.locator('#customerResults input[data-cx-cb="101"]').is_checked()
+                    assert any(d['source']=='customers' for d in client.get('/api/planning-drafts').json()['drafts'])
                     # Lazy verification starts only for the chosen orders, then resolves in one dialog.
                     from unittest.mock import patch
                     from fastapi import HTTPException
@@ -349,12 +359,13 @@ def main():
                         page.locator('#tab-giro').wait_for(state='visible')
                         assert page.evaluate('deliveries.length')==2
                         assert len(calls)==2
+                        page.once('dialog',lambda dialog:dialog.accept())  # il giro aperto va in bozza
                         page.evaluate("showTab('ordini')")
+                        page.locator('#tab-ordini').wait_for(state='visible')
                         manual=client.post('/api/orders',json={'number':'AUTO-MANUAL','recipient_name':'Manual recipient','delivery_address':'Ambiguous 2'}).json()
                         page.evaluate('GFOrders.load()')
                         box=page.get_by_role('checkbox',name='Seleziona ordine AUTO-MANUAL',exact=True)
                         box.check();expect(box).to_be_enabled()
-                        page.once('dialog',lambda dialog:dialog.accept())
                         page.locator('#ordersGoPlanning').click()
                         page.locator('#selectedAddressesDialog').wait_for(state='visible')
                         # Leaflet is stubbed to test the explicit confirmation without external tiles.
@@ -367,7 +378,8 @@ def main():
                         assert result['verification_status']=='manual' and result['address_verification']['confirmed_manually']
                         page.locator('#selectedAddressesContinue').click()
                         page.locator('#tab-giro').wait_for(state='visible')
-                        assert page.evaluate('deliveries.length')==3
+                        # La selezione era stata svuotata mettendo in bozza il giro precedente: resta solo AUTO-MANUAL.
+                        assert page.evaluate('deliveries.length')==1
                     assert not errors,errors
                     context.close()
             engine.dispose()

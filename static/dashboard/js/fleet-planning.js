@@ -143,6 +143,7 @@
             :'Giri programmati correttamente. Le consegne sono ora disponibili nel portale degli autisti.';
           notice(message);
           globalThis.GFOrderPlanning?.leave();
+          customerDirectoryPlanning=false; // giri programmati: nulla da mettere in bozza
           await globalThis.GFOrderPlanning?.afterProgram?.().catch(()=>{});
           await loadRoutes();
           // Come per il giro singolo: si apre Giri programmati sul giorno dei giri appena creati.

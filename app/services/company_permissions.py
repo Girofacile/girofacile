@@ -149,6 +149,10 @@ rule("POST", ["/api/order-sources/{source_id}/runs/{run_id}/commit"], "orders.im
 rule("GET", ["/api/order-planning/selection"], "orders.plan")
 rule("PUT", ["/api/order-planning/selection", "/api/order-planning/snapshot"], "orders.plan")
 rule("POST", ["/api/order-planning/preview", "/api/order-planning/verify-selected", "/api/order-planning/resolve-address"], "orders.plan")
+# Giri in bozza: chi può pianificare dagli ordini o dai clienti.
+rule("GET", ["/api/planning-drafts"], "orders.plan", "routes.plan")
+rule("POST", ["/api/planning-drafts", "/api/planning-drafts/{draft_id}/resume"], "orders.plan", "routes.plan")
+rule("DELETE", ["/api/planning-drafts/{draft_id}"], "orders.plan", "routes.plan")
 rule("GET", ["/api/orders", "/api/orders/{order_id}"], "orders.read")
 rule("POST", ["/api/orders"], "orders.create")
 rule("PUT", ["/api/orders/{order_id}"], "orders.update")

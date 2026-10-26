@@ -427,6 +427,8 @@ async function goCustomerPlanning(resume=false){
     clearRouteWorkspace();
     deliveries=stops;
     customerDirectoryPlanning=true;
+    // La selezione passa al pianificatore: tornando in Clienti non resta spuntata.
+    customerDirectory.selected.clear();renderCustomerSelection();
     renderDeliveries();
     updateRoutePlanningGateV68();
   }catch(error){

@@ -19,7 +19,7 @@ from .database import Base, engine, get_db
 from .models import Agent, Customer, Deposit, Driver, RoutePlan, User, Vehicle, PasswordResetToken, DistanceCache
 from .routers import (
     admin_billing, admin_database, admin_profile, admin_server, admin_support, admin_users,
-    agents, auth, billing, customers, tracking, collaborators, orders, order_planning, order_sources, fleet_planning,
+    agents, auth, billing, customers, tracking, collaborators, orders, order_planning, planning_drafts, order_sources, fleet_planning,
     deposits, reports, routes, operator, notifications, settings, support, driver as driver_router_module, agent as agent_router_module,
 )
 from .routers.vehicles_drivers import drivers_router, vehicles_router
@@ -123,6 +123,7 @@ app.include_router(auth.router)
 app.include_router(collaborators.router)
 app.include_router(orders.router)
 app.include_router(order_planning.router)
+app.include_router(planning_drafts.router)
 app.include_router(fleet_planning.router)
 app.include_router(order_sources.router)
 app.include_router(deposits.router)
