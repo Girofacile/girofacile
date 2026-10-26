@@ -93,7 +93,7 @@ def main():
                 counts=[]
                 for lane in range(page.locator('[data-fleet-select]').count()):
                     page.locator(f'[data-fleet-select="{lane}"]').click()
-                    counts.append(page.locator('[data-fleet-review] .gf-stop[data-fleet-stop]').count())
+                    counts.append(page.locator('[data-fleet-review] tr[data-fleet-stop]').count())
                 assert sum(counts)==6,counts
                 page.locator('[data-fleet-select="0"]').click()
                 assert page.locator('[data-fleet-map]').is_visible()
@@ -110,7 +110,7 @@ def main():
                 assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 2')
                 page.evaluate('window.scrollTo(0,0)');page.screenshot(path=str(output/f'preview-{width}.png'),full_page=True)
                 if width>=1024:
-                    first_stop=page.locator('.gf-stop[data-fleet-stop]').first
+                    first_stop=page.locator('tr[data-fleet-stop]').first
                     source_lane=first_stop.locator('xpath=ancestor::*[@data-fleet-lane]')
                     source_id=source_lane.get_attribute('data-fleet-lane')
                     target_lane=page.locator(f'[data-fleet-lane]:not([data-fleet-lane="{source_id}"])').first
@@ -119,7 +119,7 @@ def main():
                     assert page.locator('[data-fleet-plan]').is_disabled()
                     page.locator('[data-fleet-undo]').click()
                     page.evaluate('window.scrollTo(0,0)')
-                    first_stop=page.locator('.gf-stop[data-fleet-stop]').first
+                    first_stop=page.locator('tr[data-fleet-stop]').first
                     source_id=first_stop.locator('xpath=ancestor::*[@data-fleet-lane]').get_attribute('data-fleet-lane')
                     target_lane=page.locator(f'[data-fleet-lane]:not([data-fleet-lane="{source_id}"])').first
                     first_stop.locator('[data-fleet-drag]').drag_to(target_lane,target_position={'x':15,'y':15})

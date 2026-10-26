@@ -5,6 +5,10 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- "Controlla la suddivisione": le fermate del giro scelto sono ora una tabella
+  (#, cliente con indirizzo, avvisi, arrivo, "Sposta in", azioni con maniglia e
+  ×); su telefono ogni fermata diventa una scheda. L'etichetta del fuori orario
+  è più corta ("Fuori orario +22 min"), con l'orario di fine nel suggerimento.
 - "Controlla la suddivisione": ogni fermata ha il pulsante "Togli dai giri"
   (×). La consegna diventa non assegnata, compare in "Da sistemare" (con
   "Assegna al giro N" per rimetterla) e, dopo "Ripianifica giri", non viene

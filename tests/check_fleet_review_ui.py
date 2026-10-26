@@ -87,7 +87,7 @@ def main():
                 # Niente avvisi grandi in alto: fuori orario e non assegnate sono solo in "Da sistemare".
                 assert review.locator(':scope > .gf-alert').count() == 0
                 # Giro 1 scelto: tre fermate, avvisi come etichette sulla fermata.
-                assert review.locator('.gf-stop[data-fleet-stop]').count() == 3
+                assert review.locator('tr[data-fleet-stop]').count() == 3
                 assert review.locator('[data-fleet-warning="tail-lift"]').count() == 1
                 assert review.locator('[data-fleet-warning="late"]').count() == 1
                 # "Da sistemare": solo la non assegnata e la fuori orario.
@@ -105,7 +105,7 @@ def main():
                 # Vedi giro 2: cambia il giro mostrato e l'etichetta del pulsante Assegna.
                 review.locator('[data-fleet-select="1"]').click()
                 assert review.locator('[data-fleet-select="1"]').get_attribute('aria-pressed') == 'true'
-                assert review.locator('.gf-stop[data-fleet-stop]').count() == 2
+                assert review.locator('tr[data-fleet-stop]').count() == 2
                 assert review.locator('[data-fleet-warning="ztl"]').count() == 1
                 assert review.locator('[data-fleet-assign="5"]').inner_text() == 'Assegna al giro 2'
                 review.locator('[data-fleet-assign="5"]').click()
@@ -140,7 +140,7 @@ def main():
                 review.locator('[data-fleet-select="1"]').click()
                 if width > 1000:
                     # Trascinamento di una fermata sulla riga di un altro giro.
-                    review.locator('.gf-stop[data-fleet-stop="3"] [data-fleet-drag]').drag_to(review.locator('tbody tr[data-fleet-lane="0"]'))
+                    review.locator('tr[data-fleet-stop="3"] [data-fleet-drag]').drag_to(review.locator('tbody tr[data-fleet-lane="0"]'))
                     page.get_by_role('button', name='Sposta comunque', exact=True).click()
                     assert page.evaluate('window.__moves')[-1] == [3, 0]
                     page.screenshot(path=str(output / f'suddivisione-giro2-{width}.png'), full_page=True)
