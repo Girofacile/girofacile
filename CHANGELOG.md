@@ -5,6 +5,10 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- "Controlla la suddivisione": tolti i due avvisi grandi in alto (riepilogo
+  della distribuzione e clienti fuori orario). Le consegne fuori orario e non
+  assegnate restano in "Da sistemare"; restano gli avvisi di ricalcolo e di
+  bozza non programmata.
 - Pianificazione con più mezzi: sparisce il riquadro "Costo del giro" (il
   prezzo del carburante si imposta già in ogni card del mezzo, in "Costi
   carburante ed energia") e la mappa "Dove sono i clienti" prende tutta la

@@ -174,7 +174,6 @@ function render(params){
  if(selected>=rows)selected=0;
  const alert=dirty?'Hai modificato la distribuzione. Le stime precedenti non sono valide: ricalcola prima di pianificare.':
  manualAdjusted?'Suddivisione personalizzata: GiroFacile ottimizza le fermate all’interno dei mezzi scelti, ma non garantisce la migliore combinazione globale.':'';
- const assigned=assignment.filter(v=>v!=null).length;
  // Classe di ambito per i segnaposto della mappa (ancora sul vecchio foglio, in attesa di un componente mappa).
  target.classList.add('fleet-review-page');
  target.innerHTML='<section class="gf-stack" data-gap="lg" data-fleet-review>'+
@@ -182,9 +181,7 @@ function render(params){
  '<h1 class="gf-title">Controlla la suddivisione</h1><p class="gf-muted">Verifica le consegne distribuite fra i mezzi. Puoi spostarle prima di pianificare i giri.</p></div>'+
  '<div class="gf-cluster"><button type="button" class="gf-button" data-variant="secondary" data-fleet-back>← Torna alla pianificazione</button>'+
  (planned?'<span class="gf-badge" data-status="success">Giri programmati</span>':'<button type="button" class="gf-button" data-variant="primary" data-fleet-plan '+(busy||dirty||!permission?'disabled':'')+'>Pianifica giri</button>')+'</div></div>'+
- (alert?'<div class="gf-alert" data-status="warning" role="status"><div class="gf-alert__body"><strong class="gf-alert__title">'+(dirty?'Ricalcolo necessario':'Suddivisione manuale')+'</strong><p>'+esc(alert)+'</p></div></div>':
-  plan.status==='preview'?'<div class="gf-alert" data-status="info" role="note"><div class="gf-alert__body"><p class="gf-alert__title">GiroFacile ha distribuito '+gfCount(assigned,'consegna','consegne')+' su '+gfCount(plan.configuration.resources.filter((_,i)=>assignment.includes(i)).length,'mezzo','mezzi')+'</p><p class="gf-alert__text">Rispettando fasce orarie, capienza e traffico previsto. Controlla gli avvisi e, se serve, sposta le fermate fra i giri.</p></div></div>':'')+
- (!dirty&&plan.status==='preview'&&lateStops(plan).length?'<div class="gf-alert" data-status="danger" role="status"><div class="gf-alert__body"><strong class="gf-alert__title">Clienti fuori orario con il traffico</strong><p>'+gfCount(lateStops(plan).length,'consegna verrebbe servita','consegne verrebbero servite')+' oltre la fascia oraria. '+(lateStops(plan).length===1?'Puoi spostarla in un altro giro o allargare la sua fascia e ricalcolare':'Puoi spostarle in altri giri o allargare la loro fascia e ricalcolare')+', oppure programmare comunque: i giri verranno salvati con l’avviso.</p></div></div>':'')+
+ (alert?'<div class="gf-alert" data-status="warning" role="status"><div class="gf-alert__body"><strong class="gf-alert__title">'+(dirty?'Ricalcolo necessario':'Suddivisione manuale')+'</strong><p>'+esc(alert)+'</p></div></div>':'')+
  (saved?'<div class="gf-alert" data-status="warning" role="status"><div class="gf-alert__body"><strong class="gf-alert__title">Giri in bozza, programmazione non completata</strong><p>Puoi riprovare con “Pianifica giri”. Non verranno duplicati giri.</p></div></div>':'')+
  totals(plan,assignment,dirty)+
  '<div class="gf-grid" data-cols="main-side"><div class="gf-stack">'+table(plan,assignment,dirty)+lane(plan,assignment,dirty,selected)+'</div>'+fixes(plan,assignment,dirty)+'</div>'+

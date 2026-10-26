@@ -78,6 +78,8 @@ def main():
                 review = page.locator('[data-fleet-review]')
                 review.get_by_role('heading', name='Confronto dei giri').wait_for()
                 assert review.locator('tbody tr[data-fleet-lane]').count() == 2
+                # Niente avvisi grandi in alto: fuori orario e non assegnate sono solo in "Da sistemare".
+                assert review.locator(':scope > .gf-alert').count() == 0
                 # Giro 1 scelto: tre fermate, avvisi come etichette sulla fermata.
                 assert review.locator('.gf-stop[data-fleet-stop]').count() == 3
                 assert review.locator('[data-fleet-warning="tail-lift"]').count() == 1
