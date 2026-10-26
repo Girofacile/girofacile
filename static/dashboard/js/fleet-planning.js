@@ -87,7 +87,7 @@
       changedAssignments=draftAssignments.some((v,i)=>v!==before[i]);
       manualAdjusted=true;
       render();
-      if(changedAssignments)notice('Suddivisione modificata: ricalcola per aggiornare l’ordine delle fermate, i tempi e i costi.');
+      if(changedAssignments)notice('Fermate spostate: premi “Ripianifica giri” in basso per aggiornare l’ordine delle fermate, i tempi e i costi.');
     };
     if(!acknowledgedWarning){
       window.GFFleetReview.warning(()=>{acknowledgedWarning=true;apply();});
@@ -109,7 +109,7 @@
     if(busy||!plan)return;
     if(!window.GFPlanAccess?.require('has_fleet_planning','La suddivisione automatica su più mezzi'))return;
     if(name==='plan'&&plan.status==='preview'&&changedAssignments){
-      notice('Ricalcola le assegnazioni prima di pianificare i giri.');return;
+      notice('Premi “Ripianifica giri” in basso prima di pianificare i giri.');return;
     }
     if(name==='plan'&&!can('routes.program')){
       notice('Il tuo account non ha il permesso di programmare i giri.');return;
@@ -122,7 +122,7 @@
     if(name!=='plan'&&name!=='revise')return;
     busy=true;
     el('routePreviewResult')?.querySelectorAll('button,select').forEach(b=>b.disabled=true);
-    notice(name==='revise'?'Ricalcolo delle assegnazioni in corso…':'Verifica e programmazione dei giri in corso…');
+    notice(name==='revise'?'Ripianificazione dei giri in corso…':'Verifica e programmazione dei giri in corso…');
     try{
       if(name==='revise'){
         const payload={version:plan.version,assignments:reviewAssignments()};
@@ -181,7 +181,7 @@
     if(e.target.id==='planningMode'){modeChanged();refreshResourceAvailability();}
     if(e.target.dataset.field&&el('fleetResources').contains(e.target)){resources[Number(e.target.dataset.index)][e.target.dataset.field]=Number(e.target.value);if(e.target.dataset.field==='vehicle_id'){const title=e.target.closest('article')?.querySelector('[data-fleet-name]');if(title)title.textContent=vehicleName(e.target.value);}if(e.target.dataset.field==='driver_id'){resources[Number(e.target.dataset.index)].driver_schedule=null;GFDriverSchedules.fleet(resources);}if(['vehicle_id','driver_id'].includes(e.target.dataset.field))syncChoices();updateRoutePlanningGateV68();globalThis.GFOrderPlanning?.changed();}
     if(e.target.id==='fleetStrategy')globalThis.GFOrderPlanning?.changed();
-    if(e.target.dataset.stop!==undefined&&el('routePreviewResult').contains(e.target)){changedAssignments=true;notice('Assegnazioni modificate: premi Ricalcola assegnazioni per verificare i nuovi giri.');}
+    if(e.target.dataset.stop!==undefined&&el('routePreviewResult').contains(e.target)){changedAssignments=true;notice('Fermate spostate: premi “Ripianifica giri” per verificare i nuovi giri.');}
   });
   document.addEventListener('click',e=>{
     const remove=e.target.closest('[data-remove]'),button=e.target.closest('[data-action]'),open=e.target.closest('[data-open]');

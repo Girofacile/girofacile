@@ -165,15 +165,13 @@ function warning(onConfirm){
  next.addEventListener('close',close,{once:true});
 }
 function render(params){
- const {plan,assignment,dirty,busy,manualAdjusted,permission,onMove,onUndo,onRecalc,onPlan,onBack}=params;
+ const {plan,assignment,dirty,busy,permission,onMove,onUndo,onRecalc,onPlan,onBack}=params;
  stopMap();if(dialog){dialog.remove();dialog=null;}
  const target=site();if(!target)return;
  const planned=plan.status==='programmed',saved=plan.status==='saved',rows=plan.configuration.resources.length;
  // Il giro scelto resta lo stesso tra un ricalcolo e l'altro dello stesso piano.
  if(selectedPlan!==plan.id){selectedPlan=plan.id;selected=0;}
  if(selected>=rows)selected=0;
- const alert=dirty?'Hai modificato la distribuzione. Le stime precedenti non sono valide: ricalcola prima di pianificare.':
- manualAdjusted?'Suddivisione personalizzata: GiroFacile ottimizza le fermate all’interno dei mezzi scelti, ma non garantisce la migliore combinazione globale.':'';
  // Classe di ambito per i segnaposto della mappa (ancora sul vecchio foglio, in attesa di un componente mappa).
  target.classList.add('fleet-review-page');
  target.innerHTML='<section class="gf-stack" data-gap="lg" data-fleet-review>'+
@@ -181,13 +179,12 @@ function render(params){
  '<h1 class="gf-title">Controlla la suddivisione</h1><p class="gf-muted">Verifica le consegne distribuite fra i mezzi. Puoi spostarle prima di pianificare i giri.</p></div>'+
  '<div class="gf-cluster"><button type="button" class="gf-button" data-variant="secondary" data-fleet-back>← Torna alla pianificazione</button>'+
  (planned?'<span class="gf-badge" data-status="success">Giri programmati</span>':'<button type="button" class="gf-button" data-variant="primary" data-fleet-plan '+(busy||dirty||!permission?'disabled':'')+'>Pianifica giri</button>')+'</div></div>'+
- (alert?'<div class="gf-alert" data-status="warning" role="status"><div class="gf-alert__body"><strong class="gf-alert__title">'+(dirty?'Ricalcolo necessario':'Suddivisione manuale')+'</strong><p>'+esc(alert)+'</p></div></div>':'')+
  (saved?'<div class="gf-alert" data-status="warning" role="status"><div class="gf-alert__body"><strong class="gf-alert__title">Giri in bozza, programmazione non completata</strong><p>Puoi riprovare con “Pianifica giri”. Non verranno duplicati giri.</p></div></div>':'')+
  totals(plan,assignment,dirty)+
  '<div class="gf-grid" data-cols="main-side"><div class="gf-stack">'+table(plan,assignment,dirty)+lane(plan,assignment,dirty,selected)+'</div>'+fixes(plan,assignment,dirty)+'</div>'+
  '<div id="fleetMessage" role="status" tabindex="-1" class="gf-muted"></div>'+
- (dirty?'<div class="gf-savebar" data-floating role="region" aria-label="Modifiche in sospeso"><span><b>Assegnazioni modificate</b> · Ricalcola per aggiornare tempi e distanze.</span>'+
- '<button type="button" class="gf-button" data-variant="secondary" data-size="sm" data-fleet-undo>Annulla modifiche</button><button type="button" class="gf-button" data-variant="primary" data-size="sm" data-fleet-recalc '+(busy?'disabled':'')+'>Ricalcola assegnazioni</button></div>':'')+
+ (dirty?'<div class="gf-savebar" data-floating role="region" aria-label="Fermate spostate, giri da ripianificare"><span><b>Fermate spostate</b> · Ripianifica i giri per aggiornare ordine, tempi e costi.</span>'+
+ '<button type="button" class="gf-button" data-variant="secondary" data-size="sm" data-fleet-undo>Annulla modifiche</button><button type="button" class="gf-button" data-variant="primary" data-size="sm" data-fleet-recalc '+(busy?'disabled':'')+'>Ripianifica giri</button></div>':'')+
  '</section>';
  target.querySelector('[data-fleet-back]')?.addEventListener('click',onBack);
  target.querySelector('[data-fleet-plan]')?.addEventListener('click',()=>onPlan(!!target.querySelector('[data-fleet-accept-unassigned]')?.checked));

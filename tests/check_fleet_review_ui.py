@@ -105,6 +105,14 @@ def main():
                 review.locator('[data-fleet-assign="5"]').click()
                 page.get_by_role('button', name='Sposta comunque', exact=True).click()
                 assert page.evaluate('window.__moves') == [[5, 1]]
+                # Dopo uno spostamento: nessun avviso in alto, solo la barra in basso con "Ripianifica giri".
+                page.evaluate('() => GFFleetReview.render({...window.__params, assignment:[0,1,0,1,1,null], dirty:true, manualAdjusted:true})')
+                assert review.locator(':scope > .gf-alert').count() == 0
+                bar = review.locator('.gf-savebar')
+                assert bar.is_visible() and bar.get_by_role('button', name='Ripianifica giri').is_visible()
+                assert review.locator('[data-fleet-plan]').is_disabled()
+                page.screenshot(path=str(output / f'suddivisione-spostata-{width}.png'))
+                page.evaluate('() => GFFleetReview.render(window.__params)')
                 if width > 1000:
                     # Trascinamento di una fermata sulla riga di un altro giro.
                     review.locator('.gf-stop[data-fleet-stop="3"] [data-fleet-drag]').drag_to(review.locator('tbody tr[data-fleet-lane="0"]'))

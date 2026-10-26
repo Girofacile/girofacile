@@ -64,10 +64,11 @@ test('fleet review replica il modello senza sidebar ne dati fittizi',()=>{
 test('modifiche manuali invalidano stime e disabilitano pianificazione',()=>{
  const {control,page,params}=preview();
  control.render({...params,assignment:[1,1],dirty:true,manualAdjusted:true});
- assert.match(page.innerHTML,/Ricalcolo necessario/);
+ // Nessun avviso in alto: compare solo la barra in basso con "Ripianifica giri".
+ assert.doesNotMatch(page.innerHTML,/Ricalcolo necessario|Suddivisione manuale/);
  assert.match(page.innerHTML,/Da ricalcolare/);
  assert.match(page.innerHTML,/data-fleet-plan disabled/);
- assert.match(page.innerHTML,/Ricalcola assegnazioni/);
+ assert.match(page.innerHTML,/>Ripianifica giri<\/button>/);
  assert.match(page.innerHTML,/Annulla modifiche/);
 });
 test('un solo pulsante Pianifica giri usa una richiesta backend di programmazione',()=>{

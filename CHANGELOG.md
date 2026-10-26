@@ -5,6 +5,11 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- "Controlla la suddivisione": quando si sposta una consegna fra i giri non
+  compare più l'avviso giallo in alto ("Ricalcolo necessario" / "Suddivisione
+  manuale"). Compare solo la barra in basso, ora con il tasto "Ripianifica
+  giri" (prima "Ricalcola assegnazioni") e "Annulla modifiche". Resta l'avviso
+  dei giri in bozza se la programmazione non si completa.
 - "Controlla la suddivisione": tolti i due avvisi grandi in alto (riepilogo
   della distribuzione e clienti fuori orario). Le consegne fuori orario e non
   assegnate restano in "Da sistemare"; restano gli avvisi di ricalcolo e di
