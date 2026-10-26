@@ -68,7 +68,9 @@ function stop(plan,dirty,index,lane,position,busy){
  const moveTo=plan.status==='preview'&&others.length?'<span><select class="gf-select" data-fleet-move-to="'+index+'" aria-label="Sposta '+esc(delivery.cliente_nome)+' in un altro giro"'+(busy?' disabled':'')+'><option value="" selected>Sposta in…</option>'+
  others.map(i=>'<option value="'+i+'">Giro '+(i+1)+' · '+esc(names(plan,i).driver)+'</option>').join('')+'</select></span>':'';
  const handle=plan.status==='preview'?'<button type="button" class="gf-icon-button" data-fleet-drag draggable="true" title="Trascina su un giro della tabella" aria-label="Trascina '+esc(delivery.cliente_nome)+'"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14"/></svg></button>':'';
- return '<li class="gf-stop" data-fleet-stop="'+index+'"><span class="gf-stop__number">'+(position+1)+'</span><span class="gf-stop__main"><span class="gf-stop__name">'+esc(delivery.cliente_nome)+'</span><span class="gf-stop__meta">'+esc(delivery.indirizzo)+badges+'</span>'+(moveTo||handle?'<span class="gf-cluster">'+moveTo+handle+'</span>':'')+'</span>'+
+ // Togliere una consegna dai giri: diventa "non assegnata" e non viene programmata (si può riassegnare da "Da sistemare").
+ const remove=plan.status==='preview'&&lane!==null?'<button type="button" class="gf-icon-button" data-fleet-remove="'+index+'" title="Togli dai giri" aria-label="Togli '+esc(delivery.cliente_nome)+' dai giri"'+(busy?' disabled':'')+'><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>':'';
+ return '<li class="gf-stop" data-fleet-stop="'+index+'"><span class="gf-stop__number">'+(position+1)+'</span><span class="gf-stop__main"><span class="gf-stop__name">'+esc(delivery.cliente_nome)+'</span><span class="gf-stop__meta">'+esc(delivery.indirizzo)+badges+'</span>'+(moveTo||handle||remove?'<span class="gf-cluster">'+moveTo+handle+remove+'</span>':'')+'</span>'+
  '<span class="gf-stop__time">'+esc(timing?.arrivo_stimato||'')+'</span></li>';
 }
 // Tabella di confronto: una riga per giro, che è anche il punto in cui rilasciare una fermata trascinata.
@@ -104,7 +106,7 @@ function fixes(plan,assignment,dirty){
  const target=names(plan,selected);
  const rows=missing.map(i=>{
   const d=plan.configuration.consegne[i],reason=plan.unassigned?.find(row=>row.index===i)?.reason;
-  return '<li class="gf-list-item" data-fleet-stop="'+i+'"><div class="gf-list-item__main"><strong>'+esc(d.cliente_nome)+'</strong><small>Non assegnata · '+esc(d.indirizzo)+'</small>'+(reason?'<small>'+esc(reason)+'</small>':'')+'</div>'+
+  return '<li class="gf-list-item" data-fleet-stop="'+i+'"><div class="gf-list-item__main"><strong>'+esc(d.cliente_nome)+'</strong><small>Non assegnata · '+esc(d.indirizzo)+'</small>'+'<small>'+esc(reason||'Tolta dai giri: non verrà programmata.')+'</small>'+'</div>'+
   (plan.status==='preview'?'<button type="button" class="gf-button" data-variant="secondary" data-size="sm" data-fleet-assign="'+i+'">Assegna al giro '+(selected+1)+'</button>':'<span class="gf-badge" data-status="warning">Non assegnata</span>')+'</li>';
  }).concat(late.map(item=>{
   const lane=assignment[item.stop_index],d=plan.configuration.consegne[item.stop_index];
@@ -203,7 +205,7 @@ function render(params){
  target.querySelector('[data-fleet-undo]')?.addEventListener('click',onUndo);
  target.querySelector('[data-fleet-recalc]')?.addEventListener('click',onRecalc);
  const move=(index,to)=>{
-  if(!Number.isInteger(index)||to===assignment[index]||to<0||to>=rows)return;
+  if(!Number.isInteger(index)||to===assignment[index]||(to!==null&&(to<0||to>=rows)))return;
   onMove(index,to);
  };
  target.querySelectorAll('[data-fleet-select]').forEach(button=>button.addEventListener('click',()=>{selected=Number(button.dataset.fleetSelect);render(params);}));
@@ -211,6 +213,7 @@ function render(params){
   const to=select.value===''?null:Number(select.value);select.value='';
   if(to!==null&&!busy)move(Number(select.dataset.fleetMoveTo),to);
  }));
+ target.querySelectorAll('[data-fleet-remove]').forEach(button=>button.addEventListener('click',()=>{if(!busy)move(Number(button.dataset.fleetRemove),null);}));
  target.querySelectorAll('[data-fleet-assign]').forEach(button=>button.addEventListener('click',()=>{if(!busy)move(Number(button.dataset.fleetAssign),selected);}));
  target.querySelectorAll('[data-fleet-stop]').forEach(stop=>{
   stop.addEventListener('dragstart',e=>{if(plan.status!=='preview'||busy||!e.target.closest('[data-fleet-drag]')){e.preventDefault();return;}drag=Number(stop.dataset.fleetStop);e.dataTransfer.setData('text/plain',String(drag));e.dataTransfer.effectAllowed='move';e.dataTransfer.setDragImage(stop,20,20);stop.classList.add('is-highlighted');});

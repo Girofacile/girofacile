@@ -133,6 +133,10 @@ def main():
                 page.get_by_role('button', name='Sposta comunque', exact=True).click()
                 assert page.evaluate('window.__moves')[moves_before:] == [[1, 1]]
                 assert review.locator('[data-fleet-move-to="1"]').input_value() == ''
+                # "Togli dai giri": la consegna diventa non assegnata (passa dalla conferma).
+                review.locator('[data-fleet-remove="2"]').click()
+                page.get_by_role('button', name='Sposta comunque', exact=True).click()
+                assert page.evaluate('window.__moves')[-1] == [2, None]
                 review.locator('[data-fleet-select="1"]').click()
                 if width > 1000:
                     # Trascinamento di una fermata sulla riga di un altro giro.

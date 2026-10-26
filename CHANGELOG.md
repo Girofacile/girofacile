@@ -5,6 +5,10 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- "Controlla la suddivisione": ogni fermata ha il pulsante "Togli dai giri"
+  (×). La consegna diventa non assegnata, compare in "Da sistemare" (con
+  "Assegna al giro N" per rimetterla) e, dopo "Ripianifica giri", non viene
+  programmata confermando "programma soltanto le consegne assegnate".
 - "Controlla la suddivisione", spostamenti più chiari: ogni fermata ha il menu
   "Sposta in…" con l'elenco degli altri giri (funziona anche da telefono, dove
   il trascinamento non c'è). Se "Ripianifica giri" viene rifiutato (per esempio

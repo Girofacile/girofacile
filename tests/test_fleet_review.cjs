@@ -158,3 +158,13 @@ test('un ricalcolo rifiutato mostra il motivo nella barra in basso',()=>{
  assert.doesNotMatch(page.innerHTML,/data-fleet-error/);
  assert.match(page.innerHTML,/<b>Fermate spostate<\/b>/);
 });
+
+test('ogni fermata si può togliere dai giri e finisce in Da sistemare',()=>{
+ const {control,page,params}=preview();
+ control.render(params);
+ assert.match(page.innerHTML,/data-fleet-remove="0" title="Togli dai giri" aria-label="Togli Alimentari Rossi dai giri"/);
+ control.render({...params,assignment:[null,1],dirty:true});
+ assert.match(page.innerHTML,/Tolta dai giri: non verrà programmata\./);
+ assert.match(page.innerHTML,/data-fleet-assign="0"/);
+ assert.match(page.innerHTML,/data-fleet-accept-unassigned/);
+});
