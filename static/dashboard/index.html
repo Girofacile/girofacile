@@ -562,8 +562,9 @@
             <p id="routePlanningInlineHint" class="gf-muted hidden">Anteprima calcolata nella schermata dedicata.</p>
           </section>
 
-        <!-- Mappa dei clienti e costo del giro, affiancati -->
-        <div class="gf-grid" data-cols="2">
+        <!-- Mappa dei clienti e costo del giro, affiancati. Con più mezzi il costo è nelle card
+             dei mezzi: il riquadro si nasconde e la mappa prende tutta la larghezza. -->
+        <div class="gf-grid">
             <section class="gf-panel" aria-labelledby="planningMapTitle">
               <header class="gf-panel__header"><h2 class="gf-panel__title" id="planningMapTitle">Dove sono i clienti</h2><span class="gf-badge" data-status="info">Prima del calcolo</span></header>
               <div class="gf-panel__body gf-stack" data-gap="sm">
@@ -593,7 +594,7 @@
         <!-- Barra fissa: numeri del giro e calcolo del percorso -->
         <div id="routePlanningActions" class="gf-savebar" data-floating role="region" aria-label="Riepilogo e calcolo del percorso">
           <span><strong id="statDeliveries">0</strong> consegne · <strong id="statColli">0</strong> colli · <strong id="statWarnings">0</strong> con ZTL o sponda</span>
-          <span>Carburante <strong id="statFuel"></strong> <small id="statFuelHint">Seleziona un mezzo</small></span>
+          <span id="statFuelGroup">Carburante <strong id="statFuel"></strong> <small id="statFuelHint">Seleziona un mezzo</small></span>
           <button type="button" class="gf-button" data-variant="primary" onclick="optimizeRoute()">Calcola percorso</button>
         </div>
       </section>
@@ -1573,7 +1574,7 @@
 <script src="/static/dashboard/js/order-sources.js?v=gf_plans_20261023"></script>
 <script src="/static/dashboard/js/dashboard-real-map.js?v=gf_priority_hero_20261025"></script>
 <script src="/static/dashboard/js/in-progress-reference.js?v=gf_driver_flow_20261020"></script>
-<script src="/static/dashboard/js/core.js?v=gf_mappa_20261025"></script>
+<script src="/static/dashboard/js/core.js?v=gf_carburante_20261026"></script>
 <script src="/static/dashboard/js/dashboard-mobile.js?v=gf_dashboard_mobile_20261019"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=orders_2"></script>
 <link rel="stylesheet" href="/static/dashboard/css/fleet-review.css?v=gf_suddivisione_20261025">
@@ -1581,7 +1582,7 @@
 <link rel="stylesheet" href="/static/driver-schedule.css?v=gf_break_row_20261021">
 <script src="/static/driver-schedule.js?v=gf_break_row_20261021"></script>
 <script src="/static/dashboard/js/driver-schedules.js?v=gf_base_20261015u"></script>
-<script src="/static/dashboard/js/fleet-planning.js?v=gf_avviso_20261025b"></script>
+<script src="/static/dashboard/js/fleet-planning.js?v=gf_carburante_20261026"></script>
 <script src="/static/dashboard/js/selected-addresses.js?v=gf_selected_addresses_20261019"></script>
 <script src="/static/dashboard/js/selected-customer-addresses.js?v=gf_customer_selected_addresses_20261020"></script>
 <script src="/static/dashboard/js/order-planning.js?v=gf_format_20261020"></script>

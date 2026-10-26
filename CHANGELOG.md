@@ -5,6 +5,11 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Pianificazione con più mezzi: sparisce il riquadro "Costo del giro" (il
+  prezzo del carburante si imposta già in ogni card del mezzo, in "Costi
+  carburante ed energia") e la mappa "Dove sono i clienti" prende tutta la
+  larghezza. Anche la barra in basso non mostra più il carburante. Con un solo
+  mezzo non cambia nulla.
 - Più mezzi, "Controlla la suddivisione": nuovo layout. In alto la tabella di
   confronto dei giri (autista, mezzo, fermate, km, costo, rientro, avvisi);
   sotto il giro scelto con la mappa (gli altri giri attenuati, un colore per

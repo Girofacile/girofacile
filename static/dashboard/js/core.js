@@ -215,9 +215,10 @@ function updateDashboardStats(){
     setText("summaryColli", colli);
     setText("statColli", colli);
 
-    if(globalThis.GFFleetPlanning?.active()){
-      setText("statFuel", "Per mezzo");setText("statFuelHint", "Prezzi nei dettagli delle risorse");return;
-    }
+    // Con più mezzi i prezzi sono nelle card dei mezzi: nella barra non si ripetono.
+    const fleet = !!globalThis.GFFleetPlanning?.active();
+    const fuelGroup = document.getElementById("statFuelGroup"); if(fuelGroup) fuelGroup.hidden = fleet;
+    if(fleet) return;
     const sv=vehiclesCache.find(v=>String(v.id)===String(val("routeVehicle")));
     if(!sv){
       setText("statFuel", "");
@@ -2432,7 +2433,8 @@ async function updateRouteEnergyPricingV895(){
         note=document.getElementById("automaticFuelPriceInfo"),
         priceInput=document.getElementById("fuelPrice");
 
-  if(!v){
+  // Con più mezzi il costo si imposta in ogni card ("Costi carburante ed energia"), non qui.
+  if(!v || globalThis.GFFleetPlanning?.active()){
     box?.classList.add("hidden");
     if(info) info.textContent="";
     primaryWrap?.classList.remove("hidden");

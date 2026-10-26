@@ -40,7 +40,7 @@
     if(!window.GFPlanAccess?.has('has_fleet_planning'))el('planningMode').value='single';
     if(active()&&!resources.length)resources=[blank(),blank()];
     el('fleetSetup').hidden=!active();el('singleVehicleField').hidden=active();el('singleDriverField').hidden=active();
-    refresh();updateRoutePlanningGateV68();updateDashboardStats();
+    refresh();globalThis.updateRouteEnergyPricingV895?.();updateRoutePlanningGateV68();updateDashboardStats();
     if(notify)globalThis.GFOrderPlanning?.changed();
   }
   function missing(){
