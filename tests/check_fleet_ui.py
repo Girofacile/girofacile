@@ -141,7 +141,7 @@ def main():
                 assert all(r.status=='annullato' for r in db.query(RoutePlan))
                 mp.setattr(route_enrichment,'enrich_final_route',real_enrich)
                 page.locator('[data-fleet-plan]').click()
-                page.locator('[data-fleet-review] .gf-badge[data-status="success"]',has_text='Giri programmati').wait_for()
+                page.locator('#workspacePageBadge',has_text='Giri programmati').wait_for()
                 page.locator('[data-open]').first.click()
                 page.wait_for_function("document.getElementById('planningMode').value==='single'")
                 assert page.locator('#singleVehicleField').is_visible()

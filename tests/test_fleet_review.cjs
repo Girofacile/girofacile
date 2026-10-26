@@ -8,10 +8,13 @@ function preview(){
   innerHTML:'',classList:{add(){}},
   querySelector:()=>null,querySelectorAll:()=>[]
  };
+ const title={textContent:''};
+ const host={innerHTML:'',classList:{add(){},remove(){}},querySelector:()=>null};
  const body={appendChild(){}};
  const document={
   body,
-  getElementById(id){return id==='routePreviewResult'?page:null;},
+  // "Pianifica giri" sta nella barra in alto, come le azioni delle altre pagine.
+  getElementById(id){return id==='routePreviewResult'?page:id==='fleetTopbarActionsHost'?host:id==='workspacePageTitle'?title:null;},
   createElement(){return {set innerHTML(v){this.value=v;},get innerHTML(){return this.value;},
    querySelector(){return {onclick:null}},addEventListener(){},showModal(){},remove(){}};}
  };
@@ -40,12 +43,12 @@ function preview(){
  };
  const params={plan,assignment:[0,1],dirty:false,busy:false,manualAdjusted:false,permission:true,
   onMove(){},onUndo(){},onRecalc(){},onPlan(){},onBack(){}};
- return {control:sandbox.window.GFFleetReview,page,params};
+ return {control:sandbox.window.GFFleetReview,page,host,title,params};
 }
 test('fleet review replica il modello senza sidebar ne dati fittizi',()=>{
- const {control,page,params}=preview();
+ const {control,page,host,title,params}=preview();
  control.render(params);
- assert.match(page.innerHTML,/Controlla la suddivisione/);
+ assert.equal(title.textContent,'Controlla la suddivisione');
  assert.match(page.innerHTML,/data-fleet-map role="region"/);
  assert.doesNotMatch(page.innerHTML,/Note sul calcolo|data-fleet-map-details|Mostra la mappa/);
  assert.doesNotMatch(page.innerHTML,/Controlli sulla suddivisione/);
@@ -57,17 +60,18 @@ test('fleet review replica il modello senza sidebar ne dati fittizi',()=>{
  assert.doesNotMatch(page.innerHTML,/Bar Bianchi/);
  assert.match(page.innerHTML,/Furgone A/);
  assert.match(page.innerHTML,/Furgone B/);
- assert.match(page.innerHTML,/>Pianifica giri<\/button>/);
+ assert.match(host.innerHTML,/>Pianifica giri<\/button>/);
+ assert.doesNotMatch(page.innerHTML,/<h1|data-fleet-back|Torna alla pianificazione/);
  assert.doesNotMatch(page.innerHTML,/Salva giri in bozza/);
  assert.doesNotMatch(page.innerHTML,/class="sidebar"|Supermercati Iorio|Peugeot 2008/);
 });
 test('modifiche manuali invalidano stime e disabilitano pianificazione',()=>{
- const {control,page,params}=preview();
+ const {control,page,host,params}=preview();
  control.render({...params,assignment:[1,1],dirty:true,manualAdjusted:true});
  // Nessun avviso in alto: compare solo la barra in basso con "Ripianifica giri".
  assert.doesNotMatch(page.innerHTML,/Ricalcolo necessario|Suddivisione manuale/);
  assert.match(page.innerHTML,/Da ricalcolare/);
- assert.match(page.innerHTML,/data-fleet-plan disabled/);
+ assert.match(host.innerHTML,/data-fleet-plan disabled/);
  assert.match(page.innerHTML,/>Ripianifica giri<\/button>/);
  assert.match(page.innerHTML,/Annulla modifiche/);
 });

@@ -104,6 +104,8 @@ function syncWorkspaceTopbar(name){
     if(target){back.setAttribute("aria-label",target.label);back.title=target.label;}
     document.body?.classList.toggle("gf-has-topbar-back",!!target);
   }
+  const fleetActions=document.getElementById("fleetTopbarActionsHost");
+  if(fleetActions){fleetActions.innerHTML="";fleetActions.classList.add("gf-hidden");}
   // «Annulla giro» compare solo con il dettaglio di un giro programmato aperto.
   const cancelRoute=document.getElementById("scheduledCancelRouteBtn");
   if(cancelRoute) cancelRoute.hidden=true;

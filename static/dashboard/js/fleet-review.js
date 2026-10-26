@@ -164,6 +164,20 @@ function warning(onConfirm){
  next.querySelector('[data-accept]').onclick=()=>{close();onConfirm();};
  next.addEventListener('close',close,{once:true});
 }
+// Titolo, freccia "indietro" e "Pianifica giri" nella barra in alto, come nelle altre pagine.
+function topbar(plan,dirty,busy,permission,onBack,onPlan){
+ const planned=plan.status==='programmed',el=id=>document.getElementById(id);
+ document.querySelector?.('.gf-header__titles')?.classList.remove('gf-hidden');
+ const title=el('workspacePageTitle'),subtitle=el('workspacePageSubtitle'),badge=el('workspacePageBadge'),host=el('fleetTopbarActionsHost');
+ if(title)title.textContent='Controlla la suddivisione';
+ if(subtitle)subtitle.textContent='Verifica le consegne distribuite fra i mezzi. Puoi spostarle prima di pianificare i giri.';
+ if(badge){badge.hidden=!planned;badge.textContent=planned?'Giri programmati':'';badge.dataset.status='success';}
+ if(typeof gfRouteDetailBack==='function')gfRouteDetailBack('Torna alla pianificazione',onBack);
+ if(!host)return;
+ host.classList.remove('gf-hidden');
+ host.innerHTML=planned?'':'<button type="button" class="gf-button" data-variant="primary" data-fleet-plan '+(busy||dirty||!permission?'disabled':'')+'>Pianifica giri</button>';
+ host.querySelector('[data-fleet-plan]')?.addEventListener('click',onPlan);
+}
 function render(params){
  const {plan,assignment,dirty,busy,permission,onMove,onUndo,onRecalc,onPlan,onBack}=params;
  stopMap();if(dialog){dialog.remove();dialog=null;}
@@ -175,10 +189,6 @@ function render(params){
  // Classe di ambito per i segnaposto della mappa (ancora sul vecchio foglio, in attesa di un componente mappa).
  target.classList.add('fleet-review-page');
  target.innerHTML='<section class="gf-stack" data-gap="lg" data-fleet-review>'+
- '<div class="gf-cluster" data-justify="between"><div><p class="gf-muted">Pianificazione <span aria-hidden="true">›</span> Controlla la suddivisione</p>'+
- '<h1 class="gf-title">Controlla la suddivisione</h1><p class="gf-muted">Verifica le consegne distribuite fra i mezzi. Puoi spostarle prima di pianificare i giri.</p></div>'+
- '<div class="gf-cluster"><button type="button" class="gf-button" data-variant="secondary" data-fleet-back>← Torna alla pianificazione</button>'+
- (planned?'<span class="gf-badge" data-status="success">Giri programmati</span>':'<button type="button" class="gf-button" data-variant="primary" data-fleet-plan '+(busy||dirty||!permission?'disabled':'')+'>Pianifica giri</button>')+'</div></div>'+
  (saved?'<div class="gf-alert" data-status="warning" role="status"><div class="gf-alert__body"><strong class="gf-alert__title">Giri in bozza, programmazione non completata</strong><p>Puoi riprovare con “Pianifica giri”. Non verranno duplicati giri.</p></div></div>':'')+
  totals(plan,assignment,dirty)+
  '<div class="gf-grid" data-cols="main-side"><div class="gf-stack">'+table(plan,assignment,dirty)+lane(plan,assignment,dirty,selected)+'</div>'+fixes(plan,assignment,dirty)+'</div>'+
@@ -186,8 +196,7 @@ function render(params){
  (dirty?'<div class="gf-savebar" data-floating role="region" aria-label="Fermate spostate, giri da ripianificare"><span><b>Fermate spostate</b> · Ripianifica i giri per aggiornare ordine, tempi e costi.</span>'+
  '<button type="button" class="gf-button" data-variant="secondary" data-size="sm" data-fleet-undo>Annulla modifiche</button><button type="button" class="gf-button" data-variant="primary" data-size="sm" data-fleet-recalc '+(busy?'disabled':'')+'>Ripianifica giri</button></div>':'')+
  '</section>';
- target.querySelector('[data-fleet-back]')?.addEventListener('click',onBack);
- target.querySelector('[data-fleet-plan]')?.addEventListener('click',()=>onPlan(!!target.querySelector('[data-fleet-accept-unassigned]')?.checked));
+ topbar(plan,dirty,busy,permission,onBack,()=>onPlan(!!target.querySelector('[data-fleet-accept-unassigned]')?.checked));
  target.querySelector('[data-fleet-undo]')?.addEventListener('click',onUndo);
  target.querySelector('[data-fleet-recalc]')?.addEventListener('click',onRecalc);
  const move=(index,to)=>{

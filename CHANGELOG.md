@@ -5,6 +5,10 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- "Controlla la suddivisione" come le altre pagine: titolo e sottotitolo nella
+  barra in alto, freccia per tornare alla pianificazione e "Pianifica giri"
+  accanto alla campanella; a giri programmati il titolo mostra l'etichetta
+  "Giri programmati".
 - "Controlla la suddivisione": quando si sposta una consegna fra i giri non
   compare più l'avviso giallo in alto ("Ricalcolo necessario" / "Suddivisione
   manuale"). Compare solo la barra in basso, ora con il tasto "Ripianifica
