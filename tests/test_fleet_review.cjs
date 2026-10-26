@@ -91,7 +91,8 @@ test('trasferimenti notificati e mappe solo sul contenuto, senza nuova sidebar',
  const css=read('static/dashboard/css/fleet-review.css');
  const html=read('static/dashboard/index.html');
  assert.match(review,/GiroFacile non può garantire la combinazione più efficiente/);
- assert.doesNotMatch(review,/data-fleet-move/);
+ // Spostamento con "Sposta in…" (anche da telefono) oltre al trascinamento.
+ assert.match(review,/data-fleet-move-to/);
  assert.match(review,/data-fleet-lane/);
  assert.match(review,/loadRoadMapLibrary\(\)/);
  assert.match(review,/drawMap\(plan,assignment\);/);
@@ -113,7 +114,9 @@ test('unassigned deliveries stay visible with address, reason and reassignment',
  assert.match(page.innerHTML,/Via Napoli 5/);
  assert.match(page.innerHTML,/accesso ZTL richiesto/);
  assert.match(page.innerHTML,/data-fleet-drag draggable="true"/);
- assert.doesNotMatch(page.innerHTML,/<select|Sposta in un altro giro/);
+ // La fermata del giro 1 si può spostare nel giro 2 dal menu "Sposta in…".
+ assert.match(page.innerHTML,/<select class="gf-select" data-fleet-move-to="0" aria-label="Sposta Alimentari Rossi in un altro giro">/);
+ assert.match(page.innerHTML,/<option value="1">Giro 2 · /);
  assert.match(page.innerHTML,/data-fleet-accept-unassigned/);
 });
 
@@ -145,4 +148,13 @@ test('approximate road estimates remain clear without a bottom notes panel',()=>
  control.render(params);
  assert.match(page.innerHTML,/Stima approssimativa/);
  assert.doesNotMatch(page.innerHTML,/Note sul calcolo/);
+});
+
+test('un ricalcolo rifiutato mostra il motivo nella barra in basso',()=>{
+ const {control,page,params}=preview();
+ control.render({...params,assignment:[1,1],dirty:true,error:'Giro 2: Fasce orarie di consegna o turni e pause non rispettati.'});
+ assert.match(page.innerHTML,/class="gf-savebar"[^>]*>.*data-fleet-error><b>Ripianificazione non riuscita<\/b> · Giro 2: Fasce orarie/);
+ control.render({...params,assignment:[1,1],dirty:true});
+ assert.doesNotMatch(page.innerHTML,/data-fleet-error/);
+ assert.match(page.innerHTML,/<b>Fermate spostate<\/b>/);
 });

@@ -2,7 +2,7 @@
 (function(){
   'use strict';
   const el=id=>document.getElementById(id);
-  let resources=[],plan=null,busy=false,changedAssignments=false,draftAssignments=null,manualAdjusted=false,acknowledgedWarning=false;
+  let resources=[],plan=null,busy=false,changedAssignments=false,draftAssignments=null,manualAdjusted=false,acknowledgedWarning=false,reviseError='';
   const active=()=>window.GFPlanAccess?.has('has_fleet_planning')===true && el('planningMode')?.value==='fleet';
   const blank=()=>({vehicle_id:0,driver_id:0,energy_price_primary:1.75,energy_price_electric:0.30});
   const can=permission=>!window.GFCompanyAccess||GFCompanyAccess.can(permission);
@@ -85,7 +85,7 @@
     const apply=()=>{
       draftAssignments=current.slice();draftAssignments[index]=to;
       changedAssignments=draftAssignments.some((v,i)=>v!==before[i]);
-      manualAdjusted=true;
+      manualAdjusted=true;reviseError='';
       render();
       if(changedAssignments)notice('Fermate spostate: premi “Ripianifica giri” in basso per aggiornare l’ordine delle fermate, i tempi e i costi.');
     };
@@ -96,10 +96,10 @@
   function render(){
     if(!plan)return;
     window.GFFleetReview.render({
-      plan,assignment:reviewAssignments(),dirty:changedAssignments,busy,manualAdjusted,
+      plan,assignment:reviewAssignments(),dirty:changedAssignments,busy,manualAdjusted,error:reviseError,
       permission:can('routes.program'),
       onMove:moveStop,
-      onUndo:()=>{draftAssignments=null;changedAssignments=false;manualAdjusted=false;acknowledgedWarning=false;render();},
+      onUndo:()=>{draftAssignments=null;changedAssignments=false;manualAdjusted=false;acknowledgedWarning=false;reviseError='';render();},
       onRecalc:()=>action('revise'),
       onPlan:accept=>action('plan',accept),
       onBack:()=>showTab('giro')
@@ -127,7 +127,7 @@
       if(name==='revise'){
         const payload={version:plan.version,assignments:reviewAssignments()};
         plan=await api(`/api/fleet-planning/${plan.id}/revise`,{method:'POST',body:JSON.stringify(payload)});
-        changedAssignments=false;draftAssignments=null;
+        changedAssignments=false;draftAssignments=null;reviseError='';
         render();notice('Nuove fermate e stime ricalcolate. Controlla il risultato e premi “Pianifica giri”.');
       }else{
         if(plan.status==='preview'||plan.status==='saved'){
@@ -153,6 +153,7 @@
         }
       }
     }catch(e){
+      if(name==='revise')reviseError=e.message||'Ripianificazione non riuscita.';
       if(name==='plan'){
         try{
           plan=await api(`/api/fleet-planning/${plan.id}`);

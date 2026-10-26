@@ -55,7 +55,7 @@ function totals(plan,assignment,dirty){
  stat('fuel','3','Carburante / energia',dirty?'—':money(cost),dirty?'Da ricalcolare':'Costo stimato',dirty)+
  stat('clock','neutral','Ultimo rientro',dirty?'—':ends.at(-1)||'—',dirty?'Da ricalcolare':traffic?'Con traffico':approximate?'Stima approssimativa':'Stima senza traffico',dirty||(approximate&&!traffic))+'</section>';
 }
-function stop(plan,dirty,index,lane,position){
+function stop(plan,dirty,index,lane,position,busy){
  const delivery=plan.configuration.consegne[index];
  const route=oldRoute(plan,index),moved=route?.resource!==lane;
  const w=warnings(plan,dirty,index,lane);
@@ -64,13 +64,16 @@ function stop(plan,dirty,index,lane,position){
  (w.tailLift?'<span class="gf-badge" data-kind="tail-lift" data-fleet-warning="tail-lift" title="Questa consegna richiede la sponda, ma questo mezzo non la possiede.">Sponda mancante</span>':'')+
  (w.ztl?'<span class="gf-badge" data-kind="ztl" data-fleet-warning="ztl" title="Questa consegna è in ZTL, ma questo mezzo non è abilitato all’accesso.">ZTL senza permesso</span>':'')+
  (moved&&lane!==null?'<span class="gf-badge" data-status="info">Spostata</span>':'');
+ const others=plan.configuration.resources.map((_,i)=>i).filter(i=>i!==lane);
+ const moveTo=plan.status==='preview'&&others.length?'<span><select class="gf-select" data-fleet-move-to="'+index+'" aria-label="Sposta '+esc(delivery.cliente_nome)+' in un altro giro"'+(busy?' disabled':'')+'><option value="" selected>Sposta in…</option>'+
+ others.map(i=>'<option value="'+i+'">Giro '+(i+1)+' · '+esc(names(plan,i).driver)+'</option>').join('')+'</select></span>':'';
  const handle=plan.status==='preview'?'<button type="button" class="gf-icon-button" data-fleet-drag draggable="true" title="Trascina su un giro della tabella" aria-label="Trascina '+esc(delivery.cliente_nome)+'"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14"/></svg></button>':'';
- return '<li class="gf-stop" data-fleet-stop="'+index+'"><span class="gf-stop__number">'+(position+1)+'</span><span class="gf-stop__main"><span class="gf-stop__name">'+esc(delivery.cliente_nome)+'</span><span class="gf-stop__meta">'+esc(delivery.indirizzo)+badges+'</span></span>'+
- '<span class="gf-stop__time">'+esc(timing?.arrivo_stimato||'')+'</span>'+handle+'</li>';
+ return '<li class="gf-stop" data-fleet-stop="'+index+'"><span class="gf-stop__number">'+(position+1)+'</span><span class="gf-stop__main"><span class="gf-stop__name">'+esc(delivery.cliente_nome)+'</span><span class="gf-stop__meta">'+esc(delivery.indirizzo)+badges+'</span>'+(moveTo||handle?'<span class="gf-cluster">'+moveTo+handle+'</span>':'')+'</span>'+
+ '<span class="gf-stop__time">'+esc(timing?.arrivo_stimato||'')+'</span></li>';
 }
 // Tabella di confronto: una riga per giro, che è anche il punto in cui rilasciare una fermata trascinata.
 function table(plan,assignment,dirty){
- return '<section class="gf-panel" aria-labelledby="fleetCompareTitle"><header class="gf-panel__header"><div><h2 class="gf-panel__title" id="fleetCompareTitle">Confronto dei giri</h2><p class="gf-muted">Scegli un giro per vederlo sulla mappa. Per spostare una fermata, trascinala sulla riga di un altro giro.</p></div></header>'+
+ return '<section class="gf-panel" aria-labelledby="fleetCompareTitle"><header class="gf-panel__header"><div><h2 class="gf-panel__title" id="fleetCompareTitle">Confronto dei giri</h2><p class="gf-muted">Scegli un giro per vederlo sulla mappa. Per spostare una fermata usa «Sposta in…» oppure trascinala sulla riga di un altro giro.</p></div></header>'+
  '<div class="gf-table-wrap"><table class="gf-table"><thead><tr><th>Giro</th><th>Fermate</th><th>Km</th><th>Costo</th><th>Rientro</th><th>Avvisi</th><th><span class="gf-hidden">Azione</span></th></tr></thead><tbody>'+
  plan.configuration.resources.map((_,i)=>{
   const info=names(plan,i),route=info.r,stops=ordered(plan,assignment,i);
@@ -83,14 +86,14 @@ function table(plan,assignment,dirty){
  }).join('')+'</tbody></table></div></section>';
 }
 // Il giro scelto: mappa e fermate in ordine, con gli avvisi del mezzo come etichette.
-function lane(plan,assignment,dirty,i){
+function lane(plan,assignment,dirty,i,busy){
  const all=ordered(plan,assignment,i),info=names(plan,i),route=info.r,valid=!dirty&&route;
  const metrics=valid?[Number(route.result.total_km).toLocaleString('it-IT',{maximumFractionDigits:1})+' km',duration(routeMinutes(route))+(withTraffic(route)?' con traffico':''),money(route.fuel_cost),'rientro '+(routeReturn(route)||'—')].join(' · '):'Stime da ricalcolare';
  const routeId=plan.status==='programmed'&&route?plan.route_ids?.[plan.routes.indexOf(route)]:null;
  return '<section class="gf-panel" data-fleet-lane="'+i+'" aria-labelledby="fleetLaneTitle"><header class="gf-panel__header"><div><h2 class="gf-panel__title" id="fleetLaneTitle">Giro '+(i+1)+' · '+esc(info.driver)+'</h2><p class="gf-muted">'+esc([info.vehicle,info.plate].filter(Boolean).join(' · '))+' · '+esc(metrics)+'</p></div><span class="gf-badge" data-status="info" data-dot>'+gfCount(all.length,'fermata','fermate')+'</span></header>'+
  '<div class="gf-panel__body"><div class="gf-route-panel__canvas" data-fleet-map role="region" aria-label="Mappa della suddivisione dei giri"></div></div>'+
  '<ol class="gf-stop-list" data-height="auto" aria-label="Fermate del giro '+(i+1)+'">'+
- (all.length?all.map((k,j)=>stop(plan,dirty,k,i,j)).join(''):'<li class="gf-empty"><p>Nessuna fermata</p><small>Trascina qui una consegna.</small></li>')+'</ol>'+
+ (all.length?all.map((k,j)=>stop(plan,dirty,k,i,j,busy)).join(''):'<li class="gf-empty"><p>Nessuna fermata</p><small>Trascina qui una consegna.</small></li>')+'</ol>'+
  (valid&&route.result.driver_breaks?.length?'<details class="fleet-lane-breaks"><summary>Turno e pause</summary>'+GFDriverBreaks.cards(route.result,0,'div')+route.stop_indexes.map((_,j)=>GFDriverBreaks.cards(route.result,j+1,'div')).join('')+'</details>':'')+
  (routeId?'<footer class="gf-panel__footer"><button type="button" class="gf-button" data-variant="secondary" data-size="sm" data-open="'+Number(routeId)+'">Apri giro programmato</button></footer>':'')+'</section>';
 }
@@ -179,7 +182,7 @@ function topbar(plan,dirty,busy,permission,onBack,onPlan){
  host.querySelector('[data-fleet-plan]')?.addEventListener('click',onPlan);
 }
 function render(params){
- const {plan,assignment,dirty,busy,permission,onMove,onUndo,onRecalc,onPlan,onBack}=params;
+ const {plan,assignment,dirty,busy,permission,error,onMove,onUndo,onRecalc,onPlan,onBack}=params;
  stopMap();if(dialog){dialog.remove();dialog=null;}
  const target=site();if(!target)return;
  const planned=plan.status==='programmed',saved=plan.status==='saved',rows=plan.configuration.resources.length;
@@ -191,9 +194,9 @@ function render(params){
  target.innerHTML='<section class="gf-stack" data-gap="lg" data-fleet-review>'+
  (saved?'<div class="gf-alert" data-status="warning" role="status"><div class="gf-alert__body"><strong class="gf-alert__title">Giri in bozza, programmazione non completata</strong><p>Puoi riprovare con “Pianifica giri”. Non verranno duplicati giri.</p></div></div>':'')+
  totals(plan,assignment,dirty)+
- '<div class="gf-grid" data-cols="main-side"><div class="gf-stack">'+table(plan,assignment,dirty)+lane(plan,assignment,dirty,selected)+'</div>'+fixes(plan,assignment,dirty)+'</div>'+
+ '<div class="gf-grid" data-cols="main-side"><div class="gf-stack">'+table(plan,assignment,dirty)+lane(plan,assignment,dirty,selected,busy)+'</div>'+fixes(plan,assignment,dirty)+'</div>'+
  '<div id="fleetMessage" role="status" tabindex="-1" class="gf-muted"></div>'+
- (dirty?'<div class="gf-savebar" data-floating role="region" aria-label="Fermate spostate, giri da ripianificare"><span><b>Fermate spostate</b> · Ripianifica i giri per aggiornare ordine, tempi e costi.</span>'+
+ (dirty?'<div class="gf-savebar" data-floating role="region" aria-label="Fermate spostate, giri da ripianificare">'+(error?'<span role="alert" data-fleet-error><b>Ripianificazione non riuscita</b> · '+esc(error)+' Sposta di nuovo le fermate o annulla le modifiche.</span>':'<span><b>Fermate spostate</b> · Ripianifica i giri per aggiornare ordine, tempi e costi.</span>')+
  '<button type="button" class="gf-button" data-variant="secondary" data-size="sm" data-fleet-undo>Annulla modifiche</button><button type="button" class="gf-button" data-variant="primary" data-size="sm" data-fleet-recalc '+(busy?'disabled':'')+'>Ripianifica giri</button></div>':'')+
  '</section>';
  topbar(plan,dirty,busy,permission,onBack,()=>onPlan(!!target.querySelector('[data-fleet-accept-unassigned]')?.checked));
@@ -204,6 +207,10 @@ function render(params){
   onMove(index,to);
  };
  target.querySelectorAll('[data-fleet-select]').forEach(button=>button.addEventListener('click',()=>{selected=Number(button.dataset.fleetSelect);render(params);}));
+ target.querySelectorAll('[data-fleet-move-to]').forEach(select=>select.addEventListener('change',()=>{
+  const to=select.value===''?null:Number(select.value);select.value='';
+  if(to!==null&&!busy)move(Number(select.dataset.fleetMoveTo),to);
+ }));
  target.querySelectorAll('[data-fleet-assign]').forEach(button=>button.addEventListener('click',()=>{if(!busy)move(Number(button.dataset.fleetAssign),selected);}));
  target.querySelectorAll('[data-fleet-stop]').forEach(stop=>{
   stop.addEventListener('dragstart',e=>{if(plan.status!=='preview'||busy||!e.target.closest('[data-fleet-drag]')){e.preventDefault();return;}drag=Number(stop.dataset.fleetStop);e.dataTransfer.setData('text/plain',String(drag));e.dataTransfer.effectAllowed='move';e.dataTransfer.setDragImage(stop,20,20);stop.classList.add('is-highlighted');});

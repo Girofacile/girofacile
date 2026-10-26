@@ -5,6 +5,12 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- "Controlla la suddivisione", spostamenti più chiari: ogni fermata ha il menu
+  "Sposta in…" con l'elenco degli altri giri (funziona anche da telefono, dove
+  il trascinamento non c'è). Se "Ripianifica giri" viene rifiutato (per esempio
+  fasce orarie, turni o capienza non rispettati in un giro, o anteprima
+  scaduta), il motivo compare nella barra in basso al posto dell'invito a
+  ripianificare, finché non si sposta di nuovo o si annulla.
 - "Controlla la suddivisione" come le altre pagine: titolo e sottotitolo nella
   barra in alto, freccia per tornare alla pianificazione e "Pianifica giri"
   accanto alla campanella; a giri programmati il titolo mostra l'etichetta
