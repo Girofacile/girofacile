@@ -3,7 +3,7 @@ from datetime import datetime
 from .core.clock import utc_now
 from sqlalchemy import inspect, text
 
-LATEST = '20261023_01'
+LATEST = '20261027_01'
 LOCK_ID = 7640152404
 
 
@@ -200,7 +200,13 @@ def run_migrations(engine):
                         elif existing.used < used:
                             conn.execute(OrderMonthlyUsage.__table__.update().where(
                                 OrderMonthlyUsage.user_id == uid, OrderMonthlyUsage.month == month).values(used=used))
-                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': LATEST, 'now': utc_now()})
+                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261023_01', 'now': utc_now()})
+            if '20261027_01' not in applied:
+                # Giri in bozza: pianificazioni lasciate prima della programmazione.
+                from .order_models import PlanningDraft
+                with engine.begin() as conn:
+                    PlanningDraft.__table__.create(conn, checkfirst=True)
+                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261027_01', 'now': utc_now()})
         finally:
             if postgres:
                 lock.execute(text('SELECT pg_advisory_unlock(:key)'), {'key': LOCK_ID})
