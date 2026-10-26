@@ -4,8 +4,8 @@ window.GFHistory = (() => {
   const PERIODS = {'':'Qualsiasi data','7':'Ultimi 7 giorni','30':'Ultimi 30 giorni','month':'Questo mese','last-month':'Mese scorso','90':'Ultimi 3 mesi','custom':'Date a scelta'};
   const STATES = {'':'Tutti gli stati','completato':'Completati','annullato':'Annullati'};
   const state = {routes:[], day:null, query:'', period:'', from:'', to:'', driver:'', vehicle:'', status:''};
-  // Nella settimana ogni giorno mostra al massimo WEEK_LIMIT giri; gli altri si aprono con "Mostra altri".
-  const WEEK_LIMIT = 3, expandedDays = new Set();
+  // Nella settimana ogni giorno mostra al massimo WEEK_LIMIT giri; "Mostra altri" apre la tabella del giorno, sotto.
+  const WEEK_LIMIT = 3;
   let route = null, request = 0, detailRequest = 0;
   const $ = id => document.getElementById(id);
   const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
@@ -93,9 +93,9 @@ window.GFHistory = (() => {
       : `${first.getDate()} ${DASH_SCHEDULED_MONTHS[first.getMonth()]} – ${last.getDate()} ${DASH_SCHEDULED_MONTHS[last.getMonth()]} ${last.getFullYear()}`);
     return `<div class="gf-grid" data-cols="7">${days.map(iso => {
       const d = dashScheduledDate(iso), list = routesOf(iso);
-      const open = expandedDays.has(iso), shown = open ? list : list.slice(0, WEEK_LIMIT), hidden = list.length - WEEK_LIMIT;
+      const shown = list.slice(0, WEEK_LIMIT), hidden = list.length - WEEK_LIMIT;
       const more = hidden > 0
-        ? `<li class="gf-list-item"><button type="button" class="gf-button" data-variant="link" data-size="sm" aria-expanded="${open}" onclick="GFHistory.more('${iso}')">${open ? 'Mostra meno' : `Mostra altri ${hidden}`}</button></li>`
+        ? `<li class="gf-list-item"><button type="button" class="gf-button" data-variant="link" data-size="sm" aria-controls="historyDaySection" onclick="GFHistory.more('${iso}')">Mostra altri ${hidden}</button></li>`
         : '';
       const items = list.length
         ? shown.map(r => `<li><button type="button" class="gf-list-item" onclick="GFHistory.open(${Number(r.id)})"><span class="gf-list-item__main"><strong>${esc(r.orario_partenza || '-')}</strong><small>${esc(r.nome || 'Giro consegne')}</small></span></button></li>`).join('') + more
@@ -329,7 +329,7 @@ window.GFHistory = (() => {
       render();
     },
     day(iso){ state.day = iso; render(); },
-    more(iso){ if(expandedDays.has(iso)) expandedDays.delete(iso); else expandedDays.add(iso); $('historyWeek').innerHTML = weekHtml(); },
+    more(iso){ state.day = iso; render(); $('historyDaySection')?.scrollIntoView({behavior:'smooth', block:'start'}); },
     week(step){ state.day = step ? dashScheduledAddDays(dashScheduledMonday(state.day), step*7) : (state.routes.map(r => r.data_giro).filter(d => d && d <= todayIso()).sort().pop() || todayIso()); render(); }
   };
 })();

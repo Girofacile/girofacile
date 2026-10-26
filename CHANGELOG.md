@@ -6,8 +6,8 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 ## Verso la V1
 
 - Storico, vista settimana: ogni giorno mostra al massimo 3 giri; sotto,
-  "Mostra altri N" apre l'elenco completo di quel giorno e "Mostra meno" lo
-  richiude. L'elenco completo del giorno scelto resta anche nella tabella sotto.
+  "Mostra altri N" seleziona quel giorno e porta alla tabella in basso con
+  l'elenco completo (la colonna del giorno non si allunga).
 - "Controlla la suddivisione": le fermate del giro scelto sono ora una tabella
   (#, cliente con indirizzo, avvisi, arrivo, "Sposta in", azioni con maniglia e
   ×); su telefono ogni fermata diventa una scheda. L'etichetta del fuori orario

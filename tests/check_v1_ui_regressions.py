@@ -137,9 +137,9 @@ def main():
                 assert more.is_visible() and week.locator("li > button.gf-list-item").count() == 3
                 week.screenshot(path=str(output/"storico-settimana.png"))
                 more.click()
-                assert week.locator("li > button.gf-list-item").count() == 230
-                week.get_by_role("button", name="Mostra meno").click()
+                # Il giorno resta a 3 giri; l'elenco completo è nella tabella del giorno, sotto.
                 assert week.locator("li > button.gf-list-item").count() == 3
+                assert page.locator("#historyDaySection tbody tr").count() == 230
                 page.locator("#historySearch").fill("Giro d'Italia antico")
                 assert page.locator("#historyResultsList tbody tr").count() == 1
                 assert "Giro d'Italia antico" in page.locator("#historyResultsList").inner_text()
