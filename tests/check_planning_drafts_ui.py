@@ -49,7 +49,7 @@ def open_dashboard(browser, width, height, store, errors):
             store['next'] += 1; store['drafts'].append(draft)
             route.fulfill(status=201, json={k: v for k, v in draft.items() if not k.startswith('_')}); return
         if path == '/api/planning-drafts':
-            route.fulfill(json=dict(drafts=[{k: v for k, v in d.items() if not k.startswith('_')} for d in store['drafts']], routes=[])); return
+            route.fulfill(json=dict(drafts=[{k: v for k, v in d.items() if not k.startswith('_')} for d in store['drafts']], routes=store.get('routes', []))); return
         if path.startswith('/api/planning-drafts/') and path.endswith('/resume'):
             draft = next(d for d in store['drafts'] if d['id'] == int(path.split('/')[3]))
             store['drafts'].remove(draft)
@@ -109,7 +109,8 @@ def main():
                 table.locator('tbody tr').first.wait_for()
                 assert page.locator('#workspacePageTitle').inner_text() == 'Giri in bozza'
                 assert table.locator('tbody tr').count() == 1
-                assert 'Configurazione del giro' in table.inner_text() and 'Clienti' in table.inner_text()
+                assert 'Configurazione del giro' in table.inner_text() and 'Da clienti' in table.inner_text()
+                assert page.locator('#planningDraftsStats').is_visible()
                 page.screenshot(path=str(output / f'bozze-{width}.png'), full_page=True)
 
                 # Riprendi: torna in pianificazione con le stesse consegne, la voce sparisce.

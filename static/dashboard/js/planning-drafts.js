@@ -88,26 +88,41 @@ window.GFPlanningDrafts=(()=>{
     const stamp=String(value),date=new Date(/Z$|[+-]\d\d:\d\d$/.test(stamp)?stamp:stamp+'Z');
     return Number.isNaN(date.getTime())?'—':date.toLocaleString('it-IT',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
   };
+  // Righe come nelle altre tabelle del gestionale: nome in grassetto con i dettagli sotto, azione secondaria.
+  const origin=source=>source==='orders'?'Da ordini':'Da clienti';
+  function row({name,detail,stage,status,day:when,stops,saved:at,open,remove}){
+    return `<tr>
+      <td data-label="Giro"><strong>${esc(name)}</strong><br><span class="gf-muted">${esc(detail)}</span></td>
+      <td data-label="Fase"><span class="gf-badge" data-status="${status}" data-dot>${esc(stage)}</span></td>
+      <td data-label="Data giro">${esc(when)}</td>
+      <td data-label="Consegne">${esc(stops)}</td>
+      <td data-label="Salvato">${esc(saved(at))}</td>
+      <td data-label="Azioni"><span class="gf-cluster"><button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="${open}">${open.includes('resume')?'Riprendi':'Apri giro'}</button><button type="button" class="gf-button" data-variant="ghost" data-size="sm" onclick="${remove}">Elimina</button></span></td></tr>`;
+  }
   function rows(){
-    const drafts=data.drafts.map(d=>({key:'d'+d.id,when:d.updated_at,html:`<tr>
-      <td data-label="Giro"><button type="button" class="gf-button" data-variant="link" onclick="GFPlanningDrafts.resume(${Number(d.id)})">${esc(d.name)}</button></td>
-      <td data-label="Fase"><span class="gf-badge" data-status="${d.stage==='suddivisione'?'info':'neutral'}">${esc(STAGES[d.stage]||STAGES.configurazione)}</span></td>
-      <td data-label="Origine">${d.source==='orders'?'Ordini':'Clienti'}</td>
-      <td data-label="Data giro">${esc(day(d.data_giro))}</td>
-      <td data-label="Mezzi">${d.planning_mode==='fleet'?esc(gfCount(d.vehicles,'mezzo','mezzi')):'1 mezzo'}</td>
-      <td data-label="Consegne">${esc(d.source==='orders'?gfCount(d.orders,'ordine','ordini'):gfCount(d.stops,'cliente','clienti'))}</td>
-      <td data-label="Salvato">${esc(saved(d.updated_at))}</td>
-      <td data-label="Azioni"><span class="gf-cluster"><button type="button" class="gf-button" data-variant="primary" data-size="sm" onclick="GFPlanningDrafts.resume(${Number(d.id)})">Riprendi</button><button type="button" class="gf-button" data-variant="ghost" data-size="sm" onclick="GFPlanningDrafts.remove(${Number(d.id)})">Elimina</button></span></td></tr>`}));
-    const routes=data.routes.map(r=>({key:'r'+r.id,when:r.created_at,html:`<tr>
-      <td data-label="Giro"><button type="button" class="gf-button" data-variant="link" onclick="GFPlanningDrafts.openRoute(${Number(r.id)})">${esc(r.name)}</button></td>
-      <td data-label="Fase"><span class="gf-badge" data-status="success">${STAGES.route}</span></td>
-      <td data-label="Origine">—</td>
-      <td data-label="Data giro">${esc(day(r.data_giro))}${r.orario_partenza?' · '+esc(r.orario_partenza):''}</td>
-      <td data-label="Mezzi">1 mezzo</td>
-      <td data-label="Consegne">—</td>
-      <td data-label="Salvato">${esc(saved(r.created_at))}</td>
-      <td data-label="Azioni"><span class="gf-cluster"><button type="button" class="gf-button" data-variant="primary" data-size="sm" onclick="GFPlanningDrafts.openRoute(${Number(r.id)})">Apri</button><button type="button" class="gf-button" data-variant="ghost" data-size="sm" onclick="GFPlanningDrafts.cancelRoute(${Number(r.id)})">Elimina</button></span></td></tr>`}));
-    return drafts.concat(routes).sort((a,b)=>String(b.when||'').localeCompare(String(a.when||''))).map(row=>row.html).join('');
+    const drafts=data.drafts.map(d=>({when:d.updated_at,html:row({name:d.name,
+      detail:[origin(d.source),d.planning_mode==='fleet'?gfCount(d.vehicles,'mezzo','mezzi'):'1 mezzo'].join(' · '),
+      stage:STAGES[d.stage]||STAGES.configurazione,status:d.stage==='suddivisione'?'info':'warning',day:day(d.data_giro),
+      stops:d.source==='orders'?gfCount(d.orders,'ordine','ordini'):gfCount(d.stops,'cliente','clienti'),saved:d.updated_at,
+      open:`GFPlanningDrafts.resume(${Number(d.id)})`,remove:`GFPlanningDrafts.remove(${Number(d.id)})`})}));
+    const routes=data.routes.map(r=>({when:r.created_at,html:row({name:r.name,
+      detail:[origin(r.source),r.vehicle,r.driver].filter(Boolean).join(' · '),
+      stage:STAGES.route,status:'success',day:day(r.data_giro)+(r.orario_partenza?' · '+r.orario_partenza:''),
+      stops:gfCount(r.stops||0,'fermata','fermate'),saved:r.created_at,
+      open:`GFPlanningDrafts.openRoute(${Number(r.id)})`,remove:`GFPlanningDrafts.cancelRoute(${Number(r.id)})`})}));
+    return drafts.concat(routes).sort((a,b)=>String(b.when||'').localeCompare(String(a.when||''))).map(item=>item.html).join('');
+  }
+  // Numeri in alto, come nelle altre pagine.
+  function stats(){
+    const box=el('planningDraftsStats');if(!box)return;
+    const total=data.drafts.length+data.routes.length;
+    box.hidden=!total;if(!total){box.innerHTML='';return;}
+    const latest=[...data.drafts.map(d=>d.updated_at),...data.routes.map(r=>r.created_at)].filter(Boolean).sort().at(-1);
+    const stops=data.drafts.reduce((n,d)=>n+(d.source==='orders'?d.orders:d.stops),0)+data.routes.reduce((n,r)=>n+(r.stops||0),0);
+    box.innerHTML=gfStatCell('route','1','Da riprendere',String(data.drafts.length),'pianificazioni lasciate')+
+      gfStatCell('check','2','Percorsi calcolati',String(data.routes.length),'da programmare')+
+      gfStatCell('pin','4','Consegne in bozza',String(stops),'ordini e fermate')+
+      gfStatCell('clock','neutral','Ultimo salvataggio',saved(latest),'','text');
   }
   // Voce nella sidebar (solo con bozze) e tabella della pagina.
   function render(){
@@ -116,9 +131,10 @@ window.GFPlanningDrafts=(()=>{
     if(item){const hide=!total;if(item.classList.contains('gf-hidden')!==hide){item.classList.toggle('gf-hidden',hide);window.GFSidebarFit?.();}}
     if(badge)badge.textContent=String(total);
     if(count){count.hidden=!total;count.textContent=gfCount(total,'bozza','bozze');}
+    stats();
     if(!table)return;
     table.innerHTML=total
-      ?`<div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards"><thead><tr><th scope="col">Giro</th><th scope="col">Fase</th><th scope="col">Origine</th><th scope="col">Data giro</th><th scope="col">Mezzi</th><th scope="col">Consegne</th><th scope="col">Salvato</th><th scope="col">Azioni</th></tr></thead><tbody>${rows()}</tbody></table></div>`
+      ?`<div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards"><thead><tr><th scope="col">Giro</th><th scope="col">Fase</th><th scope="col">Data giro</th><th scope="col">Consegne</th><th scope="col">Salvato</th><th scope="col">Azioni</th></tr></thead><tbody>${rows()}</tbody></table></div>`
       :'<div class="gf-empty"><p>Nessun giro in bozza</p><small>Quando lasci una pianificazione prima di programmarla, la ritrovi qui.</small></div>';
   }
 

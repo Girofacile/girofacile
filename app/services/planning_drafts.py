@@ -2,7 +2,8 @@
 from datetime import date
 from fastapi import HTTPException
 from ..core.clock import utc_now
-from ..models import RoutePlan
+from sqlalchemy import func
+from ..models import RoutePlan, Delivery, Vehicle, Driver
 from ..order_models import Order, PlanningDraft, RouteOrderAssignment
 from .order_planning import selection, selection_response, check_version
 
@@ -34,11 +35,19 @@ def summary(row):
 def list_drafts(db, user_id, actor):
     drafts = db.query(PlanningDraft).filter_by(user_id=user_id, actor=actor).order_by(PlanningDraft.updated_at.desc()).limit(50).all()
     # Giri già calcolati e salvati come bozza (non ancora programmati): si riaprono dal pianificatore.
-    routes = db.query(RoutePlan.id, RoutePlan.nome, RoutePlan.data_giro, RoutePlan.orario_partenza, RoutePlan.created_at).filter(
+    routes = db.query(RoutePlan.id, RoutePlan.nome, RoutePlan.data_giro, RoutePlan.orario_partenza, RoutePlan.created_at,
+                      RoutePlan.vehicle_id, RoutePlan.driver_id).filter(
         RoutePlan.user_id == user_id, RoutePlan.status == 'bozza').order_by(RoutePlan.id.desc()).limit(50).all()
+    ids = [r.id for r in routes]
+    stops = dict(db.query(Delivery.route_plan_id, func.count(Delivery.id)).filter(Delivery.route_plan_id.in_(ids)).group_by(Delivery.route_plan_id)) if ids else {}
+    from_orders = {rid for (rid,) in db.query(RouteOrderAssignment.route_plan_id).filter(RouteOrderAssignment.route_plan_id.in_(ids)).distinct()} if ids else set()
+    vehicles = {v.id: v.nome for v in db.query(Vehicle.id, Vehicle.nome).filter(Vehicle.id.in_({r.vehicle_id for r in routes if r.vehicle_id}))}
+    drivers = {d.id: ' '.join(x for x in (d.nome, d.cognome) if x) for d in db.query(Driver.id, Driver.nome, Driver.cognome).filter(Driver.id.in_({r.driver_id for r in routes if r.driver_id}))}
     return {'drafts': [summary(row) for row in drafts],
             'routes': [{'id': r.id, 'name': r.nome or 'Giro consegne', 'data_giro': r.data_giro.isoformat() if r.data_giro else None,
                         'orario_partenza': r.orario_partenza.strftime('%H:%M') if r.orario_partenza else None,
+                        'source': 'orders' if r.id in from_orders else 'customers', 'stops': stops.get(r.id, 0),
+                        'vehicle': vehicles.get(r.vehicle_id), 'driver': drivers.get(r.driver_id),
                         'created_at': r.created_at} for r in routes]}
 
 

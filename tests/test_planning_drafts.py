@@ -92,6 +92,7 @@ def test_calculated_route_drafts_are_listed(drafts):
     route, _ = calculate(drafts, [ready(ctx, 'ORD-1')])
     routes = client.get('/api/planning-drafts').json()['routes']
     assert [r['id'] for r in routes] == [route['id']]
+    assert routes[0]['source'] == 'orders' and routes[0]['stops'] == 1
 
 
 def test_draft_remembers_stage_and_fleet_preview(drafts):

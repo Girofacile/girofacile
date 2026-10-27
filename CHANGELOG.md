@@ -5,6 +5,11 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Giri in bozza allineata alle altre pagine: numeri in alto (da riprendere,
+  percorsi calcolati, consegne in bozza, ultimo salvataggio), nome del giro in
+  grassetto con origine, mezzi o autista sotto, fase come etichetta, azioni
+  secondarie (Riprendi / Apri giro, Elimina). Anche i giri calcolati mostrano
+  origine, mezzo, autista e numero di fermate.
 - Giri in bozza diventa una pagina: voce "Giri in bozza" nella sidebar
   (Attività), visibile solo quando ci sono bozze e con il loro numero; non più
   riquadri in Dashboard e Ordini. La pagina elenca in tabella bozze da ordini e
