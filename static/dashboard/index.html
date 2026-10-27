@@ -189,6 +189,7 @@
           <button type="button" data-tab="ordini" data-workspace-operational="1" onclick="showTab('ordini')" class="gf-sidebar__item"><svg class="gf-sidebar__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6v3H9z M7 5H6a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1h-1 M9 12h6 M9 16h6"/></svg><span>Ordini</span><span id="sidebarOrdersBadge" class="gf-sidebar__count hidden" aria-label="Nuovi ordini">0</span></button>
           <button type="button" data-tab="report" data-workspace-operational="1" onclick="showTab('report')" class="gf-sidebar__item"><svg class="gf-sidebar__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v18h18 M7 15l4-4 3 3 5-6"/></svg><span>Report</span></button>
           <button type="button" data-tab="storico" data-workspace-operational="1" onclick="showTab('storico')" class="gf-sidebar__item"><svg class="gf-sidebar__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7 M3 4v5h5 M12 7v5l3 2"/></svg><span>Storico</span></button>
+          <button type="button" id="sidebarDraftsItem" data-tab="bozze" data-workspace-operational="1" onclick="showTab('bozze')" class="gf-sidebar__item gf-hidden"><svg class="gf-sidebar__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z M14 3v5h5 M9 13h6 M9 17h4"/></svg><span>Giri in bozza</span><span id="sidebarDraftsBadge" class="gf-sidebar__count" aria-label="Giri in bozza">0</span></button>
         </div>
       </details>
       <details class="gf-sidebar__group" data-sidebar-group="persone" open>
@@ -359,7 +360,6 @@
         </div>
       </section>
       <section id="tab-dashboard" class="tab gf-stack" data-gap="lg">
-        <section class="gf-panel" data-planning-drafts="dashboard" hidden></section>
         <div id="workspaceEmptyDashboardV49" class="gf-stack hidden" data-gap="lg">
           <section class="gf-panel">
             <div class="gf-panel__body gf-stack">
@@ -612,8 +612,14 @@
         </div>
       </section>
 
+      <section id="tab-bozze" class="tab hidden gf-stack" data-gap="lg">
+        <section class="gf-panel" aria-labelledby="planningDraftsTitle">
+          <header class="gf-panel__header"><div><h2 class="gf-panel__title" id="planningDraftsTitle">Tutte le bozze</h2><p class="gf-muted">Giri pianificati e mai programmati, da ordini o da clienti. Aprili per riprendere dalla fase in cui li hai lasciati.</p></div><span id="planningDraftsCount" class="gf-badge" data-status="warning" data-dot hidden></span></header>
+          <div id="planningDraftsTable"></div>
+        </section>
+      </section>
+
       <section id="tab-ordini" class="tab hidden gf-stack" data-gap="lg">
-        <section class="gf-panel" data-planning-drafts="ordini" hidden></section>
         <div id="ordersMetrics" class="gf-stat-strip" data-icons="side" aria-label="Indicatori ordini"></div>
 
         <section class="gf-panel" aria-labelledby="ordersListTitle">
@@ -1568,16 +1574,16 @@
 
 <script src="/static/dashboard/js/reports.js?v=gf_format_20261020"></script>
 <script src="/static/dashboard/js/customers.js?v=gf_bozze_20261026"></script>
-<script src="/static/dashboard/js/navigation.js?v=gf_bozze_20261026"></script>
+<script src="/static/dashboard/js/navigation.js?v=gf_bozze_pagina_20261027"></script>
 <script src="/static/dashboard/js/history.js?v=gf_mostra_altri_20261026b"></script>
 <script src="/static/password-strength.js?v=gf_driver_flow_20261020"></script>
-<script src="/static/dashboard/js/collaborators.js?v=gf_annulla_20261025"></script>
+<script src="/static/dashboard/js/collaborators.js?v=gf_bozze_pagina_20261027"></script>
 <script src="/static/dashboard/js/orders.js?v=gf_warning_20261025"></script>
 <script src="/static/dashboard/js/order-import.js?v=gf_base_20261015u"></script>
 <script src="/static/dashboard/js/order-sources.js?v=gf_plans_20261023"></script>
 <script src="/static/dashboard/js/dashboard-real-map.js?v=gf_priority_hero_20261025"></script>
 <script src="/static/dashboard/js/in-progress-reference.js?v=gf_driver_flow_20261020"></script>
-<script src="/static/dashboard/js/core.js?v=gf_carburante_20261026"></script>
+<script src="/static/dashboard/js/core.js?v=gf_bozze_pagina_20261027"></script>
 <script src="/static/dashboard/js/dashboard-mobile.js?v=gf_dashboard_mobile_20261019"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=orders_2"></script>
 <link rel="stylesheet" href="/static/dashboard/css/fleet-review.css?v=gf_suddivisione_20261025">
@@ -1585,11 +1591,11 @@
 <link rel="stylesheet" href="/static/driver-schedule.css?v=gf_break_row_20261021">
 <script src="/static/driver-schedule.js?v=gf_break_row_20261021"></script>
 <script src="/static/dashboard/js/driver-schedules.js?v=gf_base_20261015u"></script>
-<script src="/static/dashboard/js/fleet-planning.js?v=gf_bozze_20261026"></script>
+<script src="/static/dashboard/js/fleet-planning.js?v=gf_bozze_pagina_20261027"></script>
 <script src="/static/dashboard/js/selected-addresses.js?v=gf_selected_addresses_20261019"></script>
 <script src="/static/dashboard/js/selected-customer-addresses.js?v=gf_customer_selected_addresses_20261020"></script>
 <script src="/static/dashboard/js/order-planning.js?v=gf_bozze_20261026"></script>
-<script src="/static/dashboard/js/planning-drafts.js?v=gf_bozze_20261026"></script>
+<script src="/static/dashboard/js/planning-drafts.js?v=gf_bozze_pagina_20261027"></script>
 
 <script>
 function toggleLoginPassword(){

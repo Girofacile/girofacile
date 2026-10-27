@@ -92,3 +92,17 @@ def test_calculated_route_drafts_are_listed(drafts):
     route, _ = calculate(drafts, [ready(ctx, 'ORD-1')])
     routes = client.get('/api/planning-drafts').json()['routes']
     assert [r['id'] for r in routes] == [route['id']]
+
+
+def test_draft_remembers_stage_and_fleet_preview(drafts):
+    ctx, _ = drafts
+    client, *_ = ctx
+    state, _ = preview(drafts, [ready(ctx, 'ORD-1')])
+    draft = client.post('/api/planning-drafts', json={'source': 'orders', 'selection_version': state['version'], 'stage': 'suddivisione', 'fleet_plan_id': 42}).json()
+    assert draft['stage'] == 'suddivisione' and draft['fleet_plan_id'] == 42
+    resumed = client.post(f'/api/planning-drafts/{draft["id"]}/resume', json={'selection_version': selection(client)['version']}).json()
+    assert resumed['stage'] == 'suddivisione' and resumed['fleet_plan_id'] == 42
+    # Fuori dalla suddivisione il riferimento all'anteprima non si conserva.
+    state = selection(client)
+    other = client.post('/api/planning-drafts', json={'source': 'orders', 'selection_version': state['version'], 'stage': 'configurazione', 'fleet_plan_id': 42}).json()
+    assert other['stage'] == 'configurazione' and other['fleet_plan_id'] is None

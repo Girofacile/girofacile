@@ -3,7 +3,7 @@
   'use strict';
   const tabs = {'ordini-importa':'orders.read',ordini:'orders.read','ordine-dettaglio':'orders.read','ordine-modifica':'orders.read','ordini-collegamenti':'orders.read',dashboard:'dashboard.read',giro:'routes.plan','route-preview':'routes.plan',
     'dashboard-scheduled':'routes.read','dashboard-in-progress':'routes.read',
-    'dashboard-completed':'routes.read',storico:'routes.read',clienti:'customers.read',
+    'dashboard-completed':'routes.read',storico:'routes.read',bozze:'routes.plan',clienti:'customers.read',
     depositi:'deposits.read',mezzi:'vehicles.read',autisti:'drivers.read',agenti:'agents.read',
     report:'reports.read',company:'company.read','chat-autisti':'chat.read',settings:'settings.update',
     'collaborator-home':'session'};

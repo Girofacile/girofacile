@@ -3,7 +3,7 @@ from datetime import datetime
 from .core.clock import utc_now
 from sqlalchemy import inspect, text
 
-LATEST = '20261027_01'
+LATEST = '20261027_02'
 LOCK_ID = 7640152404
 
 
@@ -207,6 +207,15 @@ def run_migrations(engine):
                 with engine.begin() as conn:
                     PlanningDraft.__table__.create(conn, checkfirst=True)
                     conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261027_01', 'now': utc_now()})
+            if '20261027_02' not in applied:
+                # Giri in bozza: fase in cui è stato lasciato il giro e anteprima della suddivisione.
+                with engine.begin() as conn:
+                    existing = {c['name'] for c in inspect(conn).get_columns('planning_drafts')}
+                    if 'stage' not in existing:
+                        conn.execute(text("ALTER TABLE planning_drafts ADD COLUMN stage VARCHAR(20) NOT NULL DEFAULT 'configurazione'"))
+                    if 'fleet_plan_id' not in existing:
+                        conn.execute(text('ALTER TABLE planning_drafts ADD COLUMN fleet_plan_id INTEGER'))
+                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261027_02', 'now': utc_now()})
         finally:
             if postgres:
                 lock.execute(text('SELECT pg_advisory_unlock(:key)'), {'key': LOCK_ID})

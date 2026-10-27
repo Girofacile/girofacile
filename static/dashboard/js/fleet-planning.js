@@ -192,5 +192,19 @@
     if(button&&el('routePreviewResult').contains(button))action(button.dataset.action);
     if(open&&el('routePreviewResult').contains(open))GFOrderPlanning.openRoute(Number(open.dataset.open));
   });
-  window.GFFleetPlanning={active,config,restore,reset,refresh,missing,calculate};
+  // Giri in bozza: la suddivisione aperta e la sua riapertura. Un'anteprima scaduta (12 ore) o già usata si ricalcola.
+  const current=()=>plan&&plan.status==='preview'?plan.id:null;
+  async function open(id){
+    try{
+      const loaded=await api(`/api/fleet-planning/${Number(id)}`);
+      const stamp=String(loaded.created_at||''),utc=/Z$|[+-]\d\d:\d\d$/.test(stamp)?stamp:stamp+'Z'; // orario del server in UTC
+      const fresh=!!stamp&&Date.now()-new Date(utc).getTime()<11*3600*1000;
+      if(loaded.status==='preview'&&fresh){
+        plan=loaded;changedAssignments=false;draftAssignments=null;manualAdjusted=false;acknowledgedWarning=false;
+        showTab('route-preview');render();return true;
+      }
+    }catch(error){console.warn('Suddivisione non riapribile, la ricalcolo',error);}
+    await calculate();return false;
+  }
+  window.GFFleetPlanning={active,config,restore,reset,refresh,missing,calculate,current,open};
 })();

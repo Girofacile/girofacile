@@ -200,7 +200,7 @@ def main():
                     page.evaluate("showTab('ordini')")
                     page.locator('#tab-ordini').wait_for(state='visible')
                     assert 'in bozza' in messages[0]
-                    page.locator('[data-planning-drafts="ordini"]').get_by_role('button',name='Riprendi',exact=True).wait_for()
+                    page.wait_for_function("!document.getElementById('sidebarDraftsItem').classList.contains('gf-hidden')")  # voce "Giri in bozza" nella sidebar
                     assert client.get('/api/order-planning/selection').json()['order_ids']==[]
                     assert len(client.get('/api/planning-drafts').json()['drafts'])==1
                     page.locator('#ordersSearch').fill('inesistente')

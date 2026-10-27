@@ -1189,6 +1189,8 @@ async function checkLogin(){
       updatePremiumNavState();
       renderSidebarUpgrade(me.plan || "starter");
       window.GFSidebarFit?.();
+      // Giri in bozza: la voce nella sidebar compare subito se ce ne sono.
+      window.GFPlanningDrafts?.load();
       document.getElementById("logoutBtn").classList.remove("hidden");
       document.getElementById("notificationBellBtn")?.classList.remove("hidden");
       if(me.username) localStorage.setItem("girofacile_account_name", me.username);

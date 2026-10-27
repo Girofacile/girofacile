@@ -10,6 +10,7 @@ const WORKSPACE_TOPBAR_META = {
   "collaborator-home": {title:"Il tuo accesso",subtitle:"Funzioni operative assegnate dal titolare dell’azienda."},
   settings: {title:"Impostazioni",subtitle:"Configura le preferenze operative applicate al gestionale aziendale."},
   report: {title:"Report consegne",subtitle:"Analizza i giri completati: chilometri, tempi, consumi e costi stimati."},
+  bozze: {title:"Giri in bozza",subtitle:"Giri pianificati e mai programmati: riprendili dalla fase in cui li hai lasciati."},
   storico: {title:"Storico giri",subtitle:"Consulta i percorsi completati, i chilometri e i dati operativi dei tuoi giri."},
   "plan-account": {title:"Piani e abbonamento",subtitle:"Gestisci il piano attivo e confronta le funzionalità disponibili.",back:{label:"Torna al profilo",go:()=>returnFromPlanAccount()}},
   "billing-account": {title:"Fatturazione e pagamenti",subtitle:"Abbonamento, metodo di pagamento, dati fiscali, fatture e addebiti.",back:{label:"Torna a Piani e abbonamento",go:()=>returnFromBillingPageV876()}},
@@ -155,7 +156,7 @@ function showTab(name){
   if(name!=="ordini-collegamenti") window.GFOrderSources?.hideSecret();
   if(name==="ordini-collegamenti") window.GFOrderSources?.load();
   if(name==="ordini"){ GFOrders.load(); markOrdersSeenV30(); }
-  if(name==="ordini"||name==="dashboard") window.GFPlanningDrafts?.load();
+  if(name==="bozze"||name==="ordini"||name==="dashboard") window.GFPlanningDrafts?.load();
   if(name==="collaboratori") GFCollaborators.load();
   if(name==="dashboard-scheduled") loadDashboardScheduledPage();
   if(name==="dashboard-in-progress") loadDashboardInProgressPage();

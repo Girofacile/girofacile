@@ -161,5 +161,8 @@ class PlanningDraft(Base):
     order_ids: Mapped[list] = mapped_column(JSON, default=list, nullable=False)
     configuration: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
     stops: Mapped[list | None] = mapped_column(JSON)
+    # Fase in cui è stato lasciato il giro: selezione, configurazione o suddivisione (con la sua anteprima).
+    stage: Mapped[str] = mapped_column(String(20), default='configurazione', server_default='configurazione', nullable=False)
+    fleet_plan_id: Mapped[int | None] = mapped_column(Integer)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, nullable=False)

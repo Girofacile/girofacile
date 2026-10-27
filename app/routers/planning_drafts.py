@@ -20,6 +20,8 @@ class DraftCreate(BaseModel):
     selection_version: int = Field(default=0, ge=0)
     configuration: PlanningConfiguration | None = None
     stops: list[DeliveryIn] | None = Field(default=None, max_length=MAX_SELECTION)
+    stage: Literal['selezione', 'configurazione', 'suddivisione'] = 'configurazione'
+    fleet_plan_id: int | None = None
 
 
 class DraftResume(BaseModel):

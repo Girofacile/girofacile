@@ -367,7 +367,7 @@ def distribute(db,user,data,assignments=None):
 
 
 def public(plan):
-    return {'id':plan.id,'version':plan.version,'status':plan.status,'configuration':plan.configuration,
+    return {'id':plan.id,'version':plan.version,'status':plan.status,'configuration':plan.configuration,'created_at':plan.created_at,
             'routes':[{k:({**v,'legs':None} if k=='traffic' and isinstance(v,dict) else v) for k,v in r.items()} for r in plan.result['routes']],
             'unassigned':plan.result['unassigned'],'warnings':plan.result['warnings'],'route_ids':plan.route_ids,
             'resource_capabilities':plan.result.get('resource_capabilities',[]),'search':plan.result.get('search',{})}

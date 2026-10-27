@@ -5,6 +5,15 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Giri in bozza diventa una pagina: voce "Giri in bozza" nella sidebar
+  (Attività), visibile solo quando ci sono bozze e con il loro numero; non più
+  riquadri in Dashboard e Ordini. La pagina elenca in tabella bozze da ordini e
+  da clienti e giri calcolati non programmati (fase, origine, data, mezzi,
+  consegne, salvataggio), con Riprendi/Apri ed Elimina. Riprendendo si torna
+  alla fase in cui il giro era stato lasciato: una bozza lasciata in "Controlla
+  la suddivisione" riapre la stessa suddivisione (ricalcolata se scaduta). Gli
+  ordini rimasti selezionati da un giro già portato in pianificazione vanno in
+  bozza all'accesso, così non restano spuntati. Migrazione 20261027_02.
 - Giri in bozza: lasciando la pianificazione (pre-pianificazione, anteprima o
   "Controlla la suddivisione") con un giro non ancora programmato compare
   l'avviso "stai per mandare questo giro in bozza". Confermando, il giro

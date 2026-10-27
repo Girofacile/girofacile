@@ -27,17 +27,19 @@ def summary(row):
     return {'id': row.id, 'source': row.source, 'name': row.name, 'data_giro': configuration.get('data_giro') or None,
             'planning_mode': configuration.get('planning_mode', 'single'),
             'vehicles': len(configuration.get('fleet_resources') or []) if configuration.get('planning_mode') == 'fleet' else 1,
-            'stops': stops, 'orders': len(row.order_ids), 'updated_at': row.updated_at}
+            'stops': stops, 'orders': len(row.order_ids), 'stage': row.stage, 'fleet_plan_id': row.fleet_plan_id,
+            'created_at': row.created_at, 'updated_at': row.updated_at}
 
 
 def list_drafts(db, user_id, actor):
     drafts = db.query(PlanningDraft).filter_by(user_id=user_id, actor=actor).order_by(PlanningDraft.updated_at.desc()).limit(50).all()
     # Giri già calcolati e salvati come bozza (non ancora programmati): si riaprono dal pianificatore.
-    routes = db.query(RoutePlan.id, RoutePlan.nome, RoutePlan.data_giro, RoutePlan.orario_partenza).filter(
+    routes = db.query(RoutePlan.id, RoutePlan.nome, RoutePlan.data_giro, RoutePlan.orario_partenza, RoutePlan.created_at).filter(
         RoutePlan.user_id == user_id, RoutePlan.status == 'bozza').order_by(RoutePlan.id.desc()).limit(50).all()
     return {'drafts': [summary(row) for row in drafts],
             'routes': [{'id': r.id, 'name': r.nome or 'Giro consegne', 'data_giro': r.data_giro.isoformat() if r.data_giro else None,
-                        'orario_partenza': r.orario_partenza.strftime('%H:%M') if r.orario_partenza else None} for r in routes]}
+                        'orario_partenza': r.orario_partenza.strftime('%H:%M') if r.orario_partenza else None,
+                        'created_at': r.created_at} for r in routes]}
 
 
 def create(db, user_id, actor, data):
@@ -59,6 +61,8 @@ def create(db, user_id, actor, data):
                               configuration=data.configuration.model_dump(mode='json') if data.configuration else {},
                               stops=[s.model_dump(mode='json') for s in data.stops])
     draft.name = draft_name(draft.configuration, draft.source)
+    draft.stage = data.stage
+    draft.fleet_plan_id = data.fleet_plan_id if data.stage == 'suddivisione' else None
     db.add(draft)
     db.flush()
     return draft
@@ -75,7 +79,8 @@ def owned(db, user_id, actor, draft_id, lock=False):
 def resume(db, user_id, actor, draft_id, data):
     draft = owned(db, user_id, actor, draft_id, lock=True)
     dropped = 0
-    result = {'source': draft.source, 'configuration': draft.configuration, 'stops': draft.stops}
+    result = {'source': draft.source, 'configuration': draft.configuration, 'stops': draft.stops,
+              'stage': draft.stage, 'fleet_plan_id': draft.fleet_plan_id}
     if draft.source == 'orders':
         row = selection(db, user_id, actor, lock=True)
         check_version(row, data.selection_version)
