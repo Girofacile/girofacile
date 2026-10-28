@@ -109,6 +109,7 @@ pagina; l'aspetto di un componente deve cambiare nel foglio condiviso.
 | Dati | `.gf-details` (`[data-layout="rows"]`), `.gf-setting` (`__copy`, `__control`), `.gf-stat-card` (`__icon[data-tone]`, `__label`, `__value`, `__change[data-trend]`), `.gf-bar-chart` |
 | Flussi | `.gf-steps` / `.gf-step.is-done\|[aria-current="step"]`, `.gf-chat` + `.gf-message[data-from="me"]`, `.gf-upload` |
 | Accesso e avvisi | `.gf-auth` (`__aside`, `__main`, `__card`), `.gf-banner`, `.gf-hidden` |
+| Sito pubblico (landing, approvati il 28 ottobre 2026) | `.gf-site-header` (`__inner`, `__brand`, `__nav`, `__actions`), `.gf-section` (`[data-tone="subtle\|nav"]`, `__inner`, `__head[data-align="center"]`), `.gf-hero` (`__title` con `--gf-font-hero`, `__accent`, `__lead`, `__actions`, `__note`), `.gf-signup` (email + pulsante), `.gf-showcase` (schermata del gestionale incorniciata: `__bar`, `__address`, `__nav`, `__item`, `__main`), `.gf-trust`, `.gf-figures` (numeri grandi, solo dati reali), `.gf-quote` + `.gf-stars` / `.gf-rating` (solo recensioni reali), `.gf-map-pin` per la mappa reale Leaflet (`.gf-route-panel__canvas[data-map]`), `.gf-site-footer`. La landing (`static/landing/index.html`) usa solo questi componenti, senza CSS di pagina; le mappe sono disegnate da `static/landing/landing-maps.js` con percorsi stradali salvati nel file. |
 
 `GFDesignSystem` espone `enhance`, `breakpoints`, `announce`,
 `createButton`, `createBadge`, `createEmptyState`, `createLoading` e

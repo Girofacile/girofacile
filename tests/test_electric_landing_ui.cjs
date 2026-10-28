@@ -39,7 +39,7 @@ test('landing and price cards show configured electric bonuses as visible plan b
     assert.ok(nodes.publicPricing.innerHTML.includes(label), label);
     assert.ok(nodes.electricPlanBonuses.innerHTML.includes(label), label);
   }
-  assert.equal((nodes.publicPricing.innerHTML.match(/class="pricing-electric-bonus"/g) || []).length, 3);
+  assert.equal((nodes.publicPricing.innerHTML.match(/pricing-electric-bonus"/g) || []).length, 3);
   assert.equal((nodes.publicPricing.innerHTML.match(/Slot aggiuntivi riservati ai mezzi elettrici/g) || []).length, 3);
   assert.match(landing, /senza consumare gli slot standard/);
 });
@@ -51,13 +51,13 @@ test('benefits follow catalogue changes instead of duplicated plan constants', (
   assert.match(nodes.publicPricing.innerHTML, /\+4 veicoli elettrici bonus/);
   assert.match(nodes.electricPlanBonuses.innerHTML, /\+9 veicoli elettrici bonus/);
   assert.doesNotMatch(nodes.electricPlanBonuses.innerHTML, /Business/);
-  assert.equal((nodes.publicPricing.innerHTML.match(/class="pricing-electric-bonus"/g) || []).length, 2);
-  assert.equal((nodes.publicPricing.innerHTML.match(/class="pricing-card"/g) || []).length, 3);
+  assert.equal((nodes.publicPricing.innerHTML.match(/pricing-electric-bonus"/g) || []).length, 2);
+  assert.equal((nodes.publicPricing.innerHTML.match(/pricing-card"/g) || []).length, 3);
 });
 
 test('old or incomplete catalogues never advertise unavailable electric slots', () => {
   const {nodes} = render({starter: plan('Starter', undefined), business: plan('Business', -1), pro: plan('Pro', 'invalid')});
-  assert.doesNotMatch(nodes.publicPricing.innerHTML, /class="pricing-electric-bonus"/);
+  assert.doesNotMatch(nodes.publicPricing.innerHTML, /pricing-electric-bonus"/);
   assert.equal(nodes.electricPlanBonuses.innerHTML, '');
   assert.equal((nodes.publicPricing.innerHTML.match(/Prova gratis per 14 giorni/g) || []).length, 3);
 });
@@ -81,11 +81,12 @@ test('landing retains route planning and cost messaging without absolute sustain
 
 test('electric section and price cards share responsive styles without hiding benefits on mobile', () => {
   assert.match(landing, /<meta name="viewport" content="width=device-width, initial-scale=1.0">/);
-  assert.match(landing, /@media\(max-width:960px\)[\s\S]*?\.electric-inner\{grid-template-columns:1fr;/);
-  assert.match(landing, /@media\(max-width:960px\)[\s\S]*?\.pricing-grid\{grid-template-columns:1fr;/);
-  assert.match(landing, /\.electric-plan-bonuses\{display:flex;flex-wrap:wrap;/);
-  assert.match(landing, /\.electric-plan-bonus\{flex:1 1 96px;/);
-  assert.doesNotMatch(landing, /\.(?:electric-[\w-]+|pricing-electric-bonus)\{[^}]*display:none/);
+  // Layout from the shared components: wrapping badges and a price grid that stacks on phones.
+  assert.doesNotMatch(landing, /<style[\s>]|\sstyle="/, 'No page-specific CSS or inline styles');
+  assert.match(landing, /class="gf-panel electric-inner"/);
+  assert.match(landing, /class="gf-cluster" id="electricPlanBonuses"/);
+  assert.match(landing, /class="gf-grid pricing-grid" data-cols="3" id="publicPricing"/);
+  assert.match(landing, /class="gf-badge electric-plan-bonus"/);
   assert.match(landing, /aria-labelledby="electricMobilityTitle"/);
 });
 

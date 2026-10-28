@@ -5,8 +5,8 @@
 <meta name="robots" content="noindex,nofollow">
 <title>Catalogo componenti · GiroFacile</title>
 <link rel="icon" href="/static/favicon-32x32.png">
-<link rel="stylesheet" href="/static/design-system/theme.css?v=gf_warning_20261025">
-<link rel="stylesheet" href="/static/design-system/components.css?v=gf_barra_20261025">
+<link rel="stylesheet" href="/static/design-system/theme.css?v=gf_landing_20261028">
+<link rel="stylesheet" href="/static/design-system/components.css?v=gf_landing_20261028">
 <link rel="stylesheet" href="/static/design-system/layout.css?v=gf_sidebar_fit_20261025">
 <script src="/static/design-system/design-system.js" defer></script>
 <script src="/static/design-system/shell.js?v=gf_original_logo_20261019" defer></script>
@@ -35,6 +35,9 @@
     {"id":"gestionale-dati","label":"Dati e grafici","icon":"report","href":"#gestionale-dati"},
     {"id":"gestionale-flussi","label":"Passaggi, chat, foto","icon":"chat","href":"#gestionale-flussi"},
     {"id":"gestionale-accesso","label":"Accesso e banner","icon":"user","href":"#gestionale-accesso"}
+  ]},
+  {"label":"Sito pubblico","items":[
+    {"id":"sito-pubblico","label":"Landing e sezioni","icon":"company","href":"#sito-pubblico"}
   ]}
 ]
 </script>
@@ -498,6 +501,59 @@
     <button class="gf-button" data-variant="primary" type="button">Ho capito</button>
   </div>
   <p class="gf-muted">.gf-banner: avviso fisso in basso (qui mostrato dentro la pagina). .gf-hidden: nasconde un elemento; sostituisce la vecchia classe .hidden usata dal JavaScript.</p>
+</section>
+<section class="gf-stack gf-catalog-section" id="sito-pubblico" aria-labelledby="sito-pubblico-title">
+  <h2 class="gf-title" id="sito-pubblico-title">Sito pubblico (landing)</h2>
+  <p class="gf-muted">Approvati il 28 ottobre 2026 per la landing, che non usa la sidebar. Il body dichiara data-gf-surface="public".</p>
+  <header class="gf-site-header">
+    <div class="gf-site-header__inner">
+      <a class="gf-site-header__brand" href="#sito-pubblico"><img src="/static/girofacile-logo.png" alt="" width="36" height="36">GiroFacile</a>
+      <nav class="gf-site-header__nav" aria-label="Sezioni di esempio"><a href="#sito-pubblico">Funzionalità</a><a href="#sito-pubblico">Prezzi</a></nav>
+      <div class="gf-site-header__actions"><a class="gf-button" data-variant="ghost" data-size="sm" href="#sito-pubblico">Accedi</a><a class="gf-button" data-variant="primary" data-size="sm" href="#sito-pubblico">Registrati</a></div>
+    </div>
+  </header>
+  <p class="gf-muted">.gf-site-header (__inner, __brand, __nav, __actions): intestazione fissa in alto; sotto i 1024 px restano marchio e pulsanti.</p>
+  <section class="gf-section" data-tone="subtle">
+    <div class="gf-section__inner">
+      <div class="gf-hero" data-align="center">
+        <p class="gf-kicker">Occhiello</p>
+        <h3 class="gf-hero__title">Titolo di apertura, <span class="gf-hero__accent">con la parte in evidenza.</span></h3>
+        <p class="gf-hero__lead">Testo introduttivo dell'apertura, in grigio e più grande del testo normale.</p>
+        <form class="gf-signup" action="#sito-pubblico"><input class="gf-input" type="email" aria-label="Email aziendale" placeholder="La tua email aziendale"><button class="gf-button" data-variant="primary" type="button">Prova gratis</button></form>
+        <p class="gf-hero__note"><span><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4 10-10"/></svg>Nessuna carta di credito</span><span><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4 10-10"/></svg>Disdici quando vuoi</span></p>
+      </div>
+      <ul class="gf-trust" aria-label="Garanzie"><li><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4 10-10"/></svg>Dati su server nell'Unione Europea</li><li><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4 10-10"/></svg>Assistenza in italiano</li></ul>
+    </div>
+  </section>
+  <p class="gf-muted">.gf-section (data-tone="subtle|nav", __inner, __head[data-align="center"]): fascia a tutta larghezza. .gf-hero (__title, __accent, __lead, __actions, __note; data-align="center"): apertura; il titolo usa --gf-font-hero. .gf-signup: email e pulsante sulla stessa riga. .gf-trust: garanzie con icona.</p>
+  <div class="gf-figures">
+    <div class="gf-figures__item"><strong class="gf-figures__value">14 gg</strong><span class="gf-figures__label">Di prova gratuita</span></div>
+    <div class="gf-figures__item"><strong class="gf-figures__value">2 min</strong><span class="gf-figures__label">Per attivare l'account</span></div>
+    <div class="gf-figures__item"><strong class="gf-figures__value">3</strong><span class="gf-figures__label">Portali inclusi</span></div>
+  </div>
+  <p class="gf-muted">.gf-figures (__item, __value, __label): numeri grandi; su smartphone uno sotto l'altro. Usare solo dati reali.</p>
+  <figure class="gf-showcase" aria-label="Finestra del prodotto">
+    <div class="gf-showcase__bar"><span class="gf-showcase__dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="gf-showcase__address">girofacile.it/dashboard</span></div>
+    <div class="gf-showcase__body">
+      <div class="gf-showcase__nav" aria-hidden="true"><span class="gf-showcase__brand"><img src="/static/girofacile-logo.png" alt="">GiroFacile</span><span class="gf-showcase__item" aria-current="page">Dashboard</span><span class="gf-showcase__item">Ordini</span></div>
+      <div class="gf-showcase__main"><p class="gf-subtitle">Contenuto della schermata</p><p class="gf-muted">Qui vanno i componenti veri del gestionale (pannelli, numeri, mappa).</p></div>
+    </div>
+  </figure>
+  <p class="gf-muted">.gf-showcase (__bar, __dots, __address, __body, __nav, __brand, __item, __main): una schermata del gestionale incorniciata come un'app; sotto i 768 px senza barra laterale. Nella mappa reale (.gf-route-panel__canvas[data-map], Leaflet) i segnaposto sono .gf-map-pin con data-tone, data-state="done|next|miss|todo" o data-kind="depot|home".</p>
+  <article class="gf-card gf-quote"><span class="gf-stars" role="img" aria-label="5 stelle su 5"><svg viewBox="0 0 24 24"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9Z"/></svg><svg viewBox="0 0 24 24"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9Z"/></svg><svg viewBox="0 0 24 24"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9Z"/></svg><svg viewBox="0 0 24 24"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9Z"/></svg><svg viewBox="0 0 24 24"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9Z"/></svg></span><blockquote>«Testo della recensione di un cliente reale.»</blockquote><div class="gf-cluster"><span class="gf-avatar" data-tone="1">NC</span><strong>Nome C.</strong></div></article>
+  <p class="gf-muted">.gf-quote con .gf-stars (e .gf-rating per il voto medio): solo recensioni reali e verificabili.</p>
+  <footer class="gf-site-footer">
+    <div class="gf-site-footer__inner">
+      <div class="gf-site-footer__top">
+        <div class="gf-site-footer__brand"><a class="gf-site-header__brand" href="#sito-pubblico"><img src="/static/girofacile-logo.png" alt="" width="36" height="36">GiroFacile</a><p>Descrizione breve del servizio.</p></div>
+        <div><p class="gf-site-footer__title">Prodotto</p><ul class="gf-site-footer__links"><li><a href="#sito-pubblico">Funzionalità</a></li><li><a href="#sito-pubblico">Prezzi</a></li></ul></div>
+        <div><p class="gf-site-footer__title">Azienda</p><ul class="gf-site-footer__links"><li><a href="#sito-pubblico">Contatti</a></li></ul></div>
+        <div><p class="gf-site-footer__title">Supporto</p><ul class="gf-site-footer__links"><li><a href="#sito-pubblico">Privacy</a></li></ul></div>
+      </div>
+      <div class="gf-site-footer__bottom"><span>© 2026 GiroFacile</span><div><a href="#sito-pubblico">Termini e condizioni</a></div></div>
+    </div>
+  </footer>
+  <p class="gf-muted">.gf-site-footer (__inner, __top, __brand, __title, __links, __bottom): piè di pagina blu notte del sito.</p>
 </section>
 </div>
 </main>

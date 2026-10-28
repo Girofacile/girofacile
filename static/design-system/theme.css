@@ -96,6 +96,8 @@
   --gf-font-2xl: 28px;
   --gf-font-stat: 30px;
   --gf-font-3xl: 36px;
+  /* Titolo di apertura del sito pubblico (approvato il 28 ottobre 2026). */
+  --gf-font-hero: 50px;
   --gf-font-size-base: var(--gf-font-md);
   --gf-font-size-header: var(--gf-font-2xl);
   --gf-weight-normal: 400;

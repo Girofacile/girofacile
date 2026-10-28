@@ -1316,8 +1316,12 @@ function getSelectedPlan(){
 function updateSignupPlanFeatures(){
   const select=document.getElementById('signupPlanSelect');
   if(select && !select.dataset.planInitialized){
-    const requested=new URLSearchParams(window.location.search).get('plan');
+    const params=new URLSearchParams(window.location.search);
+    const requested=params.get('plan');
     if(Object.hasOwn(window.GF_PLANS || {},requested))select.value=requested;
+    // Email scritta nella landing (/login?email=...): precompila la registrazione.
+    const email=document.getElementById('signupEmail');
+    if(email && !email.value && params.get('email'))email.value=params.get('email').trim().slice(0,254);
     select.dataset.planInitialized='true';
   }
   const plan=window.GF_PLANS[getSelectedPlan()] || {};
