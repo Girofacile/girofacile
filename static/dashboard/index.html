@@ -31,8 +31,8 @@
 <script src="/static/dashboard/js/drivers.js?v=gf_audit_20261020"></script>
 
 <!-- Shared GiroFacile design system; legacy sheets retain feature layout. -->
-<link rel="stylesheet" href="/static/design-system/theme.css?v=gf_warning_20261025">
-<link rel="stylesheet" href="/static/design-system/components.css?v=gf_barra_20261025">
+<link rel="stylesheet" href="/static/design-system/theme.css?v=gf_landing_20261028">
+<link rel="stylesheet" href="/static/design-system/components.css?v=gf_login_20261028">
 <link rel="stylesheet" href="/static/design-system/layout.css?v=gf_sidebar_fit_20261025">
 <link rel="stylesheet" href="/static/design-system/workspace.css?v=gf_selection_20261016">
 <link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007_reference_2">
@@ -49,10 +49,11 @@
 <section id="loginCard" class="gf-auth">
   <aside class="gf-auth__aside">
     <div class="gf-cluster"><svg class="gf-sidebar__mark" viewBox="0 0 34 34" role="img" aria-label="Logo GiroFacile"><rect class="gf-sidebar__mark-bg" width="34" height="34" rx="9"/><path class="gf-sidebar__mark-g" d="M24 12.2A8.2 8.2 0 1 0 25 17.5H17.5"/><circle class="gf-sidebar__mark-dot" cx="24.2" cy="9.6" r="2.4"/></svg><div><span class="gf-auth__brand">GiroFacile</span><p>Gestione percorsi e consegne</p></div></div>
+    <h2 class="gf-title">I tuoi giri di consegna, sempre sotto controllo.</h2>
     <ul class="gf-auth__features">
-      <li><strong>Pianifica</strong><span>Organizza i percorsi in modo efficiente</span></li>
-      <li><strong>Monitora</strong><span>Segui consegne e stati in tempo reale</span></li>
-      <li><strong>Analizza</strong><span>Report dettagliati per decisioni migliori</span></li>
+      <li><strong>Pianifica</strong><span>Giri calcolati in automatico, anche su più furgoni</span></li>
+      <li><strong>Monitora</strong><span>Autisti e consegne aggiornati in tempo reale</span></li>
+      <li><strong>Analizza</strong><span>Report su chilometri, tempi e costi</span></li>
     </ul>
     <nav class="gf-auth__footer" aria-label="Informazioni legali">© 2026 GiroFacile · Tutti i diritti riservati · <a href="/privacy-policy" target="_blank">Privacy</a> · <a href="/termini-condizioni" target="_blank">Termini</a> · <a href="/cookie-policy" target="_blank">Cookie</a></nav>
   </aside>
@@ -63,16 +64,14 @@
     <!-- PANNELLO LOGIN -->
     <div class="gf-auth__card" id="loginPanel">
       <div class="gf-cluster"><svg class="gf-sidebar__mark" viewBox="0 0 34 34" aria-hidden="true"><rect class="gf-sidebar__mark-bg" width="34" height="34" rx="9"/><path class="gf-sidebar__mark-g" d="M24 12.2A8.2 8.2 0 1 0 25 17.5H17.5"/><circle class="gf-sidebar__mark-dot" cx="24.2" cy="9.6" r="2.4"/></svg><div><strong class="gf-subtitle">GiroFacile</strong><p class="gf-muted">Gestione percorsi e consegne</p></div></div>
-      <div><h2 class="gf-title">Accesso riservato</h2><p class="gf-muted">Accedi al tuo portale</p></div>
-      <label class="gf-field" for="loginUser"><span class="gf-field__label">Utente o Email</span><input class="gf-input" id="loginUser" placeholder="Email o nome utente" value="" autocomplete="username"></label>
-      <div class="gf-field"><label class="gf-field__label" for="loginPass">Password</label>
-        <div class="gf-cluster"><input class="gf-input" id="loginPass" type="password" placeholder="Inserisci la tua password" value="" autocomplete="current-password"><button type="button" class="gf-icon-button" onclick="toggleLoginPassword()" aria-label="Mostra o nascondi password"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.8 12s3.3-5.7 9.2-5.7 9.2 5.7 9.2 5.7-3.3 5.7-9.2 5.7S2.8 12 2.8 12Z M12 14.7a2.7 2.7 0 1 0 0-5.4 2.7 2.7 0 0 0 0 5.4z"/></svg></button></div>
+      <div class="gf-stack" data-gap="sm"><h2 class="gf-title">Bentornato</h2><p class="gf-muted">Accedi alla tua area riservata GiroFacile</p></div>
+      <label class="gf-field" for="loginUser"><span class="gf-field__label">Utente o email</span><input class="gf-input" id="loginUser" placeholder="Email o nome utente" value="" autocomplete="username"></label>
+      <div class="gf-field">
+        <div class="gf-cluster" data-justify="between"><label class="gf-field__label" for="loginPass">Password</label><button type="button" id="forgotPasswordBtn" class="gf-button" data-variant="link" onclick="toggleForgotPassword(true)">Password dimenticata?</button></div>
+        <div class="gf-cluster"><input class="gf-input" id="loginPass" type="password" placeholder="La tua password" value="" autocomplete="current-password"><button type="button" class="gf-icon-button" onclick="toggleLoginPassword()" aria-label="Mostra o nascondi password"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.8 12s3.3-5.7 9.2-5.7 9.2 5.7 9.2 5.7-3.3 5.7-9.2 5.7S2.8 12 2.8 12Z M12 14.7a2.7 2.7 0 1 0 0-5.4 2.7 2.7 0 0 0 0 5.4z"/></svg></button></div>
       </div>
       <button type="button" onclick="login()" class="gf-button" data-variant="primary">Accedi a GiroFacile →</button>
-      <div class="gf-stack" data-gap="sm">
-        <p class="gf-muted">Non hai un account? <button type="button" class="gf-button" data-variant="link" onclick="toggleSignup(true)">Registrati gratis</button></p>
-        <p class="gf-muted">oppure <button type="button" id="forgotPasswordBtn" class="gf-button" data-variant="link" onclick="toggleForgotPassword(true)">Password dimenticata?</button></p>
-      </div>
+      <p class="gf-muted">Non hai un account? <button type="button" class="gf-button" data-variant="link" onclick="toggleSignup(true)">Registrati gratis</button></p>
       <div id="forgotBox" class="gf-stack hidden" data-gap="sm">
         <h3 class="gf-subtitle">Recupero password</h3>
         <p class="gf-muted">Inserisci l'email del tuo account. Riceverai un link sicuro per impostare una nuova password.</p>
@@ -80,6 +79,11 @@
         <button type="button" id="forgotPasswordSubmitBtn" class="gf-button" data-variant="primary" onclick="requestPasswordReset()">Invia link di recupero</button>
         <div><button type="button" id="forgotPasswordCancelBtn" class="gf-button" data-variant="link" onclick="toggleForgotPassword(false)">Annulla</button></div>
       </div>
+      <ul class="gf-trust" aria-label="Garanzie">
+        <li><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Connessione cifrata</li>
+        <li><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4 10-10"/></svg>Dati su server nell'Unione Europea</li>
+        <li><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 14v-2a8 8 0 0 1 16 0v2 M4 14h3v5H5a1 1 0 0 1-1-1z M20 14h-3v5h2a1 1 0 0 0 1-1z"/></svg>Assistenza in italiano</li>
+      </ul>
     </div>
 
     <!-- PANNELLO RESET PASSWORD -->

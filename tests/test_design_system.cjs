@@ -598,7 +598,7 @@ test('login page uses the shared access screen with the same content and actions
   assert.match(login,/id="loginUser"/);assert.match(login,/id="loginPass"[^>]*type="password"/);
   assert.match(login,/onclick="login\(\)"[^>]*data-variant="primary">Accedi a GiroFacile →</);
   assert.match(login,/onclick="toggleSignup\(true\)">Registrati gratis</);
-  assert.match(login,/oppure <button type="button" id="forgotPasswordBtn"/);
+  assert.match(login,/<label class="gf-field__label" for="loginPass">Password<\/label><button type="button" id="forgotPasswordBtn"[^>]*onclick="toggleForgotPassword\(true\)">Password dimenticata\?</);
   // Registrazione a passaggi con il componente gf-steps; stato gestito con aria-current.
   assert.equal((login.match(/class="gf-step"/g)||[]).length,4);
   assert.equal((login.match(/data-signup-step="\d"/g)||[]).length,4);
