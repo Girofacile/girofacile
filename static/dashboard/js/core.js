@@ -4469,6 +4469,11 @@ function selectDashboardScheduledDay(iso){
   dashboardScheduledDay = iso;
   renderDashboardScheduledSubpage(dashboardScheduledRoutes, null);
 }
+// Come nello Storico: "Mostra altri" apre la tabella del giorno, sotto, con tutti i giri.
+function showAllDashboardScheduledDay(iso){
+  selectDashboardScheduledDay(iso);
+  document.getElementById("scheduledDayTitle")?.closest("section")?.scrollIntoView({behavior:"smooth", block:"start"});
+}
 function shiftDashboardScheduledWeek(weeks){
   const base = dashScheduledMonday(dashboardScheduledDay || todayIso());
   selectDashboardScheduledDay(weeks ? dashScheduledAddDays(base, weeks*7) : todayIso());
@@ -4498,6 +4503,7 @@ function closeDashboardScheduledRoute(){
   if(typeof syncWorkspaceTopbar === 'function') syncWorkspaceTopbar('dashboard-scheduled');
 }
 
+const DASH_SCHEDULED_WEEK_LIMIT = 3;
 function dashboardScheduledWeekHtml(){
   const monday = dashScheduledMonday(dashboardScheduledDay);
   const days = Array.from({length:7},(_,i)=>dashScheduledAddDays(monday,i));
@@ -4509,12 +4515,17 @@ function dashboardScheduledWeekHtml(){
     const d = dashScheduledDate(iso);
     const list = dashScheduledRoutesOf(iso);
     const active = list.filter(r=>!dashScheduledCancelled(r)).length;
+    // Nella settimana al massimo DASH_SCHEDULED_WEEK_LIMIT giri per giorno; gli altri si vedono nella tabella del giorno.
+    const hidden = list.length - DASH_SCHEDULED_WEEK_LIMIT;
+    const more = hidden > 0
+      ? `<li class="gf-list-item"><button type="button" class="gf-button" data-variant="link" data-size="sm" onclick="showAllDashboardScheduledDay('${iso}')">Mostra altri ${hidden}</button></li>`
+      : '';
     const items = list.length
-      ? list.map(r=>`<li><button type="button" class="gf-list-item"${dashScheduledCancelled(r)?' data-status="danger"':''} onclick="openDashboardScheduledRoute(${Number(r.id)})"><span class="gf-list-item__main"><strong>${esc(r.orario_partenza || '-')}</strong><small>${esc(r.nome || 'Giro consegne')}${dashScheduledCancelled(r)?' · Annullato':''}</small></span></button></li>`).join('')
+      ? list.slice(0, DASH_SCHEDULED_WEEK_LIMIT).map(r=>`<li><button type="button" class="gf-list-item"${dashScheduledCancelled(r)?' data-status="danger"':''} onclick="openDashboardScheduledRoute(${Number(r.id)})"><span class="gf-list-item__main"><strong>${esc(r.orario_partenza || '-')}</strong><small>${esc(r.nome || 'Giro consegne')}${dashScheduledCancelled(r)?' · Annullato':''}</small></span></button></li>`).join('')
       : '<li class="gf-list-item"><span class="gf-muted">Nessun giro</span></li>';
     return `<section class="gf-panel" aria-label="${esc(dashScheduledDayLabel(iso))}">
       <header class="gf-panel__header"><button type="button" class="gf-chip" aria-pressed="${iso===dashboardScheduledDay}" onclick="selectDashboardScheduledDay('${iso}')">${DASH_SCHEDULED_DAY_NAMES[d.getDay()]}&nbsp;${d.getDate()} <span class="gf-chip__count">${active}</span></button></header>
-      <ul class="gf-list">${items}</ul>
+      <ul class="gf-list">${items}${more}</ul>
     </section>`;
   }).join('');
   return `<section class="gf-stack" aria-labelledby="scheduledWeekTitle">

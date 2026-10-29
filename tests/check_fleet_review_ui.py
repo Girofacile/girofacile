@@ -138,6 +138,13 @@ def main():
                 page.get_by_role('button', name='Sposta comunque', exact=True).click()
                 assert page.evaluate('window.__moves')[-1] == [2, None]
                 review.locator('[data-fleet-select="1"]').click()
+                # Giri programmati: si apre «Giri programmati» e l'intestazione della suddivisione non la sovrascrive.
+                page.evaluate('''() => { showTab("dashboard-scheduled");
+                    GFFleetReview.render({...window.__params, plan:{...window.__params.plan, status:"programmed"}}); }''')
+                assert page.locator('#workspacePageTitle').inner_text() == 'Giri programmati'
+                assert page.locator('#workspacePageBadge').is_hidden()
+                page.evaluate('() => { showTab("route-preview"); GFFleetReview.render(window.__params); }')
+                review.locator('[data-fleet-select="1"]').click()
                 if width > 1000:
                     # Trascinamento di una fermata sulla riga di un altro giro.
                     # Il giro scelto sta sotto, a tutta larghezza: finestra più alta perché fermata e riga del giro siano visibili insieme.

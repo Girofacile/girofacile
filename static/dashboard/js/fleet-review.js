@@ -178,6 +178,8 @@ function warning(onConfirm){
 // Titolo, freccia "indietro" e "Pianifica giri" nella barra in alto, come nelle altre pagine.
 function topbar(plan,dirty,busy,permission,onBack,onPlan){
  const planned=plan.status==='programmed',el=id=>document.getElementById(id);
+ // Dopo «Pianifica giri» si apre Giri programmati: l'intestazione della suddivisione non deve sovrascriverla.
+ if(el('tab-route-preview')?.classList.contains('hidden'))return;
  document.querySelector?.('.gf-header__titles')?.classList.remove('gf-hidden');
  const title=el('workspacePageTitle'),subtitle=el('workspacePageSubtitle'),badge=el('workspacePageBadge'),host=el('fleetTopbarActionsHost');
  if(title)title.textContent='Controlla la suddivisione';
