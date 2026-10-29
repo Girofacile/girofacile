@@ -65,7 +65,8 @@
     nodes(root,'table:not(.leaflet-control table)').forEach(el => mark(el,'gf-table'));
     nodes(root,LABEL_TABLES).forEach(labelTable);
     nodes(root,'.customer-details-dialog,dialog.customer-tracking-dialog').forEach(el => mark(el,'gf-dialog'));
-    nodes(root,'.gf-dropdown').forEach(el => {
+    // Solo i menu a tendina (<details>): il contenitore dei suggerimenti indirizzo non ha un menu da marcare.
+    nodes(root,'details.gf-dropdown').forEach(el => {
       const menu = Array.from(el.children).find(child => child.tagName !== 'SUMMARY');
       if(menu) menu.dataset.gfMenu = '';
     });

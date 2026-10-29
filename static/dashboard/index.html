@@ -37,7 +37,7 @@
 <link rel="stylesheet" href="/static/design-system/layout.css?v=gf_sidebar_fit_20261025">
 <link rel="stylesheet" href="/static/design-system/workspace.css?v=gf_selection_20261016">
 <link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007_reference_2">
-<script src="/static/design-system/design-system.js?v=gf_tutor_20261029" defer></script>
+<script src="/static/design-system/design-system.js?v=gf_deposito_20261029" defer></script>
 <script src="/static/design-system/shell.js?v=gf_original_logo_20261019" defer></script>
 <link rel="stylesheet" href="/static/dashboard/css/dashboard-real-map.css?v=gf_route_detail_20261020b">
 <link rel="stylesheet" href="/static/dashboard/css/in-progress-reference.css?v=gf_selection_20261016">
@@ -965,14 +965,13 @@
         <div class="gf-modal" role="dialog" aria-modal="true" aria-labelledby="depositFormTitle" onclick="event.stopPropagation()">
           <form id="depositForm" onsubmit="event.preventDefault();saveDeposit()">
           <header class="gf-modal__header">
-            <div><p class="gf-kicker">Anagrafica deposito</p><h2 class="gf-modal__title" id="depositFormTitle">Nuovo deposito</h2><p class="gf-muted" id="depositFormSubtitle">Aggiungi un nuovo deposito alla tua azienda.</p></div>
+            <div><p class="gf-kicker">Anagrafica deposito</p><h2 class="gf-modal__title" id="depositFormTitle">Nuovo deposito</h2><p class="gf-muted" id="depositFormSubtitle">Il punto da cui partono e rientrano i tuoi giri.</p></div>
             <button type="button" class="gf-icon-button" onclick="closeDepositModal()" aria-label="Chiudi"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12 M18 6L6 18"/></svg></button>
           </header>
           <div class="gf-modal__body gf-stack">
             <input type="hidden" id="depId">
-            <div><h3 class="gf-subtitle">Dati deposito</h3><p class="gf-muted">Inserisci nome e indirizzo usati come punto di partenza e rientro.</p></div>
             <label class="gf-field" for="depNome"><span class="gf-field__label">Nome deposito</span><input class="gf-input" id="depNome" placeholder="Inserisci un nome per il deposito" required maxlength="200" autocomplete="off"></label>
-            <label class="gf-field" for="depIndirizzo"><span class="gf-field__label">Indirizzo completo</span><textarea class="gf-textarea" id="depIndirizzo" placeholder="Inserisci l'indirizzo completo del deposito" required maxlength="500" rows="3" autocomplete="off"></textarea></label>
+            <label class="gf-field" for="depIndirizzo"><span class="gf-field__label">Indirizzo completo</span><input class="gf-input" id="depIndirizzo" type="text" placeholder="Via, numero civico, CAP e città" required maxlength="500" autocomplete="off"></label>
             <label class="gf-check" for="depDefault"><input id="depDefault" type="checkbox"><span><strong>Deposito predefinito</strong><br><small class="gf-muted">Imposta questo deposito come predefinito per i nuovi giri.</small></span></label>
             <div id="depositDeleteSection" class="gf-setting hidden">
               <div class="gf-setting__copy"><strong>Elimina deposito</strong><p>Rimuove il deposito dall'azienda e dalla selezione dei nuovi giri.</p></div>
@@ -1599,7 +1598,7 @@
 <script src="/static/dashboard/js/order-sources.js?v=gf_plans_20261023"></script>
 <script src="/static/dashboard/js/dashboard-real-map.js?v=gf_priority_hero_20261025"></script>
 <script src="/static/dashboard/js/in-progress-reference.js?v=gf_driver_flow_20261020"></script>
-<script src="/static/dashboard/js/core.js?v=gf_tutor_20261029"></script>
+<script src="/static/dashboard/js/core.js?v=gf_deposito_20261029"></script>
 <script src="/static/dashboard/js/dashboard-mobile.js?v=gf_dashboard_mobile_20261019"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=orders_2"></script>
 <link rel="stylesheet" href="/static/dashboard/css/fleet-review.css?v=gf_suddivisione_20261025">

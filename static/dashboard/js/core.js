@@ -2365,7 +2365,7 @@ function resetDepositForm(){
   set('depId','');set('depNome','');set('depIndirizzo','');
   const defaultCheckbox=document.getElementById('depDefault');if(defaultCheckbox)defaultCheckbox.checked=false;
   const title=document.getElementById('depositFormTitle');if(title)title.textContent='Nuovo deposito';
-  const subtitle=document.getElementById('depositFormSubtitle');if(subtitle)subtitle.textContent='Aggiungi un nuovo deposito alla tua azienda.';
+  const subtitle=document.getElementById('depositFormSubtitle');if(subtitle)subtitle.textContent='Il punto da cui partono e rientrano i tuoi giri.';
   document.getElementById('depositDeleteSection')?.classList.add('hidden');
   depositStatus('depositFormStatus','');
 }
