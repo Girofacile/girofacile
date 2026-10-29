@@ -3,7 +3,7 @@ from datetime import datetime
 from .core.clock import utc_now
 from sqlalchemy import inspect, text
 
-LATEST = '20261027_02'
+LATEST = '20261028_01'
 LOCK_ID = 7640152404
 
 
@@ -216,6 +216,19 @@ def run_migrations(engine):
                     if 'fleet_plan_id' not in existing:
                         conn.execute(text('ALTER TABLE planning_drafts ADD COLUMN fleet_plan_id INTEGER'))
                     conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261027_02', 'now': utc_now()})
+            if '20261028_01' not in applied:
+                # Tutor del primo giro: stato per azienda. Chi ha già un giro non bozza non lo vede.
+                with engine.begin() as conn:
+                    tables = set(inspect(conn).get_table_names())
+                    existing = {c['name'] for c in inspect(conn).get_columns('users')} if 'users' in tables else {'tutor_state', 'tutor_completed_at'}
+                    if 'tutor_state' not in existing:
+                        conn.execute(text('ALTER TABLE users ADD COLUMN tutor_state VARCHAR(20)'))
+                    if 'tutor_completed_at' not in existing:
+                        conn.execute(text('ALTER TABLE users ADD COLUMN tutor_completed_at TIMESTAMP'))
+                    if {'users', 'route_plans'} <= tables and 'status' in {c['name'] for c in inspect(conn).get_columns('route_plans')}:
+                        conn.execute(text("UPDATE users SET tutor_state='completato', tutor_completed_at=:now WHERE tutor_state IS NULL "
+                                          "AND id IN (SELECT user_id FROM route_plans WHERE status <> 'bozza')"), {'now': utc_now()})
+                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261028_01', 'now': utc_now()})
         finally:
             if postgres:
                 lock.execute(text('SELECT pg_advisory_unlock(:key)'), {'key': LOCK_ID})

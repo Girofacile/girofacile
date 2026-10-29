@@ -6,7 +6,7 @@
 <title>Catalogo componenti · GiroFacile</title>
 <link rel="icon" href="/static/favicon-32x32.png">
 <link rel="stylesheet" href="/static/design-system/theme.css?v=gf_landing_20261028">
-<link rel="stylesheet" href="/static/design-system/components.css?v=gf_landing_20261028">
+<link rel="stylesheet" href="/static/design-system/components.css?v=gf_tutor_20261029">
 <link rel="stylesheet" href="/static/design-system/layout.css?v=gf_sidebar_fit_20261025">
 <script src="/static/design-system/design-system.js" defer></script>
 <script src="/static/design-system/shell.js?v=gf_original_logo_20261019" defer></script>
@@ -452,6 +452,22 @@
     <header class="gf-panel__header"><h3 class="gf-panel__title" id="p10-title">Passaggi numerati</h3><span class="gf-panel__meta">.gf-steps</span></header>
     <div class="gf-panel__body">
       <ol class="gf-steps"><li class="gf-step is-done"><strong>Account</strong><small>Email e password</small></li><li class="gf-step" aria-current="step"><strong>Dati aziendali</strong><small>Ragione sociale e sede</small></li><li class="gf-step"><strong>Fatturazione</strong><small>Partita IVA e SDI</small></li><li class="gf-step"><strong>Settore</strong><small>Tipo di consegne</small></li></ol>
+    </div>
+  </section>
+  <section class="gf-panel" aria-labelledby="p10b-title">
+    <header class="gf-panel__header"><h3 class="gf-panel__title" id="p10b-title">Guida in sovrapposizione</h3><span class="gf-panel__meta">.gf-coach · [data-gf-tutor-target]</span></header>
+    <div class="gf-panel__body gf-stack">
+      <p class="gf-muted">Nel gestionale barra e fumetto sono popover agganciati all'elemento con <code class="gf-code">data-gf-tutor-target</code>; qui sono mostrati nel flusso con <code class="gf-code">data-embedded</code>.</p>
+      <div>
+        <button type="button" class="gf-button" data-variant="primary">+ Nuovo mezzo</button>
+        <section class="gf-coach__tip" data-embedded aria-label="Esempio di fumetto">
+          <p class="gf-coach__kicker">Passo 3 di 7 · Il primo mezzo</p>
+          <h4 class="gf-coach__title">Premi «Nuovo mezzo»</h4>
+          <p class="gf-coach__text">Si apre la scheda del veicolo da compilare.</p>
+          <div class="gf-coach__actions"><button type="button" class="gf-coach__link">Esci dalla guida</button></div>
+        </section>
+      </div>
+      <div class="gf-coach__bar" data-embedded><span><strong>Il tuo primo giro</strong> · Passo 3 di 7 · Il primo mezzo</span><span class="gf-coach__segments"><span class="is-done"></span><span class="is-done"></span><span aria-current="step"></span><span></span><span></span><span></span><span></span></span></div>
     </div>
   </section>
   <div class="gf-grid" data-cols="2">

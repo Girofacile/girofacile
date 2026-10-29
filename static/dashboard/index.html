@@ -33,11 +33,11 @@
 
 <!-- Shared GiroFacile design system; legacy sheets retain feature layout. -->
 <link rel="stylesheet" href="/static/design-system/theme.css?v=gf_landing_20261028">
-<link rel="stylesheet" href="/static/design-system/components.css?v=gf_login_20261028">
+<link rel="stylesheet" href="/static/design-system/components.css?v=gf_tutor_20261029">
 <link rel="stylesheet" href="/static/design-system/layout.css?v=gf_sidebar_fit_20261025">
 <link rel="stylesheet" href="/static/design-system/workspace.css?v=gf_selection_20261016">
 <link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007_reference_2">
-<script src="/static/design-system/design-system.js?v=gf_base_20261015" defer></script>
+<script src="/static/design-system/design-system.js?v=gf_tutor_20261029" defer></script>
 <script src="/static/design-system/shell.js?v=gf_original_logo_20261019" defer></script>
 <link rel="stylesheet" href="/static/dashboard/css/dashboard-real-map.css?v=gf_route_detail_20261020b">
 <link rel="stylesheet" href="/static/dashboard/css/in-progress-reference.css?v=gf_selection_20261016">
@@ -260,6 +260,7 @@
         <div id="companyTopbarStatus" class="gf-cluster gf-hidden" data-show-on-tabs="company" aria-live="polite">
           <span id="companyConfiguredBadge" class="gf-badge hidden" data-status="success">✓ Profilo configurato</span>
           <button id="showOnboardingBtn" type="button" class="gf-button hidden" data-variant="secondary" onclick="openOnboardingPanel()">Configurazione guidata</button>
+          <button id="tutorResumeBtn" type="button" class="gf-button" data-variant="secondary" hidden onclick="GFTutor.resume()">Riprendi la guida al primo giro</button>
         </div>
         <button type="button" id="scheduledCancelRouteBtn" class="gf-button" data-variant="danger" hidden onclick="cancelScheduledRoute(dashboardScheduledSelectedId)">Annulla giro</button>
         <div class="gf-notifications notification-center-v30">
@@ -602,7 +603,7 @@
         <div id="routePlanningActions" class="gf-savebar" data-floating role="region" aria-label="Riepilogo e calcolo del percorso">
           <span><strong id="statDeliveries">0</strong> consegne · <strong id="statColli">0</strong> colli · <strong id="statWarnings">0</strong> con ZTL o sponda</span>
           <span id="statFuelGroup">Carburante <strong id="statFuel"></strong> <small id="statFuelHint">Seleziona un mezzo</small></span>
-          <button type="button" class="gf-button" data-variant="primary" onclick="optimizeRoute()">Calcola percorso</button>
+          <button type="button" id="routeCalculateBtn" class="gf-button" data-variant="primary" onclick="optimizeRoute()">Calcola percorso</button>
         </div>
       </section>
 
@@ -987,7 +988,7 @@
         <section class="gf-panel" aria-labelledby="fleetDirectoryTitle">
           <header class="gf-panel__header">
             <div><h2 class="gf-panel__title" id="fleetDirectoryTitle">Elenco mezzi</h2><p class="gf-muted">Cerca, filtra e scegli se visualizzare i mezzi a tabella o a card.</p></div>
-            <button type="button" class="gf-button" data-variant="primary" onclick="createFleetVehicle()">+ Nuovo mezzo</button>
+            <button type="button" id="newVehicleBtn" class="gf-button" data-variant="primary" onclick="createFleetVehicle()">+ Nuovo mezzo</button>
           </header>
           <div class="gf-panel__body gf-cluster">
             <input class="gf-input" id="fleetSearch" type="search" aria-label="Cerca mezzo per nome, targa o modello" placeholder="Cerca mezzo o targa…" oninput="renderFleetDirectory()">
@@ -1028,7 +1029,7 @@
             </div>
           </div>
           <div class="gf-form-grid">
-            <label class="gf-field" for="vNome"><span class="gf-field__label">Nome mezzo</span><input class="gf-input" id="vNome" placeholder="Nome mezzo"></label>
+            <label class="gf-field" for="vNome"><span class="gf-field__label">Nome mezzo</span><input class="gf-input" id="vNome" placeholder="Nome mezzo" required></label>
             <label class="gf-field" for="vMarca"><span class="gf-field__label">Marca</span><input class="gf-input" id="vMarca" placeholder="Marca"></label>
             <label class="gf-field" for="vModello"><span class="gf-field__label">Modello</span><input class="gf-input" id="vModello" placeholder="Modello"></label>
             <label class="gf-field" for="vAnnoImmatricolazione"><span class="gf-field__label">Anno immatricolazione</span><input class="gf-input" id="vAnnoImmatricolazione" type="number" min="1900" max="2100" placeholder="Anno immatricolazione"></label>
@@ -1066,7 +1067,7 @@
         <section class="gf-panel" aria-labelledby="driverDirectoryTitle">
           <header class="gf-panel__header">
             <div><h2 class="gf-panel__title" id="driverDirectoryTitle">Elenco autisti</h2><p class="gf-muted">Cerca rapidamente oppure cambia visualizzazione quando serve.</p></div>
-            <button type="button" class="gf-button" data-variant="primary" onclick="openNewDriverModal()">+ Nuovo autista</button>
+            <button type="button" id="newDriverBtn" class="gf-button" data-variant="primary" onclick="openNewDriverModal()">+ Nuovo autista</button>
           </header>
           <div class="gf-panel__body gf-cluster">
             <input class="gf-input" id="driverSearch" type="search" aria-label="Cerca autista per nome, telefono, email o patente" placeholder="Cerca autista…" oninput="renderDrivers()">
@@ -1284,7 +1285,7 @@
         </div>
       </div>
       <div class="gf-form-grid">
-        <label class="gf-field" for="drNome"><span class="gf-field__label">Nome</span><input class="gf-input" id="drNome" placeholder="Mario" oninput="updateDriverPreview()"></label>
+        <label class="gf-field" for="drNome"><span class="gf-field__label">Nome</span><input class="gf-input" id="drNome" placeholder="Mario" required oninput="updateDriverPreview()"></label>
         <label class="gf-field" for="drCognome"><span class="gf-field__label">Cognome</span><input class="gf-input" id="drCognome" placeholder="Rossi" oninput="updateDriverPreview()"></label>
         <label class="gf-field" for="drTelefono"><span class="gf-field__label">Cellulare</span><input class="gf-input" id="drTelefono" placeholder="+39 ..."></label>
         <label class="gf-field" for="drEmail"><span class="gf-field__label">Email</span><input class="gf-input" id="drEmail" type="email" placeholder="autista@email.it"></label>
@@ -1589,7 +1590,7 @@
 <script src="/static/dashboard/js/order-sources.js?v=gf_plans_20261023"></script>
 <script src="/static/dashboard/js/dashboard-real-map.js?v=gf_priority_hero_20261025"></script>
 <script src="/static/dashboard/js/in-progress-reference.js?v=gf_driver_flow_20261020"></script>
-<script src="/static/dashboard/js/core.js?v=gf_bozze_pagina_20261027"></script>
+<script src="/static/dashboard/js/core.js?v=gf_tutor_20261029"></script>
 <script src="/static/dashboard/js/dashboard-mobile.js?v=gf_dashboard_mobile_20261019"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=orders_2"></script>
 <link rel="stylesheet" href="/static/dashboard/css/fleet-review.css?v=gf_suddivisione_20261025">
@@ -1602,6 +1603,7 @@
 <script src="/static/dashboard/js/selected-customer-addresses.js?v=gf_customer_selected_addresses_20261020"></script>
 <script src="/static/dashboard/js/order-planning.js?v=gf_bozze_20261026"></script>
 <script src="/static/dashboard/js/planning-drafts.js?v=gf_bozze_stile_20261027b"></script>
+<script src="/static/dashboard/js/tutor.js?v=gf_tutor_20261029"></script>
 
 <script>
 function toggleLoginPassword(){
@@ -1613,6 +1615,24 @@ function toggleLoginPassword(){
 </script>
 
 <script src="/static/dashboard/js/company-profile.js?v=gf_audit_20261020"></script>
+
+<!-- Tutor del primo giro (.gf-coach): barra in alto e fumetto sul prossimo clic. -->
+<div class="gf-coach" aria-label="Guida al primo giro">
+  <div id="coachSpot" class="gf-coach__spot" popover="manual" aria-hidden="true"></div>
+  <aside id="coachBar" class="gf-coach__bar" popover="manual" aria-label="Avanzamento della guida">
+    <span><strong>Il tuo primo giro</strong> · <span id="coachCount"></span> · <span id="coachStep"></span></span>
+    <span id="coachSegments" class="gf-coach__segments"></span>
+  </aside>
+  <section id="coachTip" class="gf-coach__tip" popover="manual" aria-live="polite" aria-labelledby="coachTitle">
+    <p id="coachKicker" class="gf-coach__kicker"></p>
+    <h2 id="coachTitle" class="gf-coach__title"></h2>
+    <p id="coachText" class="gf-coach__text"></p>
+    <div class="gf-coach__actions">
+      <button id="coachExit" type="button" class="gf-coach__link" onclick="GFTutor.close()">Esci dalla guida</button>
+      <button id="coachDone" type="button" class="gf-coach__button" hidden onclick="GFTutor.close()">Chiudi</button>
+    </div>
+  </section>
+</div>
 
 <!-- Ultimo foglio: allinea tutte le sezioni al linguaggio visivo della dashboard. -->
 </body>

@@ -926,7 +926,66 @@ def onboarding_status(user: User = Depends(current_user), db: Session = Depends(
         "completed": bool(user.onboarding_completed),
         "workspace_operational": _workspace_operational_for_user(user),
         "dismissed": bool(user.onboarding_dismissed),
+        # Finché il primo giro non è programmato la guida è il tutor: la finestra di configurazione non si apre da sola.
+        "tutor_pending": user.tutor_state != "completato",
     }
+
+
+# -----------------------------------------------------------------------
+# Tutor del primo giro: i passi si spuntano dai dati reali dell'azienda.
+# -----------------------------------------------------------------------
+TUTOR_STEPS = (
+    ("company", "Profilo azienda"),
+    ("deposit", "Deposito di partenza"),
+    ("vehicle", "Il primo mezzo"),
+    ("driver", "Un autista"),
+    ("orders", "Le consegne"),
+    ("route", "Calcolo del giro"),
+    ("program", "Programmazione"),
+)
+
+
+def _tutor_payload(user: User, db: Session) -> dict:
+    from ..order_models import Order
+    routes = db.query(RoutePlan.status).filter(RoutePlan.user_id == user.id)
+    done = {
+        "company": bool((user.company_name or "").strip() and (user.company_address or "").strip()),
+        "deposit": _count_for_user(db, Deposit, user.id) > 0,
+        "vehicle": _count_for_user(db, Vehicle, user.id) > 0,
+        "driver": _count_for_user(db, Driver, user.id) > 0,
+        "orders": _count_for_user(db, Order, user.id) > 0,
+        "route": routes.first() is not None,
+        "program": routes.filter(RoutePlan.status != "bozza").first() is not None,
+    }
+    if done["program"] and user.tutor_state != "completato":
+        user.tutor_state = "completato"
+        user.tutor_completed_at = utc_now()
+        db.commit()
+    steps = [{"key": key, "label": label, "done": done[key]} for key, label in TUTOR_STEPS]
+    current = next((step["key"] for step in steps if not step["done"]), None)
+    return {
+        "state": user.tutor_state or "attivo",
+        "steps": steps,
+        "current": current,
+        "progress": sum(1 for step in steps if step["done"]),
+        "total": len(steps),
+    }
+
+
+@router.get("/api/onboarding/tutor")
+def tutor_status(user: User = Depends(current_user), db: Session = Depends(get_db)):
+    return _tutor_payload(user, db)
+
+
+@router.post("/api/onboarding/tutor")
+def update_tutor(payload: dict, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    action = payload.get("action")
+    if action not in ("close", "resume"):
+        raise HTTPException(400, "Azione non valida")
+    if user.tutor_state != "completato":
+        user.tutor_state = "chiuso" if action == "close" else None
+        db.commit()
+    return _tutor_payload(user, db)
 
 
 @router.post("/api/onboarding/complete")

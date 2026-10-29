@@ -68,6 +68,9 @@ class User(Base):
     onboarding_completed: Mapped[bool] = mapped_column(Boolean, default=False)
     onboarding_completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     onboarding_dismissed: Mapped[bool] = mapped_column(Boolean, default=False)
+    # Tutor del primo giro: NULL = attivo, "chiuso" = uscito dall'utente, "completato" = primo giro programmato.
+    tutor_state: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    tutor_completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     password_hash: Mapped[str] = mapped_column(String(300), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
 

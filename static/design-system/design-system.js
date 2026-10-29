@@ -133,7 +133,26 @@
   }
   global.GFDesignSystem = Object.freeze({enhance,breakpoints,announce,createButton,createBadge,createEmptyState,createLoading,pageHeader});
   if(!doc) return;
+  // Campi obbligatori vuoti: scritta rossa dentro il campo (.gf-field[data-invalid]) al posto del fumetto del browser.
+  function fieldOf(control){ return control.closest ? control.closest('.gf-field') : null; }
+  function markInvalid(event){
+    const control = event.target, field = fieldOf(control);
+    if(!field) return;
+    event.preventDefault();
+    let error = field.querySelector('.gf-field__error');
+    if(!error){ error = doc.createElement('p'); error.className = 'gf-field__error'; error.dataset.gfAuto = ''; field.appendChild(error); }
+    if(error.dataset.gfAuto !== undefined) error.textContent = control.validity.valueMissing ? 'Campo obbligatorio' : control.validationMessage;
+    field.setAttribute('data-invalid','');
+    const form = control.form || field.closest('[role="dialog"],dialog') || doc;
+    if(form.querySelector(':invalid') === control) control.focus();
+  }
+  function clearInvalid(event){
+    const field = fieldOf(event.target);
+    if(field && field.hasAttribute('data-invalid') && event.target.checkValidity && event.target.checkValidity()) field.removeAttribute('data-invalid');
+  }
   function start(){
+    doc.addEventListener('invalid',markInvalid,true);
+    doc.addEventListener('input',clearInvalid,true);
     enhance(doc);
     let pending = false;
     if(global.MutationObserver){

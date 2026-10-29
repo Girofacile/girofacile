@@ -729,6 +729,69 @@ body[data-gf-surface] .gf-step.is-done{border-top-color:var(--gf-color-primary)}
 body[data-gf-surface] .gf-step.is-done::before{content:"✓";background:var(--gf-color-primary);border-color:var(--gf-color-primary);color:var(--gf-color-on-primary)}
 body[data-gf-surface] .gf-step[aria-current="step"]{border-top-color:var(--gf-color-primary)}
 body[data-gf-surface] .gf-step[aria-current="step"]::before{border-color:var(--gf-color-primary);color:var(--gf-color-primary)}
+/* Guida in sovrapposizione (tutor del primo giro, approvata il 29 ottobre 2026) -------
+   Barra verde in basso a sinistra + fumetto con freccia agganciato all'elemento [data-gf-tutor-target]
+   con CSS anchor positioning. Le tre parti sono popover: stanno sopra anche alle finestre.
+   Con [data-embedded] fumetto e barra restano nel flusso della pagina (catalogo). */
+body[data-gf-surface] [data-gf-tutor-target]{anchor-name:--gf-tutor-target}
+body[data-gf-surface] :is(.gf-coach__spot,.gf-coach__tip,.gf-coach__bar)[popover]{inset:auto;margin:0;overflow:visible}
+body[data-gf-surface] .gf-coach__spot[popover]{
+  position-anchor:--gf-tutor-target;pointer-events:none;width:auto;height:auto;
+  top:calc(anchor(top) - var(--gf-space-2));bottom:calc(anchor(bottom) - var(--gf-space-2));
+  left:calc(anchor(left) - var(--gf-space-2));right:calc(anchor(right) - var(--gf-space-2));
+  border:var(--gf-border-width-strong) solid var(--gf-color-success);border-radius:var(--gf-radius-md);background:transparent;
+  box-shadow:0 0 0 var(--gf-space-1) var(--gf-color-success-bg)
+}
+body[data-gf-surface] .gf-coach__tip{
+  width:min(calc(var(--gf-notifications-width) * .8),calc(100vw - var(--gf-space-8)));padding:var(--gf-space-4);border:0;
+  background:var(--gf-color-success);color:var(--gf-color-on-primary);border-radius:var(--gf-radius-lg);box-shadow:var(--gf-shadow-dialog);
+  font-size:var(--gf-font-md);line-height:var(--gf-line-height)
+}
+body[data-gf-surface] .gf-coach__tip[popover]{position-anchor:--gf-tutor-target;position-area:bottom;position-try-fallbacks:flip-block;margin:var(--gf-space-5)}
+body[data-gf-surface] .gf-coach__tip[data-embedded]{position:relative;margin-top:var(--gf-space-3)}
+body[data-gf-surface] .gf-coach__tip:is(:popover-open,[data-embedded]){display:grid;gap:var(--gf-space-2)}
+body[data-gf-surface] .gf-coach__tip::before{content:"";position:absolute;width:var(--gf-space-4);height:var(--gf-space-4);background:inherit;transform:rotate(45deg);top:calc(-1 * var(--gf-space-2));left:calc(50% - var(--gf-space-2))}
+body[data-gf-surface] .gf-coach__tip[data-placement="bottom-end"]{position-area:bottom span-left;margin-right:0}
+body[data-gf-surface] .gf-coach__tip[data-placement="bottom-end"]::before{left:auto;right:var(--gf-space-12)}
+body[data-gf-surface] .gf-coach__tip[data-placement="top-end"]{position-area:top span-left;margin-right:0}
+body[data-gf-surface] .gf-coach__tip[data-placement="top-end"]::before{top:auto;bottom:calc(-1 * var(--gf-space-2));left:auto;right:var(--gf-space-12)}
+/* Dentro una finestra modale il fumetto è solo un'indicazione: i suoi pulsanti non sarebbero cliccabili. */
+body[data-gf-surface] .gf-coach__tip[data-modal] .gf-coach__actions{display:none}
+body[data-gf-surface] .gf-coach__tip[data-placement="top"]{position-area:top}
+body[data-gf-surface] .gf-coach__tip[data-placement="top"]::before{top:auto;bottom:calc(-1 * var(--gf-space-2))}
+body[data-gf-surface] .gf-coach__tip[data-placement="right"]{position-area:right}
+body[data-gf-surface] .gf-coach__tip[data-placement="right"]::before{left:calc(-1 * var(--gf-space-2));top:calc(50% - var(--gf-space-2))}
+body[data-gf-surface] .gf-coach__tip[data-placement="left"]{position-area:left}
+body[data-gf-surface] .gf-coach__tip[data-placement="left"]::before{left:auto;right:calc(-1 * var(--gf-space-2));top:calc(50% - var(--gf-space-2))}
+body[data-gf-surface] .gf-coach__kicker{margin:0;font-size:var(--gf-font-xs);font-weight:var(--gf-weight-semibold);text-transform:uppercase;letter-spacing:.06em;opacity:.85}
+body[data-gf-surface] .gf-coach__title{margin:0;font:var(--gf-weight-bold) var(--gf-font-lg)/var(--gf-line-height-tight) var(--gf-font-display)}
+body[data-gf-surface] .gf-coach__text{margin:0;opacity:.92}
+body[data-gf-surface] .gf-coach__actions{display:flex;justify-content:flex-end;gap:var(--gf-space-2);margin-top:var(--gf-space-2)}
+body[data-gf-surface] :is(.gf-coach__button,.gf-coach__link){
+  min-height:var(--gf-control-height-sm);padding:0 var(--gf-space-4);border-radius:var(--gf-radius-pill);cursor:pointer;
+  font:var(--gf-weight-semibold) var(--gf-font-sm) var(--gf-font-family)
+}
+body[data-gf-surface] .gf-coach__button{border:0;background:var(--gf-color-on-primary);color:var(--gf-color-success)}
+body[data-gf-surface] .gf-coach__link{border:var(--gf-border-width) solid currentColor;background:transparent;color:var(--gf-color-on-primary);opacity:.85}
+body[data-gf-surface] :is(.gf-coach__button,.gf-coach__link):focus-visible{outline:var(--gf-border-width-strong) solid var(--gf-color-on-primary);outline-offset:var(--gf-border-width-strong)}
+body[data-gf-surface] .gf-coach__bar{
+  padding:var(--gf-space-3) var(--gf-space-5);border:0;border-radius:var(--gf-radius-pill);
+  background:var(--gf-color-success);color:var(--gf-color-on-primary);box-shadow:var(--gf-shadow-md);font-size:var(--gf-font-sm)
+}
+body[data-gf-surface] .gf-coach__bar[popover]{bottom:var(--gf-space-5);left:calc(var(--gf-sidebar-width) + var(--gf-space-6))}
+body[data-gf-surface] .gf-coach__bar:is(:popover-open,[data-embedded]){display:flex;align-items:center;gap:var(--gf-space-4)}
+body[data-gf-surface] .gf-coach__bar[data-embedded]{width:fit-content}
+body[data-gf-surface] .gf-coach__segments{display:flex;gap:var(--gf-space-1)}
+body[data-gf-surface] .gf-coach__segments>span{width:var(--gf-space-6);height:var(--gf-space-2);border-radius:var(--gf-radius-pill);background:var(--gf-color-on-primary);opacity:.3}
+body[data-gf-surface] .gf-coach__segments>span.is-done{opacity:1}
+body[data-gf-surface] .gf-coach__segments>span[aria-current="step"]{opacity:.6}
+/* Senza aggancio CSS: fumetto in basso a destra, riquadro sostituito dal contorno dell'elemento. */
+@supports not (position-anchor:--gf-tutor-target){
+  body[data-gf-surface] .gf-coach__spot{display:none !important}
+  body[data-gf-surface] .gf-coach__tip[popover]{right:var(--gf-space-6);bottom:var(--gf-space-6);margin:0}
+  body[data-gf-surface] .gf-coach__tip::before{display:none}
+  body[data-gf-surface] [data-gf-tutor-target]{outline:var(--gf-border-width-strong) solid var(--gf-color-success);outline-offset:var(--gf-space-1)}
+}
 /* Chat ------------------------------------------------------------------- */
 body[data-gf-surface] .gf-chat{display:flex;flex-direction:column;min-height:0}
 body[data-gf-surface] .gf-chat__messages{display:flex;flex-direction:column;gap:var(--gf-space-3);height:var(--gf-chat-height);overflow-y:auto;padding:var(--gf-space-4);background:var(--gf-color-surface-subtle)}

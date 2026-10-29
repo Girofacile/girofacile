@@ -1523,6 +1523,7 @@ async function initApp(){
   const companyReady = (async () => {
     await loadCompanyProfile(false);
     await loadOnboardingStatus(true);
+    window.GFTutor?.start();
   })();
   // A slow secondary section must not delay rendering the dashboard or the others.
   const results = await Promise.allSettled([
@@ -2616,7 +2617,7 @@ async function saveVehicle(){
     normalizeVehiclePlateInputV896();
     const plateEl=document.getElementById("vTarga");
     const payload = {nome:val("vNome"), targa:val("vTarga"), toll_class:val("vTollClass")||"B", marca:val("vMarca")||null, modello:val("vModello")||null, anno_immatricolazione:val("vAnnoImmatricolazione")?parseInt(val("vAnnoImmatricolazione")):null, cilindrata_cc:val("vCilindrata")?parseInt(val("vCilindrata")):null, potenza_kw:val("vPotenzaKw")?parseFloat(val("vPotenzaKw")):null, classe_euro:val("vClasseEuro")||null, carrozzeria:val("vCarrozzeria")||null, lookup_provider:plateEl?.dataset?.lookupProvider||null, lookup_at:plateEl?.dataset?.lookupAt||null, lookup_token:plateEl?.dataset?.lookupToken||null, alimentazione:val("vFuelType")||"gasolio", consumo_primario_100km:parseFloat(val("vConsumo")||0), consumo_kwh_100km:parseFloat(val("vConsumoKwh")||0), consumo_l_100km:parseFloat(val("vConsumo")||0), capacita_kg:parseFloat(val("vKg")||1000), capacita_colli:parseInt(val("vColli")||100), ha_sponda:boolVal("vSponda"), accesso_ztl:boolVal("vZtl"), photo_url:val("vPhotoUrl") || null};
-    if(!payload.nome){ alert("Inserisci il nome del mezzo"); return; }
+    if(!payload.nome){ document.getElementById("vNome")?.reportValidity(); return; }
     const id = val("vId");
     await api(id?`/api/vehicles/${id}`:"/api/vehicles", {method:id?"PUT":"POST", body:JSON.stringify(payload)});
     resetVehicleForm();
@@ -2683,7 +2684,7 @@ function editDriver(id){
 async function saveDriver(){
   return withButtonLoading("saveDriverBtn", "Salvataggio...", async()=>{
     const payload = {work_schedule:GFDriverSchedules.read("driverWorkSchedule"),nome:val("drNome"), cognome:val("drCognome"), telefono:val("drTelefono"), email:val("drEmail"), patente:val("drPatente"), scadenza_patente:val("drScadenzaPatente")||null, cqc:false, scadenza_cqc:null, adr:false, note:val("drNote"), photo_url:val("drPhotoUrl") || null};
-    if(!payload.nome){ alert("Inserisci almeno il nome dell'autista"); return; }
+    if(!payload.nome){ document.getElementById("drNome")?.reportValidity(); return; }
     const scheduleError=GFDriverSchedules.error(payload.work_schedule);if(scheduleError){alert(scheduleError);return;}
     const id = val("drId");
     const r = await api(id?`/api/drivers/${id}`:"/api/drivers", {method:id?"PUT":"POST", body:JSON.stringify(payload)});
@@ -4984,7 +4985,7 @@ async function loadOnboardingStatus(showIfNeeded=false){
   try{
     const data = await api("/api/onboarding/status");
     renderOnboardingStatus(data);
-    if(showIfNeeded && !data.completed && !data.dismissed){
+    if(showIfNeeded && !data.completed && !data.dismissed && !data.tutor_pending){
       setTimeout(()=>openOnboardingPanel(), 600);
     }
     return data;
