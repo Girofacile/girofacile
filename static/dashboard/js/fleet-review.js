@@ -48,7 +48,9 @@ function totals(plan,assignment,dirty){
  const cost=plan.routes.reduce((x,r)=>x+Number(r.fuel_cost||0),0);
  const ends=plan.routes.map(routeReturn).filter(Boolean).sort();
  const traffic=plan.routes.length&&plan.routes.every(withTraffic);
- const stat=(icon,t,label,value,sub,warning=false)=>'<div class="gf-stat-strip__cell"><span class="gf-stat-strip__icon" data-tone="'+t+'" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="'+ICONS[icon]+'"/></svg></span><span class="gf-stat-strip__label">'+esc(label)+'</span><strong class="gf-stat-strip__value">'+esc(value)+'</strong><small class="gf-stat-strip__unit">'+(warning?'<span class="gf-badge" data-status="warning">'+esc(sub)+'</span>':esc(sub))+'</small></div>';
+ // Avviso nella barra dei totali: «Stima approssimativa» resta breve, il testo completo è nel suggerimento.
+ const badge=sub=>sub==='Stima approssimativa'?'<span class="gf-badge" data-status="warning" title="Stima approssimativa: alcuni percorsi non hanno il calcolo stradale completo.">Stima</span>':'<span class="gf-badge" data-status="warning">'+esc(sub)+'</span>';
+ const stat=(icon,t,label,value,sub,warning=false)=>'<div class="gf-stat-strip__cell"><span class="gf-stat-strip__icon" data-tone="'+t+'" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="'+ICONS[icon]+'"/></svg></span><span class="gf-stat-strip__label">'+esc(label)+'</span><strong class="gf-stat-strip__value">'+esc(value)+'</strong><small class="gf-stat-strip__unit">'+(warning?badge(sub):esc(sub))+'</small></div>';
  return '<section class="gf-stat-strip" data-icons="side" aria-label="Totali della suddivisione">'+
  stat('box','1','Consegne',String(assignment.length),assignment.filter(x=>x==null).length+' non assegnate · '+gfCount(used,'mezzo','mezzi'),assignment.some(x=>x==null))+
  stat('road','2','Km totali',dirty?'—':km.toLocaleString('it-IT',{maximumFractionDigits:1})+' km',dirty?'Da ricalcolare':approximate?'Stima approssimativa':'Somma dei percorsi',dirty||approximate)+
@@ -62,7 +64,7 @@ function stop(plan,dirty,index,lane,position,busy){
  const timing=!dirty&&!moved?route?.result?.ordered?.[route.stop_indexes.indexOf(index)]:null;
  const badges=(w.late?'<span class="gf-badge" data-status="danger" data-fleet-warning="late" title="Con il traffico lo scarico finisce alle '+esc(w.late.fine_servizio)+', oltre la fascia '+esc(w.late.window.start)+'–'+esc(w.late.window.end)+'.">Fuori orario +'+esc(w.late.lateness_min)+' min</span>':'')+
  (w.tailLift?'<span class="gf-badge" data-kind="tail-lift" data-fleet-warning="tail-lift" title="Questa consegna richiede la sponda, ma questo mezzo non la possiede.">Sponda mancante</span>':'')+
- (w.ztl?'<span class="gf-badge" data-kind="ztl" data-fleet-warning="ztl" title="Questa consegna è in ZTL, ma questo mezzo non è abilitato all’accesso.">ZTL senza permesso</span>':'')+
+ (w.ztl?'<span class="gf-badge" data-kind="ztl" data-fleet-warning="ztl" title="Il cliente si trova in una zona a traffico limitato.">In ZTL</span>':'')+
  (moved&&lane!==null?'<span class="gf-badge" data-status="info">Spostata</span>':'');
  const others=plan.configuration.resources.map((_,i)=>i).filter(i=>i!==lane);
  const moveTo=plan.status==='preview'&&others.length?'<span><select class="gf-select" data-fleet-move-to="'+index+'" aria-label="Sposta '+esc(delivery.cliente_nome)+' in un altro giro"'+(busy?' disabled':'')+'><option value="" selected>Sposta in…</option>'+
@@ -200,7 +202,8 @@ function render(params){
  target.innerHTML='<section class="gf-stack" data-gap="lg" data-fleet-review>'+
  (saved?'<div class="gf-alert" data-status="warning" role="status"><div class="gf-alert__body"><strong class="gf-alert__title">Giri in bozza, programmazione non completata</strong><p>Puoi riprovare con “Pianifica giri”. Non verranno duplicati giri.</p></div></div>':'')+
  totals(plan,assignment,dirty)+
- '<div class="gf-grid" data-cols="main-side"><div class="gf-stack">'+table(plan,assignment,dirty)+lane(plan,assignment,dirty,selected,busy)+'</div>'+fixes(plan,assignment,dirty)+'</div>'+
+ // «Da sistemare» accanto al confronto (stessa altezza), il giro scelto con la mappa sotto, a tutta larghezza.
+ '<div class="gf-grid" data-cols="main-side">'+table(plan,assignment,dirty)+fixes(plan,assignment,dirty)+'</div>'+lane(plan,assignment,dirty,selected,busy)+
  '<div id="fleetMessage" role="status" tabindex="-1" class="gf-muted"></div>'+
  (dirty?'<div class="gf-savebar" data-floating role="region" aria-label="Fermate spostate, giri da ripianificare">'+(error?'<span role="alert" data-fleet-error><b>Ripianificazione non riuscita</b> · '+esc(error)+' Sposta di nuovo le fermate o annulla le modifiche.</span>':'<span><b>Fermate spostate</b> · Ripianifica i giri per aggiornare ordine, tempi e costi.</span>')+
  '<button type="button" class="gf-button" data-variant="secondary" data-size="sm" data-fleet-undo>Annulla modifiche</button><button type="button" class="gf-button" data-variant="primary" data-size="sm" data-fleet-recalc '+(busy?'disabled':'')+'>Ripianifica giri</button></div>':'')+

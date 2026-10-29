@@ -140,6 +140,8 @@ def main():
                 review.locator('[data-fleet-select="1"]').click()
                 if width > 1000:
                     # Trascinamento di una fermata sulla riga di un altro giro.
+                    # Il giro scelto sta sotto, a tutta larghezza: finestra più alta perché fermata e riga del giro siano visibili insieme.
+                    page.set_viewport_size({'width': width, 'height': 1400})
                     review.locator('tr[data-fleet-stop="3"] [data-fleet-drag]').drag_to(review.locator('tbody tr[data-fleet-lane="0"]'))
                     page.get_by_role('button', name='Sposta comunque', exact=True).click()
                     assert page.evaluate('window.__moves')[-1] == [3, 0]

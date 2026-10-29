@@ -135,7 +135,7 @@ test('ZTL warning follows the selected vehicle and coexists with the tail lift w
  Object.assign(params.plan.configuration.consegne[0],{ztl:true,sponda:true});
  params.plan.resource_capabilities=[{has_tail_lift:false,has_ztl_access:false},{has_tail_lift:true,has_ztl_access:true}];
  control.render(params);
- assert.match(page.innerHTML,/data-fleet-warning="ztl" title="Questa consegna è in ZTL, ma questo mezzo non è abilitato/);
+ assert.match(page.innerHTML,/data-fleet-warning="ztl" title="Il cliente si trova in una zona a traffico limitato.">In ZTL/);
  assert.match(page.innerHTML,/data-fleet-warning="tail-lift"/);
  control.render({...params,assignment:[1,1],dirty:true});
  assert.doesNotMatch(page.innerHTML,/data-fleet-warning="(ztl|tail-lift)"/);
