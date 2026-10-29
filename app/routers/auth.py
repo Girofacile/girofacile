@@ -980,9 +980,14 @@ def tutor_status(user: User = Depends(current_user), db: Session = Depends(get_d
 @router.post("/api/onboarding/tutor")
 def update_tutor(payload: dict, user: User = Depends(current_user), db: Session = Depends(get_db)):
     action = payload.get("action")
-    if action not in ("close", "resume"):
+    if action not in ("close", "resume", "restart"):
         raise HTTPException(400, "Azione non valida")
-    if user.tutor_state != "completato":
+    if action == "restart":
+        # Provvisorio per le prove della guida: riparte anche dopo il completamento.
+        user.tutor_state = None
+        user.tutor_completed_at = None
+        db.commit()
+    elif user.tutor_state != "completato":
         user.tutor_state = "chiuso" if action == "close" else None
         db.commit()
     return _tutor_payload(user, db)

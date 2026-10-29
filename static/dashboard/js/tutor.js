@@ -116,6 +116,12 @@
     try{status=await api('/api/onboarding/tutor',{method:'POST',body:JSON.stringify({action})});finished=false;schedule();}
     catch(e){toast(e.message||'Operazione non riuscita.');}
   }
+  // Provvisorio (prove della guida): riparte dal primo passo, anche dopo il completamento.
+  async function restart(){
+    await update('restart');
+    if(status?.state==='completato'){toast('Questo account ha già un giro programmato: la guida risulta completata. Per rifarla da capo usa un account nuovo.');return;}
+    showTab('dashboard');toast('Guida al primo giro riavviata.');
+  }
   function close(){
     if(finished){finished=false;hide();return;}
     if(confirm('Uscire dalla guida al primo giro? Potrai riprenderla da Azienda.'))update('close');
@@ -136,5 +142,5 @@
       .observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class','hidden','open','disabled']});
     refresh();
   }
-  window.GFTutor={start,refresh,close,resume:()=>update('resume'),state:()=>status};
+  window.GFTutor={start,refresh,close,restart,resume:()=>update('resume'),state:()=>status};
 })();

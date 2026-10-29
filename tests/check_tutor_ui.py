@@ -51,7 +51,7 @@ def open_dashboard(browser, store, errors):
             return
         body = json.loads(route.request.post_data or '{}') if method != 'GET' else {}
         if path == '/api/onboarding/tutor':
-            if method == 'POST' and store['state'] != 'completato':
+            if method == 'POST' and (store['state'] != 'completato' or body['action'] == 'restart'):
                 store['state'] = 'chiuso' if body['action'] == 'close' else 'attivo'
                 store['tutor_posts'].append(body['action'])
             route.fulfill(json=tutor(store)); return
@@ -208,6 +208,20 @@ def main():
             page.locator('#tutorResumeBtn').click()
             tip_on(page, '#app .gf-sidebar__item[data-tab="depositi"]')
             assert store['tutor_posts'] == ['close', 'resume']
+            page.close()
+
+            # Pulsante provvisorio in Impostazioni: la guida completata riparte dal primo passo mancante.
+            store = dict(state='completato', deposits=[], vehicles=[], drivers=[], orders=0, route=None, tutor_posts=[])
+            page = open_dashboard(browser, store, errors)
+            page.wait_for_timeout(500)
+            assert page.locator('#coachBar').is_hidden()
+            # Guida completata: si riapre da sola la finestra di configurazione già esistente.
+            page.locator('#onboardingOverlay').wait_for(state='visible')
+            page.evaluate('closeOnboardingPanel(); showTab("settings")')
+            page.screenshot(path=str(output / '7-impostazioni-riavvia.png'))
+            page.locator('#tutorRestartBtn').click()
+            assert 'Depositi' in tip_on(page, '#app .gf-sidebar__item[data-tab="depositi"]')
+            assert store['tutor_posts'] == ['restart'] and page.locator('#tab-dashboard').is_visible()
             page.close()
         finally:
             browser.close()

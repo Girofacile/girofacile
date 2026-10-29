@@ -46,6 +46,8 @@ def test_tutor_advances_on_real_data_and_completes_with_first_programmed_route(e
     # Completato resta completato: non si riapre né si chiude.
     assert client.post('/api/onboarding/tutor', json={'action': 'resume'}).json()['state'] == 'completato'
     assert client.get('/api/onboarding/status').json()['tutor_pending'] is False
+    # Riavvio (provvisorio): riparte, ma con un giro già programmato risulta subito completata.
+    assert client.post('/api/onboarding/tutor', json={'action': 'restart'}).json()['state'] == 'completato'
 
 
 def test_tutor_close_and_resume_are_saved_on_server(env):
@@ -57,6 +59,10 @@ def test_tutor_close_and_resume_are_saved_on_server(env):
     assert owner.tutor_state == 'chiuso'
     assert client.get('/api/onboarding/tutor').json()['state'] == 'chiuso'
     assert client.post('/api/onboarding/tutor', json={'action': 'resume'}).json()['state'] == 'attivo'
+    owner.tutor_state = 'completato'
+    db.commit()
+    assert client.post('/api/onboarding/tutor', json={'action': 'restart'}).json()['state'] == 'attivo'
+    assert owner.tutor_state is None and owner.tutor_completed_at is None
     assert client.post('/api/onboarding/tutor', json={'action': 'boh'}).status_code == 400
 
 
