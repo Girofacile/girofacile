@@ -73,6 +73,15 @@ def test_tutor_close_and_resume_are_saved_on_server(env):
     db.commit()
     assert client.post('/api/onboarding/tutor', json={'action': 'restart'}).json()['state'] == 'attivo'
     assert owner.tutor_state is None and owner.tutor_completed_at is None
+    # «Avanti»: il passo corrente si salta e resta saltato; saltando l'ultimo la guida termina.
+    owner.company_name, owner.company_address = 'Panificio Rossi', 'Via Roma 1'
+    db.commit()
+    data = client.post('/api/onboarding/tutor', json={'action': 'skip'}).json()
+    assert data['current'] == 'vehicle' and data['steps'][1]['skipped'] is True
+    assert client.get('/api/onboarding/tutor').json()['current'] == 'vehicle'
+    for _ in range(5):
+        data = client.post('/api/onboarding/tutor', json={'action': 'skip'}).json()
+    assert data['state'] == 'completato' and data['current'] is None
     assert client.post('/api/onboarding/tutor', json={'action': 'boh'}).status_code == 400
 
 

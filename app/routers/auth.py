@@ -952,8 +952,9 @@ def _tutor_models():
 
 def _tutor_payload(user: User, db: Session) -> dict:
     models = _tutor_models()
-    # Modalità prova (provvisoria): dopo un riavvio contano solo gli elementi creati dopo.
+    # tutor_baseline: ultimi id al riavvio in modalità prova (provvisoria) e passi saltati con «Avanti».
     baseline = user.tutor_baseline or {}
+    skipped = set(baseline.get("skipped") or [])
 
     def created(key):
         model = models[key]
@@ -969,13 +970,14 @@ def _tutor_payload(user: User, db: Session) -> dict:
         "route": routes.first() is not None,
         "program": routes.filter(RoutePlan.status != "bozza").first() is not None,
     }
-    if done["program"] and user.tutor_state != "completato":
+    finished = done["program"] or all(done[key] or key in skipped for key, _ in TUTOR_STEPS)
+    if finished and user.tutor_state != "completato":
         user.tutor_state = "completato"
         user.tutor_completed_at = utc_now()
         user.tutor_baseline = None
         db.commit()
-    steps = [{"key": key, "label": label, "done": done[key]} for key, label in TUTOR_STEPS]
-    current = next((step["key"] for step in steps if not step["done"]), None)
+    steps = [{"key": key, "label": label, "done": done[key], "skipped": key in skipped and not done[key]} for key, label in TUTOR_STEPS]
+    current = None if user.tutor_state == "completato" else next((s["key"] for s in steps if not s["done"] and not s["skipped"]), None)
     return {
         "state": user.tutor_state or "attivo",
         "steps": steps,
@@ -993,9 +995,17 @@ def tutor_status(user: User = Depends(current_user), db: Session = Depends(get_d
 @router.post("/api/onboarding/tutor")
 def update_tutor(payload: dict, user: User = Depends(current_user), db: Session = Depends(get_db)):
     action = payload.get("action")
-    if action not in ("close", "resume", "restart"):
+    if action not in ("close", "resume", "restart", "skip"):
         raise HTTPException(400, "Azione non valida")
-    if action == "restart":
+    if action == "skip":
+        # «Avanti»: il passo corrente si salta e la guida passa al successivo.
+        current = _tutor_payload(user, db)["current"]
+        if current and user.tutor_state != "completato":
+            baseline = dict(user.tutor_baseline or {})
+            baseline["skipped"] = sorted(set(baseline.get("skipped") or []) | {current})
+            user.tutor_baseline = baseline
+            db.commit()
+    elif action == "restart":
         # Provvisorio per le prove della guida: riparte da zero ignorando i dati già presenti.
         user.tutor_state = None
         user.tutor_completed_at = None

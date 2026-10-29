@@ -27,8 +27,9 @@ def tutor(store):
                 orders=store['orders'] > 0, route=store['route'] is not None, program=store['route'] == 'programmato')
     if done['program']:
         store['state'] = 'completato'
-    steps = [dict(key=k, label=label, done=done[k]) for k, label in LABELS]
-    current = next((s['key'] for s in steps if not s['done']), None)
+    skipped = store.setdefault('skipped', [])
+    steps = [dict(key=k, label=label, done=done[k], skipped=k in skipped) for k, label in LABELS]
+    current = next((s['key'] for s in steps if not s['done'] and not s['skipped']), None)
     return dict(state=store['state'], steps=steps, current=current, progress=sum(done.values()), total=7)
 
 
@@ -51,12 +52,15 @@ def open_dashboard(browser, store, errors):
             return
         body = json.loads(route.request.post_data or '{}') if method != 'GET' else {}
         if path == '/api/onboarding/tutor':
+            if method == 'POST' and body['action'] == 'skip':
+                store['skipped'].append(tutor(store)['current']); store['tutor_posts'].append('skip')
+                route.fulfill(json=tutor(store)); return
             if method == 'POST' and (store['state'] != 'completato' or body['action'] == 'restart'):
                 store['state'] = 'chiuso' if body['action'] == 'close' else 'attivo'
                 store['tutor_posts'].append(body['action'])
             route.fulfill(json=tutor(store)); return
         if path == '/api/onboarding/status':
-            route.fulfill(json=dict(completed=False, dismissed=False, tutor_pending=store['state'] != 'completato',
+            route.fulfill(json=dict(completed=False, dismissed=store['state'] == 'completato', tutor_pending=store['state'] != 'completato',
                                     workspace_operational=True, steps=[], progress=0, total=2, percent=0)); return
         for kind in ('deposits', 'vehicles', 'drivers'):
             if path == f'/api/{kind}':
@@ -210,14 +214,25 @@ def main():
             assert store['tutor_posts'] == ['close', 'resume']
             page.close()
 
+            # «Avanti»: si salta il deposito senza crearlo e il fumetto passa ai mezzi; «Esci» a sinistra.
+            store = dict(state='attivo', deposits=[], vehicles=[], drivers=[], orders=0, route=None, tutor_posts=[])
+            page = open_dashboard(browser, store, errors)
+            tip_on(page, '#app .gf-sidebar__item[data-tab="depositi"]')
+            assert page.locator('#coachExit').inner_text() == 'Esci' and page.locator('#coachNext').inner_text() == 'Avanti'
+            exit_box, next_box = page.locator('#coachExit').bounding_box(), page.locator('#coachNext').bounding_box()
+            assert exit_box['x'] < next_box['x']
+            page.screenshot(path=str(output / '8-esci-avanti.png'))
+            page.locator('#coachNext').click()
+            assert 'Mezzi' in tip_on(page, '#app .gf-sidebar__item[data-tab="mezzi"]')
+            assert store['tutor_posts'] == ['skip'] and 'Passo 3 di 7' in page.locator('#coachBar').inner_text()
+            page.close()
+
             # Pulsante provvisorio in Impostazioni: la guida completata riparte dal primo passo mancante.
             store = dict(state='completato', deposits=[], vehicles=[], drivers=[], orders=0, route=None, tutor_posts=[])
             page = open_dashboard(browser, store, errors)
             page.wait_for_timeout(500)
             assert page.locator('#coachBar').is_hidden()
-            # Guida completata: si riapre da sola la finestra di configurazione già esistente.
-            page.locator('#onboardingOverlay').wait_for(state='visible')
-            page.evaluate('closeOnboardingPanel(); showTab("settings")')
+            page.evaluate('showTab("settings")')
             page.screenshot(path=str(output / '7-impostazioni-riavvia.png'))
             page.locator('#tutorRestartBtn').click()
             assert 'Depositi' in tip_on(page, '#app .gf-sidebar__item[data-tab="depositi"]')

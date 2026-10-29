@@ -767,6 +767,8 @@ body[data-gf-surface] .gf-coach__kicker{margin:0;font-size:var(--gf-font-xs);fon
 body[data-gf-surface] .gf-coach__title{margin:0;font:var(--gf-weight-bold) var(--gf-font-lg)/var(--gf-line-height-tight) var(--gf-font-display)}
 body[data-gf-surface] .gf-coach__text{margin:0;opacity:.92}
 body[data-gf-surface] .gf-coach__actions{display:flex;justify-content:flex-end;gap:var(--gf-space-2);margin-top:var(--gf-space-2)}
+/* «Esci» a sinistra, «Avanti» (bianco) a destra. */
+body[data-gf-surface] .gf-coach__link{margin-right:auto}
 body[data-gf-surface] :is(.gf-coach__button,.gf-coach__link){
   min-height:var(--gf-control-height-sm);padding:0 var(--gf-space-4);border-radius:var(--gf-radius-pill);cursor:pointer;
   font:var(--gf-weight-semibold) var(--gf-font-sm) var(--gf-font-family)

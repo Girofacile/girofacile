@@ -33,7 +33,7 @@
 
 <!-- Shared GiroFacile design system; legacy sheets retain feature layout. -->
 <link rel="stylesheet" href="/static/design-system/theme.css?v=gf_landing_20261028">
-<link rel="stylesheet" href="/static/design-system/components.css?v=gf_tutor_20261029">
+<link rel="stylesheet" href="/static/design-system/components.css?v=gf_tutor_avanti_20261029">
 <link rel="stylesheet" href="/static/design-system/layout.css?v=gf_sidebar_fit_20261025">
 <link rel="stylesheet" href="/static/design-system/workspace.css?v=gf_selection_20261016">
 <link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007_reference_2">
@@ -1611,7 +1611,7 @@
 <script src="/static/dashboard/js/selected-customer-addresses.js?v=gf_customer_selected_addresses_20261020"></script>
 <script src="/static/dashboard/js/order-planning.js?v=gf_bozze_20261026"></script>
 <script src="/static/dashboard/js/planning-drafts.js?v=gf_bozze_stile_20261027b"></script>
-<script src="/static/dashboard/js/tutor.js?v=gf_tutor_prova_20261029"></script>
+<script src="/static/dashboard/js/tutor.js?v=gf_tutor_avanti_20261029"></script>
 
 <script>
 function toggleLoginPassword(){
@@ -1636,7 +1636,8 @@ function toggleLoginPassword(){
     <h2 id="coachTitle" class="gf-coach__title"></h2>
     <p id="coachText" class="gf-coach__text"></p>
     <div class="gf-coach__actions">
-      <button id="coachExit" type="button" class="gf-coach__link" onclick="GFTutor.close()">Esci dalla guida</button>
+      <button id="coachExit" type="button" class="gf-coach__link" onclick="GFTutor.close()">Esci</button>
+      <button id="coachNext" type="button" class="gf-coach__button" onclick="GFTutor.skip()">Avanti</button>
       <button id="coachDone" type="button" class="gf-coach__button" hidden onclick="GFTutor.close()">Chiudi</button>
     </div>
   </section>

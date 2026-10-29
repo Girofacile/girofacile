@@ -97,10 +97,12 @@
     el('coachTitle').textContent=step.title;
     el('coachText').textContent=step.text;
     el('coachExit').hidden=finished;
+    el('coachNext').hidden=finished;
+    el('coachNext').textContent=index===steps.length-1?'Termina':'Avanti';
     el('coachDone').hidden=!finished;
     el('coachCount').textContent=finished?`${status.total} di ${status.total}`:`Passo ${index+1} di ${steps.length}`;
     el('coachStep').textContent=finished?'Completato':steps[index]?.label||'';
-    el('coachSegments').replaceChildren(...steps.map((item,i)=>{const s=document.createElement('span');if(item.done)s.className='is-done';if(i===index)s.setAttribute('aria-current','step');return s;}));
+    el('coachSegments').replaceChildren(...steps.map((item,i)=>{const s=document.createElement('span');if(item.done||item.skipped)s.className='is-done';if(i===index)s.setAttribute('aria-current','step');return s;}));
     toggle(spot,!!node);toggle(bar,true);toggle(tip,true);
   }
   function schedule(){if(!scheduled){scheduled=true;requestAnimationFrame(render);}}
@@ -122,9 +124,14 @@
     if(status?.state==='completato'){toast('Questo account ha già un giro programmato: la guida risulta completata. Per rifarla da capo usa un account nuovo.');return;}
     showTab('dashboard');toast('Guida al primo giro riavviata.');
   }
+  // «Avanti»: salta il passo corrente (salvato sul server) e passa al successivo.
+  async function skip(){
+    await update('skip');
+    if(status?.state==='completato'){hide();toast('Guida terminata. Puoi riavviarla da Impostazioni.');}
+  }
   function close(){
     if(finished){finished=false;hide();return;}
-    if(confirm('Uscire dalla guida al primo giro? Potrai riprenderla da Azienda.'))update('close');
+    if(confirm('Uscire dalla guida al primo giro? Potrai riprenderla da Impostazioni.'))update('close');
   }
   function start(){
     if(started||window.GFCompanyAccess?.isCollaborator()||!HTMLElement.prototype.showPopover||!el('coachTip'))return;
@@ -142,5 +149,5 @@
       .observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class','hidden','open','disabled']});
     refresh();
   }
-  window.GFTutor={start,refresh,close,restart,resume:()=>update('resume'),state:()=>status};
+  window.GFTutor={start,refresh,close,restart,skip,resume:()=>update('resume'),state:()=>status};
 })();
