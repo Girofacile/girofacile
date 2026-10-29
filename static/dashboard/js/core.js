@@ -1183,6 +1183,12 @@ async function checkLogin(){
       return;
     }
     if(me.authenticated){
+      // Foto, nome ed email salvati nel browser sono dell'ultimo account collegato: con un altro account si scartano.
+      const previousAccount = localStorage.getItem("girofacile_account_name");
+      if(previousAccount && me.username && previousAccount !== me.username){
+        ["girofacile_profile_photo","girofacile_profile_name","girofacile_profile_role","girofacile_company_name","girofacile_profile_email"].forEach(key=>localStorage.removeItem(key));
+        profilePhotoData = "";
+      }
       currentSessionUser = me;
       setSectorConfigV47(me);
       showGestionaleAfterLogin(false);
@@ -1465,15 +1471,18 @@ async function signup(){
       has_ztl: signupBool("signupZtl"),
       needs_tail_lift: signupBool("signupTailLift")
     })});
-    toggleSignup(false);
-    await checkLogin();
-    toast("Benvenuto in GiroFacile! Azienda configurata e prova gratuita avviata.");
+    // Nuovo account: si riparte da una pagina pulita, senza dati rimasti in memoria da un accesso precedente.
+    window.location.href = "/dashboard";
   }catch(e){ alert(e.message); }
   finally{
     const createBtn = document.getElementById("signupCreateBtn");
     if(createBtn){ createBtn.disabled = false; createBtn.textContent = "Crea account gratuito →"; }
   }
 }
+// Un altro account collegato in un'altra scheda: questa si ricarica per non mescolare i dati dei due account.
+window.addEventListener("storage", event => {
+  if(event.key === "girofacile_account_name" && event.newValue && currentSessionUser?.username && event.newValue !== currentSessionUser.username) location.reload();
+});
 async function login(){
   try{
     const res = await api("/api/login", {method:"POST", body:JSON.stringify({username:val("loginUser"), password:val("loginPass")} )});
