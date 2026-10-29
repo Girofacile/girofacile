@@ -98,8 +98,17 @@ def main():
                 for i in range(2):
                     page.locator(f'#fleetVehicle{i}').select_option(str(vehicles[i]['id']))
                     page.locator(f'#fleetDriver{i}').select_option(str(drivers[i]['id']))
-                page.locator('#fleetResources [data-schedule-editor] summary').first.click()
-                assert page.locator('#fleetDriverSchedule0Break0Start').input_value()=='08:15'
+                # Turno e pausa sono già visibili nella card, con gli orari predefiniti dell'autista.
+                assert page.locator('#fleetBreakStart0').input_value()=='08:15'
+                assert page.locator('#fleetShiftStart0').is_visible() and page.locator('#fleetBreakEnd0').is_visible()
+                # Costo carburante: «Automatico» di default; scrivendo un prezzo si passa a manuale.
+                auto = page.locator('[data-fuel-auto="0"]')
+                assert auto.get_attribute('aria-pressed')=='true'
+                auto.click(); assert page.locator('[data-fuel-auto="0"]').get_attribute('aria-pressed')=='false'
+                page.locator('#fleetFuel0').fill('1.90'); page.locator('#fleetFuel0').blur()
+                assert page.evaluate("GFFleetPlanning.config().fleet_resources[0].energy_price_mode")=='manual'
+                page.locator('[data-fuel-auto="0"]').click()
+                assert page.evaluate("GFFleetPlanning.config().fleet_resources[0].energy_price_mode")=='automatic'
                 page.locator('#fleetStrategy').select_option('balanced')
                 assert page.evaluate('routePlanningMissingFieldsV68()')==[]
                 page.screenshot(path=str(output/f'fleet-setup-{width}.png'),full_page=True)

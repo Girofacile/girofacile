@@ -32,7 +32,7 @@ def route_data(data,resource,rows,index,driver_name=None):
     # Nome automatico di ogni giro: base (la data) · autista; senza autista resta il numero del giro.
     values=data.model_dump(exclude={'resources','strategy','consegne'})
     values.update(nome=f'{data.nome or "Giro consegne"} · {driver_name or index+1}',vehicle_id=resource.vehicle_id,
-                  driver_id=resource.driver_id,driver_schedule=resource.driver_schedule,consegne=rows,energy_price_mode='manual',
+                  driver_id=resource.driver_id,driver_schedule=resource.driver_schedule,consegne=rows,energy_price_mode=resource.energy_price_mode,
                   energy_price_primary=resource.energy_price_primary,energy_price_electric=resource.energy_price_electric)
     return RoutePlanIn.model_validate(values)
 

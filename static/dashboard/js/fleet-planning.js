@@ -4,7 +4,7 @@
   const el=id=>document.getElementById(id);
   let resources=[],plan=null,busy=false,changedAssignments=false,draftAssignments=null,manualAdjusted=false,acknowledgedWarning=false,reviseError='';
   const active=()=>window.GFPlanAccess?.has('has_fleet_planning')===true && el('planningMode')?.value==='fleet';
-  const blank=()=>({vehicle_id:0,driver_id:0,energy_price_primary:1.75,energy_price_electric:0.30});
+  const blank=()=>({vehicle_id:0,driver_id:0,energy_price_primary:1.75,energy_price_electric:0.30,energy_price_mode:'automatic'});
   const can=permission=>!window.GFCompanyAccess||GFCompanyAccess.can(permission);
   const config=()=>({planning_mode:active()?'fleet':'single',fleet_strategy:el('fleetStrategy')?.value||'efficient',fleet_resources:active()?resources.filter(r=>r.vehicle_id&&r.driver_id):[]});
   // Un mezzo o un autista già scelto in un'altra card non si può scegliere di nuovo.
@@ -25,16 +25,42 @@
       select.innerHTML=options(field==='vehicle_id'?'vehicles':'drivers',resources[i][field],i);
     });
   }
+  // Turno, pausa e costo carburante direttamente nella card (niente pannelli da aprire).
+  const vehicleOf=id=>(typeof vehiclesCache!=='undefined'?vehiclesCache:[]).find(v=>v.id===Number(id));
+  const scheduleOf=r=>r.driver_schedule??globalThis.GFDriverSchedules?.defaults(r.driver_id)??{start:null,end:null,breaks:[]};
+  function autoPrice(r){
+    const vehicle=vehicleOf(r.vehicle_id),type=vehicle?.alimentazione||'gasolio';
+    return type==='elettrico'?null:(typeof gfFuelPricesV895!=='undefined'?gfFuelPricesV895?.[fuelBaseTypeV895(type)]?.price:null)||null;
+  }
+  function extras(r,i){
+    const schedule=scheduleOf(r),pause=(schedule.breaks||[])[0]||{},type=vehicleOf(r.vehicle_id)?.alimentazione||'gasolio';
+    const time=(id,key,value,label)=>`<input class="gf-input" id="${id}" type="time" data-index="${i}" data-schedule="${key}" value="${esc(value||'')}" aria-label="${label}">`;
+    const error=globalThis.GFDriverSchedules?.error(schedule)||'';
+    const electric=type==='elettrico',plugin=type.startsWith('ibrido_plugin'),automatic=r.energy_price_mode==='automatic'&&!electric;
+    const fuel=electric?'':`<div class="gf-field"><span class="gf-field__label" id="fleetFuelLabel${i}">Costo carburante</span><div class="gf-cluster"><button type="button" class="gf-chip" data-fuel-auto="${i}" aria-pressed="${automatic}" title="Prezzo medio nazionale aggiornato">Automatico</button><input class="gf-input" id="fleetFuel${i}" type="number" min="0.01" step="0.01" data-index="${i}" data-field="energy_price_primary" value="${r.energy_price_primary}" aria-labelledby="fleetFuelLabel${i}" ${automatic?'readonly':''}></div></div>`;
+    const energy=electric||plugin?field('fleetElectric'+i,'Energia elettrica (€/kWh)',`<input class="gf-input" id="fleetElectric${i}" type="number" min="0.01" step="0.01" data-index="${i}" data-field="energy_price_electric" value="${r.energy_price_electric}">`):'';
+    return `<div class="gf-grid" data-cols="2"><div class="gf-field"><span class="gf-field__label">Turno</span><div class="gf-stack" data-gap="sm">${time('fleetShiftStart'+i,'start',schedule.start,'Inizio turno')}${time('fleetShiftEnd'+i,'end',schedule.end,'Fine turno')}</div></div>`
+      +`<div class="gf-field"><span class="gf-field__label">Orario di pausa</span><div class="gf-stack" data-gap="sm">${time('fleetBreakStart'+i,'break-start',pause.start,'Inizio pausa')}${time('fleetBreakEnd'+i,'break-end',pause.end,'Fine pausa')}</div></div></div>`
+      +`<div class="gf-field" ${error?'data-invalid':''} data-schedule-state="${i}"><p class="gf-field__error" role="alert">${esc(error)}</p></div>${fuel}${energy}`;
+  }
+  // In automatico il prezzo è la media del carburante del mezzo; senza dato resta l'ultimo prezzo.
+  async function applyAutoPrices(){
+    if(!resources.some(r=>r.energy_price_mode==='automatic'))return;
+    if(typeof gfFuelPricesV895!=='undefined'&&!gfFuelPricesV895)await loadAutomaticFuelPricesV895();
+    let changed=false;
+    resources.forEach((r,i)=>{const price=r.energy_price_mode==='automatic'&&autoPrice(r);if(price&&price!==r.energy_price_primary){r.energy_price_primary=price;changed=true;const input=el('fleetFuel'+i);if(input)input.value=price;}});
+    if(changed){updateRoutePlanningGateV68();updateDashboardStats();}
+  }
   const vehicleName=id=>(resourcesAvailabilityCache?.vehicles||[]).find(v=>v.id===Number(id))?.nome||'Nuovo mezzo';
   function refresh(){
     if(!el('fleetResources'))return;
     const field=(id,label,control)=>`<label class="gf-field" for="${id}"><span class="gf-field__label">${label}</span>${control}</label>`;
     // Una card per mezzo (variante B): turno, pause, durata e costi restano chiusi finché servono.
     const remove=i=>`<button type="button" class="gf-icon-button" data-remove="${i}" aria-label="Rimuovi mezzo e autista ${i+1}" title="Rimuovi"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>`;
-    el('fleetResources').innerHTML=resources.map((r,i)=>`<article class="gf-card gf-stack" data-gap="sm" aria-label="Mezzo e autista ${i+1}"><header class="gf-cluster" data-justify="between"><span class="gf-cluster"><span class="gf-stop__number">${i+1}</span><strong data-fleet-name>${esc(vehicleName(r.vehicle_id))}</strong></span>${resources.length>2?remove(i):''}</header>${field('fleetVehicle'+i,'Mezzo',`<select class="gf-select" id="fleetVehicle${i}" data-index="${i}" data-field="vehicle_id">${options('vehicles',r.vehicle_id,i)}</select>`)}${field('fleetDriver'+i,'Autista',`<select class="gf-select" id="fleetDriver${i}" data-index="${i}" data-field="driver_id">${options('drivers',r.driver_id,i)}</select>`)}<details data-schedule-editor><summary class="gf-button" data-variant="ghost" data-size="sm">Modifica turno e pause di oggi</summary><div id="fleetDriverSchedule${i}"></div></details><details><summary class="gf-button" data-variant="ghost" data-size="sm">Costi carburante ed energia</summary><div class="gf-form-grid">${field('fleetFuel'+i,'Carburante (€/litro o €/kg)',`<input class="gf-input" id="fleetFuel${i}" type="number" min="0.01" step="0.01" data-index="${i}" data-field="energy_price_primary" value="${r.energy_price_primary}">`)}${field('fleetElectric'+i,'Energia elettrica (€/kWh)',`<input class="gf-input" id="fleetElectric${i}" type="number" min="0.01" step="0.01" data-index="${i}" data-field="energy_price_electric" value="${r.energy_price_electric}">`)}</div></details></article>`).join('')
+    el('fleetResources').innerHTML=resources.map((r,i)=>`<article class="gf-card gf-stack" data-gap="sm" aria-label="Mezzo e autista ${i+1}"><header class="gf-cluster" data-justify="between"><span class="gf-cluster"><span class="gf-stop__number">${i+1}</span><strong data-fleet-name>${esc(vehicleName(r.vehicle_id))}</strong></span>${resources.length>2?remove(i):''}</header>${field('fleetVehicle'+i,'Mezzo',`<select class="gf-select" id="fleetVehicle${i}" data-index="${i}" data-field="vehicle_id">${options('vehicles',r.vehicle_id,i)}</select>`)}${field('fleetDriver'+i,'Autista',`<select class="gf-select" id="fleetDriver${i}" data-index="${i}" data-field="driver_id">${options('drivers',r.driver_id,i)}</select>`)}${extras(r,i)}</article>`).join('')
       +`<div class="gf-card gf-stack" data-variant="info" data-gap="sm"><strong>Un altro mezzo?</strong><span class="gf-muted">Aggiungi una card vuota e scegli tu mezzo e autista.</span><span><button type="button" class="gf-button" data-variant="secondary" id="fleetAdd">+ Aggiungi mezzo</button></span></div>`;
     el('fleetAdd').disabled=resources.length>=10;
-    globalThis.GFDriverSchedules?.fleet(resources);
+    applyAutoPrices();
   }
   function modeChanged(notify=true){
     if(!window.GFPlanAccess?.has('has_fleet_planning'))el('planningMode').value='single';
@@ -181,12 +207,26 @@
   }
   document.addEventListener('change',e=>{
     if(e.target.id==='planningMode'){modeChanged();refreshResourceAvailability();}
-    if(e.target.dataset.field&&el('fleetResources').contains(e.target)){resources[Number(e.target.dataset.index)][e.target.dataset.field]=Number(e.target.value);if(e.target.dataset.field==='vehicle_id'){const title=e.target.closest('article')?.querySelector('[data-fleet-name]');if(title)title.textContent=vehicleName(e.target.value);}if(e.target.dataset.field==='driver_id'){resources[Number(e.target.dataset.index)].driver_schedule=null;GFDriverSchedules.fleet(resources);}if(['vehicle_id','driver_id'].includes(e.target.dataset.field))syncChoices();updateRoutePlanningGateV68();globalThis.GFOrderPlanning?.changed();}
+    if(e.target.dataset.field&&el('fleetResources').contains(e.target)){resources[Number(e.target.dataset.index)][e.target.dataset.field]=Number(e.target.value);if(e.target.dataset.field==='vehicle_id'){const title=e.target.closest('article')?.querySelector('[data-fleet-name]');if(title)title.textContent=vehicleName(e.target.value);}if(e.target.dataset.field==='driver_id')resources[Number(e.target.dataset.index)].driver_schedule=null;if(e.target.dataset.field==='energy_price_primary'){resources[Number(e.target.dataset.index)].energy_price_mode='manual';e.target.closest('article')?.querySelector('[data-fuel-auto]')?.setAttribute('aria-pressed','false');}if(['vehicle_id','driver_id'].includes(e.target.dataset.field))refresh();updateRoutePlanningGateV68();globalThis.GFOrderPlanning?.changed();}
+    // Turno e pausa scritti nella card: diventano il turno di oggi dell'autista (la prima pausa).
+    if(e.target.dataset.schedule&&el('fleetResources').contains(e.target)){
+      const i=Number(e.target.dataset.index),r=resources[i],schedule=JSON.parse(JSON.stringify(scheduleOf(r)));
+      const key=e.target.dataset.schedule,value=e.target.value||null;
+      if(key==='start'||key==='end')schedule[key]=value;
+      else{schedule.breaks=schedule.breaks||[];schedule.breaks[0]={...(schedule.breaks[0]||{start:'',end:''}),[key==='break-start'?'start':'end']:value||''};if(!schedule.breaks[0].start&&!schedule.breaks[0].end)schedule.breaks.shift();}
+      r.driver_schedule=schedule;
+      const message=GFDriverSchedules.error(schedule),state=el('fleetResources').querySelector(`[data-schedule-state="${i}"]`);
+      if(state){state.toggleAttribute('data-invalid',!!message);state.querySelector('.gf-field__error').textContent=message;}
+      updateRoutePlanningGateV68();globalThis.GFOrderPlanning?.changed();
+    }
     if(e.target.id==='fleetStrategy')globalThis.GFOrderPlanning?.changed();
     if(e.target.dataset.stop!==undefined&&el('routePreviewResult').contains(e.target)){changedAssignments=true;notice('Fermate spostate: premi “Ripianifica giri” per verificare i nuovi giri.');}
   });
   document.addEventListener('click',e=>{
     const remove=e.target.closest('[data-remove]'),button=e.target.closest('[data-action]'),open=e.target.closest('[data-open]');
+    // «Automatico»: torna al prezzo medio del carburante del mezzo.
+    const auto=e.target.closest('[data-fuel-auto]');
+    if(auto&&el('fleetResources').contains(auto)){const r=resources[Number(auto.dataset.fuelAuto)];r.energy_price_mode=r.energy_price_mode==='automatic'?'manual':'automatic';refresh();globalThis.GFOrderPlanning?.changed();}
     if(e.target.id==='fleetAdd'&&resources.length<10){resources.push(blank());refresh();updateRoutePlanningGateV68();globalThis.GFOrderPlanning?.changed();}
     if(remove&&el('fleetResources').contains(remove)){resources.splice(Number(remove.dataset.remove),1);refresh();updateRoutePlanningGateV68();globalThis.GFOrderPlanning?.changed();}
     if(button&&el('routePreviewResult').contains(button))action(button.dataset.action);

@@ -12,6 +12,8 @@ class FleetResource(BaseModel):
     driver_id: int=Field(gt=0)
     energy_price_primary: float=Field(default=1.75,ge=0,le=10000,allow_inf_nan=False)
     energy_price_electric: float=Field(default=0.30,ge=0,le=10000,allow_inf_nan=False)
+    # Prezzo carburante preso dalla media automatica o scritto a mano nella card del mezzo.
+    energy_price_mode: Literal['automatic','manual']='manual'
     @model_validator(mode='before')
     @classmethod
     def drop_removed_fields(cls,value):

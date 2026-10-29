@@ -2449,7 +2449,7 @@ async function updateRouteEnergyPricingV895(){
         note=document.getElementById("automaticFuelPriceInfo"),
         priceInput=document.getElementById("fuelPrice");
 
-  // Con più mezzi il costo si imposta in ogni card ("Costi carburante ed energia"), non qui.
+  // Con più mezzi il costo si imposta in ogni card ("Costo carburante"), non qui.
   if(!v || globalThis.GFFleetPlanning?.active()){
     box?.classList.add("hidden");
     if(info) info.textContent="";
