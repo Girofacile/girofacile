@@ -19,12 +19,12 @@ from check_management_design import ME
 CATALOGUE = {key: dict(value, price_eur=PLAN_PRICES[key]['price_eur']) for key, value in PLAN_LIMITS.items()}
 LISTS = ('customers', 'agents', 'operativi', 'routes')
 LABELS = (('company', 'Profilo azienda'), ('deposit', 'Deposito di partenza'), ('vehicle', 'Il primo mezzo'),
-          ('driver', 'Un autista'), ('orders', 'Le consegne'), ('route', 'Calcolo del giro'), ('program', 'Programmazione'))
+          ('driver', 'Un autista'), ('customer', 'Il primo cliente'), ('route', 'Calcolo del giro'), ('program', 'Programmazione'))
 
 
 def tutor(store):
     done = dict(company=store.get('company', True), deposit=bool(store['deposits']), vehicle=bool(store['vehicles']), driver=bool(store['drivers']),
-                orders=store['orders'] > 0, route=store['route'] is not None, program=store['route'] == 'programmato')
+                customer=bool(store['customers']), route=store['route'] is not None, program=store['route'] == 'programmato')
     if done['program']:
         store['state'] = 'completato'
     skipped = store.setdefault('skipped', [])
@@ -62,10 +62,10 @@ def open_dashboard(browser, store, errors):
         if path == '/api/onboarding/status':
             route.fulfill(json=dict(completed=False, dismissed=store['state'] == 'completato', tutor_pending=store['state'] != 'completato',
                                     workspace_operational=True, steps=[], progress=0, total=2, percent=0)); return
-        for kind in ('deposits', 'vehicles', 'drivers'):
+        for kind in ('deposits', 'vehicles', 'drivers', 'customers'):
             if path == f'/api/{kind}':
                 if method == 'POST':
-                    item = dict(body, id=len(store[kind]) + 1, stato='Disponibile', predefinito=True)
+                    item = dict(body, id=len(store[kind]) + 1, stato='Disponibile', predefinito=True, stato_geocodifica='verificato', lat=40.85, lon=14.25)
                     store[kind].append(item); route.fulfill(json=item); return
                 route.fulfill(json=store[kind]); return
         if path == '/api/planning-drafts':
@@ -102,7 +102,7 @@ def main():
     with sync_playwright() as pw:
         browser = pw.chromium.launch(headless=True, executable_path=os.getenv('GF_TEST_BROWSER_EXECUTABLE') or None)
         try:
-            store = dict(state='attivo', deposits=[], vehicles=[], drivers=[], orders=0, route=None, tutor_posts=[])
+            store = dict(state='attivo', deposits=[], vehicles=[], drivers=[], customers=[], route=None, tutor_posts=[])
             page = open_dashboard(browser, store, errors)
             # Account nuovo: barra verde in alto e fumetto sulla voce "Depositi"; nessuna finestra di configurazione.
             assert 'Depositi' in tip_on(page, '#app .gf-sidebar__item[data-tab="depositi"]')
@@ -154,14 +154,25 @@ def main():
             page.locator('#drNome').locator('xpath=ancestor::label[@data-invalid]').wait_for()
             page.fill('#drNome', 'Marco')
             page.locator('#saveDriverBtn').click()
-            assert 'Ordini' in tip_on(page, '#app .gf-sidebar__item[data-tab="ordini"]')
-            page.locator('#app .gf-sidebar__item[data-tab="ordini"]').click()
-            assert 'Nuovo ordine' in tip_on(page, '#ordersNew')
-            page.screenshot(path=str(output / '5-ordini.png'))
+            # Cliente: la guida passa dai Clienti, non dagli ordini.
+            assert 'Clienti' in tip_on(page, '#app .gf-sidebar__item[data-tab="clienti"]')
+            page.locator('#app .gf-sidebar__item[data-tab="clienti"]').click()
+            assert 'Nuovo cliente' in tip_on(page, '#newCustomerBtn')
+            page.locator('#newCustomerBtn').click()
+            assert 'Salva' in tip_on(page, '#customerDrawer [data-cx-save]')
+            page.locator('#customerDrawer [data-cx-save]').click()
+            page.locator('#cxName').locator('xpath=ancestor::*[@data-invalid][1]').wait_for()
+            assert not store['customers']
+            page.screenshot(path=str(output / '5-cliente-salva.png'))
+            page.fill('#cxName', 'Bar Vesuvio'); page.fill('#cxAddress', 'Via Toledo 25'); page.fill('#cxCity', 'Napoli')
+            page.locator('#customerDrawer [data-cx-save]').click()
+            # Cliente salvato: il fumetto chiede di selezionarlo e poi di andare in pianificazione.
+            assert 'Seleziona il cliente' in tip_on(page, '#tab-clienti .cx-cb')
+            page.locator('#tab-clienti .cx-cb').first.check()
+            assert 'pianificazione' in tip_on(page, '#customersGoPlanning')
+            page.screenshot(path=str(output / '6-cliente-pianifica.png'))
 
-            # Ordine e calcolo simulati nel server finto: in pianificazione il fumetto indica "Calcola percorso".
-            store['orders'] = 1
-            page.evaluate('GFTutor.refresh()')
+            # In pianificazione il fumetto indica "Calcola percorso" (il calcolo è simulato nel server finto).
             page.evaluate('showTab("giro")')
             assert 'Calcola percorso' in tip_on(page, '#routeCalculateBtn')
             store['route'] = 'bozza'
@@ -173,7 +184,7 @@ def main():
             page.evaluate('GFTutor.refresh()')
             page.wait_for_function('document.getElementById("coachTitle").textContent.includes("Complimenti")')
             assert '7 di 7' in page.locator('#coachBar').inner_text()
-            page.screenshot(path=str(output / '6-primo-giro-programmato.png'))
+            page.screenshot(path=str(output / '7-primo-giro-programmato.png'))
             page.locator('#coachDone').click()
             page.wait_for_function('!document.getElementById("coachBar").matches(":popover-open")')
             page.close()
@@ -183,7 +194,7 @@ def main():
             page.close()
 
             # Profilo incompleto: «Azienda» sta nel gruppo chiuso del menu, il fumetto indica prima il gruppo.
-            store = dict(state='attivo', company=False, deposits=[], vehicles=[], drivers=[], orders=0, route=None, tutor_posts=[])
+            store = dict(state='attivo', company=False, deposits=[], vehicles=[], drivers=[], customers=[], route=None, tutor_posts=[])
             page = open_dashboard(browser, store, errors)
             group = '#app details[data-sidebar-group="sistema"] > summary'
             assert page.evaluate('!document.querySelector(`#app details[data-sidebar-group="sistema"]`).open')
@@ -197,7 +208,7 @@ def main():
             page.close()
 
             # Uscita: confermata, salvata sul server; non ricompare e si riprende da Azienda.
-            store = dict(state='attivo', deposits=[], vehicles=[], drivers=[], orders=0, route=None, tutor_posts=[])
+            store = dict(state='attivo', deposits=[], vehicles=[], drivers=[], customers=[], route=None, tutor_posts=[])
             page = open_dashboard(browser, store, errors)
             tip_on(page, '#app .gf-sidebar__item[data-tab="depositi"]')
             page.once('dialog', lambda d: d.accept())
@@ -215,7 +226,7 @@ def main():
             page.close()
 
             # «Avanti»: si salta il deposito senza crearlo e il fumetto passa ai mezzi; «Esci» a sinistra.
-            store = dict(state='attivo', deposits=[], vehicles=[], drivers=[], orders=0, route=None, tutor_posts=[])
+            store = dict(state='attivo', deposits=[], vehicles=[], drivers=[], customers=[], route=None, tutor_posts=[])
             page = open_dashboard(browser, store, errors)
             tip_on(page, '#app .gf-sidebar__item[data-tab="depositi"]')
             assert page.locator('#coachExit').inner_text() == 'Esci' and page.locator('#coachNext').inner_text() == 'Avanti'
@@ -228,12 +239,12 @@ def main():
             page.close()
 
             # Pulsante provvisorio in Impostazioni: la guida completata riparte dal primo passo mancante.
-            store = dict(state='completato', deposits=[], vehicles=[], drivers=[], orders=0, route=None, tutor_posts=[])
+            store = dict(state='completato', deposits=[], vehicles=[], drivers=[], customers=[], route=None, tutor_posts=[])
             page = open_dashboard(browser, store, errors)
             page.wait_for_timeout(500)
             assert page.locator('#coachBar').is_hidden()
             page.evaluate('showTab("settings")')
-            page.screenshot(path=str(output / '7-impostazioni-riavvia.png'))
+            page.screenshot(path=str(output / '9-impostazioni-riavvia.png'))
             page.locator('#tutorRestartBtn').click()
             assert 'Depositi' in tip_on(page, '#app .gf-sidebar__item[data-tab="depositi"]')
             assert store['tutor_posts'] == ['restart'] and page.locator('#tab-dashboard').is_visible()

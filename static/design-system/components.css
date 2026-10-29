@@ -781,6 +781,8 @@ body[data-gf-surface] .gf-coach__bar{
   background:var(--gf-color-success);color:var(--gf-color-on-primary);box-shadow:var(--gf-shadow-md);font-size:var(--gf-font-sm)
 }
 body[data-gf-surface] .gf-coach__bar[popover]{bottom:var(--gf-space-5);left:calc(var(--gf-sidebar-width) + var(--gf-space-6))}
+/* Con una barra flottante in basso (selezione, salvataggio) la barra della guida sale sopra di essa. */
+body[data-gf-surface]:has(:is(.tab:not(.hidden),.gf-header) .gf-savebar[data-floating]:not(.hidden):not([hidden])) .gf-coach__bar[popover]{bottom:calc(var(--gf-space-12) * 2)}
 body[data-gf-surface] .gf-coach__bar:is(:popover-open,[data-embedded]){display:flex;align-items:center;gap:var(--gf-space-4)}
 body[data-gf-surface] .gf-coach__bar[data-embedded]{width:fit-content}
 body[data-gf-surface] .gf-coach__segments{display:flex;gap:var(--gf-space-1)}

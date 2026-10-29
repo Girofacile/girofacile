@@ -8,11 +8,11 @@ def _steps(client):
 
 
 def test_tutor_advances_on_real_data_and_completes_with_first_programmed_route(env):
-    from app.models import Deposit, Driver, RoutePlan, Vehicle
-    from app.order_models import Order, OrderSource
+    from app.models import Customer, Deposit, Driver, RoutePlan, Vehicle
     from app.routers import auth
-    client, db, owner, other, *_ = env
+    client, db, owner, other, _seller, _foreign, existing, *_ = env
     client.app.include_router(auth.router)
+    db.delete(existing)  # azienda nuova: nessun cliente
     owner.company_name, owner.company_address = 'Panificio Rossi', None
     db.commit()
 
@@ -27,12 +27,9 @@ def test_tutor_advances_on_real_data_and_completes_with_first_programmed_route(e
     db.add(RoutePlan(user_id=other.id, nome='Altro', data_giro=date.today(), orario_partenza=time(8), status='programmato'))
     db.commit()
     data, done = _steps(client)
-    assert data['current'] == 'orders' and data['progress'] == 4 and not done['program']
+    assert data['current'] == 'customer' and data['progress'] == 4 and not done['program']
 
-    source = OrderSource(user_id=owner.id, key='manuale', name='Manuale', kind='manual')
-    db.add(source)
-    db.flush()
-    db.add(Order(user_id=owner.id, source_id=source.id, external_id='1', number='1', status='nuovo', original_payload={}, operational_data={}))
+    db.add(Customer(user_id=owner.id, nome='Bar Vesuvio', indirizzo='Via Toledo 25'))
     db.add(RoutePlan(user_id=owner.id, nome='Bozza', data_giro=date.today(), orario_partenza=time(8), status='bozza'))
     db.commit()
     data, _ = _steps(client)
@@ -53,7 +50,7 @@ def test_tutor_advances_on_real_data_and_completes_with_first_programmed_route(e
     db.commit()
     assert _steps(client)[0]['current'] == 'vehicle'
     db.add_all([Vehicle(user_id=owner.id, nome='Furgone 2'), Driver(user_id=owner.id, nome='Luca')])
-    db.add(Order(user_id=owner.id, source_id=source.id, external_id='2', number='2', status='nuovo', original_payload={}, operational_data={}))
+    db.add(Customer(user_id=owner.id, nome='Bar Centrale', indirizzo='Via Roma 2'))
     db.add(RoutePlan(user_id=owner.id, nome='Nuovo giro', data_giro=date.today(), orario_partenza=time(8), status='programmato'))
     db.commit()
     data, _ = _steps(client)

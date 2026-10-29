@@ -9,7 +9,7 @@
   const activeTab=()=>document.querySelector('#app .tab:not(.hidden)')?.id.slice(4)||'';
   const nav=name=>document.querySelector(`#app .gf-sidebar__item[data-tab="${name}"]`);
   const isOpen=id=>{const node=el(id);return !!node&&(node.tagName==='DIALOG'?node.open:!node.classList.contains('hidden')&&!node.hidden);};
-  const TRACKED=/^\/api\/(company-profile|deposits|vehicles|drivers|orders|order-sources\/\d+\/runs\/\d+\/commit|routes\/optimize|routes\/recalculate-manual|routes\/\d+\/program|planning-drafts)/;
+  const TRACKED=/^\/api\/(company-profile|deposits|vehicles|drivers|customers|orders|order-sources\/\d+\/runs\/\d+\/commit|routes\/optimize|routes\/recalculate-manual|routes\/\d+\/program|planning-drafts)/;
   let status=null,finished=false,target=null,scheduled=false,refreshTimer=null,openDialogs=0,started=false;
 
   function go(name,label,text){return {target:nav(name),placement:'right',title:`Apri «${label}»`,text};}
@@ -34,16 +34,16 @@
         if(isOpen('driverFormOverlay'))return save('saveDriverBtn','Salva autista','i dati dell’autista');
         if(tab==='autisti')return {target:el('newDriverBtn'),placement:'bottom-end',title:'Premi «Nuovo autista»',text:'Con l’email l’autista riceve l’invito all’app.'};
         return go('autisti','Autisti','Aggiungi chi guiderà il mezzo.');
-      case 'orders':
-        if(isOpen('orderModal')&&visible(el('orderSave')))return save('orderSave','Crea ordine','destinatario e indirizzo di consegna');
-        if(tab==='ordini')return {target:el('ordersNew'),placement:'bottom-end',title:'Premi «Nuovo ordine»',text:'Inserisci la prima consegna. Puoi anche importare gli ordini da file.'};
-        return go('ordini','Ordini','Qui arrivano le consegne da pianificare.');
+      case 'customer':
+        if(isOpen('customerDrawerScrim')){const button=document.querySelector('#customerDrawer [data-cx-save]');return {...save('','Salva','nome, indirizzo e città del cliente'),target:button};}
+        if(tab==='clienti')return {target:el('newCustomerBtn'),placement:'bottom-end',title:'Premi «Nuovo cliente»',text:'Il cliente è il punto in cui l’autista consegna.'};
+        return go('clienti','Clienti','Registra il primo cliente da servire.');
       case 'route': {
         if(tab==='giro')return {target:el('routeCalculateBtn'),placement:'top-end',title:'Premi «Calcola percorso»',text:'Scegli data, deposito, mezzo e autista: GiroFacile ordina le fermate per te.'};
-        if(tab!=='ordini')return go('ordini','Ordini','Seleziona le consegne del primo giro.');
-        const proceed=el('ordersGoPlanning');
-        if(visible(proceed)&&!proceed.disabled)return {target:proceed,placement:'top-end',title:'Premi «Vai alla pianificazione»',text:'Gli ordini selezionati passano al giro.'};
-        return {target:[...document.querySelectorAll('#tab-ordini .order-select:not(.order-select-all)')].find(box=>visible(box)&&!box.disabled),placement:'right',title:'Seleziona gli ordini',text:'Spunta le consegne da mettere nel primo giro.'};
+        if(tab!=='clienti')return go('clienti','Clienti','Scegli i clienti del primo giro.');
+        const proceed=el('customersGoPlanning');
+        if(visible(proceed)&&!proceed.disabled)return {target:proceed,placement:'top-end',title:'Premi «Vai alla pianificazione»',text:'I clienti selezionati diventano le fermate del giro.'};
+        return {target:[...document.querySelectorAll('#tab-clienti .cx-cb')].find(box=>visible(box)&&!box.disabled),placement:'right',title:'Seleziona il cliente',text:'Spunta i clienti da mettere nel primo giro.'};
       }
       case 'program':
         if(tab==='route-preview')return {target:document.querySelector('#tab-route-preview [data-preview-program]'),placement:'bottom-end',title:'Premi «Programma giro»',text:'Controlla l’anteprima: con la programmazione il giro passa all’autista.'};

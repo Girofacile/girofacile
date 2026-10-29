@@ -939,15 +939,15 @@ TUTOR_STEPS = (
     ("deposit", "Deposito di partenza"),
     ("vehicle", "Il primo mezzo"),
     ("driver", "Un autista"),
-    ("orders", "Le consegne"),
+    ("customer", "Il primo cliente"),
     ("route", "Calcolo del giro"),
     ("program", "Programmazione"),
 )
 
 
 def _tutor_models():
-    from ..order_models import Order
-    return {"deposit": Deposit, "vehicle": Vehicle, "driver": Driver, "orders": Order, "route": RoutePlan}
+    # La guida pianifica il primo giro partendo dai clienti (non dagli ordini).
+    return {"deposit": Deposit, "vehicle": Vehicle, "driver": Driver, "customer": Customer, "route": RoutePlan}
 
 
 def _tutor_payload(user: User, db: Session) -> dict:
@@ -966,7 +966,7 @@ def _tutor_payload(user: User, db: Session) -> dict:
         "deposit": created("deposit").first() is not None,
         "vehicle": created("vehicle").first() is not None,
         "driver": created("driver").first() is not None,
-        "orders": created("orders").first() is not None,
+        "customer": created("customer").first() is not None,
         "route": routes.first() is not None,
         "program": routes.filter(RoutePlan.status != "bozza").first() is not None,
     }

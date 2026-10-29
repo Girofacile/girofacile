@@ -33,7 +33,7 @@
 
 <!-- Shared GiroFacile design system; legacy sheets retain feature layout. -->
 <link rel="stylesheet" href="/static/design-system/theme.css?v=gf_landing_20261028">
-<link rel="stylesheet" href="/static/design-system/components.css?v=gf_tutor_avanti_20261029">
+<link rel="stylesheet" href="/static/design-system/components.css?v=gf_tutor_clienti_20261029">
 <link rel="stylesheet" href="/static/design-system/layout.css?v=gf_sidebar_fit_20261025">
 <link rel="stylesheet" href="/static/design-system/workspace.css?v=gf_selection_20261016">
 <link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007_reference_2">
@@ -731,7 +731,7 @@
             <div><h2 class="gf-panel__title" id="customerListTitle">Elenco <span data-gf-label="customers">clienti</span></h2><p class="gf-muted">Cerca rapidamente oppure apri i filtri avanzati quando servono.</p></div>
             <div id="customersPanelActions" class="gf-cluster">
               <button type="button" class="gf-button" data-variant="secondary" onclick="openCustomerImportModal()"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12 M7 10l5 5 5-5 M5 21h14"/></svg>Importa clienti</button>
-              <button type="button" class="gf-button" data-variant="primary" onclick="openCustomerDrawer(null,'new')"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14 M5 12h14"/></svg>Nuovo <span data-gf-label="customer">cliente</span></button>
+              <button type="button" id="newCustomerBtn" class="gf-button" data-variant="primary" onclick="openCustomerDrawer(null,'new')"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14 M5 12h14"/></svg>Nuovo <span data-gf-label="customer">cliente</span></button>
             </div>
           </header>
           <div class="gf-panel__body gf-stack">
@@ -1611,7 +1611,7 @@
 <script src="/static/dashboard/js/selected-customer-addresses.js?v=gf_customer_selected_addresses_20261020"></script>
 <script src="/static/dashboard/js/order-planning.js?v=gf_bozze_20261026"></script>
 <script src="/static/dashboard/js/planning-drafts.js?v=gf_bozze_stile_20261027b"></script>
-<script src="/static/dashboard/js/tutor.js?v=gf_tutor_avanti_20261029"></script>
+<script src="/static/dashboard/js/tutor.js?v=gf_tutor_clienti_20261029"></script>
 
 <script>
 function toggleLoginPassword(){
