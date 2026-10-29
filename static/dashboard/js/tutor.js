@@ -116,7 +116,7 @@
     try{status=await api('/api/onboarding/tutor',{method:'POST',body:JSON.stringify({action})});finished=false;schedule();}
     catch(e){toast(e.message||'Operazione non riuscita.');}
   }
-  // Provvisorio (prove della guida): riparte dal primo passo, anche dopo il completamento.
+  // Provvisorio (prove della guida): riparte da zero, i dati già presenti non contano.
   async function restart(){
     await update('restart');
     if(status?.state==='completato'){toast('Questo account ha già un giro programmato: la guida risulta completata. Per rifarla da capo usa un account nuovo.');return;}

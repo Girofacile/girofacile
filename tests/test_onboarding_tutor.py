@@ -46,8 +46,18 @@ def test_tutor_advances_on_real_data_and_completes_with_first_programmed_route(e
     # Completato resta completato: non si riapre né si chiude.
     assert client.post('/api/onboarding/tutor', json={'action': 'resume'}).json()['state'] == 'completato'
     assert client.get('/api/onboarding/status').json()['tutor_pending'] is False
-    # Riavvio (provvisorio): riparte, ma con un giro già programmato risulta subito completata.
-    assert client.post('/api/onboarding/tutor', json={'action': 'restart'}).json()['state'] == 'completato'
+    # Riavvio (provvisorio, modalità prova): riparte da zero ignorando deposito, mezzi, ordini e giri esistenti.
+    data = client.post('/api/onboarding/tutor', json={'action': 'restart'}).json()
+    assert data['state'] == 'attivo' and data['current'] == 'deposit' and data['progress'] == 1
+    db.add(Deposit(user_id=owner.id, nome='Nuovo', indirizzo='Via Nuova'))
+    db.commit()
+    assert _steps(client)[0]['current'] == 'vehicle'
+    db.add_all([Vehicle(user_id=owner.id, nome='Furgone 2'), Driver(user_id=owner.id, nome='Luca')])
+    db.add(Order(user_id=owner.id, source_id=source.id, external_id='2', number='2', status='nuovo', original_payload={}, operational_data={}))
+    db.add(RoutePlan(user_id=owner.id, nome='Nuovo giro', data_giro=date.today(), orario_partenza=time(8), status='programmato'))
+    db.commit()
+    data, _ = _steps(client)
+    assert data['state'] == 'completato' and owner.tutor_baseline is None
 
 
 def test_tutor_close_and_resume_are_saved_on_server(env):
@@ -83,7 +93,7 @@ def test_tutor_migration_marks_companies_with_a_route_as_completed_and_is_repeat
     run_migrations(engine)
     run_migrations(engine)
     require_current_schema(engine)
-    assert {'tutor_state', 'tutor_completed_at'} <= {c['name'] for c in inspect(engine).get_columns('users')}
+    assert {'tutor_state', 'tutor_completed_at', 'tutor_baseline'} <= {c['name'] for c in inspect(engine).get_columns('users')}
     with engine.connect() as conn:
         states = dict(conn.execute(text('SELECT username, tutor_state FROM users')).all())
     assert states == {'con-giro': 'completato', 'solo-bozza': None, 'nuovo': None}

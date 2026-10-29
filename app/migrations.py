@@ -3,7 +3,7 @@ from datetime import datetime
 from .core.clock import utc_now
 from sqlalchemy import inspect, text
 
-LATEST = '20261028_01'
+LATEST = '20261029_01'
 LOCK_ID = 7640152404
 
 
@@ -229,6 +229,12 @@ def run_migrations(engine):
                         conn.execute(text("UPDATE users SET tutor_state='completato', tutor_completed_at=:now WHERE tutor_state IS NULL "
                                           "AND id IN (SELECT user_id FROM route_plans WHERE status <> 'bozza')"), {'now': utc_now()})
                     conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261028_01', 'now': utc_now()})
+            if '20261029_01' not in applied:
+                # Tutor in modalità prova: ultimi id esistenti al riavvio, si contano solo gli elementi creati dopo.
+                with engine.begin() as conn:
+                    if 'users' in set(inspect(conn).get_table_names()) and 'tutor_baseline' not in {c['name'] for c in inspect(conn).get_columns('users')}:
+                        conn.execute(text('ALTER TABLE users ADD COLUMN tutor_baseline JSON'))
+                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261029_01', 'now': utc_now()})
         finally:
             if postgres:
                 lock.execute(text('SELECT pg_advisory_unlock(:key)'), {'key': LOCK_ID})

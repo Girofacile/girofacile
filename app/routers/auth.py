@@ -945,21 +945,34 @@ TUTOR_STEPS = (
 )
 
 
-def _tutor_payload(user: User, db: Session) -> dict:
+def _tutor_models():
     from ..order_models import Order
-    routes = db.query(RoutePlan.status).filter(RoutePlan.user_id == user.id)
+    return {"deposit": Deposit, "vehicle": Vehicle, "driver": Driver, "orders": Order, "route": RoutePlan}
+
+
+def _tutor_payload(user: User, db: Session) -> dict:
+    models = _tutor_models()
+    # Modalità prova (provvisoria): dopo un riavvio contano solo gli elementi creati dopo.
+    baseline = user.tutor_baseline or {}
+
+    def created(key):
+        model = models[key]
+        return db.query(model.id).filter(model.user_id == user.id, model.id > int(baseline.get(key) or 0))
+
+    routes = created("route")
     done = {
         "company": bool((user.company_name or "").strip() and (user.company_address or "").strip()),
-        "deposit": _count_for_user(db, Deposit, user.id) > 0,
-        "vehicle": _count_for_user(db, Vehicle, user.id) > 0,
-        "driver": _count_for_user(db, Driver, user.id) > 0,
-        "orders": _count_for_user(db, Order, user.id) > 0,
+        "deposit": created("deposit").first() is not None,
+        "vehicle": created("vehicle").first() is not None,
+        "driver": created("driver").first() is not None,
+        "orders": created("orders").first() is not None,
         "route": routes.first() is not None,
         "program": routes.filter(RoutePlan.status != "bozza").first() is not None,
     }
     if done["program"] and user.tutor_state != "completato":
         user.tutor_state = "completato"
         user.tutor_completed_at = utc_now()
+        user.tutor_baseline = None
         db.commit()
     steps = [{"key": key, "label": label, "done": done[key]} for key, label in TUTOR_STEPS]
     current = next((step["key"] for step in steps if not step["done"]), None)
@@ -983,9 +996,11 @@ def update_tutor(payload: dict, user: User = Depends(current_user), db: Session 
     if action not in ("close", "resume", "restart"):
         raise HTTPException(400, "Azione non valida")
     if action == "restart":
-        # Provvisorio per le prove della guida: riparte anche dopo il completamento.
+        # Provvisorio per le prove della guida: riparte da zero ignorando i dati già presenti.
         user.tutor_state = None
         user.tutor_completed_at = None
+        user.tutor_baseline = {key: db.query(func.max(model.id)).filter(model.user_id == user.id).scalar() or 0
+                               for key, model in _tutor_models().items()}
         db.commit()
     elif user.tutor_state != "completato":
         user.tutor_state = "chiuso" if action == "close" else None

@@ -71,6 +71,8 @@ class User(Base):
     # Tutor del primo giro: NULL = attivo, "chiuso" = uscito dall'utente, "completato" = primo giro programmato.
     tutor_state: Mapped[str | None] = mapped_column(String(20), nullable=True)
     tutor_completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    # Modalità prova del tutor: ultimi id esistenti al riavvio (provvisorio).
+    tutor_baseline: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     password_hash: Mapped[str] = mapped_column(String(300), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
 
