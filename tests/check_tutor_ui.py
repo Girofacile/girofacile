@@ -23,7 +23,7 @@ LABELS = (('company', 'Profilo azienda'), ('deposit', 'Deposito di partenza'), (
 
 
 def tutor(store):
-    done = dict(company=True, deposit=bool(store['deposits']), vehicle=bool(store['vehicles']), driver=bool(store['drivers']),
+    done = dict(company=store.get('company', True), deposit=bool(store['deposits']), vehicle=bool(store['vehicles']), driver=bool(store['drivers']),
                 orders=store['orders'] > 0, route=store['route'] is not None, program=store['route'] == 'programmato')
     if done['program']:
         store['state'] = 'completato'
@@ -176,6 +176,20 @@ def main():
             page = open_dashboard(browser, store, errors)
             page.wait_for_timeout(500)
             assert page.locator('#coachBar').is_hidden() and page.locator('#coachTip').is_hidden()
+            page.close()
+
+            # Profilo incompleto: «Azienda» sta nel gruppo chiuso del menu, il fumetto indica prima il gruppo.
+            store = dict(state='attivo', company=False, deposits=[], vehicles=[], drivers=[], orders=0, route=None, tutor_posts=[])
+            page = open_dashboard(browser, store, errors)
+            group = '#app details[data-sidebar-group="sistema"] > summary'
+            assert page.evaluate('!document.querySelector(`#app details[data-sidebar-group="sistema"]`).open')
+            assert 'Azienda e sistema' in tip_on(page, group) and near(page, group)
+            page.screenshot(path=str(output / '0-gruppo-menu-chiuso.png'))
+            page.locator(group).click()
+            assert 'Azienda' in tip_on(page, '#app .gf-sidebar__item[data-tab="company"]')
+            assert near(page, '#app .gf-sidebar__item[data-tab="company"]')
+            page.locator('#app .gf-sidebar__item[data-tab="company"]').click()
+            assert 'sede' in tip_on(page, '#companyAddressInput')
             page.close()
 
             # Uscita: confermata, salvata sul server; non ricompare e si riprende da Azienda.

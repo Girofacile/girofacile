@@ -4,7 +4,8 @@
 (function(){
   'use strict';
   const el=id=>document.getElementById(id);
-  const visible=node=>!!node&&node.isConnected&&node.getClientRects().length>0;
+  // Le voci di un gruppo chiuso del menu restano nel layout ma non si vedono: contano come nascoste.
+  const visible=node=>!!node&&node.isConnected&&node.getClientRects().length>0&&!node.closest('details:not([open])>:not(summary)');
   const activeTab=()=>document.querySelector('#app .tab:not(.hidden)')?.id.slice(4)||'';
   const nav=name=>document.querySelector(`#app .gf-sidebar__item[data-tab="${name}"]`);
   const isOpen=id=>{const node=el(id);return !!node&&(node.tagName==='DIALOG'?node.open:!node.classList.contains('hidden')&&!node.hidden);};
@@ -78,7 +79,12 @@
     const steps=status.steps||[],index=steps.findIndex(step=>step.key===status.current);
     let step=finished?{target:null,placement:'bottom',title:'Complimenti, il primo giro è programmato!',text:'Lo trovi in «Giri programmati». La guida finisce qui.'}:plan(status.current);
     let node=step.target;
-    if(node&&!visible(node)){const group=node.closest('details');if(group&&!group.open){group.open=true;}}
+    // Voce dentro un gruppo chiuso del menu: prima si indica il gruppo da aprire.
+    const summary=node&&!visible(node)?node.closest('details:not([open])')?.querySelector(':scope>summary'):null;
+    if(visible(summary)){
+      const group=summary.textContent.trim();
+      step={...step,target:summary,placement:'right',title:`Apri «${group}»`,text:`Poi scegli ${step.title.replace(/^Apri /,'')}.`};node=summary;
+    }
     if(!visible(node))node=null;
     // Una finestra appena aperta passa sopra: la guida torna in cima.
     const dialogs=document.querySelectorAll('dialog[open]').length;
