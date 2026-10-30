@@ -254,12 +254,18 @@ jobs:
         run: python -m pytest tests/test_routing_quality_oracle.py tests/test_routing_quality_audit.py tests/test_routing_quality_integration.py -q -ra
       - name: Audit current engines on fresh frozen problems
         run: python tests/run_routing_quality_audit.py --profile full --strict
+      - name: Compare fifty deliveries on two through five vehicles
+        run: |
+          python -m pytest tests/test_routing_quality_fifty.py -q
+          python tests/run_routing_quality_fifty.py --strict
       - name: Preserve independent audit inputs and results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: current-routing-quality
-          path: test-results/routing-quality/
+          path: |
+            test-results/routing-quality/
+            test-results/routing-quality-fifty/
           if-no-files-found: error
           retention-days: 30
 

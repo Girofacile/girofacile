@@ -2,6 +2,8 @@
 
 La [verifica del motore del 30 ottobre 2026](docs/routing-quality-2026-10-30.md)
 riporta nuovi test indipendenti per giro singolo e flotta, risultati e limiti rilevati.
+Il [confronto su cinquanta consegne](docs/routing-quality-fifty-2026-10-30.md)
+approfondisce le flotte di 2, 3, 4 e 5 mezzi, con e senza finestre, turni e pause.
 
 L'[audit del progetto del 7 ottobre 2026](docs/audit-progetto-2026-10-07.md)
 documenta errori corretti, controlli eseguiti e rischi ancora aperti.
