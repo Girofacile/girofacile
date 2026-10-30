@@ -1,0 +1,4066 @@
+{
+  "metadata": {
+    "commit": "2220304753a73e85656ca3b50829a008d6c3aba4",
+    "measured_at": "2026-10-30T14:50:00.987559+00:00",
+    "profile": "full",
+    "python": "3.12.14",
+    "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+    "source_hashes": {
+      "app/optimizer.py": "6b452720b3541aa66610ecc7b71e229183a8c8835d86279d4c4225faa4cb5885",
+      "app/services/optimizer_search.py": "9967ec8a98a5729c97795a7f060ec550533676c344a0c2daa54726e6b0ee1974",
+      "app/services/fleet_planning.py": "c3469c3c79d058da18c10f92941a6346a8168a8923670eb234a0306df24a6063",
+      "app/services/fleet_search.py": "a9efc7f6dc615eeb186d38d4e1e62244635d969e50130ef2ab15a28be46d3182",
+      "app/services/fleet_route_evaluator.py": "9c8e73ce68223f51b3a788d070a1c8e77b0cefbc9fa227c77c4d836cdef44dd2",
+      "app/services/driver_schedule.py": "5969479ea24bd88f6de22a5fab72be55c89d7815b6559ee7d24c1a7869698803",
+      "tests/routing_quality_oracle.py": "55756708ae1e89aeef5cb04d73a8f29aa0d9053aecbe1ad00f1b68bff65c01d7",
+      "tests/routing_quality_single.py": "f9512fac09d5a8370455af900361397ec47e204f91f9a65f95894ef4165f4dd0",
+      "tests/routing_quality_fleet.py": "e22c0cebdb792e16cc2b1a9cf7a1cabafdd841aee22cee2f79af94d64e287c6b",
+      "tests/run_routing_quality_audit.py": "a03b9bb61572ff90ef3faa1239e17099420ee0e52c7924fb3adb0fb8bb4cf1a1"
+    },
+    "provider_calls_blocked": true,
+    "synthetic": true
+  },
+  "summary": {
+    "cases": 70,
+    "single_cases": 42,
+    "fleet_cases": 28,
+    "runs": 283,
+    "errors": 0,
+    "error_runs": 0,
+    "exact_comparisons": 240,
+    "exact_gaps": 1,
+    "witness_gaps": 0,
+    "order_sensitive": 1,
+    "distance_certificates": 13,
+    "external_calls": 0,
+    "elapsed_seconds": 21.75,
+    "runtime_ms": {
+      "single": {
+        "median": 1.134,
+        "p95": 368.528,
+        "maximum": 2318.031
+      },
+      "fleet": {
+        "median": 9.859,
+        "p95": 368.449,
+        "maximum": 1113.55
+      }
+    }
+  },
+  "findings": [
+    {
+      "id": "fleet-eight-input-order",
+      "case_id": "fleet-new-scale-8",
+      "strategy": "balanced",
+      "variant": "reverse",
+      "actual": {
+        "served": 8,
+        "used": 2,
+        "km": 38.66522494376009,
+        "minutes": 97.58139148840394,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 50.05679265338597,
+        "sumsq": 4764.269985173467,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            0,
+            2,
+            5,
+            1
+          ],
+          [
+            4,
+            3,
+            7,
+            6
+          ]
+        ]
+      },
+      "optimal": {
+        "served": 8,
+        "used": 2,
+        "km": 33.32911659658362,
+        "minutes": 87.66472995825268,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 46.43273987584462,
+        "sumsq": 3856.0763385336477,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            1,
+            7,
+            6,
+            0
+          ],
+          [
+            5,
+            3,
+            4,
+            2
+          ]
+        ]
+      },
+      "makespan_gap_percent": 7.80495139255537,
+      "minutes_gap_percent": 11.312031115448296,
+      "km_gap_percent": 16.01035038451468
+    },
+    {
+      "id": "zero-manual-energy-price",
+      "location": "app/routers/routes.py:477",
+      "input": {
+        "energy_price_primary": 0,
+        "energy_price_mode": "manual"
+      },
+      "preview_price": 0,
+      "saved_price": 1.75,
+      "regression": "tests/test_routing_quality_integration.py::test_explicit_zero_manual_energy_price_matches_preview_after_confirmation",
+      "status": "known defect; strict expected failure; no application change"
+    }
+  ],
+  "baseline_runs": [
+    {
+      "case_id": "single-q30-shorter-is-slower",
+      "strategy": "single",
+      "stops": 3,
+      "resources": 1,
+      "runtime_ms": 108.799,
+      "actual": {
+        "served": 3,
+        "used": 1,
+        "km": 9.0,
+        "minutes": 76.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 76.0,
+        "sumsq": 5776.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            0,
+            1,
+            2
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "single-q30-terminal-closed",
+      "strategy": "single",
+      "stops": 4,
+      "resources": 1,
+      "runtime_ms": 0.705,
+      "actual": {
+        "served": 4,
+        "used": 1,
+        "km": 26.8,
+        "minutes": 32.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 32.0,
+        "sumsq": 1024.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            1,
+            2,
+            3,
+            0
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "single-q30-terminal-open",
+      "strategy": "single",
+      "stops": 4,
+      "resources": 1,
+      "runtime_ms": 0.765,
+      "actual": {
+        "served": 4,
+        "used": 1,
+        "km": 5.6,
+        "minutes": 24.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 24.0,
+        "sumsq": 576.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            0,
+            1,
+            2,
+            3
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "single-q30-urgent-detour",
+      "strategy": "single",
+      "stops": 5,
+      "resources": 1,
+      "runtime_ms": 5.669,
+      "actual": {
+        "served": 5,
+        "used": 1,
+        "km": 46.400000000000006,
+        "minutes": 96.0,
+        "wait": 0.0,
+        "lateness": 7.0,
+        "violations": 1,
+        "mismatches": 0,
+        "makespan": 96.0,
+        "sumsq": 9216.0,
+        "feasible": false,
+        "unassigned": [],
+        "orders": [
+          [
+            3,
+            4,
+            0,
+            2,
+            1
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [
+        "single_route_infeasible_no_feasible_reference"
+      ],
+      "errors": []
+    },
+    {
+      "case_id": "single-q30-second-window-is-needed",
+      "strategy": "single",
+      "stops": 4,
+      "resources": 1,
+      "runtime_ms": 1.309,
+      "actual": {
+        "served": 4,
+        "used": 1,
+        "km": 17.0,
+        "minutes": 82.0,
+        "wait": 8.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 82.0,
+        "sumsq": 6724.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            1,
+            3,
+            2,
+            0
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "single-q30-service-finishes-on-boundary",
+      "strategy": "single",
+      "stops": 3,
+      "resources": 1,
+      "runtime_ms": 0.298,
+      "actual": {
+        "served": 3,
+        "used": 1,
+        "km": 8.0,
+        "minutes": 40.5,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 40.5,
+        "sumsq": 1640.25,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            1,
+            0,
+            2
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "single-q30-pause-interrupts-driving",
+      "strategy": "single",
+      "stops": 4,
+      "resources": 1,
+      "runtime_ms": 1.033,
+      "actual": {
+        "served": 4,
+        "used": 1,
+        "km": 20.0,
+        "minutes": 89.0,
+        "wait": 30.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 89.0,
+        "sumsq": 7921.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            1,
+            3,
+            2,
+            0
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "single-q30-pause-forbids-split-unloading",
+      "strategy": "single",
+      "stops": 3,
+      "resources": 1,
+      "runtime_ms": 0.347,
+      "actual": {
+        "served": 3,
+        "used": 1,
+        "km": 9.2,
+        "minutes": 94.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 94.0,
+        "sumsq": 8836.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            1,
+            2,
+            0
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "single-q30-waiting-covers-pause",
+      "strategy": "single",
+      "stops": 4,
+      "resources": 1,
+      "runtime_ms": 1.267,
+      "actual": {
+        "served": 4,
+        "used": 1,
+        "km": 20.5,
+        "minutes": 127.0,
+        "wait": 67.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 127.0,
+        "sumsq": 16129.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            0,
+            1,
+            2,
+            3
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "single-q30-shift-end-beats-shorter-distance",
+      "strategy": "single",
+      "stops": 3,
+      "resources": 1,
+      "runtime_ms": 0.248,
+      "actual": {
+        "served": 3,
+        "used": 1,
+        "km": 19.5,
+        "minutes": 35.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 35.0,
+        "sumsq": 1225.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            0,
+            2,
+            1
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "single-q30-load-exactly-at-both-caps",
+      "strategy": "single",
+      "stops": 4,
+      "resources": 1,
+      "runtime_ms": 0.977,
+      "actual": {
+        "served": 4,
+        "used": 1,
+        "km": 33.6,
+        "minutes": 70.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 70.0,
+        "sumsq": 4900.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            3,
+            1,
+            0,
+            2
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "single-q30-equipment-remains-warning",
+      "strategy": "single",
+      "stops": 4,
+      "resources": 1,
+      "runtime_ms": 0.628,
+      "actual": {
+        "served": 4,
+        "used": 1,
+        "km": 30.9,
+        "minutes": 90.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 2,
+        "makespan": 90.0,
+        "sumsq": 8100.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            2,
+            0,
+            1,
+            3
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "single-q30-crosses-midnight",
+      "strategy": "single",
+      "stops": 4,
+      "resources": 1,
+      "runtime_ms": 0.632,
+      "actual": {
+        "served": 4,
+        "used": 1,
+        "km": 43.1,
+        "minutes": 67.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 67.0,
+        "sumsq": 4489.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            2,
+            0,
+            1,
+            3
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "single-q30-rejects-capacity-overrun",
+      "strategy": "single",
+      "stops": 2,
+      "resources": 1,
+      "runtime_ms": 0.04,
+      "actual": null,
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "single-q30-seeded-3-20261333-plain",
+      "strategy": "single",
+      "stops": 3,
+      "resources": 1,
+      "runtime_ms": 0.318,
+      "actual": {
+        "served": 3,
+        "used": 1,
+        "km": 45.4,
+        "minutes": 65.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 65.0,
+        "sumsq": 4225.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            2,
+            0,
+            1
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "single-q30-seeded-3-20261334-windows",
+      "strategy": "single",
+      "stops": 3,
+      "resources": 1,
+      "runtime_ms": 0.329,
+      "actual": {
+        "served": 3,
+        "used": 1,
+        "km": 31.0,
+        "minutes": 98.0,
+        "wait": 13.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 98.0,
+        "sumsq": 9604.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            0,
+            1,
+            2
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "single-q30-seeded-3-20261335-plain",
+      "strategy": "single",
+      "stops": 3,
+      "resources": 1,
+      "runtime_ms": 0.278,
+      "actual": {
+        "served": 3,
+        "used": 1,
+        "km": 41.1,
+        "minutes": 46.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 46.0,
+        "sumsq": 2116.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            2,
+            1,
+            0
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "single-q30-seeded-3-20261336-windows",
+      "strategy": "single",
+      "stops": 3,
+      "resources": 1,
+      "runtime_ms": 0.418,
+      "actual": {
+        "served": 3,
+        "used": 1,
+        "km": 39.0,
+        "minutes": 68.0,
+        "wait": 17.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 68.0,
+        "sumsq": 4624.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            1,
+            0,
+            2
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "single-q30-seeded-3-20261337-plain",
+      "strategy": "single",
+      "stops": 3,
+      "resources": 1,
+      "runtime_ms": 0.286,
+      "actual": {
+        "served": 3,
+        "used": 1,
+        "km": 31.0,
+        "minutes": 87.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 87.0,
+        "sumsq": 7569.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            2,
+            1,
+            0
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "single-q30-seeded-4-20261434-plain",
+      "strategy": "single",
+      "stops": 4,
+      "resources": 1,
+      "runtime_ms": 0.725,
+      "actual": {
+        "served": 4,
+        "used": 1,
+        "km": 36.5,
+        "minutes": 85.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 85.0,
+        "sumsq": 7225.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            1,
+            0,
+            2,
+            3
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "single-q30-seeded-4-20261435-windows",
+      "strategy": "single",
+      "stops": 4,
+      "resources": 1,
+      "runtime_ms": 1.131,
+      "actual": {
+        "served": 4,
+        "used": 1,
+        "km": 28.6,
+        "minutes": 101.0,
+        "wait": 10.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 101.0,
+        "sumsq": 10201.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            0,
+            3,
+            1,
+            2
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "single-q30-seeded-4-20261436-plain",
+      "strategy": "single",
+      "stops": 4,
+      "resources": 1,
+      "runtime_ms": 0.65,
+      "actual": {
+        "served": 4,
+        "used": 1,
+        "km": 37.199999999999996,
+        "minutes": 101.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 101.0,
+        "sumsq": 10201.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            0,
+            3,
+            1,
+            2
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "single-q30-seeded-4-20261437-windows",
+      "strategy": "single",
+      "stops": 4,
+      "resources": 1,
+      "runtime_ms": 1.173,
+      "actual": {
+        "served": 4,
+        "used": 1,
+        "km": 77.6,
+        "minutes": 95.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 95.0,
+        "sumsq": 9025.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            3,
+            1,
+            2,
+            0
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "single-q30-seeded-4-20261438-plain",
+      "strategy": "single",
+      "stops": 4,
+      "resources": 1,
+      "runtime_ms": 0.889,
+      "actual": {
+        "served": 4,
+        "used": 1,
+        "km": 22.1,
+        "minutes": 77.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 77.0,
+        "sumsq": 5929.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            0,
+            1,
+            2,
+            3
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "single-q30-seeded-5-20261535-plain",
+      "strategy": "single",
+      "stops": 5,
+      "resources": 1,
+      "runtime_ms": 3.799,
+      "actual": {
+        "served": 5,
+        "used": 1,
+        "km": 34.7,
+        "minutes": 125.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 125.0,
+        "sumsq": 15625.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            3,
+            1,
+            2,
+            0,
+            4
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "single-q30-seeded-5-20261536-windows",
+      "strategy": "single",
+      "stops": 5,
+      "resources": 1,
+      "runtime_ms": 6.824,
+      "actual": {
+        "served": 5,
+        "used": 1,
+        "km": 65.4,
+        "minutes": 121.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 121.0,
+        "sumsq": 14641.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            3,
+            1,
+            4,
+            0,
+            2
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "single-q30-seeded-5-20261537-plain",
+      "strategy": "single",
+      "stops": 5,
+      "resources": 1,
+      "runtime_ms": 3.813,
+      "actual": {
+        "served": 5,
+        "used": 1,
+        "km": 41.599999999999994,
+        "minutes": 81.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 81.0,
+        "sumsq": 6561.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            2,
+            0,
+            4,
+            1,
+            3
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "single-q30-seeded-5-20261538-windows",
+      "strategy": "single",
+      "stops": 5,
+      "resources": 1,
+      "runtime_ms": 5.513,
+      "actual": {
+        "served": 5,
+        "used": 1,
+        "km": 54.400000000000006,
+        "minutes": 103.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 103.0,
+        "sumsq": 10609.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            4,
+            0,
+            3,
+            1,
+            2
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "single-q30-seeded-5-20261539-plain",
+      "strategy": "single",
+      "stops": 5,
+      "resources": 1,
+      "runtime_ms": 3.263,
+      "actual": {
+        "served": 5,
+        "used": 1,
+        "km": 35.5,
+        "minutes": 89.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 89.0,
+        "sumsq": 7921.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            1,
+            2,
+            3,
+            0,
+            4
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "single-q30-seeded-6-20261636-plain",
+      "strategy": "single",
+      "stops": 6,
+      "resources": 1,
+      "runtime_ms": 26.538,
+      "actual": {
+        "served": 6,
+        "used": 1,
+        "km": 39.699999999999996,
+        "minutes": 98.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 98.0,
+        "sumsq": 9604.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            4,
+            3,
+            2,
+            1,
+            5,
+            0
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "single-q30-seeded-6-20261637-windows",
+      "strategy": "single",
+      "stops": 6,
+      "resources": 1,
+      "runtime_ms": 38.054,
+      "actual": {
+        "served": 6,
+        "used": 1,
+        "km": 88.0,
+        "minutes": 131.0,
+        "wait": 17.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 131.0,
+        "sumsq": 17161.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            0,
+            4,
+            3,
+            1,
+            2,
+            5
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "single-q30-seeded-6-20261638-plain",
+      "strategy": "single",
+      "stops": 6,
+      "resources": 1,
+      "runtime_ms": 24.273,
+      "actual": {
+        "served": 6,
+        "used": 1,
+        "km": 20.400000000000002,
+        "minutes": 109.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 109.0,
+        "sumsq": 11881.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            4,
+            1,
+            2,
+            3,
+            0,
+            5
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "single-q30-seeded-6-20261639-windows",
+      "strategy": "single",
+      "stops": 6,
+      "resources": 1,
+      "runtime_ms": 34.557,
+      "actual": {
+        "served": 6,
+        "used": 1,
+        "km": 82.7,
+        "minutes": 124.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 124.0,
+        "sumsq": 15376.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            3,
+            1,
+            0,
+            5,
+            4,
+            2
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "single-q30-seeded-6-20261640-plain",
+      "strategy": "single",
+      "stops": 6,
+      "resources": 1,
+      "runtime_ms": 33.929,
+      "actual": {
+        "served": 6,
+        "used": 1,
+        "km": 49.099999999999994,
+        "minutes": 131.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 131.0,
+        "sumsq": 17161.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            3,
+            1,
+            5,
+            2,
+            4,
+            0
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "single-q30-line-certificate-9",
+      "strategy": "single",
+      "stops": 9,
+      "resources": 1,
+      "runtime_ms": 23.308,
+      "actual": {
+        "served": 9,
+        "used": 1,
+        "km": 30.599999999999994,
+        "minutes": 45.80999999999983,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 45.80999999999983,
+        "sumsq": 2098.556099999985,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            5,
+            1,
+            2,
+            7,
+            6,
+            3,
+            8,
+            0,
+            4
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [
+        "minimum_distance_certified_by_bound"
+      ],
+      "errors": []
+    },
+    {
+      "case_id": "single-q30-line-certificate-12",
+      "strategy": "single",
+      "stops": 12,
+      "resources": 1,
+      "runtime_ms": 94.156,
+      "actual": {
+        "served": 12,
+        "used": 1,
+        "km": 40.79999999999999,
+        "minutes": 61.079999999999814,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 61.079999999999814,
+        "sumsq": 3730.7663999999772,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            2,
+            9,
+            4,
+            1,
+            6,
+            8,
+            3,
+            11,
+            0,
+            10,
+            7,
+            5
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [
+        "minimum_distance_certified_by_bound"
+      ],
+      "errors": []
+    },
+    {
+      "case_id": "single-q30-line-certificate-20",
+      "strategy": "single",
+      "stops": 20,
+      "resources": 1,
+      "runtime_ms": 139.089,
+      "actual": {
+        "served": 20,
+        "used": 1,
+        "km": 68.0,
+        "minutes": 101.79999999999961,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 101.79999999999961,
+        "sumsq": 10363.239999999922,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            1,
+            19,
+            5,
+            7,
+            6,
+            18,
+            9,
+            3,
+            10,
+            11,
+            2,
+            12,
+            15,
+            0,
+            14,
+            8,
+            17,
+            13,
+            4,
+            16
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [
+        "minimum_distance_certified_by_bound"
+      ],
+      "errors": []
+    },
+    {
+      "case_id": "single-q30-line-certificate-50",
+      "strategy": "single",
+      "stops": 50,
+      "resources": 1,
+      "runtime_ms": 450.106,
+      "actual": {
+        "served": 50,
+        "used": 1,
+        "km": 169.99999999999972,
+        "minutes": 254.49999999999795,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 254.49999999999795,
+        "sumsq": 64770.24999999896,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            2,
+            26,
+            39,
+            44,
+            29,
+            38,
+            31,
+            4,
+            3,
+            1,
+            13,
+            25,
+            0,
+            27,
+            33,
+            49,
+            20,
+            28,
+            7,
+            34,
+            15,
+            32,
+            41,
+            6,
+            46,
+            42,
+            19,
+            24,
+            43,
+            37,
+            36,
+            12,
+            11,
+            9,
+            18,
+            14,
+            23,
+            48,
+            21,
+            22,
+            5,
+            10,
+            16,
+            30,
+            35,
+            47,
+            17,
+            45,
+            8,
+            40
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [
+        "minimum_distance_certified_by_bound"
+      ],
+      "errors": []
+    },
+    {
+      "case_id": "single-q30-line-certificate-100",
+      "strategy": "single",
+      "stops": 100,
+      "resources": 1,
+      "runtime_ms": 2318.031,
+      "actual": {
+        "served": 100,
+        "used": 1,
+        "km": 339.99999999999915,
+        "minutes": 508.9999999999968,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 508.9999999999968,
+        "sumsq": 259080.99999999677,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            5,
+            84,
+            90,
+            32,
+            30,
+            76,
+            51,
+            99,
+            25,
+            46,
+            63,
+            47,
+            29,
+            88,
+            23,
+            91,
+            33,
+            34,
+            89,
+            20,
+            18,
+            27,
+            72,
+            37,
+            13,
+            97,
+            74,
+            31,
+            68,
+            62,
+            17,
+            64,
+            38,
+            49,
+            75,
+            2,
+            11,
+            0,
+            14,
+            4,
+            55,
+            45,
+            41,
+            59,
+            58,
+            28,
+            9,
+            1,
+            56,
+            70,
+            57,
+            79,
+            24,
+            6,
+            53,
+            94,
+            80,
+            95,
+            69,
+            8,
+            86,
+            93,
+            54,
+            50,
+            36,
+            43,
+            78,
+            7,
+            3,
+            81,
+            35,
+            44,
+            65,
+            83,
+            71,
+            21,
+            67,
+            22,
+            87,
+            42,
+            52,
+            40,
+            98,
+            60,
+            19,
+            15,
+            26,
+            82,
+            92,
+            12,
+            77,
+            66,
+            96,
+            16,
+            61,
+            48,
+            73,
+            39,
+            10,
+            85
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [
+        "minimum_distance_certified_by_bound"
+      ],
+      "errors": []
+    },
+    {
+      "case_id": "single-q30-seeded-9-20261209-windows",
+      "strategy": "single",
+      "stops": 9,
+      "resources": 1,
+      "runtime_ms": 119.434,
+      "actual": {
+        "served": 9,
+        "used": 1,
+        "km": 122.19999999999999,
+        "minutes": 159.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 159.0,
+        "sumsq": 25281.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            1,
+            3,
+            2,
+            7,
+            8,
+            4,
+            6,
+            0,
+            5
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "single-q30-seeded-16-20261216-windows",
+      "strategy": "single",
+      "stops": 16,
+      "resources": 1,
+      "runtime_ms": 368.528,
+      "actual": {
+        "served": 16,
+        "used": 1,
+        "km": 215.89999999999998,
+        "minutes": 246.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 246.0,
+        "sumsq": 60516.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            9,
+            6,
+            14,
+            0,
+            15,
+            10,
+            2,
+            1,
+            8,
+            13,
+            11,
+            5,
+            4,
+            3,
+            12,
+            7
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "single-q30-seeded-24-20261224-windows",
+      "strategy": "single",
+      "stops": 24,
+      "resources": 1,
+      "runtime_ms": 509.833,
+      "actual": {
+        "served": 24,
+        "used": 1,
+        "km": 269.19999999999993,
+        "minutes": 349.0,
+        "wait": 30.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 349.0,
+        "sumsq": 121801.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            1,
+            10,
+            19,
+            3,
+            20,
+            14,
+            5,
+            15,
+            6,
+            7,
+            11,
+            21,
+            0,
+            12,
+            16,
+            4,
+            13,
+            17,
+            23,
+            22,
+            18,
+            8,
+            2,
+            9
+          ]
+        ]
+      },
+      "comparison": {
+        "index": 1,
+        "actual": 269.19999999999993,
+        "reference": 357.5999999999999,
+        "delta": -88.39999999999998,
+        "worse": false
+      },
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-weight-repacking",
+      "strategy": "efficient",
+      "stops": 6,
+      "resources": 2,
+      "runtime_ms": 63.135,
+      "actual": {
+        "served": 6,
+        "used": 2,
+        "km": 21.6,
+        "minutes": 68.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 34.0,
+        "sumsq": 2312.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            0,
+            3,
+            5
+          ],
+          [
+            1,
+            2,
+            4
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-weight-repacking",
+      "strategy": "balanced",
+      "stops": 6,
+      "resources": 2,
+      "runtime_ms": 10.793,
+      "actual": {
+        "served": 6,
+        "used": 2,
+        "km": 21.6,
+        "minutes": 68.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 34.0,
+        "sumsq": 2312.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            0,
+            3,
+            5
+          ],
+          [
+            1,
+            2,
+            4
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-parcels-repacking",
+      "strategy": "efficient",
+      "stops": 6,
+      "resources": 2,
+      "runtime_ms": 10.851,
+      "actual": {
+        "served": 6,
+        "used": 2,
+        "km": 21.6,
+        "minutes": 74.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 47.0,
+        "sumsq": 2938.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            1,
+            0
+          ],
+          [
+            5,
+            4,
+            3,
+            2
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-parcels-repacking",
+      "strategy": "balanced",
+      "stops": 6,
+      "resources": 2,
+      "runtime_ms": 13.232,
+      "actual": {
+        "served": 6,
+        "used": 2,
+        "km": 21.6,
+        "minutes": 74.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 37.0,
+        "sumsq": 2738.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            5,
+            2,
+            0
+          ],
+          [
+            4,
+            3,
+            1
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-soft-equipment",
+      "strategy": "efficient",
+      "stops": 5,
+      "resources": 2,
+      "runtime_ms": 9.375,
+      "actual": {
+        "served": 5,
+        "used": 2,
+        "km": 18.900000000000002,
+        "minutes": 69.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 1,
+        "makespan": 40.0,
+        "sumsq": 2441.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            4,
+            1,
+            0
+          ],
+          [
+            3,
+            2
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-soft-equipment",
+      "strategy": "balanced",
+      "stops": 5,
+      "resources": 2,
+      "runtime_ms": 8.846,
+      "actual": {
+        "served": 5,
+        "used": 2,
+        "km": 18.900000000000002,
+        "minutes": 69.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 1,
+        "makespan": 40.0,
+        "sumsq": 2441.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            4,
+            1,
+            0
+          ],
+          [
+            3,
+            2
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-coverage-before-equipment",
+      "strategy": "efficient",
+      "stops": 4,
+      "resources": 2,
+      "runtime_ms": 2.967,
+      "actual": {
+        "served": 4,
+        "used": 2,
+        "km": 16.200000000000003,
+        "minutes": 58.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 3,
+        "makespan": 40.0,
+        "sumsq": 1924.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            0
+          ],
+          [
+            3,
+            2,
+            1
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-coverage-before-equipment",
+      "strategy": "balanced",
+      "stops": 4,
+      "resources": 2,
+      "runtime_ms": 1.982,
+      "actual": {
+        "served": 4,
+        "used": 2,
+        "km": 16.200000000000003,
+        "minutes": 58.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 3,
+        "makespan": 40.0,
+        "sumsq": 1924.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            0
+          ],
+          [
+            3,
+            2,
+            1
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-urgent-stop-break-conflict",
+      "strategy": "efficient",
+      "stops": 5,
+      "resources": 2,
+      "runtime_ms": 10.36,
+      "actual": {
+        "served": 5,
+        "used": 2,
+        "km": 18.900000000000002,
+        "minutes": 131.0,
+        "wait": 49.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 68.0,
+        "sumsq": 8593.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            4,
+            3
+          ],
+          [
+            0,
+            2,
+            1
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-urgent-stop-break-conflict",
+      "strategy": "balanced",
+      "stops": 5,
+      "resources": 2,
+      "runtime_ms": 9.122,
+      "actual": {
+        "served": 5,
+        "used": 2,
+        "km": 18.900000000000002,
+        "minutes": 131.0,
+        "wait": 49.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 68.0,
+        "sumsq": 8593.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            4,
+            1
+          ],
+          [
+            0,
+            3,
+            2
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-shift-start-is-not-delayed",
+      "strategy": "efficient",
+      "stops": 4,
+      "resources": 2,
+      "runtime_ms": 4.55,
+      "actual": {
+        "served": 4,
+        "used": 1,
+        "km": 13.5,
+        "minutes": 104.0,
+        "wait": 53.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 104.0,
+        "sumsq": 10816.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [],
+          [
+            3,
+            2,
+            1,
+            0
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-shift-start-is-not-delayed",
+      "strategy": "balanced",
+      "stops": 4,
+      "resources": 2,
+      "runtime_ms": 5.224,
+      "actual": {
+        "served": 4,
+        "used": 1,
+        "km": 13.5,
+        "minutes": 104.0,
+        "wait": 53.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 104.0,
+        "sumsq": 10816.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [],
+          [
+            3,
+            2,
+            1,
+            0
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-upcoming-bookings",
+      "strategy": "efficient",
+      "stops": 6,
+      "resources": 3,
+      "runtime_ms": 238.735,
+      "actual": {
+        "served": 6,
+        "used": 1,
+        "km": 18.9,
+        "minutes": 102.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 102.0,
+        "sumsq": 10404.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [],
+          [],
+          [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-upcoming-bookings",
+      "strategy": "balanced",
+      "stops": 6,
+      "resources": 3,
+      "runtime_ms": 234.601,
+      "actual": {
+        "served": 6,
+        "used": 3,
+        "km": 24.300000000000004,
+        "minutes": 114.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 38.0,
+        "sumsq": 4332.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            3,
+            0
+          ],
+          [
+            4,
+            1
+          ],
+          [
+            5,
+            2
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-return-through-break",
+      "strategy": "efficient",
+      "stops": 3,
+      "resources": 2,
+      "runtime_ms": 3.274,
+      "actual": {
+        "served": 3,
+        "used": 1,
+        "km": 10.8,
+        "minutes": 49.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 49.0,
+        "sumsq": 2401.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [],
+          [
+            0,
+            1,
+            2
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-return-through-break",
+      "strategy": "balanced",
+      "stops": 3,
+      "resources": 2,
+      "runtime_ms": 3.401,
+      "actual": {
+        "served": 3,
+        "used": 2,
+        "km": 13.500000000000002,
+        "minutes": 59.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 36.0,
+        "sumsq": 1825.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-return-policy-open",
+      "strategy": "efficient",
+      "stops": 4,
+      "resources": 2,
+      "runtime_ms": 4.571,
+      "actual": {
+        "served": 4,
+        "used": 2,
+        "km": 10.8,
+        "minutes": 56.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 37.0,
+        "sumsq": 1730.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            2,
+            1,
+            0
+          ],
+          [
+            3
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-return-policy-open",
+      "strategy": "balanced",
+      "stops": 4,
+      "resources": 2,
+      "runtime_ms": 3.52,
+      "actual": {
+        "served": 4,
+        "used": 2,
+        "km": 10.8,
+        "minutes": 56.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 28.0,
+        "sumsq": 1568.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            2,
+            0
+          ],
+          [
+            3,
+            1
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-return-policy-closed",
+      "strategy": "efficient",
+      "stops": 4,
+      "resources": 2,
+      "runtime_ms": 4.535,
+      "actual": {
+        "served": 2,
+        "used": 2,
+        "km": 10.8,
+        "minutes": 68.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 34.0,
+        "sumsq": 2312.0,
+        "feasible": true,
+        "unassigned": [
+          2,
+          3
+        ],
+        "orders": [
+          [
+            0
+          ],
+          [
+            1
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-return-policy-closed",
+      "strategy": "balanced",
+      "stops": 4,
+      "resources": 2,
+      "runtime_ms": 2.919,
+      "actual": {
+        "served": 2,
+        "used": 2,
+        "km": 10.8,
+        "minutes": 68.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 34.0,
+        "sumsq": 2312.0,
+        "feasible": true,
+        "unassigned": [
+          2,
+          3
+        ],
+        "orders": [
+          [
+            0
+          ],
+          [
+            1
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-zero-and-unlimited-capacity",
+      "strategy": "efficient",
+      "stops": 4,
+      "resources": 2,
+      "runtime_ms": 5.435,
+      "actual": {
+        "served": 4,
+        "used": 1,
+        "km": 13.5,
+        "minutes": 51.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 51.0,
+        "sumsq": 2601.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [],
+          [
+            0,
+            3,
+            2,
+            1
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-zero-and-unlimited-capacity",
+      "strategy": "balanced",
+      "stops": 4,
+      "resources": 2,
+      "runtime_ms": 5.058,
+      "actual": {
+        "served": 4,
+        "used": 2,
+        "km": 16.200000000000003,
+        "minutes": 58.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 40.0,
+        "sumsq": 1924.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            0
+          ],
+          [
+            3,
+            2,
+            1
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-two-service-windows",
+      "strategy": "efficient",
+      "stops": 5,
+      "resources": 2,
+      "runtime_ms": 11.762,
+      "actual": {
+        "served": 5,
+        "used": 2,
+        "km": 18.900000000000002,
+        "minutes": 684.0,
+        "wait": 508.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 356.0,
+        "sumsq": 234320.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            2,
+            1,
+            0
+          ],
+          [
+            4,
+            3
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-two-service-windows",
+      "strategy": "balanced",
+      "stops": 5,
+      "resources": 2,
+      "runtime_ms": 8.123,
+      "actual": {
+        "served": 5,
+        "used": 2,
+        "km": 18.900000000000002,
+        "minutes": 684.0,
+        "wait": 508.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 356.0,
+        "sumsq": 234320.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            4,
+            2,
+            0
+          ],
+          [
+            3,
+            1
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-availability-ceil-boundary",
+      "strategy": "efficient",
+      "stops": 2,
+      "resources": 2,
+      "runtime_ms": 0.416,
+      "actual": {
+        "served": 2,
+        "used": 2,
+        "km": 10.8,
+        "minutes": 70.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 35.0,
+        "sumsq": 2450.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            0
+          ],
+          [
+            1
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-availability-ceil-boundary",
+      "strategy": "balanced",
+      "stops": 2,
+      "resources": 2,
+      "runtime_ms": 0.439,
+      "actual": {
+        "served": 2,
+        "used": 2,
+        "km": 10.8,
+        "minutes": 70.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 35.0,
+        "sumsq": 2450.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            0
+          ],
+          [
+            1
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-availability-ceil-over",
+      "strategy": "efficient",
+      "stops": 2,
+      "resources": 2,
+      "runtime_ms": 0.371,
+      "actual": {
+        "served": 1,
+        "used": 1,
+        "km": 5.4,
+        "minutes": 35.00001999999995,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 35.00001999999995,
+        "sumsq": 1225.0014000003964,
+        "feasible": true,
+        "unassigned": [
+          1
+        ],
+        "orders": [
+          [],
+          [
+            0
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-availability-ceil-over",
+      "strategy": "balanced",
+      "stops": 2,
+      "resources": 2,
+      "runtime_ms": 0.552,
+      "actual": {
+        "served": 1,
+        "used": 1,
+        "km": 5.4,
+        "minutes": 35.00001999999995,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 35.00001999999995,
+        "sumsq": 1225.0014000003964,
+        "feasible": true,
+        "unassigned": [
+          1
+        ],
+        "orders": [
+          [],
+          [
+            0
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-prudent-margin-1.0",
+      "strategy": "efficient",
+      "stops": 3,
+      "resources": 2,
+      "runtime_ms": 0.806,
+      "actual": {
+        "served": 3,
+        "used": 2,
+        "km": 13.500000000000002,
+        "minutes": 65.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 40.0,
+        "sumsq": 2225.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            0,
+            1
+          ],
+          [
+            2
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-prudent-margin-1.0",
+      "strategy": "balanced",
+      "stops": 3,
+      "resources": 2,
+      "runtime_ms": 0.887,
+      "actual": {
+        "served": 3,
+        "used": 2,
+        "km": 13.500000000000002,
+        "minutes": 65.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 40.0,
+        "sumsq": 2225.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            0,
+            2
+          ],
+          [
+            1
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-prudent-margin-1.15",
+      "strategy": "efficient",
+      "stops": 3,
+      "resources": 2,
+      "runtime_ms": 1.143,
+      "actual": {
+        "served": 2,
+        "used": 1,
+        "km": 8.100000000000001,
+        "minutes": 44.5,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 44.5,
+        "sumsq": 1980.25,
+        "feasible": true,
+        "unassigned": [
+          0
+        ],
+        "orders": [
+          [
+            2,
+            1
+          ],
+          []
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-prudent-margin-1.15",
+      "strategy": "balanced",
+      "stops": 3,
+      "resources": 2,
+      "runtime_ms": 1.515,
+      "actual": {
+        "served": 2,
+        "used": 2,
+        "km": 10.8,
+        "minutes": 56.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 28.0,
+        "sumsq": 1568.0,
+        "feasible": true,
+        "unassigned": [
+          0
+        ],
+        "orders": [
+          [
+            1
+          ],
+          [
+            2
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-energy-prices-per-resource",
+      "strategy": "efficient",
+      "stops": 3,
+      "resources": 2,
+      "runtime_ms": 0.616,
+      "actual": {
+        "served": 3,
+        "used": 2,
+        "km": 21.5,
+        "minutes": 47.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 29.0,
+        "sumsq": 1165.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            1,
+            0
+          ],
+          [
+            2
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-energy-prices-per-resource",
+      "strategy": "balanced",
+      "stops": 3,
+      "resources": 2,
+      "runtime_ms": 0.728,
+      "actual": {
+        "served": 3,
+        "used": 2,
+        "km": 21.5,
+        "minutes": 47.0,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 29.0,
+        "sumsq": 1165.0,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            2,
+            0
+          ],
+          [
+            1
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-random-2026103000",
+      "strategy": "efficient",
+      "stops": 5,
+      "resources": 2,
+      "runtime_ms": 7.886,
+      "actual": {
+        "served": 5,
+        "used": 2,
+        "km": 35.348532459187176,
+        "minutes": 92.49992757902044,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 1,
+        "makespan": 47.039247616914395,
+        "sumsq": 4279.364238982416,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            0,
+            4,
+            3
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-random-2026103000",
+      "strategy": "balanced",
+      "stops": 5,
+      "resources": 2,
+      "runtime_ms": 7.657,
+      "actual": {
+        "served": 5,
+        "used": 2,
+        "km": 35.348532459187176,
+        "minutes": 92.49992757902044,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 1,
+        "makespan": 47.039247616914395,
+        "sumsq": 4279.364238982416,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            0,
+            4,
+            3
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-random-2026103001",
+      "strategy": "efficient",
+      "stops": 6,
+      "resources": 2,
+      "runtime_ms": 68.262,
+      "actual": {
+        "served": 6,
+        "used": 2,
+        "km": 52.70502819607885,
+        "minutes": 141.05088590217508,
+        "wait": 6.322957396187803,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 99.6883436381471,
+        "sumsq": 11648.625759860806,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            1,
+            3
+          ],
+          [
+            0,
+            4,
+            2,
+            5
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-random-2026103001",
+      "strategy": "balanced",
+      "stops": 6,
+      "resources": 2,
+      "runtime_ms": 74.155,
+      "actual": {
+        "served": 6,
+        "used": 2,
+        "km": 52.70502819607885,
+        "minutes": 141.05088590217508,
+        "wait": 6.322957396187803,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 99.6883436381471,
+        "sumsq": 11648.625759860806,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            1,
+            3
+          ],
+          [
+            0,
+            4,
+            2,
+            5
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-random-2026103002",
+      "strategy": "efficient",
+      "stops": 5,
+      "resources": 2,
+      "runtime_ms": 19.433,
+      "actual": {
+        "served": 5,
+        "used": 2,
+        "km": 22.855238013708185,
+        "minutes": 81.28230073343997,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 59.32705022585037,
+        "sumsq": 4001.7319133515857,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            2,
+            0,
+            1,
+            4
+          ],
+          [
+            3
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-random-2026103002",
+      "strategy": "balanced",
+      "stops": 5,
+      "resources": 2,
+      "runtime_ms": 27.814,
+      "actual": {
+        "served": 5,
+        "used": 2,
+        "km": 29.11845657126608,
+        "minutes": 92.921910442176,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 48.95038335837171,
+        "sumsq": 4329.635225013288,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            0,
+            1,
+            2
+          ],
+          [
+            4,
+            3
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-random-2026103003",
+      "strategy": "efficient",
+      "stops": 6,
+      "resources": 2,
+      "runtime_ms": 34.224,
+      "actual": {
+        "served": 6,
+        "used": 2,
+        "km": 38.77653491221129,
+        "minutes": 135.6581422236112,
+        "wait": 30.815024245165432,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 90.64071235290896,
+        "sumsq": 10242.307728006379,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            1,
+            4,
+            5
+          ],
+          [
+            2,
+            0,
+            3
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-random-2026103003",
+      "strategy": "balanced",
+      "stops": 6,
+      "resources": 2,
+      "runtime_ms": 35.22,
+      "actual": {
+        "served": 6,
+        "used": 2,
+        "km": 38.77653491221129,
+        "minutes": 135.6581422236112,
+        "wait": 30.815024245165432,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 90.64071235290896,
+        "sumsq": 10242.307728006379,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            1,
+            4,
+            5
+          ],
+          [
+            2,
+            0,
+            3
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-random-2026103004",
+      "strategy": "efficient",
+      "stops": 5,
+      "resources": 2,
+      "runtime_ms": 14.299,
+      "actual": {
+        "served": 5,
+        "used": 2,
+        "km": 24.147041574510702,
+        "minutes": 76.68299761634728,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 39.89765674475302,
+        "sumsq": 2944.984316761519,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            0,
+            4
+          ],
+          [
+            2,
+            1,
+            3
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-random-2026103004",
+      "strategy": "balanced",
+      "stops": 5,
+      "resources": 2,
+      "runtime_ms": 11.493,
+      "actual": {
+        "served": 5,
+        "used": 2,
+        "km": 24.147041574510702,
+        "minutes": 76.68299761634728,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 39.89765674475302,
+        "sumsq": 2944.984316761519,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            0,
+            4
+          ],
+          [
+            2,
+            1,
+            3
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-random-2026103005",
+      "strategy": "efficient",
+      "stops": 6,
+      "resources": 2,
+      "runtime_ms": 45.918,
+      "actual": {
+        "served": 6,
+        "used": 2,
+        "km": 43.60796345467719,
+        "minutes": 131.82478731703577,
+        "wait": 14.002908330467562,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 93.66651024628186,
+        "sumsq": 10229.46925072525,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            1,
+            3
+          ],
+          [
+            4,
+            0,
+            2,
+            5
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-random-2026103005",
+      "strategy": "balanced",
+      "stops": 6,
+      "resources": 2,
+      "runtime_ms": 69.972,
+      "actual": {
+        "served": 6,
+        "used": 2,
+        "km": 43.60796345467719,
+        "minutes": 131.82478731703577,
+        "wait": 14.002908330467562,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 93.66651024628186,
+        "sumsq": 10229.46925072525,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            1,
+            3
+          ],
+          [
+            4,
+            0,
+            2,
+            5
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-scale-8",
+      "strategy": "efficient",
+      "stops": 8,
+      "resources": 2,
+      "runtime_ms": 17.719,
+      "actual": {
+        "served": 8,
+        "used": 2,
+        "km": 31.507229166550324,
+        "minutes": 84.27892145996077,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 50.633124491460535,
+        "sumsq": 3695.7529494132805,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            4,
+            3,
+            5,
+            1
+          ],
+          [
+            0,
+            7,
+            6,
+            2
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-scale-8",
+      "strategy": "balanced",
+      "stops": 8,
+      "resources": 2,
+      "runtime_ms": 19.788,
+      "actual": {
+        "served": 8,
+        "used": 2,
+        "km": 33.32911659658362,
+        "minutes": 87.66472995825279,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 46.43273987584473,
+        "sumsq": 3856.0763385336577,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            0,
+            6,
+            7,
+            1
+          ],
+          [
+            5,
+            3,
+            4,
+            2
+          ]
+        ]
+      },
+      "comparison": null,
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-scale-12",
+      "strategy": "efficient",
+      "stops": 12,
+      "resources": 3,
+      "runtime_ms": 17.41,
+      "actual": {
+        "served": 12,
+        "used": 3,
+        "km": 39.77557539734205,
+        "minutes": 112.50770649063577,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 42.18838235415865,
+        "sumsq": 4255.2156958554415,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            2,
+            11,
+            4,
+            5
+          ],
+          [
+            1,
+            9,
+            7,
+            0
+          ],
+          [
+            3,
+            10,
+            8,
+            6
+          ]
+        ]
+      },
+      "comparison": {
+        "index": 3,
+        "actual": 112.50770649063577,
+        "reference": 153.22288512000705,
+        "delta": -40.71517862937128,
+        "worse": false
+      },
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-scale-12",
+      "strategy": "balanced",
+      "stops": 12,
+      "resources": 3,
+      "runtime_ms": 48.447,
+      "actual": {
+        "served": 12,
+        "used": 3,
+        "km": 41.13034432328163,
+        "minutes": 115.02541865388639,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 39.66402761540792,
+        "sumsq": 4416.316198860037,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            1,
+            9,
+            2,
+            5
+          ],
+          [
+            3,
+            10,
+            8,
+            6
+          ],
+          [
+            11,
+            4,
+            7,
+            0
+          ]
+        ]
+      },
+      "comparison": {
+        "index": 3,
+        "actual": 39.66402761540792,
+        "reference": 54.260232959127734,
+        "delta": -14.596205343719816,
+        "worse": false
+      },
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-scale-25",
+      "strategy": "efficient",
+      "stops": 25,
+      "resources": 4,
+      "runtime_ms": 324.667,
+      "actual": {
+        "served": 25,
+        "used": 4,
+        "km": 78.45561740667517,
+        "minutes": 224.00689960532554,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 63.8074138191954,
+        "sumsq": 13162.92419315312,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            3,
+            6,
+            24,
+            14,
+            1,
+            12,
+            0
+          ],
+          [
+            8,
+            5,
+            13,
+            21,
+            9,
+            10,
+            11
+          ],
+          [
+            16,
+            18,
+            15,
+            4,
+            17,
+            19,
+            20
+          ],
+          [
+            22,
+            7,
+            23,
+            2
+          ]
+        ]
+      },
+      "comparison": {
+        "index": 3,
+        "actual": 224.00689960532554,
+        "reference": 315.35220376848633,
+        "delta": -91.34530416316079,
+        "worse": false
+      },
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-scale-25",
+      "strategy": "balanced",
+      "stops": 25,
+      "resources": 4,
+      "runtime_ms": 315.571,
+      "actual": {
+        "served": 25,
+        "used": 4,
+        "km": 60.72038630789187,
+        "minutes": 191.0476205721884,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 48.89110581006253,
+        "sumsq": 9130.4334822309,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            16,
+            5,
+            8,
+            18,
+            12,
+            0
+          ],
+          [
+            23,
+            9,
+            10,
+            11,
+            1,
+            15
+          ],
+          [
+            14,
+            24,
+            4,
+            17,
+            19,
+            20,
+            2
+          ],
+          [
+            7,
+            3,
+            6,
+            13,
+            21,
+            22
+          ]
+        ]
+      },
+      "comparison": {
+        "index": 3,
+        "actual": 48.89110581006253,
+        "reference": 103.31254227809848,
+        "delta": -54.42143646803595,
+        "worse": false
+      },
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-scale-50",
+      "strategy": "efficient",
+      "stops": 50,
+      "resources": 5,
+      "runtime_ms": 701.627,
+      "actual": {
+        "served": 50,
+        "used": 5,
+        "km": 135.93009076445222,
+        "minutes": 406.10459345606176,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 99.18669363097263,
+        "sumsq": 36301.739933548866,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            23,
+            10,
+            3,
+            11,
+            22,
+            13,
+            4,
+            49,
+            0,
+            7,
+            6,
+            5
+          ],
+          [
+            21,
+            18,
+            8,
+            12,
+            2,
+            17,
+            19,
+            16,
+            20,
+            15,
+            9,
+            14
+          ],
+          [
+            27,
+            31,
+            34,
+            29,
+            30,
+            35,
+            32,
+            26,
+            33,
+            28,
+            25,
+            24
+          ],
+          [
+            47,
+            43,
+            39,
+            40,
+            38,
+            45,
+            41,
+            37,
+            36,
+            44,
+            46,
+            42
+          ],
+          [
+            1,
+            48
+          ]
+        ]
+      },
+      "comparison": {
+        "index": 3,
+        "actual": 406.10459345606176,
+        "reference": 589.4079199807857,
+        "delta": -183.3033265247239,
+        "worse": false
+      },
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-scale-50",
+      "strategy": "balanced",
+      "stops": 50,
+      "resources": 5,
+      "runtime_ms": 1001.604,
+      "actual": {
+        "served": 50,
+        "used": 5,
+        "km": 96.77622653150542,
+        "minutes": 333.340774970054,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 68.71269820740315,
+        "sumsq": 22268.3992917533,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            42,
+            30,
+            18,
+            0,
+            49,
+            38,
+            7,
+            6,
+            32,
+            21,
+            28,
+            25
+          ],
+          [
+            43,
+            33,
+            47,
+            23,
+            5,
+            40,
+            39,
+            1,
+            35,
+            24
+          ],
+          [
+            46,
+            36,
+            37,
+            8,
+            2,
+            17,
+            22,
+            31,
+            44,
+            14
+          ],
+          [
+            9,
+            48,
+            15,
+            16,
+            20,
+            11,
+            3,
+            10,
+            26
+          ],
+          [
+            27,
+            19,
+            12,
+            41,
+            34,
+            13,
+            45,
+            29,
+            4
+          ]
+        ]
+      },
+      "comparison": {
+        "index": 3,
+        "actual": 68.71269820740315,
+        "reference": 126.05621590686246,
+        "delta": -57.34351769945931,
+        "worse": false
+      },
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-scale-100",
+      "strategy": "efficient",
+      "stops": 100,
+      "resources": 10,
+      "runtime_ms": 424.508,
+      "actual": {
+        "served": 100,
+        "used": 10,
+        "km": 292.1174072802197,
+        "minutes": 849.8553586623549,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 95.14526265366385,
+        "sumsq": 72687.30980293818,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            12,
+            7,
+            1,
+            18,
+            0,
+            13,
+            6,
+            4,
+            8,
+            9
+          ],
+          [
+            2,
+            3,
+            29,
+            15,
+            19,
+            14,
+            17,
+            11,
+            16,
+            10
+          ],
+          [
+            5,
+            21,
+            24,
+            28,
+            25,
+            22,
+            26,
+            27,
+            20,
+            23
+          ],
+          [
+            34,
+            38,
+            39,
+            31,
+            30,
+            37,
+            33,
+            35,
+            32,
+            36
+          ],
+          [
+            46,
+            41,
+            42,
+            44,
+            40,
+            43,
+            45,
+            49,
+            48,
+            47
+          ],
+          [
+            51,
+            57,
+            50,
+            56,
+            55,
+            52,
+            58,
+            54,
+            53,
+            59
+          ],
+          [
+            67,
+            62,
+            64,
+            61,
+            68,
+            69,
+            63,
+            66,
+            60,
+            65
+          ],
+          [
+            74,
+            76,
+            75,
+            73,
+            79,
+            77,
+            71,
+            72,
+            70,
+            78
+          ],
+          [
+            83,
+            87,
+            82,
+            89,
+            85,
+            81,
+            88,
+            86,
+            84,
+            80
+          ],
+          [
+            97,
+            94,
+            93,
+            98,
+            91,
+            90,
+            95,
+            96,
+            99,
+            92
+          ]
+        ]
+      },
+      "comparison": {
+        "index": 3,
+        "actual": 849.8553586623549,
+        "reference": 1239.5269300603659,
+        "delta": -389.671571398011,
+        "worse": false
+      },
+      "observations": [],
+      "errors": []
+    },
+    {
+      "case_id": "fleet-new-scale-100",
+      "strategy": "balanced",
+      "stops": 100,
+      "resources": 10,
+      "runtime_ms": 546.698,
+      "actual": {
+        "served": 100,
+        "used": 10,
+        "km": 201.58138214642725,
+        "minutes": 681.6025685907053,
+        "wait": 0.0,
+        "lateness": 0.0,
+        "violations": 0,
+        "mismatches": 0,
+        "makespan": 86.99788808340247,
+        "sumsq": 47279.13031319121,
+        "feasible": true,
+        "unassigned": [],
+        "orders": [
+          [
+            43,
+            21,
+            80,
+            18,
+            51,
+            0,
+            91,
+            24,
+            32,
+            36
+          ],
+          [
+            99,
+            74,
+            76,
+            58,
+            75,
+            97,
+            60,
+            1,
+            94,
+            37
+          ],
+          [
+            38,
+            83,
+            54,
+            68,
+            31,
+            19,
+            15,
+            63,
+            93,
+            2
+          ],
+          [
+            48,
+            49,
+            90,
+            35,
+            72,
+            57,
+            84,
+            12,
+            3,
+            78
+          ],
+          [
+            52,
+            23,
+            67,
+            89,
+            16,
+            81,
+            27,
+            47,
+            4,
+            70
+          ],
+          [
+            46,
+            17,
+            11,
+            42,
+            41,
+            73,
+            79,
+            61,
+            39,
+            5
+          ],
+          [
+            50,
+            88,
+            25,
+            33,
+            13,
+            45,
+            86,
+            65,
+            6,
+            28
+          ],
+          [
+            59,
+            66,
+            29,
+            53,
+            40,
+            30,
+            7,
+            71,
+            96,
+            95
+          ],
+          [
+            62,
+            26,
+            85,
+            82,
+            64,
+            55,
+            20,
+            10,
+            56,
+            8
+          ],
+          [
+            34,
+            14,
+            69,
+            77,
+            44,
+            87,
+            92,
+            9,
+            22,
+            98
+          ]
+        ]
+      },
+      "comparison": {
+        "index": 3,
+        "actual": 86.99788808340247,
+        "reference": 151.8653987876445,
+        "delta": -64.86751070424202,
+        "worse": false
+      },
+      "observations": [],
+      "errors": []
+    }
+  ]
+}

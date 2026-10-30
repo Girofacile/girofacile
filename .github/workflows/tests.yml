@@ -234,6 +234,35 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
+  current-routing-quality:
+    name: Fresh routing scenarios and independent optimality audit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    env:
+      DATABASE_URL: 'sqlite+pysqlite:///:memory:'
+      ALLOW_SQLITE_LEGACY: 'true'
+      APP_ENV: test
+      BILLING_MODE: disabled
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Validate new reference and operational contracts
+        run: python -m pytest tests/test_routing_quality_oracle.py tests/test_routing_quality_audit.py tests/test_routing_quality_integration.py -q -ra
+      - name: Audit current engines on fresh frozen problems
+        run: python tests/run_routing_quality_audit.py --profile full --strict
+      - name: Preserve independent audit inputs and results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: current-routing-quality
+          path: test-results/routing-quality/
+          if-no-files-found: error
+          retention-days: 30
+
   fleet-simulations:
     name: Fleet quality simulations and independent exact references
     runs-on: ubuntu-24.04
