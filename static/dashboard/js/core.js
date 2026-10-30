@@ -3639,6 +3639,19 @@ async function programCurrentRoute(){
     alert("Calcola prima il percorso del giro.");
     return;
   }
+  // Primo giro della guida: è di prova, non arriva all'autista e non resta tra i giri.
+  if(window.GFTutor?.testing?.()){
+    try{
+      await GFTutor.testRoute(lastRouteResult.id);
+      clearRouteWorkspace();
+      await Promise.allSettled([loadDashboardHome(), loadRoutes(), loadVehicles(), loadDrivers()]);
+      await refreshResourceAvailability();
+      showTab("dashboard");
+    }catch(e){
+      alert(e.message || "Errore durante la prova di programmazione.");
+    }
+    return;
+  }
   try{
     await api(`/api/routes/${lastRouteResult.id}/program`, {method:"POST", body:"{}"});
     toast("Giro programmato correttamente. Lo trovi in Giri programmati.");

@@ -46,7 +46,7 @@
         return {target:[...document.querySelectorAll('#tab-clienti .cx-cb')].find(box=>visible(box)&&!box.disabled),placement:'right',title:'Seleziona il cliente',text:'Spunta i clienti da mettere nel primo giro.'};
       }
       case 'program':
-        if(tab==='route-preview')return {target:document.querySelector('#tab-route-preview [data-preview-program]'),placement:'bottom-end',title:'Premi «Programma giro»',text:'Controlla l’anteprima: con la programmazione il giro passa all’autista.'};
+        if(tab==='route-preview')return {target:document.querySelector('#tab-route-preview [data-preview-program]'),placement:'top-end',title:'Premi «Programma giro di prova»',text:'È una prova: il giro non va all’autista e non conta nel piano. Deposito, mezzo, autista e cliente restano.'};
         if(tab==='giro')return {target:el('routeCalculateBtn'),placement:'top-end',title:'Premi «Calcola percorso»',text:'Poi programma il giro dall’anteprima.'};
         if(tab==='bozze')return {target:document.querySelector('#tab-bozze .gf-table button'),placement:'left',title:'Riprendi il giro in bozza',text:'Lo ritrovi dove l’avevi lasciato.'};
         return {target:visible(el('sidebarDraftsItem'))?el('sidebarDraftsItem'):null,placement:'right',title:'Riprendi il giro in bozza',text:'Il giro calcolato ti aspetta in «Giri in bozza».'};
@@ -64,6 +64,9 @@
     if(target===node)return;
     target?.removeAttribute('data-gf-tutor-target');
     target=node;target?.setAttribute('data-gf-tutor-target','');
+    // Un pulsante fuori dallo schermo (es. in fondo all'anteprima) viene portato in vista una volta.
+    const box=node?.getBoundingClientRect();
+    if(box&&node.id!=='coachBar'&&(box.bottom>innerHeight-96||box.top<0))node.scrollIntoView({block:'center',behavior:'smooth'});
   }
   function toggle(node,show){
     if(!node)return;
@@ -75,9 +78,13 @@
     scheduled=false;
     const bar=el('coachBar'),tip=el('coachTip'),spot=el('coachSpot');
     const resume=el('tutorResumeBtn');if(resume)resume.hidden=status?.state!=='chiuso';
+    // Durante la guida il primo giro è di prova: il pulsante dell'anteprima lo dice.
+    const program=document.querySelector('#tab-route-preview [data-preview-program]'),label=testing()?'Programma giro di prova':'Programma giro';
+    if(program&&program.textContent!==label)program.textContent=label;
     if(!status||(!finished&&status.state!=='attivo')){hide();return;}
     const steps=status.steps||[],index=steps.findIndex(step=>step.key===status.current);
-    let step=finished?{target:null,placement:'bottom',title:'Complimenti, il primo giro è programmato!',text:'Lo trovi in «Giri programmati». La guida finisce qui.'}:plan(status.current);
+    let step=finished==='prova'?{target:null,placement:'bottom',title:'Giro di prova completato!',text:'Ecco come funziona la programmazione: il giro di prova non è stato inviato all’autista. Ora puoi pianificare i giri veri.'}
+      :finished?{target:null,placement:'bottom',title:'Complimenti, il primo giro è programmato!',text:'Lo trovi in «Giri programmati». La guida finisce qui.'}:plan(status.current);
     let node=step.target;
     // Voce dentro un gruppo chiuso del menu: prima si indica il gruppo da aprire.
     const summary=node&&!visible(node)?node.closest('details:not([open])')?.querySelector(':scope>summary'):null;
@@ -93,7 +100,7 @@
     const placement=node&&step.placement==='auto-end'?savePlacement(node,tip):step.placement;
     tip.dataset.placement=node?placement:'top';
     tip.toggleAttribute('data-modal',!!node?.closest('dialog[open]'));
-    el('coachKicker').textContent=finished?'Primo giro creato':`Passo ${index+1} di ${steps.length} · ${steps[index]?.label||''}`;
+    el('coachKicker').textContent=finished==='prova'?'Guida completata':finished?'Primo giro creato':`Passo ${index+1} di ${steps.length} · ${steps[index]?.label||''}`;
     el('coachTitle').textContent=step.title;
     el('coachText').textContent=step.text;
     el('coachExit').hidden=finished;
@@ -102,8 +109,14 @@
     el('coachDone').hidden=!finished;
     el('coachCount').textContent=finished?`${status.total} di ${status.total}`:`Passo ${index+1} di ${steps.length}`;
     el('coachStep').textContent=finished?'Completato':steps[index]?.label||'';
-    el('coachSegments').replaceChildren(...steps.map((item,i)=>{const s=document.createElement('span');if(item.done||item.skipped)s.className='is-done';if(i===index)s.setAttribute('aria-current','step');return s;}));
+    el('coachSegments').replaceChildren(...steps.map((item,i)=>{const s=document.createElement('span');if(finished||item.done||item.skipped)s.className='is-done';if(i===index)s.setAttribute('aria-current','step');return s;}));
     toggle(spot,!!node);toggle(bar,true);toggle(tip,true);
+  }
+  function testing(){return !finished&&status?.state==='attivo'&&status.current==='program';}
+  // Il giro di prova viene eliminato dal server al posto della programmazione.
+  async function testRoute(id){
+    status=await api('/api/onboarding/tutor',{method:'POST',body:JSON.stringify({action:'test_route',route_id:id})});
+    finished='prova';schedule();
   }
   function schedule(){if(!scheduled){scheduled=true;requestAnimationFrame(render);}}
   async function refresh(){
@@ -149,5 +162,5 @@
       .observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class','hidden','open','disabled']});
     refresh();
   }
-  window.GFTutor={start,refresh,close,restart,skip,resume:()=>update('resume'),state:()=>status};
+  window.GFTutor={start,refresh,close,restart,skip,resume:()=>update('resume'),state:()=>status,testing,testRoute};
 })();

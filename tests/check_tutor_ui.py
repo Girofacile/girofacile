@@ -51,7 +51,14 @@ def open_dashboard(browser, store, errors):
             route.fulfill(path=str(file)) if file.is_relative_to(ROOT) and file.is_file() else route.fulfill(status=404, body='')
             return
         body = json.loads(route.request.post_data or '{}') if method != 'GET' else {}
+        if method == 'POST' and path.endswith('/program'):
+            store.setdefault('programmed', []).append(path)
         if path == '/api/onboarding/tutor':
+            if method == 'POST' and body['action'] == 'test_route':
+                # Giro di prova: il server lo elimina al posto della programmazione.
+                assert tutor(store)['current'] == 'program'
+                store.update(route=None, state='completato', test_route=body['route_id']); store['tutor_posts'].append('test_route')
+                route.fulfill(json=tutor(store)); return
             if method == 'POST' and body['action'] == 'skip':
                 store['skipped'].append(tutor(store)['current']); store['tutor_posts'].append('skip')
                 route.fulfill(json=tutor(store)); return
@@ -179,12 +186,23 @@ def main():
             page.evaluate('async () => { await GFTutor.refresh(); showTab("dashboard"); }')
             assert 'bozza' in tip_on(page, '#sidebarDraftsItem')
 
-            # Primo giro programmato: congratulazioni, poi la guida si chiude e non torna più.
-            store['route'] = 'programmato'
-            page.evaluate('GFTutor.refresh()')
-            page.wait_for_function('document.getElementById("coachTitle").textContent.includes("Complimenti")')
+            # Primo giro di prova: nell'anteprima il pulsante diventa «Programma giro di prova».
+            page.evaluate('''() => { renderRouteResult({id: 7, status: 'bozza', nome: 'Giro di prova', data_giro: '2026-10-31',
+                consegne: [{cliente_nome: 'Bar Vesuvio', indirizzo: 'Via Toledo 25', ordine: 1}]}, 'routePreviewResult', false);
+                showTab('route-preview'); }''')
+            assert 'giro di prova' in tip_on(page, '#tab-route-preview [data-preview-program]')
+            assert page.locator('#tab-route-preview [data-preview-program]').inner_text() == 'Programma giro di prova'
+            page.wait_for_timeout(600)
+            box = page.locator('#coachTip').bounding_box()
+            assert box['y'] >= 0 and box['y'] + box['height'] <= 900
+            page.screenshot(path=str(output / '7-giro-di-prova.png'))
+            page.locator('#tab-route-preview [data-preview-program]').click()
+            page.wait_for_function('document.getElementById("coachTitle").textContent.includes("Giro di prova completato")')
+            # Il giro non passa dalla programmazione vera (niente email, niente limiti): lo elimina il server.
+            assert store['test_route'] == 7 and not store.get('programmed') and store['state'] == 'completato'
+            page.locator('#tab-dashboard').wait_for()
             assert '7 di 7' in page.locator('#coachBar').inner_text()
-            page.screenshot(path=str(output / '7-primo-giro-programmato.png'))
+            page.screenshot(path=str(output / '8-giro-di-prova-completato.png'))
             page.locator('#coachDone').click()
             page.wait_for_function('!document.getElementById("coachBar").matches(":popover-open")')
             page.close()
@@ -252,7 +270,7 @@ def main():
         finally:
             browser.close()
     assert not errors, errors
-    print('PASS: tutor 1440 — bar + tip on next click, waits on Save with red required fields, advances on saved data, completes on first programmed route, exit/resume persisted')
+    print('PASS: tutor 1440 — bar + tip on next click, waits on Save with red required fields, advances on saved data, first route is a test route deleted instead of programmed, exit/resume persisted')
 
 
 if __name__ == '__main__':

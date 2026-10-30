@@ -82,6 +82,47 @@ def test_tutor_close_and_resume_are_saved_on_server(env):
     assert client.post('/api/onboarding/tutor', json={'action': 'boh'}).status_code == 400
 
 
+def test_first_route_is_a_test_route_deleted_instead_of_programmed(env, monkeypatch):
+    from datetime import datetime, timedelta
+    from app.models import ApiUsageLog, Customer, Delivery, Deposit, Driver, RoutePlan, RouteToken, Vehicle
+    from app.routers import auth
+    from app.services import email
+    client, db, owner, other, *_ = env
+    client.app.include_router(auth.router)
+    sent = []
+    monkeypatch.setattr(email, 'send_driver_route_assigned', lambda **kw: sent.append(kw))
+    owner.company_name, owner.company_address = 'Panificio Rossi', 'Via Emilia 112'
+    driver = Driver(user_id=owner.id, nome='Marco', email='marco@example.com')
+    db.add_all([Deposit(user_id=owner.id, nome='Magazzino', indirizzo='Via Emilia 112'), Vehicle(user_id=owner.id, nome='Furgone'),
+                driver, Customer(user_id=owner.id, nome='Bar Vesuvio', indirizzo='Via Toledo 25')])
+    foreign = RoutePlan(user_id=other.id, nome='Altro', data_giro=date.today(), orario_partenza=time(8), status='bozza')
+    route = RoutePlan(user_id=owner.id, nome='Prova', data_giro=date.today() + timedelta(days=1), orario_partenza=time(8), status='bozza', driver=driver)
+    db.add_all([foreign, route])
+    db.flush()
+    db.add_all([Delivery(route_plan_id=route.id, cliente_nome='Bar Vesuvio', indirizzo='Via Toledo 25'),
+                RouteToken(route_plan_id=route.id, token='t' * 40, expires_at=datetime(2030, 1, 1)),
+                ApiUsageLog(user_id=owner.id, route_plan_id=route.id, service='routes')])
+    db.commit()
+    assert client.get('/api/onboarding/tutor').json()['current'] == 'program'
+
+    def test_route(route_id):
+        return client.post('/api/onboarding/tutor', json={'action': 'test_route', 'route_id': route_id})
+    # Solo i giri in bozza dell'azienda.
+    assert test_route(foreign.id).status_code == 404
+    route_id = route.id
+    data = test_route(route_id).json()
+    assert data['state'] == 'completato' and data['current'] is None
+    db.expire_all()
+    # Il giro sparisce senza email e senza tracce; i dati creati durante la guida restano.
+    assert db.query(RoutePlan).filter_by(user_id=owner.id).count() == 0
+    assert db.query(Delivery).filter_by(route_plan_id=route_id).count() == 0 and db.query(RouteToken).count() == 0
+    assert db.query(ApiUsageLog).one().route_plan_id is None
+    assert sent == [] and db.get(RoutePlan, foreign.id) is not None
+    assert db.query(Driver).filter_by(user_id=owner.id).count() == 1 and db.query(Vehicle).filter_by(user_id=owner.id).count() == 1
+    # A guida finita (o chiusa) i giri si programmano davvero.
+    assert test_route(foreign.id).status_code == 409
+
+
 def test_tutor_migration_marks_companies_with_a_route_as_completed_and_is_repeatable():
     from sqlalchemy import create_engine, text, inspect
     from app.migrations import run_migrations, require_current_schema

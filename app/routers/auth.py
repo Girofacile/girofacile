@@ -995,9 +995,19 @@ def tutor_status(user: User = Depends(current_user), db: Session = Depends(get_d
 @router.post("/api/onboarding/tutor")
 def update_tutor(payload: dict, user: User = Depends(current_user), db: Session = Depends(get_db)):
     action = payload.get("action")
-    if action not in ("close", "resume", "restart", "skip"):
+    if action not in ("close", "resume", "restart", "skip", "test_route"):
         raise HTTPException(400, "Azione non valida")
-    if action == "skip":
+    if action == "test_route":
+        # Ultimo passo della guida: il primo giro è di prova e al posto della programmazione viene eliminato.
+        if user.tutor_state is not None or _tutor_payload(user, db)["current"] != "program":
+            raise HTTPException(409, "Il giro di prova è disponibile solo durante la guida.")
+        from ..services.tutor_route import discard_test_route
+        discard_test_route(db, user, int(payload.get("route_id") or 0))
+        user.tutor_state = "completato"
+        user.tutor_completed_at = utc_now()
+        user.tutor_baseline = None
+        db.commit()
+    elif action == "skip":
         # «Avanti»: il passo corrente si salta e la guida passa al successivo.
         current = _tutor_payload(user, db)["current"]
         if current and user.tutor_state != "completato":
