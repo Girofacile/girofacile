@@ -56,8 +56,9 @@ def index_rows(result):
 def objective_order(actual, reference, strategy):
     """Compare raw objectives; ignore arithmetic noise, never UI rounding."""
     aa, rr = audit.key(actual, strategy), audit.key(reference, strategy)
+    integer_prefix = 3 if strategy == "balanced" else 2
     for index, (a, r) in enumerate(zip(aa, rr)):
-        if index < 3:
+        if index < integer_prefix:
             if a != r:
                 return 1 if a > r else -1
             continue
@@ -83,19 +84,30 @@ def compare_results(before, after):
             if row.get(field) != updated.get(field):
                 raise ValueError(f"Scenario changed between implementations: {identity}, {field}")
         aa, bb = row["actual"]["metrics"], updated["actual"]["metrics"]
+        before_valid = aa.get("feasible", True) and not row["actual"].get("invariant_errors")
+        after_valid = bb.get("feasible", True) and not updated["actual"].get("invariant_errors")
+        comparable = before_valid and after_valid
         pairs.append(dict(
             case_id=row["case_id"], strategy=row["strategy"], stage=row["stage"],
             variant=row.get("variant",row["stage"]), permutation=row.get("permutation"),
             before=deepcopy(aa), after=deepcopy(bb),
+            before_valid=before_valid, after_valid=after_valid, comparable=comparable,
+            validity_improvement=not before_valid and after_valid,
+            validity_regression=before_valid and not after_valid,
             delta={field: bb[field] - aa[field] for field in FIELDS},
-            coverage_regression=bb["served"] < aa["served"],
-            objective_regression=objective_order(bb, aa, row["strategy"]) > 0,
-            objective_improvement=objective_order(bb, aa, row["strategy"]) < 0,
+            coverage_regression=comparable and bb["served"] < aa["served"],
+            objective_regression=comparable and objective_order(bb, aa, row["strategy"]) > 0,
+            objective_improvement=comparable and objective_order(bb, aa, row["strategy"]) < 0,
             before_runtime_ms=row["actual"]["runtime_ms"],
             after_runtime_ms=updated["actual"]["runtime_ms"]))
     summary = dict(paired_runs=len(pairs),
                    paired_base_runs=sum(row["stage"] == "base" for row in pairs),
                    total_engine_runs=len(previous) + len(current),
+                   comparable_runs=sum(row["comparable"] for row in pairs),
+                   invalid_before_runs=sum(not row["before_valid"] for row in pairs),
+                   invalid_after_runs=sum(not row["after_valid"] for row in pairs),
+                   validity_improvements=sum(row["validity_improvement"] for row in pairs),
+                   validity_regressions=sum(row["validity_regression"] for row in pairs),
                    coverage_regressions=sum(row["coverage_regression"] for row in pairs),
                    objective_regressions=sum(row["objective_regression"] for row in pairs),
                    objective_improvements=sum(row["objective_improvement"] for row in pairs),
@@ -103,12 +115,14 @@ def compare_results(before, after):
                    strategies={})
     for strategy in audit.STRATEGIES:
         rows = [row for row in pairs if row["stage"] == "base" and row["strategy"] == strategy]
-        equal = [row for row in rows if row["before"]["served"] == row["after"]["served"]
+        comparable = [row for row in rows if row["comparable"]]
+        equal = [row for row in comparable if row["before"]["served"] == row["after"]["served"]
                  and row["before"]["mismatches"] == row["after"]["mismatches"]]
         summary["strategies"][strategy] = dict(
             paired_base_runs=len(rows),
-            coverage_improved_cases=sum(row["delta"]["served"] > 0 for row in rows),
-            extra_served_stops=sum(max(0, row["delta"]["served"]) for row in rows),
+            comparable_base_runs=len(comparable),
+            coverage_improved_cases=sum(row["delta"]["served"] > 0 for row in comparable),
+            extra_served_stops=sum(max(0, row["delta"]["served"]) for row in comparable),
             coverage_regressions=sum(row["coverage_regression"] for row in rows),
             objective_improvements=sum(row["objective_improvement"] for row in rows),
             objective_regressions=sum(row["objective_regression"] for row in rows),
@@ -132,7 +146,10 @@ def render_comparison(comparison):
         f"Baseline: {BASELINE_COMMIT}; checkout: {comparison['metadata']['after_commit']}.",
         f"Coppie confrontate: **{summary['paired_runs']}**; esecuzioni totali: **{summary['total_engine_runs']}**.",
         "Stesse matrici, input, strategie, permutazioni e ripetizioni; nessun dato operativo o provider.",
-        "Sponda e ZTL rimangono preferenze con avviso.", "",
+        "I piani vengono rivalutati secondo i vincoli attuali: sponda richiesta obbligatoria, ZTL con avviso. "
+        "La baseline conserva il proprio comportamento storico; piani non validi sono esclusi dai confronti di qualità.",
+        f"Coppie valide e confrontabili: **{summary['comparable_runs']}**; "
+        f"piani non validi prima/dopo: **{summary['invalid_before_runs']} / {summary['invalid_after_runs']}**.", "",
         "| Strategia | Casi con più consegne | Consegne recuperate | Miglioramenti obiettivo | Regressioni |",
         "|---|---:|---:|---:|---:|"]
     for strategy, values in summary["strategies"].items():
@@ -150,11 +167,11 @@ def render_comparison(comparison):
         aa, bb = before["strategies"][strategy], after["strategies"][strategy]
         lines.append(f"| {strategy} | {aa['missed_feasible_cases']} / {bb['missed_feasible_cases']} | "
                      f"{aa['worse_than_strategy_reference']} / {bb['worse_than_strategy_reference']} |")
-    lines += ["", "| Caso | Strategia | Consegnate prima/dopo | km prima/dopo | minuti cumulativi prima/dopo |",
-              "|---|---|---:|---:|---:|"]
+    lines += ["", "| Caso | Strategia | Valido prima/dopo | Consegnate prima/dopo | km prima/dopo | minuti cumulativi prima/dopo |",
+              "|---|---|---|---:|---:|---:|"]
     for row in comparison["examples"]:
         aa, bb = row["before"], row["after"]
-        lines.append(f"| {row['case_id']} | {row['strategy']} | {aa['served']} / {bb['served']} | "
+        lines.append(f"| {row['case_id']} | {row['strategy']} | {row['before_valid']} / {row['after_valid']} | {aa['served']} / {bb['served']} | "
                      f"{aa['km']:.2f} / {bb['km']:.2f} | {aa['minutes']:.1f} / {bb['minutes']:.1f} |")
     lines += ["",
         "Km e minuti indicano risparmi diretti solo a parità di servizio e compatibilità. "
@@ -194,12 +211,13 @@ def main():
     before_code, before = run_implementation(baseline, output / "before", "before", provenance)
     after_code, after = run_implementation(current, output / "after", "after", {
         "source_path": "app/services/fleet_planning.py",
-        "sha256": hashlib.sha256((ROOT / "app/services/fleet_planning.py").read_bytes()).hexdigest()})
+        "sha256": audit.LOADED_SOURCE_SHA256["app/services/fleet_planning.py"]})
     comparison = compare_results(before, after)
     comparison["metadata"] = dict(
         baseline=provenance, after_commit=after["metadata"]["tested_commit"],
         before_metadata=before["metadata"], after_metadata=after["metadata"],
-        same_policy="sponda/ZTL soft; coverage then equipment then strategy objective")
+        comparison_policy="current hard tail-lift validation; invalid plans excluded from objective/coverage comparisons; efficient km before time; balanced workload unchanged",
+        baseline_exit_code=before_code, current_exit_code=after_code)
     examples = {row["case_id"] for row in after["examples"]}
     comparison["examples"] = [row for row in comparison["pairs"]
                               if row["stage"] == "base" and row["case_id"] in examples]
@@ -214,7 +232,9 @@ def main():
     print("FLEET_BEFORE_AFTER_REPORT " + json.dumps(
         dict(markdown=report, metadata=comparison["metadata"]), ensure_ascii=False), flush=True)
     summary = comparison["summary"]
-    return int(bool(before_code or after_code or summary["coverage_regressions"]
+    # Historical failures remain visible in the artifacts. They do not fail the
+    # current implementation's gate: the frozen service predates hard tail lift.
+    return int(bool(after_code or summary["validity_regressions"] or summary["coverage_regressions"]
                     or summary["objective_regressions"]))
 
 

@@ -102,6 +102,9 @@ def test_plan_metrics_detects_duplicates_and_soft_equipment_requirements():
     resources = [{"max_minutes": 480, "ha_sponda": False, "accesso_ztl": False}] * 2
     case = make_case(stops=[{"tempo_scarico_min": 0, "sponda": True, "ztl": True}],
                      resources=resources, travel=10)
+    # Explicit historical/manual advisory semantics remain testable; automatic
+    # planning now treats a requested tail lift as physically required.
+    case["hard_tail_lift"] = False
     valid = plan_metrics(case, [[0], []])
     assert valid["feasible"] and valid["mismatches"] == 2
     assert valid["served"] == 1 and valid["used"] == 1 and valid["makespan"] == 10
@@ -154,7 +157,32 @@ def test_exact_reference_keeps_distinct_km_and_time_witnesses():
     assert exact["km"]["km"] == 3 and exact["km"]["minutes"] == 30
     assert exact["time"]["orders"] == [[1, 0]]
     assert exact["time"]["km"] == 30 and exact["time"]["minutes"] == 3
-    assert exact["efficient"]["orders"] == exact["time"]["orders"]
+    assert exact["efficient"]["orders"] == exact["km"]["orders"]
+    assert exact["balanced"]["orders"] == exact["time"]["orders"]
+
+
+def test_automatic_reference_rejects_missing_tail_lift_but_ztl_stays_advisory():
+    case = make_case(stops=[{"tempo_scarico_min": 0, "sponda": True, "ztl": True}],
+                     resources=[{"max_minutes": 480, "ha_sponda": False, "accesso_ztl": False}],
+                     travel=10)
+    assert route_replay(case, 0, [0])["errors"] == ["tail_lift:0"]
+    assert all(metrics["served"] == 0 for metrics in solve_exact(case).values())
+    case["resources"][0]["ha_sponda"] = True
+    allowed = route_replay(case, 0, [0])
+    assert allowed["feasible"] and allowed["mismatches"] == 1
+    assert solve_exact(case)["efficient"]["served"] == 1
+
+
+def test_efficient_reference_can_use_an_extra_vehicle_to_save_distance():
+    case = make_case(stops=[{"tempo_scarico_min": 0}] * 2,
+                     resources=[{"max_minutes": 480}] * 2,
+                     travel=10, returning=True)
+    for edge in ((0, 1), (1, 0), (0, 2), (2, 0)):
+        case["matrix"][edge]["km"] = 1
+    case["matrix"][1, 2]["km"] = case["matrix"][2, 1]["km"] = 50
+    exact = solve_exact(case)["efficient"]
+    assert exact["served"] == 2 and exact["used"] == 2
+    assert exact["km"] == 4 and exact["minutes"] == 40
 
 
 def test_exact_reference_prefers_serving_deliveries_then_equipped_resources():

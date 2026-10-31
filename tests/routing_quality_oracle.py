@@ -158,6 +158,9 @@ def replay(case, resource_index, order):
         result['violations'] += int(late > 0)
         result['mismatches'] += int(_truth(row.get('sponda')) and not _truth(resource.get('ha_sponda')))
         result['mismatches'] += int(_truth(row.get('ztl')) and not _truth(resource.get('accesso_ztl')))
+        if case.get('hard_tail_lift') and _truth(row.get('sponda')) and not _truth(resource.get('ha_sponda')):
+            result['violations'] += 1
+            result['errors'].append('tail_lift_required')
         result['stops'].append(dict(index=index, arrival=arrival, service_start=service_start,
                                     service_end=service_end, window_end=window_end, lateness=late))
         previous, clock = node, service_end
@@ -209,7 +212,7 @@ def objective(metrics, strategy='single'):
         return (False, metrics['km'], metrics['minutes'], metrics['wait'], metrics['warnings'])
     prefix = (-metrics['served'], metrics['mismatches'])
     if strategy == 'efficient':
-        return (*prefix, metrics['used'], metrics['minutes'], metrics['km'])
+        return (*prefix, metrics['km'], metrics['minutes'], metrics['used'])
     if strategy == 'balanced':
         return (*prefix, -metrics['used'], metrics['makespan'], metrics['sumsq'], metrics['minutes'], metrics['km'])
     raise ValueError('Unknown strategy')
@@ -258,7 +261,8 @@ def solve_fleet(case, strategy='efficient'):
             for order in permutations(members):
                 metrics = replay(case, resource_index, order)
                 if metrics['feasible']:
-                    rank = (metrics['minutes'], metrics['km'])
+                    rank = ((metrics['km'],metrics['minutes']) if strategy=='efficient'
+                            else (metrics['minutes'], metrics['km']))
                     if best_rank is None or rank < best_rank:
                         best_order, best_rank = order, rank
             if best_order is not None:

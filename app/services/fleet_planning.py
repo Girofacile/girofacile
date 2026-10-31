@@ -182,6 +182,22 @@ def fuel_cost(vehicle,resource,km):
     return round(primary+electric,2)
 
 
+def _require_tail_lift(deliveries,vehicle):
+    """A required lift is physical compatibility for newly automatic plans."""
+    if vehicle.ha_sponda:
+        return
+    for delivery in deliveries:
+        required=delivery.get('sponda') if isinstance(delivery,dict) else delivery.sponda
+        if required:
+            raise HTTPException(422,'Una consegna richiede la sponda, ma il mezzo non la possiede. Ricalcola la suddivisione o assegna un mezzo compatibile.')
+
+
+def _strict_tail_lift(plan):
+    # Historical soft-preference plans and explicit manual revisions retain
+    # their saved policy. New automatic plans declare the stronger guarantee.
+    return bool((plan.result.get('search') or {}).get('tail_lift_required'))
+
+
 def distribute(db,user,data,assignments=None):
     from ..routers.routes import build_vehicle_dict
     from .distance_cache import point_key
@@ -210,6 +226,8 @@ def distribute(db,user,data,assignments=None):
                 failures.add(reason)
             return None
         if not sequence: return None
+        if assignments is None and not vehicles[resource].ha_sponda and any(row.get('sponda') for row in sequence):
+            return reject('La consegna richiede la sponda: questo mezzo non la possiede.')
         try: opt.validate_vehicle_load(sequence,vehicle_data[resource])
         except ValueError as exc: return reject(str(exc))
         result=opt._evaluate_fixed_sequence(sequence,matrix,points,vehicle_data[resource],data.rientro_deposito,data.orario_partenza,include_details=include_details,earliest_windows=True)
@@ -223,8 +241,9 @@ def distribute(db,user,data,assignments=None):
             return {key:result[key] for key in ('total_km','total_min','_objective')}
         return result
 
-    def insert(index):
+    def insert(index,distance_first=False,balance=None):
         row=rows[index];best=None;reasons=[]
+        balance=(data.strategy=='balanced') if balance is None else balance
         for resource,sequence in enumerate(routes):
             failures=set()
             for position in range(len(sequence)+1):
@@ -233,10 +252,16 @@ def distribute(db,user,data,assignments=None):
                 if evaluated is None: continue
                 durations=[r['total_min'] if r else 0 for r in results];durations[resource]=evaluated['total_min']
                 delta=evaluated['total_min']-(results[resource]['total_min'] if results[resource] else 0)
-                if data.strategy=='balanced':
+                if balance:
                     key=(sum(not r for i,r in enumerate(routes) if i!=resource),max(durations),sum(x*x for x in durations),delta,evaluated['total_km'])
+                elif distance_first:
+                    distances=[float(r['_objective'][0]) if r else 0 for r in results]
+                    distances[resource]=evaluated['_objective'][0]
+                    raw_minutes=[float(r['_objective'][1]) if r else 0 for r in results]
+                    raw_minutes[resource]=evaluated['_objective'][1]
+                    key=(sum(distances),sum(raw_minutes),sum(bool(route) for route in routes if route)+int(not sequence))
                 else: key=(0 if sequence else 1,delta,evaluated['total_km'])
-                # Prefer an equipped vehicle, but keep the delivery when none can take it.
+                # ZTL remains advisory; a required lift was checked above.
                 equipment_penalty=int(bool(row.get('sponda')) and not vehicles[resource].ha_sponda)+int(bool(row.get('ztl')) and not vehicles[resource].accesso_ztl)
                 key=(equipment_penalty,*key)
                 if best is None or key<best[0]: best=(key,resource,candidate,evaluated)
@@ -249,29 +274,79 @@ def distribute(db,user,data,assignments=None):
             routes[resource],results[resource]=sequence,result
 
     if assignments is None:
-        # Constrained/heavy jobs first; deterministic ordering for repeatability.
-        order=sorted(range(len(rows)),key=lambda i:(not(rows[i]['sponda'] or rows[i]['ztl']),not bool(opt.delivery_windows(rows[i])),-rows[i]['peso_kg'],-rows[i]['colli'],i))
-        for index in order: insert(index)
-        from .fleet_search import optimize_fleet
+        from .fleet_search import optimize_fleet,stable_stop_key
         import json
         def equipment(sequence, resource):
             return sum(
                 int(bool(rows[i].get('sponda')) and not vehicles[resource].ha_sponda)
                 + int(bool(rows[i].get('ztl')) and not vehicles[resource].accesso_ztl)
                 for i in sequence)
+        def membership_compatible(sequence,resource):
+            selected=[rows[i] for i in sequence]
+            if not vehicles[resource].ha_sponda and any(row.get('sponda') for row in selected):
+                return False
+            try:
+                opt.validate_vehicle_load(selected,vehicle_data[resource])
+            except ValueError:
+                return False
+            return True
+        legacy_order=sorted(range(len(rows)),key=lambda i:(not(rows[i]['sponda'] or rows[i]['ztl']),not bool(opt.delivery_windows(rows[i])),-rows[i]['peso_kg'],-rows[i]['colli'],i))
+        legacy_canonical=sorted(range(len(rows)),key=lambda i:(not(rows[i]['sponda'] or rows[i]['ztl']),not bool(opt.delivery_windows(rows[i])),-rows[i]['peso_kg'],-rows[i]['colli'],stable_stop_key(rows[i])))
+        def urgency(index):
+            windows=opt.delivery_windows(rows[index])
+            closing=min((end for _,end in windows),default=float('inf'))
+            width=min((end-start for start,end in windows),default=float('inf'))
+            return (not rows[index]['sponda'],closing,width,-rows[index]['peso_kg'],-rows[index]['colli'],stable_stop_key(rows[index]))
+        canonical_order=sorted(range(len(rows)),key=urgency)
+        initial_candidates=[]
+        # Keep the former construction as a quality floor under the CURRENT
+        # physical constraints; add urgency-first time and distance proposals.
+        constructions=[(legacy_order,False,None),(legacy_canonical,False,None),
+                       (canonical_order,False,None),(canonical_order,True,False)]
+        if data.strategy=='efficient':
+            # A balanced construction can retain scarce capacity/time slots;
+            # the final selection still follows coverage, then km and minutes.
+            constructions.extend((order,False,True) for order in
+                                 (canonical_order,legacy_canonical,legacy_order))
+        else:
+            constructions.extend((order,False,False) for order in
+                                 (canonical_order,legacy_canonical,legacy_order))
+        seen_constructions=set()
+        for order,distance_first,balance in constructions:
+            balanced=(data.strategy=='balanced') if balance is None else balance
+            construction=(tuple(order),'balanced' if balanced
+                          else 'distance' if distance_first else 'legacy-time')
+            if construction in seen_constructions:
+                continue
+            seen_constructions.add(construction)
+            routes=[[] for _ in vehicles];results=[None for _ in vehicles];unresolved={}
+            for index in order: insert(index,distance_first,balance)
+            initial_candidates.append((tuple(tuple(row['fleet_stop_index'] for row in route) for route in routes),tuple(results)))
+        def initial_key(candidate):
+            sequences,scores=candidate
+            common=(-sum(map(len,sequences)),sum(equipment(route,r) for r,route in enumerate(sequences)))
+            minutes=[float(score['_objective'][1]) if score else 0 for score in scores]
+            km=sum(float(score['_objective'][0]) for score in scores if score)
+            used=sum(bool(route) for route in sequences)
+            return common+((-used,max(minutes,default=0),sum(value*value for value in minutes),sum(minutes),km)
+                           if data.strategy=='balanced' else (km,sum(minutes),used))
+        initial_routes,initial_results=min(initial_candidates,key=initial_key)
         signature_fields=('driver_schedule','ha_sponda','accesso_ztl','capacita_kg','capacita_colli')
         signatures=[json.dumps({key:v.get(key) for key in signature_fields},sort_keys=True,default=str)+':'+str(limit)
                     for v,limit in zip(vehicle_data,limits)]
         proposed,optimized_results,search=optimize_fleet(
             rows,len(vehicles),
             lambda sequence,resource:evaluate([rows[i] for i in sequence],resource),
-            data.strategy,initial_routes=[
-                [row['fleet_stop_index'] for row in route] for route in routes],
-            initial_results=results,matrix=matrix,points=points,
+            data.strategy,initial_routes=initial_routes,
+            initial_results=initial_results,initial_candidates=initial_candidates,matrix=matrix,points=points,
             equipment_penalty=equipment,resource_signatures=signatures,
+            membership_compatible=membership_compatible,
             return_depot=data.rientro_deposito)
         routes=[[rows[i] for i in sequence] for sequence in proposed]
         results=list(optimized_results)
+        search['tail_lift_required']=True
+        search['equipment_policy']='tail-lift-required-ztl-warning-fallback'
+        search['primary_objective']='distance-then-work-time' if data.strategy=='efficient' else 'balanced-workload'
     else:
         search={'method':'manual-membership','equipment_policy':'prefer-compatible-with-warning-fallback'}
         if len(assignments)!=len(rows) or any(a is not None and (a<0 or a>=len(routes)) for a in assignments):
@@ -296,6 +371,7 @@ def distribute(db,user,data,assignments=None):
     refined,results,refinement=refine_routes(
         sequences,results,
         lambda sequence,resource:evaluate([rows[i] for i in sequence],resource),
+        strategy=data.strategy,
         global_exact=bool(search.get('global_optimum_proven')),
         prepare=lambda sequence,resource:FixedRouteEvaluator(
             rows,sequence,matrix,points,vehicle_data[resource],data.rientro_deposito,
@@ -411,6 +487,7 @@ def confirm(db,user,actor,plan_id,data):
     route_ids=[]
     for route in plan.result['routes']:
         index=route['resource'];resource=settings.resources[index];result=deepcopy(route['result'])
+        if _strict_tail_lift(plan): _require_tail_lift(result['ordered'],vehicles[index])
         opt.validate_vehicle_load(result['ordered'],build_vehicle_dict(vehicles[index]))
         driver=db.get(Driver,resource.driver_id) if resource.driver_id else None
         driver_name=' '.join(x for x in (driver.nome,driver.cognome) if x).strip() if driver else None
@@ -508,6 +585,8 @@ def _program_saved(db,user,actor,plan_id,data):
                 raise HTTPException(409,'Un giro e stato modificato o programmato separatamente: gestiscilo dallo storico.')
         return rows
     for row,proposal in zip(drafts(),plan.result['routes']):
+        if _strict_tail_lift(plan):
+            _require_tail_lift(row.deliveries,_require_owned_entity(db,Vehicle,user,row.vehicle_id,'Mezzo'))
         enrich_final_route(db,row,cached_traffic=reusable_traffic(proposal,row))
     db.commit()  # Persist timing and provider accounting before releasing route locks.
     route_orders.lock_company(db,user.id)
@@ -523,7 +602,11 @@ def _program_saved(db,user,actor,plan_id,data):
         db.query(RoutePlan).filter_by(id=row.id,user_id=user.id).with_for_update().one()
         lock_route_resources(db,row)
         from ..models import Deposit
-        _require_owned_entity(db,Vehicle,user,row.vehicle_id,'Mezzo')
+        vehicle=_require_owned_entity(db,Vehicle,user,row.vehicle_id,'Mezzo')
+        if _strict_tail_lift(plan):
+            # The vehicle may have changed while waiting for the company lock.
+            db.refresh(vehicle)
+            _require_tail_lift(row.deliveries,vehicle)
         _require_owned_entity(db,Driver,user,row.driver_id,'Autista')
         _require_owned_entity(db,Deposit,user,row.deposit_id,'Deposito')
         ensure_not_past_route_date(row.data_giro)

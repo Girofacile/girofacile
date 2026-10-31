@@ -66,17 +66,15 @@ def test_combined_equipment_is_reserved_when_compatible_plan_exists(strategy):
 
 
 @pytest.mark.parametrize("strategy", ["efficient", "balanced"])
-def test_equipment_is_warning_when_no_compatible_vehicle_exists(strategy):
+def test_required_tail_lift_is_not_replaced_by_a_warning(strategy):
     case = make_case(
         "equipment-warning-fallback", "equipment",
         [stop(0, sponda=True, ztl=True)], uniform_matrix(1),
         [resource(10, ha_sponda=False, accesso_ztl=False) for _ in range(2)])
     actual = _execute(case, strategy)
-    assert actual["metrics"]["served"] == 1
-    assert actual["unassigned"] == []
-    assert actual["metrics"]["mismatches"] == 2
-    warnings = " ".join(actual["warnings"]).lower()
-    assert "sponda" in warnings and "ztl" in warnings
+    assert actual["metrics"]["served"] == 0
+    assert len(actual["unassigned"]) == 1
+    assert "sponda" in actual["unassigned"][0]['reason'].lower()
 
 
 @pytest.mark.parametrize("strategy", ["efficient", "balanced"])
@@ -96,12 +94,12 @@ def test_identical_preview_is_deterministic():
 
 
 @pytest.mark.parametrize("strategy", ["efficient", "balanced"])
-def test_coverage_has_priority_over_equipment_warnings(strategy):
+def test_coverage_cannot_override_a_required_tail_lift(strategy):
     case = make_case(
         "equipment-coverage-first", "equipment",
         [stop(0, 2, sponda=True), stop(1, 1, sponda=True)], uniform_matrix(2),
         [resource(2, ha_sponda=True), resource(2, ha_sponda=False)])
     actual = _execute(case, strategy)
-    assert actual["metrics"]["served"] == 2
-    assert actual["metrics"]["mismatches"] == 1
-    assert actual["unassigned"] == []
+    assert actual["metrics"]["served"] == 1
+    assert actual["metrics"]["mismatches"] == 0
+    assert len(actual["unassigned"]) == 1

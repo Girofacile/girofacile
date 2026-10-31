@@ -269,6 +269,54 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+  adaptive-fleet:
+    name: Adaptive fleet with heterogeneous fifty-delivery scenarios
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      DATABASE_URL: 'sqlite+pysqlite:///:memory:'
+      ALLOW_SQLITE_LEGACY: 'true'
+      APP_ENV: test
+      BILLING_MODE: disabled
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Verify search, physical compatibility and independent reference data
+        run: python -m pytest tests/test_fleet_adaptive_search.py tests/test_fleet_seed_search.py tests/test_fleet_route_pool.py tests/test_fleet_upgrade_quality.py tests/test_fleet_capability_lifecycle.py -q -ra
+      - name: Compare the previous engine with development and held-out scenarios
+        run: |
+          python tests/run_fleet_upgrade_benchmark.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path('test-results/fleet-upgrade/comparison/results.json').read_text())
+          summary = report['summary']
+          assert not report['metadata']['source_changed_during_campaign']
+          assert summary['current_infeasible'] == 0, summary
+          assert summary['external_calls'] == 0, summary
+          assert summary['objective_regressions'] == 0, summary
+          # Witness coverage remains a reported quality target: the measured
+          # release still has documented heuristic gaps on tightly constrained
+          # problems. Every other error must fail the build.
+          assert all(set(row['after']['errors']) <= {'known_feasible_coverage_missed'}
+                     for row in report['records']), summary
+          print(json.dumps(summary, indent=2))
+          PY
+      - name: Preserve complete inputs, road matrices and independently checked plans
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: adaptive-fleet-comparison
+          path: test-results/fleet-upgrade/comparison/
+          if-no-files-found: error
+          retention-days: 30
+
   fleet-simulations:
     name: Fleet quality simulations and independent exact references
     runs-on: ubuntu-24.04

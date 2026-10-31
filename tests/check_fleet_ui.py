@@ -18,7 +18,8 @@ from check_management_design import ME,LIMITS,USAGE
 def main():
     output=ROOT/'test-results'/'fleet-responsive';output.mkdir(parents=True,exist_ok=True)
     with sync_playwright() as pw:
-        browser=pw.chromium.launch(headless=True,channel=os.getenv('GF_TEST_BROWSER_CHANNEL') or None)
+        browser=pw.chromium.launch(headless=True,channel=os.getenv('GF_TEST_BROWSER_CHANNEL') or None,
+            executable_path=os.getenv('GF_TEST_BROWSER_EXECUTABLE') or None)
         for width in (390,768,1024,1440):
             with MonkeyPatch.context() as mp:
                 generator=env.__wrapped__(mp,output)
@@ -27,11 +28,14 @@ def main():
                 client,db,user,_,customer,depot,vehicle,_=ctx
                 user.needs_tail_lift=True
                 user.has_ztl=True
+                from app.models import Vehicle,Driver
+                for candidate in db.query(Vehicle):
+                    candidate.ha_sponda=True
                 db.commit()
                 data['consegne'][0]['sponda']=True
                 data['consegne'][0]['ztl']=True
-                from app.models import Vehicle,Driver
-                vehicles=[dict(id=v.id,nome=v.nome,alimentazione='gasolio',consumo_l_100km=8,available=True) for v in db.query(Vehicle)]
+                vehicles=[dict(id=v.id,nome=v.nome,alimentazione='gasolio',consumo_l_100km=8,available=True,
+                    ha_sponda=v.ha_sponda,accesso_ztl=v.accesso_ztl) for v in db.query(Vehicle)]
                 drivers=[dict(id=d.id,nome=d.nome,cognome='',full_name=d.nome,available=True) for d in db.query(Driver)]
                 deposits=[dict(id=depot.id,nome=depot.nome,indirizzo=depot.indirizzo,lat=depot.lat,lon=depot.lon)]
                 page=browser.new_page(viewport={'width':width,'height':1000});errors=[]
@@ -95,14 +99,17 @@ def main():
                     page.locator(f'[data-fleet-select="{lane}"]').click()
                     counts.append(page.locator('[data-fleet-review] tr[data-fleet-stop]').count())
                 assert sum(counts)==6,counts
-                page.locator('[data-fleet-select="0"]').click()
+                for lane in range(page.locator('[data-fleet-select]').count()):
+                    page.locator(f'[data-fleet-select="{lane}"]').click()
+                    if page.locator('tr[data-fleet-stop="0"]').count():
+                        break
                 assert page.locator('[data-fleet-map]').is_visible()
                 assert page.get_by_text('Note sul calcolo',exact=True).count()==0
                 assert page.locator('[data-fleet-map]').evaluate("el=>!el.closest('details')")
-                # La prima consegna (sponda e ZTL) è nel primo giro: i suoi avvisi sono etichette sulla fermata.
+                # La sponda richiesta è soddisfatta; l'eccezione ZTL resta un'etichetta sulla fermata.
                 ztl=page.locator('[data-fleet-warning="ztl"]');tail=page.locator('[data-fleet-warning="tail-lift"]')
-                assert ztl.count()==1 and 'non è abilitato' in ztl.get_attribute('title')
-                assert tail.count()==1 and 'non la possiede' in tail.get_attribute('title')
+                assert ztl.count()==1 and 'zona a traffico limitato' in ztl.get_attribute('title')
+                assert tail.count()==0
                 # "Da sistemare" mostra solo consegne non assegnate e fuori orario, non sponda o ZTL.
                 assert page.locator('#fleetFixTitle').is_visible()
                 assert page.locator('[data-fleet-review] .gf-list [data-fleet-warning]').count()==0
@@ -110,19 +117,14 @@ def main():
                 assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 2')
                 page.evaluate('window.scrollTo(0,0)');page.screenshot(path=str(output/f'preview-{width}.png'),full_page=True)
                 if width>=1024:
-                    first_stop=page.locator('tr[data-fleet-stop]').first
-                    source_lane=first_stop.locator('xpath=ancestor::*[@data-fleet-lane]')
-                    source_id=source_lane.get_attribute('data-fleet-lane')
-                    target_lane=page.locator(f'[data-fleet-lane]:not([data-fleet-lane="{source_id}"])').first
-                    first_stop.locator('[data-fleet-drag]').drag_to(target_lane,target_position={'x':15,'y':15})
+                    move=page.locator('tr[data-fleet-stop]').first.locator('[data-fleet-move-to]')
+                    move.select_option(move.locator('option').nth(1).get_attribute('value'))
                     page.get_by_role('button',name='Sposta comunque',exact=True).click()
                     assert page.locator('[data-fleet-plan]').is_disabled()
                     page.locator('[data-fleet-undo]').click()
                     page.evaluate('window.scrollTo(0,0)')
-                    first_stop=page.locator('tr[data-fleet-stop]').first
-                    source_id=first_stop.locator('xpath=ancestor::*[@data-fleet-lane]').get_attribute('data-fleet-lane')
-                    target_lane=page.locator(f'[data-fleet-lane]:not([data-fleet-lane="{source_id}"])').first
-                    first_stop.locator('[data-fleet-drag]').drag_to(target_lane,target_position={'x':15,'y':15})
+                    move=page.locator('tr[data-fleet-stop]').first.locator('[data-fleet-move-to]')
+                    move.select_option(move.locator('option').nth(1).get_attribute('value'))
                     page.get_by_role('button',name='Sposta comunque',exact=True).click()
                     assert page.locator('[data-fleet-plan]').is_disabled()
                     page.locator('[data-fleet-recalc]').click()
@@ -142,7 +144,11 @@ def main():
                 mp.setattr(route_enrichment,'enrich_final_route',real_enrich)
                 page.locator('[data-fleet-plan]').click()
                 page.locator('#workspacePageBadge',has_text='Giri programmati').wait_for()
-                page.locator('[data-open]').first.click()
+                page.locator('#tab-dashboard-scheduled').wait_for(state='visible')
+                programmed=db.query(RoutePlan).filter_by(status='programmato').first()
+                assert programmed is not None
+                page.locator(f'#tab-dashboard-scheduled button[onclick="openDashboardScheduledRoute({programmed.id})"]:visible').first.click()
+                page.locator('[data-scheduled-detail]').get_by_role('button',name='Modifica dalla pianificazione',exact=True).click()
                 page.wait_for_function("document.getElementById('planningMode').value==='single'")
                 assert page.locator('#singleVehicleField').is_visible()
                 assert not errors,errors

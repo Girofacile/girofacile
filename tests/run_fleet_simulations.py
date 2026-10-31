@@ -47,6 +47,19 @@ from fleet_simulation_cases import all_cases
 STRATEGIES = ("efficient", "balanced")
 METRIC_FIELDS = ("served", "mismatches", "used", "km", "minutes", "makespan", "sumsq")
 KM_EPS, MIN_EPS = 0.02, 0.11
+SOURCE_PATHS = (
+    "app/optimizer.py", "app/services/fleet_planning.py",
+    "app/services/driver_schedule.py", "app/services/optimizer_search.py",
+    "app/services/fleet_search.py", "app/services/fleet_route_evaluator.py",
+    "app/services/fleet_route_pool.py", "app/services/fleet_seed_search.py",
+    "tests/run_fleet_simulations.py",
+    "tests/fleet_quality_reference.py", "tests/fleet_simulation_cases.py",
+)
+# Capture provenance alongside imports, not minutes later after a campaign.
+# A concurrently edited working tree must not relabel already loaded modules.
+LOADED_SOURCE_SHA256 = {
+    path: hashlib.sha256((ROOT / path).read_bytes()).hexdigest() for path in SOURCE_PATHS
+}
 
 
 def forbidden(*args, **kwargs):
@@ -88,7 +101,7 @@ def clock_distance(text, raw):
 
 
 def compact(metrics):
-    return {key: deepcopy(metrics[key]) for key in (*METRIC_FIELDS, "orders")}
+    return {key: deepcopy(metrics[key]) for key in (*METRIC_FIELDS, "orders", "feasible")}
 
 
 def key(metrics, mode):
@@ -98,7 +111,7 @@ def key(metrics, mode):
     if mode == "time":
         return (*prefix, metrics["minutes"], metrics["km"], metrics["used"])
     if mode == "efficient":
-        return (*prefix, metrics["used"], metrics["minutes"], metrics["km"])
+        return (*prefix, metrics["km"], metrics["minutes"], metrics["used"])
     return (*prefix, -metrics["used"], metrics["makespan"], metrics["sumsq"],
             metrics["minutes"], metrics["km"])
 
@@ -106,11 +119,10 @@ def key(metrics, mode):
 def worse(actual, reference, mode):
     """Ignore differences below public display precision."""
     aa, rr = key(actual, mode), key(reference, mode)
-    if mode in ("km", "time"):
-        eps = (0, 0, KM_EPS if mode == "km" else MIN_EPS,
-               MIN_EPS if mode == "km" else KM_EPS, 0)
-    elif mode == "efficient":
-        eps = (0, 0, 0, MIN_EPS, KM_EPS)
+    if mode in ("km", "time", "efficient"):
+        distance_first = mode in ("km", "efficient")
+        eps = (0, 0, KM_EPS if distance_first else MIN_EPS,
+               MIN_EPS if distance_first else KM_EPS, 0)
     else:
         square_eps = max(1, 2 * max(actual["makespan"], reference["makespan"]) *
                          MIN_EPS * max(actual["used"], 1))
@@ -203,8 +215,8 @@ def execute(case, strategy):
                                         lambda *args: {"lat": depot.lat, "lon": depot.lon}))
         stack.enter_context(patch.object(opt, "build_distance_matrix", matrix_fixture))
         # Il simulatore misura la ricerca sulle matrici di riferimento: niente margine né traffico in anteprima.
-        stack.enter_context(patch.object(fleet, "traffic_margin", lambda db: 1.0))
-        stack.enter_context(patch.object(fleet, "preview_traffic", lambda *args: {"status": "disabled"}))
+        stack.enter_context(patch.object(fleet, "traffic_margin", lambda db: 1.0, create=True))
+        stack.enter_context(patch.object(fleet, "preview_traffic", lambda *args: {"status": "disabled"}, create=True))
         stack.enter_context(patch.object(requests.sessions.Session, "request", forbidden))
         stack.enter_context(patch.object(requests, "get", forbidden))
         stack.enter_context(patch.object(socket.socket, "connect", forbidden))
@@ -329,7 +341,7 @@ def summarize(records, cases, deterministic, reorder_changes):
 def markdown(summary, examples, metadata):
     before=metadata.get("fleet_implementation")=="before"
     method=("Baseline congelata: inserimento progressivo senza riallocazione globale."
-            if before else "Ricerca globale esatta sui piccoli casi; raggruppamenti e scambi limitati sui grandi, seguiti dal riordino completo di ogni giro fino a 8 fermate.")
+            if before else "Ricerca globale esatta sui piccoli casi; più soluzioni iniziali, recupero delle consegne escluse, scambi tra giri e ricombinazione limitata di percorsi validati sui grandi; riordino completo dei giri fino a 8 fermate.")
     lines = [
         "# Simulazioni della distribuzione multi-mezzo", "",
         method, "",
@@ -339,9 +351,9 @@ def markdown(summary, examples, metadata):
         f"casi con riferimento esatto: **{summary['exact_scenarios']}**, con entrambe le strategie.", "",
         "## Metodo", "",
         "- Invocazione reale di app.services.fleet_planning.distribute; ingressi aziendali, disponibilità e matrice sostituiti con fixture isolate.",
-        "- Valutatore indipendente per capacità, finestre doppie, scarico, pause, turno, durata massima e rientro.",
+        "- Valutatore indipendente per capacità, sponda richiesta, finestre doppie, scarico, pause, turno, tempo disponibile e rientro.",
         "- Nei casi piccoli: tutte le sequenze per sottoinsieme/risorsa e tutte le assegnazioni, comprese consegne lasciate fuori.",
-        "- Riferimenti distinti: copertura massima, dotazioni, poi minimo km / minimo minuti / consolidamento / bilanciamento. Questi ultimi sono riferimenti globali coerenti con le priorità, non la stessa decisione locale a ogni inserimento.",
+        "- Riferimenti distinti: copertura massima, compatibilità, poi minimo km / minimo minuti / Efficiente distanza-prima / Bilanciata. Sono riferimenti globali coerenti con le priorità, non la stessa decisione locale a ogni inserimento.",
         "- Nei casi grandi: invarianti, tempi e stabilità; nessuna certificazione di ottimo.", "",
         "## Risultati", "",
         f"Errori degli invarianti: **{summary['invariant_errors']}**. Richieste esterne: **{summary['external_requests']}**. "
@@ -374,9 +386,10 @@ def markdown(summary, examples, metadata):
         f"massimo {summary['stress_runtime_ms']['max']:.1f} ms per distribuzione.",
         "Tempi del solo motore, senza database/provider, su runner CI: non sono tempi garantiti in produzione.",
         "Il confronto valuta copertura, avvisi e obiettivo di ogni strategia separatamente. "
-        "Gli obiettivi non equivalgono alla sola minimizzazione dei km.",
+        "Efficiente privilegia i km, poi la durata cumulativa e il numero di mezzi. "
+        "Bilanciata mantiene la priorità sull'utilizzo delle risorse e sul carico di lavoro.",
         "Partenza/deposito/giornata comuni; pause fisse dichiarate. Niente ricerca di partenze differenziate "
-        "né verifica automatica normativa ore guida. Sponda/ZTL sono preferenze con avviso; volume/pallet "
+        "né verifica automatica normativa ore guida. La sponda richiesta è obbligatoria nella distribuzione automatica; ZTL resta una preferenza con avviso. Volume/pallet "
         "non sono capacità rigide. La campagna usa solo dati fittizi e matrici congelate.",
         "Il benchmark testa il nucleo della distribuzione. Persistenza, autorizzazioni e traffico sono coperti "
         "dai test applicativi separati. Il traffico reale futuro non è certificabile con matrici congelate.", "",
@@ -475,16 +488,13 @@ def main():
         commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
     except (OSError, subprocess.CalledProcessError):
         commit = "unknown"
-    paths = ("app/optimizer.py", "app/services/fleet_planning.py",
-             "app/services/driver_schedule.py", "app/services/optimizer_search.py",
-             "app/services/fleet_search.py", "app/services/fleet_route_evaluator.py",
-             "tests/run_fleet_simulations.py", "tests/fleet_quality_reference.py",
-             "tests/fleet_simulation_cases.py")
     metadata = {
         "tested_commit": commit, "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "python": platform.python_version(), "platform": platform.platform(),
-        "engine_sha256": {path: hashlib.sha256((ROOT / path).read_bytes()).hexdigest() for path in paths},
+        "engine_sha256": dict(LOADED_SOURCE_SHA256),
         "scope": "real distribute core; fixture matrix/input/availability; no DB/provider calls",
+        "objective_policy": "efficient: coverage, compatibility, km, cumulative minutes, used vehicles; balanced: unchanged workload priorities",
+        "tail_lift_policy": "required for automatic assignments; explicit case override reserved for historical/manual references",
         "baseline_inspected_commit": "bbf4553d9d7ed47c3f01c3954214206bcf734579",
     }
     examples = [row for row in records if row["stage"] == "base" and row["case_id"] in {

@@ -67,7 +67,13 @@ def _windows(stop):
 
 
 def route_replay(case, resource, order):
-    """Replay one ordered route independently of the production scheduler."""
+    """Replay one ordered route independently of the production scheduler.
+
+    Automatic planning requires a tail lift when requested by a stop. Explicit
+    ``hard_tail_lift=False`` keeps the former advisory contract available for
+    historical/manual reference checks without changing the current default.
+    ZTL remains an equipment preference, not an inferred legal-access rule.
+    """
     settings = case["resources"][resource] if isinstance(resource, int) else resource
     start = float(case.get("start_min", 480))
     result = {
@@ -102,6 +108,9 @@ def route_replay(case, resource, order):
         cursor, origin = arrived, destination
 
     for index, stop in zip(order, stops):
+        if (case.get("hard_tail_lift", True) and _flag(stop.get("sponda"))
+                and not _flag(settings.get("ha_sponda"))):
+            result["errors"].append("tail_lift:" + str(index))
         travel(index + 1)
         arrival = cursor
         duration = float(stop.get("tempo_scarico_min") or 0)
@@ -185,7 +194,7 @@ def _key(kind, metrics):
     if kind == "time":
         return common + (metrics["minutes"], metrics["km"], metrics["used"])
     if kind == "efficient":
-        return common + (metrics["used"], metrics["minutes"], metrics["km"])
+        return common + (metrics["km"], metrics["minutes"], metrics["used"])
     return common + (
         -metrics["used"], metrics["makespan"], metrics["sumsq"],
         metrics["minutes"], metrics["km"],
@@ -195,8 +204,10 @@ def _key(kind, metrics):
 def solve_exact(case):
     """Enumerate every subset order and every assignment, including unassigned.
 
-    Bounded to seven stops and three resources. "balanced" here is a transparent
-    global comparison objective, not a claim that the product implements it.
+    Bounded to seven stops and three resources. Efficient compares distance,
+    then cumulative time, then active resources after service and compatibility.
+    Balanced retains its distinct workload objective. The subset dominance
+    rule must therefore keep a shortest route for Efficient, not a fastest one.
     """
     n, resource_count = len(case["stops"]), len(case["resources"])
     if n > 7 or resource_count > 3 or resource_count < 1:
@@ -226,7 +237,7 @@ def solve_exact(case):
             if resource >= 0:
                 masks[resource] |= 1 << index
         for kind in best:
-            preference = "km" if kind == "km" else "time"
+            preference = "km" if kind in ("km", "efficient") else "time"
             selected = [subset_routes[resource][mask][preference] for resource, mask in enumerate(masks)]
             if any(route is None for route in selected):
                 continue

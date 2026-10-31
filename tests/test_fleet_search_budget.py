@@ -35,7 +35,7 @@ def test_hundred_stop_search_respects_budget_and_keeps_full_floor(monkeypatch, b
         assert calls == []
 
 
-@pytest.mark.parametrize("value, expected", [("-1", 0), ("9999999", 100000), ("garbage", 5000)])
+@pytest.mark.parametrize("value, expected", [("-1", 0), ("9999999", 100000), ("garbage", 10000)])
 def test_candidate_configuration_is_bounded(monkeypatch, value, expected):
     monkeypatch.setenv("FLEET_MAX_CANDIDATES", value)
     assert candidate_limit(100) == expected

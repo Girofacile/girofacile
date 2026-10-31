@@ -33,7 +33,7 @@ def test_recovery_is_improvement_even_with_more_distance_and_warnings():
     assert result["summary"]["strategies"]["efficient"]["equal_service_cases"]==0
 
 
-def test_equipment_is_soft_and_follows_coverage():
+def test_advisory_ztl_mismatch_follows_coverage():
     result=compare_results(fixture_result(mismatches=1),
                            fixture_result(served=3,mismatches=0,km=10,minutes=20))
     assert result["summary"]["coverage_regressions"]==1
@@ -42,7 +42,7 @@ def test_equipment_is_soft_and_follows_coverage():
 
 @pytest.mark.parametrize("strategy,changes", [
     ("efficient",{"mismatches":1,"km":20,"minutes":40}),
-    ("efficient",{"used":3,"km":20,"minutes":40}),
+    ("efficient",{"used":1,"km":50,"minutes":40}),
     ("balanced",{"used":1,"km":20,"minutes":40,"makespan":40}),
 ])
 def test_strategy_priorities_are_preserved(strategy,changes):
@@ -90,10 +90,10 @@ def test_modified_baseline_is_rejected_before_execution(tmp_path):
 
 
 @pytest.mark.parametrize("gain",[0.02,0.001,0.000001])
-def test_small_real_time_gain_precedes_distance_even_if_not_visible_in_ui(gain):
+def test_distance_regression_precedes_a_small_real_time_gain(gain):
     summary=compare_results(fixture_result(),fixture_result(minutes=88.0-gain,km=47.0))["summary"]
-    assert summary["objective_improvements"]==1
-    assert summary["objective_regressions"]==0
+    assert summary["objective_improvements"]==0
+    assert summary["objective_regressions"]==1
 
 
 def test_floating_time_noise_does_not_hide_distance_regression():
@@ -103,10 +103,39 @@ def test_floating_time_noise_does_not_hide_distance_regression():
 
 
 @pytest.mark.parametrize("loss",[0.02,0.001,0.000001])
-def test_true_time_loss_is_not_hidden_by_distance_savings(loss):
+def test_distance_savings_precede_a_true_time_loss(loss):
     summary=compare_results(fixture_result(),fixture_result(minutes=88.0+loss,km=41.0))["summary"]
-    assert summary["objective_regressions"]==1
-    assert summary["objective_improvements"]==0
+    assert summary["objective_regressions"]==0
+    assert summary["objective_improvements"]==1
+
+
+def test_efficient_may_use_more_vehicles_to_save_distance():
+    summary=compare_results(fixture_result(),fixture_result(used=3,km=20,minutes=40))["summary"]
+    assert summary["objective_improvements"]==1
+    assert summary["objective_regressions"]==0
+
+
+def test_arithmetic_distance_noise_does_not_hide_real_time_savings():
+    summary=compare_results(fixture_result(),fixture_result(km=44.0+1e-14,minutes=87.0))["summary"]
+    assert summary["objective_improvements"]==1
+    assert summary["objective_regressions"]==0
+
+
+def test_invalid_baseline_is_reported_without_claiming_a_coverage_regression():
+    before=fixture_result(served=4,feasible=False)
+    before["runs"][0]["actual"]["invariant_errors"]=["Required tail lift unavailable"]
+    summary=compare_results(before,fixture_result(served=3))["summary"]
+    assert summary["invalid_before_runs"]==summary["validity_improvements"]==1
+    assert summary["comparable_runs"]==summary["coverage_regressions"]==0
+    assert summary["objective_regressions"]==summary["objective_improvements"]==0
+    assert summary["strategies"]["efficient"]["equal_service_cases"]==0
+
+
+def test_newly_invalid_plan_is_a_validity_regression():
+    after=fixture_result(feasible=False)
+    summary=compare_results(fixture_result(),after)["summary"]
+    assert summary["invalid_after_runs"]==summary["validity_regressions"]==1
+    assert summary["comparable_runs"]==summary["objective_improvements"]==0
 
 
 @pytest.mark.parametrize("gain",[0.02,0.001,0.000001])

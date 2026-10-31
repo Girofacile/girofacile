@@ -21,9 +21,11 @@ function fixture(){
   agentsFeatureEnabled:()=>true,loadAgents:async()=>{calls.push('agents');},
   loadCustomers:()=>{assert.ok(calls.includes('agents'));return customers.promise;},loadCustomerPicker:async()=>{assert.ok(calls.includes('agents'));},
   loadCompanyProfile:async()=>{calls.push('company');},loadOnboardingStatus:async()=>{assert.ok(calls.includes('company'));},
-  loadNotificationsV30:async()=>{calls.push('notifications');},notificationsPollV30:null,
+  loadNotificationsV30:async()=>{calls.push('notifications');},notificationsPollV30:null,NOTIFICATIONS_POLL_MS:30000,
   setInterval:()=>1,clearInterval:noop,updateDashboardStats:noop,toast:msg=>calls.push(msg)});
  vm.runInContext(init,ctx);
+ vm.runInContext(core.slice(core.indexOf('function startNotificationsPollV30(){'),
+  core.indexOf('document.addEventListener("visibilitychange"')),ctx);
  return {ctx,calls,settings,features,customers};
 }
 test('dashboard renders while slow customers remain pending; resources are requested once',async()=>{

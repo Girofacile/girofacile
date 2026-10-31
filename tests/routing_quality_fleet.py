@@ -63,7 +63,7 @@ def _case(identifier, family, stops, resources, matrix=None, *, returning=True,
     result = dict(id=identifier, kind='fleet', family=family, seed=seed,
                   stops=stops, resources=resources, matrix=matrix or _uniform(len(stops)),
                   return_depot=returning, start_time='08:00', reference=reference,
-                  traffic_margin=1.0,
+                  traffic_margin=1.0, hard_tail_lift=True,
                   availability_semantics='minutes until a conflicting booking or midnight')
     if witness is not None:
         result['witness'] = witness

@@ -34,6 +34,8 @@ def fixture():
         {"start":"08:20","end":"08:35"},{"start":"12:00","end":"12:30"}]}
     vehicles=[resource(capacity=9,packages=9,schedule=schedule,
         ha_sponda=False,accesso_ztl=False) for _ in range(10)]
+    # Automatic assignment now requires a real lift for the first delivery.
+    vehicles[0]['ha_sponda']=True
     rows[0]["sponda"]=True;rows[1]["ztl"]=True
     return rows,points,matrix,vehicles
 

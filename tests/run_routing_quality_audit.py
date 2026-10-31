@@ -240,7 +240,7 @@ def markdown_report(report):
         f"Richieste esterne: {summary['external_calls']}.", '',
         '## Criteri', '',
         '- Giro singolo: fattibilità, poi chilometri, durata, attesa e avvisi.',
-        '- Flotta efficiente: consegne servite, compatibilità preferenziale, meno mezzi, durata cumulativa e km.',
+        '- Flotta efficiente: consegne compatibili servite, preferenza ZTL, chilometri, durata cumulativa e mezzi utilizzati.',
         '- Flotta bilanciata: consegne servite, compatibilità preferenziale, più mezzi utilizzati, durata massima, bilanciamento, durata cumulativa e km.',
         '- Il prezzo energetico modifica la stima, non l’obiettivo di assegnazione.', '',
         'Il riferimento esatto enumera ordini e assegnazioni sui casi piccoli. '
