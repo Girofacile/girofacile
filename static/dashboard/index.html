@@ -884,27 +884,55 @@
       </section>
 
       <section id="tab-settings" class="tab hidden gf-stack" data-gap="lg">
-        <section class="gf-panel" aria-label="Preferenze operative">
+        <section class="gf-panel" aria-labelledby="settingsDeliveryTitle">
+          <header class="gf-panel__header">
+            <div><h2 class="gf-panel__title" id="settingsDeliveryTitle">Consegna e prova di consegna</h2><p class="gf-muted">Cosa chiede il portale autista quando completa una fermata.</p></div>
+            <span class="gf-panel__meta" data-settings-count="settingDeliverySignature featurePhotoProofV89"></span>
+          </header>
           <div class="gf-panel__body">
             <div class="gf-setting">
-              <div class="gf-setting__copy"><strong id="settingsTitle0">Firma cliente alla consegna</strong><p id="settingsDescription0">Se attiva, l'autista potrà raccogliere la firma del cliente quando completa una consegna. Se disattiva, il portale autista resta nella modalità standard.</p><p id="settingsDetail0" class="gf-field__hint hidden">La preferenza si applica alle consegne nel portale autista. Salva le modifiche per applicarla.</p></div>
-              <div class="gf-setting__control"><label class="gf-switch"><input id="settingDeliverySignature" type="checkbox" role="switch" aria-labelledby="settingsTitle0" aria-describedby="settingsDescription0" onchange="markSettingsDirtyV893()"></label><button type="button" class="gf-icon-button" aria-label="Dettagli: Firma cliente alla consegna" aria-expanded="false" aria-controls="settingsDetail0" onclick="toggleSettingsDetail(this)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button></div>
+              <div class="gf-setting__copy"><strong id="settingsTitle0">Firma cliente alla consegna</strong><p id="settingsDescription0">Se attiva, l'autista potrà raccogliere la firma del cliente quando completa una consegna. Se disattiva, il portale autista resta nella modalità standard.</p><p class="gf-field__hint">La preferenza si applica alle consegne nel portale autista. Salva le modifiche per applicarla.</p></div>
+              <div class="gf-setting__control"><label class="gf-switch"><input id="settingDeliverySignature" type="checkbox" role="switch" aria-labelledby="settingsTitle0" aria-describedby="settingsDescription0" onchange="markSettingsDirtyV893()"></label></div>
             </div>
             <div class="gf-setting">
-              <div class="gf-setting__copy"><strong id="settingsTitle1">Gestione agenti</strong><p id="settingsDescription1">Abilita la sezione Agenti, le assegnazioni clienti e i report per agente. Disattivandola, i nuovi clienti non avranno un agente; le associazioni esistenti saranno conservate.</p><p id="settingsDetail1" class="gf-field__hint hidden">La disponibilità dipende dal piano aziendale. Disattivando la funzione le associazioni già registrate vengono conservate.</p></div>
-              <div class="gf-setting__control"><label class="gf-switch"><input id="settingAgentsEnabled" type="checkbox" role="switch" aria-labelledby="settingsTitle1" aria-describedby="settingsDescription1" onchange="markSettingsDirtyV893()"></label><button type="button" class="gf-icon-button" aria-label="Dettagli: Gestione agenti" aria-expanded="false" aria-controls="settingsDetail1" onclick="toggleSettingsDetail(this)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button></div>
+              <div class="gf-setting__copy"><strong id="settingsTitle3">Foto prova consegna</strong><p id="settingsDescription3">Se attiva, la foto della merce è obbligatoria prima di completare la consegna.</p><p class="gf-field__hint">Firma, foto e POD vengono archiviati privatamente. Configurare lo storage prima di attivare questa opzione.</p></div>
+              <div class="gf-setting__control"><label class="gf-switch"><input id="featurePhotoProofV89" type="checkbox" role="switch" aria-labelledby="settingsTitle3" aria-describedby="settingsDescription3" onchange="markSettingsDirtyV893()"></label></div>
+            </div>
+          </div>
+        </section>
+        <section class="gf-panel" aria-labelledby="settingsPlanningTitle">
+          <header class="gf-panel__header">
+            <div><h2 class="gf-panel__title" id="settingsPlanningTitle">Pianificazione dei giri</h2><p class="gf-muted">Vincoli di clienti e mezzi considerati quando calcoli un giro.</p></div>
+            <span class="gf-panel__meta" data-settings-count="featureTimeWindowsV89 featureZtlV89 featureTailLiftV89 featureRefrigeratedV89"></span>
+          </header>
+          <div class="gf-panel__body">
+            <div class="gf-setting">
+              <div class="gf-setting__copy"><strong id="settingsTitle2">Finestre orarie</strong><p id="settingsDescription2">Gestisci fasce orarie e vincoli di consegna dei clienti.</p><p class="gf-field__hint">Le fasce orarie dei clienti vengono considerate nella pianificazione dei giri.</p></div>
+              <div class="gf-setting__control"><label class="gf-switch"><input id="featureTimeWindowsV89" type="checkbox" role="switch" aria-labelledby="settingsTitle2" aria-describedby="settingsDescription2" checked onchange="markSettingsDirtyV893()"></label></div>
             </div>
             <div class="gf-setting">
-              <div class="gf-setting__copy"><strong id="settingsTitle2">Finestre orarie</strong><p id="settingsDescription2">Gestisci fasce orarie e vincoli di consegna dei clienti.</p><p id="settingsDetail2" class="gf-field__hint hidden">Le fasce orarie dei clienti vengono considerate nella pianificazione dei giri.</p></div>
-              <div class="gf-setting__control"><label class="gf-switch"><input id="featureTimeWindowsV89" type="checkbox" role="switch" aria-labelledby="settingsTitle2" aria-describedby="settingsDescription2" checked onchange="markSettingsDirtyV893()"></label><button type="button" class="gf-icon-button" aria-label="Dettagli: Finestre orarie" aria-expanded="false" aria-controls="settingsDetail2" onclick="toggleSettingsDetail(this)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button></div>
+              <div class="gf-setting__copy"><strong id="settingsTitle4">ZTL e zone difficili</strong><p id="settingsDescription4">Usa i vincoli di accesso quando pianifichi clienti e mezzi.</p><p class="gf-field__hint">Attiva questa preferenza per gestire i vincoli di accesso di clienti e mezzi.</p></div>
+              <div class="gf-setting__control"><label class="gf-switch"><input id="featureZtlV89" type="checkbox" role="switch" aria-labelledby="settingsTitle4" aria-describedby="settingsDescription4" onchange="markSettingsDirtyV893()"></label></div>
             </div>
             <div class="gf-setting">
-              <div class="gf-setting__copy"><strong id="settingsTitle3">Foto prova consegna</strong><p id="settingsDescription3">Se attiva, la foto della merce è obbligatoria prima di completare la consegna.</p><p id="settingsDetail3" class="gf-field__hint hidden">Firma, foto e POD vengono archiviati privatamente. Configurare lo storage prima di attivare questa opzione.</p></div>
-              <div class="gf-setting__control"><label class="gf-switch"><input id="featurePhotoProofV89" type="checkbox" role="switch" aria-labelledby="settingsTitle3" aria-describedby="settingsDescription3" onchange="markSettingsDirtyV893()"></label><button type="button" class="gf-icon-button" aria-label="Dettagli: Foto prova consegna" aria-expanded="false" aria-controls="settingsDetail3" onclick="toggleSettingsDetail(this)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button></div>
+              <div class="gf-setting__copy"><strong id="settingsTitle5">Sponda idraulica / transpallet</strong><p id="settingsDescription5">Gestisci compatibilità tra esigenze del cliente e mezzo.</p><p class="gf-field__hint">Attiva questa preferenza per gestire i requisiti di sponda idraulica e transpallet.</p></div>
+              <div class="gf-setting__control"><label class="gf-switch"><input id="featureTailLiftV89" type="checkbox" role="switch" aria-labelledby="settingsTitle5" aria-describedby="settingsDescription5" onchange="markSettingsDirtyV893()"></label></div>
             </div>
             <div class="gf-setting">
-              <div class="gf-setting__copy"><strong id="settingsTitle4">ZTL e zone difficili</strong><p id="settingsDescription4">Usa i vincoli di accesso quando pianifichi clienti e mezzi.</p><p id="settingsDetail4" class="gf-field__hint hidden">Attiva questa preferenza per gestire i vincoli di accesso di clienti e mezzi.</p></div>
-              <div class="gf-setting__control"><label class="gf-switch"><input id="featureZtlV89" type="checkbox" role="switch" aria-labelledby="settingsTitle4" aria-describedby="settingsDescription4" onchange="markSettingsDirtyV893()"></label><button type="button" class="gf-icon-button" aria-label="Dettagli: ZTL e zone difficili" aria-expanded="false" aria-controls="settingsDetail4" onclick="toggleSettingsDetail(this)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button></div>
+              <div class="gf-setting__copy"><strong id="settingsTitle6">Merce refrigerata <span class="gf-badge" data-status="neutral">In sviluppo</span></strong><p id="settingsDescription6">La gestione della catena del freddo non è ancora disponibile. Questa opzione sarà attivabile al completamento della funzione.</p></div>
+              <div class="gf-setting__control"><label class="gf-switch"><input id="featureRefrigeratedV89" type="checkbox" role="switch" aria-labelledby="settingsTitle6" aria-describedby="settingsDescription6" disabled onchange="markSettingsDirtyV893()"></label></div>
+            </div>
+          </div>
+        </section>
+        <section class="gf-panel" aria-labelledby="settingsOrganizationTitle">
+          <header class="gf-panel__header">
+            <div><h2 class="gf-panel__title" id="settingsOrganizationTitle">Organizzazione</h2><p class="gf-muted">Sezioni aggiuntive del gestionale.</p></div>
+            <span class="gf-panel__meta" data-settings-count="settingAgentsEnabled"></span>
+          </header>
+          <div class="gf-panel__body">
+            <div class="gf-setting">
+              <div class="gf-setting__copy"><strong id="settingsTitle1">Gestione agenti</strong><p id="settingsDescription1">Abilita la sezione Agenti, le assegnazioni clienti e i report per agente.</p><p class="gf-field__hint">La disponibilità dipende dal piano aziendale. Disattivandola, i nuovi clienti non avranno un agente; le associazioni già registrate vengono conservate.</p></div>
+              <div class="gf-setting__control"><label class="gf-switch"><input id="settingAgentsEnabled" type="checkbox" role="switch" aria-labelledby="settingsTitle1" aria-describedby="settingsDescription1" onchange="markSettingsDirtyV893()"></label></div>
             </div>
           </div>
         </section>
@@ -917,19 +945,6 @@
             </div>
           </div>
         </section>
-        <details class="gf-panel">
-          <summary class="gf-panel__header"><h2 class="gf-panel__title">Altre impostazioni</h2></summary>
-          <div class="gf-panel__body" aria-label="Altre preferenze operative">
-            <div class="gf-setting">
-              <div class="gf-setting__copy"><strong id="settingsTitle5">Sponda idraulica / transpallet</strong><p id="settingsDescription5">Gestisci compatibilità tra esigenze del cliente e mezzo.</p><p id="settingsDetail5" class="gf-field__hint hidden">Attiva questa preferenza per gestire i requisiti di sponda idraulica e transpallet.</p></div>
-              <div class="gf-setting__control"><label class="gf-switch"><input id="featureTailLiftV89" type="checkbox" role="switch" aria-labelledby="settingsTitle5" aria-describedby="settingsDescription5" onchange="markSettingsDirtyV893()"></label><button type="button" class="gf-icon-button" aria-label="Dettagli: Sponda idraulica / transpallet" aria-expanded="false" aria-controls="settingsDetail5" onclick="toggleSettingsDetail(this)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button></div>
-            </div>
-            <div class="gf-setting">
-              <div class="gf-setting__copy"><strong id="settingsTitle6">Merce refrigerata - In sviluppo</strong><p id="settingsDescription6">La gestione della catena del freddo non è ancora disponibile. Questa opzione sarà attivabile al completamento della funzione.</p><p id="settingsDetail6" class="gf-field__hint hidden">Funzione in sviluppo: al momento non è possibile attivare la gestione della merce refrigerata.</p></div>
-              <div class="gf-setting__control"><label class="gf-switch"><input id="featureRefrigeratedV89" type="checkbox" role="switch" aria-labelledby="settingsTitle6" aria-describedby="settingsDescription6" disabled onchange="markSettingsDirtyV893()"></label><button type="button" class="gf-icon-button" aria-label="Dettagli: Merce refrigerata - In sviluppo" aria-expanded="false" aria-controls="settingsDetail6" onclick="toggleSettingsDetail(this)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button></div>
-            </div>
-          </div>
-        </details>
         <div id="settingsSaveBar" class="gf-savebar hidden" data-floating>
           <span id="settingsSaveState" role="status" aria-live="polite">Impostazioni azienda sincronizzate.</span>
           <button id="settingsSaveBtnV893" class="gf-button" data-variant="primary" data-size="sm" type="button" onclick="saveAllSettingsV893()" disabled>Salva modifiche</button>
@@ -1598,7 +1613,7 @@
 <script src="/static/dashboard/js/order-sources.js?v=gf_plans_20261023"></script>
 <script src="/static/dashboard/js/dashboard-real-map.js?v=gf_priority_hero_20261025"></script>
 <script src="/static/dashboard/js/in-progress-reference.js?v=gf_driver_flow_20261020"></script>
-<script src="/static/dashboard/js/core.js?v=gf_giro_prova_20261030"></script>
+<script src="/static/dashboard/js/core.js?v=gf_impostazioni_20261031"></script>
 <script src="/static/dashboard/js/dashboard-mobile.js?v=gf_dashboard_mobile_20261019"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=orders_2"></script>
 <link rel="stylesheet" href="/static/dashboard/css/fleet-review.css?v=gf_suddivisione_20261025">

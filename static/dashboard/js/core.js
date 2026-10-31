@@ -318,6 +318,7 @@ async function loadSettingsV41(){
     const toggle = document.getElementById('settingDeliverySignature');
     if(toggle) toggle.checked = !!settingsV41.delivery_signature_enabled && planFeatureEnabled('has_delivery_signature');
     applyPlanFeatureControls();
+    updateSettingsCountsV893();
     const state = document.getElementById('settingsSaveState');
     if(state) state.textContent = settingsV41.delivery_signature_enabled ? 'Firma cliente attiva nel portale autista.' : 'Firma cliente disattivata nel portale autista.';
   }catch(e){
@@ -5697,12 +5698,15 @@ function sidebarFit(){
 
 // v89.3 - salvataggio manuale della pagina Impostazioni
 let gfSettingsDirtyV893=false;
-function toggleSettingsDetail(button){
-  const expanded=button.getAttribute('aria-expanded')!=='true';
-  button.setAttribute('aria-expanded',String(expanded));
-  document.getElementById(button.getAttribute('aria-controls'))?.classList.toggle('hidden',!expanded);
+// Conteggio "X di Y attive" nell'intestazione di ogni gruppo: contano solo gli interruttori utilizzabili.
+function updateSettingsCountsV893(){
+  document.querySelectorAll('[data-settings-count]').forEach(meta=>{
+    const inputs=meta.dataset.settingsCount.split(' ').map(id=>document.getElementById(id)).filter(input=>input && !input.disabled);
+    meta.textContent=inputs.length ? `${inputs.filter(input=>input.checked).length} di ${inputs.length} attive` : '';
+  });
 }
 function markSettingsDirtyV893(){
+  updateSettingsCountsV893();
   document.getElementById('settingsSaveBar')?.classList.remove('hidden');
   gfSettingsDirtyV893=true;
   const state=document.getElementById('settingsSaveState');
@@ -5791,6 +5795,7 @@ async function loadUniversalFeaturesV89(){
     Object.entries(map).forEach(([id,key])=>{const el=document.getElementById(id);if(el)el.checked=!!gfUniversalFeaturesV891[key];});
     applyUniversalFeaturesV891();
     applyPlanFeatureControls();
+    updateSettingsCountsV893();
   }catch(e){ console.warn('Funzionalità opzionali',e); }
 }
 async function saveUniversalFeaturesV89(){

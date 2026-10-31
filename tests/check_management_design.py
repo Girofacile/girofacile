@@ -335,11 +335,9 @@ def main():
                     capture(page, "report-filters", width)
                     page.locator("#reportFilterToggleBtn").click()
                     page.evaluate("showTab('settings')")
-                    detail = page.locator('#tab-settings [onclick="toggleSettingsDetail(this)"]').first
-                    detail.click()
-                    assert detail.get_attribute("aria-expanded") == "true"
-                    detail.click()
-                    interactions.append(f"{width}: report filters and settings detail")
+                    assert page.locator("#tab-settings .gf-setting__copy .gf-field__hint").first.is_visible()
+                    assert page.locator("#tab-settings [data-settings-count]").first.inner_text().endswith("attive")
+                    interactions.append(f"{width}: report filters and settings details")
                 page.close()
             browser.close()
     finally:
