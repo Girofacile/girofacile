@@ -115,6 +115,8 @@ function syncWorkspaceTopbar(name){
   // Elementi legati a una sezione (azioni dell'intestazione, voci di menu): visibili solo lì.
   document.querySelectorAll("[data-show-on-tabs]").forEach(el=>el.classList.toggle("gf-hidden",!el.dataset.showOnTabs.split(" ").includes(name)));
   document.querySelectorAll("[data-hide-on-tabs]").forEach(el=>el.classList.toggle("gf-hidden",el.dataset.hideOnTabs.split(" ").includes(name)));
+  // Una voce di menu comparsa o sparita cambia lo spazio della sidebar (riquadro di upgrade).
+  window.GFSidebarFit?.();
   if(document.body){
     document.body.classList.toggle("gf-company-page-active",company);
     document.body.classList.toggle("gf-dashboard-page-active",name==="dashboard");
