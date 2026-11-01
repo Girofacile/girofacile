@@ -311,7 +311,7 @@ def distribute(db,user,data,assignments=None):
         else:
             constructions.extend((order,False,False) for order in
                                  (canonical_order,legacy_canonical,legacy_order))
-        seen_constructions=set()
+        seen_constructions=set();constructed_candidates={}
         for order,distance_first,balance in constructions:
             balanced=(data.strategy=='balanced') if balance is None else balance
             construction=(tuple(order),'balanced' if balanced
@@ -322,6 +322,7 @@ def distribute(db,user,data,assignments=None):
             routes=[[] for _ in vehicles];results=[None for _ in vehicles];unresolved={}
             for index in order: insert(index,distance_first,balance)
             initial_candidates.append((tuple(tuple(row['fleet_stop_index'] for row in route) for route in routes),tuple(results)))
+            constructed_candidates[construction]=initial_candidates[-1]
         def initial_key(candidate):
             sequences,scores=candidate
             common=(-sum(map(len,sequences)),sum(equipment(route,r) for r,route in enumerate(sequences)))
@@ -342,6 +343,57 @@ def distribute(db,user,data,assignments=None):
             equipment_penalty=equipment,resource_signatures=signatures,
             membership_compatible=membership_compatible,
             return_depot=data.rientro_deposito)
+        # A globally constrained feasibility model is a separate recovery
+        # stage: do not declare a delivery impossible because local moves
+        # exhausted their evaluation quota. It shares this matrix and replays
+        # every proposed itinerary with the canonical scheduler above.
+        potentially_serviceable=sum(any(membership_compatible((i,),resource)
+            for resource in range(len(vehicles))) for i in range(len(rows)))
+        from .fleet_search import candidate_limit
+        if (sum(map(len,proposed))<potentially_serviceable
+                and not search.get('global_optimum_proven')
+                and candidate_limit(len(rows))>0):
+            from time import perf_counter
+            from .fleet_working_clock import _plan_key
+            from .fleet_search import _better
+            recovery_started=perf_counter()
+            alternate='balanced' if data.strategy=='efficient' else 'efficient'
+            preferred=constructed_candidates[(tuple(legacy_order),
+                'balanced' if alternate=='balanced' else 'legacy-time')]
+            alternate_candidates=[preferred]+[candidate for candidate in initial_candidates
+                if candidate is not preferred]
+            alternate_initial=min(alternate_candidates,key=lambda candidate:
+                _plan_key(candidate[0],candidate[1],rows,vehicle_data,alternate))
+            other_routes,other_scores,portfolio=optimize_fleet(
+                rows,len(vehicles),
+                lambda sequence,resource:evaluate([rows[i] for i in sequence],resource),
+                alternate,initial_routes=alternate_initial[0],initial_results=alternate_initial[1],
+                initial_candidates=alternate_candidates,matrix=matrix,points=points,
+                equipment_penalty=equipment,resource_signatures=signatures,
+                membership_compatible=membership_compatible,return_depot=data.rientro_deposito)
+            recovery_candidates=[(proposed,optimized_results),(other_routes,other_scores)]
+            improved=_better(_plan_key(other_routes,other_scores,rows,vehicle_data,data.strategy),
+                             _plan_key(proposed,optimized_results,rows,vehicle_data,data.strategy))
+            if improved:
+                proposed,optimized_results=other_routes,other_scores
+            search['coverage_portfolio']=dict(strategy=alternate,improved=improved,
+                search=portfolio,wall_seconds=perf_counter()-recovery_started)
+            if sum(map(len,proposed))<potentially_serviceable:
+                from .fleet_milp_solver import solve_fleet_milp
+                # Repair from the shorter-distance search basin; acceptance
+                # still uses the operator's selected strategy and incumbent.
+                seed=min(recovery_candidates,key=lambda candidate:
+                    _plan_key(candidate[0],candidate[1],rows,vehicle_data,'efficient'))
+                recovered,recovered_scores,recovery=solve_fleet_milp(
+                    rows,vehicle_data,matrix,points,data.orario_partenza,
+                    data.rientro_deposito,limits,seed[0],
+                    lambda sequence,resource:evaluate([rows[i] for i in sequence],resource),
+                    initial_results=seed[1],strategy=data.strategy,
+                    max_seconds=max(0,30-(perf_counter()-recovery_started)))
+                if _better(_plan_key(recovered,recovered_scores,rows,vehicle_data,data.strategy),
+                           _plan_key(proposed,optimized_results,rows,vehicle_data,data.strategy)):
+                    proposed,optimized_results=recovered,recovered_scores
+                search['constraint_recovery']=recovery
         routes=[[rows[i] for i in sequence] for sequence in proposed]
         results=list(optimized_results)
         search['tail_lift_required']=True
