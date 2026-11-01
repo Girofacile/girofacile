@@ -3984,11 +3984,14 @@ async function optimizeRoute(){
     vehicle_id:val("routeVehicle") ? parseInt(val("routeVehicle")) : null, driver_id:val("routeDriver") ? parseInt(val("routeDriver")) : null, rientro_deposito:boolVal("returnDepot"), prezzo_carburante_litro:parseFloat(val("fuelPrice")||0), energy_price_mode:(document.querySelector('input[name="energyPriceMode"]:checked')?.value||"manual"), energy_price_primary:parseFloat(val("fuelPrice")||0), energy_price_electric:parseFloat(val("electricityPrice")||0), consegne:deliveries};
   const box = document.getElementById("routePreviewResult");
   if(box) box.innerHTML = `<section class="gf-panel"><div class="gf-loading" role="status">Calcolo anteprima giro in corso...</div></section>`;
+  // Schermata di attesa a tutto schermo: almeno 2 secondi anche se il calcolo è più rapido.
+  const wait = globalThis.GFDesignSystem?.showWait({title:"Sto calcolando il giro", messages:["Calcolo le distanze tra i clienti…","Ottimizzo l’ordine delle fermate…","Stimo gli orari di arrivo…"]});
   showTab("route-preview");
   try{
     const editingOrderRoute=globalThis.GFOrderPlanning?.routeId() || (lastRouteResult?.id && deliveries.some(d=>d.order_refs?.length) ? lastRouteResult.id : null);
     if(editingOrderRoute)payload.route_id=editingOrderRoute;
     const r = await api(editingOrderRoute?"/api/routes/recalculate-manual":"/api/routes/optimize", {method:"POST", body:JSON.stringify(payload)});
+    await wait?.close();
     globalThis.GFOrderPlanning?.calculated(r);
     deliveries = (r.consegne || []).map(cleanDeliveryForPayload);
     customerPlanningStepOpenedV68 = true;
@@ -4005,6 +4008,7 @@ async function optimizeRoute(){
     await refreshResourceAvailability();
     document.getElementById("routePreviewResult")?.scrollIntoView({behavior:"smooth", block:"start"});
   }catch(e){
+    await wait?.close();
     const msg = e.message || "Errore sconosciuto";
     const ticketBtn = e.errorId ? `<div class="gf-cluster"><button type="button" class="gf-button" data-variant="secondary" onclick="openSupportPanelV49(${e.errorId})">Invia ticket assistenza</button></div>` : "";
     if(box) box.innerHTML = `

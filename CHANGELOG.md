@@ -5,6 +5,13 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Schermata di attesa a tutto schermo: durante il calcolo dei giri compare un
+  velo chiaro sfocato su tutto il gestionale, con al centro il logo GiroFacile
+  che si disegna, un titolo con il numero reale di mezzi ("Sto pianificando i
+  giri di 4 mezzi"), frasi che cambiano e una barra senza percentuale. Vale per
+  il calcolo multimezzo, il ricalcolo e la conferma della suddivisione e il
+  calcolo del giro singolo; resta almeno 2 secondi anche se il calcolo è più
+  rapido e, oltre i 45 secondi, avvisa che ci vuole più del solito.
 - Piani e abbonamento: aperta dal riquadro "Passa a …" della sidebar mostrava
   "—" al posto del nome del piano attivo, perché il piano veniva letto solo
   aprendo il profilo. Ora è noto subito dopo l'accesso.

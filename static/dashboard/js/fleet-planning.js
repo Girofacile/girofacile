@@ -88,11 +88,17 @@
     if(!deliveries.length){alert('Aggiungi almeno una consegna.');return;}
     if(deliveries.length>100){alert('Puoi suddividere fino a 100 consegne per volta. Riduci la selezione.');return;}
     busy=true;
+    // Schermata di attesa a tutto schermo: il numero di mezzi è quello delle card compilate.
+    const vans=resources.length===1?'1 mezzo':`${resources.length} mezzi`;
+    const wait=globalThis.GFDesignSystem?.showWait({
+      title:`Sto pianificando i giri di ${vans}`,hint:'Di solito servono 10–30 secondi.',
+      messages:['Calcolo le distanze tra i clienti…',resources.length===1?'Assegno le consegne al mezzo…':`Divido le consegne tra i ${vans}…`,'Controllo orari, peso e colli…','Ottimizzo l’ordine delle fermate…','Preparo i giri da controllare…']
+    });
     try{
       showTab('route-preview');el('routePreviewResult').innerHTML='<section class="gf-panel"><div class="gf-loading" role="status">Distribuzione delle consegne in corso…</div></section>';
       const data={nome:val('routeName')||'Piano consegne',data_giro:val('routeDate'),orario_partenza:val('routeStart'),deposit_id:Number(val('routeDeposit')),rientro_deposito:boolVal('returnDepot'),strategy:el('fleetStrategy').value,resources,consegne:deliveries};
-      plan=await api('/api/fleet-planning/preview',{method:'POST',body:JSON.stringify(data)});changedAssignments=false;draftAssignments=null;manualAdjusted=false;acknowledgedWarning=false;busy=false;render();
-    }catch(e){el('routePreviewResult').innerHTML=`<section class="gf-panel"><div class="gf-panel__body gf-stack"><h2 class="gf-panel__title">Distribuzione non completata</h2><p class="gf-alert" data-status="danger" role="alert">${esc(e.message)}</p><div><button type="button" class="gf-button" data-variant="secondary" onclick="showTab('giro')">Torna alla pianificazione</button></div></div></section>`;}
+      plan=await api('/api/fleet-planning/preview',{method:'POST',body:JSON.stringify(data)});await wait?.close();changedAssignments=false;draftAssignments=null;manualAdjusted=false;acknowledgedWarning=false;busy=false;render();
+    }catch(e){await wait?.close();el('routePreviewResult').innerHTML=`<section class="gf-panel"><div class="gf-panel__body gf-stack"><h2 class="gf-panel__title">Distribuzione non completata</h2><p class="gf-alert" data-status="danger" role="alert">${esc(e.message)}</p><div><button type="button" class="gf-button" data-variant="secondary" onclick="showTab('giro')">Torna alla pianificazione</button></div></div></section>`;}
     finally{busy=false;}
   }
   function assignments(){const a=Array(plan.configuration.consegne.length).fill(null);plan.routes.forEach(r=>r.stop_indexes.forEach(i=>a[i]=r.resource));return a;}
@@ -149,10 +155,15 @@
     busy=true;
     el('routePreviewResult')?.querySelectorAll('button,select').forEach(b=>b.disabled=true);
     notice(name==='revise'?'Ripianificazione dei giri in corso…':'Verifica e programmazione dei giri in corso…');
+    const routes=plan.routes?.length||0,giri=routes===1?'1 giro':`${routes} giri`;
+    const wait=globalThis.GFDesignSystem?.showWait(name==='revise'
+      ?{title:'Sto ricalcolando i giri',messages:['Aggiorno le fermate spostate…','Ricalcolo percorsi e orari…','Controllo orari, peso e colli…']}
+      :{title:routes?`Sto programmando ${giri}`:'Sto programmando i giri',minMs:1000,messages:['Salvo i giri…','Preparo le consegne per il portale degli autisti…']});
     try{
       if(name==='revise'){
         const payload={version:plan.version,assignments:reviewAssignments()};
         plan=await api(`/api/fleet-planning/${plan.id}/revise`,{method:'POST',body:JSON.stringify(payload)});
+        await wait?.close();
         changedAssignments=false;draftAssignments=null;reviseError='';
         render();notice('Nuove fermate e stime ricalcolate. Controlla il risultato e premi “Pianifica giri”.');
       }else{
@@ -161,6 +172,7 @@
             method:'POST',body:JSON.stringify({version:plan.version,accept_unassigned:!!acceptUnassigned})
           });
         }
+        await wait?.close();
         render();
         if(plan.status==='programmed'){
           const issues=(plan.warnings||[]).filter(x=>/email non inviata|notifiche? non inviate?|fuori orario/i.test(x));
@@ -180,6 +192,7 @@
         }
       }
     }catch(e){
+      await wait?.close();
       if(name==='revise')reviseError=e.message||'Ripianificazione non riuscita.';
       if(name==='plan'){
         try{
@@ -199,6 +212,7 @@
           ?'Programmazione non completata. Controlla le bozze nello storico prima di riprovare. '+e.message
           :e.message);
     }finally{
+      wait?.dispose();
       const lastMessage=el('fleetMessage')?.textContent;
       busy=false;
       render();

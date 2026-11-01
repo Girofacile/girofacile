@@ -6,7 +6,7 @@
 <title>Catalogo componenti · GiroFacile</title>
 <link rel="icon" href="/static/favicon-32x32.png">
 <link rel="stylesheet" href="/static/design-system/theme.css?v=gf_frecce_grigie_20261101">
-<link rel="stylesheet" href="/static/design-system/components.css?v=gf_frecce_grigie_20261101">
+<link rel="stylesheet" href="/static/design-system/components.css?v=gf_attesa_20261101">
 <link rel="stylesheet" href="/static/design-system/layout.css?v=gf_banner_unico_20261101">
 <script src="/static/design-system/design-system.js" defer></script>
 <script src="/static/design-system/shell.js?v=gf_scala_20261101" defer></script>
@@ -372,6 +372,15 @@
         </div>
         <div class="gf-empty"><span class="gf-empty__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 5h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z M16 3v4 M8 3v4 M4 11h16"/></svg></span><h3 class="gf-subtitle">Nessun giro programmato</h3><p>Stato vuoto con icona (.gf-empty__icon).</p></div>
         <p class="gf-muted">Giri programmati e Storico. Colonna di oggi con <code>.gf-panel[data-day="today"]</code>, sabato e domenica con <code>[data-day="weekend"]</code>. Card del giro solo con orario e autista; striscia ambra se programmato, verde se completato, grigia con orario barrato se annullato (in fondo alla colonna). Il conteggio nell'intestazione conta solo i giri attivi.</p>
+      </div>
+    </section>
+    <section class="gf-panel" aria-labelledby="p1d-title">
+      <header class="gf-panel__header"><h3 class="gf-panel__title" id="p1d-title">Schermata di attesa</h3><span class="gf-panel__meta">.gf-wait · .gf-loader · GFDesignSystem.showWait</span></header>
+      <div class="gf-panel__body gf-stack">
+        <div class="gf-wait__card"><div class="gf-loader" role="status"><svg class="gf-loader__art" viewBox="0 0 100 100" aria-hidden="true"><rect class="gf-anim-logo__bg" width="100" height="100" rx="22"/><g class="gf-anim-logo__mark"><path class="gf-anim-logo__stroke gf-anim-logo__arc" pathLength="1" d="M54 25A26 26 0 1 0 47 77"/><g><path class="gf-anim-logo__dash" d="M52.7 76.9A26 26 0 0 0 58 75.7"/><path class="gf-anim-logo__dash" d="M61.4 74.4A26 26 0 0 0 66 71.5"/><path class="gf-anim-logo__dash" d="M68.7 69.1A26 26 0 0 0 72.5 64"/></g><path class="gf-anim-logo__stroke gf-anim-logo__bar" pathLength="1" d="M54 52H75.5A1.5 1.5 0 0 1 77 53.5V58"/><g class="gf-anim-logo__ring"><circle cx="47" cy="77" r="5.6"/><circle cx="47" cy="77" r="2.5"/></g><g class="gf-anim-logo__pin"><path d="M66.5 17.5c-5 0-9 3.9-9 8.8 0 6.1 9 14.2 9 14.2s9-8.1 9-14.2c0-4.9-4-8.8-9-8.8z"/><circle cx="66.5" cy="26.4" r="3.3"/></g></g></svg>
+          <p class="gf-loader__title">Sto pianificando i giri di 3 mezzi</p><p class="gf-loader__message">Divido le consegne tra i 3 mezzi…</p><div class="gf-loader__bar" aria-hidden="true"></div><p class="gf-loader__hint">Di solito servono 10–30 secondi.</p></div></div>
+        <div><button type="button" class="gf-button" data-variant="secondary" onclick="const w=GFDesignSystem.showWait({title:'Esempio di attesa',messages:['Prima fase…','Seconda fase…']});setTimeout(()=>w.close(),5000)">Prova la schermata (5 secondi)</button></div>
+        <p class="gf-muted">Per le operazioni lunghe: calcolo del giro singolo e multimezzo, ricalcolo e conferma della suddivisione. Copre tutto lo schermo, sidebar compresa, con un velo chiaro sfocato; il gestionale sotto non è cliccabile. Titolo e frasi li passa la pagina (per esempio il numero di mezzi). Resta almeno 2 secondi (minMs), poi quanto serve; dopo 45 secondi (slowMs) avvisa che ci vuole più del solito. <code>const wait=GFDesignSystem.showWait({title,messages,hint}); … await wait.close();</code></p>
       </div>
     </section>
     <section class="gf-panel" aria-labelledby="p2-title">

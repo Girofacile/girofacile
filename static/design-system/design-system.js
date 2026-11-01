@@ -132,7 +132,59 @@
     if(el._gfTimer) global.clearTimeout(el._gfTimer);
     el._gfTimer = global.setTimeout(() => { el.hidden = true; },5000); return el;
   }
-  global.GFDesignSystem = Object.freeze({enhance,breakpoints,announce,createButton,createBadge,createEmptyState,createLoading,pageHeader});
+  // Schermata di attesa a tutto schermo per le operazioni lunghe (approvata il 1° novembre 2026): logo GiroFacile
+  // che si disegna, titolo e frasi passati dalla pagina (es. il numero di mezzi), barra senza percentuale.
+  // Resta almeno minMs (2 secondi) anche se il calcolo finisce prima, poi quanto serve; dopo slowMs avvisa
+  // che ci vuole più del solito. Il gestionale sotto diventa inert finché la schermata è aperta.
+  // Uso: const wait=GFDesignSystem.showWait({title,messages,hint}); ... await wait.close();
+  const WAIT_LOGO = '<svg class="gf-loader__art" viewBox="0 0 100 100" aria-hidden="true"><rect class="gf-anim-logo__bg" width="100" height="100" rx="22"/><g class="gf-anim-logo__mark"><path class="gf-anim-logo__stroke gf-anim-logo__arc" pathLength="1" d="M54 25A26 26 0 1 0 47 77"/><g><path class="gf-anim-logo__dash" d="M52.7 76.9A26 26 0 0 0 58 75.7"/><path class="gf-anim-logo__dash" d="M61.4 74.4A26 26 0 0 0 66 71.5"/><path class="gf-anim-logo__dash" d="M68.7 69.1A26 26 0 0 0 72.5 64"/></g><path class="gf-anim-logo__stroke gf-anim-logo__bar" pathLength="1" d="M54 52H75.5A1.5 1.5 0 0 1 77 53.5V58"/><g class="gf-anim-logo__ring"><circle cx="47" cy="77" r="5.6"/><circle cx="47" cy="77" r="2.5"/></g><g class="gf-anim-logo__pin"><path d="M66.5 17.5c-5 0-9 3.9-9 8.8 0 6.1 9 14.2 9 14.2s9-8.1 9-14.2c0-4.9-4-8.8-9-8.8z"/><circle cx="66.5" cy="26.4" r="3.3"/></g></g></svg>';
+  const WAIT_SLOW = 'Ci vuole un po’ più del solito: stiamo ancora calcolando, non chiudere la pagina.';
+  let activeWait = null;
+  function showWait(options){
+    options = options || {};
+    if(activeWait) activeWait.dispose();
+    const started = Date.now();
+    const minMs = options.minMs == null ? 2000 : options.minMs, slowMs = options.slowMs == null ? 45000 : options.slowMs;
+    const messages = (options.messages || []).filter(Boolean);
+    const part = (tag, className, text) => { const node = doc.createElement(tag); node.className = className; if(text != null) node.textContent = text; return node; };
+    const overlay = part('div','gf-wait'), card = part('div','gf-wait__card'), loader = part('div','gf-loader');
+    loader.setAttribute('role','status');
+    loader.setAttribute('aria-live','polite');
+    loader.insertAdjacentHTML('afterbegin', WAIT_LOGO); // disegno fisso, nessun testo della pagina
+    const title = part('p','gf-loader__title',options.title || 'Attendi qualche secondo');
+    const message = part('p','gf-loader__message',messages[0] || '');
+    const bar = part('div','gf-loader__bar'); bar.setAttribute('aria-hidden','true');
+    const hint = part('p','gf-loader__hint',options.hint || 'Di solito bastano pochi secondi.');
+    loader.append(title, message, bar, hint);
+    card.append(loader);
+    overlay.append(card);
+    const shell = doc.querySelector('[data-gf-shell]');
+    if(shell) shell.inert = true;
+    doc.body.append(overlay);
+    let index = 0;
+    const rotate = messages.length > 1 ? global.setInterval(() => {
+      message.setAttribute('data-fading','');
+      global.setTimeout(() => { index = (index + 1) % messages.length; message.textContent = messages[index]; message.removeAttribute('data-fading'); }, 250);
+    }, 2600) : null;
+    const slow = global.setTimeout(() => { hint.textContent = options.slowHint || WAIT_SLOW; }, slowMs);
+    const handle = {
+      element: overlay,
+      dispose(){
+        if(rotate) global.clearInterval(rotate);
+        global.clearTimeout(slow);
+        overlay.remove();
+        if(shell) shell.inert = false;
+        if(activeWait === handle) activeWait = null;
+      },
+      close(){
+        const remaining = Math.max(0, minMs - (Date.now() - started));
+        return new Promise(resolve => global.setTimeout(() => { handle.dispose(); resolve(); }, remaining));
+      }
+    };
+    activeWait = handle;
+    return handle;
+  }
+  global.GFDesignSystem = Object.freeze({enhance,breakpoints,announce,createButton,createBadge,createEmptyState,createLoading,pageHeader,showWait});
   if(!doc) return;
   // Campi obbligatori vuoti: scritta rossa dentro il campo (.gf-field[data-invalid]) al posto del fumetto del browser.
   function fieldOf(control){ return control.closest ? control.closest('.gf-field') : null; }
