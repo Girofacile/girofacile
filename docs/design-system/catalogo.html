@@ -5,9 +5,9 @@
 <meta name="robots" content="noindex,nofollow">
 <title>Catalogo componenti · GiroFacile</title>
 <link rel="icon" href="/static/favicon-32x32.png">
-<link rel="stylesheet" href="/static/design-system/theme.css?v=gf_landing_20261028">
-<link rel="stylesheet" href="/static/design-system/components.css?v=gf_tutor_avanti_20261029">
-<link rel="stylesheet" href="/static/design-system/layout.css?v=gf_sidebar_upgrade_20261101">
+<link rel="stylesheet" href="/static/design-system/theme.css?v=gf_settimana_20261101">
+<link rel="stylesheet" href="/static/design-system/components.css?v=gf_settimana_20261101">
+<link rel="stylesheet" href="/static/design-system/layout.css?v=gf_settimana_20261101">
 <script src="/static/design-system/design-system.js" defer></script>
 <script src="/static/design-system/shell.js?v=gf_original_logo_20261019" defer></script>
 <script type="application/json" id="gf-shell-nav">
@@ -346,6 +346,31 @@
           <button type="button" class="gf-button" data-variant="primary" data-size="sm">Scopri i piani</button>
         </section>
         <p class="gf-muted">In fondo alla sidebar della Dashboard, sopra il piè di pagina. Propone il piano successivo (Starter → Business, Business → Pro); non compare con Pro e per i collaboratori. Card scura con icona blu a sinistra e pulsante blu; si nasconde solo quando, con i gruppi aperti in quel momento, non c'è spazio nella barra.</p>
+      </div>
+    </section>
+    <section class="gf-panel" aria-labelledby="p1c-title">
+      <header class="gf-panel__header"><h3 class="gf-panel__title" id="p1c-title">Settimana dei giri</h3><span class="gf-panel__meta">.gf-day-head · .gf-route-card · .gf-day-empty</span></header>
+      <div class="gf-panel__body gf-stack">
+        <div class="gf-grid" data-cols="3">
+          <section class="gf-panel" aria-label="Esempio giorno con giri">
+            <header class="gf-panel__header"><button type="button" class="gf-day-head" aria-pressed="true"><span class="gf-day-head__weekday">Ven</span><span class="gf-day-head__number">30</span><span class="gf-badge" data-status="warning">2 giri</span></button></header>
+            <ul class="gf-route-list">
+              <li><button type="button" class="gf-route-card" data-status="scheduled"><span class="gf-route-card__time">07:00</span><span class="gf-route-card__driver">S. Siviglia</span></button></li>
+              <li><button type="button" class="gf-route-card" data-status="completed"><span class="gf-route-card__time">07:30</span><span class="gf-route-card__driver">G. Paglietta</span></button></li>
+              <li><button type="button" class="gf-route-card" data-status="cancelled" aria-label="09:00 · Autista Prova · Annullato"><span class="gf-route-card__time">09:00</span><span class="gf-route-card__driver">A. Prova</span></button></li>
+            </ul>
+          </section>
+          <section class="gf-panel" data-day="weekend" aria-label="Esempio giorno vuoto">
+            <header class="gf-panel__header"><button type="button" class="gf-day-head" aria-pressed="false"><span class="gf-day-head__weekday">Sab</span><span class="gf-day-head__number">31</span></button></header>
+            <ul class="gf-route-list"><li class="gf-day-empty"><span>Nessun giro</span><button type="button" class="gf-button" data-variant="link" data-size="sm">+ Pianifica</button></li></ul>
+          </section>
+          <section class="gf-panel" data-day="today" aria-label="Esempio giorno di oggi">
+            <header class="gf-panel__header"><button type="button" class="gf-day-head" aria-pressed="false"><span class="gf-day-head__weekday">Dom · Oggi</span><span class="gf-day-head__number">1</span><span class="gf-badge" data-status="warning">1 giro</span></button></header>
+            <ul class="gf-route-list"><li><button type="button" class="gf-route-card" data-status="scheduled"><span class="gf-route-card__time">07:30</span><span class="gf-route-card__driver">G. Paglietta</span></button></li></ul>
+          </section>
+        </div>
+        <div class="gf-empty"><span class="gf-empty__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 5h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z M16 3v4 M8 3v4 M4 11h16"/></svg></span><h3 class="gf-subtitle">Nessun giro programmato</h3><p>Stato vuoto con icona (.gf-empty__icon).</p></div>
+        <p class="gf-muted">Giri programmati e Storico. Colonna di oggi con <code>.gf-panel[data-day="today"]</code>, sabato e domenica con <code>[data-day="weekend"]</code>. Card del giro solo con orario e autista; striscia ambra se programmato, verde se completato, grigia con orario barrato se annullato (in fondo alla colonna). Il conteggio nell'intestazione conta solo i giri attivi.</p>
       </div>
     </section>
     <section class="gf-panel" aria-labelledby="p2-title">

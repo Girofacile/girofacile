@@ -23,8 +23,15 @@ test('scheduled week shows seven days and the day table; a route opens as a full
   const f=fixture();f.run('renderDashboardScheduledSubpage([route],null)');let html=f.node.innerHTML;
   // Sette card dei giorni affiancate, con giorno e data sempre sulla stessa riga.
   assert.match(html,/class="gf-grid" data-cols="7"/);
-  assert.equal((html.match(/class="gf-chip"/g)||[]).length,7);
-  assert.match(html,/Martedì&nbsp;29 <span class="gf-chip__count">1<\/span>/);
+  assert.equal((html.match(/class="gf-day-head"/g)||[]).length,7);
+  // Oggi (martedì 29) ha la colonna evidenziata e il conteggio dei giri attivi; sabato e domenica il fondo del fine settimana.
+  assert.match(html,/<section class="gf-panel" data-day="today" aria-label="Martedì 29 settembre">/);
+  assert.match(html,/aria-label="Martedì 29 settembre · 1 giro"[^>]*><span class="gf-day-head__weekday">Mar · Oggi<\/span><span class="gf-day-head__number">29<\/span><span class="gf-badge" data-status="warning">1 giro<\/span>/);
+  assert.equal((html.match(/data-day="weekend"/g)||[]).length,2);
+  // Il giro è una card semplice: orario e autista; i giorni vuoti invitano a pianificare.
+  assert.match(html,/class="gf-route-card" data-status="scheduled"[^>]*onclick="openDashboardScheduledRoute\(42\)"><span class="gf-route-card__time">08:00<\/span><span class="gf-route-card__driver">Non assegnato<\/span>/);
+  assert.equal((html.match(/class="gf-day-empty"/g)||[]).length,6);
+  assert.match(html,/<span class="gf-badge" data-status="warning" data-dot>1 programmato<\/span>/);
   assert.match(html,/Settimana 28 settembre – 4 ottobre 2026/);
   for(const text of ['Giro selezionato','0 km','0 min','openDashboardScheduledRoute(42)']) assert.ok(html.includes(text),text);
   // Il giro scelto si apre a pagina intera (variante B): barra con icone, mappa, fermate, tabella apribile.
@@ -41,6 +48,7 @@ test('scheduled week shows seven days and the day table; a route opens as a full
   assert.match(f.node.innerHTML,/data-cols="7"/);
   f.run('selectDashboardScheduledDay("2026-09-30")');
   assert.match(f.node.innerHTML,/In questa giornata non ci sono giri/);
+  assert.match(f.node.innerHTML,/class="gf-empty__icon"/);
   f.run('renderDashboardScheduledSubpage([],null)');assert.match(f.node.innerHTML,/Nessun giro programmato/);
 });
 test('direct edit hydrates the selected scheduled route and stays in planning',async()=>{

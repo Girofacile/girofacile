@@ -5,6 +5,17 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Giri programmati e Storico: settimana più curata con la stessa disposizione.
+  Intestazione del giorno stile calendario (nome breve e numero grande, «N
+  giri» solo se ci sono giri attivi), colonna di oggi con bordo blu, sabato e
+  domenica su fondo più chiaro, giri come piccole card con solo orario e
+  autista e una striscia colorata (ambra programmato, verde completato, grigia
+  e barrata se annullato, in fondo alla colonna), giorni vuoti tratteggiati con
+  «+ Pianifica» nei Giri programmati. Accanto al titolo dei Giri programmati il
+  riepilogo della settimana; nel dettaglio del giorno l'etichetta «Oggi» e lo
+  stato vuoto con icona.
+- Sidebar della Dashboard: fondo blu notte e voce attiva in un riquadro
+  semitrasparente con barretta blu, come nel layout base; gruppi invariati.
 - Sidebar: riquadro di upgrade ridisegnato (card scura con bordo, icona a
   razzo blu a sinistra, titolo, testo e pulsante «Scopri i piani» blu a
   destra). Non si nasconde più ogni volta che si apre "Azienda e sistema":

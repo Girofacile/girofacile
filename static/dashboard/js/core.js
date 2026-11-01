@@ -4479,6 +4479,30 @@ function dashScheduledMoney(value){ return value === null || value === undefined
 function dashScheduledRoutesOf(iso){ return dashboardScheduledRoutes.filter(r=>r.data_giro===iso).sort((a,b)=>String(a.orario_partenza||'').localeCompare(String(b.orario_partenza||''))); }
 function dashScheduledCancelled(r){ return r.status === 'annullato'; }
 
+// Settimana dei giri, condivisa da Giri programmati e Storico: colonna di oggi e del fine settimana,
+// intestazione del giorno stile calendario e giri come card semplici (orario e autista).
+const DASH_WEEK_SHORT_DAYS = ['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
+function dashWeekPanelAttrs(iso){
+  if(iso === todayIso()) return ' data-day="today"';
+  const day = dashScheduledDate(iso).getDay();
+  return day === 0 || day === 6 ? ' data-day="weekend"' : '';
+}
+function dashWeekDayHead(iso, pressed, count, tone, onclick){
+  const d = dashScheduledDate(iso), routes = `${count} ${count===1?'giro':'giri'}`;
+  return `<button type="button" class="gf-day-head" aria-pressed="${pressed}" aria-label="${esc(dashScheduledDayLabel(iso))}${count?` · ${routes}`:''}" onclick="${onclick}"><span class="gf-day-head__weekday">${DASH_WEEK_SHORT_DAYS[d.getDay()]}${iso===todayIso()?' · Oggi':''}</span><span class="gf-day-head__number">${d.getDate()}</span>${count?`<span class="gf-badge" data-status="${tone}">${routes}</span>`:''}</button>`;
+}
+// «S. Siviglia»: nella colonna stretta basta l'iniziale del nome.
+function dashWeekShortName(name){
+  const [first, ...rest] = String(name || '').trim().split(/\s+/);
+  return !first ? 'Non assegnato' : rest.length ? `${first[0]}. ${rest.join(' ')}` : first;
+}
+function dashWeekRouteCard(r, onclick){
+  const status = r.status === 'annullato' ? 'cancelled' : r.status === 'completato' ? 'completed' : 'scheduled';
+  const label = `${r.orario_partenza || '-'} · ${r.driver_name || 'Non assegnato'}${status === 'cancelled' ? ' · Annullato' : ''}`;
+  return `<li><button type="button" class="gf-route-card" data-status="${status}" aria-label="${esc(label)}" title="${esc(label)}" onclick="${onclick}"><span class="gf-route-card__time">${esc(r.orario_partenza || '-')}</span><span class="gf-route-card__driver">${esc(dashWeekShortName(r.driver_name))}</span></button></li>`;
+}
+const DASH_WEEK_EMPTY_ICON = '<span class="gf-empty__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 5h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z M16 3v4 M8 3v4 M4 11h16"/></svg></span>';
+
 function selectDashboardScheduledDay(iso){
   dashboardScheduledDay = iso;
   renderDashboardScheduledSubpage(dashboardScheduledRoutes, null);
@@ -4526,24 +4550,33 @@ function dashboardScheduledWeekHtml(){
     ? `${first.getDate()} – ${last.getDate()} ${DASH_SCHEDULED_MONTHS[last.getMonth()]} ${last.getFullYear()}`
     : `${first.getDate()} ${DASH_SCHEDULED_MONTHS[first.getMonth()]} – ${last.getDate()} ${DASH_SCHEDULED_MONTHS[last.getMonth()]} ${last.getFullYear()}`;
   const cards = days.map(iso=>{
-    const d = dashScheduledDate(iso);
-    const list = dashScheduledRoutesOf(iso);
+    // Attivi prima, annullati in fondo alla colonna.
+    const list = dashScheduledRoutesOf(iso).sort((a,b)=>dashScheduledCancelled(a)-dashScheduledCancelled(b));
     const active = list.filter(r=>!dashScheduledCancelled(r)).length;
     // Nella settimana al massimo DASH_SCHEDULED_WEEK_LIMIT giri per giorno; gli altri si vedono nella tabella del giorno.
     const hidden = list.length - DASH_SCHEDULED_WEEK_LIMIT;
     const more = hidden > 0
-      ? `<li class="gf-list-item"><button type="button" class="gf-button" data-variant="link" data-size="sm" onclick="showAllDashboardScheduledDay('${iso}')">Mostra altri ${hidden}</button></li>`
+      ? `<li><button type="button" class="gf-button" data-variant="link" data-size="sm" onclick="showAllDashboardScheduledDay('${iso}')">Mostra altri ${hidden}</button></li>`
       : '';
     const items = list.length
-      ? list.slice(0, DASH_SCHEDULED_WEEK_LIMIT).map(r=>`<li><button type="button" class="gf-list-item"${dashScheduledCancelled(r)?' data-status="danger"':''} onclick="openDashboardScheduledRoute(${Number(r.id)})"><span class="gf-list-item__main"><strong>${esc(r.orario_partenza || '-')}</strong><small>${esc(r.nome || 'Giro consegne')}${dashScheduledCancelled(r)?' · Annullato':''}</small></span></button></li>`).join('')
-      : '<li class="gf-list-item"><span class="gf-muted">Nessun giro</span></li>';
-    return `<section class="gf-panel" aria-label="${esc(dashScheduledDayLabel(iso))}">
-      <header class="gf-panel__header"><button type="button" class="gf-chip" aria-pressed="${iso===dashboardScheduledDay}" onclick="selectDashboardScheduledDay('${iso}')">${DASH_SCHEDULED_DAY_NAMES[d.getDay()]}&nbsp;${d.getDate()} <span class="gf-chip__count">${active}</span></button></header>
-      <ul class="gf-list">${items}${more}</ul>
+      ? list.slice(0, DASH_SCHEDULED_WEEK_LIMIT).map(r=>dashWeekRouteCard(r, `openDashboardScheduledRoute(${Number(r.id)})`)).join('')
+      : '<li class="gf-day-empty"><span>Nessun giro</span><button type="button" class="gf-button" data-variant="link" data-size="sm" onclick="openPlanningSelection()">+ Pianifica</button></li>';
+    return `<section class="gf-panel"${dashWeekPanelAttrs(iso)} aria-label="${esc(dashScheduledDayLabel(iso))}">
+      <header class="gf-panel__header">${dashWeekDayHead(iso, iso===dashboardScheduledDay, active, 'warning', `selectDashboardScheduledDay('${iso}')`)}</header>
+      <ul class="gf-route-list">${items}${more}</ul>
     </section>`;
   }).join('');
+  // Riepilogo della settimana accanto al titolo.
+  const weekRoutes = dashboardScheduledRoutes.filter(r=>days.includes(r.data_giro));
+  const weekActive = weekRoutes.filter(r=>!dashScheduledCancelled(r));
+  const weekDrivers = new Set(weekActive.map(r=>r.driver_name).filter(Boolean)).size;
+  const summary = [
+    weekActive.length ? `<span class="gf-badge" data-status="warning" data-dot>${weekActive.length} ${weekActive.length===1?'programmato':'programmati'}</span>` : '',
+    weekRoutes.length - weekActive.length ? `<span class="gf-badge" data-status="neutral">${weekRoutes.length - weekActive.length} ${weekRoutes.length - weekActive.length===1?'annullato':'annullati'}</span>` : '',
+    weekDrivers ? `<span class="gf-badge" data-status="info">${weekDrivers} ${weekDrivers===1?'autista':'autisti'}</span>` : ''
+  ].join('');
   return `<section class="gf-stack" aria-labelledby="scheduledWeekTitle">
-    <div class="gf-cluster" data-justify="between"><h2 class="gf-title" id="scheduledWeekTitle">Settimana ${esc(range)}</h2>
+    <div class="gf-cluster" data-justify="between"><div class="gf-cluster"><h2 class="gf-title" id="scheduledWeekTitle">Settimana ${esc(range)}</h2>${summary}</div>
       <div class="gf-cluster"><button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="shiftDashboardScheduledWeek(-1)">‹ Precedente</button><button type="button" class="gf-button" data-variant="ghost" data-size="sm" onclick="shiftDashboardScheduledWeek(0)">Oggi</button><button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="shiftDashboardScheduledWeek(1)">Successiva ›</button><button type="button" class="gf-button" data-variant="primary" data-size="sm" onclick="openPlanningSelection()">Pianifica giro</button></div>
     </div>
     <div class="gf-grid" data-cols="7">${cards}</div>
@@ -4582,9 +4615,9 @@ function dashboardScheduledDayHtml(){
         <thead><tr><th scope="col">Orario</th><th scope="col">Giro</th><th scope="col">Fermate</th><th scope="col">Autista</th><th scope="col">Mezzo</th><th scope="col">Km previsti</th><th scope="col">Guida</th><th scope="col">Costo stimato</th><th scope="col">Azioni</th></tr></thead>
         <tbody>${list.map(rowHtml).join('')}</tbody>
       </table></div>`
-    : `<div class="gf-empty"><h3 class="gf-subtitle">Nessun giro programmato</h3><p>In questa giornata non ci sono giri assegnati.</p><button type="button" class="gf-button" data-variant="secondary" onclick="openPlanningSelection()">Pianifica un giro</button></div>`;
+    : `<div class="gf-empty">${DASH_WEEK_EMPTY_ICON}<h3 class="gf-subtitle">Nessun giro programmato</h3><p>In questa giornata non ci sono giri assegnati.</p><button type="button" class="gf-button" data-variant="secondary" onclick="openPlanningSelection()">Pianifica un giro</button></div>`;
   return `<section class="gf-panel" aria-labelledby="scheduledDayTitle">
-    <header class="gf-panel__header"><h2 class="gf-panel__title" id="scheduledDayTitle">${esc(dashScheduledDayLabel(dashboardScheduledDay))}</h2><span class="gf-panel__meta">${esc(meta)}</span></header>
+    <header class="gf-panel__header"><h2 class="gf-panel__title" id="scheduledDayTitle">${esc(dashScheduledDayLabel(dashboardScheduledDay))}${dashboardScheduledDay===todayIso()?' <span class="gf-badge" data-status="info">Oggi</span>':''}</h2><span class="gf-panel__meta">${esc(meta)}</span></header>
     ${body}
   </section>`;
 }

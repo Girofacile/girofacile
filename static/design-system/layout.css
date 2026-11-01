@@ -198,15 +198,9 @@ body[data-gf-layout="base"] .gf-sidebar__footer{
 body[data-gf-layout="base"] .gf-sidebar__links{display:flex;gap:var(--gf-space-2)}
 body[data-gf-layout="base"] .gf-sidebar__links a{color:var(--gf-color-nav-text);text-decoration:none}
 body[data-gf-layout="base"] .gf-sidebar__links a:hover{color:var(--gf-color-on-nav);text-decoration:underline}
-/* Blu strutturata: native disclosures preserve keyboard and mobile navigation. */
-body[data-gf-layout="base"] .gf-sidebar[data-sidebar-variant="structured"]{
-  --gf-color-nav:var(--gf-color-structured-nav);
-  --gf-color-nav-text:var(--gf-color-structured-nav-text);
-  --gf-color-nav-muted:var(--gf-color-structured-nav-muted);
-  --gf-color-nav-hover-bg:var(--gf-color-structured-nav-hover);
-  --gf-color-nav-divider:var(--gf-color-structured-nav-divider);
-  --gf-color-nav-selected-bg:var(--gf-color-structured-nav-selected);
-}
+/* Sidebar a gruppi (Dashboard): stessi colori del layout base, fondo blu notte e voce attiva in un
+   riquadro semitrasparente con la barretta blu a sinistra (1° novembre 2026). I gruppi sono details
+   nativi, apribili da tastiera e su mobile. */
 body[data-gf-layout="base"] [data-sidebar-variant="structured"] .gf-sidebar__brand{
   border-bottom:var(--gf-border-width) solid var(--gf-color-nav-divider);
   margin-bottom:var(--gf-space-3);flex-shrink:0;
@@ -233,7 +227,6 @@ body[data-gf-layout="base"] .gf-sidebar__chevron{
 body[data-gf-layout="base"] .gf-sidebar__group[open] > .gf-sidebar__summary .gf-sidebar__chevron{transform:rotate(180deg)}
 body[data-gf-layout="base"] [data-sidebar-variant="structured"] .gf-sidebar__item{font-size:var(--gf-font-sm)}
 body[data-gf-layout="base"] [data-sidebar-variant="structured"] .gf-sidebar__item[aria-current="page"]{font-weight:var(--gf-weight-semibold)}
-body[data-gf-layout="base"] [data-sidebar-variant="structured"] .gf-sidebar__item[aria-current="page"]::before{content:none}
 /* Compact desktop spacing keeps every expanded group and the legal footer in view. */
 @media (pointer:fine){
   body[data-gf-layout="base"] .gf-sidebar[data-sidebar-variant="structured"]{padding-top:var(--gf-space-4);padding-bottom:var(--gf-space-3)}

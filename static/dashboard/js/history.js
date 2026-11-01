@@ -92,17 +92,19 @@ window.GFHistory = (() => {
       ? `${first.getDate()} – ${last.getDate()} ${DASH_SCHEDULED_MONTHS[last.getMonth()]} ${last.getFullYear()}`
       : `${first.getDate()} ${DASH_SCHEDULED_MONTHS[first.getMonth()]} – ${last.getDate()} ${DASH_SCHEDULED_MONTHS[last.getMonth()]} ${last.getFullYear()}`);
     return `<div class="gf-grid" data-cols="7">${days.map(iso => {
-      const d = dashScheduledDate(iso), list = routesOf(iso);
+      // Completati prima, annullati in fondo alla colonna; come nella tabella, ogni giro non annullato è concluso (striscia verde).
+      const list = routesOf(iso).sort((a, b) => (a.status === 'annullato') - (b.status === 'annullato'));
       const shown = list.slice(0, WEEK_LIMIT), hidden = list.length - WEEK_LIMIT;
+      const completed = list.filter(r => r.status !== 'annullato').length;
       const more = hidden > 0
-        ? `<li class="gf-list-item"><button type="button" class="gf-button" data-variant="link" data-size="sm" aria-controls="historyDaySection" onclick="GFHistory.more('${iso}')">Mostra altri ${hidden}</button></li>`
+        ? `<li><button type="button" class="gf-button" data-variant="link" data-size="sm" aria-controls="historyDaySection" onclick="GFHistory.more('${iso}')">Mostra altri ${hidden}</button></li>`
         : '';
       const items = list.length
-        ? shown.map(r => `<li><button type="button" class="gf-list-item" onclick="GFHistory.open(${Number(r.id)})"><span class="gf-list-item__main"><strong>${esc(r.orario_partenza || '-')}</strong><small>${esc(r.nome || 'Giro consegne')}</small></span></button></li>`).join('') + more
-        : `<li class="gf-list-item"><span class="gf-muted">${iso > todayIso() ? 'Giorno futuro' : 'Nessun giro'}</span></li>`;
-      return `<section class="gf-panel" aria-label="${esc(dashScheduledDayLabel(iso))}">
-        <header class="gf-panel__header"><button type="button" class="gf-chip" aria-pressed="${iso === state.day}" onclick="GFHistory.day('${iso}')">${DASH_SCHEDULED_DAY_NAMES[d.getDay()]}&nbsp;${d.getDate()} <span class="gf-chip__count">${list.length}</span></button></header>
-        <ul class="gf-list">${items}</ul>
+        ? shown.map(r => dashWeekRouteCard({...r, status: r.status === 'annullato' ? 'annullato' : 'completato'}, `GFHistory.open(${Number(r.id)})`)).join('') + more
+        : `<li class="gf-day-empty"><span>${iso > todayIso() ? 'Giorno futuro' : 'Nessun giro'}</span></li>`;
+      return `<section class="gf-panel"${dashWeekPanelAttrs(iso)} aria-label="${esc(dashScheduledDayLabel(iso))}">
+        <header class="gf-panel__header">${dashWeekDayHead(iso, iso === state.day, completed, 'success', `GFHistory.day('${iso}')`)}</header>
+        <ul class="gf-route-list">${items}</ul>
       </section>`;
     }).join('')}</div>`;
   }
@@ -152,9 +154,9 @@ window.GFHistory = (() => {
     }
     $('historyWeek').innerHTML = weekHtml();
     const list = routesOf(state.day);
-    $('historyDayTitle').textContent = dashScheduledDayLabel(state.day);
+    $('historyDayTitle').innerHTML = esc(dashScheduledDayLabel(state.day)) + (state.day === todayIso() ? ' <span class="gf-badge" data-status="info">Oggi</span>' : '');
     $('historyDayMeta').textContent = list.length ? `${plural(list.length,'giro','giri')} · ${plural(list.reduce((s,r) => s + Number(r.consegne_count || 0), 0),'fermata','fermate')}` : '';
-    $('historyDayList').innerHTML = list.length ? routesTable(list, false) : '<div class="gf-empty"><h3 class="gf-subtitle">Nessun giro</h3><p>In questa giornata non ci sono giri conclusi.</p></div>';
+    $('historyDayList').innerHTML = list.length ? routesTable(list, false) : `<div class="gf-empty">${DASH_WEEK_EMPTY_ICON}<h3 class="gf-subtitle">Nessun giro</h3><p>In questa giornata non ci sono giri conclusi.</p></div>`;
   }
 
   /* --- Pannello del giro -------------------------------------------------------- */

@@ -1065,3 +1065,51 @@ body[data-gf-surface] .gf-site-footer__bottom div{display:flex;flex-wrap:wrap;ga
   body[data-gf-surface] .gf-trust{justify-content:flex-start}
   body[data-gf-surface] .gf-site-footer__top{grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--gf-space-6)}
 }
+
+/* --- Settimana dei giri (approvata il 1° novembre 2026) ----------------------------------------
+   Giri programmati e Storico: colonna di oggi e del fine settimana, intestazione del giorno stile
+   calendario, giri come card semplici con striscia di stato, giorno vuoto tratteggiato, icona
+   dello stato vuoto. */
+body[data-gf-surface] .gf-panel[data-day="weekend"]{background:var(--gf-color-surface-subtle)}
+body[data-gf-surface] .gf-panel[data-day="today"]{border-color:var(--gf-color-primary);box-shadow:0 0 0 var(--gf-border-width) var(--gf-color-primary),var(--gf-shadow-sm)}
+body[data-gf-surface] .gf-panel[data-day="today"]>.gf-panel__header{background:var(--gf-color-info-bg)}
+/* Intestazione del giorno: nome breve in maiuscolo, numero grande, conteggio a destra */
+body[data-gf-surface] .gf-day-head{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:0 var(--gf-space-2);width:100%;
+  padding:var(--gf-space-2) var(--gf-space-3);border:var(--gf-border-width) solid transparent;border-radius:var(--gf-radius-md);
+  background:transparent;color:var(--gf-color-text);font:inherit;text-align:left;cursor:pointer;
+  transition:background var(--gf-motion-duration),border-color var(--gf-motion-duration);
+}
+body[data-gf-surface] .gf-day-head:hover{background:var(--gf-color-surface-subtle)}
+body[data-gf-surface] .gf-day-head[aria-pressed="true"]{border-color:var(--gf-color-primary);background:var(--gf-color-surface)}
+body[data-gf-surface] .gf-day-head__weekday{grid-column:1;color:var(--gf-color-muted);font-size:var(--gf-font-xs);font-weight:var(--gf-weight-semibold);text-transform:uppercase;letter-spacing:.06em}
+body[data-gf-surface] .gf-day-head__number{grid-column:1;font:var(--gf-weight-bold) var(--gf-font-2xl)/1.1 var(--gf-font-display);letter-spacing:-.01em}
+body[data-gf-surface] .gf-day-head>.gf-badge{grid-column:2;grid-row:1 / span 2;align-self:center}
+body[data-gf-surface] .gf-panel[data-day="today"] :is(.gf-day-head__weekday,.gf-day-head__number){color:var(--gf-color-primary)}
+/* Giri come card: orario e autista, fondo tenue e striscia a sinistra del colore dello stato
+   (data-status: scheduled ambra, completed verde, cancelled grigio con orario barrato) */
+body[data-gf-surface] .gf-route-list{display:grid;gap:var(--gf-space-1);margin:0;padding:var(--gf-space-3);list-style:none}
+body[data-gf-surface] .gf-route-card{
+  display:grid;width:100%;min-width:0;padding:var(--gf-space-2) var(--gf-space-3);
+  border:0;border-left:calc(var(--gf-border-width) * 3) solid var(--gf-color-warning);border-radius:0 var(--gf-radius-sm) var(--gf-radius-sm) 0;
+  background:var(--gf-color-surface-subtle);color:var(--gf-color-text);font:inherit;text-align:left;cursor:pointer;
+  transition:background var(--gf-motion-duration);
+}
+body[data-gf-surface] .gf-route-card:hover{background:var(--gf-color-info-bg)}
+body[data-gf-surface] .gf-route-card[data-status="completed"]{border-left-color:var(--gf-color-success)}
+body[data-gf-surface] .gf-route-card[data-status="cancelled"]{border-left-color:var(--gf-color-border);background:transparent;color:var(--gf-color-muted)}
+body[data-gf-surface] .gf-route-card__time{font-size:var(--gf-font-sm);font-weight:var(--gf-weight-semibold)}
+body[data-gf-surface] .gf-route-card[data-status="cancelled"] .gf-route-card__time{font-weight:var(--gf-weight-medium);text-decoration:line-through}
+body[data-gf-surface] .gf-route-card__driver{overflow:hidden;color:var(--gf-color-muted);font-size:var(--gf-font-xs);text-overflow:ellipsis;white-space:nowrap}
+/* Giorno vuoto: riquadro tratteggiato, con eventuale invito a pianificare */
+body[data-gf-surface] .gf-day-empty{
+  display:grid;justify-items:center;gap:var(--gf-space-1);padding:var(--gf-space-5) var(--gf-space-3);
+  border:var(--gf-border-width) dashed var(--gf-color-border);border-radius:var(--gf-radius-md);
+  color:var(--gf-color-muted);font-size:var(--gf-font-sm);text-align:center;
+}
+/* Stato vuoto con icona */
+body[data-gf-surface] .gf-empty__icon{
+  display:inline-grid;place-items:center;width:var(--gf-space-12);height:var(--gf-space-12);margin-bottom:var(--gf-space-2);
+  border-radius:var(--gf-radius-circle);background:var(--gf-color-info-bg);color:var(--gf-color-primary);
+}
+body[data-gf-surface] .gf-empty__icon svg{width:var(--gf-icon-size);height:var(--gf-icon-size);fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
