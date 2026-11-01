@@ -1,12 +1,13 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
-// Barre di scorrimento (1° novembre 2026): sottili, grigie, frecce blu, anche nelle aree interne.
+// Barre di scorrimento (1° novembre 2026): sottili, grigie, frecce dello stesso grigio, anche nelle aree interne.
 const theme=fs.readFileSync('static/design-system/theme.css','utf8');
 const components=fs.readFileSync('static/design-system/components.css','utf8');
-test('i colori della barra vengono dal tema: grigio tra bordi e testi secondari, frecce blu',()=>{
+test('i colori della barra vengono dal tema: grigio tra bordi e testi secondari, frecce dello stesso grigio',()=>{
   assert.match(theme,/--gf-color-scrollbar: color-mix\(in srgb, var\(--gf-color-border\) 55%, var\(--gf-color-muted\)\);/);
-  assert.match(theme,/--gf-color-scrollbar-arrow: var\(--gf-color-primary\);/);
+  assert.match(theme,/--gf-color-scrollbar-arrow: var\(--gf-color-scrollbar\);/);
+  assert.match(theme,/--gf-color-scrollbar-arrow-hover: var\(--gf-color-scrollbar-hover\);/);
 });
 test('pagina e aree interne usano la barra sottile con una freccia per estremità',()=>{
   const scope=':where(html:has(>body[data-gf-surface]),body[data-gf-surface] *)';

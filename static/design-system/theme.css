@@ -45,11 +45,11 @@
   --gf-color-nav-divider: #1d3470;
   --gf-color-on-nav: #ffffff;
   --gf-color-brand-accent: #9cc0ff;
-  /* Barre di scorrimento: grigio a metà tra bordi e testi secondari, frecce blu */
+  /* Barre di scorrimento: grigio a metà tra bordi e testi secondari, frecce dello stesso grigio */
   --gf-color-scrollbar: color-mix(in srgb, var(--gf-color-border) 55%, var(--gf-color-muted));
   --gf-color-scrollbar-hover: var(--gf-color-muted);
-  --gf-color-scrollbar-arrow: var(--gf-color-primary);
-  --gf-color-scrollbar-arrow-hover: var(--gf-color-primary-hover);
+  --gf-color-scrollbar-arrow: var(--gf-color-scrollbar);
+  --gf-color-scrollbar-arrow-hover: var(--gf-color-scrollbar-hover);
   /* Colore della freccia in uso: components.css lo cambia al passaggio del mouse e nella sidebar. */
   --gf-scroll-arrow: var(--gf-color-scrollbar-arrow);
 
