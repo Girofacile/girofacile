@@ -509,7 +509,8 @@
           <div class="gf-panel__body gf-stack">
             <p id="fleetPlanUpgradeNotice" class="gf-alert" data-status="info" hidden>La suddivisione automatica su più mezzi è disponibile dal piano Business. Puoi pianificare un giro con un solo mezzo.</p>
             <select class="gf-select" id="planningMode" hidden aria-hidden="true" tabindex="-1"><option value="single">Un solo mezzo</option><option value="fleet">Suddivisione automatica su più mezzi</option></select>
-            <div id="singleVehicleField" class="gf-grid" data-cols="3">
+            <!-- Campi del giro singolo: la card unica (fleet-planning.js) li legge e li scrive; restano nascosti. -->
+            <div id="singleVehicleField" class="gf-grid" data-cols="3" hidden>
               <article class="gf-card gf-stack" data-gap="sm" aria-label="Mezzo e autista del giro">
                 <span class="gf-cluster"><span class="gf-stop__number">1</span><strong>Mezzo e autista</strong></span>
                 <div class="gf-field"><label class="gf-field__label" for="routeVehicle" data-gf-label="vehicle">Mezzo</label><select class="gf-select" id="routeVehicle" disabled></select><span id="vehicleAvailabilityHint" class="gf-badge" data-status="neutral">Seleziona prima data e orario di partenza</span></div>
@@ -523,9 +524,9 @@
                 <span><button type="button" class="gf-button" data-variant="secondary" data-plan-feature="has_fleet_planning" onclick="selectPlanningModeCard('fleet')">Usa più mezzi</button></span>
               </div>
             </div>
-            <section id="fleetSetup" class="gf-stack" hidden aria-label="Mezzi e autisti della giornata">
+            <section id="fleetSetup" class="gf-stack" aria-label="Mezzi e autisti della giornata">
               <div id="fleetResources" class="gf-grid" data-cols="3"></div>
-              <div class="gf-cluster" data-justify="between">
+              <div class="gf-cluster" data-justify="between" id="fleetStrategyRow" hidden>
                 <small class="gf-field__hint">Consideriamo durata dei giri, peso, colli, orari di consegna e attrezzature. Potrai spostare le consegne prima di confermare.</small>
                 <label class="gf-field" for="fleetStrategy"><span class="gf-field__label">Come distribuiamo il lavoro?</span><select class="gf-select" id="fleetStrategy"><option value="efficient">Riduci chilometri e tempi</option><option value="balanced">Distribuisci il lavoro tra tutti i mezzi</option></select></label>
               </div>
@@ -583,12 +584,12 @@
               </div>
             </section>
 
-            <!-- Costo del giro: compare quando è scelto un mezzo -->
-            <section id="routeEnergyPriceBoxV895" class="gf-panel hidden" aria-labelledby="routeEnergyPriceTitleV895">
+            <!-- Costo del giro: ora nella card del mezzo («Costo carburante»); il riquadro resta nascosto per la logica dei prezzi -->
+            <section id="routeEnergyPriceBoxV895" class="gf-panel hidden" hidden aria-labelledby="routeEnergyPriceTitleV895">
               <header class="gf-panel__header"><h2 class="gf-panel__title" id="routeEnergyPriceTitleV895">Costo del giro</h2></header>
               <div class="gf-panel__body gf-stack">
                 <p id="routeEnergyVehicleInfo" class="gf-muted">Seleziona un mezzo</p>
-                <div class="gf-cluster" role="radiogroup" aria-label="Modalità prezzo"><label class="gf-check"><input type="radio" name="energyPriceMode" value="automatic" onchange="updateRouteEnergyPricingV895()"> <span>Automatico</span></label><label class="gf-check"><input type="radio" name="energyPriceMode" value="manual" checked onchange="updateRouteEnergyPricingV895()"> <span>Manuale</span></label></div>
+                <div class="gf-cluster" role="radiogroup" aria-label="Modalità prezzo"><label class="gf-check"><input type="radio" name="energyPriceMode" value="automatic" checked onchange="updateRouteEnergyPricingV895()"> <span>Automatico</span></label><label class="gf-check"><input type="radio" name="energyPriceMode" value="manual" onchange="updateRouteEnergyPricingV895()"> <span>Manuale</span></label></div>
                 <div class="gf-form-grid">
                   <div id="primaryEnergyPriceWrap" class="gf-field"><label class="gf-field__label" id="primaryEnergyPriceLabel" for="fuelPrice">Prezzo carburante €/L</label><input class="gf-input" id="fuelPrice" type="number" step="0.001" value="1.75"></div>
                   <div id="electricEnergyPriceWrap" class="gf-field hidden"><label class="gf-field__label" for="electricityPrice">Prezzo energia €/kWh</label><input class="gf-input" id="electricityPrice" type="number" step="0.001" value="0.30"></div>
@@ -1622,7 +1623,7 @@
 <link rel="stylesheet" href="/static/driver-schedule.css?v=gf_break_row_20261021">
 <script src="/static/driver-schedule.js?v=gf_break_row_20261021"></script>
 <script src="/static/dashboard/js/driver-schedules.js?v=gf_base_20261015u"></script>
-<script src="/static/dashboard/js/fleet-planning.js?v=gf_attesa_20261101"></script>
+<script src="/static/dashboard/js/fleet-planning.js?v=gf_card_unica_20261101"></script>
 <script src="/static/dashboard/js/selected-addresses.js?v=gf_selected_addresses_20261019"></script>
 <script src="/static/dashboard/js/selected-customer-addresses.js?v=gf_customer_selected_addresses_20261020"></script>
 <script src="/static/dashboard/js/order-planning.js?v=gf_bozze_20261026"></script>

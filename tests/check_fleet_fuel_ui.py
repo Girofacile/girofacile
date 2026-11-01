@@ -56,15 +56,17 @@ def main():
                 page.evaluate('v => { vehiclesCache = v; resourcesAvailabilityCache = {vehicles: v, drivers: []}; }', VEHICLES)
                 page.locator('#routeDate').fill('2099-01-15'); page.locator('#routeStart').fill('08:00'); page.locator('#routeStart').blur()
                 page.evaluate('refreshResourceAvailability()')
-                page.locator('#routeVehicle option[value="1"]').wait_for(state='attached')
-                page.locator('#routeVehicle').select_option('1')
-                box = page.locator('#routeEnergyPriceBoxV895')
+                page.locator('#fleetVehicle0 option[value="1"]').wait_for(state='attached')
+                page.locator('#fleetVehicle0').select_option('1')
+                # Il costo carburante sta nella card del mezzo anche con un solo mezzo; il vecchio riquadro resta nascosto.
+                old_box = page.locator('#routeEnergyPriceBoxV895')
+                box = page.locator('#fleetFuel0')
                 fuel = page.locator('#statFuelGroup')
-                assert box.is_visible() and fuel.is_visible()
+                assert box.is_visible() and fuel.is_visible() and old_box.is_hidden()
                 page.locator('[data-planning-mode-card="fleet"]').click()
                 assert page.locator('#planningMode').input_value() == 'fleet'
-                # Più mezzi: niente riquadro costo né prezzo nella barra; la mappa prende tutta la riga.
-                assert box.is_hidden() and fuel.is_hidden()
+                # Più mezzi: il costo resta nelle card, niente prezzo nella barra; la mappa prende tutta la riga.
+                assert old_box.is_hidden() and fuel.is_hidden() and box.is_visible()
                 assert page.locator('#statDeliveries').is_visible()
                 map_panel = page.locator('section[aria-labelledby="planningMapTitle"]')
                 grid_width = map_panel.evaluate('el => el.parentElement.getBoundingClientRect().width')
@@ -73,13 +75,13 @@ def main():
                 map_panel.scroll_into_view_if_needed()
                 page.screenshot(path=str(output / f'piu-mezzi-{width}.png'))
                 page.locator('[data-planning-mode-card="single"]').click()
-                state = page.evaluate('[document.getElementById("routeVehicle").value, document.getElementById("routeEnergyPriceBoxV895").className, document.getElementById("statFuelGroup").hidden]')
-                assert box.is_visible() and fuel.is_visible(), state
+                state = page.evaluate('[document.getElementById("routeVehicle").value, document.getElementById("statFuelGroup").hidden]')
+                assert box.is_visible() and fuel.is_visible() and old_box.is_hidden(), state
                 page.close()
         finally:
             browser.close()
     assert not errors, errors
-    print('PASS: fuel cost box only with one vehicle; fleet mode keeps costs in the vehicle cards (390/1440)')
+    print('PASS: fuel cost always in the vehicle card; price in the bar only with one vehicle (390/1440)')
 
 
 if __name__ == '__main__':

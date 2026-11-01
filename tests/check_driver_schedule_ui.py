@@ -75,11 +75,11 @@ def main():
                 page.locator('#saveDriverBtn').click();page.locator('#driverFormOverlay').wait_for(state='hidden')
                 assert db.query(Driver).filter_by(nome='Nuovo turnista').one().work_schedule['start']=='09:00'
                 page.evaluate("showTab('giro')")
-                page.locator('#routeVehicle').select_option('1');page.locator('#routeDriver').select_option('1')
-                page.locator('#singleDriverField [data-schedule-editor] summary').click()
-                assert page.locator('#routeDriverScheduleBreak0Start').input_value()=='08:15'
+                # Card del mezzo (uguale per uno e più mezzi): turno e pausa dell'autista direttamente nella card.
+                page.locator('#fleetVehicle0').select_option('1');page.locator('#fleetDriver0').select_option('1')
+                assert page.locator('#fleetBreakStart0').input_value()=='08:15'
                 # Daily override must not overwrite the driver's normal break.
-                page.locator('#routeDriverScheduleBreak0End').fill('09:00');page.locator('#routeDriverScheduleBreak0End').blur()
+                page.locator('#fleetBreakEnd0').fill('09:00');page.locator('#fleetBreakEnd0').blur()
                 page.evaluate('rows=>{deliveries=rows;renderDeliveries();}',data['consegne'][:2])
                 page.evaluate('optimizeRoute()')
                 page.locator('#routePreviewResult .driver-break-row').wait_for()

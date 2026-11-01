@@ -2,7 +2,8 @@
 
 La schermata Pianificazione conserva i tre passaggi Dati del giro, Risorse e Rientro.
 In Risorse si sceglie Un solo mezzo oppure Suddivisione automatica su più mezzi.
-Nel secondo caso compaiono le coppie mezzo/autista disponibili e la strategia:
+In entrambi i casi mezzo e autista si scelgono nella stessa card (fleet-planning.js), con la disponibilità sotto ciascuno, turno, pausa e costo carburante: con un solo mezzo c'è una card, che legge e scrive i campi del giro singolo (routeVehicle, routeDriver, fuelPrice, turno di #routeDriverSchedule); con più mezzi una card per mezzo, con la X per toglierla (restandone una si torna a un solo mezzo). Passando a più mezzi la card 1 resta e se ne aggiunge una vuota.
+Con più mezzi compare anche la strategia:
 
 - Riduci chilometri e tempi: a parità di consegne e avvisi ZTL, minimizza i chilometri totali, poi la somma delle durate e infine i mezzi usati.
 - Distribuisci il lavoro tra tutti i mezzi: a parità di consegne e avvisi, utilizza più risorse e minimizza la durata massima, poi lo squilibrio delle durate (somma dei quadrati), la durata totale e i chilometri.

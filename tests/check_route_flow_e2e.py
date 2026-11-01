@@ -111,12 +111,12 @@ def run(browser, width, output):
         # 2. Configurazione: orario, mezzo, autista.
         page.fill('#routeStart', '08:00'); page.locator('#routeStart').dispatch_event('change')
         try:
-            expect(page.locator('#routeVehicle')).to_be_enabled()
+            expect(page.locator('#fleetVehicle0')).to_be_enabled()
         except AssertionError:
             raise AssertionError(f'mezzo non selezionabile; errori={errors} api={api_failures} '
                                  f'start={page.input_value("#routeStart")!r} date={page.input_value("#routeDate")!r}')
-        page.select_option('#routeVehicle', str(vehicle.id))
-        page.select_option('#routeDriver', str(driver.id))
+        page.select_option('#fleetVehicle0', str(vehicle.id))
+        page.select_option('#fleetDriver0', str(driver.id))
         page.get_by_role('button', name='Calcola percorso', exact=True).click()
 
         # 3. Anteprima: contenuti e formati.

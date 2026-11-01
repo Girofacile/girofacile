@@ -5,6 +5,16 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Pianificazione, «Chi fa le consegne?»: una sola card del mezzo, uguale con uno
+  e con più mezzi (mezzo, autista, turno, pausa e costo carburante). Sotto mezzo
+  e autista si vede la disponibilità («Disponibile», «Non disponibile · In uso»,
+  «3 mezzi disponibili su 4»). Passando a «Più mezzi» la card 1 resta com'è e si
+  aggiunge una card vuota; tornando indietro e di nuovo a più mezzi riappaiono le
+  altre card. La X compare su ogni card appena sono più di una; restandone una si
+  torna a «Un solo mezzo». «Aggiungi mezzo» funziona anche cliccando sul testo.
+  Con un solo mezzo il costo carburante sta nella card (niente riquadro separato)
+  e, come con più mezzi, parte da «Automatico» (prezzo medio nazionale).
+
 - Schermata di attesa a tutto schermo: durante il calcolo dei giri compare un
   velo chiaro sfocato su tutto il gestionale, con al centro il logo GiroFacile
   che si disegna, un titolo con il numero reale di mezzi ("Sto pianificando i

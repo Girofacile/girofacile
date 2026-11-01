@@ -78,8 +78,10 @@ def main():
                 # Il cambio di modalità conserva le risorse già scelte.
                 page.locator('[data-planning-mode-card="single"]').click()
                 assert page.locator('#planningMode').input_value()=='single'
-                assert page.locator('#singleVehicleField').is_visible()
-                assert page.locator('#fleetSetup').is_hidden()
+                # Un solo mezzo: la stessa card, una sola, con mezzo e autista della card 1.
+                assert page.locator('#fleetResources article').count()==1
+                assert page.locator('#fleetVehicle0').input_value()==str(vehicles[0]['id'])
+                assert page.locator('#singleVehicleField').is_hidden()
                 page.locator('[data-planning-mode-card="fleet"]').click()
                 assert page.locator('#planningMode').input_value()=='fleet'
                 for i in range(2):
@@ -150,7 +152,7 @@ def main():
                 page.locator(f'#tab-dashboard-scheduled button[onclick="openDashboardScheduledRoute({programmed.id})"]:visible').first.click()
                 page.locator('[data-scheduled-detail]').get_by_role('button',name='Modifica dalla pianificazione',exact=True).click()
                 page.wait_for_function("document.getElementById('planningMode').value==='single'")
-                assert page.locator('#singleVehicleField').is_visible()
+                assert page.locator('#fleetResources article').count()==1
                 assert not errors,errors
                 page.close()
                 try:next(generator)
