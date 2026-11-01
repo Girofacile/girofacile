@@ -113,7 +113,7 @@ function fixes(plan,assignment,dirty){
  const rows=missing.map(i=>{
   const d=plan.configuration.consegne[i],reason=plan.unassigned?.find(row=>row.index===i)?.reason;
   return '<li class="gf-list-item" data-fleet-stop="'+i+'"><div class="gf-list-item__main"><strong>'+esc(d.cliente_nome)+'</strong><small>Non assegnata · '+esc(d.indirizzo)+'</small>'+'<small>'+esc(reason||'Tolta dai giri: non verrà programmata.')+'</small>'+'</div>'+
-  (plan.status==='preview'?'<button type="button" class="gf-button" data-variant="secondary" data-size="sm" data-fleet-assign="'+i+'">Assegna al giro '+(selected+1)+'</button>':'<span class="gf-badge" data-status="warning">Non assegnata</span>')+'</li>';
+  (/^Consegna non programmabile/.test(reason||'')?'<span class="gf-badge" data-status="danger">Solo in traghetto</span>':plan.status==='preview'?'<button type="button" class="gf-button" data-variant="secondary" data-size="sm" data-fleet-assign="'+i+'">Assegna al giro '+(selected+1)+'</button>':'<span class="gf-badge" data-status="warning">Non assegnata</span>')+'</li>';
  }).concat(late.map(item=>{
   const lane=assignment[item.stop_index],d=plan.configuration.consegne[item.stop_index];
   return '<li class="gf-list-item" data-fleet-late="'+item.stop_index+'"><span class="gf-avatar" data-tone="'+tone(lane)+'" aria-label="Giro '+(lane+1)+'">'+(lane+1)+'</span><div class="gf-list-item__main"><strong>'+esc(d.cliente_nome)+'</strong><small>Giro '+(lane+1)+' · con il traffico lo scarico finisce alle '+esc(item.fine_servizio)+', oltre la fascia '+esc(item.window.start)+'–'+esc(item.window.end)+'</small></div>'+

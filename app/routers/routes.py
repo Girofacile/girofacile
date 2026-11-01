@@ -377,6 +377,7 @@ def route_response(plan, result):
         **shifts.metadata(plan),
         "status": computed_route_status(plan), "status_label": route_status_label(computed_route_status(plan)),
         "consegne": result["ordered"],
+        "consegne_escluse": result.get("consegne_escluse") or [],
         **window_summary(result["ordered"]),
     }
 

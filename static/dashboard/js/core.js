@@ -3751,6 +3751,8 @@ function renderRouteResult(r, targetId="routeResult", fromHistory=false){
   const alert = (status, title, text, extra="") => `<div class="gf-alert" data-status="${status}"${status==="danger"?' role="alert"':''}><div class="gf-alert__body"><strong class="gf-alert__title">${title}</strong><p>${text}</p>${extra?`<small>${extra}</small>`:""}</div></div>`;
   // ZTL, area pedonale e sponda richiesta sono elencate in "Prima della partenza": qui solo i problemi.
   const otherWarnings = counts.critici && !counts.sponda && !counts.attesa && !counts.ztl && !counts.pedonale;
+  // Clienti raggiungibili solo in traghetto: esclusi dal giro fino alla gestione dei biglietti.
+  const excluded = r.consegne_escluse || [];
   const day = r.data_giro ? dashScheduledDayLabel(r.data_giro).toLowerCase() : "";
   const kicker = [fromHistory ? "Giro salvato" : "Anteprima", day].filter(Boolean).join(" · ");
   const badge = isProgrammable
@@ -3787,7 +3789,8 @@ function renderRouteResult(r, targetId="routeResult", fromHistory=false){
       ${gfStatCell("pin","4","Fermate", String(consegne.length), "", "", "sm")}
       ${gfStatCell("euro","5","Costo operativo", dashScheduledMoney(total), Number(r.toll_estimated_eur) > 0 ? "pedaggi inclusi" : (energy.electric ? "energia" : "carburante"))}
     </div>
-    ${violationsCount || counts.sponda || counts.attesa || otherWarnings ? `<section class="gf-grid" data-cols="2" data-preview-alerts aria-label="Avvisi principali">
+    ${violationsCount || counts.sponda || counts.attesa || otherWarnings || excluded.length ? `<section class="gf-grid" data-cols="2" data-preview-alerts aria-label="Avvisi principali">
+        ${excluded.length ? alert("danger", "Consegna non programmabile: cliente su un'isola", `${gfCount(excluded.length,"consegna esclusa","consegne escluse")} dal giro · ${esc(excluded.map(d=>d.cliente_nome).join(" · "))}`, "Il cliente è raggiungibile solo in traghetto: pianifica la consegna a parte.") : ""}
         ${violationsCount > 0 ? alert("danger", "Finestre orarie non rispettate", `${gfCount(violationsCount,"fermata","fermate")} · ${gfDecimal(r.total_lateness_min||0,1)} min di ritardo totale`, "Verifica le fermate prima di programmare. Puoi comunque confermare il giro.") : ""}
         ${counts.sponda ? alert("danger", "Sponda richiesta non disponibile", gfCount(counts.sponda,"fermata","fermate")) : ""}
         ${counts.attesa ? alert("warning", "Arrivo prima dell'apertura / attesa", gfCount(counts.attesa,"fermata","fermate")) : ""}

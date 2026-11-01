@@ -199,6 +199,30 @@ def _strict_tail_lift(plan):
 
 
 def distribute(db,user,data,assignments=None):
+    """Clienti raggiungibili solo in traghetto: fuori dalla ricerca, poi tra i non assegnati."""
+    from . import islands
+    deposit,rows,vehicles,_=input_state(db,user,data)
+    ferry=islands.ferry_exclusions(opt.geocode_deposit(db,deposit),rows)
+    if not ferry: return _distribute(db,user,data,assignments)
+    kept=[index for index in range(len(rows)) if index not in ferry]
+    if kept:
+        subset=data.model_copy(update={'consegne':[data.consegne[index] for index in kept]})
+        result=_distribute(db,user,subset,None if assignments is None else [assignments[index] for index in kept])
+        for route in result['routes']:
+            route['stop_indexes']=[kept[index] for index in route['stop_indexes']]
+            for item in (route.get('traffic') or {}).get('late',[]): item['stop_index']=kept[item['stop_index']]
+        for item in result['unassigned']: item['index']=kept[item['index']]
+    else:
+        result={'routes':[],'unassigned':[],'search':{'method':'ferry-exclusion'},
+                'resource_capabilities':[{'has_tail_lift':bool(v.ha_sponda),'has_ztl_access':bool(v.accesso_ztl)} for v in vehicles],
+                'warnings':[],'validated_depot':{'id':deposit.id,'indirizzo':deposit.indirizzo,'lat':deposit.lat,'lon':deposit.lon},'source':'osrm'}
+    result['unassigned']=sorted(result['unassigned']+[{'index':index,'reason':reason} for index,reason in ferry.items()],key=lambda item:item['index'])
+    result['validated_stops']=deepcopy(rows)
+    result['warnings'].insert(0,islands.warning([rows[index].get('cliente_nome') or 'Cliente senza nome' for index in sorted(ferry)]))
+    return result
+
+
+def _distribute(db,user,data,assignments=None):
     from ..routers.routes import build_vehicle_dict
     from .distance_cache import point_key
     deposit,rows,vehicles,drivers=input_state(db,user,data)

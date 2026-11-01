@@ -201,10 +201,17 @@ function renderMobileRouteDetails(r, targetId="routeResult"){
         <div class="stop-time"><span>Km</span><strong>${fmt(d.km_tappa)}</strong></div>
       </div>
     </div>`).join("");
+  // Clienti raggiungibili solo in traghetto: esclusi dal giro e segnalati qui.
+  const excluded=(r.consegne_escluse||[]).map(d=>`
+    <div class="stop-card">
+      <div class="stop-header"><div class="stop-num">!</div><div><div class="stop-name">${esc(d.cliente_nome)}</div><div class="stop-addr">${esc(d.indirizzo)}</div></div></div>
+      <div class="warning-tag">${esc(d.motivo)}</div>
+    </div>`).join("");
   box.innerHTML=`<div class="section-card"><div class="section-head"><h3>${esc(r.nome)}</h3><span>${esc(r.status_label||"Bozza")}</span></div>
     <div class="route-kpi-grid"><div class="route-kpi"><strong>${fmt(r.totale_km)} km</strong><span>Distanza</span></div><div class="route-kpi"><strong>${Math.round(r.totale_minuti||0)} min</strong><span>Durata</span></div><div class="route-kpi"><strong>${esc(r.orario_rientro_stimato||"—")}</strong><span>Rientro stimato</span></div></div>
     ${window.GiroFacileRouting.summaryHtml(r, `refreshMobileRouteTraffic(${Number(r.id)}, '${targetId}')`)}
     ${r.status==="bozza" ? `<button class="btn-primary" onclick="programMobileRoute(${Number(r.id)}, '${targetId}')">Programma giro</button>` : ""}
+    ${excluded}
     ${stops}
     ${r.google_maps_url ? `<a class="maps-btn" target="_blank" rel="noopener noreferrer" href="${esc(r.google_maps_url)}">Apri in Google Maps</a>` : ""}
   </div>`;

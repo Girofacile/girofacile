@@ -5,6 +5,12 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Clienti raggiungibili solo in traghetto (isole e, dal deposito su un'isola,
+  il continente): esclusi in automatico dal giro singolo e dalla pianificazione
+  a più mezzi, con l'avviso «Consegna non programmabile: il cliente si trova su
+  un'isola». Il calcolo stradale non conosce orari delle corse né imbarco e
+  dava tempi senza senso. Dettagli in [docs/isole-traghetto.md](docs/isole-traghetto.md).
+
 - Pianificazione, «Chi fa le consegne?»: una sola card del mezzo, uguale con uno
   e con più mezzi (mezzo, autista, turno, pausa e costo carburante). Sotto mezzo
   e autista si vede la disponibilità («Disponibile», «Non disponibile · In uso»,

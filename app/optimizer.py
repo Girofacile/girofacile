@@ -10,6 +10,7 @@ from .services.geocoding import geocode_address
 from .services.platform_settings import google_geocoding_enabled, google_maps_api_key
 from .services import road_routing
 from .services import distance_cache as dc
+from .services import islands
 
 NOMINATIM_URL = os.getenv("NOMINATIM_URL", "https://nominatim.openstreetmap.org").rstrip("/")
 
@@ -697,8 +698,30 @@ def _legacy_internal_sequence(deliveries, matrix, points, vehicle=None, return_d
     return _feasible_fallback(deliveries, matrix, points, vehicle, return_depot, start_time, result, evaluator=evaluator)
 
 
+def _without_known_ferry(deposit, deliveries):
+    """Prima di ogni calcolo: le consegne oltre il mare non pesano sul mezzo."""
+    lat, lon = getattr(deposit, "lat", None), getattr(deposit, "lon", None)
+    if lat is None or lon is None:
+        return deliveries
+    reasons = islands.ferry_exclusions({"lat": lat, "lon": lon}, deliveries)
+    return [d for i, d in enumerate(deliveries) if i not in reasons]
+
+
+def _exclude_ferry_deliveries(depot_coord, deliveries):
+    """Fino alla V1 i clienti raggiungibili solo in traghetto restano fuori dal giro."""
+    reasons = islands.ferry_exclusions(depot_coord, deliveries)
+    if not reasons:
+        return deliveries, []
+    excluded = [islands.excluded_delivery(d, reasons[i]) for i, d in enumerate(deliveries) if i in reasons]
+    kept = [d for i, d in enumerate(deliveries) if i not in reasons]
+    if not kept:
+        raise ValueError("Nessuna consegna programmabile. " + " ".join(
+            f"{e['cliente_nome']}: {e['motivo']}" for e in excluded[:8]))
+    return kept, excluded
+
+
 def optimize_route(db: Session, deposit, deliveries, vehicle=None, return_depot=True, start_time="08:00", route_date=None):
-    validate_vehicle_load(deliveries, vehicle)
+    validate_vehicle_load(_without_known_ferry(deposit, deliveries), vehicle)
     _route_departure_time_iso(start_time, route_date)
     depot_coord = geocode_deposit(db, deposit)
 
@@ -711,6 +734,8 @@ def optimize_route(db: Session, deposit, deliveries, vehicle=None, return_depot=
             missing.append(d.get("cliente_nome") or d.get("indirizzo") or "Cliente")
     if missing:
         raise ValueError("Clienti senza coordinate Google valide: " + ", ".join(missing[:8]) + ". Apri il cliente e usa “Verifica indirizzo con Google”.")
+    deliveries, excluded = _exclude_ferry_deliveries(depot_coord, deliveries)
+    validate_vehicle_load(deliveries, vehicle)
 
     points = [depot_coord] + [d["coord"] for d in deliveries]
     user_id = int(getattr(deposit, "user_id", 0) or 0)
@@ -741,11 +766,12 @@ def optimize_route(db: Session, deposit, deliveries, vehicle=None, return_depot=
         result["base_return_leg"] = dict(matrix.get((last_index, 0)) or {})
 
     result["google_maps_url"] = build_google_maps_url(deposit.indirizzo, result["ordered"], return_depot)
+    result["consegne_escluse"] = excluded
     return result
 
 def recalculate_manual_route(db: Session, deposit, deliveries, vehicle=None, return_depot=True, start_time="08:00", route_date=None):
     """Ricalcola km, tempi e orari rispettando l'ordine scelto manualmente dall'utente."""
-    validate_vehicle_load(deliveries, vehicle)
+    validate_vehicle_load(_without_known_ferry(deposit, deliveries), vehicle)
     _route_departure_time_iso(start_time, route_date)
     depot_coord = geocode_deposit(db, deposit)
     missing = []
@@ -757,6 +783,8 @@ def recalculate_manual_route(db: Session, deposit, deliveries, vehicle=None, ret
             missing.append(d.get("cliente_nome") or d.get("indirizzo") or "Cliente")
     if missing:
         raise ValueError("Clienti senza coordinate Google valide: " + ", ".join(missing[:8]) + ". Apri il cliente e usa “Verifica indirizzo con Google”.")
+    deliveries, excluded = _exclude_ferry_deliveries(depot_coord, deliveries)
+    validate_vehicle_load(deliveries, vehicle)
 
     points = [depot_coord] + [d["coord"] for d in deliveries]
     user_id = int(getattr(deposit, "user_id", 0) or 0)
@@ -782,4 +810,5 @@ def recalculate_manual_route(db: Session, deposit, deliveries, vehicle=None, ret
         result["base_return_leg"] = dict(matrix.get((last_index, 0)) or {})
 
     result["google_maps_url"] = build_google_maps_url(deposit.indirizzo, result["ordered"], return_depot)
+    result["consegne_escluse"] = excluded
     return result
