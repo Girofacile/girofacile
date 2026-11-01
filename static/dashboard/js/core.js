@@ -5687,9 +5687,8 @@ function syncMobileShellV62(){
     else if(['giro','dashboard-scheduled','dashboard-completed'].includes(active)) nav.querySelector('button.main')?.setAttribute('aria-current','page');
   }catch(e){ console.warn('syncMobileShellV62', e); }
 }
-// Sidebar: voci grandi quanto lo spazio permette, senza barra di scorrimento. Misura l'altezza
-// naturale della barra con voci da 32 px e distribuisce lo spazio libero sulle voci visibili.
-// Il riquadro di upgrade si nasconde solo se, con i gruppi aperti in quel momento, non entra.
+// Sidebar: voci compatte fisse e gruppi aperti, senza barra di scorrimento. Il riquadro di upgrade resta
+// intero se entra; altrimenti si riduce (senza testo) e, solo se nemmeno così entra, si nasconde.
 function sidebarFit(){
   const bar=document.querySelector('.gf-sidebar[data-sidebar-variant="structured"]');
   if(!bar || !bar.offsetHeight) return;
@@ -5704,17 +5703,11 @@ function sidebarFit(){
     }
     return total;
   };
-  delete bar.dataset.rowSize;
-  bar.dataset.upgradeFit='yes';
   const margin=12;
-  if(natural()+margin>bar.clientHeight){ bar.dataset.upgradeFit='no'; return; }
-  // Sui dispositivi touch le voci restano all'altezza touch: si decide solo il riquadro.
-  if(!matchMedia('(pointer:fine)').matches) return;
-  for(const size of [48,44,40,36]){
-    bar.dataset.rowSize=String(size);
+  for(const fit of ['yes','compact','no']){
+    bar.dataset.upgradeFit=fit;
     if(natural()+margin<=bar.clientHeight) return;
   }
-  delete bar.dataset.rowSize;
 }
 (function initSidebarFit(){
   let timer=null;

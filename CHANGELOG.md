@@ -5,6 +5,11 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Sidebar della Dashboard: all'avvio tutti e quattro i gruppi sono aperti
+  (anche "Azienda e sistema"), con voci sempre compatte, e restano chiudibili.
+  Le voci non si ingrandiscono più in base allo spazio, così in fondo resta
+  posto per il riquadro "Passa a …". Con la finestra bassa il riquadro perde il
+  testo e resta con titolo e pulsante; sparisce solo se nemmeno così entra.
 - Giri programmati e Storico: settimana più curata con la stessa disposizione.
   Intestazione del giorno stile calendario (nome breve e numero grande, «N
   giri» solo se ci sono giri attivi), colonna di oggi con bordo blu, sabato e

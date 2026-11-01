@@ -236,23 +236,15 @@ body[data-gf-layout="base"] [data-sidebar-variant="structured"] .gf-sidebar__ite
   body[data-gf-layout="base"] [data-sidebar-variant="structured"] .gf-sidebar__summary{min-height:var(--gf-control-height-sm);padding-block:var(--gf-space-1)}
   body[data-gf-layout="base"] [data-sidebar-variant="structured"] .gf-sidebar__footer{padding-top:var(--gf-space-2);flex-shrink:0}
 }
-/* Voci più grandi quando c'è spazio: la pagina misura lo spazio libero della barra e sceglie
-   data-row-size (36, 40, 44 o 48), senza mai far comparire lo scorrimento (sidebarFit in core.js).
-   Se nemmeno a 32 px c'è posto, data-upgrade-fit="no" nasconde il riquadro di upgrade. */
-body[data-gf-layout="base"] [data-sidebar-variant="structured"][data-row-size="36"] .gf-sidebar__item,
-body[data-gf-layout="base"] [data-sidebar-variant="structured"][data-row-size="36"] .gf-sidebar__summary{min-height:calc((var(--gf-control-height-sm) + var(--gf-control-height)) / 2)}
-body[data-gf-layout="base"] [data-sidebar-variant="structured"][data-row-size="40"] .gf-sidebar__item,
-body[data-gf-layout="base"] [data-sidebar-variant="structured"][data-row-size="40"] .gf-sidebar__summary{min-height:var(--gf-control-height)}
-body[data-gf-layout="base"] [data-sidebar-variant="structured"][data-row-size="44"] .gf-sidebar__item,
-body[data-gf-layout="base"] [data-sidebar-variant="structured"][data-row-size="44"] .gf-sidebar__summary{min-height:var(--gf-control-touch)}
-body[data-gf-layout="base"] [data-sidebar-variant="structured"][data-row-size="48"] .gf-sidebar__item,
-body[data-gf-layout="base"] [data-sidebar-variant="structured"][data-row-size="48"] .gf-sidebar__summary{min-height:var(--gf-space-12)}
-body[data-gf-layout="base"] [data-sidebar-variant="structured"]:is([data-row-size="40"],[data-row-size="44"],[data-row-size="48"]) .gf-sidebar__item{font-size:var(--gf-font-md)}
+/* Voci sempre compatte (32 px su computer), gruppi tutti aperti: il riquadro di upgrade ha posto in fondo.
+   Se la finestra è bassa sidebarFit (core.js) lo riduce (data-upgrade-fit="compact": senza testo) e,
+   solo se nemmeno così entra, lo nasconde (data-upgrade-fit="no"). */
 body[data-gf-layout="base"] .gf-sidebar[data-upgrade-fit="no"] .gf-sidebar-upgrade{display:none}
+body[data-gf-layout="base"] .gf-sidebar[data-upgrade-fit="compact"] .gf-sidebar-upgrade{padding:var(--gf-space-3)}
+body[data-gf-layout="base"] .gf-sidebar[data-upgrade-fit="compact"] .gf-sidebar-upgrade__text{display:none}
 /* Riquadro di upgrade in fondo alla sidebar (approvato il 25 ottobre 2026, ridisegnato il 1° novembre 2026):
    card scura con bordo, icona blu a sinistra, titolo, testo e pulsante blu a destra, appena sopra il
-   piè di pagina. Si nasconde solo quando non c'è posto (data-upgrade-fit="no", sidebarFit in core.js),
-   qualunque sia il gruppo aperto. */
+   piè di pagina. Con la finestra bassa si riduce e, solo all'ultimo, si nasconde (vedi sopra). */
 body[data-gf-layout="base"] .gf-sidebar-upgrade{
   display:grid;grid-template-columns:auto minmax(0,1fr);gap:var(--gf-space-1) var(--gf-space-3);align-items:start;
   margin:auto 0 var(--gf-space-3);padding:var(--gf-space-4);flex-shrink:0;
