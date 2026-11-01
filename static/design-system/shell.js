@@ -236,7 +236,24 @@
     });
   }
 
-  global.GFShell = {NAV, ICONS, mount, bind, open, icon};
+  // Scala dell'interfaccia (1° novembre 2026): il gestionale mostra sempre la stessa area di lavoro,
+  // circa SCALE_WIDTH × SCALE_HEIGHT px (la vista scelta dall'utente), qualunque siano il
+  // ridimensionamento di Windows e lo zoom del browser. Conta il lato più stretto, così su schermi
+  // larghi e bassi non si ingrandisce troppo. La pagina imposta --gf-ui-scale e layout.css applica
+  // zoom al body. Sotto i 1024 px reali resta a 1: lì valgono la sidebar a scomparsa e la barra in basso.
+  const SCALE_WIDTH = 1707, SCALE_HEIGHT = 960, SCALE_MIN = .75, SCALE_MAX = 1.5, SCALE_FROM = 1024;
+  function uiScale(width, height){
+    if(width < SCALE_FROM) return 1;
+    return Math.min(SCALE_MAX, Math.max(SCALE_MIN, Math.min(width / SCALE_WIDTH, height / SCALE_HEIGHT)));
+  }
+  function applyScale(){
+    if(!doc.body || doc.body.dataset.gfLayout !== 'base') return;
+    doc.documentElement.style.setProperty('--gf-ui-scale', uiScale(global.innerWidth, global.innerHeight).toFixed(3));
+  }
+  applyScale();
+  global.addEventListener('resize', applyScale);
+
+  global.GFShell = {NAV, ICONS, mount, bind, open, icon, uiScale};
   if(doc.readyState === 'loading') doc.addEventListener('DOMContentLoaded', autoMount);
   else autoMount();
 })(window);

@@ -148,6 +148,17 @@ Ogni nuova pagina usa il layout base: sidebar blu notte con il menu della
 Dashboard, intestazione con titolo, sottotitolo, azioni e utente, contenuto
 con margini di 32 px. Sotto 1024 px la sidebar si apre dal pulsante menu.
 
+Scala dell'interfaccia (1° novembre 2026): il layout base mostra sempre la
+stessa area di lavoro, circa 1707 × 960 px, qualunque siano il
+ridimensionamento di Windows e lo zoom del browser. `shell.js` calcola
+`--gf-ui-scale` (lato più stretto rispetto a quell'area, tra 0,75 e 1,5; 1
+sotto i 1024 px reali) e `layout.css` applica `zoom` al body. Con lo zoom
+`100vh` e `100vw` non coprono più la finestra: usare `--gf-viewport-height` e
+`--gf-viewport-width` di `theme.css`. Le regole che dipendono dalla larghezza
+disponibile usano `@container gf-content` (il contenuto della pagina, già
+scalato) invece delle media query sulla finestra; le media query restano solo
+per il passaggio a 1024 px e per i portali senza layout base.
+
 ```html
 <body data-gf-surface="workspace" data-gf-layout="base"
       data-gf-nav-active="clienti" data-gf-title="Clienti"

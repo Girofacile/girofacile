@@ -140,6 +140,11 @@
   --gf-stop-marker: 26px;
 
   /* --- Layout ---------------------------------------------------------- */
+  /* Scala dell'interfaccia: shell.js imposta --gf-ui-scale e layout.css applica zoom al body del layout
+     base. Altezza e larghezza della finestra misurate nella pagina scalata: usarle al posto di 100vh/100vw. */
+  --gf-ui-scale: 1;
+  --gf-viewport-height: calc(100dvh / var(--gf-ui-scale));
+  --gf-viewport-width: calc(100vw / var(--gf-ui-scale));
   --gf-sidebar-width: 244px;
   --gf-topbar-height: 80px;
   --gf-header-height: 86px;

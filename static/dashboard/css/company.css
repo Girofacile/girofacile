@@ -145,7 +145,8 @@ body:has(#tab-company:not(.hidden)) #app .content {
   margin-top:12px;padding:10px;border-radius:10px;
   color:var(--gf-color-on-primary);background:var(--gf-ref-color);text-align:center;font-size:12px;font-weight:750;
 }
-@media(max-width:1180px){
+/* Contenuto sotto gli 872 px (finestra di 1180 px tolti sidebar e margini), già scalato da --gf-ui-scale. */
+@container gf-content (max-width:872px){
   #tab-company .gf-ref-hero{grid-template-columns:1fr!important}
   #tab-company .gf-ref-identity{border-right:0;border-bottom:1px solid var(--gf-ref-line)}
 }

@@ -40,7 +40,7 @@ test('le finestre operative usano i componenti gf-overlay / gf-modal e restano u
     assert.equal((html.match(new RegExp('id="'+id+'"','g'))||[]).length,1,id);
   }
   assert.match(components,/dialog\.gf-modal::backdrop/);
-  assert.match(components,/max-height:calc\(100dvh - var\(--gf-space-8\)\)/);
+  assert.match(components,/max-height:calc\(var\(--gf-viewport-height\) - var\(--gf-space-8\)\)/);
 });
 
 test('i fogli rimasti della Dashboard usano solo variabili del tema e non contengono logica',()=>{

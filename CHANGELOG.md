@@ -5,6 +5,13 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Gestionale e Super Admin: l'interfaccia si adatta da sola allo schermo e
+  mostra sempre la stessa area di lavoro (circa 1707 × 960 px), cioè quello che
+  si vedeva con Windows al 150% e Chrome al 75%. Non serve più cambiare lo zoom:
+  su schermi piccoli o con Windows ingrandito tutto si rimpicciolisce (non
+  sotto il 75%), su schermi grandi si ingrandisce (non oltre il 150%). Sotto i
+  1024 px resta il layout a scomparsa. La settimana dei giri, la barra dei
+  numeri, il Report e l'Azienda seguono lo spazio reale del contenuto.
 - Sidebar della Dashboard: all'avvio tutti e quattro i gruppi sono aperti
   (anche "Azienda e sistema"), con voci sempre compatte, e restano chiudibili.
   Le voci non si ingrandiscono più in base allo spazio, così in fondo resta

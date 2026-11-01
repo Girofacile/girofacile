@@ -25,7 +25,8 @@ def main():
         browser = pw.chromium.launch(headless=True, executable_path=os.getenv('GF_TEST_BROWSER_EXECUTABLE') or None)
         try:
             for plan in ('starter', 'business', 'pro'):
-                page = browser.new_page(viewport={'width': 1440, 'height': 1000})
+                # Scala dell'interfaccia bloccata a 1 (vedi sotto), così le altezze qui sotto sono quelle reali.
+                page = browser.new_page(viewport={'width': 1700, 'height': 1000})
                 page.on('pageerror', lambda error: errors.append(str(error)))
                 owner = dict(ME, plan=plan, plan_status='active', limits=PLAN_LIMITS[plan], authenticated=True)
 
@@ -44,6 +45,7 @@ def main():
 
                 page.route('**/*', handle)
                 page.goto('http://upgrade.test/dashboard', wait_until='networkidle')
+                page.add_style_tag(content=':root{--gf-ui-scale:1 !important}')
                 # Avvio reale della Dashboard dopo l'accesso: il riquadro deve comparire senza aprire il profilo.
                 page.evaluate('async () => { acceptCookieNotice(); await checkLogin(); document.getElementById("onboardingOverlay")?.classList.add("hidden"); }')
                 card = page.locator('#sidebarUpgrade')
@@ -71,13 +73,13 @@ def main():
                     assert page.evaluate(no_scroll)
                     page.locator('.gf-sidebar').screenshot(path=str(output / f'{plan}.png'))
                     # Finestra più bassa: il riquadro si riduce (senza testo) ma resta.
-                    page.set_viewport_size({'width': 1440, 'height': 900})
+                    page.set_viewport_size({'width': 1700, 'height': 900})
                     page.wait_for_timeout(150)
                     assert fit() == 'compact' and card.is_visible() and text.is_hidden()
                     assert page.evaluate(no_scroll)
                     page.locator('.gf-sidebar').screenshot(path=str(output / f'{plan}-ridotto-900.png'))
                     # Ancora più bassa: solo ora sparisce; il piè di pagina resta in fondo alla barra.
-                    page.set_viewport_size({'width': 1440, 'height': 820})
+                    page.set_viewport_size({'width': 1700, 'height': 820})
                     page.wait_for_timeout(150)
                     assert fit() == 'no' and card.is_hidden()
                     assert page.evaluate(no_scroll)
@@ -90,7 +92,7 @@ def main():
                     assert page.evaluate(no_scroll)
                     page.locator('.gf-sidebar').screenshot(path=str(output / f'{plan}-risorse-chiuso-820.png'))
                     page.locator('[data-sidebar-group="risorse"] > summary').click()
-                    page.set_viewport_size({'width': 1440, 'height': 1000})
+                    page.set_viewport_size({'width': 1700, 'height': 1000})
                     page.wait_for_timeout(150)
                     assert fit() == 'yes' and card.is_visible()
                     page.evaluate("document.body.classList.add('company-collaborator'); window.GFCompanyAccess={isCollaborator:()=>true}; renderSidebarUpgrade(currentSessionUser.plan)")

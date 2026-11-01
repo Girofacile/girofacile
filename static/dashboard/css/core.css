@@ -68,6 +68,7 @@ html[data-gf-agents="off"] [data-gf-agents-only]{display:none!important}
 .report-svg.donut .s3,.donut-dot.s3{stroke:var(--gf-color-info);background:var(--gf-color-info)}
 .report-svg.donut .s4,.donut-dot.s4{stroke:var(--gf-color-nav-muted);background:var(--gf-color-nav-muted)}
 .report-svg.donut .s5,.donut-dot.s5{stroke:var(--gf-color-danger);background:var(--gf-color-danger)}
-@media (max-width:1300px){
+/* Contenuto sotto i 992 px (finestra di 1300 px tolti sidebar e margini), già scalato da --gf-ui-scale. */
+@container gf-content (max-width:992px){
   .report-donut-wrap{grid-template-columns:1fr}
 }
