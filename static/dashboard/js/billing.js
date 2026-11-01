@@ -107,6 +107,10 @@ function renderSidebarUpgrade(plan) {
   document.getElementById('sidebarUpgradeText').textContent=next==='pro'
     ? `Integrazione AI, ${n(target.max_orders_per_month)} ordini al mese e fino a ${n(target.max_vehicles)} mezzi.`
     : `Più mezzi, firma e foto di consegna, Shopify e WooCommerce.`;
+  // Versione di una riga, per quando la finestra è bassa (sidebarFit, data-upgrade-fit="compact").
+  document.getElementById('sidebarUpgradeShort').textContent=next==='pro'
+    ? `AI, ${n(target.max_orders_per_month)} ordini e ${n(target.max_vehicles)} mezzi.`
+    : `Più mezzi, firma e foto.`;
   document.getElementById('sidebarUpgradeButton').dataset.plan=next;
 }
 

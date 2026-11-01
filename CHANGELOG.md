@@ -5,6 +5,10 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Sidebar: con la finestra bassa il riquadro "Passa a …" non perde più subito
+  la descrizione: mostra una riga breve ("AI, 6.000 ordini e 50 mezzi." per Pro,
+  "Più mezzi, firma e foto." per Business) con titolo e pulsante. Solo se
+  nemmeno così entra restano titolo e pulsante, e solo all'ultimo sparisce.
 - Barre di scorrimento più moderne in tutte le pagine: sottili, grigie, con
   piccole frecce dello stesso grigio sopra e sotto; più scure al passaggio del
   mouse. Valgono per la pagina e per le aree che scorrono (elenchi, tabelle,

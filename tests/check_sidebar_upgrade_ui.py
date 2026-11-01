@@ -72,12 +72,19 @@ def main():
                     assert fit() == 'yes' and text.is_visible()
                     assert page.evaluate(no_scroll)
                     page.locator('.gf-sidebar').screenshot(path=str(output / f'{plan}.png'))
-                    # Finestra più bassa: il riquadro si riduce (senza testo) ma resta.
+                    short = card.locator('#sidebarUpgradeShort')
+                    # Finestra più bassa: il riquadro si riduce a una riga di descrizione breve, mai tagliata.
                     page.set_viewport_size({'width': 1700, 'height': 900})
                     page.wait_for_timeout(150)
-                    assert fit() == 'compact' and card.is_visible() and text.is_hidden()
+                    assert fit() == 'compact' and card.is_visible() and text.is_hidden() and short.is_visible()
+                    assert short.evaluate("e => e.scrollWidth <= e.clientWidth")
                     assert page.evaluate(no_scroll)
                     page.locator('.gf-sidebar').screenshot(path=str(output / f'{plan}-ridotto-900.png'))
+                    # Ancora più bassa: restano titolo e pulsante.
+                    page.set_viewport_size({'width': 1700, 'height': 880})
+                    page.wait_for_timeout(150)
+                    assert fit() == 'mini' and card.is_visible() and text.is_hidden() and short.is_hidden()
+                    assert page.evaluate(no_scroll)
                     # Ancora più bassa: solo ora sparisce; il piè di pagina resta in fondo alla barra.
                     page.set_viewport_size({'width': 1700, 'height': 820})
                     page.wait_for_timeout(150)
