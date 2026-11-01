@@ -5,6 +5,11 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Sidebar: riquadro di upgrade ridisegnato (card scura con bordo, icona a
+  razzo blu a sinistra, titolo, testo e pulsante «Scopri i piani» blu a
+  destra). Non si nasconde più ogni volta che si apre "Azienda e sistema":
+  sparisce solo se, con i gruppi aperti in quel momento, non c'è spazio (per
+  esempio con tutti e quattro i gruppi aperti). Vale anche su tablet e telefono.
 - Giri in bozza allineata alle altre pagine: numeri in alto (da riprendere,
   percorsi calcolati, consegne in bozza, ultimo salvataggio), nome del giro in
   grassetto con origine, mezzi o autista sotto, fase come etichetta, azioni

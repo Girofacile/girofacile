@@ -1,5 +1,5 @@
 """Sidebar upgrade card in Chromium: next plan per owner, hidden on Pro, for collaborators
-and while the "Azienda e sistema" group is open. All responses are synthetic.
+and only when the open groups leave no room for it. All responses are synthetic.
 Screenshots are written under test-results/sidebar-upgrade.
 """
 import json
@@ -65,14 +65,31 @@ def main():
                     assert page.evaluate("(()=>{const s=document.querySelector('.gf-sidebar');return s.scrollHeight<=s.clientHeight})()")
                     assert page.locator('.gf-sidebar').get_attribute('data-row-size') in ('36', '40', '44', '48')
                     page.locator('.gf-sidebar').screenshot(path=str(output / f'{plan}.png'))
+                    no_scroll = "(()=>{const s=document.querySelector('.gf-sidebar');return s.scrollHeight<=s.clientHeight})()"
+                    # Con "Azienda e sistema" aperto il riquadro resta finché c'è posto.
                     page.locator('[data-sidebar-group="sistema"] > summary').click()
+                    assert card.is_visible()
+                    assert page.evaluate(no_scroll)
+                    page.locator('.gf-sidebar').screenshot(path=str(output / f'{plan}-sistema-aperto.png'))
+                    # Finestra bassa con tutti i gruppi aperti: il riquadro sparisce, senza scorrimento.
+                    page.set_viewport_size({'width': 1440, 'height': 860})
+                    page.wait_for_timeout(150)
                     assert card.is_hidden()
+                    assert page.evaluate(no_scroll)
                     # Il piè di pagina resta in fondo alla barra anche senza il riquadro.
                     side = page.locator('.gf-sidebar').bounding_box()
                     footer = page.locator('.gf-sidebar__footer').bounding_box()
                     assert footer['y'] + footer['height'] >= side['y'] + side['height'] - 40
-                    page.locator('.gf-sidebar').screenshot(path=str(output / f'{plan}-sistema-aperto.png'))
+                    page.locator('.gf-sidebar').screenshot(path=str(output / f'{plan}-tutti-aperti-860.png'))
+                    # Chiudendo un altro gruppo torna lo spazio e il riquadro ricompare.
+                    page.locator('[data-sidebar-group="risorse"] > summary').click()
+                    assert card.is_visible()
+                    assert page.evaluate(no_scroll)
+                    page.locator('.gf-sidebar').screenshot(path=str(output / f'{plan}-risorse-chiuso-860.png'))
+                    page.locator('[data-sidebar-group="risorse"] > summary').click()
                     page.locator('[data-sidebar-group="sistema"] > summary').click()
+                    page.set_viewport_size({'width': 1440, 'height': 1000})
+                    page.wait_for_timeout(150)
                     assert card.is_visible()
                     page.evaluate("document.body.classList.add('company-collaborator'); window.GFCompanyAccess={isCollaborator:()=>true}; renderSidebarUpgrade(currentSessionUser.plan)")
                     assert card.is_hidden()
@@ -80,7 +97,7 @@ def main():
         finally:
             browser.close()
     assert not errors, errors
-    print('PASS: sidebar upgrade — next plan, hidden on Pro, collaborators and open company group')
+    print('PASS: sidebar upgrade — next plan, hidden on Pro, collaborators and only when it does not fit')
 
 
 if __name__ == '__main__':
