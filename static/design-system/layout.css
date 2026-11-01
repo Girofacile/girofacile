@@ -236,32 +236,31 @@ body[data-gf-layout="base"] [data-sidebar-variant="structured"] .gf-sidebar__ite
   body[data-gf-layout="base"] [data-sidebar-variant="structured"] .gf-sidebar__summary{min-height:var(--gf-control-height-sm);padding-block:var(--gf-space-1)}
   body[data-gf-layout="base"] [data-sidebar-variant="structured"] .gf-sidebar__footer{padding-top:var(--gf-space-2);flex-shrink:0}
 }
-/* Voci sempre compatte (32 px su computer), gruppi tutti aperti: il riquadro di upgrade ha posto in fondo.
-   Se la finestra è bassa sidebarFit (core.js) lo riduce: prima a una riga di descrizione breve
-   (data-upgrade-fit="compact"), poi a titolo e pulsante (data-upgrade-fit="mini") e, solo se nemmeno
-   così entra, lo nasconde (data-upgrade-fit="no"). */
+/* Voci sempre compatte (32 px su computer), gruppi tutti aperti: il riquadro di upgrade ha posto in fondo,
+   anche con le voci in più (Giri in bozza, Giri programmati). Solo se nemmeno così entra sidebarFit (core.js)
+   lo nasconde (data-upgrade-fit="no"). */
 body[data-gf-layout="base"] .gf-sidebar[data-upgrade-fit="no"] .gf-sidebar-upgrade{display:none}
-body[data-gf-layout="base"] .gf-sidebar-upgrade__text[data-length="short"]{display:none}
-body[data-gf-layout="base"] .gf-sidebar:is([data-upgrade-fit="compact"],[data-upgrade-fit="mini"]) .gf-sidebar-upgrade{padding:var(--gf-space-3)}
-body[data-gf-layout="base"] .gf-sidebar:is([data-upgrade-fit="compact"],[data-upgrade-fit="mini"]) .gf-sidebar-upgrade__text{display:none}
-body[data-gf-layout="base"] .gf-sidebar[data-upgrade-fit="compact"] .gf-sidebar-upgrade__text[data-length="short"]{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-/* Riquadro di upgrade in fondo alla sidebar (approvato il 25 ottobre 2026, ridisegnato il 1° novembre 2026):
-   card scura con bordo, icona blu a sinistra, titolo, testo e pulsante blu a destra, appena sopra il
-   piè di pagina. Con la finestra bassa si riduce e, solo all'ultimo, si nasconde (vedi sopra). */
-body[data-gf-layout="base"] .gf-sidebar-upgrade{
-  display:grid;grid-template-columns:auto minmax(0,1fr);gap:var(--gf-space-1) var(--gf-space-3);align-items:start;
-  margin:auto 0 var(--gf-space-3);padding:var(--gf-space-4);flex-shrink:0;
-  border:var(--gf-border-width) solid var(--gf-color-nav-divider);border-radius:var(--gf-radius-lg);
-  background:color-mix(in srgb,var(--gf-color-nav-hover-bg) 45%,transparent);color:var(--gf-color-nav-text);font-size:var(--gf-font-xs);
+/* Riquadro di upgrade in fondo alla sidebar (approvato il 25 ottobre 2026, versione unica compatta del
+   1° novembre 2026): tutta la card è il pulsante, con icona blu, «Passa a … ›» e descrizione su due righe
+   letta per intero, appena sopra il piè di pagina. */
+body[data-gf-layout="base"] .gf-sidebar-upgrade{margin:auto 0 var(--gf-space-2);flex-shrink:0}
+body[data-gf-layout="base"] .gf-sidebar-upgrade__action{
+  display:grid;grid-template-columns:auto minmax(0,1fr);gap:2px var(--gf-space-3);align-items:center;width:100%;
+  padding:var(--gf-space-2) var(--gf-space-3);border:var(--gf-border-width) solid var(--gf-color-nav-divider);border-radius:var(--gf-radius-lg);
+  background:color-mix(in srgb,var(--gf-color-nav-hover-bg) 45%,transparent);color:var(--gf-color-nav-text);
+  font:inherit;font-size:var(--gf-font-xs);text-align:left;cursor:pointer;
+  transition:background var(--gf-motion-duration),border-color var(--gf-motion-duration);
 }
+body[data-gf-layout="base"] .gf-sidebar-upgrade__action:hover{border-color:var(--gf-color-primary);background:var(--gf-color-nav-hover-bg)}
+body[data-gf-layout="base"] .gf-sidebar-upgrade__action:focus-visible{outline:var(--gf-border-width) solid var(--gf-color-brand-accent);outline-offset:var(--gf-space-1)}
 body[data-gf-layout="base"] .gf-sidebar-upgrade__icon{
-  grid-row:1 / span 2;display:grid;place-items:center;width:var(--gf-control-height);height:var(--gf-control-height);
+  grid-row:1 / span 2;display:grid;place-items:center;width:var(--gf-space-8);height:var(--gf-space-8);
   border-radius:var(--gf-radius-md);background:var(--gf-color-primary);color:var(--gf-color-on-primary);
 }
 body[data-gf-layout="base"] .gf-sidebar-upgrade__icon svg{width:var(--gf-icon-size);height:var(--gf-icon-size);fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
-body[data-gf-layout="base"] .gf-sidebar-upgrade__title{grid-column:2;margin:0;color:var(--gf-color-on-nav);font:var(--gf-weight-bold) var(--gf-font-md)/var(--gf-line-height-tight) var(--gf-font-display)}
-body[data-gf-layout="base"] .gf-sidebar-upgrade__text{grid-column:2;margin:0;color:var(--gf-color-nav-text);line-height:1.45}
-body[data-gf-layout="base"] .gf-sidebar-upgrade .gf-button{grid-column:2;justify-self:start;margin-top:var(--gf-space-2)}
+body[data-gf-layout="base"] .gf-sidebar-upgrade__title{grid-column:2;color:var(--gf-color-on-nav);font:var(--gf-weight-bold) var(--gf-font-md)/var(--gf-line-height-tight) var(--gf-font-display)}
+body[data-gf-layout="base"] .gf-sidebar-upgrade__title::after{content:" ›"}
+body[data-gf-layout="base"] .gf-sidebar-upgrade__text{grid-column:2;color:var(--gf-color-nav-text);line-height:1.35}
 body[data-gf-layout="base"] .gf-sidebar:not([data-upgrade-fit="no"]) .gf-sidebar-upgrade:not(.gf-hidden)+.gf-sidebar__footer{margin-top:0}
 /* Do not leave empty group headings after permissions or feature flags hide every item. */
 body[data-gf-layout="base"] .gf-sidebar__group:not(:has(.gf-sidebar__item:not(.hidden):not(.gf-hidden):not(.collaborator-denied):not([hidden]))){display:none}

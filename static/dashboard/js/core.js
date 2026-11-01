@@ -5687,9 +5687,8 @@ function syncMobileShellV62(){
     else if(['giro','dashboard-scheduled','dashboard-completed'].includes(active)) nav.querySelector('button.main')?.setAttribute('aria-current','page');
   }catch(e){ console.warn('syncMobileShellV62', e); }
 }
-// Sidebar: voci compatte fisse e gruppi aperti, senza barra di scorrimento. Il riquadro di upgrade resta
-// intero se entra; altrimenti mostra una riga di descrizione breve, poi solo titolo e pulsante e, solo se
-// nemmeno così entra, si nasconde.
+// Sidebar: voci compatte fisse e gruppi aperti, senza barra di scorrimento. Il riquadro di upgrade ha una
+// sola versione, compatta: si nasconde solo se nemmeno quella entra.
 function sidebarFit(){
   const bar=document.querySelector('.gf-sidebar[data-sidebar-variant="structured"]');
   if(!bar || !bar.offsetHeight) return;
@@ -5705,7 +5704,7 @@ function sidebarFit(){
     return total;
   };
   const margin=12;
-  for(const fit of ['yes','compact','mini','no']){
+  for(const fit of ['yes','no']){
     bar.dataset.upgradeFit=fit;
     if(natural()+margin<=bar.clientHeight) return;
   }

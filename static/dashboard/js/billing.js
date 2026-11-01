@@ -104,13 +104,10 @@ function renderSidebarUpgrade(plan) {
   if(!target) return;
   const n=value=>Number(value).toLocaleString('it-IT',{useGrouping:'always'});
   document.getElementById('sidebarUpgradeTitle').textContent=`Passa a ${target.name}`;
+  // Una sola versione del riquadro, compatta: la descrizione sta su due righe e si legge per intero.
   document.getElementById('sidebarUpgradeText').textContent=next==='pro'
-    ? `Integrazione AI, ${n(target.max_orders_per_month)} ordini al mese e fino a ${n(target.max_vehicles)} mezzi.`
-    : `Più mezzi, firma e foto di consegna, Shopify e WooCommerce.`;
-  // Versione di una riga, per quando la finestra è bassa (sidebarFit, data-upgrade-fit="compact").
-  document.getElementById('sidebarUpgradeShort').textContent=next==='pro'
-    ? `AI, ${n(target.max_orders_per_month)} ordini e ${n(target.max_vehicles)} mezzi.`
-    : `Più mezzi, firma e foto.`;
+    ? `AI, ${n(target.max_orders_per_month)} ordini al mese e ${n(target.max_vehicles)} mezzi.`
+    : `Più mezzi, firma, foto ed e‑commerce.`; // trattino che non va a capo
   document.getElementById('sidebarUpgradeButton').dataset.plan=next;
 }
 

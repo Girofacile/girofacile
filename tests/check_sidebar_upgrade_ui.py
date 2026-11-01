@@ -1,5 +1,5 @@
 """Sidebar upgrade card in Chromium: next plan per owner, hidden on Pro, for collaborators
-shrunk on short windows and hidden only when even the short version does not fit. All responses are synthetic.
+one compact version, hidden only when it does not fit even with all groups open. All responses are synthetic.
 Screenshots are written under test-results/sidebar-upgrade.
 """
 import json
@@ -65,27 +65,25 @@ def main():
                     no_scroll = "(()=>{const s=document.querySelector('.gf-sidebar');return s.scrollHeight<=s.clientHeight})()"
                     fit = lambda: page.locator('.gf-sidebar').get_attribute('data-upgrade-fit')
                     text = card.locator('#sidebarUpgradeText')
-                    # All'avvio tutti e quattro i gruppi sono aperti, voci compatte, riquadro intero e niente scorrimento.
+                    # All'avvio tutti e quattro i gruppi sono aperti, voci compatte, riquadro compatto con la descrizione intera.
                     page.wait_for_timeout(150)
                     assert page.locator('.gf-sidebar__group:not([open])').count() == 0
                     assert page.locator('.gf-sidebar').get_attribute('data-row-size') is None
                     assert fit() == 'yes' and text.is_visible()
+                    # Una sola versione: descrizione su due righe al massimo, mai tagliata; card bassa.
+                    lines = text.evaluate("e => Math.round(e.getBoundingClientRect().height / parseFloat(getComputedStyle(e).lineHeight))")
+                    assert lines <= 2, lines
+                    assert card.bounding_box()['height'] <= 74
                     assert page.evaluate(no_scroll)
                     page.locator('.gf-sidebar').screenshot(path=str(output / f'{plan}.png'))
-                    short = card.locator('#sidebarUpgradeShort')
-                    # Finestra più bassa: il riquadro si riduce a una riga di descrizione breve, mai tagliata.
-                    page.set_viewport_size({'width': 1700, 'height': 900})
+                    # Schermo con Windows al 150% (circa 910 px utili) e le voci Giri in bozza e Giri programmati: il riquadro resta.
+                    page.evaluate("document.getElementById('sidebarDraftsItem').classList.remove('gf-hidden'); document.querySelector('.scheduled-nav-entry').classList.remove('gf-hidden')")
+                    page.set_viewport_size({'width': 1700, 'height': 910})
                     page.wait_for_timeout(150)
-                    assert fit() == 'compact' and card.is_visible() and text.is_hidden() and short.is_visible()
-                    assert short.evaluate("e => e.scrollWidth <= e.clientWidth")
+                    assert fit() == 'yes' and card.is_visible() and text.is_visible()
                     assert page.evaluate(no_scroll)
-                    page.locator('.gf-sidebar').screenshot(path=str(output / f'{plan}-ridotto-900.png'))
-                    # Ancora più bassa: restano titolo e pulsante.
-                    page.set_viewport_size({'width': 1700, 'height': 880})
-                    page.wait_for_timeout(150)
-                    assert fit() == 'mini' and card.is_visible() and text.is_hidden() and short.is_hidden()
-                    assert page.evaluate(no_scroll)
-                    # Ancora più bassa: solo ora sparisce; il piè di pagina resta in fondo alla barra.
+                    page.locator('.gf-sidebar').screenshot(path=str(output / f'{plan}-voci-extra-910.png'))
+                    # Molto più bassa: solo ora sparisce; il piè di pagina resta in fondo alla barra.
                     page.set_viewport_size({'width': 1700, 'height': 820})
                     page.wait_for_timeout(150)
                     assert fit() == 'no' and card.is_hidden()
@@ -97,8 +95,8 @@ def main():
                     page.locator('[data-sidebar-group="risorse"] > summary').click()
                     assert card.is_visible()
                     assert page.evaluate(no_scroll)
-                    page.locator('.gf-sidebar').screenshot(path=str(output / f'{plan}-risorse-chiuso-820.png'))
                     page.locator('[data-sidebar-group="risorse"] > summary').click()
+                    page.evaluate("document.getElementById('sidebarDraftsItem').classList.add('gf-hidden'); document.querySelector('.scheduled-nav-entry').classList.add('gf-hidden')")
                     page.set_viewport_size({'width': 1700, 'height': 1000})
                     page.wait_for_timeout(150)
                     assert fit() == 'yes' and card.is_visible()
@@ -108,7 +106,7 @@ def main():
         finally:
             browser.close()
     assert not errors, errors
-    print('PASS: sidebar upgrade — groups open, next plan, compact then hidden only when it does not fit')
+    print('PASS: sidebar upgrade — one compact card with full description, hidden only when it does not fit')
 
 
 if __name__ == '__main__':

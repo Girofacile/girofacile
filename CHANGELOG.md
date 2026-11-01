@@ -5,6 +5,11 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Sidebar: il riquadro "Passa a …" ha ora una sola versione, compatta: tutta
+  la card è il pulsante, con icona, «Passa a Pro ›» e la descrizione intera su
+  due righe ("AI, 6.000 ordini al mese e 50 mezzi."). Entra anche con tutti i
+  gruppi aperti e le voci Giri in bozza e Giri programmati su uno schermo con
+  Windows al 150%; sparisce solo se nemmeno così c'è posto.
 - Sidebar: con la finestra bassa il riquadro "Passa a …" non perde più subito
   la descrizione: mostra una riga breve ("AI, 6.000 ordini e 50 mezzi." per Pro,
   "Più mezzi, firma e foto." per Business) con titolo e pulsante. Solo se
