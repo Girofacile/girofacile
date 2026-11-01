@@ -5,6 +5,10 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Barre di scorrimento più moderne in tutte le pagine: sottili, grigie, con
+  piccole frecce blu sopra e sotto; più scure al passaggio del mouse. Valgono
+  per la pagina e per le aree che scorrono (elenchi, tabelle, sidebar, dove
+  sono chiare e semitrasparenti). In Firefox la barra è grigia senza frecce.
 - Gestionale e Super Admin: l'interfaccia si adatta da sola allo schermo e
   mostra sempre la stessa area di lavoro (circa 1707 × 960 px), cioè quello che
   si vedeva con Windows al 150% e Chrome al 75%. Non serve più cambiare lo zoom:

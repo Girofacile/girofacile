@@ -1115,3 +1115,34 @@ body[data-gf-surface] .gf-empty__icon{
   border-radius:var(--gf-radius-circle);background:var(--gf-color-info-bg);color:var(--gf-color-primary);
 }
 body[data-gf-surface] .gf-empty__icon svg{width:var(--gf-icon-size);height:var(--gf-icon-size);fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+
+/* --- Barre di scorrimento (approvate il 1° novembre 2026) --------------------------------------
+   Sottili, grigie, con piccole frecce blu sopra e sotto (a sinistra e a destra in orizzontale), per la
+   pagina e per ogni area che scorre. Chrome/Edge/Safari usano ::-webkit-scrollbar; lì scrollbar-color
+   annullerebbe questi stili, quindi le proprietà standard valgono solo dove le pseudo non esistono
+   (Firefox: barra grigia senza frecce). Le frecce sono disegnate con conic-gradient. */
+@supports not selector(::-webkit-scrollbar){
+  html:has(>body[data-gf-surface]){scrollbar-color:var(--gf-color-scrollbar) transparent;scrollbar-width:thin}
+  body[data-gf-surface] .gf-sidebar{scrollbar-color:var(--gf-color-nav-selected-bg) transparent}
+}
+:where(html:has(>body[data-gf-surface]),body[data-gf-surface] *)::-webkit-scrollbar{width:var(--gf-space-2);height:var(--gf-space-2)}
+:where(html:has(>body[data-gf-surface]),body[data-gf-surface] *)::-webkit-scrollbar-track{background:transparent}
+:where(html:has(>body[data-gf-surface]),body[data-gf-surface] *)::-webkit-scrollbar-corner{background:transparent}
+:where(html:has(>body[data-gf-surface]),body[data-gf-surface] *)::-webkit-scrollbar-thumb{border-radius:var(--gf-radius-pill);background:var(--gf-color-scrollbar)}
+:where(html:has(>body[data-gf-surface]),body[data-gf-surface] *)::-webkit-scrollbar-thumb:hover{background:var(--gf-color-scrollbar-hover)}
+:where(html:has(>body[data-gf-surface]),body[data-gf-surface] *)::-webkit-scrollbar-button{display:none}
+:where(html:has(>body[data-gf-surface]),body[data-gf-surface] *)::-webkit-scrollbar-button:single-button{
+  display:block;width:var(--gf-space-2);height:var(--gf-space-3);background-color:transparent;
+  background-repeat:no-repeat;background-position:center;background-size:var(--gf-space-2) var(--gf-space-1);
+  --gf-scroll-arrow:var(--gf-color-scrollbar-arrow);
+}
+:where(html:has(>body[data-gf-surface]),body[data-gf-surface] *)::-webkit-scrollbar-button:single-button:hover{--gf-scroll-arrow:var(--gf-color-scrollbar-arrow-hover)}
+:where(html:has(>body[data-gf-surface]),body[data-gf-surface] *)::-webkit-scrollbar-button:single-button:vertical:decrement{background-image:conic-gradient(from 135deg at 50% 0,var(--gf-scroll-arrow) 90deg,transparent 0)}
+:where(html:has(>body[data-gf-surface]),body[data-gf-surface] *)::-webkit-scrollbar-button:single-button:vertical:increment{background-image:conic-gradient(from -45deg at 50% 100%,var(--gf-scroll-arrow) 90deg,transparent 0)}
+:where(html:has(>body[data-gf-surface]),body[data-gf-surface] *)::-webkit-scrollbar-button:single-button:horizontal{width:var(--gf-space-3);height:var(--gf-space-2);background-size:var(--gf-space-1) var(--gf-space-2)}
+:where(html:has(>body[data-gf-surface]),body[data-gf-surface] *)::-webkit-scrollbar-button:single-button:horizontal:decrement{background-image:conic-gradient(from 45deg at 0 50%,var(--gf-scroll-arrow) 90deg,transparent 0)}
+:where(html:has(>body[data-gf-surface]),body[data-gf-surface] *)::-webkit-scrollbar-button:single-button:horizontal:increment{background-image:conic-gradient(from 225deg at 100% 50%,var(--gf-scroll-arrow) 90deg,transparent 0)}
+/* Nella sidebar scura: barra chiara semitrasparente e frecce azzurre */
+body[data-gf-surface] .gf-sidebar::-webkit-scrollbar-thumb{background:var(--gf-color-nav-selected-bg)}
+body[data-gf-surface] .gf-sidebar::-webkit-scrollbar-thumb:hover{background:var(--gf-color-nav-text)}
+body[data-gf-surface] .gf-sidebar::-webkit-scrollbar-button:single-button{--gf-scroll-arrow:var(--gf-color-nav-text)}
