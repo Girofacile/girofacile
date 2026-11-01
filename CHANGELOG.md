@@ -5,6 +5,9 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Piani e abbonamento: aperta dal riquadro "Passa a …" della sidebar mostrava
+  "—" al posto del nome del piano attivo, perché il piano veniva letto solo
+  aprendo il profilo. Ora è noto subito dopo l'accesso.
 - Sidebar: il riquadro "Passa a …" ha ora una sola versione, compatta: tutta
   la card è il pulsante, con icona, «Passa a Pro ›» e la descrizione intera su
   due righe ("AI, 6.000 ordini al mese e 50 mezzi."). Entra anche con tutti i

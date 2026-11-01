@@ -919,6 +919,7 @@ function openPlanAccountPage(plan){
   if(current !== "plan-account") _planReturnTabV874 = current;
   closeProfilePanel();
   closeBillingPanel();
+  if(!_currentPlan && typeof currentSessionUser !== "undefined" && currentSessionUser?.plan) _currentPlan = currentSessionUser.plan;
   _selectedUpgradePlan = plan || _currentPlan || "starter";
   showTab("plan-account");
   renderUpgradeCards();
@@ -1191,6 +1192,9 @@ async function checkLogin(){
         profilePhotoData = "";
       }
       currentSessionUser = me;
+      // Piano attivo noto subito: Piani e abbonamento può aprirsi anche dal riquadro della sidebar,
+      // prima che il pannello del profilo abbia caricato le informazioni del piano.
+      _currentPlan = me.plan || "starter";
       setSectorConfigV47(me);
       showGestionaleAfterLogin(false);
       updatePremiumNavState();

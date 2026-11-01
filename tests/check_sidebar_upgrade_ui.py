@@ -58,6 +58,12 @@ def main():
                     assert card.locator('#sidebarUpgradeButton').get_attribute('data-plan') == expected.lower()
                     if plan == 'business':
                         assert '6.000 ordini' in card.inner_text()
+                    # Clic sul riquadro appena entrati (profilo mai aperto): Piani e abbonamento mostra il piano attivo.
+                    card.locator('#sidebarUpgradeButton').click()
+                    page.locator('#planPageCurrentNameV874').wait_for(state='visible')
+                    assert page.locator('#planPageCurrentNameV874').inner_text() == plan.capitalize()
+                    assert page.locator('#upgradePlanCards [data-plan-card="%s"]' % plan).count() == 1
+                    page.evaluate("showTab('dashboard')")
                     # Il riquadro sta sopra il piè di pagina, dentro la barra laterale.
                     footer = page.locator('.gf-sidebar__footer').bounding_box()
                     box = card.bounding_box()
@@ -93,7 +99,7 @@ def main():
                     assert footer['y'] + footer['height'] >= side['y'] + side['height'] - 40
                     # I gruppi restano chiudibili: chiudendone uno torna lo spazio e il riquadro ricompare.
                     page.locator('[data-sidebar-group="risorse"] > summary').click()
-                    assert card.is_visible()
+                    card.wait_for(state='visible', timeout=2000)  # il ricalcolo parte dall'evento toggle, subito dopo il clic
                     assert page.evaluate(no_scroll)
                     page.locator('[data-sidebar-group="risorse"] > summary').click()
                     page.evaluate("document.getElementById('sidebarDraftsItem').classList.add('gf-hidden'); document.querySelector('.scheduled-nav-entry').classList.add('gf-hidden')")
