@@ -21,6 +21,25 @@ La ricerca usa i tempi stradali allungati di un margine prudente (`fleet_traffic
 
 L'operatore può indicare i prezzi energetici nei dettagli della coppia; non esiste una durata massima del giro impostata a mano: il limite è dato da turno e pause dell'autista, impegni già programmati e fine della giornata. La disponibilità iniziale verifica la partenza; il calcolo considera anche gli impegni successivi già programmati e i giri in corso.
 
+## Miglioramento con OR-Tools
+
+Con la strategia «Riduci chilometri e tempi», dopo la ricerca e il riordino dei
+giri, il piano trovato passa a **Google OR-Tools** (libreria gratuita, eseguita sul
+server, nessuna chiamata esterna). OR-Tools parte da quel piano e cerca giri più
+corti con le stesse regole: pause, fasce, turni, disponibilità, capacità; sponda e
+ZTL incompatibili sono penalizzate. Il risultato passa dal calendario canonico e
+dal riordino esatto dei giri fino a 8 fermate, poi viene confrontato con il piano
+di partenza secondo la strategia: si tiene solo se migliore (prima consegne
+servite, poi avvisi, poi chilometri). Un errore, un piano peggiore o la libreria
+assente lasciano il piano attuale; la diagnostica `search.ortools` indica stato,
+tempo e accettazione.
+
+Tempo: 0,15 s per consegna, tra 1 s e `FLEET_ORTOOLS_SECONDS` (predefinito 10 s;
+0 disattiva). La strategia «Distribuisci il lavoro» non lo usa ancora. Nei test è
+spento di default e si accende in `tests/test_fleet_ortools.py`. Il confronto su 47
+problemi che ha motivato la scelta è in
+[ortools-full-comparison-2026-11-02.md](ortools-full-comparison-2026-11-02.md).
+
 ## Percorso operativo
 
 1. Scegli data, ora e deposito comuni, risorse e rientro.

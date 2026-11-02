@@ -5,6 +5,13 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Più mezzi, strategia «Riduci chilometri e tempi»: dopo il calcolo attuale il
+  piano passa a Google OR-Tools, che parte da quel piano e cerca giri più corti.
+  Si tiene solo se migliore e senza perdere consegne (nel confronto su 47
+  problemi: -14% di km con 50 consegne, -30% con 100). Da 1 a 10 secondi in più
+  secondo il numero di consegne; regolabile con FLEET_ORTOOLS_SECONDS (0 lo
+  spegne). Nuova dipendenza: ortools 9.15.6755.
+
 - Tempo di scarico stimato dai colli: per clienti e ordini senza un tempo proprio
   il calcolo usa minuti fissi più un tempo per collo (predefiniti 4 minuti + 15
   secondi, massimo 30: 3 colli 5 minuti, 40 colli 14). Il tempo scritto a mano

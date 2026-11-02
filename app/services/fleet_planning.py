@@ -228,6 +228,48 @@ def distribute(db,user,data,assignments=None):
     return result
 
 
+def _ortools_improvement(rows,vehicle_data,matrix,points,data,limits,refined,results,evaluate,search):
+    """OR-Tools parte dal piano trovato e propone giri più corti: resta solo se migliore.
+
+    Confronto su 47 problemi: docs/ortools-full-comparison-2026-11-02.md. Il piano
+    proposto passa dal calendario canonico e dal riordino esatto dei giri brevi come
+    ogni altro candidato; un errore o un piano peggiore lasciano quello attuale.
+    """
+    from . import fleet_ortools
+    from .fleet_search import refine_routes,_better
+    from .fleet_route_evaluator import FixedRouteEvaluator
+    from .fleet_working_clock import _plan_key
+    seconds=fleet_ortools.seconds_budget(len(rows))
+    if not seconds or not rows or not fleet_ortools.available():
+        search['ortools']={'status':'disabled' if not seconds else 'unavailable'}
+        return refined,results
+    try:
+        orders,report=fleet_ortools.improve(rows,vehicle_data,matrix,data.orario_partenza,data.rientro_deposito,limits,refined,seconds)
+    except Exception as exc:  # Un problema del solutore esterno non deve fermare la pianificazione.
+        search['ortools']={'status':'error','error':type(exc).__name__}
+        return refined,results
+    report['accepted']=False
+    if orders is not None:
+        score=lambda sequence,resource:evaluate([rows[i] for i in sequence],resource)
+        scores=tuple(score(order,v) if order else None for v,order in enumerate(orders))
+        if all(value is not None for order,value in zip(orders,scores) if order):
+            orders,scores,_=refine_routes(orders,scores,score,strategy=data.strategy,global_exact=False,
+                prepare=lambda sequence,resource:FixedRouteEvaluator(
+                    rows,sequence,matrix,points,vehicle_data[resource],data.rientro_deposito,
+                    data.orario_partenza,limits[resource]))
+            before=_plan_key(refined,results,rows,vehicle_data,data.strategy)
+            after=_plan_key(orders,scores,rows,vehicle_data,data.strategy)
+            report.update(served_before=-before[0],served_after=-after[0],km_before=round(before[2],2),km_after=round(after[2],2))
+            if _better(after,before):
+                report['accepted']=True
+                search['ortools']=report
+                return orders,scores
+        else:
+            report['rejected']='canonical-schedule'
+    search['ortools']=report
+    return refined,results
+
+
 def _distribute(db,user,data,assignments=None):
     from ..routers.routes import build_vehicle_dict
     from .distance_cache import point_key
@@ -455,6 +497,8 @@ def _distribute(db,user,data,assignments=None):
             rows,sequence,matrix,points,vehicle_data[resource],data.rientro_deposito,
             data.orario_partenza,limits[resource]))
     search.update(refinement)
+    if assignments is None and data.strategy=='efficient' and not search.get('global_optimum_proven'):
+        refined,results=_ortools_improvement(rows,vehicle_data,matrix,points,data,limits,refined,results,evaluate,search)
     routes=[[rows[i] for i in sequence] for sequence in refined]
     for resource,sequence in enumerate(routes):
         if sequence and results[resource] is None:

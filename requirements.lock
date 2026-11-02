@@ -1,6 +1,7 @@
 # Versioni esatte di tutte le dipendenze, incluse quelle indirette (Linux/Docker).
 # Usato come vincolo: pip install -r requirements.txt -c requirements.lock
 # Rigenerare dopo ogni modifica a requirements.txt, rieseguendo test e pip-audit.
+absl-py==2.5.1
 annotated-doc==0.0.5
 annotated-types==0.8.0
 anyio==4.15.1
@@ -18,15 +19,18 @@ httpcore==1.0.9
 httptools==0.9.0
 httpx==0.28.1
 idna==3.20
+immutabledict==4.3.1
 iniconfig==2.3.1
 jmespath==1.1.0
 numpy==2.5.4
 openpyxl==3.1.5
 opentelemetry-api==1.45.1
+ortools==9.15.6755
 packaging==26.3
 pandas==2.2.3
 pillow==12.3.0
 pluggy==1.6.0
+protobuf==6.33.6
 psycopg2-binary==2.9.10
 pycparser==3.11
 pydantic==2.14.1
