@@ -1751,13 +1751,9 @@ function advanceRoutePlanning(){
 }
 
 let customerDirectoryPlanning=false;
+// Finestra «Aggiungi clienti» con filtri e scelta multipla: planning-pickers.js.
 function openPlanningCustomerPicker(){
-  const dialog=document.getElementById('planningCustomerDialog');
-  if(!dialog)return;
-  set('planningCustomerSearch','');
-  dialog.showModal();
-  document.getElementById('planningCustomerSearch').focus();
-  loadCustomerPicker();
+  globalThis.GFPlanningPickers?.openCustomers();
 }
 function updateRoutePlanningGateV68(){
   const btn = document.getElementById("openCustomerStepBtn");
@@ -3141,15 +3137,15 @@ function requirePlannableCustomer(c){
 
 let planningPickerCustomers=new Map();
 async function loadCustomerPicker(){
-  const modal=document.getElementById('planningCustomerDialog')?.open;
-  const box = document.getElementById(modal ? 'planningCustomerResults' : 'customerPickerList');
+  // La finestra «Aggiungi clienti» ha filtri e caricamento propri (planning-pickers.js).
+  const box = document.getElementById('customerPickerList');
   if(!box) return;
   const params = new URLSearchParams({
-    q: document.getElementById(modal ? "planningCustomerSearch" : "pickQ")?.value || "",
-    comune: modal ? "" : document.getElementById("pickComune")?.value || "",
-    provincia: modal ? "" : document.getElementById("pickProvincia")?.value || "",
-    ztl: modal ? "" : document.getElementById("pickZtl")?.value || "",
-    sponda: modal ? "" : document.getElementById("pickSponda")?.value || "",
+    q: document.getElementById("pickQ")?.value || "",
+    comune: document.getElementById("pickComune")?.value || "",
+    provincia: document.getElementById("pickProvincia")?.value || "",
+    ztl: document.getElementById("pickZtl")?.value || "",
+    sponda: document.getElementById("pickSponda")?.value || "",
     limit: "50", planning_only: "true"
   });
   const request=(loadCustomerPicker.request||0)+1;

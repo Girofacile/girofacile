@@ -66,6 +66,19 @@ class SelectionSnapshot(BaseModel):
     stops: list[DeliveryIn] | None = Field(default=None, max_length=MAX_SELECTION)
 
 
+class AppendOrders(BaseModel):
+    """Ordini aggiunti a una pianificazione aperta senza rigenerare le fermate esistenti."""
+    model_config = ConfigDict(extra='forbid')
+    order_ids: list[int] = Field(min_length=1, max_length=200)
+    data_giro: date
+    group_orders: bool = False
+    stops: list[DeliveryIn] = Field(default_factory=list, max_length=MAX_SELECTION)
+    # Presente quando si pianifica dalla selezione ordini: la selezione salvata si aggiorna.
+    version: int | None = Field(default=None, ge=1)
+    # Giro in modifica: i suoi ordini già riservati restano validi.
+    route_id: int | None = None
+
+
 class SelectionVerify(BaseModel):
     model_config = ConfigDict(extra='forbid')
     version: int = Field(ge=1)

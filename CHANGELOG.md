@@ -5,6 +5,17 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Pianificazione, lista delle consegne: nuovo tasto «Aggiungi ordine» accanto ad
+  «Aggiungi cliente». Si apre una finestra con gli ordini pronti e non ancora
+  programmati per la data del giro (ricerca e provenienza), si spuntano e si
+  aggiungono alle consegne senza ripartire da capo: mezzi, autisti, turni e
+  modifiche alle fermate restano. Se la selezione unisce gli ordini per
+  destinatario, il nuovo ordine entra nella fermata compatibile già presente.
+- «Aggiungi cliente» ridisegnato con lo stesso schema: finestra grande con
+  ricerca e filtri per comune, provincia e agente, tabella con caselle di spunta
+  e «seleziona tutti», aggiunta di più clienti insieme. I clienti già nel giro e
+  quelli raggiungibili solo in traghetto non si possono spuntare.
+
 - Clienti raggiungibili solo in traghetto (isole e, dal deposito su un'isola,
   il continente): esclusi in automatico dal giro singolo e dalla pianificazione
   a più mezzi, con l'avviso «Consegna non programmabile: il cliente si trova su

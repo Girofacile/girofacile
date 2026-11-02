@@ -1,10 +1,11 @@
 """Private, resumable selections for each company operator."""
+from datetime import date
 from fastapi import APIRouter, Depends, Request, HTTPException
 from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models import User
 from ..core.dependencies import current_user
-from ..schemas.order_planning import SelectionChange, SelectionSnapshot, SelectionVerify, SelectionAddressResolution
+from ..schemas.order_planning import SelectionChange, SelectionSnapshot, SelectionVerify, SelectionAddressResolution, AppendOrders
 from ..services import order_planning as service
 from .orders import actor_key
 
@@ -46,6 +47,25 @@ def prepare_preview(data: SelectionSnapshot, request: Request, db: Session = Dep
         row, warnings = service.preview(db,user,actor_key(request,user),data)
         db.commit()
         return service.selection_response(db,row) | {'warnings':warnings}
+    except Exception:
+        db.rollback(); raise
+
+
+@router.get('/available')
+def available_orders(data_giro: date, deposit_id: int | None = None, db: Session = Depends(get_db), user: User = Depends(current_user)):
+    from ..models import Deposit
+    from .routes import _require_owned_entity
+    deposit = _require_owned_entity(db, Deposit, user, deposit_id, 'Deposito') if deposit_id else None
+    depot = {'lat': deposit.lat, 'lon': deposit.lon} if deposit and deposit.lat is not None and deposit.lon is not None else None
+    return {'orders': service.available(db, user.id, data_giro, depot)}
+
+
+@router.post('/stops')
+def append_orders(data: AppendOrders, request: Request, db: Session = Depends(get_db), user: User = Depends(current_user)):
+    try:
+        result, row = service.append_stops(db, user, actor_key(request, user), data)
+        db.commit()
+        return result | ({'selection': service.selection_response(db, row)} if row is not None else {})
     except Exception:
         db.rollback(); raise
 

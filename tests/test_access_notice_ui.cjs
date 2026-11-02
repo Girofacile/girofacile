@@ -31,7 +31,7 @@ test('orders list and order details display separately detected access notices',
 
 test('dashboard loads cache-busted scripts and describes both GeoJSON sources',()=>{
  assert.match(html,/customers\.js\?v=gf_bozze_20261026/);
- assert.match(html,/core\.js\?v=gf_attesa_20261101/);
+ assert.match(html,/core\.js\?v=gf_aggiungi_20261102/);
  assert.match(html,/Avvisi ZTL \/ area pedonale indicativi/);
 });
 

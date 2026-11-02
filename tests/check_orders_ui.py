@@ -84,7 +84,7 @@ def main():
                               '/api/customers':[
                                   {'id':101,'nome':'Cliente verificato','indirizzo':'Via Roma 1','stato_geocodifica':'verificato','lat':45.46,'lon':9.19,'tempo_scarico_min':15},
                                   {'id':102,'nome':'Cliente da verificare','indirizzo':'Via Roma 2','stato_geocodifica':'da_verificare','lat':None,'lon':None}],'/api/deposits':DEPOSITS,'/api/vehicles':VEHICLES,'/api/drivers':DRIVERS,
-                              '/api/vehicles/usage':USAGE,'/api/agents':[],'/api/routes':[],
+                              '/api/vehicles/usage':USAGE,'/api/agents':[],'/api/routes':[],'/api/resources/availability':dict(vehicles=VEHICLES,drivers=DRIVERS),
                               '/api/notifications':{'items':[],'unread':0},'/api/notifications/count':{'unread':0},
                               '/api/driver/admin/chat-threads':[],'/api/driver/admin/unread':{'total':0,'routes':[]},
                               '/api/onboarding/status':{'completed':True,'workspace_operational':True,'steps':[]}}.get(path,{})
@@ -179,12 +179,16 @@ def main():
                     assert page.locator('#planningCustomerDialog').is_visible()
                     assert page.locator('#customerPlanningStep').is_hidden()
                     page.locator('#planningCustomerSearch').fill('Cliente verificato')
-                    page.locator('#planningCustomerResults').get_by_role('button',name='+ Aggiungi',exact=True).first.click()
+                    page.locator('#planningCustomerResults input[data-pick]:not([disabled])').first.check()
+                    page.locator('#planningCustomerDialog').get_by_role('button',name='Aggiungi 1 cliente',exact=True).click()
+                    assert not page.locator('#planningCustomerDialog').is_visible()
                     page.wait_for_function('deliveries.length===3 && deliveries[2].customer_id===101')
                     page.evaluate('GFOrderPlanning.beforeCalculate()')
                     assert page.evaluate('deliveries.length===3 && deliveries[2].customer_id===101')
                     assert len(client.get('/api/order-planning/selection').json()['stops'])==3
-                    page.locator('#planningCustomerDialog').get_by_role('button',name='Chiudi',exact=True).click()
+                    page.locator('#deliveryTableArea').get_by_role('button',name='Aggiungi ordine',exact=True).click()
+                    assert page.locator('#planningOrderDialog').is_visible()
+                    page.locator('#planningOrderDialog').get_by_role('button',name='Annulla',exact=True).click()
                     page.locator('#deliveryBody tr').last.get_by_role('button',name='Elimina',exact=True).click()
                     page.evaluate('GFOrderPlanning.flush()')
                     assert page.evaluate("deliveries.length===2 && deliveries.reduce((sum,d)=>sum+d.colli,0)===8")

@@ -17,7 +17,7 @@ from ..core.dependencies import current_user, owned
 from ..core.utils import time_to_hhmm, parse_time_value
 from ..database import get_db
 from ..services.customer_import import read_customer_import, preflight_customer_import, customer_address_key, invalidate_imported_address, unload_minutes
-from ..models import Agent, Customer, User
+from ..models import Agent, Customer, Deposit, User
 from ..routers.agents import agent_full_name
 from ..schemas import CustomerIn
 from ..services.geocoding import apply_geocode, geocode_customer, geocode_address, GeocodingUnavailable
@@ -105,7 +105,7 @@ def safe_geocode_customer(customer):
 def list_customers(
     q: str = "", provincia: str = "", comune: str = "",
     ztl: str = "", sponda: str = "", agent_id: str = "",
-    limit: int = 300, offset: int = 0, planning_only: bool = False,
+    limit: int = 300, offset: int = 0, planning_only: bool = False, deposit_id: int | None = None,
     db: Session = Depends(get_db), user: User = Depends(current_user),
 ):
     query = owned(db.query(Customer), Customer, user)
@@ -140,7 +140,16 @@ def list_customers(
         rows = filtered[max(0, offset):max(0, offset) + max(10, min(limit, 1000))]
     else:
         rows = query.offset(max(0, offset)).limit(max(10, min(limit, 1000))).all()
-    return [customer_to_dict(x) for x in rows]
+    result = [customer_to_dict(x) for x in rows]
+    if deposit_id:
+        # Pianificazione: clienti raggiungibili dal deposito solo in traghetto.
+        from ..services.islands import ferry_reason
+        deposit = owned(db.query(Deposit), Deposit, user).filter(Deposit.id == deposit_id).first()
+        if deposit and deposit.lat is not None and deposit.lon is not None:
+            depot = {"lat": deposit.lat, "lon": deposit.lon}
+            for item, row in zip(result, rows):
+                item["ferry_reason"] = ferry_reason(depot, {"lat": row.lat, "lon": row.lon})
+    return result
 
 
 @router.post("")

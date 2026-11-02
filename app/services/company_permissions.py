@@ -146,9 +146,9 @@ rule("PUT", ["/api/order-sources/{source_id}", "/api/order-sources/{source_id}/f
 rule("DELETE", ["/api/order-sources/{source_id}"], "orders.integrations")
 rule("POST", ["/api/order-sources/{source_id}/upload", "/api/order-sources/{source_id}/runs/{run_id}/preview"], "orders.import", "orders.integrations")
 rule("POST", ["/api/order-sources/{source_id}/runs/{run_id}/commit"], "orders.import")
-rule("GET", ["/api/order-planning/selection"], "orders.plan")
+rule("GET", ["/api/order-planning/selection", "/api/order-planning/available"], "orders.plan")
 rule("PUT", ["/api/order-planning/selection", "/api/order-planning/snapshot"], "orders.plan")
-rule("POST", ["/api/order-planning/preview", "/api/order-planning/verify-selected", "/api/order-planning/resolve-address"], "orders.plan")
+rule("POST", ["/api/order-planning/preview", "/api/order-planning/verify-selected", "/api/order-planning/resolve-address", "/api/order-planning/stops"], "orders.plan")
 # Giri in bozza: chi può pianificare dagli ordini o dai clienti.
 rule("GET", ["/api/planning-drafts"], "orders.plan", "routes.plan")
 rule("POST", ["/api/planning-drafts", "/api/planning-drafts/{draft_id}/resume"], "orders.plan", "routes.plan")

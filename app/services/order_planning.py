@@ -134,6 +134,80 @@ def selection_stops(db, row):
     return stops
 
 
+def available(db, user_id, route_date, depot=None):
+    """Ordini pronti, liberi e con indirizzo verificato per la data del giro."""
+    from ..order_models import OrderSource
+    from .islands import ferry_reason
+    sources = {s.id: s.name for s in db.query(OrderSource).filter(OrderSource.user_id == user_id)}
+    query = db.query(Order).filter(
+        Order.user_id == user_id, Order.status == 'pronto',
+        ~Order.id.in_(db.query(RouteOrderAssignment.order_id)),
+        or_(Order.requested_date.is_(None), Order.requested_date == route_date),
+    ).order_by(Order.number, Order.id).limit(MAX_SELECTION)
+    rows = []
+    for order in query:
+        values = order.operational_data or {}
+        verified = order.address_verification or {}
+        if (not values.get('recipient_name') or verified.get('input_address') != values.get('delivery_address')
+                or not has_verified_coordinates(verified.get('stato_geocodifica'), verified.get('lat'), verified.get('lon'))):
+            continue
+        rows.append({'id': order.id, 'number': order.number, 'source': sources.get(order.source_id, ''),
+                     'recipient_name': values['recipient_name'], 'address': verified.get('indirizzo'),
+                     'requested_date': order.requested_date.isoformat() if order.requested_date else None,
+                     'weight_kg': values.get('weight_kg'), 'packages': values.get('packages'),
+                     'time_from': (values.get('time_from') or '')[:5] or None, 'time_to': (values.get('time_to') or '')[:5] or None,
+                     'ferry_reason': ferry_reason(depot, verified) if depot else None})
+    return rows
+
+
+def append_stops(db, user, actor, data):
+    """Fermate per gli ordini scelti; con l'unione attiva entrano nella fermata compatibile esistente."""
+    from .order_grouping import group_stops, compatible, merge
+    from .route_orders import validate_references
+    ids = sorted(set(data.order_ids))
+    current = [s.model_dump(mode='json') for s in data.stops]
+    # Verifica le fermate attuali e ne ricostruisce numeri e dati operativi degli ordini.
+    validate_references(db, user.id, current, route_id=data.route_id, route_date=data.data_giro)
+    present = {ref['id'] for stop in current for ref in stop.get('order_refs') or []}
+    if present & set(ids):
+        raise HTTPException(409, 'Uno o più ordini sono già tra le consegne del giro.')
+    orders = db.query(Order).filter(Order.user_id == user.id, Order.id.in_(ids)).order_by(Order.id).all()
+    if len(orders) != len(ids):
+        raise HTTPException(404, 'Uno o più ordini non sono disponibili.')
+    if db.query(RouteOrderAssignment.id).filter(RouteOrderAssignment.order_id.in_(ids)).first():
+        raise HTTPException(409, 'Un ordine è già riservato a un giro. Aggiorna l’elenco degli ordini.')
+    for order in orders:
+        if order.status != 'pronto':
+            raise HTTPException(409, f'Ordine {order.number}: non è più pronto per la pianificazione.')
+        if order.requested_date and order.requested_date != data.data_giro:
+            raise HTTPException(422, f"Ordine {order.number}: la data richiesta è {order.requested_date.strftime('%d/%m/%Y')}.")
+    added = [to_stop(order) for order in orders]
+    merged = {}
+    if data.group_orders:
+        added = group_stops(user.id, added)
+        remaining = []
+        for stop in added:
+            index = next((i for i, row in enumerate(current)
+                          if row.get('order_refs') and compatible([merged.get(i, row), stop])), None)
+            if index is None:
+                remaining.append(stop)
+            else:
+                merged[index] = merge(user.id, [merged.get(index, current[index]), stop])
+        added = remaining
+    row = None
+    if data.version is not None:
+        row = selection(db, user.id, actor, lock=True)
+        check_version(row, data.version)
+        if row is None:
+            raise HTTPException(404, 'Selezione non trovata')
+        row.order_ids = sorted(set(row.order_ids) | set(ids))
+        row.stops = [merged.get(i, stop) for i, stop in enumerate(current)] + added
+        row.version += 1
+        row.updated_at = utc_now()
+        db.flush()
+    return {'added': added, 'merged': [{'index': i, 'stop': stop} for i, stop in sorted(merged.items())]}, row
+
+
 def preview(db, user, actor, data):
     row = snapshot(db, user.id, actor, data)
     config = row.configuration

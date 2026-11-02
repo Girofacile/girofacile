@@ -33,7 +33,7 @@
 
 <!-- Shared GiroFacile design system; legacy sheets retain feature layout. -->
 <link rel="stylesheet" href="/static/design-system/theme.css?v=gf_frecce_grigie_20261101">
-<link rel="stylesheet" href="/static/design-system/components.css?v=gf_attesa_20261101">
+<link rel="stylesheet" href="/static/design-system/components.css?v=gf_aggiungi_20261102">
 <link rel="stylesheet" href="/static/design-system/layout.css?v=gf_banner_unico_20261101">
 <link rel="stylesheet" href="/static/design-system/workspace.css?v=gf_selection_20261016">
 <link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007_reference_2">
@@ -566,6 +566,7 @@
               <footer class="gf-panel__footer gf-cluster" data-justify="end">
                 <button type="button" class="gf-button" data-variant="primary" onclick="openOccasionalStopModal()"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14 M5 12h14"/></svg>Aggiungi fermata occasionale</button>
                 <button type="button" class="gf-button" data-variant="primary" onclick="openPlanningCustomerPicker()"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14 M5 12h14"/></svg>Aggiungi cliente</button>
+                <button type="button" class="gf-button" data-variant="primary" onclick="GFPlanningPickers.openOrders()"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14 M5 12h14"/></svg>Aggiungi ordine</button>
               </footer>
               <small id="ztlDataAttribution" class="gf-muted" hidden>Avvisi ZTL / area pedonale indicativi · dati automatici: <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap contributors</a>. Verifica sempre le regole locali.</small>
             </div>
@@ -1422,11 +1423,33 @@
   </div>
 </dialog>
 
-<dialog id="planningCustomerDialog" class="gf-dialog" aria-labelledby="planningCustomerDialogTitle">
-  <div class="gf-stack">
-    <header class="gf-cluster" data-justify="between"><h2 id="planningCustomerDialogTitle" class="gf-subtitle">Aggiungi cliente</h2><button type="button" class="gf-button" data-variant="ghost" data-size="sm" onclick="document.getElementById('planningCustomerDialog').close()">Chiudi</button></header>
-    <label class="gf-field" for="planningCustomerSearch"><span class="gf-field__label">Cerca per nome o codice cliente</span><input id="planningCustomerSearch" class="gf-input" type="search" placeholder="Nome o codice cliente" oninput="loadCustomerPicker()" autocomplete="off"></label>
-    <div id="planningCustomerResults" aria-live="polite"></div>
+<dialog id="planningCustomerDialog" class="gf-modal" data-size="lg" aria-labelledby="planningCustomerDialogTitle">
+  <div data-gf-modal-content>
+    <header class="gf-modal__header"><div><p class="gf-kicker">Pianifica giro</p><h2 class="gf-modal__title" id="planningCustomerDialogTitle">Aggiungi clienti</h2><p class="gf-muted">Filtra per zona e spunta i clienti da aggiungere al giro.</p></div><button type="button" class="gf-icon-button" data-close aria-label="Chiudi"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12 M18 6L6 18"/></svg></button></header>
+    <div class="gf-modal__body gf-stack">
+      <form class="gf-filters" role="search" aria-label="Filtra i clienti" onsubmit="return false">
+        <label class="gf-field" data-grow for="planningCustomerSearch"><span class="gf-field__label">Cerca</span><input id="planningCustomerSearch" class="gf-input" type="search" data-filter="q" placeholder="Nome, codice o indirizzo" autocomplete="off"></label>
+        <label class="gf-field" for="planningCustomerComune"><span class="gf-field__label">Comune</span><select id="planningCustomerComune" class="gf-select" data-filter="comune"></select></label>
+        <label class="gf-field" for="planningCustomerProvincia"><span class="gf-field__label">Provincia</span><select id="planningCustomerProvincia" class="gf-select" data-filter="provincia"></select></label>
+        <label class="gf-field" for="planningCustomerAgent"><span class="gf-field__label">Agente</span><select id="planningCustomerAgent" class="gf-select" data-filter="agente"></select></label>
+      </form>
+      <div id="planningCustomerResults" class="gf-table-wrap" data-results aria-live="polite"></div>
+    </div>
+    <footer class="gf-modal__footer"><span class="gf-muted" data-selected></span><button type="button" class="gf-button" data-variant="secondary" data-close>Annulla</button><button type="button" class="gf-button" data-variant="primary" data-submit disabled>Aggiungi clienti</button></footer>
+  </div>
+</dialog>
+
+<dialog id="planningOrderDialog" class="gf-modal" data-size="lg" aria-labelledby="planningOrderDialogTitle">
+  <div data-gf-modal-content>
+    <header class="gf-modal__header"><div><p class="gf-kicker">Pianifica giro</p><h2 class="gf-modal__title" id="planningOrderDialogTitle">Aggiungi ordini</h2><p class="gf-muted">Ordini pronti e non ancora programmati per la data del giro. Mezzi, autisti e fermate già impostati restano come sono.</p></div><button type="button" class="gf-icon-button" data-close aria-label="Chiudi"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12 M18 6L6 18"/></svg></button></header>
+    <div class="gf-modal__body gf-stack">
+      <form class="gf-filters" role="search" aria-label="Filtra gli ordini" onsubmit="return false">
+        <label class="gf-field" data-grow for="planningOrderSearch"><span class="gf-field__label">Cerca</span><input id="planningOrderSearch" class="gf-input" type="search" data-filter="q" placeholder="Numero ordine, destinatario o indirizzo" autocomplete="off"></label>
+        <label class="gf-field" for="planningOrderSource"><span class="gf-field__label">Provenienza</span><select id="planningOrderSource" class="gf-select" data-filter="fonte"></select></label>
+      </form>
+      <div id="planningOrderResults" class="gf-table-wrap" data-results aria-live="polite"></div>
+    </div>
+    <footer class="gf-modal__footer"><span class="gf-muted" data-selected></span><button type="button" class="gf-button" data-variant="secondary" data-close>Annulla</button><button type="button" class="gf-button" data-variant="primary" data-submit disabled>Aggiungi ordini</button></footer>
   </div>
 </dialog>
 
@@ -1609,13 +1632,13 @@
 <script src="/static/dashboard/js/navigation.js?v=gf_sidebar_fit_20261101"></script>
 <script src="/static/dashboard/js/history.js?v=gf_settimana_20261101"></script>
 <script src="/static/password-strength.js?v=gf_driver_flow_20261020"></script>
-<script src="/static/dashboard/js/collaborators.js?v=gf_bozze_pagina_20261027"></script>
+<script src="/static/dashboard/js/collaborators.js?v=gf_aggiungi_20261102"></script>
 <script src="/static/dashboard/js/orders.js?v=gf_warning_20261025"></script>
 <script src="/static/dashboard/js/order-import.js?v=gf_base_20261015u"></script>
 <script src="/static/dashboard/js/order-sources.js?v=gf_plans_20261023"></script>
 <script src="/static/dashboard/js/dashboard-real-map.js?v=gf_priority_hero_20261025"></script>
 <script src="/static/dashboard/js/in-progress-reference.js?v=gf_driver_flow_20261020"></script>
-<script src="/static/dashboard/js/core.js?v=gf_attesa_20261101"></script>
+<script src="/static/dashboard/js/core.js?v=gf_aggiungi_20261102"></script>
 <script src="/static/dashboard/js/dashboard-mobile.js?v=gf_dashboard_mobile_20261019"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=orders_2"></script>
 <link rel="stylesheet" href="/static/dashboard/css/fleet-review.css?v=gf_suddivisione_20261025">
@@ -1627,6 +1650,7 @@
 <script src="/static/dashboard/js/selected-addresses.js?v=gf_selected_addresses_20261019"></script>
 <script src="/static/dashboard/js/selected-customer-addresses.js?v=gf_customer_selected_addresses_20261020"></script>
 <script src="/static/dashboard/js/order-planning.js?v=gf_bozze_20261026"></script>
+<script src="/static/dashboard/js/planning-pickers.js?v=gf_aggiungi_20261102"></script>
 <script src="/static/dashboard/js/planning-drafts.js?v=gf_bozze_stile_20261027b"></script>
 <script src="/static/dashboard/js/tutor.js?v=gf_giro_prova_20261030"></script>
 

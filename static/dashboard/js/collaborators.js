@@ -59,6 +59,7 @@
       [/generateOperator|generate.*Token|TrackingLink|openCustomerTracking/,'routes.tracking'],
       [/send.*Chat|sendDriverMessage/,'chat.write'],
       [/openSupportPanel|submitSupportTicketV60|generateSupportTicketTextAIv67/,'support.write'],
+      [/GFPlanningPickers\.openOrders/,'orders.plan'],
     ];
     document.querySelectorAll('[onclick]').forEach(el=>{
       const code=el.getAttribute('onclick') || '';
