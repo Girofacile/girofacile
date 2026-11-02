@@ -102,9 +102,6 @@ def test_plan_metrics_detects_duplicates_and_soft_equipment_requirements():
     resources = [{"max_minutes": 480, "ha_sponda": False, "accesso_ztl": False}] * 2
     case = make_case(stops=[{"tempo_scarico_min": 0, "sponda": True, "ztl": True}],
                      resources=resources, travel=10)
-    # Explicit historical/manual advisory semantics remain testable; automatic
-    # planning now treats a requested tail lift as physically required.
-    case["hard_tail_lift"] = False
     valid = plan_metrics(case, [[0], []])
     assert valid["feasible"] and valid["mismatches"] == 2
     assert valid["served"] == 1 and valid["used"] == 1 and valid["makespan"] == 10
@@ -161,12 +158,14 @@ def test_exact_reference_keeps_distinct_km_and_time_witnesses():
     assert exact["balanced"]["orders"] == exact["time"]["orders"]
 
 
-def test_automatic_reference_rejects_missing_tail_lift_but_ztl_stays_advisory():
+def test_automatic_reference_keeps_missing_tail_lift_and_ztl_advisory():
     case = make_case(stops=[{"tempo_scarico_min": 0, "sponda": True, "ztl": True}],
                      resources=[{"max_minutes": 480, "ha_sponda": False, "accesso_ztl": False}],
                      travel=10)
-    assert route_replay(case, 0, [0])["errors"] == ["tail_lift:0"]
-    assert all(metrics["served"] == 0 for metrics in solve_exact(case).values())
+    missing = route_replay(case, 0, [0])
+    assert missing["feasible"] and missing["errors"] == []
+    assert missing["mismatches"] == 2
+    assert all(metrics["served"] == 1 for metrics in solve_exact(case).values())
     case["resources"][0]["ha_sponda"] = True
     allowed = route_replay(case, 0, [0])
     assert allowed["feasible"] and allowed["mismatches"] == 1

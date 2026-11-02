@@ -88,8 +88,7 @@ def service_domains(row, vehicle, start, available_minutes):
 
 
 def _compatible(row, vehicle):
-    if row.get('sponda') and not vehicle.get('ha_sponda', False):
-        return False
+    """Check blocking load limits; equipment differences remain advisory."""
     return all(vehicle.get(capacity) is None or float(row.get(demand) or 0) <= float(vehicle[capacity])
                for demand, capacity in (('peso_kg', 'capacita_kg'), ('colli', 'capacita_colli')))
 
@@ -100,8 +99,11 @@ def _plan_key(routes, results, rows, vehicles, strategy):
         raw = score.get('_objective') if score else None
         distances.append(float(raw[0] if raw else score['total_km']) if score else 0.0)
         durations.append(float(raw[1] if raw else score['total_min']) if score else 0.0)
-    common = (-sum(map(len, routes)), sum(bool(rows[i].get('ztl')) and not vehicles[v].get('accesso_ztl', False)
-        for v, order in enumerate(routes) for i in order))
+    mismatches = sum(
+        int(bool(rows[i].get('sponda')) and not vehicles[v].get('ha_sponda', False))
+        + int(bool(rows[i].get('ztl')) and not vehicles[v].get('accesso_ztl', False))
+        for v, order in enumerate(routes) for i in order)
+    common = (-sum(map(len, routes)), mismatches)
     used = sum(bool(order) for order in routes)
     if strategy == 'balanced':
         return common + (-used, max(durations, default=0), sum(t*t for t in durations),

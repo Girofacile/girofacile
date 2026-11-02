@@ -117,9 +117,9 @@ def test_road_windows_equipment_and_remaining_availability(fleet):
                       driver_id=r['driver_id'],vehicle_id=r['vehicle_id'],totale_minuti=60,status='programmato')
     db.add(booking);db.commit()
     plan=preview(fleet,data)
-    assert all(0 not in route['stop_indexes'] for route in plan['routes'])
-    assert [stop['index'] for stop in plan['unassigned']]==[0]
-    assert 'sponda' in plan['unassigned'][0]['reason'].lower()
+    assert plan['unassigned']==[]
+    assert sorted(i for route in plan['routes'] for i in route['stop_indexes'])==list(range(4))
+    assert any('richiede la sponda' in warning for warning in plan['warnings'])
     assert all(route['result']['total_min']<=40 for route in plan['routes'] if route['resource']==1)
     # A booking later in the morning does not hide a resource available at departure.
     available=ctx[0].get('/api/resources/availability?data_giro=2099-01-15&orario=08:00&preview_minutes=1').json()
@@ -266,7 +266,7 @@ def test_tail_lift_prefers_equipped_vehicle(fleet,strategy):
 
 
 @pytest.mark.parametrize('equipped_but_full',[False,True])
-def test_tail_lift_unavailable_requires_accepting_unassigned_before_programming(fleet,equipped_but_full):
+def test_tail_lift_unavailable_warns_and_allows_programming_all_deliveries(fleet,equipped_but_full):
     ctx, original=fleet
     data=deepcopy(original);data['consegne']=data['consegne'][:2]
     ctx[2].needs_tail_lift=True
@@ -277,18 +277,19 @@ def test_tail_lift_unavailable_requires_accepting_unassigned_before_programming(
     ctx[1].commit()
     data['consegne'][0]['sponda']=True
     plan=preview(fleet,data)
-    assert [stop['index'] for stop in plan['unassigned']]==[0]
-    assert all(0 not in route['stop_indexes'] for route in plan['routes'])
-    assert 'sponda' in plan['unassigned'][0]['reason'].lower()
-    assert command(fleet,plan,'confirm').status_code==422
-    assert ctx[1].query(RoutePlan).count()==0
-    saved=command(fleet,plan,'confirm',accept_unassigned=True)
+    assert plan['unassigned']==[]
+    assert sorted(i for route in plan['routes'] for i in route['stop_indexes'])==[0,1]
+    assert any('richiede la sponda, ma il mezzo non la possiede' in warning
+               for warning in plan['warnings'])
+    saved=command(fleet,plan,'confirm')
     assert saved.status_code==200,saved.text
     programmed=command(fleet,saved.json(),'program')
     assert programmed.status_code==200,programmed.text
+    assert any('richiede la sponda' in warning for warning in programmed.json()['warnings'])
     routes=ctx[1].query(RoutePlan).all()
-    assert sum(len(r.deliveries) for r in routes)==1
-    assert all(not d.sponda for r in routes for d in r.deliveries)
+    assert sum(len(r.deliveries) for r in routes)==2
+    assert any(d.sponda and 'sponda' in (d.warning or '').lower()
+               for r in routes for d in r.deliveries)
     assert all(r.status=='programmato' for r in routes)
 
 

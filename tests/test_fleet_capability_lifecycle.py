@@ -1,4 +1,4 @@
-"""Required tail lifts remain valid through preview, save and programming.
+"""Tail-lift warnings preserve deliveries through preview, save and programming.
 
 Only isolated account/routing fixture plumbing is reused. The stops and
 capability changes are new; all road and traffic providers remain frozen.
@@ -46,24 +46,24 @@ def _lose_selected_lift(fixture, plan):
     return vehicle
 
 
-def test_automatic_preview_cannot_be_saved_after_selected_vehicle_loses_lift(lift_lifecycle):
+def test_automatic_preview_can_be_saved_after_selected_vehicle_loses_lift(lift_lifecycle):
     fixture, payload = lift_lifecycle
     plan = preview(fixture, payload)
-    assert plan['search']['tail_lift_required'] is True
+    assert plan['search'].get('tail_lift_required', False) is False
     assert plan['unassigned'] == []
     _lose_selected_lift(lift_lifecycle, plan)
 
-    rejected = command(fixture, plan, 'confirm')
-    assert rejected.status_code == 422, rejected.text
-    assert 'sponda' in rejected.json()['detail'].lower()
+    saved = command(fixture, plan, 'confirm')
+    assert saved.status_code == 200, saved.text
+    assert any('richiede la sponda' in warning.lower() for warning in saved.json()['warnings'])
     db = fixture[0][1]
-    assert db.query(RoutePlan).count() == 0
+    assert sum(len(route.deliveries) for route in db.query(RoutePlan)) == 2
     db.expire_all()
     persisted = db.get(FleetPlan, plan['id'])
-    assert persisted.status == 'preview' and persisted.route_ids == []
+    assert persisted.status == 'saved' and persisted.route_ids
 
 
-def test_saved_automatic_plan_cannot_be_programmed_after_lift_is_removed(lift_lifecycle):
+def test_saved_automatic_plan_can_be_programmed_with_warning_after_lift_is_removed(lift_lifecycle):
     fixture, payload = lift_lifecycle
     plan = preview(fixture, payload)
     saved_response = command(fixture, plan, 'confirm')
@@ -72,13 +72,14 @@ def test_saved_automatic_plan_cannot_be_programmed_after_lift_is_removed(lift_li
     assert saved['route_ids']
     _lose_selected_lift(lift_lifecycle, plan)
 
-    rejected = command(fixture, saved, 'program')
-    assert rejected.status_code == 422, rejected.text
-    assert 'sponda' in rejected.json()['detail'].lower()
+    programmed = command(fixture, saved, 'program')
+    assert programmed.status_code == 200, programmed.text
+    assert any('richiede la sponda' in warning.lower() for warning in programmed.json()['warnings'])
     db = fixture[0][1]
     db.expire_all()
-    assert db.query(RoutePlan).filter(RoutePlan.status == 'programmato').count() == 0
-    assert all(db.get(RoutePlan, route_id).status != 'programmato' for route_id in saved['route_ids'])
+    assert all(db.get(RoutePlan, route_id).status == 'programmato' for route_id in saved['route_ids'])
+    assert any(delivery.sponda and 'sponda' in (delivery.warning or '').lower()
+               for route in db.query(RoutePlan) for delivery in route.deliveries)
 
 
 def test_manual_revision_keeps_explicit_incompatible_choice_with_warning(lift_lifecycle):
@@ -106,14 +107,17 @@ def test_manual_revision_keeps_explicit_incompatible_choice_with_warning(lift_li
     assert all(route.status == 'programmato' for route in db.query(RoutePlan))
 
 
-def test_historical_soft_policy_remains_readable_and_programmable(lift_lifecycle):
+@pytest.mark.parametrize('previously_strict', [False, True])
+def test_saved_policy_marker_cannot_reintroduce_a_tail_lift_block(lift_lifecycle, previously_strict):
     fixture, payload = lift_lifecycle
     client, db = fixture[0][:2]
     plan = preview(fixture, payload)
     persisted = db.get(FleetPlan, plan['id'])
     old_result = deepcopy(persisted.result)
-    old_result['search'].pop('tail_lift_required', None)
-    old_result['search']['equipment_policy'] = 'prefer-compatible-with-warning-fallback'
+    old_result['search']['tail_lift_required'] = previously_strict
+    old_result['search']['equipment_policy'] = (
+        'tail-lift-required-ztl-warning-fallback' if previously_strict
+        else 'prefer-compatible-with-warning-fallback')
     persisted.result = old_result
     db.commit()
     _lose_selected_lift(lift_lifecycle, plan)
@@ -122,7 +126,6 @@ def test_historical_soft_policy_remains_readable_and_programmable(lift_lifecycle
     assert response.status_code == 200, response.text
     restored = response.json()
     assert restored['id'] == plan['id']
-    assert not restored['search'].get('tail_lift_required', False)
     assert restored['routes']
 
     saved = command(fixture, restored, 'confirm')
@@ -130,3 +133,7 @@ def test_historical_soft_policy_remains_readable_and_programmable(lift_lifecycle
     programmed = command(fixture, saved.json(), 'program')
     assert programmed.status_code == 200, programmed.text
     assert any('sponda' in warning.lower() for warning in programmed.json()['warnings'])
+    assert sum(len(route.deliveries) for route in db.query(RoutePlan)) == 2
+    assert all(route.status == 'programmato' for route in db.query(RoutePlan))
+    assert any(delivery.sponda and 'sponda' in (delivery.warning or '').lower()
+               for route in db.query(RoutePlan) for delivery in route.deliveries)

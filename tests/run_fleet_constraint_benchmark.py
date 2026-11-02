@@ -3,7 +3,9 @@
 Every candidate is replayed by an independent calendar. All witnesses stay in
 the test harness; only delivery, road, vehicle and driver input enters the real
 planning service. Cached answers are accepted only when their engine/source
-hashes and complete case inputs match the frozen published baseline.
+hashes and complete case inputs match the frozen published baseline. Both
+implementations use the current input adapter and advisory-equipment replay;
+the comparison includes intentional policy changes as well as search changes.
 """
 from __future__ import annotations
 
@@ -27,7 +29,7 @@ sys.path.insert(0, str(ROOT / 'tests'))
 from fleet_constraint_holdout import constraint_holdout_cases
 from fleet_upgrade_cases import upgrade_cases
 from routing_quality_fleet import run_fleet
-from run_fleet_upgrade_benchmark import examine
+from run_fleet_upgrade_benchmark import examine, shared_fleet_source_matches
 from run_routing_quality_audit import first_difference, serializable_case
 
 BASELINE_COMMIT = 'dbe4641271fd95a8a8b78c93ab169306d86e131e'
@@ -64,9 +66,9 @@ def frozen_sources():
     files = [*(f'app/services/{name}.py' for name in MODULES), *SHARED_FILES, *INPUT_FILES]
     sources = {path: subprocess.check_output(
         ['git', 'show', f'{BASELINE_COMMIT}:{path}'], cwd=ROOT) for path in files}
-    for path in (*SHARED_FILES, *INPUT_FILES):
-        if sources[path] != (ROOT / path).read_bytes():
-            raise ValueError(f'Shared optimizer/calendar or input adapter changed since baseline: {path}')
+    for path in SHARED_FILES:
+        if not shared_fleet_source_matches(path,sources[path],(ROOT / path).read_bytes()):
+            raise ValueError(f'Shared optimizer/calendar changed since baseline: {path}')
     return sources
 
 
@@ -99,19 +101,23 @@ def cached_baseline(cases, sources, directory):
     inputs_path = directory / 'inputs.json'
     if not all(path.is_file() for path in (results_path, outputs_path, inputs_path)):
         return {}, None
+    provenance = dict(directory=str(directory), results_sha256=digest(results_path.read_bytes()),
+                      inputs_sha256=digest(inputs_path.read_bytes()),
+                      outputs_sha256=digest(outputs_path.read_bytes()), validated_answers=0)
     previous = json.loads(results_path.read_text())
     if previous['metadata'].get('source_changed_during_campaign'):
-        raise ValueError('Cached baseline campaign changed sources while running')
+        return {}, dict(provenance, ignored_reason='cached_sources_changed_during_campaign')
     measured = previous['metadata']['source_hashes']
     for path, source in sources.items():
         if measured.get(path) != digest(source):
-            raise ValueError(f'Cached baseline source differs from published baseline: {path}')
+            return {}, dict(provenance, ignored_reason=f'cached_source_differs_from_baseline: {path}')
     prior_inputs = {case['id']: case for case in json.loads(inputs_path.read_text())}
-    permitted = set()
+    permitted, changed_inputs = set(), []
     for case in cases:
         if case['id'] in prior_inputs:
             if prior_inputs[case['id']] != serializable_case(case):
-                raise ValueError(f'Cached input differs from requested case: {case["id"]}')
+                changed_inputs.append(case['id'])
+                continue
             permitted.add(case['id'])
     answers = {}
     for row in json.loads(outputs_path.read_text()):
@@ -120,9 +126,7 @@ def cached_baseline(cases, sources, directory):
             if key in answers:
                 raise ValueError(f'Duplicate cached baseline answer: {key}')
             answers[key] = (row['input_order'], row['answer'])
-    provenance = dict(directory=str(directory), results_sha256=digest(results_path.read_bytes()),
-                      inputs_sha256=digest(inputs_path.read_bytes()),
-                      outputs_sha256=digest(outputs_path.read_bytes()), validated_answers=len(answers))
+    provenance.update(validated_answers=len(answers), ignored_input_cases=changed_inputs)
     return answers, provenance
 
 
@@ -199,6 +203,10 @@ def markdown(report):
         'le loro assegnazioni e sequenze non sono fornite al motore. '
         'Gli input precedenti e i nuovi semi di verifica rimangono distinti. '
         'Una maggiore copertura non viene presentata come un risparmio di km a parità di servizio.', '',
+        'Entrambi i motori ricevono gli input correnti e vengono rivalutati secondo '
+        'la politica corrente: sponda e ZTL sono preferenze con avviso. Il confronto '
+        'include quindi la correzione della politica, oltre alle modifiche della ricerca. '
+        'Le cache con input differenti sono ignorate e il motore storico viene rieseguito.', '',
         '| Strategia | Confronti sulle stesse consegne | km prima | km dopo | minuti prima | minuti dopo |',
         '| --- | ---: | ---: | ---: | ---: | ---: |']
     for strategy, values in summary['strategies'].items():
@@ -267,6 +275,8 @@ def main():
         target.write_bytes(source)
     write_json(args.output/'campaign-start.json', dict(
         baseline_commit=BASELINE_COMMIT, baseline_hashes={p:digest(s) for p,s in sources.items()},
+        current_input_hashes={p:initial_hashes[p] for p in INPUT_FILES},
+        comparison_policy='current input adapter and replay; tail lift and ZTL advisory; shared optimizer/calendar unchanged',
         source_hashes=initial_hashes, cache_provenance=cache_provenance,
         measured_at=datetime.now(timezone.utc).isoformat(),
         selected_cases=[case['id'] for case in cases]))
@@ -317,6 +327,8 @@ def main():
         scipy_version = None
     report = dict(summary=summarize(records), records=records, metadata=dict(
         baseline_commit=BASELINE_COMMIT, baseline_hashes={p:digest(s) for p,s in sources.items()},
+        current_input_hashes={p:initial_hashes[p] for p in INPUT_FILES},
+        comparison_policy='current input adapter and replay; tail lift and ZTL advisory; shared optimizer/calendar unchanged',
         cache_provenance=cache_provenance, current_commit=subprocess.check_output(
             ['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
         measured_at=datetime.now(timezone.utc).isoformat(), scipy_version=scipy_version,

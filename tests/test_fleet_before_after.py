@@ -1,5 +1,7 @@
 """Regression gates distinguish service, equipment, strategy and display precision."""
 from copy import deepcopy
+import hashlib
+import json
 import os
 from unittest.mock import patch
 import pytest
@@ -33,7 +35,7 @@ def test_recovery_is_improvement_even_with_more_distance_and_warnings():
     assert result["summary"]["strategies"]["efficient"]["equal_service_cases"]==0
 
 
-def test_advisory_ztl_mismatch_follows_coverage():
+def test_advisory_equipment_mismatch_follows_coverage():
     result=compare_results(fixture_result(mismatches=1),
                            fixture_result(served=3,mismatches=0,km=10,minutes=20))
     assert result["summary"]["coverage_regressions"]==1
@@ -123,7 +125,7 @@ def test_arithmetic_distance_noise_does_not_hide_real_time_savings():
 
 def test_invalid_baseline_is_reported_without_claiming_a_coverage_regression():
     before=fixture_result(served=4,feasible=False)
-    before["runs"][0]["actual"]["invariant_errors"]=["Required tail lift unavailable"]
+    before["runs"][0]["actual"]["invariant_errors"]=["Weight capacity exceeded"]
     summary=compare_results(before,fixture_result(served=3))["summary"]
     assert summary["invalid_before_runs"]==summary["validity_improvements"]==1
     assert summary["comparable_runs"]==summary["coverage_regressions"]==0
@@ -154,3 +156,46 @@ def test_equal_permutations_from_distinct_variant_attempts_are_both_compared():
     summary=compare_results(before,deepcopy(before))["summary"]
     assert summary["paired_runs"]==2
     assert summary["objective_regressions"]==0
+
+
+def baseline_cache(tmp_path):
+    """A historic cached answer, never a production planner expectation."""
+    from run_routing_quality_audit import serializable_case
+    source=b'published planner source'
+    sources={'app/services/fleet_planning.py':source}
+    case=dict(id='policy-cache-case', hard_tail_lift=True,
+              matrix={(0,0):{'km':0.0,'min':0.0}})
+    report={'metadata':{'source_changed_during_campaign':False,
+        'source_hashes':{name:hashlib.sha256(value).hexdigest() for name,value in sources.items()}}}
+    output={'version':'after','case_id':case['id'],'strategy':'efficient',
+            'variant':'original','input_order':[0], 'answer':{'routes':[[0]]}}
+    for name,value in (('results.json',report),('inputs.json',[serializable_case(case)]),
+                       ('outputs.json',[output])):
+        (tmp_path/name).write_text(json.dumps(value))
+    return case,sources
+
+
+def test_historic_cache_is_reused_only_with_matching_source_and_input(tmp_path):
+    from run_fleet_constraint_benchmark import cached_baseline
+    case,sources=baseline_cache(tmp_path)
+    cached,provenance=cached_baseline([case],sources,tmp_path)
+    assert cached[(case['id'],'efficient','original')][1]['routes']==[[0]]
+    assert provenance['validated_answers']==1
+
+
+def test_advisory_policy_change_invalidates_historic_cached_answer(tmp_path):
+    from run_fleet_constraint_benchmark import cached_baseline
+    case,sources=baseline_cache(tmp_path)
+    case['hard_tail_lift']=False
+    cached,provenance=cached_baseline([case],sources,tmp_path)
+    assert cached=={} and provenance['validated_answers']==0
+    assert provenance['ignored_input_cases']==[case['id']]
+
+
+def test_changed_baseline_source_is_recomputed_instead_of_using_cached_answer(tmp_path):
+    from run_fleet_constraint_benchmark import cached_baseline
+    case,sources=baseline_cache(tmp_path)
+    sources['app/services/fleet_planning.py']=b'another published planner'
+    cached,provenance=cached_baseline([case],sources,tmp_path)
+    assert cached=={} and provenance['validated_answers']==0
+    assert 'cached_source_differs_from_baseline' in provenance['ignored_reason']

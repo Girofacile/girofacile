@@ -146,7 +146,7 @@ def render_comparison(comparison):
         f"Baseline: {BASELINE_COMMIT}; checkout: {comparison['metadata']['after_commit']}.",
         f"Coppie confrontate: **{summary['paired_runs']}**; esecuzioni totali: **{summary['total_engine_runs']}**.",
         "Stesse matrici, input, strategie, permutazioni e ripetizioni; nessun dato operativo o provider.",
-        "I piani vengono rivalutati secondo i vincoli attuali: sponda richiesta obbligatoria, ZTL con avviso. "
+        "I piani vengono rivalutati secondo i vincoli attuali: sponda e ZTL sono preferenze con avviso. "
         "La baseline conserva il proprio comportamento storico; piani non validi sono esclusi dai confronti di qualità.",
         f"Coppie valide e confrontabili: **{summary['comparable_runs']}**; "
         f"piani non validi prima/dopo: **{summary['invalid_before_runs']} / {summary['invalid_after_runs']}**.", "",
@@ -216,7 +216,7 @@ def main():
     comparison["metadata"] = dict(
         baseline=provenance, after_commit=after["metadata"]["tested_commit"],
         before_metadata=before["metadata"], after_metadata=after["metadata"],
-        comparison_policy="current hard tail-lift validation; invalid plans excluded from objective/coverage comparisons; efficient km before time; balanced workload unchanged",
+        comparison_policy="current advisory tail-lift and ZTL policy; invalid plans excluded from objective/coverage comparisons; efficient km before time; balanced workload unchanged",
         baseline_exit_code=before_code, current_exit_code=after_code)
     examples = {row["case_id"] for row in after["examples"]}
     comparison["examples"] = [row for row in comparison["pairs"]
@@ -233,7 +233,7 @@ def main():
         dict(markdown=report, metadata=comparison["metadata"]), ensure_ascii=False), flush=True)
     summary = comparison["summary"]
     # Historical failures remain visible in the artifacts. They do not fail the
-    # current implementation's gate: the frozen service predates hard tail lift.
+    # current implementation's gate; both use the current advisory-equipment replay.
     return int(bool(after_code or summary["validity_regressions"] or summary["coverage_regressions"]
                     or summary["objective_regressions"]))
 

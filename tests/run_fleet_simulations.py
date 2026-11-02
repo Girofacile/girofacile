@@ -351,7 +351,7 @@ def markdown(summary, examples, metadata):
         f"casi con riferimento esatto: **{summary['exact_scenarios']}**, con entrambe le strategie.", "",
         "## Metodo", "",
         "- Invocazione reale di app.services.fleet_planning.distribute; ingressi aziendali, disponibilità e matrice sostituiti con fixture isolate.",
-        "- Valutatore indipendente per capacità, sponda richiesta, finestre doppie, scarico, pause, turno, tempo disponibile e rientro.",
+        "- Valutatore indipendente per capacità, avvisi sponda/ZTL, finestre doppie, scarico, pause, turno, tempo disponibile e rientro.",
         "- Nei casi piccoli: tutte le sequenze per sottoinsieme/risorsa e tutte le assegnazioni, comprese consegne lasciate fuori.",
         "- Riferimenti distinti: copertura massima, compatibilità, poi minimo km / minimo minuti / Efficiente distanza-prima / Bilanciata. Sono riferimenti globali coerenti con le priorità, non la stessa decisione locale a ogni inserimento.",
         "- Nei casi grandi: invarianti, tempi e stabilità; nessuna certificazione di ottimo.", "",
@@ -389,7 +389,7 @@ def markdown(summary, examples, metadata):
         "Efficiente privilegia i km, poi la durata cumulativa e il numero di mezzi. "
         "Bilanciata mantiene la priorità sull'utilizzo delle risorse e sul carico di lavoro.",
         "Partenza/deposito/giornata comuni; pause fisse dichiarate. Niente ricerca di partenze differenziate "
-        "né verifica automatica normativa ore guida. La sponda richiesta è obbligatoria nella distribuzione automatica; ZTL resta una preferenza con avviso. Volume/pallet "
+        "né verifica automatica normativa ore guida. Sponda e ZTL restano preferenze con avviso anche nella distribuzione automatica. Volume/pallet "
         "non sono capacità rigide. La campagna usa solo dati fittizi e matrici congelate.",
         "Il benchmark testa il nucleo della distribuzione. Persistenza, autorizzazioni e traffico sono coperti "
         "dai test applicativi separati. Il traffico reale futuro non è certificabile con matrici congelate.", "",
@@ -494,7 +494,7 @@ def main():
         "engine_sha256": dict(LOADED_SOURCE_SHA256),
         "scope": "real distribute core; fixture matrix/input/availability; no DB/provider calls",
         "objective_policy": "efficient: coverage, compatibility, km, cumulative minutes, used vehicles; balanced: unchanged workload priorities",
-        "tail_lift_policy": "required for automatic assignments; explicit case override reserved for historical/manual references",
+        "tail_lift_policy": "advisory for automatic and manual assignments; prefer equipped resources without excluding otherwise feasible deliveries",
         "baseline_inspected_commit": "bbf4553d9d7ed47c3f01c3954214206bcf734579",
     }
     examples = [row for row in records if row["stage"] == "base" and row["case_id"] in {

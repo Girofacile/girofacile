@@ -20,8 +20,6 @@ def solve(rows, resources, *, matrix=None, returning=True, initial=None, evaluat
     def evaluate(order, v):
         calls.append((order, v))
         selected = [rows[i] for i in order]
-        if any(r.get('sponda') for r in selected) and not resources[v].get('ha_sponda'):
-            return None
         try:
             opt.validate_vehicle_load(selected, resources[v])
         except ValueError:
@@ -35,14 +33,37 @@ def solve(rows, resources, *, matrix=None, returning=True, initial=None, evaluat
     return answer, calls
 
 
-def test_joint_assignment_recovers_capacity_packing_and_required_lift():
+def test_joint_assignment_recovers_capacity_packing_with_equipment_preferences():
     rows = [stop(i, weight=w, packages=p, service=1, sponda=i == 3)
             for i, (w, p) in enumerate(((3, 1), (1, 3), (2, 1), (1, 2)))]
     resources = [resource(4, 4, ha_sponda=False), resource(4, 4, ha_sponda=True)]
     (orders, scores, info), _ = solve(rows, resources, initial=((0,), (1,)))
     assert sorted(i for order in orders for i in order) == list(range(4))
-    assert 3 in orders[1] and all(score is not None for score in scores)
+    assert all(score is not None for score in scores)
     assert info['improvements'] == 1 and not info['global_optimum_proven']
+
+
+def test_required_lift_without_any_equipped_vehicle_keeps_delivery_and_warning():
+    rows = [stop(0, service=1, sponda=True), stop(1, service=1)]
+    resources = [resource(1, 1, ha_sponda=False), resource(1, 1, ha_sponda=False)]
+    (orders, scores, info), _ = solve(rows, resources)
+    assert sorted(i for order in orders for i in order) == [0, 1]
+    assert info['potentially_serviceable'] == 2 and info['invalid_candidates'] == 0
+    delivery = next(row for score in scores if score for row in score['ordered']
+                    if row['customer_id'] == 1)
+    assert 'sponda' in delivery['warning'].lower()
+    assert 'non la possiede' in delivery['warning']
+    assert all(not score['violations'] for score in scores if score)
+
+
+def test_equipped_vehicle_capacity_cannot_exclude_an_otherwise_serviceable_delivery():
+    rows = [stop(0, weight=2, service=1), stop(1, weight=3, service=1, sponda=True)]
+    resources = [resource(2, 1, ha_sponda=True), resource(3, 1, ha_sponda=False)]
+    (orders, scores, info), _ = solve(rows, resources)
+    assert orders == ((0,), (1,))
+    assert info['potentially_serviceable'] == 2 and info['invalid_candidates'] == 0
+    assert 'non la possiede' in scores[1]['ordered'][0]['warning']
+    assert all(not score['violations'] for score in scores)
 
 
 def test_breaks_interrupt_driving_but_service_stays_contiguous():
@@ -97,13 +118,13 @@ def test_canonical_rejection_never_replaces_the_incumbent():
 def test_prepared_atomic_exchange_recovers_a_job_that_no_single_move_can_fit():
     # Weight is saturated on the first vehicle and parcels on the second.
     # No insertion or one-way ejection fits. Exchanging the two 3kg jobs with
-    # different parcel counts creates the only room for the lift-required job.
+    # different parcel counts creates room for the remaining job.
     rows = [stop(i, weight=w, packages=p, service=1, sponda=i == 4)
             for i, (w, p) in enumerate(((3, 1), (5, 5), (3, 3), (3, 5), (2, 1)))]
     resources = [resource(8, 8, ha_sponda=False), resource(8, 8, ha_sponda=True)]
     (orders, scores, info), _ = solve(rows, resources, initial=((0, 1), (2, 3)))
     assert sorted(i for order in orders for i in order) == list(range(5))
-    assert 4 in orders[1] and info['completed_stage'] == 'prepared-pair-exchange'
+    assert info['completed_stage'] == 'prepared-pair-exchange'
     assert info['canonical_candidates'] >= 1 and info['invalid_candidates'] == 0
     assert all(score is not None for score in scores)
 

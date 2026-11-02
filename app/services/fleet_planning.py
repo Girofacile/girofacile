@@ -182,20 +182,26 @@ def fuel_cost(vehicle,resource,km):
     return round(primary+electric,2)
 
 
-def _require_tail_lift(deliveries,vehicle):
-    """A required lift is physical compatibility for newly automatic plans."""
-    if vehicle.ha_sponda:
-        return
-    for delivery in deliveries:
-        required=delivery.get('sponda') if isinstance(delivery,dict) else delivery.sponda
-        if required:
-            raise HTTPException(422,'Una consegna richiede la sponda, ma il mezzo non la possiede. Ricalcola la suddivisione o assegna un mezzo compatibile.')
-
-
-def _strict_tail_lift(plan):
-    # Historical soft-preference plans and explicit manual revisions retain
-    # their saved policy. New automatic plans declare the stronger guarantee.
-    return bool((plan.result.get('search') or {}).get('tail_lift_required'))
+def _refresh_tail_lift_warnings(result,vehicles):
+    """Refresh advisory equipment messages without changing route membership."""
+    updated=deepcopy(result)
+    updated['search']={**updated.get('search',{}),'tail_lift_required':False,
+                       'equipment_policy':'prefer-compatible-with-warning-fallback'}
+    updated['resource_capabilities']=[{'has_tail_lift':bool(v.ha_sponda),
+        'has_ztl_access':bool(v.accesso_ztl)} for v in vehicles]
+    updated['warnings']=[warning for warning in updated.get('warnings',[])
+                         if 'richiede la sponda' not in warning.lower()]
+    for route in updated['routes']:
+        vehicle=vehicles[route['resource']]
+        for stop in route['result']['ordered']:
+            messages=[part.strip() for part in (stop.get('warning') or '').split(';')
+                      if part.strip() and not part.strip().lower().startswith(('serve sponda','sponda richiesta'))]
+            messages.extend(message for message in opt.delivery_warnings(stop,{'ha_sponda':vehicle.ha_sponda})
+                            if 'sponda' in message.lower())
+            stop['warning']='; '.join(messages)
+            if stop.get('sponda') and not vehicle.ha_sponda:
+                updated['warnings'].append(f"Giro {route['resource']+1} · {stop['cliente_nome']}: attenzione, questa consegna richiede la sponda, ma il mezzo non la possiede.")
+    return updated
 
 
 def distribute(db,user,data,assignments=None):
@@ -250,8 +256,6 @@ def _distribute(db,user,data,assignments=None):
                 failures.add(reason)
             return None
         if not sequence: return None
-        if assignments is None and not vehicles[resource].ha_sponda and any(row.get('sponda') for row in sequence):
-            return reject('La consegna richiede la sponda: questo mezzo non la possiede.')
         try: opt.validate_vehicle_load(sequence,vehicle_data[resource])
         except ValueError as exc: return reject(str(exc))
         result=opt._evaluate_fixed_sequence(sequence,matrix,points,vehicle_data[resource],data.rientro_deposito,data.orario_partenza,include_details=include_details,earliest_windows=True)
@@ -285,7 +289,7 @@ def _distribute(db,user,data,assignments=None):
                     raw_minutes[resource]=evaluated['_objective'][1]
                     key=(sum(distances),sum(raw_minutes),sum(bool(route) for route in routes if route)+int(not sequence))
                 else: key=(0 if sequence else 1,delta,evaluated['total_km'])
-                # ZTL remains advisory; a required lift was checked above.
+                # Equipment is advisory: prefer compatibility after coverage.
                 equipment_penalty=int(bool(row.get('sponda')) and not vehicles[resource].ha_sponda)+int(bool(row.get('ztl')) and not vehicles[resource].accesso_ztl)
                 key=(equipment_penalty,*key)
                 if best is None or key<best[0]: best=(key,resource,candidate,evaluated)
@@ -307,8 +311,6 @@ def _distribute(db,user,data,assignments=None):
                 for i in sequence)
         def membership_compatible(sequence,resource):
             selected=[rows[i] for i in sequence]
-            if not vehicles[resource].ha_sponda and any(row.get('sponda') for row in selected):
-                return False
             try:
                 opt.validate_vehicle_load(selected,vehicle_data[resource])
             except ValueError:
@@ -420,8 +422,8 @@ def _distribute(db,user,data,assignments=None):
                 search['constraint_recovery']=recovery
         routes=[[rows[i] for i in sequence] for sequence in proposed]
         results=list(optimized_results)
-        search['tail_lift_required']=True
-        search['equipment_policy']='tail-lift-required-ztl-warning-fallback'
+        search['tail_lift_required']=False
+        search['equipment_policy']='prefer-compatible-with-warning-fallback'
         search['primary_objective']='distance-then-work-time' if data.strategy=='efficient' else 'balanced-workload'
     else:
         search={'method':'manual-membership','equipment_policy':'prefer-compatible-with-warning-fallback'}
@@ -522,7 +524,9 @@ def public(plan):
     return {'id':plan.id,'version':plan.version,'status':plan.status,'configuration':plan.configuration,'created_at':plan.created_at,
             'routes':[{k:({**v,'legs':None} if k=='traffic' and isinstance(v,dict) else v) for k,v in r.items()} for r in plan.result['routes']],
             'unassigned':plan.result['unassigned'],'warnings':plan.result['warnings'],'route_ids':plan.route_ids,
-            'resource_capabilities':plan.result.get('resource_capabilities',[]),'search':plan.result.get('search',{})}
+            'resource_capabilities':plan.result.get('resource_capabilities',[]),
+            'search':{**plan.result.get('search',{}),'tail_lift_required':False,
+                      'equipment_policy':'prefer-compatible-with-warning-fallback'}}
 
 
 def check_version(plan,version):
@@ -560,10 +564,10 @@ def confirm(db,user,actor,plan_id,data):
     if {'id':deposit.id,'indirizzo':deposit.indirizzo,'lat':deposit.lat,'lon':deposit.lon}!=plan.result['validated_depot']:
         raise HTTPException(409,'Deposito cambiato: ricalcola la distribuzione.')
     if current!=plan.result['validated_stops']: raise HTTPException(409,'Indirizzi o dati cambiati: ricalcola la distribuzione.')
+    plan.result=_refresh_tail_lift_warnings(plan.result,vehicles)
     route_ids=[]
     for route in plan.result['routes']:
         index=route['resource'];resource=settings.resources[index];result=deepcopy(route['result'])
-        if _strict_tail_lift(plan): _require_tail_lift(result['ordered'],vehicles[index])
         opt.validate_vehicle_load(result['ordered'],build_vehicle_dict(vehicles[index]))
         driver=db.get(Driver,resource.driver_id) if resource.driver_id else None
         driver_name=' '.join(x for x in (driver.nome,driver.cognome) if x).strip() if driver else None
@@ -661,8 +665,6 @@ def _program_saved(db,user,actor,plan_id,data):
                 raise HTTPException(409,'Un giro e stato modificato o programmato separatamente: gestiscilo dallo storico.')
         return rows
     for row,proposal in zip(drafts(),plan.result['routes']):
-        if _strict_tail_lift(plan):
-            _require_tail_lift(row.deliveries,_require_owned_entity(db,Vehicle,user,row.vehicle_id,'Mezzo'))
         enrich_final_route(db,row,cached_traffic=reusable_traffic(proposal,row))
     db.commit()  # Persist timing and provider accounting before releasing route locks.
     route_orders.lock_company(db,user.id)
@@ -679,10 +681,7 @@ def _program_saved(db,user,actor,plan_id,data):
         lock_route_resources(db,row)
         from ..models import Deposit
         vehicle=_require_owned_entity(db,Vehicle,user,row.vehicle_id,'Mezzo')
-        if _strict_tail_lift(plan):
-            # The vehicle may have changed while waiting for the company lock.
-            db.refresh(vehicle)
-            _require_tail_lift(row.deliveries,vehicle)
+        db.refresh(vehicle)
         _require_owned_entity(db,Driver,user,row.driver_id,'Autista')
         _require_owned_entity(db,Deposit,user,row.deposit_id,'Deposito')
         ensure_not_past_route_date(row.data_giro)
@@ -701,6 +700,8 @@ def _program_saved(db,user,actor,plan_id,data):
         row.status='programmato'
         route_orders.sync_route_orders(db,row,'scheduled')
     updated=deepcopy(plan.result)
+    updated['search']={**updated.get('search',{}),'tail_lift_required':False,
+                       'equipment_policy':'prefer-compatible-with-warning-fallback'}
     updated['resource_capabilities']=[{'has_tail_lift':bool(db.get(Vehicle,r.vehicle_id).ha_sponda),'has_ztl_access':bool(db.get(Vehicle,r.vehicle_id).accesso_ztl)} for r in settings.resources]
     for proposal,row in zip(updated['routes'],rows):
         proposal['result'].update(driver_breaks=row.driver_breaks or [],total_min=row.totale_minuti,return_time=row.orario_rientro_stimato.strftime('%H:%M'))

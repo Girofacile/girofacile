@@ -69,10 +69,9 @@ def _windows(stop):
 def route_replay(case, resource, order):
     """Replay one ordered route independently of the production scheduler.
 
-    Automatic planning requires a tail lift when requested by a stop. Explicit
-    ``hard_tail_lift=False`` keeps the former advisory contract available for
-    historical/manual reference checks without changing the current default.
-    ZTL remains an equipment preference, not an inferred legal-access rule.
+    Tail lift and ZTL are advisory equipment preferences. An explicit
+    ``hard_tail_lift=True`` is reserved for replaying historical audit inputs;
+    current automatic and manual planning use the advisory default.
     """
     settings = case["resources"][resource] if isinstance(resource, int) else resource
     start = float(case.get("start_min", 480))
@@ -108,7 +107,7 @@ def route_replay(case, resource, order):
         cursor, origin = arrived, destination
 
     for index, stop in zip(order, stops):
-        if (case.get("hard_tail_lift", True) and _flag(stop.get("sponda"))
+        if (case.get("hard_tail_lift", False) and _flag(stop.get("sponda"))
                 and not _flag(settings.get("ha_sponda"))):
             result["errors"].append("tail_lift:" + str(index))
         travel(index + 1)

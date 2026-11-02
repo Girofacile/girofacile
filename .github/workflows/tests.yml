@@ -288,7 +288,7 @@ jobs:
           cache: pip
       - run: pip install -r requirements.txt
       - name: Verify search, physical compatibility and independent reference data
-        run: python -m pytest tests/test_fleet_adaptive_search.py tests/test_fleet_seed_search.py tests/test_fleet_route_pool.py tests/test_fleet_upgrade_quality.py tests/test_fleet_capability_lifecycle.py -q -ra
+        run: python -m pytest tests/test_fleet_adaptive_search.py tests/test_fleet_seed_search.py tests/test_fleet_route_pool.py tests/test_fleet_upgrade_quality.py tests/test_fleet_capability_lifecycle.py tests/test_fleet_tail_lift_warning.py -q -ra
       - name: Compare the previous engine with development and held-out scenarios
         run: python tests/run_fleet_upgrade_benchmark.py --strict
       - name: Preserve complete inputs, road matrices and independently checked plans

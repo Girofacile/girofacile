@@ -31,7 +31,6 @@ def _individually_compatible(stop, resource):
     return (
         (resource.get('capacita_kg') is None or stop['peso_kg'] <= resource['capacita_kg'])
         and (resource.get('capacita_colli') is None or stop['colli'] <= resource['capacita_colli'])
-        and (not stop.get('sponda') or resource.get('ha_sponda', False))
     )
 
 
@@ -64,14 +63,14 @@ def test_every_problem_has_fifty_identifiable_stops_and_complete_directed_roads(
                        for i in range(51) for j in range(i + 1, 51))
 
 
-def test_all_claimed_witnesses_pass_the_independent_calendar_and_equipment(cases_by_split):
+def test_all_claimed_witnesses_pass_calendar_and_loads_with_declared_warnings(cases_by_split):
     for cases in cases_by_split.values():
         for case in cases:
             before = deepcopy(case)
             witness = plan_metrics(_effective(case), case['witness'])
             assert witness['feasible'], (case['id'], witness)
             assert witness['served'] == case.get('expected_served', 50), case['id']
-            assert witness['mismatches'] == 0, case['id']
+            assert witness['mismatches'] == case.get('expected_witness_mismatches', 0), case['id']
             assert list(witness['unassigned']) == case.get('expected_unassigned', []), case['id']
             for resource, order in zip(case['resources'], case['witness']):
                 assert all(_individually_compatible(case['stops'][index], resource)
@@ -100,7 +99,7 @@ def test_combined_families_really_include_windows_breaks_and_scarce_tail_lifts(c
         combined = [case for case in cases if case['family'] == 'combined_tight']
         assert {len(case['resources']) for case in combined} == {2, 3, 4, 5}
         for case in combined:
-            assert case.get('hard_tail_lift') is True
+            assert case.get('hard_tail_lift') is False
             assert {resource['ha_sponda'] for resource in case['resources']} == {False, True}
             assert any(stop.get('sponda') for stop in case['stops'])
             assert any(not stop.get('sponda') for stop in case['stops'])
@@ -115,7 +114,7 @@ def test_combined_families_really_include_windows_breaks_and_scarce_tail_lifts(c
 def test_negative_coverage_bounds_follow_from_physical_incompatibility(cases_by_split):
     negative = [case for case in cases_by_split['development']
                 if case.get('expected_served', 50) < 50]
-    assert len(negative) >= 2
+    assert len(negative) >= 1
     for case in negative:
         blocked = case['expected_unassigned']
         assert blocked
@@ -129,6 +128,16 @@ def test_negative_coverage_bounds_follow_from_physical_incompatibility(cases_by_
         # maximum service coverage, without asserting minimum km or work hours.
         witness = plan_metrics(_effective(case), case['witness'])
         assert witness['feasible'] and witness['served'] == case['expected_upper_bound']
+
+
+def test_missing_tail_lift_is_a_full_coverage_warning_scenario(cases_by_split):
+    case = next(case for case in cases_by_split['development']
+                if case['family'] == 'tail_lift_warning')
+    assert all(not resource['ha_sponda'] for resource in case['resources'])
+    assert case['stops'][0]['sponda']
+    witness = plan_metrics(_effective(case), case['witness'])
+    assert witness['feasible'] and witness['served'] == 50
+    assert not witness['unassigned'] and witness['mismatches'] == 1
 
 
 def test_electric_and_diesel_estimates_match_hand_calculated_energy_only_amounts():

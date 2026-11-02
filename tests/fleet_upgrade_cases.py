@@ -2,7 +2,7 @@
 
 Each problem contains fifty fictional deliveries and a frozen directed road
 matrix. Feasible witnesses are constructed without the production search:
-membership, loads and compatible tail lifts are chosen first; an independent
+membership, loads and preferred tail lifts are chosen first; an independent
 calendar then supplies windows around an already feasible itinerary. The data
 do not prove global optimality, predict live traffic, or model EV autonomy.
 
@@ -88,12 +88,12 @@ def _base(count, family, seed, split):
         for position, index in enumerate(order):
             rows[index]['sponda'] = bool(equipment_family and lift and
                 (position % 2 == 0 or family == 'combined_tight' and position % 3 == 1))
-            # ZTL remains advisory in the application; a compatible witness is
-            # nevertheless useful when comparing the equipment preference.
+            # Tail lift and ZTL remain advisory in the application; a compatible
+            # witness is useful when comparing equipment preferences.
             rows[index]['ztl'] = bool(access and (index + seed) % 7 == 0)
     case = _case(f'upgrade-{split}-{count}-{family}-{seed}', family, rows,
         resources, matrix, reference='witness', seed=seed, witness=orders,
-        split=split, hard_tail_lift=True, expected_served=50, expected_unassigned=[],
+        split=split, hard_tail_lift=False, expected_served=50, expected_unassigned=[],
         expected_upper_bound=50, requested_vehicles=count,
         witness_origin='independent constructive membership and calendar; no production answer',
         generated_for='fleet-adaptive-upgrade', electric_range_modelled=False)
@@ -144,11 +144,8 @@ def _validate_witness(case):
     metrics = plan_metrics(case, case['witness'])
     if not metrics['feasible'] or metrics['served'] != case['expected_served']:
         raise AssertionError(f"Independent witness is invalid for {case['id']}")
-    for resource, order in zip(case['resources'], case['witness']):
-        if any(case['stops'][index]['sponda'] and not resource['ha_sponda'] for index in order):
-            raise AssertionError('A required tail lift must be present on the witness vehicle')
-    if metrics['mismatches']:
-        raise AssertionError('Constructed witnesses must avoid equipment preferences too')
+    if metrics['mismatches'] != case.get('expected_witness_mismatches', 0):
+        raise AssertionError('Constructed witness equipment warnings differ from the declared count')
 
 
 def _diagnostic_cases():
@@ -161,14 +158,14 @@ def _diagnostic_cases():
     _validate_witness(overweight)
 
     no_lift = _base(4, 'geography_capacity', 2026119092, 'development')
-    no_lift.update(id='upgrade-development-impossible-tail-lift', family='impossible_tail_lift',
-        expected_served=49, expected_unassigned=[0], expected_upper_bound=49,
-        coverage_proof='Stop 0 requires a tail lift; none of the selected vehicles has one.')
+    no_lift.update(id='upgrade-development-tail-lift-warning', family='tail_lift_warning',
+        expected_served=50, expected_unassigned=[], expected_upper_bound=50,
+        expected_witness_mismatches=1,
+        coverage_proof='The tail lift is advisory: all fifty stops fit the selected fleet with one equipment warning.')
     for resource in no_lift['resources']:
         resource['ha_sponda'] = False
     for row in no_lift['stops']:
         row['sponda'] = row['customer_id'] == 1
-    no_lift['witness'] = [[i for i in order if i != 0] for order in no_lift['witness']]
     _validate_witness(no_lift)
 
     unavailable = _base(2, 'windows_shifts', 2026119093, 'development')

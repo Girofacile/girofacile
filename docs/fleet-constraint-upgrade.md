@@ -1,5 +1,9 @@
 # Pianificazione multi mezzo con solutore specializzato
 
+Rapporto della versione `8bdcd61`: comprendeva la precedente sponda bloccante.
+La politica attuale è descritta in [Pianificazione su più mezzi](fleet-planning.md):
+la sponda è un avviso e non esclude consegne né blocca la programmazione.
+
 Questo confronto parte dalla versione pubblicata `dbe4641`, che aveva tredici
 esecuzioni con consegne fattibili escluse su 124 combinazioni di dati, strategia
 e ordine degli input. La copertura è verificata prima di valutare i risparmi.
