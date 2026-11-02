@@ -1,0 +1,3 @@
+# Optional offline experiment only; not an application dependency.
+-r ../requirements.txt
+ortools==9.15.6755
