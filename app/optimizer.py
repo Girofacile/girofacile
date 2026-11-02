@@ -720,7 +720,7 @@ def _exclude_ferry_deliveries(depot_coord, deliveries):
     return kept, excluded
 
 
-def optimize_route(db: Session, deposit, deliveries, vehicle=None, return_depot=True, start_time="08:00", route_date=None):
+def optimize_route(db: Session, deposit, deliveries, vehicle=None, return_depot=True, start_time="08:00", route_date=None, travel_factor=None):
     validate_vehicle_load(_without_known_ferry(deposit, deliveries), vehicle)
     _route_departure_time_iso(start_time, route_date)
     depot_coord = geocode_deposit(db, deposit)
@@ -747,6 +747,10 @@ def optimize_route(db: Session, deposit, deliveries, vehicle=None, return_depot=
         d["_matrix_index"] = idx
 
     matrix = build_distance_matrix(db, user_id, points, keys, start_time=start_time, route_date=route_date)
+    if travel_factor:
+        # Secondo passaggio Mapbox: tempi di guida allungati dal traffico misurato sul giro.
+        from .services.traffic_correction import scaled_matrix
+        matrix = scaled_matrix(matrix, travel_factor)
 
     result = _best_internal_sequence(deliveries, matrix, points, vehicle, return_depot, start_time)
 

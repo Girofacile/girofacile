@@ -5,6 +5,13 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Doppio passaggio Mapbox: calcolato il giro (singolo o più mezzi), si chiedono
+  i tempi con il traffico; se qualche consegna finisce fuori fascia, le fermate
+  vengono riordinate con i tempi allungati dal traffico misurato su quel giro e
+  si richiede Mapbox. Il nuovo ordine resta solo se ha meno ritardi. Il giro
+  singolo mostra già al calcolo orari con traffico e pedaggi. Una o due chiamate
+  per giro; nessuno storico salvato.
+
 - Più mezzi, strategia «Riduci chilometri e tempi»: dopo il calcolo attuale il
   piano passa a Google OR-Tools, che parte da quel piano e cerca giri più corti.
   Si tiene solo se migliore e senza perdere consegne (nel confronto su 47

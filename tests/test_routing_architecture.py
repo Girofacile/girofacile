@@ -93,14 +93,22 @@ def test_optimizer_never_calls_google_matrix_or_mapbox(routing_env, endpoint, mo
     result = saved_route(routing_env, two=True, endpoint=endpoint)
     client, db, _, _, _, _, _, calls = routing_env
     assert result["status"] == "bozza"
-    assert result["eta_type"] == "road"
-    assert len(calls) == 1 and "/table/" in calls[0][0]
-    assert calls[0][1]["annotations"] == "distance,duration"
+    # L'ordine si decide solo con la matrice OSRM; Google non viene mai interrogato.
+    assert "/table/" in calls[0][0] and calls[0][1]["annotations"] == "distance,duration"
+    assert not any("googleapis" in url for url, _ in calls)
     assert db.query(DistanceCache).count() == 6
-    assert db.query(ApiUsageLog).count() == 0
+    if endpoint == "optimize":
+        # Doppio passaggio Mapbox: orari con traffico sul giro già calcolato, nessuna matrice Mapbox.
+        assert result["eta_type"] == "traffic"
+        assert any("api.mapbox.com/directions" in url for url, _ in calls)
+        assert not any("/table/" in url for url, _ in calls[1:])
+    else:
+        assert result["eta_type"] == "road"
+        assert len(calls) == 1 and db.query(ApiUsageLog).count() == 0
+    made = len(calls)
     for path in (f"/api/routes/{result['id']}", f"/api/routes/{result['id']}/map-data"):
         assert client.get(path).status_code == 200
-    assert len(calls) == 1
+    assert len(calls) == made
 
 
 def test_cache_reused_across_companies_dates_and_directions(routing_env):
@@ -115,7 +123,8 @@ def test_cache_reused_across_companies_dates_and_directions(routing_env):
     data = payload(ctx, day="2100-02-01")
     data["orario_partenza"] = "11:00"
     assert ctx[0].post("/api/routes/optimize", json=data).status_code == 200
-    assert len(ctx[-1]) == 1
+    # Una sola matrice OSRM: le altre richieste sono gli orari con traffico del giro.
+    assert len([url for url, _ in ctx[-1] if "/table/" in url]) == 1
     keys = list(reverse_pairs)
     assert distance_cache.get_pairs(ctx[1], ctx[3].id, keys) == {}
     distance_cache.save_pairs(ctx[1], ctx[3].id, [(keys[0][0], keys[0][1], 50, 90)])
@@ -169,11 +178,11 @@ def test_osrm_timeout_does_not_pollute_cache_and_can_recover(routing_env, monkey
         return original(url, **kwargs)
     monkeypatch.setattr(requests, "get", unavailable)
     result = saved_route(routing_env, endpoint="optimize")
-    assert result["eta_type"] == "approximate"
+    assert result["base_routing_provider"] == "estimated"
     assert routing_env[1].query(DistanceCache).count() == 0
     monkeypatch.setattr(requests, "get", original)
     restored = saved_route(routing_env, endpoint="optimize")
-    assert restored["eta_type"] == "road"
+    assert restored["base_routing_provider"] == "osrm"
     assert routing_env[1].query(DistanceCache).count() == 2
 
 

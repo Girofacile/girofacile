@@ -522,20 +522,48 @@ def _distribute(db,user,data,assignments=None):
     # Generate complete ETA and diagnostic details only for selected final routes.
     results=[evaluate(sequence,index,include_details=True) if sequence else None
              for index,sequence in enumerate(routes)]
-    output=[]
-    for index,result in enumerate(results):
-        if result is None: continue
+    def build_route(index,result):
         indexes=[s['fleet_stop_index'] for s in result['ordered']]
         for stop in result['ordered']: stop.pop('fleet_stop_index',None)
         for field in ('score','_objective','violations','total_wait'): result.pop(field,None)
         result.update(base_routing_provider=getattr(matrix,'source','osrm'),depot_coord=depot,
                       base_return_leg=dict(matrix.get((indexes[-1]+1,0)) or {}) if data.rientro_deposito else {},
                       google_maps_url=opt.build_google_maps_url(deposit.indirizzo,result['ordered'],data.rientro_deposito))
-        output.append({'resource':index,'vehicle_name':vehicles[index].nome,'driver_name':(drivers[index].nome+' '+(drivers[index].cognome or '')).strip(),
-                       'stop_indexes':indexes,'result':result,'fuel_cost':fuel_cost(vehicles[index],data.resources[index],result['total_km']),
-                       'weight_kg':sum(rows[i]['peso_kg'] for i in indexes),'packages':sum(rows[i]['colli'] for i in indexes)})
+        return {'resource':index,'vehicle_name':vehicles[index].nome,'driver_name':(drivers[index].nome+' '+(drivers[index].cognome or '')).strip(),
+                'stop_indexes':indexes,'result':result,'fuel_cost':fuel_cost(vehicles[index],data.resources[index],result['total_km']),
+                'weight_kg':sum(rows[i]['peso_kg'] for i in indexes),'packages':sum(rows[i]['colli'] for i in indexes)}
+
+    def traffic_second_pass(route):
+        """Fuori orario con il traffico: riordino con i tempi corretti e nuova richiesta a Mapbox."""
+        from . import traffic_correction as correction
+        first=route['traffic']
+        if first.get('status')!='updated' or not first.get('late'): return route
+        snapshot=_traffic_snapshot(route['result'],data.rientro_deposito)
+        factor=correction.travel_factor([leg['min'] for leg in snapshot['base_legs']],[leg['duration'] for leg in first['legs']])
+        report={'factor':round(factor,2) if factor else None,'late_before':len(first['late']),'reordered':False}
+        first['second_pass']=report
+        if not factor: return route
+        resource=route['resource']
+        ordered=opt._best_internal_sequence([rows[i] for i in route['stop_indexes']],correction.scaled_matrix(matrix,factor),
+                                            points,vehicle_data[resource],data.rientro_deposito,data.orario_partenza)['ordered']
+        indexes=[stop['fleet_stop_index'] for stop in ordered]
+        if indexes==route['stop_indexes']: return route
+        result=evaluate([rows[i] for i in indexes],resource,include_details=True)
+        if result is None: return route
+        candidate=build_route(resource,result)
+        candidate['traffic']=preview_traffic(db,user,data,candidate,vehicles[resource],data.resources[resource])
+        if candidate['traffic'].get('status')!='updated': return route
+        report.update(late_after=len(candidate['traffic']['late']))
+        if correction.lateness(candidate['traffic']['late'])<correction.lateness(first['late']):
+            report['reordered']=True
+            candidate['traffic']['second_pass']=report
+            return candidate
+        return route
+
+    output=[build_route(index,result) for index,result in enumerate(results) if result is not None]
     for route in output:
         route['traffic']=preview_traffic(db,user,data,route,vehicles[route['resource']],data.resources[route['resource']])
+    output=[traffic_second_pass(route) for route in output]
     statuses={route['traffic']['status'] for route in output}
     late=[item for route in output for item in route['traffic'].get('late',[])]
     if output and statuses=={'updated'}:

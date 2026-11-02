@@ -21,6 +21,21 @@ La ricerca usa i tempi stradali allungati di un margine prudente (`fleet_traffic
 
 L'operatore può indicare i prezzi energetici nei dettagli della coppia; non esiste una durata massima del giro impostata a mano: il limite è dato da turno e pause dell'autista, impegni già programmati e fine della giornata. La disponibilità iniziale verifica la partenza; il calcolo considera anche gli impegni successivi già programmati e i giri in corso.
 
+## Doppio passaggio con il traffico
+
+Calcolato il giro, Mapbox restituisce i tempi con il traffico tipico di quel giorno
+e di quell'ora. Se una consegna finisce fuori fascia, dal giro stesso si ricava di
+quanto il traffico allunga i tempi di guida (rapporto tra tempi Mapbox e tempi del
+calcolo, al massimo ×3); le fermate dello stesso mezzo vengono riordinate con i
+tempi allungati e Mapbox viene interrogato di nuovo. Il nuovo ordine resta solo se
+ha meno consegne fuori fascia (poi meno minuti di ritardo); la diagnostica
+`traffic.second_pass` riporta fattore e ritardi prima e dopo. Le consegne non
+cambiano mezzo. Vale anche per il giro singolo: il calcolo restituisce già orari e
+pedaggi con il traffico, come dopo «Aggiorna ETA con traffico». Una chiamata per
+giro se tutto è in orario, due quando serve la correzione. Nessun dato di traffico
+viene salvato oltre al giro; senza fornitore configurato nulla cambia
+(`services/traffic_correction.py`).
+
 ## Miglioramento con OR-Tools
 
 Con la strategia «Riduci chilometri e tempi», dopo la ricerca e il riordino dei

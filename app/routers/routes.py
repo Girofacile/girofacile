@@ -27,6 +27,7 @@ from ..services.error_monitor import log_exception
 from ..services.route_enrichment import initialize_snapshot, enrich_final_route, routing_metadata, json_data, TIMING_DETAILS
 from ..services.ai_assistant import ensure_company_ai_allowed, run_ai_text
 import json
+from copy import deepcopy
 
 router = APIRouter(tags=["routes"])
 
@@ -617,6 +618,7 @@ def create_and_optimize_route(
     route_orders.require_planning_permission(request, deliveries, db, getattr(data, "route_id", None))
     deposit, vehicle, _driver = _validate_route_tenant_scope(db, user, data, deliveries)
     _apply_route_preferences(user, deliveries)
+    original_deliveries = deepcopy(deliveries)
     try:
         result = optimize_route(db, deposit, deliveries, build_vehicle_dict(vehicle, data.driver_schedule.model_dump()), data.rientro_deposito, data.orario_partenza, route_date=data.data_giro)
     except ValueError as e:
@@ -645,7 +647,62 @@ def create_and_optimize_route(
     end_min = start_min + int(float(result.get("total_min") or 0))
     _check_resource_overlap(db, user, data, start_min, end_min)
     plan = save_route_result(db, user, data, result, vehicle)
+    plan, result, timed = _traffic_two_pass(db, user, data, deposit, original_deliveries, vehicle, plan, result)
+    if timed:
+        # Orari con il traffico salvati sul giro, come dopo «Aggiorna ETA con traffico».
+        return serialize_route(plan) | {"consegne_escluse": result.get("consegne_escluse") or []}
     return route_response(plan, result)
+
+
+def _stop_identity(result):
+    return [(d.get("customer_id"), d.get("order_stop_key"), d.get("cliente_nome"), d.get("indirizzo")) for d in result["ordered"]]
+
+
+def _traffic_two_pass(db, user, data, deposit, deliveries, vehicle, plan, result):
+    """Doppio passaggio Mapbox sul giro appena calcolato (services/traffic_correction.py).
+
+    Prima richiesta: orari con il traffico. Con consegne fuori fascia, riordino con i
+    tempi di guida allungati dal traffico misurato e seconda richiesta; il nuovo ordine
+    resta solo se ha meno ritardi. Ritorna (giro, risultato, orari con traffico calcolati).
+    """
+    from ..services import traffic_correction as correction
+    from ..services.platform_settings import traffic_provider_name
+    from ..services.route_enrichment import evaluate_legs
+    if traffic_provider_name(db) == "none":
+        return plan, result, False
+
+    def late_stops(current):
+        timed = evaluate_legs(json_data(current.routing_snapshot_json), json_data(current.traffic_result_json)["legs"], current)
+        return [stop for stop in timed["ordered"] if stop.get("time_window_violation")]
+
+    enrich_final_route(db, plan)
+    db.commit()
+    if plan.traffic_status != "updated" or not (first := late_stops(plan)):
+        return plan, result, True
+    snapshot, first_traffic = json_data(plan.routing_snapshot_json), json_data(plan.traffic_result_json)
+    factor = correction.travel_factor([leg["min"] for leg in snapshot["base_legs"]],
+                                      [leg["duration"] for leg in first_traffic["legs"]])
+    if not factor:
+        return plan, result, True
+    try:
+        second = optimize_route(db, deposit, deepcopy(deliveries), build_vehicle_dict(vehicle, data.driver_schedule.model_dump()),
+                                data.rientro_deposito, data.orario_partenza, route_date=data.data_giro, travel_factor=factor)
+        start_min = minutes_from_hhmm(data.orario_partenza) or 0
+        _check_resource_overlap(db, user, data, start_min, start_min + int(float(second.get("total_min") or 0)), exclude_route_id=plan.id)
+    except (ValueError, HTTPException):
+        return plan, result, True  # Il primo giro resta valido: solo gli avvisi di ritardo.
+    if _stop_identity(second) == _stop_identity(result):
+        return plan, result, True
+    second_plan = save_route_result(db, user, data, second, vehicle, plan.id)
+    enrich_final_route(db, second_plan, force=True)
+    db.commit()
+    if second_plan.traffic_status == "updated" and correction.lateness(late_stops(second_plan)) < correction.lateness(first):
+        return second_plan, second, True
+    # Nessun miglioramento: torna l'ordine iniziale con le tratte della prima richiesta.
+    plan = save_route_result(db, user, data, result, vehicle, plan.id)
+    enrich_final_route(db, plan, cached_traffic=first_traffic)
+    db.commit()
+    return plan, result, True
 
 
 @router.post("/api/routes/recalculate-manual")

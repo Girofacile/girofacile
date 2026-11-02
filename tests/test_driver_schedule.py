@@ -46,11 +46,12 @@ def test_defaults_snapshot_override_recalculate_and_traffic(routing_env):
     db.add(driver);db.commit()
     data=payload(ctx);data['driver_id']=driver.id;data['consegne'][0].update(scarico_mattina_da=None,scarico_mattina_a=None,tempo_scarico_min=10)
     response=client.post('/api/routes/optimize',json=data);assert response.status_code==200,response.text
-    saved=response.json();assert saved['driver_breaks'] and saved['consegne'][0]['arrivo_stimato']=='08:40'
+    # Il calcolo restituisce già gli orari con il traffico (Mapbox simulato: 20 minuti per tratta).
+    saved=response.json();assert saved['driver_breaks'] and saved['consegne'][0]['arrivo_stimato']=='08:50'
     driver.work_schedule={};db.commit()
     reread=client.get('/api/routes/'+str(saved['id'])).json()
     assert reread['driver_schedule']==saved['driver_schedule']
-    assert reread['consegne'][0]['arrivo_stimato']=='08:40'
+    assert reread['consegne'][0]['arrivo_stimato']=='08:50'
     recalculated=client.post('/api/routes/recalculate-manual',json={**data,'route_id':saved['id']})
     assert recalculated.status_code==200,recalculated.text
     assert recalculated.json()['driver_schedule']==saved['driver_schedule']
@@ -96,9 +97,10 @@ def test_shift_limit_and_traffic_overrun_block_programming(routing_env):
     assert ctx[0].post('/api/routes/optimize',json=data).status_code==422
 
 
-def test_execution_delay_does_not_shift_fixed_pause(routing_env):
+def test_execution_delay_does_not_shift_fixed_pause(routing_env,monkeypatch):
     from datetime import datetime
     from app.services.route_schedule import route_schedule_datetimes
+    monkeypatch.setenv('TRAFFIC_PROVIDER','none')  # tempi stradali: qui conta solo la pausa fissa
     ctx=routing_env;data=payload(ctx);data['consegne'][0].update(scarico_mattina_da=None,scarico_mattina_a=None,tempo_scarico_min=10)
     data['driver_schedule']={'start':'08:00','end':'17:00','breaks':[{'start':'08:15','end':'08:45'}]}
     result=ctx[0].post('/api/routes/optimize',json=data);assert result.status_code==200,result.text
