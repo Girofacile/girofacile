@@ -1,4 +1,5 @@
 from ..services import driver_schedule as shifts
+from ..services import unload_time
 from ..services import route_orders
 from ..services.order_planning import ORDER_FIELDS
 from ..services.route_schedule import live_route_schedule, route_schedule_datetimes
@@ -90,6 +91,7 @@ def _enrich_owned_deliveries(db, user: User, deliveries: list[dict]) -> None:
     customer_map = _owned_customer_map(db, user, deliveries)
     for delivery in deliveries:
         customer_id = delivery.get("customer_id")
+        unload_time.apply(delivery, user, customer_map.get(int(customer_id)) if customer_id is not None else None)
         if customer_id is None:
             # Ordini e fermate occasionali: avvisi geografici, mai vincoli.
             detection = detect_ztl(delivery.get("lat"), delivery.get("lon"))
@@ -445,7 +447,7 @@ def serialize_route(plan):
     for row, delivery in zip(response["consegne"], consegne):
         if delivery.optimizer_details:
             details = json.loads(delivery.optimizer_details)
-            row.update({k: details[k] for k in (*TIMING_DETAILS, *STOP_VERIFICATION_FIELDS, *ORDER_FIELDS) if k in details})
+            row.update({k: details[k] for k in (*TIMING_DETAILS, *STOP_VERIFICATION_FIELDS, *ORDER_FIELDS, "tempo_scarico_auto") if k in details})
     route_orders.refresh_references(plan, response["consegne"])
     response.update(window_summary(response["consegne"]))
     return response
@@ -536,8 +538,8 @@ def save_route_result(db, user, data, result, vehicle, route_id=None, *, commit=
     for item in result["ordered"]:
         delivery_data = dict(item)
         delivery_data["optimizer_details"] = json.dumps({k: item[k] for k in
-            (*TIMING_DETAILS, *STOP_VERIFICATION_FIELDS, *ORDER_FIELDS) if k in item} | (item.get("coord") or {}))
-        for extra in (*ORDER_FIELDS, "geocoding_token", "coord", "lat", "lon", "stato_geocodifica", "indirizzo_geocodificato",
+            (*TIMING_DETAILS, *STOP_VERIFICATION_FIELDS, *ORDER_FIELDS, "tempo_scarico_auto") if k in item} | (item.get("coord") or {}))
+        for extra in (*ORDER_FIELDS, "tempo_scarico_auto", "geocoding_token", "coord", "lat", "lon", "stato_geocodifica", "indirizzo_geocodificato",
                       "arrivo_fisico", "inizio_servizio", "lateness_min", "time_window_violation", "pause_travel_min"):
             delivery_data.pop(extra, None)
         for _f in ["scarico_mattina_da", "scarico_mattina_a", "scarico_pomeriggio_da", "scarico_pomeriggio_a", "arrivo_stimato", "partenza_stimata"]:

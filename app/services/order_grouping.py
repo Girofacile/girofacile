@@ -50,6 +50,8 @@ def merge(user_id, rows):
     result['order_stop_key']=group_key(user_id,[r['id'] for r in result['order_refs']])
     for field in ('peso_kg','colli'): result[field]=sum(row.get(field) or 0 for row in rows)
     result['tempo_scarico_min']=max(row.get('tempo_scarico_min') or 10 for row in rows)
+    # Stime dai colli: il calcolo le rifà sul totale della fermata unita.
+    result['tempo_scarico_auto']=all(bool(row.get('tempo_scarico_auto')) for row in rows)
     # Le segnalazioni geografiche non separano ordini altrimenti raggruppabili.
     result['ztl']=any(bool(row.get('ztl')) for row in rows)
     result['pedestrian_area']=any(bool(row.get('pedestrian_area')) for row in rows)

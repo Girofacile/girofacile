@@ -235,6 +235,15 @@ def run_migrations(engine):
                     if 'users' in set(inspect(conn).get_table_names()) and 'tutor_baseline' not in {c['name'] for c in inspect(conn).get_columns('users')}:
                         conn.execute(text('ALTER TABLE users ADD COLUMN tutor_baseline JSON'))
                     conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261029_01', 'now': utc_now()})
+            if '20261102_01' not in applied:
+                # Tempo di scarico stimato dai colli: formula dell'azienda, vuota = valori predefiniti.
+                with engine.begin() as conn:
+                    if 'users' in set(inspect(conn).get_table_names()):
+                        existing = {c['name'] for c in inspect(conn).get_columns('users')}
+                        for column in ('unload_base_min', 'unload_seconds_per_package', 'unload_max_min'):
+                            if column not in existing:
+                                conn.execute(text(f'ALTER TABLE users ADD COLUMN {column} INTEGER'))
+                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261102_01', 'now': utc_now()})
         finally:
             if postgres:
                 lock.execute(text('SELECT pg_advisory_unlock(:key)'), {'key': LOCK_ID})

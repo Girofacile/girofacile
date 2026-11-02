@@ -64,6 +64,10 @@ class User(Base):
     has_refrigerated_goods: Mapped[bool] = mapped_column(Boolean, default=False)
     has_ztl: Mapped[bool] = mapped_column(Boolean, default=False)
     needs_tail_lift: Mapped[bool] = mapped_column(Boolean, default=False)
+    # Stima del tempo di scarico dai colli (unload_time.py); vuoto = valori predefiniti.
+    unload_base_min: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    unload_seconds_per_package: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    unload_max_min: Mapped[int | None] = mapped_column(Integer, nullable=True)
     universal_features_initialized: Mapped[bool] = mapped_column(Boolean, default=False)
     onboarding_completed: Mapped[bool] = mapped_column(Boolean, default=False)
     onboarding_completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)

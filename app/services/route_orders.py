@@ -24,7 +24,7 @@ def lock_company(db, user_id):
 
 
 # Durata dello scarico: scelta dell'operatore sulla fermata, non un dato dell'ordine.
-STOP_ONLY_FIELDS = ('tempo_scarico_min',)
+STOP_ONLY_FIELDS = ('tempo_scarico_min', 'tempo_scarico_auto')
 
 
 def refresh_stale(db, user_id, rows, route_id=None):

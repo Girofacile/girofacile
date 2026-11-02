@@ -1,4 +1,5 @@
 from ..services.identity import ensure_login_email_available
+from ..services.unload_time import LIMITS as UNLOAD_LIMITS, settings as unload_settings
 from ..services.platform_policy import require_registration, trial_days, default_plan
 from ..services.sessions import read_session, active_identity, logout_sessions, read_superadmin_session, credential
 from ..core.security import make_account_token
@@ -633,6 +634,18 @@ def confirm_password_reset(payload: dict, db: Session = Depends(get_db)):
 # -----------------------------------------------------------------------
 # Profilo azienda + onboarding iniziale
 # -----------------------------------------------------------------------
+def _unload_setting(key, value):
+    """Valore intero entro i limiti della formula del tempo di scarico."""
+    low, high = UNLOAD_LIMITS[key]
+    try:
+        number = int(value)
+    except (TypeError, ValueError):
+        raise HTTPException(422, "Tempo di scarico: inserisci numeri interi.")
+    if isinstance(value, bool) or not low <= number <= high:
+        raise HTTPException(422, f"Tempo di scarico: valore tra {low} e {high}.")
+    return number
+
+
 def _company_payload(user: User) -> dict:
     return {
         "company_name": user.company_name or user.username,
@@ -662,6 +675,7 @@ def _company_payload(user: User) -> dict:
         "has_refrigerated_goods": bool(getattr(user, "has_refrigerated_goods", False)),
         "has_ztl": bool(getattr(user, "has_ztl", False)),
         "needs_tail_lift": bool(getattr(user, "needs_tail_lift", False)),
+        **unload_settings(user),
         "account_email": user.email or "",
         "plan": user.plan,
         "plan_status": user.plan_status,
@@ -863,7 +877,8 @@ def update_company_profile(payload: dict, user: User = Depends(current_user), db
         "company_legal_address", "company_billing_address", "company_sector",
         "company_activity_type", "company_size", "daily_deliveries",
         "has_time_windows", "needs_signature", "needs_photo_proof",
-        "has_refrigerated_goods", "has_ztl", "needs_tail_lift"
+        "has_refrigerated_goods", "has_ztl", "needs_tail_lift",
+        "unload_base_min", "unload_seconds_per_package", "unload_max_min"
     }
     if payload.get("company_logo_url") == company_logo_src(user):
         # Il modulo rimanda l'indirizzo del logo già salvato: nessuna modifica.
@@ -881,6 +896,8 @@ def update_company_profile(payload: dict, user: User = Depends(current_user), db
             # False in NULL e causava il 500 sulle colonne NOT NULL.
             if key in {"has_time_windows", "needs_signature", "needs_photo_proof", "has_refrigerated_goods", "has_ztl", "needs_tail_lift"}:
                 setattr(user, key, bool(value))
+            elif key in UNLOAD_LIMITS:
+                setattr(user, key, _unload_setting(key, value))
             else:
                 setattr(user, key, value or None)
     if not user.company_country:

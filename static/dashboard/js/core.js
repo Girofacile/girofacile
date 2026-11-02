@@ -3320,6 +3320,8 @@ function updateDeliveryField(i, field, value){
   }
   if(field === "tempo_scarico_min" || field === "colli"){
     deliveries[i][field] = parseInt(value || 0);
+    // Tempo scritto a mano: non più stimato dai colli.
+    if(field === "tempo_scarico_min") deliveries[i].tempo_scarico_auto = false;
   }else if(field === "peso_kg"){
     deliveries[i][field] = parseFloat(value || 0);
   }else if(field === "ztl" || field === "sponda"){
@@ -3510,7 +3512,9 @@ function saveDeliveryDetailsModal(){
   deliveries[i].scarico_mattina_a = val("dmMattinaA") || null;
   deliveries[i].scarico_pomeriggio_da = val("dmPomeriggioDa") || null;
   deliveries[i].scarico_pomeriggio_a = val("dmPomeriggioA") || null;
-  deliveries[i].tempo_scarico_min = parseInt(val("dmScarico")||10);
+  const unloadMinutes = parseInt(val("dmScarico")||10);
+  if(unloadMinutes !== parseInt(deliveries[i].tempo_scarico_min)) deliveries[i].tempo_scarico_auto = false;
+  deliveries[i].tempo_scarico_min = unloadMinutes;
   deliveries[i].ztl = boolVal("dmZtl");
   deliveries[i].sponda = boolVal("dmSponda");
   deliveries[i].peso_kg = parseFloat(val("dmPeso")||0);
@@ -3561,7 +3565,7 @@ function cleanDeliveryForPayload(d){
     peso_kg: parseFloat(d.peso_kg)||0, colli: parseInt(d.colli)||0,
     scarico_mattina_da: d.scarico_mattina_da || null, scarico_mattina_a: d.scarico_mattina_a || null,
     scarico_pomeriggio_da: d.scarico_pomeriggio_da || null, scarico_pomeriggio_a: d.scarico_pomeriggio_a || null,
-    tempo_scarico_min: parseInt(d.tempo_scarico_min ?? 10), ztl: !!d.ztl, pedestrian_area: !!d.pedestrian_area, sponda: !!d.sponda, note: d.note || null
+    tempo_scarico_min: parseInt(d.tempo_scarico_min ?? 10), tempo_scarico_auto: !!d.tempo_scarico_auto, ztl: !!d.ztl, pedestrian_area: !!d.pedestrian_area, sponda: !!d.sponda, note: d.note || null
   };
 }
 function routePayloadFromResult(){
@@ -5781,7 +5785,9 @@ async function saveAllSettingsV893(){
     needs_photo_proof:planFeatureEnabled('has_photo_proof') && !!document.getElementById('featurePhotoProofV89')?.checked,
     has_ztl:!!document.getElementById('featureZtlV89')?.checked,
     needs_tail_lift:!!document.getElementById('featureTailLiftV89')?.checked,
-    has_refrigerated_goods:!!document.getElementById('featureRefrigeratedV89')?.checked
+    has_refrigerated_goods:!!document.getElementById('featureRefrigeratedV89')?.checked,
+    // Formula del tempo di scarico stimato dai colli.
+    unload_base_min:Number(document.getElementById('unloadBaseMin')?.value),unload_seconds_per_package:Number(document.getElementById('unloadSecondsPerPackage')?.value),unload_max_min:Number(document.getElementById('unloadMaxMin')?.value)
   };
   const signature=planFeatureEnabled('has_delivery_signature') && !!document.getElementById('settingDeliverySignature')?.checked;
   try{
@@ -5841,6 +5847,8 @@ async function loadUniversalFeaturesV89(){
     };
     const map={featureTimeWindowsV89:'has_time_windows',featurePhotoProofV89:'needs_photo_proof',featureZtlV89:'has_ztl',featureTailLiftV89:'needs_tail_lift',featureRefrigeratedV89:'has_refrigerated_goods'};
     Object.entries(map).forEach(([id,key])=>{const el=document.getElementById(id);if(el)el.checked=!!gfUniversalFeaturesV891[key];});
+    [['unloadBaseMin','unload_base_min'],['unloadSecondsPerPackage','unload_seconds_per_package'],['unloadMaxMin','unload_max_min']]
+      .forEach(([id,key])=>{const el=document.getElementById(id);if(el&&c[key]!=null)el.value=c[key];});
     applyUniversalFeaturesV891();
     applyPlanFeatureControls();
     updateSettingsCountsV893();
@@ -5853,7 +5861,8 @@ async function saveUniversalFeaturesV89(){
     needs_photo_proof:planFeatureEnabled('has_photo_proof') && !!document.getElementById('featurePhotoProofV89')?.checked,
     has_ztl:!!document.getElementById('featureZtlV89')?.checked,
     needs_tail_lift:!!document.getElementById('featureTailLiftV89')?.checked,
-    has_refrigerated_goods:!!document.getElementById('featureRefrigeratedV89')?.checked
+    has_refrigerated_goods:!!document.getElementById('featureRefrigeratedV89')?.checked,
+    unload_base_min:Number(document.getElementById('unloadBaseMin')?.value),unload_seconds_per_package:Number(document.getElementById('unloadSecondsPerPackage')?.value),unload_max_min:Number(document.getElementById('unloadMaxMin')?.value)
   };
   try{
     await api('/api/company-profile',{method:'PUT',body:JSON.stringify(payload)});

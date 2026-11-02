@@ -5,6 +5,13 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Tempo di scarico stimato dai colli: per clienti e ordini senza un tempo proprio
+  il calcolo usa minuti fissi più un tempo per collo (predefiniti 4 minuti + 15
+  secondi, massimo 30: 3 colli 5 minuti, 40 colli 14). Il tempo scritto a mano
+  sul cliente o sulla fermata e quello imparato dalle consegne reali hanno la
+  precedenza; senza colli restano 10 minuti. La formula si regola in
+  Impostazioni. Lo scarico deve sempre finire entro la fascia del cliente.
+
 - Aggiornando la pagina (F5) da utente collegato non compare più la schermata di
   login, disegnata due volte a grandezze diverse prima che si applicasse la
   scala dell'interfaccia. Finché si verifica la sessione si vede solo lo sfondo;
