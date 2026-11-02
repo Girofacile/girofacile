@@ -5,6 +5,13 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Pianificazione dagli ordini: niente più blocco «Ordine … aggiornato: ricarica
+  la selezione o il giro». Se un ordine cambia dopo la selezione (anche solo
+  perché il giro è stato salvato in bozza), prima del calcolo la fermata ne
+  ricarica i dati (indirizzo, colli, peso, orari, note) e compare un avviso; la
+  durata dello scarico scelta sulla fermata resta. Il blocco rimane solo per gli
+  ordini annullati o presi da un altro giro.
+
 - Pianificazione, lista delle consegne: nuovo tasto «Aggiungi ordine» accanto ad
   «Aggiungi cliente». Si apre una finestra con gli ordini pronti e non ancora
   programmati per la data del giro (ricerca e provenienza), si spuntano e si

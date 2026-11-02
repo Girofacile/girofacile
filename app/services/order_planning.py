@@ -163,10 +163,11 @@ def available(db, user_id, route_date, depot=None):
 def append_stops(db, user, actor, data):
     """Fermate per gli ordini scelti; con l'unione attiva entrano nella fermata compatibile esistente."""
     from .order_grouping import group_stops, compatible, merge
-    from .route_orders import validate_references
+    from .route_orders import validate_references, refresh_stale
     ids = sorted(set(data.order_ids))
     current = [s.model_dump(mode='json') for s in data.stops]
     # Verifica le fermate attuali e ne ricostruisce numeri e dati operativi degli ordini.
+    refresh_stale(db, user.id, current, data.route_id)
     validate_references(db, user.id, current, route_id=data.route_id, route_date=data.data_giro)
     present = {ref['id'] for stop in current for ref in stop.get('order_refs') or []}
     if present & set(ids):
@@ -248,8 +249,12 @@ def preview(db, user, actor, data):
         stops = [to_stop(o) for o in orders]
         if config.get('group_orders'): stops = group_stops(user.id,stops)
     else:
-        stops = row.stops
-        from .route_orders import validate_references
+        # Copia: una modifica sul posto della colonna JSON non verrebbe salvata.
+        from copy import deepcopy
+        stops = deepcopy(row.stops)
+        from .route_orders import validate_references, refresh_stale
+        for number in refresh_stale(db, user.id, stops):
+            warnings.append(f'Ordine {number}: aggiornato dopo la selezione, dati ricaricati nella fermata.')
         validate_references(db,user.id,stops,route_date=config['data_giro'])
     if config.get('group_orders'):
         warnings.append(f"{len(orders)} ordini preparati in {len(stops)} fermate. Apri il dettaglio per vedere gli ordini inclusi.")

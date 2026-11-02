@@ -23,6 +23,44 @@ def lock_company(db, user_id):
     db.query(User).filter_by(id=user_id).with_for_update().one()
 
 
+# Durata dello scarico: scelta dell'operatore sulla fermata, non un dato dell'ordine.
+STOP_ONLY_FIELDS = ('tempo_scarico_min',)
+
+
+def refresh_stale(db, user_id, rows, route_id=None):
+    """Prima di un calcolo: le fermate con un ordine aggiornato ne ricaricano i dati.
+
+    Ogni salvataggio di un giro aumenta la versione degli ordini collegati, anche
+    senza cambiarne i dati: bloccare il calcolo lascerebbe l'operatore senza via
+    d'uscita. Si ricaricano solo gli ordini ancora pianificabili (pronti, oppure
+    già in questo giro); gli altri restano a validate_references, che li segnala.
+    Ritorna i numeri degli ordini ricaricati."""
+    ids = [ref['id'] for row in rows for ref in row.get('order_refs') or []]
+    if not ids: return []
+    orders = {o.id: o for o in db.query(Order).filter(Order.user_id == user_id, Order.id.in_(ids))}
+    assigned = {a.order_id: a.route_plan_id for a in db.query(RouteOrderAssignment).filter(RouteOrderAssignment.order_id.in_(ids))}
+    def plannable(order):
+        if order.id in assigned:
+            return route_id is not None and assigned[order.id] == route_id and order.status in ('pronto', 'assegnato')
+        return order.status == 'pronto'
+    refreshed = []
+    for row in rows:
+        refs = row.get('order_refs') or []
+        members = [orders.get(ref['id']) for ref in refs]
+        if not refs or None in members or all(o.version == ref['version'] for o, ref in zip(members, refs)):
+            continue
+        if not all(plannable(o) for o in members):
+            continue
+        stops = [to_stop(o) for o in members]
+        if len(stops) > 1 and not compatible(stops):
+            continue
+        fresh = merge(user_id, stops) if len(stops) > 1 else stops[0]
+        fresh['order_refs'] = [{'id': o.id, 'version': o.version} for o in members]
+        row.update({key: value for key, value in fresh.items() if key not in STOP_ONLY_FIELDS})
+        refreshed += [o.number for o, ref in zip(members, refs) if o.version != ref['version']]
+    return refreshed
+
+
 def validate_references(db, user_id, rows, route_id=None, route_date=None, lock=False):
     refs = [ref for row in rows for ref in row.get('order_refs', [])]
     ids = [r['id'] for r in refs]

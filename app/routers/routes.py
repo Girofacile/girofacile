@@ -117,6 +117,7 @@ def _validate_route_tenant_scope(db, user: User, data, deliveries: list[dict]):
     deposit = _require_owned_entity(db, Deposit, user, data.deposit_id, "Deposito")
     vehicle = _require_owned_entity(db, Vehicle, user, data.vehicle_id, "Mezzo", optional=True)
     driver = _require_owned_entity(db, Driver, user, data.driver_id, "Autista", optional=True)
+    route_orders.refresh_stale(db, user.id, deliveries, getattr(data, "route_id", None))
     route_orders.validate_references(db, user.id, deliveries, getattr(data, "route_id", None), getattr(data, "data_giro", None))
     _enrich_owned_deliveries(db, user, deliveries)
     from ..schemas.driver_schedule import DriverSchedule
