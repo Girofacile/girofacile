@@ -830,6 +830,8 @@ body[data-gf-surface] .gf-upload__button{position:relative;overflow:hidden}
 body[data-gf-surface] .gf-upload__button input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer}
 /* Schermata di accesso --------------------------------------------------- */
 body[data-gf-surface] .gf-auth{display:grid;grid-template-columns:var(--gf-auth-aside-width) minmax(0,1fr);min-height:var(--gf-viewport-height);background:var(--gf-color-bg)}
+/* Pagina che sta ancora verificando la sessione (F5 da utente collegato): il login non si mostra. */
+body[data-gf-surface][data-gf-auth="checking"] .gf-auth{visibility:hidden}
 body[data-gf-surface] .gf-auth[data-embedded]{min-height:560px;overflow:hidden;border:var(--gf-border);border-radius:var(--gf-radius-lg)}
 body[data-gf-surface] .gf-auth__aside{display:flex;flex-direction:column;gap:var(--gf-space-8);padding:var(--gf-space-10) var(--gf-space-8);background:var(--gf-color-nav);color:var(--gf-color-nav-text)}
 body[data-gf-surface] .gf-auth__brand{color:var(--gf-color-on-nav);font:var(--gf-weight-bold) var(--gf-font-2xl)/1 var(--gf-font-display)}

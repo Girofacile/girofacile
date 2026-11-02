@@ -1,3 +1,8 @@
+// Sessione verificata (collegato o no): da qui il login può comparire.
+function markAuthReady(){
+  document.body.dataset.gfAuth = 'ready';
+}
+
 function showGestionaleAfterLogin(isAdmin=false){
   // Dashboard aziendale: non attivare mai il vecchio menu Admin SaaS qui.
   // Il Super Admin usa /admin/login e /admin, separati dal gestionale aziendale.
@@ -6,6 +11,7 @@ function showGestionaleAfterLogin(isAdmin=false){
   const app = document.getElementById('app');
   if(loginCard) loginCard.classList.add('hidden');
   if(app) app.classList.remove('hidden');
+  markAuthReady();
   document.body.classList.add('app-logged-in');
   document.body.classList.toggle('admin-mode', !!isAdmin);
   document.body.classList.toggle('user-mode', !isAdmin);
@@ -16,6 +22,7 @@ function showLoginScreen(){
   const app = document.getElementById('app');
   if(app) app.classList.add('hidden');
   if(loginCard) loginCard.classList.remove('hidden');
+  markAuthReady();
   document.body.classList.remove('app-logged-in');
 }
 
@@ -1184,6 +1191,7 @@ async function checkLogin(){
       window.location.href = me.redirect_url || (me.role === "driver" ? "/driver" : "/agent");
       return;
     }
+    if(!me.authenticated) markAuthReady();
     if(me.authenticated){
       // Foto, nome ed email salvati nel browser sono dell'ultimo account collegato: con un altro account si scartano.
       const previousAccount = localStorage.getItem("girofacile_account_name");
@@ -1411,6 +1419,7 @@ async function showResetPasswordPanel(){
   const loginCard = document.getElementById("loginCard");
   if(app) app.classList.add("hidden");
   if(loginCard) loginCard.classList.remove("hidden");
+  markAuthReady();
   if(loginPanel) loginPanel.classList.add("hidden");
   if(signupPanel) signupPanel.classList.add("hidden");
   if(resetPanel) resetPanel.classList.remove("hidden");
@@ -4043,7 +4052,9 @@ function formatDateTimeLabel(value){
 if(window.location.pathname.startsWith("/reset-password/")){
   showResetPasswordPanel();
 }else{
-  checkLogin().catch(()=>{});
+  checkLogin().catch(markAuthReady);
+  // Se la verifica della sessione non risponde, il login compare comunque.
+  setTimeout(markAuthReady, 6000);
 }
 
 

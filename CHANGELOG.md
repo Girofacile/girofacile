@@ -5,6 +5,12 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Aggiornando la pagina (F5) da utente collegato non compare più la schermata di
+  login, disegnata due volte a grandezze diverse prima che si applicasse la
+  scala dell'interfaccia. Finché si verifica la sessione si vede solo lo sfondo;
+  poi il gestionale, oppure il login se l'utente non è collegato (comunque dopo
+  6 secondi al massimo).
+
 - Pianificazione dagli ordini: niente più blocco «Ordine … aggiornato: ricarica
   la selezione o il giro». Se un ordine cambia dopo la selezione (anche solo
   perché il giro è stato salvato in bozza), prima del calcolo la fermata ne
