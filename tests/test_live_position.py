@@ -74,13 +74,16 @@ def test_invalid_payload(gps, fields):
     assert upload(gps, **fields).status_code == 422
 
 
+# Gli orari si calcolano quando il test gira: calcolati alla raccolta dei test,
+# in una suite lunga «tra 5 minuti» sarebbe già passato.
 @pytest.mark.parametrize('fields', [
-    {'accuracy':500},
-    {'captured_at':(datetime.now(timezone.utc)-timedelta(minutes=5)).isoformat()},
-    {'captured_at':(datetime.now(timezone.utc)+timedelta(minutes=5)).isoformat()},
+    lambda: {'accuracy':500},
+    lambda: {'captured_at':(datetime.now(timezone.utc)-timedelta(minutes=5)).isoformat()},
+    lambda: {'captured_at':(datetime.now(timezone.utc)+timedelta(minutes=5)).isoformat()},
 ])
 def test_unusable_samples_never_replace_last_good_fix(gps, fields):
     from app.models import RoutePosition
+    fields = fields()
     assert upload(gps).json()['accepted']
     before = gps[1].get(RoutePosition,gps[2].id).captured_at
     assert upload(gps, **fields).json()['reason'] == 'unusable'
