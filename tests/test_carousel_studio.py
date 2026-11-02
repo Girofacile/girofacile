@@ -29,17 +29,18 @@ class CarouselTests(unittest.TestCase):
     def test_default_brief_is_ready_without_user_input(self):
         brand = studio.brand_profile()
         brief = brand["default_brief"]
-        self.assertEqual(len(brief["facts"].splitlines()), 6)
-        self.assertEqual(brief["count"], 9)
+        # Una riga per ogni blocco funzione della landing (oggi 4), più le slide di apertura e chiusura.
+        self.assertEqual(len(brief["facts"].splitlines()), 4)
+        self.assertEqual(brief["count"], 7)
         self.assertIn("https://girofacile.it/login", brief["cta"])
         result = studio.generate(brief)
         studio.validate_output(result, studio.brief_input(brief))
         self.assertEqual(len(result["carousels"]), 3)
 
     def test_brief_tracks_source_copy_changes(self):
-        landing = (studio.ROOT / "static/landing/index.html").read_text()
-        changed = landing.replace("Pianificazione intelligente", "Pianificazione verificata")
-        self.assertIn("Pianificazione verificata", studio.project_brief(changed)["brief"]["facts"])
+        landing = (studio.ROOT / "static/landing/index.html").read_text(encoding="utf-8")
+        changed = landing.replace("Chat con l'ufficio per gli imprevisti", "Chat con l'ufficio sempre aperta")
+        self.assertIn("Chat con l'ufficio sempre aperta", studio.project_brief(changed)["brief"]["facts"])
         with self.assertRaises(ValueError):
             studio.project_brief("<h1>Landing incompleta</h1>")
 

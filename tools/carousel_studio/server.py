@@ -49,11 +49,13 @@ def project_brief(landing):
         return " ".join(unescape(re.sub(r"<[^>]+>", " ", fragment)).split())
 
     title = re.search(r"<h1\b[^>]*>(.*?)</h1>", landing, re.S)
-    features = re.findall(r'<div class="feat-card">.*?<h3[^>]*>(.*?)</h3>\s*<p[^>]*>(.*?)</p>', landing, re.S)
-    action = re.search(r'<a\b[^>]*href="(https://[^"\s]+)"[^>]*class="btn-hero"[^>]*>(.*?)</a>', landing, re.S)
+    # Blocchi funzione della landing: «01 · Ordini», titolo e punti elenco.
+    features = re.findall(r'<p class="gf-kicker">\s*\d+\s*·[^<]*</p>\s*<h2[^>]*>(.*?)</h2>\s*<ul\b[^>]*>(.*?)</ul>', landing, re.S)
+    action = re.search(r'<a\b[^>]*class="gf-button"[^>]*data-variant="primary"[^>]*href="(https://[^"\s]+)"[^>]*>(.*?)</a>', landing, re.S)
     if not title or not features or not action:
         raise ValueError("La landing è cambiata: aggiorna l'estrazione del brief automatico.")
-    points = [f"{plain(heading)}: {plain(body)}" for heading, body in features]
+    points = [f"{plain(heading)}: {'; '.join(plain(item) for item in re.findall(r'<li\b[^>]*>(.*?)</li>', items, re.S))}"
+              for heading, items in features]
     selected = points[:6]
     brief = {"topic": plain(title.group(1)),
              "audience": "responsabili aziendali che organizzano le consegne e coordinano gli autisti",
@@ -70,7 +72,7 @@ def project_brief(landing):
 
 def brand_profile():
     theme_path = "static/design-system/theme.css"
-    css = (ROOT / theme_path).read_text()
+    css = (ROOT / theme_path).read_text(encoding="utf-8")
     tokens = dict(re.findall(r"--(gf-[\w-]+)\s*:\s*([^;]+);", css))
     names = {"primary": "primary", "navy": "nav", "background": "bg", "text": "text", "muted": "muted", "accent": "brand-accent"}
     colors = {name: tokens[f"gf-color-{token}"].strip() for name, token in names.items()}
@@ -78,7 +80,7 @@ def brand_profile():
         raise ValueError("I token colore del brand richiedono una revisione.")
     fonts = {"display": tokens["gf-font-display"].split(',')[0].strip(' "'),
              "body": tokens["gf-font-family"].split(',')[0].strip(' "')}
-    landing = (ROOT / "static/landing/index.html").read_text()
+    landing = (ROOT / "static/landing/index.html").read_text(encoding="utf-8")
     extracted = project_brief(landing)
     headings = re.findall(r"<h[13]\b[^>]*>(.*?)</h[13]>", landing, re.S)
     facts = [re.sub(r"<[^>]+>", "", h).strip() for h in headings][:12]

@@ -54,7 +54,8 @@ test('account password change stays inline and separate from profile save', () =
 
 test('order source onboarding explains samples and protects regenerated API keys', () => {
   const path='static/dashboard/js/order-sources.js';
-  const src=readFileSync(path,'utf8');
+  // Gli a capo di Windows non devono cambiare l'esito dei controlli sul testo.
+  const src=readFileSync(path,'utf8').replace(/\r\n/g,'\n');
   new vm.Script(src,{filename:path});
   assert.match(src,/data-source-api-settings/);
   assert.match(src,/Verifica con un ordine di esempio/);
