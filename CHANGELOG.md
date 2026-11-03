@@ -5,6 +5,11 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- OR-Tools anche nel giro singolo (oltre 8 fermate: parte dall'ordine trovato e
+  resta solo se il giro migliora, servendo tutte le consegne) e nella strategia
+  «Distribuisci il lavoro» (cerca giri equilibrati, con lo stesso controllo di
+  accettazione). Stessa regolazione FLEET_ORTOOLS_SECONDS.
+
 - Doppio passaggio Mapbox: calcolato il giro (singolo o più mezzi), si chiedono
   i tempi con il traffico; se qualche consegna finisce fuori fascia, le fermate
   vengono riordinate con i tempi allungati dal traffico misurato su quel giro e

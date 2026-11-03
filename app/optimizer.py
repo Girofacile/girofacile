@@ -720,6 +720,40 @@ def _exclude_ferry_deliveries(depot_coord, deliveries):
     return kept, excluded
 
 
+def _ortools_single(deliveries, matrix, points, vehicle, return_depot, start_time, result):
+    """Giri oltre 8 fermate: OR-Tools parte dall'ordine trovato e propone un giro più corto.
+
+    Fino a 8 fermate l'ordine è già esatto. La proposta deve servire tutte le
+    consegne e viene rivalutata qui: resta solo se migliore secondo solution_key
+    (prima la fattibilità, poi km e minuti). Errori o libreria assente lasciano
+    l'ordine attuale. Stessa regolazione del multi-mezzo: FLEET_ORTOOLS_SECONDS.
+    """
+    from .services import fleet_ortools
+    if len(deliveries) <= 8:
+        return result
+    seconds = fleet_ortools.seconds_budget(len(deliveries))
+    if not seconds or not fleet_ortools.available():
+        return result
+    start = parse_hhmm(start_time) or 0
+    # Le fermate ordinate sono copie senza _matrix_index: si riconoscono dai campi originali.
+    pending, initial = list(range(len(deliveries))), [[]]
+    for stop in result["ordered"]:
+        match = next((i for i in pending if all(stop.get(k) == v for k, v in deliveries[i].items() if k != "_matrix_index")), None)
+        if match is None:
+            return result
+        pending.remove(match)
+        initial[0].append(match)
+    try:
+        orders, _ = fleet_ortools.improve(deliveries, [vehicle or {}], matrix, start_time, return_depot,
+                                          [24 * 60 - start], initial, seconds)
+    except Exception:  # Un problema del solutore esterno non deve fermare il calcolo.
+        return result
+    if not orders or sorted(orders[0]) != list(range(len(deliveries))):
+        return result
+    candidate = _evaluate_fixed_sequence([deliveries[i] for i in orders[0]], matrix, points, vehicle, return_depot, start_time)
+    return candidate if solution_key(candidate) < solution_key(result) else result
+
+
 def optimize_route(db: Session, deposit, deliveries, vehicle=None, return_depot=True, start_time="08:00", route_date=None, travel_factor=None):
     validate_vehicle_load(_without_known_ferry(deposit, deliveries), vehicle)
     _route_departure_time_iso(start_time, route_date)
@@ -753,6 +787,7 @@ def optimize_route(db: Session, deposit, deliveries, vehicle=None, return_depot=
         matrix = scaled_matrix(matrix, travel_factor)
 
     result = _best_internal_sequence(deliveries, matrix, points, vehicle, return_depot, start_time)
+    result = _ortools_single(deliveries, matrix, points, vehicle, return_depot, start_time, result)
 
     for d in deliveries:
         d.pop("_matrix_index", None)

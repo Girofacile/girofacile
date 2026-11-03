@@ -229,7 +229,10 @@ def distribute(db,user,data,assignments=None):
 
 
 def _ortools_improvement(rows,vehicle_data,matrix,points,data,limits,refined,results,evaluate,search):
-    """OR-Tools parte dal piano trovato e propone giri più corti: resta solo se migliore.
+    """OR-Tools parte dal piano trovato e propone giri migliori: resta solo se lo sono davvero.
+
+    «Riduci chilometri e tempi»: giri più corti. «Distribuisci il lavoro»: in più un costo
+    sulla durata del giro più lungo; l'accettazione segue comunque la chiave della strategia.
 
     Confronto su 47 problemi: docs/ortools-full-comparison-2026-11-02.md. Il piano
     proposto passa dal calendario canonico e dal riordino esatto dei giri brevi come
@@ -244,7 +247,7 @@ def _ortools_improvement(rows,vehicle_data,matrix,points,data,limits,refined,res
         search['ortools']={'status':'disabled' if not seconds else 'unavailable'}
         return refined,results
     try:
-        orders,report=fleet_ortools.improve(rows,vehicle_data,matrix,data.orario_partenza,data.rientro_deposito,limits,refined,seconds)
+        orders,report=fleet_ortools.improve(rows,vehicle_data,matrix,data.orario_partenza,data.rientro_deposito,limits,refined,seconds,data.strategy)
     except Exception as exc:  # Un problema del solutore esterno non deve fermare la pianificazione.
         search['ortools']={'status':'error','error':type(exc).__name__}
         return refined,results
@@ -259,7 +262,8 @@ def _ortools_improvement(rows,vehicle_data,matrix,points,data,limits,refined,res
                     data.orario_partenza,limits[resource]))
             before=_plan_key(refined,results,rows,vehicle_data,data.strategy)
             after=_plan_key(orders,scores,rows,vehicle_data,data.strategy)
-            report.update(served_before=-before[0],served_after=-after[0],km_before=round(before[2],2),km_after=round(after[2],2))
+            km=2 if data.strategy=='efficient' else -1  # posizione dei km nella chiave della strategia
+            report.update(served_before=-before[0],served_after=-after[0],km_before=round(before[km],2),km_after=round(after[km],2))
             if _better(after,before):
                 report['accepted']=True
                 search['ortools']=report
@@ -497,7 +501,7 @@ def _distribute(db,user,data,assignments=None):
             rows,sequence,matrix,points,vehicle_data[resource],data.rientro_deposito,
             data.orario_partenza,limits[resource]))
     search.update(refinement)
-    if assignments is None and data.strategy=='efficient' and not search.get('global_optimum_proven'):
+    if assignments is None and not search.get('global_optimum_proven'):
         refined,results=_ortools_improvement(rows,vehicle_data,matrix,points,data,limits,refined,results,evaluate,search)
     routes=[[rows[i] for i in sequence] for sequence in refined]
     for resource,sequence in enumerate(routes):

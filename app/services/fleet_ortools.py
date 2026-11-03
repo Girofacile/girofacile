@@ -27,6 +27,8 @@ SCALE = 60            # secondi
 WEIGHT_SCALE = 1000   # grammi: pesi con decimali senza perdere capacità
 DROP_PENALTY = 1_000_000   # metri: 1.000 km
 MISMATCH_PENALTY = 20_000  # metri: 20 km
+# «Distribuisci il lavoro»: un minuto sul giro più lungo pesa come circa 10 km.
+BALANCE_PER_SECOND = 167
 
 
 def seconds_budget(stop_count):
@@ -45,7 +47,7 @@ def available():
     return True
 
 
-def improve(rows, vehicles, matrix, start_time, return_depot, limits, initial, seconds):
+def improve(rows, vehicles, matrix, start_time, return_depot, limits, initial, seconds, strategy='efficient'):
     """Nuovi ordini (indici di rows) per mezzo partendo da ``initial``, oppure None.
 
     ``rows[i]`` è il nodo i+1 della matrice; ``limits`` sono i minuti disponibili
@@ -86,6 +88,9 @@ def improve(rows, vehicles, matrix, start_time, return_depot, limits, initial, s
         return service[i] + leg(i, j)[1]
     routing.AddDimension(routing.RegisterTransitCallback(transit), horizon, horizon, False, 'Time')
     time = routing.GetDimensionOrDie('Time')
+    if strategy == 'balanced':
+        # Durata del giro più lungo: OR-Tools cerca giri equilibrati tra gli autisti.
+        time.SetGlobalSpanCostCoefficient(BALANCE_PER_SECOND)
     visit = [service[manager.IndexToNode(index)] for index in range(routing.Size())]
     unusable = set()
     for v, vehicle in enumerate(vehicles):

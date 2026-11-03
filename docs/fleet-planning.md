@@ -38,8 +38,8 @@ viene salvato oltre al giro; senza fornitore configurato nulla cambia
 
 ## Miglioramento con OR-Tools
 
-Con la strategia «Riduci chilometri e tempi», dopo la ricerca e il riordino dei
-giri, il piano trovato passa a **Google OR-Tools** (libreria gratuita, eseguita sul
+Con entrambe le strategie, dopo la ricerca e il riordino dei giri, il piano
+trovato passa a **Google OR-Tools** (libreria gratuita, eseguita sul
 server, nessuna chiamata esterna). OR-Tools parte da quel piano e cerca giri più
 corti con le stesse regole: pause, fasce, turni, disponibilità, capacità; sponda e
 ZTL incompatibili sono penalizzate. Il risultato passa dal calendario canonico e
@@ -50,7 +50,11 @@ assente lasciano il piano attuale; la diagnostica `search.ortools` indica stato,
 tempo e accettazione.
 
 Tempo: 0,15 s per consegna, tra 1 s e `FLEET_ORTOOLS_SECONDS` (predefinito 10 s;
-0 disattiva). La strategia «Distribuisci il lavoro» non lo usa ancora. Nei test è
+0 disattiva). Con «Distribuisci il lavoro» OR-Tools aggiunge un costo sulla durata
+del giro più lungo (un minuto pesa come circa 10 km) e l'accettazione segue la
+chiave bilanciata. Nel **giro singolo** oltre 8 fermate OR-Tools parte dall'ordine
+trovato e la proposta resta solo se migliore secondo `solution_key`, servendo tutte
+le consegne; fino a 8 fermate l'ordine è già esatto. Nei test è
 spento di default e si accende in `tests/test_fleet_ortools.py`. Il confronto su 47
 problemi che ha motivato la scelta è in
 [ortools-full-comparison-2026-11-02.md](ortools-full-comparison-2026-11-02.md).
