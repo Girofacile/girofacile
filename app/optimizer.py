@@ -754,7 +754,7 @@ def _ortools_single(deliveries, matrix, points, vehicle, return_depot, start_tim
     return candidate if solution_key(candidate) < solution_key(result) else result
 
 
-def optimize_route(db: Session, deposit, deliveries, vehicle=None, return_depot=True, start_time="08:00", route_date=None, travel_factor=None):
+def optimize_route(db: Session, deposit, deliveries, vehicle=None, return_depot=True, start_time="08:00", route_date=None, travel_factor=None, window_buffer=None):
     validate_vehicle_load(_without_known_ferry(deposit, deliveries), vehicle)
     _route_departure_time_iso(start_time, route_date)
     depot_coord = geocode_deposit(db, deposit)
@@ -786,8 +786,17 @@ def optimize_route(db: Session, deposit, deliveries, vehicle=None, return_depot=
         from .services.traffic_correction import scaled_matrix
         matrix = scaled_matrix(matrix, travel_factor)
 
-    result = _best_internal_sequence(deliveries, matrix, points, vehicle, return_depot, start_time)
-    result = _ortools_single(deliveries, matrix, points, vehicle, return_depot, start_time, result)
+    if window_buffer:
+        # Fasce chiuse prima solo per la ricerca; gli orari finali usano quelle vere.
+        from .services.traffic_correction import buffered
+        search = [dict(buffered(d, window_buffer), _buffer_index=i) for i, d in enumerate(deliveries)]
+        found = _best_internal_sequence(search, matrix, points, vehicle, return_depot, start_time)
+        found = _ortools_single(search, matrix, points, vehicle, return_depot, start_time, found)
+        result = _evaluate_fixed_sequence([deliveries[d["_buffer_index"]] for d in found["ordered"]],
+                                          matrix, points, vehicle, return_depot, start_time)
+    else:
+        result = _best_internal_sequence(deliveries, matrix, points, vehicle, return_depot, start_time)
+        result = _ortools_single(deliveries, matrix, points, vehicle, return_depot, start_time, result)
 
     for d in deliveries:
         d.pop("_matrix_index", None)

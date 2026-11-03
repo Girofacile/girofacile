@@ -5,6 +5,13 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Puntualità prima dei chilometri: se con il traffico una consegna resta fuori
+  fascia anche dopo il riordino, il multi-mezzo rifà la divisione tra i mezzi
+  con i tempi corretti e un margine di sicurezza sulle fasce (15–45 minuti) e
+  tiene il nuovo piano se serve le stesse consegne con meno ritardi, anche con
+  più km. Sul piano reale di prova: Agriturismo Luna da +28 minuti a in orario,
+  con 6 km in più. Il giro singolo usa lo stesso margine nel secondo passaggio.
+
 - OR-Tools anche nel giro singolo (oltre 8 fermate: parte dall'ordine trovato e
   resta solo se il giro migliora, servendo tutte le consegne) e nella strategia
   «Distribuisci il lavoro» (cerca giri equilibrati, con lo stesso controllo di

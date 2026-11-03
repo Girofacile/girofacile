@@ -36,6 +36,15 @@ giro se tutto è in orario, due quando serve la correzione. Nessun dato di traff
 viene salvato oltre al giro; senza fornitore configurato nulla cambia
 (`services/traffic_correction.py`).
 
+**Puntualità prima dei chilometri.** Se dopo il riordino una consegna resta fuori
+fascia, il multi-mezzo rifà l'intera divisione tra i mezzi con i tempi corretti dal
+traffico e le fasce chiuse prima di un margine (almeno 15 minuti, o il ritardo
+osservato, al massimo 45), poi richiede Mapbox. Il nuovo piano resta se serve almeno
+le stesse consegne con meno ritardi, anche con più chilometri; altrimenti resta il
+primo con l'avviso. Il margine vale solo per la ricerca: orari e fasce mostrati sono
+quelli veri del cliente. Il giro singolo usa lo stesso margine nel secondo passaggio.
+Diagnostica: `search.on_time_replan`. Le assegnazioni manuali non vengono rifatte.
+
 ## Miglioramento con OR-Tools
 
 Con entrambe le strategie, dopo la ricerca e il riordino dei giri, il piano

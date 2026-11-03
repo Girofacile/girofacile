@@ -662,8 +662,8 @@ def _traffic_two_pass(db, user, data, deposit, deliveries, vehicle, plan, result
     """Doppio passaggio Mapbox sul giro appena calcolato (services/traffic_correction.py).
 
     Prima richiesta: orari con il traffico. Con consegne fuori fascia, riordino con i
-    tempi di guida allungati dal traffico misurato e seconda richiesta; il nuovo ordine
-    resta solo se ha meno ritardi. Ritorna (giro, risultato, orari con traffico calcolati).
+    tempi di guida allungati dal traffico misurato e le fasce chiuse prima di un margine
+    di sicurezza, poi seconda richiesta; il nuovo ordine resta solo se ha meno ritardi. Ritorna (giro, risultato, orari con traffico calcolati).
     """
     from ..services import traffic_correction as correction
     from ..services.platform_settings import traffic_provider_name
@@ -680,13 +680,13 @@ def _traffic_two_pass(db, user, data, deposit, deliveries, vehicle, plan, result
     if plan.traffic_status != "updated" or not (first := late_stops(plan)):
         return plan, result, True
     snapshot, first_traffic = json_data(plan.routing_snapshot_json), json_data(plan.traffic_result_json)
+    # Anche con traffico in media più veloce una consegna può sforare: il margine sulle fasce serve comunque.
     factor = correction.travel_factor([leg["min"] for leg in snapshot["base_legs"]],
-                                      [leg["duration"] for leg in first_traffic["legs"]])
-    if not factor:
-        return plan, result, True
+                                      [leg["duration"] for leg in first_traffic["legs"]]) or 1.0
     try:
         second = optimize_route(db, deposit, deepcopy(deliveries), build_vehicle_dict(vehicle, data.driver_schedule.model_dump()),
-                                data.rientro_deposito, data.orario_partenza, route_date=data.data_giro, travel_factor=factor)
+                                data.rientro_deposito, data.orario_partenza, route_date=data.data_giro, travel_factor=factor,
+                                window_buffer=correction.replan_buffer(first))
         start_min = minutes_from_hhmm(data.orario_partenza) or 0
         _check_resource_overlap(db, user, data, start_min, start_min + int(float(second.get("total_min") or 0)), exclude_route_id=plan.id)
     except (ValueError, HTTPException):

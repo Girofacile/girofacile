@@ -5,10 +5,15 @@
 3. Se qualche consegna finisce fuori fascia, dal giro stesso si ricava di quanto il
    traffico allunga i tempi; le fermate vengono riordinate con i tempi corretti e si
    chiede di nuovo Mapbox. Il nuovo ordine resta solo se ha meno ritardi.
+4. Se resta un ritardo, si rifà il calcolo (nel multi-mezzo l'intera divisione tra i
+   mezzi) con i tempi corretti e un margine di sicurezza sulle fasce, poi Mapbox:
+   la puntualità conta prima dei chilometri.
 
 Nessun dato viene salvato oltre al giro: il fattore vale solo per quel calcolo.
 Senza un fornitore di traffico configurato nulla cambia.
 """
+import math
+
 from .road_routing import RoadMatrix
 
 MAX_FACTOR = 3.0
@@ -32,3 +37,25 @@ def scaled_matrix(matrix, factor):
 def lateness(late):
     """Ordine dei ritardi: prima quante consegne fuori fascia, poi i minuti totali."""
     return (len(late), round(sum(float(item.get('lateness_min') or 0) for item in late), 1))
+
+
+def buffered(row, minutes):
+    """Copia della consegna con le fasce chiuse prima di ``minutes`` minuti, solo per la ricerca.
+
+    Il margine non rende mai impossibile una fascia: resta almeno il tempo dello scarico.
+    """
+    from ..optimizer import parse_hhmm
+    copy = dict(row)
+    service = float(row.get('tempo_scarico_min') or 0)
+    for period in ('mattina', 'pomeriggio'):
+        start, end = parse_hhmm(row.get(f'scarico_{period}_da')), parse_hhmm(row.get(f'scarico_{period}_a'))
+        if start is None or end is None or end <= start:
+            continue
+        closing = max(end - minutes, math.ceil(start + service))
+        copy[f'scarico_{period}_a'] = f'{closing // 60:02d}:{closing % 60:02d}'
+    return copy
+
+
+def replan_buffer(late):
+    """Margine del terzo passaggio: almeno 15 minuti, o il ritardo osservato, fino a 45."""
+    return min(45, max(15, math.ceil(max(float(item.get('lateness_min') or 0) for item in late))))

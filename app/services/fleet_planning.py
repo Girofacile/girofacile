@@ -204,16 +204,45 @@ def _refresh_tail_lift_warnings(result,vehicles):
     return updated
 
 
+def _distribute_on_time(db,user,data,assignments=None):
+    """Consegne ancora fuori orario dopo il riordino: si rifà la divisione tra i mezzi.
+
+    Il nuovo calcolo usa i tempi corretti dal traffico e fasce chiuse prima di un margine
+    (traffic_correction.replan_buffer), poi Mapbox. Resta se serve almeno le stesse
+    consegne con meno ritardi, anche con più chilometri: la puntualità viene prima.
+    Le assegnazioni scelte dall'operatore non vengono rifatte.
+    """
+    from . import traffic_correction as correction
+    late_of=lambda plan:[item for route in plan['routes'] for item in (route.get('traffic') or {}).get('late',[])]
+    served=lambda plan:sum(len(route['stop_indexes']) for route in plan['routes'])
+    result=_distribute(db,user,data,assignments)
+    late=late_of(result)
+    if not late or assignments is not None:
+        return result
+    factors=[(route['traffic'].get('second_pass') or {}).get('factor') for route in result['routes'] if route['traffic'].get('late')]
+    tighten={'factor':max([f for f in factors if f] or [1.0]),'buffer':correction.replan_buffer(late)}
+    retry=_distribute(db,user,data,None,tighten)
+    timed=all((route.get('traffic') or {}).get('status')=='updated' for route in retry['routes'])
+    report={'factor':round(tighten['factor'],2),'buffer_min':tighten['buffer'],'late_before':len(late),
+            'late_after':len(late_of(retry)) if timed else None,'accepted':False}
+    if timed and served(retry)>=served(result) and correction.lateness(late_of(retry))<correction.lateness(late):
+        report['accepted']=True
+        retry['search']['on_time_replan']=report
+        return retry
+    result['search']['on_time_replan']=report
+    return result
+
+
 def distribute(db,user,data,assignments=None):
     """Clienti raggiungibili solo in traghetto: fuori dalla ricerca, poi tra i non assegnati."""
     from . import islands
     deposit,rows,vehicles,_=input_state(db,user,data)
     ferry=islands.ferry_exclusions(opt.geocode_deposit(db,deposit),rows)
-    if not ferry: return _distribute(db,user,data,assignments)
+    if not ferry: return _distribute_on_time(db,user,data,assignments)
     kept=[index for index in range(len(rows)) if index not in ferry]
     if kept:
         subset=data.model_copy(update={'consegne':[data.consegne[index] for index in kept]})
-        result=_distribute(db,user,subset,None if assignments is None else [assignments[index] for index in kept])
+        result=_distribute_on_time(db,user,subset,None if assignments is None else [assignments[index] for index in kept])
         for route in result['routes']:
             route['stop_indexes']=[kept[index] for index in route['stop_indexes']]
             for item in (route.get('traffic') or {}).get('late',[]): item['stop_index']=kept[item['stop_index']]
@@ -274,7 +303,7 @@ def _ortools_improvement(rows,vehicle_data,matrix,points,data,limits,refined,res
     return refined,results
 
 
-def _distribute(db,user,data,assignments=None):
+def _distribute(db,user,data,assignments=None,tighten=None):
     from ..routers.routes import build_vehicle_dict
     from .distance_cache import point_key
     deposit,rows,vehicles,drivers=input_state(db,user,data)
@@ -292,6 +321,12 @@ def _distribute(db,user,data,assignments=None):
     matrix=opt.build_distance_matrix(db,user.id,points,keys,start_time=data.orario_partenza,route_date=data.data_giro)
     margin=traffic_margin(db)
     matrix=apply_traffic_margin(matrix,margin)
+    originals=rows
+    if tighten:
+        # Terzo passaggio: tempi corretti dal traffico e fasce chiuse prima, solo per la ricerca.
+        from . import traffic_correction as correction
+        matrix=correction.scaled_matrix(matrix,tighten['factor'])
+        rows=[correction.buffered(row,tighten['buffer']) for row in rows]
     vehicle_data=[build_vehicle_dict(v,r.driver_schedule.model_dump()) for v,r in zip(vehicles,data.resources)]
     routes=[[] for _ in vehicles];results=[None for _ in vehicles]
     unresolved={}
@@ -523,6 +558,10 @@ def _distribute(db,user,data,assignments=None):
                 if failures:
                     reasons.append(f'Giro {resource+1}: '+ ' '.join(sorted(failures)))
             unresolved[index]='Consegna non assegnata nella suddivisione corrente. '+ ' '.join(reasons)
+    if tighten:
+        # Orari finali con le fasce vere del cliente: il margine serviva solo alla ricerca.
+        routes=[[originals[row['fleet_stop_index']] for row in route] for route in routes]
+        rows=originals
     # Generate complete ETA and diagnostic details only for selected final routes.
     results=[evaluate(sequence,index,include_details=True) if sequence else None
              for index,sequence in enumerate(routes)]
