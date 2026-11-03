@@ -118,3 +118,26 @@ La diagnostica `search.route_refinement` indica metodo, permutazioni valutate, m
 Regressioni aggiuntive: `tests/test_fleet_route_exact.py`, `tests/test_fleet_route_exact_api.py`, `tests/test_fleet_route_evaluator.py`. Il benchmark separato `python tests/run_fleet_route_exact_benchmark.py` misura 50 consegne suddivise in `6×8+2`, il caso misto `5×8+9+1` e il flusso completo con una sola matrice; non modifica il conteggio storico delle 512 simulazioni.
 
 Risultati misurati e differenze di comportamento: [riordino completo fino a 8 fermate](fleet-route-exact-results.md).
+
+## Recupero delle finestre e tempi manuali — 3 novembre 2026
+
+Il recupero dopo il traffico cerca prima con le finestre originali. Solo se restano
+ritardi prova un margine sulle chiusure. Un piano sostituisce il precedente solo
+se il traffico è verificato, non diminuisce la copertura e riduce i ritardi;
+nel giro singolo si conserva il migliore dei tentativi verificati. Il recupero
+si ferma appena trova un piano puntuale. Rimangono al massimo due tentativi di
+recupero aggiuntivi: non si promette una soluzione quando i vincoli non lo consentono.
+
+Regressione riprodotta: tre consegne, due mezzi, partenza 08:00, guida 20 minuti,
+scarico 5 minuti, chiusura 08:55. Ora il recupero distribuisce 2+1 consegne,
+terminando gli scarichi alle 08:50 e 08:25 invece di conservare 20 minuti di ritardo.
+Il margine non può mai estendere la chiusura originale, neppure quando lo scarico
+è già più lungo dell'intera fascia.
+
+`tempo_scarico_auto=false` conserva sempre il tempo manuale, incluso 10 minuti;
+`true` indica una stima ricalcolabile; `null` una provenienza non specificata.
+Il frontend conserva questa distinzione durante salvataggio e ricalcolo.
+I tempi presenti nell'anagrafica cliente sono conservati anche se uguali a 10:
+la vecchia anagrafica non distingue un valore predefinito da uno scelto manualmente.
+Le stime dai colli rimangono attive per fermate senza un tempo cliente e per stime
+esplicitamente automatiche. Nessuna migrazione o modifica dei giri storici.

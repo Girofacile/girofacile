@@ -128,13 +128,94 @@ def test_fleet_replans_across_vehicles_when_reordering_is_not_enough(fleet, monk
     assert all(route['traffic']['late'] == [] for route in plan['routes'])
 
 
-def test_fleet_keeps_every_delivery_when_replan_would_drop_one(fleet, monkeypatch):  # noqa: F811
+def test_fleet_uses_real_windows_before_safety_margin(fleet, monkeypatch):  # noqa: F811
     ctx, data = fleet
     flat_roads(monkeypatch)
     data = deepcopy(data)
     # Con il margine ogni mezzo può fare una sola consegna: il nuovo piano ne lascerebbe fuori una.
     data.update(strategy='efficient', consegne=same_window(ctx[2].id, '08:55'))
     plan = preview(fleet, data)
-    assert plan['search']['on_time_replan']['accepted'] is False
+    assert plan['search']['on_time_replan']['accepted'] is True
+    assert plan['search']['on_time_replan']['attempts'] == [{'buffer_min': 0, 'late_after': 0, 'accepted': True}]
     assert plan['unassigned'] == [] and sum(len(route['stop_indexes']) for route in plan['routes']) == 3
-    assert any('fuori orario' in warning for warning in plan['warnings'])
+    assert len(plan['routes']) == 2
+    assert all(route['traffic']['late'] == [] for route in plan['routes'])
+
+
+def test_buffer_never_expands_or_mutates_customer_windows():
+    for service, closing in ((20, '08:10'), (10, '08:10'), (5, '08:30')):
+        row = {'scarico_mattina_da':'08:00','scarico_mattina_a':closing,'tempo_scarico_min':service,
+               'scarico_pomeriggio_da':'13:00','scarico_pomeriggio_a':'14:00'}
+        original = deepcopy(row)
+        adjusted = traffic_correction.buffered(row, 15)
+        assert row == original
+        assert adjusted['scarico_mattina_a'] <= closing
+        assert adjusted['scarico_pomeriggio_a'] == '13:45'
+        if service >= 10:
+            assert adjusted['scarico_mattina_a'] == closing
+
+
+def test_fleet_retains_coverage_when_real_windows_are_still_impossible(fleet, monkeypatch):
+    ctx, data = fleet
+    flat_roads(monkeypatch)
+    data = deepcopy(data)
+    data.update(strategy='efficient', consegne=same_window(ctx[2].id, '08:40'))
+    plan = preview(fleet, data)
+    assert not plan['search']['on_time_replan']['accepted']
+    assert len(plan['search']['on_time_replan']['attempts']) == 2
+    assert plan['unassigned'] == []
+    assert sum(len(r['stop_indexes']) for r in plan['routes']) == 3
+    assert any(r['traffic']['late'] for r in plan['routes'])
+
+
+def test_fleet_recovery_does_not_replace_plan_when_traffic_is_unavailable(monkeypatch):
+    from app.services import fleet_planning
+    original = {'routes':[{'stop_indexes':[0,1], 'traffic':{'status':'updated','late':[{'lateness_min':20}]}}], 'search':{}}
+    retry = {'routes':[{'stop_indexes':[0,1], 'traffic':{'status':'unavailable'}}], 'search':{}}
+    calls = []
+    def distribute(*args):
+        calls.append(args)
+        return deepcopy(original if len(calls) == 1 else retry)
+    monkeypatch.setattr(fleet_planning, '_distribute', distribute)
+    result = fleet_planning._distribute_on_time(None,None,None)
+    assert result['routes'] == original['routes']
+    assert not result['search']['on_time_replan']['accepted']
+    assert len(calls) == 3
+
+
+def test_single_route_restores_best_verified_attempt(monkeypatch):
+    from types import SimpleNamespace
+    from app.routers import routes
+    from app.services import platform_settings, route_enrichment
+    plan = SimpleNamespace(id=1, delay=20, traffic_status='updated',
+                           routing_snapshot_json={'base_legs':[{'min':10}]},
+                           traffic_result_json={'legs':[{'duration':20}], 'delay':20})
+    def result(name, delay):
+        return {'ordered':[{'cliente_nome':name}], 'total_min':30, 'delay':delay}
+    original, better, worse = result('A',20), result('B',10), result('C',30)
+    candidates = iter([better,worse])
+    buffers = []
+    def optimize(*args, **kwargs):
+        buffers.append(kwargs['window_buffer'])
+        return next(candidates)
+    def save(db,user,data,chosen,vehicle,plan_id):
+        plan.delay = chosen['delay']
+        return plan
+    def enrich(db,current,force=False,cached_traffic=None):
+        current.traffic_result_json = cached_traffic or {'legs':[{'duration':20}], 'delay':current.delay}
+    def evaluate(snapshot,legs,current):
+        return {'ordered':[{'time_window_violation':True,'lateness_min':current.delay}]}
+    monkeypatch.setattr(platform_settings,'traffic_provider_name',lambda db:'mapbox')
+    monkeypatch.setattr(route_enrichment,'evaluate_legs',evaluate)
+    monkeypatch.setattr(routes,'json_data',lambda value:value)
+    monkeypatch.setattr(routes,'enrich_final_route',enrich)
+    monkeypatch.setattr(routes,'optimize_route',optimize)
+    monkeypatch.setattr(routes,'save_route_result',save)
+    monkeypatch.setattr(routes,'build_vehicle_dict',lambda *args:{})
+    monkeypatch.setattr(routes,'_check_resource_overlap',lambda *args,**kwargs:None)
+    data = SimpleNamespace(driver_schedule=SimpleNamespace(model_dump=lambda:{}),
+                           rientro_deposito=False,orario_partenza='08:00',data_giro='2099-01-01')
+    final, chosen, timed = routes._traffic_two_pass(SimpleNamespace(commit=lambda:None),None,data,None,[],None,plan,original)
+    assert timed and chosen is better
+    assert final.delay == 10 and final.traffic_result_json['delay'] == 10
+    assert buffers[0] == 0 and buffers[1] > 0

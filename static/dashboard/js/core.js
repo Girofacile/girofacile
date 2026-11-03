@@ -3269,7 +3269,7 @@ function deliveryPayloadFromForm(){
   if(!cliente || !indirizzo){ alert("Inserisci cliente e indirizzo"); return null; }
   return {customer_id:selectedCustomer?.id || null, cliente_nome:cliente, indirizzo, peso_kg:parseFloat(val("dPeso")||0), colli:parseInt(val("dColli")||0),
     scarico_mattina_da:val("dMattinaDa")||null, scarico_mattina_a:val("dMattinaA")||null, scarico_pomeriggio_da:val("dPomeriggioDa")||null, scarico_pomeriggio_a:val("dPomeriggioA")||null,
-    tempo_scarico_min:parseInt(val("dScarico")||10), ztl:boolVal("dZtl"), sponda:boolVal("dSponda"), note:val("dNote")};
+    tempo_scarico_min:parseInt(val("dScarico")||10), tempo_scarico_auto:false, ztl:boolVal("dZtl"), sponda:boolVal("dSponda"), note:val("dNote")};
 }
 
 function addDelivery(){
@@ -3565,7 +3565,7 @@ function cleanDeliveryForPayload(d){
     peso_kg: parseFloat(d.peso_kg)||0, colli: parseInt(d.colli)||0,
     scarico_mattina_da: d.scarico_mattina_da || null, scarico_mattina_a: d.scarico_mattina_a || null,
     scarico_pomeriggio_da: d.scarico_pomeriggio_da || null, scarico_pomeriggio_a: d.scarico_pomeriggio_a || null,
-    tempo_scarico_min: parseInt(d.tempo_scarico_min ?? 10), tempo_scarico_auto: !!d.tempo_scarico_auto, ztl: !!d.ztl, pedestrian_area: !!d.pedestrian_area, sponda: !!d.sponda, note: d.note || null
+    tempo_scarico_min: parseInt(d.tempo_scarico_min ?? 10), tempo_scarico_auto: d.tempo_scarico_auto ?? null, ztl: !!d.ztl, pedestrian_area: !!d.pedestrian_area, sponda: !!d.sponda, note: d.note || null
   };
 }
 function routePayloadFromResult(){

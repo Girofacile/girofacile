@@ -7,8 +7,9 @@
 
 Il calcolo degli orari esige che lo scarico finisca entro la fascia: con 15 minuti
 e chiusura alle 12:00 l'arrivo deve avvenire entro le 11:45.
-Dieci minuti senza misure reali sono il valore predefinito, non una scelta: in quel
-caso, e quando la fermata è già stata stimata, si usa la stima dai colli.
+False indica una scelta manuale, True una stima ricalcolabile, None una
+provenienza non specificata. I tempi salvati sul cliente sono conservati anche
+quando valgono 10 minuti: non è possibile dedurne la provenienza dal numero.
 """
 import math
 
@@ -40,18 +41,21 @@ def estimate(packages, user):
 
 def customer_known(customer):
     """Tempo del cliente scritto a mano o imparato dalle consegne."""
-    measured = int(getattr(customer, 'tempo_scarico_rilevazioni', 0) or 0) > 0
     value = getattr(customer, 'tempo_scarico_min', None)
-    return measured or (value is not None and int(value) != DEFAULT_MINUTES)
+    return value is not None
 
 
 def apply(delivery, user, customer=None):
     """Aggiorna la fermata prima del calcolo, senza toccare i tempi decisi dall'operatore."""
-    if customer is not None and customer_known(customer):
-        return
     current = delivery.get('tempo_scarico_min')
-    automatic = bool(delivery.get('tempo_scarico_auto'))
-    if not automatic and current not in (None, DEFAULT_MINUTES):
+    provenance = delivery.get('tempo_scarico_auto')
+    automatic = provenance is True
+    if provenance is False or (not automatic and current not in (None, DEFAULT_MINUTES)):
+        return
+    if customer is not None and customer_known(customer):
+        delivery['tempo_scarico_min'] = int(customer.tempo_scarico_min)
+        if automatic:
+            delivery['tempo_scarico_auto'] = False
         return
     minutes = estimate(delivery.get('colli'), user)
     if minutes is None:

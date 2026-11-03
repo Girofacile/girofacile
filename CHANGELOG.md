@@ -240,3 +240,13 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
   impostazioni mancanti compaiono come avvisi nel log.
 - Produzione: nuovo `/health` (app + database), healthcheck Docker, proxy HTTPS
   Caddy in `deploy/caddy` e guida in `deploy/README.md`.
+
+## 2026-11-03 — Recupero ritardi e conservazione dello scarico manuale
+
+- Recupero dopo il traffico: prima finestre reali, poi eventuale margine; conserva
+  il migliore dei tentativi verificati senza ridurre le consegne assegnate.
+- Il margine non estende le finestre già troppo corte per lo scarico.
+- Conserva i 10 minuti manuali e i tempi registrati sul cliente; distingue
+  provenienza automatica, manuale e non specificata nel payload delle fermate.
+- Regressioni per il caso 3 consegne/2 mezzi, traffico non disponibile, impossibilità
+  residua, salvataggio/ricaricamento dei tempi manuali e serializzazione frontend.

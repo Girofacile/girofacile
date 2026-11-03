@@ -207,8 +207,8 @@ def _refresh_tail_lift_warnings(result,vehicles):
 def _distribute_on_time(db,user,data,assignments=None):
     """Consegne ancora fuori orario dopo il riordino: si rifà la divisione tra i mezzi.
 
-    Il nuovo calcolo usa i tempi corretti dal traffico e fasce chiuse prima di un margine
-    (traffic_correction.replan_buffer), poi Mapbox. Resta se serve almeno le stesse
+    Il nuovo calcolo usa i tempi corretti dal traffico e prima le finestre reali.
+    Solo se restano ritardi prova le fasce ridotte da un margine, poi Mapbox. Resta se serve almeno le stesse
     consegne con meno ritardi, anche con più chilometri: la puntualità viene prima.
     Le assegnazioni scelte dall'operatore non vengono rifatte.
     """
@@ -220,16 +220,23 @@ def _distribute_on_time(db,user,data,assignments=None):
     if not late or assignments is not None:
         return result
     factors=[(route['traffic'].get('second_pass') or {}).get('factor') for route in result['routes'] if route['traffic'].get('late')]
-    tighten={'factor':max([f for f in factors if f] or [1.0]),'buffer':correction.replan_buffer(late)}
-    retry=_distribute(db,user,data,None,tighten)
-    timed=all((route.get('traffic') or {}).get('status')=='updated' for route in retry['routes'])
-    report={'factor':round(tighten['factor'],2),'buffer_min':tighten['buffer'],'late_before':len(late),
-            'late_after':len(late_of(retry)) if timed else None,'accepted':False}
-    if timed and served(retry)>=served(result) and correction.lateness(late_of(retry))<correction.lateness(late):
-        report['accepted']=True
-        retry['search']['on_time_replan']=report
-        return retry
-    result['search']['on_time_replan']=report
+    factor=max([f for f in factors if f] or [1.0])
+    initial_late=len(late)
+    attempts=[]
+    accepted=False
+    # Real customer windows first. A safety margin must not hide a punctual plan.
+    for buffer in (0, correction.replan_buffer(late)):
+        retry=_distribute(db,user,data,None,{'factor':factor,'buffer':buffer})
+        timed=bool(retry['routes']) and all((route.get('traffic') or {}).get('status')=='updated' for route in retry['routes'])
+        improved=timed and served(retry)>=served(result) and correction.lateness(late_of(retry))<correction.lateness(late_of(result))
+        attempts.append({'buffer_min':buffer,'late_after':len(late_of(retry)) if timed else None,'accepted':bool(improved)})
+        if improved:
+            result=retry
+            accepted=True
+        if not late_of(result):
+            break
+    result['search']['on_time_replan']={'factor':round(factor,2),'buffer_min':next((a['buffer_min'] for a in reversed(attempts) if a['accepted']),attempts[-1]['buffer_min']),
+        'late_before':initial_late,'late_after':len(late_of(result)),'accepted':accepted,'attempts':attempts}
     return result
 
 

@@ -6,8 +6,8 @@
    traffico allunga i tempi; le fermate vengono riordinate con i tempi corretti e si
    chiede di nuovo Mapbox. Il nuovo ordine resta solo se ha meno ritardi.
 4. Se resta un ritardo, si rifà il calcolo (nel multi-mezzo l'intera divisione tra i
-   mezzi) con i tempi corretti e un margine di sicurezza sulle fasce, poi Mapbox:
-   la puntualità conta prima dei chilometri.
+   mezzi) con i tempi corretti e le finestre originali, poi Mapbox. Solo se restano
+   ritardi si prova un margine: la puntualità conta prima dei chilometri.
 
 Nessun dato viene salvato oltre al giro: il fattore vale solo per quel calcolo.
 Senza un fornitore di traffico configurato nulla cambia.
@@ -42,7 +42,8 @@ def lateness(late):
 def buffered(row, minutes):
     """Copia della consegna con le fasce chiuse prima di ``minutes`` minuti, solo per la ricerca.
 
-    Il margine non rende mai impossibile una fascia: resta almeno il tempo dello scarico.
+    Una fascia fattibile conserva spazio per lo scarico; una fascia già impossibile
+    resta invariata. Il limite originale non viene mai esteso.
     """
     from ..optimizer import parse_hhmm
     copy = dict(row)
@@ -51,7 +52,7 @@ def buffered(row, minutes):
         start, end = parse_hhmm(row.get(f'scarico_{period}_da')), parse_hhmm(row.get(f'scarico_{period}_a'))
         if start is None or end is None or end <= start:
             continue
-        closing = max(end - minutes, math.ceil(start + service))
+        closing = min(end, max(end - max(0, minutes), math.ceil(start + service)))
         copy[f'scarico_{period}_a'] = f'{closing // 60:02d}:{closing % 60:02d}'
     return copy
 

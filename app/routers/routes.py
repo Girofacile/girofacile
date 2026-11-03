@@ -27,6 +27,7 @@ from ..services.error_monitor import log_exception
 from ..services.route_enrichment import initialize_snapshot, enrich_final_route, routing_metadata, json_data, TIMING_DETAILS
 from ..services.ai_assistant import ensure_company_ai_allowed, run_ai_text
 import json
+import math
 from copy import deepcopy
 
 router = APIRouter(tags=["routes"])
@@ -661,9 +662,9 @@ def _stop_identity(result):
 def _traffic_two_pass(db, user, data, deposit, deliveries, vehicle, plan, result):
     """Doppio passaggio Mapbox sul giro appena calcolato (services/traffic_correction.py).
 
-    Prima richiesta: orari con il traffico. Con consegne fuori fascia, riordino con i
-    tempi di guida allungati dal traffico misurato e le fasce chiuse prima di un margine
-    di sicurezza, poi seconda richiesta; il nuovo ordine resta solo se ha meno ritardi. Ritorna (giro, risultato, orari con traffico calcolati).
+    Prima richiesta: orari con il traffico. Con consegne fuori fascia, ricerca con
+    tempi corretti e finestre originali; soltanto se necessario si prova un margine.
+    Ogni nuovo ordine resta solo se riduce i ritardi verificati dal provider. Ritorna (giro, risultato, orari con traffico calcolati).
     """
     from ..services import traffic_correction as correction
     from ..services.platform_settings import traffic_provider_name
@@ -683,25 +684,34 @@ def _traffic_two_pass(db, user, data, deposit, deliveries, vehicle, plan, result
     # Anche con traffico in media più veloce una consegna può sforare: il margine sulle fasce serve comunque.
     factor = correction.travel_factor([leg["min"] for leg in snapshot["base_legs"]],
                                       [leg["duration"] for leg in first_traffic["legs"]]) or 1.0
-    try:
-        second = optimize_route(db, deposit, deepcopy(deliveries), build_vehicle_dict(vehicle, data.driver_schedule.model_dump()),
-                                data.rientro_deposito, data.orario_partenza, route_date=data.data_giro, travel_factor=factor,
-                                window_buffer=correction.replan_buffer(first))
-        start_min = minutes_from_hhmm(data.orario_partenza) or 0
-        _check_resource_overlap(db, user, data, start_min, start_min + int(float(second.get("total_min") or 0)), exclude_route_id=plan.id)
-    except (ValueError, HTTPException):
-        return plan, result, True  # Il primo giro resta valido: solo gli avvisi di ritardo.
-    if _stop_identity(second) == _stop_identity(result):
-        return plan, result, True
-    second_plan = save_route_result(db, user, data, second, vehicle, plan.id)
-    enrich_final_route(db, second_plan, force=True)
-    db.commit()
-    if second_plan.traffic_status == "updated" and correction.lateness(late_stops(second_plan)) < correction.lateness(first):
-        return second_plan, second, True
-    # Nessun miglioramento: torna l'ordine iniziale con le tratte della prima richiesta.
-    plan = save_route_result(db, user, data, result, vehicle, plan.id)
-    enrich_final_route(db, plan, cached_traffic=first_traffic)
-    db.commit()
+    attempted = {tuple(_stop_identity(result))}
+    for buffer in (0, correction.replan_buffer(first)):
+        try:
+            second = optimize_route(db, deposit, deepcopy(deliveries), build_vehicle_dict(vehicle, data.driver_schedule.model_dump()),
+                                    data.rientro_deposito, data.orario_partenza, route_date=data.data_giro, travel_factor=factor,
+                                    window_buffer=buffer)
+            start_min = minutes_from_hhmm(data.orario_partenza) or 0
+            _check_resource_overlap(db, user, data, start_min, start_min + math.ceil(float(second.get("total_min") or 0)), exclude_route_id=plan.id)
+        except (ValueError, HTTPException):
+            continue
+        identity = tuple(_stop_identity(second))
+        if identity in attempted:
+            continue
+        attempted.add(identity)
+        second_plan = save_route_result(db, user, data, second, vehicle, plan.id)
+        enrich_final_route(db, second_plan, force=True)
+        db.commit()
+        if second_plan.traffic_status == "updated" and correction.lateness(late_stops(second_plan)) < correction.lateness(first):
+            plan, result = second_plan, second
+            first = late_stops(plan)
+            first_traffic = json_data(plan.traffic_result_json)
+            if not first:
+                return plan, result, True
+        else:
+            # Restore the best verified result, never a worse intermediate attempt.
+            plan = save_route_result(db, user, data, result, vehicle, plan.id)
+            enrich_final_route(db, plan, cached_traffic=first_traffic)
+            db.commit()
     return plan, result, True
 
 

@@ -27,7 +27,7 @@ def test_company_formula():
 
 
 def test_priority_rules():
-    unknown = SimpleNamespace(tempo_scarico_min=10, tempo_scarico_rilevazioni=0)
+    unknown = SimpleNamespace(tempo_scarico_min=None, tempo_scarico_rilevazioni=0)
     stop = {'tempo_scarico_min': 10, 'colli': 40}
     unload_time.apply(stop, COMPANY, unknown)
     assert stop == {'tempo_scarico_min': 14, 'colli': 40, 'tempo_scarico_auto': True}
@@ -80,3 +80,34 @@ def test_route_estimates_unknown_stop_and_keeps_manual(routing_env):  # noqa: F8
     minutes = {stop['cliente_nome']: stop['tempo_scarico_min'] for stop in response.json()['consegne']}
     assert minutes['Nuovo'] == 14
     assert minutes[data['consegne'][0]['cliente_nome']] == 20
+
+@pytest.mark.parametrize('packages', [3, 40])
+def test_explicit_manual_ten_minutes_survives_estimation(packages):
+    row = {'tempo_scarico_min': 10, 'tempo_scarico_auto': False, 'colli': packages}
+    unload_time.apply(row, COMPANY)
+    assert row['tempo_scarico_min'] == 10 and row['tempo_scarico_auto'] is False
+
+
+def test_customer_ten_minutes_is_preserved_without_guessing_provenance():
+    customer = SimpleNamespace(tempo_scarico_min=10, tempo_scarico_rilevazioni=0)
+    row = {'tempo_scarico_min': 14, 'tempo_scarico_auto': True, 'colli': 40}
+    unload_time.apply(row, COMPANY, customer)
+    assert row['tempo_scarico_min'] == 10 and row['tempo_scarico_auto'] is False
+
+
+def test_manual_ten_minutes_survives_api_save_and_manual_recalculation(routing_env):
+    client, _, owner, *_ = routing_env
+    data = payload(routing_env)
+    data['consegne'] = [verified_stop(owner.id, colli=40, tempo_scarico_min=10, tempo_scarico_auto=False)]
+    result = client.post('/api/routes/optimize', json=data)
+    assert result.status_code == 200, result.text
+    saved = result.json()
+    assert saved['consegne'][0]['tempo_scarico_min'] == 10
+    assert saved['consegne'][0]['tempo_scarico_auto'] is False
+    fetched = client.get(f"/api/routes/{saved['id']}").json()
+    data.update(route_id=saved['id'], consegne=fetched['consegne'])
+    data['consegne'][0]['colli'] = 3
+    again = client.post('/api/routes/recalculate-manual', json=data)
+    assert again.status_code == 200, again.text
+    assert again.json()['consegne'][0]['tempo_scarico_min'] == 10
+    assert again.json()['consegne'][0]['tempo_scarico_auto'] is False

@@ -201,7 +201,7 @@ class OrderReference(BaseModel):
 
 class DeliveryIn(TimeWindowsMixin, BaseModel):
     # Tempo di scarico stimato dai colli: si ricalcola se cambiano i colli.
-    tempo_scarico_auto: bool = False
+    tempo_scarico_auto: bool | None = None
     order_refs: list[OrderReference] = Field(default_factory=list, max_length=1000)
     order_stop_key: str | None = Field(default=None, max_length=36)
     customer_id: Optional[int] = None
