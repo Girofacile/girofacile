@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Anteprima A · Giri in corso · GiroFacile</title>
+<link rel="stylesheet" href="../static/design-system/theme.css">
+<link rel="stylesheet" href="../static/design-system/components.css">
+<link rel="stylesheet" href="../static/design-system/layout.css">
+<script src="../static/design-system/shell.js" defer></script>
+<script src="giri-in-corso-demo.js" defer></script>
+</head>
+<!-- Variante A · Tabella dei giri.
+     Una riga per giro con autista e mezzo, avanzamento, prossima fermata, rientro e segnali
+     (mancate, ritardo, GPS, messaggi). «Apri» mostra il giro nel dettaglio sotto.
+     Resta compatta anche con 10-15 giri attivi. -->
+<body data-gf-surface="workspace" data-gf-layout="base" data-gf-nav-active="dashboard"
+      data-gf-title="Giri in corso" data-gf-subtitle="Mercoledì 4 novembre: avanzamento delle consegne, stato delle fermate e posizione GPS degli autisti."
+      data-gf-user-name="Supermercati Iorio" data-gf-user-role="admin">
+<main data-gf-shell-content>
+  <div data-gf-slot="header-actions" class="gf-cluster">
+    <nav class="gf-cluster" aria-label="Versioni da confrontare"><a class="gf-button" data-variant="secondary" data-size="sm" href="giri-in-corso-a.html" aria-current="page">A</a><a class="gf-button" data-variant="ghost" data-size="sm" href="giri-in-corso-b.html">B</a><a class="gf-button" data-variant="ghost" data-size="sm" href="giri-in-corso-c.html">C</a></nav>
+  </div>
+  <div class="gf-stack" data-gap="lg">
+    <section class="gf-panel" aria-label="Giri attivi">
+      <header class="gf-panel__header">
+        <div><h2 class="gf-panel__title">Giri attivi</h2><p class="gf-muted">Aggiornamento automatico ogni 30 secondi · ultimo alle 12:18</p></div>
+        <div class="gf-cluster" role="group" aria-label="Filtra i giri">
+          <button type="button" class="gf-chip" data-demo-filter="all" data-demo-count="label-all"></button>
+          <button type="button" class="gf-chip" data-demo-filter="issue" data-demo-count="label-issue"></button>
+          <button type="button" class="gf-chip" data-demo-filter="gps" data-demo-count="label-gps"></button>
+        </div>
+      </header>
+      <div class="gf-table-wrap">
+        <table class="gf-table" data-gf-responsive="cards" aria-label="Giri attivi">
+          <thead><tr><th scope="col">Autista e mezzo</th><th scope="col">Avanzamento</th><th scope="col">Prossima fermata</th><th scope="col">Rientro stimato</th><th scope="col">Segnali</th><th scope="col"><span class="gf-muted">Dettaglio</span></th></tr></thead>
+          <tbody data-demo-list="route">
+            <template data-demo-template="route">
+              <tr data-demo-route>
+                <td data-label="Autista e mezzo"><div class="gf-cluster"><span class="gf-avatar" data-demo-tone data-demo-field="initials" aria-hidden="true"></span><div><strong data-demo-field="driver"></strong><br><small class="gf-muted" data-demo-field="vehicle"></small></div></div></td>
+                <td data-label="Avanzamento"><div class="gf-progress"><div class="gf-progress__top"><span><b data-demo-field="count"></b> consegne</span><span data-demo-field="todo"></span></div><div class="gf-progress__track" role="img" aria-label="Avanzamento del giro"><span class="gf-progress__done" data-demo-done></span><span class="gf-progress__miss" data-demo-miss></span></div></div></td>
+                <td data-label="Prossima fermata"><strong data-demo-field="next"></strong><br><small class="gf-muted"><span data-demo-field="nextTime"></span> · <span data-demo-field="nextAddress"></span></small></td>
+                <td data-label="Rientro stimato"><strong data-demo-field="eta"></strong><br><small class="gf-muted" data-demo-field="etaNote"></small></td>
+                <td data-label="Segnali"><div class="gf-cluster"><span class="gf-badge" data-demo-if="miss" data-status="danger" data-demo-field="miss"></span><span class="gf-badge" data-demo-if="delay" data-status="warning" data-demo-field="delay"></span><span class="gf-badge" data-dot data-demo-gps data-demo-field="gps"></span><span class="gf-badge" data-demo-if="messages" data-status="info" data-demo-field="messages"></span></div></td>
+                <td data-label="Dettaglio"><button type="button" class="gf-button" data-size="sm" data-demo-pick data-demo-select-button data-demo-route>Apri</button></td>
+              </tr>
+            </template>
+            <template data-demo-template="empty"><tr><td colspan="6"><div class="gf-empty"><p>Nessun giro corrisponde al filtro selezionato.</p></div></td></tr></template>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  <!-- Parte sotto: invariata rispetto alla pagina attuale (mappa, indicatori, fermate). -->
+  <section class="gf-route-panel" aria-label="Dettaglio del giro selezionato" data-demo-detail>
+    <div class="gf-route-panel__map">
+      <div class="gf-route-panel__heading">
+        <div><h2 class="gf-title" data-demo-detail-field="title"></h2><p class="gf-muted">Percorso stradale pianificato e posizione GPS dell’autista</p></div>
+        <span class="gf-badge" data-status="info" data-dot>In corso</span>
+      </div>
+      <div class="gf-route-panel__canvas">
+        <svg viewBox="0 0 660 300" role="img" aria-label="Schema del percorso del giro selezionato">
+          <g aria-hidden="true">
+            <line class="gf-route-map__grid" x1="0" y1="75" x2="660" y2="75"/><line class="gf-route-map__grid" x1="0" y1="150" x2="660" y2="150"/><line class="gf-route-map__grid" x1="0" y1="225" x2="660" y2="225"/>
+            <line class="gf-route-map__grid" x1="165" y1="0" x2="165" y2="300"/><line class="gf-route-map__grid" x1="330" y1="0" x2="330" y2="300"/><line class="gf-route-map__grid" x1="495" y1="0" x2="495" y2="300"/>
+          </g>
+          <path class="gf-route-map__done" d="M60 230 C 110 200, 120 150, 160 130"/>
+          <path class="gf-route-map__todo" d="M160 130 S 240 90, 270 110 C 320 140, 340 210, 400 200 S 480 120, 520 90 S 600 140, 610 190"/>
+          <g class="gf-route-map__depot"><rect x="34" y="216" width="52" height="28" rx="6"/><text x="60" y="230">DEP</text></g>
+          <g class="gf-route-map__node is-done"><circle cx="160" cy="130" r="14"/><text x="160" y="130">1</text></g>
+          <g class="gf-route-map__node is-next"><circle cx="270" cy="110" r="14"/><text x="270" y="110">2</text></g>
+          <g class="gf-route-map__node"><circle cx="400" cy="200" r="14"/><text x="400" y="200">3</text></g>
+          <g class="gf-route-map__node"><circle cx="520" cy="90" r="14"/><text x="520" y="90">4</text></g>
+          <g class="gf-route-map__node"><circle cx="610" cy="190" r="14"/><text x="610" y="190">5</text></g>
+        </svg>
+      </div>
+      <div class="gf-legend"><span><i data-state="done"></i>Completata</span><span><i></i>Da fare</span><span><i data-state="miss"></i>Mancata</span><span class="gf-badge" data-dot data-demo-detail-gps data-demo-detail-field="gps"></span></div>
+    </div>
+    <div class="gf-route-panel__detail">
+      <div class="gf-panel__body gf-stack">
+        <h2 class="gf-subtitle">Indicatori del giro</h2>
+        <dl class="gf-details">
+          <div class="gf-details__item"><dt>Avanzamento</dt><dd><strong data-demo-detail-field="progress"></strong><br><small class="gf-muted" data-demo-detail-field="progressNote"></small></dd></div>
+          <div class="gf-details__item"><dt>Consegne</dt><dd><strong data-demo-detail-field="deliveries"></strong><br><small class="gf-muted" data-demo-detail-field="deliveriesNote"></small></dd></div>
+          <div class="gf-details__item"><dt>Rientro stimato</dt><dd><strong data-demo-detail-field="eta"></strong><br><small class="gf-muted" data-demo-detail-field="etaNote"></small></dd></div>
+          <div class="gf-details__item"><dt>Percorso</dt><dd><strong data-demo-detail-field="km"></strong><br><small class="gf-muted" data-demo-detail-field="minutes"></small></dd></div>
+          <div class="gf-details__item"><dt>Carburante</dt><dd><strong data-demo-detail-field="fuel"></strong><br><small class="gf-muted">Costo stimato</small></dd></div>
+          <div class="gf-details__item"><dt>Pedaggi</dt><dd><strong>—</strong><br><small class="gf-muted">Stima non disponibile</small></dd></div>
+        </dl>
+      </div>
+      <div class="gf-route-panel__footer gf-cluster">
+        <button type="button" class="gf-button" data-variant="secondary">Aggiorna dati</button>
+        <button type="button" class="gf-button" data-variant="danger">Annulla giro</button>
+        <button type="button" class="gf-button" data-variant="primary">Apri navigazione</button>
+      </div>
+    </div>
+  </section>
+  <section class="gf-panel" aria-label="Fermate del giro">
+    <header class="gf-panel__header"><div><h2 class="gf-panel__title">Fermate del giro</h2><p class="gf-muted">Confronto tra arrivo previsto e arrivo reale registrato dall’autista</p></div>
+      <select class="gf-select" aria-label="Filtra fermate per esito"><option>Tutti gli esiti</option><option>Completate</option><option>Mancate</option><option>Da fare</option></select></header>
+    <div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards">
+      <thead><tr><th scope="col">#</th><th scope="col">Cliente</th><th scope="col">Indirizzo</th><th scope="col">Arrivo previsto</th><th scope="col">Arrivo reale</th><th scope="col">Differenza</th><th scope="col">Stato</th></tr></thead>
+      <tbody>
+        <tr><td data-label="#">1</td><td data-label="Cliente"><strong>Alimentari Oplonti</strong></td><td data-label="Indirizzo">Corso Umberto I 135, Torre Annunziata</td><td data-label="Arrivo previsto">11:34</td><td data-label="Arrivo reale">11:08</td><td data-label="Differenza"><span class="gf-badge" data-status="success">−26 min</span></td><td data-label="Stato"><span class="gf-badge" data-status="success">Completata</span></td></tr>
+        <tr><td data-label="#">2</td><td data-label="Cliente"><strong>Bar Pompei Scavi</strong></td><td data-label="Indirizzo">Via Roma 78, Pompei</td><td data-label="Arrivo previsto">11:56</td><td data-label="Arrivo reale">—</td><td data-label="Differenza">—</td><td data-label="Stato"><span class="gf-badge" data-status="neutral">Da fare</span></td></tr>
+        <tr><td data-label="#">3</td><td data-label="Cliente"><strong>Cash &amp; Carry Nocera</strong></td><td data-label="Indirizzo">Via Atzori 180, Nocera Inferiore</td><td data-label="Arrivo previsto">12:23</td><td data-label="Arrivo reale">—</td><td data-label="Differenza">—</td><td data-label="Stato"><span class="gf-badge" data-status="neutral">Da fare</span></td></tr>
+      </tbody>
+    </table></div>
+  </section>
+  </div>
+</main>
+</body>
+</html>
