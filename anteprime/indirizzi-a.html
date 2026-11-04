@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Anteprima A · Controlla gli indirizzi · GiroFacile</title>
+<link rel="stylesheet" href="../static/design-system/theme.css">
+<link rel="stylesheet" href="../static/design-system/components.css">
+<link rel="stylesheet" href="../static/design-system/layout.css">
+<script src="../static/design-system/shell.js" defer></script>
+<script src="indirizzi-demo.js" defer></script>
+</head>
+<!-- Variante A · Schede complete.
+     Un riquadro per indirizzo con tutto a portata di mano: confronto «Scritto / Trovato»,
+     «Usa questo indirizzo» in un clic, campo già compilato con «Verifica», mappa per forzare
+     la posizione che si apre dentro il riquadro. In alto l'avanzamento e «Accetta le proposte». -->
+<body data-gf-surface="workspace" data-gf-layout="base" data-gf-nav-active="ordini"
+      data-gf-title="Ordini" data-gf-subtitle="Gestisci gli ordini ricevuti e prepara le tue consegne."
+      data-gf-user-name="Supermercati Iorio" data-gf-user-role="admin">
+<main data-gf-shell-content>
+  <div data-gf-slot="header-actions" class="gf-cluster">
+    <nav class="gf-cluster" aria-label="Versioni da confrontare"><a class="gf-button" data-variant="secondary" data-size="sm" href="indirizzi-a.html" aria-current="page">A</a><a class="gf-button" data-variant="ghost" data-size="sm" href="indirizzi-b.html">B</a><a class="gf-button" data-variant="ghost" data-size="sm" href="indirizzi-c.html">C</a></nav>
+  </div>
+  <section class="gf-panel"><div class="gf-panel__body"><p class="gf-muted">Elenco ordini · 15 ordini selezionati per la pianificazione.</p></div></section>
+
+  <dialog class="gf-modal" data-size="lg" data-demo-dialog aria-labelledby="demoTitle">
+    <div data-gf-modal-content>
+      <header class="gf-modal__header">
+        <div>
+          <p class="gf-kicker">Prima di pianificare</p>
+          <h2 class="gf-modal__title" id="demoTitle">Controlla gli indirizzi</h2>
+          <p class="gf-muted" data-demo-message role="status"></p>
+        </div>
+        <button type="button" class="gf-icon-button" data-demo-action="close" aria-label="Chiudi"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12 M18 6L6 18"/></svg></button>
+      </header>
+
+      <div class="gf-modal__body gf-stack">
+        <div class="gf-progress">
+          <div class="gf-progress__top"><span><b data-demo-done-count></b> risolti</span><span data-demo-left-count></span></div>
+          <div class="gf-progress__track" role="img" aria-label="Indirizzi risolti"><span class="gf-progress__done" data-demo-progress data-gf-width="0"></span></div>
+        </div>
+
+        <div class="gf-card" data-variant="action" data-demo-bulk>
+          <div class="gf-stack" data-gap="sm">
+            <strong><span data-demo-safe-count></span> proposte sono nel comune scritto dal cliente</strong>
+            <span class="gf-muted">Puoi accettarle tutte insieme: le altre restano da controllare una per una.</span>
+          </div>
+          <button type="button" class="gf-button" data-variant="primary" data-demo-action="accept-safe">Accetta le proposte</button>
+        </div>
+
+        <div class="gf-stack" data-gap="sm" data-demo-list="row"></div>
+
+        <section class="gf-stack" data-gap="sm" data-demo-done-section hidden>
+          <h3 class="gf-subtitle">Risolti</h3>
+          <ul class="gf-list" data-demo-list="done"></ul>
+        </section>
+      </div>
+
+      <footer class="gf-modal__footer">
+        <button type="button" class="gf-button" data-variant="secondary" data-demo-action="close">Chiudi</button>
+        <button type="button" class="gf-button" data-variant="primary" data-demo-continue data-demo-action="continue">Continua alla pianificazione</button>
+      </footer>
+    </div>
+  </dialog>
+
+  <template data-demo-template="row">
+    <article class="gf-card gf-stack" data-gap="sm" data-demo-row data-demo-id>
+      <div class="gf-cluster" data-justify="between">
+        <strong><span data-demo-field="number"></span> · <span data-demo-field="name"></span></strong>
+        <span class="gf-badge" data-demo-tone data-dot data-demo-field="reason"></span>
+      </div>
+      <dl class="gf-details" data-layout="rows">
+        <div class="gf-details__item"><dt>Scritto</dt><dd data-demo-field="written"></dd></div>
+        <div class="gf-details__item" data-demo-if="found"><dt>Trovato da Google</dt><dd><strong data-demo-field="found"></strong></dd></div>
+      </dl>
+      <p class="gf-muted" data-demo-field="hint"></p>
+      <div class="gf-cluster" data-demo-if="safe">
+        <button type="button" class="gf-button" data-variant="primary" data-size="sm" data-demo-action="use" data-demo-id>Usa questo indirizzo</button>
+      </div>
+      <form class="gf-stack" data-gap="sm" data-demo-verify data-demo-id>
+        <label class="gf-field"><span class="gf-field__label">Oppure correggi l'indirizzo</span><input class="gf-input" data-demo-input data-demo-id data-demo-value="written" maxlength="500"></label>
+        <p class="gf-field__error" data-demo-note data-demo-id hidden></p>
+        <div class="gf-cluster">
+          <button type="submit" class="gf-button" data-variant="secondary" data-size="sm">Verifica</button>
+          <button type="button" class="gf-button" data-variant="ghost" data-size="sm" data-demo-action="force" data-demo-id>Forza posizione sulla mappa</button>
+          <button type="button" class="gf-button" data-variant="ghost" data-size="sm" data-demo-action="exclude" data-demo-id>Escludi</button>
+        </div>
+      </form>
+      <div class="gf-stack" data-gap="sm" data-demo-map-wrap data-demo-id hidden>
+        <div class="gf-route-panel__canvas" data-map data-demo-map data-demo-id role="region" aria-label="Scegli la posizione della consegna"></div>
+        <p class="gf-muted">Trascina lo spillo sul punto di consegna o clicca sulla mappa.</p>
+        <div class="gf-cluster"><button type="button" class="gf-button" data-variant="primary" data-size="sm" data-demo-action="pin" data-demo-id>Conferma questa posizione</button></div>
+      </div>
+    </article>
+  </template>
+</main>
+</body>
+</html>
