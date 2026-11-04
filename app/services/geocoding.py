@@ -33,10 +33,16 @@ def normalize_address(value: str) -> str:
     return text_value
 
 
-def _google_geocode(query: str, limit: int = 5, db: Session | None = None, user_id=None, strict=False) -> list:
-    """Esegue una richiesta Google Geocoding e normalizza i risultati."""
-    api_key = google_maps_api_key(db)
-    if not google_geocoding_enabled(db) or not api_key:
+def _google_geocode(query: str, limit: int = 5, db: Session | None = None, user_id=None, strict=False,
+                   api_key: str | None = None, usage: list | None = None) -> list:
+    """Esegue una richiesta Google Geocoding e normalizza i risultati.
+
+    Per le verifiche in parallelo la chiave arriva già letta (api_key) e l'uso dell'API
+    si annota in `usage` invece che nel database: lo registra poi il thread principale.
+    """
+    if api_key is None:
+        api_key = google_maps_api_key(db) if google_geocoding_enabled(db) else ""
+    if not api_key:
         print("[GEOCODING] Google disattivato o chiave Google mancante")
         if strict: raise GeocodingUnavailable('Servizio di verifica indirizzi non disponibile. Riprova più tardi.')
         return []
@@ -117,10 +123,13 @@ def _google_geocode(query: str, limit: int = 5, db: Session | None = None, user_
         print(f"[GEOCODING] Errore Google: {type(e).__name__}")
         return []
     finally:
-        if db is not None:
-            log_api_usage(db, user_id=user_id, provider="google", service="google_geocoding",
-                          action="Geocodifica indirizzo", endpoint="/maps/api/geocode/json",
-                          status=outcome, message=message, response_ms=int((time.perf_counter() - started) * 1000))
+        entry = dict(user_id=user_id, provider="google", service="google_geocoding",
+                     action="Geocodifica indirizzo", endpoint="/maps/api/geocode/json",
+                     status=outcome, message=message, response_ms=int((time.perf_counter() - started) * 1000))
+        if usage is not None:
+            usage.append(entry)
+        elif db is not None:
+            log_api_usage(db, **entry)
 
 
 def _plain(value: str) -> str:
@@ -144,7 +153,8 @@ def matches_request(query: str, result: dict) -> bool:
     return place_ok or not result.get("partial_match")
 
 
-def geocode_address(indirizzo: str, comune: str = "", provincia: str = "", db: Session | None = None, user_id=None, strict=False) -> dict:
+def geocode_address(indirizzo: str, comune: str = "", provincia: str = "", db: Session | None = None, user_id=None, strict=False,
+                    api_key: str | None = None, usage: list | None = None) -> dict:
     """
     Geocodifica un indirizzo usando solo Google.
     Ritorna dict con: status, lat, lon, formatted, source, confidence.
@@ -154,6 +164,8 @@ def geocode_address(indirizzo: str, comune: str = "", provincia: str = "", db: S
     )
 
     options={'strict':True} if strict else {}
+    if api_key is not None: options['api_key']=api_key
+    if usage is not None: options['usage']=usage
     results = _google_geocode(query, limit=5, db=db, user_id=user_id, **options)
     if not results:
         return {"status": "non_trovato", "source": "google"}
@@ -207,6 +219,11 @@ def apply_geocode(customer, result: dict):
     from .ztl import detect_pedestrian
     customer.pedestrian_area = (result.get("status") == "verificato"
                                 and detect_pedestrian(customer.lat, customer.lon)["detected"])
+
+
+def geocoding_key(db: Session | None = None) -> str:
+    """Chiave Google da usare, oppure "" se la geocodifica è spenta."""
+    return google_maps_api_key(db) if google_geocoding_enabled(db) else ""
 
 
 def search_address_autocomplete(

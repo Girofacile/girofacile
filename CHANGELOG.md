@@ -5,6 +5,11 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Verifica degli indirizzi selezionati più veloce e con la schermata di attesa
+  del calcolo del giro («Controllo 6 di 12 indirizzi…»): il server chiede a
+  Google fino a 6 indirizzi diversi alla volta in parallelo, invece che uno dopo
+  l'altro, e un indirizzo ripetuto una volta sola. Nella prova con 12 indirizzi
+  (2–3 secondi per risposta di Google) circa 6 secondi invece di circa 30.
 - La pagina aperta resta nell'indirizzo (es. `/dashboard#ordini`): con F5 si
   riapre la stessa pagina e Indietro/Avanti del browser si muovono tra le pagine
   del portale. Le pagine legate a un lavoro a metà (importazione, giro in

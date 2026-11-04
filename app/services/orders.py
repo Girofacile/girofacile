@@ -133,7 +133,7 @@ def _mark_verified(db, order, proof, address, actor, method):
         record(db, order, actor, 'status_changed', {'before': before, 'after': 'pronto', 'method': 'manual' if proof.get('confirmed_manually') else 'automatic'})
 
 
-def verify_address(db, order, version, actor, reusable=None, strict=False):
+def verify_address(db, order, version, actor, reusable=None, strict=False, prefetched=None):
     editable(db, order, version)
     values = order.operational_data or {}
     address = values.get('delivery_address')
@@ -149,7 +149,13 @@ def verify_address(db, order, version, actor, reusable=None, strict=False):
                     order.user_id, reusable.get('indirizzo'), reusable['lat'], reusable['lon'])):
             proof = reusable
             method = 'reused_batch'
-    if proof is None:
+    if proof is None and prefetched and address in prefetched:
+        # Risposta già chiesta a Google in parallelo con gli altri indirizzi della selezione.
+        outcome = prefetched[address]
+        if isinstance(outcome, Exception):
+            raise outcome
+        proof = outcome
+    elif proof is None:
         proof = verify_stop_address(db, order.user_id, address, **({'strict':True} if strict else {}))
     # Geocoding usage logging may commit. Reacquire and recheck after the call.
     order = get_order(db, order.user_id, order.id, lock=True)

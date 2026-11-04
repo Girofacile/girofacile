@@ -1,4 +1,5 @@
 """Lazy verification of actor-selected orders and explicit, audited manual positions."""
+from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 from datetime import datetime,timedelta
 from fastapi import HTTPException
@@ -7,6 +8,10 @@ from ..core.clock import utc_now
 from ..order_models import Order
 from ..schemas.orders import OrderUpdate
 from .occasional_stops import sign_stop_address
+from .api_usage import log_api_usage
+from .geocoding import geocoding_key
+
+PARALLEL_LOOKUPS=6
 
 
 def selected(db,user_id,actor,version,ids):
@@ -37,9 +42,42 @@ def cached_failure(db,order):
     return None
 
 
+def needs_google(db,order,retry):
+    """Same checks as the verification loop, without locks: only decides what to ask in advance."""
+    if orders.address_is_verified(db,order) and order.status=='pronto':return False
+    if orders._existing_order_proof(db,order,order.delivery_address):return False
+    return retry or cached_failure(db,order) is None
+
+
+def prefetch(db,user_id,order_ids,retry):
+    """Ask Google for every distinct address at the same time instead of one after another.
+
+    Identical addresses are asked once. Usage is logged here, on the request's own session,
+    because database sessions must not cross threads. Any address left out is simply
+    verified one by one in the loop, as before.
+    """
+    rows=db.query(Order).filter(Order.user_id==user_id,Order.id.in_(order_ids)).all()
+    addresses=list(dict.fromkeys(o.delivery_address for o in rows
+                                 if o.delivery_address and o.recipient_name and needs_google(db,o,retry)))
+    if len(addresses)<2:return {}
+    key=geocoding_key(db)
+    if not key:return {}
+    def ask(address):
+        usage=[]
+        try:result=orders.verify_stop_address(None,user_id,address,strict=True,api_key=key,usage=usage)
+        except HTTPException as exc:result=exc
+        return address,result,usage
+    with ThreadPoolExecutor(max_workers=min(PARALLEL_LOOKUPS,len(addresses))) as pool:
+        answers=list(pool.map(ask,addresses))
+    for _,_,usage in answers:
+        for entry in usage:log_api_usage(db,**entry)
+    return {address:result for address,result,_ in answers}
+
+
 def verify_selected(db,user_id,actor,data):
     version=data.version
     selected(db,user_id,actor,version,data.order_ids)
+    prefetched=prefetch(db,user_id,list(dict.fromkeys(data.order_ids)),data.retry)
     issues=[];aborted=False
     for order_id in dict.fromkeys(data.order_ids):
         selected(db,user_id,actor,version,[order_id])
@@ -56,7 +94,7 @@ def verify_selected(db,user_id,actor,data):
             issues.append(issue(order,previous));continue
         attempt_version=order.version
         try:
-            orders.verify_address(db,order,order.version,actor,strict=True)
+            orders.verify_address(db,order,order.version,actor,strict=True,prefetched=prefetched)
             row=selected(db,user_id,actor,version,[order_id])
             row.stops=None;row.version+=1;row.updated_at=utc_now();version=row.version
             db.commit()

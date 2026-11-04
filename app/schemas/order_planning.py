@@ -82,7 +82,7 @@ class AppendOrders(BaseModel):
 class SelectionVerify(BaseModel):
     model_config = ConfigDict(extra='forbid')
     version: int = Field(ge=1)
-    order_ids: list[int] = Field(min_length=1,max_length=3)
+    order_ids: list[int] = Field(min_length=1,max_length=6)  # un gruppo verificato in parallelo
     retry: bool = False
 
 

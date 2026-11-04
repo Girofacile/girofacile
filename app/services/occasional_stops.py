@@ -31,9 +31,9 @@ def sign_stop_address(user_id, address, lat, lon):
     return hmac.new(APP_SECRET.encode(), value.encode(), hashlib.sha256).hexdigest()
 
 
-def verify_stop_address(db, user_id, address, strict=False):
+def verify_stop_address(db, user_id, address, strict=False, **google):
     try:
-        result = geocode_address(address, db=db, user_id=user_id, **({'strict':True} if strict else {}))
+        result = geocode_address(address, db=db, user_id=user_id, **({'strict':True} if strict else {}), **google)
     except GeocodingUnavailable as exc:
         raise HTTPException(503,str(exc)) from exc
     if not has_verified_coordinates(result.get("status"), result.get("lat"), result.get("lon")):

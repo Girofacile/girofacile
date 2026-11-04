@@ -156,3 +156,31 @@ def test_selection_version_checked_before_resolution(selected_orders):
     response=client.post('/api/order-planning/resolve-address',json={'version':state['version'],'order_id':row['id'],
         'order_version':row['version'],'action':'exclude'})
     assert response.status_code==409
+
+def test_distinct_addresses_are_asked_to_google_in_parallel_and_logged(selected_orders,monkeypatch):
+    import threading,time
+    ctx=selected_orders;client,db=ctx[0],ctx[1]
+    from app.services import orders as service,selected_order_addresses as selected
+    from app.models import ApiUsageLog
+    monkeypatch.setattr(selected,'geocoding_key',lambda db=None:'key')
+    calls=[];active=[0];peak=[0];guard=threading.Lock()
+    def geocode(db,user_id,address,strict=False,api_key=None,usage=None):
+        assert db is None and api_key=='key'  # nei thread niente sessione del database
+        with guard:active[0]+=1;peak[0]=max(peak[0],active[0]);calls.append(address)
+        time.sleep(0.05)
+        with guard:active[0]-=1
+        usage.append(dict(user_id=user_id,provider='google',service='google_geocoding',action='Geocodifica indirizzo',
+                          endpoint='/maps/api/geocode/json',status='success',message='OK',response_ms=50))
+        if address.startswith('Errata'):
+            raise HTTPException(422,{'kind':'address','reason':'non_trovato','message':'Non trovato','candidate':None})
+        return proof(ctx,address)
+    monkeypatch.setattr(service,'verify_stop_address',geocode)
+    addresses=['Via Uno 1, Roma','Via Due 2, Roma','Via Uno 1, Roma','Errata 3']
+    rows=[create(client,number=str(i),delivery_address=a) for i,a in enumerate(addresses)]
+    state=select(ctx,[r['id'] for r in rows])
+    result=verify(ctx,state,state['order_ids'])
+    assert result.status_code==200,result.text
+    assert sorted(calls)==sorted(set(addresses))  # un indirizzo ripetuto si chiede una volta sola
+    assert peak[0]>1  # le richieste sono partite insieme
+    assert [i['reason'] for i in result.json()['issues']]==['non_trovato']
+    assert db.query(ApiUsageLog).filter(ApiUsageLog.service=='google_geocoding').count()==3

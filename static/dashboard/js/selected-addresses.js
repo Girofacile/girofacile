@@ -6,6 +6,7 @@ window.GFSelectedAddresses=(()=>{
  const el=id=>document.getElementById(id);
  const issues=new Map();
  const resolved=[];
+ const GROUP=6; // indirizzi per richiesta: il server li chiede a Google in parallelo
  let busy=false,active=null,map=null,marker=null,point=null,mapEpoch=0;
  const state=()=>GFOrderPlanning.selection();
  const message=text=>{el('selectedAddressesMessage').textContent=text;};
@@ -68,21 +69,31 @@ window.GFSelectedAddresses=(()=>{
   if(ids===null){issues.clear();resolved.length=0;ids=[...state().order_ids];cancelEdit();}
   lock(true);
   let completed=0;
+  // Verifica di tutta la selezione: schermata di attesa come nel calcolo del giro, con l'avanzamento.
+  const full=ids.length>1;
+  const progressText=()=>`Controllo ${completed} di ${ids.length} indirizzi…`;
+  const wait=full?globalThis.GFDesignSystem?.showWait({title:'Sto verificando gli indirizzi',messages:[progressText()],
+   hint:'Controllo ogni indirizzo con Google: di solito bastano pochi secondi.',minMs:800}):null;
+  const waitMessage=wait?.element.querySelector('.gf-loader__message');
   try{
-   for(let offset=0;offset<ids.length;offset+=3){
-    const chunk=ids.slice(offset,offset+3);
+   for(let offset=0;offset<ids.length;offset+=GROUP){
+    const chunk=ids.slice(offset,offset+GROUP);
     el('ordersMessage').textContent=`Verifica indirizzi selezionati: ${completed} di ${ids.length}…`;
+    if(waitMessage)waitMessage.textContent=progressText();
     chunk.forEach(id=>issues.delete(id));
     const result=await api('/api/order-planning/verify-selected',{method:'POST',body:JSON.stringify({version:state().version,order_ids:chunk,retry})});
     GFOrderPlanning.acceptSelection(result.selection);
     result.issues.forEach(row=>issues.set(row.id,row));completed+=chunk.length;
+    if(waitMessage)waitMessage.textContent=progressText();
     if(result.aborted)break;
    }
+   await wait?.close();
    message(issues.size?`${issues.size} indirizzi vanno sistemati prima di pianificare. Correggi l'indirizzo o metti lo spillo sul punto di consegna, oppure escludi l'ordine.`:'Indirizzi confermati. Puoi continuare alla pianificazione.');
    el('ordersMessage').textContent=issues.size?'Alcuni indirizzi selezionati richiedono attenzione.':'Indirizzi selezionati verificati.';
    if(issues.size&&!el('selectedAddressesDialog').open)el('selectedAddressesDialog').showModal();
    return issues.size===0;
   }finally{
+   wait?.dispose();
    lock(false);
    await GFOrders.load().catch(()=>{});
   }
