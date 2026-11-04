@@ -169,8 +169,11 @@ def geocode_address(indirizzo: str, comune: str = "", provincia: str = "", db: S
         conf = 0.5
 
     status = "verificato" if conf >= 0.55 and not mismatch else "da_verificare"
+    # Motivo mostrato al cliente quando deve correggere o confermare l'indirizzo.
+    reason = "altro_comune" if mismatch else ("approssimativo" if status != "verificato" else None)
     return {
         "status": status,
+        "reason": reason,
         "lat": float(best["lat"]),
         "lon": float(best["lon"]),
         "formatted": best.get("formatted"),

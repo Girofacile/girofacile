@@ -23,7 +23,7 @@ def test_same_street_in_another_town_is_not_verified(monkeypatch):
     fake_google(monkeypatch, google_item("V. Nazionale, 95, 08028 Orosei NU, Italia", "Orosei", "08028",
                                          partial=True, lat=40.38, lon=9.69))
     result = geocoding.geocode_address("Via Nazionale, 95, 80031 Brusciano NA")
-    assert result["status"] == "da_verificare"
+    assert result["status"] == "da_verificare" and result["reason"] == "altro_comune"
     assert "Orosei" in result["formatted"]  # resta proposto come posizione da confermare sulla mappa
 
 
@@ -50,3 +50,30 @@ def test_without_postal_code_a_partial_match_elsewhere_is_rejected(monkeypatch):
     assert geocoding.geocode_address("Via Roma 1, Sant'Anastasia")["status"] == "da_verificare"
     fake_google(monkeypatch, google_item("Via Roma, 1, 80048 Sant'Anastasia NA, Italia", "Sant'Anastasia", "80048", partial=True))
     assert geocoding.geocode_address("Via Roma 1, Sant Anastasia")["status"] == "verificato"
+
+
+def test_approximate_position_in_the_right_town_explains_why(monkeypatch):
+    item = google_item("80031 Brusciano NA, Italia", "Brusciano", "80031")
+    item["geometry"]["location_type"] = "APPROXIMATE"
+    fake_google(monkeypatch, item)
+    result = geocoding.geocode_address("Via Inesistente 3, 80031 Brusciano NA")
+    assert result["status"] == "da_verificare" and result["reason"] == "approssimativo"
+    fake_google(monkeypatch, google_item("Via Roma, 8, 80030 Castello di Cisterna NA, Italia", "Castello di Cisterna", "80030"))
+    assert geocoding.geocode_address("Via Roma 8, 80030 Cisterna")["reason"] is None
+
+
+def test_strict_failure_carries_reason_and_message(monkeypatch):
+    import pytest
+    from fastapi import HTTPException
+    from app.services import occasional_stops
+    for result, reason in [({"status": "non_trovato"}, "non_trovato"),
+                           ({"status": "da_verificare", "reason": "altro_comune", "lat": 40.38, "lon": 9.69,
+                             "formatted": "Via Nazionale, 95, 08028 Orosei NU"}, "altro_comune"),
+                           ({"status": "da_verificare", "reason": "approssimativo", "lat": 40.92, "lon": 14.42,
+                             "formatted": "80031 Brusciano NA"}, "approssimativo")]:
+        monkeypatch.setattr(occasional_stops, "geocode_address", lambda *a, _r=result, **kw: _r)
+        with pytest.raises(HTTPException) as error:
+            occasional_stops.verify_stop_address(None, 1, "Via Nazionale 95, 80031 Brusciano NA", strict=True)
+        detail = error.value.detail
+        assert detail["reason"] == reason and detail["message"] == occasional_stops.ADDRESS_REASONS[reason]
+        assert (detail["candidate"] is None) == (reason == "non_trovato")

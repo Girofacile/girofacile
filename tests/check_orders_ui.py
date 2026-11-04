@@ -353,9 +353,9 @@ def main():
                         page.locator('#selectedAddressesDialog').wait_for(state='visible')
                         assert calls==['Via valida 1','Ambiguous 1']
                         assert client.get('/api/orders/'+str(created[2]['id'])).json()['address_verification'] is None
-                        page.locator('#selectedAddressesList').get_by_role('button',name='Correggi o scegli posizione',exact=True).click()
+                        page.locator('#selectedAddressesList').get_by_role('button',name='Modifica',exact=True).click()
                         page.locator('#selectedAddressText').fill('Via valida 1')
-                        page.get_by_role('button',name='Verifica indirizzo corretto',exact=True).click()
+                        page.locator('#selectedAddressEditor').get_by_role('button',name='Verifica',exact=True).click()
                         expect(page.locator('#selectedAddressesContinue')).to_be_enabled()
                         assert len(calls)==2  # The corrected identical address reuses the first proof.
                         page.screenshot(path=str(output/f'address-resolution-{width}.png'),full_page=True)
@@ -374,7 +374,7 @@ def main():
                         page.locator('#selectedAddressesDialog').wait_for(state='visible')
                         # Leaflet is stubbed to test the explicit confirmation without external tiles.
                         page.evaluate("""window.L={map:host=>({setView(){return this},on(){return this},remove(){host.replaceChildren()},invalidateSize(){}}),tileLayer:()=>({addTo(){}}),marker:()=>({addTo(){return this},on(){return this},setLatLng(){return this},getLatLng(){return {lat:45.2,lng:9.2}}})};""")
-                        page.locator('#selectedAddressesList').get_by_role('button',name='Correggi o scegli posizione',exact=True).click()
+                        page.locator('#selectedAddressesList').get_by_role('button',name='Modifica',exact=True).click()
                         expect(page.locator('#selectedAddressManual')).to_be_enabled()
                         page.locator('#selectedAddressManual').click()
                         expect(page.locator('#selectedAddressesContinue')).to_be_enabled()

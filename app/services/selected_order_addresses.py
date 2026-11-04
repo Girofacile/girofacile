@@ -22,6 +22,7 @@ def issue(order,detail,status=422):
     return {'id':order.id,'version':order.version,'number':order.number,
             'recipient_name':order.recipient_name or '', 'address':order.delivery_address or '',
             'kind':'service' if status>=500 else info.get('kind','address'),
+            'reason':'servizio' if status>=500 else info.get('reason'),
             'message':info.get('message','Verifica non riuscita.'),'candidate':info.get('candidate')}
 
 
@@ -73,7 +74,7 @@ def verify_selected(db,user_id,actor,data):
                 issues=[issue(o,exc.detail,503) for o in pending if not orders.address_is_verified(db,o)]
                 break
             order.address_verification={'input_address':order.delivery_address,'attempted_at':utc_now().isoformat(),
-                'failure':{k:info[k] for k in ('message','candidate','kind')}}
+                'failure':{k:info[k] for k in ('message','candidate','kind','reason')}}
             order.status='da_verificare';order.verification_status='pending'
             orders.touch(order);orders.record(db,order,actor,'address_verification_failed',{'message':info['message']})
             db.commit();info['version']=order.version;issues.append(info)

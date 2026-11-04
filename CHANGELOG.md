@@ -5,6 +5,12 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Nuova finestra «Controlla gli indirizzi» prima della pianificazione: tabella
+  con indirizzo scritto, proposta di Google e motivo («Non trovato», «Altro
+  comune», «Posizione approssimativa»); «Modifica» apre sotto la riga il campo da
+  correggere e la mappa per mettere lo spillo. Ogni indirizzo si sistema riga per
+  riga dal cliente: di proposito non c'è un «accetta tutto», e la proposta in un
+  altro comune non sposta lo spillo.
 - Correzioni dal collaudo con 250 ordini:
   - verifica indirizzi: un risultato di Google vale solo se corrisponde al CAP o
     al comune scritti (si sceglie il primo che corrisponde); altrimenti l'ordine

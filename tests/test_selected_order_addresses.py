@@ -48,13 +48,14 @@ def test_wrong_address_is_cached_and_explicit_retry_rechecks(selected_orders,mon
     from app.services import orders as service
     calls=[]
     def fail(*args,**kwargs):
-        calls.append(1);raise HTTPException(422,{'kind':'address','message':'Indirizzo non trovato','candidate':{'lat':45.2,'lon':9.2}})
+        calls.append(1);raise HTTPException(422,{'kind':'address','reason':'approssimativo','message':'Indirizzo non trovato','candidate':{'lat':45.2,'lon':9.2}})
     monkeypatch.setattr(service,'verify_stop_address',fail)
     rows=[create(client,number=str(i)) for i in range(2)]
     state=select(ctx,[r['id'] for r in rows])
     result=verify(ctx,state,state['order_ids']).json()
     assert len(result['issues'])==2 and len(calls)==1
     assert result['issues'][0]['candidate']['lat']==45.2
+    assert [i['reason'] for i in result['issues']]==['approssimativo']*2  # anche dalla verifica in memoria
     verify(ctx,result['selection'],state['order_ids'],retry=True)
     assert len(calls)==3
 
@@ -68,7 +69,7 @@ def test_provider_failure_stops_the_queue_without_marking_addresses_wrong(select
     state=select(ctx,[r['id'] for r in rows])
     result=verify(ctx,state,state['order_ids'][:3]).json()
     assert len(calls)==1 and result['aborted'] and len(result['issues'])==5
-    assert all(i['kind']=='service' for i in result['issues'])
+    assert all(i['kind']=='service' and i['reason']=='servizio' for i in result['issues'])
     assert all(client.get(f"/api/orders/{r['id']}").json()['address_verification'] is None for r in rows)
 
 def test_only_owned_selected_editable_orders_can_be_verified(selected_orders):

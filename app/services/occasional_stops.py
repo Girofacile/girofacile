@@ -16,6 +16,13 @@ from .geocoding import geocode_address, GeocodingUnavailable
 
 STOP_VERIFICATION_FIELDS = ("geocoding_token", "stato_geocodifica", "indirizzo_geocodificato")
 VERIFICATION_ERROR = "Verifica l'indirizzo della fermata occasionale prima di inserirla nel giro."
+# Il gestionale non sceglie mai al posto del cliente: spiega il problema e lascia a lui
+# la correzione dell'indirizzo o la posizione sulla mappa.
+ADDRESS_REASONS = {
+    "non_trovato": "Google non ha trovato questo indirizzo. Correggilo oppure metti lo spillo sul punto di consegna.",
+    "altro_comune": "Google ha trovato questa via solo in un altro comune. Correggi l'indirizzo oppure metti lo spillo sul punto di consegna.",
+    "approssimativo": "Google ha trovato solo la zona, non il punto preciso. Correggi l'indirizzo oppure sposta lo spillo sul punto di consegna.",
+}
 
 
 def sign_stop_address(user_id, address, lat, lon):
@@ -33,7 +40,8 @@ def verify_stop_address(db, user_id, address, strict=False):
         if strict:
             candidate=({k:result.get(k) for k in ('lat','lon','formatted')}
                        if has_verified_coordinates('verificato',result.get('lat'),result.get('lon')) else None)
-            raise HTTPException(422,{'kind':'address','message':'Indirizzo non verificato correttamente. Correggilo o conferma una posizione sulla mappa.','candidate':candidate})
+            reason=(result.get('reason') or 'approssimativo') if candidate else 'non_trovato'
+            raise HTTPException(422,{'kind':'address','reason':reason,'message':ADDRESS_REASONS[reason],'candidate':candidate})
         raise HTTPException(400, "Indirizzo non verificato. Completa via, numero civico e comune e riprova.")
     address = result.get("formatted") or address.strip()
     lat, lon = float(result["lat"]), float(result["lon"])
