@@ -85,50 +85,44 @@
   }
   const dayName = i => `${SHORT[i]}${DAYS[i] === TODAY ? ' · oggi' : ''}`;
 
-  // A · Colonne dei giorni: il giorno scelto ha il bordo, oggi è solo scritto
-  function weekA(){
+  // Tre varianti della stessa settimana a colonne: cambiano solo i dettagli.
+  // A · avatar dell'autista, annullati contati in fondo, giorno vuoto tratteggiato.
+  // B · righe compatte senza avatar, i giri del giorno scelto si accendono, totale fermate in fondo.
+  // C · senza avatar ma con mezzo e fermate, «+ Pianifica» sempre in fondo alla colonna, giorno vuoto semplice.
+  function weekCols(v){
     return `<div class="gf-grid" data-cols="7">${DAYS.map((iso, i) => {
-      // Gli annullati non occupano la colonna: una riga grigia li conta, il dettaglio è nella tabella sotto.
       const list = active(ofDay(i)), count = list.length, cancelled = ofDay(i).length - count;
-      const items = list.length || cancelled
-        ? list.slice(0, LIMIT).map(r => `<button type="button" class="gf-list-item" data-pick="${i}" title="${esc(r.start + ' · ' + r.driver)}">${avatar(r.driver)}<span class="gf-list-item__main"><strong>${r.start}</strong><small>${esc(short(r.driver))}</small></span></button>`).join('')
-          + (list.length > LIMIT ? `<div class="gf-list-item"><button type="button" class="gf-button" data-variant="link" data-size="sm" data-pick="${i}">Mostra altri ${list.length - LIMIT}</button></div>` : '')
-          + (cancelled ? `<div class="gf-list-item"><button type="button" class="gf-button" data-variant="ghost" data-size="sm" data-pick="${i}">${plural(cancelled,'annullato','annullati')}</button></div>` : '')
-        : `<div class="gf-panel__body"><div class="gf-day-empty"><span>Nessun giro</span><button type="button" class="gf-button" data-variant="link" data-size="sm">+ Pianifica</button></div></div>`;
+      const on = i === selected;
+      const item = r => {
+        const title = esc(`${r.start} · ${r.driver} · ${r.vehicle} · ${r.stops} fermate`);
+        if(v === 'B') return `<button type="button" class="gf-list-item"${on ? ' aria-current="true"' : ''} data-pick="${i}" title="${title}"><span class="gf-list-item__main"><strong>${r.start}</strong><small>${esc(r.driver)}</small></span></button>`;
+        if(v === 'C') return `<button type="button" class="gf-list-item" data-pick="${i}" title="${title}"><span class="gf-list-item__main"><strong>${r.start} · ${esc(short(r.driver))}</strong><small>${esc(r.vehicle)}</small><small>${plural(r.stops,'fermata','fermate')}</small></span></button>`;
+        return `<button type="button" class="gf-list-item" data-pick="${i}" title="${title}">${avatar(r.driver)}<span class="gf-list-item__main"><strong>${r.start}</strong><small>${esc(short(r.driver))}</small></span></button>`;
+      };
+      const more = list.length > LIMIT ? `<div class="gf-list-item"><button type="button" class="gf-button" data-variant="link" data-size="sm" data-pick="${i}">Mostra altri ${list.length - LIMIT}</button></div>` : '';
+      const cancelledRow = cancelled ? `<div class="gf-list-item"><button type="button" class="gf-button" data-variant="ghost" data-size="sm" data-pick="${i}">${plural(cancelled,'annullato','annullati')}</button></div>` : '';
+      let items;
+      if(list.length || cancelled) items = list.slice(0, LIMIT).map(item).join('') + more + cancelledRow;
+      else if(v === 'A') items = `<div class="gf-panel__body"><div class="gf-day-empty"><span>Nessun giro</span><button type="button" class="gf-button" data-variant="link" data-size="sm">+ Pianifica</button></div></div>`;
+      else items = `<div class="gf-panel__body"><p class="gf-muted">Nessun giro</p>${v === 'B' ? '<button type="button" class="gf-button" data-variant="link" data-size="sm">+ Pianifica</button>' : ''}</div>`;
+      const stops = list.reduce((s, r) => s + r.stops, 0);
+      const footer = v === 'B' && count ? `<footer class="gf-panel__footer"><small class="gf-muted">${plural(stops,'fermata','fermate')}</small></footer>`
+        : v === 'C' ? `<footer class="gf-panel__footer"><button type="button" class="gf-button" data-variant="link" data-size="sm">+ Pianifica</button></footer>` : '';
+      const badge = count ? `<span class="gf-badge" data-status="${v === 'C' && on ? 'info' : 'neutral'}">${plural(count,'giro','giri')}</span>` : '';
       const weekend = i > 4 ? ' data-day="weekend"' : '';
       return `<section class="gf-panel"${weekend} aria-label="${LONG[i]}">
-        <header class="gf-panel__header"><button type="button" class="gf-day-head" aria-pressed="${i === selected}" data-pick="${i}"><span class="gf-day-head__weekday">${dayName(i)}</span><span class="gf-day-head__number">${iso.slice(8).replace(/^0/,'')}</span>${count ? `<span class="gf-badge" data-status="neutral">${plural(count,'giro','giri')}</span>` : ''}</button></header>
-        <div class="gf-list">${items}</div>
+        <header class="gf-panel__header"><button type="button" class="gf-day-head" aria-pressed="${on}" data-pick="${i}"><span class="gf-day-head__weekday">${dayName(i)}</span><span class="gf-day-head__number">${iso.slice(8).replace(/^0/,'')}</span>${badge}</button></header>
+        <div class="gf-list">${items}</div>${footer}
       </section>`;
-    }).join('')}</div>`;
-  }
-
-  // B · Agenda: una riga per autista, una colonna per giorno
-  function weekB(){
-    const head = DAYS.map((iso, i) => `<th scope="col"><button type="button" class="gf-button" data-variant="ghost" data-size="sm" aria-pressed="${i === selected}" data-pick="${i}">${dayName(i)} ${iso.slice(8).replace(/^0/,'')}</button></th>`).join('');
-    const rows = DRIVERS.map(d => `<tr><th scope="row"><div class="gf-cluster">${avatar(d)}<span>${esc(d)}</span></div></th>${DAYS.map((iso, i) => {
-      const own = ofDay(i).filter(r => r.driver === d);
-      return `<td data-label="${LONG[i]}">${own.length ? `<div class="gf-cluster">${own.map(r => `<span class="gf-badge" data-status="${r.cancelled ? 'danger' : 'info'}" title="${esc(r.cancelled ? 'Annullato' : r.vehicle)}">${r.start}${r.cancelled ? ' · annullato' : ''}</span>`).join('')}</div>` : '<span class="gf-muted">—</span>'}</td>`;
-    }).join('')}</tr>`).join('');
-    const totals = `<tr><th scope="row"><span class="gf-muted">Giri del giorno</span></th>${DAYS.map((iso, i) => `<td data-label="${LONG[i]}"><strong>${active(ofDay(i)).length}</strong></td>`).join('')}</tr>`;
-    return `<section class="gf-panel" aria-label="Agenda della settimana"><div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards">
-      <thead><tr><th scope="col">Autista</th>${head}</tr></thead><tbody>${rows}${totals}</tbody></table></div></section>`;
-  }
-
-  // C · Schede dei giorni: un giorno alla volta, numeri del giorno sopra la tabella
-  function weekC(){
-    return `<div class="gf-tabs" role="tablist" aria-label="Giorni della settimana">${DAYS.map((iso, i) => {
-      const count = active(ofDay(i)).length;
-      return `<button type="button" class="gf-button" data-variant="ghost" role="tab" aria-selected="${i === selected}" data-pick="${i}">${dayName(i)} ${iso.slice(8).replace(/^0/,'')}${count ? ` <span class="gf-chip__count">${count}</span>` : ''}</button>`;
     }).join('')}</div>`;
   }
 
   function render(){
     const v = document.body.dataset.demoVariant;
-    const week = v === 'A' ? weekA() : v === 'B' ? weekB() : weekC();
+    const week = weekCols(v);
     document.querySelector('[data-demo-summary]').textContent = weekSummary();
     document.querySelector('[data-demo-week]').innerHTML = week;
-    document.querySelector('[data-demo-day]').innerHTML = dayPanel(v === 'C');
+    document.querySelector('[data-demo-day]').innerHTML = dayPanel(false);
   }
   document.addEventListener('click', e => {
     const pick = e.target.closest('[data-pick]');
