@@ -5,6 +5,14 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Giri programmati: nuovo aspetto della settimana. Il colore segue il giorno
+  che si sta guardando e non più oggi (che resta solo scritto, «Mer · Oggi»);
+  ogni giro mostra orario, autista, mezzo e fermate; in fondo alla colonna
+  «Mostra di più» apre la tabella del giorno; nei giorni vuoti icona e
+  «Pianifica giro», solo da oggi in poi; gli annullati restano nella tabella
+  (badge rosso solo se il giorno ha soltanto annullati). Niente più ambra:
+  conteggi grigi, azzurri sul giorno scelto. Tabella del giorno con avatar
+  dell'autista e targa del mezzo. Lo Storico resta com'era.
 - Giri in corso: la sezione «Giri attivi» è una tabella, una riga per giro con
   autista e mezzo, avanzamento, prossima fermata, rientro stimato (con il
   ritardo sul previsto) e segnali (mancate, ritardo, GPS, messaggi non letti

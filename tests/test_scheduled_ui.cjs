@@ -24,16 +24,20 @@ test('scheduled week shows seven days and the day table; a route opens as a full
   // Sette card dei giorni affiancate, con giorno e data sempre sulla stessa riga.
   assert.match(html,/class="gf-grid" data-cols="7"/);
   assert.equal((html.match(/class="gf-day-head"/g)||[]).length,7);
-  // Oggi (martedì 29) ha la colonna evidenziata e il conteggio dei giri attivi; sabato e domenica il fondo del fine settimana.
-  assert.match(html,/<section class="gf-panel" data-day="today" aria-label="Martedì 29 settembre">/);
-  assert.match(html,/aria-label="Martedì 29 settembre · 1 giro"[^>]*><span class="gf-day-head__weekday">Mar · Oggi<\/span><span class="gf-day-head__number">29<\/span><span class="gf-badge" data-status="warning">1 giro<\/span>/);
+  // Il colore segue il giorno scelto (aria-pressed), non oggi: oggi è solo scritto «Mar · Oggi».
+  assert.doesNotMatch(html,/data-day="today"/);
+  assert.match(html,/aria-pressed="true" aria-label="Martedì 29 settembre · 1 giro"[^>]*><span class="gf-day-head__weekday">Mar · Oggi<\/span><span class="gf-day-head__number">29<\/span><span class="gf-badge" data-status="info">1 giro<\/span>/);
   assert.equal((html.match(/data-day="weekend"/g)||[]).length,2);
-  // Il giro è una card semplice: orario e autista; i giorni vuoti invitano a pianificare.
-  assert.match(html,/class="gf-route-card" data-status="scheduled"[^>]*onclick="openDashboardScheduledRoute\(42\)"><span class="gf-route-card__time">08:00<\/span><span class="gf-route-card__driver">Non assegnato<\/span>/);
-  assert.equal((html.match(/class="gf-day-empty"/g)||[]).length,6);
-  assert.match(html,/<span class="gf-badge" data-status="warning" data-dot>1 programmato<\/span>/);
+  // Il giro mostra orario, autista, mezzo e fermate; in fondo «Mostra di più».
+  assert.match(html,/class="gf-list-item"[^>]*onclick="openDashboardScheduledRoute\(42\)"><span class="gf-list-item__main"><strong>08:00 · Non assegnato<\/strong><small>Mezzo non indicato<\/small><small>0 fermate<\/small>/);
+  assert.match(html,/onclick="showAllDashboardScheduledDay\('2026-09-29'\)">Mostra di più<\/button><\/footer>/);
+  // Giorni vuoti: icona e «Nessun giro»; «Pianifica giro» solo da oggi in poi (mercoledì–domenica, non lunedì 28).
+  assert.equal((html.match(/<p>Nessun giro<\/p>/g)||[]).length,6);
+  assert.equal((html.match(/data-variant="secondary" data-size="sm" onclick="openPlanningSelection\(\)">Pianifica giro<\/button><\/div>/g)||[]).length,5);
+  assert.doesNotMatch(html,/gf-route-card|data-status="warning"/);
+  assert.match(html,/<p class="gf-muted">1 giro programmato<\/p>/);
   assert.match(html,/Settimana 28 settembre – 4 ottobre 2026/);
-  for(const text of ['Giro selezionato','0 km','0 min','openDashboardScheduledRoute(42)']) assert.ok(html.includes(text),text);
+  for(const text of ['Non assegnato','0 km','0 min','openDashboardScheduledRoute(42)']) assert.ok(html.includes(text),text);
   // Il giro scelto si apre a pagina intera (variante B): barra con icone, mappa, fermate, tabella apribile.
   f.run('renderDashboardScheduledSubpage([route],route)');html=f.node.innerHTML;
   assert.doesNotMatch(html,/<dialog|data-cols="7"/);
