@@ -85,33 +85,37 @@
   }
   const dayName = i => `${SHORT[i]}${DAYS[i] === TODAY ? ' · oggi' : ''}`;
 
-  // Tre varianti della stessa settimana a colonne: cambiano solo i dettagli.
-  // A · avatar dell'autista, annullati contati in fondo, giorno vuoto tratteggiato.
-  // B · righe compatte senza avatar, i giri del giorno scelto si accendono, totale fermate in fondo.
-  // C · senza avatar ma con mezzo e fermate, «+ Pianifica» sempre in fondo alla colonna, giorno vuoto semplice.
+  // Tre varianti della C: giri con orario, autista, mezzo e fermate; «Mostra di più» in fondo;
+  // nei giorni vuoti da oggi in poi icona e «Pianifica giro», nei giorni passati solo «Nessun giro».
+  // A · «Mostra altri N» in fondo, contando giri nascosti e annullati; niente annullati in colonna.
+  // B · «Mostra di più» in fondo a ogni giorno con giri; annullati come badge accanto al conteggio.
+  // C · «Mostra altri N» in fondo solo se servono; annullati non in colonna (solo nella tabella sotto);
+  //     giorno vuoto nel riquadro tratteggiato.
+  const CAL_ICON = '<span class="gf-empty__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 5h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z M16 3v4 M8 3v4 M4 11h16"/></svg></span>';
   function weekCols(v){
     return `<div class="gf-grid" data-cols="7">${DAYS.map((iso, i) => {
       const list = active(ofDay(i)), count = list.length, cancelled = ofDay(i).length - count;
-      const on = i === selected;
-      const item = r => {
-        const title = esc(`${r.start} · ${r.driver} · ${r.vehicle} · ${r.stops} fermate`);
-        if(v === 'B') return `<button type="button" class="gf-list-item"${on ? ' aria-current="true"' : ''} data-pick="${i}" title="${title}"><span class="gf-list-item__main"><strong>${r.start}</strong><small>${esc(r.driver)}</small></span></button>`;
-        if(v === 'C') return `<button type="button" class="gf-list-item" data-pick="${i}" title="${title}"><span class="gf-list-item__main"><strong>${r.start} · ${esc(short(r.driver))}</strong><small>${esc(r.vehicle)}</small><small>${plural(r.stops,'fermata','fermate')}</small></span></button>`;
-        return `<button type="button" class="gf-list-item" data-pick="${i}" title="${title}">${avatar(r.driver)}<span class="gf-list-item__main"><strong>${r.start}</strong><small>${esc(short(r.driver))}</small></span></button>`;
-      };
-      const more = list.length > LIMIT ? `<div class="gf-list-item"><button type="button" class="gf-button" data-variant="link" data-size="sm" data-pick="${i}">Mostra altri ${list.length - LIMIT}</button></div>` : '';
-      const cancelledRow = cancelled ? `<div class="gf-list-item"><button type="button" class="gf-button" data-variant="ghost" data-size="sm" data-pick="${i}">${plural(cancelled,'annullato','annullati')}</button></div>` : '';
+      const on = i === selected, hidden = list.length - LIMIT, future = iso >= TODAY;
+      const item = r => `<button type="button" class="gf-list-item" data-pick="${i}" title="${esc(`${r.start} · ${r.driver} · ${r.vehicle} · ${r.stops} fermate`)}"><span class="gf-list-item__main"><strong>${r.start} · ${esc(short(r.driver))}</strong><small>${esc(r.vehicle)}</small><small>${plural(r.stops,'fermata','fermate')}</small></span></button>`;
       let items;
-      if(list.length || cancelled) items = list.slice(0, LIMIT).map(item).join('') + more + cancelledRow;
-      else if(v === 'A') items = `<div class="gf-panel__body"><div class="gf-day-empty"><span>Nessun giro</span><button type="button" class="gf-button" data-variant="link" data-size="sm">+ Pianifica</button></div></div>`;
-      else items = `<div class="gf-panel__body"><p class="gf-muted">Nessun giro</p>${v === 'B' ? '<button type="button" class="gf-button" data-variant="link" data-size="sm">+ Pianifica</button>' : ''}</div>`;
-      const stops = list.reduce((s, r) => s + r.stops, 0);
-      const footer = v === 'B' && count ? `<footer class="gf-panel__footer"><small class="gf-muted">${plural(stops,'fermata','fermate')}</small></footer>`
-        : v === 'C' ? `<footer class="gf-panel__footer"><button type="button" class="gf-button" data-variant="link" data-size="sm">+ Pianifica</button></footer>` : '';
-      const badge = count ? `<span class="gf-badge" data-status="${v === 'C' && on ? 'info' : 'neutral'}">${plural(count,'giro','giri')}</span>` : '';
+      if(count) items = list.slice(0, LIMIT).map(item).join('');
+      else {
+        const plan = future ? `<button type="button" class="gf-button" data-variant="${v === 'B' ? 'secondary' : 'link'}" data-size="sm">Pianifica giro</button>` : '';
+        const empty = `${CAL_ICON}<p>Nessun giro</p>${plan}`;
+        items = v === 'C' ? `<div class="gf-panel__body"><div class="gf-day-empty">${empty}</div></div>` : `<div class="gf-empty">${empty}</div>`;
+      }
+      // A: il numero conta anche gli annullati, che si vedono nella tabella sotto.
+      const extra = Math.max(hidden, 0) + (v === 'A' ? cancelled : 0);
+      const moreLabel = v === 'B' ? 'Mostra di più' : `Mostra altri ${extra}`;
+      const showMore = v === 'B' ? count > 0 : extra > 0;
+      const left = '';
+      const footer = showMore || left
+        ? `<footer class="gf-panel__footer">${left}${showMore ? `<button type="button" class="gf-button" data-variant="link" data-size="sm" data-pick="${i}">${moreLabel}</button>` : ''}</footer>` : '';
+      const badge = count ? `<span class="gf-badge" data-status="${on ? 'info' : 'neutral'}">${plural(count,'giro','giri')}</span>` : '';
+      const cancelledBadge = v === 'B' && cancelled ? `<span class="gf-badge" data-status="danger">${cancelled} annull.</span>` : '';
       const weekend = i > 4 ? ' data-day="weekend"' : '';
       return `<section class="gf-panel"${weekend} aria-label="${LONG[i]}">
-        <header class="gf-panel__header"><button type="button" class="gf-day-head" aria-pressed="${on}" data-pick="${i}"><span class="gf-day-head__weekday">${dayName(i)}</span><span class="gf-day-head__number">${iso.slice(8).replace(/^0/,'')}</span>${badge}</button></header>
+        <header class="gf-panel__header"><button type="button" class="gf-day-head" aria-pressed="${on}" data-pick="${i}"><span class="gf-day-head__weekday">${dayName(i)}</span><span class="gf-day-head__number">${iso.slice(8).replace(/^0/,'')}</span>${badge || cancelledBadge}</button></header>
         <div class="gf-list">${items}</div>${footer}
       </section>`;
     }).join('')}</div>`;
