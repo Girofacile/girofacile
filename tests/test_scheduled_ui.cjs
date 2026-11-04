@@ -24,9 +24,9 @@ test('scheduled week shows seven days and the day table; a route opens as a full
   // Sette card dei giorni affiancate, con giorno e data sempre sulla stessa riga.
   assert.match(html,/class="gf-grid" data-cols="7"/);
   assert.equal((html.match(/class="gf-day-head"/g)||[]).length,7);
-  // Il colore segue il giorno scelto (aria-pressed), non oggi: oggi è solo scritto «Mar · Oggi».
+  // Il colore segue il giorno scelto (aria-pressed); oggi ha solo aria-current (numero rosso), senza scritta.
   assert.doesNotMatch(html,/data-day="today"/);
-  assert.match(html,/aria-pressed="true" aria-label="Martedì 29 settembre · 1 giro"[^>]*><span class="gf-day-head__weekday">Mar · Oggi<\/span><span class="gf-day-head__number">29<\/span><span class="gf-badge" data-status="info">1 giro<\/span>/);
+  assert.match(html,/aria-pressed="true" aria-current="date" aria-label="Martedì 29 settembre · oggi · 1 giro"[^>]*><span class="gf-day-head__weekday">Mar<\/span><span class="gf-day-head__number">29<\/span><span class="gf-badge" data-status="info">1 giro<\/span>/);
   assert.equal((html.match(/data-day="weekend"/g)||[]).length,2);
   // Il giro mostra orario, autista, mezzo e fermate; in fondo «Mostra di più».
   assert.match(html,/class="gf-list-item"[^>]*onclick="openDashboardScheduledRoute\(42\)"><span class="gf-list-item__main"><strong>08:00 · Non assegnato<\/strong><small>Mezzo non indicato<\/small><small>0 fermate<\/small>/);

@@ -4510,7 +4510,7 @@ function dashScheduledRoutesOf(iso){ return dashboardScheduledRoutes.filter(r=>r
 function dashScheduledCancelled(r){ return r.status === 'annullato'; }
 
 // Settimana dei giri, condivisa da Giri programmati e Storico (nuovo aspetto del 4 novembre 2026):
-// il colore segue il giorno scelto (aria-pressed), non oggi, che resta solo scritto («Mer · Oggi»);
+// il colore segue il giorno scelto (aria-pressed); oggi ha solo il numero in rosso (aria-current="date");
 // ogni giro mostra orario, autista, mezzo e fermate; «Mostra di più» in fondo apre la tabella del giorno;
 // gli annullati restano nella tabella sotto (badge rosso solo se il giorno ha soltanto annullati).
 const DASH_WEEK_SHORT_DAYS = ['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
@@ -4531,8 +4531,9 @@ function dashWeekColumn(iso, routes, opts){
   const badge = list.length
     ? `<span class="gf-badge" data-status="${opts.selected ? 'info' : 'neutral'}">${count}</span>`
     : cancelled ? `<span class="gf-badge" data-status="danger">${cancelled} annull.</span>` : '';
-  const label = `${dashScheduledDayLabel(iso)}${list.length?` · ${count}`:''}${cancelled?` · ${cancelled} ${cancelled===1?'annullato':'annullati'}`:''}`;
-  const head = `<button type="button" class="gf-day-head" aria-pressed="${!!opts.selected}" aria-label="${esc(label)}" onclick="${opts.onSelect}"><span class="gf-day-head__weekday">${DASH_WEEK_SHORT_DAYS[d.getDay()]}${iso===todayIso()?' · Oggi':''}</span><span class="gf-day-head__number">${d.getDate()}</span>${badge}</button>`;
+  const isToday = iso===todayIso();
+  const label = `${dashScheduledDayLabel(iso)}${isToday?' · oggi':''}${list.length?` · ${count}`:''}${cancelled?` · ${cancelled} ${cancelled===1?'annullato':'annullati'}`:''}`;
+  const head = `<button type="button" class="gf-day-head" aria-pressed="${!!opts.selected}"${isToday?' aria-current="date"':''} aria-label="${esc(label)}" onclick="${opts.onSelect}"><span class="gf-day-head__weekday">${DASH_WEEK_SHORT_DAYS[d.getDay()]}</span><span class="gf-day-head__number">${d.getDate()}</span>${badge}</button>`;
   const item = r=>{
     const stops = Number(r.consegne_count||0), vehicle = dashScheduledVehicle(r)[0] || 'Mezzo non indicato';
     const stopsText = `${stops} ${stops===1?'fermata':'fermate'}`;

@@ -5,6 +5,8 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Giri programmati e Storico: tolta la scritta «Oggi» sotto il giorno, che
+  allungava il riquadro; oggi ha il numero della data in rosso.
 - Storico: nei giorni vuoti da oggi in poi, al posto di «Giorno futuro»,
   icona e pulsante «Pianifica giro», come in Giri programmati.
 - Giri programmati: nuovo aspetto della settimana. Il colore segue il giorno
