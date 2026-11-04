@@ -69,6 +69,14 @@ test('history follows every bounded page and searches/exports beyond 200 records
   f.history.exportRoutes();
   assert.match(f.downloads.at(-1),/Archivio antico/);
 });
+test('history week offers planning on empty days from today',async()=>{
+  const f=historyFixture(async()=>({items:[closed(1)],total:1,next_page:null}));
+  await f.history.load();
+  const html=f.node('historyWeek').innerHTML;
+  assert.doesNotMatch(html,/Giorno futuro/);
+  assert.match(html,/2026-10-19[\s\S]*openPlanningSelection\(\)">Pianifica giro/);
+  assert.equal((html.match(/Pianifica giro/g)||[]).length,6);
+});
 test('failed history page shows retry and never presents a partial archive',async()=>{
   let fail=true;
   const f=historyFixture(async path=>{

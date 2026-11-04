@@ -5,6 +5,8 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Storico: nei giorni vuoti da oggi in poi, al posto di «Giorno futuro»,
+  icona e pulsante «Pianifica giro», come in Giri programmati.
 - Giri programmati: nuovo aspetto della settimana. Il colore segue il giorno
   che si sta guardando e non più oggi (che resta solo scritto, «Mer · Oggi»);
   ogni giro mostra orario, autista, mezzo e fermate; in fondo alla colonna

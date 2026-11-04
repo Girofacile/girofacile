@@ -91,13 +91,13 @@ window.GFHistory = (() => {
     $('historyWeekTitle').textContent = 'Settimana ' + (first.getMonth() === last.getMonth()
       ? `${first.getDate()} – ${last.getDate()} ${DASH_SCHEDULED_MONTHS[last.getMonth()]} ${last.getFullYear()}`
       : `${first.getDate()} ${DASH_SCHEDULED_MONTHS[first.getMonth()]} – ${last.getDate()} ${DASH_SCHEDULED_MONTHS[last.getMonth()]} ${last.getFullYear()}`);
-    // Stessa settimana di Giri programmati; i giorni futuri restano vuoti, senza «Pianifica».
+    // Stessa settimana di Giri programmati: nei giorni vuoti da oggi in poi «Pianifica giro».
     return `<div class="gf-grid" data-cols="7">${days.map(iso => dashWeekColumn(iso, routesOf(iso), {
       selected: iso === state.day, limit: WEEK_LIMIT,
       onSelect: `GFHistory.day('${iso}')`,
       onOpen: r => `GFHistory.open(${Number(r.id)})`,
       onMore: `GFHistory.more('${iso}')`, moreControls: 'historyDaySection',
-      emptyText: iso > todayIso() ? 'Giorno futuro' : 'Nessun giro'
+      empty: iso >= todayIso() ? DASH_WEEK_PLAN_BUTTON : ''
     })).join('')}</div>`;
   }
   function routesTable(list, withDate){

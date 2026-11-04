@@ -4519,6 +4519,8 @@ function dashWeekShortName(name){
   const [first, ...rest] = String(name || '').trim().split(/\s+/);
   return !first ? 'Non assegnato' : rest.length ? `${first[0]}. ${rest.join(' ')}` : first;
 }
+// «Pianifica giro» nei giorni vuoti da oggi in poi (Giri programmati e Storico).
+const DASH_WEEK_PLAN_BUTTON = '<button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="openPlanningSelection()">Pianifica giro</button>';
 const DASH_WEEK_EMPTY_ICON = '<span class="gf-empty__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 5h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z M16 3v4 M8 3v4 M4 11h16"/></svg></span>';
 function dashScheduledVehicle(r){ return String(r.vehicle_name || '').split(' · ').filter(Boolean); }
 // Una colonna della settimana. opts: selected, limit, onSelect, onOpen(r), onMore, empty (HTML extra
@@ -4610,7 +4612,7 @@ function dashboardScheduledWeekHtml(){
     onOpen: r=>`openDashboardScheduledRoute(${Number(r.id)})`,
     onMore: `showAllDashboardScheduledDay('${iso}')`,
     // «Pianifica giro» solo nei giorni vuoti da oggi in poi.
-    empty: iso >= today ? '<button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="openPlanningSelection()">Pianifica giro</button>' : ''
+    empty: iso >= today ? DASH_WEEK_PLAN_BUTTON : ''
   })).join('');
   // Riepilogo della settimana sotto il titolo, in grigio.
   const weekRoutes = dashboardScheduledRoutes.filter(r=>days.includes(r.data_giro));
