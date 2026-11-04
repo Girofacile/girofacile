@@ -4,7 +4,7 @@ window.GFHistory = (() => {
   const PERIODS = {'':'Qualsiasi data','7':'Ultimi 7 giorni','30':'Ultimi 30 giorni','month':'Questo mese','last-month':'Mese scorso','90':'Ultimi 3 mesi','custom':'Date a scelta'};
   const STATES = {'':'Tutti gli stati','completato':'Completati','annullato':'Annullati'};
   const state = {routes:[], day:null, query:'', period:'', from:'', to:'', driver:'', vehicle:'', status:''};
-  // Nella settimana ogni giorno mostra al massimo WEEK_LIMIT giri; "Mostra altri" apre la tabella del giorno, sotto.
+  // Nella settimana ogni giorno mostra al massimo WEEK_LIMIT giri; "Mostra di più" apre la tabella del giorno, sotto.
   const WEEK_LIMIT = 3;
   let route = null, request = 0, detailRequest = 0;
   const $ = id => document.getElementById(id);
@@ -91,22 +91,14 @@ window.GFHistory = (() => {
     $('historyWeekTitle').textContent = 'Settimana ' + (first.getMonth() === last.getMonth()
       ? `${first.getDate()} – ${last.getDate()} ${DASH_SCHEDULED_MONTHS[last.getMonth()]} ${last.getFullYear()}`
       : `${first.getDate()} ${DASH_SCHEDULED_MONTHS[first.getMonth()]} – ${last.getDate()} ${DASH_SCHEDULED_MONTHS[last.getMonth()]} ${last.getFullYear()}`);
-    return `<div class="gf-grid" data-cols="7">${days.map(iso => {
-      // Completati prima, annullati in fondo alla colonna; come nella tabella, ogni giro non annullato è concluso (striscia verde).
-      const list = routesOf(iso).sort((a, b) => (a.status === 'annullato') - (b.status === 'annullato'));
-      const shown = list.slice(0, WEEK_LIMIT), hidden = list.length - WEEK_LIMIT;
-      const completed = list.filter(r => r.status !== 'annullato').length;
-      const more = hidden > 0
-        ? `<li><button type="button" class="gf-button" data-variant="link" data-size="sm" aria-controls="historyDaySection" onclick="GFHistory.more('${iso}')">Mostra altri ${hidden}</button></li>`
-        : '';
-      const items = list.length
-        ? shown.map(r => dashWeekRouteCard({...r, status: r.status === 'annullato' ? 'annullato' : 'completato'}, `GFHistory.open(${Number(r.id)})`)).join('') + more
-        : `<li class="gf-day-empty"><span>${iso > todayIso() ? 'Giorno futuro' : 'Nessun giro'}</span></li>`;
-      return `<section class="gf-panel"${dashWeekPanelAttrs(iso)} aria-label="${esc(dashScheduledDayLabel(iso))}">
-        <header class="gf-panel__header">${dashWeekDayHead(iso, iso === state.day, completed, 'success', `GFHistory.day('${iso}')`)}</header>
-        <ul class="gf-route-list">${items}</ul>
-      </section>`;
-    }).join('')}</div>`;
+    // Stessa settimana di Giri programmati; i giorni futuri restano vuoti, senza «Pianifica».
+    return `<div class="gf-grid" data-cols="7">${days.map(iso => dashWeekColumn(iso, routesOf(iso), {
+      selected: iso === state.day, limit: WEEK_LIMIT,
+      onSelect: `GFHistory.day('${iso}')`,
+      onOpen: r => `GFHistory.open(${Number(r.id)})`,
+      onMore: `GFHistory.more('${iso}')`, moreControls: 'historyDaySection',
+      emptyText: iso > todayIso() ? 'Giorno futuro' : 'Nessun giro'
+    })).join('')}</div>`;
   }
   function routesTable(list, withDate){
     return `<div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards">

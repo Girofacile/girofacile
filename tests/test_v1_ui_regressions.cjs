@@ -3,9 +3,9 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
 const historySource=fs.readFileSync('static/dashboard/js/history.js','utf8');
-// Intestazione del giorno e card dei giri, condivise con Giri programmati (core.js).
+// Colonna della settimana (dashWeekColumn), condivisa con Giri programmati (core.js).
 const coreSource=fs.readFileSync('static/dashboard/js/core.js','utf8');
-const weekSource=coreSource.slice(coreSource.indexOf('const DASH_WEEK_SHORT_DAYS'),coreSource.indexOf('\n',coreSource.indexOf('const DASH_WEEK_EMPTY_ICON')));
+const weekSource=coreSource.slice(coreSource.indexOf('const DASH_WEEK_SHORT_DAYS'),coreSource.indexOf('function selectDashboardScheduledDay('));
 const mobileSource=fs.readFileSync('static/mobile/mobile.js','utf8');
 const driverSource=fs.readFileSync('static/driver/index.html','utf8');
 function sourceFunction(source,name){

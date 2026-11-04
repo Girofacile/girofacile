@@ -12,7 +12,13 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
   «Pianifica giro», solo da oggi in poi; gli annullati restano nella tabella
   (badge rosso solo se il giorno ha soltanto annullati). Niente più ambra:
   conteggi grigi, azzurri sul giorno scelto. Tabella del giorno con avatar
-  dell'autista e targa del mezzo. Lo Storico resta com'era.
+  dell'autista e targa del mezzo.
+- Storico: la settimana ha lo stesso aspetto di Giri programmati (stessa
+  funzione `dashWeekColumn`): colore sul giorno scelto, giri con orario,
+  autista, mezzo e fermate, «Mostra di più» in fondo, giorni futuri vuoti senza
+  «Pianifica». Tolti dal sistema di stile la colonna di oggi in blu, le card
+  con la striscia colorata e il giorno tratteggiato, non più usati; catalogo e
+  documentazione aggiornati.
 - Giri in corso: la sezione «Giri attivi» è una tabella, una riga per giro con
   autista e mezzo, avanzamento, prossima fermata, rientro stimato (con il
   ritardo sul previsto) e segnali (mancate, ritardo, GPS, messaggi non letti

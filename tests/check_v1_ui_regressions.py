@@ -131,14 +131,14 @@ def main():
                 page.locator("#historyError").get_by_role("button", name="Riprova").click()
                 page.locator("#historyPage").wait_for(state="visible")
                 assert state["history_pages"] == [1, 2, 3]
-                # Settimana: al massimo 3 giri per giorno, gli altri con "Mostra altri".
+                # Settimana: al massimo 3 giri per giorno, gli altri con "Mostra di più".
                 week = page.locator("#historyWeek")
-                more = week.get_by_role("button", name="Mostra altri 227")
-                assert more.is_visible() and week.locator("li > button.gf-route-card").count() == 3
+                more = week.get_by_role("button", name="Mostra di più")
+                assert more.is_visible() and week.locator("button.gf-list-item").count() == 3
                 week.screenshot(path=str(output/"storico-settimana.png"))
                 more.click()
                 # Il giorno resta a 3 giri; l'elenco completo è nella tabella del giorno, sotto.
-                assert week.locator("li > button.gf-route-card").count() == 3
+                assert week.locator("button.gf-list-item").count() == 3
                 assert page.locator("#historyDaySection tbody tr").count() == 230
                 page.locator("#historySearch").fill("Giro d'Italia antico")
                 assert page.locator("#historyResultsList tbody tr").count() == 1
