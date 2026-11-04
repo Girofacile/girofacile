@@ -111,7 +111,7 @@
     }
     apply(); startObserver();
     const preferred=['dashboard','giro','clienti','depositi','mezzi','autisti','agenti','storico','report','chat-autisti','company','settings'];
-    showTab(preferred.find(name=>allowedTab(name) && (name!=='agenti' || agentsFeatureEnabled())) || 'collaborator-home');
+    restoreTabFromUrl(preferred.find(name=>allowedTab(name) && (name!=='agenti' || agentsFeatureEnabled())) || 'collaborator-home');
   }
   function rewrite(path){
     if(!isCollaborator()) return path;

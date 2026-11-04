@@ -5,6 +5,11 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- La pagina aperta resta nell'indirizzo (es. `/dashboard#ordini`): con F5 si
+  riapre la stessa pagina e Indietro/Avanti del browser si muovono tra le pagine
+  del portale. Le pagine legate a un lavoro a metà (importazione, giro in
+  pianificazione) riaprono Ordini; una pagina non consentita al collaboratore
+  riapre la sua pagina iniziale.
 - Nuova finestra «Controlla gli indirizzi» prima della pianificazione: tabella
   con indirizzo scritto, proposta di Google e motivo («Non trovato», «Altro
   comune», «Posizione approssimativa»); «Modifica» apre sotto la riga il campo da

@@ -1528,6 +1528,8 @@ async function initApp(){
   };
   const dashboardReady = loadDashboardHome(startupResources);
   await Promise.all([loadSettingsV41(), loadUniversalFeaturesV89()]);
+  // Dopo F5 si resta nella pagina in cui si era (scritta nell'indirizzo, es. #ordini).
+  if(typeof restoreTabFromUrl==="function") restoreTabFromUrl(null);
   loadProfilePanel();
   initAddressAutocomplete();
   initResourceAvailabilityControls();

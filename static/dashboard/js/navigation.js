@@ -136,6 +136,56 @@ function setActiveNavItem(name){
   });
 }
 
+// La pagina aperta resta nell'indirizzo (/dashboard#ordini): con F5 si riapre la stessa
+// pagina e i tasti Indietro/Avanti del browser si muovono tra le pagine del portale.
+// Le pagine che dipendono da qualcosa aperto a metà (dettaglio, importazione, giro in
+// pianificazione) riaprono la pagina da cui si parte.
+const GF_TAB_RESTORE_PARENT={"ordine-fonte":"ordini","ordini-importa":"ordini","ordine-dettaglio":"ordini",
+  "ordine-modifica":"ordini","giro":"ordini","route-preview":"ordini"};
+let gfTabFromHistory=false;
+function tabFromUrl(){
+  const name=decodeURIComponent((window.location.hash||"").slice(1));
+  return /^[a-z0-9-]+$/.test(name) && document.getElementById("tab-"+name) ? name : null;
+}
+function visibleTab(){
+  return document.querySelector(".tab:not(.hidden)")?.id?.replace(/^tab-/,"") || null;
+}
+function rememberTab(name){
+  if(!document.getElementById("tab-"+name) || window.location.hash==="#"+name) return;
+  const url=window.location.pathname+window.location.search+"#"+name;
+  if(gfTabFromHistory) window.history.replaceState(null,"",url);
+  else window.history.pushState(null,"",url);
+}
+function showTabFromHistory(name){
+  gfTabFromHistory=true;
+  try{ showTab(name); }finally{ gfTabFromHistory=false; }
+}
+// Dopo il caricamento: riapre la pagina scritta nell'indirizzo, se esiste e se è consentita.
+function restoreTabFromUrl(fallback){
+  const saved=tabFromUrl();
+  const name=saved ? (GF_TAB_RESTORE_PARENT[saved] || saved) : null;
+  const allowed=name && (!window.GFCompanyAccess || GFCompanyAccess.allowedTab(name));
+  // Se nel frattempo si è già aperta un'altra pagina, si resta lì.
+  const moved=!fallback && visibleTab()!=="dashboard";
+  const target=moved ? null : (allowed ? name : fallback);
+  // Senza fallback (titolare) la Dashboard è già aperta: non la si ricarica una seconda volta.
+  if(target && (fallback || target!==visibleTab())) showTabFromHistory(target);
+  // Anche la prima pagina finisce nell'indirizzo, così «Indietro» ci ritorna.
+  const shown=visibleTab();
+  if(shown) window.history.replaceState(null,"",window.location.pathname+window.location.search+"#"+shown);
+  return target;
+}
+if(typeof window!=="undefined" && typeof window.addEventListener==="function"){
+  window.addEventListener("popstate",()=>{
+    const name=tabFromUrl();
+    if(!name || name===visibleTab()) return;
+    showTabFromHistory(name);
+    // Cambio annullato (per esempio il giro da non mandare in bozza): l'indirizzo torna alla pagina aperta.
+    const shown=visibleTab();
+    if(shown && shown!==name) window.history.replaceState(null,"",window.location.pathname+window.location.search+"#"+shown);
+  });
+}
+
 function showTab(name){
   if(window.GFCompanyAccess && !GFCompanyAccess.allowedTab(name)){toast("Funzione non assegnata al tuo account");return;}
   // Lasciando la pianificazione il giro va in bozza, dopo una conferma.
@@ -145,6 +195,7 @@ function showTab(name){
   if(name !== "company" && typeof blockCompanyNavigationForUnsavedChanges === "function" && blockCompanyNavigationForUnsavedChanges()) return;
   if(blockOperationalTabV49(name)) return;
   if(name === "agenti" && !agentsFeatureEnabled()) name = "settings";
+  rememberTab(name);
   if(showLockedOrProceed(name)) return;
   document.querySelectorAll(".tab").forEach(x=>x.classList.add("hidden"));
   const tab = document.getElementById("tab-"+name);
