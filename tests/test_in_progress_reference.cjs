@@ -225,3 +225,25 @@ test('zero-valued GPS coordinates remain valid',()=>{
   assert.equal(f.map.layers.size,2);assert.equal(f.follow.disabled,false);
   assert.equal(f.state.vehicle.coord[0],0);assert.equal(f.state.vehicle.coord[1],0);
 });
+
+test('giri attivi in tabella: prossima fermata, rientro, segnali e giro aperto',()=>{
+  const {picker,route,controller}=harness();
+  const late={...route,id:20,driver_name:'Seconda Autista',vehicle_name:'Furgone Due',consegne:undefined,
+    consegne_count:9,completed_count:6,missed_count:1,orario_rientro_stimato:'13:40',rientro_stimato_aggiornato:'13:52',
+    next_delivery:{cliente_nome:'Pasticceria Del Corso',indirizzo:'Corso Umberto I 2, Cicciano',ordine:8},unread_driver_messages:2};
+  controller.render([route,late],route);
+  const rows=picker.innerHTML.split('<tr ').slice(1);
+  assert.equal(rows.length,2);
+  assert.match(rows[0],/Aperto sotto/);
+  assert.match(rows[0],/aria-pressed="true"/);
+  assert.match(rows[1],/>Apri</);
+  assert.match(rows[1],/Pasticceria Del Corso/);
+  assert.match(rows[1],/Corso Umberto I 2, Cicciano/);
+  assert.match(rows[1],/<strong>13:52<\/strong>/);
+  assert.match(rows[1],/Previsto 13:40/);
+  assert.match(rows[1],/\+12 min/);
+  assert.match(rows[1],/1 mancata/);
+  assert.match(rows[1],/2 messaggi/);
+  assert.match(rows[1],/6\/9<\/b> consegne/);
+  assert.match(rows[1],/data-label="Prossima fermata"/);
+});

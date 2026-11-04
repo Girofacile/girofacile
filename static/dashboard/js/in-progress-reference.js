@@ -32,16 +32,36 @@ window.GFInProgressReference=(()=>{
   }
   const chip=(label,type='info')=>'<span class="gf-badge" data-status="'+type+'">'+esc(label)+'</span>';
   const gpsTone=p=>p?.state==='fresh'?'success':p?.state==='stale'?'warning':'neutral';
-  const issue=r=>stat(r).miss>0 || n(r.delay_minutes)>0 || r.late===true;
-  function routeCard(r){
-    const s=stat(r),p=state.gps.get(Number(r.id)),chosen=Number(state.id)===Number(r.id);
-    return '<button type="button" class="gf-list-item" role="radio" data-ip-route="'+Number(r.id)+'" aria-checked="'+chosen+'" aria-current="'+chosen+'" tabindex="'+(chosen?0:-1)+'">'+
-      '<span class="gf-avatar" aria-hidden="true">'+esc(initials(r.driver_name))+'</span><span class="gf-list-item__main gf-stack" data-gap="sm">'+
-      '<span class="gf-cluster" data-justify="between"><span><b>'+esc(r.driver_name||'Autista non assegnato')+'</b><br><small class="gf-muted">'+esc(r.vehicle_name||'Mezzo non assegnato')+'</small></span>'+chip(issue(r)?'Da verificare':'In corso',issue(r)?'warning':'info')+'</span>'+bar(r)+
-      '<span class="gf-cluster"><span><b>'+s.done+'/'+s.total+'</b> consegne</span>'+
-      (s.miss?'<span class="gf-badge" data-status="danger">'+s.miss+' mancate</span>':'')+
-      '<span>Rientro <b>'+esc(r.rientro_stimato_aggiornato||r.orario_rientro_stimato||'—')+'</b></span>'+
-      '<span class="gf-badge" data-dot data-status="'+gpsTone(p)+'">'+esc(gpsText(p))+'</span></span></span></button>';
+  // Ritardo sul rientro: rientro aggiornato con il traffico rispetto a quello previsto alla programmazione.
+  const clockMin=v=>{const m=/^(\d{1,2}):(\d{2})/.exec(String(v||''));return m?Number(m[1])*60+Number(m[2]):null;};
+  const delay=r=>{
+    if(n(r.delay_minutes)>0)return Math.round(n(r.delay_minutes));
+    const now=clockMin(r.rientro_stimato_aggiornato),planned=clockMin(r.orario_rientro_stimato);
+    if(now==null||planned==null)return 0;
+    const diff=(now-planned+1440)%1440;
+    return diff>0&&diff<720?diff:0;
+  };
+  const issue=r=>stat(r).miss>0 || delay(r)>0 || r.late===true;
+  // Una riga per giro (approvata il 4 novembre 2026): autista e mezzo, avanzamento, prossima
+  // fermata, rientro e segnali; «Apri» mostra il giro nel dettaglio sotto.
+  function routeCard(r,index){
+    const s=stat(r),p=state.gps.get(Number(r.id)),chosen=Number(state.id)===Number(r.id),late=delay(r);
+    const next=r.next_delivery,eta=r.rientro_stimato_aggiornato||r.orario_rientro_stimato||'—';
+    const etaNote=late?'Previsto '+esc(r.orario_rientro_stimato):r.rientro_stimato_aggiornato?'In orario':'Orario previsto';
+    const unread=n(r.unread_driver_messages);
+    return '<tr data-ip-route="'+Number(r.id)+'"'+(chosen?' aria-current="true"':'')+'>'+
+      '<td data-label="Autista e mezzo"><div class="gf-cluster"><span class="gf-avatar" data-tone="'+(index%6+1)+'" aria-hidden="true">'+esc(initials(r.driver_name))+'</span>'+
+        '<div><strong>'+esc(r.driver_name||'Autista non assegnato')+'</strong><br><small class="gf-muted">'+esc(r.vehicle_name||'Mezzo non assegnato')+'</small></div></div></td>'+
+      '<td data-label="Avanzamento"><div class="gf-progress"><div class="gf-progress__top"><span><b>'+s.done+'/'+s.total+'</b> consegne</span><span>'+s.todo+' da fare</span></div>'+bar(r)+'</div></td>'+
+      '<td data-label="Prossima fermata">'+(next?'<strong>'+esc(next.cliente_nome||'Fermata '+(next.ordine||''))+'</strong><br><small class="gf-muted">'+esc(next.indirizzo||'')+'</small>':'<span class="gf-muted">Tutte le fermate gestite</span>')+'</td>'+
+      '<td data-label="Rientro stimato"><strong>'+esc(eta)+'</strong><br><small class="gf-muted">'+etaNote+'</small></td>'+
+      '<td data-label="Segnali"><div class="gf-cluster">'+
+        (s.miss?'<span class="gf-badge" data-status="danger">'+gfCount(s.miss,'mancata','mancate')+'</span>':'')+
+        (late?'<span class="gf-badge" data-status="warning">+'+late+' min</span>':'')+
+        '<span class="gf-badge" data-dot data-status="'+gpsTone(p)+'">'+esc(gpsText(p))+'</span>'+
+        (unread?'<span class="gf-badge" data-status="info">'+gfCount(unread,'messaggio','messaggi')+'</span>':'')+
+      '</div></td>'+
+      '<td data-label="Dettaglio"><button type="button" class="gf-button" data-size="sm" data-variant="'+(chosen?'primary':'secondary')+'" data-ip-route="'+Number(r.id)+'" aria-pressed="'+chosen+'">'+(chosen?'Aperto sotto':'Apri')+'</button></td></tr>';
   }
   function filtered(){
     return state.routes.filter(r=>state.filter==='issue'?issue(r):
@@ -51,10 +71,10 @@ window.GFInProgressReference=(()=>{
     const page=root();if(!page)return;
     const box=page.querySelector('[data-ip-picker]');if(!box)return;
     const visible=filtered();
-    box.innerHTML=visible.length?visible.map(routeCard).join(''):'<div class="gf-empty"><p>Nessun giro corrisponde al filtro selezionato.</p></div>';
+    box.innerHTML=visible.length?visible.map(r=>routeCard(r,state.routes.indexOf(r))).join(''):'<tr><td colspan="6"><div class="gf-empty"><p>Nessun giro corrisponde al filtro selezionato.</p></div></td></tr>';
     const issueCount=state.routes.filter(issue).length;
     const gpsCount=state.routes.filter(r=>state.gps.has(Number(r.id))&&state.gps.get(Number(r.id)).state!=='fresh').length;
-    [['all','Tutti ('+state.routes.length+')'],['issue','Con mancate o ritardi ('+issueCount+')'],['gps','GPS non aggiornato ('+gpsCount+')']].forEach(([key,label])=>{
+    [['all','Tutti ('+state.routes.length+')'],['issue','Con mancate o ritardi ('+issueCount+')'],['gps','GPS da controllare ('+gpsCount+')']].forEach(([key,label])=>{
       const b=page.querySelector('[data-ip-filter="'+key+'"]');
       if(b){b.textContent=label;b.setAttribute('aria-pressed',String(state.filter===key));}
     });
@@ -227,16 +247,23 @@ window.GFInProgressReference=(()=>{
     const eta=detail.rientro_stimato_aggiornato||detail.orario_rientro_stimato||'—';
     const kpi=(label,value,sub)=>'<div class="gf-details__item"><dt>'+esc(label)+'</dt><dd><strong>'+esc(value)+'</strong><br><small class="gf-muted">'+esc(sub||'')+'</small></dd></div>';
     const svgIcon=name=>icon(name).replace('<svg ','<svg class="gf-icon" ');
+    const updated=new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
     page.innerHTML=`
       <section class="gf-panel" aria-label="Giri attivi">
-        <header class="gf-panel__header"><h2 class="gf-panel__title">Giri attivi</h2><span class="gf-badge" data-status="neutral" data-ip-count></span><span class="gf-muted">Aggiornamento automatico</span>
+        <header class="gf-panel__header">
+          <div><h2 class="gf-panel__title">Giri attivi</h2><p class="gf-muted"><span data-ip-count></span> · aggiornamento automatico ogni 30 secondi, ultimo alle ${esc(updated)}</p></div>
           <div class="gf-cluster" role="group" aria-label="Filtra i giri">
             <button type="button" class="gf-chip" data-ip-filter="all">Tutti</button>
             <button type="button" class="gf-chip" data-ip-filter="issue">Con mancate o ritardi</button>
-            <button type="button" class="gf-chip" data-ip-filter="gps">GPS non aggiornato</button>
+            <button type="button" class="gf-chip" data-ip-filter="gps">GPS da controllare</button>
           </div>
         </header>
-        <div class="gf-grid" data-cols="3" data-ip-picker role="radiogroup" aria-label="Seleziona un giro"></div>
+        <div class="gf-table-wrap">
+          <table class="gf-table" data-gf-responsive="cards" aria-label="Giri attivi">
+            <thead><tr><th scope="col">Autista e mezzo</th><th scope="col">Avanzamento</th><th scope="col">Prossima fermata</th><th scope="col">Rientro stimato</th><th scope="col">Segnali</th><th scope="col"><span class="gf-muted">Dettaglio</span></th></tr></thead>
+            <tbody data-ip-picker></tbody>
+          </table>
+        </div>
       </section>
       <section class="gf-route-panel" aria-label="Dettaglio del giro selezionato">
         <div class="gf-route-panel__map">

@@ -5,6 +5,11 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Giri in corso: la sezione «Giri attivi» è una tabella, una riga per giro con
+  autista e mezzo, avanzamento, prossima fermata, rientro stimato (con il
+  ritardo sul previsto) e segnali (mancate, ritardo, GPS, messaggi non letti
+  dell'autista); «Apri» mostra il giro nel dettaglio sotto. Mappa, indicatori e
+  fermate restano invariati.
 - Finestre (gf-modal) su iPhone: Safari le schiacciava a una riga alta zero,
   lasciando la pagina scurita e apparentemente bloccata (per esempio «Controlla
   gli indirizzi» dopo «Vai alla pianificazione»). Contenuto e corpo della
