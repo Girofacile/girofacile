@@ -45,6 +45,18 @@ primo con l'avviso. Il margine vale solo per la ricerca: orari e fasce mostrati 
 quelli veri del cliente. Il giro singolo usa lo stesso margine nel secondo passaggio.
 Diagnostica: `search.on_time_replan`. Le assegnazioni manuali non vengono rifatte.
 
+**Rientro oltre il turno.** Il traffico può spostare anche il rientro oltre la fine del
+turno (`traffic.overtime_min`), che la programmazione rifiuterebbe. Vale come un
+ritardo: riordino, poi nuova divisione con il turno accorciato per la sola ricerca
+(sforamento più 10 minuti, al massimo 60, mai oltre metà turno). Se il rientro resta
+oltre il turno, la revisione lo mostra tra gli avvisi e in «Da sistemare».
+
+**Partenza a inizio turno.** L'orario di partenza è comune a tutti i giri, ma un
+autista il cui turno inizia più tardi parte all'inizio del suo turno
+(`resource_start`, chiave `departure` nel mezzo usato dalla ricerca): la ricerca, OR-Tools,
+il traffico, i giri salvati e la programmazione usano quella partenza. La revisione
+la indica accanto al mezzo («parte alle 09:00»).
+
 ## Miglioramento con OR-Tools
 
 Con entrambe le strategie, dopo la ricerca e il riordino dei giri, il piano

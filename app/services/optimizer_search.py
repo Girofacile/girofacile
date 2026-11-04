@@ -18,7 +18,7 @@ class RouteEvaluator:
         self.return_depot, self.start_time = return_depot, start_time
         schedule = (vehicle or {}).get('driver_schedule') or {}
         self.has_schedule = bool(schedule.get('start') or schedule.get('end') or schedule.get('breaks'))
-        self.start = opt._start_clock(start_time)
+        self.start = opt.vehicle_start_clock(start_time, vehicle)
         self.windows = {d['_matrix_index']: opt.delivery_windows(d) for d in deliveries}
         self.service = {d['_matrix_index']: float(d.get('tempo_scarico_min') or 0) for d in deliveries}
         self.warnings = {d['_matrix_index']: sum(not w.startswith('Attenzione: cliente in ') for w in opt.delivery_warnings(d, vehicle)) for d in deliveries}

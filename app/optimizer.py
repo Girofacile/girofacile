@@ -40,6 +40,14 @@ def _start_clock(start_time):
     return 8 * 60 if parsed is None else parsed
 
 
+def vehicle_start_clock(start_time, vehicle=None):
+    """Partenza del mezzo: nel multi-mezzo un autista che inizia dopo l'orario comune parte a inizio turno."""
+    own = parse_hhmm((vehicle or {}).get("departure"))
+    if own is not None:
+        return own
+    return start_time if isinstance(start_time, (int, float)) else _start_clock(start_time)
+
+
 def fmt_hhmm(total_min):
     total_min = int(round(total_min)) % (24 * 60)
     return f"{total_min // 60:02d}:{total_min % 60:02d}"
@@ -359,7 +367,7 @@ def _feasible_fallback(deliveries, matrix, points, vehicle, return_depot, start_
     n = len(deliveries)
     if not best["violations"] or n > 15 or not n:
         return best
-    states = {(0, -1): (_start_clock(start_time), None)}
+    states = {(0, -1): (vehicle_start_clock(start_time, vehicle), None)}
     for mask in range(1 << n):
         for last in range(-1, n):
             state = states.get((mask, last))
@@ -462,7 +470,7 @@ def _evaluate_fixed_sequence(sequence, matrix, points, vehicle=None, return_depo
     total_lateness = 0.0
     violations = 0
     warning_count = 0
-    start_clock = _start_clock(start_time)
+    start_clock = vehicle_start_clock(start_time, vehicle)
     current_clock = start_clock
     current_idx = 0
     from .services import driver_schedule as shifts
@@ -556,7 +564,7 @@ def _greedy_sequence(deliveries, matrix, points, vehicle=None, start_time="08:00
     remaining = deliveries[:]
     ordered = []
     current_idx = 0
-    current_clock = _start_clock(start_time)
+    current_clock = vehicle_start_clock(start_time, vehicle)
 
     while remaining:
         best_idx = 0

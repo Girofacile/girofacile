@@ -12,7 +12,7 @@ class FixedRouteEvaluator:
         from .. import optimizer as opt
         from . import driver_schedule as shifts
         self.opt, self.shifts = opt, shifts
-        self.start = opt._start_clock(start_time)
+        self.start = opt.vehicle_start_clock(start_time, vehicle)
         self.return_depot = return_depot
         self.available_minutes = available_minutes
         self.rows = {index: rows[index] for index in sequence}

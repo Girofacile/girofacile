@@ -97,15 +97,16 @@ def improve(rows, vehicles, matrix, start_time, return_depot, limits, initial, s
         schedule = (vehicle or {}).get('driver_schedule') or {}
         shift_start = opt.parse_hhmm(schedule.get('start'))
         shift_end = opt.parse_hhmm(schedule.get('end'))
-        if shift_start is not None and shift_start > start:
+        departure = opt.vehicle_start_clock(start, vehicle)
+        if shift_start is not None and shift_start > departure:
             unusable.add(v)
-        end = start + max(0, int(limits[v]))
+        end = departure + max(0, int(limits[v]))
         if shift_end is not None:
             end = min(end, shift_end)
-        time.CumulVar(routing.Start(v)).SetRange(start * SCALE, start * SCALE)
-        time.CumulVar(routing.End(v)).SetMax(max(start, end) * SCALE)
+        time.CumulVar(routing.Start(v)).SetRange(int(departure * SCALE), int(departure * SCALE))
+        time.CumulVar(routing.End(v)).SetMax(int(max(departure, end) * SCALE))
         routing.AddVariableMinimizedByFinalizer(time.CumulVar(routing.End(v)))
-        pauses = [(a, b) for a, b in shifts.intervals(schedule) if b > start]
+        pauses = [(a, b) for a, b in shifts.intervals(schedule) if b > departure]
         breaks = [routing.solver().FixedDurationIntervalVar(int(a * SCALE), int(a * SCALE), int((b - a) * SCALE), False, f'pausa-{v}-{k}')
                   for k, (a, b) in enumerate(pauses)]
         if breaks:

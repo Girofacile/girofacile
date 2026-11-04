@@ -99,7 +99,7 @@ def fleet_cases(quick=False):
              for i in range(1, 5)]
     cases.append(_case('fleet-new-urgent-stop-break-conflict', 'break-window-interaction',
         rows, [_resource(3, schedule=pause), _resource(3)]))
-    cases.append(_case('fleet-new-shift-start-is-not-delayed', 'driver-shift-start',
+    cases.append(_case('fleet-new-later-shift-departs-at-shift-start', 'driver-shift-start',
         [_stop(i, service=4, scarico_mattina_da='09:00', scarico_mattina_a='11:00')
          for i in range(4)],
         [_resource(schedule={'start': '09:00', 'end': '17:00', 'breaks': []}),
@@ -149,7 +149,7 @@ def fleet_cases(quick=False):
         # Keep every new-feature family represented while bounding CI time.
         wanted = {'fleet-new-weight-repacking', 'fleet-new-soft-equipment',
                   'fleet-new-coverage-before-equipment', 'fleet-new-urgent-stop-break-conflict',
-                  'fleet-new-shift-start-is-not-delayed', 'fleet-new-upcoming-bookings',
+                  'fleet-new-later-shift-departs-at-shift-start', 'fleet-new-upcoming-bookings',
                   'fleet-new-return-policy-open', 'fleet-new-return-policy-closed',
                   'fleet-new-availability-ceil-over', 'fleet-new-prudent-margin-1.15',
                   'fleet-new-energy-prices-per-resource'}

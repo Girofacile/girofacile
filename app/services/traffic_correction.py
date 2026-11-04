@@ -7,7 +7,9 @@
    chiede di nuovo Mapbox. Il nuovo ordine resta solo se ha meno ritardi.
 4. Se resta un ritardo, si rifà il calcolo (nel multi-mezzo l'intera divisione tra i
    mezzi) con i tempi corretti e le finestre originali, poi Mapbox. Solo se restano
-   ritardi si prova un margine: la puntualità conta prima dei chilometri.
+   ritardi si prova un margine: la puntualità conta prima dei chilometri. Nel
+   multi-mezzo vale anche per un rientro oltre la fine del turno: la ricerca usa un
+   turno più corto di qualche minuto.
 
 Nessun dato viene salvato oltre al giro: il fattore vale solo per quel calcolo.
 Senza un fornitore di traffico configurato nulla cambia.
@@ -60,3 +62,25 @@ def buffered(row, minutes):
 def replan_buffer(late):
     """Margine del terzo passaggio: almeno 15 minuti, o il ritardo osservato, fino a 45."""
     return min(45, max(15, math.ceil(max(float(item.get('lateness_min') or 0) for item in late))))
+
+
+def shift_buffer(overtime_min):
+    """Margine sul turno quando il traffico porta il rientro oltre la fine: il ritardo più 10 minuti, fino a 60."""
+    return min(60, max(10, math.ceil(float(overtime_min or 0)) + 10))
+
+
+def shortened_shift(vehicle, minutes):
+    """Copia del mezzo con il turno che finisce ``minutes`` minuti prima, solo per la ricerca.
+
+    Il turno non si accorcia mai oltre la sua metà: un margine eccessivo svuoterebbe i giri.
+    """
+    from ..optimizer import parse_hhmm
+    schedule = dict((vehicle or {}).get('driver_schedule') or {})
+    start, end = parse_hhmm(schedule.get('start')), parse_hhmm(schedule.get('end'))
+    if vehicle is None or start is None or end is None:
+        return vehicle
+    closing = max(end - minutes, start + (end - start) // 2)
+    for pause in schedule.get('breaks') or []:
+        closing = max(closing, parse_hhmm(pause['end']) or closing)  # le pause restano dentro il turno
+    schedule['end'] = f'{closing // 60:02d}:{closing % 60:02d}'
+    return {**vehicle, 'driver_schedule': schedule}

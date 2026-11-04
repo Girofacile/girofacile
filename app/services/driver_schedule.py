@@ -33,8 +33,12 @@ def service_ready(start,duration,pauses):
 
 def shift_error(schedule,start,end):
     if not schedule or not schedule.get('start'): return None
-    if start<minutes(schedule['start']) or end>minutes(schedule['end']):
-        return f"Il giro non rientra nel turno dell'autista ({schedule['start']}–{schedule['end']}). Modifica il turno o le consegne."
+    if start<minutes(schedule['start']):
+        return (f"La partenza ({clock(start)}) è prima dell'inizio del turno dell'autista ({schedule['start']}–{schedule['end']}). "
+                f"Sposta la partenza alle {schedule['start']} o più tardi, oppure cambia il turno.")
+    if end>minutes(schedule['end']):
+        return (f"Il giro finisce alle {clock(end)}, dopo la fine del turno dell'autista ({schedule['start']}–{schedule['end']}). "
+                "Togli alcune consegne, anticipa la partenza o allunga il turno.")
     return None
 
 def ensure_shift(schedule,start,total):

@@ -29,6 +29,10 @@ const withTraffic=r=>r?.traffic?.status==='updated';
 const routeMinutes=r=>withTraffic(r)?r.traffic.total_min:r.result.total_min;
 const routeReturn=r=>withTraffic(r)&&r.traffic.return_time?r.traffic.return_time:r.result.return_time;
 const lateStops=plan=>plan.routes.flatMap(r=>withTraffic(r)?r.traffic.late||[]:[]);
+// Minuti di rientro oltre la fine del turno con il traffico (la programmazione li rifiuterebbe).
+const overtime=r=>withTraffic(r)?Number(r.traffic.overtime_min)||0:0;
+// Partenza del giro: l'orario comune, o l'inizio turno se l'autista comincia più tardi.
+const departure=(plan,i)=>{const c=plan.configuration,s=c.resources[i]?.driver_schedule?.start;return s&&s>c.orario_partenza?s:c.orario_partenza;};
 const duration=min=>{const m=Math.round(Number(min)||0);return m>=60?Math.floor(m/60)+' h '+(m%60?m%60+' min':''):m+' min';};
 // Avvisi di una fermata nel giro in cui si trova ora (sponda e ZTL seguono subito il mezzo scelto).
 function warnings(plan,dirty,index,lane){
@@ -84,9 +88,10 @@ function table(plan,assignment,dirty){
  '<div class="gf-table-wrap"><table class="gf-table"><thead><tr><th>Giro</th><th>Fermate</th><th>Km</th><th>Costo</th><th>Rientro</th><th>Avvisi</th><th><span class="gf-hidden">Azione</span></th></tr></thead><tbody>'+
  plan.configuration.resources.map((_,i)=>{
   const info=names(plan,i),route=info.r,stops=ordered(plan,assignment,i);
-  const alerts=stops.filter(k=>{const w=warnings(plan,dirty,k,i);return w.tailLift||w.ztl||w.late;}).length;
   const valid=!dirty&&route;
-  return '<tr data-fleet-lane="'+i+'"><td><div class="gf-cluster"><span class="gf-avatar" data-tone="'+tone(i)+'" aria-hidden="true">'+esc(initials(info.driver))+'</span><div><strong>Giro '+(i+1)+' · '+esc(info.driver)+'</strong><br><span class="gf-muted">'+esc([info.vehicle,info.plate].filter(Boolean).join(' · '))+'</span></div></div></td>'+
+  const alerts=stops.filter(k=>{const w=warnings(plan,dirty,k,i);return w.tailLift||w.ztl||w.late;}).length+(valid&&overtime(route)?1:0);
+  const later=departure(plan,i)!==plan.configuration.orario_partenza?' · parte alle '+departure(plan,i):'';
+  return '<tr data-fleet-lane="'+i+'"><td><div class="gf-cluster"><span class="gf-avatar" data-tone="'+tone(i)+'" aria-hidden="true">'+esc(initials(info.driver))+'</span><div><strong>Giro '+(i+1)+' · '+esc(info.driver)+'</strong><br><span class="gf-muted">'+esc([info.vehicle,info.plate].filter(Boolean).join(' · ')+later)+'</span></div></div></td>'+
   '<td>'+stops.length+'</td><td>'+(valid?Number(route.result.total_km).toLocaleString('it-IT',{maximumFractionDigits:1}):'—')+'</td><td>'+(valid?money(route.fuel_cost):'—')+'</td><td>'+esc(valid?routeReturn(route)||'—':'—')+'</td>'+
   '<td>'+(alerts?'<span class="gf-badge" data-status="warning" data-dot>'+alerts+'</span>':'<span class="gf-badge" data-status="success" data-dot>0</span>')+'</td>'+
   '<td><button type="button" class="gf-button" data-variant="ghost" data-size="sm" data-fleet-select="'+i+'" aria-pressed="'+(i===selected)+'">Vedi</button></td></tr>';
@@ -95,7 +100,7 @@ function table(plan,assignment,dirty){
 // Il giro scelto: mappa e fermate in ordine, con gli avvisi del mezzo come etichette.
 function lane(plan,assignment,dirty,i,busy){
  const all=ordered(plan,assignment,i),info=names(plan,i),route=info.r,valid=!dirty&&route;
- const metrics=valid?[Number(route.result.total_km).toLocaleString('it-IT',{maximumFractionDigits:1})+' km',duration(routeMinutes(route))+(withTraffic(route)?' con traffico':''),money(route.fuel_cost),'rientro '+(routeReturn(route)||'—')].join(' · '):'Stime da ricalcolare';
+ const metrics=valid?['partenza '+departure(plan,i),Number(route.result.total_km).toLocaleString('it-IT',{maximumFractionDigits:1})+' km',duration(routeMinutes(route))+(withTraffic(route)?' con traffico':''),money(route.fuel_cost),'rientro '+(routeReturn(route)||'—')].join(' · '):'Stime da ricalcolare';
  const routeId=plan.status==='programmed'&&route?plan.route_ids?.[plan.routes.indexOf(route)]:null;
  return '<section class="gf-panel" data-fleet-lane="'+i+'" aria-labelledby="fleetLaneTitle"><header class="gf-panel__header"><div><h2 class="gf-panel__title" id="fleetLaneTitle">Giro '+(i+1)+' · '+esc(info.driver)+'</h2><p class="gf-muted">'+esc([info.vehicle,info.plate].filter(Boolean).join(' · '))+' · '+esc(metrics)+'</p></div><span class="gf-badge" data-status="info" data-dot>'+gfCount(all.length,'fermata','fermate')+'</span></header>'+
  '<div class="gf-panel__body"><div class="gf-route-panel__canvas" data-fleet-map role="region" aria-label="Mappa della suddivisione dei giri"></div></div>'+
@@ -110,6 +115,7 @@ function fixes(plan,assignment,dirty){
  const missing=assignment.map((v,i)=>v==null?i:null).filter(i=>i!==null);
  const late=dirty?[]:lateStops(plan).filter(item=>assignment[item.stop_index]!=null);
  const target=names(plan,selected);
+ const overtimes=dirty?[]:plan.routes.filter(r=>overtime(r));
  const rows=missing.map(i=>{
   const d=plan.configuration.consegne[i],reason=plan.unassigned?.find(row=>row.index===i)?.reason;
   return '<li class="gf-list-item" data-fleet-stop="'+i+'"><div class="gf-list-item__main"><strong>'+esc(d.cliente_nome)+'</strong><small>Non assegnata · '+esc(d.indirizzo)+'</small>'+'<small>'+esc(reason||'Tolta dai giri: non verrà programmata.')+'</small>'+'</div>'+
@@ -118,8 +124,12 @@ function fixes(plan,assignment,dirty){
   const lane=assignment[item.stop_index],d=plan.configuration.consegne[item.stop_index];
   return '<li class="gf-list-item" data-fleet-late="'+item.stop_index+'"><span class="gf-avatar" data-tone="'+tone(lane)+'" aria-label="Giro '+(lane+1)+'">'+(lane+1)+'</span><div class="gf-list-item__main"><strong>'+esc(d.cliente_nome)+'</strong><small>Giro '+(lane+1)+' · con il traffico lo scarico finisce alle '+esc(item.fine_servizio)+', oltre la fascia '+esc(item.window.start)+'–'+esc(item.window.end)+'</small></div>'+
   '<span class="gf-badge" data-status="danger">+'+esc(item.lateness_min)+' min</span></li>';
+ })).concat(overtimes.map(r=>{
+  const lane=r.resource,end=plan.configuration.resources[lane]?.driver_schedule?.end||'—';
+  return '<li class="gf-list-item" data-fleet-overtime="'+lane+'"><span class="gf-avatar" data-tone="'+tone(lane)+'" aria-label="Giro '+(lane+1)+'">'+(lane+1)+'</span><div class="gf-list-item__main"><strong>Giro '+(lane+1)+' · '+esc(names(plan,lane).driver)+'</strong><small>Con il traffico rientra alle '+esc(r.traffic.return_time)+', oltre la fine del turno ('+esc(end)+'): sposta una consegna in un altro giro o allunga il turno.</small></div>'+
+  '<span class="gf-badge" data-status="danger">+'+esc(overtime(r))+' min</span></li>';
  }));
- return '<section class="gf-panel" aria-labelledby="fleetFixTitle"><header class="gf-panel__header"><div><h2 class="gf-panel__title" id="fleetFixTitle">Da sistemare</h2><p class="gf-muted">'+(rows.length?'Consegne non assegnate e fuori orario':'Tutto a posto')+'</p></div>'+(rows.length?'<span class="gf-badge" data-status="warning">'+rows.length+'</span>':'')+'</header>'+
+ return '<section class="gf-panel" aria-labelledby="fleetFixTitle"><header class="gf-panel__header"><div><h2 class="gf-panel__title" id="fleetFixTitle">Da sistemare</h2><p class="gf-muted">'+(rows.length?'Consegne non assegnate, fuori orario o oltre il turno':'Tutto a posto')+'</p></div>'+(rows.length?'<span class="gf-badge" data-status="warning">'+rows.length+'</span>':'')+'</header>'+
  (rows.length?'<ul class="gf-list">'+rows.join('')+'</ul>':'<div class="gf-empty"><p>Nessuna consegna da sistemare</p><small>Tutte le consegne sono assegnate e in orario.</small></div>')+
  (missing.length&&plan.status==='preview'?'<div class="gf-panel__body gf-stack" data-gap="sm"><p class="gf-muted">«Assegna» la sposta nel giro che stai guardando ('+esc(target.driver)+').</p><label class="gf-check"><input type="checkbox" data-fleet-accept-unassigned> <span>Confermo di programmare soltanto le consegne assegnate</span></label></div>':'')+'</section>';
 }

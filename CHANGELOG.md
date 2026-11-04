@@ -5,6 +5,19 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Correzioni dal collaudo con 250 ordini:
+  - verifica indirizzi: un risultato di Google vale solo se corrisponde al CAP o
+    al comune scritti (si sceglie il primo che corrisponde); altrimenti l'ordine
+    resta da verificare con la posizione proposta da confermare sulla mappa.
+    Prima «Via Nazionale 95, 80031 Brusciano» diventava Orosei (Sardegna);
+  - più mezzi: un rientro oltre la fine del turno dovuto al traffico ora è un
+    avviso nella revisione e fa rifare la divisione, invece di bloccare solo
+    alla programmazione;
+  - più mezzi: un autista con il turno che inizia dopo l'orario di partenza
+    parte a inizio turno, invece di restare inutilizzato;
+  - messaggio del turno con la causa (partenza prima del turno o rientro dopo la
+    fine) e pulsante «Torna alla pianificazione» nella pagina d'errore del calcolo.
+
 - Puntualità prima dei chilometri: se con il traffico una consegna resta fuori
   fascia anche dopo il riordino, il multi-mezzo rifà la divisione tra i mezzi
   con i tempi corretti e un margine di sicurezza sulle fasce (15–45 minuti) e

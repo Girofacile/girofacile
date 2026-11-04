@@ -4022,13 +4022,19 @@ async function optimizeRoute(){
   }catch(e){
     await wait?.close();
     const msg = e.message || "Errore sconosciuto";
-    const ticketBtn = e.errorId ? `<div class="gf-cluster"><button type="button" class="gf-button" data-variant="secondary" onclick="openSupportPanelV49(${e.errorId})">Invia ticket assistenza</button></div>` : "";
+    const lower = msg.toLowerCase();
+    // Il consiglio segue la causa: turno, risorse occupate, indirizzo; altrimenti un invito generico.
+    const hint = lower.includes("turno") ? "Torna alla pianificazione e cambia l'orario di partenza o il turno dell'autista, poi ricalcola."
+      : lower.includes("non disponibile") || lower.includes("già assegnato") ? "Scegli un altro mezzo/autista oppure modifica l'orario del giro."
+      : lower.includes("indirizz") ? "Controlla l'indirizzo indicato, rendilo più completo e riprova."
+      : "Torna alla pianificazione, correggi i dati e riprova.";
+    const ticketBtn = e.errorId ? `<button type="button" class="gf-button" data-variant="secondary" onclick="openSupportPanelV49(${e.errorId})">Invia ticket assistenza</button>` : "";
     if(box) box.innerHTML = `
       <div class="gf-alert" data-status="danger" role="alert"><div class="gf-alert__body gf-stack">
         <strong class="gf-alert__title">Errore calcolo percorso</strong>
         <p class="gf-alert__text">${esc(msg)}</p>
-        <small class="gf-muted">${msg.toLowerCase().includes("non disponibile") || msg.toLowerCase().includes("già assegnato") ? "Scegli un altro mezzo/autista oppure modifica l'orario del giro." : "Controlla l'indirizzo indicato, rendilo più completo e riprova."}</small>
-        ${ticketBtn}
+        <small class="gf-muted">${esc(hint)}</small>
+        <div class="gf-cluster"><button type="button" class="gf-button" data-variant="primary" onclick="showTab('giro')">Torna alla pianificazione</button>${ticketBtn}</div>
       </div></div>`;
   }
 }

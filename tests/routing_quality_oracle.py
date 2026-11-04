@@ -130,6 +130,9 @@ def replay(case, resource_index, order):
     if not order:
         return result
     schedule = resource.get('driver_schedule') or {}
+    if case.get('kind') == 'fleet' and schedule.get('start'):
+        # Nel multi-mezzo chi inizia dopo l'orario comune parte a inizio turno.
+        started = max(started, _minute(schedule['start']))
     breaks = sorted((_minute(item['start']), _minute(item['end']))
                     for item in schedule.get('breaks', []))
     if any(right <= left for left, right in breaks):

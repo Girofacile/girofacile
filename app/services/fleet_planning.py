@@ -28,10 +28,43 @@ def get_plan(db,user,actor,plan_id,lock=False):
     return row
 
 
+def resource_start(data,resource):
+    """Partenza di un giro: l'orario comune, oppure l'inizio turno se l'autista comincia più tardi."""
+    schedule=getattr(resource,'driver_schedule',None)
+    shift=opt.parse_hhmm(schedule.start) if schedule and schedule.start else None
+    common=opt.parse_hhmm(data.orario_partenza)
+    if shift is None or common is None or shift<=common: return data.orario_partenza
+    return f'{shift//60:02d}:{shift%60:02d}'
+
+
+def search_vehicle(vehicle,resource,data):
+    from ..routers.routes import build_vehicle_dict
+    result=build_vehicle_dict(vehicle,resource.driver_schedule.model_dump() if resource.driver_schedule else None)
+    start=resource_start(data,resource)
+    if result is not None and start!=data.orario_partenza: result['departure']=start
+    return result
+
+
+def overtime(schedule,start,total_min):
+    """Minuti di rientro oltre la fine turno (0 se il giro sta nel turno)."""
+    end=opt.parse_hhmm((schedule or {}).get('end'))
+    begin=opt.parse_hhmm(start)
+    if end is None or begin is None or total_min is None: return 0
+    return max(0,math.ceil(begin+float(total_min)-end))
+
+
+def delay(routes):
+    """Ordine dei problemi con il traffico: consegne fuori fascia e rientri oltre il turno, poi i minuti."""
+    traffic=[route.get('traffic') or {} for route in routes]
+    late=[item for t in traffic for item in t.get('late',[])]
+    extra=[t.get('overtime_min') or 0 for t in traffic]
+    return (len(late)+sum(1 for m in extra if m),round(sum(float(i.get('lateness_min') or 0) for i in late)+sum(extra),1))
+
+
 def route_data(data,resource,rows,index,driver_name=None):
     # Nome automatico di ogni giro: base (la data) · autista; senza autista resta il numero del giro.
     values=data.model_dump(exclude={'resources','strategy','consegne'})
-    values.update(nome=f'{data.nome or "Giro consegne"} · {driver_name or index+1}',vehicle_id=resource.vehicle_id,
+    values.update(nome=f'{data.nome or "Giro consegne"} · {driver_name or index+1}',vehicle_id=resource.vehicle_id,orario_partenza=resource_start(data,resource),
                   driver_id=resource.driver_id,driver_schedule=resource.driver_schedule,consegne=rows,energy_price_mode=resource.energy_price_mode,
                   energy_price_primary=resource.energy_price_primary,energy_price_electric=resource.energy_price_electric)
     return RoutePlanIn.model_validate(values)
@@ -93,9 +126,10 @@ def preview_traffic(db,user,data,route,vehicle,resource):
     from .route_enrichment import evaluate_legs
     snapshot=_traffic_snapshot(route['result'],data.rientro_deposito)
     if not snapshot: return {'status':'unavailable'}
-    plan=SimpleNamespace(rientro_deposito=data.rientro_deposito,vehicle=vehicle,orario_partenza=data.orario_partenza,
+    start=resource_start(data,resource)
+    plan=SimpleNamespace(rientro_deposito=data.rientro_deposito,vehicle=vehicle,orario_partenza=start,
                          driver_schedule=resource.driver_schedule.model_dump() if resource.driver_schedule else {})
-    departure=opt._route_departure_time_iso(data.orario_partenza,data.data_giro)
+    departure=opt._route_departure_time_iso(start,data.data_giro)
     try:
         provider=get_traffic_provider(db)
         def advance(legs):
@@ -118,7 +152,9 @@ def preview_traffic(db,user,data,route,vehicle,resource):
                      'lateness_min':round(float(issue.get('lateness_min') or 0))})
     return {'status':'updated','provider':traffic['provider'],'departure_time':departure,
             'calculated_at':traffic['calculated_at'],'legs':legs,'total_min':timed['total_min'],
-            'return_time':timed.get('return_time'),'late':late}
+            'return_time':timed.get('return_time'),'late':late,
+            # Il traffico può spostare il rientro oltre il turno: la programmazione lo rifiuterebbe.
+            'overtime_min':overtime(plan.driver_schedule,start,timed['total_min'])}
 
 
 def reusable_traffic(proposal,row):
@@ -161,11 +197,11 @@ def traffic_window_problems(rows):
 def work_limits(db,user,data):
     """Tempo utilizzabile da ogni coppia prima di altri giri già programmati o della fine della giornata."""
     from ..routers.routes import _check_resource_overlap
-    start=opt.parse_hhmm(data.orario_partenza)
     limits=[]
     for index,r in enumerate(data.resources):
         route=route_data(data,r,[],index)
-        low,high=0,day_minutes_left(data.orario_partenza)
+        start=opt.parse_hhmm(route.orario_partenza)
+        low,high=0,day_minutes_left(route.orario_partenza)
         while low<high:
             middle=(low+high+1)//2
             try: _check_resource_overlap(db,user,route,start,start+middle)
@@ -214,29 +250,36 @@ def _distribute_on_time(db,user,data,assignments=None):
     """
     from . import traffic_correction as correction
     late_of=lambda plan:[item for route in plan['routes'] for item in (route.get('traffic') or {}).get('late',[])]
+    overtime_of=lambda plan:[(route.get('traffic') or {}).get('overtime_min') or 0 for route in plan['routes']]
     served=lambda plan:sum(len(route['stop_indexes']) for route in plan['routes'])
     result=_distribute(db,user,data,assignments)
-    late=late_of(result)
-    if not late or assignments is not None:
+    late,extra=late_of(result),max(overtime_of(result) or [0])
+    if not (late or extra) or assignments is not None:
         return result
-    factors=[(route['traffic'].get('second_pass') or {}).get('factor') for route in result['routes'] if route['traffic'].get('late')]
+    troubled=[route for route in result['routes'] if route['traffic'].get('late') or route['traffic'].get('overtime_min')]
+    factors=[(route['traffic'].get('second_pass') or {}).get('factor') for route in troubled]
     factor=max([f for f in factors if f] or [1.0])
-    initial_late=len(late)
+    # Rientro oltre il turno: per la ricerca il turno finisce qualche minuto prima.
+    shift=correction.shift_buffer(extra) if extra else 0
+    initial_late,initial_overtime=len(late),sum(overtime_of(result))
     attempts=[]
     accepted=False
     # Real customer windows first. A safety margin must not hide a punctual plan.
-    for buffer in (0, correction.replan_buffer(late)):
-        retry=_distribute(db,user,data,None,{'factor':factor,'buffer':buffer})
+    for buffer in (0, correction.replan_buffer(late) if late else 0):
+        if attempts and buffer==attempts[-1]['buffer_min']: break
+        retry=_distribute(db,user,data,None,{'factor':factor,'buffer':buffer,'shift_buffer':shift})
         timed=bool(retry['routes']) and all((route.get('traffic') or {}).get('status')=='updated' for route in retry['routes'])
-        improved=timed and served(retry)>=served(result) and correction.lateness(late_of(retry))<correction.lateness(late_of(result))
-        attempts.append({'buffer_min':buffer,'late_after':len(late_of(retry)) if timed else None,'accepted':bool(improved)})
+        improved=timed and served(retry)>=served(result) and delay(retry['routes'])<delay(result['routes'])
+        attempts.append({'buffer_min':buffer,'late_after':len(late_of(retry)) if timed else None,
+                         'overtime_after':sum(overtime_of(retry)) if timed else None,'accepted':bool(improved)})
         if improved:
             result=retry
             accepted=True
-        if not late_of(result):
+        if not late_of(result) and not any(overtime_of(result)):
             break
     result['search']['on_time_replan']={'factor':round(factor,2),'buffer_min':next((a['buffer_min'] for a in reversed(attempts) if a['accepted']),attempts[-1]['buffer_min']),
-        'late_before':initial_late,'late_after':len(late_of(result)),'accepted':accepted,'attempts':attempts}
+        'shift_buffer_min':shift,'late_before':initial_late,'late_after':len(late_of(result)),
+        'overtime_before':initial_overtime,'overtime_after':sum(overtime_of(result)),'accepted':accepted,'attempts':attempts}
     return result
 
 
@@ -334,7 +377,12 @@ def _distribute(db,user,data,assignments=None,tighten=None):
         from . import traffic_correction as correction
         matrix=correction.scaled_matrix(matrix,tighten['factor'])
         rows=[correction.buffered(row,tighten['buffer']) for row in rows]
-    vehicle_data=[build_vehicle_dict(v,r.driver_schedule.model_dump()) for v,r in zip(vehicles,data.resources)]
+    vehicle_data=[search_vehicle(v,r,data) for v,r in zip(vehicles,data.resources)]
+    final_vehicle_data=vehicle_data
+    if tighten and tighten.get('shift_buffer'):
+        # Il traffico ha portato un rientro oltre il turno: per la ricerca il turno finisce prima.
+        from . import traffic_correction as correction
+        vehicle_data=[correction.shortened_shift(vehicle,tighten['shift_buffer']) for vehicle in vehicle_data]
     routes=[[] for _ in vehicles];results=[None for _ in vehicles]
     unresolved={}
 
@@ -569,6 +617,7 @@ def _distribute(db,user,data,assignments=None,tighten=None):
         # Orari finali con le fasce vere del cliente: il margine serviva solo alla ricerca.
         routes=[[originals[row['fleet_stop_index']] for row in route] for route in routes]
         rows=originals
+        vehicle_data[:]=final_vehicle_data
     # Generate complete ETA and diagnostic details only for selected final routes.
     results=[evaluate(sequence,index,include_details=True) if sequence else None
              for index,sequence in enumerate(routes)]
@@ -587,15 +636,16 @@ def _distribute(db,user,data,assignments=None,tighten=None):
         """Fuori orario con il traffico: riordino con i tempi corretti e nuova richiesta a Mapbox."""
         from . import traffic_correction as correction
         first=route['traffic']
-        if first.get('status')!='updated' or not first.get('late'): return route
+        if first.get('status')!='updated' or not (first.get('late') or first.get('overtime_min')): return route
         snapshot=_traffic_snapshot(route['result'],data.rientro_deposito)
         factor=correction.travel_factor([leg['min'] for leg in snapshot['base_legs']],[leg['duration'] for leg in first['legs']])
-        report={'factor':round(factor,2) if factor else None,'late_before':len(first['late']),'reordered':False}
+        report={'factor':round(factor,2) if factor else None,'late_before':len(first['late']),
+                'overtime_before':first.get('overtime_min') or 0,'reordered':False}
         first['second_pass']=report
         if not factor: return route
         resource=route['resource']
         ordered=opt._best_internal_sequence([rows[i] for i in route['stop_indexes']],correction.scaled_matrix(matrix,factor),
-                                            points,vehicle_data[resource],data.rientro_deposito,data.orario_partenza)['ordered']
+                                            points,vehicle_data[resource],data.rientro_deposito,resource_start(data,data.resources[resource]))['ordered']
         indexes=[stop['fleet_stop_index'] for stop in ordered]
         if indexes==route['stop_indexes']: return route
         result=evaluate([rows[i] for i in indexes],resource,include_details=True)
@@ -603,8 +653,8 @@ def _distribute(db,user,data,assignments=None,tighten=None):
         candidate=build_route(resource,result)
         candidate['traffic']=preview_traffic(db,user,data,candidate,vehicles[resource],data.resources[resource])
         if candidate['traffic'].get('status')!='updated': return route
-        report.update(late_after=len(candidate['traffic']['late']))
-        if correction.lateness(candidate['traffic']['late'])<correction.lateness(first['late']):
+        report.update(late_after=len(candidate['traffic']['late']),overtime_after=candidate['traffic'].get('overtime_min') or 0)
+        if delay([candidate])<delay([route]):
             report['reordered']=True
             candidate['traffic']['second_pass']=report
             return candidate
@@ -625,6 +675,12 @@ def _distribute(db,user,data,assignments=None,tighten=None):
     if late:
         warnings.insert(0,f'Con il traffico {len(late)} {"cliente sarebbe servito" if len(late)==1 else "clienti sarebbero serviti"} fuori orario: '
                         'spostali in un altro giro o allarga la loro fascia, poi ricalcola.')
+    for route in output:
+        extra=route['traffic'].get('overtime_min') or 0
+        if extra:
+            schedule=data.resources[route['resource']].driver_schedule
+            warnings.insert(0,f"Giro {route['resource']+1} · {route['driver_name']}: con il traffico rientra alle {route['traffic'].get('return_time')}, "
+                            f"{extra} min dopo la fine del turno ({schedule.end}). Sposta una consegna in un altro giro o allunga il turno, poi ricalcola.")
     if getattr(matrix,'source','osrm') in ('estimated','mixed'):
         warnings.insert(0,'Routing stradale non disponibile per alcune tratte: tempi e distanze approssimativi, da verificare.')
     if data.strategy=='balanced' and len(output)<len(data.resources): warnings.append('Non tutte le risorse hanno ricevuto consegne: controlla le disponibilita e le consegne non assegnate.')
@@ -694,7 +750,7 @@ def confirm(db,user,actor,plan_id,data):
         driver=db.get(Driver,resource.driver_id) if resource.driver_id else None
         driver_name=' '.join(x for x in (driver.nome,driver.cognome) if x).strip() if driver else None
         payload=route_data(settings,resource,result['ordered'],index,driver_name)
-        start=opt.parse_hhmm(settings.orario_partenza)
+        start=opt.parse_hhmm(payload.orario_partenza)
         _check_resource_overlap(db,user,payload,start,start+math.ceil(result['total_min']))
         saved=save_route_result(db,user,payload,result,vehicles[index],commit=False)
         route_ids.append(saved.id)
@@ -717,7 +773,7 @@ def release_failed_drafts(db,user,actor,plan_id,version):
         expected=settings.resources[proposal['resource']]
         if (row.status!='bozza' or json.loads(row.routing_snapshot_json or '{}').get('revision')!=1
             or row.vehicle_id!=expected.vehicle_id or row.driver_id!=expected.driver_id
-            or row.data_giro.isoformat()!=settings.data_giro or row.orario_partenza.strftime('%H:%M')!=settings.orario_partenza[:5]):
+            or row.data_giro.isoformat()!=settings.data_giro or row.orario_partenza.strftime('%H:%M')!=resource_start(settings,expected)[:5]):
             return False
     for row in rows:
         route_orders.sync_route_orders(db,row,'cancelled')
@@ -781,7 +837,7 @@ def _program_saved(db,user,actor,plan_id,data):
         for row,proposal in zip(rows,plan.result['routes']):
             expected=settings.resources[proposal['resource']]
             if (computed_route_status(row)!='bozza' or json.loads(row.routing_snapshot_json or '{}').get('revision')!=1
-                or row.data_giro.isoformat()!=settings.data_giro or row.orario_partenza.strftime('%H:%M')!=settings.orario_partenza[:5]
+                or row.data_giro.isoformat()!=settings.data_giro or row.orario_partenza.strftime('%H:%M')!=resource_start(settings,expected)[:5]
                 or row.deposit_id!=settings.deposit_id or row.rientro_deposito!=settings.rientro_deposito
                 or row.vehicle_id!=expected.vehicle_id or row.driver_id!=expected.driver_id):
                 raise HTTPException(409,'Un giro e stato modificato o programmato separatamente: gestiscilo dallo storico.')
@@ -810,9 +866,10 @@ def _program_saved(db,user,actor,plan_id,data):
         ensure_future_departure(row.data_giro,row.orario_partenza)
         check_daily_route_limit(user,db,row.data_giro,exclude_route_id=row.id)
         opt.validate_vehicle_load([{'peso_kg':d.peso_kg,'colli':d.colli} for d in row.deliveries],build_vehicle_dict(row.vehicle))
-        if math.ceil(row.totale_minuti)>day_minutes_left(settings.orario_partenza):
+        departure=row.orario_partenza.strftime('%H:%M')
+        if math.ceil(row.totale_minuti)>day_minutes_left(departure):
             raise HTTPException(409,'Con il traffico aggiornato un giro supera la fine della giornata. Anticipa la partenza o sposta alcune consegne, poi ricalcola.')
-        start=opt.parse_hhmm(settings.orario_partenza)
+        start=opt.parse_hhmm(departure)
         _check_resource_overlap(db,user,row,start,start+math.ceil(row.totale_minuti),exclude_route_id=row.id)
     from ..models import RouteToken
     from secrets import token_urlsafe

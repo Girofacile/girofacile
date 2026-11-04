@@ -6,7 +6,9 @@ Geoapify e Nominatim sono disattivati per evitare fallback non desiderati.
 from datetime import datetime
 from ..core.clock import utc_now
 
+import re
 import time
+import unicodedata
 import requests
 from .api_usage import log_api_usage
 
@@ -82,12 +84,17 @@ def _google_geocode(query: str, limit: int = 5, db: Session | None = None, user_
             components = item.get("address_components") or []
             comune = ""
             provincia = ""
+            cap = ""
+            places = []
             for comp in components:
                 types = comp.get("types") or []
                 if "locality" in types or "postal_town" in types or "administrative_area_level_3" in types:
                     comune = comune or comp.get("long_name", "")
+                    places.append(comp.get("long_name", ""))
                 if "administrative_area_level_2" in types:
                     provincia = provincia or comp.get("long_name", "")
+                if "postal_code" in types:
+                    cap = cap or comp.get("long_name", "")
 
             results.append({
                 "lat": loc.get("lat"),
@@ -99,6 +106,9 @@ def _google_geocode(query: str, limit: int = 5, db: Session | None = None, user_
                 "location_type": location_type,
                 "comune": comune,
                 "provincia": provincia,
+                "cap": cap,
+                "places": [p for p in places if p],
+                "partial_match": bool(item.get("partial_match")),
             })
         print(f"[GEOCODING] Google risultati={len(results)} query={query}")
         return results
@@ -111,6 +121,27 @@ def _google_geocode(query: str, limit: int = 5, db: Session | None = None, user_
             log_api_usage(db, user_id=user_id, provider="google", service="google_geocoding",
                           action="Geocodifica indirizzo", endpoint="/maps/api/geocode/json",
                           status=outcome, message=message, response_ms=int((time.perf_counter() - started) * 1000))
+
+
+def _plain(value: str) -> str:
+    text_value = unicodedata.normalize("NFKD", str(value or "")).encode("ascii", "ignore").decode().lower()
+    return " " + " ".join(re.sub(r"[^a-z0-9]+", " ", text_value).split()) + " "
+
+
+def matches_request(query: str, result: dict) -> bool:
+    """Il risultato deve stare nel CAP o nel comune scritti dall'utente.
+
+    Con un CAP nell'indirizzo basta che coincida il CAP oppure il comune (le grandi città
+    hanno molti CAP). Senza CAP si accetta un comune citato o una corrispondenza completa.
+    """
+    written = _plain(query)
+    place_ok = any(_plain(place) in written for place in result.get("places") or [])
+    caps = re.findall(r"(?<!\d)\d{5}(?!\d)", str(query or ""))
+    if caps:
+        return place_ok or (result.get("cap") or "") in caps
+    if not result.get("places"):
+        return True
+    return place_ok or not result.get("partial_match")
 
 
 def geocode_address(indirizzo: str, comune: str = "", provincia: str = "", db: Session | None = None, user_id=None, strict=False) -> dict:
@@ -127,13 +158,17 @@ def geocode_address(indirizzo: str, comune: str = "", provincia: str = "", db: S
     if not results:
         return {"status": "non_trovato", "source": "google"}
 
-    best = results[0]
+    # Google può restituire la stessa via in un altro comune (es. Brusciano → Orosei):
+    # si preferisce il primo risultato che rispetta CAP o comune scritti.
+    best = next((item for item in results if matches_request(query, item)), None)
+    mismatch = best is None
+    best = best or results[0]
     try:
         conf = float(best.get("confidence") or 0.5)
     except Exception:
         conf = 0.5
 
-    status = "verificato" if conf >= 0.55 else "da_verificare"
+    status = "verificato" if conf >= 0.55 and not mismatch else "da_verificare"
     return {
         "status": status,
         "lat": float(best["lat"]),

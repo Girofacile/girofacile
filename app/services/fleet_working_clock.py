@@ -40,6 +40,7 @@ def service_domains(row, vehicle, start, available_minutes):
     from .. import optimizer as opt
     from . import driver_schedule as shifts
 
+    start = opt.vehicle_start_clock(start, vehicle)
     schedule = vehicle.get('driver_schedule') or {}
     if schedule.get('start') and start < shifts.minutes(schedule['start']):
         return (), 0

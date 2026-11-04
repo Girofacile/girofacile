@@ -5,7 +5,8 @@ import requests
 
 from test_routing_architecture import routing_env, payload, Response  # noqa: F401
 from test_agents_feature import env  # noqa: F401
-from test_fleet_planning import fleet, preview  # noqa: F401
+from test_fleet_planning import fleet, preview, command  # noqa: F401
+from app.models import RoutePlan
 from stop_fixture import verified_stop
 from app import optimizer as opt
 from app.services import traffic_correction
@@ -136,7 +137,7 @@ def test_fleet_uses_real_windows_before_safety_margin(fleet, monkeypatch):  # no
     data.update(strategy='efficient', consegne=same_window(ctx[2].id, '08:55'))
     plan = preview(fleet, data)
     assert plan['search']['on_time_replan']['accepted'] is True
-    assert plan['search']['on_time_replan']['attempts'] == [{'buffer_min': 0, 'late_after': 0, 'accepted': True}]
+    assert plan['search']['on_time_replan']['attempts'] == [{'buffer_min': 0, 'late_after': 0, 'overtime_after': 0, 'accepted': True}]
     assert plan['unassigned'] == [] and sum(len(route['stop_indexes']) for route in plan['routes']) == 3
     assert len(plan['routes']) == 2
     assert all(route['traffic']['late'] == [] for route in plan['routes'])
@@ -219,3 +220,56 @@ def test_single_route_restores_best_verified_attempt(monkeypatch):
     assert timed and chosen is better
     assert final.delay == 10 and final.traffic_result_json['delay'] == 10
     assert buffers[0] == 0 and buffers[1] > 0
+
+
+def shifts(data, *schedules):
+    for resource, (start, end) in zip(data['resources'], schedules):
+        resource['driver_schedule'] = {'start': start, 'end': end, 'breaks': []}
+
+
+def test_fleet_replans_when_traffic_pushes_return_past_the_shift(fleet, monkeypatch):  # noqa: F811
+    ctx, data = fleet
+    flat_roads(monkeypatch)
+    data = deepcopy(data)
+    # Un mezzo solo: 55 minuti senza traffico (rientro 8:55), 95 con il traffico (9:35, turno fino alle 9:30).
+    data.update(strategy='efficient', consegne=[verified_stop(ctx[2].id, cliente_nome=n, indirizzo=f'Via {n}', lat=45.1 + i / 100,
+                                                             lon=9.1, tempo_scarico_min=5) for i, n in enumerate('ABC')])
+    shifts(data, ('08:00', '09:30'), ('08:00', '09:30'))
+    plan = preview(fleet, data)
+    report = plan['search']['on_time_replan']
+    assert report['accepted'] and report['overtime_before'] == 5 and report['overtime_after'] == 0
+    assert len(plan['routes']) == 2 and plan['unassigned'] == []
+    assert all(not route['traffic']['overtime_min'] for route in plan['routes'])
+
+
+def test_fleet_warns_when_overtime_cannot_be_removed(fleet, monkeypatch):  # noqa: F811
+    ctx, data = fleet
+    flat_roads(monkeypatch)
+    data = deepcopy(data)
+    # Un solo autista disponibile: la consegna resta sua, ma il rientro con il traffico è oltre il turno.
+    data.update(strategy='efficient', consegne=[verified_stop(ctx[2].id, cliente_nome='A', indirizzo='Via A', lat=45.1, lon=9.1,
+                                                             tempo_scarico_min=5)])
+    shifts(data, ('08:00', '08:30'), ('12:00', '12:30'))
+    plan = preview(fleet, data)
+    [route] = plan['routes']
+    assert route['traffic']['overtime_min'] == 15
+    assert any('dopo la fine del turno (08:30)' in warning for warning in plan['warnings'])
+
+
+def test_fleet_driver_with_later_shift_departs_at_shift_start(fleet, monkeypatch):  # noqa: F811
+    ctx, data = fleet
+    flat_roads(monkeypatch)
+    data = deepcopy(data)
+    # Fasce pomeridiane: solo il secondo autista (10:00-18:00) può servirle, partendo alle 10:00 e non alle 8:00.
+    data.update(strategy='efficient', consegne=[verified_stop(ctx[2].id, cliente_nome=n, indirizzo=f'Via {n}', lat=45.1 + i / 100, lon=9.1,
+                                                             tempo_scarico_min=5, scarico_mattina_da='14:00', scarico_mattina_a='16:00')
+                                                for i, n in enumerate('ABC')])
+    shifts(data, ('08:00', '12:00'), ('10:00', '18:00'))
+    plan = preview(fleet, data)
+    assert plan['unassigned'] == []
+    [route] = plan['routes']
+    assert route['resource'] == 1 and route['traffic']['departure_time'].endswith('T09:00:00Z')
+    saved = command(fleet, plan, 'confirm')
+    assert saved.status_code == 200, saved.text
+    [row] = ctx[1].query(RoutePlan).all()
+    assert row.orario_partenza.strftime('%H:%M') == '10:00'
