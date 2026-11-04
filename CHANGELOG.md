@@ -5,6 +5,8 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Chat autisti: il riquadro della conversazione finisce sotto la casella
+  d'invio e non si allunga più fino in fondo alla lista delle conversazioni.
 - Giri programmati e Storico: tolta la scritta «Oggi» sotto il giorno, che
   allungava il riquadro; oggi ha il numero della data in rosso.
 - Storico: nei giorni vuoti da oggi in poi, al posto di «Giorno futuro»,

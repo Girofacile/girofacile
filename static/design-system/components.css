@@ -802,7 +802,8 @@ body[data-gf-surface] .gf-coach__segments>span[aria-current="step"]{opacity:.6}
   body[data-gf-surface] [data-gf-tutor-target]{outline:var(--gf-border-width-strong) solid var(--gf-color-success);outline-offset:var(--gf-space-1)}
 }
 /* Chat ------------------------------------------------------------------- */
-body[data-gf-surface] .gf-chat{display:flex;flex-direction:column;min-height:0}
+/* In una griglia la chat finisce sotto la casella d'invio e non si allunga come la colonna accanto */
+body[data-gf-surface] .gf-chat{display:flex;flex-direction:column;min-height:0;align-self:start}
 body[data-gf-surface] .gf-chat__messages{display:flex;flex-direction:column;gap:var(--gf-space-3);height:var(--gf-chat-height);overflow-y:auto;padding:var(--gf-space-4);background:var(--gf-color-surface-subtle)}
 body[data-gf-surface] .gf-message{display:grid;gap:2px;max-width:min(78%,420px)}
 body[data-gf-surface] .gf-message__bubble{padding:var(--gf-space-2) var(--gf-space-3);border:var(--gf-border);border-radius:var(--gf-radius-lg) var(--gf-radius-lg) var(--gf-radius-lg) var(--gf-radius-xs);background:var(--gf-color-surface);font-size:var(--gf-font-md);overflow-wrap:anywhere}
