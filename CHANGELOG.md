@@ -5,6 +5,10 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Finestre (gf-modal) su iPhone: Safari le schiacciava a una riga alta zero,
+  lasciando la pagina scurita e apparentemente bloccata (per esempio «Controlla
+  gli indirizzi» dopo «Vai alla pianificazione»). Contenuto e corpo della
+  finestra ora prendono l'altezza del contenuto; sul computer non cambia nulla.
 - Verifica degli indirizzi selezionati più veloce e con la schermata di attesa
   del calcolo del giro («Controllo 6 di 12 indirizzi…»): il server chiede a
   Google fino a 6 indirizzi diversi alla volta in parallelo, invece che uno dopo

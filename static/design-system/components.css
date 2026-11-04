@@ -655,10 +655,13 @@ body[data-gf-surface] .gf-modal[data-size="lg"]{width:min(var(--gf-dialog-width-
 body[data-gf-surface] .gf-modal__header{display:flex;align-items:flex-start;gap:var(--gf-space-3);padding:var(--gf-space-5) var(--gf-space-6) var(--gf-space-4);border-bottom:var(--gf-border)}
 body[data-gf-surface] .gf-modal__header>div{flex:1;min-width:0;display:grid;gap:2px}
 body[data-gf-surface] .gf-modal__title{margin:0;font:var(--gf-weight-bold) var(--gf-font-xl)/1.2 var(--gf-font-display)}
-body[data-gf-surface] .gf-modal__body{flex:1;overflow-y:auto;padding:var(--gf-space-5) var(--gf-space-6)}
+/* flex-basis auto, non 0: Safari su iPhone con base 0 e altezza non fissata schiaccia la finestra
+   a una riga alta zero (pagina scurita e "bloccata"). Con auto la finestra prende l'altezza del
+   contenuto e, oltre il massimo, scorre solo il corpo. */
+body[data-gf-surface] .gf-modal__body{flex:1 1 auto;min-height:0;overflow-y:auto;padding:var(--gf-space-5) var(--gf-space-6)}
 /* Nel corpo scorrevole le righe restano alla loro altezza (i pannelli con overflow non si schiacciano). */
 body[data-gf-surface] .gf-modal__body.gf-stack{align-content:start;grid-auto-rows:max-content}
-body[data-gf-surface] :is(.gf-modal>form,.gf-modal>[data-gf-modal-content],.gf-modal>[data-gf-modal-content]>form){display:flex;flex-direction:column;flex:1;min-height:0}
+body[data-gf-surface] :is(.gf-modal>form,.gf-modal>[data-gf-modal-content],.gf-modal>[data-gf-modal-content]>form){display:flex;flex-direction:column;flex:1 1 auto;min-height:0}
 body[data-gf-surface] .gf-modal__footer{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:var(--gf-space-3);padding:var(--gf-space-4) var(--gf-space-6);border-top:var(--gf-border);background:var(--gf-color-surface-subtle)}
 body[data-gf-surface] .gf-overlay[data-position="side"]{place-items:stretch end;padding:0}
 body[data-gf-surface] .gf-overlay[data-position="side"] .gf-modal{width:min(var(--gf-drawer-width),100%);max-height:none;height:100%;border-radius:var(--gf-radius-lg) 0 0 var(--gf-radius-lg)}
