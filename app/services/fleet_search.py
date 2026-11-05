@@ -40,9 +40,15 @@ def _numbers(result):
         float(result["total_min"]), float(result["total_km"]))
 
 
+def _cost(result):
+    from .. import optimizer as opt
+    return opt.objective_cost(result)
+
+
 def _route_key(result, strategy):
+    # Efficient: costo (carburante + ore dell'autista, attese comprese), poi km e minuti.
     minutes, distance = _numbers(result)
-    return (distance, minutes) if strategy == "efficient" else (minutes, distance)
+    return (_cost(result), distance, minutes) if strategy == "efficient" else (minutes, distance)
 
 
 def stable_stop_key(row):
@@ -173,7 +179,7 @@ def optimize_fleet(rows, resource_count, evaluate, strategy, *,
             return common + (-active, max(durations, default=0),
                              sum(value * value for value in durations),
                              sum(durations), sum(distances))
-        return common + (sum(distances), sum(durations), active)
+        return common + (sum(_cost(result) for result in results), sum(distances), sum(durations), active)
 
     best_routes, best_results = initial_routes, initial_results
     best_key = plan_key(best_routes, best_results)
@@ -780,7 +786,7 @@ def optimize_fleet(rows, resource_count, evaluate, strategy, *,
         "budget_exhausted": bool(not exact and (exhausted or used >= limit)),
         "global_optimum_proven": exact,
         "equipment_policy": "prefer-compatible-with-warning-fallback",
-        "objective": "distance-then-work-time" if strategy == "efficient" else "balanced-workload",
+        "objective": "cost-fuel-and-driver-time" if strategy == "efficient" else "balanced-workload",
         "construction": "stable-identity-and-urgent-windows",
         "membership_checks": membership_checks,
         "membership_rejections": membership_rejections,

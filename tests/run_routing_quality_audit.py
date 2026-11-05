@@ -106,7 +106,7 @@ def inspect_answer(case, strategy, answer, reference=None):
                     observations=observations, actual=None, reference=None, comparison=None)
     effective = effective_case(case)
     try:
-        metrics = plan_metrics(effective, answer['routes'])
+        metrics = plan_metrics(effective, answer['routes'], answer.get('departures'))
     except (ValueError, IndexError, KeyError) as exc:
         return dict(status='error', errors=errors + [str(exc)], observations=observations,
                     actual=None, reference=None, comparison=None)

@@ -52,6 +52,90 @@ def fmt_hhmm(total_min):
     total_min = int(round(total_min)) % (24 * 60)
     return f"{total_min // 60:02d}:{total_min % 60:02d}"
 
+
+# Confronto dei giri (5 novembre 2026): vince il giro che costa meno, carburante al km
+# più ore dell'autista, attese comprese (services/route_costs.py). Prima vincevano
+# sempre i km e un giro con ore di attesa batteva un giro di poco più lungo.
+def cost_rates(vehicle=None):
+    """(euro al km, euro al minuto) dal mezzo, con i valori predefiniti se mancano."""
+    from .services.route_costs import DEFAULT_COST_PER_KM, DEFAULT_DRIVER_HOURLY_COST
+    v = vehicle or {}
+
+    def rate(key, default):
+        try:
+            value = float(v.get(key))
+        except (TypeError, ValueError):
+            return default
+        return value if math.isfinite(value) and value >= 0 else default
+    return rate("costo_km", DEFAULT_COST_PER_KM), rate("costo_orario_autista", DEFAULT_DRIVER_HOURLY_COST) / 60
+
+
+def route_cost(km, work_min, vehicle=None):
+    per_km, per_min = cost_rates(vehicle)
+    return float(km) * per_km + float(work_min) * per_min
+
+
+def opening_wait(wait, service_start, windows):
+    """Attesa che una partenza più tarda può eliminare: solo quella per l'apertura di una fascia.
+
+    L'attesa dovuta a una pausa dell'autista resta: la pausa ha un orario fisso.
+    """
+    return float(wait or 0) if any(abs(service_start - opening) < 1e-6 for opening, _ in windows) else 0.0
+
+
+def departure_slack(stops, total_wait):
+    """Minuti di cui la partenza può slittare senza spostare il rientro.
+
+    stops: per ogni fermata (attesa per l'apertura della fascia, minuti tra fine scarico
+    e chiusura della fascia, None senza fascia). Il ritardo viene assorbito da quelle
+    attese, ma nessuno scarico può finire dopo la chiusura della propria fascia.
+    """
+    best, absorbed = float(total_wait), 0.0
+    for wait, margin in stops:
+        absorbed += float(wait or 0)
+        if margin is not None:
+            best = min(best, absorbed + float(margin))
+    return max(0.0, best)
+
+
+def later_departure(base, start_clock, evaluate_at, step=5):
+    """Partenza più tarda che elimina attese: stesso rientro, meno ore dell'autista.
+
+    evaluate_at(minuti) rivaluta lo stesso ordine con quella partenza e restituisce il
+    risultato completo (o None). Si accetta solo un giro senza violazioni, senza
+    ritardi sulle fasce, con rientro non successivo e meno attesa. Partenza a
+    multipli di 5 minuti. Ritorna (risultato, nuova partenza) oppure (base, None).
+    """
+    slack = float(base.get("departure_slack_min") or 0)
+    if base.get("violations") or slack < step:
+        return base, None
+    end = start_clock + float(base["total_min"])
+    waited = float(base.get("total_wait", base.get("total_wait_min", 0)) or 0)
+    shift = math.floor(slack / step) * step
+    while shift >= step:
+        candidate = evaluate_at(start_clock + shift)
+        if (candidate is not None and not candidate.get("violations")
+                and not candidate.get("driver_schedule_error")
+                and float(candidate.get("total_lateness_min") or 0) <= 0
+                and start_clock + shift + float(candidate["total_min"]) <= end + 0.5
+                and float(candidate.get("total_wait", candidate.get("total_wait_min", 0)) or 0) < waited):
+            return candidate, start_clock + shift
+        # Pause fisse o fasce strette: si prova uno spostamento minore.
+        shift = math.floor(shift / 2 / step) * step
+    return base, None
+
+
+def objective_cost(result):
+    """Costo del giro per i confronti; i risultati senza costo usano i valori predefiniti."""
+    if result is None:
+        return 0.0
+    raw = result.get("_objective")
+    if raw is not None and len(raw) > 4:
+        return float(raw[4])
+    km = raw[0] if raw is not None else result["total_km"]
+    minutes = raw[1] if raw is not None else result["total_min"]
+    return route_cost(km, minutes)
+
 def delivery_windows(d):
     """Restituisce le finestre orarie valide ordinate: [(start_min, end_min), ...]."""
     out = []
@@ -187,7 +271,8 @@ def truthy_flag(value):
 def delivery_warnings(selected, vehicle=None):
     warnings = []
     if truthy_flag(selected.get("sponda")):
-        if vehicle and not truthy_flag(vehicle.get("ha_sponda")):
+        # Solo un mezzo vero (con ha_sponda) può mancare della sponda: i costi o il turno da soli non bastano.
+        if vehicle and "ha_sponda" in vehicle and not truthy_flag(vehicle.get("ha_sponda")):
             warnings.append("Serve sponda ma il mezzo selezionato non la possiede")
         else:
             warnings.append("Sponda richiesta")
@@ -402,17 +487,18 @@ def _feasible_fallback(deliveries, matrix, points, vehicle, return_depot, start_
 
 
 def solution_key(result):
-    """Absolute feasibility, then distance, duration, waiting and warnings.
+    """Absolute feasibility, then cost (fuel + driver hours), distance, duration, waiting, warnings.
 
     Infeasible routes retain the historical lateness/count/score ordering.
-    Constant vehicle consumption is proportional to km, not a separate weight.
-    Raw totals avoid letting display rounding override a distance improvement.
+    Driver hours exclude the waiting a later departure absorbs (departure_slack).
+    Raw totals avoid letting display rounding override an improvement.
     """
     violations = result["violations"]
     if violations:
         return (True, result["total_lateness_min"], violations, result["score"])
-    return (False, *result.get("_objective", (
-        result["total_km"], result["total_min"], result.get("total_wait", 0), 0)))
+    raw = result.get("_objective") or (
+        result["total_km"], result["total_min"], result.get("total_wait", 0), 0)
+    return (False, objective_cost(result), *raw[:4])
 
 
 def stop_timing_details(delivery, arrival, service_start, service_end, window_end=None):
@@ -477,6 +563,7 @@ def _evaluate_fixed_sequence(sequence, matrix, points, vehicle=None, return_depo
     schedule=(vehicle or {}).get('driver_schedule') or {}
     pauses=shifts.intervals(schedule)
     departures=[]
+    margins=[]
 
     for original in sequence:
         selected = dict(original)
@@ -514,6 +601,8 @@ def _evaluate_fixed_sequence(sequence, matrix, points, vehicle=None, return_depo
         selected["warning"] = "; ".join(warnings) if warnings else ""
         if ev.get("window_end") is not None:
             total_lateness += max(0.0, service_end - ev["window_end"])
+        margins.append((opening_wait(ev.get("wait"), service_start, delivery_windows(selected)),
+                        ev["window_end"] - service_end if ev.get("window_end") is not None else None))
         if include_details:
             selected.update(stop_timing_details(selected, physical_arrival, service_start, service_end, ev.get("window_end")))
 
@@ -543,6 +632,9 @@ def _evaluate_fixed_sequence(sequence, matrix, points, vehicle=None, return_depo
 
     for d in ordered:
         d.pop("_matrix_index", None)
+    # Ore dell'autista: senza le attese che una partenza più tarda eliminerebbe.
+    slack = 0.0 if violations else departure_slack(margins, sum(wait for wait, _ in margins))
+    cost = route_cost(total_km, total_min - slack, vehicle)
 
     return {
         "ordered": ordered,
@@ -552,7 +644,9 @@ def _evaluate_fixed_sequence(sequence, matrix, points, vehicle=None, return_depo
         "total_min": round(total_min, 1),
         "return_time": fmt_hhmm(current_clock),
         "score": score,
-        "_objective": (total_km, total_min, total_wait, warning_count),
+        "_objective": (total_km, total_min, total_wait, warning_count, cost),
+        "departure_slack_min": round(slack, 1),
+        "_sequence": [original["_matrix_index"] for original in sequence],
         "violations": violations,
         "total_wait": round(total_wait, 1),
         **(window_summary(ordered) if include_details else {"total_lateness_min": total_lateness}),
@@ -762,7 +856,7 @@ def _ortools_single(deliveries, matrix, points, vehicle, return_depot, start_tim
     return candidate if solution_key(candidate) < solution_key(result) else result
 
 
-def optimize_route(db: Session, deposit, deliveries, vehicle=None, return_depot=True, start_time="08:00", route_date=None, travel_factor=None, window_buffer=None):
+def optimize_route(db: Session, deposit, deliveries, vehicle=None, return_depot=True, start_time="08:00", route_date=None, travel_factor=None, window_buffer=None, flexible_departure=True):
     validate_vehicle_load(_without_known_ferry(deposit, deliveries), vehicle)
     _route_departure_time_iso(start_time, route_date)
     depot_coord = geocode_deposit(db, deposit)
@@ -806,13 +900,22 @@ def optimize_route(db: Session, deposit, deliveries, vehicle=None, return_depot=
         result = _best_internal_sequence(deliveries, matrix, points, vehicle, return_depot, start_time)
         result = _ortools_single(deliveries, matrix, points, vehicle, return_depot, start_time, result)
 
+    if flexible_departure and result.get("_sequence") and not (vehicle or {}).get("departure"):
+        # Partenza più tarda se l'autista aspetterebbe: l'orario resta modificabile dal giro.
+        by_index = {d["_matrix_index"]: d for d in deliveries}
+        sequence = [by_index[i] for i in result["_sequence"]]
+        start = vehicle_start_clock(start_time, vehicle)
+        result, moved = later_departure(result, start, lambda clock: _evaluate_fixed_sequence(
+            sequence, matrix, points, vehicle, return_depot, fmt_hhmm(clock)))
+        if moved is not None:
+            result["departure"] = fmt_hhmm(moved)
+            result["requested_departure"] = fmt_hhmm(start)
+
     for d in deliveries:
         d.pop("_matrix_index", None)
 
-    result.pop("_objective", None)
-    result.pop("score", None)
-    result.pop("violations", None)
-    result.pop("total_wait", None)
+    for key in ("_objective", "score", "violations", "total_wait", "_sequence", "departure_slack_min"):
+        result.pop(key, None)
 
     result["base_routing_provider"] = getattr(matrix, "source", "osrm")
     result["depot_coord"] = depot_coord
@@ -855,7 +958,7 @@ def recalculate_manual_route(db: Session, deposit, deliveries, vehicle=None, ret
     result = _evaluate_fixed_sequence(deliveries, matrix, points, vehicle, return_depot, start_time)
     for delivery in deliveries:
         delivery.pop("_matrix_index", None)
-    for key in ("_objective", "score", "violations", "total_wait"):
+    for key in ("_objective", "score", "violations", "total_wait", "_sequence", "departure_slack_min"):
         result.pop(key, None)
 
     result["base_routing_provider"] = getattr(matrix, "source", "osrm")

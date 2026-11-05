@@ -23,6 +23,7 @@ class FixedRouteEvaluator:
         self.pauses = shifts.intervals(schedule)
         self.shift = ((shifts.minutes(schedule["start"]), shifts.minutes(schedule["end"]))
                       if schedule.get("start") else None)
+        self.vehicle = vehicle
         self.load_valid = True
         try:
             opt.validate_vehicle_load(list(self.rows.values()), vehicle)
@@ -38,6 +39,7 @@ class FixedRouteEvaluator:
             return None
         clock, previous, km = self.start, -1, 0.0
         opt, shifts, pauses = self.opt, self.shifts, self.pauses
+        margins, waited = [], 0.0
         for index in order:
             row, service, windows = self.rows[index], self.service[index], self.windows[index]
             leg = self.legs[previous, index]
@@ -56,6 +58,9 @@ class FixedRouteEvaluator:
             if not ev.get("feasible", True):
                 return None
             clock = ev["service_start"] + service
+            wait = opt.opening_wait(max(0.0, ev["service_start"] - physical_arrival), ev["service_start"], windows)
+            waited += wait
+            margins.append((wait, ev["window_end"] - clock if windows and ev.get("window_end") is not None else None))
             km += leg["km"]
             previous = index
         if self.return_depot and order:
@@ -65,5 +70,7 @@ class FixedRouteEvaluator:
         duration = clock-self.start
         if (self.shift and clock > self.shift[1]) or math.ceil(duration) > self.available_minutes:
             return None
+        # Costo: carburante più ore dell'autista, senza le attese che una partenza più tarda elimina.
+        cost = opt.route_cost(km, duration - opt.departure_slack(margins, waited), self.vehicle)
         return {"total_km": round(km, 2), "total_min": round(duration, 1),
-                "_objective": (km, duration, 0.0, 0)}
+                "_objective": (km, duration, 0.0, 0, cost)}

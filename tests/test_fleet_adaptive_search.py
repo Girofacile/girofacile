@@ -11,25 +11,33 @@ def result(km, minutes):
             '_objective': (float(km), float(minutes), 0.0, 0)}
 
 
-def test_efficient_prefers_fewer_kilometres_even_when_it_uses_another_vehicle():
-    # Two separate trips total four kilometres; joining both customers costs
-    # nine kilometres. This must not be traded away for the old vehicle count.
+def test_efficient_prefers_the_cheaper_plan_even_when_it_uses_another_vehicle():
+    # Two separate trips cost 2 x (2 km + 3 min); joining both customers costs
+    # 9 km + 4 min. The cheaper plan must not be traded away for the vehicle count.
     def evaluate(order, resource):
         return result(2, 3) if len(order) == 1 else result(9, 4)
     orders, scores, info = optimize_fleet([{}, {}], 2, evaluate, 'efficient')
     assert sorted(map(len, orders)) == [1, 1]
     assert sum(score['_objective'][0] for score in scores) == 4
     assert info['global_optimum_proven']
-    assert info['objective'] == 'distance-then-work-time'
+    assert info['objective'] == 'cost-fuel-and-driver-time'
 
 
-def test_efficient_exact_order_uses_raw_distance_before_duration():
-    values = {(0, 1): result(1.00001, 30), (1, 0): result(1.00002, 2),
+def test_efficient_exact_order_uses_cost_before_raw_distance():
+    # 28 driver minutes (7 EUR) are worth more than 2 extra km (0.40 EUR).
+    values = {(0, 1): result(1, 30), (1, 0): result(3, 2),
               (0,): result(50, 1), (1,): result(50, 1)}
     orders, _, info = optimize_fleet([{}, {}], 1,
                                    lambda order, resource: values[order], 'efficient')
-    assert orders == ((0, 1),)
+    assert orders == ((1, 0),)
     assert info['global_optimum_proven']
+
+
+def test_efficient_equal_cost_falls_back_to_raw_distance():
+    values = {(0, 1): result(1.00001, 30), (1, 0): result(1.00002, 30),
+              (0,): result(50, 1), (1,): result(50, 1)}
+    orders, _, _ = optimize_fleet([{}, {}], 1, lambda order, resource: values[order], 'efficient')
+    assert orders == ((0, 1),)
 
 
 def test_balanced_keeps_its_workload_priority():
@@ -40,7 +48,9 @@ def test_balanced_keeps_its_workload_priority():
 
 
 def test_fixed_membership_refinement_uses_the_selected_strategy():
-    values = {(0, 1): result(8, 40), (1, 0): result(10, 20)}
+    # Efficient: (0, 1) costs 0.40 + 7.50 EUR, (1, 0) costs 8 + 7 EUR.
+    # Balanced keeps minutes first: (1, 0) is two minutes shorter.
+    values = {(0, 1): result(2, 30), (1, 0): result(40, 28)}
     evaluate = lambda order, resource: values[order]
     efficient, _, _ = refine_routes(((1, 0),), (values[1, 0],), evaluate,
                                      strategy='efficient')

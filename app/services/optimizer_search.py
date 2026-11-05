@@ -39,6 +39,7 @@ class RouteEvaluator:
         km = wait = late = 0.0
         violations = warnings = 0
         constrained = False
+        margins = []
         for d in sequence:
             node = d['_matrix_index']
             leg = opt._matrix_leg(self.matrix, self.points, previous, node)
@@ -58,6 +59,7 @@ class RouteEvaluator:
                 violations += not ev['feasible']
                 warnings += bool(ev['warning'])
                 late += max(0.0, clock - ev['window_end'])
+                margins.append((ev['wait'], ev['window_end'] - clock))
             else:
                 clock = clock + leg['min'] + self.service[node]
             warnings += self.warnings[node]
@@ -73,9 +75,12 @@ class RouteEvaluator:
         # comparisons go through solution_key, not this weighted legacy field.
         score = (violations * 100000 + duration * 10 + wait * 1.5 + warnings * 25 + km
                  if constrained else duration * 10 + km)
+        # Same cost as the canonical evaluator: fuel plus driver hours without absorbable waits.
+        slack = 0.0 if violations else opt.departure_slack(margins, wait)
+        cost = opt.route_cost(km, duration - slack, self.vehicle)
         return dict(total_km=round(km, 2), total_min=round(duration, 1),
                     total_wait=round(wait, 1), total_lateness_min=late,
-                    violations=violations, score=score, _objective=(km, duration, wait, warnings))
+                    violations=violations, score=score, _objective=(km, duration, wait, warnings, cost))
 
 
 def candidate_limit(n):

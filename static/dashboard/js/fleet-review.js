@@ -31,8 +31,8 @@ const routeReturn=r=>withTraffic(r)&&r.traffic.return_time?r.traffic.return_time
 const lateStops=plan=>plan.routes.flatMap(r=>withTraffic(r)?r.traffic.late||[]:[]);
 // Minuti di rientro oltre la fine del turno con il traffico (la programmazione li rifiuterebbe).
 const overtime=r=>withTraffic(r)?Number(r.traffic.overtime_min)||0:0;
-// Partenza del giro: l'orario comune, o l'inizio turno se l'autista comincia più tardi.
-const departure=(plan,i)=>{const c=plan.configuration,s=c.resources[i]?.driver_schedule?.start;return s&&s>c.orario_partenza?s:c.orario_partenza;};
+// Partenza del giro: quella calcolata (più tarda se evita attese), altrimenti l'orario comune o l'inizio turno.
+const departure=(plan,i)=>{const own=(plan.routes||[]).find(r=>r.resource===i)?.departure;if(own)return own;const c=plan.configuration,s=c.resources[i]?.driver_schedule?.start;return s&&s>c.orario_partenza?s:c.orario_partenza;};
 const duration=min=>{const m=Math.round(Number(min)||0);return m>=60?Math.floor(m/60)+' h '+(m%60?m%60+' min':''):m+' min';};
 // Avvisi di una fermata nel giro in cui si trova ora (sponda e ZTL seguono subito il mezzo scelto).
 function warnings(plan,dirty,index,lane){

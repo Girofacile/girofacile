@@ -20,9 +20,13 @@ def test_oracle_imports_neither_application_nor_historical_reference():
 
 
 def test_audit_detects_a_nonoptimal_answer_in_an_exact_single_problem():
+    from itertools import permutations
+    from routing_quality_oracle import objective, plan_metrics
     case = single_cases(True)[0]
     reference = reference_for(case, 'single')
-    poor = {'routes': [[2, 1, 0]], 'provider_calls': 0}
+    worst = max(permutations(range(len(case['stops']))),
+                key=lambda order: objective(plan_metrics(case, (order,) + ((),) * (len(case['resources']) - 1)), 'single'))
+    poor = {'routes': [list(worst)], 'provider_calls': 0}
     report = inspect_answer(case, 'single', poor, reference)
     assert 'exact_objective_gap' in report['errors']
     assert report['comparison']['worse']

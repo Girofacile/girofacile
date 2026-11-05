@@ -338,6 +338,15 @@ def ensure_not_past_route_date(data_giro):
         raise HTTPException(400, "Non puoi programmare un giro in una data precedente a oggi")
 
 
+def _costed_vehicle(user, vehicle, data):
+    """Mezzo per il calcolo con i costi che scelgono il giro: carburante e ore dell'autista."""
+    from ..services.route_costs import rates
+    schedule = data.driver_schedule.model_dump() if data.driver_schedule else None
+    result = build_vehicle_dict(vehicle, schedule) or {}
+    result.update(rates(user, vehicle, getattr(data, "energy_price_primary", None), getattr(data, "energy_price_electric", None)))
+    return result
+
+
 def build_vehicle_dict(vehicle, driver_schedule=None):
     if not vehicle and driver_schedule:
         return {"driver_schedule":driver_schedule}
@@ -621,7 +630,7 @@ def create_and_optimize_route(
     _apply_route_preferences(user, deliveries)
     original_deliveries = deepcopy(deliveries)
     try:
-        result = optimize_route(db, deposit, deliveries, build_vehicle_dict(vehicle, data.driver_schedule.model_dump()), data.rientro_deposito, data.orario_partenza, route_date=data.data_giro)
+        result = optimize_route(db, deposit, deliveries, _costed_vehicle(user, vehicle, data), data.rientro_deposito, data.orario_partenza, route_date=data.data_giro)
     except ValueError as e:
         # Gli errori di configurazione del routing arrivano come ValueError
         # per poter essere mostrati bene in Dashboard, ma sono errori tecnici
@@ -644,6 +653,9 @@ def create_and_optimize_route(
             severity="high",
         )
         raise HTTPException(status_code=500, detail={"message": f"Errore calcolo percorso: {str(e)}", "error_id": error_id})
+    if result.get("departure"):
+        # Partenza più tarda proposta dal calcolo per evitare attese: è l'orario salvato sul giro.
+        data = data.model_copy(update={"orario_partenza": result["departure"]})
     start_min = minutes_from_hhmm(data.orario_partenza) or 0
     end_min = start_min + int(float(result.get("total_min") or 0))
     _check_resource_overlap(db, user, data, start_min, end_min)
@@ -687,9 +699,9 @@ def _traffic_two_pass(db, user, data, deposit, deliveries, vehicle, plan, result
     attempted = {tuple(_stop_identity(result))}
     for buffer in (0, correction.replan_buffer(first)):
         try:
-            second = optimize_route(db, deposit, deepcopy(deliveries), build_vehicle_dict(vehicle, data.driver_schedule.model_dump()),
+            second = optimize_route(db, deposit, deepcopy(deliveries), _costed_vehicle(user, vehicle, data),
                                     data.rientro_deposito, data.orario_partenza, route_date=data.data_giro, travel_factor=factor,
-                                    window_buffer=buffer)
+                                    window_buffer=buffer, flexible_departure=False)
             start_min = minutes_from_hhmm(data.orario_partenza) or 0
             _check_resource_overlap(db, user, data, start_min, start_min + math.ceil(float(second.get("total_min") or 0)), exclude_route_id=plan.id)
         except (ValueError, HTTPException):

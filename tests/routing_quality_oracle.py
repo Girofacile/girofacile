@@ -110,7 +110,29 @@ def _stop_timing(arrival, stop, breaks):
     return start, closing, late, True
 
 
-def replay(case, resource_index, order):
+# Business cost of a route (5 November 2026): fuel per km plus driver hours,
+# without the waiting a later departure would absorb. Written independently of
+# app.optimizer; defaults mirror app/services/route_costs.py.
+COST_PER_KM, DRIVER_HOURLY_COST = 0.20, 15.0
+
+
+def _rate(resource, key, default):
+    value = resource.get(key)
+    return default if value is None else float(value)
+
+
+def _absorbable_wait(stops):
+    # Only waiting for a window to open; a fixed driver break keeps its own wait.
+    waits = [stop['service_start'] - stop['arrival'] if stop['opened'] else 0.0 for stop in stops]
+    best, absorbed = sum(waits), 0.0
+    for stop, wait in zip(stops, waits):
+        absorbed += wait
+        if stop['window_end'] is not None:
+            best = min(best, absorbed + stop['window_end'] - stop['service_end'])
+    return max(0.0, best)
+
+
+def replay(case, resource_index, order, start=None):
     """Replay one zero-based stop order without touching the supplied input.
 
     ``max_minutes`` denotes the already computed available booking/day horizon
@@ -124,7 +146,7 @@ def replay(case, resource_index, order):
         raise ValueError('Stop index is outside the supplied case')
     resource = case['resources'][resource_index]
     started = _minute(case.get('start_time', '08:00'))
-    result = dict(order=order, feasible=True, violations=0, km=0.0,
+    result = dict(order=order, feasible=True, violations=0, km=0.0, cost=0.0,
                   minutes=0.0, wait=0.0, lateness=0.0, mismatches=0,
                   warnings=0, stops=[], errors=[])
     if not order:
@@ -133,6 +155,9 @@ def replay(case, resource_index, order):
     if case.get('kind') == 'fleet' and schedule.get('start'):
         # Nel multi-mezzo chi inizia dopo l'orario comune parte a inizio turno.
         started = max(started, _minute(schedule['start']))
+    if start is not None:
+        # The engine may depart later when that removes waiting: replay its departure.
+        started = _minute(start)
     breaks = sorted((_minute(item['start']), _minute(item['end']))
                     for item in schedule.get('breaks', []))
     if any(right <= left for left, right in breaks):
@@ -167,7 +192,8 @@ def replay(case, resource_index, order):
             result['violations'] += 1
             result['errors'].append('tail_lift_required')
         result['stops'].append(dict(index=index, arrival=arrival, service_start=service_start,
-                                    service_end=service_end, window_end=window_end, lateness=late))
+                                    service_end=service_end, window_end=window_end, lateness=late,
+                                    opened=any(abs(service_start - opening) < 1e-6 for opening, _ in _windows(row))))
         previous, clock = node, service_end
     if case.get('return_depot', True):
         back = case['matrix'][previous, 0]
@@ -184,20 +210,25 @@ def replay(case, resource_index, order):
             result['violations'] += 1
             result['errors'].append('availability')
     result['feasible'] = result['violations'] == 0
+    work = result['minutes'] - (_absorbable_wait(result['stops']) if result['feasible'] else 0.0)
+    result['cost'] = (result['km'] * _rate(resource, 'costo_km', COST_PER_KM)
+                      + work * _rate(resource, 'costo_orario_autista', DRIVER_HOURLY_COST) / 60)
     return result
 
 
-def plan_metrics(case, orders):
+def plan_metrics(case, orders, starts=None):
     """Aggregate raw route totals and independently detect duplicate assignment."""
     orders = tuple(tuple(order) for order in orders)
     if len(orders) != len(case['resources']):
         raise ValueError('One route, possibly empty, is required per resource')
-    routes = [replay(case, i, order) for i, order in enumerate(orders)]
+    starts = starts or [None] * len(orders)
+    routes = [replay(case, i, order, starts[i]) for i, order in enumerate(orders)]
     assigned = [index for order in orders for index in order]
     duplicates = len(assigned) - len(set(assigned))
     durations = [route['minutes'] for route in routes]
     return dict(served=len(set(assigned)), used=sum(bool(order) for order in orders),
                 km=sum(route['km'] for route in routes), minutes=sum(durations),
+                cost=sum(route['cost'] for route in routes),
                 wait=sum(route['wait'] for route in routes),
                 lateness=sum(route['lateness'] for route in routes),
                 violations=sum(route['violations'] for route in routes) + duplicates,
@@ -214,17 +245,17 @@ def objective(metrics, strategy='single'):
     if strategy == 'single':
         if not metrics['feasible']:
             return (True, metrics['lateness'], metrics['violations'], metrics['km'], metrics['minutes'])
-        return (False, metrics['km'], metrics['minutes'], metrics['wait'], metrics['warnings'])
+        return (False, metrics['cost'], metrics['km'], metrics['minutes'], metrics['wait'], metrics['warnings'])
     prefix = (-metrics['served'], metrics['mismatches'])
     if strategy == 'efficient':
-        return (*prefix, metrics['km'], metrics['minutes'], metrics['used'])
+        return (*prefix, metrics['cost'], metrics['km'], metrics['minutes'], metrics['used'])
     if strategy == 'balanced':
         return (*prefix, -metrics['used'], metrics['makespan'], metrics['sumsq'], metrics['minutes'], metrics['km'])
     raise ValueError('Unknown strategy')
 
 
 def solve_single(case):
-    """Enumerate every order, proving best feasible distance for up to 8 stops."""
+    """Enumerate every order, proving the cheapest feasible route for up to 8 stops."""
     n = len(case['stops'])
     if n > 8:
         raise ValueError('Exhaustive single reference is limited to eight stops')
@@ -266,7 +297,7 @@ def solve_fleet(case, strategy='efficient'):
             for order in permutations(members):
                 metrics = replay(case, resource_index, order)
                 if metrics['feasible']:
-                    rank = ((metrics['km'],metrics['minutes']) if strategy=='efficient'
+                    rank = ((metrics['cost'],metrics['km'],metrics['minutes']) if strategy=='efficient'
                             else (metrics['minutes'], metrics['km']))
                     if best_rank is None or rank < best_rank:
                         best_order, best_rank = order, rank

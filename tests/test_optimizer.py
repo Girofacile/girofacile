@@ -234,13 +234,16 @@ def test_public_entrypoints_use_one_stub_matrix(monkeypatch, entrypoint, return_
     assert calls[0][0] == 7 and len(calls[0][1]) == 3
     assert calls[0][3] == {"start_time": "08:00", "route_date": "2030-01-15"}
     assert sorted(ids(result)) == [1, 2]
-    # Replay chosen order through internal evaluator for public/internal agreement.
+    # Replay chosen order through internal evaluator for public/internal agreement,
+    # from the departure the calculation proposes (later when it avoids waiting).
     indexed = {d["customer_id"]: dict(d, _matrix_index=d["customer_id"]) for d in rows}
-    expected = opt._evaluate_fixed_sequence([indexed[i] for i in ids(result)], matrix, [], return_depot=return_depot)
+    expected = opt._evaluate_fixed_sequence([indexed[i] for i in ids(result)], matrix, [], return_depot=return_depot,
+                                            start_time=result.get("departure", "08:00"))
     for field in ("total_km", "total_min", "return_time"):
         assert result[field] == expected[field]
     assert all("_matrix_index" not in d for d in result["ordered"])
     assert "score" not in result and "violations" not in result
+    assert "_sequence" not in result and "departure_slack_min" not in result
     assert result["google_maps_url"].endswith("/Deposito") is return_depot
     if entrypoint is opt.recalculate_manual_route:
         assert ids(result) == [1, 2]

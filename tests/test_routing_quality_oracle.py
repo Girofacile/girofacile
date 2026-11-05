@@ -60,15 +60,20 @@ def test_open_and_closed_tour_have_different_directed_optima():
     assert opened['optimality_proven'] and closed['optimality_proven']
 
 
-def test_single_tour_minimizes_distance_before_duration():
+def test_single_tour_minimizes_cost_of_fuel_and_driver_time():
     data = case([stop(0), stop(1)], returning=True, edges={
         (0, 1): (1, 50), (1, 2): (1, 50), (2, 0): (1, 50),
         (0, 2): (2, 1), (2, 1): (2, 1), (1, 0): (2, 1),
     })
+    # 3 km + 150 min (38,10 €) against 6 km + 3 min (1,95 €).
+    result = solve_single(data)
+    assert tuple(result['orders'][0]) == (1, 0)
+    assert (result['metrics']['km'], result['metrics']['minutes']) == (6, 3)
+    # Free driver minutes: the shortest tour wins again.
+    data['resources'][0]['costo_orario_autista'] = 0
     result = solve_single(data)
     assert tuple(result['orders'][0]) == (0, 1)
-    assert result['metrics']['km'] == 3
-    assert result['metrics']['minutes'] == 150
+    assert (result['metrics']['km'], result['metrics']['minutes']) == (3, 150)
 
 
 def test_window_requires_service_completion_and_includes_exact_closing():

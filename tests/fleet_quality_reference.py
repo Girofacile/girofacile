@@ -66,7 +66,7 @@ def _windows(stop):
     return sorted(windows)
 
 
-def route_replay(case, resource, order):
+def route_replay(case, resource, order, start=None):
     """Replay one ordered route independently of the production scheduler.
 
     Tail lift and ZTL are advisory equipment preferences. An explicit
@@ -74,7 +74,8 @@ def route_replay(case, resource, order):
     current automatic and manual planning use the advisory default.
     """
     settings = case["resources"][resource] if isinstance(resource, int) else resource
-    start = float(case.get("start_min", 480))
+    # A route may depart later than the common start when that removes waiting.
+    start = float(case.get("start_min", 480) if start is None else start)
     result = {
         "feasible": True, "errors": [], "km": 0.0, "minutes": 0.0,
         "end": start, "wait_min": 0.0, "drive_min": 0.0,

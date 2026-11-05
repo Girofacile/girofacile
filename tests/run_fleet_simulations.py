@@ -235,7 +235,9 @@ def execute(case, strategy):
             errors.append("Resource repeated in result")
         orders[resource] = sequence
         assigned.extend(sequence)
-        replayed = route_replay(case, resource, sequence)
+        departure = route.get("departure")
+        replayed = route_replay(case, resource, sequence,
+                                start=int(departure[:2]) * 60 + int(departure[3:5]) if departure else None)
         if not replayed["feasible"]:
             errors.append(f"Resource {resource}: {replayed.get('errors')}")
             continue

@@ -256,11 +256,12 @@ def test_fleet_warns_when_overtime_cannot_be_removed(fleet, monkeypatch):  # noq
     assert any('dopo la fine del turno (08:30)' in warning for warning in plan['warnings'])
 
 
-def test_fleet_driver_with_later_shift_departs_at_shift_start(fleet, monkeypatch):  # noqa: F811
+def test_fleet_driver_with_later_shift_departs_when_customers_open(fleet, monkeypatch):  # noqa: F811
     ctx, data = fleet
     flat_roads(monkeypatch)
     data = deepcopy(data)
-    # Fasce pomeridiane: solo il secondo autista (10:00-18:00) può servirle, partendo alle 10:00 e non alle 8:00.
+    # Fasce pomeridiane: solo il secondo autista (10:00-18:00) può servirle. Non parte né alle 8:00
+    # né a inizio turno (10:00): parte alle 13:45, così non aspetta l'apertura delle 14:00.
     data.update(strategy='efficient', consegne=[verified_stop(ctx[2].id, cliente_nome=n, indirizzo=f'Via {n}', lat=45.1 + i / 100, lon=9.1,
                                                              tempo_scarico_min=5, scarico_mattina_da='14:00', scarico_mattina_a='16:00')
                                                 for i, n in enumerate('ABC')])
@@ -268,8 +269,11 @@ def test_fleet_driver_with_later_shift_departs_at_shift_start(fleet, monkeypatch
     plan = preview(fleet, data)
     assert plan['unassigned'] == []
     [route] = plan['routes']
-    assert route['resource'] == 1 and route['traffic']['departure_time'].endswith('T09:00:00Z')
+    assert route['resource'] == 1 and route['departure'] == '13:45'
+    assert route['traffic']['departure_time'].endswith('T12:45:00Z')
+    assert route['result']['total_wait_min'] < 5
+    assert any('parte alle 13:45 invece delle 10:00' in warning for warning in plan['warnings'])
     saved = command(fleet, plan, 'confirm')
     assert saved.status_code == 200, saved.text
     [row] = ctx[1].query(RoutePlan).all()
-    assert row.orario_partenza.strftime('%H:%M') == '10:00'
+    assert row.orario_partenza.strftime('%H:%M') == '13:45'

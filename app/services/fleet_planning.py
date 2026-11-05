@@ -61,10 +61,24 @@ def delay(routes):
     return (len(late)+sum(1 for m in extra if m),round(sum(float(i.get('lateness_min') or 0) for i in late)+sum(extra),1))
 
 
-def route_data(data,resource,rows,index,driver_name=None):
+# Attesa oltre la quale la proposta lo segnala: tempo pagato all'autista senza consegnare.
+WAIT_WARNING_MIN=45
+
+
+def opt_duration(minutes):
+    hours,rest=divmod(int(minutes),60)
+    return f'{hours} h {rest} min' if hours and rest else f'{hours} h' if hours else f'{rest} min'
+
+
+def proposal_start(settings,proposal):
+    """Partenza salvata nella proposta (più tarda se elimina attese), altrimenti quella comune o di inizio turno."""
+    return (proposal.get('departure') or resource_start(settings,settings.resources[proposal['resource']]))[:5]
+
+
+def route_data(data,resource,rows,index,driver_name=None,departure=None):
     # Nome automatico di ogni giro: base (la data) · autista; senza autista resta il numero del giro.
     values=data.model_dump(exclude={'resources','strategy','consegne'})
-    values.update(nome=f'{data.nome or "Giro consegne"} · {driver_name or index+1}',vehicle_id=resource.vehicle_id,orario_partenza=resource_start(data,resource),
+    values.update(nome=f'{data.nome or "Giro consegne"} · {driver_name or index+1}',vehicle_id=resource.vehicle_id,orario_partenza=departure or resource_start(data,resource),
                   driver_id=resource.driver_id,driver_schedule=resource.driver_schedule,consegne=rows,energy_price_mode=resource.energy_price_mode,
                   energy_price_primary=resource.energy_price_primary,energy_price_electric=resource.energy_price_electric)
     return RoutePlanIn.model_validate(values)
@@ -126,7 +140,7 @@ def preview_traffic(db,user,data,route,vehicle,resource):
     from .route_enrichment import evaluate_legs
     snapshot=_traffic_snapshot(route['result'],data.rientro_deposito)
     if not snapshot: return {'status':'unavailable'}
-    start=resource_start(data,resource)
+    start=route.get('departure') or resource_start(data,resource)
     plan=SimpleNamespace(rientro_deposito=data.rientro_deposito,vehicle=vehicle,orario_partenza=start,
                          driver_schedule=resource.driver_schedule.model_dump() if resource.driver_schedule else {})
     departure=opt._route_departure_time_iso(start,data.data_giro)
@@ -325,31 +339,43 @@ def _ortools_improvement(rows,vehicle_data,matrix,points,data,limits,refined,res
     if not seconds or not rows or not fleet_ortools.available():
         search['ortools']={'status':'disabled' if not seconds else 'unavailable'}
         return refined,results
-    try:
-        orders,report=fleet_ortools.improve(rows,vehicle_data,matrix,data.orario_partenza,data.rientro_deposito,limits,refined,seconds,data.strategy)
-    except Exception as exc:  # Un problema del solutore esterno non deve fermare la pianificazione.
-        search['ortools']={'status':'error','error':type(exc).__name__}
-        return refined,results
-    report['accepted']=False
-    if orders is not None:
-        score=lambda sequence,resource:evaluate([rows[i] for i in sequence],resource)
+    # «Riduci chilometri e tempi»: metà del tempo a una passata sul costo (carburante e ore
+    # dell'autista) e metà a una sui soli km, che resta una buona strada verso piani economici.
+    # Si tiene la proposta migliore secondo la chiave della strategia, cioè il costo.
+    modes=[('efficient',seconds/2),('distance',seconds/2)] if data.strategy=='efficient' else [(data.strategy,seconds)]
+    before=_plan_key(refined,results,rows,vehicle_data,data.strategy)
+    best=None;reports=[]
+    score=lambda sequence,resource:evaluate([rows[i] for i in sequence],resource)
+    for mode,budget in modes:
+        try:
+            orders,report=fleet_ortools.improve(rows,vehicle_data,matrix,data.orario_partenza,data.rientro_deposito,limits,refined,budget,mode)
+        except Exception as exc:  # Un problema del solutore esterno non deve fermare la pianificazione.
+            reports.append({'mode':mode,'status':'error','error':type(exc).__name__})
+            continue
+        report['mode']=mode;reports.append(report)
+        if orders is None: continue
         scores=tuple(score(order,v) if order else None for v,order in enumerate(orders))
-        if all(value is not None for order,value in zip(orders,scores) if order):
-            orders,scores,_=refine_routes(orders,scores,score,strategy=data.strategy,global_exact=False,
-                prepare=lambda sequence,resource:FixedRouteEvaluator(
-                    rows,sequence,matrix,points,vehicle_data[resource],data.rientro_deposito,
-                    data.orario_partenza,limits[resource]))
-            before=_plan_key(refined,results,rows,vehicle_data,data.strategy)
-            after=_plan_key(orders,scores,rows,vehicle_data,data.strategy)
-            km=2 if data.strategy=='efficient' else -1  # posizione dei km nella chiave della strategia
-            report.update(served_before=-before[0],served_after=-after[0],km_before=round(before[km],2),km_after=round(after[km],2))
-            if _better(after,before):
-                report['accepted']=True
-                search['ortools']=report
-                return orders,scores
-        else:
-            report['rejected']='canonical-schedule'
-    search['ortools']=report
+        if not all(value is not None for order,value in zip(orders,scores) if order):
+            report['rejected']='canonical-schedule';continue
+        orders,scores,_=refine_routes(orders,scores,score,strategy=data.strategy,global_exact=False,
+            prepare=lambda sequence,resource:FixedRouteEvaluator(
+                rows,sequence,matrix,points,vehicle_data[resource],data.rientro_deposito,
+                data.orario_partenza,limits[resource]))
+        after=_plan_key(orders,scores,rows,vehicle_data,data.strategy)
+        km=3 if data.strategy=='efficient' else -1  # posizione dei km nella chiave della strategia
+        report.update(served_before=-before[0],served_after=-after[0],km_before=round(before[km],2),km_after=round(after[km],2))
+        if data.strategy=='efficient': report.update(cost_before=round(before[2],2),cost_after=round(after[2],2))
+        if best is None or _better(after,best[0]): best=(after,orders,scores,report)
+    if all(report.get('status')=='error' for report in reports):
+        search['ortools']={'status':'error','error':reports[0].get('error')};return refined,results
+    summary=dict(reports[0]) if len(reports)==1 else {'status':reports[0].get('status'),'seeded':reports[0].get('seeded'),'passes':reports}
+    summary['accepted']=False
+    if best is not None and _better(best[0],before):
+        best[3]['chosen']=True
+        summary.update(accepted=True,**{k:best[3][k] for k in ('served_before','served_after','km_before','km_after','cost_before','cost_after') if k in best[3]})
+        search['ortools']=summary
+        return best[1],best[2]
+    search['ortools']=summary
     return refined,results
 
 
@@ -377,7 +403,11 @@ def _distribute(db,user,data,assignments=None,tighten=None):
         from . import traffic_correction as correction
         matrix=correction.scaled_matrix(matrix,tighten['factor'])
         rows=[correction.buffered(row,tighten['buffer']) for row in rows]
+    from .route_costs import rates
     vehicle_data=[search_vehicle(v,r,data) for v,r in zip(vehicles,data.resources)]
+    for item,v,r in zip(vehicle_data,vehicles,data.resources):
+        # Costi per scegliere i giri: carburante del mezzo e ore dell'autista, attese comprese.
+        if item is not None: item.update(rates(user,v,r.energy_price_primary,r.energy_price_electric))
     final_vehicle_data=vehicle_data
     if tighten and tighten.get('shift_buffer'):
         # Il traffico ha portato un rientro oltre il turno: per la ricerca il turno finisce prima.
@@ -423,6 +453,7 @@ def _distribute(db,user,data,assignments=None,tighten=None):
                     distances[resource]=evaluated['_objective'][0]
                     raw_minutes=[float(r['_objective'][1]) if r else 0 for r in results]
                     raw_minutes[resource]=evaluated['_objective'][1]
+                    # Costruzione «per distanza»: un punto di partenza diverso per la ricerca, che poi sceglie per costo.
                     key=(sum(distances),sum(raw_minutes),sum(bool(route) for route in routes if route)+int(not sequence))
                 else: key=(0 if sequence else 1,delta,evaluated['total_km'])
                 # Equipment is advisory: prefer compatibility after coverage.
@@ -492,7 +523,7 @@ def _distribute(db,user,data,assignments=None,tighten=None):
             km=sum(float(score['_objective'][0]) for score in scores if score)
             used=sum(bool(route) for route in sequences)
             return common+((-used,max(minutes,default=0),sum(value*value for value in minutes),sum(minutes),km)
-                           if data.strategy=='balanced' else (km,sum(minutes),used))
+                           if data.strategy=='balanced' else (sum(opt.objective_cost(score) for score in scores if score),km,sum(minutes),used))
         initial_routes,initial_results=min(initial_candidates,key=initial_key)
         signature_fields=('driver_schedule','ha_sponda','accesso_ztl','capacita_kg','capacita_colli')
         signatures=[json.dumps({key:v.get(key) for key in signature_fields},sort_keys=True,default=str)+':'+str(limit)
@@ -560,7 +591,7 @@ def _distribute(db,user,data,assignments=None,tighten=None):
         results=list(optimized_results)
         search['tail_lift_required']=False
         search['equipment_policy']='prefer-compatible-with-warning-fallback'
-        search['primary_objective']='distance-then-work-time' if data.strategy=='efficient' else 'balanced-workload'
+        search['primary_objective']='cost-fuel-and-driver-time' if data.strategy=='efficient' else 'balanced-workload'
     else:
         search={'method':'manual-membership','equipment_policy':'prefer-compatible-with-warning-fallback'}
         if len(assignments)!=len(rows) or any(a is not None and (a<0 or a>=len(routes)) for a in assignments):
@@ -618,18 +649,31 @@ def _distribute(db,user,data,assignments=None,tighten=None):
         routes=[[originals[row['fleet_stop_index']] for row in route] for route in routes]
         rows=originals
         vehicle_data[:]=final_vehicle_data
+    # Partenza più tarda se l'autista aspetterebbe i clienti: stesso rientro, meno ore di lavoro.
+    for index,sequence in enumerate(routes):
+        original=vehicle_data[index]
+        if not sequence or original is None: continue
+        base=evaluate(sequence,index,include_details=True)
+        if base is None: continue
+        def at(clock,index=index,sequence=sequence,original=original):
+            vehicle_data[index]={**original,'departure':opt.fmt_hhmm(clock)}
+            try: return evaluate(sequence,index,include_details=True)
+            finally: vehicle_data[index]=original
+        _,moved=opt.later_departure(base,opt.vehicle_start_clock(data.orario_partenza,original),at)
+        if moved is not None: vehicle_data[index]={**original,'departure':opt.fmt_hhmm(moved)}
     # Generate complete ETA and diagnostic details only for selected final routes.
     results=[evaluate(sequence,index,include_details=True) if sequence else None
              for index,sequence in enumerate(routes)]
     def build_route(index,result):
         indexes=[s['fleet_stop_index'] for s in result['ordered']]
         for stop in result['ordered']: stop.pop('fleet_stop_index',None)
-        for field in ('score','_objective','violations','total_wait'): result.pop(field,None)
+        for field in ('score','_objective','violations','total_wait','_sequence','departure_slack_min'): result.pop(field,None)
         result.update(base_routing_provider=getattr(matrix,'source','osrm'),depot_coord=depot,
                       base_return_leg=dict(matrix.get((indexes[-1]+1,0)) or {}) if data.rientro_deposito else {},
                       google_maps_url=opt.build_google_maps_url(deposit.indirizzo,result['ordered'],data.rientro_deposito))
         return {'resource':index,'vehicle_name':vehicles[index].nome,'driver_name':(drivers[index].nome+' '+(drivers[index].cognome or '')).strip(),
-                'stop_indexes':indexes,'result':result,'fuel_cost':fuel_cost(vehicles[index],data.resources[index],result['total_km']),
+                'stop_indexes':indexes,'result':result,
+                'departure':opt.fmt_hhmm(opt.vehicle_start_clock(data.orario_partenza,vehicle_data[index])),'fuel_cost':fuel_cost(vehicles[index],data.resources[index],result['total_km']),
                 'weight_kg':sum(rows[i]['peso_kg'] for i in indexes),'packages':sum(rows[i]['colli'] for i in indexes)}
 
     def traffic_second_pass(route):
@@ -683,6 +727,16 @@ def _distribute(db,user,data,assignments=None,tighten=None):
                             f"{extra} min dopo la fine del turno ({schedule.end}). Sposta una consegna in un altro giro o allunga il turno, poi ricalcola.")
     if getattr(matrix,'source','osrm') in ('estimated','mixed'):
         warnings.insert(0,'Routing stradale non disponibile per alcune tratte: tempi e distanze approssimativi, da verificare.')
+    for route in output:
+        # Partenza spostata per evitare attese, e attese che restano comunque lunghe.
+        name=f"Giro {route['resource']+1} · {route['driver_name']}"
+        usual=resource_start(data,data.resources[route['resource']])[:5]
+        if route.get('departure') and route['departure']!=usual:
+            warnings.append(f"{name}: parte alle {route['departure']} invece delle {usual}, così l'autista non aspetta l'apertura dei clienti. Puoi cambiare l'orario dal giro.")
+        waited=round(float(route['result'].get('total_wait_min') or 0))
+        if waited>=WAIT_WARNING_MIN:
+            warnings.append(f"{name}: {opt_duration(waited)} di attesa ai clienti anche con la partenza alle {route.get('departure') or usual}. "
+                            "Sposta in un altro giro le consegne con fasce lontane tra loro, oppure allarga le fasce, poi ricalcola.")
     if data.strategy=='balanced' and len(output)<len(data.resources): warnings.append('Non tutte le risorse hanno ricevuto consegne: controlla le disponibilita e le consegne non assegnate.')
     for route in output:
         if not vehicles[route['resource']].ha_sponda:
@@ -749,7 +803,7 @@ def confirm(db,user,actor,plan_id,data):
         opt.validate_vehicle_load(result['ordered'],build_vehicle_dict(vehicles[index]))
         driver=db.get(Driver,resource.driver_id) if resource.driver_id else None
         driver_name=' '.join(x for x in (driver.nome,driver.cognome) if x).strip() if driver else None
-        payload=route_data(settings,resource,result['ordered'],index,driver_name)
+        payload=route_data(settings,resource,result['ordered'],index,driver_name,proposal_start(settings,route))
         start=opt.parse_hhmm(payload.orario_partenza)
         _check_resource_overlap(db,user,payload,start,start+math.ceil(result['total_min']))
         saved=save_route_result(db,user,payload,result,vehicles[index],commit=False)
@@ -773,7 +827,7 @@ def release_failed_drafts(db,user,actor,plan_id,version):
         expected=settings.resources[proposal['resource']]
         if (row.status!='bozza' or json.loads(row.routing_snapshot_json or '{}').get('revision')!=1
             or row.vehicle_id!=expected.vehicle_id or row.driver_id!=expected.driver_id
-            or row.data_giro.isoformat()!=settings.data_giro or row.orario_partenza.strftime('%H:%M')!=resource_start(settings,expected)[:5]):
+            or row.data_giro.isoformat()!=settings.data_giro or row.orario_partenza.strftime('%H:%M')!=proposal_start(settings,proposal)):
             return False
     for row in rows:
         route_orders.sync_route_orders(db,row,'cancelled')
@@ -837,7 +891,7 @@ def _program_saved(db,user,actor,plan_id,data):
         for row,proposal in zip(rows,plan.result['routes']):
             expected=settings.resources[proposal['resource']]
             if (computed_route_status(row)!='bozza' or json.loads(row.routing_snapshot_json or '{}').get('revision')!=1
-                or row.data_giro.isoformat()!=settings.data_giro or row.orario_partenza.strftime('%H:%M')!=resource_start(settings,expected)[:5]
+                or row.data_giro.isoformat()!=settings.data_giro or row.orario_partenza.strftime('%H:%M')!=proposal_start(settings,proposal)
                 or row.deposit_id!=settings.deposit_id or row.rientro_deposito!=settings.rientro_deposito
                 or row.vehicle_id!=expected.vehicle_id or row.driver_id!=expected.driver_id):
                 raise HTTPException(409,'Un giro e stato modificato o programmato separatamente: gestiscilo dallo storico.')

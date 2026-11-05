@@ -270,11 +270,13 @@ def run_fleet(case, strategy, input_order=None, budget=None):
         production = fleet.distribute(_NoDatabase(), SimpleNamespace(id=1), data)
         elapsed_ms, cpu_ms = (perf_counter() - started) * 1000, (process_time() - cpu) * 1000
     routes = [[] for _ in case['resources']]
+    departures = [None for _ in case['resources']]
     for route in production['routes']:
         routes[route['resource']] = [order[index] for index in route['stop_indexes']]
+        departures[route['resource']] = route.get('departure')
     used = len(production['routes'])
     durations = [float(route['result']['total_min']) for route in production['routes']]
-    return dict(routes=routes, production=production, diagnostics=production['search'],
+    return dict(routes=routes, departures=departures, production=production, diagnostics=production['search'],
         production_metrics=dict(served=sum(map(len, routes)), used=used,
             km=sum(float(route['result']['total_km']) for route in production['routes']),
             minutes=sum(durations), makespan=max(durations, default=0),

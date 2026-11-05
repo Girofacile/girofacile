@@ -13,6 +13,11 @@ una fascia ridotta della sua durata, rientro entro fine turno e tempo disponibil
 capacità in kg e colli. Sponda e ZTL incompatibili costano come 20 km, una
 consegna esclusa come 1.000 km. Tempi in secondi arrotondati per eccesso.
 
+Modalità «efficient» (dal 5 novembre 2026): ogni tratta costa i km pesati con il carburante
+del mezzo più le ore dell'autista per guida e scarico (services/route_costs.py), in metri
+al costo predefinito di 0,20 €/km. Modalità «distance»: soli km, come prima. Le attese
+non sono nel modello: le valuta il calendario canonico all'accettazione.
+
 Tempo: 0,15 s per consegna, tra 1 s e FLEET_ORTOOLS_SECONDS (predefinito 10 s).
 OR-Tools usa sempre tutto il tempo concesso. Senza OR-Tools installato, o con
 FLEET_ORTOOLS_SECONDS=0, il piano resta quello del motore attuale.
@@ -77,10 +82,17 @@ def improve(rows, vehicles, matrix, start_time, return_depot, limits, initial, s
         return (int(bool(row.get('sponda')) and not vehicle.get('ha_sponda', False))
                 + int(bool(row.get('ztl')) and not vehicle.get('accesso_ztl', False)))
 
+    from .route_costs import DEFAULT_COST_PER_KM
     for v, vehicle in enumerate(vehicles):
-        def cost(a, b, vehicle=vehicle):
+        # Efficient: metri pesati con il costo al km del mezzo (unità: metri a 0,20 €/km).
+        per_km, per_min = opt.cost_rates(vehicle)
+        factor = per_km / DEFAULT_COST_PER_KM if strategy == 'efficient' else 1.0
+        # Ore dell'autista sulla tratta (guida più scarico): stessa unità dei metri.
+        per_second = per_min / SCALE / (DEFAULT_COST_PER_KM / 1000) if strategy == 'efficient' else 0.0
+        def cost(a, b, vehicle=vehicle, factor=factor, per_second=per_second):
             i, j = manager.IndexToNode(a), manager.IndexToNode(b)
-            return leg(i, j)[0] + mismatches(vehicle, j) * MISMATCH_PENALTY
+            meters, seconds = leg(i, j)
+            return round(meters * factor + (seconds + service[i]) * per_second) + mismatches(vehicle, j) * MISMATCH_PENALTY
         routing.SetArcCostEvaluatorOfVehicle(routing.RegisterTransitCallback(cost), v)
 
     def transit(a, b):

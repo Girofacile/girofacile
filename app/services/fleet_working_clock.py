@@ -109,5 +109,7 @@ def _plan_key(routes, results, rows, vehicles, strategy):
     if strategy == 'balanced':
         return common + (-used, max(durations, default=0), sum(t*t for t in durations),
                          sum(durations), sum(distances))
-    return common + (sum(distances), sum(durations), used)
+    from .. import optimizer as opt
+    costs = sum(opt.objective_cost(score) for score in results if score)
+    return common + (costs, sum(distances), sum(durations), used)
 

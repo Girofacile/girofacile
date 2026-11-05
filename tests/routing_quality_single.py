@@ -307,7 +307,8 @@ def run_single(case, input_order=None, budget=None):
             error = str(exc)
     by_id = {int(row['customer_id']): index for index, row in enumerate(case['stops'])}
     route = [by_id[int(row['customer_id'])] for row in result['ordered']] if result else []
-    return dict(routes=[route], result=result, diagnostics=diagnostics,
+    departures = [result.get('departure') if result else None] + [None] * (len(resources) - 1)
+    return dict(routes=[route], departures=departures, result=result, diagnostics=diagnostics,
                 raw_metrics=raw, runtime_ms=(perf_counter() - wall) * 1000,
                 cpu_ms=(process_time() - cpu) * 1000,
                 provider_calls=calls['provider'], matrix_calls=calls['matrix'],

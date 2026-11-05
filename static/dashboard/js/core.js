@@ -3357,9 +3357,11 @@ function deliverySpecsSummary(d){
   return pieces.join(" · ");
 }
 
+// Il nome della fascia segue l'orario, non il campo in cui è salvata: 14:00–18:00 è «Pomeriggio».
+function deliveryWindowName(from){ return parseInt(String(from), 10) < 12 ? 'Mattina' : 'Pomeriggio'; }
 function deliveryWindowLabel(d){
-  const morning = d.scarico_mattina_da && d.scarico_mattina_a ? `Mattina ${esc(d.scarico_mattina_da)}–${esc(d.scarico_mattina_a)}` : "";
-  const afternoon = d.scarico_pomeriggio_da && d.scarico_pomeriggio_a ? `Pomeriggio ${esc(d.scarico_pomeriggio_da)}–${esc(d.scarico_pomeriggio_a)}` : "";
+  const morning = d.scarico_mattina_da && d.scarico_mattina_a ? `${deliveryWindowName(d.scarico_mattina_da)} ${esc(d.scarico_mattina_da)}–${esc(d.scarico_mattina_a)}` : "";
+  const afternoon = d.scarico_pomeriggio_da && d.scarico_pomeriggio_a ? `${deliveryWindowName(d.scarico_pomeriggio_da)} ${esc(d.scarico_pomeriggio_da)}–${esc(d.scarico_pomeriggio_a)}` : "";
   return [morning, afternoon].filter(Boolean).join("<br>") || '<span class="gf-muted">—</span>';
 }
 function deliveryRequirementBadges(d){
@@ -5814,7 +5816,8 @@ async function saveAllSettingsV893(){
     needs_tail_lift:!!document.getElementById('featureTailLiftV89')?.checked,
     has_refrigerated_goods:!!document.getElementById('featureRefrigeratedV89')?.checked,
     // Formula del tempo di scarico stimato dai colli.
-    unload_base_min:Number(document.getElementById('unloadBaseMin')?.value),unload_seconds_per_package:Number(document.getElementById('unloadSecondsPerPackage')?.value),unload_max_min:Number(document.getElementById('unloadMaxMin')?.value)
+    unload_base_min:Number(document.getElementById('unloadBaseMin')?.value),unload_seconds_per_package:Number(document.getElementById('unloadSecondsPerPackage')?.value),unload_max_min:Number(document.getElementById('unloadMaxMin')?.value),
+    driver_hourly_cost:document.getElementById('driverHourlyCost')?.value ?? ''
   };
   const signature=planFeatureEnabled('has_delivery_signature') && !!document.getElementById('settingDeliverySignature')?.checked;
   try{
@@ -5874,7 +5877,7 @@ async function loadUniversalFeaturesV89(){
     };
     const map={featureTimeWindowsV89:'has_time_windows',featurePhotoProofV89:'needs_photo_proof',featureZtlV89:'has_ztl',featureTailLiftV89:'needs_tail_lift',featureRefrigeratedV89:'has_refrigerated_goods'};
     Object.entries(map).forEach(([id,key])=>{const el=document.getElementById(id);if(el)el.checked=!!gfUniversalFeaturesV891[key];});
-    [['unloadBaseMin','unload_base_min'],['unloadSecondsPerPackage','unload_seconds_per_package'],['unloadMaxMin','unload_max_min']]
+    [['unloadBaseMin','unload_base_min'],['unloadSecondsPerPackage','unload_seconds_per_package'],['unloadMaxMin','unload_max_min'],['driverHourlyCost','driver_hourly_cost']]
       .forEach(([id,key])=>{const el=document.getElementById(id);if(el&&c[key]!=null)el.value=c[key];});
     applyUniversalFeaturesV891();
     applyPlanFeatureControls();
@@ -5889,7 +5892,8 @@ async function saveUniversalFeaturesV89(){
     has_ztl:!!document.getElementById('featureZtlV89')?.checked,
     needs_tail_lift:!!document.getElementById('featureTailLiftV89')?.checked,
     has_refrigerated_goods:!!document.getElementById('featureRefrigeratedV89')?.checked,
-    unload_base_min:Number(document.getElementById('unloadBaseMin')?.value),unload_seconds_per_package:Number(document.getElementById('unloadSecondsPerPackage')?.value),unload_max_min:Number(document.getElementById('unloadMaxMin')?.value)
+    unload_base_min:Number(document.getElementById('unloadBaseMin')?.value),unload_seconds_per_package:Number(document.getElementById('unloadSecondsPerPackage')?.value),unload_max_min:Number(document.getElementById('unloadMaxMin')?.value),
+    driver_hourly_cost:document.getElementById('driverHourlyCost')?.value ?? ''
   };
   try{
     await api('/api/company-profile',{method:'PUT',body:JSON.stringify(payload)});

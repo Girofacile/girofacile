@@ -68,6 +68,8 @@ class User(Base):
     unload_base_min: Mapped[int | None] = mapped_column(Integer, nullable=True)
     unload_seconds_per_package: Mapped[int | None] = mapped_column(Integer, nullable=True)
     unload_max_min: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # Costo orario dell'autista (€): con il carburante sceglie l'ordine delle fermate. Vuoto = 15 €.
+    driver_hourly_cost: Mapped[int | None] = mapped_column(Integer, nullable=True)
     universal_features_initialized: Mapped[bool] = mapped_column(Boolean, default=False)
     onboarding_completed: Mapped[bool] = mapped_column(Boolean, default=False)
     onboarding_completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)

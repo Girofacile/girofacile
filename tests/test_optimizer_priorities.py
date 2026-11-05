@@ -60,7 +60,9 @@ def test_public_timing_and_violation_details(monkeypatch, entrypoint, late):
     rows[0].update(scarico_mattina_da="09:00", scarico_mattina_a="09:10" if late else "10:00", tempo_scarico_min=15)
     monkeypatch.setattr(opt, "build_distance_matrix", lambda *a, **k: constant_matrix(1, 2, 40))
     depot = SimpleNamespace(id=1, user_id=1, lat=45, lon=9, indirizzo="Depot")
-    result = entrypoint(None, depot, rows, route_date="2099-01-01")
+    # Fixed departure: the flexible one has its own tests (test_optimizer_cost_first.py).
+    fixed = {"flexible_departure": False} if entrypoint is opt.optimize_route else {}
+    result = entrypoint(None, depot, rows, route_date="2099-01-01", **fixed)
     row = result["ordered"][0]
     assert (row["arrivo_fisico"], row["attesa_min"], row["inizio_servizio"], row["arrivo_stimato"], row["partenza_stimata"]) == ("08:40",20,"09:00","09:00","09:15")
     assert result["violations_count"] == int(late)
