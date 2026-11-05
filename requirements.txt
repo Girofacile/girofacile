@@ -22,3 +22,5 @@ cryptography==50.0.2
 scipy==1.17.0
 # Multi-mezzo: migliora il piano di GiroFacile (app/services/fleet_ortools.py).
 ortools==9.15.6755
+# Multi-mezzo, «Riduci chilometri e tempi»: seconda proposta (app/services/fleet_pyvrp.py).
+pyvrp==0.14.1

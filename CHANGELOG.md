@@ -5,6 +5,15 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Calcolo dei giri con più mezzi, «Riduci chilometri e tempi»: al piano
+  trovato si affianca una seconda proposta calcolata con PyVRP (libreria
+  gratuita, sul server). Vince sempre il piano migliore secondo le regole di
+  GiroFacile: prima più consegne servite, poi meno km e ore. Su 36 problemi
+  pubblici di riferimento serve sempre tutte le consegne (prima ne lasciava
+  fuori in 14 problemi) e resta in media allo 0,7% dalla migliore soluzione
+  nota. Sui piani salvati: fino a 3 consegne servite in più, fino a 24 km in
+  meno. Il calcolo dura qualche decina di secondi in più. Dettagli in
+  docs/motore-pyvrp-2026-11-05.md.
 - Calcolo dei giri: vince il giro con meno km più ore di lavoro
   dell'autista, convertite in km con un peso fisso (1 ora = 60 km), e non
   più sempre quello con meno km. Il peso non dipende da prezzi del

@@ -80,6 +80,19 @@ spento di default e si accende in `tests/test_fleet_ortools.py`. Il confronto su
 problemi che ha motivato la scelta è in
 [ortools-full-comparison-2026-11-02.md](ortools-full-comparison-2026-11-02.md).
 
+### Seconda proposta con PyVRP
+
+Con «Riduci chilometri e tempi» e più mezzi, oltre a OR-Tools gira anche **PyVRP**
+(libreria gratuita, licenza MIT, sul server; `app/services/fleet_pyvrp.py`). Parte da zero,
+non dal piano trovato, usa l'orologio di lavoro di ogni autista (pause tolte, fasce come
+copie alternative della consegna) e lo stesso punteggio km + ore. La sua proposta passa
+dallo stesso calendario canonico e dalla stessa accettazione di OR-Tools: vince il piano
+migliore, prima per consegne servite. Tempo: 0,3 s per consegna, tra 1 s e
+`FLEET_PYVRP_SECONDS` (predefinito 30 s; 0 disattiva). Diagnostica in `search.ortools`
+(modo `pyvrp`). Su 36 problemi pubblici di Solomon il piano serve sempre tutte le consegne
+e resta in media allo 0,7% dalla migliore soluzione nota: misure in
+[motore-pyvrp-2026-11-05.md](motore-pyvrp-2026-11-05.md).
+
 ## Percorso operativo
 
 1. Scegli data, ora e deposito comuni, risorse e rientro.

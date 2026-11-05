@@ -331,24 +331,34 @@ def _ortools_improvement(rows,vehicle_data,matrix,points,data,limits,refined,res
     proposto passa dal calendario canonico e dal riordino esatto dei giri brevi come
     ogni altro candidato; un errore o un piano peggiore lasciano quello attuale.
     """
-    from . import fleet_ortools
+    from . import fleet_ortools, fleet_pyvrp
     from .fleet_search import refine_routes,_better
     from .fleet_route_evaluator import FixedRouteEvaluator
     from .fleet_working_clock import _plan_key
-    seconds=fleet_ortools.seconds_budget(len(rows))
-    if not seconds or not rows or not fleet_ortools.available():
-        search['ortools']={'status':'disabled' if not seconds else 'unavailable'}
+    seconds=fleet_ortools.seconds_budget(len(rows)) if fleet_ortools.available() else 0
+    # PyVRP (dal 5 novembre 2026) solo per «Riduci chilometri e tempi»: non ha un costo
+    # sulla durata del giro più lungo, che serve a «Distribuisci il lavoro».
+    pyvrp_seconds=(fleet_pyvrp.seconds_budget(len(rows))
+                   if data.strategy=='efficient' and fleet_pyvrp.available() else 0)
+    if not rows or not (seconds or pyvrp_seconds):
+        search['ortools']={'status':'disabled' if fleet_ortools.available() else 'unavailable'}
         return refined,results
     # «Riduci chilometri e tempi»: metà del tempo a una passata sul punteggio (km più ore
     # dell'autista) e metà a una sui soli km, che resta una buona strada verso piani corti.
     # Si tiene la proposta migliore secondo la chiave della strategia, cioè il punteggio.
-    modes=[('efficient',seconds/2),('distance',seconds/2)] if data.strategy=='efficient' else [(data.strategy,seconds)]
+    modes=([('efficient',seconds/2),('distance',seconds/2)] if data.strategy=='efficient' else [(data.strategy,seconds)]) if seconds else []
+    if pyvrp_seconds:
+        # «Riduci chilometri e tempi»: anche PyVRP, da zero (docs/motore-pyvrp-2026-11-05.md).
+        # Sui problemi di Solomon vince quasi sempre PyVRP, su alcuni piani reali OR-Tools.
+        modes.append(('pyvrp',pyvrp_seconds))
     before=_plan_key(refined,results,rows,vehicle_data,data.strategy)
     best=None;reports=[]
     score=lambda sequence,resource:evaluate([rows[i] for i in sequence],resource)
     for mode,budget in modes:
         try:
-            orders,report=fleet_ortools.improve(rows,vehicle_data,matrix,data.orario_partenza,data.rientro_deposito,limits,refined,budget,mode)
+            engine=fleet_pyvrp.improve if mode=='pyvrp' else fleet_ortools.improve
+            orders,report=engine(rows,vehicle_data,matrix,data.orario_partenza,data.rientro_deposito,limits,refined,budget,
+                                 data.strategy if mode=='pyvrp' else mode)
         except Exception as exc:  # Un problema del solutore esterno non deve fermare la pianificazione.
             reports.append({'mode':mode,'status':'error','error':type(exc).__name__})
             continue
