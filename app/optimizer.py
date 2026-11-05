@@ -53,24 +53,34 @@ def fmt_hhmm(total_min):
     return f"{total_min // 60:02d}:{total_min % 60:02d}"
 
 
-# Confronto dei giri (5 novembre 2026): vince il giro che costa meno, carburante al km
-# più ore dell'autista, attese comprese (services/route_costs.py). Prima vincevano
-# sempre i km e un giro con ore di attesa batteva un giro di poco più lungo.
-def cost_rates(vehicle=None):
-    """(euro al km, euro al minuto) dal mezzo, con i valori predefiniti se mancano."""
-    from .services.route_costs import DEFAULT_COST_PER_KM, DEFAULT_DRIVER_HOURLY_COST
-    v = vehicle or {}
+# Confronto dei giri (5 novembre 2026): vince il giro con il punteggio più basso,
+# km più ore di lavoro dell'autista (dalla partenza al rientro, attese comprese)
+# convertite in km: 1 ora = KM_PER_HOUR km. Il peso è fisso e uguale per tutti:
+# non dipende da prezzi del carburante o costi scritti dal cliente, che possono
+# essere sbagliati. Prima vincevano sempre i km e un giro con ore di attesa
+# batteva un giro di poco più lungo.
+KM_PER_HOUR = 60
 
-    def rate(key, default):
+
+def cost_rates(vehicle=None):
+    """(peso di un km, peso di un minuto) nel punteggio: (1, KM_PER_HOUR / 60).
+
+    Solo per prove e diagnosi, il mezzo può portare "km_per_ora" (0 = soli km).
+    """
+    per_hour = KM_PER_HOUR
+    raw = (vehicle or {}).get("km_per_ora")
+    if raw is not None:
         try:
-            value = float(v.get(key))
+            value = float(raw)
         except (TypeError, ValueError):
-            return default
-        return value if math.isfinite(value) and value >= 0 else default
-    return rate("costo_km", DEFAULT_COST_PER_KM), rate("costo_orario_autista", DEFAULT_DRIVER_HOURLY_COST) / 60
+            value = None
+        if value is not None and math.isfinite(value) and value >= 0:
+            per_hour = value
+    return 1.0, per_hour / 60
 
 
 def route_cost(km, work_min, vehicle=None):
+    """Punteggio del giro in km equivalenti: km + minuti di lavoro × KM_PER_HOUR / 60."""
     per_km, per_min = cost_rates(vehicle)
     return float(km) * per_km + float(work_min) * per_min
 
@@ -126,7 +136,7 @@ def later_departure(base, start_clock, evaluate_at, step=5):
 
 
 def objective_cost(result):
-    """Costo del giro per i confronti; i risultati senza costo usano i valori predefiniti."""
+    """Punteggio del giro per i confronti (km equivalenti)."""
     if result is None:
         return 0.0
     raw = result.get("_objective")

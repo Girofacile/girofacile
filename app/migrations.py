@@ -245,7 +245,7 @@ def run_migrations(engine):
                                 conn.execute(text(f'ALTER TABLE users ADD COLUMN {column} INTEGER'))
                     conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261102_01', 'now': utc_now()})
             if '20261105_01' not in applied:
-                # Costo orario dell'autista: con il carburante sceglie i giri, attese comprese. Vuoto = 15 €.
+                # Colonna del costo orario dell'autista: non più usata dal 5 novembre 2026 (punteggio fisso km + ore).
                 with engine.begin() as conn:
                     if 'users' in set(inspect(conn).get_table_names()) and 'driver_hourly_cost' not in {c['name'] for c in inspect(conn).get_columns('users')}:
                         conn.execute(text('ALTER TABLE users ADD COLUMN driver_hourly_cost INTEGER'))

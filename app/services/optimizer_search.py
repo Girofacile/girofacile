@@ -75,7 +75,7 @@ class RouteEvaluator:
         # comparisons go through solution_key, not this weighted legacy field.
         score = (violations * 100000 + duration * 10 + wait * 1.5 + warnings * 25 + km
                  if constrained else duration * 10 + km)
-        # Same cost as the canonical evaluator: fuel plus driver hours without absorbable waits.
+        # Same score as the canonical evaluator: km plus driver hours without absorbable waits.
         slack = 0.0 if violations else opt.departure_slack(margins, wait)
         cost = opt.route_cost(km, duration - slack, self.vehicle)
         return dict(total_km=round(km, 2), total_min=round(duration, 1),

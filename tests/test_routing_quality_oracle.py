@@ -70,7 +70,7 @@ def test_single_tour_minimizes_cost_of_fuel_and_driver_time():
     assert tuple(result['orders'][0]) == (1, 0)
     assert (result['metrics']['km'], result['metrics']['minutes']) == (6, 3)
     # Free driver minutes: the shortest tour wins again.
-    data['resources'][0]['costo_orario_autista'] = 0
+    data['resources'][0]['km_per_ora'] = 0
     result = solve_single(data)
     assert tuple(result['orders'][0]) == (0, 1)
     assert (result['metrics']['km'], result['metrics']['minutes']) == (3, 150)

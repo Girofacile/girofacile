@@ -1,12 +1,11 @@
-"""Confronto dei giri per costo (5 novembre 2026): carburante al km più ore dell'autista,
-attese comprese, e partenza più tarda quando elimina le attese. Sostituisce la regola
-«prima i km» (test_optimizer_distance_first.py)."""
+"""Confronto dei giri per punteggio (5 novembre 2026): km più ore dell'autista convertite
+in km (1 ora = 60 km), attese comprese, e partenza più tarda quando elimina le attese.
+Sostituisce la regola «prima i km» (test_optimizer_distance_first.py)."""
 from types import SimpleNamespace
 
 import pytest
 
 from app import optimizer as opt
-from app.services import route_costs
 from test_optimizer import offline, deliveries, constant_matrix, ids
 
 
@@ -14,7 +13,7 @@ def test_faster_route_wins_when_saved_minutes_cost_more_than_extra_km():
     rows, matrix = deliveries(2), constant_matrix(2, 1, 1)
     matrix[0, 1] = {"km": 1, "min": 40}
     matrix[0, 2] = {"km": 2, "min": 1}
-    # 1 km in più (0,20 €) contro 39 minuti di autista (9,75 €).
+    # 1 km in più contro 39 minuti di autista (39 km equivalenti).
     assert ids(opt._best_internal_sequence(rows, matrix, [])) == [2, 1]
 
 
@@ -22,7 +21,7 @@ def test_much_shorter_route_still_wins_against_a_little_faster_one():
     rows, matrix = deliveries(2), constant_matrix(2, 1, 1)
     matrix[0, 1] = {"km": 1, "min": 4}
     matrix[0, 2] = {"km": 20, "min": 1}
-    # 19 km in più (3,80 €) contro 3 minuti (0,75 €).
+    # 19 km in più contro 3 minuti (3 km equivalenti).
     assert ids(opt._best_internal_sequence(rows, matrix, [])) == [1, 2]
 
 
@@ -30,7 +29,7 @@ def test_free_driver_minutes_bring_back_the_shortest_route():
     rows, matrix = deliveries(2), constant_matrix(2, 1, 1)
     matrix[0, 1] = {"km": 1, "min": 40}
     matrix[0, 2] = {"km": 2, "min": 1}
-    vehicle = {"costo_orario_autista": 0}
+    vehicle = {"km_per_ora": 0}
     assert ids(opt._best_internal_sequence(rows, matrix, [], vehicle)) == [1, 2]
 
 
@@ -55,7 +54,7 @@ def test_waiting_that_a_later_departure_cannot_absorb_costs_driver_time():
 
 def test_minutes_cost_nothing_then_kilometres_decide_again():
     rows, matrix = unavoidable_wait_case()
-    best = opt._best_internal_sequence(rows, matrix, [], {"costo_orario_autista": 0})
+    best = opt._best_internal_sequence(rows, matrix, [], {"km_per_ora": 0})
     assert best["total_km"] == 4
 
 
@@ -138,18 +137,28 @@ def test_later_departure_never_accepts_a_worse_route():
 
 def test_vehicle_without_tail_lift_field_is_not_a_missing_tail_lift():
     stop = {"sponda": True}
-    assert opt.delivery_warnings(stop, {"costo_km": 0.2}) == ["Sponda richiesta"]
+    assert opt.delivery_warnings(stop, {"km_per_ora": 60}) == ["Sponda richiesta"]
     assert opt.delivery_warnings(stop, {"ha_sponda": False}) == ["Serve sponda ma il mezzo selezionato non la possiede"]
 
 
-def test_cost_rates_from_company_and_vehicle():
-    user = SimpleNamespace(driver_hourly_cost=22)
-    van = SimpleNamespace(alimentazione="gasolio", consumo_primario_100km=10, consumo_l_100km=None, consumo_kwh_100km=None)
-    assert route_costs.rates(user, van, 1.8) == {"costo_km": 0.18, "costo_orario_autista": 22}
-    assert route_costs.rates(SimpleNamespace(driver_hourly_cost=None), None) == {
-        "costo_km": route_costs.DEFAULT_COST_PER_KM, "costo_orario_autista": route_costs.DEFAULT_DRIVER_HOURLY_COST}
-    # Prezzo dell'energia mancante: si usa il valore predefinito, mai un carburante gratuito.
-    assert route_costs.rates(user, van, 0)["costo_km"] == route_costs.DEFAULT_COST_PER_KM
-    assert opt.cost_rates({"costo_km": 0.18, "costo_orario_autista": 22}) == (0.18, 22 / 60)
-    assert opt.cost_rates({"costo_km": "x", "costo_orario_autista": -1}) == (
-        route_costs.DEFAULT_COST_PER_KM, route_costs.DEFAULT_DRIVER_HOURLY_COST / 60)
+def test_score_weights_are_fixed_and_ignore_company_prices():
+    # Nessun prezzo o costo scritto dal cliente: 1 km vale 1, un minuto vale 1 km.
+    assert opt.KM_PER_HOUR == 60
+    assert opt.cost_rates() == (1.0, 1.0)
+    assert opt.cost_rates({"costo_km": 5, "costo_orario_autista": 99, "ha_sponda": True}) == (1.0, 1.0)
+    assert opt.route_cost(85, 300) == 385
+    assert opt.cost_rates({"km_per_ora": 0}) == (1.0, 0.0)
+    assert opt.cost_rates({"km_per_ora": "x"}) == (1.0, 1.0)
+    assert opt.cost_rates({"km_per_ora": -1}) == (1.0, 1.0)
+
+
+def test_fleet_backup_search_ranks_by_km_and_main_search_by_score():
+    from app.services.fleet_search import _route_key
+    from app.services.fleet_working_clock import _plan_key
+    short_slow = {"total_km": 10, "total_min": 300, "_objective": (10, 300, 0, 0, 310)}
+    long_fast = {"total_km": 40, "total_min": 100, "_objective": (40, 100, 0, 0, 140)}
+    assert _route_key(short_slow, "distance") < _route_key(long_fast, "distance")
+    assert _route_key(long_fast, "efficient") < _route_key(short_slow, "efficient")
+    rows, vehicles = [{}], [{}]
+    assert _plan_key([[0]], [short_slow], rows, vehicles, "distance") < _plan_key([[0]], [long_fast], rows, vehicles, "distance")
+    assert _plan_key([[0]], [long_fast], rows, vehicles, "efficient") < _plan_key([[0]], [short_slow], rows, vehicles, "efficient")

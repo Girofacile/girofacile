@@ -110,10 +110,10 @@ def _stop_timing(arrival, stop, breaks):
     return start, closing, late, True
 
 
-# Business cost of a route (5 November 2026): fuel per km plus driver hours,
-# without the waiting a later departure would absorb. Written independently of
-# app.optimizer; defaults mirror app/services/route_costs.py.
-COST_PER_KM, DRIVER_HOURLY_COST = 0.20, 15.0
+# Score of a route (5 November 2026): km plus driver hours converted to km
+# (1 hour = 60 km), without the waiting a later departure would absorb. Written
+# independently of app.optimizer; the weight mirrors app.optimizer.KM_PER_HOUR.
+KM_PER_HOUR = 60.0
 
 
 def _rate(resource, key, default):
@@ -211,8 +211,7 @@ def replay(case, resource_index, order, start=None):
             result['errors'].append('availability')
     result['feasible'] = result['violations'] == 0
     work = result['minutes'] - (_absorbable_wait(result['stops']) if result['feasible'] else 0.0)
-    result['cost'] = (result['km'] * _rate(resource, 'costo_km', COST_PER_KM)
-                      + work * _rate(resource, 'costo_orario_autista', DRIVER_HOURLY_COST) / 60)
+    result['cost'] = result['km'] + work * _rate(resource, 'km_per_ora', KM_PER_HOUR) / 60
     return result
 
 

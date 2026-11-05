@@ -20,7 +20,7 @@ def test_efficient_prefers_the_cheaper_plan_even_when_it_uses_another_vehicle():
     assert sorted(map(len, orders)) == [1, 1]
     assert sum(score['_objective'][0] for score in scores) == 4
     assert info['global_optimum_proven']
-    assert info['objective'] == 'cost-fuel-and-driver-time'
+    assert info['objective'] == 'km-and-driver-hours'
 
 
 def test_efficient_exact_order_uses_cost_before_raw_distance():

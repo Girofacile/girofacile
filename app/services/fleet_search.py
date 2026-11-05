@@ -46,9 +46,12 @@ def _cost(result):
 
 
 def _route_key(result, strategy):
-    # Efficient: costo (carburante + ore dell'autista, attese comprese), poi km e minuti.
+    # Efficient: punteggio km + ore dell'autista (attese comprese), poi km e minuti.
+    # Distance: soli km, poi minuti; è la ricerca di riserva della strategia efficient.
     minutes, distance = _numbers(result)
-    return (_cost(result), distance, minutes) if strategy == "efficient" else (minutes, distance)
+    if strategy == "efficient":
+        return (_cost(result), distance, minutes)
+    return (distance, minutes) if strategy == "distance" else (minutes, distance)
 
 
 def stable_stop_key(row):
@@ -179,6 +182,8 @@ def optimize_fleet(rows, resource_count, evaluate, strategy, *,
             return common + (-active, max(durations, default=0),
                              sum(value * value for value in durations),
                              sum(durations), sum(distances))
+        if strategy == "distance":
+            return common + (sum(distances), sum(durations), active)
         return common + (sum(_cost(result) for result in results), sum(distances), sum(durations), active)
 
     best_routes, best_results = initial_routes, initial_results
@@ -373,7 +378,7 @@ def optimize_fleet(rows, resource_count, evaluate, strategy, *,
         urgency = sorted(stable, key=lambda i: (_urgency(rows[i]), identities[i]))
         # Urgency and stable business identity come before spatial starts. This
         # is independent of CSV/input order and reserves early service slots.
-        seeds = [(urgency, 'balanced' if strategy == 'efficient' else None, False),
+        seeds = [(urgency, 'balanced' if strategy in ('efficient', 'distance') else None, False),
                  (nearest, None, True), (list(reversed(nearest)), None, True),
                  (stable, None, True), (farthest, None, True), (by_weight, None, True)]
         if points and len(points) > n:
@@ -786,7 +791,8 @@ def optimize_fleet(rows, resource_count, evaluate, strategy, *,
         "budget_exhausted": bool(not exact and (exhausted or used >= limit)),
         "global_optimum_proven": exact,
         "equipment_policy": "prefer-compatible-with-warning-fallback",
-        "objective": "cost-fuel-and-driver-time" if strategy == "efficient" else "balanced-workload",
+        "objective": {"efficient": "km-and-driver-hours", "distance": "distance-then-work-time"}.get(
+            strategy, "balanced-workload"),
         "construction": "stable-identity-and-urgent-windows",
         "membership_checks": membership_checks,
         "membership_rejections": membership_rejections,

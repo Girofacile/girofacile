@@ -13,9 +13,9 @@ una fascia ridotta della sua durata, rientro entro fine turno e tempo disponibil
 capacità in kg e colli. Sponda e ZTL incompatibili costano come 20 km, una
 consegna esclusa come 1.000 km. Tempi in secondi arrotondati per eccesso.
 
-Modalità «efficient» (dal 5 novembre 2026): ogni tratta costa i km pesati con il carburante
-del mezzo più le ore dell'autista per guida e scarico (services/route_costs.py), in metri
-al costo predefinito di 0,20 €/km. Modalità «distance»: soli km, come prima. Le attese
+Modalità «efficient» (dal 5 novembre 2026): ogni tratta costa i suoi metri più il tempo
+di guida e scarico convertito in metri (1 ora = optimizer.KM_PER_HOUR km), lo stesso
+punteggio del calcolo canonico. Modalità «distance»: soli km, come prima. Le attese
 non sono nel modello: le valuta il calendario canonico all'accettazione.
 
 Tempo: 0,15 s per consegna, tra 1 s e FLEET_ORTOOLS_SECONDS (predefinito 10 s).
@@ -82,13 +82,11 @@ def improve(rows, vehicles, matrix, start_time, return_depot, limits, initial, s
         return (int(bool(row.get('sponda')) and not vehicle.get('ha_sponda', False))
                 + int(bool(row.get('ztl')) and not vehicle.get('accesso_ztl', False)))
 
-    from .route_costs import DEFAULT_COST_PER_KM
     for v, vehicle in enumerate(vehicles):
-        # Efficient: metri pesati con il costo al km del mezzo (unità: metri a 0,20 €/km).
+        # Efficient: metri più tempo di guida e scarico convertito in metri (km equivalenti × 1000).
         per_km, per_min = opt.cost_rates(vehicle)
-        factor = per_km / DEFAULT_COST_PER_KM if strategy == 'efficient' else 1.0
-        # Ore dell'autista sulla tratta (guida più scarico): stessa unità dei metri.
-        per_second = per_min / SCALE / (DEFAULT_COST_PER_KM / 1000) if strategy == 'efficient' else 0.0
+        factor = per_km if strategy == 'efficient' else 1.0
+        per_second = per_min * 1000 / SCALE if strategy == 'efficient' else 0.0
         def cost(a, b, vehicle=vehicle, factor=factor, per_second=per_second):
             i, j = manager.IndexToNode(a), manager.IndexToNode(b)
             meters, seconds = leg(i, j)

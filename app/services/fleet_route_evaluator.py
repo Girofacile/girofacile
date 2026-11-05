@@ -70,7 +70,7 @@ class FixedRouteEvaluator:
         duration = clock-self.start
         if (self.shift and clock > self.shift[1]) or math.ceil(duration) > self.available_minutes:
             return None
-        # Costo: carburante più ore dell'autista, senza le attese che una partenza più tarda elimina.
+        # Punteggio: km più ore dell'autista, senza le attese che una partenza più tarda elimina.
         cost = opt.route_cost(km, duration - opt.departure_slack(margins, waited), self.vehicle)
         return {"total_km": round(km, 2), "total_min": round(duration, 1),
                 "_objective": (km, duration, 0.0, 0, cost)}

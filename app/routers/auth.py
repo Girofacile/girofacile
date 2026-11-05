@@ -1,6 +1,5 @@
 from ..services.identity import ensure_login_email_available
 from ..services.unload_time import LIMITS as UNLOAD_LIMITS, settings as unload_settings
-from ..services.route_costs import HOURLY_COST_LIMITS, driver_hourly_cost
 from ..services.platform_policy import require_registration, trial_days, default_plan
 from ..services.sessions import read_session, active_identity, logout_sessions, read_superadmin_session, credential
 from ..core.security import make_account_token
@@ -647,20 +646,6 @@ def _unload_setting(key, value):
     return number
 
 
-def _hourly_cost_setting(value):
-    """Costo orario dell'autista in euro interi; vuoto torna al valore predefinito."""
-    if value is None or value == "":
-        return None
-    low, high = HOURLY_COST_LIMITS
-    try:
-        number = int(value)
-    except (TypeError, ValueError):
-        raise HTTPException(422, "Costo orario dell'autista: inserisci un numero intero di euro.")
-    if isinstance(value, bool) or not low <= number <= high:
-        raise HTTPException(422, f"Costo orario dell'autista: valore tra {low} e {high} euro.")
-    return number
-
-
 def _company_payload(user: User) -> dict:
     return {
         "company_name": user.company_name or user.username,
@@ -691,7 +676,6 @@ def _company_payload(user: User) -> dict:
         "has_ztl": bool(getattr(user, "has_ztl", False)),
         "needs_tail_lift": bool(getattr(user, "needs_tail_lift", False)),
         **unload_settings(user),
-        "driver_hourly_cost": driver_hourly_cost(user),
         "account_email": user.email or "",
         "plan": user.plan,
         "plan_status": user.plan_status,
@@ -894,7 +878,7 @@ def update_company_profile(payload: dict, user: User = Depends(current_user), db
         "company_activity_type", "company_size", "daily_deliveries",
         "has_time_windows", "needs_signature", "needs_photo_proof",
         "has_refrigerated_goods", "has_ztl", "needs_tail_lift",
-        "unload_base_min", "unload_seconds_per_package", "unload_max_min", "driver_hourly_cost"
+        "unload_base_min", "unload_seconds_per_package", "unload_max_min"
     }
     if payload.get("company_logo_url") == company_logo_src(user):
         # Il modulo rimanda l'indirizzo del logo già salvato: nessuna modifica.
@@ -914,8 +898,6 @@ def update_company_profile(payload: dict, user: User = Depends(current_user), db
                 setattr(user, key, bool(value))
             elif key in UNLOAD_LIMITS:
                 setattr(user, key, _unload_setting(key, value))
-            elif key == "driver_hourly_cost":
-                setattr(user, key, _hourly_cost_setting(value))
             else:
                 setattr(user, key, value or None)
     if not user.company_country:

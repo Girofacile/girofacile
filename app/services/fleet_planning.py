@@ -339,9 +339,9 @@ def _ortools_improvement(rows,vehicle_data,matrix,points,data,limits,refined,res
     if not seconds or not rows or not fleet_ortools.available():
         search['ortools']={'status':'disabled' if not seconds else 'unavailable'}
         return refined,results
-    # «Riduci chilometri e tempi»: metà del tempo a una passata sul costo (carburante e ore
-    # dell'autista) e metà a una sui soli km, che resta una buona strada verso piani economici.
-    # Si tiene la proposta migliore secondo la chiave della strategia, cioè il costo.
+    # «Riduci chilometri e tempi»: metà del tempo a una passata sul punteggio (km più ore
+    # dell'autista) e metà a una sui soli km, che resta una buona strada verso piani corti.
+    # Si tiene la proposta migliore secondo la chiave della strategia, cioè il punteggio.
     modes=[('efficient',seconds/2),('distance',seconds/2)] if data.strategy=='efficient' else [(data.strategy,seconds)]
     before=_plan_key(refined,results,rows,vehicle_data,data.strategy)
     best=None;reports=[]
@@ -403,11 +403,7 @@ def _distribute(db,user,data,assignments=None,tighten=None):
         from . import traffic_correction as correction
         matrix=correction.scaled_matrix(matrix,tighten['factor'])
         rows=[correction.buffered(row,tighten['buffer']) for row in rows]
-    from .route_costs import rates
     vehicle_data=[search_vehicle(v,r,data) for v,r in zip(vehicles,data.resources)]
-    for item,v,r in zip(vehicle_data,vehicles,data.resources):
-        # Costi per scegliere i giri: carburante del mezzo e ore dell'autista, attese comprese.
-        if item is not None: item.update(rates(user,v,r.energy_price_primary,r.energy_price_electric))
     final_vehicle_data=vehicle_data
     if tighten and tighten.get('shift_buffer'):
         # Il traffico ha portato un rientro oltre il turno: per la ricerca il turno finisce prima.
@@ -536,6 +532,29 @@ def _distribute(db,user,data,assignments=None,tighten=None):
             equipment_penalty=equipment,resource_signatures=signatures,
             membership_compatible=membership_compatible,
             return_depot=data.rientro_deposito)
+        if data.strategy=='efficient':
+            # Rete di sicurezza: la stessa ricerca guidata dai soli km (la regola precedente al
+            # 5 novembre 2026). Esplora piani che la ricerca sul punteggio può non visitare;
+            # vince sempre la proposta migliore per copertura, attrezzatura e punteggio km + ore.
+            from time import perf_counter
+            from .fleet_working_clock import _plan_key
+            from .fleet_search import _better
+            distance_started=perf_counter()
+            distance_initial=min(initial_candidates,key=lambda candidate:
+                _plan_key(candidate[0],candidate[1],rows,vehicle_data,'distance'))
+            km_routes,km_scores,km_search=optimize_fleet(
+                rows,len(vehicles),
+                lambda sequence,resource:evaluate([rows[i] for i in sequence],resource),
+                'distance',initial_routes=distance_initial[0],initial_results=distance_initial[1],
+                initial_candidates=initial_candidates,matrix=matrix,points=points,
+                equipment_penalty=equipment,resource_signatures=signatures,
+                membership_compatible=membership_compatible,return_depot=data.rientro_deposito)
+            km_better=_better(_plan_key(km_routes,km_scores,rows,vehicle_data,'efficient'),
+                              _plan_key(proposed,optimized_results,rows,vehicle_data,'efficient'))
+            if km_better:
+                proposed,optimized_results=km_routes,km_scores
+            search['distance_portfolio']=dict(improved=km_better,
+                evaluations=km_search.get('additional_evaluations'),wall_seconds=round(perf_counter()-distance_started,2))
         # A globally constrained feasibility model is a separate recovery
         # stage: do not declare a delivery impossible because local moves
         # exhausted their evaluation quota. It shares this matrix and replays
@@ -591,7 +610,7 @@ def _distribute(db,user,data,assignments=None,tighten=None):
         results=list(optimized_results)
         search['tail_lift_required']=False
         search['equipment_policy']='prefer-compatible-with-warning-fallback'
-        search['primary_objective']='cost-fuel-and-driver-time' if data.strategy=='efficient' else 'balanced-workload'
+        search['primary_objective']='km-and-driver-hours' if data.strategy=='efficient' else 'balanced-workload'
     else:
         search={'method':'manual-membership','equipment_policy':'prefer-compatible-with-warning-fallback'}
         if len(assignments)!=len(rows) or any(a is not None and (a<0 or a>=len(routes)) for a in assignments):

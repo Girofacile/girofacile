@@ -339,12 +339,9 @@ def ensure_not_past_route_date(data_giro):
 
 
 def _costed_vehicle(user, vehicle, data):
-    """Mezzo per il calcolo con i costi che scelgono il giro: carburante e ore dell'autista."""
-    from ..services.route_costs import rates
+    """Mezzo per il calcolo; il punteggio km + ore è fisso (optimizer.KM_PER_HOUR)."""
     schedule = data.driver_schedule.model_dump() if data.driver_schedule else None
-    result = build_vehicle_dict(vehicle, schedule) or {}
-    result.update(rates(user, vehicle, getattr(data, "energy_price_primary", None), getattr(data, "energy_price_electric", None)))
-    return result
+    return build_vehicle_dict(vehicle, schedule) or {}
 
 
 def build_vehicle_dict(vehicle, driver_schedule=None):

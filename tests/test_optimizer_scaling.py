@@ -56,7 +56,7 @@ def test_or_opt_improves_a_proven_swap_reversal_and_relocate_local_minimum():
     matrix = {(i, j): value for i, line in enumerate(data['matrix']) for j, value in enumerate(line) if i != j}
     order = [rows[i-1] for i in data['order']]
     # The fixture is a distance local minimum: with free driver minutes the cost is km only.
-    evaluator = RouteEvaluator(rows, matrix, [], {'costo_orario_autista': 0}, True, '08:00')
+    evaluator = RouteEvaluator(rows, matrix, [], {'km_per_ora': 0}, True, '08:00')
     result = evaluator.evaluate(order, include_details=False)
     assert result['total_km'] == data['km']
     for generator in (swap_moves(order), reversal_moves(order), or_opt_moves(order, 1)):
@@ -137,7 +137,7 @@ def test_eight_stop_result_and_enumeration_are_unchanged(monkeypatch):
     assert stats['candidates_evaluated'] == 40321
     assert stats['optimizer_strategy'] == 'exact-permutations'
     # Free driver minutes: the cheapest route is the shortest one of the distance oracle.
-    km_only = opt._best_internal_sequence(rows, matrix, [], {'costo_orario_autista': 0})
+    km_only = opt._best_internal_sequence(rows, matrix, [], {'km_per_ora': 0})
     oracle = exact_distance_reference(rows, matrix)
     assert (km_only['total_km'], km_only['total_min']) == (oracle['total_km'], oracle['total_min'])
     assert opt.route_cost(after['total_km'], after['total_min']) <= opt.route_cost(km_only['total_km'], km_only['total_min'])

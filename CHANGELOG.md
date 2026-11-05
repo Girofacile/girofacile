@@ -5,14 +5,16 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
-- Calcolo dei giri: vince il giro che costa meno, carburante più ore
-  dell'autista, e non più sempre quello con meno km. Le ore contano anche
-  quando l'autista aspetta che un cliente apra. Se le attese lo permettono,
-  il giro parte più tardi (a multipli di 5 minuti) con lo stesso rientro:
-  l'orario resta modificabile. Nuova impostazione «Costo orario
-  dell'autista» (15 €/ora se vuota, 0 = conta solo il carburante). La
-  proposta con più mezzi segnala la partenza spostata e le attese oltre 45
-  minuti. Il nome della fascia segue l'orario: 14:00–18:00 è «Pomeriggio»
+- Calcolo dei giri: vince il giro con meno km più ore di lavoro
+  dell'autista, convertite in km con un peso fisso (1 ora = 60 km), e non
+  più sempre quello con meno km. Il peso non dipende da prezzi del
+  carburante o costi scritti dal cliente. Le ore contano anche quando
+  l'autista aspetta che un cliente apra. Se le attese lo permettono, il
+  giro parte più tardi (a multipli di 5 minuti) con lo stesso rientro:
+  l'orario resta modificabile. Con più mezzi una ricerca di riserva sui
+  soli km impedisce che il risultato sia peggiore di quello precedente; la
+  proposta segnala la partenza spostata e le attese oltre 45 minuti.
+  Dettagli e confronto in docs/punteggio-giri-2026-11-05.md. Il nome della fascia segue l'orario: 14:00–18:00 è «Pomeriggio»
   anche se salvata come prima fascia.
 - Chat autisti: il riquadro della conversazione finisce sotto la casella
   d'invio e non si allunga più fino in fondo alla lista delle conversazioni.
