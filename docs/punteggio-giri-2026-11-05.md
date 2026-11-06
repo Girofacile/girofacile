@@ -9,7 +9,7 @@ Le ore vanno dalla partenza al rientro, attese comprese. Il peso è fisso e ugua
 - Partenza flessibile: se l'autista aspetterebbe l'apertura dei clienti, il giro parte più tardi (multipli di 5 minuti) con lo stesso rientro. Solo l'attesa per l'apertura di una fascia si recupera, non quella dovuta a una pausa a orario fisso. Ricalcolo manuale e secondo passaggio con il traffico mantengono la partenza.
 - Multi-mezzo, «Riduci chilometri e tempi»: la ricerca sul punteggio è affiancata da una ricerca di riserva guidata dai soli km (la regola precedente); vince la proposta migliore per consegne servite, attrezzatura e punteggio. Così il calcolo nuovo non restituisce mai un piano che il vecchio batteva su km e ore insieme. Costa da 5 a 20 secondi di calcolo in più sui piani grandi. OR-Tools divide il suo tempo tra una passata sul punteggio e una sui soli km.
 - La proposta segnala la partenza spostata e le attese oltre 45 minuti.
-- Codice: `optimizer.route_cost`, `departure_slack`, `later_departure`, `solution_key`; ricerca di riserva in `fleet_planning._distribute` (`distance_portfolio`); oracolo dei test in `tests/routing_quality_oracle.py`.
+- Codice: `optimizer.route_cost`, `realizable_departure_slack`, `later_departure`, `solution_key`; ricerca di riserva in `fleet_planning._distribute` (`distance_portfolio`); oracolo dei test in `tests/routing_quality_oracle.py`. Dal 6 novembre lo slittamento viene verificato sul calendario con pause e finestre, a incrementi di cinque minuti rispetto alla partenza richiesta; una partenza bloccata non riceve sconti. Dettagli in [GF Engine Optimizer 1.0 — correzioni](gf-engine-optimizer-1.0-fixes-2026-11-06.md).
 
 ## Confronto sui piani salvati
 

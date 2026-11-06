@@ -33,7 +33,7 @@ from routing_quality_oracle import objective, plan_metrics, solve_fleet, solve_s
 from routing_quality_single import run_single, single_cases
 from routing_quality_fleet import fleet_cases, run_fleet
 
-METRICS = ('served', 'used', 'km', 'minutes', 'wait', 'lateness', 'violations',
+METRICS = ('served', 'used', 'km', 'minutes', 'work_minutes', 'cost', 'wait', 'lateness', 'violations',
            'mismatches', 'makespan', 'sumsq', 'feasible', 'unassigned', 'orders')
 
 
@@ -188,7 +188,7 @@ def run_campaign(quick=False, variants=True, progress=False):
                 answer = adapter(case, **kwargs) if strategy == 'single' else adapter(case, strategy, **kwargs)
                 inspection = inspect_answer(case, strategy, answer, reference)
                 if inspection['actual']:
-                    rank = objective(plan_metrics(effective_case(case), answer['routes']), strategy)
+                    rank = objective(plan_metrics(effective_case(case), answer['routes'], answer.get('departures')), strategy)
                     if base is None:
                         base = (answer['routes'], rank)
                     elif variant == 'repeat' and (answer['routes'] != base[0] or first_difference(rank, base[1])):

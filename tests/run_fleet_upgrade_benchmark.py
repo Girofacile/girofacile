@@ -1,18 +1,19 @@
 """Offline fleet upgrade comparison against the complete pre-upgrade service.
 
 The frozen revision is loaded from Git, never from a mutable test expectation.
-Both implementations use identical calendars, input permutations and frozen road
-matrices and current input adapter. The independent replay applies the current
+Both implementations use identical calendar inputs, input permutations and frozen
+road matrices and the current input adapter. Each engine uses its own versioned
+calendar and objective implementation. The independent replay applies the current
 advisory policy for sponda/ZTL. The comparison includes policy changes rather
 than attributing every difference solely to the search algorithm.
 """
 from __future__ import annotations
 
 import argparse
-import ast
 from contextlib import contextmanager, ExitStack
 from datetime import datetime, timezone
 import hashlib
+from importlib import import_module
 import json
 from pathlib import Path
 import subprocess
@@ -37,12 +38,25 @@ BASELINE_HASHES = {
     'fleet_search': 'a9efc7f6dc615eeb186d38d4e1e62244635d969e50130ef2ab15a28be46d3182',
     'fleet_planning': 'c3469c3c79d058da18c10f92941a6346a8168a8923670eb234a0306df24a6063',
 }
+SHARED_ENGINE_FILES = ('app/services/driver_schedule.py',
+                       'app/services/optimizer_search.py', 'app/optimizer.py')
+# These files were identical in both historical baseline revisions. Keep their
+# immutable digests: a calendar update must never silently change the old engine.
+BASELINE_SHARED_HASHES = {
+    'app/optimizer.py': '6b452720b3541aa66610ecc7b71e229183a8c8835d86279d4c4225faa4cb5885',
+    'app/services/driver_schedule.py': '5969479ea24bd88f6de22a5fab72be55c89d7815b6559ee7d24c1a7869698803',
+    'app/services/optimizer_search.py': '9967ec8a98a5729c97795a7f060ec550533676c344a0c2daa54726e6b0ee1974',
+}
+COMPARISON_POLICY = ('current input adapter and independent replay; tail lift and ZTL advisory; '
+                     'historical engine uses frozen optimizer/calendar/objective; current engine uses current implementation; '
+                     'whole-upgrade comparison under current km-plus-work-time or balanced priorities')
 SOURCE_FILES = ['app/services/fleet_planning.py', 'app/services/fleet_search.py',
     'app/services/fleet_route_pool.py', 'app/services/fleet_seed_search.py',
     'app/services/fleet_route_evaluator.py',
     'app/services/fleet_working_clock.py', 'app/services/fleet_milp_solver.py',
     'app/services/fleet_highs_start.py', 'requirements.txt', 'requirements.lock',
-    'app/optimizer.py', 'app/services/driver_schedule.py', 'tests/fleet_upgrade_cases.py',
+    'app/optimizer.py', 'app/services/driver_schedule.py', 'app/services/optimizer_search.py',
+    'app/services/fleet_pyvrp.py', 'app/services/fleet_ortools.py', 'tests/fleet_upgrade_cases.py',
     'tests/routing_quality_fleet.py', 'tests/routing_quality_oracle.py',
     'tests/run_routing_quality_audit.py',
     'tests/run_fleet_upgrade_benchmark.py']
@@ -53,29 +67,6 @@ def source_hashes():
             for path in SOURCE_FILES}
 
 
-def shared_fleet_source_matches(path,baseline,current):
-    """Allow the independent ferry entry points while protecting fleet scoring.
-
-    Fleet comparisons call the fixed-sequence/calendar helpers, never the
-    single-route entry points. All remaining executable statements must match.
-    Full source hashes still identify the exact shared revision in the report.
-    """
-    if baseline==current:
-        return True
-    if path!='app/optimizer.py':
-        return False
-    def canonical(source):
-        tree=ast.parse(source)
-        ignored={'optimize_route','recalculate_manual_route',
-                 '_without_known_ferry','_exclude_ferry_deliveries'}
-        tree.body=[node for node in tree.body
-            if not (isinstance(node,(ast.FunctionDef,ast.AsyncFunctionDef)) and node.name in ignored)
-            and not (isinstance(node,ast.ImportFrom) and node.module=='services'
-                     and node.level==1 and [name.name for name in node.names]==['islands'])]
-        return ast.dump(tree,include_attributes=False)
-    return canonical(baseline)==canonical(current)
-
-
 def frozen_sources():
     result = {}
     for name in MODULES:
@@ -83,40 +74,56 @@ def frozen_sources():
         source = subprocess.check_output(['git', 'show', f'{BASELINE_COMMIT}:{path}'], cwd=ROOT)
         if hashlib.sha256(source).hexdigest() != BASELINE_HASHES[name]:
             raise ValueError(f'Unexpected frozen baseline: {path}')
-        result[name] = source
-    # The scoring/calendar core must match; ferry filtering belongs to separate
-    # single-route entry points. Reports identify the complete current source.
-    for path in ('app/optimizer.py', 'app/services/driver_schedule.py'):
+        result[path] = source
+    for path in SHARED_ENGINE_FILES:
         source = subprocess.check_output(['git', 'show', f'{BASELINE_COMMIT}:{path}'], cwd=ROOT)
-        if not shared_fleet_source_matches(path,source,(ROOT / path).read_bytes()):
-            raise ValueError(f'Shared optimizer/calendar changed since baseline: {path}')
+        if hashlib.sha256(source).hexdigest() != BASELINE_SHARED_HASHES[path]:
+            raise ValueError(f'Unexpected frozen baseline: {path}')
+        result[path] = source
     return result
 
 
 @contextmanager
-def implementation(sources=None):
+def frozen_implementation(sources, commit, modules):
+    """Swap the complete historical computation graph, restoring every alias.
+
+    The input adapter and the independent verifier stay current. Shared engine
+    modules are frozen too, so a legitimate current calendar/objective change
+    cannot leak into the old planner or invalidate the comparison.
+    """
     if sources is None:
         yield
         return
-    import app.services as services
-    # Import current modules first so restoration always restores real modules,
-    # including package attributes used by `from app.services import ...`.
-    from app.services import fleet_planning, fleet_search, fleet_route_evaluator
+    paths = [*SHARED_ENGINE_FILES, *(f'app/services/{name}.py' for name in modules)]
+    specs = []
+    for path in paths:
+        full_name = path.removesuffix('.py').replace('/', '.')
+        import_module(full_name)
+        package, name = full_name.rsplit('.', 1)
+        specs.append((path, full_name, import_module(package), name))
     with ExitStack() as stack:
-        for name in MODULES:
-            full_name = f'app.services.{name}'
+        replacements = []
+        # Install every alias before executing sources: imports between the
+        # historical modules must resolve to the same historical module objects.
+        for path, full_name, package, name in specs:
             module = ModuleType(full_name)
-            module.__package__ = 'app.services'
-            module.__file__ = f'git:{BASELINE_COMMIT}:app/services/{name}.py'
+            module.__package__ = full_name.rsplit('.', 1)[0]
+            module.__file__ = f'git:{commit}:{path}'
             stack.enter_context(patch.dict(sys.modules, {full_name: module}))
-            stack.enter_context(patch.object(services, name, module))
-            exec(compile(sources[name], module.__file__, 'exec'), module.__dict__)
+            stack.enter_context(patch.object(package, name, module))
+            replacements.append((path, module))
+        for path, module in replacements:
+            exec(compile(sources[path], module.__file__, 'exec'), module.__dict__)
         yield
+
+
+def implementation(sources=None):
+    return frozen_implementation(sources, BASELINE_COMMIT, MODULES)
 
 
 def examine(case, strategy, answer, current):
     check = inspect_answer(case, strategy, answer, reference_for(case, strategy))
-    metrics = plan_metrics(effective_case(case), answer['routes'])
+    metrics = plan_metrics(effective_case(case), answer['routes'], answer.get('departures'))
     energy = independent_energy_cost(case, answer['routes'])
     if abs(sum(energy) - answer['production_metrics']['fuel_cost']) > .011:
         check['errors'].append('energy_cost_disagrees_with_independent_accounting')
@@ -187,8 +194,10 @@ def markdown(report):
         f"errori nuovi: **{s['errors']}**; richieste esterne: **{s['external_calls']}**.", '',
         f"Piani precedenti incompatibili con i vincoli attuali: **{s['baseline_infeasible']}**. "
         'Sono registrati, ma esclusi dai confronti di risparmio. '
-        'Il confronto misura l’intero aggiornamento, compreso il nuovo obiettivo Efficiente '
-        '(copertura, compatibilità, km, tempo) e la politica corrente con sponda e ZTL '
+        'Il motore storico usa calendario e obiettivo congelati; quello attuale usa '
+        'l’implementazione corrente. Il confronto misura '
+        'l’intero aggiornamento, valutato con l’obiettivo Efficiente corrente '
+        '(copertura, compatibilità, km più tempo di lavoro) e la politica corrente con sponda e ZTL '
         'come avvisi; non isola il solo algoritmo di ricerca.', '',
         '| Strategia | Casi con servizio e compatibilità uguali | km prima | km dopo | minuti cumulativi prima | minuti cumulativi dopo |',
         '| --- | ---: | ---: | ---: | ---: | ---: |']
@@ -199,7 +208,7 @@ def markdown(report):
         f"Fra {s['comparable_runs']} coppie operative valide: "
         f"{s['objective_improvements']} miglioramenti e {s['objective_regressions']} peggioramenti "
         'secondo la priorità della strategia. Il totale dei minuti può crescere quando '
-        'la soluzione riduce prima i chilometri o gli avvisi di sponda/ZTL.', '',
+        'la soluzione migliora il punteggio km più tempo o gli avvisi di sponda/ZTL.', '',
         '**Nessuna certificazione dell’ottimo globale su 50 consegne.** '
         'I testimoni costruttivi indipendenti provano fattibilità e copertura; le matrici sono sintetiche '
         'e congelate, senza traffico reale. I costi energia sono verificati separatamente; '
@@ -265,14 +274,15 @@ def main():
                 # Preserve evidence even if a subsequent long campaign is interrupted.
                 (args.output / 'partial-records.json').write_text(json.dumps(records, indent=2) + '\n')
     report = dict(summary=summarize(records), records=records, metadata=dict(
-        baseline_commit=BASELINE_COMMIT, baseline_hashes=BASELINE_HASHES,
+        baseline_commit=BASELINE_COMMIT,
+        baseline_hashes={path:hashlib.sha256(source).hexdigest() for path,source in sources.items()},
         current_commit=subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
         measured_at=datetime.now(timezone.utc).isoformat(), synthetic=True,
         case_count=len(cases), splits=sorted({case['split'] for case in cases}),
         vehicle_counts=sorted({len(case['resources']) for case in cases}),
         impossible_case_count=sum(case['expected_served'] < 50 for case in cases),
         later_driver_case_count=sum(case['family'] == 'later_driver_start' for case in cases),
-        comparison_policy='current input adapter and replay; tail lift and ZTL advisory; shared optimizer/calendar unchanged',
+        comparison_policy=COMPARISON_POLICY,
         source_hashes=initial_hashes,
         source_changed_during_campaign=source_hashes() != initial_hashes))
     for name, value in (('results.json', report), ('outputs.json', outputs)):

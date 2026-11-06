@@ -34,7 +34,7 @@ def test_concurrent_creation_and_delivery_delete(pg):
     from app.services.delivery_tracking import owned_delivery, ensure_link, credential
     Base.metadata.create_all(pg)
     with Session(pg) as db:
-        user = User(username='tracking', password_hash='test'); db.add(user); db.flush()
+        user = User(username='tracking', password_hash='test', plan='business', plan_status='active'); db.add(user); db.flush()
         plan = RoutePlan(user_id=user.id, nome='Test', data_giro=date.today()+timedelta(days=1),
                          orario_partenza=time(8), status='programmato')
         db.add(plan); db.flush()

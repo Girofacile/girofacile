@@ -121,19 +121,8 @@ def _rate(resource, key, default):
     return default if value is None else float(value)
 
 
-def _absorbable_wait(stops):
-    # Only waiting for a window to open; a fixed driver break keeps its own wait.
-    waits = [stop['service_start'] - stop['arrival'] if stop['opened'] else 0.0 for stop in stops]
-    best, absorbed = sum(waits), 0.0
-    for stop, wait in zip(stops, waits):
-        absorbed += wait
-        if stop['window_end'] is not None:
-            best = min(best, absorbed + stop['window_end'] - stop['service_end'])
-    return max(0.0, best)
-
-
-def replay(case, resource_index, order, start=None):
-    """Replay one zero-based stop order without touching the supplied input.
+def _replay_at(case, resource_index, order, start=None):
+    """Replay one departure, without optimising its time or touching the input.
 
     ``max_minutes`` denotes the already computed available booking/day horizon
     for fleet planning. It is not a single-route setting. Set
@@ -148,16 +137,19 @@ def replay(case, resource_index, order, start=None):
     started = _minute(case.get('start_time', '08:00'))
     result = dict(order=order, feasible=True, violations=0, km=0.0, cost=0.0,
                   minutes=0.0, wait=0.0, lateness=0.0, mismatches=0,
-                  warnings=0, stops=[], errors=[])
+                  warnings=0, stops=[], errors=[], departure_min=started,
+                  return_min=started)
     if not order:
         return result
     schedule = resource.get('driver_schedule') or {}
     if case.get('kind') == 'fleet' and schedule.get('start'):
         # Nel multi-mezzo chi inizia dopo l'orario comune parte a inizio turno.
         started = max(started, _minute(schedule['start']))
+    if resource.get('departure') is not None:
+        started = _minute(resource['departure'])
     if start is not None:
-        # The engine may depart later when that removes waiting: replay its departure.
-        started = _minute(start)
+        started = float(start) if isinstance(start, (int, float)) else _minute(start)
+    result['departure_min'] = started
     breaks = sorted((_minute(item['start']), _minute(item['end']))
                     for item in schedule.get('breaks', []))
     if any(right <= left for left, right in breaks):
@@ -200,6 +192,7 @@ def replay(case, resource_index, order, start=None):
         result['km'] += float(back['km'])
         clock = _travel(clock, float(back['min']), breaks)
     result['minutes'] = clock - started
+    result['return_min'] = clock
     if schedule.get('start') and (started < _minute(schedule['start']) or
                                   clock > _minute(schedule['end'])):
         result['violations'] += 1
@@ -210,8 +203,43 @@ def replay(case, resource_index, order, start=None):
             result['violations'] += 1
             result['errors'].append('availability')
     result['feasible'] = result['violations'] == 0
-    work = result['minutes'] - (_absorbable_wait(result['stops']) if result['feasible'] else 0.0)
-    result['cost'] = result['km'] + work * _rate(resource, 'km_per_ora', KM_PER_HOUR) / 60
+    return result
+
+
+def replay(case, resource_index, order, start=None):
+    """Replay and independently price a route's achievable working time.
+
+    An explicit ``start`` replays the actual, fixed departure of an answer.
+    Otherwise flexible planning can postpone departure in five-minute steps,
+    capped by customer-opening waits. Fixed driver rest alone gives no credit.
+    FIFO travel/service makes the feasible departures with unchanged return a
+    prefix, so binary search verifies actual calendars rather than subtracting
+    a theoretical window slack. No production scheduling helper is imported.
+    """
+    result = _replay_at(case, resource_index, order, start)
+    resource = case['resources'][resource_index]
+    slack = 0.0
+    flexible = (start is None and case.get('flexible_departure', True)
+                and resource.get('_flexible_departure', True)
+                and not (case.get('kind') == 'single' and resource.get('departure') is not None))
+    if flexible and result['feasible'] and result['order']:
+        opening_wait = sum(stop['service_start'] - stop['arrival']
+                           for stop in result['stops'] if stop['opened'])
+        low, high = 0, int(math.floor((opening_wait + 1e-9) / 5))
+        while low < high:
+            steps = (low + high + 1) // 2
+            candidate = _replay_at(case, resource_index, result['order'],
+                                   result['departure_min'] + steps * 5)
+            if candidate['feasible'] and candidate['return_min'] <= result['return_min'] + 1e-8:
+                low = steps
+            else:
+                high = steps - 1
+        slack = float(low * 5)
+    result['departure_slack_min'] = slack
+    result['work_minutes'] = result['minutes'] - slack
+    result['score_departure_min'] = result['departure_min'] + slack
+    result['cost'] = (result['km'] + result['work_minutes']
+                      * _rate(resource, 'km_per_ora', KM_PER_HOUR) / 60)
     return result
 
 
@@ -225,15 +253,17 @@ def plan_metrics(case, orders, starts=None):
     assigned = [index for order in orders for index in order]
     duplicates = len(assigned) - len(set(assigned))
     durations = [route['minutes'] for route in routes]
+    work = [route['work_minutes'] for route in routes]
     return dict(served=len(set(assigned)), used=sum(bool(order) for order in orders),
                 km=sum(route['km'] for route in routes), minutes=sum(durations),
+                work_minutes=sum(work),
                 cost=sum(route['cost'] for route in routes),
                 wait=sum(route['wait'] for route in routes),
                 lateness=sum(route['lateness'] for route in routes),
                 violations=sum(route['violations'] for route in routes) + duplicates,
                 mismatches=sum(route['mismatches'] for route in routes),
                 warnings=sum(route['warnings'] for route in routes),
-                makespan=max(durations, default=0.0), sumsq=sum(value ** 2 for value in durations),
+                makespan=max(work, default=0.0), sumsq=sum(value ** 2 for value in work),
                 feasible=not duplicates and all(route['feasible'] for route in routes),
                 unassigned=tuple(sorted(set(range(len(case['stops']))) - set(assigned))),
                 orders=orders, routes=routes)
@@ -249,7 +279,7 @@ def objective(metrics, strategy='single'):
     if strategy == 'efficient':
         return (*prefix, metrics['cost'], metrics['km'], metrics['minutes'], metrics['used'])
     if strategy == 'balanced':
-        return (*prefix, -metrics['used'], metrics['makespan'], metrics['sumsq'], metrics['minutes'], metrics['km'])
+        return (*prefix, -metrics['used'], metrics['makespan'], metrics['sumsq'], metrics['work_minutes'], metrics['km'])
     raise ValueError('Unknown strategy')
 
 
@@ -272,7 +302,7 @@ def solve_single(case):
 def solve_fleet(case, strategy='efficient'):
     """Exhaust routes/subsets and their disjoint assignment to up to 3 resources.
 
-    Each subset keeps its fastest feasible sequence (distance breaks ties).
+    Each subset keeps its cheapest/shortest-working feasible sequence.
     Both fleet objectives are monotone in every route duration, so that
     dominance preserves the complete optimum. Unassigned stops remain in the
     unused mask at the final resource. Only total weight/parcels, which are
@@ -297,7 +327,7 @@ def solve_fleet(case, strategy='efficient'):
                 metrics = replay(case, resource_index, order)
                 if metrics['feasible']:
                     rank = ((metrics['cost'],metrics['km'],metrics['minutes']) if strategy=='efficient'
-                            else (metrics['minutes'], metrics['km']))
+                            else (metrics['work_minutes'], metrics['km']))
                     if best_rank is None or rank < best_rank:
                         best_order, best_rank = order, rank
             if best_order is not None:

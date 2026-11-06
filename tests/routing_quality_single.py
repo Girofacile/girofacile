@@ -302,7 +302,8 @@ def run_single(case, input_order=None, budget=None):
         try:
             result = opt.optimize_route(_NoDatabase(), deposit, rows, resource,
                 return_depot=case.get('return_depot', True),
-                start_time=case.get('start_time', '08:00'), route_date='2099-01-14')
+                start_time=case.get('start_time', '08:00'), route_date='2099-01-14',
+                flexible_departure=case.get('flexible_departure', True))
         except ValueError as exc:
             error = str(exc)
     by_id = {int(row['customer_id']): index for index, row in enumerate(case['stops'])}

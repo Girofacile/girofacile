@@ -39,7 +39,7 @@ class FixedRouteEvaluator:
             return None
         clock, previous, km = self.start, -1, 0.0
         opt, shifts, pauses = self.opt, self.shifts, self.pauses
-        margins, waited = [], 0.0
+        timing, waited = [], 0.0
         for index in order:
             row, service, windows = self.rows[index], self.service[index], self.windows[index]
             leg = self.legs[previous, index]
@@ -60,18 +60,21 @@ class FixedRouteEvaluator:
             clock = ev["service_start"] + service
             wait = opt.opening_wait(max(0.0, ev["service_start"] - physical_arrival), ev["service_start"], windows)
             waited += wait
-            margins.append((wait, ev["window_end"] - clock if windows and ev.get("window_end") is not None else None))
+            timing.append((leg['min'], service, windows))
             km += leg["km"]
             previous = index
+        return_minutes = None
         if self.return_depot and order:
             back = self.legs[previous, -1]
             km += back["km"]
             clock = shifts.travel_end(clock, back["min"], pauses)
+            return_minutes = back['min']
         duration = clock-self.start
         if (self.shift and clock > self.shift[1]) or math.ceil(duration) > self.available_minutes:
             return None
         # Punteggio: km più ore dell'autista, senza le attese che una partenza più tarda elimina.
-        work = duration - opt.departure_slack(margins, waited)
+        work = duration - opt.realizable_departure_slack(
+            self.start, clock, timing, waited, pauses, return_minutes, self.vehicle)
         cost = opt.route_cost(km, work, self.vehicle)
         return {"total_km": round(km, 2), "total_min": round(duration, 1),
                 "_objective": (km, duration, 0.0, 0, cost, work)}

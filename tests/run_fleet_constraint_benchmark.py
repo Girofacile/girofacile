@@ -10,7 +10,6 @@ the comparison includes intentional policy changes as well as search changes.
 from __future__ import annotations
 
 import argparse
-from contextlib import contextmanager, ExitStack
 from datetime import datetime, timezone
 import hashlib
 from importlib import metadata
@@ -19,8 +18,6 @@ import math
 from pathlib import Path
 import subprocess
 import sys
-from types import ModuleType
-from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -29,19 +26,21 @@ sys.path.insert(0, str(ROOT / 'tests'))
 from fleet_constraint_holdout import constraint_holdout_cases
 from fleet_upgrade_cases import upgrade_cases
 from routing_quality_fleet import run_fleet
-from run_fleet_upgrade_benchmark import examine, shared_fleet_source_matches
+from run_fleet_upgrade_benchmark import (BASELINE_SHARED_HASHES, COMPARISON_POLICY,
+    SHARED_ENGINE_FILES, examine, frozen_implementation)
 from run_routing_quality_audit import first_difference, serializable_case
 
 BASELINE_COMMIT = 'dbe4641271fd95a8a8b78c93ab169306d86e131e'
 MODULES = ('fleet_route_evaluator', 'fleet_route_pool', 'fleet_seed_search',
            'fleet_search', 'fleet_planning')
-SHARED_FILES = ('app/optimizer.py', 'app/services/driver_schedule.py')
+SHARED_FILES = SHARED_ENGINE_FILES
 INPUT_FILES = ('tests/fleet_upgrade_cases.py', 'tests/routing_quality_fleet.py',
                'tests/routing_quality_oracle.py', 'tests/run_routing_quality_audit.py')
 SOURCE_FILES = [*(f'app/services/{name}.py' for name in MODULES),
     'requirements.txt', 'requirements.lock',
     'app/services/fleet_milp_solver.py', 'app/services/fleet_working_clock.py',
     'app/services/fleet_highs_start.py',
+    'app/services/fleet_pyvrp.py', 'app/services/fleet_ortools.py',
     *SHARED_FILES, *INPUT_FILES,
     'tests/run_fleet_upgrade_benchmark.py',
     'tests/fleet_constraint_holdout.py', 'tests/run_fleet_constraint_benchmark.py']
@@ -67,30 +66,13 @@ def frozen_sources():
     sources = {path: subprocess.check_output(
         ['git', 'show', f'{BASELINE_COMMIT}:{path}'], cwd=ROOT) for path in files}
     for path in SHARED_FILES:
-        if not shared_fleet_source_matches(path,sources[path],(ROOT / path).read_bytes()):
-            raise ValueError(f'Shared optimizer/calendar changed since baseline: {path}')
+        if digest(sources[path]) != BASELINE_SHARED_HASHES[path]:
+            raise ValueError(f'Unexpected frozen baseline: {path}')
     return sources
 
 
-@contextmanager
 def implementation(sources=None):
-    if sources is None:
-        yield
-        return
-    import app.services as services
-    for name in MODULES:
-        __import__(f'app.services.{name}')
-    with ExitStack() as stack:
-        for name in MODULES:
-            full_name = f'app.services.{name}'
-            module = ModuleType(full_name)
-            module.__package__ = 'app.services'
-            module.__file__ = f'git:{BASELINE_COMMIT}:app/services/{name}.py'
-            stack.enter_context(patch.dict(sys.modules, {full_name: module}))
-            stack.enter_context(patch.object(services, name, module))
-            path = f'app/services/{name}.py'
-            exec(compile(sources[path], module.__file__, 'exec'), module.__dict__)
-        yield
+    return frozen_implementation(sources, BASELINE_COMMIT, MODULES)
 
 
 def cached_baseline(cases, sources, directory):
@@ -205,7 +187,11 @@ def markdown(report):
         'Una maggiore copertura non viene presentata come un risparmio di km a parità di servizio.', '',
         'Entrambi i motori ricevono gli input correnti e vengono rivalutati secondo '
         'la politica corrente: sponda e ZTL sono preferenze con avviso. Il confronto '
-        'include quindi la correzione della politica, oltre alle modifiche della ricerca. '
+        'include quindi politica, calendario e obiettivo oltre alle modifiche della ricerca. '
+        'Il motore storico usa calendario e obiettivo congelati; quello attuale usa '
+        'l’implementazione corrente. Il confronto '
+        'usa le priorità correnti di copertura, compatibilità e km più tempo di lavoro '
+        'oppure bilanciamento. '
         'Le cache con input differenti sono ignorate e il motore storico viene rieseguito.', '',
         '| Strategia | Confronti sulle stesse consegne | km prima | km dopo | minuti prima | minuti dopo |',
         '| --- | ---: | ---: | ---: | ---: | ---: |']
@@ -276,7 +262,7 @@ def main():
     write_json(args.output/'campaign-start.json', dict(
         baseline_commit=BASELINE_COMMIT, baseline_hashes={p:digest(s) for p,s in sources.items()},
         current_input_hashes={p:initial_hashes[p] for p in INPUT_FILES},
-        comparison_policy='current input adapter and replay; tail lift and ZTL advisory; shared optimizer/calendar unchanged',
+        comparison_policy=COMPARISON_POLICY,
         source_hashes=initial_hashes, cache_provenance=cache_provenance,
         measured_at=datetime.now(timezone.utc).isoformat(),
         selected_cases=[case['id'] for case in cases]))
@@ -328,7 +314,7 @@ def main():
     report = dict(summary=summarize(records), records=records, metadata=dict(
         baseline_commit=BASELINE_COMMIT, baseline_hashes={p:digest(s) for p,s in sources.items()},
         current_input_hashes={p:initial_hashes[p] for p in INPUT_FILES},
-        comparison_policy='current input adapter and replay; tail lift and ZTL advisory; shared optimizer/calendar unchanged',
+        comparison_policy=COMPARISON_POLICY,
         cache_provenance=cache_provenance, current_commit=subprocess.check_output(
             ['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
         measured_at=datetime.now(timezone.utc).isoformat(), scipy_version=scipy_version,

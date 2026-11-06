@@ -689,11 +689,14 @@ def _distribute(db,user,data,assignments=None,tighten=None):
         base=evaluate(sequence,index,include_details=True)
         if base is None: continue
         def at(clock,index=index,sequence=sequence,original=original):
-            vehicle_data[index]={**original,'departure':opt.fmt_hhmm(clock)}
+            vehicle_data[index]={**original,'departure':opt.fmt_hhmm(clock),'_flexible_departure':False}
             try: return evaluate(sequence,index,include_details=True)
             finally: vehicle_data[index]=original
         _,moved=opt.later_departure(base,opt.vehicle_start_clock(data.orario_partenza,original),at)
-        if moved is not None: vehicle_data[index]={**original,'departure':opt.fmt_hhmm(moved)}
+        # The chosen departure is now fixed: final working time includes all
+        # waiting that remains, without discounting another future proposal.
+        vehicle_data[index]={**original,'_flexible_departure':False}
+        if moved is not None: vehicle_data[index]['departure']=opt.fmt_hhmm(moved)
     # Generate complete ETA and diagnostic details only for selected final routes.
     results=[evaluate(sequence,index,include_details=True) if sequence else None
              for index,sequence in enumerate(routes)]

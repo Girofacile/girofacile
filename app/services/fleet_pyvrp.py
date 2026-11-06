@@ -19,7 +19,9 @@ consegna esclusa costa più di quanto possa mai costare servirla.
 
 PyVRP parte da zero, non dal piano già trovato: partire da un piano debole lo intrappola,
 e la scelta finale tiene comunque il migliore dei due. Tempo: 0,3 s per consegna, tra 1 s
-e FLEET_PYVRP_SECONDS (predefinito 30 s; 0 lo spegne).
+e FLEET_PYVRP_SECONDS (predefinito 30 s; 0 lo spegne), condiviso tra costruzione,
+tentativi e bilanciamento. I modelli troppo grandi lasciano il piano già trovato:
+FLEET_PYVRP_MAX_EDGES (250.000, al massimo 1.000.000) limita gli archi prima di allocarli.
 """
 from __future__ import annotations
 
@@ -34,6 +36,17 @@ COST_PER_METER = 60        # costo intero: 60 per metro, round(60 × km/ora ÷ 6
 MISMATCH_PENALTY_M = 20_000
 BALANCE_KM_PER_MIN = 10    # «Distribuisci il lavoro»: un minuto di lavoro pesa come 10 km (come OR-Tools)
 BALANCE_STEPS = 5          # dimezzamenti del limite di durata del giro
+DEFAULT_MAX_MODEL_EDGES = 250_000
+HARD_MAX_MODEL_EDGES = 1_000_000
+
+
+class _Deadline:
+    """PyVRP controlla questo termine assoluto anche dopo il proprio setup."""
+    def __init__(self, deadline):
+        self.deadline = deadline
+
+    def __call__(self, best_cost):
+        return perf_counter() >= self.deadline
 
 
 def available():
@@ -52,6 +65,16 @@ def seconds_budget(stop_count):
     return min(ceiling, max(1.0, 0.3 * stop_count)) if ceiling else 0.0
 
 
+def _max_model_edges():
+    # Un Edge occupa già 64 byte, senza interi, liste e matrici del solutore.
+    # Una configurazione sbagliata non deve poter rimuovere il tetto di memoria.
+    try:
+        requested = int(os.getenv('FLEET_PYVRP_MAX_EDGES', str(DEFAULT_MAX_MODEL_EDGES)))
+    except (TypeError, ValueError):
+        requested = DEFAULT_MAX_MODEL_EDGES
+    return max(1_000, min(HARD_MAX_MODEL_EDGES, requested))
+
+
 def _scaled_domains(row, vehicle, start, limit):
     from .fleet_working_clock import TIME_SCALE, service_domains
     domains, horizon = service_domains(row, vehicle, start, limit)
@@ -66,9 +89,22 @@ def _scaled_domains(row, vehicle, start, limit):
 
 def improve(rows, vehicles, matrix, start_time, return_depot, limits, initial, seconds, strategy='efficient'):
     """Nuovi ordini (indici di rows) per mezzo, oppure None; stessa interfaccia di fleet_ortools."""
+    clock_started = perf_counter()
+    budget = max(0.0, float(seconds))
+    deadline = clock_started + budget
+
+    def remaining():
+        return max(0.0, deadline - perf_counter())
+
+    def skipped(status, **details):
+        return None, {'engine': 'pyvrp', 'status': status, 'seeded': False,
+                      'feasible': False, 'attempts': 0,
+                      'seconds': round(perf_counter() - clock_started, 2), **details}
+
+    if not remaining():
+        return skipped('time-limit')
     from pyvrp import Model, PenaltyParams, Route, Solution, SolveParams, solve
     from pyvrp.exceptions import PenaltyBoundWarning
-    from pyvrp.stop import MaxRuntime
     from .. import optimizer as opt
 
     start = opt.parse_hhmm(start_time)
@@ -76,12 +112,29 @@ def improve(rows, vehicles, matrix, start_time, return_depot, limits, initial, s
     # Orologio di ogni mezzo: inizi di scarico ammessi per consegna e fine del lavoro.
     clocks, signature_of = [], []
     for v, vehicle in enumerate(vehicles):
+        if not remaining():
+            return skipped('time-limit')
         per_row = [_scaled_domains(row, vehicle or {}, start, limits[v]) for row in rows]
         signature = tuple(domains for domains, _ in per_row)
         horizon = min((h for _, h in per_row), default=0) if rows else 0
         if signature not in clocks:
             clocks.append(signature)
         signature_of.append((clocks.index(signature), horizon))
+
+    # Ogni copia cliente compare in una matrice densa per ciascun profilo.
+    # Contare prima: 100 consegne × 10 orari × 2 fasce arrivano a 40 milioni
+    # di Edge, anche quando la ricerca è limitata a pochi secondi.
+    copy_count = sum(len(domains) for signature in clocks for domains in signature)
+    profile_count = len({(signature_of[v][0], bool((vehicle or {}).get('ha_sponda')),
+                         bool((vehicle or {}).get('accesso_ztl')))
+                        for v, vehicle in enumerate(vehicles)})
+    model_edges = (copy_count + 1) ** 2 * profile_count
+    dimensions = {'copies': copy_count, 'clocks': len(clocks), 'profiles': profile_count,
+                  'model_edges': model_edges, 'max_model_edges': _max_model_edges()}
+    if model_edges > dimensions['max_model_edges']:
+        return skipped('model-size-limit', **dimensions)
+    if not remaining():
+        return skipped('time-limit', **dimensions)
 
     def mismatches(vehicle, row):
         return (int(bool(row.get('sponda')) and not (vehicle or {}).get('ha_sponda', False))
@@ -111,6 +164,8 @@ def improve(rows, vehicles, matrix, start_time, return_depot, limits, initial, s
     # Copie: (riga, orologio, inizio ammesso minimo, massimo).
     copies, locations = [], [depot_location]
     for i, row in enumerate(rows):
+        if not remaining():
+            return skipped('time-limit', **dimensions)
         options = [(c, lo, hi) for c, signature in enumerate(clocks) for lo, hi in signature[i]]
         if not options:
             continue
@@ -126,7 +181,7 @@ def improve(rows, vehicles, matrix, start_time, return_depot, limits, initial, s
             copies.append((i, c))
             locations.append(location)
     if not copies:
-        return None, {'status': 'no-feasible-copy'}
+        return skipped('no-feasible-copy', **dimensions)
 
     def leg(a, b):
         if a == b or (b == 0 and not return_depot):
@@ -145,6 +200,8 @@ def improve(rows, vehicles, matrix, start_time, return_depot, limits, initial, s
         profile = model.add_profile()
         profiles[key] = profile
         for a, frm in enumerate(nodes):
+            if not remaining():
+                return skipped('time-limit', **dimensions)
             ia = 0 if frm is None else frm[0] + 1
             for b, to in enumerate(nodes):
                 ib = 0 if to is None else to[0] + 1
@@ -174,7 +231,7 @@ def improve(rows, vehicles, matrix, start_time, return_depot, limits, initial, s
         costs = (round(COST_PER_METER * per_km), round(COST_PER_METER * per_min))
         members.setdefault((profile_key, caps, costs, horizon), []).append(v)
     if not members:
-        return None, {'status': 'no-usable-vehicle'}
+        return skipped('no-usable-vehicle', **dimensions)
     type_of = {}
     for t, ((profile_key, caps, costs, horizon), group) in enumerate(members.items()):
         model.add_vehicle_type(
@@ -186,6 +243,8 @@ def improve(rows, vehicles, matrix, start_time, return_depot, limits, initial, s
         for v in group:
             type_of[v] = t
     groups = list(members.values())
+    if not remaining():
+        return skipped('time-limit', **dimensions)
     data = model.data()
     seed = None
     # Di norma PyVRP parte da zero: partire da un piano debole lo intrappola (rc203: 10% contro 1%).
@@ -206,26 +265,31 @@ def improve(rows, vehicles, matrix, start_time, return_depot, limits, initial, s
             seed = Solution(data, seed_routes) if seed_routes else None
         except Exception:
             seed = None
-    clock_started = perf_counter()
-    budget = max(0.1, float(seconds))
-
     def run(problem, limit, start_from=None):
         # Prima la ricerca con le impostazioni normali di PyVRP. Se non trova un piano valido
         # (giorni in cui non tutto è servibile: piano reale 50, 30 consegne su 54) si ripete con
         # il tetto delle penalità per sovraccarico e ritardo sopra il costo di una consegna
         # esclusa, altrimenti PyVRP preferisce sforare. Quel tetto alto, sempre attivo,
         # peggiora invece i casi con fasce strette (Solomon r104, r110: 3 escluse invece di 0).
-        attempts = (PenaltyParams(), PenaltyParams(max_penalty=float(max(100_000, prize + 1))))
-        for attempt, penalty in enumerate(attempts, 1):
+        phase_deadline = min(deadline, perf_counter() + max(0.0, limit))
+        penalties = (PenaltyParams(), PenaltyParams(max_penalty=float(max(100_000, prize + 1))))
+        result, attempts = None, 0
+        for attempt, penalty in enumerate(penalties, 1):
+            left = min(deadline, phase_deadline) - perf_counter()
+            if left <= 0:
+                break
+            # Riservare una parte al retry: non deve ricevere di nuovo l'intero budget.
+            allowance = left * 0.65 if attempt == 1 else left
             with warnings.catch_warnings():
                 # Penalità che toccano il tetto sono previste (consegne non servibili): niente avvisi nei log.
                 warnings.simplefilter('ignore', PenaltyBoundWarning)
-                result = solve(problem, stop=MaxRuntime(max(0.1, limit)), seed=1, display=False,
+                result = solve(problem, stop=_Deadline(min(deadline, phase_deadline, perf_counter() + allowance)), seed=1, display=False,
                                collect_stats=False, initial_solution=start_from,
                                params=SolveParams(penalty=penalty))
+            attempts += 1
             if result.is_feasible():
                 break
-        return result, attempt
+        return result, attempts
 
     def served(solution):
         return sum(route.num_clients() for route in solution.routes())
@@ -237,10 +301,13 @@ def improve(rows, vehicles, matrix, start_time, return_depot, limits, initial, s
     # durata del giro più lungo trovata e la media per mezzo, imponendo a ogni giro di non
     # superarla (vincolo rigido di PyVRP). Si tiene il limite più basso che serve ancora
     # le stesse consegne; il giudizio finale resta della chiave «Distribuisci il lavoro».
-    result, attempts = run(data, budget * (0.35 if balanced else 1.0), seed)
-    report = {'engine': 'pyvrp', 'seeded': seed is not None, 'feasible': bool(result.is_feasible()),
-              'attempts': attempts, 'copies': len(copies), 'clocks': len(clocks), 'vehicle_types': len(groups)}
-    best = result.best if result.is_feasible() else None
+    result, attempts = run(data, remaining() * (0.35 if balanced else 1.0), seed)
+    feasible = result is not None and result.is_feasible()
+    report = {'engine': 'pyvrp', 'seeded': seed is not None, 'feasible': bool(feasible),
+              'attempts': attempts, **dimensions, 'vehicle_types': len(groups)}
+    if result is None:
+        report['status'] = 'time-limit'
+    best = result.best if feasible else None
     if balanced and best is not None and best.routes():
         target = served(best)
         usable = sum(len(group) for group in groups)
@@ -248,14 +315,17 @@ def improve(rows, vehicles, matrix, start_time, return_depot, limits, initial, s
         low = int(0.9 * sum(route.duration() for route in best.routes()) / max(1, usable))
         steps = []
         for _ in range(BALANCE_STEPS):
-            if high - low <= TIME_PER_MIN:   # meno di un minuto: inutile stringere ancora
+            if not remaining() or high - low <= TIME_PER_MIN:   # meno di un minuto: inutile stringere ancora
                 break
             limit = (low + high) // 2
             tight = data.replace(vehicle_types=[vt.replace(shift_duration=limit) for vt in data.vehicle_types()])
             # Il piano migliore finora come punto di partenza: PyVRP vuole giri legati ai nuovi dati.
             start_from = Solution(tight, [Route(tight, [a.idx for a in route if a.is_client()], route.vehicle_type())
                                           for route in best.routes()])
-            trial, _ = run(tight, budget * 0.65 / BALANCE_STEPS, start_from)
+            trial, trial_attempts = run(tight, remaining() / (BALANCE_STEPS - len(steps)), start_from)
+            report['attempts'] += trial_attempts
+            if trial is None:
+                break
             ok = trial.is_feasible() and served(trial.best) >= target
             steps.append((round(limit / TIME_PER_MIN), bool(ok)))
             if ok:
@@ -264,6 +334,7 @@ def improve(rows, vehicles, matrix, start_time, return_depot, limits, initial, s
                 low = limit
         report['balance'] = {'longest_min': round(longest(best) / TIME_PER_MIN, 1), 'steps': steps}
     report['seconds'] = round(perf_counter() - clock_started, 2)
+    report['budget_exhausted'] = not remaining()
     if best is None:
         return None, report
     orders = [()] * count

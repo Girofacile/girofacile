@@ -79,3 +79,19 @@ def test_new_quick_campaign_respects_constraints_and_proven_optima():
     assert report['summary']['cases'] == len(cases) >= 20
     assert report['summary']['errors'] == report['summary']['exact_gaps'] == 0
     assert report['summary']['external_calls'] == 0
+
+
+def test_balanced_audit_rejects_unnecessary_afternoon_wait_at_explicit_departure():
+    from test_routing_quality_oracle import case, resource, stop
+    data = case([stop(0, tempo_scarico_min=10,
+                      scarico_pomeriggio_da='13:00', scarico_pomeriggio_a='17:00')],
+                [resource(), resource()], returning=True)
+    data.update(kind='fleet', reference='exact')
+    reference = reference_for(data, 'balanced')
+    early = dict(routes=[[], [0]], departures=[None, '08:00'])
+    report = inspect_answer(data, 'balanced', early, reference)
+    assert report['reference']['metrics']['makespan'] == 30
+    assert report['actual']['makespan'] == 320
+    assert 'exact_objective_gap' in report['errors']
+    late = dict(routes=[[], [0]], departures=[None, '12:50'])
+    assert not inspect_answer(data, 'balanced', late, reference)['errors']

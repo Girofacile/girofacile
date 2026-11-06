@@ -1,5 +1,10 @@
 # Motore dei giri con PyVRP — misure del 5 novembre 2026
 
+Questa pagina conserva le misure delle revisioni del 5–6 novembre precedenti alle
+correzioni di punteggio, memoria e tempo. Non sono state riacquisite dopo tali correzioni.
+Per il comportamento aggiornato e il relativo collaudo vedere
+[GF Engine Optimizer 1.0 — correzioni](gf-engine-optimizer-1.0-fixes-2026-11-06.md).
+
 Con «Riduci chilometri e tempi» e più mezzi, il piano trovato dalla ricerca di GiroFacile
 viene ora confrontato con due proposte esterne: OR-Tools (già presente) e **PyVRP 0.14.1**
 (libreria gratuita, licenza MIT, eseguita sul server, nessuna chiamata esterna). Nessuna

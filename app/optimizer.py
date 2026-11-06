@@ -86,9 +86,11 @@ def route_cost(km, work_min, vehicle=None):
 
 
 def opening_wait(wait, service_start, windows):
-    """Attesa che una partenza più tarda può eliminare: solo quella per l'apertura di una fascia.
+    """Upper bound from opening waits; the calendar pass checks what is removable.
 
-    L'attesa dovuta a una pausa dell'autista resta: la pausa ha un orario fisso.
+    A service starting after a break, away from a window opening, adds no
+    opening wait. When opening and break overlap, realizable_departure_slack
+    retains the fixed pause in the driver's actual working duration.
     """
     return float(wait or 0) if any(abs(service_start - opening) < 1e-6 for opening, _ in windows) else 0.0
 
@@ -108,19 +110,75 @@ def departure_slack(stops, total_wait):
     return max(0.0, best)
 
 
+def _latest_travel_start(deadline, duration, pauses):
+    """Inverse of pause-aware travel, keeping arrival no later than deadline."""
+    cursor, remaining = float(deadline), float(duration)
+    for opening, closing in reversed(pauses):
+        if cursor <= opening:
+            continue
+        if cursor < closing:
+            cursor = opening
+            continue
+        available = max(0.0, cursor - closing)
+        if remaining <= available:
+            return cursor - remaining
+        remaining -= available
+        cursor = opening
+    return cursor - remaining
+
+
+def _latest_service_start(deadline, duration, pauses):
+    """Latest uninterrupted service finishing by deadline, outside fixed pauses."""
+    start = float(deadline) - duration
+    for opening, closing in reversed(pauses):
+        if start < closing and (start >= opening or start + duration > opening):
+            # A zero-duration service at the opening of a break is postponed by
+            # service_ready too. Keep that forbidden boundary out of the grid.
+            start = opening - duration - (1e-7 if duration == 0 else 0)
+    return start
+
+
+def realizable_departure_slack(start_clock, end_clock, stops, opening_wait_min,
+                               pauses=(), return_minutes=None, vehicle=None, step=5):
+    """Attesa eliminabile con una partenza realmente fattibile, a passi di 5 min.
+
+    stops contains (travel minutes, service minutes, pre-parsed windows). A
+    backward timing pass respects fixed pauses and window closures without
+    replaying candidate routes at many departure times. The opening-wait cap
+    preserves the rule that a pause alone never triggers a later departure.
+    """
+    if (not stops or opening_wait_min < step
+            or (vehicle or {}).get('_flexible_departure') is False):
+        return 0.0
+    latest = float(end_clock)
+    if return_minutes is not None:
+        latest = _latest_travel_start(latest, return_minutes, pauses)
+    for travel, service, windows in reversed(stops):
+        slots = windows or [(-math.inf, math.inf)]
+        starts = [_latest_service_start(min(latest, closing), service, pauses)
+                  for opening, closing in slots]
+        possible = [clock for clock, (opening, _) in zip(starts, slots) if clock >= opening]
+        if not possible:
+            return 0.0
+        latest = _latest_travel_start(max(possible), travel, pauses)
+    limit = min(float(opening_wait_min), max(0.0, latest - start_clock))
+    # Steps are delays relative to the requested departure (08:03 -> 08:08).
+    return max(0.0, math.floor((limit + 1e-9) / step) * step)
+
+
 def later_departure(base, start_clock, evaluate_at, step=5):
     """Partenza più tarda che elimina attese: stesso rientro, meno ore dell'autista.
 
     evaluate_at(minuti) rivaluta lo stesso ordine con quella partenza e restituisce il
     risultato completo (o None). Si accetta solo un giro senza violazioni, senza
-    ritardi sulle fasce, con rientro non successivo e meno attesa. Partenza a
-    multipli di 5 minuti. Ritorna (risultato, nuova partenza) oppure (base, None).
+    ritardi sulle fasce, con rientro non successivo e durata minore. Ritardo a
+    incrementi di 5 minuti rispetto alla partenza richiesta. Ritorna (risultato,
+    nuova partenza) oppure (base, None).
     """
     slack = float(base.get("departure_slack_min") or 0)
     if base.get("violations") or slack < step:
         return base, None
     end = start_clock + float(base["total_min"])
-    waited = float(base.get("total_wait", base.get("total_wait_min", 0)) or 0)
     shift = math.floor(slack / step) * step
     while shift >= step:
         candidate = evaluate_at(start_clock + shift)
@@ -128,7 +186,7 @@ def later_departure(base, start_clock, evaluate_at, step=5):
                 and not candidate.get("driver_schedule_error")
                 and float(candidate.get("total_lateness_min") or 0) <= 0
                 and start_clock + shift + float(candidate["total_min"]) <= end + 0.5
-                and float(candidate.get("total_wait", candidate.get("total_wait_min", 0)) or 0) < waited):
+                and float(candidate['total_min']) < float(base['total_min'])):
             return candidate, start_clock + shift
         # Pause fisse o fasce strette: si prova uno spostamento minore.
         shift = math.floor(shift / 2 / step) * step
@@ -585,7 +643,8 @@ def _evaluate_fixed_sequence(sequence, matrix, points, vehicle=None, return_depo
     schedule=(vehicle or {}).get('driver_schedule') or {}
     pauses=shifts.intervals(schedule)
     departures=[]
-    margins=[]
+    timing=[]
+    opening_wait_min=0.0
 
     for original in sequence:
         selected = dict(original)
@@ -623,8 +682,9 @@ def _evaluate_fixed_sequence(sequence, matrix, points, vehicle=None, return_depo
         selected["warning"] = "; ".join(warnings) if warnings else ""
         if ev.get("window_end") is not None:
             total_lateness += max(0.0, service_end - ev["window_end"])
-        margins.append((opening_wait(ev.get("wait"), service_start, delivery_windows(selected)),
-                        ev["window_end"] - service_end if ev.get("window_end") is not None else None))
+        windows = delivery_windows(selected)
+        opening_wait_min += opening_wait(ev.get("wait"), service_start, windows)
+        timing.append((leg['min'], float(selected.get('tempo_scarico_min') or 0), windows))
         if include_details:
             selected.update(stop_timing_details(selected, physical_arrival, service_start, service_end, ev.get("window_end")))
 
@@ -635,10 +695,12 @@ def _evaluate_fixed_sequence(sequence, matrix, points, vehicle=None, return_depo
         current_idx = selected["_matrix_index"]
         ordered.append(selected)
 
+    return_minutes = None
     if return_depot and ordered:
         back = _matrix_leg(matrix, points, current_idx, 0)
         total_km += back["km"]
         current_clock = shifts.travel_end(current_clock,back["min"],pauses)
+        return_minutes = back['min']
 
     total_min = current_clock - start_clock
     schedule_error=shifts.shift_error(schedule,start_clock,current_clock)
@@ -655,7 +717,8 @@ def _evaluate_fixed_sequence(sequence, matrix, points, vehicle=None, return_depo
     for d in ordered:
         d.pop("_matrix_index", None)
     # Ore dell'autista: senza le attese che una partenza più tarda eliminerebbe.
-    slack = 0.0 if violations else departure_slack(margins, sum(wait for wait, _ in margins))
+    slack = 0.0 if violations else realizable_departure_slack(
+        start_clock, current_clock, timing, opening_wait_min, pauses, return_minutes, vehicle)
     cost = route_cost(total_km, total_min - slack, vehicle)
 
     return {
@@ -879,6 +942,10 @@ def _ortools_single(deliveries, matrix, points, vehicle, return_depot, start_tim
 
 
 def optimize_route(db: Session, deposit, deliveries, vehicle=None, return_depot=True, start_time="08:00", route_date=None, travel_factor=None, window_buffer=None, flexible_departure=True):
+    # The same departure policy must govern both route ranking and the final
+    # proposal. In particular the traffic replan keeps its existing departure.
+    if not flexible_departure or (vehicle or {}).get('departure'):
+        vehicle = {**(vehicle or {}), '_flexible_departure': False}
     validate_vehicle_load(_without_known_ferry(deposit, deliveries), vehicle)
     _route_departure_time_iso(start_time, route_date)
     depot_coord = geocode_deposit(db, deposit)
@@ -927,8 +994,9 @@ def optimize_route(db: Session, deposit, deliveries, vehicle=None, return_depot=
         by_index = {d["_matrix_index"]: d for d in deliveries}
         sequence = [by_index[i] for i in result["_sequence"]]
         start = vehicle_start_clock(start_time, vehicle)
+        fixed_vehicle = {**(vehicle or {}), '_flexible_departure': False}
         result, moved = later_departure(result, start, lambda clock: _evaluate_fixed_sequence(
-            sequence, matrix, points, vehicle, return_depot, fmt_hhmm(clock)))
+            sequence, matrix, points, fixed_vehicle, return_depot, fmt_hhmm(clock)))
         if moved is not None:
             result["departure"] = fmt_hhmm(moved)
             result["requested_departure"] = fmt_hhmm(start)

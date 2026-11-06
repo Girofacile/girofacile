@@ -5,13 +5,13 @@ In Risorse si sceglie Un solo mezzo oppure Suddivisione automatica su più mezzi
 In entrambi i casi mezzo e autista si scelgono nella stessa card (fleet-planning.js), con la disponibilità sotto ciascuno, turno, pausa e costo carburante: con un solo mezzo c'è una card, che legge e scrive i campi del giro singolo (routeVehicle, routeDriver, fuelPrice, turno di #routeDriverSchedule); con più mezzi una card per mezzo, con la X per toglierla (restandone una si torna a un solo mezzo). Passando a più mezzi la card 1 resta e se ne aggiunge una vuota.
 Con più mezzi compare anche la strategia:
 
-- Riduci chilometri e tempi: a parità di consegne e avvisi ZTL, minimizza i chilometri totali, poi la somma delle durate e infine i mezzi usati.
+- Riduci chilometri e tempi: a parità di consegne e compatibilità, minimizza il punteggio km più minuti di lavoro dell'autista (1 ora = 60 km equivalenti), poi i chilometri, la somma delle durate e i mezzi usati.
 - Distribuisci il lavoro tra tutti i mezzi: a parità di consegne e avvisi, utilizza più risorse e minimizza la durata massima, poi lo squilibrio delle durate (somma dei quadrati), la durata totale e i chilometri. Dal 6 novembre 2026 la durata è quella del lavoro dell'autista (`optimizer.work_minutes`): come nel punteggio di «Riduci chilometri e tempi», non conta l'attesa che una partenza più tarda elimina senza spostare il rientro; le attese a metà giro restano.
 
 Entrambe danno prima priorità al numero di consegne fattibili assegnate e poi alla riduzione degli avvisi per sponda e ZTL. La sponda è una preferenza con avviso: il motore cerca un mezzo attrezzato, ma una consegna rimane assegnabile anche quando il mezzo non la possiede. L'operatore vede l'avviso e decide se programmare lo stesso oppure modificare la suddivisione. Questo vale per assegnazioni automatiche, revisioni manuali e piani già salvati; l'assenza della sponda non blocca conferma o programmazione.
 
 La ricerca usa una sola matrice stradale condivisa. Fino a 7 fermate e 3 coppie confronta tutti i sottoinsiemi, gli ordini e le assegnazioni, compresa la possibilità di lasciare fermate non assegnate. Sceglie il migliore secondo la strategia selezionata. Oltre questi limiti usa una ricerca deterministica con budget: costruzioni alternative per scadenze e geografia, riordino, trasferimenti, scambi di fermate e di tratti finali tra mezzi. Ricostruzioni parziali cercano di superare gli incastri che richiedono più spostamenti coordinati. Un archivio di giri già verificati permette anche di ricombinare più assegnazioni senza ripetere chiamate stradali. Mantiene l'inserimento precedente come candidato sotto i vincoli e l'obiettivo correnti; non certifica un ottimo globale sui casi grandi.
-Dopo la suddivisione, ogni giro fino a **8 fermate** riceve un riordino completo su tutti gli ordini possibili (`8! = 40.320`). La soglia riguarda il singolo giro: vale anche con 50 o 100 consegne totali. Consegne e mezzo assegnati rimangono fissi; la strategia efficiente minimizza i km e poi la durata, quella bilanciata la durata e poi i km. Le pause e le finestre continuano a essere verificate per ogni ordine.
+Dopo la suddivisione, ogni giro fino a **8 fermate** riceve un riordino completo su tutti gli ordini possibili (`8! = 40.320`). La soglia riguarda il singolo giro: vale anche con 50 o 100 consegne totali. Consegne e mezzo assegnati rimangono fissi; la strategia efficiente minimizza il punteggio km più lavoro effettivo, quella bilanciata il lavoro effettivo e poi i km. Le pause e le finestre continuano a essere verificate per ogni ordine. Le attese vengono sottratte soltanto se lo stesso calendario permette davvero di ritardare la partenza, a passi di cinque minuti, mantenendo il rientro. Con partenza bloccata non vengono sottratte.
 
 La matrice stradale globale è già completa e viene riutilizzata: non si richiede una nuova matrice o un provider per ogni permutazione. Un valutatore preparato riusa gli stessi selettori di finestre e l'aritmetica delle pause del valutatore canonico. Il vincitore viene verificato e poi ricostruito con tutti i dettagli ETA. La verifica canonica del vincitore non sostituisce i test di equivalenza esaustivi sul valutatore preparato.
 
@@ -88,13 +88,14 @@ non dal piano trovato, usa l'orologio di lavoro di ogni autista (pause tolte, fa
 copie alternative della consegna) e lo stesso punteggio km + ore. La sua proposta passa
 dallo stesso calendario canonico e dalla stessa accettazione di OR-Tools: vince il piano
 migliore, prima per consegne servite. Tempo: 0,3 s per consegna, tra 1 s e
-`FLEET_PYVRP_SECONDS` (predefinito 30 s; 0 disattiva). Diagnostica in `search.ortools`
+`FLEET_PYVRP_SECONDS` (predefinito 30 s; 0 disattiva), condiviso fra costruzione del modello, tentativi e bilanciamento. Prima della costruzione si stimano gli archi: `FLEET_PYVRP_MAX_EDGES` (predefinito 250.000, minimo 1.000, tetto massimo 1.000.000) evita l'espansione eccessiva delle copie cliente con calendari diversi. Se il modello supera il limite o il tempo disponibile, resta la proposta già trovata dagli altri motori. Le singole operazioni native non sono interrompibili a metà; la scadenza impedisce di avviare ulteriori fasi. Diagnostica in `search.ortools`
 (modo `pyvrp`). Con «Distribuisci il lavoro» PyVRP calcola un piano libero e poi
 impone a tutti i giri una durata massima via via più stretta (fino a 5 dimezzamenti), tenendo
 il limite più basso che serve ancora le stesse consegne (`search.ortools`, voce `balance`).
 Su 36 problemi pubblici di Solomon il piano serve sempre tutte le consegne
 e resta in media allo 0,7% dalla migliore soluzione nota: misure in
 [motore-pyvrp-2026-11-05.md](motore-pyvrp-2026-11-05.md).
+Sono misure storiche precedenti alle correzioni del 6 novembre: non costituiscono un nuovo benchmark della versione corretta. I dettagli delle correzioni e del collaudo sono in [GF Engine Optimizer 1.0](gf-engine-optimizer-1.0-fixes-2026-11-06.md).
 
 ## Percorso operativo
 

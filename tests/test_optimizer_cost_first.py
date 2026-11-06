@@ -162,3 +162,114 @@ def test_fleet_backup_search_ranks_by_km_and_main_search_by_score():
     rows, vehicles = [{}], [{}]
     assert _plan_key([[0]], [short_slow], rows, vehicles, "distance") < _plan_key([[0]], [long_fast], rows, vehicles, "distance")
     assert _plan_key([[0]], [long_fast], rows, vehicles, "efficient") < _plan_key([[0]], [short_slow], rows, vehicles, "efficient")
+
+
+def break_scoring_case():
+    rows, matrix = deliveries(2), constant_matrix(2, 2, 20)
+    rows[0].update(scarico_mattina_da='09:00', scarico_mattina_a='10:00', tempo_scarico_min=15)
+    matrix[1, 2]['min'] = 40
+    vehicle = {'driver_schedule': {
+        'start': '08:00', 'end': '18:00',
+        'breaks': [{'start': '08:30', 'end': '09:00'}],
+    }}
+    return rows, matrix, vehicle
+
+
+def test_fixed_break_remains_in_cost_when_later_departure_cannot_remove_it(monkeypatch):
+    rows, matrix, vehicle = break_scoring_case()
+    first = opt._evaluate_fixed_sequence(rows, matrix, [], vehicle)
+    assert first['departure_slack_min'] == 10  # 40 minutes of waiting include a fixed 30-minute break.
+    assert opt.work_minutes(first) == 125
+    moved, clock = opt.later_departure(first, 480, lambda start: opt._evaluate_fixed_sequence(
+        rows, matrix, [], vehicle, True, opt.fmt_hhmm(start)))
+    assert clock == 490 and moved['total_min'] == 125
+    assert opt.work_minutes(moved) == moved['total_min']
+    assert opt.objective_cost(moved) == 131
+    # The alternative takes 105 minutes with the same 6 km, so it must win.
+    depot = stub_route(monkeypatch, rows, matrix)
+    best = opt.optimize_route(None, depot, rows, vehicle, route_date='2099-01-01')
+    assert ids(best) == [2, 1] and best['total_min'] == 105
+    assert 'departure' not in best
+
+
+def fixed_departure_case():
+    rows, matrix = deliveries(2), constant_matrix(2, 2, 20)
+    rows[0].update(scarico_mattina_da='10:00', scarico_mattina_a='12:00', tempo_scarico_min=15)
+    matrix[0, 2]['min'] = matrix[2, 1]['min'] = 40
+    return rows, matrix
+
+
+def test_fixed_departure_ranks_the_waiting_that_will_actually_remain(monkeypatch):
+    rows, matrix = fixed_departure_case()
+    depot = stub_route(monkeypatch, rows, matrix)
+    fixed = opt.optimize_route(None, depot, [dict(row) for row in rows],
+                               route_date='2099-01-01', flexible_departure=False)
+    flexible = opt.optimize_route(None, depot, [dict(row) for row in rows], route_date='2099-01-01')
+    assert ids(fixed) == [2, 1] and fixed['total_min'] == 155
+    assert fixed['return_time'] == '10:35' and 'departure' not in fixed
+    assert ids(flexible) == [1, 2] and flexible['total_min'] == 75
+    assert flexible['departure'] == '09:40'
+
+
+@pytest.mark.parametrize('fixed', [False, True])
+def test_fast_evaluator_matches_realizable_slack_and_fixed_departure(fixed):
+    from app.services.optimizer_search import RouteEvaluator
+    rows, matrix = deliveries(2), constant_matrix(2, 2, 37)
+    rows[0].update(scarico_mattina_da='09:00', scarico_mattina_a='12:00', tempo_scarico_min=15)
+    vehicle = {'_flexible_departure': not fixed}
+    canonical = opt._evaluate_fixed_sequence(rows, matrix, [], vehicle, include_details=False)
+    fast = RouteEvaluator(rows, matrix, [], vehicle, True, '08:00').evaluate(rows, include_details=False)
+    assert fast['_objective'] == canonical['_objective']
+    assert canonical['departure_slack_min'] == (0 if fixed else 20)
+    # The three minutes left after the five-minute grid remain paid time.
+    assert opt.work_minutes(canonical) == canonical['total_min'] - (0 if fixed else 20)
+
+
+@pytest.mark.parametrize('fixed', [False, True])
+def test_fleet_fixed_order_evaluator_matches_pause_and_departure_score(fixed):
+    from app.services.fleet_route_evaluator import FixedRouteEvaluator
+    rows, matrix, vehicle = break_scoring_case()
+    vehicle['_flexible_departure'] = not fixed
+    canonical = opt._evaluate_fixed_sequence(rows, matrix, [], vehicle, earliest_windows=True)
+    fast = FixedRouteEvaluator(rows, [0, 1], matrix, [], vehicle, True, '08:00', 600)([0, 1])
+    assert opt.objective_cost(fast) == opt.objective_cost(canonical)
+    assert opt.work_minutes(fast) == opt.work_minutes(canonical)
+    assert canonical['departure_slack_min'] == (0 if fixed else 10)
+
+
+def test_pause_alone_does_not_trigger_departure_change():
+    rows, matrix = deliveries(1), constant_matrix(1, 2, 20)
+    vehicle = {'driver_schedule': {'breaks': [{'start': '08:30', 'end': '09:00'}]}}
+    base = opt._evaluate_fixed_sequence(rows, matrix, [], vehicle, start_time='08:40')
+    assert base['departure_slack_min'] == 0
+    assert opt.work_minutes(base) == base['total_min']
+
+
+def test_departure_delay_grid_is_relative_to_requested_clock(monkeypatch):
+    rows, matrix = deliveries(1), constant_matrix(1, 2, 37)
+    rows[0].update(scarico_mattina_da='09:00', scarico_mattina_a='10:00', tempo_scarico_min=15)
+    depot = stub_route(monkeypatch, rows, matrix)
+    result = opt.optimize_route(None, depot, rows, start_time='08:03', route_date='2099-01-01')
+    assert result['departure'] == '08:23' and result['total_wait_min'] == 0
+
+
+def test_selected_departure_does_not_discount_a_second_future_shift(monkeypatch):
+    rows, matrix = deliveries(1), constant_matrix(1, 2, 20)
+    rows[0].update(scarico_mattina_da='09:30', scarico_mattina_a='11:00', tempo_scarico_min=15)
+    vehicle = {'driver_schedule': {'breaks': [{'start': '08:30', 'end': '09:00'}]}}
+    depot = stub_route(monkeypatch, rows, matrix)
+    replay = opt._evaluate_fixed_sequence
+    snapshots = []
+    def record(*args, **kwargs):
+        result = replay(*args, **kwargs)
+        snapshots.append(dict(result))
+        return result
+    monkeypatch.setattr(opt, '_evaluate_fixed_sequence', record)
+    result = opt.optimize_route(None, depot, rows, vehicle,
+                                start_time='08:40', route_date='2099-01-01')
+    # Only the original 10-minute opening wait may shift the departure. Even
+    # though the selected clock remains inside the pause, do not discount a
+    # second ten-minute shift from this final, already chosen departure.
+    assert result['departure'] == '08:50' and result['total_min'] == 75
+    assert opt.work_minutes(snapshots[-1]) == result['total_min']
+    assert snapshots[-1]['departure_slack_min'] == 0

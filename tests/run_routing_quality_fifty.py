@@ -40,7 +40,7 @@ def campaign(variants=True):
             for variant, permutation in inputs:
                 answer = run_fleet(case, strategy, input_order=permutation)
                 check = inspect_answer(case, strategy, answer, reference)
-                actual = plan_metrics(effective_case(case), answer['routes'])
+                actual = plan_metrics(effective_case(case), answer['routes'], answer.get('departures'))
                 rank = objective(actual, strategy)
                 if first is None:
                     first = (answer['routes'], rank)

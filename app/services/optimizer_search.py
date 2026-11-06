@@ -39,7 +39,7 @@ class RouteEvaluator:
         km = wait = late = 0.0
         violations = warnings = 0
         constrained = False
-        margins = []
+        timing = []
         for d in sequence:
             node = d['_matrix_index']
             leg = opt._matrix_leg(self.matrix, self.points, previous, node)
@@ -59,24 +59,27 @@ class RouteEvaluator:
                 violations += not ev['feasible']
                 warnings += bool(ev['warning'])
                 late += max(0.0, clock - ev['window_end'])
-                margins.append((ev['wait'], ev['window_end'] - clock))
             else:
                 clock = clock + leg['min'] + self.service[node]
+            timing.append((leg['min'], self.service[node], windows))
             warnings += self.warnings[node]
             constrained |= self.constrained[node]
             km += leg['km']
             previous = node
+        return_minutes = None
         if self.return_depot and sequence:
             back = opt._matrix_leg(self.matrix, self.points, previous, 0)
             km += back['km']
             clock += back['min']
+            return_minutes = back['min']
         duration = clock - self.start
         # Preserve the existing diagnostic/infeasible score exactly; all search
         # comparisons go through solution_key, not this weighted legacy field.
         score = (violations * 100000 + duration * 10 + wait * 1.5 + warnings * 25 + km
                  if constrained else duration * 10 + km)
         # Same score as the canonical evaluator: km plus driver hours without absorbable waits.
-        slack = 0.0 if violations else opt.departure_slack(margins, wait)
+        slack = 0.0 if violations else opt.realizable_departure_slack(
+            self.start, clock, timing, wait, return_minutes=return_minutes, vehicle=self.vehicle)
         cost = opt.route_cost(km, duration - slack, self.vehicle)
         return dict(total_km=round(km, 2), total_min=round(duration, 1),
                     total_wait=round(wait, 1), total_lateness_min=late,

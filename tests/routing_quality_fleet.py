@@ -279,7 +279,7 @@ def run_fleet(case, strategy, input_order=None, budget=None):
     return dict(routes=routes, departures=departures, production=production, diagnostics=production['search'],
         production_metrics=dict(served=sum(map(len, routes)), used=used,
             km=sum(float(route['result']['total_km']) for route in production['routes']),
-            minutes=sum(durations), makespan=max(durations, default=0),
+            minutes=sum(durations), work_minutes=sum(durations), makespan=max(durations, default=0),
             sumsq=sum(value * value for value in durations),
             fuel_cost=sum(float(route['fuel_cost']) for route in production['routes'])),
         unassigned=[order[item['index']] for item in production['unassigned']],

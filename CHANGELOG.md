@@ -5,6 +5,15 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- GF Engine Optimizer 1.0: il punteggio sottrae solo le attese eliminabili con una
+  partenza realmente compatibile con pause e finestre, a passi di cinque minuti;
+  con partenza fissa conta tutta la durata. PyVRP ha un limite alla dimensione del
+  modello prima dell'allocazione e una scadenza condivisa fra costruzione e tentativi.
+  Il verificatore indipendente usa il nuovo lavoro effettivo anche nel bilanciamento;
+  i confronti storici conservano il proprio calendario congelato. Aggiornati il
+  requisito dell'ultima migrazione e i test PostgreSQL di migrazione e tracking.
+  Dettagli e controlli in docs/gf-engine-optimizer-1.0-fixes-2026-11-06.md.
+
 - Calcolo dei giri, «Distribuisci il lavoro»: le ore di ogni autista non
   contano più l'attesa che una partenza più tarda elimina (come già in «Riduci
   chilometri e tempi»), quindi un autista con soli clienti del pomeriggio non

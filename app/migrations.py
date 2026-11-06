@@ -3,7 +3,7 @@ from datetime import datetime
 from .core.clock import utc_now
 from sqlalchemy import inspect, text
 
-LATEST = '20261029_01'
+LATEST = '20261105_01'
 LOCK_ID = 7640152404
 
 

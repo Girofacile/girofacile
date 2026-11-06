@@ -7,7 +7,7 @@ from copy import deepcopy
 
 import pytest
 
-from routing_quality_oracle import replay, solve_fleet, solve_single
+from routing_quality_oracle import objective, plan_metrics, replay, solve_fleet, solve_single
 
 
 def stop(index, **changes):
@@ -264,3 +264,109 @@ def test_reference_does_not_modify_input():
     solve_single(data)
     solve_fleet(data, 'balanced')
     assert data == original
+
+
+def test_balanced_afternoon_route_counts_achievable_work_not_morning_wait():
+    data = case([stop(0, tempo_scarico_min=10,
+                      scarico_pomeriggio_da='13:00', scarico_pomeriggio_a='17:00')],
+                returning=True)
+    data['kind'] = 'fleet'
+    result = solve_fleet(data, 'balanced')
+    metrics = result['metrics']
+    # 08:00 -> arrival08:10 -> wait13:00 -> service13:10 -> return13:20.
+    # Departing12:50 gives the same return after thirty working minutes.
+    assert metrics['minutes'] == 320
+    assert metrics['work_minutes'] == metrics['makespan'] == 30
+    assert metrics['sumsq'] == 900
+    assert metrics['routes'][0]['departure_slack_min'] == 290
+    assert metrics['routes'][0]['score_departure_min'] == 12 * 60 + 50
+    assert objective(metrics, 'balanced') == (-1, 0, -1, 30, 900, 30, 2)
+    actual = plan_metrics(data, [(0,)], starts=['12:50'])
+    assert actual['minutes'] == 30
+    assert objective(actual, 'balanced') == objective(metrics, 'balanced')
+
+
+def test_fixed_or_explicit_departure_keeps_all_window_wait_in_score():
+    data = case([stop(0, tempo_scarico_min=10,
+                      scarico_pomeriggio_da='13:00', scarico_pomeriggio_a='17:00')],
+                returning=True)
+    data['flexible_departure'] = False
+    fixed = replay(data, 0, (0,))
+    assert fixed['departure_slack_min'] == 0
+    assert fixed['work_minutes'] == fixed['minutes'] == 320
+    assert fixed['cost'] == 322
+    data['flexible_departure'] = True
+    explicit = replay(data, 0, (0,), start='08:00')
+    assert explicit['cost'] == fixed['cost']
+    data['resources'][0]['_flexible_departure'] = False
+    assert replay(data, 0, (0,))['cost'] == fixed['cost']
+
+
+def test_only_departure_steps_that_can_be_published_reduce_work():
+    data = case([stop(0, tempo_scarico_min=15,
+                      scarico_mattina_da='09:00', scarico_mattina_a='10:00')],
+                returning=True, minutes=37)
+    result = replay(data, 0, (0,))
+    # Twenty-three minutes of waiting permit a twenty-minute departure shift.
+    assert result['minutes'] == 112
+    assert result['departure_slack_min'] == 20
+    assert result['work_minutes'] == 92
+    assert result['cost'] == 94
+
+
+def test_fixed_break_alone_does_not_discount_the_working_score():
+    data = case([stop(0, tempo_scarico_min=10)],
+                [resource(driver_schedule=dict(start='08:00', end='17:00',
+                    breaks=[dict(start='08:10', end='08:30')]))],
+                returning=True, minutes=5)
+    result = replay(data, 0, (0,))
+    assert result['minutes'] == result['work_minutes'] == 45
+    assert result['departure_slack_min'] == 0
+    assert result['cost'] == 47
+
+
+def test_opening_wait_credit_replays_travel_across_a_fixed_break():
+    data = case([stop(0, tempo_scarico_min=10,
+                      scarico_mattina_da='08:35', scarico_mattina_a='10:00')],
+                [resource(driver_schedule=dict(start='08:00', end='17:00',
+                    breaks=[dict(start='08:20', end='08:40')]))],
+                returning=True, minutes=10)
+    result = replay(data, 0, (0,))
+    # Service initially starts08:40 (rest ends after opening): no opening wait
+    # credit is available, although moving departure could avoid part of rest.
+    assert result['minutes'] == result['work_minutes'] == 60
+    assert result['departure_slack_min'] == 0
+
+
+def test_balanced_two_shifts_compare_work_for_morning_and_afternoon_customers():
+    data = case([stop(0, peso_kg=1, tempo_scarico_min=10,
+                      scarico_mattina_da='08:00', scarico_mattina_a='09:00'),
+                 stop(1, peso_kg=1, tempo_scarico_min=10,
+                      scarico_pomeriggio_da='13:00', scarico_pomeriggio_a='17:00')],
+                [resource(capacita_kg=1), resource(capacita_kg=1)], returning=True)
+    data['kind'] = 'fleet'
+    result = solve_fleet(data, 'balanced')
+    assert result['metrics']['served'] == 2
+    assert result['metrics']['used'] == 2
+    assert result['metrics']['work_minutes'] == 60
+    assert result['metrics']['makespan'] == 30
+    assert result['metrics']['sumsq'] == 1800
+
+
+def test_window_wait_is_not_credit_when_it_pushes_service_across_rest():
+    data = case([stop(0, tempo_scarico_min=5,
+                      scarico_mattina_da='08:10', scarico_mattina_a='10:00'),
+                 stop(1, tempo_scarico_min=10),
+                 stop(2, scarico_mattina_da='09:00', scarico_mattina_a='10:00')],
+                [resource(driver_schedule=dict(start='08:00', end='17:00',
+                    breaks=[dict(start='08:30', end='08:50')]))],
+                returning=True, minutes=5)
+    result = replay(data, 0, (0, 1, 2))
+    # Initial service ends08:15 and08:30, then the break and last opening
+    # give return09:05. Window waits total10min, but delaying10min makes
+    # the second service cross rest, moving return09:10. Only5min is real.
+    assert result['minutes'] == 65
+    assert result['wait'] == 10
+    assert result['departure_slack_min'] == 5
+    assert result['work_minutes'] == 60
+    assert result['cost'] == 64

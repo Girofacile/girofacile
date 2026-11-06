@@ -34,7 +34,7 @@ def test_migrations_are_serialized_repeatable_and_preserve_data(pg):
     require_current_schema(pg)
     with pg.begin() as conn:
         markers = set(conn.execute(text('SELECT version FROM schema_migrations')).scalars())
-        assert markers == {'20261004_01', '20261004_02', '20261004_03', '20261004_04', '20261006_01', '20261009_01', '20261009_02', '20261010_01', '20261010_02', '20261011_01', '20261011_02', '20261013_01', '20261013_02', '20261020_01', '20261020_02', '20261023_01', '20261027_01', '20261027_02', '20261028_01', LATEST}
+        assert markers == {'20261004_01', '20261004_02', '20261004_03', '20261004_04', '20261006_01', '20261009_01', '20261009_02', '20261010_01', '20261010_02', '20261011_01', '20261011_02', '20261013_01', '20261013_02', '20261020_01', '20261020_02', '20261023_01', '20261027_01', '20261027_02', '20261028_01', '20261029_01', '20261102_01', LATEST}
         conn.execute(text("UPDATE users SET company_name='preserved'"))
         conn.execute(text('CREATE TABLE activity_events (id INTEGER)'))
         conn.execute(text('INSERT INTO activity_events VALUES (1)'))
@@ -43,6 +43,17 @@ def test_migrations_are_serialized_repeatable_and_preserve_data(pg):
         assert set(conn.execute(text('SELECT version FROM schema_migrations')).scalars()) == markers
         assert conn.execute(text('SELECT company_name FROM users')).scalar() == 'preserved'
         assert conn.execute(text('SELECT COUNT(*) FROM activity_events')).scalar() == 1
+
+
+def test_startup_requires_the_latest_migration(pg):
+    from app.migrations import run_migrations, require_current_schema, LATEST
+    run_migrations(pg)
+    with pg.begin() as conn:
+        conn.execute(text('DELETE FROM schema_migrations WHERE version=:version'), {'version': LATEST})
+    with pytest.raises(RuntimeError, match='Migrazioni pendenti'):
+        require_current_schema(pg)
+    run_migrations(pg)
+    require_current_schema(pg)
 
 
 def test_duplicate_legacy_statuses_stop_before_mutation(pg):
