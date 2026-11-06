@@ -122,6 +122,8 @@ function syncWorkspaceTopbar(name){
     document.body.classList.toggle("gf-dashboard-page-active",name==="dashboard");
   }
   if(name==="dashboard")window.GFDashboardMobile?.syncHeader();
+  // Anteprima di un giro singolo: titolo e stato del giro nella barra in alto.
+  if(name==="route-preview" && typeof gfApplyRoutePreviewTopbar==="function")gfApplyRoutePreviewTopbar();
 }
 
 // Voce attiva della sidebar del layout base (aria-current, come in shell.js).

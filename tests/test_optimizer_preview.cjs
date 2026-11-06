@@ -34,14 +34,15 @@ test('zero violations has no urgent window alarm, preserves operational warnings
 
 test('clean preview: five metrics, stops above the map panel, print and scheduling actions',()=>{
   const html=render(false,{consegne:[{ordine:1,cliente_nome:'Cliente',indirizzo:'Via Roma',warning:''}],totale_km:89.59,litri_stimati:7.62,google_maps_url:'https://www.google.com/maps'});
-  // Cinque indicatori con icone, poi la tabella delle fermate e sotto mappa + riepilogo; nessun avviso senza problemi.
+  // Cinque indicatori con icone, poi la tabella delle fermate e sotto la mappa a tutta larghezza e il riepilogo.
   const metrics=html.slice(html.indexOf('data-preview-metrics'),html.indexOf('data-preview-stops'));
   assert.equal((metrics.match(/class="gf-stat-strip__cell"/g)||[]).length,5);
   assert.ok(html.indexOf('data-preview-metrics') < html.indexOf('data-preview-stops'));
   assert.ok(html.indexOf('data-preview-stops') < html.indexOf('data-preview-layout'));
-  assert.match(html,/class="gf-route-panel" data-preview-layout/);
-  assert.doesNotMatch(html,/data-preview-alerts/);
-  for(const text of ['89,59','7,62 L','Prima della partenza','Torna alla pianificazione','Programma giro','Visualizza su mappa','Apri in Google Maps','Ricarica mappa','Stampa dettaglio fermate','Copia indirizzo']) assert.ok(html.includes(text),text);
+  assert.match(html,/<section class="gf-panel" data-preview-map/);
+  assert.ok(html.indexOf('data-preview-map') < html.indexOf('data-preview-summary'));
+  assert.doesNotMatch(html,/data-preview-alerts|gf-route-panel"|Prima della partenza/);
+  for(const text of ['89,59','7,62 L','Torna alla pianificazione','Programma giro','Visualizza su mappa','Apri in Google Maps','Ricarica mappa','Stampa dettaglio fermate','Copia indirizzo']) assert.ok(html.includes(text),text);
 });
 
 test('saved history cannot schedule or reorder stops and routes without IDs do not load a map',()=>{
@@ -52,15 +53,18 @@ test('saved history cannot schedule or reorder stops and routes without IDs do n
   assert.doesNotMatch(unsaved,/programCurrentRoute|data-preview-map[ >]/);
 });
 
-test('unclassified warnings remain visible in the preview summary and stop table',()=>{
-  const html=render(false,{consegne:[{ordine:1,cliente_nome:'Cliente',indirizzo:'Via Roma',warning:'Percorso non fattibile'}]});
-  assert.match(html,/Fermate da verificare/);
+test('warnings stay next to their stop in the table, without summary cards',()=>{
+  const html=render(false,{consegne:[{ordine:1,cliente_nome:'Cliente',indirizzo:'Via Roma',warning:'Percorso non fattibile'}],
+    consegne_escluse:[{cliente_nome:'Cliente isola',indirizzo:'Via del Porto'}]});
+  assert.doesNotMatch(html,/Fermate da verificare|gf-alert/);
   assert.match(html,/Percorso non fattibile/);
+  const excluded=html.slice(html.indexOf('data-preview-excluded'));
+  assert.match(excluded,/Cliente isola/);
+  assert.match(excluded,/raggiungibile solo in traghetto/);
 });
-test('violations show urgent summary and affected customer without blocking planning',()=>{
+test('violations show the affected customer in the table without blocking planning',()=>{
   const html=render(true);
-  assert.match(html,/role="alert"/);
-  assert.match(html,/Finestre orarie non rispettate/);
+  assert.doesNotMatch(html,/Finestre orarie non rispettate/);
   assert.match(html,/Finestra non rispettata · 5.0 min/);
   assert.match(html,/Cliente &lt;test>/);
   assert.match(html,/Programma giro/);
