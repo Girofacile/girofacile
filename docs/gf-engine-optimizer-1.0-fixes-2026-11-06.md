@@ -46,6 +46,30 @@ Le operazioni native individuali non sono interrompibili: non è una garanzia di
 del processo esattamente al millisecondo. Una proposta già fattibile viene conservata
 quando il bilanciamento esaurisce il tempo.
 
+### Ripartizione definitiva del tempo (V1)
+
+Anche con lo stop adattivo, sull'intero prodotto e su un computer Windows più lento
+r104 e r112 lasciavano fuori 3 e 5 consegne: al 65% della fase la prima ricerca non
+aveva ancora un piano valido, quindi partiva il secondo tentativo con penalità alte,
+che preferisce escludere consegne. Con tutto il tempo alla prima ricerca r104 le serve
+tutte. Il risultato dipendeva quindi dalla velocità della macchina.
+
+Regola definitiva: la prima ricerca usa tutta la propria fase. Solo se alla fine non è
+fattibile, il secondo tentativo riceve al massimo il 35% di `FLEET_PYVRP_SECONDS` in più
+(tetto assoluto: 1,35 volte il budget). Nei limiti di durata del bilanciamento non c'è
+secondo tentativo: un limite troppo stretto si scarta e si prova il successivo.
+
+Misura sui 36 problemi Solomon, prodotto completo, stesso computer della misura del
+5 novembre: 36/36 serviti per intero, scarto medio 0,72% (mediana 0,16%, massimo 6,08%
+su r112, che varia tra esecuzioni), 15 problemi alla migliore soluzione nota, tempo medio
+110 s. Piani reali salvati, stessa data, contro `5e270a3`: stesse consegne servite,
+108 km e 4 ore in meno in totale, nessun peggioramento oltre la variabilità della ricerca
+a tempo (piano 32: giro più lungo 237 invece di 233 minuti, con 64 km in meno).
+
+Limite degli archi: misurato su questo computer, 250.000 archi costano 0,5 s e 25 MB,
+1.000.000 circa 2,4 s e 100 MB prima della ricerca. Il piano reale più grande ne usa
+50.000: il predefinito resta 250.000, alzabile con `FLEET_PYVRP_MAX_EDGES`.
+
 ### Verifica successiva della ripartizione del tempo: Solomon R104
 
 È stata segnalata una perdita di tre consegne dopo la riserva fissa del 35%. La prova

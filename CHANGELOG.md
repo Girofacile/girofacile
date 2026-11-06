@@ -5,6 +5,15 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Motore dei giri V1, PyVRP: la prima ricerca usa sempre tutto il tempo previsto.
+  Il secondo tentativo, con penalità più alte, parte solo se alla fine non c'è un
+  piano valido e riceve al massimo il 35% di tempo in più. Con la riserva al 65%
+  Solomon r104 e r112 lasciavano fuori 3 e 5 consegne su un computer più lento:
+  ora tutti i 36 problemi servono tutte le consegne (scarto medio 0,72% dalla
+  migliore soluzione nota). Nel bilanciamento un limite di durata troppo stretto
+  si scarta senza secondo tentativo. Pagina anteprima del giro: titolo e stato
+  nella barra in alto, avvisi solo nella tabella accanto alla fermata (anche le
+  consegne escluse), mappa a tutta larghezza con riepilogo e pulsanti sotto.
 - PyVRP: la ricerca con una soluzione già fattibile può usare l'intero tempo della
   propria fase, continuando a recuperare consegne escluse. La riserva per il secondo
   tentativo scatta al 65% soltanto se il primo è ancora non fattibile. Il limite

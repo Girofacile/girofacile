@@ -209,7 +209,7 @@ def test_model_construction_uses_the_same_deadline_as_search(monkeypatch):
     assert report['attempts'] == 0 and report['seconds'] == 4
 
 
-def test_retry_uses_only_the_time_left_after_construction_and_first_attempt(monkeypatch):
+def test_retry_gets_a_bounded_extra_only_after_a_full_infeasible_search(monkeypatch):
     import pyvrp
     from types import SimpleNamespace
 
@@ -222,24 +222,20 @@ def test_retry_uses_only_the_time_left_after_construction_and_first_attempt(monk
         return original(self)
 
     def infeasible(problem, *, stop, **kwargs):
-        # Il criterio pubblico FirstFeasible riceve INT_MAX, non inf, quando
-        # il solutore non ha ancora trovato un piano fattibile.
-        infeasible_cost = (1 << 63) - 1
-        assert not stop(infeasible_cost)
-        end = stop.retry_at if stop.retry_at is not None else stop.deadline
-        calls.append(end - clock.now)
-        clock.now = end
-        assert stop(infeasible_cost)
+        assert not stop(0)
+        calls.append(stop.deadline - clock.now)
+        clock.now = stop.deadline
+        assert stop(0)
         return SimpleNamespace(is_feasible=lambda: False)
 
     monkeypatch.setattr(pyvrp.Model, 'data', build_data)
     monkeypatch.setattr(pyvrp, 'solve', infeasible)
     orders, report = fleet_pyvrp.improve([_row(1)], [_vehicle()], _line([1]), '08:00',
                                         True, [540], [()], 10)
+    # Prima ricerca fino alla scadenza (10 s meno i 2 della costruzione), poi al massimo il 35% in più.
     assert orders is None and report['attempts'] == 2
-    assert sum(calls) == pytest.approx(8) and clock.now == pytest.approx(10)
-    assert report['budget_exhausted'] and report['seconds'] == 10
-
+    assert calls == [pytest.approx(8), pytest.approx(3.5)] and clock.now == pytest.approx(13.5)
+    assert report['budget_exhausted'] and report['seconds'] == 13.5
 
 def test_feasible_first_search_uses_the_full_phase_without_restarting(monkeypatch):
     import pyvrp
@@ -250,25 +246,19 @@ def test_feasible_first_search_uses_the_full_phase_without_restarting(monkeypatc
 
     def solver(problem, *, stop, **kwargs):
         calls.append(stop)
-        assert stop.retry_at is not None and stop.retry_at < stop.deadline
-        # Un piano con consegne facoltative non servite è comunque fattibile:
-        # deve poter continuare oltre la quota del 65% per recuperarle.
         best = pyvrp.Solution(problem, [pyvrp.Route(problem, [0], 0)])
-        cost = pyvrp.CostEvaluator([0, 0], 0, 0).cost(best)
-        clock.now = stop.retry_at
-        assert not stop(cost)
         clock.now = stop.deadline - .001
-        assert not stop(cost)
+        assert not stop(0)
         clock.now = stop.deadline
-        assert stop(cost)
+        assert stop(0)
         return SimpleNamespace(is_feasible=lambda: True, best=best)
 
     monkeypatch.setattr(pyvrp, 'solve', solver)
     orders, report = fleet_pyvrp.improve([_row(1), _row(2)], [_vehicle()], _line([1, 2]),
                                         '08:00', True, [540], [()], 10)
+    # Un piano valido, anche con consegne escluse, non fa partire il secondo tentativo né tempo in più.
     assert orders == ((0,),) and len(calls) == report['attempts'] == 1
     assert report['feasible'] and report['seconds'] == 10
-
 
 def test_balancing_shares_deadline_and_keeps_its_feasible_plan(monkeypatch):
     import pyvrp
@@ -284,10 +274,9 @@ def test_balancing_shares_deadline_and_keeps_its_feasible_plan(monkeypatch):
             clock.now = stop.deadline
             best = pyvrp.Solution(problem, [pyvrp.Route(problem, [0, 1], 0)])
             return SimpleNamespace(is_feasible=lambda: True, best=best)
-        end = stop.retry_at if stop.retry_at is not None else stop.deadline
-        calls.append(end - clock.now)
-        clock.now = end
-        assert stop((1 << 63) - 1)
+        calls.append(stop.deadline - clock.now)
+        clock.now = stop.deadline
+        assert stop(0)
         return SimpleNamespace(is_feasible=lambda: False)
 
     monkeypatch.setattr(pyvrp, 'solve', solver)

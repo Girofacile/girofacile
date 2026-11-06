@@ -20,7 +20,8 @@ consegna esclusa costa più di quanto possa mai costare servirla.
 PyVRP parte da zero, non dal piano già trovato: partire da un piano debole lo intrappola,
 e la scelta finale tiene comunque il migliore dei due. Tempo: 0,3 s per consegna, tra 1 s
 e FLEET_PYVRP_SECONDS (predefinito 30 s; 0 lo spegne), condiviso tra costruzione,
-tentativi e bilanciamento. I modelli troppo grandi lasciano il piano già trovato:
+ricerca e bilanciamento. Solo quando la ricerca non trova un piano valido, un secondo
+tentativo con penalità più alte riceve al massimo il 35% in più (RETRY_SHARE). I modelli troppo grandi lasciano il piano già trovato:
 FLEET_PYVRP_MAX_EDGES (250.000, al massimo 1.000.000) limita gli archi prima di allocarli.
 """
 from __future__ import annotations
@@ -40,21 +41,16 @@ DEFAULT_MAX_MODEL_EDGES = 250_000
 HARD_MAX_MODEL_EDGES = 1_000_000
 
 
+RETRY_SHARE = 0.35         # tempo in più, solo per il secondo tentativo (quota di FLEET_PYVRP_SECONDS)
+
+
 class _Deadline:
     """PyVRP controlla questo termine assoluto anche dopo il proprio setup."""
-    def __init__(self, deadline, retry_at=None):
+    def __init__(self, deadline):
         self.deadline = deadline
-        self.retry_at = retry_at
-        if retry_at is not None:
-            # Import locale: PyVRP resta una dipendenza facoltativa del servizio.
-            from pyvrp.stop import FirstFeasible
-            self._first_feasible = FirstFeasible()
 
     def __call__(self, best_cost):
-        now = perf_counter()
-        return (now >= self.deadline
-                or (self.retry_at is not None and now >= self.retry_at
-                    and not self._first_feasible(best_cost)))
+        return perf_counter() >= self.deadline
 
 
 def available():
@@ -100,6 +96,9 @@ def improve(rows, vehicles, matrix, start_time, return_depot, limits, initial, s
     clock_started = perf_counter()
     budget = max(0.0, float(seconds))
     deadline = clock_started + budget
+    # Solo il secondo tentativo, quando il primo non trova un piano valido, può andare oltre:
+    # al massimo il 35% del tempo in più (fino a 40,5 s con il predefinito di 30 s).
+    hard_deadline = deadline + RETRY_SHARE * budget
 
     def remaining():
         return max(0.0, deadline - perf_counter())
@@ -273,33 +272,33 @@ def improve(rows, vehicles, matrix, start_time, return_depot, limits, initial, s
             seed = Solution(data, seed_routes) if seed_routes else None
         except Exception:
             seed = None
-    def run(problem, limit, start_from=None):
-        # Prima la ricerca con le impostazioni normali di PyVRP. Se non trova un piano valido
-        # (giorni in cui non tutto è servibile: piano reale 50, 30 consegne su 54) si ripete con
-        # il tetto delle penalità per sovraccarico e ritardo sopra il costo di una consegna
-        # esclusa, altrimenti PyVRP preferisce sforare. Quel tetto alto, sempre attivo,
-        # peggiora invece i casi con fasce strette (Solomon r104, r110: 3 escluse invece di 0).
+    def run(problem, limit, start_from=None, retry=True):
+        # Prima la ricerca con le impostazioni normali di PyVRP, per tutto il tempo della fase:
+        # sui problemi con fasce strette il piano valido arriva tardi (Solomon r104: con il 65%
+        # del tempo 3 consegne escluse, con il 100% nessuna; dipende dalla velocità del server).
+        # Solo se alla fine non c'è un piano valido (giorni in cui non tutto è servibile: piano
+        # reale 50, 30 consegne su 54) si ripete con il tetto delle penalità per sovraccarico e
+        # ritardo sopra il costo di una consegna esclusa, altrimenti PyVRP preferisce sforare;
+        # quel tetto alto, sempre attivo, peggiora i casi con fasce strette (r104, r110).
         phase_deadline = min(deadline, perf_counter() + max(0.0, limit))
-        penalties = (PenaltyParams(), PenaltyParams(max_penalty=float(max(100_000, prize + 1))))
         result, attempts = None, 0
-        for attempt, penalty in enumerate(penalties, 1):
-            left = min(deadline, phase_deadline) - perf_counter()
-            if left <= 0:
-                break
-            # Un piano fattibile, anche parziale, continua nella stessa ricerca
-            # fino alla scadenza. Soltanto se ancora non fattibile si riserva il
-            # tempo finale al retry, senza riavviare i casi che stanno migliorando.
-            retry_at = perf_counter() + left * 0.65 if attempt == 1 else None
-            with warnings.catch_warnings():
-                # Penalità che toccano il tetto sono previste (consegne non servibili): niente avvisi nei log.
-                warnings.simplefilter('ignore', PenaltyBoundWarning)
-                result = solve(problem, stop=_Deadline(min(deadline, phase_deadline), retry_at), seed=1, display=False,
-                               collect_stats=False, initial_solution=start_from,
-                               params=SolveParams(penalty=penalty))
-            attempts += 1
-            if result.is_feasible():
-                break
+        if phase_deadline > perf_counter():
+            result = _solve(problem, PenaltyParams(), phase_deadline, start_from)
+            attempts = 1
+        if retry and (result is None or not result.is_feasible()):
+            retry_deadline = min(hard_deadline, perf_counter() + RETRY_SHARE * budget)
+            if retry_deadline > perf_counter():
+                result = _solve(problem, PenaltyParams(max_penalty=float(max(100_000, prize + 1))),
+                                retry_deadline, start_from)
+                attempts += 1
         return result, attempts
+
+    def _solve(problem, penalty, until, start_from):
+        with warnings.catch_warnings():
+            # Penalità che toccano il tetto sono previste (consegne non servibili): niente avvisi nei log.
+            warnings.simplefilter('ignore', PenaltyBoundWarning)
+            return solve(problem, stop=_Deadline(until), seed=1, display=False, collect_stats=False,
+                         initial_solution=start_from, params=SolveParams(penalty=penalty))
 
     def served(solution):
         return sum(route.num_clients() for route in solution.routes())
@@ -332,7 +331,8 @@ def improve(rows, vehicles, matrix, start_time, return_depot, limits, initial, s
             # Il piano migliore finora come punto di partenza: PyVRP vuole giri legati ai nuovi dati.
             start_from = Solution(tight, [Route(tight, [a.idx for a in route if a.is_client()], route.vehicle_type())
                                           for route in best.routes()])
-            trial, trial_attempts = run(tight, remaining() / (BALANCE_STEPS - len(steps)), start_from)
+            # Un limite troppo stretto si scarta e si prova quello successivo: nessun secondo tentativo.
+            trial, trial_attempts = run(tight, remaining() / (BALANCE_STEPS - len(steps)), start_from, retry=False)
             report['attempts'] += trial_attempts
             if trial is None:
                 break
