@@ -34,12 +34,79 @@ viene escluso prima dell'allocazione, conservando il piano degli altri motori.
 del fallback (`model-size-limit` o `time-limit`).
 
 `FLEET_PYVRP_SECONDS` è condiviso fra preparazione, ricerca, eventuale secondo tentativo
-e bilanciamento. Il primo tentativo usa il 65% del tempo della propria fase per riservare
-il resto al retry con penalità diverse; il retry non riceve un nuovo budget intero.
+e bilanciamento. Il primo tentativo può usare l'intera fase quando ha già trovato un
+piano fattibile, anche parziale: continua la stessa ricerca per recuperare le consegne
+ancora escluse. Soltanto se è ancora non fattibile al 65% della fase cede il residuo al
+retry con penalità diverse; il retry non riceve un nuovo budget intero. Il controllo usa
+il criterio pubblico `FirstFeasible` di PyVRP, che riconosce il costo sentinella `INT_MAX`
+dei piani non fattibili. Una quota fissa del 65% anche nei casi fattibili tagliava la ricerca
+e lasciava inutilizzato il tempo residuo: questa ripartizione è stata corretta.
 La scadenza è assoluta, con verifiche durante la costruzione e prima di ogni ricerca.
 Le operazioni native individuali non sono interrompibili: non è una garanzia di arresto
 del processo esattamente al millisecondo. Una proposta già fattibile viene conservata
 quando il bilanciamento esaurisce il tempo.
+
+### Verifica successiva della ripartizione del tempo: Solomon R104
+
+È stata segnalata una perdita di tre consegne dopo la riserva fissa del 35%. La prova
+locale con i dati ufficiali SINTEF, nove mezzi da 200 unità e 30 secondi non ha riprodotto
+le tre esclusioni: entrambe le revisioni servono tutti i cento clienti. Conferma però il
+taglio del tempo utile e il vantaggio della correzione adattiva:
+
+| Versione del componente PyVRP | Tempo misurato | Servite | Distanza |
+| --- | ---: | ---: | ---: |
+| `34f6ef9`, quota fissa | 19,554 s su 30 | 100/100 | 1.022,52145 |
+| Stop adattivo, stessa ricerca continua | 30,004 s su 30 | 100/100 | 1.007,31058 |
+
+Nessun errore nel replay indipendente: capacità, inizio del servizio entro la finestra
+originale Solomon, rientro in deposito entro 230 e unicità delle consegne. La seconda
+distanza arrotondata coincide con 1.007,31, il valore riportato da
+[SINTEF per R104 con nove mezzi](https://www.sintef.no/projectweb/top/vrptw/100-customers/).
+È un confronto locale del componente, non una nuova campagna su tutte le istanze né una
+garanzia dell'ottimo globale del prodotto. La ricerca a tempo può dare risultati diversi
+su altre macchine.
+
+La fixture R104 con provenienza e checksum è versionata in `tests/fixtures/solomon/`.
+Il confronto si ripete senza rete con:
+
+```sh
+python tests/run_pyvrp_r104_benchmark.py --seconds 30 --baseline-ref 34f6ef9 --strict
+```
+
+Il controllo usa le nove risorse della soluzione di riferimento, non i 25 veicoli massimi
+del file originale. Il report salva ordini completi, controlli indipendenti, versione della
+libreria, tempi e hash dei sorgenti; si confrontano i due adattatori PyVRP sul medesimo
+calendario corrente. Due esecuzioni locali successive della correzione hanno entrambe
+servito 100/100 clienti a distanza 1.007,31058, in circa 30 secondi ciascuna.
+
+Fonte dell'input: [archivio ufficiale Solomon 100](https://www.sintef.no/globalassets/project/top/vrptw/solomon/solomon-100.zip),
+voce `In/r104.txt`, SHA-256 del file originale
+`dd087124311d91facd81736debbfc7d0f351d27942917e2d76cbafd01e6183b7`.
+Le finestre Solomon limitano l'inizio del servizio; nell'adattatore GiroFacile si aggiunge
+la durata dello scarico alla chiusura della finestra, perché il calendario del prodotto
+vincola la fine dello scarico. Distanze euclidee e tempi sono calcolati in doppia precisione.
+
+### Ripetizioni con ricerca a tempo nell'audit
+
+La pipeline del commit `34f6ef9` ha registrato un solo finding nell'audit: due ricerche
+bilanciate sul medesimo input da 100 consegne hanno trovato piani diversi entro il limite
+di tempo (`identical_input_not_deterministic`). Nell'artifact GitHub `13533105444` il
+replay resta fattibile e non ci sono scarti dai riferimenti esatti o dai testimoni.
+Una seed fissa non garantisce lo stesso numero di iterazioni prima di una scadenza reale.
+
+L'audit continua a registrare la variazione, come `repeated_timed_search_changed_result`,
+soltanto quando la diagnostica documenta che un solutore a tempo è stato effettivamente
+eseguito. Senza tale evidenza la mancata ripetibilità resta un errore. La modifica non
+declassa vincoli violati, assegnazioni duplicate, dati pubblici incoerenti o false promesse
+di ottimo: questi controlli restano bloccanti. I rapporti riportano separatamente il numero
+delle variazioni a tempo. L'adattatore del giro singolo conserva anche il resoconto della
+ricerca OR-Tools per applicare la stessa classificazione.
+
+Verifica dell'aggiornamento: 63 test mirati superati (solutore, audit, riferimento
+indipendente e fixture R104). Il replay dell'output CI del caso segnalato conferma zero
+errori operativi e registra la variazione come osservazione a tempo. Sono state aggiunte
+regressioni che mantengono bloccanti sia le assegnazioni duplicate sia gli scarti in un
+problema che promette l'ottimo esatto, anche in presenza di diagnostica a tempo.
 
 ## Verifiche e confronti
 

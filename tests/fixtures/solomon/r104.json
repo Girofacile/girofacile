@@ -1,0 +1,14 @@
+{
+  "source_url": "https://www.sintef.no/globalassets/project/top/vrptw/solomon/solomon-100.zip",
+  "archive_entry": "In/r104.txt",
+  "source_sha256": "dd087124311d91facd81736debbfc7d0f351d27942917e2d76cbafd01e6183b7",
+  "fixture_lf_sha256": "45c9f16a6ec499ed9ea4bfc5d01bf8f4b80a2d7b73468449e6ad6a40dea2b388",
+  "customers": 100,
+  "vehicles_in_file": 25,
+  "benchmark_vehicles": 9,
+  "capacity": 200,
+  "known_distance": 1007.31,
+  "reference_url": "https://www.sintef.no/projectweb/top/vrptw/100-customers/",
+  "window_semantics": "latest service start; GiroFacile window end adds service duration",
+  "normalization": "LF line endings; trailing whitespace removed; numeric data unchanged"
+}

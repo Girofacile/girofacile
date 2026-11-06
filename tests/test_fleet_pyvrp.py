@@ -222,10 +222,14 @@ def test_retry_uses_only_the_time_left_after_construction_and_first_attempt(monk
         return original(self)
 
     def infeasible(problem, *, stop, **kwargs):
-        assert not stop(0)
-        calls.append(stop.deadline - clock.now)
-        clock.now = stop.deadline
-        assert stop(0)
+        # Il criterio pubblico FirstFeasible riceve INT_MAX, non inf, quando
+        # il solutore non ha ancora trovato un piano fattibile.
+        infeasible_cost = (1 << 63) - 1
+        assert not stop(infeasible_cost)
+        end = stop.retry_at if stop.retry_at is not None else stop.deadline
+        calls.append(end - clock.now)
+        clock.now = end
+        assert stop(infeasible_cost)
         return SimpleNamespace(is_feasible=lambda: False)
 
     monkeypatch.setattr(pyvrp.Model, 'data', build_data)
@@ -237,6 +241,35 @@ def test_retry_uses_only_the_time_left_after_construction_and_first_attempt(monk
     assert report['budget_exhausted'] and report['seconds'] == 10
 
 
+def test_feasible_first_search_uses_the_full_phase_without_restarting(monkeypatch):
+    import pyvrp
+    from types import SimpleNamespace
+
+    clock, calls = _FakeClock(), []
+    monkeypatch.setattr(fleet_pyvrp, 'perf_counter', clock)
+
+    def solver(problem, *, stop, **kwargs):
+        calls.append(stop)
+        assert stop.retry_at is not None and stop.retry_at < stop.deadline
+        # Un piano con consegne facoltative non servite è comunque fattibile:
+        # deve poter continuare oltre la quota del 65% per recuperarle.
+        best = pyvrp.Solution(problem, [pyvrp.Route(problem, [0], 0)])
+        cost = pyvrp.CostEvaluator([0, 0], 0, 0).cost(best)
+        clock.now = stop.retry_at
+        assert not stop(cost)
+        clock.now = stop.deadline - .001
+        assert not stop(cost)
+        clock.now = stop.deadline
+        assert stop(cost)
+        return SimpleNamespace(is_feasible=lambda: True, best=best)
+
+    monkeypatch.setattr(pyvrp, 'solve', solver)
+    orders, report = fleet_pyvrp.improve([_row(1), _row(2)], [_vehicle()], _line([1, 2]),
+                                        '08:00', True, [540], [()], 10)
+    assert orders == ((0,),) and len(calls) == report['attempts'] == 1
+    assert report['feasible'] and report['seconds'] == 10
+
+
 def test_balancing_shares_deadline_and_keeps_its_feasible_plan(monkeypatch):
     import pyvrp
     from types import SimpleNamespace
@@ -246,11 +279,15 @@ def test_balancing_shares_deadline_and_keeps_its_feasible_plan(monkeypatch):
 
     def solver(problem, *, stop, **kwargs):
         assert clock.now < stop.deadline <= 10
-        calls.append(stop.deadline - clock.now)
-        clock.now = stop.deadline
-        if len(calls) == 1:
+        if not calls:
+            calls.append(stop.deadline - clock.now)
+            clock.now = stop.deadline
             best = pyvrp.Solution(problem, [pyvrp.Route(problem, [0, 1], 0)])
             return SimpleNamespace(is_feasible=lambda: True, best=best)
+        end = stop.retry_at if stop.retry_at is not None else stop.deadline
+        calls.append(end - clock.now)
+        clock.now = end
+        assert stop((1 << 63) - 1)
         return SimpleNamespace(is_feasible=lambda: False)
 
     monkeypatch.setattr(pyvrp, 'solve', solver)

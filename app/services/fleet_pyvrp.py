@@ -42,11 +42,19 @@ HARD_MAX_MODEL_EDGES = 1_000_000
 
 class _Deadline:
     """PyVRP controlla questo termine assoluto anche dopo il proprio setup."""
-    def __init__(self, deadline):
+    def __init__(self, deadline, retry_at=None):
         self.deadline = deadline
+        self.retry_at = retry_at
+        if retry_at is not None:
+            # Import locale: PyVRP resta una dipendenza facoltativa del servizio.
+            from pyvrp.stop import FirstFeasible
+            self._first_feasible = FirstFeasible()
 
     def __call__(self, best_cost):
-        return perf_counter() >= self.deadline
+        now = perf_counter()
+        return (now >= self.deadline
+                or (self.retry_at is not None and now >= self.retry_at
+                    and not self._first_feasible(best_cost)))
 
 
 def available():
@@ -278,12 +286,14 @@ def improve(rows, vehicles, matrix, start_time, return_depot, limits, initial, s
             left = min(deadline, phase_deadline) - perf_counter()
             if left <= 0:
                 break
-            # Riservare una parte al retry: non deve ricevere di nuovo l'intero budget.
-            allowance = left * 0.65 if attempt == 1 else left
+            # Un piano fattibile, anche parziale, continua nella stessa ricerca
+            # fino alla scadenza. Soltanto se ancora non fattibile si riserva il
+            # tempo finale al retry, senza riavviare i casi che stanno migliorando.
+            retry_at = perf_counter() + left * 0.65 if attempt == 1 else None
             with warnings.catch_warnings():
                 # Penalità che toccano il tetto sono previste (consegne non servibili): niente avvisi nei log.
                 warnings.simplefilter('ignore', PenaltyBoundWarning)
-                result = solve(problem, stop=_Deadline(min(deadline, phase_deadline, perf_counter() + allowance)), seed=1, display=False,
+                result = solve(problem, stop=_Deadline(min(deadline, phase_deadline), retry_at), seed=1, display=False,
                                collect_stats=False, initial_solution=start_from,
                                params=SolveParams(penalty=penalty))
             attempts += 1

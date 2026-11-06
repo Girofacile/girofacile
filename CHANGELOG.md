@@ -5,6 +5,15 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- PyVRP: la ricerca con una soluzione già fattibile può usare l'intero tempo della
+  propria fase, continuando a recuperare consegne escluse. La riserva per il secondo
+  tentativo scatta al 65% soltanto se il primo è ancora non fattibile. Il limite
+  complessivo resta condiviso e non viene raddoppiato dal retry.
+- R104: aggiunti input ufficiale con checksum e confronto offline riproducibile dei
+  due adattatori PyVRP, con controllo indipendente delle soluzioni. Gli audit distinguono
+  la variazione fra ricerche effettivamente limitate a tempo dagli errori di fattibilità
+  o di ottimo; una mancata ripetibilità senza solutori a tempo resta un errore.
+
 - GF Engine Optimizer 1.0: il punteggio sottrae solo le attese eliminabili con una
   partenza realmente compatibile con pause e finestre, a passi di cinque minuti;
   con partenza fissa conta tutta la durata. PyVRP ha un limite alla dimensione del

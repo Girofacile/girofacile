@@ -165,6 +165,24 @@ def _percentile(values, proportion):
     return sorted(values)[max(0, math.ceil(len(values) * proportion) - 1)]
 
 
+def timed_search_used(answer):
+    """Use execution diagnostics, not an environment flag, to identify timed runs."""
+    report = (answer.get('diagnostics') or {}).get('ortools') or {}
+    passes = report.get('passes', [report])
+    return any(item.get('attempts', 1) > 0 and float(item.get('seconds') or 0) > 0
+               for item in passes)
+
+
+def record_repeat_change(inspection, before, after):
+    # A fixed seed does not fix the number of iterations before a wall-clock
+    # deadline. Preserve every correctness/exactness finding already recorded;
+    # classify only the expectation of identical routes across timed searches.
+    if timed_search_used(before) or timed_search_used(after):
+        inspection['observations'].append('repeated_timed_search_changed_result')
+    else:
+        inspection['errors'].append('identical_input_not_deterministic')
+
+
 def run_campaign(quick=False, variants=True, progress=False):
     cases = single_cases(quick) + fleet_cases(quick)
     records, outputs = [], []
@@ -190,9 +208,9 @@ def run_campaign(quick=False, variants=True, progress=False):
                 if inspection['actual']:
                     rank = objective(plan_metrics(effective_case(case), answer['routes'], answer.get('departures')), strategy)
                     if base is None:
-                        base = (answer['routes'], rank)
+                        base = (answer['routes'], rank, answer)
                     elif variant == 'repeat' and (answer['routes'] != base[0] or first_difference(rank, base[1])):
-                        inspection['errors'].append('identical_input_not_deterministic')
+                        record_repeat_change(inspection, base[2], answer)
                     elif variant in ('reverse', 'shuffle') and first_difference(rank, base[1]):
                         inspection['observations'].append('input_order_changes_objective')
                 runtime = answer.get('runtime_ms', answer.get('elapsed_ms'))
@@ -218,6 +236,7 @@ def run_campaign(quick=False, variants=True, progress=False):
         exact_gaps=sum('exact_objective_gap' in row['observations'] for row in records),
         witness_gaps=sum('worse_than_feasible_witness' in row['observations'] for row in records),
         order_sensitive=sum('input_order_changes_objective' in row['observations'] for row in records),
+        timed_repeat_changes=sum('repeated_timed_search_changed_result' in row['observations'] for row in records),
         distance_certificates=sum('minimum_distance_certified_by_bound' in row['observations'] for row in records),
         external_calls=sum(row['external_calls'] for row in records),
         elapsed_seconds=round(perf_counter() - wall, 3))
@@ -265,6 +284,7 @@ def markdown_report(report):
                      f"{values[0]} | {values[1]} | {values[2]} | {values[3]} | {label} | {outcome} | {row['runtime_ms']} |")
     lines.extend(['', '## Robustezza e prestazioni', '',
         f"Variazioni dell’obiettivo riordinando gli input: {summary['order_sensitive']}. "
+        f"Variazioni nelle ripetizioni con ricerca a tempo: {summary.get('timed_repeat_changes', 0)}. "
         f"Risultati peggiori di un testimone fattibile: {summary['witness_gaps']}. "
         f"Certificati di distanza minima sui casi analitici: {summary['distance_certificates']}.", '',
         'I tempi misurano il motore su questa macchina, senza latenza database/provider; '

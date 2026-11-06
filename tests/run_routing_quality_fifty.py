@@ -18,7 +18,7 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / 'tests'))
 
 from run_routing_quality_audit import (effective_case, first_difference, inspect_answer,
-    reference_for, serializable_case)
+    record_repeat_change, reference_for, serializable_case)
 from routing_quality_oracle import objective, plan_metrics
 from routing_quality_fleet import run_fleet
 from routing_quality_fifty import fifty_cases
@@ -43,9 +43,9 @@ def campaign(variants=True):
                 actual = plan_metrics(effective_case(case), answer['routes'], answer.get('departures'))
                 rank = objective(actual, strategy)
                 if first is None:
-                    first = (answer['routes'], rank)
+                    first = (answer['routes'], rank, answer)
                 elif variant == 'repeat' and (answer['routes'] != first[0] or first_difference(rank, first[1])):
-                    check['errors'].append('identical_input_not_deterministic')
+                    record_repeat_change(check, first[2], answer)
                 elif variant in ('reverse', 'shuffle') and first_difference(rank, first[1]):
                     check['observations'].append('input_order_changes_objective')
                 records.append(dict(case_id=case['id'], scenario=case['profile'],
@@ -66,6 +66,7 @@ def campaign(variants=True):
         coverage_gap_runs=sum(row['actual']['served'] < 50 for row in records),
         minimum_served=min(row['actual']['served'] for row in records),
         input_order_sensitive=sum('input_order_changes_objective' in row['observations'] for row in records),
+        timed_repeat_changes=sum('repeated_timed_search_changed_result' in row['observations'] for row in records),
         worse_than_witness=sum('worse_than_feasible_witness' in row['observations'] for row in records),
         external_calls=sum(row['external_calls'] for row in records))
     return dict(summary=summary, records=records), cases, answers
@@ -108,6 +109,7 @@ def markdown(report):
             f"{metrics['served']}/50 | {metrics['km']:.2f} | {metrics['makespan']:.2f} min | {row['runtime_ms']:.1f} |")
     lines += ['', '## Qualità e limiti', '',
         f"Cambiando l’ordine degli input, l’obiettivo varia in {summary['input_order_sensitive']} esecuzioni. "
+        f"Variazioni nelle ripetizioni con ricerca a tempo: {summary.get('timed_repeat_changes', 0)}. "
         f"Piani peggiori del testimone fattibile secondo la strategia scelta: {summary['worse_than_witness']}.", '',
         '**Queste prove non certificano l’ottimo globale di cinquanta consegne.** '
         'Misurano copertura, vincoli, stabilità e confronto con un piano fattibile indipendente. '

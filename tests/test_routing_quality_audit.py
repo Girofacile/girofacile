@@ -30,6 +30,9 @@ def test_audit_detects_a_nonoptimal_answer_in_an_exact_single_problem():
     report = inspect_answer(case, 'single', poor, reference)
     assert 'exact_objective_gap' in report['errors']
     assert report['comparison']['worse']
+    from run_routing_quality_audit import record_repeat_change
+    record_repeat_change(report, {}, {'diagnostics': {'ortools': {'seconds': 1}}})
+    assert 'exact_objective_gap' in report['errors']
 
 
 def test_duplicate_assignment_is_a_failure_even_when_totals_look_good():
@@ -72,6 +75,43 @@ def test_input_generation_is_frozen_and_provider_free_adapter_preserves_node_ide
 def test_rounding_cannot_hide_a_real_objective_gap():
     assert first_difference((0, 10.000001), (0, 10.0))['worse']
     assert first_difference((0, 10.0 + 1e-12), (0, 10.0)) is None
+
+
+@pytest.mark.parametrize('before,after,timed', [
+    ({}, {}, False),
+    ({'diagnostics': {'ortools': {'status': 'disabled'}}}, {}, False),
+    ({'diagnostics': {'ortools': {'status': 'model-size-limit', 'seconds': 1, 'attempts': 0}}}, {}, False),
+    ({'diagnostics': {'ortools': {'seconds': 1}}}, {}, True),
+    ({}, {'diagnostics': {'ortools': {'passes': [{'mode': 'pyvrp', 'seconds': 1}]}}}, True),
+])
+def test_repeat_variation_is_reported_separately_only_after_executed_timed_search(before, after, timed):
+    from run_routing_quality_audit import record_repeat_change
+    report = {'errors': [], 'observations': []}
+    record_repeat_change(report, before, after)
+    assert report['errors'] == ([] if timed else ['identical_input_not_deterministic'])
+    assert report['observations'] == (['repeated_timed_search_changed_result'] if timed else [])
+
+
+def test_timed_repeat_does_not_hide_duplicate_assignment():
+    from run_routing_quality_audit import record_repeat_change
+    data = fleet_cases(True)[0]
+    bad = {'routes': [[0, 1], [0, 2]], 'diagnostics': {'ortools': {'seconds': 1}}}
+    report = inspect_answer(data, 'efficient', bad)
+    record_repeat_change(report, {}, bad)
+    assert 'fleet_contains_infeasible_or_duplicate_assignment' in report['errors']
+    assert 'repeated_timed_search_changed_result' in report['observations']
+
+
+def test_single_adapter_records_the_executed_native_search(monkeypatch):
+    from app.services import fleet_ortools
+    from run_routing_quality_audit import timed_search_used
+    data = next(c for c in single_cases() if len(c['stops']) == 9)
+    monkeypatch.setattr(fleet_ortools, 'seconds_budget', lambda n: 1)
+    monkeypatch.setattr(fleet_ortools, 'available', lambda: True)
+    monkeypatch.setattr(fleet_ortools, 'improve', lambda *a, **k: (a[6], {'seconds': 1}))
+    answer = run_single(data)
+    assert timed_search_used(answer)
+    assert answer['provider_calls'] == 0
 
 
 def test_new_quick_campaign_respects_constraints_and_proven_optima():

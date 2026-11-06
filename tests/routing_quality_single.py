@@ -254,6 +254,7 @@ def run_single(case, input_order=None, budget=None):
     """
     import requests
     from app import optimizer as opt
+    from app.services import fleet_ortools
 
     count = len(case['stops'])
     order = list(range(count)) if input_order is None else list(input_order)
@@ -272,6 +273,7 @@ def run_single(case, input_order=None, budget=None):
     diagnostics = {}
     raw = {}
     real_search = opt._best_internal_sequence
+    real_native = fleet_ortools.improve
 
     def frozen_matrix(*args, **kwargs):
         calls['matrix'] += 1
@@ -284,6 +286,11 @@ def run_single(case, input_order=None, budget=None):
             raw[field] = deepcopy(result.get(field))
         return result
 
+    def observe_native(*args, **kwargs):
+        orders, report = real_native(*args, **kwargs)
+        diagnostics['ortools'] = deepcopy(report)
+        return orders, report
+
     def forbidden(*args, **kwargs):
         calls['provider'] += 1
         raise AssertionError('Single audit attempted an external provider/network call')
@@ -294,6 +301,7 @@ def run_single(case, input_order=None, budget=None):
     with ExitStack() as stack, redirect_stdout(io.StringIO()):
         stack.enter_context(patch.object(opt, 'build_distance_matrix', frozen_matrix))
         stack.enter_context(patch.object(opt, '_best_internal_sequence', observe_search))
+        stack.enter_context(patch.object(fleet_ortools, 'improve', observe_native))
         stack.enter_context(patch.object(requests.sessions.Session, 'request', forbidden))
         stack.enter_context(patch.object(socket, 'create_connection', forbidden))
         stack.enter_context(patch.object(socket.socket, 'connect', forbidden))
