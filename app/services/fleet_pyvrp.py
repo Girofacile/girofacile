@@ -1,8 +1,10 @@
 """Miglioramento del piano multi-mezzo con PyVRP (libreria locale e gratuita, licenza MIT).
 
-Solo per «Riduci chilometri e tempi». Come OR-Tools, PyVRP propone soltanto: fleet_planning
-rivaluta ogni giro con il calendario canonico e tiene la proposta solo se è migliore secondo
-la strategia (prima consegne servite, poi punteggio). Misure su 36 problemi pubblici di
+Per «Riduci chilometri e tempi» e «Distribuisci il lavoro». Come OR-Tools, PyVRP propone
+soltanto: fleet_planning rivaluta ogni giro con il calendario canonico e tiene la proposta
+solo se è migliore secondo la strategia (prima consegne servite, poi punteggio o equilibrio).
+Con «Distribuisci il lavoro» il costo è sulle ore (un minuto = 10 km) e un limite di durata
+dei giri via via più stretto accorcia il giro più lungo. Misure su problemi pubblici di
 Solomon e sui piani reali salvati: docs/motore-pyvrp-2026-11-05.md.
 
 Il modello usa l'«orologio di lavoro» di ogni autista (fleet_working_clock): le pause fisse
@@ -30,6 +32,8 @@ TIME_PER_MIN = 1000        # millesimi di minuto
 WEIGHT_SCALE = 1000        # grammi
 COST_PER_METER = 60        # costo intero: 60 per metro, round(60 × km/ora ÷ 60) per millesimo di minuto
 MISMATCH_PENALTY_M = 20_000
+BALANCE_KM_PER_MIN = 10    # «Distribuisci il lavoro»: un minuto di lavoro pesa come 10 km (come OR-Tools)
+BALANCE_STEPS = 5          # dimezzamenti del limite di durata del giro
 
 
 def available():
@@ -62,7 +66,7 @@ def _scaled_domains(row, vehicle, start, limit):
 
 def improve(rows, vehicles, matrix, start_time, return_depot, limits, initial, seconds, strategy='efficient'):
     """Nuovi ordini (indici di rows) per mezzo, oppure None; stessa interfaccia di fleet_ortools."""
-    from pyvrp import Model, PenaltyParams, Route, Solution, SolveParams
+    from pyvrp import Model, PenaltyParams, Route, Solution, SolveParams, solve
     from pyvrp.exceptions import PenaltyBoundWarning
     from pyvrp.stop import MaxRuntime
     from .. import optimizer as opt
@@ -88,7 +92,15 @@ def improve(rows, vehicles, matrix, start_time, return_depot, limits, initial, s
     # giornata di lavoro). Servire viene prima del risparmio, come nel calcolo canonico; con un
     # valore più basso PyVRP rinuncia alle consegne difficili (Solomon r1: da 1 a 3 escluse).
     longest = max((float(value.get('km') or 0) * 1000 for value in matrix.values()), default=0.0)
-    hourly = max((opt.cost_rates(vehicle)[1] for vehicle in vehicles), default=0.0) if strategy == 'efficient' else 0.0
+    efficient, balanced = strategy == 'efficient', strategy == 'balanced'
+
+    def rates(vehicle):
+        per_km, per_min = opt.cost_rates(vehicle)
+        if balanced:
+            return 1.0, float(BALANCE_KM_PER_MIN)
+        return (per_km, per_min) if efficient else (1.0, 0.0)
+
+    hourly = max((rates(vehicle)[1] for vehicle in vehicles), default=0.0)
     day = max((h for _, h in signature_of), default=0)
     prize = COST_PER_METER * math.ceil(2 * longest + 2 * MISMATCH_PENALTY_M) + math.ceil(COST_PER_METER * hourly) * day
     prize = max(2 * prize + 1, COST_PER_METER * 100_000_000)
@@ -151,7 +163,6 @@ def improve(rows, vehicles, matrix, start_time, return_depot, limits, initial, s
     # Mezzi identici (stesso orologio, attrezzatura, capacità e costi) formano un solo tipo:
     # PyVRP li scambia liberamente e la ricerca è molto più efficace.
     types, members = {}, {}
-    efficient = strategy == 'efficient'
     for v, vehicle in enumerate(vehicles):
         clock, horizon = signature_of[v]
         if not any(clock == c for _, c in copies) or horizon <= 0:
@@ -159,9 +170,8 @@ def improve(rows, vehicles, matrix, start_time, return_depot, limits, initial, s
         caps = tuple(math.floor(float(vehicle[k]) * s) if (vehicle or {}).get(k) is not None else 10 ** 12
                      for k, s in (('capacita_kg', WEIGHT_SCALE), ('capacita_colli', 1)))
         profile_key = (clock, int(bool((vehicle or {}).get('ha_sponda'))), int(bool((vehicle or {}).get('accesso_ztl'))))
-        per_km, per_min = opt.cost_rates(vehicle)
-        costs = (round(COST_PER_METER * (per_km if efficient else 1.0)),
-                 round(COST_PER_METER * per_min) if efficient else 0)
+        per_km, per_min = rates(vehicle)
+        costs = (round(COST_PER_METER * per_km), round(COST_PER_METER * per_min))
         members.setdefault((profile_key, caps, costs, horizon), []).append(v)
     if not members:
         return None, {'status': 'no-usable-vehicle'}
@@ -197,29 +207,68 @@ def improve(rows, vehicles, matrix, start_time, return_depot, limits, initial, s
         except Exception:
             seed = None
     clock_started = perf_counter()
-    # Prima la ricerca con le impostazioni normali di PyVRP. Se non trova un piano valido
-    # (giorni in cui non tutto è servibile: piano reale 50, 30 consegne su 54) si ripete con
-    # il tetto delle penalità per sovraccarico e ritardo sopra il costo di una consegna esclusa,
-    # altrimenti PyVRP preferisce sforare. Quel tetto alto, sempre attivo, peggiora invece i
-    # casi con fasce strette (Solomon r104, r110: 3 consegne escluse invece di 0).
-    attempts = (PenaltyParams(), PenaltyParams(max_penalty=float(max(100_000, prize + 1))))
-    for attempt, penalty in enumerate(attempts):
-        with warnings.catch_warnings():
-            # Le penalità che toccano il tetto sono previste (consegne non servibili): niente avvisi nei log.
-            warnings.simplefilter('ignore', PenaltyBoundWarning)
-            result = model.solve(stop=MaxRuntime(max(0.1, float(seconds))), seed=1, display=False,
-                                 collect_stats=False, initial_solution=seed,
-                                 params=SolveParams(penalty=penalty))
-        if result.is_feasible():
-            break
+    budget = max(0.1, float(seconds))
+
+    def run(problem, limit, start_from=None):
+        # Prima la ricerca con le impostazioni normali di PyVRP. Se non trova un piano valido
+        # (giorni in cui non tutto è servibile: piano reale 50, 30 consegne su 54) si ripete con
+        # il tetto delle penalità per sovraccarico e ritardo sopra il costo di una consegna
+        # esclusa, altrimenti PyVRP preferisce sforare. Quel tetto alto, sempre attivo,
+        # peggiora invece i casi con fasce strette (Solomon r104, r110: 3 escluse invece di 0).
+        attempts = (PenaltyParams(), PenaltyParams(max_penalty=float(max(100_000, prize + 1))))
+        for attempt, penalty in enumerate(attempts, 1):
+            with warnings.catch_warnings():
+                # Penalità che toccano il tetto sono previste (consegne non servibili): niente avvisi nei log.
+                warnings.simplefilter('ignore', PenaltyBoundWarning)
+                result = solve(problem, stop=MaxRuntime(max(0.1, limit)), seed=1, display=False,
+                               collect_stats=False, initial_solution=start_from,
+                               params=SolveParams(penalty=penalty))
+            if result.is_feasible():
+                break
+        return result, attempt
+
+    def served(solution):
+        return sum(route.num_clients() for route in solution.routes())
+
+    def longest(solution):
+        return max((route.duration() for route in solution.routes()), default=0)
+
+    # «Distribuisci il lavoro»: prima un piano libero, poi si dimezza la distanza tra la
+    # durata del giro più lungo trovata e la media per mezzo, imponendo a ogni giro di non
+    # superarla (vincolo rigido di PyVRP). Si tiene il limite più basso che serve ancora
+    # le stesse consegne; il giudizio finale resta della chiave «Distribuisci il lavoro».
+    result, attempts = run(data, budget * (0.35 if balanced else 1.0), seed)
     report = {'engine': 'pyvrp', 'seeded': seed is not None, 'feasible': bool(result.is_feasible()),
-              'attempts': attempt + 1, 'seconds': round(perf_counter() - clock_started, 2),
-              'copies': len(copies), 'clocks': len(clocks), 'vehicle_types': len(groups)}
-    if not result.is_feasible():
+              'attempts': attempts, 'copies': len(copies), 'clocks': len(clocks), 'vehicle_types': len(groups)}
+    best = result.best if result.is_feasible() else None
+    if balanced and best is not None and best.routes():
+        target = served(best)
+        usable = sum(len(group) for group in groups)
+        high = longest(best)
+        low = int(0.9 * sum(route.duration() for route in best.routes()) / max(1, usable))
+        steps = []
+        for _ in range(BALANCE_STEPS):
+            if high - low <= TIME_PER_MIN:   # meno di un minuto: inutile stringere ancora
+                break
+            limit = (low + high) // 2
+            tight = data.replace(vehicle_types=[vt.replace(shift_duration=limit) for vt in data.vehicle_types()])
+            # Il piano migliore finora come punto di partenza: PyVRP vuole giri legati ai nuovi dati.
+            start_from = Solution(tight, [Route(tight, [a.idx for a in route if a.is_client()], route.vehicle_type())
+                                          for route in best.routes()])
+            trial, _ = run(tight, budget * 0.65 / BALANCE_STEPS, start_from)
+            ok = trial.is_feasible() and served(trial.best) >= target
+            steps.append((round(limit / TIME_PER_MIN), bool(ok)))
+            if ok:
+                best, high = trial.best, min(limit, longest(trial.best))
+            else:
+                low = limit
+        report['balance'] = {'longest_min': round(longest(best) / TIME_PER_MIN, 1), 'steps': steps}
+    report['seconds'] = round(perf_counter() - clock_started, 2)
+    if best is None:
         return None, report
     orders = [()] * count
     free = [list(group) for group in groups]
-    for route in result.best.routes():
+    for route in best.routes():
         v = free[route.vehicle_type()].pop(0)
         orders[v] = tuple(copies[a.idx][0] for a in route if a.is_client())
     return tuple(orders), report

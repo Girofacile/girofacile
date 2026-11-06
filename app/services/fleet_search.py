@@ -40,6 +40,12 @@ def _numbers(result):
         float(result["total_min"]), float(result["total_km"]))
 
 
+def _work(result):
+    # «Distribuisci il lavoro»: ore dell'autista senza le attese eliminabili partendo più tardi.
+    from .. import optimizer as opt
+    return opt.work_minutes(result)
+
+
 def _cost(result):
     from .. import optimizer as opt
     return opt.objective_cost(result)
@@ -51,7 +57,7 @@ def _route_key(result, strategy):
     minutes, distance = _numbers(result)
     if strategy == "efficient":
         return (_cost(result), distance, minutes)
-    return (distance, minutes) if strategy == "distance" else (minutes, distance)
+    return (distance, minutes) if strategy == "distance" else (_work(result), distance)
 
 
 def stable_stop_key(row):
@@ -179,9 +185,10 @@ def optimize_fleet(rows, resource_count, evaluate, strategy, *,
         active = sum(bool(route) for route in routes)
         common = (-served, mismatches)
         if strategy == "balanced":
-            return common + (-active, max(durations, default=0),
-                             sum(value * value for value in durations),
-                             sum(durations), sum(distances))
+            work = [_work(result) for result in results]
+            return common + (-active, max(work, default=0),
+                             sum(value * value for value in work),
+                             sum(work), sum(distances))
         if strategy == "distance":
             return common + (sum(distances), sum(durations), active)
         return common + (sum(_cost(result) for result in results), sum(distances), sum(durations), active)
@@ -353,7 +360,7 @@ def optimize_fleet(rows, resource_count, evaluate, strategy, *,
                         # bulky job even when every delivery fits jointly.
                         # Balance an independent construction, then compare its
                         # completed plan under the user's unchanged objective.
-                        minutes = [_numbers(score)[0] for score in changed_results]
+                        minutes = [_work(score) for score in changed_results]
                         key = key[:2] + (-sum(bool(route) for route in changed_routes),
                             max(minutes, default=0), sum(value * value for value in minutes),
                             sum(minutes), sum(_numbers(score)[1] for score in changed_results))

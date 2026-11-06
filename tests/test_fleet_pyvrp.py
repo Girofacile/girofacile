@@ -47,14 +47,15 @@ def test_solver_error_keeps_current_plan(case, monkeypatch):
     assert result['routes'] == baseline['routes']
 
 
-def test_missing_library_and_balanced_strategy_skip_pyvrp(case, monkeypatch):
+def test_balanced_strategy_uses_pyvrp_and_missing_library_skips_it(case, monkeypatch):
     monkeypatch.setenv('FLEET_PYVRP_SECONDS', '3')
     called = []
-    monkeypatch.setattr(fleet_pyvrp, 'improve', lambda *a, **k: called.append(1))
+    monkeypatch.setattr(fleet_pyvrp, 'improve', lambda *a, **k: called.append(a[-1]) or (None, {}))
     run_fleet(case, 'balanced', budget=4000)
+    assert called == ['balanced']
     monkeypatch.setattr(fleet_pyvrp, 'available', lambda: False)
     assert run_fleet(case, 'efficient', budget=4000)['diagnostics']['ortools'] == {'status': 'disabled'}
-    assert not called
+    assert called == ['balanced']
 
 
 # Piccoli problemi costruiti a mano: chilometri = minuti sulla retta dei punti.
@@ -127,3 +128,15 @@ def test_missing_tail_lift_is_avoided_when_another_vehicle_has_it():
     matrix, limits = _line([10, 11]), [540, 540]
     orders, _ = fleet_pyvrp.improve(rows, vehicles, matrix, '08:00', True, limits, ((), ()), 2)
     assert 0 in orders[1]
+
+
+def test_balanced_spreads_the_work_where_shortest_km_would_use_one_driver():
+    # Quattro consegne vicine: per i soli km basta un mezzo, per l'equilibrio servono entrambi.
+    rows = [_row(i, service=60) for i in range(1, 5)]
+    vehicles = [_vehicle(), _vehicle()]
+    matrix, limits = _line([10, 11, 12, 13]), [540, 540]
+    efficient, _ = fleet_pyvrp.improve(rows, vehicles, matrix, '08:00', True, limits, ((), ()), 2)
+    balanced, report = fleet_pyvrp.improve(rows, vehicles, matrix, '08:00', True, limits, ((), ()), 2, 'balanced')
+    assert sum(bool(order) for order in efficient) == 1
+    assert sorted(map(len, balanced)) == [2, 2] and report['balance']['steps']
+    assert _oracle(rows, vehicles, matrix, limits, balanced)['feasible']

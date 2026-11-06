@@ -5,6 +5,13 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Calcolo dei giri, «Distribuisci il lavoro»: le ore di ogni autista non
+  contano più l'attesa che una partenza più tarda elimina (come già in «Riduci
+  chilometri e tempi»), quindi un autista con soli clienti del pomeriggio non
+  sembra più lavorare dalle 8:00. Anche qui si affianca la proposta di PyVRP,
+  che accorcia il giro più lungo. Sui 12 piani salvati: 35 ore di lavoro e 37
+  ore di attesa in meno, giro più lungo fino a 4 ore più corto, stesse
+  consegne servite. Dettagli in docs/motore-pyvrp-2026-11-05.md.
 - Calcolo dei giri con più mezzi, «Riduci chilometri e tempi»: al piano
   trovato si affianca una seconda proposta calcolata con PyVRP (libreria
   gratuita, sul server). Vince sempre il piano migliore secondo le regole di

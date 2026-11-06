@@ -336,10 +336,10 @@ def _ortools_improvement(rows,vehicle_data,matrix,points,data,limits,refined,res
     from .fleet_route_evaluator import FixedRouteEvaluator
     from .fleet_working_clock import _plan_key
     seconds=fleet_ortools.seconds_budget(len(rows)) if fleet_ortools.available() else 0
-    # PyVRP (dal 5 novembre 2026) solo per «Riduci chilometri e tempi»: non ha un costo
-    # sulla durata del giro più lungo, che serve a «Distribuisci il lavoro».
+    # PyVRP (dal 5 novembre 2026) per «Riduci chilometri e tempi» e «Distribuisci il lavoro»;
+    # per quest'ultima con un limite di durata dei giri via via più stretto (fleet_pyvrp).
     pyvrp_seconds=(fleet_pyvrp.seconds_budget(len(rows))
-                   if data.strategy=='efficient' and fleet_pyvrp.available() else 0)
+                   if data.strategy in ('efficient','balanced') and fleet_pyvrp.available() else 0)
     if not rows or not (seconds or pyvrp_seconds):
         search['ortools']={'status':'disabled' if fleet_ortools.available() else 'unavailable'}
         return refined,results
@@ -348,8 +348,8 @@ def _ortools_improvement(rows,vehicle_data,matrix,points,data,limits,refined,res
     # Si tiene la proposta migliore secondo la chiave della strategia, cioè il punteggio.
     modes=([('efficient',seconds/2),('distance',seconds/2)] if data.strategy=='efficient' else [(data.strategy,seconds)]) if seconds else []
     if pyvrp_seconds:
-        # «Riduci chilometri e tempi»: anche PyVRP, da zero (docs/motore-pyvrp-2026-11-05.md).
-        # Sui problemi di Solomon vince quasi sempre PyVRP, su alcuni piani reali OR-Tools.
+        # Anche PyVRP, da zero (docs/motore-pyvrp-2026-11-05.md). Sui problemi di Solomon
+        # vince quasi sempre PyVRP, su alcuni piani reali OR-Tools: si tiene il migliore.
         modes.append(('pyvrp',pyvrp_seconds))
     before=_plan_key(refined,results,rows,vehicle_data,data.strategy)
     best=None;reports=[]
@@ -453,6 +453,9 @@ def _distribute(db,user,data,assignments=None,tighten=None):
                 durations=[r['total_min'] if r else 0 for r in results];durations[resource]=evaluated['total_min']
                 delta=evaluated['total_min']-(results[resource]['total_min'] if results[resource] else 0)
                 if balance:
+                    # Ore dell'autista senza le attese eliminabili partendo più tardi (optimizer.work_minutes).
+                    durations=[opt.work_minutes(r) for r in results];durations[resource]=opt.work_minutes(evaluated)
+                    delta=durations[resource]-opt.work_minutes(results[resource])
                     key=(sum(not r for i,r in enumerate(routes) if i!=resource),max(durations),sum(x*x for x in durations),delta,evaluated['total_km'])
                 elif distance_first:
                     distances=[float(r['_objective'][0]) if r else 0 for r in results]
@@ -528,7 +531,8 @@ def _distribute(db,user,data,assignments=None,tighten=None):
             minutes=[float(score['_objective'][1]) if score else 0 for score in scores]
             km=sum(float(score['_objective'][0]) for score in scores if score)
             used=sum(bool(route) for route in sequences)
-            return common+((-used,max(minutes,default=0),sum(value*value for value in minutes),sum(minutes),km)
+            work=[opt.work_minutes(score) for score in scores]
+            return common+((-used,max(work,default=0),sum(value*value for value in work),sum(work),km)
                            if data.strategy=='balanced' else (sum(opt.objective_cost(score) for score in scores if score),km,sum(minutes),used))
         initial_routes,initial_results=min(initial_candidates,key=initial_key)
         signature_fields=('driver_schedule','ha_sponda','accesso_ztl','capacita_kg','capacita_colli')

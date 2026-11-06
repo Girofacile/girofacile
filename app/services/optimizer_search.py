@@ -80,7 +80,7 @@ class RouteEvaluator:
         cost = opt.route_cost(km, duration - slack, self.vehicle)
         return dict(total_km=round(km, 2), total_min=round(duration, 1),
                     total_wait=round(wait, 1), total_lateness_min=late,
-                    violations=violations, score=score, _objective=(km, duration, wait, warnings, cost))
+                    violations=violations, score=score, _objective=(km, duration, wait, warnings, cost, duration - slack))
 
 
 def candidate_limit(n):

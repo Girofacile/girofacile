@@ -107,8 +107,11 @@ def _plan_key(routes, results, rows, vehicles, strategy):
     common = (-sum(map(len, routes)), mismatches)
     used = sum(bool(order) for order in routes)
     if strategy == 'balanced':
-        return common + (-used, max(durations, default=0), sum(t*t for t in durations),
-                         sum(durations), sum(distances))
+        # Ore dell'autista senza le attese eliminabili partendo più tardi, come il punteggio.
+        from .. import optimizer as opt
+        work = [opt.work_minutes(score) for score in results]
+        return common + (-used, max(work, default=0), sum(t*t for t in work),
+                         sum(work), sum(distances))
     if strategy == 'distance':
         return common + (sum(distances), sum(durations), used)
     from .. import optimizer as opt

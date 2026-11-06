@@ -83,9 +83,12 @@ def optimize_seed(rows, resource_count, evaluate, strategy, *, budget,
         active = sum(bool(route) for route in routes)
         common = (-served, mismatches)
         if strategy == "balanced":
-            return common + (-active, max(durations, default=0),
-                             sum(value * value for value in durations),
-                             sum(durations), sum(distances))
+            # Ore dell'autista senza le attese eliminabili partendo più tardi (optimizer.work_minutes).
+            from .. import optimizer as opt
+            work = [opt.work_minutes(result) for result in results]
+            return common + (-active, max(work, default=0),
+                             sum(value * value for value in work),
+                             sum(work), sum(distances))
         return common + (active, sum(durations), sum(distances))
 
     best_routes, best_results = initial_routes, initial_results

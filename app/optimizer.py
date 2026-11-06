@@ -146,6 +146,18 @@ def objective_cost(result):
     minutes = raw[1] if raw is not None else result["total_min"]
     return route_cost(km, minutes)
 
+def work_minutes(result):
+    """Minuti di lavoro dell'autista: durata del giro senza le attese che una partenza più
+    tarda eliminerebbe (stessa regola del punteggio). Misura di «Distribuisci il lavoro»."""
+    if result is None:
+        return 0.0
+    raw = result.get("_objective")
+    if raw is not None and len(raw) > 5:
+        return float(raw[5])
+    minutes = raw[1] if raw is not None else result["total_min"]
+    return max(0.0, float(minutes) - float(result.get("departure_slack_min") or 0))
+
+
 def delivery_windows(d):
     """Restituisce le finestre orarie valide ordinate: [(start_min, end_min), ...]."""
     out = []
@@ -654,7 +666,7 @@ def _evaluate_fixed_sequence(sequence, matrix, points, vehicle=None, return_depo
         "total_min": round(total_min, 1),
         "return_time": fmt_hhmm(current_clock),
         "score": score,
-        "_objective": (total_km, total_min, total_wait, warning_count, cost),
+        "_objective": (total_km, total_min, total_wait, warning_count, cost, total_min - slack),
         "departure_slack_min": round(slack, 1),
         "_sequence": [original["_matrix_index"] for original in sequence],
         "violations": violations,

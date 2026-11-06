@@ -111,11 +111,65 @@ nessuna violazione di fasce, pause, turni o capacità.
 - **Tempo:** 0,3 s per consegna, tra 1 s e `FLEET_PYVRP_SECONDS` (predefinito 30 s, massimo
   120, 0 lo spegne). Nei test è spento di default e si accende in `tests/test_fleet_pyvrp.py`.
 
+## «Distribuisci il lavoro» (6 novembre 2026)
+
+Due modifiche insieme:
+
+1. **Ore di lavoro senza le attese eliminabili.** La chiave della strategia contava come
+   lavoro anche l'attesa prima del primo cliente che una partenza più tarda elimina: un
+   autista con soli clienti del pomeriggio sembrava lavorare dalle 8:00. Ora la durata è
+   quella del lavoro (`optimizer.work_minutes`), come nel punteggio di «Riduci chilometri e
+   tempi». Le attese a metà giro restano conteggiate.
+2. **PyVRP anche qui.** Prima un piano libero con le ore come costo (un minuto = 10 km),
+   poi fino a 5 tentativi con una durata massima dei giri via via più stretta; si tiene il
+   limite più basso che serve ancora le stesse consegne. Decide comunque la chiave della
+   strategia.
+
+### Piani reali bilanciati (12 piani, stessa data e stessi autisti liberi)
+
+| Piano | Giro più lungo prima | Solo nuove ore | Nuove ore + PyVRP |
+|---|---:|---:|---:|
+| 32 (39 consegne, 5 mezzi) | 450 min | 258 | **208** |
+| 24 (32 consegne, 3 mezzi) | 472 | 438 | **413** |
+| 29 (11 consegne, 3 mezzi) | 376 | 279 | **279** |
+| 47 (41 consegne, 4 mezzi) | 368 | 335 | **342**² |
+| 34 (25 consegne, 2 mezzi) | 484 | 445 | **445** |
+| 20 (33 consegne, 3 mezzi) | 455 | 449 | **449** |
+| 19, 18, 16, 15, 7, 6 | invariati | | |
+
+Totale dei 12 piani: ore di lavoro da 183 a 148 (−35 h), attese da 49 a 12 h, km +3%,
+consegne servite invariate (3 non servibili in tutte le versioni). I piani 34, 32, 47 e 24
+sono stati ricontrollati con il verificatore indipendente: nessuna violazione.
+
+² Differenza tra due esecuzioni: la ricerca ha un tempo limitato e non dà ogni volta lo
+stesso piano.
+
+### Solomon, 12 problemi, stesso numero di mezzi della migliore soluzione nota
+
+| Problema | Consegne servite prima → dopo | Giro più lungo prima → dopo (min) |
+|---|---|---|
+| c102 | 100 → 100 | 1156 → **1035** |
+| c106 | 100 → 100 | 1053 → **1050** |
+| r104 | 95 → **97** | 226 → 227 |
+| r108 | 97 → **100** | 227 → 224 |
+| r111 | 92 → **100** | 211 → 217 |
+| rc104 | 99 → **100** | 238 → **228** |
+| rc108 | 98 → **100** | 233 → **229** |
+| r202 | 98 → **100** | 864 → **791** |
+| r205 | 100 → 100 | 796 → **717** |
+| r209 | 100 → 100 | 896 → **647** |
+| rc202 | 95 → **100** | 859 → **836** |
+| rc206 | 99 → **100** | 825 → **750** |
+
+Prima tutte le consegne erano servite in 4 problemi su 12, ora in 11. Dove prima ne restavano
+fuori il giro più lungo non è confrontabile (meno consegne). Tempo medio con 100 consegne:
+da circa 80 a circa 125 secondi.
+
 ## Limiti noti
 
 - Il calcolo con molte consegne dura di più: con 100 consegne circa 1 minuto e 45 secondi in
   tutto (prima circa 80 s, ma con consegne lasciate fuori).
-- PyVRP non ha un costo sulla durata del giro più lungo: «Distribuisci il lavoro» resta
-  com'era.
+- Per «Distribuisci il lavoro» non esistono migliori soluzioni pubblicate su Solomon: lì
+  si misura solo il miglioramento rispetto al motore precedente, non la distanza dall'ottimo.
 - Serve la libreria `pyvrp==0.14.1` sul server (in `requirements.txt` e `requirements.lock`);
   senza, il calcolo funziona come prima.

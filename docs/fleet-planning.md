@@ -6,7 +6,7 @@ In entrambi i casi mezzo e autista si scelgono nella stessa card (fleet-planning
 Con più mezzi compare anche la strategia:
 
 - Riduci chilometri e tempi: a parità di consegne e avvisi ZTL, minimizza i chilometri totali, poi la somma delle durate e infine i mezzi usati.
-- Distribuisci il lavoro tra tutti i mezzi: a parità di consegne e avvisi, utilizza più risorse e minimizza la durata massima, poi lo squilibrio delle durate (somma dei quadrati), la durata totale e i chilometri.
+- Distribuisci il lavoro tra tutti i mezzi: a parità di consegne e avvisi, utilizza più risorse e minimizza la durata massima, poi lo squilibrio delle durate (somma dei quadrati), la durata totale e i chilometri. Dal 6 novembre 2026 la durata è quella del lavoro dell'autista (`optimizer.work_minutes`): come nel punteggio di «Riduci chilometri e tempi», non conta l'attesa che una partenza più tarda elimina senza spostare il rientro; le attese a metà giro restano.
 
 Entrambe danno prima priorità al numero di consegne fattibili assegnate e poi alla riduzione degli avvisi per sponda e ZTL. La sponda è una preferenza con avviso: il motore cerca un mezzo attrezzato, ma una consegna rimane assegnabile anche quando il mezzo non la possiede. L'operatore vede l'avviso e decide se programmare lo stesso oppure modificare la suddivisione. Questo vale per assegnazioni automatiche, revisioni manuali e piani già salvati; l'assenza della sponda non blocca conferma o programmazione.
 
@@ -82,14 +82,17 @@ problemi che ha motivato la scelta è in
 
 ### Seconda proposta con PyVRP
 
-Con «Riduci chilometri e tempi» e più mezzi, oltre a OR-Tools gira anche **PyVRP**
+Con entrambe le strategie e più mezzi, oltre a OR-Tools gira anche **PyVRP**
 (libreria gratuita, licenza MIT, sul server; `app/services/fleet_pyvrp.py`). Parte da zero,
 non dal piano trovato, usa l'orologio di lavoro di ogni autista (pause tolte, fasce come
 copie alternative della consegna) e lo stesso punteggio km + ore. La sua proposta passa
 dallo stesso calendario canonico e dalla stessa accettazione di OR-Tools: vince il piano
 migliore, prima per consegne servite. Tempo: 0,3 s per consegna, tra 1 s e
 `FLEET_PYVRP_SECONDS` (predefinito 30 s; 0 disattiva). Diagnostica in `search.ortools`
-(modo `pyvrp`). Su 36 problemi pubblici di Solomon il piano serve sempre tutte le consegne
+(modo `pyvrp`). Con «Distribuisci il lavoro» PyVRP calcola un piano libero e poi
+impone a tutti i giri una durata massima via via più stretta (fino a 5 dimezzamenti), tenendo
+il limite più basso che serve ancora le stesse consegne (`search.ortools`, voce `balance`).
+Su 36 problemi pubblici di Solomon il piano serve sempre tutte le consegne
 e resta in media allo 0,7% dalla migliore soluzione nota: misure in
 [motore-pyvrp-2026-11-05.md](motore-pyvrp-2026-11-05.md).
 
