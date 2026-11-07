@@ -3819,10 +3819,10 @@ function renderRouteResult(r, targetId="routeResult", fromHistory=false){
     ${r.driver_schedule_error ? `<div class="gf-alert" data-status="danger" role="alert"><div class="gf-alert__body"><p class="gf-alert__text">${esc(r.driver_schedule_error)}</p></div></div>` : ""}
     <div class="gf-stat-strip" data-icons="side" data-fit data-preview-metrics aria-label="Numeri del giro">
       ${gfStatCell("home","neutral","Partenza", r.orario_partenza || "-", r.orario_rientro_stimato ? "rientro "+r.orario_rientro_stimato : "dal deposito")}
-      ${gfStatCell("toll","1","Pedaggi", tollKnown ? dashScheduledMoney(r.toll_estimated_eur) : "—", tollNote)}
       ${gfStatCell("route","2","Percorso", r.totale_km == null ? "-" : gfDecimal(r.totale_km), "km")}
       ${gfStatCell("pin","4","Fermate", String(consegne.length), "", "", "sm")}
-      ${gfStatCell("euro","5","Costo operativo", dashScheduledMoney(total), Number(r.toll_estimated_eur) > 0 ? "pedaggi inclusi" : (energy.electric ? "energia" : "carburante"))}
+      ${gfStatCell("euro","5",energy.electric ? "Costo energia" : "Costo carburante", dashScheduledMoney(r.costo_carburante), "")}
+      ${gfStatCell("toll","1","Pedaggi", tollKnown ? dashScheduledMoney(r.toll_estimated_eur) : "—", tollNote)}
     </div>
     <section class="gf-panel" data-preview-stops aria-labelledby="previewStopsTitle">
       <header class="gf-panel__header"><div><h3 class="gf-panel__title" id="previewStopsTitle">Dettaglio delle fermate</h3><p class="gf-muted">${gfCount(consegne.length,"fermata pianificata","fermate pianificate")} · ${esc(r.eta_label || "orari stimati")}${etaNote}</p></div>

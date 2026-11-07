@@ -77,6 +77,10 @@ test('anteprima: la card dei pedaggi sostituisce il rientro, che resta sotto la 
   assert.match(metrics,/2,30/);
   assert.match(metrics,/rientro 11:01/);
   assert.doesNotMatch(metrics,/Rientro previsto/);
+  // Pedaggi in fondo, accanto al costo del carburante senza pedaggi né diciture.
+  assert.ok(metrics.indexOf('Costo carburante') < metrics.indexOf('Pedaggi'));
+  assert.match(metrics,/Costo carburante<\/span><strong class="gf-stat-strip__value">€ 10,00<\/strong>/);
+  assert.doesNotMatch(metrics,/Costo operativo|>carburante</);
   const unknown=render(false,{toll_estimated_eur:null,toll_status:'unavailable'});
   assert.match(unknown.slice(unknown.indexOf('data-preview-metrics'),unknown.indexOf('data-preview-stops')),/non disponibili/);
   const free=render(false,{toll_estimated_eur:0,toll_status:'estimated'});
