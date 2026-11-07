@@ -5,6 +5,9 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- App installabili sulla schermata Home: manifest «GiroFacile Autista» (/driver) e
+  «GiroFacile» (/mobile), service worker alla radice (/sw.js) che non tiene dati in cache
+  e mostra «Sei offline» senza rete.
 - Indirizzo a campi separati (variante B): via, civico, CAP e comune nel cliente e
   nell'ordine, con la riga «Verifichiamo esattamente: …» che mostra cosa arriva a Google.
   Clienti: nuova colonna CAP (migrazione 20261107_01), l'indirizzo resta «via civico».

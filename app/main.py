@@ -97,6 +97,9 @@ async def system_error_monitor(request: Request, call_next):
         )
 
 static_dir = Path(__file__).resolve().parent.parent / "static"
+# Manifest delle app installabili sulla schermata Home (tipo standard, non «octet-stream»).
+import mimetypes
+mimetypes.add_type("application/manifest+json", ".webmanifest")
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 # Archivio POD locale (solo sviluppo): link firmati e temporanei, come quelli S3.
@@ -161,6 +164,16 @@ def index(request_headers: dict = None):
     )
 
 
+
+
+@app.get("/sw.js", include_in_schema=False)
+def service_worker():
+    """Service worker alla radice del sito (app autista e portale mobile installabili)."""
+    return FileResponse(
+        static_dir / "sw.js",
+        media_type="application/javascript",
+        headers={"Cache-Control": "no-cache", "Service-Worker-Allowed": "/"},
+    )
 
 
 @app.get("/favicon.ico", include_in_schema=False)
