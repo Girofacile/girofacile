@@ -77,3 +77,19 @@ def test_strict_failure_carries_reason_and_message(monkeypatch):
         detail = error.value.detail
         assert detail["reason"] == reason and detail["message"] == occasional_stops.ADDRESS_REASONS[reason]
         assert (detail["candidate"] is None) == (reason == "non_trovato")
+
+
+def test_partial_result_without_town_is_not_verified(monkeypatch):
+    # Risposta reale di Google per «Via Roma 10, Casoria»: Montiglio (altro comune) e una
+    # «Via Roma, Italia» senza comune, centro geometrico nelle Marche.
+    other = google_item("Via Roma, 10, 14026 Montiglio AT, Italia", "Montiglio", "14026", partial=True, lat=45.07, lon=8.10)
+    anywhere = {"formatted_address": "Via Roma, Italia", "partial_match": True, "place_id": "via-roma",
+                "geometry": {"location": {"lat": 43.69, "lng": 12.80}, "location_type": "GEOMETRIC_CENTER"},
+                "address_components": [{"long_name": "Via Roma", "types": ["route"]}]}
+    fake_google(monkeypatch, other, anywhere)
+    result = geocoding.geocode_address("Via Roma 10, Casoria")
+    assert result["status"] == "da_verificare" and result["reason"] == "altro_comune"
+    # La stessa risposta senza comune ma come corrispondenza completa resta accettata.
+    anywhere["partial_match"] = False
+    fake_google(monkeypatch, anywhere)
+    assert geocoding.matches_request("Via Roma, Italia", geocoding._google_geocode("Via Roma, Italia")[0])

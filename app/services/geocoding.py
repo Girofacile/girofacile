@@ -142,6 +142,9 @@ def matches_request(query: str, result: dict) -> bool:
 
     Con un CAP nell'indirizzo basta che coincida il CAP oppure il comune (le grandi città
     hanno molti CAP). Senza CAP si accetta un comune citato o una corrispondenza completa.
+    Un risultato senza comune vale solo se Google lo dà come corrispondenza completa: con
+    corrispondenza parziale è una via omonima qualsiasi («Via Roma, Italia» per «Via Roma 10,
+    Casoria» finiva nelle Marche e risultava verificato).
     """
     written = _plain(query)
     place_ok = any(_plain(place) in written for place in result.get("places") or [])
@@ -149,7 +152,7 @@ def matches_request(query: str, result: dict) -> bool:
     if caps:
         return place_ok or (result.get("cap") or "") in caps
     if not result.get("places"):
-        return True
+        return not result.get("partial_match")
     return place_ok or not result.get("partial_match")
 
 
