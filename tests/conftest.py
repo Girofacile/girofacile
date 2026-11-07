@@ -1,6 +1,55 @@
 """Impostazioni comuni ai test, indipendenti dal file .env locale."""
 import pytest
 
+# Test del motore dei giri (algoritmo, ricerche a tempo, confronti di qualità): sono la
+# parte lenta della suite. In locale, per modifiche che non toccano i calcoli:
+#   python -m pytest tests -m "not motore"
+# Senza -m la suite resta completa, come su GitHub.
+MOTORE = frozenset((
+    'test_balanced_work_minutes.py',
+    'test_fleet_adaptive_search.py',
+    'test_fleet_before_after.py',
+    'test_fleet_benchmark_baselines.py',
+    'test_fleet_highs_start.py',
+    'test_fleet_milp_solver.py',
+    'test_fleet_ortools.py',
+    'test_fleet_pyvrp.py',
+    'test_fleet_quality_reference.py',
+    'test_fleet_route_evaluator.py',
+    'test_fleet_route_exact.py',
+    'test_fleet_route_exact_api.py',
+    'test_fleet_route_pool.py',
+    'test_fleet_search.py',
+    'test_fleet_search_budget.py',
+    'test_fleet_seed_search.py',
+    'test_fleet_upgrade_quality.py',
+    'test_fleet_working_clock.py',
+    'test_optimizer.py',
+    'test_optimizer_cost_first.py',
+    'test_optimizer_improvements.py',
+    'test_optimizer_priorities.py',
+    'test_optimizer_scaling.py',
+    'test_ortools_comparison.py',
+    'test_ortools_full_comparison.py',
+    'test_pyvrp_r104_benchmark.py',
+    'test_real_optimizer_benchmark.py',
+    'test_road_margin_benchmark.py',
+    'test_routing_quality_audit.py',
+    'test_routing_quality_fifty.py',
+    'test_routing_quality_integration.py',
+    'test_routing_quality_oracle.py',
+))
+
+
+def pytest_configure(config):
+    config.addinivalue_line('markers', 'motore: test del motore dei giri (lenti), esclusi con -m "not motore"')
+
+
+def pytest_collection_modifyitems(config, items):
+    for item in items:
+        if item.path.name in MOTORE:
+            item.add_marker(pytest.mark.motore)
+
 
 @pytest.fixture(autouse=True)
 def _pod_storage_production_backend(monkeypatch):

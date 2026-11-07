@@ -14,6 +14,20 @@ Usare Git locale per commit e push. Confermare l'esito del caricamento e indicar
 il commit nella risposta finale. Se autenticazione, protezioni del repository o
 controlli impediscono il push, riportare il blocco senza dichiararlo completato.
 
+## Quali test eseguire
+
+Eseguire i test adeguati alla modifica, non sempre la suite completa (circa 17 minuti):
+
+- interfaccia, pagine e funzioni che non toccano i calcoli dei giri:
+  `python -m pytest tests -m "not motore"` (circa 1000 test);
+- motore dei giri (ottimizzatore, flotta, PyVRP, OR-Tools, punteggi): i file del
+  motore toccati, poi `python -m pytest tests -m motore`;
+- l'elenco dei file del motore è in `tests/conftest.py` (`MOTORE`): un nuovo file di
+  test del motore va aggiunto lì.
+
+Su GitHub la suite gira sempre completa. I test JavaScript (`tests/*.cjs`) richiedono
+Node.js.
+
 ## Più assistenti sullo stesso progetto
 
 Claude Code e Codex lavorano su copie di lavoro separate dello stesso repository,
