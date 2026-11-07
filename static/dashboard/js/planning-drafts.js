@@ -47,7 +47,9 @@ window.GFPlanningDrafts=(()=>{
   // Un giro già calcolato in bozza viene annullato; un giro programmato aperto per modifica resta com'è.
   async function discard(){
     if(busy)return;
-    if(!deliveries.length&&!lastRouteResult?.id){clearRouteWorkspace();return;}
+    // Dopo l'eliminazione si torna da dove si era partiti: Ordini, Clienti o, altrimenti, la Dashboard.
+    const back=globalThis.GFOrderPlanning?.active()?'ordini':customerDirectoryPlanning?'clienti':'dashboard';
+    if(!deliveries.length&&!lastRouteResult?.id){clearRouteWorkspace();showTab(back);return;}
     if(!confirm('Eliminare questa pianificazione? Le consegne vengono tolte e gli ordini collegati tornano da pianificare.'))return;
     busy=true;
     try{
@@ -58,6 +60,8 @@ window.GFPlanningDrafts=(()=>{
       clearRouteWorkspace();
       window.GFOrders?.refreshSelection?.();
       toast('Pianificazione eliminata.');
+      busy=false;
+      showTab(back);
     }catch(error){alert('Non è stato possibile eliminare la pianificazione: '+(error.message||error));}
     finally{busy=false;}
     await load();
