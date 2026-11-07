@@ -19,6 +19,12 @@ class OrderData(BaseModel):
     number: Text160
     recipient_name: str | None = Field(default=None, max_length=200)
     delivery_address: str | None = Field(default=None, max_length=500)
+    # Indirizzo a campi separati: se presenti, l'indirizzo su una riga si compone da questi.
+    street: str | None = Field(default=None, max_length=300)
+    street_number: str | None = Field(default=None, max_length=20)
+    postal_code: str | None = Field(default=None, max_length=5)
+    city: str | None = Field(default=None, max_length=150)
+    province: str | None = Field(default=None, max_length=2)
     requested_date: date | None = None
     time_from: time | None = None
     time_to: time | None = None
@@ -31,6 +37,19 @@ class OrderData(BaseModel):
     ztl: bool | None = None
     requirements: str | None = Field(default=None, max_length=2000)
     notes: str | None = Field(default=None, max_length=5000)
+
+    @model_validator(mode='after')
+    def address_parts(self):
+        from ..services.address_parts import CAP_RE, compose
+        if any((self.street, self.street_number, self.postal_code, self.city)):
+            if not (self.street and self.postal_code and self.city):
+                raise ValueError('Indirizzo: indica via, CAP e comune (il civico se c’è)')
+            if self.postal_code.isdigit() and len(self.postal_code) < 5:
+                self.postal_code = self.postal_code.zfill(5)  # da Excel «00118» arriva come 118
+            if not CAP_RE.match(self.postal_code):
+                raise ValueError('Il CAP ha 5 cifre')
+            self.delivery_address = compose(self.street, self.street_number, self.postal_code, self.city, self.province)
+        return self
 
     @model_validator(mode='after')
     def window(self):

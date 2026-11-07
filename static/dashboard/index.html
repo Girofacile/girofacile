@@ -1351,7 +1351,7 @@
       </section>
       <section class="gf-stack" data-gap="sm">
         <div><p class="gf-kicker">02</p><h3 class="gf-subtitle">Indirizzo</h3><p class="gf-muted">L'indirizzo è usato per calcolo percorso e verifica geografica.</p></div>
-        <div class="gf-form-grid"><label class="gf-field" for="cIndirizzo" data-span="full"><span class="gf-field__label">Indirizzo completo</span><input class="gf-input" id="cIndirizzo" placeholder="Via, numero civico, città"></label><label class="gf-field" for="cComune"><span class="gf-field__label">Comune / zona</span><input class="gf-input" id="cComune" placeholder="Comune / zona"></label><label class="gf-field" for="cProvincia"><span class="gf-field__label">Provincia</span><input class="gf-input" id="cProvincia" placeholder="Provincia"></label></div><input type="hidden" id="cLat"><input type="hidden" id="cLon"><input type="hidden" id="cGeoStatus"><input type="hidden" id="cGeoProvider"><input type="hidden" id="cGeoConfidence"><input type="hidden" id="cGooglePlaceId"><input type="hidden" id="cGeocodedAddress"><div class="gf-cluster"><button type="button" class="gf-button" data-variant="secondary" onclick="verifyCustomerModalAddress()">Verifica indirizzo con Google</button><div id="customerAddressVerifyStatus" class="gf-alert" data-status="neutral">Indirizzo non ancora verificato.</div></div>
+        <div class="gf-grid" data-cols="4"><label class="gf-field" for="cVia"><span class="gf-field__label">Via</span><input class="gf-input" id="cVia" placeholder="Via Roma" autocomplete="off"></label><label class="gf-field" for="cCivico"><span class="gf-field__label">Civico</span><input class="gf-input" id="cCivico" placeholder="10" maxlength="20" autocomplete="off"></label><label class="gf-field" for="cCap"><span class="gf-field__label">CAP</span><input class="gf-input" id="cCap" placeholder="80026" maxlength="5" inputmode="numeric" pattern="\d{5}" autocomplete="off"></label><label class="gf-field" for="cComune"><span class="gf-field__label">Comune</span><input class="gf-input" id="cComune" placeholder="Casoria" autocomplete="off"></label></div><div class="gf-form-grid"><label class="gf-field" for="cProvincia"><span class="gf-field__label">Provincia</span><input class="gf-input" id="cProvincia" placeholder="NA" maxlength="2"></label></div><p class="gf-field__hint" id="cAddressExact"></p><input type="hidden" id="cIndirizzo"><input type="hidden" id="cLat"><input type="hidden" id="cLon"><input type="hidden" id="cGeoStatus"><input type="hidden" id="cGeoProvider"><input type="hidden" id="cGeoConfidence"><input type="hidden" id="cGooglePlaceId"><input type="hidden" id="cGeocodedAddress"><div class="gf-cluster"><button type="button" class="gf-button" data-variant="secondary" onclick="verifyCustomerModalAddress()">Verifica indirizzo con Google</button><div id="customerAddressVerifyStatus" class="gf-alert" data-status="neutral">Indirizzo non ancora verificato.</div></div>
       </section>
       <section class="gf-stack" data-gap="sm" data-gf-feature="time_windows">
         <div><p class="gf-kicker">03</p><h3 class="gf-subtitle">Fasce orarie</h3><p class="gf-muted">Quando il cliente può ricevere la consegna.</p></div>
@@ -1662,17 +1662,17 @@
 </div>
 
 <script src="/static/dashboard/js/reports.js?v=gf_format_20261020"></script>
-<script src="/static/dashboard/js/customers.js?v=gf_bozze_20261026"></script>
+<script src="/static/dashboard/js/customers.js?v=gf_indirizzo_campi_20261107"></script>
 <script src="/static/dashboard/js/navigation.js?v=gf_pianifica_settimana_20261107"></script>
 <script src="/static/dashboard/js/history.js?v=gf_storico_pianifica_20261105"></script>
 <script src="/static/password-strength.js?v=gf_driver_flow_20261020"></script>
 <script src="/static/dashboard/js/collaborators.js?v=gf_senza_avvisi_20261107"></script>
-<script src="/static/dashboard/js/orders.js?v=gf_problema_indirizzo_20261107"></script>
+<script src="/static/dashboard/js/orders.js?v=gf_indirizzo_campi_20261107"></script>
 <script src="/static/dashboard/js/order-import.js?v=gf_base_20261015u"></script>
 <script src="/static/dashboard/js/order-sources.js?v=gf_plans_20261023"></script>
 <script src="/static/dashboard/js/dashboard-real-map.js?v=gf_priority_hero_20261025"></script>
 <script src="/static/dashboard/js/in-progress-reference.js?v=gf_giri_tabella_20261104"></script>
-<script src="/static/dashboard/js/core.js?v=gf_pianifica_settimana_20261107"></script>
+<script src="/static/dashboard/js/core.js?v=gf_indirizzo_campi_20261107"></script>
 <script src="/static/dashboard/js/dashboard-mobile.js?v=gf_dashboard_mobile_20261019"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=orders_2"></script>
 <link rel="stylesheet" href="/static/dashboard/css/fleet-review.css?v=gf_suddivisione_20261025">

@@ -66,6 +66,7 @@ def customer_to_dict(customer) -> dict:
         "indirizzo": customer.indirizzo,
         "comune": customer.comune,
         "provincia": customer.provincia,
+        "cap": customer.cap,
         "telefono": customer.telefono,
         "referente": customer.referente,
         "email": customer.email,
@@ -182,7 +183,7 @@ def update_customer(item_id: int, data: CustomerIn, db: Session = Depends(get_db
     if not item:
         raise HTTPException(404, "Cliente non trovato")
     old_coordinates = (item.lat, item.lon)
-    old_key = "|".join([item.indirizzo or "", item.comune or "", item.provincia or ""]).strip().lower()
+    old_key = "|".join([item.indirizzo or "", item.cap or "", item.comune or "", item.provincia or ""]).strip().lower()
     payload = data.model_dump()
     if not agents_enabled(user):
         payload.pop("agent_id", None)
@@ -193,7 +194,7 @@ def update_customer(item_id: int, data: CustomerIn, db: Session = Depends(get_db
         if not agent:
             raise HTTPException(400, "Agente non trovato")
     new_key = "|".join([
-        payload.get("indirizzo") or "", payload.get("comune") or "", payload.get("provincia") or ""
+        payload.get("indirizzo") or "", payload.get("cap") or "", payload.get("comune") or "", payload.get("provincia") or ""
     ]).strip().lower()
     payload["stato_geocodifica"] = payload.get("stato_geocodifica") or (
         "da_verificare" if old_key != new_key or old_coordinates != (payload.get("lat"), payload.get("lon"))
@@ -320,7 +321,7 @@ def verify_selected_customer_addresses(
             continue
         try:
             result = geocode_address(
-                customer.indirizzo, customer.comune or "", customer.provincia or "",
+                customer.indirizzo, " ".join(x for x in (customer.cap or "", customer.comune or "") if x), customer.provincia or "",
                 db=db, user_id=user.id, strict=True,
             )
         except GeocodingUnavailable as exc:
@@ -438,7 +439,11 @@ async def import_customers(
     for _, row in df.iterrows():
         codice = str(get(row, "codice_cliente", "") or "").strip()
         nome = str(get(row, "nome", "") or "").strip()
-        indirizzo = str(get(row, "indirizzo", "") or "").strip()
+        # Import a campi separati: «via» e «civico» (oppure «indirizzo» già completo), «cap», «comune».
+        indirizzo = str(get(row, "indirizzo", "") or get(row, "via", "") or "").strip()
+        civico = str(get(row, "civico", "") or "").strip()
+        if civico and not indirizzo.endswith(civico):
+            indirizzo = f"{indirizzo} {civico}".strip()
         if not nome or not indirizzo:
             continue
         item = (
@@ -461,6 +466,8 @@ async def import_customers(
             item.agent_id = agent_lookup_by_code.get(codice_agente) or agent_lookup_by_name.get(agente_nome) or None
         item.comune = get(row, "comune")
         item.provincia = get(row, "provincia")
+        cap = str(get(row, "cap", "") or "").strip().split(".")[0].zfill(5) if get(row, "cap") else None
+        item.cap = cap if cap and cap.isdigit() and len(cap) == 5 else None
         item.telefono = str(get(row, "telefono", "") or "")
         item.referente = get(row, "referente")
         item.email = get(row, "email")

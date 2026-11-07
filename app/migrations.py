@@ -3,7 +3,7 @@ from datetime import datetime
 from .core.clock import utc_now
 from sqlalchemy import inspect, text
 
-LATEST = '20261105_01'
+LATEST = '20261107_01'
 LOCK_ID = 7640152404
 
 
@@ -250,6 +250,12 @@ def run_migrations(engine):
                     if 'users' in set(inspect(conn).get_table_names()) and 'driver_hourly_cost' not in {c['name'] for c in inspect(conn).get_columns('users')}:
                         conn.execute(text('ALTER TABLE users ADD COLUMN driver_hourly_cost INTEGER'))
                     conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261105_01', 'now': utc_now()})
+            if '20261107_01' not in applied:
+                # Indirizzo a campi separati: il CAP del cliente, usato dalla verifica severa.
+                with engine.begin() as conn:
+                    if 'customers' in set(inspect(conn).get_table_names()) and 'cap' not in {c['name'] for c in inspect(conn).get_columns('customers')}:
+                        conn.execute(text('ALTER TABLE customers ADD COLUMN cap VARCHAR(5)'))
+                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261107_01', 'now': utc_now()})
         finally:
             if postgres:
                 lock.execute(text('SELECT pg_advisory_unlock(:key)'), {'key': LOCK_ID})

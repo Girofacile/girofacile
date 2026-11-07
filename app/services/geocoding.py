@@ -179,7 +179,7 @@ def _street_tokens(value: str) -> list:
 def parse_address(query: str) -> dict:
     """Via, civico, CAP e comune da un indirizzo su una riga («Via Roma 10, 80026 Casoria NA»)."""
     parts = [p.strip() for p in str(query or "").split(",") if p.strip()]
-    parts = [p for p in parts if _plain(p).strip() not in ("italia", "italy")]
+    parts = [p for p in parts if _plain(p).strip() not in ("italia", "italy", "it", "ita")]
     caps = re.findall(r"(?<!\d)\d{5}(?!\d)", str(query or ""))
     street = parts[0] if parts else ""
     number = None
@@ -294,9 +294,10 @@ def geocode_address(indirizzo: str, comune: str = "", provincia: str = "", db: S
 
 
 def geocode_customer(customer, db: Session | None = None) -> dict:
+    # Con il CAP la verifica severa confronta anche il CAP (o il comune nelle grandi città).
     return geocode_address(
         customer.indirizzo or "",
-        customer.comune or "",
+        " ".join(x for x in (getattr(customer, "cap", None) or "", customer.comune or "") if x),
         customer.provincia or "",
         db=db, user_id=getattr(customer, "user_id", None),
     )

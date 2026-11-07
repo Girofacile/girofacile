@@ -2939,13 +2939,14 @@ function openCustomerModal(id=null){
   if(title) title.textContent = id ? "Modifica cliente" : "Nuovo cliente";
   document.getElementById("customerDeleteSection")?.classList.toggle("hidden", !id);
   document.getElementById("customerOverlay")?.classList.remove("hidden");
-  ["cIndirizzo","cComune","cProvincia"].forEach(fieldId=>{
+  ["cVia","cCivico","cCap","cComune","cProvincia"].forEach(fieldId=>{
     const el = document.getElementById(fieldId);
     if(el && el.dataset.geoClearReady !== "true"){
       el.dataset.geoClearReady = "true";
-      el.addEventListener("input", clearCustomerModalGeocode);
+      el.addEventListener("input", ()=>{ syncCustomerModalAddress(); clearCustomerModalGeocode(); });
     }
   });
+  syncCustomerModalAddress();
   if(id) editCustomer(id, true);
 }
 function closeCustomerModal(e){
@@ -2974,6 +2975,28 @@ function setCustomerAddressStatus(text, status="muted"){
   box.dataset.status = {ok:"success", warn:"warning", error:"danger", loading:"info"}[status] || "neutral";
 }
 
+// Indirizzo a campi separati: «via civico» nel campo indirizzo, CAP e comune a parte; sotto,
+// l'indirizzo esatto che arriva a Google.
+function gfSplitStreet(line){
+  const text = String(line || "").trim();
+  const match = text.match(/^(.*?\D)[\s,]+(\d+\s*[a-zA-Z]?(?:\s*\/\s*\w+)?)$/);
+  return match ? [match[1].replace(/[\s,]+$/,""), match[2]] : [text, ""];
+}
+function gfExactAddress(street, number, cap, city, province){
+  return [[street, number].filter(Boolean).join(" "), [cap, city, String(province || "").toUpperCase()].filter(Boolean).join(" ")].filter(Boolean).join(", ");
+}
+function syncCustomerModalAddress(){
+  set("cIndirizzo", [val("cVia"), val("cCivico")].filter(Boolean).join(" "));
+  const hint = document.getElementById("cAddressExact");
+  const line = gfExactAddress(val("cVia"), val("cCivico"), val("cCap"), val("cComune"), val("cProvincia"));
+  if(hint) hint.innerHTML = line ? `Verifichiamo esattamente: <strong>${esc(line)}</strong>` : "Indica via, civico, CAP e comune: li verifichiamo così come li scrivi.";
+}
+function fillCustomerModalAddress(c){
+  const [street, number] = gfSplitStreet(c.indirizzo);
+  set("cVia", street); set("cCivico", number); set("cCap", c.cap || "");
+  syncCustomerModalAddress();
+}
+
 function clearCustomerModalGeocode(){
   ["cLat","cLon","cGeoStatus","cGeoProvider","cGeoConfidence","cGooglePlaceId","cGeocodedAddress"].forEach(id=>set(id,""));
   setCustomerAddressStatus("Indirizzo modificato: verifica con Google prima di salvare.", "warn");
@@ -2982,7 +3005,6 @@ function clearCustomerModalGeocode(){
 function applyCustomerModalGeocode(data){
   const suggested = data?.suggested || {};
   const result = data?.result || {};
-  if(suggested.indirizzo) set("cIndirizzo", suggested.indirizzo);
   set("cLat", suggested.lat ?? "");
   set("cLon", suggested.lon ?? "");
   set("cGeoStatus", suggested.stato_geocodifica || result.status || "non_trovato");
@@ -2992,7 +3014,7 @@ function applyCustomerModalGeocode(data){
   set("cGeocodedAddress", suggested.indirizzo || result.formatted || "");
 
   const status = suggested.stato_geocodifica || result.status || "non_trovato";
-  if(status === "verificato") setCustomerAddressStatus("Indirizzo verificato con Google.", "ok");
+  if(status === "verificato") setCustomerAddressStatus(`Indirizzo verificato con Google: ${suggested.indirizzo || result.formatted || ""}`, "ok");
   else if(status === "da_verificare") setCustomerAddressStatus("Google ha trovato un indirizzo simile: controllalo prima di salvare.", "warn");
   else setCustomerAddressStatus("Google non ha trovato un indirizzo valido.", "error");
 }
@@ -3002,9 +3024,10 @@ function customerPayloadFromModal(){
     ...(agentsFeatureEnabled() ? {agent_id: val("cAgent") ? parseInt(val("cAgent")) : null} : {}),
     codice_cliente: val("cCodice"),
     nome: val("cNome"),
-    indirizzo: val("cIndirizzo"),
+    indirizzo: [val("cVia"), val("cCivico")].filter(Boolean).join(" "),
+    cap: val("cCap") || null,
     comune: val("cComune"),
-    provincia: val("cProvincia"),
+    provincia: val("cProvincia").toUpperCase() || null,
     telefono: val("cTelefono"),
     email: val("cEmail"),
     referente: val("cReferente"),
@@ -3028,8 +3051,8 @@ function customerPayloadFromModal(){
 
 async function verifyCustomerModalAddress(){
   const payload = customerPayloadFromModal();
-  if(!payload.indirizzo || payload.indirizzo.trim().length < 4){
-    alert("Inserisci un indirizzo valido prima di verificare con Google.");
+  if(!payload.indirizzo || payload.indirizzo.trim().length < 4 || !/^\d{5}$/.test(payload.cap || "") || !payload.comune){
+    alert("Indica via, civico, CAP (5 cifre) e comune prima di verificare con Google.");
     return;
   }
   try{
@@ -3047,7 +3070,7 @@ async function loadCustomers(){
 }
 function editCustomer(id, fromModal=false){
   const c = customersCache.find(x=>x.id===id); if(!c) return;
-  set("cId",c.id); set("cCodice",c.codice_cliente); set("cNome",c.nome); set("cIndirizzo",c.indirizzo); set("cComune",c.comune); set("cProvincia",c.provincia); set("cTelefono",c.telefono); set("cEmail",c.email); set("cReferente",c.referente); set("cAgent", c.agent_id || "");
+  set("cId",c.id); set("cCodice",c.codice_cliente); set("cNome",c.nome); set("cIndirizzo",c.indirizzo); fillCustomerModalAddress(c); set("cComune",c.comune); set("cProvincia",c.provincia); set("cTelefono",c.telefono); set("cEmail",c.email); set("cReferente",c.referente); set("cAgent", c.agent_id || "");
   set("cMattinaDa",c.scarico_mattina_da); set("cMattinaA",c.scarico_mattina_a); set("cPomeriggioDa",c.scarico_pomeriggio_da); set("cPomeriggioA",c.scarico_pomeriggio_a);
   set("cScarico",c.tempo_scarico_min); set("cZtl",c.ztl_manual?"true":"false"); set("cSponda",c.sponda?"true":"false"); set("cNote",c.note);
   set("cLat", c.lat ?? ""); set("cLon", c.lon ?? ""); set("cGeoStatus", c.stato_geocodifica || "da_verificare"); set("cGeoProvider", c.fonte_geocodifica || "");
@@ -3059,7 +3082,7 @@ function editCustomer(id, fromModal=false){
   if(!fromModal) document.getElementById("customerOverlay")?.classList.remove("hidden");
 }
 function resetCustomerForm(){
-  ["cId","cCodice","cNome","cIndirizzo","cComune","cProvincia","cTelefono","cEmail","cReferente","cAgent","cMattinaDa","cMattinaA","cPomeriggioDa","cPomeriggioA","cNote","cLat","cLon","cGeoStatus","cGeoProvider","cGeoConfidence","cGooglePlaceId","cGeocodedAddress"].forEach(id=>set(id,""));
+  ["cId","cCodice","cNome","cIndirizzo","cVia","cCivico","cCap","cComune","cProvincia","cTelefono","cEmail","cReferente","cAgent","cMattinaDa","cMattinaA","cPomeriggioDa","cPomeriggioA","cNote","cLat","cLon","cGeoStatus","cGeoProvider","cGeoConfidence","cGooglePlaceId","cGeocodedAddress"].forEach(id=>set(id,""));
   set("cScarico",10); set("cZtl","false"); set("cSponda","false");
   document.getElementById("customerDeleteSection")?.classList.add("hidden");
   setCustomerAddressStatus("Indirizzo non ancora verificato.", "muted");

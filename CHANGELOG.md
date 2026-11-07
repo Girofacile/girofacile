@@ -5,6 +5,13 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Indirizzo a campi separati (variante B): via, civico, CAP e comune nel cliente e
+  nell'ordine, con la riga «Verifichiamo esattamente: …» che mostra cosa arriva a Google.
+  Clienti: nuova colonna CAP (migrazione 20261107_01), l'indirizzo resta «via civico».
+  Ordini: campi nei dati dell'ordine, indirizzo su una riga composto dai campi; gli ordini
+  già salvati si aprono con i campi ricavati dalla riga. Import: colonne via, civico, CAP,
+  comune, provincia (resta valida la colonna unica); Shopify e WooCommerce senza paese e
+  senza seconda riga dell'indirizzo, che va nelle note.
 - Giri non partiti in orario (services/late_start.py): fino a 15 minuti dopo la partenza
   nessun avviso; oltre, «In ritardo» se partendo adesso fasce, turno e pause reggono ancora
   (stesse tratte salvate), altrimenti o dopo 30 minuti «Da riprogrammare» e l'autista non può

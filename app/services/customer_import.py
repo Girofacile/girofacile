@@ -47,7 +47,7 @@ def import_row_errors(row):
 
 def customer_address_key(customer):
     return tuple(str(getattr(customer, field, None) or '').strip().casefold()
-                 for field in ('indirizzo', 'comune', 'provincia'))
+                 for field in ('indirizzo', 'cap', 'comune', 'provincia'))
 
 
 def invalidate_imported_address(db, customer, previous_address):
@@ -92,7 +92,7 @@ def preflight_customer_import(df, db, user, agent_id=None):
         def value(key):
             raw = row.get(key)
             return '' if pd.isna(raw) else str(raw or '').strip()
-        if not value('nome') or not value('indirizzo'):
+        if not value('nome') or not (value('indirizzo') or value('via')):
             continue
         for message in import_row_errors(row):
             row_errors.append(f'Riga {position + 2}: {message}')

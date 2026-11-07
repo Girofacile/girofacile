@@ -60,9 +60,9 @@ test('customer selection supports planning without bulk unloading-window actions
 
 test('drawer saves keep every stored field and reset geocoding when the address changes',async()=>{
   const f=fixture();const calls=[];
-  const inputs={cxName:{value:'Bar Nuovo'},cxAddress:{value:'Via Roma 2'},cxCode:{value:'C9'},cxCity:{value:'Napoli'},cxProv:{value:'na'},
+  const inputs={cxName:{value:'Bar Nuovo'},cxStreet:{value:'Via Roma'},cxNumber:{value:'2'},cxCap:{value:'80132'},cxCode:{value:'C9'},cxCity:{value:'Napoli'},cxProv:{value:'na'},
     cxSlot1From:{value:'06:00'},cxSlot1To:{value:'12:00'},cxSecondSlot:{hidden:true},cxSlotError:{},cxAddressError:{},customerDrawer:{querySelector:()=>null,classList:{remove(){},add(){}},setAttribute(){}}};
-  for(const key of ['cxName','cxAddress','cxCity'])inputs[key].classList={toggle(){}};
+  for(const key of ['cxName','cxStreet','cxCap','cxCity'])inputs[key].classList={toggle(){}};
   Object.assign(f.fields,inputs);
   f.ctx.document.documentElement={dataset:{gfTimeWindows:'on'}};
   f.ctx.api=async(url,opts)=>{calls.push([url,opts]);return url.includes('limit=')?[]:{stato_geocodifica:'da_verificare'};};
@@ -73,6 +73,8 @@ test('drawer saves keep every stored field and reset geocoding when the address 
   assert.equal(url,'/api/customers/7');assert.equal(opts.method,'PUT');
   assert.equal(body.telefono,'081');assert.equal(body.tempo_scarico_min,15);assert.equal(body.ztl,true);
   assert.equal(body.provincia,'NA');assert.equal(body.lat,null);assert.equal(body.stato_geocodifica,null);
+  // Indirizzo a campi separati: «via civico» nell'indirizzo, CAP a parte.
+  assert.equal(body.indirizzo,'Via Roma 2');assert.equal(body.cap,'80132');
   assert.equal(body.scarico_mattina_da,'06:00');assert.equal(body.scarico_pomeriggio_da,null);
 });
 

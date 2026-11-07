@@ -171,7 +171,7 @@ def main():
             page.locator('#cxName').locator('xpath=ancestor::*[@data-invalid][1]').wait_for()
             assert not store['customers']
             page.screenshot(path=str(output / '5-cliente-salva.png'))
-            page.fill('#cxName', 'Bar Vesuvio'); page.fill('#cxAddress', 'Via Toledo 25'); page.fill('#cxCity', 'Napoli')
+            page.fill('#cxName', 'Bar Vesuvio'); page.fill('#cxStreet', 'Via Toledo'); page.fill('#cxNumber', '25'); page.fill('#cxCap', '80134'); page.fill('#cxCity', 'Napoli')
             page.locator('#customerDrawer [data-cx-save]').click()
             # Cliente salvato: il fumetto chiede di selezionarlo e poi di andare in pianificazione.
             assert 'Seleziona il cliente' in tip_on(page, '#tab-clienti .cx-cb')

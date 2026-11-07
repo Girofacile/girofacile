@@ -327,6 +327,7 @@ class Customer(Base):
     indirizzo: Mapped[str] = mapped_column(String(500), nullable=False)
     comune: Mapped[str | None] = mapped_column(String(150), nullable=True)
     provincia: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    cap: Mapped[str | None] = mapped_column(String(5), nullable=True)
     telefono: Mapped[str | None] = mapped_column(String(100), nullable=True)
     referente: Mapped[str | None] = mapped_column(String(150), nullable=True)
     email: Mapped[str | None] = mapped_column(String(200), nullable=True)

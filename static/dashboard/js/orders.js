@@ -14,7 +14,9 @@
 
   // Da pianificare come «In servizio» della Dashboard, così non si confonde con «Assegnato» (azzurro); annullato in rosso chiaro.
   const statusTone={nuovo:'warning',da_verificare:'warning',pronto:'warning',assegnato:'info',in_consegna:'info',consegnato:'success',non_consegnato:'danger',annullato:'danger'};
-  const fields={number:'Numero ordine',recipient_name:'Destinatario',delivery_address:'Indirizzo di consegna',requested_date:'Data richiesta',time_from:'Fascia oraria: dalle',time_to:'Alle',weight_kg:'Peso (kg)',packages:'Colli',pallets:'Pallet',volume_m3:'Volume (m³)',tail_lift:'Sponda',pallet_truck:'Transpallet',ztl:'ZTL',requirements:'Requisiti operativi',notes:'Note'};
+  const fields={number:'Numero ordine',recipient_name:'Destinatario',street:'Via',street_number:'Civico',postal_code:'CAP',city:'Comune',requested_date:'Data richiesta',time_from:'Fascia oraria: dalle',time_to:'Alle',weight_kg:'Peso (kg)',packages:'Colli',pallets:'Pallet',volume_m3:'Volume (m³)',tail_lift:'Sponda',pallet_truck:'Transpallet',ztl:'ZTL',requirements:'Requisiti operativi',notes:'Note'};
+  // Etichette anche dei campi che non sono nel modulo (storico delle modifiche, errori).
+  const labelOf=key=>fields[key]||({delivery_address:'Indirizzo di consegna',province:'Provincia'})[key];
   const numeric=['weight_kg','packages','pallets','volume_m3'], bools=['tail_lift','pallet_truck','ztl'];
   let page=1, sequence=0, detailSequence=0, view='table', current=null, last=null, timer, modalScrollY=0, bulkVerifying=false, stopBulkVerification=false;
   const el=id=>document.getElementById(id);
@@ -36,7 +38,7 @@
     const data=await response.json();
     if(!response.ok){
       let message=data.detail;
-      if(Array.isArray(message))message=message.map(e=>`${fields[e.loc?.[1]]||'Dati ordine'}: ${e.msg?.startsWith('Value error, ')?e.msg.slice(13):'verifica formato, limiti e campi obbligatori.'}`).join('\n');
+      if(Array.isArray(message))message=message.map(e=>`${labelOf(e.loc?.[1])||'Dati ordine'}: ${e.msg?.startsWith('Value error, ')?e.msg.slice(13):'verifica formato, limiti e campi obbligatori.'}`).join('\n');
       throw new Error(typeof message==='string'?message:'Operazione non riuscita. Riprova.');
     }
     return data;
@@ -96,7 +98,7 @@
       if(bools.includes(key))return `<label class="gf-field" for="${id}"><span class="gf-field__label">${label}</span><select class="gf-select" id="${id}" name="${key}"><option value="">Non indicato</option><option value="true" ${value===true?'selected':''}>Sì</option><option value="false" ${value===false?'selected':''}>No</option></select></label>`;
       if(['notes','requirements'].includes(key))return `<label class="gf-field" data-span="full" for="${id}"><span class="gf-field__label">${label}</span><textarea class="gf-textarea" id="${id}" name="${key}" maxlength="${key==='notes'?5000:2000}">${esc(value||'')}</textarea></label>`;
       const type=numeric.includes(key)?'number':key==='requested_date'?'date':key.startsWith('time_')?'time':'text';
-      return `<label class="gf-field" for="${id}"><span class="gf-field__label">${label}</span><input class="gf-input" id="${id}" name="${key}" type="${type}" value="${esc(value??'')}" ${key==='number'?'required maxlength="160"':key==='recipient_name'?'maxlength="200"':key==='delivery_address'?'maxlength="500"':''} ${type==='number'?`min="0" max="${key==='packages'?1000000:100000000}" step="${key==='packages'?1:'any'}"`:''}></label>`;
+      return `<label class="gf-field" for="${id}"><span class="gf-field__label">${label}</span><input class="gf-input" id="${id}" name="${key}" type="${type}" value="${esc(value??'')}" ${key==='number'?'required maxlength="160"':key==='recipient_name'?'maxlength="200"':key==='street'?'maxlength="300" autocomplete="off"':key==='street_number'?'maxlength="20" autocomplete="off"':key==='postal_code'?'maxlength="5" inputmode="numeric" pattern="\\d{5}" autocomplete="off"':key==='city'?'maxlength="150" autocomplete="off"':''} ${type==='number'?`min="0" max="${key==='packages'?1000000:100000000}" step="${key==='packages'?1:'any'}"`:''}></label>`;
     }).join('');
     // Keep the everyday workflow compact; optional logistics remain available on demand.
     const container=el('orderFormFields');
@@ -110,14 +112,34 @@
     title.textContent='Altre informazioni (facoltative)';
     const otherFields=document.createElement('div');
     otherFields.className='gf-panel__body gf-form-grid';
-    const essential=new Set(['number','recipient_name','delivery_address']);
+    // Indirizzo a campi separati (variante B): via, civico, CAP e comune su una riga e, sotto,
+    // l'indirizzo esatto che arriverà a Google per la verifica.
+    const ADDRESS=['street','street_number','postal_code','city'];
+    const essential=new Set(['number','recipient_name']);
+    const address=document.createElement('fieldset');
+    address.className='gf-fieldset gf-stack';address.dataset.gap='sm';address.dataset.orderAddress='';
+    address.innerHTML='<legend class="gf-field__label">Indirizzo di consegna</legend>';
+    const addressGrid=document.createElement('div');
+    addressGrid.className='gf-grid';addressGrid.dataset.cols='4';
     for(const label of Array.from(container.children)){
       const input=label.querySelector('input,select,textarea');
-      if(essential.has(input?.name))basic.appendChild(label);
+      if(ADDRESS.includes(input?.name))addressGrid.appendChild(label);
+      else if(essential.has(input?.name))basic.appendChild(label);
       else otherFields.appendChild(label);
     }
+    const exact=document.createElement('p');
+    exact.className='gf-field__hint';exact.dataset.orderAddressExact='';
+    const province=document.createElement('input');
+    province.type='hidden';province.name='province';province.value=data.province||'';
+    address.append(addressGrid,exact,province);
+    const preview=()=>{
+      const part=name=>(addressGrid.querySelector(`[name="${name}"]`)?.value||'').trim();
+      const line=[[part('street'),part('street_number')].filter(Boolean).join(' '),[part('postal_code'),part('city'),province.value].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+      exact.innerHTML=line?`Verifichiamo esattamente: <strong>${esc(line)}</strong>`:'Indica via, civico, CAP e comune: li verifichiamo così come li scrivi.';
+    };
+    addressGrid.addEventListener('input',preview);preview();
     optional.append(title,otherFields);
-    container.replaceChildren(basic,optional);
+    container.replaceChildren(basic,address,optional);
   }
   function modal(){return el('orderModal');}
   function showOrderModal(){
@@ -161,14 +183,14 @@
     catch(err){if(request===detailSequence)el('orderModalContent').innerHTML=`<div class="gf-modal__body gf-stack"><div class="gf-alert" data-status="danger">${esc(err.message||String(err))}</div><div><button type="button" class="gf-button" data-variant="secondary" onclick="GFOrders.close()">Chiudi</button></div></div>`;}
   }
   function changes(event){
-    if(event.kind==='corrected')return Object.entries(event.changes).map(([key,value])=>`<p>${fields[key]||esc(key)}: ${esc(display(value.before))} → ${esc(display(value.after))}</p>`).join('');
+    if(event.kind==='corrected')return Object.entries(event.changes).map(([key,value])=>`<p>${labelOf(key)||esc(key)}: ${esc(display(value.before))} → ${esc(display(value.after))}</p>`).join('');
     if(event.kind==='status_changed')return `<p>${labels[event.changes.before]||event.changes.before} → ${labels[event.changes.after]||event.changes.after}</p>`;
     if(event.kind==='address_verified')return `<p>${esc(event.changes.address)}</p>`;
     if(event.kind==='route_status')return `<p>Giro #${esc(event.changes.route_id)}: ${esc(labels[event.changes.before]||event.changes.before)} → ${esc(labels[event.changes.after]||event.changes.after)}</p>`;
     if(event.kind==='route_released')return `<p>Ordine rimosso dal giro #${esc(event.changes.route_id)} e nuovamente disponibile.</p>`;
     if(event.kind==='route_snapshot')return `<p>Dati della fermata salvati nel giro #${esc(event.changes.route_id)}.</p>`;
     if(event.kind==='received')return '<p>Ordine ricevuto dalla fonte collegata.</p>';
-    if(event.kind==='source_updated')return `<p>Aggiornamento dalla fonte. Correzioni manuali conservate: ${esc((event.changes.preserved_corrections||[]).map(k=>fields[k]||k).join(', ')||'nessuna')}.</p>`;
+    if(event.kind==='source_updated')return `<p>Aggiornamento dalla fonte. Correzioni manuali conservate: ${esc((event.changes.preserved_corrections||[]).map(k=>labelOf(k)||k).join(', ')||'nessuna')}.</p>`;
     return '<p>Inserimento manuale</p>';
   }
   function eventLabel(kind){

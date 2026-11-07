@@ -299,6 +299,9 @@ def detail(db, order):
     source = db.get(OrderSource, order.source_id)
     assignments = db.query(RouteOrderAssignment).filter_by(user_id=order.user_id, order_id=order.id).all()
     events = db.query(OrderEvent).filter_by(order_id=order.id).order_by(OrderEvent.id.desc()).limit(100).all()
+    if values.get('delivery_address') and not values.get('street'):
+        from .address_parts import split
+        values = {**values, **{key: part for key, part in split(values['delivery_address']).items() if not values.get(key)}}
     return summary(order, source.name) | {
         'external_id': order.external_id, 'external_customer_id': order.external_customer_id,
         'anomalies': issues, 'effective_data': values,

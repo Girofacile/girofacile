@@ -15,7 +15,10 @@ ALIASES={'external_id':['idordine','id','nordine','numeroordine'], 'number':['nu
  'delivery_address':['indsped','indirizzo','indirizzoconsegna'], 'requested_date':['datacons','dataconsegna'],
  'weight_kg':['peso','pesokg'],'packages':['ncolli','colli'],'tail_lift':['pedana','sponda'],
  'pallet_truck':['transpallet'],'ztl':['ztl'],'notes':['note'],'time_from':['dalle'],'time_to':['alle'],
- 'pallets':['pallet'],'volume_m3':['volume'],'requirements':['requisiti']}
+ 'pallets':['pallet'],'volume_m3':['volume'],'requirements':['requisiti'],
+ # Indirizzo a campi separati: via, civico, CAP, comune, provincia.
+ 'street':['via','strada'],'street_number':['civico','numerocivico','ncivico','numero civico'],
+ 'postal_code':['cap'],'city':['comune','citta','città','localita','località'],'province':['provincia','prov']}
 
 
 def suggestions(headers):

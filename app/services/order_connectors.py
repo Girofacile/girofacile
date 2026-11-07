@@ -65,8 +65,12 @@ def shop_order(body, provider, excluded=()):
     if not isinstance(address, dict):
         raise ValueError('Indirizzo non valido')
     name = address.get('name') or ' '.join(str(address.get(k) or '') for k in ('first_name', 'last_name')).strip() or address.get('company')
-    keys = ('address1','address2','zip','city','province','country') if provider == 'shopify' else ('address_1','address_2','postcode','city','state','country')
-    destination = ', '.join(str(address[k]).strip() for k in keys if address.get(k))
+    keys = ('address1','address2','zip','city','province_code') if provider == 'shopify' else ('address_1','address_2','postcode','city','state')
+    from .address_parts import compose
+    value = lambda key: str(address.get(key) or '').strip()
+    province = value(keys[4]) if len(value(keys[4])) == 2 else ''
+    # «address2» (scala, interno) non va a Google: resta nelle note della consegna.
+    destination = compose(value(keys[0]), '', value(keys[2]), value(keys[3]), province)
     if not body.get('id') or not str(address.get(keys[0]) or '').strip() or not str(address.get('city') or '').strip():
         raise ValueError('Identificativo o indirizzo di spedizione incompleto')
     if body.get('cancelled_at') or body.get('status') in ('cancelled','refunded','failed','trash'):
@@ -76,7 +80,7 @@ def shop_order(body, provider, excluded=()):
         raise ValueError('Troppi articoli')
     return {'external_id': str(body['id']), 'number': str(body.get('name' if provider=='shopify' else 'number') or body['id']),
             'recipient_name': name, 'delivery_address': destination,
-            'notes': body.get('note' if provider=='shopify' else 'customer_note'),
+            'notes': ' · '.join(x for x in (body.get('note' if provider=='shopify' else 'customer_note'), value(keys[1])) if x) or None,
             'items': [{'description': line.get('title') or line.get('name') or '', 'sku': line.get('sku') or None,
                        'quantity': line.get('quantity')} for line in lines]}
 

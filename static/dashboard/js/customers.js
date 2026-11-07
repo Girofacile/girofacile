@@ -20,12 +20,25 @@ const CX_ICONS = {
   plus:'M12 5v14 M5 12h14'
 };
 const CX_PRESETS = [['Mattina','06:00','12:00'],['Pomeriggio','14:00','18:00'],['Giornata','06:00','18:00']];
-const CX_FIELDS = ['agent_id','codice_cliente','nome','indirizzo','comune','provincia','telefono','referente','email',
+const CX_FIELDS = ['agent_id','codice_cliente','nome','indirizzo','cap','comune','provincia','telefono','referente','email',
   'scarico_mattina_da','scarico_mattina_a','scarico_pomeriggio_da','scarico_pomeriggio_a','tempo_scarico_min',
   'ztl','sponda','transpallet','note','lat','lon','indirizzo_geocodificato','stato_geocodifica',
   'affidabilita_geocodifica','fonte_geocodifica','google_place_id'];
 const CX_GEO_FIELDS = ['lat','lon','indirizzo_geocodificato','stato_geocodifica','affidabilita_geocodifica','fonte_geocodifica','google_place_id'];
 
+// «Via Roma 10» → ['Via Roma','10']: il civico è l'ultimo numero (anche 12/B, 7A).
+function cxStreetParts(line){
+  const text=String(line||'').trim();
+  const match=text.match(/^(.*?\D)[\s,]+(\d+\s*[a-zA-Z]?(?:\s*\/\s*\w+)?)$/);
+  return match?[match[1].replace(/[\s,]+$/,''),match[2]]:[text,''];
+}
+// Sotto i campi: l'indirizzo esatto che arriverà a Google.
+function cxSyncExact(root){
+  const hint=root?.querySelector?.('[data-cx-exact]');if(!hint)return;
+  const v=id=>(root.querySelector('#'+id)?.value||'').trim();
+  const line=[[v('cxStreet'),v('cxNumber')].filter(Boolean).join(' '),[v('cxCap'),v('cxCity'),v('cxProv').toUpperCase()].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+  hint.innerHTML=line?'Verifichiamo esattamente: <strong>'+cxEsc(line)+'</strong>':'Indica via, civico, CAP e comune: li verifichiamo così come li scrivi.';
+}
 function cxIcon(name){return '<svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="'+CX_ICONS[name]+'"/></svg>';}
 function cxEsc(value){return typeof esc==='function'?esc(value==null?'':value):String(value==null?'':value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function cxEl(id){return typeof document!=='undefined'&&document.getElementById?document.getElementById(id):null;}
@@ -279,9 +292,14 @@ function openCustomerDrawer(id,mode,focusSlot){
   let address;
   if(edit){
     address=field('cxName','Nome cliente',c.nome,'autocomplete="off" maxlength="250"')
-      +field('cxAddress','Indirizzo',c.indirizzo,'placeholder="Via e numero civico" autocomplete="off"')
-      +'<div class="gf-grid" data-cols="3">'+field('cxCode','Codice',c.codice_cliente,'autocomplete="off"')
-      +field('cxCity','Città',c.comune,'autocomplete="off"')
+      // Indirizzo a campi separati (variante B): via, civico, CAP e comune su una riga.
+      +'<fieldset class="gf-fieldset gf-stack" data-gap="sm" data-cx-address><legend class="gf-field__label">Indirizzo di consegna</legend><div class="gf-grid" data-cols="4">'
+      +field('cxStreet','Via',cxStreetParts(c.indirizzo)[0],'placeholder="Via Roma" autocomplete="off"')
+      +field('cxNumber','Civico',cxStreetParts(c.indirizzo)[1],'placeholder="10" maxlength="20" autocomplete="off"')
+      +field('cxCap','CAP',c.cap,'placeholder="80026" maxlength="5" inputmode="numeric" autocomplete="off"')
+      +field('cxCity','Comune',c.comune,'placeholder="Casoria" autocomplete="off"')+'</div>'
+      +'<p class="gf-field__hint" data-cx-exact></p></fieldset>'
+      +'<div class="gf-grid" data-cols="2">'+field('cxCode','Codice',c.codice_cliente,'autocomplete="off"')
       +field('cxProv','Prov.',c.provincia,'maxlength="2" autocapitalize="characters"')+'</div>'
       +'<p class="gf-field__hint">'+(c.isNew?'Il nuovo indirizzo verrà verificato prima di essere usato nei giri.':'Se cambi l\'indirizzo, dovrà essere verificato di nuovo.')+'</p>'
       +'<div class="gf-field" data-invalid><p class="gf-field__error" id="cxAddressError" role="alert"></p></div>'
@@ -317,6 +335,10 @@ function openCustomerDrawer(id,mode,focusSlot){
       :'<button type="button" class="gf-button" data-variant="secondary" data-cx-cancel>Annulla</button>')
     +'<button type="button" class="gf-button" data-variant="primary" data-cx-save>Salva</button></footer>';
   drawer.innerHTML=head+body+foot;
+  // Riga «Verifichiamo esattamente» aggiornata mentre si scrive.
+  cxSyncExact(drawer);
+  drawer.querySelector?.('[data-cx-address]')?.addEventListener('input',()=>cxSyncExact(drawer));
+  drawer.querySelector?.('#cxProv')?.addEventListener('input',()=>cxSyncExact(drawer));
   drawer.setAttribute('aria-hidden','false');
   cxEl('customerDrawerScrim')?.classList.remove('hidden');
   setTimeout(()=>{const t=focusSlot?cxEl('cxSlot1From'):(edit?cxEl('cxName'):drawer.querySelector('[data-cx-close]'));t?.focus();},280);
@@ -350,15 +372,17 @@ async function saveCustomerDrawer(){
   payload.ztl=Boolean(c.ztl_manual ?? c.ztl);
   if(customerDrawer.mode!=='view'){
     const value=id=>(cxEl(id)?.value||'').trim();
-    const required=['cxName','cxAddress','cxCity'];
+    const required=['cxName','cxStreet','cxCap','cxCity'];
     let bad=false;
     required.forEach(id=>{const el=cxEl(id);const empty=!value(id);el?.closest?.('.gf-field')?.toggleAttribute('data-invalid',empty);if(empty)bad=true;});
     const addressError=cxEl('cxAddressError');
-    if(addressError)addressError.textContent=bad?'Compila nome, indirizzo e città.':'';
-    if(bad)return;
-    payload.nome=value('cxName');payload.indirizzo=value('cxAddress');payload.codice_cliente=value('cxCode')||null;
-    payload.comune=value('cxCity');payload.provincia=value('cxProv').toUpperCase()||null;
-    const key=x=>[x.indirizzo,x.comune,x.provincia].map(v=>String(v||'').trim().toLowerCase()).join('|');
+    const capOk=/^\d{5}$/.test(value('cxCap'));
+    if(!bad&&!capOk){cxEl('cxCap')?.closest?.('.gf-field')?.toggleAttribute('data-invalid',true);}
+    if(addressError)addressError.textContent=bad?'Compila nome, via, CAP e comune.':(!capOk?'Il CAP ha 5 cifre.':'');
+    if(bad||!capOk)return;
+    payload.nome=value('cxName');payload.indirizzo=[value('cxStreet'),value('cxNumber')].filter(Boolean).join(' ');payload.codice_cliente=value('cxCode')||null;
+    payload.cap=value('cxCap');payload.comune=value('cxCity');payload.provincia=value('cxProv').toUpperCase()||null;
+    const key=x=>[x.indirizzo,x.cap,x.comune,x.provincia].map(v=>String(v||'').trim().toLowerCase()).join('|');
     if(c.isNew||key(payload)!==key(c))CX_GEO_FIELDS.forEach(k=>payload[k]=null);
   }
   [payload.scarico_mattina_da,payload.scarico_mattina_a]=slot1;
