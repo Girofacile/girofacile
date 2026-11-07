@@ -102,6 +102,9 @@ def test_http_diagnostics_survive_save_and_reload(env, monkeypatch, endpoint):
     deposit = Deposit(user_id=user.id, nome="Test", indirizzo="Depot", lat=45, lon=9)
     db.add(deposit); db.commit()
     monkeypatch.setattr(opt, "build_distance_matrix", lambda *a, **k: constant_matrix(1, 2, 40))
+    # Pedaggi stimati in anteprima: percorso stradale senza rete, nessun dato.
+    from app.services import road_routing
+    monkeypatch.setattr(road_routing, "road_route", lambda *a, **k: {"legs": [], "geometries": []})
     data = dict(nome="Test", data_giro="2099-01-01", orario_partenza="08:00", deposit_id=deposit.id,
                 consegne=[verified_stop(user.id, cliente_nome="Client", indirizzo="Test", lat=45.1,lon=9.1,
                 scarico_mattina_da="09:00",scarico_mattina_a="09:10",tempo_scarico_min=15)])

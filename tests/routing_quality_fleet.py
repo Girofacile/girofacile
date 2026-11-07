@@ -258,6 +258,9 @@ def run_fleet(case, strategy, input_order=None, budget=None):
         stack.enter_context(patch.object(fleet, 'traffic_margin',
             lambda *args: case.get('traffic_margin', 1.0)))
         stack.enter_context(patch.object(fleet, 'preview_traffic', no_live_traffic))
+        # Pedaggi: percorso stradale OSRM, fuori dal perimetro dell'audit senza rete.
+        stack.enter_context(patch.object(fleet, 'preview_tolls',
+            lambda *args: {'status': 'unavailable', 'amount_eur': None}, create=True))
         stack.enter_context(patch.object(opt, 'geocode_deposit',
             lambda *args: {'lat': deposit.lat, 'lon': deposit.lon}))
         stack.enter_context(patch.object(opt, 'build_distance_matrix', matrix_boundary))
