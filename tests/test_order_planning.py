@@ -209,3 +209,17 @@ def test_selection_summarizes_each_route_once_with_json_breaks(planning):
     response=client.get('/api/order-planning/selection')
     assert response.status_code==200,response.text
     assert response.json()['routes']==[{'id':saved.id,'name':saved.nome,'status':'bozza'}]
+
+
+def test_new_selection_does_not_inherit_previous_configuration(planning):
+    ctx,_=planning;client,*_=ctx
+    row=ready(ctx)
+    state,config=preview(planning,[row])
+    assert state['configuration']
+    # Svuotando la selezione (Elimina, giro programmato) la configurazione del giro precedente sparisce.
+    cleared=client.put('/api/order-planning/selection',json={'version':state['version'],'action':'clear'})
+    assert cleared.status_code==200,cleared.text
+    assert cleared.json()['configuration']=={}
+    again=client.put('/api/order-planning/selection',json={'version':cleared.json()['version'],'action':'add','order_ids':[row.id]})
+    assert again.status_code==200,again.text
+    assert again.json()['configuration']=={}

@@ -60,6 +60,7 @@ def change_selection(db, user_id, actor, data):
     row = selection(db, user_id, actor, lock=True)
     check_version(row, data.version)
     ids = set(row.order_ids if row else [])
+    previous = set(ids)
     if data.action == 'clear': ids = set()
     elif data.action == 'remove': ids -= set(data.order_ids)
     else:
@@ -76,6 +77,10 @@ def change_selection(db, user_id, actor, data):
         db.add(row)
     row.order_ids = sorted(ids)
     row.stops = None
+    # Una selezione svuotata o ripartita da zero non eredita la configurazione del giro precedente
+    # (più mezzi, risorse, data, orari): la pianificazione si apre pulita. Le bozze la ripristinano a parte.
+    if not ids or not previous:
+        row.configuration = {}
     row.version += 1
     row.updated_at = utc_now()
     db.flush()
