@@ -5,6 +5,14 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Ore dell'autista: il calcolo all'indietro della partenza più tarda ora tollera gli
+  errori di arrotondamento (1e-9 minuti). Su un giro teso dopo un'attesa d'apertura
+  ritrovava l'apertura come 899,9999999999999 invece di 900 e azzerava lo
+  spostamento: nel piano reale 32 un giro valeva 655 minuti di lavoro invece di 206,
+  quindi «Distribuisci il lavoro» e il punteggio km + ore scartavano proposte migliori.
+  Piani reali, stessa data: stesse consegne servite, 108 km e 4,7 ore in meno; giro
+  più lungo 233 → 208 minuti nel piano 32 e 439 → 413 nel piano 24.
+
 - Motore dei giri V1, PyVRP: la prima ricerca usa sempre tutto il tempo previsto.
   Il secondo tentativo, con penalità più alte, parte solo se alla fine non c'è un
   piano valido e riceve al massimo il 35% di tempo in più. Con la riserva al 65%

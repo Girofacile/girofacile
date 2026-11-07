@@ -110,6 +110,9 @@ def departure_slack(stops, total_wait):
     return max(0.0, best)
 
 
+_CLOCK_TOLERANCE = 1e-9   # minuti: gli scarti misurati sono ~1e-13; sotto il margine 1e-7 delle pause
+
+
 def _latest_travel_start(deadline, duration, pauses):
     """Inverse of pause-aware travel, keeping arrival no later than deadline."""
     cursor, remaining = float(deadline), float(duration)
@@ -157,7 +160,11 @@ def realizable_departure_slack(start_clock, end_clock, stops, opening_wait_min,
         slots = windows or [(-math.inf, math.inf)]
         starts = [_latest_service_start(min(latest, closing), service, pauses)
                   for opening, closing in slots]
-        possible = [clock for clock, (opening, _) in zip(starts, slots) if clock >= opening]
+        # Il calcolo all'indietro ritrova l'apertura servita in avanti a meno di errori di
+        # arrotondamento: senza tolleranza un giro senza pause dopo un'attesa d'apertura
+        # (prima fermata servita esattamente all'apertura) perdeva tutto lo spostamento.
+        possible = [max(clock, opening) for clock, (opening, _) in zip(starts, slots)
+                    if clock >= opening - _CLOCK_TOLERANCE]
         if not possible:
             return 0.0
         latest = _latest_travel_start(max(possible), travel, pauses)

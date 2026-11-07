@@ -1,6 +1,7 @@
 """Confronto dei giri per punteggio (5 novembre 2026): km più ore dell'autista convertite
 in km (1 ora = 60 km), attese comprese, e partenza più tarda quando elimina le attese.
 Sostituisce la regola «prima i km» (test_optimizer_distance_first.py)."""
+import math
 from types import SimpleNamespace
 
 import pytest
@@ -273,3 +274,24 @@ def test_selected_departure_does_not_discount_a_second_future_shift(monkeypatch)
     assert result['departure'] == '08:50' and result['total_min'] == 75
     assert opt.work_minutes(snapshots[-1]) == result['total_min']
     assert snapshots[-1]['departure_slack_min'] == 0
+
+
+def test_tight_route_after_an_opening_wait_keeps_its_later_departure():
+    # Piano reale 32: prima fermata servita all'apertura (15:00), poi nessuna attesa. Con tempi
+    # di viaggio decimali il calcolo all'indietro ritrovava 14:59,9999… e perdeva tutto lo
+    # spostamento della partenza: 451 minuti di attesa contati come lavoro.
+    travels = [29.0, 7.5, 25.5, 3.7, 3.2, 4.9, 3.6, 13.4, 8.5]
+    services = [6.0, 6.0, 7.0, 7.0, 6.0, 8.0, 5.0, 8.0, 6.0]
+    wide, late = [(840, 1020)], [(900, 1110)]
+    windows = [late, wide, wide, wide, late, wide, late, late, late]
+    for scale in (1.0, 1.0000001, 0.9999999, 1.0174, 0.9871):
+        legs = [t * scale for t in travels]
+        clock = 420 + legs[0]
+        wait = 900 - clock
+        clock = 900.0 + services[0]
+        for travel, service in zip(legs[1:], services[1:]):
+            clock += travel + service
+        back = 29.17358333333333 * scale
+        slack = opt.realizable_departure_slack(420, clock + back, list(zip(legs, services, windows)),
+                                               wait, (), back)
+        assert slack == math.floor(wait / 5) * 5, (scale, slack, wait)

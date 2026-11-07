@@ -70,6 +70,32 @@ Limite degli archi: misurato su questo computer, 250.000 archi costano 0,5 s e 2
 1.000.000 circa 2,4 s e 100 MB prima della ricerca. Il piano reale più grande ne usa
 50.000: il predefinito resta 250.000, alzabile con `FLEET_PYVRP_MAX_EDGES`.
 
+### Arrotondamento nella partenza più tarda e vicinanza all'ottimo (V1)
+
+`realizable_departure_slack` ripercorre il giro all'indietro e confronta l'inizio scarico
+più tardo con l'apertura della fascia. Su una catena tesa dopo un'attesa d'apertura il
+valore ritrovato era 899,9999999999999 invece di 900: la fascia risultava mancata e lo
+spostamento della partenza veniva azzerato. Nel piano reale 32 un giro di 206 minuti di
+lavoro ne valeva 655, e le proposte di PyVRP migliori venivano scartate in entrambe le
+strategie. Ora il confronto ammette uno scarto di 1e-9 minuti (gli errori misurati sono
+circa 1e-13, sotto il margine 1e-7 usato per le pause). Test di regressione:
+`test_tight_route_after_an_opening_wait_keeps_its_later_departure`.
+
+Piani reali salvati, stessa data, contro `5e270a3`: stesse consegne servite (17 non
+servite in entrambi, per mezzi o fasce), 7963 → 7855 km, 254,7 → 250,0 ore, nessun piano
+peggiore oltre la variabilità della ricerca a tempo (piano 20: 16 km in più e 0,1 ore in
+meno). «Distribuisci il lavoro», giro più lungo: piano 32 da 233 a 208 minuti, piano 24
+da 439 a 413, piano 47 da 216 a 213, gli altri invariati.
+
+Vicinanza all'ottimo di «Distribuisci il lavoro», 30 s contro 300 s di PyVRP:
+- Solomon c102, r108, rc108, r205, r209: giro più lungo migliore dello 0–0,9% con 300 s;
+- piani reali: 32 da 208 a 206 minuti, 24 da 413 a 395, 47 da 213 a 217 (variabilità).
+
+Il guadagno di una ricerca dieci volte più lunga è piccolo: il budget predefinito resta
+30 s. Nei piani con una pausa fissa il valore `longest_min` del bilanciamento PyVRP non
+conta la pausa, che invece resta nelle ore dell'autista del calcolo canonico (piano 47:
+184,6 contro 212,8 minuti sullo stesso giro, che attraversa la pausa 13:00–13:30).
+
 ### Verifica successiva della ripartizione del tempo: Solomon R104
 
 È stata segnalata una perdita di tre consegne dopo la riserva fissa del 35%. La prova
