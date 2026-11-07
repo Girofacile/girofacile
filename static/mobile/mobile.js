@@ -45,6 +45,7 @@ async function openApp(){
   if(av) av.textContent=(name||"U")[0].toUpperCase();
   await Promise.all([loadResources(),loadCustomersMobile(),loadDashboard()]);
   await populateReportFilters();
+  window.GFInstallGuide?.maybeShow('GiroFacile');
 }
 
 // ---- AUTH ----

@@ -38,3 +38,15 @@ def test_service_worker_is_served_from_the_site_root():
             "m=c.get('/static/driver.webmanifest'); assert m.headers['content-type'].startswith('application/manifest+json'), m.headers")
     result = subprocess.run([sys.executable, "-c", code], env=env, capture_output=True, text=True, timeout=60)
     assert result.returncode == 0, result.stderr
+
+
+def test_install_guide_opens_once_after_login_in_both_apps():
+    guide = Path("static/install-guide.js").read_text(encoding="utf-8")
+    assert "Aggiungi GiroFacile alla tua Home" in guide and "Metti GiroFacile sulla Home" not in guide
+    # iPhone: tre passaggi; Android: pulsante del browser; mai se già installata o rimandata.
+    for text in ("Tocca Condividi", "Aggiungi alla schermata Home", "beforeinstallprompt", "display-mode: standalone", "Più tardi"):
+        assert text in guide, text
+    for page in ("static/driver/index.html", "static/mobile/index.html"):
+        assert '<script src="/static/install-guide.js" defer></script>' in Path(page).read_text(encoding="utf-8"), page
+    assert "GFInstallGuide?.maybeShow('GiroFacile Autista')" in Path("static/driver/index.html").read_text(encoding="utf-8")
+    assert "GFInstallGuide?.maybeShow('GiroFacile')" in Path("static/mobile/mobile.js").read_text(encoding="utf-8")

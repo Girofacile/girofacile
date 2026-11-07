@@ -12,6 +12,7 @@
 <meta name="apple-mobile-web-app-title" content="GF Autista">
 <meta name="mobile-web-app-capable" content="yes">
 <script src="/static/pwa.js" defer></script>
+<script src="/static/install-guide.js" defer></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -663,6 +664,8 @@ async function openApp() {
   await loadRoutes();
   populateChatSelect();
   if(me?.features?.has_driver_chat) startChatBadgePoll();
+  // «Aggiungi GiroFacile alla tua Home», una volta sola, se l'app non è già installata.
+  window.GFInstallGuide?.maybeShow('GiroFacile Autista');
 }
 
 // ============================================================

@@ -5,6 +5,10 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- «Aggiungi GiroFacile alla tua Home» (variante B): finestra dopo l'accesso nell'app autista e
+  nel portale da telefono, una volta sola. iPhone: tre passaggi (Condividi, Aggiungi alla
+  schermata Home, Aggiungi); Android: pulsante «Installa». Non compare se l'app è già
+  installata; «Più tardi» la rimanda di 3 giorni.
 - App installabili sulla schermata Home: manifest «GiroFacile Autista» (/driver) e
   «GiroFacile» (/mobile), service worker alla radice (/sw.js) che non tiene dati in cache
   e mostra «Sei offline» senza rete.
