@@ -58,7 +58,9 @@
     return type==='elettrico'?null:(typeof gfFuelPricesV895!=='undefined'?gfFuelPricesV895?.[fuelBaseTypeV895(type)]?.price:null)||null;
   }
   const ICON={truck:'M3 6h11v10H3z M14 10h4l3 3v3h-7 M7 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4z M17 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4z',
-    clock:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 7v5l3 2',pause:'M4 8h12v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z M16 10h2a2 2 0 0 1 0 4h-2 M8 2v3 M12 2v3'};
+    clock:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 7v5l3 2',
+    split:'M4 12h6 M10 12l4-6h6 M10 12l4 6h6 M18 4l2 2-2 2 M18 16l2 2-2 2',weight:'M6 8h12l2 12H4z M9 8a3 3 0 0 1 6 0',
+    move:'M12 3v18 M3 12h18 M12 3l-3 3 M12 3l3 3 M12 21l-3-3 M12 21l3-3 M3 12l3-3 M3 12l3 3 M21 12l-3-3 M21 12l-3 3',pause:'M4 8h12v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z M16 10h2a2 2 0 0 1 0 4h-2 M8 2v3 M12 2v3'};
   const svg=name=>`<svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="${ICON[name]}"/></svg>`;
   // Testo dei pulsanti turno e pausa: gli orari impostati, oppure l'invito a impostarli.
   function scheduleLabels(schedule){
@@ -107,7 +109,10 @@
     // Con più mezzi «+ Aggiungi mezzo» sta sotto le card, accanto alla scelta della distribuzione.
     const more=active()
       ?''
-      :`<div class="gf-card gf-stack" data-variant="info" data-gap="sm"><strong>Tante consegne oggi?</strong><span class="gf-muted">Con più mezzi dividiamo noi le consegne tra gli autisti, rispettando carichi, turni e orari.</span><span><button type="button" class="gf-button" data-variant="secondary" data-plan-feature="has_fleet_planning" onclick="selectPlanningModeCard('fleet')">Usa più mezzi</button></span></div>`;
+      // Un solo mezzo: invito a «Più mezzi» con tre vantaggi in elenco (variante B), card bianca.
+      :`<article class="gf-card gf-stack" data-gap="lg" aria-label="Pianifica con più mezzi" data-fleet-invite><header class="gf-cluster"><span class="gf-avatar" data-tone="5">${svg('truck')}</span><span><small class="gf-kicker">Più mezzi</small><br><strong>Tante consegne oggi?</strong></span></header>`
+        +`<ul class="gf-list" aria-label="Cosa fa la pianificazione su più mezzi">${[[1,'split','Dividiamo noi le consegne tra gli autisti'],[3,'weight','Rispettiamo carichi, turni e orari'],[2,'move','Puoi spostare le fermate prima di confermare']].map(([tone,name,text])=>`<li class="gf-list-item"><span class="gf-cluster"><span class="gf-avatar" data-tone="${tone}">${svg(name)}</span><span>${text}</span></span></li>`).join('')}</ul>`
+        +`<span><button type="button" class="gf-button" data-variant="primary" data-plan-feature="has_fleet_planning" onclick="selectPlanningModeCard('fleet')">Usa più mezzi</button></span></article>`;
     el('fleetResources').innerHTML=resources.map((r,i)=>`<article class="gf-card gf-stack" aria-label="Mezzo e autista ${i+1}"><header class="gf-cluster" data-justify="between"><span class="gf-cluster"><span class="gf-avatar" data-tone="${i%6+1}">${svg('truck')}</span><span><small class="gf-kicker">Mezzo ${i+1}</small><br><strong data-fleet-name>${esc(vehicleName(r.vehicle_id))}</strong></span></span>${resources.length>1?remove(i):''}</header><div class="gf-form-grid">${pick('fleetVehicle'+i,'Mezzo',select('fleetVehicle'+i,i,'vehicle_id','vehicles',r.vehicle_id),'')}${pick('fleetDriver'+i,'Autista',select('fleetDriver'+i,i,'driver_id','drivers',r.driver_id),'')}</div>${extras(r,i)}</article>`).join('')+more;
     if(el('fleetAdd'))el('fleetAdd').disabled=resources.length>=10;
     if(focused&&el(focused)&&el('fleetResources').contains(el(focused)))el(focused).focus();

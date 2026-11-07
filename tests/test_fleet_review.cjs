@@ -203,3 +203,10 @@ test('card mezzi (variante A): disponibilità nel menu, turno e pausa dietro pul
  assert.doesNotMatch(js,/Un altro mezzo\?/);
  assert.match(read('static/dashboard/index.html'),/id="fleetStrategyRow"[^]*id="fleetAdd"/);
 });
+test('un solo mezzo: invito bianco a «Più mezzi» con tre vantaggi (variante B)',()=>{
+ const js=read('static/dashboard/js/fleet-planning.js');
+ assert.match(js,/data-fleet-invite/);
+ assert.doesNotMatch(js,/data-variant="info"[^`]*Tante consegne oggi/);
+ for(const text of ['Dividiamo noi le consegne tra gli autisti','Rispettiamo carichi, turni e orari','Puoi spostare le fermate prima di confermare'])assert.ok(js.includes(text),text);
+ assert.match(js,/data-variant="primary" data-plan-feature="has_fleet_planning" onclick="selectPlanningModeCard\('fleet'\)">Usa più mezzi/);
+});
