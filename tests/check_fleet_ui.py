@@ -122,13 +122,13 @@ def main():
                     move=page.locator('tr[data-fleet-stop]').first.locator('[data-fleet-move-to]')
                     move.select_option(move.locator('option').nth(1).get_attribute('value'))
                     page.get_by_role('button',name='Sposta comunque',exact=True).click()
-                    assert page.locator('[data-fleet-plan]').is_disabled()
+                    assert page.locator('[data-fleet-plan]').count()==0  # con fermate spostate solo «Ripianifica giri»
                     page.locator('[data-fleet-undo]').click()
                     page.evaluate('window.scrollTo(0,0)')
                     move=page.locator('tr[data-fleet-stop]').first.locator('[data-fleet-move-to]')
                     move.select_option(move.locator('option').nth(1).get_attribute('value'))
                     page.get_by_role('button',name='Sposta comunque',exact=True).click()
-                    assert page.locator('[data-fleet-plan]').is_disabled()
+                    assert page.locator('[data-fleet-plan]').count()==0  # con fermate spostate solo «Ripianifica giri»
                     page.locator('[data-fleet-recalc]').click()
                     page.wait_for_function("document.getElementById('fleetMessage')?.textContent.includes('Nuove fermate')")
                 assert page.locator('[data-fleet-move]').count()==0

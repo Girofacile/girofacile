@@ -195,7 +195,7 @@ function warning(onConfirm){
  next.querySelector('[data-accept]').onclick=()=>{close();onConfirm();};
  next.addEventListener('close',close,{once:true});
 }
-// Titolo, freccia "indietro" e "Pianifica giri" nella barra in alto, come nelle altre pagine.
+// Titolo e freccia "indietro" nella barra in alto; «Pianifica giri» sta nella barra flottante in basso.
 function topbar(plan,dirty,busy,permission,onBack,onPlan){
  const planned=plan.status==='programmed',el=id=>document.getElementById(id);
  // Dopo «Pianifica giri» si apre Giri programmati: l'intestazione della suddivisione non deve sovrascriverla.
@@ -206,10 +206,15 @@ function topbar(plan,dirty,busy,permission,onBack,onPlan){
  if(subtitle)subtitle.textContent='Verifica le consegne distribuite fra i mezzi. Puoi spostarle prima di pianificare i giri.';
  if(badge){badge.hidden=!planned;badge.textContent=planned?'Giri programmati':'';badge.dataset.status='success';}
  if(typeof gfRouteDetailBack==='function')gfRouteDetailBack('Torna alla pianificazione',onBack);
- if(!host)return;
- host.classList.remove('gf-hidden');
- host.innerHTML=planned?'':'<button type="button" class="gf-button" data-variant="primary" data-fleet-plan '+(busy||dirty||!permission?'disabled':'')+'>Pianifica giri</button>';
- host.querySelector('[data-fleet-plan]')?.addEventListener('click',onPlan);
+ if(host)host.innerHTML='';
+}
+// Barra flottante in basso, come «Programma giro» nell'anteprima singola: riepilogo, «Elimina» e «Pianifica giri».
+// Con fermate spostate la sostituisce la barra «Ripianifica giri».
+function planBar(plan,assignment,busy,permission){
+ const routes=plan.routes.filter(r=>r.stop_indexes?.length).length,served=assignment.filter(x=>x!=null).length;
+ return '<div class="gf-savebar" data-floating role="region" aria-label="Pianificazione dei giri" data-fleet-plan-bar><span><b>'+esc(gfCount(routes,'giro','giri'))+' · '+esc(gfCount(served,'consegna','consegne'))+'</b> · Controlla e pianifica.</span>'+
+  '<button type="button" class="gf-button" data-variant="danger" data-fleet-discard '+(busy?'disabled':'')+'>Elimina</button>'+
+  '<button type="button" class="gf-button" data-variant="primary" data-fleet-plan '+(busy||!permission?'disabled':'')+'>Pianifica giri</button></div>';
 }
 function render(params){
  const {plan,assignment,dirty,busy,permission,error,onMove,onUndo,onRecalc,onPlan,onBack}=params;
@@ -228,10 +233,13 @@ function render(params){
  '<div class="gf-grid" data-cols="main-side">'+table(plan,assignment,dirty)+fixes(plan,assignment,dirty)+'</div>'+lane(plan,assignment,dirty,selected,busy)+
  '<div id="fleetMessage" role="status" tabindex="-1" class="gf-muted"></div>'+
  (dirty?'<div class="gf-savebar" data-floating role="region" aria-label="Fermate spostate, giri da ripianificare">'+(error?'<span role="alert" data-fleet-error><b>Ripianificazione non riuscita</b> · '+esc(error)+' Sposta di nuovo le fermate o annulla le modifiche.</span>':'<span><b>Fermate spostate</b> · Ripianifica i giri per aggiornare ordine, tempi e costi.</span>')+
- '<button type="button" class="gf-button" data-variant="secondary" data-size="sm" data-fleet-undo>Annulla modifiche</button><button type="button" class="gf-button" data-variant="primary" data-size="sm" data-fleet-recalc '+(busy?'disabled':'')+'>Ripianifica giri</button></div>':'')+
+ '<button type="button" class="gf-button" data-variant="secondary" data-size="sm" data-fleet-undo>Annulla modifiche</button><button type="button" class="gf-button" data-variant="primary" data-size="sm" data-fleet-recalc '+(busy?'disabled':'')+'>Ripianifica giri</button></div>':planned?'':planBar(plan,assignment,busy,permission))+
  '</section>';
  topbar(plan,dirty,busy,permission,onBack,()=>onPlan(!!target.querySelector('[data-fleet-accept-unassigned]')?.checked));
  target.querySelector('[data-fleet-undo]')?.addEventListener('click',onUndo);
+ target.querySelector('[data-fleet-plan]')?.addEventListener('click',()=>onPlan(!!target.querySelector('[data-fleet-accept-unassigned]')?.checked));
+ // «Elimina»: la pianificazione aperta si scarta (gli ordini tornano da pianificare) e si torna da dove si era partiti.
+ target.querySelector('[data-fleet-discard]')?.addEventListener('click',()=>window.GFPlanningDrafts?.discard());
  target.querySelector('[data-fleet-recalc]')?.addEventListener('click',onRecalc);
  const move=(index,to)=>{
   if(!Number.isInteger(index)||to===assignment[index]||(to!==null&&(to<0||to>=rows)))return;

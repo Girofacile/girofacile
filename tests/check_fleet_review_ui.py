@@ -78,11 +78,12 @@ def main():
                 review = page.locator('[data-fleet-review]')
                 review.get_by_role('heading', name='Confronto dei giri').wait_for()
                 assert review.locator('tbody tr[data-fleet-lane]').count() == 2
-                # Come le altre pagine: titolo, freccia indietro e "Pianifica giri" nella barra in alto.
+                # Titolo e freccia indietro in alto; "Pianifica giri" nella barra flottante in basso.
                 assert page.locator('#workspacePageTitle').inner_text() == 'Controlla la suddivisione'
                 assert page.locator('#workspacePageTitle').is_visible() or width < 1000
                 assert page.locator('#workspaceTopbarBack').is_visible()
-                assert page.locator('#fleetTopbarActionsHost [data-fleet-plan]').is_visible()
+                assert review.locator('.gf-savebar[data-floating] [data-fleet-plan]').is_visible()
+                assert review.locator('.gf-savebar[data-floating] [data-fleet-discard]').is_visible()
                 assert review.locator('h1, [data-fleet-back]').count() == 0
                 # Niente avvisi grandi in alto: fuori orario e non assegnate sono solo in "Da sistemare".
                 assert review.locator(':scope > .gf-alert').count() == 0
@@ -116,7 +117,7 @@ def main():
                 assert review.locator(':scope > .gf-alert').count() == 0
                 bar = review.locator('.gf-savebar')
                 assert bar.is_visible() and bar.get_by_role('button', name='Ripianifica giri').is_visible()
-                assert page.locator('#fleetTopbarActionsHost [data-fleet-plan]').is_disabled()
+                assert page.locator('[data-fleet-plan]').count() == 0
                 page.screenshot(path=str(output / f'suddivisione-spostata-{width}.png'))
                 page.evaluate('() => GFFleetReview.render(window.__params)')
                 # Ricalcolo rifiutato: il motivo compare nella barra, non in fondo alla pagina.

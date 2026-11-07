@@ -60,7 +60,10 @@ test('fleet review replica il modello senza sidebar ne dati fittizi',()=>{
  assert.doesNotMatch(page.innerHTML,/Bar Bianchi/);
  assert.match(page.innerHTML,/Furgone A/);
  assert.match(page.innerHTML,/Furgone B/);
- assert.match(host.innerHTML,/>Pianifica giri<\/button>/);
+ // «Pianifica giri» e «Elimina» nella barra flottante in basso, non più in alto.
+ assert.equal(host.innerHTML,'');
+ assert.match(page.innerHTML,/data-fleet-plan-bar>[^]*data-variant="danger" data-fleet-discard[^>]*>Elimina<[^]*data-fleet-plan[^>]*>Pianifica giri<\/button>/);
+ assert.match(page.innerHTML,/2 giri · 2 consegne/);
  assert.doesNotMatch(page.innerHTML,/<h1|data-fleet-back|Torna alla pianificazione/);
  assert.doesNotMatch(page.innerHTML,/Salva giri in bozza/);
  assert.doesNotMatch(page.innerHTML,/class="sidebar"|Supermercati Iorio|Peugeot 2008/);
@@ -71,7 +74,8 @@ test('modifiche manuali invalidano stime e disabilitano pianificazione',()=>{
  // Nessun avviso in alto: compare solo la barra in basso con "Ripianifica giri".
  assert.doesNotMatch(page.innerHTML,/Ricalcolo necessario|Suddivisione manuale/);
  assert.match(page.innerHTML,/Da ricalcolare/);
- assert.match(host.innerHTML,/data-fleet-plan disabled/);
+ // Con fermate spostate c'è solo la barra «Ripianifica giri»: niente «Pianifica giri».
+ assert.doesNotMatch(page.innerHTML,/data-fleet-plan-bar|data-fleet-plan /);
  assert.match(page.innerHTML,/>Ripianifica giri<\/button>/);
  assert.match(page.innerHTML,/Annulla modifiche/);
 });
