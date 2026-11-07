@@ -133,6 +133,27 @@ def _mark_verified(db, order, proof, address, actor, method):
         record(db, order, actor, 'status_changed', {'before': before, 'after': 'pronto', 'method': 'manual' if proof.get('confirmed_manually') else 'automatic'})
 
 
+def address_problem(order):
+    """Motivo dell'ultima verifica non riuscita per l'indirizzo attuale, oppure None."""
+    proof = order.address_verification or {}
+    failure = proof.get('failure')
+    if isinstance(failure, dict) and proof.get('input_address') == order.delivery_address:
+        return {'reason': failure.get('reason'), 'message': failure.get('message'), 'candidate': failure.get('candidate')}
+    return None
+
+
+def record_address_failure(db, order, actor, detail):
+    """Indirizzo non verificato (non trovato, altro comune, via diversa...): è un problema da correggere."""
+    info = detail if isinstance(detail, dict) else {'message': str(detail)}
+    order.address_verification = {'input_address': order.delivery_address, 'attempted_at': utc_now().isoformat(),
+        'failure': {'message': info.get('message') or 'Indirizzo non verificato.', 'candidate': info.get('candidate'),
+                    'kind': info.get('kind', 'address'), 'reason': info.get('reason') or 'non_trovato'}}
+    order.status = 'da_verificare'
+    order.verification_status = 'pending'
+    touch(order)
+    record(db, order, actor, 'address_verification_failed', {'message': order.address_verification['failure']['message']})
+
+
 def verify_address(db, order, version, actor, reusable=None, strict=False, prefetched=None):
     editable(db, order, version)
     values = order.operational_data or {}
@@ -226,7 +247,7 @@ def verify_multiple(db, user_id, actor, *, after_id=0, limit=10, q='', source_id
                 continue
             address = (order.operational_data or {}).get('delivery_address')
             proof = proofs.get(address)
-            updated = verify_address(db, order, order.version, actor, reusable=proof)
+            updated = verify_address(db, order, order.version, actor, reusable=proof, strict=True)
             db.commit()
             if address and updated.address_verification:
                 proofs[address] = dict(updated.address_verification)
@@ -234,8 +255,15 @@ def verify_multiple(db, user_id, actor, *, after_id=0, limit=10, q='', source_id
         except HTTPException as exc:
             db.rollback()
             result['failed'] += 1
+            message = exc.detail.get('message') if isinstance(exc.detail, dict) else str(exc.detail)
+            if exc.status_code == 422:
+                # Indirizzo non trovato o diverso: resta segnalato sull'ordine, non solo nel riepilogo.
+                failed = get_order(db, user_id, oid, lock=True)
+                if failed.status in EDITABLE:
+                    record_address_failure(db, failed, actor, exc.detail)
+                    db.commit()
             if len(result['issues']) < 10:
-                result['issues'].append({'order_id': oid, 'reason': str(exc.detail)})
+                result['issues'].append({'order_id': oid, 'reason': message})
         except Exception:
             db.rollback()
             result['failed'] += 1
@@ -256,7 +284,7 @@ def summary(order, source_name):
         'source_name': source_name, 'source_id': order.source_id,
         'weight_kg': order.operational_data.get('weight_kg'), 'packages': order.operational_data.get('packages'),
         'ztl_notice': bool((order.operational_data or {}).get('ztl')) or ztl_auto,
-        'pedestrian_area': pedestrian_auto}
+        'pedestrian_area': pedestrian_auto, 'address_problem': address_problem(order)}
 
 
 def detail(db, order):

@@ -14,6 +14,7 @@ window.GFSelectedAddresses=(()=>{
   non_trovato:['Non trovato','danger'],
   altro_comune:['Altro comune','danger'],
   approssimativo:['Posizione approssimativa','warning'],
+  via_diversa:['Via o civico diversi','warning'],
   servizio:['Verifica non riuscita','neutral'],
  };
  const reason=row=>REASONS[row.reason]||(row.kind==='service'?REASONS.servizio:['Da controllare','warning']);

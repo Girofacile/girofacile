@@ -87,7 +87,7 @@ def test_verification_transitions_and_address_invalidation(orders,monkeypatch):
     row=create(client)
     url='/api/orders/'+str(row['id'])
     assert client.post(url+'/status',json={'version':1,'status':'pronto'}).status_code==422
-    monkeypatch.setattr('app.services.orders.verify_stop_address',lambda db,uid,address:{'stato_geocodifica':'verificato','lat':41.9,'lon':12.5,'indirizzo':address,'geocoding_token':'test'})
+    monkeypatch.setattr('app.services.orders.verify_stop_address',lambda db,uid,address,**kw:{'stato_geocodifica':'verificato','lat':41.9,'lon':12.5,'indirizzo':address,'geocoding_token':'test'})
     verified=client.post(url+'/verify-address',json={'version':1})
     assert verified.status_code==200,verified.text
     ready=client.post(url+'/status',json={'version':2,'status':'pronto'})
@@ -137,7 +137,7 @@ def test_verification_makes_orders_ready_without_confirmation_and_keeps_proof(or
     from app.services.occasional_stops import sign_stop_address
 
     requests = []
-    def geocode(session, uid, address):
+    def geocode(session, uid, address, **kw):
         requests.append(address)
         return {'stato_geocodifica':'verificato','lat':41.9,'lon':12.5,
                 'indirizzo':address,'geocoding_token':sign_stop_address(uid,address,41.9,12.5)}
@@ -172,7 +172,7 @@ def test_bulk_verification_is_bounded_scoped_and_reuses_identical_addresses(orde
     second=create(client,number='B-2')
     third=create(client,number='B-3',recipient_name=None)
     calls=[]
-    def geocode(session, uid, address):
+    def geocode(session, uid, address, **kw):
         calls.append((uid,address))
         return {'stato_geocodifica':'verificato','lat':41.9,'lon':12.5,
                 'indirizzo':address,'geocoding_token':sign_stop_address(uid,address,41.9,12.5)}
@@ -227,3 +227,29 @@ def test_planning_metrics_and_filter_group_editable_states(orders):
         'version':0,'action':'all_filtered','filters':{'status':'da_pianificare'}})
     assert selected.status_code==200,selected.text
     assert set(selected.json()['order_ids'])==set(ids[:3])
+
+
+def test_unverifiable_address_is_flagged_as_a_problem(orders, monkeypatch):
+    client, db, owner, other = orders
+    from fastapi import HTTPException
+    row=create(client,number='P-1',delivery_address='Via Roma 10, Casoria')
+    def missing(session, uid, address, **kw):
+        assert kw.get('strict') is True  # verifica severa: il motivo torna con la risposta
+        raise HTTPException(422,{'kind':'address','reason':'altro_comune','candidate':None,
+                                 'message':'Google ha trovato questa via solo in un altro comune.'})
+    monkeypatch.setattr('app.services.orders.verify_stop_address', missing)
+    # Verifica di massa: l'ordine resta «da verificare» con il motivo, visibile nell'elenco.
+    report=client.post('/api/orders/verify-addresses',json={'limit':10}).json()
+    assert report['failed']==1 and 'altro comune' in report['issues'][0]['reason']
+    detail=client.get(f"/api/orders/{row['id']}").json()
+    assert detail['status']=='da_verificare'
+    assert detail['address_problem']['reason']=='altro_comune'
+    assert any(item['address_problem'] for item in client.get('/api/orders').json()['items'])
+    # Verifica del singolo ordine: stesso esito, salvato anche se la richiesta risponde 422.
+    single=client.post(f"/api/orders/{row['id']}/verify-address",json={'version':detail['version']})
+    assert single.status_code==422
+    assert client.get(f"/api/orders/{row['id']}").json()['address_problem']['reason']=='altro_comune'
+    # Corretto l'indirizzo, il vecchio problema non vale più.
+    fixed=client.put(f"/api/orders/{row['id']}",json={'version':client.get(f"/api/orders/{row['id']}").json()['version'],'number':'P-1','recipient_name':'Destinatario','delivery_address':'Via Roma 10, 80026 Casoria NA'})
+    assert fixed.status_code==200,fixed.text
+    assert fixed.json()['address_problem'] is None

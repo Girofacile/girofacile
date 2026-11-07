@@ -22,6 +22,7 @@ ADDRESS_REASONS = {
     "non_trovato": "Google non ha trovato questo indirizzo. Correggilo oppure metti lo spillo sul punto di consegna.",
     "altro_comune": "Google ha trovato questa via solo in un altro comune. Correggi l'indirizzo oppure metti lo spillo sul punto di consegna.",
     "approssimativo": "Google ha trovato solo la zona, non il punto preciso. Correggi l'indirizzo oppure sposta lo spillo sul punto di consegna.",
+    "via_diversa": "Google non ha trovato questa via con questo numero civico nel comune indicato. Correggi l'indirizzo oppure metti lo spillo sul punto di consegna.",
 }
 
 

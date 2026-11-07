@@ -94,6 +94,16 @@ def change_status(order_id: int, data: OrderAction, request: Request, db: Sessio
 @router.post('/{order_id}/verify-address')
 def verify_address(order_id: int, data: OrderVersion, request: Request, db: Session = Depends(get_db), user: User = Depends(current_user)):
     order = service.get_order(db, user.id, order_id, lock=True)
-    service.verify_address(db, order, data.version, actor_key(request, user))
+    try:
+        service.verify_address(db, order, data.version, actor_key(request, user), strict=True)
+    except HTTPException as exc:
+        db.rollback()
+        if exc.status_code != 422:
+            raise
+        # Indirizzo non trovato o diverso: il motivo resta sull'ordine e lo segnala come problema.
+        order = service.get_order(db, user.id, order_id, lock=True)
+        service.record_address_failure(db, order, actor_key(request, user), exc.detail)
+        db.commit()
+        raise
     db.commit()
     return service.detail(db, order)

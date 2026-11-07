@@ -3,9 +3,13 @@ from app.services import geocoding
 
 
 def google_item(formatted, comune, cap, partial=False, lat=40.9, lon=14.4):
+    # Via e civico come li dà Google: «V. Nazionale, 95, 08028 Orosei NU, Italia».
+    parts = formatted.split(", ")
+    street = [{"long_name": parts[0], "short_name": parts[0], "types": ["route"]}] if not parts[0][:1].isdigit() else []
+    number = [{"long_name": parts[1], "types": ["street_number"]}] if len(parts) > 2 and parts[1].isdigit() else []
     return {"formatted_address": formatted, "partial_match": partial, "place_id": formatted,
             "geometry": {"location": {"lat": lat, "lng": lon}, "location_type": "ROOFTOP"},
-            "address_components": [{"long_name": comune, "types": ["locality", "political"]},
+            "address_components": street + number + [{"long_name": comune, "types": ["locality", "political"]},
                                    {"long_name": cap, "types": ["postal_code"]}]}
 
 
@@ -89,7 +93,53 @@ def test_partial_result_without_town_is_not_verified(monkeypatch):
     fake_google(monkeypatch, other, anywhere)
     result = geocoding.geocode_address("Via Roma 10, Casoria")
     assert result["status"] == "da_verificare" and result["reason"] == "altro_comune"
-    # La stessa risposta senza comune ma come corrispondenza completa resta accettata.
+    # Anche come corrispondenza completa, senza comune non si verifica da solo.
     anywhere["partial_match"] = False
     fake_google(monkeypatch, anywhere)
-    assert geocoding.matches_request("Via Roma, Italia", geocoding._google_geocode("Via Roma, Italia")[0])
+    assert geocoding.geocode_address("Via Roma 10, Casoria")["status"] == "da_verificare"
+
+
+def test_same_town_but_other_street_or_number_is_not_verified(monkeypatch):
+    fake_google(monkeypatch, google_item("Via Napoli, 10, 80026 Casoria NA, Italia", "Casoria", "80026"))
+    result = geocoding.geocode_address("Via Roma 10, 80026 Casoria NA")
+    assert result["status"] == "da_verificare" and result["reason"] == "via_diversa"
+    fake_google(monkeypatch, google_item("Via Roma, 12, 80026 Casoria NA, Italia", "Casoria", "80026"))
+    assert geocoding.geocode_address("Via Roma 10, 80026 Casoria NA")["reason"] == "via_diversa"
+
+
+def test_street_center_or_missing_number_needs_a_person(monkeypatch):
+    item = google_item("Via Roma, 80026 Casoria NA, Italia", "Casoria", "80026")
+    item["geometry"]["location_type"] = "GEOMETRIC_CENTER"
+    fake_google(monkeypatch, item)
+    assert geocoding.geocode_address("Via Roma 10, 80026 Casoria NA")["reason"] == "via_diversa"
+    assert geocoding.geocode_address("Via Roma, 80026 Casoria NA")["reason"] == "approssimativo"
+    # Senza comune né CAP l'indirizzo è ambiguo: mai verificato da solo.
+    fake_google(monkeypatch, google_item("Via Roma, 10, 80026 Casoria NA, Italia", "Casoria", "80026"))
+    assert geocoding.geocode_address("Via Roma 10")["status"] == "da_verificare"
+
+
+def test_abbreviations_initials_and_letters_still_match(monkeypatch):
+    fake_google(monkeypatch, google_item("Via Giuseppe Garibaldi, 12, 80038 Pomigliano d'Arco NA, Italia", "Pomigliano d'Arco", "80038"))
+    assert geocoding.geocode_address("V. G. Garibaldi 12/B, Pomigliano d'Arco")["status"] == "verificato"
+    fake_google(monkeypatch, google_item("Corso Umberto I, 76, 80138 Napoli NA, Italia", "Napoli", "80138"))
+    assert geocoding.geocode_address("C.so Umberto I 76, Napoli")["status"] == "verificato"
+
+
+def test_only_italian_results_are_requested(monkeypatch):
+    seen = {}
+    monkeypatch.setattr(geocoding, "google_geocoding_enabled", lambda db=None: True)
+    monkeypatch.setattr(geocoding, "google_maps_api_key", lambda db=None: "test")
+
+    class Response:
+        def raise_for_status(self): pass
+        def json(self): return {"status": "ZERO_RESULTS", "results": []}
+    monkeypatch.setattr(geocoding.requests, "get", lambda url, params, **kw: seen.update(params) or Response())
+    assert geocoding.geocode_address("Via Roma 10, Casoria")["status"] == "non_trovato"
+    assert seen["components"] == "country:IT"
+
+
+def test_number_followed_by_town_without_comma():
+    parsed = geocoding.parse_address("piazza giovanni leone 22 pomigliano, pomigliano d'arco")
+    assert parsed["street"] == "piazza giovanni leone" and parsed["number"] == "22"
+    assert parsed["town"] == "pomigliano d'arco"
+    assert geocoding.parse_address("Via 4 Novembre 12, Napoli")["number"] == "12"

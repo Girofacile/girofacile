@@ -54,6 +54,7 @@ def _google_geocode(query: str, limit: int = 5, db: Session | None = None, user_
             params={
                 "address": query,
                 "region": "it",
+                "components": "country:IT",
                 "language": "it",
                 "key": api_key,
             },
@@ -92,8 +93,14 @@ def _google_geocode(query: str, limit: int = 5, db: Session | None = None, user_
             provincia = ""
             cap = ""
             places = []
+            routes = []
+            street_number = ""
             for comp in components:
                 types = comp.get("types") or []
+                if "route" in types:
+                    routes += [comp.get("long_name", ""), comp.get("short_name", "")]
+                if "street_number" in types:
+                    street_number = street_number or comp.get("long_name", "")
                 if "locality" in types or "postal_town" in types or "administrative_area_level_3" in types:
                     comune = comune or comp.get("long_name", "")
                     places.append(comp.get("long_name", ""))
@@ -114,6 +121,8 @@ def _google_geocode(query: str, limit: int = 5, db: Session | None = None, user_
                 "provincia": provincia,
                 "cap": cap,
                 "places": [p for p in places if p],
+                "routes": [r for r in routes if r],
+                "street_number": street_number,
                 "partial_match": bool(item.get("partial_match")),
             })
         print(f"[GEOCODING] Google risultati={len(results)} query={query}")
@@ -156,6 +165,88 @@ def matches_request(query: str, result: dict) -> bool:
     return place_ok or not result.get("partial_match")
 
 
+# Parole del tipo di strada e articoli: non distinguono una via dall'altra («V. Nazionale» = «Via Nazionale»).
+_STREET_TYPES = set("""via v viale vle v le corso cso c so piazza pza p za pzza p zza piazzale largo lgo l go
+    vico vicolo strada str contrada c da cda localita loc traversa trav rione borgo salita discesa
+    lungomare circonvallazione parco frazione fraz statale provinciale comunale sp ss sr
+    di de del della dello dei degli delle d la le lo il gli i l snc sn""".split())
+
+
+def _street_tokens(value: str) -> list:
+    return [t for t in _plain(value).split() if t not in _STREET_TYPES and not t.isdigit()]
+
+
+def parse_address(query: str) -> dict:
+    """Via, civico, CAP e comune da un indirizzo su una riga («Via Roma 10, 80026 Casoria NA»)."""
+    parts = [p.strip() for p in str(query or "").split(",") if p.strip()]
+    parts = [p for p in parts if _plain(p).strip() not in ("italia", "italy")]
+    caps = re.findall(r"(?<!\d)\d{5}(?!\d)", str(query or ""))
+    street = parts[0] if parts else ""
+    number = None
+    match = re.match(r"^(.*?)[\s,]+(\d+\s*[a-zA-Z]?(?:\s*/\s*\w+)?)$", street)
+    # Civico seguito dal comune senza virgola: «piazza giovanni leone 22 pomigliano».
+    middle = None if match else re.match(r"^(.*?\D)\s+(\d+\s*[a-zA-Z]?(?:\s*/\s*\w+)?)\s+([^\d].*)$", street)
+    if match:
+        street, number = match.group(1).strip(), match.group(2)
+    elif middle:
+        street, number = middle.group(1).strip(), middle.group(2)
+        parts = parts[:1] + [middle.group(3)] + parts[1:]
+    elif len(parts) > 1 and re.fullmatch(r"\d+\s*[a-zA-Z]?(?:\s*/\s*\w+)?", parts[1]):
+        number = parts[1]
+    town = ""
+    for part in parts[1:]:
+        if re.fullmatch(r"\d+\s*[a-zA-Z]?(?:\s*/\s*\w+)?", part):
+            continue
+        text = re.sub(r"(?<!\d)\d{5}(?!\d)", " ", part)
+        text = re.sub(r"\s+[A-Z]{2}$", "", text.strip())  # sigla della provincia
+        if text.strip():
+            town = text.strip()
+    return {"street": street, "number": number, "cap": caps[0] if caps else None, "town": town}
+
+
+def _same_street(written: str, routes: list) -> bool:
+    """Le parole significative della via scritta stanno nella via di Google (o viceversa)."""
+    mine = _street_tokens(written)
+    if not mine:
+        return False
+    for route in routes:
+        theirs = _street_tokens(route)
+        if not theirs:
+            continue
+        small, large = (mine, theirs) if len(mine) <= len(theirs) else (theirs, mine)
+        def found(token):
+            return any(token == other or (len(token) == 1 and other.startswith(token))
+                       or (len(other) == 1 and token.startswith(other)) for other in large)
+        if all(found(token) for token in small):
+            return True
+    return False
+
+
+def _same_number(written, found) -> bool:
+    digits = lambda value: (re.match(r"\d+", str(value or "").strip()) or [None])[0]
+    return bool(digits(written)) and digits(written) == digits(found)
+
+
+def check_result(query: str, result: dict):
+    """Motivo per cui il risultato NON va verificato da solo; None se coincide tutto.
+
+    Verificato solo se: comune (o CAP) scritto e ritrovato, stessa via, stesso civico quando
+    c'è, posizione sul civico o interpolata. Altrimenti decide una persona sulla mappa.
+    """
+    written = parse_address(query)
+    if not (written["town"] or written["cap"]) or not result.get("places") or not matches_request(query, result):
+        return "altro_comune"
+    if not result.get("routes"):
+        return "approssimativo"  # Google ha trovato solo il comune o la zona
+    if not _same_street(written["street"], result["routes"]):
+        return "via_diversa"
+    if written["number"] and not _same_number(written["number"], result.get("street_number")):
+        return "via_diversa"
+    if not written["number"] or result.get("location_type") not in ("ROOFTOP", "RANGE_INTERPOLATED"):
+        return "approssimativo"
+    return None
+
+
 def geocode_address(indirizzo: str, comune: str = "", provincia: str = "", db: Session | None = None, user_id=None, strict=False,
                     api_key: str | None = None, usage: list | None = None) -> dict:
     """
@@ -173,19 +264,22 @@ def geocode_address(indirizzo: str, comune: str = "", provincia: str = "", db: S
     if not results:
         return {"status": "non_trovato", "source": "google"}
 
-    # Google può restituire la stessa via in un altro comune (es. Brusciano → Orosei):
-    # si preferisce il primo risultato che rispetta CAP o comune scritti.
-    best = next((item for item in results if matches_request(query, item)), None)
-    mismatch = best is None
-    best = best or results[0]
+    # Verificato solo il risultato che coincide in tutto con quanto scritto (comune o CAP, via,
+    # civico, precisione). Google può restituire la stessa via in un altro comune (Brusciano →
+    # Orosei) o una via omonima senza comune («Via Roma, Italia» per Casoria): restano da verificare.
+    checks = [(item, check_result(query, item)) for item in results]
+    exact = next((item for item, problem in checks if problem is None), None)
+    if exact is not None:
+        best, reason = exact, None
+    else:
+        # Proposta da mostrare: prima un risultato nel comune giusto, poi il primo.
+        order = ("via_diversa", "approssimativo", "altro_comune")
+        best, reason = min(checks, key=lambda pair: order.index(pair[1]))
     try:
         conf = float(best.get("confidence") or 0.5)
     except Exception:
         conf = 0.5
-
-    status = "verificato" if conf >= 0.55 and not mismatch else "da_verificare"
-    # Motivo mostrato al cliente quando deve correggere o confermare l'indirizzo.
-    reason = "altro_comune" if mismatch else ("approssimativo" if status != "verificato" else None)
+    status = "verificato" if reason is None else "da_verificare"
     return {
         "status": status,
         "reason": reason,
