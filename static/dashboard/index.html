@@ -606,6 +606,7 @@
         <div id="routePlanningActions" class="gf-savebar" data-floating role="region" aria-label="Riepilogo e calcolo del percorso">
           <span><strong id="statDeliveries">0</strong> consegne · <strong id="statColli">0</strong> colli · <strong id="statWarnings">0</strong> con ZTL o sponda</span>
           <span id="statFuelGroup">Carburante <strong id="statFuel"></strong> <small id="statFuelHint">Seleziona un mezzo</small></span>
+          <button type="button" id="routePlanningDelete" class="gf-button" data-variant="danger" onclick="GFPlanningDrafts.discard()">Elimina</button>
           <button type="button" id="routeCalculateBtn" class="gf-button" data-variant="primary" onclick="optimizeRoute()">Calcola percorso</button>
         </div>
       </section>
@@ -1684,7 +1685,7 @@
 <script src="/static/dashboard/js/selected-customer-addresses.js?v=gf_customer_selected_addresses_20261020"></script>
 <script src="/static/dashboard/js/order-planning.js?v=gf_bozze_20261026"></script>
 <script src="/static/dashboard/js/planning-pickers.js?v=gf_aggiungi_20261102"></script>
-<script src="/static/dashboard/js/planning-drafts.js?v=gf_bozze_stile_20261027b"></script>
+<script src="/static/dashboard/js/planning-drafts.js?v=gf_elimina_20261107"></script>
 <script src="/static/dashboard/js/tutor.js?v=gf_giro_prova_20261030"></script>
 
 <script>

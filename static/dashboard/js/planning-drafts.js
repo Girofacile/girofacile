@@ -43,6 +43,25 @@ window.GFPlanningDrafts=(()=>{
     clearRouteWorkspace();
     await load();
   }
+  // «Elimina» nella barra della pianificazione: niente bozza, gli ordini tornano da pianificare.
+  // Un giro già calcolato in bozza viene annullato; un giro programmato aperto per modifica resta com'è.
+  async function discard(){
+    if(busy)return;
+    if(!deliveries.length&&!lastRouteResult?.id){clearRouteWorkspace();return;}
+    if(!confirm('Eliminare questa pianificazione? Le consegne vengono tolte e gli ordini collegati tornano da pianificare.'))return;
+    busy=true;
+    try{
+      if(lastRouteResult?.id&&lastRouteResult.status==='bozza'){
+        await api(`/api/routes/${Number(lastRouteResult.id)}/cancel`,{method:'POST',body:'{}'});
+      }
+      if(globalThis.GFOrderPlanning?.active()){await GFOrderPlanning.flush();await clearOrderSelection();}
+      clearRouteWorkspace();
+      window.GFOrders?.refreshSelection?.();
+      toast('Pianificazione eliminata.');
+    }catch(error){alert('Non è stato possibile eliminare la pianificazione: '+(error.message||error));}
+    finally{busy=false;}
+    await load();
+  }
   // Chiamata da showTab: true blocca la navigazione (conferma o salvataggio in corso).
   function guard(name){
     if(leaving||busy||PLANNING.includes(name)||!openTab())return false;
@@ -207,5 +226,5 @@ window.GFPlanningDrafts=(()=>{
     try{await api(`/api/routes/${Number(id)}/cancel`,{method:'POST',body:'{}'});}catch(error){alert(error.message);}
     load();
   }
-  return {guard,load,resume,remove,openRoute,cancelRoute,pending};
+  return {guard,load,resume,remove,openRoute,cancelRoute,pending,discard};
 })();

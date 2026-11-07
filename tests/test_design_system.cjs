@@ -552,6 +552,8 @@ test('planning page uses the shared topbar and dashboard visual language',()=>{
   assert.match(planningHtml,/id="routeAutoNameTitle"/);
   assert.match(planningHtml,/<input type="hidden" id="routeName">/);
   assert.match(planningHtml,/id="routePlanningActions" class="gf-savebar" data-floating/);
+  // «Elimina» rosso a sinistra di «Calcola percorso», come nella barra degli ordini selezionati.
+  assert.match(planningHtml,/id="routePlanningDelete" class="gf-button" data-variant="danger" onclick="GFPlanningDrafts\.discard\(\)">Elimina<\/button>\s*<button type="button" id="routeCalculateBtn"/);
   for(const id of ['statDeliveries','statColli','statWarnings','statFuel'])assert.match(planningHtml,new RegExp('<strong id="'+id+'">'));
   assert.match(planningHtml,/<div id="deliveryTableArea">/);
   assert.match(planningHtml,/id="planningCustomersMap"/);
