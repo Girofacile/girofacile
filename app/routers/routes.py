@@ -661,6 +661,12 @@ def create_and_optimize_route(
     if timed:
         # Orari con il traffico salvati sul giro, come dopo «Aggiorna ETA con traffico».
         return serialize_route(plan) | {"consegne_escluse": result.get("consegne_escluse") or []}
+    # Senza traffico l'arricchimento non parte: i pedaggi si stimano comunque per l'anteprima.
+    from ..services.route_enrichment import capture_tolls
+    capture_tolls(db, plan)
+    if plan.toll_status == "unavailable":
+        plan.toll_details_json = None   # la programmazione riprova
+    db.commit()
     return route_response(plan, result)
 
 

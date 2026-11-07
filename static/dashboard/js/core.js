@@ -3794,14 +3794,12 @@ function renderRouteResult(r, targetId="routeResult", fromHistory=false){
   const total = r.costo_totale ?? r.costo_carburante;
   const canRefresh = !fromHistory && r.id && ["bozza","programmato"].includes(routeStatus);
   const etaNote = r.traffic_status === "unavailable" ? " · traffico non disponibile, usati i tempi stradali salvati" : "";
-  const tollNote = r.toll_estimated_eur == null
-    ? `<p class="gf-muted">Pedaggi: ${r.traffic_status === "not_requested" ? "calcolati alla programmazione, se i dati stradali lo consentono" : "dati non disponibili"}.</p>`
-    : (r.toll_status === "partial" ? '<p class="gf-muted">Pedaggi: copertura parziale dei tratti.</p>' : "");
+  const tollKnown = r.toll_estimated_eur != null;
+  const tollNote = tollKnown ? (r.toll_status === "partial" ? "stima parziale" : "stima sul percorso") : "non disponibili";
   const mapsLink = r.google_maps_url ? `<a class="gf-button" data-variant="secondary" target="_blank" rel="noopener noreferrer" href="${esc(r.google_maps_url)}">${icon("map").replace('<svg ','<svg class="gf-icon" ')}<span>Apri in Google Maps</span></a>` : "";
   const detail = `<section class="gf-panel" data-preview-summary aria-label="Riepilogo del giro">
         <div class="gf-crew"><div><small>Autista</small><strong>${esc(r.driver_name || "Non assegnato")}</strong></div><div><small>Mezzo</small><strong>${esc(r.vehicle_name || "Nessun mezzo")}</strong></div></div>
         ${gfRouteCostsHtml(r)}
-        ${tollNote ? `<div class="gf-panel__body">${tollNote}</div>` : ""}
         <div id="routeAiExplanationV67" class="gf-alert hidden" data-status="info"></div>
         <div class="gf-route-panel__footer gf-cluster">
           ${r.id ? "" : mapsLink}
@@ -3819,8 +3817,8 @@ function renderRouteResult(r, targetId="routeResult", fromHistory=false){
     ${inPreviewTab ? "" : gfRouteDetailHeader(kicker, r.nome || title, `<span class="gf-badge" data-status="${badge.status}" data-dot>${esc(badge.text)}</span>`)}
     ${r.driver_schedule_error ? `<div class="gf-alert" data-status="danger" role="alert"><div class="gf-alert__body"><p class="gf-alert__text">${esc(r.driver_schedule_error)}</p></div></div>` : ""}
     <div class="gf-stat-strip" data-icons="side" data-fit data-preview-metrics aria-label="Numeri del giro">
-      ${gfStatCell("home","neutral","Partenza", r.orario_partenza || "-", "dal deposito")}
-      ${gfStatCell("clock","1","Rientro previsto", r.orario_rientro_stimato || "-", "dopo "+dashScheduledMinutes(r.totale_minuti))}
+      ${gfStatCell("home","neutral","Partenza", r.orario_partenza || "-", r.orario_rientro_stimato ? "rientro "+r.orario_rientro_stimato : "dal deposito")}
+      ${gfStatCell("toll","1","Pedaggi", tollKnown ? dashScheduledMoney(r.toll_estimated_eur) : "—", tollNote)}
       ${gfStatCell("route","2","Percorso", r.totale_km == null ? "-" : gfDecimal(r.totale_km), "km")}
       ${gfStatCell("pin","4","Fermate", String(consegne.length), "", "", "sm")}
       ${gfStatCell("euro","5","Costo operativo", dashScheduledMoney(total), Number(r.toll_estimated_eur) > 0 ? "pedaggi inclusi" : (energy.electric ? "energia" : "carburante"))}
@@ -4711,6 +4709,7 @@ function dashboardScheduledStopsHtml(r, autoHeight=true){
 const GF_STAT_ICONS = {
   home:'M3 11l9-7 9 7 M5 10v10h14V10 M10 20v-6h4v6',
   clock:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 7v5l3 2',
+  toll:'M4 21V7 M20 21V7 M2 7h20 M4 11h16 M8 7l-4 4 M14 7l-4 4 M20 7l-4 4',
   route:'M6 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4z M18 9a2 2 0 1 0 0-4 2 2 0 0 0 0 4z M8 17h6a3 3 0 0 0 0-6h-4a3 3 0 0 1 0-6h6',
   pin:'M12 21s-7-6.5-7-12a7 7 0 0 1 14 0c0 5.5-7 12-7 12z M12 11a2 2 0 1 0 0-4 2 2 0 0 0 0 4z',
   euro:'M17 6.5A7 7 0 1 0 17 17.5 M4 10h10 M4 14h10',

@@ -26,6 +26,32 @@ def _dump(value):
     return json.dumps(value, ensure_ascii=False, default=str)
 
 
+def estimate_tolls(db, points, vehicle_class="B"):
+    """Percorso stradale e stima dei pedaggi per i punti in ordine; mai un errore, al massimo «non disponibile»."""
+    try:
+        road = road_routing.road_route(points, db=db) if points else {}
+        toll = get_toll_calculator(db).estimate(road, vehicle_class or "B", db=db)
+    except (OSError, ValueError, TypeError, KeyError, road_routing.requests.RequestException):
+        road, toll = {}, {"provider": "internal-osm", "status": "unavailable", "amount_eur": None,
+                          "label": "Pedaggio stimato", "version": 1}
+    toll["calculated_at"] = datetime.now(timezone.utc).isoformat()
+    return road, toll
+
+
+def capture_tolls(db, plan, points=None):
+    """Pedaggi del giro salvati una volta per revisione (anche i tentativi falliti) e costo totale aggiornato."""
+    if not plan.toll_details_json:
+        if points is None:
+            points = (json_data(plan.routing_snapshot_json) or {}).get("points") or []
+        road, toll = estimate_tolls(db, points, getattr(plan.vehicle, "toll_class", "B"))
+        if road:
+            plan.road_geometry_json = _dump(road.get("geometries") or [])
+        plan.toll_provider, plan.toll_status = toll["provider"], toll["status"]
+        plan.toll_estimated_eur = toll["amount_eur"]
+        plan.toll_details_json = _dump(toll)
+    plan.costo_totale = round(float(plan.costo_carburante or 0) + float(plan.toll_estimated_eur or 0), 2)
+
+
 def initialize_snapshot(plan, result):
     previous = json_data(plan.routing_snapshot_json)
     ordered = [dict(d) for d in result["ordered"]]
@@ -175,19 +201,7 @@ def enrich_final_route(db, plan, *, force=False, requested_at=None, cached_traff
     departure = _route_departure_time_iso(plan.orario_partenza, plan.data_giro)
     points = snapshot.get("points") or []
     # Capture geometry/tolls once per revision. Failed attempts are persisted too.
-    if not plan.toll_details_json:
-        try:
-            road = road_routing.road_route(points, db=db) if points else {}
-            plan.road_geometry_json = _dump(road.get("geometries") or [])
-            toll = get_toll_calculator(db).estimate(road, getattr(plan.vehicle, "toll_class", "B"), db=db)
-        except (OSError, ValueError, TypeError, KeyError, road_routing.requests.RequestException):
-            toll = {"provider": "internal-osm", "status": "unavailable", "amount_eur": None,
-                    "label": "Pedaggio stimato", "version": 1}
-        toll["calculated_at"] = datetime.now(timezone.utc).isoformat()
-        plan.toll_provider, plan.toll_status = toll["provider"], toll["status"]
-        plan.toll_estimated_eur = toll["amount_eur"]
-        plan.toll_details_json = _dump(toll)
-    plan.costo_totale = round(float(plan.costo_carburante or 0) + float(plan.toll_estimated_eur or 0), 2)
+    capture_tolls(db, plan, points)
     traffic, failure = None, False
     try:
         provider = get_traffic_provider(db)

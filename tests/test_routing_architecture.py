@@ -512,3 +512,12 @@ def test_refresh_coalesces_overlapping_attempt_but_later_refresh_retries(routing
     enrich_final_route(db, plan, force=True, requested_at=calculated_at - timedelta(seconds=1))
     db.commit()
     assert len(calls) == 3
+
+
+def test_single_preview_without_traffic_still_estimates_tolls(routing_env, monkeypatch):
+    monkeypatch.setenv("TRAFFIC_PROVIDER", "none")
+    result = saved_route(routing_env, two=True, endpoint="optimize")
+    # Tre tratte (due consegne e rientro), 1 km a pedaggio ciascuna, classe B a 0,10 €/km.
+    assert result["traffic_status"] == "not_requested"
+    assert (result["toll_status"], result["toll_estimated_eur"]) == ("estimated", 0.30)
+    assert result["costo_totale"] == pytest.approx(result["costo_carburante"] + 0.30)

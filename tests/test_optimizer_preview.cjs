@@ -70,3 +70,13 @@ test('violations show the affected customer in the table without blocking planni
   assert.match(html,/Programma giro/);
   assert.doesNotMatch(html,/disabled/);
 });
+test('anteprima: la card dei pedaggi sostituisce il rientro, che resta sotto la partenza',()=>{
+  const html=render(false,{orario_partenza:'07:00',orario_rientro_stimato:'11:01',toll_status:'estimated',toll_estimated_eur:2.3,costo_carburante:10,costo_totale:12.3});
+  const metrics=html.slice(html.indexOf('data-preview-metrics'),html.indexOf('data-preview-stops'));
+  assert.match(metrics,/Pedaggi/);
+  assert.match(metrics,/2,30/);
+  assert.match(metrics,/rientro 11:01/);
+  assert.doesNotMatch(metrics,/Rientro previsto/);
+  const unknown=render(false,{toll_estimated_eur:null,toll_status:'unavailable'});
+  assert.match(unknown.slice(unknown.indexOf('data-preview-metrics'),unknown.indexOf('data-preview-stops')),/non disponibili/);
+});

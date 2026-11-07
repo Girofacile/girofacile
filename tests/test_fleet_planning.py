@@ -505,3 +505,12 @@ def test_late_customers_are_programmed_with_a_warning(fleet,monkeypatch):
     assert result.json()['status']=='programmed'
     assert result.json()['warnings'][0].startswith('Programmati con clienti fuori orario per il traffico: Bar Luna')
     assert all(r.status=='programmato' for r in fleet[0][1].query(RoutePlan))
+
+
+def test_preview_estimates_tolls_for_each_route(fleet):
+    plan=preview(fleet)
+    # Percorso stradale simulato: 1 km a pedaggio per tratta, classe B a 0,10 €/km.
+    for route in plan['routes']:
+        legs=len(route['stop_indexes'])+1
+        assert route['toll']=={'status':'estimated','amount_eur':pytest.approx(.1*legs)}
+    assert 'Pedaggi stimati sul percorso stradale' in ' '.join(plan['warnings'])

@@ -5,6 +5,12 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Pedaggi in anteprima: nella suddivisione fra i mezzi e nell'anteprima del giro singolo
+  la card in alto mostra la stima dei pedaggi al posto del rientro (nell'anteprima
+  singola l'orario di rientro resta sotto la partenza). La stima usa il percorso
+  stradale OSRM e le tariffe configurate, anche senza traffico; un giro senza dati
+  rende la stima «parziale» e non vale zero. La programmazione riusa la stima del
+  giro singolo e ricalcola quella della suddivisione.
 - Ore dell'autista: il calcolo all'indietro della partenza più tarda ora tollera gli
   errori di arrotondamento (1e-9 minuti). Su un giro teso dopo un'attesa d'apertura
   ritrovava l'apertura come 899,9999999999999 invece di 900 e azzerava lo

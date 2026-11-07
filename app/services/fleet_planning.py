@@ -171,6 +171,15 @@ def preview_traffic(db,user,data,route,vehicle,resource):
             'overtime_min':overtime(plan.driver_schedule,start,timed['total_min'])}
 
 
+def preview_tolls(db,data,route,vehicle):
+    """Pedaggi stimati sul percorso stradale del giro proposto (la programmazione li ricalcola)."""
+    from .route_enrichment import estimate_tolls
+    snapshot=_traffic_snapshot(route['result'],data.rientro_deposito)
+    if not snapshot: return {'status':'unavailable','amount_eur':None}
+    _,toll=estimate_tolls(db,snapshot['points'],getattr(vehicle,'toll_class','B'))
+    return {'status':toll['status'],'amount_eur':toll['amount_eur']}
+
+
 def reusable_traffic(proposal,row):
     """Tratte con traffico dell'anteprima, se recenti e calcolate per la stessa partenza e gli stessi punti."""
     from .route_enrichment import json_data
@@ -744,13 +753,15 @@ def _distribute(db,user,data,assignments=None,tighten=None):
     for route in output:
         route['traffic']=preview_traffic(db,user,data,route,vehicles[route['resource']],data.resources[route['resource']])
     output=[traffic_second_pass(route) for route in output]
+    for route in output:
+        route['toll']=preview_tolls(db,data,route,vehicles[route['resource']])
     statuses={route['traffic']['status'] for route in output}
     late=[item for route in output for item in route['traffic'].get('late',[])]
     if output and statuses=={'updated'}:
-        timing='Tempi con traffico aggiornato: verranno riusati alla programmazione se non passa più di un’ora. Pedaggi calcolati alla programmazione. Costi mostrati: solo energia/carburante.'
+        timing='Tempi con traffico aggiornato: verranno riusati alla programmazione se non passa più di un’ora. Pedaggi stimati sul percorso stradale, ricalcolati alla programmazione. Costo dei giri: solo energia/carburante.'
     else:
         timing=(f'Traffico non disponibile per uno o più giri: tempi stradali con margine prudente del {round((margin-1)*100)}%; '
-                'il traffico sarà verificato alla programmazione. Costi mostrati: solo energia/carburante.')
+                'il traffico sarà verificato alla programmazione. Costo dei giri: solo energia/carburante, pedaggi a parte.')
     warnings=[timing,'Capacita automatiche: peso e colli. Verifica separatamente volume, pallet, transpallet e altri requisiti.']
     if late:
         warnings.insert(0,f'Con il traffico {len(late)} {"cliente sarebbe servito" if len(late)==1 else "clienti sarebbero serviti"} fuori orario: '

@@ -168,3 +168,19 @@ test('ogni fermata si può togliere dai giri e finisce in Da sistemare',()=>{
  assert.match(page.innerHTML,/data-fleet-assign="0"/);
  assert.match(page.innerHTML,/data-fleet-accept-unassigned/);
 });
+test('la barra dei totali mostra i pedaggi stimati al posto dell\'ultimo rientro',()=>{
+ const {control,page,params}=preview();
+ params.plan.routes[0].toll={status:'estimated',amount_eur:3.4};
+ params.plan.routes[1].toll={status:'estimated',amount_eur:1.1};
+ control.render(params);
+ const start=page.innerHTML.indexOf('Totali della suddivisione');
+ const strip=page.innerHTML.slice(start,page.innerHTML.indexOf('</section>',start));
+ assert.match(strip,/Pedaggi/);
+ assert.match(strip,/4,50/);
+ assert.match(strip,/Stima sul percorso/);
+ assert.doesNotMatch(strip,/Ultimo rientro/);
+ // Un giro senza dati non vale zero: la stima diventa parziale.
+ delete params.plan.routes[1].toll;
+ control.render(params);
+ assert.match(page.innerHTML,/Stima parziale/);
+});
