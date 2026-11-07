@@ -47,9 +47,9 @@ test('clean preview: five metrics, stops above the map panel, print and scheduli
   // Si torna con la freccia in alto; la stampa è un pulsante con icona, senza «Altre azioni».
   assert.doesNotMatch(html,/Torna alla pianificazione|Altre azioni|data-preview-back/);
   assert.match(actions,/data-preview-print[^>]*aria-label="Stampa dettaglio fermate"[^>]*><svg class="gf-icon"/);
-  // Barra in basso: «Annulla» a sinistra di «Programma giro».
-  assert.match(html,/<div class="gf-savebar" data-floating[^>]*data-preview-program-bar>[^]*data-preview-cancel[^]*data-preview-program/);
-  for(const text of ['89,59','Annulla','Programma giro','Visualizza su mappa','Apri in Google Maps','Ricarica mappa','Stampa dettaglio fermate','Copia indirizzo']) assert.ok(html.includes(text),text);
+  // Barra in basso: «Elimina» rosso a sinistra di «Programma giro».
+  assert.match(html,/<div class="gf-savebar" data-floating[^>]*data-preview-program-bar>[^]*data-variant="danger" data-preview-cancel[^>]*>Elimina<[^]*data-preview-program/);
+  for(const text of ['89,59','Programma giro','Visualizza su mappa','Apri in Google Maps','Ricarica mappa','Stampa dettaglio fermate','Copia indirizzo']) assert.ok(html.includes(text),text);
 });
 
 test('saved history cannot schedule or reorder stops and routes without IDs do not load a map',()=>{

@@ -3684,11 +3684,11 @@ async function programCurrentRoute(){
   }
 }
 
-// «Annulla» nell'anteprima: la bozza viene annullata, gli ordini tornano da pianificare e
+// «Elimina» nell'anteprima: la bozza viene annullata, gli ordini tornano da pianificare e
 // si torna alla pianificazione con le fermate ancora compilate.
 async function cancelCurrentPreviewRoute(){
   if(!lastRouteResult || !lastRouteResult.id){ showTab("giro"); return; }
-  if(!confirm("Annullare questo giro? La bozza viene eliminata e gli ordini collegati tornano da pianificare.")) return;
+  if(!confirm("Eliminare questo giro? La bozza viene eliminata e gli ordini collegati tornano da pianificare.")) return;
   try{
     await api(`/api/routes/${Number(lastRouteResult.id)}/cancel`, {method:"POST", body:"{}"});
     lastRouteResult = null;
@@ -3817,7 +3817,7 @@ function renderRouteResult(r, targetId="routeResult", fromHistory=false){
   // «Programma giro» nella barra flottante in basso al centro, come le altre azioni principali.
   const programBar = isProgrammable ? `<div class="gf-savebar" data-floating role="region" aria-label="Programmazione del giro" data-preview-program-bar>
       <span>Controlla fermate e avvisi, poi programma il giro.</span>
-      <button type="button" class="gf-button" data-variant="ghost" data-preview-cancel onclick="cancelCurrentPreviewRoute()">Annulla</button>
+      <button type="button" class="gf-button" data-variant="danger" data-preview-cancel onclick="cancelCurrentPreviewRoute()">Elimina</button>
       <button type="button" class="gf-button" data-variant="primary" data-preview-program onclick="programCurrentRoute()">Programma giro</button>
     </div>` : "";
   // Nella pagina anteprima titolo, stato e «indietro» stanno nella barra in alto, come nelle altre pagine.
