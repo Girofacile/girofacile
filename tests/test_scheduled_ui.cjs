@@ -143,3 +143,10 @@ test('driver break is an unnumbered yellow row between stops in the scheduled ta
   assert.ok(table.indexOf('Secondo')<table.indexOf('Pausa del turno') && table.indexOf('Pausa del turno')<table.indexOf('Terzo'));
   assert.doesNotMatch(html,/Ⅱ/);
 });
+
+test('giri programmati: «+ Pianifica giro» nella barra in alto, non nella riga della settimana',()=>{
+  const index=fs.readFileSync('static/dashboard/index.html','utf8');
+  assert.match(index,/data-show-on-tabs="dashboard-scheduled" data-scheduled-plan onclick="openPlanningSelection\(\)">\+ Pianifica giro<\/button>/);
+  const core=fs.readFileSync('static/dashboard/js/core.js','utf8');
+  assert.doesNotMatch(core,/shiftDashboardScheduledWeek\(1\)">Successiva ›<\/button><button/);
+});

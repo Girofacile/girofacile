@@ -4659,7 +4659,7 @@ function dashboardScheduledWeekHtml(){
   ].filter(Boolean).join(' · ');
   return `<section class="gf-stack" aria-labelledby="scheduledWeekTitle">
     <div class="gf-cluster" data-justify="between"><div><h2 class="gf-title" id="scheduledWeekTitle">Settimana ${esc(range)}</h2><p class="gf-muted">${esc(summary)}</p></div>
-      <div class="gf-cluster"><button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="shiftDashboardScheduledWeek(-1)">‹ Precedente</button><button type="button" class="gf-button" data-variant="ghost" data-size="sm" onclick="shiftDashboardScheduledWeek(0)">Oggi</button><button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="shiftDashboardScheduledWeek(1)">Successiva ›</button><button type="button" class="gf-button" data-variant="primary" data-size="sm" onclick="openPlanningSelection()">Pianifica giro</button></div>
+      <div class="gf-cluster"><button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="shiftDashboardScheduledWeek(-1)">‹ Precedente</button><button type="button" class="gf-button" data-variant="ghost" data-size="sm" onclick="shiftDashboardScheduledWeek(0)">Oggi</button><button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="shiftDashboardScheduledWeek(1)">Successiva ›</button></div>
     </div>
     <div class="gf-grid" data-cols="7">${cards}</div>
   </section>`;
