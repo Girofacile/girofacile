@@ -98,13 +98,17 @@ def main():
                 for i in range(2):
                     page.locator(f'#fleetVehicle{i}').select_option(str(vehicles[i]['id']))
                     page.locator(f'#fleetDriver{i}').select_option(str(drivers[i]['id']))
-                # Turno e pausa sono già visibili nella card, con gli orari predefiniti dell'autista.
+                # Turno e pausa dietro i due pulsanti colorati della card, con gli orari predefiniti dell'autista.
                 assert page.locator('#fleetBreakStart0').input_value()=='08:15'
+                card = page.locator('#fleetResources article').first
+                card.locator('[data-schedule-toggle="shift"] summary').click()
+                card.locator('[data-schedule-toggle="pause"] summary').click()
                 assert page.locator('#fleetShiftStart0').is_visible() and page.locator('#fleetBreakEnd0').is_visible()
-                # Costo carburante: «Automatico» di default; scrivendo un prezzo si passa a manuale.
+                assert 'Pausa 08:15' in card.locator('[data-schedule-toggle="pause"] summary').inner_text()
+                # Costo carburante: interruttore «Automatico» acceso di default; spento si scrive il prezzo.
                 auto = page.locator('[data-fuel-auto="0"]')
-                assert auto.get_attribute('aria-pressed')=='true'
-                auto.click(); assert page.locator('[data-fuel-auto="0"]').get_attribute('aria-pressed')=='false'
+                assert auto.is_checked()
+                auto.click(); assert not page.locator('[data-fuel-auto="0"]').is_checked()
                 page.locator('#fleetFuel0').fill('1.90'); page.locator('#fleetFuel0').blur()
                 assert page.evaluate("GFFleetPlanning.config().fleet_resources[0].energy_price_mode")=='manual'
                 page.locator('[data-fuel-auto="0"]').click()

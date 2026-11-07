@@ -194,3 +194,12 @@ test('la barra dei totali mostra i pedaggi stimati al posto dell\'ultimo rientro
  control.render(params);
  assert.match(page.innerHTML,/Ricalcola per la stima/);
 });
+test('card mezzi (variante A): disponibilità nel menu, turno e pausa dietro pulsanti, interruttore del carburante',()=>{
+ const js=read('static/dashboard/js/fleet-planning.js');
+ assert.doesNotMatch(js,/data-availability|function availability\(/);
+ assert.match(js,/' — disponibile'/);
+ assert.match(js,/data-schedule-toggle="\$\{kind\}"/);
+ assert.match(js,/<label class="gf-switch"[^`]*data-fuel-auto="\$\{i\}"/);
+ assert.doesNotMatch(js,/Un altro mezzo\?/);
+ assert.match(read('static/dashboard/index.html'),/id="fleetStrategyRow"[^]*id="fleetAdd"/);
+});
