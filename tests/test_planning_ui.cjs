@@ -69,11 +69,11 @@ test('invalid dates and missing depot are reflected in completion feedback',()=>
 test('contextual back buttons return to the existing planner while new-route actions start selection',()=>{
   const core=fs.readFileSync('static/dashboard/js/core.js','utf8');
   const handlers=[...core.matchAll(/<button\b[^>]*onclick="([^"]+)"[^>]*>(?:(?!<\/button>)[\s\S])*?Torna alla pianificazione<\/button>/g)].map(match=>match[1]);
-  assert.equal(handlers.length,3);  // anteprima, risultato e pagina d'errore del calcolo
+  assert.equal(handlers.length,2);  // risultato e pagina d'errore del calcolo; l'anteprima usa la freccia in alto
   const destinations=[];
   const context={showTab:name=>destinations.push(name),openPlanningSelection:()=>{throw Error('Existing route must remain in the planner');}};
   for(const handler of handlers)vm.runInNewContext(handler,context);
-  assert.deepEqual(destinations,['giro','giro','giro']);
+  assert.deepEqual(destinations,['giro','giro']);
   assert.match(core,/onclick="openPlanningSelection\(\)">Seleziona consegne/);
   assert.match(core,/onclick="openPlanningSelection\(\)">Pianifica un giro/);
 });

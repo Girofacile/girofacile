@@ -3684,6 +3684,21 @@ async function programCurrentRoute(){
   }
 }
 
+// «Annulla» nell'anteprima: la bozza viene annullata, gli ordini tornano da pianificare e
+// si torna alla pianificazione con le fermate ancora compilate.
+async function cancelCurrentPreviewRoute(){
+  if(!lastRouteResult || !lastRouteResult.id){ showTab("giro"); return; }
+  if(!confirm("Annullare questo giro? La bozza viene eliminata e gli ordini collegati tornano da pianificare.")) return;
+  try{
+    await api(`/api/routes/${Number(lastRouteResult.id)}/cancel`, {method:"POST", body:"{}"});
+    lastRouteResult = null;
+    await Promise.allSettled([loadRoutes(), refreshResourceAvailability()]);
+    showTab("giro");
+  }catch(e){
+    alert(e.message || "Errore durante l'annullamento del giro.");
+  }
+}
+
 async function openProgrammedRouteForEdit(id, goToPlanning=false){
   customerDirectoryPlanning=false;
   globalThis.GFOrderPlanning?.leave();
@@ -3754,7 +3769,7 @@ function renderRouteResult(r, targetId="routeResult", fromHistory=false){
   const isProgrammable = !fromHistory && !!r.id && (routeStatus === "bozza" || routeStatus === "programmato");
   const title = fromHistory ? `Risultato giro salvato` : (isProgrammable ? `Anteprima giro da programmare` : `Anteprima giro`);
   const icon = (name) => {
-    const paths = {clock:'<circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/>',return:'<path d="M9 7H5l4-4M5 7h10a5 5 0 0 1 0 10H9m0-4-4 4 4 4"/>',distance:'<path d="m12 3 6 9-6 9-6-9zM6 12h12m-6-9v18"/>',fuel:'<path d="M5 21V4h9v17M5 9h9m0 4h2v5a2 2 0 0 0 4 0v-8l-3-3M3 21h13"/>',euro:'<path d="M17 6a7 7 0 1 0 0 12M4 10h11M4 14h10"/>',calendar:'<rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4m8-4v4M4 11h16m-11 4h2m3 0h2m-7 3h2"/>',map:'<path d="m3 5 6-2 6 2 6-2v16l-6 2-6-2-6 2zM9 3v16m6-14v16"/>',truck:'<path d="M3 5h12v13H3zM15 10h3l3 4v4h-6"/><circle cx="7" cy="19" r="2"/><circle cx="18" cy="19" r="2"/>'};
+    const paths = {clock:'<circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/>',return:'<path d="M9 7H5l4-4M5 7h10a5 5 0 0 1 0 10H9m0-4-4 4 4 4"/>',distance:'<path d="m12 3 6 9-6 9-6-9zM6 12h12m-6-9v18"/>',fuel:'<path d="M5 21V4h9v17M5 9h9m0 4h2v5a2 2 0 0 0 4 0v-8l-3-3M3 21h13"/>',euro:'<path d="M17 6a7 7 0 1 0 0 12M4 10h11M4 14h10"/>',print:'<path d="M7 9V3h10v6M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M7 14h10v7H7z"/>',calendar:'<rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4m8-4v4M4 11h16m-11 4h2m3 0h2m-7 3h2"/>',map:'<path d="m3 5 6-2 6 2 6-2v16l-6 2-6-2-6 2zM9 3v16m6-14v16"/>',truck:'<path d="M3 5h12v13H3zM15 10h3l3 4v4h-6"/><circle cx="7" cy="19" r="2"/><circle cx="18" cy="19" r="2"/>'};
     return '<svg viewBox="0 0 24 24" aria-hidden="true">'+paths[name]+'</svg>';
   };
   let rows = GFDriverBreaks.table(r,0,9);
@@ -3802,6 +3817,7 @@ function renderRouteResult(r, targetId="routeResult", fromHistory=false){
   // «Programma giro» nella barra flottante in basso al centro, come le altre azioni principali.
   const programBar = isProgrammable ? `<div class="gf-savebar" data-floating role="region" aria-label="Programmazione del giro" data-preview-program-bar>
       <span>Controlla fermate e avvisi, poi programma il giro.</span>
+      <button type="button" class="gf-button" data-variant="ghost" data-preview-cancel onclick="cancelCurrentPreviewRoute()">Annulla</button>
       <button type="button" class="gf-button" data-variant="primary" data-preview-program onclick="programCurrentRoute()">Programma giro</button>
     </div>` : "";
   // Nella pagina anteprima titolo, stato e «indietro» stanno nella barra in alto, come nelle altre pagine.
@@ -3822,14 +3838,11 @@ function renderRouteResult(r, targetId="routeResult", fromHistory=false){
     <section class="gf-panel" data-preview-stops aria-labelledby="previewStopsTitle">
       <header class="gf-panel__header"><div><h3 class="gf-panel__title" id="previewStopsTitle">Dettaglio delle fermate</h3><p class="gf-muted">${gfCount(consegne.length,"fermata pianificata","fermate pianificate")} · ${esc(r.eta_label || "orari stimati")}${etaNote}</p></div>
         <span class="gf-cluster" data-preview-actions>
-          <button type="button" class="gf-button" data-variant="secondary" data-preview-back onclick="showTab('giro')">Torna alla pianificazione</button>
           ${canRefresh ? `<button type="button" class="gf-button" data-variant="secondary" onclick="refreshRouteTraffic(${Number(r.id)}, '${targetId}', 'preview')">Aggiorna ETA con traffico</button>` : ""}
           ${r.id ? "" : mapsLink}
           ${r.id ? `<button type="button" class="gf-button" data-variant="secondary" data-preview-map-jump onclick="document.getElementById('routeGoogleMapV74_${r.id}').scrollIntoView({behavior:'smooth',block:'center'})">${icon('map').replace('<svg ','<svg class="gf-icon" ')}Visualizza su mappa</button>` : ''}
-          <details class="gf-dropdown" data-preview-extra><summary class="gf-button" data-variant="ghost">Altre azioni</summary><div data-gf-menu>
-            <button type="button" class="gf-button" data-variant="ghost" onclick="printStopsTable()">Stampa dettaglio fermate</button>
-            ${r.id && currentSessionUser?.limits?.has_ai ? `<button type="button" class="gf-button" data-variant="ghost" onclick="explainRouteSequenceAIv67(${r.id})">Spiega sequenza giro AI</button>` : ""}
-          </div></details>
+          ${r.id && currentSessionUser?.limits?.has_ai ? `<button type="button" class="gf-button" data-variant="secondary" onclick="explainRouteSequenceAIv67(${r.id})">Spiega sequenza giro AI</button>` : ""}
+          <button type="button" class="gf-button" data-variant="primary" data-preview-print title="Stampa dettaglio fermate" aria-label="Stampa dettaglio fermate" onclick="printStopsTable()">${icon('print').replace('<svg ','<svg class="gf-icon" ')}</button>
         </span>
       </header>
       <div id="routeAiExplanationV67" class="gf-alert hidden" data-status="info"></div>

@@ -44,9 +44,12 @@ test('clean preview: five metrics, stops above the map panel, print and scheduli
   // «Torna» e «Aggiorna ETA» sopra la tabella, «Programma giro» nella barra flottante.
   assert.doesNotMatch(html,/data-preview-summary|data-route-costs|gf-crew|data-preview-alerts|gf-route-panel"|Prima della partenza/);
   const actions=html.slice(html.indexOf('data-preview-actions'),html.indexOf('<table'));
-  assert.match(actions,/data-preview-back/);
-  assert.match(html,/<div class="gf-savebar" data-floating[^>]*data-preview-program-bar>[^]*data-preview-program/);
-  for(const text of ['89,59','Torna alla pianificazione','Programma giro','Visualizza su mappa','Apri in Google Maps','Ricarica mappa','Stampa dettaglio fermate','Copia indirizzo']) assert.ok(html.includes(text),text);
+  // Si torna con la freccia in alto; la stampa è un pulsante con icona, senza «Altre azioni».
+  assert.doesNotMatch(html,/Torna alla pianificazione|Altre azioni|data-preview-back/);
+  assert.match(actions,/data-preview-print[^>]*aria-label="Stampa dettaglio fermate"[^>]*><svg class="gf-icon"/);
+  // Barra in basso: «Annulla» a sinistra di «Programma giro».
+  assert.match(html,/<div class="gf-savebar" data-floating[^>]*data-preview-program-bar>[^]*data-preview-cancel[^]*data-preview-program/);
+  for(const text of ['89,59','Annulla','Programma giro','Visualizza su mappa','Apri in Google Maps','Ricarica mappa','Stampa dettaglio fermate','Copia indirizzo']) assert.ok(html.includes(text),text);
 });
 
 test('saved history cannot schedule or reorder stops and routes without IDs do not load a map',()=>{
