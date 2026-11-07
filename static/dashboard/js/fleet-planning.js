@@ -250,6 +250,8 @@
           // Come per il giro singolo: si apre Giri programmati sul giorno dei giri appena creati.
           toast(message);
           dashboardScheduledDay=plan.configuration.data_giro;
+          // Pianificatore vuoto, come dopo «Programma giro»: la prossima selezione riparte da zero.
+          clearRouteWorkspace();
           Promise.allSettled([loadDashboardHome(),refreshResourceAvailability()]);
           showTab('dashboard-scheduled');
         }

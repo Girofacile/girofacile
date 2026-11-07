@@ -214,3 +214,7 @@ test('un solo mezzo: invito bianco a «Più mezzi» con tre vantaggi (variante B
  for(const text of ['Dividiamo noi le consegne tra gli autisti','Rispettiamo carichi, turni e orari','Puoi spostare le fermate prima di confermare'])assert.ok(js.includes(text),text);
  assert.match(js,/data-variant="primary" data-plan-feature="has_fleet_planning" onclick="selectPlanningModeCard\('fleet'\)">Usa più mezzi/);
 });
+test('dopo «Pianifica giri» con più mezzi il pianificatore si svuota come dopo il giro singolo',()=>{
+ const js=read('static/dashboard/js/fleet-planning.js');
+ assert.match(js,/dashboardScheduledDay=plan\.configuration\.data_giro;[^]{0,200}clearRouteWorkspace\(\);/);
+});

@@ -294,7 +294,6 @@
           <div class="gf-stat-strip__cell"><span class="gf-stat-strip__icon" data-tone="5" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 6h18v12H3z M3 7l9 6 9-6"/></svg></span><span class="gf-stat-strip__label">Inviti in attesa</span><strong class="gf-stat-strip__value" id="collaboratorsPending">0</strong><small class="gf-stat-strip__unit">da accettare</small></div>
           <div class="gf-stat-strip__cell"><span class="gf-stat-strip__icon" data-tone="neutral" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M10 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M2 21a8 8 0 0 1 12.5-6.6 M16 16l5 5 M21 16l-5 5"/></svg></span><span class="gf-stat-strip__label">Disattivati</span><strong class="gf-stat-strip__value" id="collaboratorsInactive">0</strong><small class="gf-stat-strip__unit">senza accesso</small></div>
         </div>
-        <p id="collaboratorQuota" class="gf-alert" data-status="info" role="status"></p>
         <section class="gf-panel" aria-labelledby="collaboratorListTitle">
           <header class="gf-panel__header">
             <h2 class="gf-panel__title" id="collaboratorListTitle">Elenco collaboratori</h2>
@@ -305,7 +304,6 @@
             <select class="gf-select" id="collaboratorStatus" aria-label="Filtra stato accesso" onchange="GFCollaborators.render()"><option value="">Tutti gli accessi</option><option value="active">Attivi</option><option value="pending">Inviti in attesa</option><option value="inactive">Disattivati</option></select>
           </div>
           <div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards"><thead><tr><th scope="col">Collaboratore</th><th scope="col">Accesso</th><th scope="col">Funzioni assegnate</th><th scope="col">Ultimo accesso</th><th scope="col">Azioni</th></tr></thead><tbody id="collaboratorsBody"></tbody></table></div>
-          <footer class="gf-panel__footer"><p class="gf-muted">Il collaboratore riceve un invito via email e sceglie autonomamente la password. Dopo l’attivazione accede da Login con le proprie credenziali. Puoi cambiare le funzioni o disattivare l’accesso in qualsiasi momento. Piano, fatturazione e gestione dei collaboratori restano riservati al titolare.</p></footer>
         </section>
       </section>
       <section id="tab-collaborator-home" class="tab hidden gf-stack" data-gap="lg"><section class="gf-panel"><div class="gf-empty"><h2>Il tuo accesso aziendale</h2><p>Non hai ancora funzioni operative assegnate. Contatta il titolare dell’azienda.</p><button type="button" class="gf-button" data-variant="secondary" onclick="openProfilePanel()">Apri il tuo profilo</button></div></section></section>
@@ -1665,16 +1663,16 @@
 
 <script src="/static/dashboard/js/reports.js?v=gf_format_20261020"></script>
 <script src="/static/dashboard/js/customers.js?v=gf_bozze_20261026"></script>
-<script src="/static/dashboard/js/navigation.js?v=gf_pedaggi_20261107"></script>
+<script src="/static/dashboard/js/navigation.js?v=gf_pianifica_settimana_20261107"></script>
 <script src="/static/dashboard/js/history.js?v=gf_storico_pianifica_20261105"></script>
 <script src="/static/password-strength.js?v=gf_driver_flow_20261020"></script>
-<script src="/static/dashboard/js/collaborators.js?v=gf_pagina_f5_20261104"></script>
+<script src="/static/dashboard/js/collaborators.js?v=gf_senza_avvisi_20261107"></script>
 <script src="/static/dashboard/js/orders.js?v=gf_problema_indirizzo_20261107"></script>
 <script src="/static/dashboard/js/order-import.js?v=gf_base_20261015u"></script>
 <script src="/static/dashboard/js/order-sources.js?v=gf_plans_20261023"></script>
 <script src="/static/dashboard/js/dashboard-real-map.js?v=gf_priority_hero_20261025"></script>
 <script src="/static/dashboard/js/in-progress-reference.js?v=gf_giri_tabella_20261104"></script>
-<script src="/static/dashboard/js/core.js?v=gf_pianifica_alto_20261107"></script>
+<script src="/static/dashboard/js/core.js?v=gf_pianifica_settimana_20261107"></script>
 <script src="/static/dashboard/js/dashboard-mobile.js?v=gf_dashboard_mobile_20261019"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=orders_2"></script>
 <link rel="stylesheet" href="/static/dashboard/css/fleet-review.css?v=gf_suddivisione_20261025">
@@ -1682,7 +1680,7 @@
 <link rel="stylesheet" href="/static/driver-schedule.css?v=gf_break_row_20261021">
 <script src="/static/driver-schedule.js?v=gf_break_row_20261021"></script>
 <script src="/static/dashboard/js/driver-schedules.js?v=gf_base_20261015u"></script>
-<script src="/static/dashboard/js/fleet-planning.js?v=gf_invito_b_20261107"></script>
+<script src="/static/dashboard/js/fleet-planning.js?v=gf_svuota_dopo_giri_20261107"></script>
 <script src="/static/dashboard/js/selected-addresses.js?v=gf_verifica_severa_20261107"></script>
 <script src="/static/dashboard/js/selected-customer-addresses.js?v=gf_customer_selected_addresses_20261020"></script>
 <script src="/static/dashboard/js/order-planning.js?v=gf_bozze_20261026"></script>

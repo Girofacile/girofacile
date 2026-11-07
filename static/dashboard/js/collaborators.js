@@ -151,8 +151,7 @@
     const rows=records.filter(r=>(`${r.full_name} ${r.email}`).toLocaleLowerCase().includes(term) && (!state || accessState(r)===state));
     document.getElementById('collaboratorsTotal').textContent=records.length;
     const used=usedSeats(),limit=seatLimit(),full=used>=limit;
-    const quota=document.getElementById('collaboratorQuota');
-    if(quota){quota.dataset.status=full?'warning':'info';quota.textContent=`${used} / ${limit} collaboratori utilizzati (titolare escluso). Attivi e inviti in attesa occupano un posto.${full?' '+quotaMessage():''}`;}
+    // Niente avviso sui posti: al limite «Invita collaboratore» si disattiva e spiega il motivo.
     const invite=document.getElementById('collaboratorInviteNew');
     if(invite){invite.disabled=full;invite.title=full?quotaMessage():'';}
 

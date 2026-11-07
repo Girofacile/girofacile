@@ -150,3 +150,21 @@ test('giri programmati: «+ Pianifica giro» nella barra in alto, non nella riga
   const core=fs.readFileSync('static/dashboard/js/core.js','utf8');
   assert.doesNotMatch(core,/shiftDashboardScheduledWeek\(1\)">Successiva ›<\/button><button/);
 });
+test('giri non partiti in orario: badge, avviso con le scelte e avviso in Dashboard',()=>{
+  const core=fs.readFileSync('static/dashboard/js/core.js','utf8');
+  const ctx=vm.createContext({esc:x=>String(x??'')});
+  vm.runInContext(core.slice(core.indexOf('function gfLateStartBadge('),core.indexOf('// «Sposta la partenza ad adesso»')),ctx);
+  assert.equal(ctx.gfLateStartBadge({}), '');
+  assert.match(ctx.gfLateStartBadge({late_start:{state:'in_ritardo',label:'In ritardo',delay_min:20}}),/data-status="warning"[^>]*>In ritardo · \+20 min</);
+  const alert=ctx.gfLateStartAlert({id:7,late_start:{state:'da_riprogrammare',label:'Da riprogrammare',delay_min:47,problems:['1 consegna fuori fascia: Bar Roma']}});
+  for(const text of ['Sposta la partenza ad adesso','Riprogramma','Annulla giro','Bar Roma','non può avviare da solo'])assert.ok(alert.includes(text),text);
+  // Giorno passato: niente «Sposta la partenza», solo riprogrammare o annullare.
+  assert.doesNotMatch(ctx.gfLateStartAlert({id:7,late_start:{state:'non_avviato',label:'Non avviato',delay_min:900,problems:[]}}),/Sposta la partenza/);
+  assert.match(core,/data-late-start-dashboard/);
+  assert.match(core,/\/depart-now`/);
+});
+test('«+ Pianifica giro» sparisce quando si apre il dettaglio di un giro programmato',()=>{
+  const core=fs.readFileSync('static/dashboard/js/core.js','utf8');
+  assert.match(core,/querySelector\('\[data-scheduled-plan\]'\)\?\.classList\.toggle\('gf-hidden', !!selectedRoute\)/);
+  assert.match(fs.readFileSync('static/dashboard/js/navigation.js','utf8'),/dashboardScheduledSelectedId\)document\.querySelector\("\[data-scheduled-plan\]"\)/);
+});

@@ -102,7 +102,7 @@ test('collaborator cap includes pending invitations and prevents reactivation wi
   vm.runInContext(fs.readFileSync('static/dashboard/js/collaborators.js','utf8'),f.ctx);
   await f.ctx.window.GFCollaborators.load();
   assert.equal(f.node('collaboratorInviteNew').disabled,true);
-  assert.match(f.node('collaboratorQuota').textContent,/2 \/ 2/);
+  assert.match(f.node('collaboratorInviteNew').title,/Limite di 2 collaboratori raggiunto/);
   f.ctx.window.GFCollaborators.edit();assert.match(f.messages.at(-1),/inviti in attesa/);
   f.ctx.window.GFCollaborators.edit(3);f.node('collaboratorActive').checked=true;
   await f.ctx.window.GFCollaborators.save({preventDefault(){}});

@@ -115,6 +115,8 @@ function syncWorkspaceTopbar(name){
   // Elementi legati a una sezione (azioni dell'intestazione, voci di menu): visibili solo lì.
   document.querySelectorAll("[data-show-on-tabs]").forEach(el=>el.classList.toggle("gf-hidden",!el.dataset.showOnTabs.split(" ").includes(name)));
   document.querySelectorAll("[data-hide-on-tabs]").forEach(el=>el.classList.toggle("gf-hidden",el.dataset.hideOnTabs.split(" ").includes(name)));
+  // Giri programmati: «+ Pianifica giro» nella settimana, non con il dettaglio di un giro aperto.
+  if(name==="dashboard-scheduled"&&typeof dashboardScheduledSelectedId!=="undefined"&&dashboardScheduledSelectedId)document.querySelector("[data-scheduled-plan]")?.classList.add("gf-hidden");
   // Una voce di menu comparsa o sparita cambia lo spazio della sidebar (riquadro di upgrade).
   window.GFSidebarFit?.();
   if(document.body){

@@ -148,7 +148,8 @@ def main():
                     assert page.locator('[data-plan-feature="has_fleet_planning"]').first.is_disabled() == (plan == 'starter')
                     page.evaluate("showTab('collaboratori')")
                     page.wait_for_function("document.getElementById('collaboratorInviteNew').disabled")
-                    assert f'{seat_limit} / {seat_limit}' in page.locator('#collaboratorQuota').inner_text()
+                    assert f'Limite di {seat_limit} collaboratori' in page.locator('#collaboratorInviteNew').get_attribute('title')
+                    assert page.locator('#collaboratorQuota').count() == 0
                     assert page.locator('#collaboratorsActive').inner_text() == '1'
                     assert page.locator('#collaboratorsPending').inner_text() == str(seat_limit-1)
                     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth+2')

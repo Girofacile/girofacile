@@ -2137,6 +2137,7 @@ async function loadDashboardHome(startupResources = {}){
     const scheduled = programmed.filter(r=>!r.data_giro || r.data_giro>=today)
       .sort((a,b)=>`${a.data_giro||'9999'} ${a.orario_partenza||''}`.localeCompare(`${b.data_giro||'9999'} ${b.orario_partenza||''}`));
     const overdueScheduled = programmed.length - scheduled.length;
+    const lateToday = scheduled.filter(r=>r.late_start && r.late_start.state !== 'non_avviato');
     const progress = inProgressRoutes;
     setText("dashScheduledBadge", scheduled.length);
     setText("dashInProgressBadge", progress.length);
@@ -2146,7 +2147,8 @@ async function loadDashboardHome(startupResources = {}){
     const completedBox=document.getElementById("dashCompletedList");
     renderLogisticsDashboardV50([...(operational || []), ...(routes || [])]);
     if(scheduledBox) scheduledBox.innerHTML = (scheduled.slice(0,3).map(r=>dashRouteItem(r,'scheduled')).join("") || renderEmptyDashList("Nessun giro programmato.", "scheduled"))
-      + (overdueScheduled ? `<div class="gf-alert" data-status="warning"><div class="gf-alert__body"><p>${overdueScheduled} ${overdueScheduled===1?'giro di una data passata non è mai stato avviato':'giri di date passate non sono mai stati avviati'}. Aprili da “Vedi tutti i giri” per riprogrammarli o eliminarli.</p></div></div>` : "");
+      + (overdueScheduled ? `<div class="gf-alert" data-status="warning"><div class="gf-alert__body"><p>${overdueScheduled} ${overdueScheduled===1?'giro di una data passata non è mai stato avviato':'giri di date passate non sono mai stati avviati'}. Aprili da “Vedi tutti i giri” per riprogrammarli o eliminarli.</p></div></div>` : "")
+      + (lateToday.length ? `<div class="gf-alert" data-status="danger" data-late-start-dashboard><div class="gf-alert__body"><p>${lateToday.length} ${lateToday.length===1?'giro di oggi non è partito in orario':'giri di oggi non sono partiti in orario'}: ${lateToday.slice(0,3).map(r=>esc((r.driver_name||'Autista')+' · '+(r.late_start.label||''))).join(', ')}. Aprili da “Vedi tutti i giri” per spostare la partenza o riprogrammarli.</p></div></div>` : "");
     if(progressBox) progressBox.innerHTML = progress.slice(1,3).map(r=>dashRouteItem(r,'progress')).join("");
     document.getElementById("gfRefOtherActive")?.classList.toggle("hidden", progress.length <= 1);
     if(completedBox) completedBox.innerHTML = completedToday.slice(0,3).map(r=>dashRouteItem(r,'completed')).join("") || renderEmptyDashList("Nessun giro completato oggi.", "completed");
@@ -4540,6 +4542,44 @@ function dashScheduledMinutes(value){ const m = Math.round(Number(value||0)); re
 function dashScheduledMoney(value){ return value === null || value === undefined || value === '' ? '-' : '€ '+Number(value).toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function dashScheduledRoutesOf(iso){ return dashboardScheduledRoutes.filter(r=>r.data_giro===iso).sort((a,b)=>String(a.orario_partenza||'').localeCompare(String(b.orario_partenza||''))); }
 function dashScheduledCancelled(r){ return r.status === 'annullato'; }
+// Giro programmato non avviato in orario (services/late_start.py): stato, ritardo e badge.
+function gfLateStartBadge(r){
+  const late = r && r.late_start;
+  if(!late) return '';
+  const tone = late.state === 'in_ritardo' ? 'warning' : 'danger';
+  const delay = late.state !== 'non_avviato' && late.delay_min > 0 ? ` · +${Number(late.delay_min)} min` : '';
+  return `<span class="gf-badge" data-status="${tone}" data-dot data-late-start="${esc(late.state)}">${esc(late.label)}${delay}</span>`;
+}
+// Avviso nel dettaglio del giro con le scelte dell'ufficio.
+function gfLateStartAlert(r){
+  const late = r && r.late_start;
+  if(!late) return '';
+  const id = Number(r.id);
+  const reasons = (late.problems || []).map(p=>`<li>${esc(p)}</li>`).join('');
+  const text = late.state === 'non_avviato'
+    ? 'Il giro era previsto per un giorno passato e non è mai partito. Riprogrammalo con una nuova data o annullalo: gli ordini tornano da pianificare.'
+    : late.state === 'in_ritardo'
+      ? `La partenza prevista è superata di ${Number(late.delay_min)} minuti. Partendo adesso fasce, turno e pause reggono ancora: l’autista può avviare, gli orari si aggiornano.`
+      : `La partenza prevista è superata di ${Number(late.delay_min)} minuti: l’autista non può avviare da solo. Sposta la partenza ad adesso (gli orari si ricalcolano e i ritardi restano segnalati), riprogramma il giro o annullalo.`;
+  const departNow = late.state !== 'non_avviato'
+    ? `<button type="button" class="gf-button" data-variant="primary" data-size="sm" data-late-depart onclick="departScheduledRouteNow(${id})">Sposta la partenza ad adesso</button>` : '';
+  return `<div class="gf-alert" data-status="${late.state === 'in_ritardo' ? 'warning' : 'danger'}" role="status" data-late-start-alert><div class="gf-alert__body gf-stack" data-gap="sm">
+    <strong class="gf-alert__title">${esc(late.label)}</strong><p class="gf-alert__text">${text}</p>${reasons ? `<ul>${reasons}</ul>` : ''}
+    <div class="gf-cluster">${departNow}<button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="openProgrammedRouteForEdit(${id}, true)">Riprogramma</button><button type="button" class="gf-button" data-variant="danger" data-size="sm" onclick="cancelScheduledRoute(${id})">Annulla giro</button></div>
+  </div></div>`;
+}
+// «Sposta la partenza ad adesso»: nuova partenza, orari ricalcolati, l'autista può avviare.
+async function departScheduledRouteNow(routeId){
+  const route = dashboardScheduledRoutes.find(r=>Number(r.id)===Number(routeId)) || {};
+  const problems = route.late_start?.problems || [];
+  if(!confirm(`Spostare la partenza ad adesso?\n\nGli orari di arrivo si ricalcolano dalla nuova partenza.${problems.length ? '\nRestano questi problemi:\n- '+problems.join('\n- ') : ''}`)) return;
+  try{
+    await api(`/api/routes/${Number(routeId)}/depart-now`, {method:"POST", body:"{}"});
+    toast("Partenza spostata: l’autista può avviare il giro.");
+    await loadDashboardScheduledPage(routeId);
+    Promise.allSettled([loadDashboardHome()]);
+  }catch(e){ alert(e.message || "Non è stato possibile spostare la partenza."); }
+}
 
 // Settimana dei giri, condivisa da Giri programmati e Storico (nuovo aspetto del 4 novembre 2026):
 // il colore segue il giorno scelto (aria-pressed); oggi ha solo il numero in rosso (aria-current="date");
@@ -4570,7 +4610,7 @@ function dashWeekColumn(iso, routes, opts){
     const stops = Number(r.consegne_count||0), vehicle = dashScheduledVehicle(r)[0] || 'Mezzo non indicato';
     const stopsText = `${stops} ${stops===1?'fermata':'fermate'}`;
     const title = `${r.orario_partenza || '-'} · ${r.driver_name || 'Non assegnato'} · ${vehicle} · ${stopsText}`;
-    return `<button type="button" class="gf-list-item" aria-label="${esc(title)}" title="${esc(title)}" onclick="${opts.onOpen(r)}"><span class="gf-list-item__main"><strong>${esc(r.orario_partenza || '-')} · ${esc(dashWeekShortName(r.driver_name))}</strong><small>${esc(vehicle)}</small><small>${stopsText}</small></span></button>`;
+    return `<button type="button" class="gf-list-item" aria-label="${esc(title)}" title="${esc(title)}" onclick="${opts.onOpen(r)}"><span class="gf-list-item__main"><strong>${esc(r.orario_partenza || '-')} · ${esc(dashWeekShortName(r.driver_name))}</strong><small>${esc(vehicle)}</small><small>${stopsText}</small>${gfLateStartBadge(r)}</span></button>`;
   };
   const body = list.length
     ? list.slice(0, opts.limit).map(item).join('')
@@ -4688,7 +4728,7 @@ function dashboardScheduledDayHtml(){
       <td data-label="Km previsti">${esc(gfKm(r.totale_km))}</td>
       <td data-label="Guida">${dashScheduledMinutes(r.totale_minuti)}</td>
       <td data-label="Costo stimato">${dashScheduledMoney(r.costo_carburante)}</td>
-      <td data-label="Azioni"><div class="gf-cluster">${cancelled ? '<span class="gf-badge" data-status="danger">Annullato</span>' : ''}<button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="openDashboardScheduledRoute(${Number(r.id)})">Apri giro</button></div></td>
+      <td data-label="Azioni"><div class="gf-cluster">${cancelled ? '<span class="gf-badge" data-status="danger">Annullato</span>' : gfLateStartBadge(r)}<button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="openDashboardScheduledRoute(${Number(r.id)})">Apri giro</button></div></td>
     </tr>`;
   };
   const body = list.length
@@ -4825,7 +4865,8 @@ function dashboardScheduledDetailHtml(r){
   return `<div class="gf-stack" data-gap="lg" data-scheduled-detail>
     ${cancelled
       ? gfRouteDetailHeader(`Giro annullato · ${day}`, r.nome || 'Giro consegne', '<span class="gf-badge" data-status="danger" data-dot>Annullato</span>')
-      : gfRouteDetailHeader(`Giro programmato · ${day}`, r.nome || 'Giro consegne', '<span class="gf-badge" data-status="warning" data-dot>Programmato</span>')}
+      : gfRouteDetailHeader(`Giro programmato · ${day}`, r.nome || 'Giro consegne', gfLateStartBadge(r) || '<span class="gf-badge" data-status="warning" data-dot>Programmato</span>')}
+    ${cancelled ? '' : gfLateStartAlert(r)}
     <div class="gf-stat-strip" data-icons="side" data-fit aria-label="Numeri del giro">
       ${gfStatCell('home','neutral','Partenza', r.orario_partenza || '-', 'dal deposito')}
       ${gfStatCell('clock','1','Rientro previsto', r.rientro_stimato_aggiornato || r.orario_rientro_stimato || '-', 'dopo '+dashScheduledMinutes(r.totale_minuti))}
@@ -4876,6 +4917,8 @@ function renderDashboardScheduledSubpage(routes, selectedRoute){
   }
   const cancelRoute = document.getElementById('scheduledCancelRouteBtn');
   if(cancelRoute) cancelRoute.hidden = !selectedRoute || selectedRoute.status === 'annullato';
+  // «+ Pianifica giro» solo nella settimana dei giri programmati, non nel dettaglio di un giro.
+  document.querySelector('[data-scheduled-plan]')?.classList.toggle('gf-hidden', !!selectedRoute);
   if(selectedRoute){
     // Il giro scelto si apre a pagina intera; il pulsante indietro torna alla settimana.
     dashboardScheduledSelectedId = selectedRoute.id;
