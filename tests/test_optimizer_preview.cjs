@@ -79,4 +79,6 @@ test('anteprima: la card dei pedaggi sostituisce il rientro, che resta sotto la 
   assert.doesNotMatch(metrics,/Rientro previsto/);
   const unknown=render(false,{toll_estimated_eur:null,toll_status:'unavailable'});
   assert.match(unknown.slice(unknown.indexOf('data-preview-metrics'),unknown.indexOf('data-preview-stops')),/non disponibili/);
+  const free=render(false,{toll_estimated_eur:0,toll_status:'estimated'});
+  assert.match(free.slice(free.indexOf('data-preview-metrics'),free.indexOf('data-preview-stops')),/nessun pedaggio/);
 });

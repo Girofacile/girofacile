@@ -3795,7 +3795,8 @@ function renderRouteResult(r, targetId="routeResult", fromHistory=false){
   const canRefresh = !fromHistory && r.id && ["bozza","programmato"].includes(routeStatus);
   const etaNote = r.traffic_status === "unavailable" ? " · traffico non disponibile, usati i tempi stradali salvati" : "";
   const tollKnown = r.toll_estimated_eur != null;
-  const tollNote = tollKnown ? (r.toll_status === "partial" ? "stima parziale" : "stima sul percorso") : "non disponibili";
+  const tollNote = !tollKnown ? "non disponibili" : r.toll_status === "partial" ? "stima parziale"
+    : Number(r.toll_estimated_eur) > 0 ? "stima sul percorso" : "nessun pedaggio";
   const mapsLink = r.google_maps_url ? `<a class="gf-button" data-variant="secondary" target="_blank" rel="noopener noreferrer" href="${esc(r.google_maps_url)}">${icon("map").replace('<svg ','<svg class="gf-icon" ')}<span>Apri in Google Maps</span></a>` : "";
   const detail = `<section class="gf-panel" data-preview-summary aria-label="Riepilogo del giro">
         <div class="gf-crew"><div><small>Autista</small><strong>${esc(r.driver_name || "Non assegnato")}</strong></div><div><small>Mezzo</small><strong>${esc(r.vehicle_name || "Nessun mezzo")}</strong></div></div>
@@ -4709,7 +4710,7 @@ function dashboardScheduledStopsHtml(r, autoHeight=true){
 const GF_STAT_ICONS = {
   home:'M3 11l9-7 9 7 M5 10v10h14V10 M10 20v-6h4v6',
   clock:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 7v5l3 2',
-  toll:'M4 21V7 M20 21V7 M2 7h20 M4 11h16 M8 7l-4 4 M14 7l-4 4 M20 7l-4 4',
+  toll:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M15 8.8a4 4 0 1 0 0 6.4 M7.5 11h6 M7.5 13h6',
   route:'M6 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4z M18 9a2 2 0 1 0 0-4 2 2 0 0 0 0 4z M8 17h6a3 3 0 0 0 0-6h-4a3 3 0 0 1 0-6h6',
   pin:'M12 21s-7-6.5-7-12a7 7 0 0 1 14 0c0 5.5-7 12-7 12z M12 11a2 2 0 1 0 0-4 2 2 0 0 0 0 4z',
   euro:'M17 6.5A7 7 0 1 0 17 17.5 M4 10h10 M4 14h10',

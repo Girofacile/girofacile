@@ -45,14 +45,16 @@ function warnings(plan,dirty,index,lane){
 }
 const ICONS={box:'M3 7l9-4 9 4-9 4-9-4z M3 7v10l9 4 9-4V7 M12 11v10',road:'M4 20 9 4 M20 20 15 4 M12 6v2 M12 11v2 M12 16v2',
  fuel:'M4 20V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v15 M3 20h12 M7 8h4 M14 9h3l3 3v6a1.5 1.5 0 0 1-3 0v-3h-3',clock:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 7v5l3 2',
- toll:'M4 21V7 M20 21V7 M2 7h20 M4 11h16 M8 7l-4 4 M14 7l-4 4 M20 7l-4 4'};
+ toll:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M15 8.8a4 4 0 1 0 0 6.4 M7.5 11h6 M7.5 13h6'};
 // Pedaggi della suddivisione: somma delle stime; un giro senza dati non vale zero.
 function tollTotals(plan){
+ if(plan.routes.length&&plan.routes.every(r=>!r.toll))return {value:'—',sub:'Ricalcola per la stima',warning:false};
  const tolls=plan.routes.map(r=>r.toll||{status:'unavailable',amount_eur:null});
  const known=tolls.filter(t=>t.amount_eur!=null);
  const amount=known.reduce((x,t)=>x+Number(t.amount_eur||0),0);
- const sub=!known.length?'Non disponibili':known.length<tolls.length||tolls.some(t=>t.status==='partial')?'Stima parziale':'Stima sul percorso';
- return {value:known.length?money(amount):'—',sub,warning:sub!=='Stima sul percorso'};
+ const partial=known.length<tolls.length||tolls.some(t=>t.status==='partial');
+ const sub=!known.length?'Non disponibili':partial?'Stima parziale':amount>0?'Stima sul percorso':'Nessun pedaggio';
+ return {value:known.length?money(amount):'—',sub,warning:!known.length||partial};
 }
 function totals(plan,assignment,dirty){
  const used=plan.configuration.resources.filter((_,i)=>assignment.includes(i)).length;
@@ -67,7 +69,7 @@ function totals(plan,assignment,dirty){
  stat('box','1','Consegne',String(assignment.length),assignment.filter(x=>x==null).length+' non assegnate · '+gfCount(used,'mezzo','mezzi'),assignment.some(x=>x==null))+
  stat('road','2','Km totali',dirty?'—':km.toLocaleString('it-IT',{maximumFractionDigits:1})+' km',dirty?'Da ricalcolare':approximate?'Stima approssimativa':'Somma dei percorsi',dirty||approximate)+
  stat('fuel','3','Carburante / energia',dirty?'—':money(cost),dirty?'Da ricalcolare':'Costo stimato',dirty)+
- stat('toll','neutral','Pedaggi',dirty?'—':tolls.value,dirty?'Da ricalcolare':tolls.sub,dirty||tolls.warning)+'</section>';
+ stat('toll','4','Pedaggi',dirty?'—':tolls.value,dirty?'Da ricalcolare':tolls.sub,dirty||tolls.warning)+'</section>';
 }
 function stop(plan,dirty,index,lane,position,busy){
  const delivery=plan.configuration.consegne[index];

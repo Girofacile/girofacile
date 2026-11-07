@@ -65,6 +65,11 @@ def _segments(leg, dataset):
         tags = step.get("osm_tags") or {}
         if "toll" in classes:
             tags = {**tags, "toll": "yes"}
+        elif step.get("intersections") and "toll" not in tags:
+            # Il profilo auto di OSRM marca i tratti a pedaggio con la classe «toll» (verificato
+            # sul server locale): un passo con incroci e senza quella classe non è a pedaggio.
+            # Un passo senza incroci resta sconosciuto, mai zero per difetto.
+            tags = {**tags, "toll": "no"}
         result.append({"distance": step.get("distance") or 0, "tags": tags})
     return result or [{"distance": leg.get("distance") or 0}]
 

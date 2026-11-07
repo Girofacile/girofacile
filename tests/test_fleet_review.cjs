@@ -183,4 +183,14 @@ test('la barra dei totali mostra i pedaggi stimati al posto dell\'ultimo rientro
  delete params.plan.routes[1].toll;
  control.render(params);
  assert.match(page.innerHTML,/Stima parziale/);
+ // Nessun tratto a pedaggio: lo si dice, non «non disponibili».
+ params.plan.routes[0].toll={status:'estimated',amount_eur:0};
+ params.plan.routes[1].toll={status:'estimated',amount_eur:0};
+ control.render(params);
+ assert.match(page.innerHTML,/Nessun pedaggio/);
+ assert.doesNotMatch(page.innerHTML,/Non disponibili/);
+ // Anteprima calcolata prima della stima dei pedaggi.
+ delete params.plan.routes[0].toll; delete params.plan.routes[1].toll;
+ control.render(params);
+ assert.match(page.innerHTML,/Ricalcola per la stima/);
 });

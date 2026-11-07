@@ -321,6 +321,16 @@ def test_custom_osrm_toll_class_is_used(routing_env):
     assert result["amount_eur"] == 1.20
 
 
+def test_osrm_steps_without_toll_class_mean_no_toll(routing_env):
+    # Percorso senza autostrade a pedaggio: OSRM dà incroci senza la classe «toll».
+    road = {"legs": [{"steps": [{"distance": 8000, "intersections": [{"classes": ["tunnel"]}, {}]},
+                                {"distance": 3000, "intersections": [{"classes": ["toll"]}]}]}]}
+    result = InternalOSMTollCalculator().estimate(road)
+    assert (result["status"], result["amount_eur"], result["toll_km"]) == ("estimated", 0.30, 3.0)
+    free = InternalOSMTollCalculator().estimate({"legs": [{"steps": [{"distance": 8000, "intersections": [{}]}]}]})
+    assert (free["status"], free["amount_eur"]) == ("estimated", 0)
+
+
 def test_traffic_and_saved_route_cannot_cross_company_boundaries(routing_env):
     from app.core.dependencies import current_user
     ctx = routing_env
