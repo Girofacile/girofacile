@@ -5,6 +5,14 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Giri non partiti in orario (services/late_start.py): fino a 15 minuti dopo la partenza
+  nessun avviso; oltre, «In ritardo» se partendo adesso fasce, turno e pause reggono ancora
+  (stesse tratte salvate), altrimenti o dopo 30 minuti «Da riprogrammare» e l'autista non può
+  avviare. L'ufficio sposta la partenza ad adesso (orari ricalcolati), riprogramma o annulla.
+  Un giro di un giorno passato mai avviato è «Non avviato» e va riprogrammato. Badge in Giri
+  programmati, avviso nel dettaglio e in Dashboard; la chiusura manuale resta sempre possibile.
+- Verifica indirizzi severa: verificato in automatico solo se Google conferma comune (o CAP),
+  via, civico e posizione sul civico; altrimenti «Indirizzo da correggere» con il motivo.
 - Pedaggi in anteprima: nella suddivisione fra i mezzi e nell'anteprima del giro singolo
   la card in alto mostra la stima dei pedaggi al posto del rientro (nell'anteprima
   singola l'orario di rientro resta sotto la partenza). La stima usa il percorso

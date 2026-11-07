@@ -115,17 +115,18 @@ def test_future_start_rejected_and_get_does_not_create_states(env):
     assert db.query(DeliveryStatus).count() == 0
 
 
-def test_overdue_route_can_start_next_day(env):
+def test_overdue_route_must_be_rescheduled_before_starting(env, monkeypatch):
+    # Regola dal 7 novembre 2026: un giro di un giorno passato mai avviato va riprogrammato.
     from app.core.utils import local_today
+    monkeypatch.setattr('app.services.late_start.ENABLED', True)
     client, db, route, _ = setup_route(env)
     route.status = 'programmato'
     route.data_giro = local_today() - timedelta(days=1)
     db.commit()
 
     response = client.post(f'/api/driver/routes/{route.id}/start')
-    assert response.status_code == 200
-    assert route.status == 'in_corso'
-    assert route.started_at is not None
+    assert response.status_code == 409 and 'riprogrammare' in response.json()['detail']
+    assert route.status == 'programmato' and route.started_at is None
 
 
 def test_second_route_cannot_start_with_same_running_driver(env):

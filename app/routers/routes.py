@@ -25,6 +25,7 @@ from ..schemas import ManualRoutePlanIn, RoutePlanIn, StopAddressIn
 from ..services.plans import check_daily_route_limit
 from ..services.error_monitor import log_exception
 from ..services.route_enrichment import initialize_snapshot, enrich_final_route, routing_metadata, json_data, TIMING_DETAILS
+from ..services.late_start import late_state, departure_now
 from ..services.ai_assistant import ensure_company_ai_allowed, run_ai_text
 import json
 import math
@@ -418,6 +419,7 @@ def serialize_route(plan):
         "driver_name": ((plan.driver.nome + (" " + plan.driver.cognome if plan.driver.cognome else "")) if plan.driver else None),
         "driver_email": (plan.driver.email if plan.driver else None),
         "rientro_deposito": plan.rientro_deposito, "prezzo_carburante_litro": plan.prezzo_carburante_litro,
+        "late_start": late_state(plan),
         "energy_price_mode": plan.energy_price_mode, "energy_type": plan.energy_type, "energy_unit": plan.energy_unit,
         "energy_price_primary": plan.energy_price_primary, "energy_price_electric": plan.energy_price_electric,
         "energy_consumption_primary": plan.energy_consumption_primary, "energy_consumption_electric": plan.energy_consumption_electric,
@@ -936,6 +938,7 @@ def list_operational_routes(include_cancelled: bool = False, db: Session = Depen
             "orario_partenza": time_to_hhmm(r.orario_partenza), "orario_rientro_stimato": time_to_hhmm(r.orario_rientro_stimato),
             "started_at": (r.started_at.isoformat() if getattr(r, "started_at", None) else None),
             "cancelled_at": (r.cancelled_at.isoformat() if getattr(r, "cancelled_at", None) else None),
+            "late_start": late_state(r),
             "rientro_stimato_aggiornato": live_sched.get("rientro_stimato_aggiornato"),
             "driver_name": ((r.driver.nome + (" " + r.driver.cognome if r.driver.cognome else "")) if r.driver else ""),
             "vehicle_id": r.vehicle_id, "vehicle_name": (r.vehicle.nome if r.vehicle else ""),
@@ -1062,6 +1065,30 @@ def refresh_route_traffic(route_id: int, db: Session = Depends(get_db), user: Us
     return serialize_route(plan)
 
 
+@router.post("/api/routes/{route_id}/depart-now")
+def depart_route_now(route_id: int, db: Session = Depends(get_db), user: User = Depends(current_user)):
+    """Giro in ritardo: la partenza diventa adesso e gli orari si ricalcolano (ritardi accettati).
+
+    Dopo questo passaggio l'autista può avviare il giro; le consegne fuori fascia restano segnalate.
+    """
+    route_orders.lock_company(db, user.id)
+    plan = owned(db.query(RoutePlan), RoutePlan, user).filter(RoutePlan.id == route_id).with_for_update().first()
+    if not plan:
+        raise HTTPException(404, "Giro non trovato")
+    if computed_route_status(plan) != "programmato" or plan.started_at:
+        raise HTTPException(409, "Si può spostare la partenza solo di un giro programmato non ancora avviato.")
+    if plan.data_giro != local_today():
+        raise HTTPException(409, "Il giro era previsto per un altro giorno: riprogrammalo o annullalo.")
+    plan.orario_partenza = departure_now()
+    try:
+        enrich_final_route(db, plan, force=True, requested_at=utc_now())
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
+    db.commit()
+    db.refresh(plan)
+    return serialize_route(plan)
+
+
 @router.post("/api/routes/{route_id}/cancel")
 def cancel_route(route_id: int, db: Session = Depends(get_db), user: User = Depends(current_user)):
     route_orders.lock_company(db, user.id)
@@ -1088,7 +1115,7 @@ def complete_route(route_id: int, db: Session = Depends(get_db), user: User = De
     if not plan:
         raise HTTPException(404, "Giro non trovato")
     from ..services.usage_limits import start_route_usage
-    start_route_usage(db, plan)
+    start_route_usage(db, plan, check_late=False)
     from ..services.route_execution import mark_completed
     if plan.status != "completato":
         mark_completed(plan)

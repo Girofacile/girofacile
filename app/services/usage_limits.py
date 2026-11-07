@@ -53,13 +53,18 @@ def usage_summary(db, user):
     return {"month": orders["month"], "orders": orders, "resources": resources}
 
 
-def start_route_usage(db, route):
+def start_route_usage(db, route, check_late=True):
     # Lock order: company -> route -> driver/vehicle -> orders.
     owner = db.query(User).filter(User.id == route.user_id).with_for_update().populate_existing().one()
     route = db.query(RoutePlan).filter_by(id=route.id, user_id=owner.id).with_for_update().populate_existing().one()
     ensure_new_route_can_start(db, route)
     if db.get(RouteUsage, route.id):
         return  # A running route can always be completed, even after expiry.
+    # Partenza molto in ritardo o giro non più realizzabile: l'autista non avvia, decide l'ufficio.
+    # La chiusura manuale dall'ufficio (check_late=False) resta sempre possibile.
+    if check_late:
+        from .late_start import ensure_can_start
+        ensure_can_start(route)
     legacy_started = bool(route.started_at or route.status in ("in_corso", "completato"))
     if not legacy_started:
         require_active_plan(owner)

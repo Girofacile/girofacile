@@ -59,6 +59,14 @@ def _pod_storage_production_backend(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def _late_start_only_where_tested(request, monkeypatch):
+    # I giri dei test hanno orari fissi (08:00): con l'orologio reale risulterebbero in ritardo.
+    # Il controllo dei ritardi resta acceso dove è verificato.
+    if request.node.path.name not in ('test_late_start.py',) and 'late_start' not in request.keywords:
+        monkeypatch.setattr('app.services.late_start.ENABLED', False)
+
+
+@pytest.fixture(autouse=True)
 def _ortools_off_by_default(monkeypatch):
     # OR-Tools usa sempre tutto il tempo concesso e cambia i piani attesi dai test del
     # motore multi-mezzo: si accende solo nei test che lo verificano (test_fleet_ortools.py).
