@@ -1078,13 +1078,12 @@ body[data-gf-surface] .gf-day-head{
   transition:background var(--gf-motion-duration),border-color var(--gf-motion-duration);
 }
 body[data-gf-surface] .gf-day-head:hover{background:var(--gf-color-surface-subtle)}
-/* Giorno scelto: intestazione piena in blu e colonna intera con bordo blu e alone */
+/* Giorno scelto: intestazione su azzurro tenue con testo blu, colonna con bordo blu e alone */
 body[data-gf-surface] .gf-day-head[aria-pressed="true"],
-body[data-gf-surface] .gf-day-head[aria-pressed="true"]:hover{border-color:var(--gf-color-primary);background:var(--gf-color-primary);color:var(--gf-color-on-primary)}
-body[data-gf-surface] .gf-day-head[aria-pressed="true"] .gf-day-head__weekday,
-body[data-gf-surface] .gf-day-head[aria-pressed="true"][aria-current="date"] .gf-day-head__number{color:var(--gf-color-on-primary)}
+body[data-gf-surface] .gf-day-head[aria-pressed="true"]:hover{border-color:var(--gf-color-info-bg);background:var(--gf-color-info-bg);color:var(--gf-color-primary)}
+body[data-gf-surface] .gf-day-head[aria-pressed="true"] .gf-day-head__weekday{color:var(--gf-color-primary)}
 body[data-gf-surface] .gf-day-head[aria-pressed="true"]>.gf-badge{background:var(--gf-color-surface);color:var(--gf-color-primary)}
-body[data-gf-surface] .gf-panel:has(>.gf-panel__header>.gf-day-head[aria-pressed="true"]){border-color:var(--gf-color-primary);box-shadow:0 0 0 var(--gf-border-width) var(--gf-color-primary),var(--gf-focus-ring),var(--gf-shadow-md)}
+body[data-gf-surface] .gf-panel:has(>.gf-panel__header>.gf-day-head[aria-pressed="true"]){border-color:var(--gf-color-primary);box-shadow:var(--gf-focus-ring),var(--gf-shadow-sm)}
 body[data-gf-surface] .gf-day-head__weekday{grid-column:1;color:var(--gf-color-muted);font-size:var(--gf-font-xs);font-weight:var(--gf-weight-semibold);text-transform:uppercase;letter-spacing:.06em}
 body[data-gf-surface] .gf-day-head__number{grid-column:1;font:var(--gf-weight-bold) var(--gf-font-2xl)/1.1 var(--gf-font-display);letter-spacing:-.01em}
 /* Oggi: solo il numero in rosso, senza scritta, così il riquadro resta alto come gli altri */
