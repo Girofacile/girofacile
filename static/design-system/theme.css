@@ -181,6 +181,7 @@
   --gf-z-menu: 40;
   --gf-z-drawer: 80;
   --gf-z-dialog: 100;
+  --gf-z-listbox: 110;
 
   /* --- Nomi di compatibilità: alias, non una seconda palette ------------ */
   --bg: var(--gf-color-bg);

@@ -1174,3 +1174,32 @@ body[data-gf-surface] .gf-anim-logo__pin{transform-box:fill-box;transform-origin
   body[data-gf-surface] .gf-anim-logo__dash{opacity:1}
   body[data-gf-surface] .gf-loader__bar::after{width:50%}
 }
+
+/* Tendina (.gf-listbox): elenco che si apre sotto una <select> con mouse o trackpad (design-system.js).
+   Voce: nome, riga di dettaglio, stato a destra (gf-badge) o spunta se scelta. Posizione calcolata dallo script. */
+body[data-gf-surface] .gf-listbox{
+  --gf-listbox-left:0;--gf-listbox-top:auto;--gf-listbox-bottom:auto;--gf-listbox-width:auto;--gf-listbox-max:none;
+  position:fixed;left:var(--gf-listbox-left);top:var(--gf-listbox-top);bottom:var(--gf-listbox-bottom);z-index:var(--gf-z-listbox);
+  display:flex;flex-direction:column;gap:var(--gf-space-2);width:var(--gf-listbox-width);max-height:var(--gf-listbox-max);
+  padding:var(--gf-space-2);border:var(--gf-border);border-radius:var(--gf-radius-md);background:var(--gf-color-surface);
+  box-shadow:var(--gf-shadow-md);color:var(--gf-color-text);outline:none;
+}
+body[data-gf-surface] .gf-listbox>.gf-search{flex:none}
+body[data-gf-surface] .gf-listbox>.gf-search input{flex:1;min-width:0;border:0;background:transparent;color:inherit;font:inherit;outline:none}
+body[data-gf-surface] .gf-listbox__list{display:grid;gap:2px;min-height:0;overflow-y:auto}
+body[data-gf-surface] .gf-listbox__option{
+  display:flex;align-items:center;gap:var(--gf-space-3);width:100%;padding:var(--gf-space-2) var(--gf-space-3);
+  border:0;border-radius:var(--gf-radius-sm);background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer;
+}
+body[data-gf-surface] .gf-listbox__option[hidden]{display:none}
+body[data-gf-surface] .gf-listbox__option[data-active]{background:var(--gf-color-surface-subtle)}
+body[data-gf-surface] .gf-listbox__option[aria-selected="true"]{background:var(--gf-color-info-bg)}
+body[data-gf-surface] .gf-listbox__option[aria-selected="true"] strong{color:var(--gf-color-info)}
+body[data-gf-surface] .gf-listbox__option>.gf-icon{flex:none;color:var(--gf-color-primary)}
+body[data-gf-surface] .gf-listbox__option>.gf-badge{flex:none}
+body[data-gf-surface] .gf-listbox__option[data-placeholder] strong{color:var(--gf-color-muted);font-weight:var(--gf-weight-medium)}
+body[data-gf-surface] .gf-listbox__option[aria-disabled="true"]{cursor:not-allowed}
+body[data-gf-surface] .gf-listbox__option[aria-disabled="true"] .gf-list-item__main{opacity:.55}
+body[data-gf-surface] .gf-listbox__group{margin:var(--gf-space-2) var(--gf-space-3) 0}
+body[data-gf-surface] .gf-listbox__group[hidden]{display:none}
+body[data-gf-surface] .gf-listbox__empty{margin:0;padding:var(--gf-space-3);color:var(--gf-color-muted);font-size:var(--gf-font-sm)}

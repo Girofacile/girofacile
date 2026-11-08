@@ -203,7 +203,177 @@
     const field = fieldOf(event.target);
     if(field && field.hasAttribute('data-invalid') && event.target.checkValidity && event.target.checkValidity()) field.removeAttribute('data-invalid');
   }
+  // Tendine (.gf-listbox): con mouse o trackpad l'elenco del browser è sostituito da quello di GiroFacile.
+  // La <select> resta l'unica fonte del valore: si sceglie qui, si scrive select.value e partono «input» e
+  // «change» come con la tendina del browser. Sui telefoni resta il selettore nativo. data-gf-native lo esclude.
+  const LISTBOX_SEARCH_FROM = 9;
+  const SVG_PATHS = {check:'M5 12l4 4 10-10', search:'M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14z M20 20l-4-4'};
+  let listbox = null;
+  const finePointer = () => !global.matchMedia || global.matchMedia('(pointer:fine)').matches;
+  function svgIcon(name){
+    const svg = doc.createElementNS('http://www.w3.org/2000/svg','svg'), path = doc.createElementNS('http://www.w3.org/2000/svg','path');
+    svg.setAttribute('viewBox','0 0 24 24'); svg.setAttribute('aria-hidden','true'); svg.setAttribute('class','gf-icon');
+    path.setAttribute('d',SVG_PATHS[name]); svg.appendChild(path); return svg;
+  }
+  function listboxEligible(select){
+    return select && select.tagName === 'SELECT' && !select.multiple && !(select.size > 1) && !select.disabled
+      && !select.closest('[data-gf-native]') && finePointer();
+  }
+  // «alessandro paglietta — già nel mezzo 3» → nome, dettaglio e stato (badge) della voce.
+  function describeOption(option){
+    const text = option.textContent.trim().replace(/\s+/g,' ');
+    const cut = text.search(/\s[—–]\s/);
+    const name = cut > 0 ? text.slice(0,cut) : text, detail = cut > 0 ? text.slice(cut + 3).trim() : '';
+    let badge = null, note = detail, match;
+    if(/^disponibile\.?$/i.test(detail)){ badge = ['success','Disponibile']; note = ''; }
+    else if((match = detail.match(/^già nel (mezzo|giro) (.+)$/i))){ badge = ['info','In ' + match[1].toLowerCase() + ' ' + match[2]]; note = ''; }
+    else if((match = detail.match(/^non disponibile:?\s*(.*)$/i))){ badge = ['neutral','Non disponibile']; note = match[1] ? match[1].charAt(0).toUpperCase() + match[1].slice(1) : ''; }
+    return {name, note, badge};
+  }
+  function closeListbox(focusSelect){
+    if(!listbox) return;
+    const {menu, select} = listbox;
+    listbox = null; menu.remove(); select.removeAttribute('aria-expanded');
+    if(focusSelect) select.focus({preventScroll:true});
+  }
+  function placeListbox(){
+    if(!listbox) return;
+    // Le pagine possono avere uno zoom CSS sul body: si lavora nelle sue coordinate.
+    const {menu, select} = listbox, zoom = menu.currentCSSZoom || 1, box = select.getBoundingClientRect(), gap = 4, margin = 12;
+    const rect = {left:box.left / zoom, top:box.top / zoom, bottom:box.bottom / zoom, width:box.width / zoom};
+    const width = global.innerWidth / zoom, height = global.innerHeight / zoom;
+    const below = height - rect.bottom - margin, above = rect.top - margin;
+    const up = below < 240 && above > below, size = Math.max(rect.width, 260);
+    menu.style.setProperty('--gf-listbox-left', Math.max(margin, Math.min(rect.left, width - size - margin)) + 'px');
+    menu.style.setProperty('--gf-listbox-width', size + 'px');
+    menu.style.setProperty('--gf-listbox-max', Math.max(160, Math.min(420, up ? above : below) - gap) + 'px');
+    menu.style.setProperty('--gf-listbox-top', up ? 'auto' : (rect.bottom + gap) + 'px');
+    menu.style.setProperty('--gf-listbox-bottom', up ? (height - rect.top + gap) + 'px' : 'auto');
+  }
+  function activeOptions(){ return listbox ? Array.from(listbox.list.querySelectorAll('.gf-listbox__option:not([hidden]):not([aria-disabled="true"])')) : []; }
+  function setActive(button){
+    if(!listbox) return;
+    listbox.list.querySelectorAll('[data-active]').forEach(el => el.removeAttribute('data-active'));
+    if(!button) return;
+    button.setAttribute('data-active',''); button.scrollIntoView({block:'nearest'});
+    (listbox.search || listbox.menu).setAttribute('aria-activedescendant', button.id);
+  }
+  function choose(button){
+    if(!listbox || !button || button.getAttribute('aria-disabled') === 'true') return;
+    const select = listbox.select, option = select.options[Number(button.dataset.index)];
+    closeListbox(true);
+    if(!option || select.selectedIndex === option.index) return;
+    select.selectedIndex = option.index;
+    select.dispatchEvent(new Event('input',{bubbles:true}));
+    select.dispatchEvent(new Event('change',{bubbles:true}));
+  }
+  function filterListbox(term){
+    const words = term.toLowerCase().split(/\s+/).filter(Boolean);
+    let visible = 0;
+    listbox.list.querySelectorAll('.gf-listbox__option').forEach(button => {
+      const show = words.every(word => button.dataset.text.includes(word));
+      button.hidden = !show; if(show) visible += 1;
+    });
+    listbox.list.querySelectorAll('.gf-listbox__group').forEach(group => {
+      let next = group.nextElementSibling, any = false;
+      while(next && !next.classList.contains('gf-listbox__group')){ if(!next.hidden) any = true; next = next.nextElementSibling; }
+      group.hidden = !any;
+    });
+    listbox.empty.hidden = visible > 0;
+    setActive(activeOptions()[0]);
+  }
+  function openListbox(select){
+    closeListbox(false);
+    const id = 'gfListbox' + Date.now().toString(36);
+    const menu = doc.createElement('div'), list = doc.createElement('div'), empty = doc.createElement('p');
+    menu.className = 'gf-listbox'; menu.id = id; menu.setAttribute('role','listbox'); menu.tabIndex = -1;
+    const label = select.labels && select.labels[0] ? select.labels[0].textContent.trim() : (select.getAttribute('aria-label') || '');
+    if(label) menu.setAttribute('aria-label', label);
+    list.className = 'gf-listbox__list';
+    empty.className = 'gf-listbox__empty'; empty.textContent = 'Nessun risultato'; empty.hidden = true;
+    let group = null, count = 0;
+    Array.from(select.options).forEach(option => {
+      if(option.hidden) return;
+      const parent = option.parentElement && option.parentElement.tagName === 'OPTGROUP' ? option.parentElement : null;
+      if(parent !== group){
+        group = parent;
+        if(group){ const head = doc.createElement('p'); head.className = 'gf-kicker gf-listbox__group'; head.textContent = group.label; list.appendChild(head); }
+      }
+      const info = describeOption(option), button = doc.createElement('button'), main = doc.createElement('span'), strong = doc.createElement('strong');
+      button.type = 'button'; button.className = 'gf-listbox__option'; button.id = id + '-' + option.index;
+      button.setAttribute('role','option'); button.dataset.index = String(option.index);
+      button.dataset.text = option.textContent.toLowerCase();
+      button.setAttribute('aria-selected', option.selected ? 'true' : 'false');
+      if(option.disabled || (parent && parent.disabled)) button.setAttribute('aria-disabled','true');
+      if(option.value === '') button.setAttribute('data-placeholder','');
+      main.className = 'gf-list-item__main'; strong.textContent = info.name || '—'; main.appendChild(strong);
+      if(info.note){ const small = doc.createElement('small'); small.textContent = info.note; main.appendChild(small); }
+      button.appendChild(main);
+      if(option.selected && option.value !== '') button.appendChild(svgIcon('check'));
+      else if(info.badge){ const badge = doc.createElement('span'); badge.className = 'gf-badge'; badge.dataset.status = info.badge[0]; badge.setAttribute('data-dot',''); badge.textContent = info.badge[1]; button.appendChild(badge); }
+      list.appendChild(button); count += 1;
+    });
+    let search = null;
+    if(count >= LISTBOX_SEARCH_FROM){
+      const box = doc.createElement('label'); box.className = 'gf-search gf-input';
+      search = doc.createElement('input'); search.type = 'search'; search.placeholder = 'Cerca…'; search.autocomplete = 'off';
+      search.setAttribute('aria-label','Cerca nell’elenco'); search.setAttribute('aria-controls', id);
+      box.append(svgIcon('search'), search); menu.appendChild(box);
+      search.addEventListener('input', () => filterListbox(search.value));
+    }
+    menu.append(list, empty);
+    menu.addEventListener('mousedown', event => { if(!event.target.closest('input')) event.preventDefault(); });
+    menu.addEventListener('click', event => choose(event.target.closest('.gf-listbox__option')));
+    menu.addEventListener('mousemove', event => { const button = event.target.closest('.gf-listbox__option:not([aria-disabled="true"])'); if(button && !button.hasAttribute('data-active')) setActive(button); });
+    menu.addEventListener('keydown', listboxKeys);
+    (select.closest('dialog[open]') || doc.body).appendChild(menu);
+    listbox = {menu, list, select, search, empty};
+    select.setAttribute('aria-expanded','true'); select.setAttribute('aria-controls', id);
+    placeListbox();
+    setActive(list.querySelector('.gf-listbox__option[aria-selected="true"]:not([aria-disabled="true"])') || activeOptions()[0]);
+    (search || menu).focus({preventScroll:true});
+  }
+  function listboxKeys(event){
+    if(!listbox) return;
+    const options = activeOptions(), current = options.indexOf(listbox.list.querySelector('[data-active]'));
+    if(event.key === 'ArrowDown' || event.key === 'ArrowUp'){
+      event.preventDefault();
+      const step = event.key === 'ArrowDown' ? 1 : -1;
+      setActive(options[Math.max(0, Math.min(options.length - 1, current + step))]);
+    } else if(event.key === 'Home' || event.key === 'End'){ if(event.target.tagName !== 'INPUT'){ event.preventDefault(); setActive(event.key === 'Home' ? options[0] : options[options.length - 1]); } }
+    else if(event.key === 'Enter'){ event.preventDefault(); choose(options[current]); }
+    else if(event.key === 'Escape'){ event.preventDefault(); event.stopPropagation(); closeListbox(true); }
+    else if(event.key === 'Tab'){ closeListbox(true); }
+    else if(!listbox.search && event.key.length === 1 && /\S/.test(event.key)){
+      const found = options.find(button => button.dataset.text.startsWith(event.key.toLowerCase()));
+      if(found) setActive(found);
+    }
+  }
+  function startListbox(){
+    doc.addEventListener('mousedown', event => {
+      if(listbox && !listbox.menu.contains(event.target)){
+        const same = event.target === listbox.select;
+        closeListbox(false);
+        if(same){ event.preventDefault(); return; }
+      }
+      const select = event.target.closest && event.target.closest('select');
+      if(event.button !== 0 || !listboxEligible(select)) return;
+      event.preventDefault();
+      select.focus({preventScroll:true});
+      openListbox(select);
+    }, true);
+    doc.addEventListener('keydown', event => {
+      const select = event.target;
+      if(!listboxEligible(select) || listbox) return;
+      if(event.key === ' ' || event.key === 'Enter' || event.key === 'F4' || (event.altKey && (event.key === 'ArrowDown' || event.key === 'ArrowUp'))){
+        event.preventDefault(); openListbox(select);
+      }
+    }, true);
+    global.addEventListener('resize', () => closeListbox(false));
+    doc.addEventListener('scroll', event => { if(listbox && !listbox.menu.contains(event.target)) placeListbox(); }, true);
+  }
   function start(){
+    startListbox();
     doc.addEventListener('invalid',markInvalid,true);
     doc.addEventListener('input',clearInvalid,true);
     enhance(doc);

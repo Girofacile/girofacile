@@ -87,6 +87,7 @@ pagina; l'aspetto di un componente deve cambiare nel foglio condiviso.
 | Table/lista mobile | `.gf-table`, `data-gf-responsive="cards"`, celle `data-label` |
 | Modal | `dialog.gf-dialog`; gli overlay legacy conservano il loro box a schermo intero |
 | Dropdown | `details.gf-dropdown` con summary accessibile |
+| Tendina | ogni `select.gf-select` (una scelta): con mouse o trackpad si apre `.gf-listbox` di `design-system.js` al posto dell’elenco del browser. Le voci «nome — dettaglio» mostrano il dettaglio sotto il nome; «disponibile», «già nel mezzo N», «non disponibile: …» diventano un `gf-badge`; voci `disabled` in grigio; ricerca da 9 voci. La select resta la fonte del valore (eventi `input` e `change`). Sui telefoni resta il selettore nativo; `data-gf-native` la esclude |
 | Pagination/tabs | `.gf-pagination`, `.gf-tabs`; stato e ruoli espliciti |
 | Toolbar/filters/search | `.gf-toolbar`, `.gf-search` |
 | Empty/loading | `.gf-empty`, `.gf-loading[role="status"]` |

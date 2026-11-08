@@ -5,6 +5,10 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Tendine nuove in tutto il software (variante A, senza icone colorate): con mouse o trackpad
+  si apre l'elenco di GiroFacile (componente `.gf-listbox`) con nome, riga di dettaglio e stato
+  a destra (Disponibile, In mezzo N, Non disponibile), spunta sulla voce scelta e ricerca da 9
+  voci. La select resta la fonte del valore; sui telefoni resta il selettore nativo.
 - «Aggiungi GiroFacile alla tua Home» (variante B): finestra dopo l'accesso nell'app autista e
   nel portale da telefono, una volta sola. iPhone: tre passaggi (Condividi, Aggiungi alla
   schermata Home, Aggiungi); Android: pulsante «Installa». Non compare se l'app è già
