@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="/static/design-system/components.css?v=gf_tracking_azienda_20261108">
   <link rel="stylesheet" href="/static/design-system/layout.css?v=gf_audit_20261020">
   <script src="/static/design-system/design-system.js?v=gf_tendine_20261108" defer></script>
-  <script src="/static/tracking/app.js?v=gf_tracking_azienda_2_20261108" defer></script>
+  <script src="/static/tracking/app.js?v=gf_tracking_compatto_2_20261108" defer></script>
 </head>
 <!-- Tracking del cliente (versione A approvata l'8 novembre 2026): in alto logo e nome dell'azienda,
      una scheda con stato, tre numeri, avanzamento e avvisi; GiroFacile firma in fondo.
@@ -32,10 +32,10 @@
           <div id="statusRow" hidden><span id="status" class="gf-badge" data-status="info" data-dot></span></div>
         </div>
         <div id="details" class="gf-stack" hidden>
-          <div class="gf-figures">
-            <div class="gf-figures__item" id="etaFigure"><strong class="gf-figures__value" id="eta"></strong><span class="gf-figures__label" id="etaLabel">Arrivo previsto</span></div>
-            <div class="gf-figures__item" id="stopsFigure" hidden><strong class="gf-figures__value" id="stopsCount"></strong><span class="gf-figures__label">Fermate prima della tua</span></div>
-            <div class="gf-figures__item"><strong class="gf-figures__value" id="dateShort"></strong><span class="gf-figures__label">Data prevista</span></div>
+          <div class="gf-stat-strip" data-fit aria-label="Riepilogo della consegna">
+            <div class="gf-stat-strip__cell"><span class="gf-stat-strip__label" id="etaLabel">Arrivo previsto</span><strong class="gf-stat-strip__value" id="eta"></strong></div>
+            <div class="gf-stat-strip__cell" id="stopsFigure" hidden><span class="gf-stat-strip__label">Fermate prima della tua</span><strong class="gf-stat-strip__value" id="stopsCount"></strong></div>
+            <div class="gf-stat-strip__cell"><span class="gf-stat-strip__label">Data prevista</span><strong class="gf-stat-strip__value" id="dateShort"></strong></div>
           </div>
           <ol class="gf-steps" id="steps" aria-label="Avanzamento della consegna">
             <li class="gf-step" data-step="programmata"><strong>Programmata</strong><small id="date"></small></li>

@@ -67,10 +67,10 @@
     el('dateShort').textContent = new Intl.DateTimeFormat('it-IT', {day:'numeric', month:'short', timeZone:'UTC'}).format(new Date(day)).replace('.', '');
     el('etaLabel').textContent = data.eta.source === 'gps' ? 'Arrivo stimato dalla posizione' : data.eta.source === 'execution' ? 'Arrivo stimato aggiornato' : 'Arrivo previsto';
     const terminal = data.refresh_after_seconds === 0;
-    // Senza orario valido (stima scaduta o giro chiuso) il numero non compare: niente orari inventati.
+    // Senza orario valido (stima scaduta o giro chiuso) nessun orario inventato: trattino e spiegazione nell'etichetta.
     const shown = data.eta.at || data.completed_at;
-    el('etaFigure').hidden = !shown;
-    el('eta').textContent = shown ? date(shown, true) : '';
+    el('eta').textContent = shown ? date(shown, true) : '—';
+    if (!shown && !terminal) el('etaLabel').textContent = 'Arrivo in aggiornamento';
     if (data.completed_at) el('etaLabel').textContent = 'Esito registrato alle';
     el('etaDate').textContent = data.completed_at ? date(data.completed_at) : data.eta.at ? `Arrivo ~${date(data.eta.at, true)}` : '';
     // Avanzamento in tre passi; nascosto se la consegna non è andata a buon fine.
