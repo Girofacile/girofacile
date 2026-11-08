@@ -50,6 +50,9 @@ body[data-gf-portal] .bnav-btn span {font-size:var(--gf-font-xs)}
 body[data-gf-surface="driver"] .app>.gf-bottom-nav {position:fixed;left:var(--gf-space-3);right:var(--gf-space-3);bottom:calc(var(--gf-space-3) + env(safe-area-inset-bottom,0px));z-index:var(--gf-z-menu);max-width:calc(var(--gf-content-narrow) - 2 * var(--gf-space-3));margin-inline:auto}
 body[data-gf-surface="driver"] .app:has(>.gf-bottom-nav) .app-main {padding-bottom:calc(var(--gf-bottom-nav-height) + var(--gf-space-12) + env(safe-area-inset-bottom,0px))}
 body[data-gf-surface="driver"] .header-logo img {display:block;width:100%;height:100%;border-radius:var(--gf-radius-sm)}
+/* Chat dell'autista: la casella sta sopra il menu in basso (staccato dal bordo, con il tasto centrale che sporge). */
+body[data-gf-surface="driver"] .app:has(>.gf-bottom-nav) .chat-input-area {bottom:calc(var(--gf-bottom-nav-height) + var(--gf-space-3) + var(--gf-space-6) + env(safe-area-inset-bottom,0px))}
+body[data-gf-surface="driver"] .app:has(>.gf-bottom-nav) .chat-wrap {padding-bottom:calc(var(--gf-bottom-nav-height) + var(--gf-space-3) + var(--gf-space-6) + var(--gf-space-12) + var(--gf-space-6) + env(safe-area-inset-bottom,0px))}
 body[data-gf-portal] :is(.back-btn,.link-btn,.notif-btn,.modal-close,.m-modal-close,.menu-item,.check-row) {min-height:var(--gf-control-touch)}
 body[data-gf-surface="mobile"] :is(.tab-bar,.tab-btn) {border-radius:var(--gf-radius-sm)}
 body[data-gf-surface="mobile"] .tab-bar {background:var(--gf-color-bg);border:1px solid var(--gf-color-border);gap:var(--gf-space-1)}

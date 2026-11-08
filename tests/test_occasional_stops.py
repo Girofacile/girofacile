@@ -141,7 +141,8 @@ def test_driver_lifecycle_and_pod_for_occasional_delivery(routing_env, storage, 
     if action=='complete':
         assert state.signature_object_key and state.delivery_photo_object_key
         assert storage.objects[state.pod_object_key].startswith(b'%PDF')
-        assert client.get(f'/api/driver/delivery/{delivery.id}/evidence/pod').status_code==200
+        assert client.get(f'/api/driver/delivery/{delivery.id}/evidence/pod').status_code==403
+        assert client.get(f'/api/deliveries/{delivery.id}/evidence/pod').status_code==200
         PdfReader = pytest.importorskip('pypdf').PdfReader
         pdf=PdfReader(io.BytesIO(storage.objects[state.pod_object_key]))
         text=' '.join(page.extract_text() for page in pdf.pages)

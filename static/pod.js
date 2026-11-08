@@ -64,9 +64,10 @@ async function podPhotoPayload(required=false, context) {
   } finally { bitmap.close(); }
 }
 
-function podEvidenceButtons(delivery, base, context) {
+// options.pod === false: niente «Scarica POD» (portali dell'autista: il POD è un documento dell'azienda).
+function podEvidenceButtons(delivery, base, context, options = {}) {
   return [['signature','has_signature','Visualizza firma','has_delivery_signature'],['delivery_photo','has_delivery_photo','Visualizza foto','has_photo_proof'],['pod','has_pod','Scarica POD','has_pod_pdf']]
-    .filter(([,flag,,feature])=>delivery[flag] && podFeatureEnabled(feature, context)).map(([kind,,label])=>
+    .filter(([kind,flag,,feature])=>delivery[flag] && podFeatureEnabled(feature, context) && !(kind === 'pod' && options.pod === false)).map(([kind,,label])=>
       `<button type="button" class="btn-mini pod-evidence-action" onclick="podOpenEvidence('${base}/${kind}')">${label}</button>`).join(' ');
 }
 

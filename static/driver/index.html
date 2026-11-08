@@ -257,13 +257,13 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
 <link rel="stylesheet" href="/static/live-gps.css?v=20261005">
 <script src="/static/live-gps.js?v=gf_gps_permesso_20261108"></script>
 <link rel="stylesheet" href="/static/pod.css?v=gf_driver_fix_20261020">
-<script src="/static/pod.js?v=gf_plans_20261023"></script>
+<script src="/static/pod.js?v=gf_pod_azienda_20261108"></script>
 <script src="/static/driver-outbox.js?v=gf_outbox_20261022"></script>
 
 <link rel="stylesheet" href="/static/design-system/theme.css?v=gf_tendine_20261108">
 <link rel="stylesheet" href="/static/design-system/components.css?v=gf_tracking_azienda_20261108">
 <link rel="stylesheet" href="/static/design-system/layout.css?v=gf_audit_20261020">
-<link rel="stylesheet" href="/static/design-system/portals.css?v=gf_autista_a_20261108">
+<link rel="stylesheet" href="/static/design-system/portals.css?v=gf_chat_autista_20261108">
 <script src="/static/design-system/design-system.js?v=gf_tendine_20261108" defer></script>
 <link rel="stylesheet" href="/static/driver-schedule.css?v=gf_break_row_20261021"><script src="/static/driver-schedule.js?v=gf_break_row_20261021"></script>
 <script src="/static/design-system/gf-icons.js?v=gf_telefono_20261108"></script>
@@ -938,7 +938,7 @@ function stopRow(c, i, data, isNext) {
   if(done) meta = `Consegnata${c.tempo_scarico_effettivo?` · scarico ${Number(c.tempo_scarico_effettivo)} min`:''}${c.signed_by_name?` · firma di ${esc(c.signed_by_name)}`:''}${c.note_operatore?` · «${esc(c.note_operatore)}»`:''}`;
   if(missed) meta = `${esc(motivi[c.motivo_mancata] || c.motivo_mancata || 'Mancata')}${c.note_operatore?` · «${esc(c.note_operatore)}»`:''}`;
   const extra = (done || missed)
-    ? `<span class="gf-cluster">${done ? podEvidenceButtons(c, `/api/driver/delivery/${c.id}/evidence`, data) : ''}<button type="button" class="gf-button" data-variant="link" data-size="sm" onclick="openNote(${Number(c.id)})">${c.note_operatore?'Modifica nota':'Aggiungi nota'}</button></span>` : '';
+    ? `<span class="gf-cluster">${done ? podEvidenceButtons(c, `/api/driver/delivery/${c.id}/evidence`, data, {pod:false}) : ''}<button type="button" class="gf-button" data-variant="link" data-size="sm" onclick="openNote(${Number(c.id)})">${c.note_operatore?'Modifica nota':'Aggiungi nota'}</button></span>` : '';
   return `<div class="gf-stop${cls}"><span class="gf-stop__number">${i+1}</span><span class="gf-stop__main"><span class="gf-stop__name">${esc(c.cliente_nome)}</span><span class="gf-stop__meta">${meta}</span>${extra}</span><span class="gf-stop__time">${time}</span></div>`;
 }
 

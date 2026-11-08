@@ -58,6 +58,10 @@ def test_complete_signature_photo_pdf_no_blobs_and_retry(env, storage, portal):
         assert getattr(state, kind + '_size') == len(raw)
         assert getattr(state, kind + '_sha256') == hashlib.sha256(raw).hexdigest()
         response = client.get(f'{prefix}/delivery/{delivery.id}/evidence/{kind}')
+        if kind == 'pod':
+            # Il POD resta all'azienda: dal portale dell'autista non si scarica.
+            assert response.status_code == 403
+            response = client.get(f'/api/deliveries/{delivery.id}/evidence/pod')
         assert response.status_code == 200 and response.json()['expires_in'] == 900
         assert response.headers['cache-control'] == 'no-store'
     assert storage.objects[state.pod_object_key].startswith(b'%PDF')
@@ -166,7 +170,7 @@ def test_tenant_driver_token_and_corrupt_key_isolation(env, storage):
     state = db.query(DeliveryStatus).filter_by(delivery_id=delivery.id).one()
     state.pod_object_key = state.pod_object_key.replace(f'companies/{route.user_id}/', f'companies/{other.id}/')
     db.commit()
-    assert client.get(f'/api/driver/delivery/{delivery.id}/evidence/pod').status_code == 404
+    assert client.get(f'/api/driver/delivery/{delivery.id}/evidence/pod').status_code == 403
     token = db.query(RouteToken).filter_by(token='test-route').one()
     from datetime import datetime, timedelta
     token.expires_at = utc_now() - timedelta(seconds=1)
@@ -461,7 +465,8 @@ def test_driver_completion_saves_signature_photo_and_pod_in_local_archive(env, l
     for kind in ('signature', 'delivery_photo', 'pod'):
         key = getattr(state, kind + '_object_key')
         assert (local_storage / key).is_file()
-        url = client.get(f'/api/driver/delivery/{delivery.id}/evidence/{kind}').json()['url']
+        portal = '/api/deliveries' if kind == 'pod' else '/api/driver/delivery'
+        url = client.get(f'{portal}/{delivery.id}/evidence/{kind}').json()['url']
         served = object_storage.serve_local_object(*_local_link(url))
         assert served.headers['content-disposition'].startswith('attachment' if kind == 'pod' else 'inline')
     assert (local_storage / state.pod_object_key).read_bytes().startswith(b'%PDF')

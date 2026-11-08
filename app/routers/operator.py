@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 from ..core.dependencies import current_user
 from ..core.utils import date_to_iso, time_to_hhmm
 from ..database import get_db
-from ..services.delivery_pod import evidence_metadata, evidence_response, commit_delivery_update
+from ..services.delivery_pod import POD_COMPANY_ONLY, evidence_metadata, evidence_response, commit_delivery_update
 from ..services.plan_features import delivery_preferences
 from ..models import (
     Customer, Delivery, DeliveryStatus, RoutePlan, RouteToken, User
@@ -303,6 +303,8 @@ def operator_evidence(token: str, delivery_id: int, kind: str, db: Session = Dep
     delivery = db.query(Delivery).filter_by(id=delivery_id, route_plan_id=route.id).first()
     if not delivery:
         raise HTTPException(404, 'Consegna non trovata')
+    if kind == 'pod':
+        raise HTTPException(403, POD_COMPANY_ONLY)
     return evidence_response(db, route, delivery, kind)
 
 

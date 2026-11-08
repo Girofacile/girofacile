@@ -18,7 +18,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, case
 
 from ..database import get_db
-from ..services.delivery_pod import evidence_metadata, evidence_response, commit_delivery_update
+from ..services.delivery_pod import POD_COMPANY_ONLY, evidence_metadata, evidence_response, commit_delivery_update
 from ..core.dependencies import current_user, owned
 from ..core.http_security import cookie_options
 from ..core.security import hash_password as secure_hash_password, password_needs_rehash, validate_password_strength, verify_password
@@ -650,6 +650,8 @@ def driver_evidence(delivery_id: int, kind: str, da: DriverAccount = Depends(get
     driver = db.get(Driver, da.driver_id)
     if not route or not driver or route.driver_id != driver.id or route.user_id != driver.user_id:
         raise HTTPException(404, 'Consegna non trovata')
+    if kind == 'pod':
+        raise HTTPException(403, POD_COMPANY_ONLY)
     return evidence_response(db, route, delivery, kind)
 
 

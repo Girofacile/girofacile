@@ -144,7 +144,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 <link rel="stylesheet" href="/static/live-gps.css?v=20261005">
 <script src="/static/live-gps.js?v=gf_gps_permesso_20261108"></script>
 <link rel="stylesheet" href="/static/pod.css?v=gf_driver_fix_20261020">
-<script src="/static/pod.js?v=gf_plans_20261023"></script>
+<script src="/static/pod.js?v=gf_pod_azienda_20261108"></script>
 
 <link rel="stylesheet" href="/static/design-system/theme.css?v=gf_tendine_20261108">
 <link rel="stylesheet" href="/static/design-system/components.css?v=gf_tracking_azienda_20261108">
@@ -421,7 +421,7 @@ function render() {
         html += `<div class="dc-warning">${gfIcon('alert')} ${esc(c.warning.split('|').join(' · '))}</div>`;
       }
       if (isDone) {
-        html += `<div class="dc-done-info">${gfIcon('checkCircle')} Consegnato${c.tempo_scarico_effettivo ? ` in ${c.tempo_scarico_effettivo} min` : ''}${podEvidenceButtons(c, `/api/operator/${token}/delivery/${c.id}/evidence`, routeData)}${c.note_operatore ? ` · "${esc(c.note_operatore)}"` : ''}</div>`;
+        html += `<div class="dc-done-info">${gfIcon('checkCircle')} Consegnato${c.tempo_scarico_effettivo ? ` in ${c.tempo_scarico_effettivo} min` : ''}${podEvidenceButtons(c, `/api/operator/${token}/delivery/${c.id}/evidence`, routeData, {pod:false})}${c.note_operatore ? ` · "${esc(c.note_operatore)}"` : ''}</div>`;
       }
       if (isMissed) {
         const motiviLabels = {assente:'Cliente assente',chiuso:'Attività chiusa',rifiutato:'Consegna rifiutata',altro:'Altro'};

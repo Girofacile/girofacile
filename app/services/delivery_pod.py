@@ -162,6 +162,10 @@ def save_delivery_evidence(db, route, delivery, status, payload, owner, action):
         status.pod_created_at = local_now().replace(tzinfo=None)
 
 
+# Il POD (PDF di consegna) è un documento dell'azienda: i portali dell'autista non lo scaricano.
+POD_COMPANY_ONLY = "Il POD si scarica dal gestionale dell'azienda."
+
+
 def evidence_response(db, route, delivery, kind):
     if kind not in ('signature', 'delivery_photo', 'pod') or delivery.route_plan_id != route.id:
         raise HTTPException(404, 'Documento non trovato')

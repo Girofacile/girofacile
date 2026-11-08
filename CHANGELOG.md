@@ -5,6 +5,9 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- POD solo per l'azienda: l'app autista e il portale via link non mostrano più «Scarica POD» e il
+  server risponde 403 se lo chiedono; firma e foto restano visibili. Chat autista: la casella di
+  scrittura sta sopra il nuovo menu in basso.
 - App autista ridisegnata (versione A): logo GiroFacile vero, «I miei giri» con il giro di oggi in
   grande e i prossimi giorni in elenco (i passati nello Storico); nel giro avanzamento a barra, la
   prossima consegna in una scheda con Naviga, Consegnato/Mancata, Chiama/Nota, e sotto tutte le fermate.
