@@ -409,7 +409,7 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
   <nav class="gf-bottom-nav" aria-label="Menu dell’app autista">
     <button type="button" class="gf-bottom-nav__item" data-nav="dashboard" aria-current="page" onclick="showView('dashboard')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h7v7H3z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7H3z"/></svg><span>Giri</span></button>
     <button type="button" class="gf-bottom-nav__item" data-nav="storico" onclick="showView('storico')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7 M3 4v5h5 M12 7v5l3 2"/></svg><span>Storico</span></button>
-    <button type="button" class="gf-bottom-nav__item" data-primary onclick="navigateNextStop()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l19-9-9 19-2-8z"/></svg><span>Naviga verso la prossima consegna</span></button>
+    <button type="button" class="gf-bottom-nav__item" data-primary onclick="navigateNextStop()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l19-9-9 19-2-8z"/></svg><span>Prossima consegna</span></button>
     <button type="button" class="gf-bottom-nav__item" data-nav="chat" onclick="showView('chat')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg><span>Chat</span><span class="gf-badge hidden" data-status="danger" id="chatBadge">0</span></button>
     <button type="button" class="gf-bottom-nav__item" data-nav="posizione" onclick="showView('posizione')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z M12 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/></svg><span>Posizione</span></button>
   </nav>
@@ -686,17 +686,28 @@ function markNav(name) {
     if(b.dataset.nav === current) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
   });
 }
-// «Naviga»: Google Maps verso la prossima consegna del giro aperto (o di quello in corso).
+// Tasto centrale: dipende da dove si trova l'autista.
+// - Nel giro aperto e avviato: Google Maps verso la prossima consegna (come «Naviga» nella scheda).
+// - Altrove: apre il giro di oggi e mostra la prossima consegna, senza partire con la navigazione.
+// - Giro non ancora avviato: lo apre e ricorda di avviarlo.
 async function navigateNextStop() {
-  if(!currentRouteData) {
-    const running = allRoutes.find(r => r.status === 'in_corso');
-    if(!running) { driverNotice('Nessun giro in corso: avvia il giro di oggi per navigare verso la prossima consegna.', 'warning'); return; }
-    await openExecution(running.id);
+  const inRoute = document.getElementById('view-execution')?.classList.contains('active') && currentRouteData;
+  if(inRoute) {
+    const data = currentRouteData;
+    if(['programmato','bozza'].includes(data.route?.status)) {
+      driverNotice('Avvia il giro per navigare verso la prima consegna.', 'warning');
+      return;
+    }
+    const next = data.consegne?.[data.progress?.prossima_idx];
+    if(!next) { driverNotice('Nessuna consegna da raggiungere in questo giro.', 'warning'); return; }
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(next.indirizzo)}`, '_blank');
+    return;
   }
-  const data = currentRouteData;
-  const next = data?.consegne?.[data.progress?.prossima_idx];
-  if(!next) { driverNotice('Nessuna consegna da raggiungere in questo giro.', 'warning'); return; }
-  window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(next.indirizzo)}`, '_blank');
+  const today = localIsoDate();
+  const route = allRoutes.find(r => r.status === 'in_corso')
+    || allRoutes.find(r => r.data_giro === today && !['completato','annullato'].includes(r.status));
+  if(!route) { driverNotice('Nessun giro da fare oggi.', 'warning'); return; }
+  await openExecution(route.id);
 }
 
 // ============================================================
