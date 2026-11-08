@@ -104,7 +104,7 @@ def main():
                 card.locator('[data-schedule-toggle="shift"] summary').click()
                 card.locator('[data-schedule-toggle="pause"] summary').click()
                 assert page.locator('#fleetShiftStart0').is_visible() and page.locator('#fleetBreakEnd0').is_visible()
-                assert 'Pausa 08:15' in card.locator('[data-schedule-toggle="pause"] summary').inner_text()
+                assert '08:15' in card.locator('[data-schedule-toggle="pause"] summary').inner_text()
                 # Costo carburante: interruttore «Automatico» acceso di default; spento si scrive il prezzo.
                 auto = page.locator('[data-fuel-auto="0"]')
                 assert auto.is_checked()

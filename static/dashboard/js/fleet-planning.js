@@ -65,8 +65,9 @@
   // Testo dei pulsanti turno e pausa: gli orari impostati, oppure l'invito a impostarli.
   function scheduleLabels(schedule){
     const pause=(schedule.breaks||[])[0]||{};
-    return {shift:schedule.start&&schedule.end?`Turno ${schedule.start} – ${schedule.end}`:'Imposta turno',
-      pause:pause.start&&pause.end?`Pausa ${pause.start} – ${pause.end}`:'Aggiungi pausa'};
+    // Solo gli orari: l'icona dice se è turno o pausa (il nome resta nel titolo del pulsante), così stanno su una riga.
+    return {shift:schedule.start&&schedule.end?`${schedule.start} – ${schedule.end}`:'Imposta turno',
+      pause:pause.start&&pause.end?`${pause.start} – ${pause.end}`:'Aggiungi pausa'};
   }
   function extras(r,i){
     const schedule=scheduleOf(r),pause=(schedule.breaks||[])[0]||{},type=vehicleOf(r.vehicle_id)?.alimentazione||'gasolio';
@@ -83,7 +84,7 @@
     const energy=electric||plugin?`<div class="gf-stack" data-gap="sm"><div class="gf-cluster" data-justify="between"><span class="gf-field__label" id="fleetElectricLabel${i}">Energia · €/kWh</span><span class="gf-badge" data-status="neutral">Manuale</span></div>`
       +`<input class="gf-input" id="fleetElectric${i}" type="number" min="0.01" step="0.01" data-index="${i}" data-field="energy_price_electric" value="${r.energy_price_electric}" aria-labelledby="fleetElectricLabel${i}"><small class="gf-field__hint">Prezzo della tua ricarica.</small></div>`:'';
     // Turno e pausa dietro due pulsanti colorati che si aprono nella card; con un errore restano aperti.
-    const toggle=(kind,tone,icon,text,fields)=>`<details class="gf-stack" data-gap="sm" data-schedule-toggle="${kind}" ${error?'open':''}><summary class="gf-chip"><span class="gf-avatar" data-tone="${tone}">${svg(icon)}</span><span data-schedule-label="${kind}${i}">${esc(text)}</span></summary><div class="gf-form-grid">${fields}</div></details>`;
+    const toggle=(kind,tone,icon,text,fields)=>`<details class="gf-stack" data-gap="sm" data-schedule-toggle="${kind}" ${error?'open':''}><summary class="gf-chip" title="${kind==='shift'?'Turno':'Pausa'}"><span class="gf-avatar" data-tone="${tone}">${svg(icon)}</span><span data-schedule-label="${kind}${i}">${esc(text)}</span></summary><div class="gf-form-grid">${fields}</div></details>`;
     // Due colonne fisse: turno e pausa restano sulla stessa riga anche nelle card strette.
     return `<div class="gf-grid" data-cols="2" data-size="sm">${toggle('shift',2,'clock',labels.shift,time('fleetShiftStart'+i,'start',schedule.start,'Inizio turno')+time('fleetShiftEnd'+i,'end',schedule.end,'Fine turno'))}`
       +`${toggle('pause',4,'pause',labels.pause,time('fleetBreakStart'+i,'break-start',pause.start,'Inizio pausa')+time('fleetBreakEnd'+i,'break-end',pause.end,'Fine pausa'))}</div>`
