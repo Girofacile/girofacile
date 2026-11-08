@@ -1166,13 +1166,13 @@ async function loadStorico() {
     if(!past.length) { box.innerHTML = '<div class="gf-empty"><p>Nessun giro nello storico.</p></div>'; return; }
     box.innerHTML = past.map(r => {
       const [label, tone] = outcome(r);
-      const meta = [longDateIt(r.data_giro), r.orario_partenza ? `partenza ${r.orario_partenza}` : '', r.vehicle_nome || ''].filter(Boolean).map(esc).join(' · ');
+      const meta = [r.orario_partenza ? `Partenza ${r.orario_partenza}` : '', r.vehicle_nome || ''].filter(Boolean).map(esc).join(' · ');
       const stats = [gfCount(r.n_consegne,'fermata','fermate'),
         r.status === 'completato' || r.completate ? gfCount(r.completate,'consegnata','consegnate') : '',
         r.mancate ? gfCount(r.mancate,'mancata','mancate') : '', r.totale_km ? `${fmt(r.totale_km)} km` : ''].filter(Boolean).map(esc).join(' · ');
       const note = label === 'Da riprogrammare' ? '<p class="gf-muted">Il giro non è partito: l’ufficio lo riprogrammerà o lo annullerà.</p>' : '';
       return `<section class="gf-card gf-stack" data-gap="sm">
-        <div class="gf-cluster" data-justify="between"><strong>${esc(routeArea(r) || 'Giro')}</strong><span class="gf-badge" data-status="${tone}">${label}</span></div>
+        <div class="gf-cluster" data-justify="between"><strong>${esc(r.nome || longDateIt(r.data_giro))}</strong><span class="gf-badge" data-status="${tone}">${label}</span></div>
         <small class="gf-muted">${meta}</small><small>${stats}</small>${note}
       </section>`;
     }).join('');
