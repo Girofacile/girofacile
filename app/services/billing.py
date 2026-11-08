@@ -238,7 +238,7 @@ def checkout(db, user, plan):
         db.commit()
         return checkout(db, user, plan)
     from ..core.links import base_url as _links_base_url
-    base = _links_base_url(config.APP_BASE_URL).rstrip("/")
+    base = _links_base_url(config.APP_BASE_URL, "app").rstrip("/")
     session = assert_test(stripe.checkout.Session.create(customer=user.stripe_customer_id,
         mode="subscription", payment_method_types=["card"], line_items=[{"price": price, "quantity": 1}],
         metadata={"user_id": str(user.id), "plan": plan}, subscription_data={"metadata": {"user_id": str(user.id)}},

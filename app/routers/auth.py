@@ -568,7 +568,7 @@ def request_password_reset(payload: dict, db: Session = Depends(get_db)):
             if prt is None:
                 continue
             display_name, account_label = _reset_display_for_account(account_type, account, db)
-            reset_url = f"{_links_base_url(APP_BASE_URL)}/reset-password/{prt.token}"
+            reset_url = f"{_links_base_url(APP_BASE_URL, "app")}/reset-password/{prt.token}"
             try:
                 send_password_reset(email, display_name, reset_url, account_label=account_label)
             except Exception as exc:

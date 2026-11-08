@@ -91,8 +91,8 @@ def _create_agent_invite(agent: Agent, db: Session, user: User, is_reinvite: boo
     )
     db.add(st)
     db.commit()
-    setup_url = f"{_links_base_url(APP_BASE_URL)}/agent/setup/{token}"
-    portal_url = f"{_links_base_url(APP_BASE_URL)}/agent"
+    setup_url = f"{_links_base_url(APP_BASE_URL, "agent")}/agent/setup/{token}"
+    portal_url = f"{_links_base_url(APP_BASE_URL, "agent")}/agent"
     sent = False
     try:
         sent = send_agent_invitation(

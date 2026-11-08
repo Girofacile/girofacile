@@ -391,7 +391,7 @@ def _send_driver_invite(driver: Driver, db: Session, user: User, *, is_reinvite:
     from ..routers.driver import create_driver_setup_token
     from ..services.email import send_driver_invitation
 
-    base_url = _links_base_url(APP_BASE_URL).rstrip("/")
+    base_url = _links_base_url(APP_BASE_URL, "driver").rstrip("/")
     token = create_driver_setup_token(driver.id, db)
     setup_url = f"{base_url}/driver/setup/{token}"
     portal_url = f"{base_url}/driver"

@@ -28,7 +28,7 @@ def _digest(token):
 
 
 def _setup_url(token):
-    base = _links_base_url(APP_BASE_URL).rstrip("/")
+    base = _links_base_url(APP_BASE_URL, "app").rstrip("/")
     try:
         parsed = urlsplit(base)
         hostname = parsed.hostname

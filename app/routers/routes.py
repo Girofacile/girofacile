@@ -1015,9 +1015,10 @@ def program_route(
     db.refresh(plan)
 
     from ..core.links import base_url as _links_base_url
-    base_url = (payload or {}).get("base_url") or _links_base_url(os.getenv("APP_BASE_URL", "https://app.girofacile.it"))
+    default_url = os.getenv("APP_BASE_URL", "https://app.girofacile.it")
+    base_url = (payload or {}).get("base_url") or _links_base_url(default_url, "app")
     operator_portal_url = f"{base_url}/giro/{token}"
-    driver_portal_url = f"{base_url}/driver"
+    driver_portal_url = f"{(payload or {}).get('base_url') or _links_base_url(default_url, 'driver')}/driver"
 
     # L'autista deve ricevere il link al suo portale personale, non al link pubblico del giro.
     email_sent = False

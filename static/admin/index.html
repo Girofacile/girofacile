@@ -295,16 +295,16 @@
               </div>
             </section>
             <section class="gf-panel gf-hidden" id="local-addresses-panel" aria-labelledby="local-addresses-title">
-              <header class="gf-panel__header"><div><h3 class="gf-panel__title" id="local-addresses-title">Indirizzi per i test in locale</h3><p class="gf-muted">L’indirizzo con cui telefoni e altri computer aprono GiroFacile: lo usano i link per autisti e agenti, le email e i QR. Solo fuori produzione.</p></div><span class="gf-badge" data-status="info" id="local-addresses-current"></span></header>
-              <div class="gf-panel__body gf-stack">
-                <div class="gf-stack" data-gap="sm"><p class="gf-kicker">Indirizzi di questo computer</p><div class="gf-cluster" id="local-addresses-suggestions"></div></div>
-                <form class="gf-stack" data-gap="sm" onsubmit="event.preventDefault();saveLocalAddress()">
-                  <label class="gf-field" for="local-base-url"><span class="gf-field__label">Indirizzo per i link</span><input class="gf-input" id="local-base-url" placeholder="http://192.168.1.20:8000" autocomplete="off" inputmode="url"></label>
-                  <div class="gf-cluster"><button class="gf-button" data-variant="primary" data-size="sm" type="submit">Salva</button><button class="gf-button" data-variant="ghost" data-size="sm" type="button" onclick="saveLocalAddress('')">Usa l’indirizzo predefinito</button></div>
-                </form>
-                <p class="gf-field__hint">Il telefono deve essere sulla stessa rete Wi‑Fi (o su Tailscale) e GiroFacile va avviato con start_locale_windows.bat, che lo apre anche alla rete.</p>
-              </div>
-              <ul class="gf-list" id="local-portal-links" aria-label="Collegamenti dei portali"></ul>
+              <header class="gf-panel__header"><div><h3 class="gf-panel__title" id="local-addresses-title">Indirizzi per i test in locale</h3><p class="gf-muted">Con quale indirizzo telefoni e altri computer aprono ogni app: lo usano i link per autisti e agenti, le email, il tracking e i QR. Solo fuori produzione.</p></div><span class="gf-badge" data-status="info" id="local-addresses-current"></span></header>
+              <form id="local-addresses-form" onsubmit="event.preventDefault();saveLocalAddresses()">
+                <div class="gf-panel__body gf-stack">
+                  <div class="gf-stack" data-gap="sm"><p class="gf-kicker">Indirizzi di questo computer</p><div class="gf-cluster" id="local-addresses-suggestions"></div><small class="gf-field__hint">Cliccane uno per metterlo nell’indirizzo generale.</small></div>
+                  <label class="gf-field" for="local-base-url"><span class="gf-field__label">Indirizzo generale, per tutte le app</span><input class="gf-input" id="local-base-url" placeholder="http://192.168.1.20:8000" autocomplete="off" inputmode="url"><small class="gf-field__hint">Vuoto: si usa l’indirizzo ufficiale. Sotto puoi dare a ogni app un indirizzo diverso.</small></label>
+                  <p class="gf-field__hint">Il telefono deve essere sulla stessa rete Wi‑Fi (o su Tailscale) e GiroFacile va avviato con start_locale_windows.bat, che lo apre anche alla rete.</p>
+                </div>
+                <ul class="gf-list" id="local-portal-links" aria-label="Indirizzo di ogni app"></ul>
+                <footer class="gf-panel__footer"><button class="gf-button" data-variant="ghost" data-size="sm" type="button" onclick="resetLocalAddresses()">Torna agli indirizzi ufficiali</button><button class="gf-button" data-variant="primary" data-size="sm" type="submit">Salva indirizzi</button></footer>
+              </form>
             </section>
             <div class="gf-grid" data-cols="2">
               <section class="gf-panel">
@@ -1190,24 +1190,32 @@ async function loadLocalAddresses(){
   }catch(e){ gfShow(panel,false); }
 }
 function renderLocalAddresses(data){
-  document.getElementById('local-addresses-current').textContent=data.custom?'Link su '+data.custom:'Link su indirizzo predefinito';
+  const custom=(data.portals||[]).filter(p=>p.custom).length;
+  document.getElementById('local-addresses-current').textContent=data.custom||custom?`Indirizzi per i test attivi${custom?' · '+custom+' app con indirizzo proprio':''}`:'Indirizzi ufficiali';
   document.getElementById('local-base-url').value=data.custom||'';
-  const chips=(data.suggestions||[]).map(s=>`<button class="gf-chip" type="button" aria-pressed="${s.url===data.custom}" onclick="saveLocalAddress('${escapeHtml(s.url)}')">${escapeHtml(s.kind)} · ${escapeHtml(s.url)}</button>`);
+  const chips=(data.suggestions||[]).map(s=>`<button class="gf-chip" type="button" aria-pressed="${s.url===data.custom}" data-local-url="${escapeHtml(s.url)}" onclick="document.getElementById('local-base-url').value=this.dataset.localUrl">${escapeHtml(s.kind)} · ${escapeHtml(s.url)}</button>`);
   document.getElementById('local-addresses-suggestions').innerHTML=chips.join('')||'<span class="gf-muted">Nessuna rete trovata: collega il computer al Wi‑Fi.</span>';
+  const general=data.custom||data.default;
   document.getElementById('local-portal-links').innerHTML=(data.portals||[]).map(p=>`
       <li class="gf-list-item">
-        <div class="gf-list-item__main"><strong>${escapeHtml(p.name)}</strong><small>${escapeHtml(p.hint)}</small><small><code>${escapeHtml(p.url)}</code></small></div>
+        <div class="gf-list-item__main gf-stack" data-gap="sm">
+          <div><strong>${escapeHtml(p.name)}</strong> <small>${escapeHtml(p.hint)}</small></div>
+          <label class="gf-field" for="local-portal-${escapeHtml(p.key)}"><span class="gf-field__label">Indirizzo di ${escapeHtml(p.name)}</span><input class="gf-input" id="local-portal-${escapeHtml(p.key)}" data-local-portal="${escapeHtml(p.key)}" value="${escapeHtml(p.custom)}" placeholder="Come l’indirizzo generale: ${escapeHtml(general)}" autocomplete="off" inputmode="url"></label>
+          <small>Link: <code>${escapeHtml(p.url)}</code></small>
+        </div>
         <div class="gf-cluster"><button class="gf-button" data-variant="secondary" data-size="sm" type="button" data-copy-url="${escapeHtml(p.url)}" onclick="copyLocalLink(this)">Copia</button><a class="gf-button" data-variant="ghost" data-size="sm" href="${escapeHtml(p.url)}" target="_blank" rel="noopener">Apri</a></div>
       </li>`).join('');
 }
-async function saveLocalAddress(value){
-  const base=value===undefined?document.getElementById('local-base-url').value.trim():value;
+async function saveLocalAddresses(payload){
+  const body=payload||{base_url:document.getElementById('local-base-url').value.trim(),
+    portals:Object.fromEntries([...document.querySelectorAll('[data-local-portal]')].map(input=>[input.dataset.localPortal,input.value.trim()]))};
   try{
-    const data=await api('/api/admin/local-addresses',{method:'PUT',body:JSON.stringify({base_url:base})}); if(!data) return;
+    const data=await api('/api/admin/local-addresses',{method:'PUT',body:JSON.stringify(body)}); if(!data) return;
     renderLocalAddresses(data);
-    showToast(data.custom?'I link ora usano '+data.custom:'I link usano di nuovo l’indirizzo predefinito','success');
+    showToast(data.custom||(data.portals||[]).some(p=>p.custom)?'Indirizzi salvati: i nuovi link li useranno':'I link usano di nuovo gli indirizzi ufficiali','success');
   }catch(e){ showToast(e.message,'error'); }
 }
+function resetLocalAddresses(){ saveLocalAddresses({base_url:'',portals:{}}); }
 async function copyLocalLink(button){
   try{ await navigator.clipboard.writeText(button.dataset.copyUrl); showToast('Collegamento copiato','success'); }
   catch(e){ showToast('Copia non riuscita: seleziona il collegamento a mano','error'); }

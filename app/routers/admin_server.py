@@ -4,6 +4,7 @@
 from datetime import datetime
 import os
 import platform
+import json
 import shutil
 import socket
 import sys
@@ -191,13 +192,7 @@ def admin_advanced_server_access(payload: dict, db: Session = Depends(get_db), s
 
 
 # ---------------------------------------------------------------- indirizzi per i test in locale
-PORTAL_LINKS = [
-    ("Gestionale", "/login", "Ufficio: ordini, giri, clienti"),
-    ("App autista", "/driver", "Giri del giorno, fermate e firme"),
-    ("Portale da telefono", "/mobile", "Il gestionale sul telefono"),
-    ("Portale agenti", "/agent", "Ordini e clienti degli agenti"),
-    ("Super Admin", "/admin", "Questo portale"),
-]
+
 
 
 def _network_addresses() -> list[dict]:
@@ -229,15 +224,17 @@ def _network_addresses() -> list[dict]:
 def _local_addresses_payload(request: Request) -> dict:
     port = request.url.port or (443 if request.url.scheme == "https" else 80)
     suffix = "" if port in (80, 443) else f":{port}"
-    current = links.base_url()
+    custom_portals = links.current_portals()
     return {
         "enabled": links.local_override_allowed(),
-        "current": current,
+        "current": links.base_url(),
         "custom": links.current_override(),
         "default": APP_BASE_URL,
         "this_page": f"{request.url.scheme}://{request.url.hostname}{suffix}",
         "suggestions": [{**item, "url": f"http://{item['ip']}{suffix}"} for item in _network_addresses()],
-        "portals": [{"name": name, "url": current + path, "hint": hint} for name, path, hint in PORTAL_LINKS],
+        "portals": [{"key": key, "name": name, "hint": hint, "custom": custom_portals.get(key, ""),
+                     "base": links.base_url(portal=key), "url": links.base_url(portal=key) + path}
+                    for key, (name, path, hint) in links.PORTALS.items()],
     }
 
 
@@ -254,10 +251,14 @@ def admin_local_addresses_save(payload: dict, request: Request, db: Session = De
         raise HTTPException(403, "In produzione i link usano sempre l'indirizzo ufficiale")
     try:
         value = links.normalize(payload.get("base_url"))
+        portals = links.normalize_portals(payload.get("portals")) if "portals" in payload else links.current_portals()
     except ValueError as exc:
         raise HTTPException(422, str(exc))
     _set_setting_value(db, links.LOCAL_BASE_URL_KEY, value)
-    _activity(db, superadmin.get("username"), "local_base_url_updated", f"Indirizzo per i test: {value or 'predefinito'}", "info")
+    _set_setting_value(db, links.LOCAL_PORTAL_URLS_KEY, json.dumps(portals))
+    detail = ", ".join(f"{links.PORTALS[key][0]} {url}" for key, url in portals.items())
+    _activity(db, superadmin.get("username"), "local_base_url_updated",
+              f"Indirizzi per i test: {value or 'predefinito'}" + (f" · {detail}" if detail else ""), "info")
     db.commit()
-    links.set_override(value)
+    links.set_override(value, portals)
     return _local_addresses_payload(request)
