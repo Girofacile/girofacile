@@ -347,15 +347,6 @@ html body[data-gf-portal] .modal-header h3{display:flex;align-items:center;gap:8
 html body[data-gf-surface="agent"] header.top .brand{display:flex;align-items:center;gap:10px}
 html body[data-gf-surface="agent"] header.top .brand small{display:block}
 
-/* Tracking pubblico: marchio e etichette come nel resto del prodotto. */
-html body[data-gf-surface="tracking"]{background:var(--gf-color-bg)!important}
-html body[data-gf-surface="tracking"] header{display:flex;align-items:center;gap:10px}
-html body[data-gf-surface="tracking"] header .gf-unified-brand-mark{width:32px;height:32px}
-html body[data-gf-surface="tracking"] header strong{font:700 19px/1.1 var(--gf-font-display);color:var(--gf-color-text)}
-html body[data-gf-surface="tracking"] header .eyebrow{margin-left:auto}
-html body[data-gf-surface="tracking"] .eyebrow{text-transform:none!important;letter-spacing:0!important;font:600 13px/1.3 var(--gf-font-family)!important;color:var(--gf-color-muted)!important}
-html body[data-gf-surface="tracking"] .card{border:1px solid var(--gf-color-border)!important;border-radius:var(--gf-radius-lg)!important;box-shadow:var(--gf-shadow-sm)!important}
-html body[data-gf-surface="tracking"] h1{font-family:var(--gf-font-display)!important}
 html body[data-gf-surface="mobile"] .dash-stats{box-shadow:none!important;background:var(--gf-color-surface)!important}
 html body[data-gf-surface="mobile"] :is(.dash-stats-row,.dash-stats-inner,.today-stats){background:var(--gf-color-surface-subtle)!important;box-shadow:none!important;border-radius:var(--gf-radius-md)!important}
 html body[data-gf-surface="mobile"] .section-card>.kpi-grid{margin:0!important;box-shadow:none!important}

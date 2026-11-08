@@ -1,11 +1,12 @@
 """Separate company management and anonymous read-only tracking endpoints."""
+import base64
 from pathlib import Path
 from collections import OrderedDict
 import threading
 import time
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from sqlalchemy.orm import Session
 
 from ..core.config import APP_BASE_URL
@@ -41,7 +42,9 @@ def tracking_limit(request: Request):
 def tracking_page():
     return FileResponse(Path(__file__).resolve().parents[2] / 'static/tracking/index.html', headers={
         **PUBLIC_HEADERS,
-        'Content-Security-Policy': "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'",
+        # img-src blob:: il logo dell'azienda arriva con il token nell'intestazione e diventa un blob locale.
+        # Font di GiroFacile da Google Fonts, come nelle altre pagine (theme.css).
+        'Content-Security-Policy': "default-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self'; img-src 'self' blob:; base-uri 'none'; frame-ancestors 'none'; form-action 'none'",
     })
 
 
@@ -49,6 +52,23 @@ def tracking_page():
 def read_tracking(x_tracking_token: str = Header(default=''), db: Session = Depends(get_db)):
     delivery, plan = resolve_link(db, x_tracking_token)
     return JSONResponse(public_projection(db, delivery, plan), headers=PUBLIC_HEADERS)
+
+
+@router.get('/api/public/tracking/logo', dependencies=[Depends(tracking_limit)])
+def read_tracking_logo(x_tracking_token: str = Header(default=''), db: Session = Depends(get_db)):
+    """Logo dell'azienda per la pagina di tracking: stesso token della consegna, mai nell'indirizzo."""
+    _, plan = resolve_link(db, x_tracking_token)
+    owner = db.get(User, plan.user_id)
+    logo = (owner.company_logo_url or '') if owner else ''
+    if not logo.startswith('data:image/') or ';base64,' not in logo:
+        raise HTTPException(404, 'Logo non presente', headers=PUBLIC_HEADERS)
+    header, encoded = logo.split(',', 1)
+    try:
+        raw = base64.b64decode(encoded, validate=True)
+    except ValueError:
+        raise HTTPException(404, 'Logo non presente', headers=PUBLIC_HEADERS) from None
+    media = header[5:].split(';', 1)[0]
+    return Response(raw, media_type=media, headers={**PUBLIC_HEADERS, 'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'"})
 
 
 @router.post('/api/deliveries/{delivery_id}/tracking')

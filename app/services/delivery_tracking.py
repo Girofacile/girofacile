@@ -118,4 +118,15 @@ def public_projection(db, delivery, plan, now=None):
                 'updated_at': iso(entry.get('updated_at')) if not terminal else None},
         'stops_before': before, 'completed_at': iso(completed),
         'refresh_after_seconds': 0 if terminal else 30,
+        'company': public_company(db.get(User, plan.user_id)),
+    }
+
+
+def public_company(owner):
+    """Identità che l'azienda mostra ai clienti: nome, se ha un logo e colore del brand."""
+    logo = (owner.company_logo_url or '') if owner else ''
+    return {
+        'name': (owner.company_name or '').strip() or None if owner else None,
+        'has_logo': logo.startswith('data:image/') and ';base64,' in logo,
+        'brand_color': owner.company_brand_color if owner else None,
     }

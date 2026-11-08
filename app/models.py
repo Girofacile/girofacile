@@ -42,6 +42,8 @@ class User(Base):
     email: Mapped[str | None] = mapped_column(String(200), unique=True, index=True, nullable=True)
     company_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
     company_logo_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # Colore del brand per la pagina di tracking dei clienti (#RRGGBB); vuoto = blu GiroFacile.
+    company_brand_color: Mapped[str | None] = mapped_column(String(7), nullable=True)
     company_email: Mapped[str | None] = mapped_column(String(200), nullable=True)
     company_phone: Mapped[str | None] = mapped_column(String(100), nullable=True)
     company_vat: Mapped[str | None] = mapped_column(String(80), nullable=True)

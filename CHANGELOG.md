@@ -5,6 +5,12 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Tracking del cliente ridisegnato (versione A) con i componenti di GiroFacile: in alto logo e nome
+  dell'azienda, una scheda con stato, numeri grandi (arrivo, fermate prima della tua, data),
+  avanzamento in tre passi e avvisi; «Tracking fornito da GiroFacile» in fondo. Il colore del brand
+  scelto in Azienda ora si salva (migrazione 20261108_01, colonna users.company_brand_color; i colori
+  troppo chiari per il testo bianco sono rifiutati) e colora la pagina. Il logo arriva da
+  /api/public/tracking/logo con lo stesso token. L'anteprima in Azienda segue la pagina vera.
 - Super Admin → Server: sezione «Indirizzi per i test in locale» (solo fuori produzione).
   Mostra gli indirizzi del computer (Wi-Fi, Tailscale), sceglie quello usato nei link
   (inviti autisti e agenti, email, tracking, QR) ed elenca i collegamenti di ogni portale da

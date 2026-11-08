@@ -1,4 +1,4 @@
-/* Profilo azienda: anteprima tracking, colore di prova, completamento e indirizzi uguali alla sede. */
+/* Profilo azienda: anteprima tracking, colore del brand, completamento e indirizzi uguali alla sede. */
 (function () {
   'use strict';
   const byId = id => document.getElementById(id);
@@ -52,20 +52,28 @@
     syncSame();
     const colors=['#1F5BFF','#0B8A7C','#7B4FE0','#C2255C','#D9480F','#2B8A3E','#1F2A44'];
     const swatches=byId('gfRefColors');
-    function selectColor(c){
+    // Il colore scelto va nel campo nascosto companyBrandColor e si salva con il profilo;
+    // il blu predefinito resta vuoto. save=false: solo caricamento, senza segnare modifiche.
+    function selectColor(c,save=true){
       if(!/^#[0-9a-f]{6}$/i.test(c))return;
+      c=c.toUpperCase();
       root.style.setProperty('--gf-ref-color',c);
       [...swatches.querySelectorAll('button')].forEach(btn=>btn.setAttribute('aria-pressed',String(btn.dataset.color===c)));
+      if(!colors.includes(c))custom.value=c.toLowerCase();
+      const hidden=byId('companyBrandColor');
+      if(!hidden)return;
+      hidden.value=c===colors[0]?'':c;
+      if(save&&typeof updateCompanyProfileDirtyStateV29==='function')updateCompanyProfileDirtyStateV29();
     }
     colors.forEach(c=>{
       const btn=document.createElement('button');btn.type='button';btn.className='gf-ref-swatch';
       btn.style.background=c;btn.dataset.color=c;btn.setAttribute('aria-label','Anteprima '+c);
       btn.addEventListener('click',()=>selectColor(c));swatches.appendChild(btn);
     });
-    const custom=document.createElement('input');custom.type='color';custom.value='#1F5BFF';
-    custom.className='gf-ref-custom-color';custom.setAttribute('aria-label','Anteprima colore personalizzato');
+    const custom=document.createElement('input');custom.type='color';custom.value='#1f5bff';
+    custom.className='gf-ref-custom-color';custom.setAttribute('aria-label','Colore del brand personalizzato');
     custom.addEventListener('input',()=>selectColor(custom.value));swatches.appendChild(custom);
-    selectColor('#1F5BFF');
+    selectColor(colors[0],false);
 
     const required=[
       ['companyNameInput','Nome azienda'],['companyPhoneInput','Telefono'],['companyEmailInput','Email aziendale'],
@@ -109,7 +117,7 @@
     }
     tab.addEventListener('input',sync);tab.addEventListener('change',sync);
     sync();
-    window.GFCompanyReference={refresh:sync,syncAddresses:syncSame};
+    window.GFCompanyReference={refresh:sync,syncAddresses:syncSame,setColor:c=>selectColor(c||colors[0],false)};
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);
   else init();

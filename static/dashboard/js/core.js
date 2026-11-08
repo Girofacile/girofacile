@@ -5026,7 +5026,8 @@ function getCompanyProfilePayload(){
     company_activity_type: val("companyActivityTypeInput"),
     company_size: val("companySizeInput"),
     daily_deliveries: val("companyDailyDeliveriesInput"),
-    company_logo_url: val("companyLogoUrl")
+    company_logo_url: val("companyLogoUrl"),
+    company_brand_color: val("companyBrandColor")
   };
 }
 
@@ -5135,6 +5136,8 @@ async function loadCompanyProfile(showToast=false){
     fillSectorSelectV47("companySectorInput", data.company_sector || "");
     set("companyLogoUrl", data.company_logo_url || "");
     setCompanyLogoPreview();
+    set("companyBrandColor", data.company_brand_color || "");
+    window.GFCompanyReference?.setColor?.(data.company_brand_color);
     setCompanyProfileBaselineV29();
     localStorage.setItem("girofacile_company_name", data.company_name || currentSessionUser?.company_name || "");
     currentSessionUser = {...(currentSessionUser || {}), company_name: data.company_name || currentSessionUser?.company_name || ""};

@@ -1,4 +1,5 @@
 from ..services.identity import ensure_login_email_available
+from ..core.brand import normalize_brand_color
 from ..services.unload_time import LIMITS as UNLOAD_LIMITS, settings as unload_settings
 from ..services.platform_policy import require_registration, trial_days, default_plan
 from ..services.sessions import read_session, active_identity, logout_sessions, read_superadmin_session, credential
@@ -651,6 +652,7 @@ def _company_payload(user: User) -> dict:
     return {
         "company_name": user.company_name or user.username,
         "company_logo_url": company_logo_src(user),
+        "company_brand_color": user.company_brand_color or "",
         "company_email": user.company_email or user.email or "",
         "company_phone": user.company_phone or "",
         "company_vat": user.company_vat or "",
@@ -872,7 +874,7 @@ def update_company_profile(payload: dict, user: User = Depends(current_user), db
         if payload.get(preference):
             require_feature(user, feature)
     allowed = {
-        "company_name", "company_logo_url", "company_email", "company_phone",
+        "company_name", "company_logo_url", "company_brand_color", "company_email", "company_phone",
         "company_vat", "company_fiscal_code", "company_pec", "company_sdi",
         "company_address", "company_city", "company_zip", "company_country",
         "company_legal_address", "company_billing_address", "company_sector",
@@ -884,6 +886,11 @@ def update_company_profile(payload: dict, user: User = Depends(current_user), db
     if payload.get("company_logo_url") == company_logo_src(user):
         # Il modulo rimanda l'indirizzo del logo già salvato: nessuna modifica.
         payload = {key: value for key, value in payload.items() if key != "company_logo_url"}
+    if "company_brand_color" in payload:
+        try:
+            payload = {**payload, "company_brand_color": normalize_brand_color(payload.get("company_brand_color"))}
+        except ValueError as exc:
+            raise HTTPException(400, str(exc)) from None
     if "company_logo_url" in payload and payload.get("company_logo_url") != user.company_logo_url:
         payload = {**payload, "company_logo_url": _validated_company_logo(payload.get("company_logo_url"))}
     for key in allowed:

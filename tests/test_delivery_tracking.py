@@ -61,7 +61,8 @@ def test_public_response_contains_only_customer_allowlist(tracking_env):
     token = issue(client, second)
     response = read(client, token)
     assert response.status_code == 200
-    assert set(response.json()) == {'status', 'scheduled_date', 'timezone', 'eta', 'stops_before', 'completed_at', 'refresh_after_seconds'}
+    assert set(response.json()) == {'status', 'scheduled_date', 'timezone', 'eta', 'stops_before', 'completed_at', 'refresh_after_seconds', 'company'}
+    assert set(response.json()['company']) == {'name', 'has_logo', 'brand_color'}
     assert set(response.json()['eta']) == {'at', 'source', 'updated_at'}
     assert 'SEGRETO' not in response.text
     assert response.headers['cache-control'] == 'no-store'
@@ -199,6 +200,41 @@ def test_page_has_no_external_assets_and_safe_headers(tracking_env):
     assert 'noindex' in response.headers['x-robots-tag']
     assert 'name="viewport"' in response.text
     assert 'src="https://' not in response.text
+
+
+def test_company_identity_brand_color_and_logo(tracking_env):
+    client, db, owner, plan, first, *_ = tracking_env
+    import base64, io
+    from app.routers import auth
+    client.app.include_router(auth.router)
+    from PIL import Image
+    buf = io.BytesIO(); Image.new('RGB', (4, 4), (200, 30, 60)).save(buf, 'PNG')
+    logo = 'data:image/png;base64,' + base64.b64encode(buf.getvalue()).decode()
+    saved = client.put('/api/company-profile', json={'company_name': 'Supermercati Iorio', 'company_brand_color': '#c2255c', 'company_logo_url': logo})
+    assert saved.status_code == 200, saved.text
+    assert saved.json()['company']['company_brand_color'] == '#C2255C'
+    # Troppo chiaro (testo bianco illeggibile) o non valido: rifiutato.
+    for bad in ('#FFEE88', 'rosso', '#12345'):
+        assert client.put('/api/company-profile', json={'company_brand_color': bad}).status_code == 400
+    token = issue(client, first)
+    company = read(client, token).json()['company']
+    assert company == {'name': 'Supermercati Iorio', 'has_logo': True, 'brand_color': '#C2255C'}
+    image = client.get('/api/public/tracking/logo', headers={'X-Tracking-Token': token})
+    assert image.status_code == 200 and image.headers['content-type'] == 'image/png'
+    assert image.content == buf.getvalue() and image.headers['cache-control'] == 'no-store'
+    assert client.get('/api/public/tracking/logo', headers={'X-Tracking-Token': 'f' * 64 + '.' + 'f' * 64}).status_code == 404
+    # Torna al blu predefinito e senza logo.
+    client.put('/api/company-profile', json={'company_brand_color': '', 'company_logo_url': ''})
+    assert read(client, token).json()['company']['brand_color'] is None
+    assert client.get('/api/public/tracking/logo', headers={'X-Tracking-Token': token}).status_code == 404
+
+
+def test_page_uses_only_design_system_and_allows_logo_blob(tracking_env):
+    response = tracking_env[0].get('/tracking')
+    assert "img-src 'self' blob:" in response.headers['content-security-policy']
+    for asset in ('theme.css', 'components.css', 'layout.css'):
+        assert f'/static/design-system/{asset}' in response.text
+    assert 'tracking/style.css' not in response.text and 'style=' not in response.text
 
 
 def test_throttling_happens_before_token_resolution(tracking_env):

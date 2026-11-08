@@ -6,40 +6,54 @@
   <meta name="referrer" content="no-referrer">
   <meta name="robots" content="noindex,nofollow,noarchive">
   <title>La tua consegna · GiroFacile</title>
-  <link rel="stylesheet" href="/static/tracking/style.css?v=20261004_design">
-  <script src="/static/tracking/app.js?v=20261004_design" defer></script>
-
-<link rel="stylesheet" href="/static/design-system/theme.css?v=gf_tendine_20261108">
-<link rel="stylesheet" href="/static/design-system/components.css?v=gf_giorno_cerchio_20261108">
-<link rel="stylesheet" href="/static/design-system/layout.css?v=gf_audit_20261020">
-<link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007">
-<script src="/static/design-system/design-system.js?v=gf_tendine_20261108" defer></script>
-<script src="/static/design-system/gf-icons.js?v=gf_unified_20261014_1"></script>
-<link rel="stylesheet" href="/static/design-system/portal-unified.css?v=gf_unified_20261014_1">
+  <link rel="stylesheet" href="/static/design-system/theme.css?v=gf_tendine_20261108">
+  <link rel="stylesheet" href="/static/design-system/components.css?v=gf_tracking_azienda_20261108">
+  <link rel="stylesheet" href="/static/design-system/layout.css?v=gf_audit_20261020">
+  <script src="/static/design-system/design-system.js?v=gf_tendine_20261108" defer></script>
+  <script src="/static/tracking/app.js?v=gf_tracking_azienda_2_20261108" defer></script>
 </head>
-<body data-gf-surface="tracking" data-gf-portal>
-  <main>
-    <header><svg class="gf-unified-brand-mark" viewBox="0 0 34 34" role="img" aria-label="Logo GiroFacile"><rect width="34" height="34" rx="9" fill="#1F5BFF"/><path d="M24 12.2A8.2 8.2 0 1 0 25 17.5H17.5" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="24.2" cy="9.6" r="2.4" fill="#9CC0FF"/></svg><strong>GiroFacile</strong><span class="eyebrow">Tracking consegna</span></header>
-    <section class="card" aria-labelledby="title">
-      <div class="parcel" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 9 5-9 5-9-5 9-5ZM3 8v9l9 5 9-5V8M12 13v9M7.5 5.5l9 5"/></svg></div>
-      <p class="eyebrow">Un aggiornamento per te</p>
-      <h1 id="title">La tua consegna</h1>
-      <p id="message" role="status" aria-live="polite">Stiamo recuperando gli aggiornamenti…</p>
-      <div id="details" hidden>
-        <p id="status" class="badge"></p>
-        <dl>
-          <div><dt>Data prevista</dt><dd id="date"></dd></div>
-          <div class="arrival"><dt id="etaLabel">Arrivo previsto</dt><dd><span id="eta"></span><span id="etaDate" class="eta-date"></span></dd></div>
-        </dl>
-        <p id="stops" class="stops" hidden></p>
-        <p id="completed" hidden></p>
-        <p id="updated" class="muted"></p>
-        <p id="estimateNote" class="muted">L’orario è una stima e può variare durante il giro.</p>
-      </div>
-      <button id="refresh" type="button">Aggiorna</button>
-      <noscript>Attiva JavaScript per visualizzare lo stato aggiornato della consegna.</noscript>
-    </section>
-    <footer><strong>La tua consegna, in un unico posto.</strong><br>Solo le informazioni che ti servono. Nessun account necessario.</footer>
+<!-- Tracking del cliente (versione A approvata l'8 novembre 2026): in alto logo e nome dell'azienda,
+     una scheda con stato, tre numeri, avanzamento e avvisi; GiroFacile firma in fondo.
+     Il colore del brand dell'azienda sostituisce il blu (app.js). -->
+<body data-gf-surface="tracking">
+  <header class="gf-site-header">
+    <div class="gf-site-header__inner">
+      <span class="gf-site-header__brand"><span id="companyLogo" class="gf-avatar" data-tone="1" aria-hidden="true">GF</span><span id="companyName">GiroFacile</span></span>
+      <div class="gf-site-header__actions"><span class="gf-badge" data-status="neutral">Tracking consegna</span></div>
+    </div>
+  </header>
+  <main class="gf-auth__main">
+    <div class="gf-stack">
+      <section class="gf-auth__card" data-size="lg" aria-labelledby="title">
+        <div class="gf-stack" data-gap="sm">
+          <p class="gf-kicker" id="kicker">Un aggiornamento per te</p>
+          <h1 class="gf-title" id="title">La tua consegna</h1>
+          <p class="gf-muted" id="message" role="status" aria-live="polite">Stiamo recuperando gli aggiornamenti…</p>
+          <div id="statusRow" hidden><span id="status" class="gf-badge" data-status="info" data-dot></span></div>
+        </div>
+        <div id="details" class="gf-stack" hidden>
+          <div class="gf-figures">
+            <div class="gf-figures__item" id="etaFigure"><strong class="gf-figures__value" id="eta"></strong><span class="gf-figures__label" id="etaLabel">Arrivo previsto</span></div>
+            <div class="gf-figures__item" id="stopsFigure" hidden><strong class="gf-figures__value" id="stopsCount"></strong><span class="gf-figures__label">Fermate prima della tua</span></div>
+            <div class="gf-figures__item"><strong class="gf-figures__value" id="dateShort"></strong><span class="gf-figures__label">Data prevista</span></div>
+          </div>
+          <ol class="gf-steps" id="steps" aria-label="Avanzamento della consegna">
+            <li class="gf-step" data-step="programmata"><strong>Programmata</strong><small id="date"></small></li>
+            <li class="gf-step" data-step="in_consegna"><strong>In viaggio</strong><small>Giro partito</small></li>
+            <li class="gf-step" data-step="completata"><strong>Consegnata</strong><small id="etaDate"></small></li>
+          </ol>
+          <div class="gf-alert" data-status="info" role="note" id="stopsAlert" hidden>
+            <svg class="gf-alert__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.1-7-11.5A7 7 0 0 1 19 9.5C19 14.9 12 21 12 21z"/><path d="M12 12a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/></svg>
+            <div class="gf-alert__body"><p class="gf-alert__title" id="stops"></p><p class="gf-alert__text" id="stopsText"></p></div>
+          </div>
+          <p class="gf-alert" data-status="success" id="completed" hidden></p>
+          <p class="gf-muted"><span id="updated"></span> <span id="estimateNote">L’orario è una stima e può variare durante il giro.</span></p>
+        </div>
+        <button id="refresh" type="button" class="gf-button" data-variant="primary">Aggiorna</button>
+        <noscript><p class="gf-alert" data-status="warning">Attiva JavaScript per visualizzare lo stato aggiornato della consegna.</p></noscript>
+      </section>
+      <p class="gf-muted gf-cluster" data-justify="center"><img src="/static/girofacile-logo.png" alt="" width="20" height="20">Tracking fornito da GiroFacile · Nessun account necessario</p>
+    </div>
   </main>
 </body>
 </html>
