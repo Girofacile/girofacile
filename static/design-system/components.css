@@ -277,6 +277,8 @@ body[data-gf-surface] .gf-panel__footer{
   display:flex;justify-content:flex-end;gap:var(--gf-space-3);margin-top:auto;
   padding:var(--gf-space-2) var(--gf-space-4);border-top:var(--gf-border);
 }
+/* Piede con contenuto a sinistra (es. riepilogo a badge) e azione a destra. */
+body[data-gf-surface] .gf-panel__footer[data-justify="between"]{justify-content:space-between;align-items:center}
 body[data-gf-surface] .gf-list{margin:0;padding:0;list-style:none}
 body[data-gf-surface] .gf-list-item{display:flex;align-items:center;gap:var(--gf-space-4);padding:var(--gf-space-4) var(--gf-space-5)}
 body[data-gf-surface] .gf-list-item+.gf-list-item{border-top:var(--gf-border)}
