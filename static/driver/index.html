@@ -347,7 +347,7 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
     <!-- STORICO -->
     <div id="view-storico" class="view">
       <div class="page-head"><h2>Storico giri</h2><p>I tuoi giri passati</p></div>
-      <div id="storicoList" style="padding:0 12px 12px"></div>
+      <div id="storicoList" class="delivery-list gf-stack"></div>
     </div>
 
     <!-- POSIZIONE: stato del GPS, richiesta del permesso e istruzioni per sbloccarlo -->
@@ -743,11 +743,11 @@ function renderRoutes() {
   let html = todays.length ? todays.map(r => renderRouteCard(r, today)).join('')
     : `<div class="gf-empty"><p>Nessun giro da fare oggi.</p></div>`;
   if(next.length) {
-    html += `<h3 class="gf-subtitle">Prossimi giri</h3><div class="gf-list">${next.map(r => `
-      <button type="button" class="gf-list-item" onclick="openExecution(${Number(r.id)})" aria-label="Apri il giro di ${esc(longDateIt(r.data_giro))}"><span class="gf-avatar" data-tone="2" aria-hidden="true">${Number(r.data_giro.split('-')[2])}</span>
+    html += `<h3 class="gf-subtitle">Prossimi giri</h3><div class="gf-stack" data-gap="sm">${next.map(r => `
+      <div class="gf-card"><button type="button" class="gf-list-item" onclick="openExecution(${Number(r.id)})" aria-label="Apri il giro di ${esc(longDateIt(r.data_giro))}"><span class="gf-avatar" data-tone="2" aria-hidden="true">${Number(r.data_giro.split('-')[2])}</span>
         <span class="gf-list-item__main"><strong>${esc(longDateIt(r.data_giro))}${r.orario_partenza?` · ${esc(r.orario_partenza)}`:''}</strong>
         <small>${routeArea(r)?`${esc(routeArea(r))} · `:''}${esc(gfCount(r.n_consegne,'fermata','fermate'))}${r.totale_km?` · ${esc(fmt(r.totale_km))} km`:''}</small></span>
-        <span class="gf-badge" data-status="warning">Programmato</span></button>`).join('')}</div>`;
+        <span class="gf-badge" data-status="warning">Programmato</span></button></div>`).join('')}</div>`;
   }
   html += `<button type="button" class="gf-button" data-variant="link" onclick="showView('storico')">Giri passati nello Storico ›</button>`;
   box.innerHTML = html;
@@ -1157,25 +1157,25 @@ async function loadStorico() {
   box.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
   try {
     const routes = await api('/api/driver/routes');
-    const past = routes.filter(r => r.status === 'completato' || r.is_past);
-    if(!past.length) { box.innerHTML = '<div class="section-card"><p style="text-align:center;color:#6b7280;padding:16px">Nessun giro nello storico</p></div>'; return; }
-    box.innerHTML = past.map(r => `
-      <div class="history-item">
-        <div class="hi-head">
-          <div>
-            <div class="hi-name">${esc(r.nome)}</div>
-            <div class="hi-date">${esc(gfDateIt(r.data_giro))} · ${esc(r.orario_partenza||'')}</div>
-          </div>
-          <span class="rc-badge ${r.status==='completato'?'rb-done':'rb-prog'}">${r.status==='completato'?'Completato':'—'}</span>
-        </div>
-        <div class="hi-stats">
-          <span>${gfIcon('pin')} ${gfCount(r.n_consegne,'fermata','fermate')}</span>
-          <span>${gfIcon('checkCircle')} ${gfCount(r.completate,'consegnata','consegnate')}</span>
-          <span>${gfIcon('xCircle')} ${gfCount(r.mancate,'mancata','mancate')}</span>
-          ${r.totale_km?`<span>${gfIcon('route')} ${fmt(r.totale_km)} km</span>`:''}
-        </div>
-      </div>`).join('');
-  } catch(e) { box.innerHTML = `<div class="section-card"><small>Errore: ${esc(e.message)}</small></div>`; }
+    const outcome = r => r.status === 'completato' ? ['Completato', 'success']
+      : r.status === 'annullato' ? ['Annullato', 'danger']
+      : r.is_past && r.status !== 'in_corso' ? ['Da riprogrammare', 'warning'] : null;
+    const past = routes.filter(outcome)
+      .sort((a, b) => (b.data_giro + (b.orario_partenza||'')).localeCompare(a.data_giro + (a.orario_partenza||'')));
+    if(!past.length) { box.innerHTML = '<div class="gf-empty"><p>Nessun giro nello storico.</p></div>'; return; }
+    box.innerHTML = past.map(r => {
+      const [label, tone] = outcome(r);
+      const meta = [longDateIt(r.data_giro), r.orario_partenza ? `partenza ${r.orario_partenza}` : '', r.vehicle_nome || ''].filter(Boolean).map(esc).join(' · ');
+      const stats = [gfCount(r.n_consegne,'fermata','fermate'),
+        r.status === 'completato' || r.completate ? gfCount(r.completate,'consegnata','consegnate') : '',
+        r.mancate ? gfCount(r.mancate,'mancata','mancate') : '', r.totale_km ? `${fmt(r.totale_km)} km` : ''].filter(Boolean).map(esc).join(' · ');
+      const note = label === 'Da riprogrammare' ? '<p class="gf-muted">Il giro non è partito: l’ufficio lo riprogrammerà o lo annullerà.</p>' : '';
+      return `<section class="gf-card gf-stack" data-gap="sm">
+        <div class="gf-cluster" data-justify="between"><strong>${esc(routeArea(r) || 'Giro')}</strong><span class="gf-badge" data-status="${tone}">${label}</span></div>
+        <small class="gf-muted">${meta}</small><small>${stats}</small>${note}
+      </section>`;
+    }).join('');
+  } catch(e) { box.innerHTML = `<p class="gf-alert" data-status="danger">Storico non disponibile: ${esc(e.message)}</p>`; }
 }
 
 // ============================================================
