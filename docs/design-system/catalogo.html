@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="/static/design-system/theme.css?v=gf_tendine_20261108">
 <link rel="stylesheet" href="/static/design-system/components.css?v=gf_riga_stato_20261108">
 <link rel="stylesheet" href="/static/design-system/layout.css?v=gf_banner_unico_20261101">
-<script src="/static/design-system/design-system.js?v=gf_tendine_20261108" defer></script>
+<script src="/static/design-system/design-system.js?v=gf_schede_2_20261108" defer></script>
 <script src="/static/design-system/shell.js?v=gf_scala_20261101" defer></script>
 <script type="application/json" id="gf-shell-nav">
 [
@@ -335,6 +335,7 @@
 <section class="gf-panel gf-catalog-section" id="interazioni" aria-labelledby="interazioni-title">
   <header class="gf-panel__header"><h2 class="gf-panel__title" id="interazioni-title">Schede e finestre</h2><span class="gf-panel__meta">.gf-tabs · dialog.gf-dialog</span></header>
   <div class="gf-panel__body gf-stack">
+    <p class="gf-muted">Nelle finestre di creazione le schede sono <code>[data-gf-form-tabs]</code> con <code>[data-gf-tab]</code> e <code>[data-gf-tab-panel]</code>: <code>GFFormTabs.check()</code> porta alla prima scheda con campi obbligatori mancanti e la segna con «!».</p>
     <div class="gf-tabs" role="tablist" aria-label="Esempio schede"><button class="gf-button" data-variant="ghost" id="kitTabDetails" type="button" role="tab" aria-selected="true" aria-controls="kitPanelDetails">Dettagli</button><button class="gf-button" data-variant="ghost" id="kitTabActivity" type="button" role="tab" aria-selected="false" aria-controls="kitPanelActivity" tabindex="-1">Attività</button></div>
     <div class="gf-card" id="kitPanelDetails" role="tabpanel" aria-labelledby="kitTabDetails"><p class="gf-text">Informazioni principali del cliente.</p></div>
     <div class="gf-card" id="kitPanelActivity" role="tabpanel" aria-labelledby="kitTabActivity" hidden><p class="gf-text">Ultime consegne e note dell'autista.</p></div>

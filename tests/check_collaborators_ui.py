@@ -200,7 +200,7 @@ def main():
                     capture("preset-operator")
 
                     # Starting with a preset must leave every permission editable.
-                    page.locator("#collaboratorPermissionsDetails summary").click()
+                    page.locator('#collaboratorDialog [data-gf-tab="permissions"]').click()
                     page.locator('#collaboratorPermissions input[value="customers.delete"]').uncheck()
                     assert page.locator("#collaboratorPreset").input_value() == "custom"
                     expected = {item["key"] for item in CATALOG} - {"customers.delete"}
@@ -214,6 +214,7 @@ def main():
                     assert page.locator("#collaboratorsActive").inner_text() == "0"
                     assert page.locator("#collaboratorSave").inner_text() == "Salva modifiche"
                     # Saving succeeded even when email delivery failed. Retry uses the existing account.
+                    page.locator('#collaboratorDialog [data-gf-tab="main"]').click()
                     page.locator("#collaboratorResendInvite").click()
                     page.locator("#collaboratorError").filter(has_text="Riprova più tardi").wait_for(state="visible")
                     assert page.locator("#collaboratorDialog").is_visible()
@@ -232,7 +233,7 @@ def main():
                         page.locator("#collaboratorPreset").select_option(key)
                         assert checked_permissions(page) == set(PRESETS[key]["permissions"]), key
                     page.locator("#collaboratorPreset").select_option("read_only")
-                    page.locator("#collaboratorPermissionsDetails summary").click()
+                    page.locator('#collaboratorDialog [data-gf-tab="permissions"]').click()
                     page.locator('#collaboratorPermissions input[value="routes.program"]').check()
                     assert page.locator("#collaboratorPreset").input_value() == "custom"
                     expected = set(normalize_permissions(PRESETS["read_only"]["permissions"] + ["routes.program"]))

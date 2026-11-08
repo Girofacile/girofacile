@@ -323,6 +323,7 @@ def main():
                     page.locator('#tab-mezzi .gf-panel__header button[onclick="createFleetVehicle()"]').click()
                     page.locator("#vehicleDrawer").wait_for(state="visible")
                     page.locator("#vFuelType").select_option("elettrico")
+                    page.locator('#vehicleDrawer [data-gf-tab="energy"]').click()
                     assert page.locator("#vElectricConsumptionWrap").is_visible()
                     assert not page.locator("#vPrimaryConsumptionWrap").is_visible()
                     page.evaluate("resetVehicleForm()")

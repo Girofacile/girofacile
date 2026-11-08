@@ -372,8 +372,109 @@
     global.addEventListener('resize', () => closeListbox(false));
     doc.addEventListener('scroll', event => { if(listbox && !listbox.menu.contains(event.target)) placeListbox(); }, true);
   }
+  // Finestre a schede (versione B approvata l'8 novembre 2026).
+  // Markup: [data-gf-form-tabs] con .gf-tabs > button[data-gf-tab="id"] e pannelli [data-gf-tab-panel="id"].
+  // GFFormTabs.check(root): se un campo [required] è vuoto o non valido apre la prima scheda che ne ha,
+  // segna con «!» tutte le schede incomplete e porta il cursore sul campo. Ogni volta che la finestra
+  // si apre (overlay senza .hidden o <dialog open) torna alla prima scheda, senza segni.
+  function tabRoots(scope){
+    if(!scope) return [];
+    if(scope.matches?.('[data-gf-form-tabs]')) return [scope];
+    return [...scope.querySelectorAll('[data-gf-form-tabs]')];
+  }
+  function selectTab(root, id){
+    root.querySelectorAll('[data-gf-tab]').forEach(tab => {
+      const on = tab.dataset.gfTab === id;
+      tab.setAttribute('aria-selected', String(on));
+      tab.tabIndex = on ? 0 : -1;
+    });
+    root.querySelectorAll('[data-gf-tab-panel]').forEach(panel => { panel.hidden = panel.dataset.gfTabPanel !== id; });
+  }
+  function markTab(tab, missing){
+    let mark = tab.querySelector('[data-gf-tab-missing]');
+    if(missing && !mark){
+      mark = doc.createElement('span');
+      mark.className = 'gf-badge'; mark.dataset.status = 'danger'; mark.dataset.gfTabMissing = '';
+      mark.textContent = '!'; mark.setAttribute('aria-label', 'campi obbligatori mancanti');
+      tab.append(' ', mark);
+    } else if(!missing && mark) mark.remove();
+  }
+  // Un campo nascosto da altro (es. consumo elettrico per i mezzi a gasolio) non conta.
+  function controlCounts(control, panel){
+    for(let node = control.parentElement; node && node !== panel; node = node.parentElement){
+      if(node.hidden || node.classList.contains('hidden') || node.classList.contains('gf-hidden')) return false;
+    }
+    return !control.disabled;
+  }
+  function missingByTab(root){
+    const result = new Map();
+    root.querySelectorAll('[data-gf-tab-panel]').forEach(panel => {
+      const bad = [...panel.querySelectorAll('[required]')].filter(control => controlCounts(control, panel) && control.checkValidity && !control.checkValidity());
+      if(bad.length) result.set(panel.dataset.gfTabPanel, bad);
+    });
+    return result;
+  }
+  function resetTabs(scope){
+    tabRoots(scope).forEach(root => {
+      const first = root.querySelector('[data-gf-tab]');
+      if(first) selectTab(root, first.dataset.gfTab);
+      root.querySelectorAll('[data-gf-tab]').forEach(tab => markTab(tab, false));
+      root.querySelectorAll('[data-invalid]').forEach(field => field.removeAttribute('data-invalid'));
+    });
+  }
+  function checkTabs(scope){
+    for(const root of tabRoots(scope)){
+      const missing = missingByTab(root);
+      root.querySelectorAll('[data-gf-tab]').forEach(tab => markTab(tab, missing.has(tab.dataset.gfTab)));
+      if(!missing.size) continue;
+      const [id, controls] = missing.entries().next().value;
+      selectTab(root, id);
+      controls.forEach(control => fieldOf(control)?.setAttribute('data-invalid', ''));
+      controls[0].focus({preventScroll:false});
+      controls[0].reportValidity?.();
+      announce('Completa i campi obbligatori evidenziati.');
+      return false;
+    }
+    return true;
+  }
+  function startFormTabs(){
+    doc.addEventListener('click', event => {
+      const tab = event.target.closest?.('[data-gf-tab]');
+      if(!tab) return;
+      const root = tab.closest('[data-gf-form-tabs]');
+      if(root) selectTab(root, tab.dataset.gfTab);
+    }, true);  // in cattura: le finestre fermano la propagazione dei clic (stopPropagation)
+    doc.addEventListener('keydown', event => {
+      const tab = event.target.closest?.('[data-gf-tab]');
+      if(!tab || !['ArrowRight','ArrowLeft'].includes(event.key)) return;
+      const tabs = [...tab.closest('[role="tablist"]').querySelectorAll('[data-gf-tab]')];
+      const next = tabs[(tabs.indexOf(tab) + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length];
+      next.click(); next.focus(); event.preventDefault();
+    });
+    // Una scheda completata perde il «!» appena i suoi campi sono a posto.
+    doc.addEventListener('input', event => {
+      const panel = event.target.closest?.('[data-gf-tab-panel]');
+      const root = panel?.closest('[data-gf-form-tabs]');
+      if(!root) return;
+      const tab = root.querySelector(`[data-gf-tab="${panel.dataset.gfTabPanel}"]`);
+      if(tab?.querySelector('[data-gf-tab-missing]') && !missingByTab(root).has(panel.dataset.gfTabPanel)) markTab(tab, false);
+    }, true);
+    tabRoots(doc).forEach(root => {
+      resetTabs(root);
+      const host = root.closest('dialog, .gf-overlay');
+      if(!host || !global.MutationObserver) return;
+      // Si azzera alla chiusura: alla riapertura la finestra parte sempre dalla prima scheda.
+      const visible = () => host.matches('dialog') ? host.open : !host.classList.contains('hidden');
+      if(host.matches('dialog')) host.addEventListener('close', () => resetTabs(root));
+      new global.MutationObserver(() => { if(!visible()) resetTabs(root); })
+        .observe(host, {attributes:true, attributeFilter:['class','open']});
+    });
+  }
+  global.GFFormTabs = Object.freeze({check:checkTabs, reset:resetTabs, select:selectTab});
+
   function start(){
     startListbox();
+    startFormTabs();
     doc.addEventListener('invalid',markInvalid,true);
     doc.addEventListener('input',clearInvalid,true);
     enhance(doc);

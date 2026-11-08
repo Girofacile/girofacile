@@ -134,6 +134,7 @@ def check_pages(page, base, width, output, fit):
     }""")
     panel = page.locator("#tab-mezzi")
     page.locator("#vehicleDrawer").wait_for(state="visible")
+    page.locator('#vehicleDrawer [data-gf-tab="energy"]').click()
     usage = panel.locator("details:has(#vehicleUsageSummary)")
     if usage.count() and not usage.evaluate("(el) => el.open"):
         usage.locator("summary").click()
@@ -141,7 +142,9 @@ def check_pages(page, base, width, output, fit):
     assert panel.get_by_text("Bonus mobilità elettrica", exact=False).count()
     assert panel.get_by_text(re.compile(r"10\s*/\s*10")).count()
     assert panel.get_by_text(re.compile(r"1\s*/\s*2")).count()
+    page.locator('#vehicleDrawer [data-gf-tab="main"]').click()
     page.locator("#vFuelType").select_option("elettrico")
+    page.locator('#vehicleDrawer [data-gf-tab="energy"]').click()
     hint = panel.get_by_text("Questo veicolo rientra nel bonus mobilità elettrica", exact=False).first
     hint.wait_for(state="visible")
     # Check each new quota card and the form message in the actual responsive page.
@@ -151,7 +154,9 @@ def check_pages(page, base, width, output, fit):
         assert box and 0 <= box["x"] and box["x"] + box["width"] <= width + 1
     fit(page, "#vehicleUsageSummary .gf-vehicle-usage-card")
     fit(page, "#vehicleElectricBonusHint")
+    page.locator('#vehicleDrawer [data-gf-tab="main"]').click()
     fit(page, "#vFuelType")
+    page.locator('#vehicleDrawer [data-gf-tab="energy"]').click()
     hint.scroll_into_view_if_needed()
     page.screenshot(path=str(output / f"dashboard-form-{width}.png"), full_page=True)
 

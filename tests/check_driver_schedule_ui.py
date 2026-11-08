@@ -58,7 +58,9 @@ def main():
                 page.locator('#routeDate').fill('2099-01-15');page.locator('#routeStart').fill('08:00');page.locator('#routeStart').blur()
                 page.evaluate('refreshResourceAvailability()')
                 page.evaluate("showTab('autisti');editDriver(1)")
-                page.locator('#driverFormOverlay [data-schedule-editor] summary').click()
+                for field, value in (('#drCognome', 'Uno'), ('#drEmail', 'autista1@example.test')):
+                    if not page.locator(field).input_value(): page.locator(field).fill(value)
+                page.locator('#driverFormOverlay [data-gf-tab="shift"]').click()
                 page.locator('#driverWorkScheduleStart').fill('08:00');page.locator('#driverWorkScheduleEnd').fill('17:00')
                 page.locator('#driverWorkSchedule [data-add-break]').click()
                 page.locator('#driverWorkScheduleBreak0Start').fill('08:15');page.locator('#driverWorkScheduleBreak0End').fill('08:45')
@@ -69,8 +71,8 @@ def main():
                 assert db.get(Driver,1).work_schedule['breaks']==[{'start':'08:15','end':'08:45'}]
                 # The creation form exposes the same controls and persists an independent schedule.
                 page.evaluate('openNewDriverModal()')
-                page.locator('#drNome').fill('Nuovo turnista')
-                page.locator('#driverFormOverlay [data-schedule-editor]').evaluate('(n)=>n.open=true')
+                page.locator('#drNome').fill('Nuovo turnista');page.locator('#drCognome').fill('Rossi');page.locator('#drEmail').fill('turnista@example.test')
+                page.locator('#driverFormOverlay [data-gf-tab="shift"]').click()
                 page.locator('#driverWorkScheduleStart').fill('09:00');page.locator('#driverWorkScheduleEnd').fill('18:00')
                 page.locator('#saveDriverBtn').click();page.locator('#driverFormOverlay').wait_for(state='hidden')
                 assert db.query(Driver).filter_by(nome='Nuovo turnista').one().work_schedule['start']=='09:00'
@@ -79,6 +81,8 @@ def main():
                 page.locator('#fleetVehicle0').select_option('1');page.locator('#fleetDriver0').select_option('1')
                 assert page.locator('#fleetBreakStart0').input_value()=='08:15'
                 # Daily override must not overwrite the driver's normal break.
+                # Turno e pausa sono pulsanti affiancati che si aprono (details): si apre la pausa.
+                page.locator('#fleetResources [data-schedule-toggle="pause"] summary').first.click()
                 page.locator('#fleetBreakEnd0').fill('09:00');page.locator('#fleetBreakEnd0').blur()
                 page.evaluate('rows=>{deliveries=rows;renderDeliveries();}',data['consegne'][:2])
                 page.evaluate('optimizeRoute()')

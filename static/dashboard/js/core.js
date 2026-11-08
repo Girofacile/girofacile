@@ -2642,6 +2642,7 @@ function editVehicle(id){
 }
 function resetVehicleForm(){ clearVehicleLookupHighlightsV8966(); ["vId","vNome","vTarga","vMarca","vModello","vAnnoImmatricolazione","vCarrozzeria","vCilindrata","vPotenzaKw","vClasseEuro","vPhotoUrl"].forEach(id=>set(id,"")); const t=document.getElementById("vTarga"); if(t){t.dataset.lookupProvider="";t.dataset.lookupPlate="";t.dataset.lookupAt="";t.dataset.lookupToken="";} setVehiclePlateLookupStateV896("Inserisci la targa per compilare automaticamente i dati disponibili."); set("vTollClass","B"); set("vFuelType","gasolio"); set("vConsumo",8.5); set("vConsumoKwh",0); updateVehicleEnergyFieldsV895(); set("vKg",1000); set("vColli",100); set("vSponda","false"); set("vZtl","false"); clearFileInput("vPhotoFile"); setVehiclePhotoPreview(); }
 async function saveVehicle(){
+  if(globalThis.GFFormTabs && !GFFormTabs.check(document.getElementById('vehicleDrawer'))) return;
   return withButtonLoading("saveVehicleBtn", "Salvataggio...", async()=>{
     normalizeVehiclePlateInputV896();
     const plateEl=document.getElementById("vTarga");
@@ -2711,6 +2712,7 @@ function editDriver(id){
   openDriverModal();
 }
 async function saveDriver(){
+  if(globalThis.GFFormTabs && !GFFormTabs.check(document.getElementById('driverFormOverlay'))) return;
   return withButtonLoading("saveDriverBtn", "Salvataggio...", async()=>{
     const payload = {work_schedule:GFDriverSchedules.read("driverWorkSchedule"),nome:val("drNome"), cognome:val("drCognome"), telefono:val("drTelefono"), email:val("drEmail"), patente:val("drPatente"), scadenza_patente:val("drScadenzaPatente")||null, cqc:false, scadenza_cqc:null, adr:false, note:val("drNote"), photo_url:val("drPhotoUrl") || null};
     if(!payload.nome){ document.getElementById("drNome")?.reportValidity(); return; }
@@ -2891,6 +2893,7 @@ function openNewAgentModal(){
 }
 
 async function saveAgent(){
+  if(globalThis.GFFormTabs && !GFFormTabs.check(document.getElementById('agentOverlay'))) return;
   if(showLockedOrProceed("agenti")) return;
   return withButtonLoading("saveAgentBtn", "Salvataggio...", async()=>{
     const payload = {
@@ -3094,6 +3097,7 @@ function resetCustomerForm(){
   setCustomerAddressStatus("Indirizzo non ancora verificato.", "muted");
 }
 async function saveCustomer(){
+  if(globalThis.GFFormTabs && !GFFormTabs.check(document.getElementById('customerOverlay'))) return;
   return withButtonLoading("saveCustomerBtn", "Salvataggio...", async()=>{
     const payload = customerPayloadFromModal();
     if(!payload.nome){ alert("Inserisci il nome del cliente"); return; }

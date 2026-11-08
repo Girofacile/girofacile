@@ -5,6 +5,12 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Finestre di creazione a schede (versione B): mezzo, autista, cliente, agente e collaboratore sono
+  finestre centrali della stessa larghezza, con i dati divisi in schede. Campi obbligatori segnati con
+  «*» (mezzo: nome, targa, alimentazione, consumo; autista: nome, cognome, email; deposito: nome e
+  indirizzo; collaboratore: nome, email, profilo; agente: nome, cognome, email, stato; cliente: nome,
+  via, civico, CAP, comune, provincia, tempo di scarico). Premendo «Salva» con dati mancanti si apre la
+  prima scheda incompleta, con «!» su tutte quelle da completare (GFFormTabs in design-system.js).
 - POD solo per l'azienda: l'app autista e il portale via link non mostrano più «Scarica POD» e il
   server risponde 403 se lo chiedono; firma e foto restano visibili. Chat autista: la casella di
   scrittura sta sopra il nuovo menu in basso.
