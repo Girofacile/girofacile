@@ -293,6 +293,9 @@ body[data-gf-surface] :is(.gf-list-item,.gf-table tr)[data-status="danger"] :is(
 body[data-gf-surface] button.gf-list-item[data-status="danger"]:hover{background:var(--gf-color-danger-bg);opacity:.8}
 body[data-gf-surface] .gf-list-item__main strong{font-size:var(--gf-font-md);font-weight:var(--gf-weight-semibold);overflow-wrap:anywhere}
 body[data-gf-surface] .gf-list-item__main small{color:var(--gf-color-muted);font-size:var(--gf-font-sm)}
+/* data-align="top": testo su più righe e stato sempre in alto a destra, senza andare a capo. */
+body[data-gf-surface] .gf-list-item[data-align="top"]{align-items:flex-start}
+body[data-gf-surface] .gf-list-item[data-align="top"]>.gf-badge{flex:none;white-space:nowrap}
 
 /* --- Striscia dei numeri del giorno ---------------------------------------- */
 body[data-gf-surface] .gf-stat-strip{
