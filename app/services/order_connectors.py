@@ -78,8 +78,15 @@ def shop_order(body, provider, excluded=()):
     lines = [] if 'items' in excluded else body.get('line_items') or []
     if not isinstance(lines,list) or len(lines)>500:
         raise ValueError('Troppi articoli')
+    # Telefono del destinatario: spedizione, poi ordine (Shopify) o fatturazione (WooCommerce).
+    # Solo cifre e simboli di un numero, così un formato strano non scarta l'ordine.
+    billing = body.get('billing') if isinstance(body.get('billing'), dict) else {}
+    raw_phone = address.get('phone') or (body.get('phone') if provider == 'shopify' else billing.get('phone')) or ''
+    phone = re.sub(r'\([^0-9]*\)', '', re.sub(r'[^0-9+()./ -]', '', str(raw_phone)))
+    phone = re.sub(r'\s+', ' ', phone).strip()[:40] or None
     return {'external_id': str(body['id']), 'number': str(body.get('name' if provider=='shopify' else 'number') or body['id']),
             'recipient_name': name, 'delivery_address': destination,
+            **({} if 'phone' in excluded or not phone else {'phone': phone}),
             'notes': ' · '.join(x for x in (body.get('note' if provider=='shopify' else 'customer_note'), value(keys[1])) if x) or None,
             'items': [{'description': line.get('title') or line.get('name') or '', 'sku': line.get('sku') or None,
                        'quantity': line.get('quantity')} for line in lines]}

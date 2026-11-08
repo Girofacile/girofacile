@@ -147,3 +147,22 @@ def test_connector_permissions_and_owner_only_configuration(connectors):
     client.app.dependency_overrides[current_user]=collaborator
     assert client.post(path,json={'name':'Email','provider':'email'}).status_code==403
     assert db.query(OrderSource).count()==0
+
+
+def test_shop_orders_bring_recipient_phone_unless_excluded():
+    from app.services.order_connectors import shop_order
+    shopify = {'id': 1, 'name': '#1001', 'phone': '+39 06 000',
+               'shipping_address': {'name': 'Mario Rossi', 'address1': 'Via Roma 1', 'city': 'Napoli', 'zip': '80100', 'phone': '+39 333 123 4567 (casa)'}}
+    assert shop_order(shopify, 'shopify')['phone'] == '+39 333 123 4567'
+    assert 'phone' not in shop_order(shopify, 'shopify', ('phone',))
+    woo = {'id': 7, 'number': '7', 'shipping': {'first_name': 'Anna', 'address_1': 'Via Po 2', 'city': 'Torino', 'postcode': '10100'},
+           'billing': {'phone': '011 555 1234'}}
+    assert shop_order(woo, 'woocommerce')['phone'] == '011 555 1234'
+    woo['billing'] = {}
+    assert 'phone' not in shop_order(woo, 'woocommerce')
+
+
+def test_phone_is_an_optional_import_field():
+    from app.services.order_files import FIELDS, suggestions
+    assert 'phone' in FIELDS
+    assert suggestions(['Destinatario', 'Cellulare', 'Indirizzo'])['phone'] == 'Cellulare'

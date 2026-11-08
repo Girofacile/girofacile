@@ -5,6 +5,8 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Fonti ordini: «Telefono» tra i dati facoltativi da importare (si può escludere come gli altri).
+  Shopify e WooCommerce ora leggono il telefono di spedizione (poi ordine o fatturazione).
 - Ordini: nuovo campo facoltativo «Telefono destinatario» (`phone`) nel modulo, nel dettaglio, nelle
   importazioni da file (colonne telefono, tel, cellulare, recapito) e nell'API delle fonti. Salvato con i
   dati operativi, senza migrazione. Nell'app autista «Chiama» usa la scheda cliente e, se manca, il
