@@ -84,7 +84,8 @@
       +`<input class="gf-input" id="fleetElectric${i}" type="number" min="0.01" step="0.01" data-index="${i}" data-field="energy_price_electric" value="${r.energy_price_electric}" aria-labelledby="fleetElectricLabel${i}"><small class="gf-field__hint">Prezzo della tua ricarica.</small></div>`:'';
     // Turno e pausa dietro due pulsanti colorati che si aprono nella card; con un errore restano aperti.
     const toggle=(kind,tone,icon,text,fields)=>`<details class="gf-stack" data-gap="sm" data-schedule-toggle="${kind}" ${error?'open':''}><summary class="gf-chip"><span class="gf-avatar" data-tone="${tone}">${svg(icon)}</span><span data-schedule-label="${kind}${i}">${esc(text)}</span></summary><div class="gf-form-grid">${fields}</div></details>`;
-    return `<div class="gf-cluster">${toggle('shift',2,'clock',labels.shift,time('fleetShiftStart'+i,'start',schedule.start,'Inizio turno')+time('fleetShiftEnd'+i,'end',schedule.end,'Fine turno'))}`
+    // Due colonne fisse: turno e pausa restano sulla stessa riga anche nelle card strette.
+    return `<div class="gf-grid" data-cols="2" data-size="sm">${toggle('shift',2,'clock',labels.shift,time('fleetShiftStart'+i,'start',schedule.start,'Inizio turno')+time('fleetShiftEnd'+i,'end',schedule.end,'Fine turno'))}`
       +`${toggle('pause',4,'pause',labels.pause,time('fleetBreakStart'+i,'break-start',pause.start,'Inizio pausa')+time('fleetBreakEnd'+i,'break-end',pause.end,'Fine pausa'))}</div>`
       +`<div class="gf-field" ${error?'data-invalid':''} data-schedule-state="${i}"><p class="gf-field__error" role="alert">${esc(error)}</p></div>${fuel}${energy}`;
   }
