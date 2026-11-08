@@ -40,7 +40,8 @@ for(const width of [390,1440]){
 
 test('shared planning view explains availability without hiding registry',()=>{
   const html=fs.readFileSync('static/dashboard/index.html','utf8');
-  assert.match(html,/Sono disponibili per la pianificazione solo i clienti con indirizzo verificato/);
-  assert.equal((html.match(/id="customerPickerList"/g)||[]).length,1);
+  // Il vecchio pannello «Seleziona clienti» è stato tolto: si usa la finestra «Aggiungi clienti».
+  assert.doesNotMatch(html,/id="customerPlanningStep"|id="customerPickerList"/);
+  assert.match(html,/openPlanningCustomerPicker\(\)/);
   assert.match(core,/async function loadCustomers\(/);
 });

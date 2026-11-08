@@ -5,6 +5,8 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Pianificazione: tolto il vecchio pannello «Seleziona clienti», che ricompariva tornando alla
+  pianificazione dopo un calcolo. I clienti si aggiungono solo dalla finestra «Aggiungi clienti».
 - Fonti ordini: «Telefono» tra i dati facoltativi da importare (si può escludere come gli altri).
   Shopify e WooCommerce ora leggono il telefono di spedizione (poi ordine o fatturazione).
 - Ordini: nuovo campo facoltativo «Telefono destinatario» (`phone`) nel modulo, nel dettaglio, nelle

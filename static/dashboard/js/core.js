@@ -1795,7 +1795,7 @@ function updateRoutePlanningGateV68(){
     picker?.classList.add("hidden");
     workbench?.classList.add("hidden");
   }else if(customerPlanningStepOpenedV68){
-    picker?.classList.remove("hidden");
+    // Il vecchio pannello «Seleziona clienti» non esiste più: resta la tabella delle consegne.
     workbench?.classList.remove("hidden");
   }
   globalThis.GFOrderPlanning?.gate();
@@ -1811,7 +1811,7 @@ function openCustomerPlanningStep(){
   customerPlanningStepOpenedV68 = true;
   updateRoutePlanningGateV68();
   loadCustomerPicker();
-  document.getElementById("customerPlanningStep")?.scrollIntoView({behavior:"smooth", block:"start"});
+  document.getElementById("deliveryWorkbenchStep")?.scrollIntoView({behavior:"smooth", block:"start"});
 }
 
 // Pianificazione (layout C4): presentazione collegata ai campi esistenti, nessuna logica nuova di calcolo.

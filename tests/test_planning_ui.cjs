@@ -29,7 +29,8 @@ test('completion action focuses missing details and never opens customers premat
   Object.assign(f.fields,{routeStart:'08:00',routeVehicle:'1',routeDriver:'1'});
   f.run('advanceRoutePlanning()');
   assert.equal(f.state.opened,1);
-  assert.equal(f.node('customerPlanningStep').classList.contains('hidden'),false);
+  assert.equal(f.node('deliveryWorkbenchStep').classList.contains('hidden'),false);
+  assert.equal(f.node('customerPlanningStep').classList.contains('hidden'),true);
   assert.match(f.node('planningChecklist').innerHTML,/Nome automatico/);
   f.fields.routeDriver='';
   f.run('updateRoutePlanningGateV68()');

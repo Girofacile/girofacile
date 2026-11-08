@@ -534,24 +534,6 @@
           </div>
         </section>
 
-        <section class="gf-panel hidden" id="customerPlanningStep" aria-labelledby="customerPlanningTitle">
-          <header class="gf-panel__header">
-            <div><h2 class="gf-panel__title" id="customerPlanningTitle"><span>Seleziona </span><span data-gf-label="customers">clienti</span></h2></div>
-            <div class="gf-cluster"><button type="button" class="gf-button" data-variant="primary" data-size="sm" onclick="openOccasionalStopModal()">+ Fermata occasionale</button><button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="closeCustomerPlanningStep()">Nascondi selezione</button></div>
-          </header>
-          <div class="gf-panel__body gf-stack">
-            <div><strong data-gf-label="customers">Clienti disponibili</strong> <small class="gf-muted">Usa i filtri per zona, ZTL o sponda</small></div>
-            <div class="gf-cluster">
-              <input class="gf-input" id="pickQ" placeholder="Nome, codice o indirizzo" aria-label="Nome, codice o indirizzo" oninput="loadCustomerPicker()">
-              <input class="gf-input" id="pickComune" placeholder="Comune / zona" aria-label="Comune / zona" oninput="loadCustomerPicker()">
-              <input class="gf-input" id="pickProvincia" placeholder="Provincia" aria-label="Provincia" oninput="loadCustomerPicker()">
-              <select class="gf-select" data-gf-feature="ztl" id="pickZtl" aria-label="ZTL" onchange="loadCustomerPicker()"><option value="">ZTL tutte</option><option value="true">Solo ZTL</option><option value="false">No ZTL</option></select>
-              <select class="gf-select" data-gf-feature="tail_lift" id="pickSponda" aria-label="Sponda" onchange="loadCustomerPicker()"><option value="">Sponda tutte</option><option value="true">Serve sponda</option><option value="false">No sponda</option></select>
-            </div>
-            <p class="gf-muted">Sono disponibili per la pianificazione solo i clienti con indirizzo verificato.</p>
-          </div>
-          <div id="customerPickerList"></div>
-        </section>
 
         <!-- Consegne del giro: a tutta larghezza e sempre aperte mentre si scelgono mezzi e autisti -->
           <section id="deliveryWorkbenchStep" class="gf-panel hidden" aria-labelledby="deliveryWorkbenchTitle">
@@ -1672,7 +1654,7 @@
 <script src="/static/dashboard/js/order-sources.js?v=gf_telefono_ordine_20261108"></script>
 <script src="/static/dashboard/js/dashboard-real-map.js?v=gf_priority_hero_20261025"></script>
 <script src="/static/dashboard/js/in-progress-reference.js?v=gf_giri_tabella_20261104"></script>
-<script src="/static/dashboard/js/core.js?v=gf_brand_tracking_20261108"></script>
+<script src="/static/dashboard/js/core.js?v=gf_senza_seleziona_clienti_20261108"></script>
 <script src="/static/dashboard/js/dashboard-mobile.js?v=gf_dashboard_mobile_20261019"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=orders_2"></script>
 <link rel="stylesheet" href="/static/dashboard/css/fleet-review.css?v=gf_suddivisione_20261025">
