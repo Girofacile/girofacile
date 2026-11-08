@@ -133,7 +133,8 @@ def run(browser, width, output):
         route = db.query(RoutePlan).one()
         db.refresh(route)
         assert route.status == 'programmato', route.status
-        expect(page.locator('#tab-dashboard-scheduled')).to_contain_text(route.nome)
+        # La settimana mostra autista e orario, non il nome completo del giro.
+        expect(page.locator('#tab-dashboard-scheduled')).to_contain_text('Planner driver')
         check_text('giri programmati', page.locator('#tab-dashboard-scheduled').inner_text())
         # 5. Dettaglio del giro programmato a pagina intera: barra con icone, mappa, fermate, tabella.
         page.locator('#tab-dashboard-scheduled').get_by_role('button', name='Apri giro').first.click()
@@ -181,11 +182,11 @@ def run(browser, width, output):
             login = client.post('/api/driver/login', json={'email': driver.email, 'password': DRIVER_PASSWORD})
             assert login.status_code == 200, login.text
             page.goto('http://flow.test/driver', wait_until='networkidle')
-            expect(page.locator('#dashDriverName')).to_contain_text('ecco i giri assegnati a te')
+            expect(page.locator('#dashGreeting')).to_contain_text('Ciao')
             detail_api = client.get(f'/api/driver/routes/{route.id}').json()['route']
             assert not {'costo_totale', 'costo_carburante', 'toll_estimated_eur'} & detail_api.keys(), 'costi esposti all’autista'
-            page.get_by_role('button', name='Dettaglio').first.click()
-            start = page.get_by_role('button', name='▶ Avvia giro per registrare le consegne')
+            page.get_by_role('button', name='Vedi le fermate').first.click()
+            start = page.get_by_role('button', name='Avvia giro per registrare le consegne')
             expect(start).to_be_visible()
             assert page.get_by_role('button', name='Consegnato', exact=True).count() == 0, 'esiti disponibili prima dell’avvio'
             start.click()

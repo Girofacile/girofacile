@@ -259,7 +259,7 @@ def run_migrations(engine):
             if '20261108_01' not in applied:
                 # Colore del brand dell'azienda, usato nella pagina di tracking dei clienti.
                 with engine.begin() as conn:
-                    if 'company_brand_color' not in {c['name'] for c in inspect(conn).get_columns('users')}:
+                    if 'users' in set(inspect(conn).get_table_names()) and 'company_brand_color' not in {c['name'] for c in inspect(conn).get_columns('users')}:
                         conn.execute(text('ALTER TABLE users ADD COLUMN company_brand_color VARCHAR(7)'))
                     conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261108_01', 'now': utc_now()})
         finally:

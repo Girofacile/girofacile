@@ -46,6 +46,10 @@ body:is([data-gf-surface="mobile"],[data-gf-surface="driver"]) .bottom-nav {widt
 body:is([data-gf-surface="mobile"],[data-gf-surface="driver"]) .bnav-btn {min-height:var(--gf-control-touch);border-radius:var(--gf-radius-sm);font-size:var(--gf-font-xs);color:var(--gf-color-muted)}
 body:is([data-gf-surface="mobile"],[data-gf-surface="driver"]) .bnav-btn.active {background:var(--gf-color-info-bg);color:var(--gf-color-primary)}
 body[data-gf-portal] .bnav-btn span {font-size:var(--gf-font-xs)}
+/* App autista: menu in basso del sistema di stile, fisso e staccato dai bordi come nel gestionale su telefono. */
+body[data-gf-surface="driver"] .app>.gf-bottom-nav {position:fixed;left:var(--gf-space-3);right:var(--gf-space-3);bottom:calc(var(--gf-space-3) + env(safe-area-inset-bottom,0px));z-index:var(--gf-z-menu);max-width:calc(var(--gf-content-narrow) - 2 * var(--gf-space-3));margin-inline:auto}
+body[data-gf-surface="driver"] .app:has(>.gf-bottom-nav) .app-main {padding-bottom:calc(var(--gf-bottom-nav-height) + var(--gf-space-12) + env(safe-area-inset-bottom,0px))}
+body[data-gf-surface="driver"] .header-logo img {display:block;width:100%;height:100%;border-radius:var(--gf-radius-sm)}
 body[data-gf-portal] :is(.back-btn,.link-btn,.notif-btn,.modal-close,.m-modal-close,.menu-item,.check-row) {min-height:var(--gf-control-touch)}
 body[data-gf-surface="mobile"] :is(.tab-bar,.tab-btn) {border-radius:var(--gf-radius-sm)}
 body[data-gf-surface="mobile"] .tab-bar {background:var(--gf-color-bg);border:1px solid var(--gf-color-border);gap:var(--gf-space-1)}

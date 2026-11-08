@@ -58,18 +58,12 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 .header-title span{color:var(--blue);}
 .header-driver{font-size:12px;color:#6b7280;margin-top:1px;}
 .header-right{display:flex;align-items:center;gap:10px;}
-.notif-btn{background:none;border:none;cursor:pointer;position:relative;padding:4px;}
 .notif-badge{position:absolute;top:0;right:0;width:16px;height:16px;background:var(--red);color:#fff;font-size:9px;font-weight:700;border-radius:50%;display:flex;align-items:center;justify-content:center;}
 
 /* MAIN */
 .app-main{flex:1;overflow-y:auto;padding-bottom:calc(var(--nav-h) + var(--safe-bottom) + 16px);}
 body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
 
-/* BOTTOM NAV */
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;height:calc(var(--nav-h) + var(--safe-bottom));background:#fff;border-top:1px solid var(--border);display:flex;align-items:flex-start;padding-top:6px;padding-bottom:var(--safe-bottom);z-index:100;box-shadow:0 -2px 12px rgba(0,0,0,.06);}
-.bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;color:#6b7280;cursor:pointer;padding:4px 0;font-size:10px;font-weight:500;-webkit-tap-highlight-color:transparent;}
-.bnav-btn.active{color:var(--blue);}
-.bnav-btn svg{stroke:currentColor;}
 
 /* VIEWS */
 .view{display:none;}
@@ -270,7 +264,7 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
 <script src="/static/format.js?v=gf_driver_flow_20261020"></script>
 <script src="/static/routing-summary.js?v=gf_driver_fix_20261020"></script>
 <link rel="stylesheet" href="/static/live-gps.css?v=20261005">
-<script src="/static/live-gps.js?v=20261005"></script>
+<script src="/static/live-gps.js?v=gf_gps_permesso_20261108"></script>
 <link rel="stylesheet" href="/static/pod.css?v=gf_driver_fix_20261020">
 <script src="/static/pod.js?v=gf_plans_20261023"></script>
 <script src="/static/driver-outbox.js?v=gf_outbox_20261022"></script>
@@ -278,7 +272,7 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
 <link rel="stylesheet" href="/static/design-system/theme.css?v=gf_tendine_20261108">
 <link rel="stylesheet" href="/static/design-system/components.css?v=gf_tracking_azienda_20261108">
 <link rel="stylesheet" href="/static/design-system/layout.css?v=gf_audit_20261020">
-<link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261020_notice">
+<link rel="stylesheet" href="/static/design-system/portals.css?v=gf_autista_a_20261108">
 <script src="/static/design-system/design-system.js?v=gf_tendine_20261108" defer></script>
 <link rel="stylesheet" href="/static/driver-schedule.css?v=gf_break_row_20261021"><script src="/static/driver-schedule.js?v=gf_break_row_20261021"></script>
 <script src="/static/design-system/gf-icons.js?v=gf_telefono_20261108"></script>
@@ -314,65 +308,47 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
 <!-- APP -->
 <div id="driverApp" class="app hidden">
 
-  <!-- HEADER -->
+  <!-- HEADER: logo GiroFacile, nome dell'autista, pallino GPS (apre «Posizione») -->
   <div class="app-header">
     <div class="header-left">
-      <div class="header-logo gf-brand-slot"><svg class="gf-unified-brand-mark" viewBox="0 0 34 34" role="img" aria-label="Logo GiroFacile"><rect width="34" height="34" rx="9" fill="#1F5BFF"/><path d="M24 12.2A8.2 8.2 0 1 0 25 17.5H17.5" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="24.2" cy="9.6" r="2.4" fill="#9CC0FF"/></svg></div>
+      <div class="header-logo gf-brand-slot"><img src="/static/girofacile-logo.png" alt="Logo GiroFacile" width="36" height="36"></div>
       <div>
         <div class="header-title">GiroFacile</div>
         <div class="header-driver" id="headerDriverName">Portale Autista</div>
       </div>
     </div>
     <div class="header-right">
-      <button class="notif-btn" data-driver-feature="has_driver_chat" onclick="showView('chat', document.querySelector('.bnav-btn:nth-child(3)'))">
-        <svg width="22" height="22" fill="none" stroke="#6b7280" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        <span class="notif-badge hidden" id="chatBadge">0</span>
-      </button>
+      <button type="button" class="gf-badge" data-status="neutral" data-dot data-gps-badge onclick="showView('posizione')">GPS</button>
       <button id="backAdminBtnV79" class="hidden" onclick="window.location.href='/dashboard'" style="background:#eef2ff;border:1px solid #c7d2fe;color:#3730a3;cursor:pointer;font-size:13px;padding:8px 12px;border-radius:10px;font-weight:700;">← Dashboard amministratore</button>
-      <button onclick="doLogout()" style="background:none;border:none;color:#6b7280;cursor:pointer;font-size:13px;">Esci</button>
+      <button type="button" class="gf-button" data-variant="ghost" data-size="sm" onclick="doLogout()">Esci</button>
     </div>
   </div>
 
   <div class="app-main">
 
-    <!-- DASHBOARD GIRI -->
+    <!-- I MIEI GIRI: il giro di oggi in grande, poi i prossimi giorni; i passati sono nello Storico -->
     <div id="view-dashboard" class="view active">
-      <div class="page-head"><h2>I miei giri</h2><p id="dashDriverName">I giri assegnati a te</p></div>
-      <div id="routesList" style="padding:0 12px 12px"></div>
+      <div class="page-head"><h2 id="dashGreeting">I miei giri</h2></div>
+      <div id="routesList" class="delivery-list gf-stack"></div>
     </div>
 
-    <!-- ESECUZIONE GIRO -->
+    <!-- GIRO IN CORSO: avanzamento, prossima consegna in una scheda, tutte le fermate -->
     <div id="view-execution" class="view">
       <div class="exec-header">
         <button class="back-btn" onclick="exitExecution()">‹ Giri</button>
         <div class="exec-title" id="execTitle">Caricamento giro…</div>
       </div>
-      <div class="exec-progress-bar"><div class="exec-progress-fill" id="execProgressBar" style="width:0%"></div></div>
       <div class="progress-strip">
-        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px">
-          <span id="execRouteName" style="font-weight:700"></span>
-          <strong id="execPercent" style="color:var(--blue)">0%</strong>
-        </div>
-        <div class="progress-strip-stats">
-          <div class="ps-stat"><div class="ps-val gray" id="psTotal">0</div><div class="ps-lbl">Totali</div></div>
-          <div class="ps-stat"><div class="ps-val green" id="psDone">0</div><div class="ps-lbl">Consegnate</div></div>
-          <div class="ps-stat"><div class="ps-val red" id="psMissed">0</div><div class="ps-lbl">Mancate</div></div>
-          <div class="ps-stat"><div class="ps-val blue" id="psRemaining">0</div><div class="ps-lbl">Rimanenti</div></div>
+        <div class="gf-progress">
+          <div class="gf-progress__top"><span id="execProgressText"></span><span id="execProgressRest"></span></div>
+          <div class="gf-progress__track" role="img" id="execProgressTrack"><span class="gf-progress__done" id="execProgressDone" data-gf-width="0"></span><span class="gf-progress__miss" id="execProgressMiss" data-gf-width="0"></span></div>
         </div>
       </div>
       <div id="outboxBanner" class="gf-alert hidden" data-status="warning" role="status">
         <p id="outboxBannerText"></p>
         <button type="button" class="btn-note-small" onclick="flushOutbox(true)">Invia ora</button>
       </div>
-      <section class="gf-gps-status" data-gps-status data-state="idle" aria-label="Condivisione posizione">
-        <div class="gf-gps-heading"><span class="gf-gps-dot" aria-hidden="true"></span>Posizione durante il giro</div>
-        <p data-gps-message role="status">Il GPS si attiva quando avvii il giro.</p>
-        <p>Con Google Maps aperto, soprattutto su iPhone, gli aggiornamenti possono fermarsi. Riprendono quando torni al portale.</p>
-        <details><summary>Come viene usata la posizione</summary><p>Solo durante il giro: la tua azienda vede l’ultima posizione e l’ora del rilevamento. Nessuno storico degli spostamenti; le coordinate vengono rimosse alla chiusura del giro.</p></details>
-        <button type="button" data-gps-retry hidden>Riprova GPS</button>
-      </section>
-<div id="driverRoutingSummary"></div>
-<div class="delivery-list" id="deliveryList"></div>
+      <div class="delivery-list gf-stack" id="deliveryList"></div>
       <div id="completedScreen" class="hidden">
         <div class="completed-wrap">
           <div class="completed-icon"><svg class="gf-i" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg></div>
@@ -382,10 +358,33 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
       </div>
     </div>
 
+
     <!-- STORICO -->
     <div id="view-storico" class="view">
       <div class="page-head"><h2>Storico giri</h2><p>I tuoi giri passati</p></div>
       <div id="storicoList" style="padding:0 12px 12px"></div>
+    </div>
+
+    <!-- POSIZIONE: stato del GPS, richiesta del permesso e istruzioni per sbloccarlo -->
+    <div id="view-posizione" class="view">
+      <div class="page-head"><h2>Posizione</h2><p>Serve solo durante il giro, per aggiornare gli orari di arrivo.</p></div>
+      <div class="delivery-list gf-stack">
+        <div class="gf-alert" data-status="info" data-gps-status role="status"><div class="gf-alert__body"><p class="gf-alert__title" data-gps-title>Posizione</p><p class="gf-alert__text" data-gps-message>Il GPS si attiva quando avvii il giro.</p></div></div>
+        <button type="button" class="gf-button" data-variant="primary" data-gps-request>Attiva posizione</button>
+        <p class="gf-muted">Se il telefono non mostra la richiesta, il permesso va sbloccato nelle impostazioni:</p>
+        <details class="gf-card"><summary><strong>iPhone (Safari)</strong></summary><ol class="gf-text">
+          <li>Apri <b>Impostazioni</b> › <b>Privacy e sicurezza</b> › <b>Localizzazione</b> e controlla che sia attiva.</li>
+          <li>Nella stessa pagina tocca <b>Siti web Safari</b> e scegli <b>Mentre usi l’app</b>.</li>
+          <li>In Safari tocca <b>aA</b> nella barra dell’indirizzo › <b>Impostazioni sito web</b> › <b>Posizione</b> › <b>Consenti</b>.</li>
+          <li>Torna qui e tocca <b>Attiva posizione</b>.</li></ol></details>
+        <details class="gf-card"><summary><strong>Android (Chrome)</strong></summary><ol class="gf-text">
+          <li>Tocca il simbolo accanto all’indirizzo › <b>Autorizzazioni</b> › <b>Posizione</b> › <b>Consenti</b>.</li>
+          <li>Controlla che la <b>Posizione</b> del telefono sia accesa (menu rapido in alto).</li>
+          <li>Se usi l’app installata nella Home: <b>Impostazioni</b> › <b>App</b> › <b>Chrome</b> › <b>Autorizzazioni</b> › <b>Posizione</b> › <b>Consenti</b>.</li>
+          <li>Torna qui e tocca <b>Attiva posizione</b>.</li></ol></details>
+        <p class="gf-muted">Durante il giro l’azienda vede solo l’ultima posizione e l’ora del rilevamento: nessuno storico degli spostamenti, le coordinate si cancellano alla chiusura del giro.</p>
+        <p class="gf-alert" data-status="info">Con Google Maps aperto, soprattutto su iPhone, gli invii si fermano: riprendono quando torni in GiroFacile.</p>
+      </div>
     </div>
 
     <!-- CHAT -->
@@ -406,20 +405,13 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
 
   </div>
 
-  <!-- BOTTOM NAV -->
-  <nav class="bottom-nav">
-    <button class="bnav-btn active" onclick="showView('dashboard',this)">
-      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-      <span>Giri</span>
-    </button>
-    <button class="bnav-btn" onclick="showView('storico',this)">
-      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-      <span>Storico</span>
-    </button>
-    <button class="bnav-btn" data-driver-feature="has_driver_chat" onclick="showView('chat',this)">
-      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-      <span>Chat</span>
-    </button>
+  <!-- MENU IN BASSO: Giri, Storico, Naviga (prossima consegna), Chat, Posizione -->
+  <nav class="gf-bottom-nav" aria-label="Menu dell’app autista">
+    <button type="button" class="gf-bottom-nav__item" data-nav="dashboard" aria-current="page" onclick="showView('dashboard')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h7v7H3z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7H3z"/></svg><span>Giri</span></button>
+    <button type="button" class="gf-bottom-nav__item" data-nav="storico" onclick="showView('storico')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7 M3 4v5h5 M12 7v5l3 2"/></svg><span>Storico</span></button>
+    <button type="button" class="gf-bottom-nav__item" data-primary onclick="navigateNextStop()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l19-9-9 19-2-8z"/></svg><span>Naviga verso la prossima consegna</span></button>
+    <button type="button" class="gf-bottom-nav__item" data-nav="chat" onclick="showView('chat')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg><span>Chat</span><span class="gf-badge hidden" data-status="danger" id="chatBadge">0</span></button>
+    <button type="button" class="gf-bottom-nav__item" data-nav="posizione" onclick="showView('posizione')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z M12 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/></svg><span>Posizione</span></button>
   </nav>
 
 </div>
@@ -656,7 +648,7 @@ async function openApp() {
   document.getElementById('loginScreen').classList.add('hidden');
   document.getElementById('driverApp').classList.remove('hidden');
   document.getElementById('headerDriverName').textContent = me.driver_name;
-  document.getElementById('dashDriverName').textContent = `Ciao ${me.driver_name}, ecco i giri assegnati a te`;
+  document.getElementById('dashGreeting').textContent = `Ciao ${String(me.driver_name || '').split(' ')[0] || ''}`.trim();
   document.querySelectorAll('[data-driver-feature]').forEach(control => {
     const enabled = me?.features?.[control.dataset.driverFeature] === true;
     control.hidden = !enabled;
@@ -673,20 +665,38 @@ async function openApp() {
 // ============================================================
 // NAVIGATION
 // ============================================================
-function showView(name, btn) {
+function showView(name) {
   if(name === 'chat' && me?.features?.has_driver_chat !== true) {
     driverNotice('La chat autista è disponibile dal piano Business. Contatta il responsabile della tua azienda.');
     return;
   }
-  if(name !== 'execution') {
-    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-    document.getElementById('view-'+name).classList.add('active');
-    document.querySelectorAll('.bnav-btn').forEach(b => b.classList.remove('active'));
-    if(btn) btn.classList.add('active');
-    if(name === 'storico') loadStorico();
-    if(name === 'chat') { chatLastId = 0; loadChat(); }
-    if(name === 'dashboard'){ loadRoutes(); }
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  markNav(name);
+  if(name === 'storico') loadStorico();
+  if(name === 'chat') { chatLastId = 0; loadChat(); }
+  if(name === 'dashboard') loadRoutes();
+  if(name === 'posizione') GiroFacileGPS.check?.();
+  document.querySelector('.app-main')?.scrollTo?.(0, 0);
+}
+// Voce attiva del menu in basso: il giro aperto conta come «Giri».
+function markNav(name) {
+  const current = name === 'execution' ? 'dashboard' : name;
+  document.querySelectorAll('.gf-bottom-nav__item[data-nav]').forEach(b => {
+    if(b.dataset.nav === current) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+  });
+}
+// «Naviga»: Google Maps verso la prossima consegna del giro aperto (o di quello in corso).
+async function navigateNextStop() {
+  if(!currentRouteData) {
+    const running = allRoutes.find(r => r.status === 'in_corso');
+    if(!running) { driverNotice('Nessun giro in corso: avvia il giro di oggi per navigare verso la prossima consegna.', 'warning'); return; }
+    await openExecution(running.id);
   }
+  const data = currentRouteData;
+  const next = data?.consegne?.[data.progress?.prossima_idx];
+  if(!next) { driverNotice('Nessuna consegna da raggiungere in questo giro.', 'warning'); return; }
+  window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(next.indirizzo)}`, '_blank');
 }
 
 // ============================================================
@@ -700,83 +710,66 @@ async function loadRoutes() {
   } catch(e) { console.error(e); }
 }
 
+function localIsoDate(d = new Date()) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function longDateIt(iso) {
+  if(!iso) return '';
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Intl.DateTimeFormat('it-IT', {weekday:'short', day:'numeric', month:'long'}).format(new Date(y, m-1, d));
+}
+// «Dom 08/11 · Mario Rossi · Marano di Napoli» → «Marano di Napoli»: data e nome dell'autista si vedono già.
+function routeArea(r) {
+  const parts = String(r.nome || '').split(' · ').map(x => x.trim()).filter(Boolean);
+  const driver = String((typeof me !== 'undefined' && me?.driver_name) || '').toLowerCase();
+  const rest = parts.filter(x => !/^[a-zà-ù]{3} \d{2}\/\d{2}$/i.test(x) && x.toLowerCase() !== driver);
+  return rest.join(' · ');
+}
+function routeMeta(r) {
+  return [r.orario_partenza ? `Partenza ${r.orario_partenza}` : '', gfCount(r.n_consegne,'fermata','fermate'),
+    r.totale_km ? `${fmt(r.totale_km)} km` : '', r.deposit_nome || ''].filter(Boolean).map(esc).join(' · ');
+}
+function progressHtml(done, missed, total) {
+  const step = n => Math.round((total ? n / total : 0) * 20) * 5;
+  const rest = Math.max(0, total - done - missed);
+  return `<div class="gf-progress"><div class="gf-progress__top"><span><b>${done} su ${total}</b> consegnate${missed?` · ${missed} mancate`:''}</span><span>${rest} da fare</span></div>
+    <div class="gf-progress__track" role="img" aria-label="${done} consegnate, ${missed} mancate, ${rest} da fare"><span class="gf-progress__done" data-gf-width="${step(done)}"></span><span class="gf-progress__miss" data-gf-width="${step(missed)}"></span></div></div>`;
+}
+
 function renderRoutes() {
-  const today = new Date().toISOString().split('T')[0];
+  const today = localIsoDate();
   const box = document.getElementById('routesList');
-
-  const upcoming = allRoutes.filter(r => r.status === 'in_corso' || (r.data_giro >= today && r.status !== 'completato' && r.status !== 'annullato'));
-  const past = allRoutes.filter(r => r.status !== 'in_corso' && (r.data_giro < today || r.status === 'completato' || r.status === 'annullato')).slice(0,3);
-
-  let html = '';
-  if(upcoming.length === 0) {
-    html += `<div class="section-card"><p style="text-align:center;color:#6b7280;font-size:14px;padding:16px 0">Nessun giro programmato</p></div>`;
-  } else {
-    html += `<div class="gf-section-label">Giri in corso e programmati</div>`;
-    upcoming.forEach(r => { html += renderRouteCard(r, today); });
+  const closed = r => r.status === 'completato' || r.status === 'annullato';
+  const todays = allRoutes.filter(r => r.status === 'in_corso' || (r.data_giro === today && !closed(r)));
+  const next = allRoutes.filter(r => r.status !== 'in_corso' && r.data_giro > today && !closed(r))
+    .sort((a, b) => (a.data_giro + (a.orario_partenza||'')).localeCompare(b.data_giro + (b.orario_partenza||'')));
+  let html = todays.length ? todays.map(r => renderRouteCard(r, today)).join('')
+    : `<div class="gf-empty"><p>Nessun giro da fare oggi.</p></div>`;
+  if(next.length) {
+    html += `<h3 class="gf-subtitle">Prossimi giri</h3><div class="gf-list">${next.map(r => `
+      <div class="gf-list-item"><span class="gf-avatar" data-tone="2" aria-hidden="true">${Number(r.data_giro.split('-')[2])}</span>
+        <span class="gf-list-item__main"><strong>${esc(longDateIt(r.data_giro))}${r.orario_partenza?` · ${esc(r.orario_partenza)}`:''}</strong>
+        <small>${routeArea(r)?`${esc(routeArea(r))} · `:''}${esc(gfCount(r.n_consegne,'fermata','fermate'))}${r.totale_km?` · ${esc(fmt(r.totale_km))} km`:''}</small></span>
+        <span class="gf-badge" data-status="warning">Programmato</span></div>`).join('')}</div>`;
   }
-  if(past.length > 0) {
-    html += `<div class="gf-section-label" style="margin-top:16px">Recenti</div>`;
-    past.forEach(r => { html += renderRouteCard(r, today); });
-  }
+  html += `<button type="button" class="gf-button" data-variant="link" onclick="showView('storico')">Giri passati nello Storico ›</button>`;
   box.innerHTML = html;
 }
 
 function renderRouteCard(r, today) {
-  const isToday = r.data_giro === today;
-  const dateParts = r.data_giro ? r.data_giro.split('-') : ['','',''];
-  const months = ['','Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
-  const day = dateParts[2] || '';
-  const month = months[parseInt(dateParts[1])] || '';
-  const pct = r.n_consegne > 0 ? Math.round((r.completate + r.mancate) / r.n_consegne * 100) : 0;
-  const statusMap = {programmato:'rb-prog',in_corso:'rb-corso',completato:'rb-done',annullato:'rb-cancel',bozza:'rb-prog'};
-  const statusLabels = {programmato:'Programmato',in_corso:'In corso',completato:'Completato',annullato:'Annullato',bozza:'Bozza'};
-  const badge = statusMap[r.status] || 'rb-prog';
-  const label = statusLabels[r.status] || r.status;
-
-  let actionsHtml = '';
-  if(r.status === 'in_corso') {
-    actionsHtml = `<div class="rc-actions">
-      <button class="btn-start" onclick="openExecution(${r.id})">▶ Continua giro</button>
-    </div>`;
-  } else if(r.can_start) {
-    actionsHtml = `<div class="rc-actions">
-      <button class="btn-start" data-start-route="${Number(r.id)}" data-before-time="${r.before_time ? 'true' : 'false'}" data-start-time="${esc(r.orario_partenza||'')}" data-start-name="${esc(r.nome||'')}">▶ Avvia giro</button>
-      <button class="btn-view" onclick="openExecution(${r.id})">Dettaglio</button>
-    </div>`;
-  } else if(r.is_future) {
-    actionsHtml = `<div class="rc-actions">
-      <button class="btn-start disabled" disabled>Disponibile il ${r.data_giro}</button>
-    </div>`;
-  } else {
-    actionsHtml = `<div class="rc-actions">
-      <button class="btn-view" onclick="openExecution(${r.id})">Visualizza</button>
-    </div>`;
-  }
-
-  return `<div class="route-card ${isToday?'today':''} ${r.status==='completato'?'completed':''}">
-    <div class="rc-head">
-      <div class="rc-date-badge" style="${isToday?'background:var(--green)':''}">
-        <div class="rc-date-day">${day}</div>
-        <div class="rc-date-month">${month}</div>
-      </div>
-      <div class="rc-info">
-        <div class="rc-name">${esc(r.nome)}</div>
-        <div class="rc-meta">
-          <span>${gfIcon('clock')} ${esc(r.orario_partenza||'—')}</span>
-          <span>${gfIcon('pin')} ${gfCount(r.n_consegne,'fermata','fermate')}</span>
-          ${r.totale_km?`<span>${gfIcon('route')} ${fmt(r.totale_km)} km</span>`:''}
-          ${r.deposit_nome?`<span>${gfIcon('warehouse')} ${esc(r.deposit_nome)}</span>`:''}
-        </div>
-      </div>
-      <div class="rc-status"><span class="rc-badge ${badge}">${label}</span></div>
-    </div>
-    ${r.n_consegne > 0 && (r.status === 'in_corso' || r.status === 'completato') ? `
-    <div class="rc-progress">
-      <div class="rc-progress-track"><div class="rc-progress-fill" style="width:${pct}%"></div></div>
-      <div class="rc-progress-label"><span>${gfCount(r.completate,'consegnata','consegnate')} · ${gfCount(r.mancate,'mancata','mancate')}</span><span>${pct}%</span></div>
-    </div>` : ''}
-    ${actionsHtml}
-  </div>`;
+  const running = r.status === 'in_corso';
+  const kicker = r.data_giro === today ? `Oggi · ${longDateIt(r.data_giro)}` : longDateIt(r.data_giro);
+  let actions;
+  if(running) actions = `<button type="button" class="gf-button" data-variant="primary" onclick="openExecution(${Number(r.id)})">Continua giro</button>`;
+  else if(r.can_start) actions = `<button type="button" class="gf-button" data-variant="primary" data-start-route="${Number(r.id)}" data-before-time="${r.before_time ? 'true' : 'false'}" data-start-time="${esc(r.orario_partenza||'')}" data-start-name="${esc(r.nome||'')}">Avvia giro</button>
+      <button type="button" class="gf-button" data-variant="secondary" onclick="openExecution(${Number(r.id)})">Vedi le fermate</button>`;
+  else actions = `<button type="button" class="gf-button" data-variant="secondary" onclick="openExecution(${Number(r.id)})">Vedi le fermate</button>`;
+  return `<section class="gf-card gf-stack" aria-label="Giro di oggi">
+    <div class="gf-cluster" data-justify="between"><span class="gf-kicker">${esc(kicker)}</span><span class="gf-badge" data-status="${running?'info':'warning'}" data-dot>${running?'In corso':'Da avviare'}</span></div>
+    <div class="gf-stack" data-gap="sm"><h2 class="gf-title">${esc(routeArea(r) || 'Giro di oggi')}</h2><p class="gf-muted">${routeMeta(r)}</p></div>
+    ${running && r.n_consegne > 0 ? progressHtml(r.completate||0, r.mancate||0, r.n_consegne) : ''}
+    ${actions}
+  </section>`;
 }
 
 // ============================================================
@@ -832,7 +825,8 @@ async function openExecution(routeId) {
   currentRoute = routeId;
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById('view-execution').classList.add('active');
-  document.querySelectorAll('.bnav-btn').forEach(b => b.classList.remove('active'));
+  markNav('execution');
+  document.querySelector('.app-main')?.scrollTo?.(0, 0);
   await loadExecution();
   if(execPollInterval) clearInterval(execPollInterval);
   execPollInterval = setInterval(() => { if (!document.hidden) loadExecution(); }, 30000);
@@ -842,8 +836,7 @@ function exitExecution() {
   if(execPollInterval) clearInterval(execPollInterval);
   currentRoute = null;
   currentRouteData = null;
-  showView('dashboard', document.querySelector('.bnav-btn:nth-child(1)'));
-  loadRoutes();
+  showView('dashboard');
 }
 
 async function loadExecution() {
@@ -860,10 +853,10 @@ async function loadExecution() {
 
 // «Chiama»: il numero dalla scheda del cliente; senza numero resta solo «Aggiungi nota».
 function callHtml(c) {
-  const note = `<button class="btn-note-small" onclick="openNote(${c.id})">${gfIcon('note')} ${c.note_operatore?'Modifica nota':'Aggiungi nota'}</button>`;
+  const note = `<button type="button" class="gf-button" data-variant="secondary" onclick="openNote(${Number(c.id)})">${gfIcon('note')} ${c.note_operatore?'Modifica nota':'Nota'}</button>`;
   const tel = String(c.telefono_cliente || '').replace(/[^0-9+]/g, '');
   if(tel.replace(/\D/g, '').length < 6) return note;
-  return `<div class="btn-row"><a class="btn-note-small btn-call" href="tel:${tel}" aria-label="Chiama ${esc(c.cliente_nome)}">${gfIcon('phone')} Chiama</a>${note}</div>`;
+  return `<div class="btn-row"><a class="gf-button" data-variant="secondary" href="tel:${tel}" aria-label="Chiama ${esc(c.cliente_nome)}">${gfIcon('phone')} Chiama</a>${note}</div>`;
 }
 
 function renderExecution(data) {
@@ -871,15 +864,13 @@ function renderExecution(data) {
   podConfigurePhoto(data);
   updateSignatureRequestCard();
   GiroFacileGPS.sync({status:route.status, statusUrl:`/api/driver/routes/${route.id}/position`, uploadUrl:`/api/driver/routes/${route.id}/position`});
-  document.getElementById("driverRoutingSummary").innerHTML = window.GiroFacileRouting.summaryHtml(route, "", {costs:false});
-  document.getElementById('execTitle').textContent = route.nome;
-  document.getElementById('execRouteName').textContent = route.nome;
-  document.getElementById('execPercent').textContent = progress.percentuale + '%';
-  document.getElementById('execProgressBar').style.width = progress.percentuale + '%';
-  document.getElementById('psTotal').textContent = progress.totale;
-  document.getElementById('psDone').textContent = progress.completate;
-  document.getElementById('psMissed').textContent = progress.mancate;
-  document.getElementById('psRemaining').textContent = progress.rimanenti;
+  document.getElementById('execTitle').textContent = routeArea(route) || 'Giro';
+  const pct = n => String(Math.round((progress.totale ? n / progress.totale : 0) * 20) * 5);
+  document.getElementById('execProgressText').innerHTML = `<b>${progress.completate} su ${progress.totale}</b> consegnate${progress.mancate?` · ${progress.mancate} mancate`:''}`;
+  document.getElementById('execProgressRest').textContent = `${progress.rimanenti} da fare`;
+  document.getElementById('execProgressDone').dataset.gfWidth = pct(progress.completate);
+  document.getElementById('execProgressMiss').dataset.gfWidth = pct(progress.mancate);
+  document.getElementById('execProgressTrack').setAttribute('aria-label', `${progress.completate} consegnate, ${progress.mancate} mancate, ${progress.rimanenti} da fare`);
 
   const list = document.getElementById('deliveryList');
   const comp = document.getElementById('completedScreen');
@@ -892,89 +883,67 @@ function renderExecution(data) {
   comp.classList.add('hidden');
   list.classList.remove('hidden');
 
-  const mapsUrl = encodeURIComponent;
   const notStarted = ['programmato','bozza'].includes(route.status);
-  list.innerHTML = GFDriverBreaks.cards(route,0)+consegne.map((c, i) => {
-    const isActive = c.status === 'in_attesa' && i === progress.prossima_idx;
-    const isDone = c.status === 'completata';
-    const isMissed = c.status === 'mancata';
-    const numClass = isActive?'active':isDone?'done':isMissed?'mancata':'waiting';
-    const cardClass = isActive?'active':isDone?'done':isMissed?'mancata':'';
-    const statusIcon = isDone?gfIcon('checkCircle'):isMissed?gfIcon('xCircle'):isActive?gfIcon('pin'):'';
-    const navUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(c.indirizzo)}`;
+  const nextIdx = progress.prossima_idx;
+  const current = nextIdx != null ? consegne[nextIdx] : null;
+  list.innerHTML = (current ? currentStopCard(current, nextIdx, consegne.length, notStarted) : '')
+    + `<h3 class="gf-subtitle">Tutte le fermate</h3><div class="gf-stop-list" data-height="auto">`
+    + GFDriverBreaks.cards(route,0)
+    + consegne.map((c, i) => stopRow(c, i, data, i === nextIdx) + GFDriverBreaks.cards(route,i+1)).join('')
+    + `</div>`;
+}
 
-    let detailsHtml = '';
-    if(isActive || isDone || isMissed) {
-      detailsHtml = `<div class="di-details">`;
-      // Solo l'arrivo previsto, aggiornato dal server con anticipi e ritardi delle consegne precedenti
-      // (si rinfresca da solo ogni 30 secondi). Sulle consegne già chiuse non serve.
-      const arrivo = c.arrivo_aggiornato || c.arrivo_stimato;
-      if(isActive && arrivo) {
-        const scarto = Number(c.arrivo_scarto_min || 0);
-        const delta = Math.abs(scarto) >= 5 ? `<div class="di-time-lbl">${scarto > 0 ? `+${scarto} min di ritardo` : `${-scarto} min in anticipo`} · previsto ${esc(c.arrivo_stimato)}</div>` : '';
-        detailsHtml += `<div class="di-times di-times-single">
-          <div class="di-time-item"><div class="di-time-lbl">Arrivo previsto</div><div class="di-time-val">${esc(arrivo)}</div>${delta}</div>
-        </div>`;
-      }
-      if(c.note) detailsHtml += `<div class="di-note-box">${gfIcon('note')} ${esc(c.note)}</div>`;
-      if(c.warning) detailsHtml += `<div class="di-warn-box">${gfIcon('alert')} ${esc(c.warning.split('|').join(' · '))}</div>`;
-      if(isDone) {
-        detailsHtml += podEvidenceButtons(c, `/api/driver/delivery/${c.id}/evidence`, data);
-        detailsHtml += `<div class="di-done-box">${gfIcon('checkCircle')} Consegnato${c.tempo_scarico_effettivo?` in ${c.tempo_scarico_effettivo} min`:''}${c.note_operatore?` · "${esc(c.note_operatore)}"`:''}</div>`;
-        if(podFeatureEnabled('has_delivery_signature', data) && (c.signed_by_name || c.signed_at)){
-          detailsHtml += `<div class="di-signature-box">${gfIcon('pen')} Firma raccolta${c.signed_by_name?`: ${esc(c.signed_by_name)}`:''}</div>`;
-        }
-      }
-      if(isMissed) {
-        const motiviLabels = {assente:'Cliente assente',chiuso:'Attività chiusa',rifiutato:'Consegna rifiutata',altro:'Altro'};
-        detailsHtml += `<div class="di-missed-box">${gfIcon('xCircle')} ${motiviLabels[c.motivo_mancata]||c.motivo_mancata||'Mancata'}${c.note_operatore?` · "${esc(c.note_operatore)}"`:''}</div>`;
-      }
-      detailsHtml += `</div>`;
-    }
+// Badge della consegna (ZTL, area pedonale, sponda, colli, scarico).
+function stopBadges(c) {
+  return [
+    c.ztl ? '<span class="gf-badge" data-kind="ztl">ZTL</span>' : '',
+    c.pedestrian_area ? '<span class="gf-badge" data-status="warning">Area pedonale</span>' : '',
+    c.sponda ? '<span class="gf-badge" data-kind="tail-lift">Sponda</span>' : '',
+    c.colli ? `<span class="gf-badge" data-status="neutral">${esc(gfCount(c.colli,'collo','colli'))}${c.order_numbers?.length?` · ${esc(gfCount(c.order_numbers.length,'ordine','ordini'))}`:''}</span>` : '',
+    c.tempo_scarico_min ? `<span class="gf-badge" data-status="neutral">Scarico ${Number(c.tempo_scarico_min)} min</span>` : '',
+  ].join('');
+}
 
-    let actionsHtml = '';
-    // Giro non ancora avviato: prima l'avvio (con la conferma se in anticipo), poi gli esiti.
-    if(isActive && notStarted) {
-      actionsHtml = `<div class="di-actions">
-        <button class="btn-start" onclick="startFromDetail()">▶ Avvia giro per registrare le consegne</button>
-      </div>`;
-    } else if(isActive) {
-      actionsHtml = `<div class="di-actions">
-        <a class="btn-navigate" href="${navUrl}" target="_blank">
-          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
-          Naviga verso ${esc(c.cliente_nome)}
-        </a>
-        <div class="btn-row">
-          <button class="btn-done" onclick="openDone(${c.id})">${gfIcon('check')} Consegnato</button>
-          <button class="btn-missed" onclick="openMissed(${c.id})">${gfIcon('x')} Mancata</button>
-        </div>
-        ${callHtml(c)}
-      </div>`;
-    } else if(isDone || isMissed) {
-      actionsHtml = `<div class="di-actions">
-        <button class="btn-note-small" onclick="openNote(${c.id})">${gfIcon('note')} ${c.note_operatore?'Modifica nota':'Aggiungi nota'}</button>
-      </div>`;
-    }
-
-    return `<div class="delivery-item ${cardClass}">
-      <div class="di-head">
-        <div class="di-num ${numClass}">${i+1}</div>
-        <div class="di-info">
-          <div class="di-name">${esc(c.cliente_nome)}</div>${c.order_numbers?.length?`<details><summary>${gfCount(c.order_numbers.length,'ordine','ordini')} · ${gfCount(c.colli,'collo','colli')}</summary><p>${c.order_numbers.map(esc).join(', ')}</p></details>`:''}
-          <div class="di-addr">${gfIcon('pin')} ${esc(c.indirizzo)}</div>
-          <div class="di-badges">
-            ${c.ztl?'<span class="di-badge db-ztl">'+gfIcon('alert')+' ZTL</span>':''}
-             ${c.pedestrian_area?'<span class="di-badge db-pedestrian">'+gfIcon('alert')+' Area pedonale</span>':''}
-            ${c.sponda?'<span class="di-badge db-sponda">'+gfIcon('tool')+' Sponda</span>':''}
-            ${c.tempo_scarico_min?`<span class="di-badge db-time">${gfIcon('timer')} ${c.tempo_scarico_min} min</span>`:''}
-          </div>
-        </div>
-        ${statusIcon?`<div class="di-status-icon">${statusIcon}</div>`:''}
+// La prossima consegna: tutto quello che serve all'autista, con i tasti in fondo.
+function currentStopCard(c, i, total, notStarted) {
+  const arrivo = c.arrivo_aggiornato || c.arrivo_stimato;
+  const scarto = Number(c.arrivo_scarto_min || 0);
+  const delta = arrivo && Math.abs(scarto) >= 5
+    ? `<p class="gf-muted">${scarto > 0 ? `${scarto} min di ritardo` : `${-scarto} min in anticipo`} sull’orario previsto (${esc(c.arrivo_stimato)})</p>` : '';
+  const navUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(c.indirizzo)}`;
+  const actions = notStarted
+    ? `<button type="button" class="gf-button" data-variant="primary" onclick="startFromDetail()">Avvia giro per registrare le consegne</button>`
+    : `<a class="gf-button" data-variant="primary" href="${navUrl}" target="_blank" rel="noopener">${gfIcon('route')} Naviga</a>
+      <div class="btn-row">
+        <button type="button" class="gf-button" data-variant="primary" onclick="openDone(${Number(c.id)})">${gfIcon('check')} Consegnato</button>
+        <button type="button" class="gf-button" data-variant="danger" onclick="openMissed(${Number(c.id)})">${gfIcon('x')} Mancata</button>
       </div>
-      ${detailsHtml}
-      ${actionsHtml}
-    </div>`+GFDriverBreaks.cards(route,i+1);
-  }).join('');
+      ${callHtml(c)}`;
+  return `<section class="gf-card gf-stack" aria-label="Prossima consegna">
+    <div class="gf-cluster" data-justify="between"><span class="gf-kicker">Prossima · ${i+1} di ${total}</span>${arrivo?`<span class="gf-badge" data-status="info">Arrivo ${esc(arrivo)}</span>`:''}</div>
+    <div class="gf-stack" data-gap="sm"><h2 class="gf-title">${esc(c.cliente_nome)}</h2><p class="gf-muted">${esc(c.indirizzo)}</p>
+      <div class="gf-cluster">${stopBadges(c)}</div></div>
+    ${delta}
+    ${c.order_numbers?.length ? `<details><summary class="gf-muted">Ordini</summary><p class="gf-muted">${c.order_numbers.map(esc).join(', ')}</p></details>` : ''}
+    ${c.note ? `<p class="gf-alert" data-status="info">${esc(c.note)}</p>` : ''}
+    ${c.warning ? `<p class="gf-alert" data-status="warning">${esc(c.warning.split('|').join(' · '))}</p>` : ''}
+    ${actions}
+  </section>`;
+}
+
+// Una riga dell'elenco: numero, cliente, indirizzo, orario o esito; sulle chiuse nota e prove di consegna.
+function stopRow(c, i, data, isNext) {
+  const done = c.status === 'completata', missed = c.status === 'mancata';
+  const cls = done ? ' is-done' : missed ? ' is-miss' : isNext ? ' is-next is-highlighted' : '';
+  const motivi = {assente:'Cliente assente',chiuso:'Attività chiusa',rifiutato:'Consegna rifiutata',altro:'Altro'};
+  const at = c.completata_il ? new Date(c.completata_il).toLocaleTimeString('it-IT', {hour:'2-digit', minute:'2-digit'}) : '';
+  const time = done ? (at || '✓') : missed ? 'Mancata' : esc(c.arrivo_aggiornato || c.arrivo_stimato || '');
+  let meta = esc(c.indirizzo);
+  if(done) meta = `Consegnata${c.tempo_scarico_effettivo?` · scarico ${Number(c.tempo_scarico_effettivo)} min`:''}${c.signed_by_name?` · firma di ${esc(c.signed_by_name)}`:''}${c.note_operatore?` · «${esc(c.note_operatore)}»`:''}`;
+  if(missed) meta = `${esc(motivi[c.motivo_mancata] || c.motivo_mancata || 'Mancata')}${c.note_operatore?` · «${esc(c.note_operatore)}»`:''}`;
+  const extra = (done || missed)
+    ? `<span class="gf-cluster">${done ? podEvidenceButtons(c, `/api/driver/delivery/${c.id}/evidence`, data) : ''}<button type="button" class="gf-button" data-variant="link" data-size="sm" onclick="openNote(${Number(c.id)})">${c.note_operatore?'Modifica nota':'Aggiungi nota'}</button></span>` : '';
+  return `<div class="gf-stop${cls}"><span class="gf-stop__number">${i+1}</span><span class="gf-stop__main"><span class="gf-stop__name">${esc(c.cliente_nome)}</span><span class="gf-stop__meta">${meta}</span>${extra}</span><span class="gf-stop__time">${time}</span></div>`;
 }
 
 // ============================================================

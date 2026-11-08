@@ -98,11 +98,13 @@ test('autista vede il giro in corso vecchio anche con oltre tre giri recenti',()
   const context={document:{getElementById:()=>box},Date,
     allRoutes:[...Array.from({length:5},(_,i)=>({id:i,data_giro:'2020-01-02',status:'completato'})),
       {id:99,data_giro:'2020-01-01',status:'in_corso'}],
+    localIsoDate:()=>'2026-01-10',longDateIt:x=>x,routeArea:()=>'',esc:x=>String(x),fmt:x=>String(x),gfCount:(n,a,b)=>n+' '+(n===1?a:b),
     renderRouteCard:r=>'[route:'+r.id+']'};
   vm.runInNewContext(source+';renderRoutes()',context);
-  assert.match(box.innerHTML,/Giri in corso e programmati/);
+  // Il giro in corso (anche se di un giorno passato) resta in cima, una volta sola; i chiusi vanno nello Storico.
   assert.equal(box.innerHTML.split('[route:99]').length-1,1);
-  assert.ok(box.innerHTML.indexOf('[route:99]')<box.innerHTML.indexOf('Recenti'));
+  assert.ok(box.innerHTML.indexOf('[route:99]')<box.innerHTML.indexOf('Storico'));
+  assert.doesNotMatch(box.innerHTML,/\[route:[0-4]\]/);
 });
 
 test('nuovo layout giri in corso mantiene i dati reali e le azioni operative',()=>{

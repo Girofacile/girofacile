@@ -3,13 +3,66 @@
   let route = null, timer, generation = 0, busy = false, denied = false;
   let lastCapture = null, lastPreciseAttempt = 0, message = 'Il GPS si attiva quando avvii il giro.', state = 'idle';
   const hosts = () => document.querySelectorAll('[data-gps-status]');
+  // Stato → colore (avvisi .gf-alert e pallino [data-gps-badge] nell'intestazione) e titolo.
+  // ready = permesso concesso ma nessun giro in corso.
+  const TONE = {active:'success', ready:'success', denied:'danger', error:'warning', idle:'info'};
+  const TITLE = {active:'Posizione attiva', ready:'Posizione consentita', denied:'Posizione bloccata', error:'Posizione in pausa', idle:'Posizione'};
   function paint(nextState, text) {
     state = nextState; message = text;
     hosts().forEach(host => {
       host.dataset.state = state;
-      host.querySelector('[data-gps-message]').textContent = message;
-      host.querySelector('[data-gps-retry]').hidden = !['denied', 'error'].includes(state);
+      if (host.classList.contains('gf-alert')) host.dataset.status = TONE[state];
+      const title = host.querySelector('[data-gps-title]');
+      if (title) title.textContent = TITLE[state];
+      const note = host.querySelector('[data-gps-message]');
+      if (note) note.textContent = message;
+      const retry = host.querySelector('[data-gps-retry]');
+      if (retry) retry.hidden = !['denied', 'error'].includes(state);
     });
+    document.querySelectorAll('[data-gps-badge]').forEach(badge => {
+      badge.dataset.status = state === 'idle' ? 'neutral' : TONE[state];
+      badge.textContent = state === 'denied' ? 'GPS bloccato' : 'GPS';
+      badge.title = TITLE[state];
+    });
+  }
+  // Permesso del browser (dove il browser lo dice): bloccato, concesso o da chiedere.
+  async function checkPermission() {
+    if (!navigator.permissions?.query) return;
+    try {
+      const status = await navigator.permissions.query({name:'geolocation'});
+      const apply = () => {
+        if (status.state === 'denied') {
+          denied = true;
+          paint('denied', 'Il telefono non permette a GiroFacile di leggere la posizione. Segui le istruzioni qui sotto per sbloccarla.');
+        } else if (denied || !route) {
+          denied = false;
+          if (route) tick();
+          else paint(status.state === 'granted' ? 'ready' : 'idle', status.state === 'granted'
+            ? 'Permesso concesso. La posizione viene condivisa solo durante il giro.'
+            : 'Tocca «Attiva posizione»: il telefono ti chiederà il permesso.');
+        }
+      };
+      apply();
+      status.onchange = apply;
+    } catch (_) { /* Safari meno recenti: si scopre al primo rilevamento. */ }
+  }
+  // «Attiva posizione»: una lettura fa comparire la richiesta di permesso del telefono.
+  function request() {
+    if (!navigator.geolocation || !window.isSecureContext) {
+      paint('denied', 'Questo collegamento non permette la posizione: apri il portale con l’indirizzo https.');
+      return;
+    }
+    paint(state === 'denied' ? 'denied' : 'idle', 'Richiesta della posizione in corso…');
+    navigator.geolocation.getCurrentPosition(() => {
+      denied = false;
+      if (route) tick();
+      else paint('ready', 'Permesso concesso. La posizione viene condivisa solo durante il giro.');
+    }, error => {
+      if (error.code === 1) {
+        denied = true;
+        paint('denied', 'Il permesso è stato negato. Sbloccalo nelle impostazioni seguendo le istruzioni qui sotto.');
+      } else paint('error', 'Posizione non disponibile ora: controlla che la localizzazione del telefono sia accesa.');
+    }, {enableHighAccuracy:false, maximumAge:60000, timeout:15000});
   }
   function stop(text = 'Giro terminato. Condivisione della posizione disattivata.') {
     generation++; clearTimeout(timer); route = null; lastCapture = null; busy = false;
@@ -85,8 +138,15 @@
     },
     stop,
     retry() { denied = false; tick(); },
+    request,
+    check: checkPermission,
+    state: () => state,
   };
-  document.addEventListener('click', event => { if (event.target.closest('[data-gps-retry]')) window.GiroFacileGPS.retry(); });
+  document.addEventListener('click', event => {
+    if (event.target.closest('[data-gps-retry]')) window.GiroFacileGPS.retry();
+    if (event.target.closest('[data-gps-request]')) request();
+  });
+  checkPermission();
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
       clearTimeout(timer); lastCapture = null;

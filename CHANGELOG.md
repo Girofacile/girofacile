@@ -5,6 +5,13 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- App autista ridisegnata (versione A): logo GiroFacile vero, «I miei giri» con il giro di oggi in
+  grande e i prossimi giorni in elenco (i passati nello Storico); nel giro avanzamento a barra, la
+  prossima consegna in una scheda con Naviga, Consegnato/Mancata, Chiama/Nota, e sotto tutte le fermate.
+  Nuova pagina «Posizione» (menu in basso e pallino GPS in alto): stato del permesso, tasto «Attiva
+  posizione» che fa comparire la richiesta del telefono e istruzioni per sbloccarla su iPhone e Android.
+  Tolti il riquadro «ETA con traffico» e il blocco GPS sempre visibile. Corretta la migrazione
+  20261108_01 sui database senza tabella utenti.
 - Pianificazione: tolto il vecchio pannello «Seleziona clienti», che ricompariva tornando alla
   pianificazione dopo un calcolo. I clienti si aggiungono solo dalla finestra «Aggiungi clienti».
 - Fonti ordini: «Telefono» tra i dati facoltativi da importare (si può escludere come gli altri).
