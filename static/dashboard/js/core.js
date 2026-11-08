@@ -4574,11 +4574,12 @@ function dashScheduledMoney(value){ return value === null || value === undefined
 function dashScheduledRoutesOf(iso){ return dashboardScheduledRoutes.filter(r=>r.data_giro===iso).sort((a,b)=>String(a.orario_partenza||'').localeCompare(String(b.orario_partenza||''))); }
 function dashScheduledCancelled(r){ return r.status === 'annullato'; }
 // Giro programmato non avviato in orario (services/late_start.py): stato, ritardo e badge.
-function gfLateStartBadge(r){
+// opts.short: senza i minuti (riquadri della settimana, dove il testo lungo allunga le colonne).
+function gfLateStartBadge(r, opts = {}){
   const late = r && r.late_start;
   if(!late) return '';
   const tone = late.state === 'in_ritardo' ? 'warning' : 'danger';
-  const delay = late.state !== 'non_avviato' && late.delay_min > 0 ? ` · +${Number(late.delay_min)} min` : '';
+  const delay = !opts.short && late.state !== 'non_avviato' && late.delay_min > 0 ? ` · +${Number(late.delay_min)} min` : '';
   return `<span class="gf-badge" data-status="${tone}" data-dot data-late-start="${esc(late.state)}">${esc(late.label)}${delay}</span>`;
 }
 // Avviso nel dettaglio del giro con le scelte dell'ufficio.
@@ -4641,7 +4642,7 @@ function dashWeekColumn(iso, routes, opts){
     const stops = Number(r.consegne_count||0), vehicle = dashScheduledVehicle(r)[0] || 'Mezzo non indicato';
     const stopsText = `${stops} ${stops===1?'fermata':'fermate'}`;
     const title = `${r.orario_partenza || '-'} · ${r.driver_name || 'Non assegnato'} · ${vehicle} · ${stopsText}`;
-    return `<button type="button" class="gf-list-item" aria-label="${esc(title)}" title="${esc(title)}" onclick="${opts.onOpen(r)}"><span class="gf-list-item__main"><strong>${esc(r.orario_partenza || '-')} · ${esc(dashWeekShortName(r.driver_name))}</strong><small>${esc(vehicle)}</small><small>${stopsText}</small>${gfLateStartBadge(r)}</span></button>`;
+    return `<button type="button" class="gf-list-item" aria-label="${esc(title)}" title="${esc(title)}" onclick="${opts.onOpen(r)}"><span class="gf-list-item__main"><strong>${esc(r.orario_partenza || '-')} · ${esc(dashWeekShortName(r.driver_name))}</strong><small>${esc(vehicle)}</small><small>${stopsText}</small>${gfLateStartBadge(r, {short:true})}</span></button>`;
   };
   const body = list.length
     ? list.slice(0, opts.limit).map(item).join('')

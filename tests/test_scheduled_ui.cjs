@@ -156,6 +156,8 @@ test('giri non partiti in orario: badge, avviso con le scelte e avviso in Dashbo
   vm.runInContext(core.slice(core.indexOf('function gfLateStartBadge('),core.indexOf('// «Sposta la partenza ad adesso»')),ctx);
   assert.equal(ctx.gfLateStartBadge({}), '');
   assert.match(ctx.gfLateStartBadge({late_start:{state:'in_ritardo',label:'In ritardo',delay_min:20}}),/data-status="warning"[^>]*>In ritardo · \+20 min</);
+  // Nei riquadri della settimana il badge è breve, senza minuti.
+  assert.match(ctx.gfLateStartBadge({late_start:{state:'da_riprogrammare',label:'Da riprogrammare',delay_min:552}},{short:true}),/data-status="danger"[^>]*>Da riprogrammare</);
   const alert=ctx.gfLateStartAlert({id:7,late_start:{state:'da_riprogrammare',label:'Da riprogrammare',delay_min:47,problems:['1 consegna fuori fascia: Bar Roma']}});
   for(const text of ['Sposta la partenza ad adesso','Riprogramma','Annulla giro','Bar Roma','non può avviare da solo'])assert.ok(alert.includes(text),text);
   // Giorno passato: niente «Sposta la partenza», solo riprogrammare o annullare.
