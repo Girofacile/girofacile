@@ -444,12 +444,7 @@ function render() {
       </div>`;
     }
 
-    // Pulsante nota anche per completate/mancate
-    if ((isDone || isMissed) && !isWaiting) {
-      html += `<div class="dc-actions">
-        <button class="btn-note" onclick="openNote(${c.id})">${gfIcon('note')} ${c.note_operatore ? 'Modifica nota' : 'Aggiungi nota'}</button>
-      </div>`;
-    }
+    // Consegne chiuse: niente nota, il server le rifiuta dopo la chiusura.
 
     html += `</div>`+GFDriverBreaks.cards(route,i+1);
   });

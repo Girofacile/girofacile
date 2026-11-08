@@ -937,8 +937,9 @@ function stopRow(c, i, data, isNext) {
   let meta = esc(c.indirizzo);
   if(done) meta = `Consegnata${c.tempo_scarico_effettivo?` · scarico ${Number(c.tempo_scarico_effettivo)} min`:''}${c.signed_by_name?` · firma di ${esc(c.signed_by_name)}`:''}${c.note_operatore?` · «${esc(c.note_operatore)}»`:''}`;
   if(missed) meta = `${esc(motivi[c.motivo_mancata] || c.motivo_mancata || 'Mancata')}${c.note_operatore?` · «${esc(c.note_operatore)}»`:''}`;
-  const extra = (done || missed)
-    ? `<span class="gf-cluster">${done ? podEvidenceButtons(c, `/api/driver/delivery/${c.id}/evidence`, data, {pod:false}) : ''}<button type="button" class="gf-button" data-variant="link" data-size="sm" onclick="openNote(${Number(c.id)})">${c.note_operatore?'Modifica nota':'Aggiungi nota'}</button></span>` : '';
+  // Sulle consegne chiuse solo firma e foto: la nota si aggiunge prima di chiudere (il server le rifiuta dopo).
+  const proofs = done ? podEvidenceButtons(c, `/api/driver/delivery/${c.id}/evidence`, data, {pod:false}) : '';
+  const extra = proofs ? `<span class="gf-cluster">${proofs}</span>` : '';
   return `<div class="gf-stop${cls}"><span class="gf-stop__number">${i+1}</span><span class="gf-stop__main"><span class="gf-stop__name">${esc(c.cliente_nome)}</span><span class="gf-stop__meta">${meta}</span>${extra}</span><span class="gf-stop__time">${time}</span></div>`;
 }
 
