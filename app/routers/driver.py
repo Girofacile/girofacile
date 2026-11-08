@@ -356,6 +356,7 @@ def get_driver_route_detail(route_id: int, da: DriverAccount = Depends(get_curre
             "status": r.status, "google_maps_url": r.google_maps_url,
             "deposit_nome": r.deposit.nome if r.deposit else None,
             "deposit_indirizzo": r.deposit.indirizzo if r.deposit else None,
+            "vehicle_nome": r.vehicle.nome if r.vehicle else None,
         },
         "consegne": [ds_dict(d) for d in deliveries],
         "progress": {

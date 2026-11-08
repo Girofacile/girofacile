@@ -186,7 +186,7 @@ def run(browser, width, output):
             detail_api = client.get(f'/api/driver/routes/{route.id}').json()['route']
             assert not {'costo_totale', 'costo_carburante', 'toll_estimated_eur'} & detail_api.keys(), 'costi esposti all’autista'
             page.get_by_role('button', name='Vedi le fermate').first.click()
-            start = page.get_by_role('button', name='Avvia giro per registrare le consegne')
+            start = page.get_by_role('button', name='Avvia giro', exact=True)
             expect(start).to_be_visible()
             assert page.get_by_role('button', name='Consegnato', exact=True).count() == 0, 'esiti disponibili prima dell’avvio'
             start.click()

@@ -111,15 +111,6 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
 .exec-title{font-size:15px;font-weight:700;flex:1;}
 .exec-progress-bar{background:#f3f4f6;height:4px;}
 .exec-progress-fill{height:100%;background:var(--blue);transition:width .4s;}
-.progress-strip{background:#fff;border-bottom:1px solid var(--border);padding:12px 16px;}
-.progress-strip-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px;}
-.ps-stat{text-align:center;}
-.ps-val{font-size:18px;font-weight:800;}
-.ps-lbl{font-size:10px;color:#6b7280;margin-top:1px;}
-.ps-val.green{color:var(--green);}
-.ps-val.red{color:var(--red);}
-.ps-val.blue{color:var(--blue);}
-.ps-val.gray{color:#6b7280;}
 .delivery-list{padding:12px;}
 .delivery-item{background:#fff;border:2px solid var(--border);border-radius:14px;margin-bottom:10px;overflow:hidden;}
 .delivery-item.active{border-color:var(--blue);box-shadow:0 4px 20px rgba(37,99,235,.12);}
@@ -336,13 +327,7 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
     <div id="view-execution" class="view">
       <div class="exec-header">
         <button class="back-btn" onclick="exitExecution()">‹ Giri</button>
-        <div class="exec-title" id="execTitle">Caricamento giro…</div>
-      </div>
-      <div class="progress-strip">
-        <div class="gf-progress">
-          <div class="gf-progress__top"><span id="execProgressText"></span><span id="execProgressRest"></span></div>
-          <div class="gf-progress__track" role="img" id="execProgressTrack"><span class="gf-progress__done" id="execProgressDone" data-gf-width="0"></span><span class="gf-progress__miss" id="execProgressMiss" data-gf-width="0"></span></div>
-        </div>
+        <div class="gf-stack" data-gap="sm"><div class="exec-title" id="execTitle">Caricamento giro…</div><small class="gf-muted" id="execMeta"></small></div>
       </div>
       <div id="outboxBanner" class="gf-alert hidden" data-status="warning" role="status">
         <p id="outboxBannerText"></p>
@@ -876,13 +861,10 @@ function renderExecution(data) {
   podConfigurePhoto(data);
   updateSignatureRequestCard();
   GiroFacileGPS.sync({status:route.status, statusUrl:`/api/driver/routes/${route.id}/position`, uploadUrl:`/api/driver/routes/${route.id}/position`});
-  document.getElementById('execTitle').textContent = routeArea(route) || (route.data_giro ? `Giro di ${longDateIt(route.data_giro)}` : 'Giro');
-  const pct = n => String(Math.round((progress.totale ? n / progress.totale : 0) * 20) * 5);
-  document.getElementById('execProgressText').innerHTML = `<b>${progress.completate} su ${progress.totale}</b> consegnate${progress.mancate?` · ${progress.mancate} mancate`:''}`;
-  document.getElementById('execProgressRest').textContent = `${progress.rimanenti} da fare`;
-  document.getElementById('execProgressDone').dataset.gfWidth = pct(progress.completate);
-  document.getElementById('execProgressMiss').dataset.gfWidth = pct(progress.mancate);
-  document.getElementById('execProgressTrack').setAttribute('aria-label', `${progress.completate} consegnate, ${progress.mancate} mancate, ${progress.rimanenti} da fare`);
+  document.getElementById('execTitle').textContent = routeArea(route) || (route.data_giro === localIsoDate() ? 'Giro di oggi' : 'Giro programmato');
+  const isToday = route.data_giro === localIsoDate();
+  document.getElementById('execMeta').textContent = [isToday ? `Oggi, ${longDateIt(route.data_giro)}` : longDateIt(route.data_giro),
+    route.orario_partenza ? `partenza ${route.orario_partenza}` : '', route.vehicle_nome || ''].filter(Boolean).join(' · ');
 
   const list = document.getElementById('deliveryList');
   const comp = document.getElementById('completedScreen');
@@ -899,9 +881,10 @@ function renderExecution(data) {
   const nextIdx = progress.prossima_idx;
   const current = nextIdx != null ? consegne[nextIdx] : null;
   const future = !!route.data_giro && route.data_giro > localIsoDate();
-  list.innerHTML = (future ? `<p class="gf-alert" data-status="info">Giro programmato per ${esc(longDateIt(route.data_giro))}${route.orario_partenza?` alle ${esc(route.orario_partenza)}`:''}: puoi vedere le consegne, si avvia quel giorno.</p>` : '')
+  const closedCount = progress.completate + progress.mancate;
+  list.innerHTML = (notStarted && !future ? `<button type="button" class="gf-button" data-variant="primary" onclick="startFromDetail()">Avvia giro</button>` : '')
     + (current ? currentStopCard(current, nextIdx, consegne.length, notStarted, future) : '')
-    + `<h3 class="gf-subtitle">Tutte le fermate</h3><div class="gf-stop-list" data-height="auto">`
+    + `<h3 class="gf-subtitle">Tutte le fermate · ${closedCount ? `${closedCount} su ${progress.totale} fatte` : progress.totale}</h3><div class="gf-stop-list" data-height="auto">`
     + GFDriverBreaks.cards(route,0)
     + consegne.map((c, i) => stopRow(c, i, data, i === nextIdx) + GFDriverBreaks.cards(route,i+1)).join('')
     + `</div>`;
@@ -925,9 +908,7 @@ function currentStopCard(c, i, total, notStarted, future = false) {
   const delta = arrivo && Math.abs(scarto) >= 5
     ? `<p class="gf-muted">${scarto > 0 ? `${scarto} min di ritardo` : `${-scarto} min in anticipo`} sull’orario previsto (${esc(c.arrivo_stimato)})</p>` : '';
   const navUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(c.indirizzo)}`;
-  const actions = future ? ''
-    : notStarted
-    ? `<button type="button" class="gf-button" data-variant="primary" onclick="startFromDetail()">Avvia giro per registrare le consegne</button>`
+  const actions = notStarted ? ''
     : `<a class="gf-button" data-variant="primary" href="${navUrl}" target="_blank" rel="noopener">${gfIcon('route')} Naviga</a>
       <div class="btn-row">
         <button type="button" class="gf-button" data-variant="primary" onclick="openDone(${Number(c.id)})">${gfIcon('check')} Consegnato</button>
