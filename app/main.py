@@ -35,6 +35,14 @@ async def lifespan(app):
     from .migrations import require_current_schema
     require_production_config()
     require_current_schema(engine)
+    # Indirizzo per i test in locale scelto dal portale admin (mai in produzione).
+    from .core import links
+    from .database import SessionLocal
+    try:
+        with SessionLocal() as db:
+            links.load(db)
+    except Exception:  # senza impostazione i link restano su APP_BASE_URL
+        pass
     yield
 
 

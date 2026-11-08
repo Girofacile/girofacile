@@ -5,11 +5,13 @@ from datetime import datetime
 import os
 import platform
 import shutil
+import socket
 import sys
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from ..core.config import APP_BASE_URL
+from ..core import links
 from ..core.dependencies import require_superadmin
 from ..database import get_db, engine
 from .admin_helpers import (
@@ -186,3 +188,76 @@ def admin_advanced_server_access(payload: dict, db: Session = Depends(get_db), s
         "ok": True,
         "message": "Accesso validato lato pannello. Per aprire una console reale collega un terminale esterno protetto e imposta l'URL nella sezione Server / Manutenzione. La password non viene salvata.",
     }
+
+
+# ---------------------------------------------------------------- indirizzi per i test in locale
+PORTAL_LINKS = [
+    ("Gestionale", "/login", "Ufficio: ordini, giri, clienti"),
+    ("App autista", "/driver", "Giri del giorno, fermate e firme"),
+    ("Portale da telefono", "/mobile", "Il gestionale sul telefono"),
+    ("Portale agenti", "/agent", "Ordini e clienti degli agenti"),
+    ("Super Admin", "/admin", "Questo portale"),
+]
+
+
+def _network_addresses() -> list[dict]:
+    """Indirizzi IPv4 di questo computer raggiungibili da altri dispositivi (Wi-Fi, Tailscale)."""
+    found: set[str] = set()
+    try:
+        for info in socket.getaddrinfo(socket.gethostname(), None, socket.AF_INET):
+            found.add(info[4][0])
+    except OSError:
+        pass
+    try:
+        probe = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        probe.connect(("10.255.255.255", 1))  # nessun pacchetto inviato: serve solo a sapere l'interfaccia principale
+        found.add(probe.getsockname()[0])
+        probe.close()
+    except OSError:
+        pass
+
+    def kind(ip: str) -> str:
+        first, second = (int(part) for part in ip.split(".")[:2])
+        if first == 100 and 64 <= second <= 127:
+            return "Tailscale"
+        if first == 192 and second == 168 or first == 10 or first == 172 and 16 <= second <= 31:
+            return "Rete locale (Wi-Fi o cavo)"
+        return "Altra rete"
+    return [{"ip": ip, "kind": kind(ip)} for ip in sorted(found) if not ip.startswith(("127.", "169.254.", "0."))]
+
+
+def _local_addresses_payload(request: Request) -> dict:
+    port = request.url.port or (443 if request.url.scheme == "https" else 80)
+    suffix = "" if port in (80, 443) else f":{port}"
+    current = links.base_url()
+    return {
+        "enabled": links.local_override_allowed(),
+        "current": current,
+        "custom": links.current_override(),
+        "default": APP_BASE_URL,
+        "this_page": f"{request.url.scheme}://{request.url.hostname}{suffix}",
+        "suggestions": [{**item, "url": f"http://{item['ip']}{suffix}"} for item in _network_addresses()],
+        "portals": [{"name": name, "url": current + path, "hint": hint} for name, path, hint in PORTAL_LINKS],
+    }
+
+
+@router.get("/local-addresses")
+def admin_local_addresses(request: Request, superadmin: dict = Depends(require_superadmin)):
+    _require_perm(superadmin, "view_server_maintenance")
+    return _local_addresses_payload(request)
+
+
+@router.put("/local-addresses")
+def admin_local_addresses_save(payload: dict, request: Request, db: Session = Depends(get_db), superadmin: dict = Depends(require_superadmin)):
+    _require_perm(superadmin, "view_server_maintenance")
+    if not links.local_override_allowed():
+        raise HTTPException(403, "In produzione i link usano sempre l'indirizzo ufficiale")
+    try:
+        value = links.normalize(payload.get("base_url"))
+    except ValueError as exc:
+        raise HTTPException(422, str(exc))
+    _set_setting_value(db, links.LOCAL_BASE_URL_KEY, value)
+    _activity(db, superadmin.get("username"), "local_base_url_updated", f"Indirizzo per i test: {value or 'predefinito'}", "info")
+    db.commit()
+    links.set_override(value)
+    return _local_addresses_payload(request)

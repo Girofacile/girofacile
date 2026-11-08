@@ -2,6 +2,7 @@
 from copy import deepcopy
 from datetime import datetime, timedelta
 from ..core.clock import utc_now
+from ..core.links import base_url as _links_base_url
 import math
 from fastapi import HTTPException
 from .. import optimizer as opt
@@ -1015,7 +1016,7 @@ def _program_saved(db,user,actor,plan_id,data):
                 company_name=user.company_name or user.username or 'GiroFacile',route_name=row.nome,
                 data_giro=row.data_giro.isoformat(),orario_partenza=row.orario_partenza.strftime('%H:%M'),
                 n_consegne=len(row.deliveries),km_totali=float(row.totale_km or 0),
-                portal_url=os.getenv('APP_BASE_URL','https://app.girofacile.it').rstrip('/')+'/driver')
+                portal_url=_links_base_url(os.getenv('APP_BASE_URL','https://app.girofacile.it')).rstrip('/')+'/driver')
             if not sent: failed.append(row)
         except Exception:
             failed.append(row)

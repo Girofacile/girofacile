@@ -9,6 +9,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from sqlalchemy.orm import Session
 
 from ..core.config import APP_BASE_URL
+from ..core.links import base_url as _links_base_url
 from ..core.dependencies import current_user
 from ..core.http_security import _client_ip
 from ..database import get_db
@@ -54,7 +55,7 @@ def read_tracking(x_tracking_token: str = Header(default=''), db: Session = Depe
 def get_tracking_link(delivery_id: int, user: User = Depends(current_user), db: Session = Depends(get_db)):
     delivery, plan = owned_delivery(db, user, delivery_id)
     link = ensure_link(db, delivery, plan)
-    url = f'{APP_BASE_URL}/tracking#{credential(link)}'
+    url = f'{_links_base_url(APP_BASE_URL)}/tracking#{credential(link)}'
     expires = link.expires_at.isoformat() + 'Z'
     db.commit()
     return JSONResponse({'url': url, 'expires_at': expires}, headers=PUBLIC_HEADERS)

@@ -39,9 +39,13 @@ set DATABASE_URL=postgresql+psycopg2://girofacile:girofacile_local@localhost:543
 echo.
 echo Avvio applicazione...
 echo Apri nel browser: http://127.0.0.1:8000/login
+echo Dal telefono (stessa rete Wi-Fi o Tailscale): usa l'indirizzo di questo PC con :8000
+echo   - lo trovi in Super Admin, sezione Server, "Indirizzi per i test in locale"
+echo   - la prima volta Windows puo' chiedere il permesso del firewall: consenti le reti private
 echo Per fermare il server: CTRL+C
 echo.
 python -m app.migrations
 if errorlevel 1 exit /b 1
-python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+REM 0.0.0.0: GiroFacile risponde anche agli altri dispositivi della rete (telefono degli autisti per i test).
+python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 pause

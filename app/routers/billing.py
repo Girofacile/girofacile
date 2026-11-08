@@ -278,6 +278,7 @@ def resume_subscription(db: Session = Depends(get_db), user: User = Depends(curr
 def billing_portal(db: Session = Depends(get_db), user: User = Depends(current_user)):
     from ..services.billing import stripe_client, retrieve_subscription
     from ..core.config import APP_BASE_URL
+    from ..core.links import base_url as _links_base_url
     stripe = stripe_client(user)
     retrieve_subscription(stripe, user)
     # Isolated portal configuration prevents unmanaged plan changes/cancellation.
@@ -288,7 +289,7 @@ def billing_portal(db: Session = Depends(get_db), user: User = Depends(current_u
                   "subscription_cancel": {"enabled": False}, "subscription_update": {"enabled": False}},
         idempotency_key="gf-sandbox-portal-v1")
     session = stripe.billing_portal.Session.create(customer=user.stripe_customer_id,
-        configuration=configuration["id"], return_url=APP_BASE_URL.rstrip("/") + "/dashboard")
+        configuration=configuration["id"], return_url=_links_base_url(APP_BASE_URL).rstrip("/") + "/dashboard")
     return {"url": session["url"]}
 
 

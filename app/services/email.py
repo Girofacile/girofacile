@@ -8,6 +8,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 from ..core.config import LOCAL_TIMEZONE, APP_BASE_URL
+from ..core.links import base_url as _links_base_url
 
 SMTP_HOST = os.getenv("SMTP_HOST", "smtp.ionos.it")
 SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
@@ -234,7 +235,7 @@ def send_new_paying_customer(
       <div class="info-row"><span class="info-label">Importo:</span><strong>{amount:.2f} {esc(currency)}</strong></div>
       <div class="info-row"><span class="info-label">Stato:</span><strong>{mode_label}</strong></div>
     </div>
-    <a class="btn" href="{APP_BASE_URL.rstrip('/')}/admin">Apri Super Admin</a>
+    <a class="btn" href="{_links_base_url(APP_BASE_URL).rstrip('/')}/admin">Apri Super Admin</a>
     """
     return _send(to_email, subject, _base_template(content))
 
@@ -260,7 +261,7 @@ def send_new_company_registration(
       <div class="info-row"><span class="info-label">Username:</span><strong>{esc(username)}</strong></div>
       <div class="info-row"><span class="info-label">Piano:</span><strong>{esc(plan)}</strong></div>
     </div>
-    <a class="btn" href="{APP_BASE_URL.rstrip('/')}/admin">Apri Super Admin</a>
+    <a class="btn" href="{_links_base_url(APP_BASE_URL).rstrip('/')}/admin">Apri Super Admin</a>
     """
     return _send(to_email, subject, _base_template(content))
 
@@ -427,7 +428,7 @@ def send_password_reset(
       <div class="info-row"><span class="info-label">Sicurezza:</span><strong>link utilizzabile una sola volta</strong></div>
     </div>
     <div class="warn">Se non hai richiesto tu questa operazione, puoi ignorare questa email.</div>
-    <p>Puoi sempre accedere dal dominio ufficiale: <a href="{APP_BASE_URL}">{APP_BASE_URL}</a></p>
+    <p>Puoi sempre accedere dal dominio ufficiale: <a href="{_links_base_url(APP_BASE_URL)}">{_links_base_url(APP_BASE_URL)}</a></p>
     """
     return _send(to_email, subject, _base_template(content))
 
@@ -442,7 +443,7 @@ def send_password_changed_notice(to_email: str, display_name: str) -> bool:
       <div class="info-row"><span class="info-label">Sicurezza:</span><strong>tutte le sessioni precedenti sono state invalidate</strong></div>
     </div>
     <div class="warn">Se non sei stato tu a modificare la password, vai subito alla pagina di accesso e usa “Password dimenticata?” per reimpostarla.</div>
-    <p>Accedi solo dal dominio ufficiale: <a href="{APP_BASE_URL}">{APP_BASE_URL}</a></p>
+    <p>Accedi solo dal dominio ufficiale: <a href="{_links_base_url(APP_BASE_URL)}">{_links_base_url(APP_BASE_URL)}</a></p>
     """
     return _send(to_email, subject, _base_template(content))
 
@@ -534,7 +535,7 @@ def send_superadmin_collaborator_invitation(
     login_url: str | None = None,
 ) -> bool:
     """Invita un collaboratore al pannello Super Admin GiroFacile."""
-    login_url = login_url or f"{APP_BASE_URL.rstrip('/')}/admin/login"
+    login_url = login_url or f"{_links_base_url(APP_BASE_URL).rstrip('/')}/admin/login"
     subject = "👥 Sei stato aggiunto come collaboratore Super Admin GiroFacile"
     content = f"""
     <p>Ciao <strong>{collaborator_name}</strong>,</p>

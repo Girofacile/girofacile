@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from ..core.clock import utc_now
 from html import escape
 from ..core.config import APP_BASE_URL
+from ..core.links import base_url as _links_base_url
 from ..models import User, BillingNotice
 from .email import _send, _base_template
 
@@ -34,7 +35,7 @@ def send_due_notices(db, send=False):
             continue
         prefix = "[PROVA] " if user.billing_source == "stripe_test" else ""
         address = user.company_email or user.email
-        body = f'<p>{escape(message)}</p><p><a href="{escape(APP_BASE_URL, quote=True)}/dashboard">Apri GiroFacile</a></p>'
+        body = f'<p>{escape(message)}</p><p><a href="{escape(_links_base_url(APP_BASE_URL), quote=True)}/dashboard">Apri GiroFacile</a></p>'
         if address and _send(address, prefix + subject, _base_template(body)):
             db.add(BillingNotice(user_id=user.id, notice_key=key))
             db.flush()

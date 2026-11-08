@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from ..core.dependencies import current_user, owned
 from ..database import get_db
 from ..core.config import APP_BASE_URL
+from ..core.links import base_url as _links_base_url
 from ..models import Agent, AgentAccount, AgentSetupToken, Customer, User
 from ..schemas import AgentIn
 from ..services.agents_feature import require_agents_enabled
@@ -90,8 +91,8 @@ def _create_agent_invite(agent: Agent, db: Session, user: User, is_reinvite: boo
     )
     db.add(st)
     db.commit()
-    setup_url = f"{APP_BASE_URL}/agent/setup/{token}"
-    portal_url = f"{APP_BASE_URL}/agent"
+    setup_url = f"{_links_base_url(APP_BASE_URL)}/agent/setup/{token}"
+    portal_url = f"{_links_base_url(APP_BASE_URL)}/agent"
     sent = False
     try:
         sent = send_agent_invitation(

@@ -8,6 +8,7 @@ from urllib.parse import urlsplit
 
 from fastapi import HTTPException
 from ..core.config import APP_BASE_URL, APP_ENV
+from ..core.links import base_url as _links_base_url
 from ..core.security import hash_password, validate_password_strength
 from ..models import CollaboratorInvitation, CompanyCollaborator, PasswordResetToken, User
 
@@ -27,7 +28,7 @@ def _digest(token):
 
 
 def _setup_url(token):
-    base = APP_BASE_URL.rstrip("/")
+    base = _links_base_url(APP_BASE_URL).rstrip("/")
     try:
         parsed = urlsplit(base)
         hostname = parsed.hostname

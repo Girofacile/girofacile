@@ -5,6 +5,10 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Super Admin → Server: sezione «Indirizzi per i test in locale» (solo fuori produzione).
+  Mostra gli indirizzi del computer (Wi-Fi, Tailscale), sceglie quello usato nei link
+  (inviti autisti e agenti, email, tracking, QR) ed elenca i collegamenti di ogni portale da
+  copiare. start_locale_windows.bat ora ascolta anche sulla rete (0.0.0.0).
 - Tendine nuove in tutto il software (variante A, senza icone colorate): con mouse o trackpad
   si apre l'elenco di GiroFacile (componente `.gf-listbox`) con nome, riga di dettaglio e stato
   a destra (Disponibile, In mezzo N, Non disponibile), spunta sulla voce scelta e ricerca da 9

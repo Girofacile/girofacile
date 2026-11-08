@@ -15,6 +15,7 @@ from sqlalchemy import func, or_, text
 from sqlalchemy.orm import Session
 
 from ..core.config import APP_BASE_URL, APP_USER, SUPERADMIN_USERNAME, SUPERADMIN_PASSWORD, TRIAL_DAYS, ERROR_NOTIFICATIONS_EMAIL
+from ..core.links import base_url as _links_base_url
 from ..core.http_security import cookie_options, COOKIE_DOMAIN
 from ..core.dependencies import current_user, is_admin_user
 from ..core.security import hash_password, make_token, make_superadmin_token, make_superadmin_collaborator_token, password_needs_rehash, validate_password_strength, verify_password, verify_token
@@ -567,7 +568,7 @@ def request_password_reset(payload: dict, db: Session = Depends(get_db)):
             if prt is None:
                 continue
             display_name, account_label = _reset_display_for_account(account_type, account, db)
-            reset_url = f"{APP_BASE_URL}/reset-password/{prt.token}"
+            reset_url = f"{_links_base_url(APP_BASE_URL)}/reset-password/{prt.token}"
             try:
                 send_password_reset(email, display_name, reset_url, account_label=account_label)
             except Exception as exc:

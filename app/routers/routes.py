@@ -1014,7 +1014,8 @@ def program_route(
     db.commit()
     db.refresh(plan)
 
-    base_url = (payload or {}).get("base_url") or os.getenv("APP_BASE_URL", "https://app.girofacile.it")
+    from ..core.links import base_url as _links_base_url
+    base_url = (payload or {}).get("base_url") or _links_base_url(os.getenv("APP_BASE_URL", "https://app.girofacile.it"))
     operator_portal_url = f"{base_url}/giro/{token}"
     driver_portal_url = f"{base_url}/driver"
 

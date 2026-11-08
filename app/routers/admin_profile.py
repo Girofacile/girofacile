@@ -8,6 +8,7 @@ import os
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from ..core.config import APP_BASE_URL, ERROR_NOTIFICATIONS_EMAIL, GOOGLE_MAPS_API_KEY
+from ..core.links import base_url as _links_base_url
 from ..core.dependencies import require_superadmin
 from ..database import get_db
 from ..models import SuperAdminActivityLog, SuperAdminCollaborator
@@ -217,7 +218,7 @@ def admin_create_collaborator(payload: dict, db: Session = Depends(get_db), supe
     labels = [label for key, label in COLLABORATOR_PERMISSIONS.items() if perms.get(key)]
     sent = send_superadmin_collaborator_invitation(
         email, full_name, temporary, ", ".join(labels[:4]) + ("..." if len(labels) > 4 else "") or "Nessun permesso operativo",
-        f"{APP_BASE_URL.rstrip('/')}/admin/login"
+        f"{_links_base_url(APP_BASE_URL).rstrip('/')}/admin/login"
     )
     collab.invitation_sent = bool(sent)
     _activity(db, superadmin.get("username"), "collaborator_created", f"Creato collaboratore {full_name} ({email})")
@@ -260,7 +261,7 @@ def admin_resend_collaborator(collaborator_id: int, db: Session = Depends(get_db
     labels = [label for key, label in COLLABORATOR_PERMISSIONS.items() if perms.get(key)]
     sent = send_superadmin_collaborator_invitation(
         collab.email, collab.full_name, temporary, ", ".join(labels[:4]) + ("..." if len(labels) > 4 else "") or "Nessun permesso operativo",
-        f"{APP_BASE_URL.rstrip('/')}/admin/login"
+        f"{_links_base_url(APP_BASE_URL).rstrip('/')}/admin/login"
     )
     collab.invitation_sent = bool(sent)
     collab.updated_at = utc_now()
