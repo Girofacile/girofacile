@@ -158,7 +158,7 @@ def test_eta_is_shared_private_and_falls_back_when_stale(gps):
     public = public_projection(db, delivery, plan, now=now)
     assert public['eta']['source'] == 'gps'
     assert public['eta']['at'] == schedule['deliveries'][delivery.id]['arrival'].isoformat()
-    assert set(public) == {'status','scheduled_date','timezone','eta','stops_before','completed_at','refresh_after_seconds'}
+    assert set(public) == {'status','scheduled_date','timezone','eta','stops_before','completed_at','refresh_after_seconds','company'}
     row = db.get(RoutePosition,plan.id)
     row.captured_at -= timedelta(seconds=100); db.commit()
     assert client.get(f'/api/routes/{plan.id}/position').json()['state'] == 'stale'

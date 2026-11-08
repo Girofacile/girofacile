@@ -153,6 +153,8 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
 .di-missed-box{background:#fee2e2;border-radius:8px;padding:10px 12px;font-size:13px;color:#991b1b;margin-bottom:8px;}
 .di-warn-box{background:#fef3c7;border-radius:8px;padding:8px 12px;font-size:12px;color:#92400e;margin-bottom:8px;}
 .di-times{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px;}
+.di-times-single{grid-template-columns:1fr;}
+.btn-call{display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;color:var(--blue);}
 .di-time-item{text-align:center;background:#f9fafb;border-radius:7px;padding:6px;}
 .di-time-lbl{font-size:9px;color:#9ca3af;margin-bottom:2px;}
 .di-time-val{font-size:13px;font-weight:700;}
@@ -279,7 +281,7 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
 <link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261020_notice">
 <script src="/static/design-system/design-system.js?v=gf_tendine_20261108" defer></script>
 <link rel="stylesheet" href="/static/driver-schedule.css?v=gf_break_row_20261021"><script src="/static/driver-schedule.js?v=gf_break_row_20261021"></script>
-<script src="/static/design-system/gf-icons.js?v=gf_unified_20261014_1"></script>
+<script src="/static/design-system/gf-icons.js?v=gf_telefono_20261108"></script>
 <link rel="stylesheet" href="/static/design-system/portal-unified.css?v=gf_unified_20261014_1">
 </head>
 <body data-gf-surface="driver" data-gf-portal>
@@ -856,6 +858,14 @@ async function loadExecution() {
   }
 }
 
+// «Chiama»: il numero dalla scheda del cliente; senza numero resta solo «Aggiungi nota».
+function callHtml(c) {
+  const note = `<button class="btn-note-small" onclick="openNote(${c.id})">${gfIcon('note')} ${c.note_operatore?'Modifica nota':'Aggiungi nota'}</button>`;
+  const tel = String(c.telefono_cliente || '').replace(/[^0-9+]/g, '');
+  if(tel.replace(/\D/g, '').length < 6) return note;
+  return `<div class="btn-row"><a class="btn-note-small btn-call" href="tel:${tel}" aria-label="Chiama ${esc(c.cliente_nome)}">${gfIcon('phone')} Chiama</a>${note}</div>`;
+}
+
 function renderExecution(data) {
   const { route, consegne, progress } = data;
   podConfigurePhoto(data);
@@ -896,11 +906,14 @@ function renderExecution(data) {
     let detailsHtml = '';
     if(isActive || isDone || isMissed) {
       detailsHtml = `<div class="di-details">`;
-      if(c.arrivo_stimato || c.km_tappa) {
-        detailsHtml += `<div class="di-times">
-          ${c.arrivo_stimato?`<div class="di-time-item"><div class="di-time-lbl">Arrivo est.</div><div class="di-time-val">${esc(c.arrivo_stimato)}</div></div>`:''}
-          ${c.partenza_stimata?`<div class="di-time-item"><div class="di-time-lbl">Ripartenza</div><div class="di-time-val">${esc(c.partenza_stimata)}</div></div>`:''}
-          ${c.km_tappa?`<div class="di-time-item"><div class="di-time-lbl">Km tappa</div><div class="di-time-val">${fmt(c.km_tappa)} km</div></div>`:''}
+      // Solo l'arrivo previsto, aggiornato dal server con anticipi e ritardi delle consegne precedenti
+      // (si rinfresca da solo ogni 30 secondi). Sulle consegne già chiuse non serve.
+      const arrivo = c.arrivo_aggiornato || c.arrivo_stimato;
+      if(isActive && arrivo) {
+        const scarto = Number(c.arrivo_scarto_min || 0);
+        const delta = Math.abs(scarto) >= 5 ? `<div class="di-time-lbl">${scarto > 0 ? `+${scarto} min di ritardo` : `${-scarto} min in anticipo`} · previsto ${esc(c.arrivo_stimato)}</div>` : '';
+        detailsHtml += `<div class="di-times di-times-single">
+          <div class="di-time-item"><div class="di-time-lbl">Arrivo previsto</div><div class="di-time-val">${esc(arrivo)}</div>${delta}</div>
         </div>`;
       }
       if(c.note) detailsHtml += `<div class="di-note-box">${gfIcon('note')} ${esc(c.note)}</div>`;
@@ -935,7 +948,7 @@ function renderExecution(data) {
           <button class="btn-done" onclick="openDone(${c.id})">${gfIcon('check')} Consegnato</button>
           <button class="btn-missed" onclick="openMissed(${c.id})">${gfIcon('x')} Mancata</button>
         </div>
-        <button class="btn-note-small" onclick="openNote(${c.id})">${gfIcon('note')} ${c.note_operatore?'Modifica nota':'Aggiungi nota'}</button>
+        ${callHtml(c)}
       </div>`;
     } else if(isDone || isMissed) {
       actionsHtml = `<div class="di-actions">

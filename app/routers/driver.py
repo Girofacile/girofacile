@@ -1,4 +1,5 @@
 from ..services.driver_schedule import metadata as driver_schedule_metadata
+from ..services.route_schedule import route_schedule_datetimes
 from ..services.identity import ensure_login_email_available
 from ..services.route_execution import apply_delivery_update, get_or_create_delivery_status, update_customer_unload_time, refresh_route_completion
 from ..services.route_enrichment import routing_metadata, json_data, TIMING_DETAILS
@@ -300,8 +301,24 @@ def get_driver_route_detail(route_id: int, da: DriverAccount = Depends(get_curre
     mancate = sum(1 for ds in statuses.values() if ds.status == "mancata")
     prossima_idx = next((i for i, d in enumerate(deliveries) if (not statuses.get(d.id) or statuses[d.id].status == "in_attesa")), None)
 
+    # Arrivo aggiornato: lo stesso calcolo del tracking cliente (partenza reale, anticipi e ritardi
+    # delle consegne già chiuse). scarto = minuti rispetto all'orario pianificato (+ ritardo, - anticipo).
+    live = route_schedule_datetimes(r, statuses)['deliveries']
+
+    def live_arrival(d, ds):
+        if ds and ds.status in ("completata", "mancata"):
+            return None, None
+        arrival = (live.get(d.id) or {}).get("arrival")
+        planned = minutes_from_hhmm(time_to_hhmm(d.arrivo_stimato))
+        if not arrival or planned is None:
+            return time_to_hhmm(d.arrivo_stimato), None
+        diff = (arrival.hour * 60 + arrival.minute - planned + 720) % 1440 - 720
+        return arrival.strftime("%H:%M"), diff
+
     def ds_dict(d):
         ds = statuses.get(d.id)
+        arrivo_aggiornato, scarto = live_arrival(d, ds)
+        phone = (d.customer.telefono or "").strip() if d.customer_id and d.customer else ""
         return {
             "id": d.id, "ordine": d.ordine, "customer_id": d.customer_id,
             "cliente_nome": d.cliente_nome, "indirizzo": d.indirizzo,
@@ -311,6 +328,8 @@ def get_driver_route_detail(route_id: int, da: DriverAccount = Depends(get_curre
             "tempo_scarico_min": d.tempo_scarico_min, "ztl": d.ztl, "pedestrian_area": d.pedestrian_area, "sponda": d.sponda,
             "note": d.note, "arrivo_stimato": time_to_hhmm(d.arrivo_stimato), "partenza_stimata": time_to_hhmm(d.partenza_stimata),
             "km_tappa": d.km_tappa, "warning": d.warning,
+            "arrivo_aggiornato": arrivo_aggiornato, "arrivo_scarto_min": scarto,
+            "telefono_cliente": phone or None,
             **{k: v for k, v in json_data(d.optimizer_details).items() if k in (*TIMING_DETAILS, "order_numbers", "order_operational")},
             "status": ds.status if ds else "in_attesa",
             "motivo_mancata": ds.motivo_mancata if ds else None,

@@ -5,6 +5,10 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- App autista, consegna attiva: tasto «Chiama» (tel:) con il numero della scheda cliente, accanto
+  ad «Aggiungi nota»; senza numero non compare. Al posto di arrivo, ripartenza e km tappa resta solo
+  «Arrivo previsto», ricalcolato dal server come nel tracking (partenza reale, anticipi e ritardi
+  delle consegne chiuse), con «+N min di ritardo» o «N min in anticipo» da 5 minuti in su.
 - Tracking del cliente ridisegnato (versione A) con i componenti di GiroFacile: in alto logo e nome
   dell'azienda, una scheda con stato, numeri grandi (arrivo, fermate prima della tua, data),
   avanzamento in tre passi e avvisi; «Tracking fornito da GiroFacile» in fondo. Il colore del brand
