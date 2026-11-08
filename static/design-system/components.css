@@ -1078,14 +1078,16 @@ body[data-gf-surface] .gf-day-head{
   transition:background var(--gf-motion-duration),border-color var(--gf-motion-duration);
 }
 body[data-gf-surface] .gf-day-head:hover{background:var(--gf-color-surface-subtle)}
-/* Giorno scelto: intestazione su azzurro tenue con testo blu, colonna con bordo blu e alone */
-body[data-gf-surface] .gf-day-head[aria-pressed="true"],
-body[data-gf-surface] .gf-day-head[aria-pressed="true"]:hover{border-color:var(--gf-color-info-bg);background:var(--gf-color-info-bg);color:var(--gf-color-primary)}
+/* Giorno scelto (variante B approvata l'8 novembre 2026): numero in un cerchio azzurro tenue,
+   giorno in blu, colonna con bordo azzurro e alone leggero; l'intestazione resta senza fondo. */
 body[data-gf-surface] .gf-day-head[aria-pressed="true"] .gf-day-head__weekday{color:var(--gf-color-primary)}
 body[data-gf-surface] .gf-day-head[aria-pressed="true"]>.gf-badge{background:var(--gf-color-surface);color:var(--gf-color-primary)}
-body[data-gf-surface] .gf-panel:has(>.gf-panel__header>.gf-day-head[aria-pressed="true"]){border-color:var(--gf-color-primary);box-shadow:var(--gf-focus-ring),var(--gf-shadow-sm)}
+body[data-gf-surface] .gf-panel:has(>.gf-panel__header>.gf-day-head[aria-pressed="true"]){border-color:var(--gf-color-info-bg);box-shadow:var(--gf-focus-ring),var(--gf-shadow-sm)}
 body[data-gf-surface] .gf-day-head__weekday{grid-column:1;color:var(--gf-color-muted);font-size:var(--gf-font-xs);font-weight:var(--gf-weight-semibold);text-transform:uppercase;letter-spacing:.06em}
 body[data-gf-surface] .gf-day-head__number{grid-column:1;font:var(--gf-weight-bold) var(--gf-font-2xl)/1.1 var(--gf-font-display);letter-spacing:-.01em}
+/* Numero in un cerchio (vuoto se il giorno non è scelto), allineato al nome del giorno */
+body[data-gf-surface] .gf-day-head .gf-day-head__number{display:inline-grid;place-items:center;justify-self:start;width:calc(var(--gf-space-10) + var(--gf-space-1));height:calc(var(--gf-space-10) + var(--gf-space-1));margin-left:calc(-1 * var(--gf-space-2));border-radius:var(--gf-radius-circle)}
+body[data-gf-surface] .gf-day-head[aria-pressed="true"] .gf-day-head__number{background:var(--gf-color-info-bg);color:var(--gf-color-primary)}
 /* Oggi: solo il numero in rosso, senza scritta, così il riquadro resta alto come gli altri */
 body[data-gf-surface] .gf-day-head[aria-current="date"] .gf-day-head__number{color:var(--gf-color-danger)}
 body[data-gf-surface] .gf-day-head>.gf-badge{grid-column:2;grid-row:1 / span 2;align-self:center}
