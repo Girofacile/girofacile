@@ -46,3 +46,35 @@ def test_driver_sees_customer_phone_and_arrival_updated_by_previous_delays(env):
     assert stops[first.id]['arrivo_aggiornato'] is None
     assert stops[second.id]['arrivo_stimato'] == '10:00'
     assert stops[second.id]['arrivo_aggiornato'] == '10:30' and stops[second.id]['arrivo_scarto_min'] == 30
+
+
+def test_driver_calls_order_recipient_when_stop_has_no_customer_card(env):
+    """Consegne da ordini (es. simulatore) senza scheda cliente: «Chiama» usa il telefono dell'ordine."""
+    import json
+    from app.routers import driver
+    from app.models import Delivery
+    from app.order_models import Order, OrderSource, RouteOrderAssignment
+    from app.schemas.orders import OrderData
+
+    client, db, owner, *_ = env
+    route, _, account = seed_route(env)
+    source = OrderSource(user_id=owner.id, key='sim', name='Simulatore', kind='api')
+    db.add(source); db.flush()
+    stop = Delivery(route_plan_id=route.id, cliente_nome='DEMO Agriturismo', indirizzo='Via Luca Giordano 7', ordine=2,
+                    optimizer_details=json.dumps({'order_stop_key': 'stop-1'}))
+    db.add(stop)
+    for i, phone in enumerate(['', '081 123 4567']):
+        order = Order(user_id=owner.id, source_id=source.id, external_id=f'E{i}', number=f'N{i}', original_payload={},
+                      operational_data={'phone': phone} if phone else {})
+        db.add(order); db.flush()
+        db.add(RouteOrderAssignment(user_id=owner.id, order_id=order.id, route_plan_id=route.id, stop_key='stop-1'))
+    db.commit()
+    client.app.include_router(driver.router)
+    client.app.dependency_overrides[driver.get_current_driver] = lambda: account
+    stops = {c['id']: c for c in client.get(f'/api/driver/routes/{route.id}').json()['consegne']}
+    assert stops[stop.id]['telefono_cliente'] == '081 123 4567'
+    # Il campo dell'ordine accetta solo cifre e simboli di un numero di telefono.
+    assert OrderData(number='1', phone='+39 (081) 123-4567').phone == '+39 (081) 123-4567'
+    import pytest
+    with pytest.raises(Exception):
+        OrderData(number='1', phone='javascript:alert(1)')

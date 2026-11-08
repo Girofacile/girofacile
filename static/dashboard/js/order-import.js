@@ -2,7 +2,7 @@
 (function(){
   'use strict';
   const el=id=>document.getElementById(id),can=k=>!window.GFCompanyAccess||GFCompanyAccess.can(k);
-  const labels={number:'Numero ordine',recipient_name:'Destinatario',delivery_address:'Indirizzo',requested_date:'Data consegna',packages:'Colli',weight_kg:'Peso',external_id:'Codice univoco',external_customer_id:'Codice cliente',time_from:'Dalle',time_to:'Alle',pallets:'Pallet',volume_m3:'Volume',tail_lift:'Sponda',pallet_truck:'Transpallet',ztl:'ZTL',requirements:'Requisiti',notes:'Note',items:'Articoli'};
+  const labels={number:'Numero ordine',recipient_name:'Destinatario',phone:'Telefono',delivery_address:'Indirizzo',requested_date:'Data consegna',packages:'Colli',weight_kg:'Peso',external_id:'Codice univoco',external_customer_id:'Codice cliente',time_from:'Dalle',time_to:'Alle',pallets:'Pallet',volume_m3:'Volume',tail_lift:'Sponda',pallet_truck:'Transpallet',ztl:'ZTL',requirements:'Requisiti',notes:'Note',items:'Articoli'};
   let sources=[],fields=[],source=null,stage=null,report=null,mapping={},excluded=[],busy=false,filename='';
   const post=value=>({method:'POST',body:JSON.stringify(value)});
   async function api(path,options={}){

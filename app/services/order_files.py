@@ -12,6 +12,7 @@ from .order_grouping import normalize
 FIELDS=list(ExternalOrder.model_fields)
 ALIASES={'external_id':['idordine','id','nordine','numeroordine'], 'number':['numeroordine','nordine','numero'],
  'external_customer_id':['codcli','codicecliente'], 'recipient_name':['ragionesociale','cliente','destinatario'],
+ 'phone':['telefono','tel','cellulare','recapito','telefonodestinatario'],
  'delivery_address':['indsped','indirizzo','indirizzoconsegna'], 'requested_date':['datacons','dataconsegna'],
  'weight_kg':['peso','pesokg'],'packages':['ncolli','colli'],'tail_lift':['pedana','sponda'],
  'pallet_truck':['transpallet'],'ztl':['ztl'],'notes':['note'],'time_from':['dalle'],'time_to':['alle'],

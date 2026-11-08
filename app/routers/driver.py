@@ -1,5 +1,6 @@
 from ..services.driver_schedule import metadata as driver_schedule_metadata
 from ..services.route_schedule import route_schedule_datetimes
+from ..services.route_orders import route_order_phones
 from ..services.identity import ensure_login_email_available
 from ..services.route_execution import apply_delivery_update, get_or_create_delivery_status, update_customer_unload_time, refresh_route_completion
 from ..services.route_enrichment import routing_metadata, json_data, TIMING_DETAILS
@@ -315,10 +316,13 @@ def get_driver_route_detail(route_id: int, da: DriverAccount = Depends(get_curre
         diff = (arrival.hour * 60 + arrival.minute - planned + 720) % 1440 - 720
         return arrival.strftime("%H:%M"), diff
 
+    order_phones = route_order_phones(db, r)
+
     def ds_dict(d):
         ds = statuses.get(d.id)
         arrivo_aggiornato, scarto = live_arrival(d, ds)
         phone = (d.customer.telefono or "").strip() if d.customer_id and d.customer else ""
+        phone = phone or order_phones.get(json_data(d.optimizer_details).get("order_stop_key"), "")
         return {
             "id": d.id, "ordine": d.ordine, "customer_id": d.customer_id,
             "cliente_nome": d.cliente_nome, "indirizzo": d.indirizzo,

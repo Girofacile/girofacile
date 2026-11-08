@@ -141,6 +141,20 @@ def reserve_orders(db, plan, rows):
     db.flush()
 
 
+def route_order_phones(db, plan):
+    """Telefono del destinatario per fermata (order_stop_key), dal primo ordine che lo indica."""
+    rows = (db.query(RouteOrderAssignment.stop_key, Order.operational_data)
+            .join(Order, (Order.id == RouteOrderAssignment.order_id) & (Order.user_id == RouteOrderAssignment.user_id))
+            .filter(RouteOrderAssignment.user_id == plan.user_id, RouteOrderAssignment.route_plan_id == plan.id)
+            .order_by(Order.id).all())
+    phones = {}
+    for key, data in rows:
+        phone = str((data or {}).get('phone') or '').strip()
+        if phone and key not in phones:
+            phones[key] = phone
+    return phones
+
+
 def sync_route_orders(db, plan, phase, delivery=None):
     assignments = db.query(RouteOrderAssignment).filter_by(user_id=plan.user_id, route_plan_id=plan.id).all()
     if delivery is not None:

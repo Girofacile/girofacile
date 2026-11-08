@@ -14,7 +14,7 @@
 
   // Da pianificare come «In servizio» della Dashboard, così non si confonde con «Assegnato» (azzurro); annullato in rosso chiaro.
   const statusTone={nuovo:'warning',da_verificare:'warning',pronto:'warning',assegnato:'info',in_consegna:'info',consegnato:'success',non_consegnato:'danger',annullato:'danger'};
-  const fields={number:'Numero ordine',recipient_name:'Destinatario',street:'Via',street_number:'Civico',postal_code:'CAP',city:'Comune',requested_date:'Data richiesta',time_from:'Fascia oraria: dalle',time_to:'Alle',weight_kg:'Peso (kg)',packages:'Colli',pallets:'Pallet',volume_m3:'Volume (m³)',tail_lift:'Sponda',pallet_truck:'Transpallet',ztl:'ZTL',requirements:'Requisiti operativi',notes:'Note'};
+  const fields={number:'Numero ordine',recipient_name:'Destinatario',phone:'Telefono destinatario',street:'Via',street_number:'Civico',postal_code:'CAP',city:'Comune',requested_date:'Data richiesta',time_from:'Fascia oraria: dalle',time_to:'Alle',weight_kg:'Peso (kg)',packages:'Colli',pallets:'Pallet',volume_m3:'Volume (m³)',tail_lift:'Sponda',pallet_truck:'Transpallet',ztl:'ZTL',requirements:'Requisiti operativi',notes:'Note'};
   // Etichette anche dei campi che non sono nel modulo (storico delle modifiche, errori).
   const labelOf=key=>fields[key]||({delivery_address:'Indirizzo di consegna',province:'Provincia'})[key];
   const numeric=['weight_kg','packages','pallets','volume_m3'], bools=['tail_lift','pallet_truck','ztl'];
@@ -97,7 +97,7 @@
       const value=data[key], id='orderField-'+key;
       if(bools.includes(key))return `<label class="gf-field" for="${id}"><span class="gf-field__label">${label}</span><select class="gf-select" id="${id}" name="${key}"><option value="">Non indicato</option><option value="true" ${value===true?'selected':''}>Sì</option><option value="false" ${value===false?'selected':''}>No</option></select></label>`;
       if(['notes','requirements'].includes(key))return `<label class="gf-field" data-span="full" for="${id}"><span class="gf-field__label">${label}</span><textarea class="gf-textarea" id="${id}" name="${key}" maxlength="${key==='notes'?5000:2000}">${esc(value||'')}</textarea></label>`;
-      const type=numeric.includes(key)?'number':key==='requested_date'?'date':key.startsWith('time_')?'time':'text';
+      const type=numeric.includes(key)?'number':key==='requested_date'?'date':key.startsWith('time_')?'time':key==='phone'?'tel':'text';
       return `<label class="gf-field" for="${id}"><span class="gf-field__label">${label}</span><input class="gf-input" id="${id}" name="${key}" type="${type}" value="${esc(value??'')}" ${key==='number'?'required maxlength="160"':key==='recipient_name'?'maxlength="200"':key==='street'?'maxlength="300" autocomplete="off"':key==='street_number'?'maxlength="20" autocomplete="off"':key==='postal_code'?'maxlength="5" inputmode="numeric" pattern="\\d{5}" autocomplete="off"':key==='city'?'maxlength="150" autocomplete="off"':''} ${type==='number'?`min="0" max="${key==='packages'?1000000:100000000}" step="${key==='packages'?1:'any'}"`:''}></label>`;
     }).join('');
     // Keep the everyday workflow compact; optional logistics remain available on demand.
@@ -248,7 +248,7 @@
             <section class="gf-panel">
               <header class="gf-panel__header"><h3 class="gf-panel__title">Dati di consegna</h3></header>
               <div class="gf-panel__body"><dl class="gf-details">
-                ${item('Destinatario',esc(display(data.recipient_name)))}${item('Indirizzo di consegna',addressText+accessBadges(o))}${item('Data richiesta',requested)}${item('Fascia oraria',timeRange)}
+                ${item('Destinatario',esc(display(data.recipient_name)))}${item('Telefono',esc(display(data.phone)))}${item('Indirizzo di consegna',addressText+accessBadges(o))}${item('Data richiesta',requested)}${item('Fascia oraria',timeRange)}
               </dl></div>
             </section>
             <section class="gf-panel">

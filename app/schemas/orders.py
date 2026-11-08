@@ -18,6 +18,8 @@ class OrderData(BaseModel):
     model_config = ConfigDict(extra='forbid', str_strip_whitespace=True)
     number: Text160
     recipient_name: str | None = Field(default=None, max_length=200)
+    # Telefono del destinatario: l'autista lo chiama con «Chiama» dall'app.
+    phone: str | None = Field(default=None, max_length=40, pattern=r'^[0-9+()./ -]*$')
     delivery_address: str | None = Field(default=None, max_length=500)
     # Indirizzo a campi separati: se presenti, l'indirizzo su una riga si compone da questi.
     street: str | None = Field(default=None, max_length=300)
