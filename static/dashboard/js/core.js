@@ -2146,9 +2146,15 @@ async function loadDashboardHome(startupResources = {}){
     const progressBox=document.getElementById("dashProgressList");
     const completedBox=document.getElementById("dashCompletedList");
     renderLogisticsDashboardV50([...(operational || []), ...(routes || [])]);
-    if(scheduledBox) scheduledBox.innerHTML = (scheduled.slice(0,3).map(r=>dashRouteItem(r,'scheduled')).join("") || renderEmptyDashList("Nessun giro programmato.", "scheduled"))
-      + (overdueScheduled ? `<div class="gf-alert" data-status="warning"><div class="gf-alert__body"><p>${overdueScheduled} ${overdueScheduled===1?'giro di una data passata non è mai stato avviato':'giri di date passate non sono mai stati avviati'}. Aprili da “Vedi tutti i giri” per riprogrammarli o eliminarli.</p></div></div>` : "")
-      + (lateToday.length ? `<div class="gf-alert" data-status="danger" data-late-start-dashboard><div class="gf-alert__body"><p>${lateToday.length} ${lateToday.length===1?'giro di oggi non è partito in orario':'giri di oggi non sono partiti in orario'}: ${lateToday.slice(0,3).map(r=>esc((r.driver_name||'Autista')+' · '+(r.late_start.label||''))).join(', ')}. Aprili da “Vedi tutti i giri” per spostare la partenza o riprogrammarli.</p></div></div>` : "");
+    // Niente riquadri: lo stato è sulla riga del giro, in fondo alla card un riepilogo con piccoli badge.
+    if(scheduledBox) scheduledBox.innerHTML = scheduled.slice(0,3).map(r=>dashRouteItem(r,'scheduled')).join("") || renderEmptyDashList("Nessun giro programmato.", "scheduled");
+    const issuesBox=document.getElementById("dashScheduledIssues");
+    if(issuesBox){
+      const late=lateToday.filter(r=>r.late_start.state==='in_ritardo').length, reschedule=lateToday.length-late;
+      issuesBox.innerHTML=(reschedule?`<span class="gf-badge" data-status="danger" data-dot data-late-start-dashboard title="Giri di oggi da riprogrammare: aprili per spostare la partenza o riprogrammarli">${reschedule} da riprogrammare</span>`:'')
+        +(late?`<span class="gf-badge" data-status="warning" data-dot data-late-start-dashboard title="Giri di oggi non partiti in orario">${late} in ritardo</span>`:'')
+        +(overdueScheduled?`<span class="gf-badge" data-status="warning" data-dot title="Giri di date passate mai avviati: aprili per riprogrammarli o eliminarli">${overdueScheduled} non avviat${overdueScheduled===1?'o':'i'}</span>`:'');
+    }
     if(progressBox) progressBox.innerHTML = progress.slice(1,3).map(r=>dashRouteItem(r,'progress')).join("");
     document.getElementById("gfRefOtherActive")?.classList.toggle("hidden", progress.length <= 1);
     if(completedBox) completedBox.innerHTML = completedToday.slice(0,3).map(r=>dashRouteItem(r,'completed')).join("") || renderEmptyDashList("Nessun giro completato oggi.", "completed");
@@ -4329,7 +4335,9 @@ function dashRouteItem(r, type){
   const completedPercent = Math.min(100, completed / progressBase * 100);
   const missedPercent = Math.min(100 - completedPercent, missed / progressBase * 100);
   const meta = `${esc(gfDateIt(r.data_giro)||"-")} · ${r.consegne_count||0} ${Number(r.consegne_count)===1?"consegna":"consegne"}${r.totale_km?` · ${gfKm(r.totale_km)}`:""}`;
-  const pill = routeStatusBadge(r.status, r.status_label);
+  // Giro di oggi non partito in orario: al posto di «Programmato» lo stato «In ritardo» o «Da riprogrammare».
+  const lateBadge = type === 'scheduled' && r.late_start && r.late_start.state !== 'non_avviato' ? gfLateStartBadge(r) : '';
+  const pill = lateBadge || routeStatusBadge(r.status, r.status_label);
   const unread = Math.max(0, Number(r.unread_driver_messages||0));
   const isProgress = type === 'progress';
   const context = [r.driver_name, r.vehicle_name].filter(Boolean).map(esc).join(' · ') || 'Autista e mezzo non assegnati';
@@ -4353,7 +4361,7 @@ function dashRouteItem(r, type){
         ${issues.length?`<div class="gf-cluster">${issues.join('')}</div>`:""}
       `:`<small class="gf-muted gf-dashboard-desktop-copy">${meta}</small><small class="gf-muted gf-dashboard-mobile-only">${esc(window.GFDashboardMobile?.routeMeta(r)||'')}</small>`}
     </div>
-    <div class="gf-cluster"><span class="gf-dashboard-desktop-copy">${pill}</span><span class="gf-dashboard-mobile-only">${type==='scheduled'?'<span class="gf-badge" data-status="warning" aria-label="Programmato">Prog.</span>':pill}</span><span aria-hidden="true">›</span></div>
+    <div class="gf-cluster"><span class="gf-dashboard-desktop-copy">${pill}</span><span class="gf-dashboard-mobile-only">${type==='scheduled'&&!lateBadge?'<span class="gf-badge" data-status="warning" aria-label="Programmato">Prog.</span>':pill}</span><span aria-hidden="true">›</span></div>
   </div>`;
 }
 
