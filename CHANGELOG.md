@@ -5,6 +5,11 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Prova del flusso autista (10 novembre): Invio nel login fa partire l'accesso; la nota scritta con
+  «Nota» non si perde più confermando consegna o mancata (anche nel portale via link) e si vede nella
+  scheda; l'avviso «Seleziona il tempo di scarico/il motivo» sparisce alla scelta; arrivo aggiornato e
+  anticipo/ritardo solo per i giri di oggi; l'elenco non segna più avviabili i giri di altri giorni;
+  «‹ Giri» su una riga.
 - Finestre di creazione a schede (versione B): mezzo, autista, cliente, agente e collaboratore sono
   finestre centrali della stessa larghezza, con i dati divisi in schede. Campi obbligatori segnati con
   «*» (mezzo: nome, targa, alimentazione, consumo; autista: nome, cognome, email; deposito: nome e

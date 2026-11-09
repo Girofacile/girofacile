@@ -107,7 +107,7 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
 
 /* DELIVERY EXECUTION */
 .exec-header{background:#fff;border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;gap:12px;}
-.back-btn{background:none;border:none;color:var(--blue);font-size:16px;font-weight:600;cursor:pointer;padding:0;}
+.back-btn{background:none;border:none;color:var(--blue);font-size:16px;font-weight:600;cursor:pointer;padding:0;white-space:nowrap;flex:none;}
 .exec-title{font-size:15px;font-weight:700;flex:1;}
 .exec-progress-bar{background:#f3f4f6;height:4px;}
 .exec-progress-fill{height:100%;background:var(--blue);transition:width .4s;}
@@ -922,6 +922,7 @@ function currentStopCard(c, i, total, notStarted, future = false) {
     ${delta}
     ${c.order_numbers?.length ? `<details><summary class="gf-muted">Ordini</summary><p class="gf-muted">${c.order_numbers.map(esc).join(', ')}</p></details>` : ''}
     ${c.note ? `<p class="gf-alert" data-status="info">${esc(c.note)}</p>` : ''}
+    ${c.note_operatore ? `<p class="gf-muted">La tua nota: «${esc(c.note_operatore)}»</p>` : ''}
     ${c.warning ? `<p class="gf-alert" data-status="warning">${esc(c.warning.split('|').join(' · '))}</p>` : ''}
     ${actions}
   </section>`;
@@ -1065,7 +1066,8 @@ function openDone(id) {
     signed_by_name: existing.signed_by_name || '',
     signature_note: existing.signature_note || ''
   } : null;
-  document.getElementById('noteDone').value = '';
+  // La nota già scritta con «Nota» resta: confermando la consegna non va persa.
+  document.getElementById('noteDone').value = existing?.note_operatore || '';
   updateSignatureRequestCard();
   const opts = currentRouteData?.tempo_scarico_options || [10,15,20,30,45,60,90];
   document.getElementById('tempoGrid').innerHTML = opts.map(t =>
@@ -1075,6 +1077,7 @@ function openDone(id) {
 }
 function selectTempo(val, btn) {
   selectedTempo = val;
+  clearDriverNotice();
   document.querySelectorAll('.tempo-btn').forEach(b => b.classList.remove('sel'));
   btn.classList.add('sel');
 }
@@ -1107,7 +1110,7 @@ async function confirmDone() {
 function openMissed(id) {
   currentDeliveryId = id;
   selectedMotivo = null;
-  document.getElementById('noteMissed').value = '';
+  document.getElementById('noteMissed').value = (currentRouteData?.consegne || []).find(x => Number(x.id) === Number(id))?.note_operatore || '';
   const motivi = {assente:gfIcon('user')+' Cliente assente',chiuso:gfIcon('lock')+' Attività chiusa',rifiutato:gfIcon('ban')+' Consegna rifiutata',altro:gfIcon('chat')+' Altro motivo'};
   document.getElementById('motivoList').innerHTML = Object.entries(motivi).map(([k,v]) =>
     `<button class="motivo-btn" onclick="selectMotivo('${k}',this)">${v}</button>`
@@ -1116,6 +1119,7 @@ function openMissed(id) {
 }
 function selectMotivo(val, btn) {
   selectedMotivo = val;
+  clearDriverNotice();
   document.querySelectorAll('.motivo-btn').forEach(b => b.classList.remove('sel'));
   btn.classList.add('sel');
 }

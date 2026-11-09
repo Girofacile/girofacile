@@ -469,7 +469,8 @@ function openDone(id) {
   selectedTempo = null;
   podResetPhoto();
   podConfigurePhoto(routeData);
-  document.getElementById('noteDone').value = '';
+  // La nota già scritta resta: confermando la consegna non va persa.
+  document.getElementById('noteDone').value = (routeData.consegne || []).find(x => Number(x.id) === Number(id))?.note_operatore || '';
   clearOperatorSignature();
   document.getElementById('operatorSignatureBox').classList.toggle('hidden', !(podFeatureEnabled('has_delivery_signature', routeData) && routeData.delivery_signature_enabled));
   const grid = document.getElementById('tempoGrid');
@@ -499,7 +500,7 @@ async function confirmDone() {
 function openMissed(id) {
   currentDeliveryId = id;
   selectedMotivo = null;
-  document.getElementById('noteMissed').value = '';
+  document.getElementById('noteMissed').value = (routeData.consegne || []).find(x => Number(x.id) === Number(id))?.note_operatore || '';
   const motiviLabels = {assente:'Cliente assente',chiuso:'Attività chiusa',rifiutato:'Consegna rifiutata',altro:'Altro motivo'};
   document.getElementById('motivoList').innerHTML = routeData.motivi_mancata.map(m => `
     <button class="motivo-btn" onclick="selectMotivo('${m}', this)">${motiviLabels[m] || m}</button>

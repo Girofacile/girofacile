@@ -228,7 +228,7 @@ def get_driver_routes(da: DriverAccount = Depends(get_current_driver), db: Sessi
 
         today = local_today()
         current_status = r.status or "programmato"
-        can_start = r.data_giro <= today and current_status in ("programmato", "bozza")
+        can_start = r.data_giro == today and current_status in ("programmato", "bozza")
         before_time = False
         if can_start and r.data_giro == today and r.orario_partenza:
             try:
@@ -309,6 +309,8 @@ def get_driver_route_detail(route_id: int, da: DriverAccount = Depends(get_curre
     def live_arrival(d, ds):
         if ds and ds.status in ("completata", "mancata"):
             return None, None
+        if r.data_giro != local_today():
+            return time_to_hhmm(d.arrivo_stimato), None
         arrival = (live.get(d.id) or {}).get("arrival")
         planned = minutes_from_hhmm(time_to_hhmm(d.arrivo_stimato))
         if not arrival or planned is None:

@@ -22,13 +22,15 @@ def test_driver_route_detail_hides_company_costs(env):
 
 def test_driver_sees_customer_phone_and_arrival_updated_by_previous_delays(env):
     """«Chiama» usa il telefono del cliente; l'arrivo previsto segue anticipi e ritardi già registrati."""
-    from datetime import datetime, time
+    from datetime import datetime, time, timedelta
     from app.routers import driver
     from app.models import Delivery, DeliveryStatus
 
     client, db, owner, _, _, _, customer, *_ = env
     route, first, account = seed_route(env)
     customer.telefono = '+39 081 555 1234'
+    from app.core.utils import local_today
+    route.data_giro = local_today()  # l'arrivo si ricalcola solo per i giri di oggi
     first.ordine, first.arrivo_stimato, first.partenza_stimata = 1, time(9), time(9, 10)
     second = Delivery(route_plan_id=route.id, cliente_nome='Senza scheda', indirizzo='Via Due', ordine=2,
                       arrivo_stimato=time(10), partenza_stimata=time(10, 10))
@@ -46,6 +48,10 @@ def test_driver_sees_customer_phone_and_arrival_updated_by_previous_delays(env):
     assert stops[first.id]['arrivo_aggiornato'] is None
     assert stops[second.id]['arrivo_stimato'] == '10:00'
     assert stops[second.id]['arrivo_aggiornato'] == '10:30' and stops[second.id]['arrivo_scarto_min'] == 30
+    # Un giro di un altro giorno mostra solo l'orario pianificato, senza anticipo o ritardo.
+    route.data_giro = local_today() + timedelta(days=1); db.commit()
+    other = {c['id']: c for c in client.get(f'/api/driver/routes/{route.id}').json()['consegne']}[second.id]
+    assert other['arrivo_aggiornato'] == '10:00' and other['arrivo_scarto_min'] is None
 
 
 def test_driver_calls_order_recipient_when_stop_has_no_customer_card(env):

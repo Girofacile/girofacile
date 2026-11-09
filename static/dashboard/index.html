@@ -66,10 +66,10 @@
     <div class="gf-auth__card" id="loginPanel">
       <div class="gf-cluster"><img class="gf-sidebar__mark" src="/static/girofacile-logo.png" alt="" width="36" height="36"><div><strong class="gf-subtitle">GiroFacile</strong><p class="gf-muted">Gestione percorsi e consegne</p></div></div>
       <div class="gf-stack" data-gap="sm"><h2 class="gf-title">Bentornato</h2><p class="gf-muted">Accedi alla tua area riservata GiroFacile</p></div>
-      <label class="gf-field" for="loginUser"><span class="gf-field__label">Utente o email</span><input class="gf-input" id="loginUser" placeholder="Email o nome utente" value="" autocomplete="username"></label>
+      <label class="gf-field" for="loginUser"><span class="gf-field__label">Utente o email</span><input class="gf-input" id="loginUser" placeholder="Email o nome utente" value="" autocomplete="username" onkeydown="if(event.key==='Enter')login()"></label>
       <div class="gf-field">
         <div class="gf-cluster" data-justify="between"><label class="gf-field__label" for="loginPass">Password</label><button type="button" id="forgotPasswordBtn" class="gf-button" data-variant="link" onclick="toggleForgotPassword(true)">Password dimenticata?</button></div>
-        <div class="gf-cluster"><input class="gf-input" id="loginPass" type="password" placeholder="La tua password" value="" autocomplete="current-password"><button type="button" class="gf-icon-button" onclick="toggleLoginPassword()" aria-label="Mostra o nascondi password"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.8 12s3.3-5.7 9.2-5.7 9.2 5.7 9.2 5.7-3.3 5.7-9.2 5.7S2.8 12 2.8 12Z M12 14.7a2.7 2.7 0 1 0 0-5.4 2.7 2.7 0 0 0 0 5.4z"/></svg></button></div>
+        <div class="gf-cluster"><input class="gf-input" id="loginPass" type="password" placeholder="La tua password" value="" autocomplete="current-password" onkeydown="if(event.key==='Enter')login()"><button type="button" class="gf-icon-button" onclick="toggleLoginPassword()" aria-label="Mostra o nascondi password"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.8 12s3.3-5.7 9.2-5.7 9.2 5.7 9.2 5.7-3.3 5.7-9.2 5.7S2.8 12 2.8 12Z M12 14.7a2.7 2.7 0 1 0 0-5.4 2.7 2.7 0 0 0 0 5.4z"/></svg></button></div>
       </div>
       <button type="button" onclick="login()" class="gf-button" data-variant="primary">Accedi a GiroFacile →</button>
       <p class="gf-muted">Non hai un account? <button type="button" class="gf-button" data-variant="link" onclick="toggleSignup(true)">Registrati gratis</button></p>
