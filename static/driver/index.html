@@ -679,6 +679,7 @@ async function navigateNextStop() {
   const inRoute = document.getElementById('view-execution')?.classList.contains('active') && currentRouteData;
   if(inRoute) {
     const data = currentRouteData;
+    if(data.route?.status === 'annullato') { driverNotice('Giro annullato dall’ufficio: non servono altre consegne.', 'warning'); return; }
     if(['programmato','bozza'].includes(data.route?.status)) {
       const future = data.route?.data_giro > localIsoDate();
       driverNotice(future ? `Questo giro si avvia ${longDateIt(data.route.data_giro)}: per ora puoi vedere le consegne.` : 'Avvia il giro per navigare verso la prima consegna.', 'warning');
@@ -753,11 +754,18 @@ function renderRoutes() {
   box.innerHTML = html;
 }
 
+// Un solo giro alla volta: con un giro in corso gli altri si avviano dopo averlo chiuso.
+function runningOtherRoute(id) {
+  return (typeof allRoutes !== 'undefined' && allRoutes || []).find(r => r.status === 'in_corso' && Number(r.id) !== Number(id)) || null;
+}
 function renderRouteCard(r, today) {
   const running = r.status === 'in_corso';
+  const busy = runningOtherRoute(r.id);
   const kicker = r.data_giro === today ? `Oggi · ${longDateIt(r.data_giro)}` : longDateIt(r.data_giro);
   let actions;
   if(running) actions = `<button type="button" class="gf-button" data-variant="primary" onclick="openExecution(${Number(r.id)})">Continua giro</button>`;
+  else if(r.can_start && busy) actions = `<p class="gf-muted">Si avvia dopo aver chiuso il giro in corso.</p>
+      <button type="button" class="gf-button" data-variant="secondary" onclick="openExecution(${Number(r.id)})">Vedi le fermate</button>`;
   else if(r.can_start) actions = `<button type="button" class="gf-button" data-variant="primary" data-start-route="${Number(r.id)}" data-before-time="${r.before_time ? 'true' : 'false'}" data-start-time="${esc(r.orario_partenza||'')}" data-start-name="${esc(r.nome||'')}">Avvia giro</button>
       <button type="button" class="gf-button" data-variant="secondary" onclick="openExecution(${Number(r.id)})">Vedi le fermate</button>`;
   else actions = `<button type="button" class="gf-button" data-variant="secondary" onclick="openExecution(${Number(r.id)})">Vedi le fermate</button>`;
@@ -881,9 +889,15 @@ function renderExecution(data) {
   const nextIdx = progress.prossima_idx;
   const current = nextIdx != null ? consegne[nextIdx] : null;
   const future = !!route.data_giro && route.data_giro > localIsoDate();
+  // Annullato dall'ufficio mentre l'autista lo aveva aperto: si vede subito, senza tasti per gli esiti.
+  const cancelled = route.status === 'annullato';
+  const busy = notStarted && runningOtherRoute(route.id);
   const closedCount = progress.completate + progress.mancate;
-  list.innerHTML = (notStarted && !future ? `<button type="button" class="gf-button" data-variant="primary" onclick="startFromDetail()">Avvia giro</button>` : '')
-    + (current ? currentStopCard(current, nextIdx, consegne.length, notStarted, future) : '')
+  const head = cancelled ? `<p class="gf-alert" data-status="danger" role="alert">Giro annullato dall’ufficio: non servono altre consegne.</p>`
+    : busy ? `<p class="gf-alert" data-status="info">Si avvia dopo aver chiuso il giro in corso.</p>`
+    : notStarted && !future ? `<button type="button" class="gf-button" data-variant="primary" onclick="startFromDetail()">Avvia giro</button>` : '';
+  list.innerHTML = head
+    + (current ? currentStopCard(current, nextIdx, consegne.length, notStarted, future || cancelled) : '')
     + `<h3 class="gf-subtitle">Tutte le fermate · ${closedCount ? `${closedCount} su ${progress.totale} fatte` : progress.totale}</h3><div class="gf-stop-list" data-height="auto">`
     + GFDriverBreaks.cards(route,0)
     + consegne.map((c, i) => stopRow(c, i, data, i === nextIdx) + GFDriverBreaks.cards(route,i+1)).join('')
@@ -902,13 +916,14 @@ function stopBadges(c) {
 }
 
 // La prossima consegna: tutto quello che serve all'autista, con i tasti in fondo.
-function currentStopCard(c, i, total, notStarted, future = false) {
+function currentStopCard(c, i, total, notStarted, readonly = false) {
   const arrivo = c.arrivo_aggiornato || c.arrivo_stimato;
   const scarto = Number(c.arrivo_scarto_min || 0);
   const delta = arrivo && Math.abs(scarto) >= 5
     ? `<p class="gf-muted">${scarto > 0 ? `${scarto} min di ritardo` : `${-scarto} min in anticipo`} sull’orario previsto (${esc(c.arrivo_stimato)})</p>` : '';
   const navUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(c.indirizzo)}`;
-  const actions = notStarted ? ''
+  // readonly (giro futuro o annullato): solo le informazioni, nessun esito.
+  const actions = notStarted || readonly ? ''
     : `<a class="gf-button" data-variant="primary" href="${navUrl}" target="_blank" rel="noopener">${gfIcon('route')} Naviga</a>
       <div class="btn-row">
         <button type="button" class="gf-button" data-variant="primary" onclick="openDone(${Number(c.id)})">${gfIcon('check')} Consegnato</button>

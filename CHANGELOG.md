@@ -5,6 +5,9 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- App autista: un giro annullato dall'ufficio mentre l'autista lo ha aperto mostra «Giro annullato
+  dall'ufficio» e nasconde Naviga/Consegnato/Mancata; con un giro in corso gli altri giri di oggi dicono
+  «Si avvia dopo aver chiuso il giro in corso» invece di offrire un «Avvia giro» che dava errore.
 - Prova del flusso autista (10 novembre): Invio nel login fa partire l'accesso; la nota scritta con
   «Nota» non si perde più confermando consegna o mancata (anche nel portale via link) e si vede nella
   scheda; l'avviso «Seleziona il tempo di scarico/il motivo» sparisce alla scelta; arrivo aggiornato e

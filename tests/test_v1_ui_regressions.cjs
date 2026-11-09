@@ -124,7 +124,7 @@ test('driver start dispatch keeps apostrophes, quotes and backslashes as data',(
   assert.deepEqual(calls,[[42,true,'08:00',name]]);
   const renderContext={gfIcon:()=>'',fmt:()=>'',esc:value=>String(value??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))};
   vm.runInNewContext(fs.readFileSync('static/format.js','utf8'),renderContext);
-  for(const name of ['longDateIt','routeArea','routeMeta','progressHtml','renderRouteCard'])vm.runInNewContext(sourceFunction(driverSource,name),renderContext);
+  for(const name of ['longDateIt','routeArea','routeMeta','progressHtml','runningOtherRoute','renderRouteCard'])vm.runInNewContext(sourceFunction(driverSource,name),renderContext);
   const html=renderContext.renderRouteCard({id:42,nome:name,status:'programmato',can_start:true,
     before_time:true,orario_partenza:'08:00',data_giro:'2026-10-18'},'2026-10-18');
   assert.match(html,/data-start-route="42"/);
