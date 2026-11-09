@@ -44,6 +44,13 @@ window.GFInProgressReference=(()=>{
   const issue=r=>stat(r).miss>0 || delay(r)>0 || r.late===true;
   // Una riga per giro (approvata il 4 novembre 2026): autista e mezzo, avanzamento, prossima
   // fermata, rientro e segnali; «Apri» mostra il giro nel dettaglio sotto.
+  // Un giro partito in un giorno precedente e mai chiuso: va chiuso dall'ufficio.
+  function openSince(r){
+    const d=new Date(),today=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    if(!r||!r.data_giro||r.data_giro>=today)return '';
+    const [y,m,g]=r.data_giro.split('-').map(Number);
+    return new Intl.DateTimeFormat('it-IT',{weekday:'short',day:'numeric',month:'long'}).format(new Date(y,m-1,g));
+  }
   function routeCard(r,index){
     const s=stat(r),p=state.gps.get(Number(r.id)),chosen=Number(state.id)===Number(r.id),late=delay(r);
     const next=r.next_delivery,eta=r.rientro_stimato_aggiornato||r.orario_rientro_stimato||'—';
@@ -56,6 +63,7 @@ window.GFInProgressReference=(()=>{
       '<td data-label="Prossima fermata">'+(next?'<strong>'+esc(next.cliente_nome||'Fermata '+(next.ordine||''))+'</strong><br><small class="gf-muted">'+esc(next.indirizzo||'')+'</small>':'<span class="gf-muted">Tutte le fermate gestite</span>')+'</td>'+
       '<td data-label="Rientro stimato"><strong>'+esc(eta)+'</strong><br><small class="gf-muted">'+etaNote+'</small></td>'+
       '<td data-label="Segnali"><div class="gf-cluster">'+
+        (openSince(r)?'<span class="gf-badge" data-status="warning">Aperto dal '+esc(openSince(r))+'</span>':'')+
         (s.miss?'<span class="gf-badge" data-status="danger">'+gfCount(s.miss,'mancata','mancate')+'</span>':'')+
         (late?'<span class="gf-badge" data-status="warning">+'+late+' min</span>':'')+
         '<span class="gf-badge" data-dot data-status="'+gpsTone(p)+'">'+esc(gpsText(p))+'</span>'+
@@ -295,7 +303,7 @@ window.GFInProgressReference=(()=>{
           </div>
           <div class="gf-route-panel__footer gf-cluster">
             <button type="button" class="gf-button" data-variant="secondary" data-ip-action="refresh">${svgIcon('refresh')} Aggiorna dati</button>
-            ${!window.GFCompanyAccess?.isCollaborator()||window.GFCompanyAccess.can('routes.manage')?'<button type="button" class="gf-button" data-variant="danger" data-ip-action="cancel">Annulla giro</button>':''}
+            ${!window.GFCompanyAccess?.isCollaborator()||window.GFCompanyAccess.can('routes.manage')?'<button type="button" class="gf-button" data-variant="secondary" data-ip-action="complete">Chiudi giro</button><button type="button" class="gf-button" data-variant="danger" data-ip-action="cancel">Annulla giro</button>':''}
             ${detail.google_maps_url?'<a class="gf-button" data-variant="primary" href="'+esc(detail.google_maps_url)+'" target="_blank" rel="noopener noreferrer">'+svgIcon('map')+' Apri navigazione</a>':''}
           </div>
         </div>
@@ -340,6 +348,18 @@ window.GFInProgressReference=(()=>{
       case 'zoom-out':state.map?.zoomOut();break;
       case 'follow':state.follow=!state.follow;drawGPS();break;
       case 'refresh':refresh();break;
+      case 'complete':{
+        const id=Number(state.id),name=state.detail?.nome||'Giro consegne';
+        if(!id||action.disabled||!confirm('Chiudere il giro "'+name+'"? Le consegne non registrate restano senza esito; autista e mezzo tornano disponibili.'))break;
+        action.disabled=true;
+        try{
+          await api('/api/routes/'+id+'/complete',{method:'POST'});
+          toast('Giro chiuso: autista e mezzo disponibili');
+          await loadDashboardInProgressPage();
+        }catch(e){toast(e.message);}
+        finally{action.disabled=false;}
+        break;
+      }
       case 'cancel':{
         const id=Number(state.id),name=state.detail?.nome||'Giro consegne';
         if(!id||action.disabled||!confirm('Annullare il giro "'+name+'"? Autista e mezzo saranno liberati. Gli esiti già registrati resteranno conservati.'))break;

@@ -394,7 +394,7 @@ def route_response(plan, result):
     }
 
 
-def serialize_route(plan):
+def serialize_route(plan, include_legs=True):
     consegne = sorted(plan.deliveries, key=lambda x: x.ordine or 0)
     status_map = {ds.delivery_id: ds for ds in getattr(plan, "delivery_statuses", [])} if hasattr(plan, "delivery_statuses") else {}
     # Fallback sicuro: la relationship non è sempre caricata nelle vecchie installazioni.
@@ -427,7 +427,7 @@ def serialize_route(plan):
         "totale_km": plan.totale_km, "totale_minuti": plan.totale_minuti,
         "litri_stimati": plan.litri_stimati, "costo_carburante": plan.costo_carburante,
         "costo_totale": plan.costo_totale, "google_maps_url": plan.google_maps_url,
-        **routing_metadata(plan, include_legs=True),
+        **routing_metadata(plan, include_legs=include_legs),
         **shifts.metadata(plan),
         "status": computed_route_status(plan), "status_label": route_status_label(computed_route_status(plan)),
         "consegne": [{
@@ -588,7 +588,7 @@ def resources_availability(
             "id": v.id, "nome": v.nome, "targa": v.targa, "consumo_l_100km": v.consumo_l_100km,
             "alimentazione": v.alimentazione or "gasolio", "consumo_primario_100km": v.consumo_primario_100km or v.consumo_l_100km or 0, "consumo_kwh_100km": v.consumo_kwh_100km or 0,
             "available": busy is None,
-            "status": "Disponibile" if busy is None else "In uso",
+            "status": "Disponibile" if busy is None else ("In uso" if busy.get("active") else "Già prenotato"),
             "note": "" if busy is None else (f"In uso ora su {busy['route_name']} fino alle {busy['busy_until']}" if busy.get("active") else f"In uso su {busy['route_name']} fino alle {busy['busy_until']}"),
             "busy": busy,
         })
@@ -600,7 +600,7 @@ def resources_availability(
         drivers.append({
             "id": d.id, "nome": d.nome, "cognome": d.cognome, "full_name": full_name, "patente": d.patente,
             "available": busy is None,
-            "status": "Disponibile" if busy is None else "In servizio",
+            "status": "Disponibile" if busy is None else ("In servizio" if busy.get("active") else "Già assegnato"),
             "note": "" if busy is None else (f"In servizio ora su {busy['route_name']} fino alle {busy['busy_until']}" if busy.get("active") else f"In servizio su {busy['route_name']} fino alle {busy['busy_until']}"),
             "busy": busy,
         })
@@ -1107,7 +1107,7 @@ def cancel_route(route_id: int, db: Session = Depends(get_db), user: User = Depe
     plan.cancelled_at = local_now().replace(tzinfo=None)
     db.commit()
     db.refresh(plan)
-    return serialize_route(plan)
+    return serialize_route(plan, include_legs=False)
 
 
 @router.post("/api/routes/{route_id}/complete")
@@ -1184,7 +1184,7 @@ def get_route(route_id: int, db: Session = Depends(get_db), user: User = Depends
     plan = owned(db.query(RoutePlan), RoutePlan, user).filter(RoutePlan.id == route_id).first()
     if not plan:
         raise HTTPException(404, "Giro non trovato")
-    return serialize_route(plan)
+    return serialize_route(plan, include_legs=False)
 
 
 @router.get("/api/routes")

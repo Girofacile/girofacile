@@ -5,6 +5,13 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Punti aperti dalla prova del flusso: programmando un giro, se il ricalcolo con il traffico sposta il
+  rientro di 10 minuti o più il messaggio lo dice («il rientro passa dalle 09:04 alle 08:04»); nei Giri in
+  corso un giro partito in un giorno precedente mostra «Aperto dal …» e c'è «Chiudi giro» per chiuderlo e
+  liberare autista e mezzo; l'anteprima avvisa se ci sono consegne previste tra le 22:00 e le 6:00; nelle
+  tendine mezzo/autista niente emoji, «In servizio/In uso» solo se il giro è partito, altrimenti «Già
+  assegnato/Già prenotato fino alle …»; annullamento, partenza e dettaglio del giro non inviano più i
+  tracciati del traffico (risposta da ~500 KB a pochi KB); tempo di scarico anche da 5 minuti.
 - App autista: un giro annullato dall'ufficio mentre l'autista lo ha aperto mostra «Giro annullato
   dall'ufficio» e nasconde Naviga/Consegnato/Mancata; con un giro in corso gli altri giri di oggi dicono
   «Si avvia dopo aver chiuso il giro in corso» invece di offrire un «Avvia giro» che dava errore.

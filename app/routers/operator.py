@@ -23,7 +23,7 @@ from ..models import (
 
 router = APIRouter(tags=["operator"])
 
-TEMPO_SCARICO_OPTIONS = [10, 15, 20, 30, 45, 60, 90]
+TEMPO_SCARICO_OPTIONS = [5, 10, 15, 20, 30, 45, 60, 90]
 MOTIVI_MANCATA = ["assente", "chiuso", "rifiutato", "altro"]
 
 

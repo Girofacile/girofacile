@@ -1084,7 +1084,7 @@ function openDone(id) {
   // La nota già scritta con «Nota» resta: confermando la consegna non va persa.
   document.getElementById('noteDone').value = existing?.note_operatore || '';
   updateSignatureRequestCard();
-  const opts = currentRouteData?.tempo_scarico_options || [10,15,20,30,45,60,90];
+  const opts = currentRouteData?.tempo_scarico_options || [5,10,15,20,30,45,60,90];
   document.getElementById('tempoGrid').innerHTML = opts.map(t =>
     `<button class="tempo-btn" onclick="selectTempo(${t},this)">${t<60?t+' min':t===60?'1 ora':t+' min'}</button>`
   ).join('');

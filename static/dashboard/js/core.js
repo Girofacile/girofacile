@@ -1614,8 +1614,8 @@ function renderResourceSelects(){
       vehicleSel.innerHTML = `<option value="">Nessun mezzo</option>`;
       const rows = resourcesAvailabilityCache.vehicles?.length ? resourcesAvailabilityCache.vehicles : vehiclesCache.map(v=>({...v, available:true, status:"Disponibile"}));
       rows.forEach(v=>{
-        const icon = v.available ? "✅" : "🔴";
-        const label = `${icon} ${v.nome || "Mezzo"}${v.targa ? " · " + v.targa : ""} · ${v.status || (v.available ? "Disponibile" : "In uso")}`;
+        const until = !v.available && v.busy?.busy_until ? ` fino alle ${v.busy.busy_until}` : "";
+        const label = `${v.nome || "Mezzo"}${v.targa ? " · " + v.targa : ""} · ${v.status || (v.available ? "Disponibile" : "In uso")}${until}`;
         const isSelected = String(v.id) === selectedVehicle;
         vehicleSel.innerHTML += `<option value="${v.id}" ${v.available || isSelected ? "" : "disabled"} ${isSelected ? "selected" : ""}>${esc(label)}</option>`;
       });
@@ -1637,9 +1637,9 @@ function renderResourceSelects(){
       driverSel.innerHTML = `<option value="">Nessun autista assegnato</option>`;
       const rows = resourcesAvailabilityCache.drivers?.length ? resourcesAvailabilityCache.drivers : driversCache.map(d=>({...d, full_name: driverFullName(d), available:true, status:"Disponibile"}));
       rows.forEach(d=>{
-        const icon = d.available ? "✅" : "🔴";
         const name = d.full_name || driverFullName(d);
-        const label = `${icon} ${name}${d.patente ? " · " + d.patente : ""} · ${d.status || (d.available ? "Disponibile" : "In servizio")}`;
+        const until = !d.available && d.busy?.busy_until ? ` fino alle ${d.busy.busy_until}` : "";
+        const label = `${name}${d.patente ? " · " + d.patente : ""} · ${d.status || (d.available ? "Disponibile" : "In servizio")}${until}`;
         const isSelected = String(d.id) === selectedDriver;
         driverSel.innerHTML += `<option value="${d.id}" ${d.available || isSelected ? "" : "disabled"} ${isSelected ? "selected" : ""}>${esc(label)}</option>`;
       });
@@ -3706,8 +3706,15 @@ async function programCurrentRoute(){
     return;
   }
   try{
-    await api(`/api/routes/${lastRouteResult.id}/program`, {method:"POST", body:"{}"});
-    toast("Giro programmato correttamente. Lo trovi in Giri programmati.");
+    const previewReturn = lastRouteResult.orario_rientro_stimato;
+    const programmed = await api(`/api/routes/${lastRouteResult.id}/program`, {method:"POST", body:"{}"});
+    // Programmando, le tratte si ricalcolano con il traffico all'ora di partenza: se il rientro cambia, lo si dice.
+    const toMin = t => { const [h, m] = String(t || "").split(":").map(Number); return Number.isFinite(h) && Number.isFinite(m) ? h * 60 + m : null; };
+    const a = toMin(previewReturn), b = toMin(programmed?.orario_rientro_stimato);
+    const shift = a == null || b == null ? 0 : ((b - a + 720 + 1440) % 1440) - 720;
+    toast(Math.abs(shift) >= 10
+      ? `Giro programmato. Con il traffico previsto il rientro passa dalle ${previewReturn} alle ${programmed.orario_rientro_stimato}.`
+      : "Giro programmato correttamente. Lo trovi in Giri programmati.");
     await globalThis.GFOrderPlanning?.afterProgram?.().catch(()=>{});
     clearRouteWorkspace();
     // Sezioni indipendenti: si aggiornano insieme invece che una dopo l'altra.
@@ -3721,6 +3728,16 @@ async function programCurrentRoute(){
 
 // «Elimina» nell'anteprima: la bozza viene annullata, gli ordini tornano da pianificare e
 // si torna alla pianificazione con le fermate ancora compilate.
+// Consegne previste di notte (22:00–6:00): spesso i clienti sono chiusi. Solo un avviso, non blocca.
+function nightDeliveriesAlert(consegne){
+  const night = (consegne || []).filter(c => {
+    const h = Number(String(c.arrivo_stimato || "").slice(0, 2));
+    return /^\d{2}:\d{2}/.test(String(c.arrivo_stimato || "")) && (h >= 22 || h < 6);
+  });
+  if(!night.length) return "";
+  return `<div class="gf-alert" data-status="warning" role="note"><div class="gf-alert__body"><p class="gf-alert__title">${gfCount(night.length, "consegna prevista", "consegne previste")} di notte (22:00–6:00)</p><p class="gf-alert__text">Controlla che i clienti possano ricevere a quell’ora, oppure sposta l’orario di partenza.</p></div></div>`;
+}
+
 async function cancelCurrentPreviewRoute(){
   if(!lastRouteResult || !lastRouteResult.id){ showTab("giro"); return; }
   if(!confirm("Eliminare questo giro? La bozza viene eliminata e gli ordini collegati tornano da pianificare.")) return;
@@ -3863,6 +3880,7 @@ function renderRouteResult(r, targetId="routeResult", fromHistory=false){
   target.innerHTML = `<section class="gf-stack" data-gap="lg" data-route-preview>
     ${inPreviewTab ? "" : gfRouteDetailHeader(kicker+" · "+crew, r.nome || title, `<span class="gf-badge" data-status="${badge.status}" data-dot>${esc(badge.text)}</span>`)}
     ${r.driver_schedule_error ? `<div class="gf-alert" data-status="danger" role="alert"><div class="gf-alert__body"><p class="gf-alert__text">${esc(r.driver_schedule_error)}</p></div></div>` : ""}
+    ${nightDeliveriesAlert(consegne)}
     <div class="gf-stat-strip" data-icons="side" data-fit data-preview-metrics aria-label="Numeri del giro">
       ${gfStatCell("home","neutral","Partenza", r.orario_partenza || "-", r.orario_rientro_stimato ? "rientro "+r.orario_rientro_stimato : "dal deposito")}
       ${gfStatCell("route","2","Percorso", r.totale_km == null ? "-" : gfDecimal(r.totale_km), "km")}
