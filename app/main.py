@@ -18,7 +18,7 @@ from .core.security import hash_password
 from .database import Base, engine, get_db
 from .models import Agent, Customer, Deposit, Driver, RoutePlan, User, Vehicle, PasswordResetToken, DistanceCache
 from .routers import (
-    admin_billing, admin_database, admin_profile, admin_server, admin_support, admin_users,
+    admin_billing, admin_database, admin_profile, admin_server, admin_support, admin_users, admin_widget,
     agents, auth, billing, customers, tracking, collaborators, orders, order_planning, planning_drafts, order_sources, fleet_planning,
     deposits, reports, routes, operator, notifications, settings, support, driver as driver_router_module, agent as agent_router_module,
 )
@@ -149,6 +149,7 @@ app.include_router(admin_profile.router)
 app.include_router(admin_server.router)
 app.include_router(admin_database.router)
 app.include_router(admin_users.router)
+app.include_router(admin_widget.router)
 app.include_router(admin_support.router)
 app.include_router(admin_billing.router)
 app.include_router(billing.router)
