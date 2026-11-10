@@ -725,6 +725,62 @@ body[data-gf-surface] .gf-bar-chart__fill[data-tone="success"]{background:var(--
 body[data-gf-surface] .gf-bar-chart__fill[data-tone="warning"]{background:var(--gf-color-warning)}
 body[data-gf-surface] .gf-bar-chart__fill[data-tone="danger"]{background:var(--gf-color-danger)}
 body[data-gf-surface] .gf-bar-chart__value{color:var(--gf-color-muted);font-variant-numeric:tabular-nums;font-weight:var(--gf-weight-semibold)}
+/* Grafici: tinte 1–8 (--gf-chart-N), ciambelle, torte, anelli, semicerchi, colonne, aree (approvati il 10 novembre 2026).
+   Disegnati da static/design-system/charts.js dentro un .gf-chart con .gf-chart__canvas e, se serve, .gf-chart__legend. */
+body[data-gf-surface] [data-tone="1"]{--gf-tone:var(--gf-chart-1)}
+body[data-gf-surface] [data-tone="2"]{--gf-tone:var(--gf-chart-2)}
+body[data-gf-surface] [data-tone="3"]{--gf-tone:var(--gf-chart-3)}
+body[data-gf-surface] [data-tone="4"]{--gf-tone:var(--gf-chart-4)}
+body[data-gf-surface] [data-tone="5"]{--gf-tone:var(--gf-chart-5)}
+body[data-gf-surface] [data-tone="6"]{--gf-tone:var(--gf-chart-6)}
+body[data-gf-surface] [data-tone="7"]{--gf-tone:var(--gf-chart-7)}
+body[data-gf-surface] [data-tone="8"]{--gf-tone:var(--gf-chart-8)}
+body[data-gf-surface] .gf-bar-chart__fill[data-tone]:not([data-tone="neutral"],[data-tone="info"],[data-tone="success"],[data-tone="warning"],[data-tone="danger"]){background:var(--gf-tone)}
+body[data-gf-surface] .gf-bar-chart__track{background:var(--gf-chart-rail)}
+body[data-gf-surface] .gf-chart{position:relative;display:grid;gap:var(--gf-space-3);min-width:0}
+body[data-gf-surface] .gf-chart__head{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:var(--gf-space-3)}
+body[data-gf-surface] .gf-chart__title{margin:0;font:var(--gf-weight-bold) var(--gf-font-md)/1.3 var(--gf-font-display);color:var(--gf-color-text)}
+body[data-gf-surface] .gf-chart__sub{margin:2px 0 0;font-size:var(--gf-font-sm);color:var(--gf-color-muted)}
+body[data-gf-surface] .gf-chart__canvas{position:relative;min-width:0}
+body[data-gf-surface] .gf-chart__canvas svg{display:block;width:100%;height:auto;overflow:visible}
+body[data-gf-surface] .gf-chart[data-shape="round"]>.gf-chart__canvas{width:100%;max-width:230px;justify-self:center}
+body[data-gf-surface] .gf-chart[data-shape="gauge"]>.gf-chart__canvas{width:100%;max-width:280px;justify-self:center;align-self:center}
+body[data-gf-surface] .gf-chart__canvas text{font-family:var(--gf-font-family);font-size:var(--gf-font-xs);fill:var(--gf-color-muted)}
+body[data-gf-surface] .gf-chart__canvas .gf-chart__value{fill:var(--gf-color-text);font-weight:var(--gf-weight-semibold)}
+body[data-gf-surface] .gf-chart__canvas .gf-chart__center{fill:var(--gf-color-text);font-family:var(--gf-font-display);font-weight:var(--gf-weight-bold);font-size:var(--gf-font-stat)}
+body[data-gf-surface] .gf-chart__canvas .gf-chart__center[data-size="lg"]{font-size:calc(var(--gf-font-stat) * 1.5)}
+body[data-gf-surface] .gf-chart__canvas .gf-chart__caption{font-size:var(--gf-font-xs)}
+body[data-gf-surface] .gf-chart__mark{transition:opacity var(--gf-motion-duration) ease}
+body[data-gf-surface] .gf-chart__canvas:hover .gf-chart__mark{opacity:.45}
+body[data-gf-surface] .gf-chart__canvas .gf-chart__mark:hover{opacity:1}
+body[data-gf-surface] .gf-chart__legend{display:flex;flex-wrap:wrap;gap:var(--gf-space-2) var(--gf-space-4);margin:0;padding:0;list-style:none;font-size:var(--gf-font-sm);color:var(--gf-color-muted)}
+body[data-gf-surface] .gf-chart__legend:empty{display:none}
+body[data-gf-surface] .gf-chart__legend li{display:flex;align-items:center;gap:6px}
+body[data-gf-surface] .gf-chart__legend b{color:var(--gf-color-text);font-weight:var(--gf-weight-semibold);font-variant-numeric:tabular-nums}
+body[data-gf-surface] .gf-chart__legend[data-layout="list"]{display:grid;gap:var(--gf-space-2)}
+body[data-gf-surface] .gf-chart__legend[data-layout="list"] li{display:grid;grid-template-columns:12px minmax(0,1fr) auto 40px;gap:var(--gf-space-2)}
+body[data-gf-surface] .gf-chart__legend[data-layout="list"] li>span:first-of-type{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body[data-gf-surface] .gf-chart__legend[data-layout="list"] li>span:last-child{text-align:right}
+body[data-gf-surface] .gf-chart__swatch{flex:none;width:10px;height:10px;border-radius:3px;background:var(--gf-tone,var(--gf-chart-1))}
+body[data-gf-surface] .gf-chart__tooltip{position:absolute;z-index:5;pointer-events:none;min-width:120px;padding:var(--gf-space-2) var(--gf-space-3);border-radius:var(--gf-radius-md);background:var(--gf-color-nav);color:var(--gf-color-on-primary);font-size:var(--gf-font-sm);box-shadow:var(--gf-shadow-dialog);transform:translate(-50%,calc(-100% - 10px));white-space:nowrap}
+body[data-gf-surface] .gf-chart__tooltip[hidden]{display:none}
+/* Ciambella con la legenda accanto (sotto, sugli schermi stretti). */
+body[data-gf-surface] .gf-chart__split{display:grid;grid-template-columns:minmax(140px,200px) minmax(0,1fr);gap:var(--gf-space-5);align-items:center}
+body[data-gf-surface] .gf-chart__split>.gf-chart__canvas{width:100%;max-width:200px;justify-self:center}
+@container gf-content (max-width:640px){body[data-gf-surface] .gf-chart__split{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:640px){body[data-gf-surface] .gf-chart__split{grid-template-columns:minmax(0,1fr)}}
+body[data-gf-surface] .gf-chart__tooltip strong{display:block;margin-bottom:2px;font-weight:var(--gf-weight-semibold)}
+body[data-gf-surface] .gf-chart__tooltip span{display:flex;align-items:center;gap:6px;color:var(--gf-color-nav-text)}
+/* Card numerica colorata: data-tone="1…8" tinge lo sfondo; __chart ospita un anello (a lato) o un mini andamento (sotto). */
+body[data-gf-surface] .gf-stat-card[data-tone]{background:color-mix(in srgb,var(--gf-tone) 8%,var(--gf-color-surface));border-color:color-mix(in srgb,var(--gf-tone) 24%,var(--gf-color-border))}
+body[data-gf-surface] .gf-stat-card__dot{display:inline-block;width:var(--gf-space-2);height:var(--gf-space-2);margin-right:6px;border-radius:var(--gf-radius-circle);background:var(--gf-tone,var(--gf-color-primary));vertical-align:middle}
+body[data-gf-surface] .gf-stat-card:has(.gf-stat-card__chart[data-place="side"]){grid-template-columns:auto minmax(0,1fr);column-gap:var(--gf-space-4)}
+body[data-gf-surface] .gf-stat-card__chart[data-place="side"]{grid-row:span 3;width:76px}
+body[data-gf-surface] .gf-stat-card__chart[data-place="bottom"]{grid-column:1/-1;height:36px;margin-top:var(--gf-space-1)}
+body[data-gf-surface] .gf-stat-card__chart[data-place="bottom"] svg{width:100%;height:36px}
+/* Barra dentro una cella di tabella. */
+body[data-gf-surface] .gf-cellbar{display:grid;grid-template-columns:minmax(60px,1fr) auto;align-items:center;gap:var(--gf-space-2);min-width:120px;font-variant-numeric:tabular-nums}
+body[data-gf-surface] .gf-cellbar .gf-bar-chart__track{height:var(--gf-space-2)}
 /* Passaggi numerati ------------------------------------------------------ */
 body[data-gf-surface] .gf-steps{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:var(--gf-space-3);margin:0;padding:0;list-style:none;counter-reset:gf-step}
 body[data-gf-surface] .gf-step{display:grid;grid-template-columns:auto minmax(0,1fr);gap:2px var(--gf-space-3);align-items:center;padding-top:var(--gf-space-3);border-top:var(--gf-space-1) solid var(--gf-color-border);counter-increment:gf-step}

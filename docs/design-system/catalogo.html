@@ -5,10 +5,11 @@
 <meta name="robots" content="noindex,nofollow">
 <title>Catalogo componenti · GiroFacile</title>
 <link rel="icon" href="/static/favicon-32x32.png">
-<link rel="stylesheet" href="/static/design-system/theme.css?v=gf_tendine_20261108">
-<link rel="stylesheet" href="/static/design-system/components.css?v=gf_collaudo_20261110">
+<link rel="stylesheet" href="/static/design-system/theme.css?v=gf_grafici_20261110">
+<link rel="stylesheet" href="/static/design-system/components.css?v=gf_grafici_20261110">
 <link rel="stylesheet" href="/static/design-system/layout.css?v=gf_banner_unico_20261101">
 <script src="/static/design-system/design-system.js?v=gf_schede_2_20261108" defer></script>
+<script src="/static/design-system/charts.js?v=gf_grafici_20261110" defer></script>
 <script src="/static/design-system/shell.js?v=gf_scala_20261101" defer></script>
 <script type="application/json" id="gf-shell-nav">
 [
@@ -495,6 +496,69 @@
       </ul>
     </div>
   </section>
+  <section class="gf-panel" aria-labelledby="p9b-title">
+    <header class="gf-panel__header"><h3 class="gf-panel__title" id="p9b-title">Colori dei grafici</h3><span class="gf-panel__meta">--gf-chart-1 … --gf-chart-8 · data-tone="1…8"</span></header>
+    <div class="gf-panel__body gf-stack">
+      <p class="gf-muted">Otto tinte in ordine fisso: la prima serie è sempre blu, la seconda arancio e così via; mai colori inventati, oltre l’ottava voce si raggruppa in «Altri». Il colore segue l’elemento (lo stesso autista ha sempre lo stesso colore). Acqua, giallo e rosa hanno poco contrasto sul bianco: accanto al colore va sempre scritto il valore.</p>
+      <ul class="gf-chart__legend">
+        <li><i class="gf-chart__swatch" data-tone="1"></i><span>1 · blu</span></li>
+        <li><i class="gf-chart__swatch" data-tone="2"></i><span>2 · arancio</span></li>
+        <li><i class="gf-chart__swatch" data-tone="3"></i><span>3 · acqua</span></li>
+        <li><i class="gf-chart__swatch" data-tone="4"></i><span>4 · giallo</span></li>
+        <li><i class="gf-chart__swatch" data-tone="5"></i><span>5 · rosa</span></li>
+        <li><i class="gf-chart__swatch" data-tone="6"></i><span>6 · verde</span></li>
+        <li><i class="gf-chart__swatch" data-tone="7"></i><span>7 · viola</span></li>
+        <li><i class="gf-chart__swatch" data-tone="8"></i><span>8 · rosso</span></li>
+      </ul>
+    </div>
+  </section>
+  <div class="gf-grid" data-cols="4">
+    <article class="gf-stat-card" data-tone="6">
+      <div class="gf-stat-card__chart gf-chart" data-place="side" data-chart="ring" data-chart-data='{"value": 91, "tone": 6, "label": "Consegne riuscite"}'><div class="gf-chart__canvas"></div></div>
+      <span class="gf-stat-card__label">Consegne riuscite</span><strong class="gf-stat-card__value">91%</strong><span class="gf-stat-card__change">381 consegnate · 31 mancate</span>
+    </article>
+    <article class="gf-stat-card" data-tone="1">
+      <span class="gf-stat-card__label"><i class="gf-stat-card__dot"></i>Fermate previste</span><strong class="gf-stat-card__value">418</strong><span class="gf-stat-card__change">in 62 giri · 6,74 a giro</span>
+      <div class="gf-stat-card__chart gf-chart" data-place="bottom" data-chart="spark" data-chart-data='{"values": [14, 18, 12, 20, 16, 19, 15, 21, 17, 22], "tone": 1}'><div class="gf-chart__canvas"></div></div>
+    </article>
+    <article class="gf-stat-card" data-tone="2">
+      <span class="gf-stat-card__label"><i class="gf-stat-card__dot"></i>Km pianificati</span><strong class="gf-stat-card__value">6.842 km</strong><span class="gf-stat-card__change">110 km a giro</span>
+      <div class="gf-stat-card__chart gf-chart" data-place="bottom" data-chart="spark" data-chart-data='{"values": [300, 210, 290, 205, 260, 300, 250, 215, 280, 240], "tone": 2}'><div class="gf-chart__canvas"></div></div>
+    </article>
+    <article class="gf-stat-card" data-tone="7">
+      <span class="gf-stat-card__label"><i class="gf-stat-card__dot"></i>Energia stimata</span><strong class="gf-stat-card__value">€ 1.064</strong><span class="gf-stat-card__change">€ 2,55 a fermata</span>
+      <div class="gf-stat-card__chart gf-chart" data-place="bottom" data-chart="spark" data-chart-data='{"values": [32, 48, 51, 46, 44, 52, 41, 47, 39, 45], "tone": 7}'><div class="gf-chart__canvas"></div></div>
+    </article>
+  </div>
+  <p class="gf-muted">.gf-stat-card con data-tone="1…8": card numerica colorata. .gf-stat-card__chart ospita un anello (data-place="side") o un mini andamento (data-place="bottom"); .gf-stat-card__dot è il pallino del colore.</p>
+  <div class="gf-grid" data-cols="2">
+    <section class="gf-panel" aria-labelledby="p9c-title">
+      <header class="gf-panel__header"><h3 class="gf-panel__title" id="p9c-title">Torta con legenda accanto</h3><span class="gf-panel__meta">data-chart="pie" · .gf-chart__split</span></header>
+      <div class="gf-panel__body"><div class="gf-chart" data-chart="pie" data-chart-data='{"label": "Fermate per mezzo", "segments": [{"label": "Fiat Ducato", "value": 140, "tone": 1}, {"label": "Ford Transit", "value": 110, "tone": 2}, {"label": "Renault e-Master", "value": 90, "tone": 3}, {"label": "Renault Kangoo", "value": 48, "tone": 4}]}'><div class="gf-chart__split"><div class="gf-chart__canvas"></div><ul class="gf-chart__legend" data-layout="list"></ul></div></div></div>
+    </section>
+    <section class="gf-panel" aria-labelledby="p9d-title">
+      <header class="gf-panel__header"><h3 class="gf-panel__title" id="p9d-title">Ciambella con totale al centro</h3><span class="gf-panel__meta">data-chart="donut"</span></header>
+      <div class="gf-panel__body"><div class="gf-chart" data-chart="donut" data-chart-data='{"label": "Spesa per alimentazione", "segments": [{"label": "Gasolio", "value": 830.4, "tone": 2}, {"label": "Elettrico", "value": 148.9, "tone": 3}, {"label": "Benzina", "value": 84.9, "tone": 4}], "format": {"prefix": "€ ", "decimals": 2}, "thickness": 24, "center": {"value": "€ 1.064", "label": "energia stimata"}}'><div class="gf-chart__split"><div class="gf-chart__canvas"></div><ul class="gf-chart__legend" data-layout="list"></ul></div></div></div>
+    </section>
+  </div>
+  <div class="gf-grid" data-cols="2">
+    <section class="gf-panel" aria-labelledby="p9e-title">
+      <header class="gf-panel__header"><h3 class="gf-panel__title" id="p9e-title">Area · andamento nel tempo</h3><span class="gf-panel__meta">data-chart="area"</span></header>
+      <div class="gf-panel__body"><div class="gf-chart" data-chart="area" data-chart-data='{"label": "Chilometri al giorno", "labels": ["01/10", "02/10", "03/10", "04/10", "05/10", "06/10", "07/10", "08/10", "09/10", "10/10"], "series": [{"name": "Km", "tone": 2, "values": [300, 210, 290, 205, 260, 300, 250, 215, 280, 240]}], "format": {"suffix": " km"}}'><div class="gf-chart__canvas"></div></div></div>
+    </section>
+    <section class="gf-panel" aria-labelledby="p9f-title">
+      <header class="gf-panel__header"><h3 class="gf-panel__title" id="p9f-title">Colonne · un colore per elemento</h3><span class="gf-panel__meta">data-chart="columns"</span></header>
+      <div class="gf-panel__body"><div class="gf-chart" data-chart="columns" data-chart-data='{"label": "Fermate per autista", "labels": ["Marco R.", "Giulia B.", "Luca F.", "Sara E."], "titles": ["Marco Rossi", "Giulia Bianchi", "Luca Ferri", "Sara Esposito"], "series": [{"name": "Fermate", "values": [132, 112, 92, 52], "tones": [1, 2, 3, 5]}], "showValues": true}'><div class="gf-chart__canvas"></div></div></div>
+    </section>
+  </div>
+  <section class="gf-panel" aria-labelledby="p9g-title">
+    <header class="gf-panel__header"><h3 class="gf-panel__title" id="p9g-title">Barra nella cella di tabella</h3><span class="gf-panel__meta">.gf-cellbar · .gf-bar-chart__fill[data-tone]</span></header>
+    <div class="gf-table-wrap"><table class="gf-table"><thead><tr><th scope="col">Mezzo</th><th scope="col">Km nel mese</th></tr></thead><tbody>
+      <tr><td>Fiat Ducato 1</td><td><div class="gf-cellbar"><span class="gf-bar-chart__track"><span class="gf-bar-chart__fill" data-tone="2" data-gf-width="100"></span></span><span>2.140 km</span></div></td></tr>
+      <tr><td>Renault e-Master</td><td><div class="gf-cellbar"><span class="gf-bar-chart__track"><span class="gf-bar-chart__fill" data-tone="2" data-gf-width="55"></span></span><span>1.180 km</span></div></td></tr>
+    </tbody></table></div>
+  </section>
+  <p class="gf-muted">Grafici disegnati da static/design-system/charts.js: GFCharts.draw(contenitore, tipo, dati) con i tipi donut, pie, ring, gauge, columns, area, spark. Una scala sola per grafico, passando sopra compare il dettaglio, la legenda mostra valore e percentuale.</p>
 </section>
 
 <section class="gf-stack gf-catalog-section" id="gestionale-flussi" aria-labelledby="gestionale-flussi-title">

@@ -79,6 +79,36 @@ function updateReportFilterSummary(){
   const ids = ["reportDateFrom","reportDateTo","reportAgent","reportCustomer","reportDriver","reportVehicle","reportStatus"];
   const active = ids.filter(id=>{ const el=document.getElementById(id); return el && String(el.value || "").trim(); }).length;
   summary.textContent = active ? `${active} filtro${active>1?'i':''} applicat${active>1?'i':'o'}` : "Nessun filtro applicato";
+  syncReportPeriodChips();
+}
+
+// Scorciatoie di periodo: compilano le date del filtro (stesso comportamento dei campi Da/A data).
+function reportPeriodRange(kind, today=new Date()){
+  const iso=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  const y=today.getFullYear(), m=today.getMonth();
+  if(kind === "7"){ const from=new Date(y, m, today.getDate()-6); return [iso(from), iso(today)]; }
+  if(kind === "month") return [iso(new Date(y, m, 1)), iso(today)];
+  if(kind === "last-month") return [iso(new Date(y, m-1, 1)), iso(new Date(y, m, 0))];
+  if(kind === "year") return [iso(new Date(y, 0, 1)), iso(today)];
+  return ["", ""];
+}
+
+function syncReportPeriodChips(){
+  if(typeof document.querySelectorAll !== "function") return;
+  const from=val("reportDateFrom") || "", to=val("reportDateTo") || "";
+  document.querySelectorAll("#reportPeriod [data-period]").forEach(b=>{
+    const [a,c]=reportPeriodRange(b.dataset.period);
+    b.setAttribute("aria-pressed", String(a === from && c === to));
+  });
+}
+
+function setReportPeriod(kind){
+  if(showLockedOrProceed("report")) return;
+  const [from,to]=reportPeriodRange(kind);
+  set("reportDateFrom", from);
+  set("reportDateTo", to);
+  updateReportFilterSummary();
+  loadReport();
 }
 
 let reportRequest = 0;
@@ -120,9 +150,14 @@ async function generateReportAIv67(){
 
 function renderReportMetrics(m){
   const setText=(id,v)=>{ const el=document.getElementById(id); if(el) el.textContent=v; };
+  const total=Number(m.consegne_totali)||0, done=Number(m.consegnate)||0;
+  const success=total ? done/total*100 : 0;
+  setText("repRiuscite", total ? fmtNumber(success) + "%" : "–");
+  setText("repConsegnate", fmtNumber(done));
+  setText("repMancate", fmtNumber(m.mancate));
   setText("repGiri", fmtNumber(m.giri_effettuati));
   setText("repConsegne", fmtNumber(m.consegne_totali));
-  setText("repKm", fmtNumber(m.km_totali,2) + " km");
+  setText("repKm", fmtNumber(m.km_totali, Number(m.km_totali) >= 100 ? 0 : 2) + " km");
   setText("repOre", fmtNumber(m.ore_totali,2) + " h");
   setText("repLitri", fmtNumber(m.litri_stimati,2) + " L");
   setText("repCosto", fmtMoney(m.costo_carburante));
@@ -130,10 +165,22 @@ function renderReportMetrics(m){
   setText("repCostoConsegna", fmtMoney(m.costo_medio_consegna));
   setText("repKmGiro", fmtNumber(m.km_medi_giro,2) + " km");
   setText("repConsegneGiro", fmtNumber(m.consegne_medie_giro,2));
+  reportChart("reportKpiRing", "ring", {value: success, tone: 6, label: "Consegne riuscite", display: total ? fmtNumber(success) + "%" : "–", note: `${fmtNumber(done)} su ${fmtNumber(total)} fermate`});
 }
 
-function chartEmpty(id, text="Nessun dato disponibile"){
-  const el=document.getElementById(id); if(el) el.innerHTML = `<div class="gf-empty"><p>${esc(text)}</p></div>`;
+/* Grafici del Report: componente .gf-chart del sistema di stile (static/design-system/charts.js). */
+function chartEmpty(id, text="Nessun dato nel periodo"){
+  const host=document.getElementById(id); if(!host) return;
+  const target=host.querySelector(".gf-chart__canvas") || host;
+  target.innerHTML = `<div class="gf-empty"><p>${esc(text)}</p></div>`;
+  const legend=host.querySelector(".gf-chart__legend"); if(legend) legend.innerHTML = "";
+}
+
+function reportChart(id, type, cfg){
+  const host=document.getElementById(id);
+  if(!host || typeof window === "undefined" || !window.GFCharts) return;
+  host.querySelector(".gf-chart__canvas .gf-empty")?.remove();
+  window.GFCharts.draw(host, type, cfg);
 }
 
 function compactDateLabel(value){
@@ -142,135 +189,113 @@ function compactDateLabel(value){
   return s;
 }
 
-function reportSinglePointCard(id, row, mode){
-  const el=document.getElementById(id); if(!el) return;
-  const item=(label,value)=>`<div class="gf-details__item"><dt>${label}</dt><dd><strong>${value}</strong></dd></div>`;
-  if(mode === "trend"){
-    el.innerHTML = `<div class="gf-stack">
-      <p class="gf-kicker">${esc(compactDateLabel(row.data))}</p>
-      <dl class="gf-details">${item("Consegne", fmtNumber(row.consegne || 0))}${item("Km pianificati", fmtNumber(row.km || 0,2) + " km")}</dl>
-      <p class="gf-muted">Nel periodo selezionato è presente un solo giorno con dati. Il grafico andamento completo apparirà con più giornate.</p>
-    </div>`;
-    return;
-  }
-  el.innerHTML = `<div class="gf-stack">
-    <p class="gf-kicker">${esc(compactDateLabel(row.data))}</p>
-    <dl class="gf-details">${item("Costo carburante stimato", fmtMoney(row.costo || 0))}</dl>
-    <p class="gf-muted">Con più giorni nel filtro verrà mostrato il confronto a colonne.</p>
-  </div>`;
+function reportDayTitle(value){
+  return typeof gfDateIt === "function" ? (gfDateIt(value) || compactDateLabel(value)) : compactDateLabel(value);
 }
 
-function svgLineChart(id, rows){
-  const el=document.getElementById(id); if(!el) return;
-  rows = rows || [];
-  if(!rows.length){ chartEmpty(id); return; }
-  if(rows.length === 1){ reportSinglePointCard(id, rows[0], "trend"); return; }
-
-  const w=760,h=310,pL=54,pR=54,pT=38,pB=48;
-  const plotW=w-pL-pR, plotH=h-pT-pB;
-  const maxC=Math.max(1,...rows.map(r=>Number(r.consegne)||0));
-  const maxK=Math.max(1,...rows.map(r=>Number(r.km)||0));
-  const x=(i)=> pL + i*plotW/(rows.length-1);
-  const yC=(v)=> pT + plotH - (Number(v)||0)/maxC*plotH;
-  const yK=(v)=> pT + plotH - (Number(v)||0)/maxK*plotH;
-  const pathC=rows.map((r,i)=>`${i?'L':'M'}${x(i)},${yC(r.consegne)}`).join(" ");
-  const pathK=rows.map((r,i)=>`${i?'L':'M'}${x(i)},${yK(r.km)}`).join(" ");
-  const areaC=`${pathC} L ${x(rows.length-1)},${pT+plotH} L ${x(0)},${pT+plotH} Z`;
-  const step=Math.max(1, Math.ceil(rows.length/7));
-  const labels=rows.map((r,i)=> i%step===0 || i===rows.length-1 ? `<text x="${x(i)}" y="${h-16}" text-anchor="middle">${esc(compactDateLabel(r.data))}</text>` : "").join("");
-  const grid=[0,1,2,3,4].map(i=>{
-    const y=pT+i*plotH/4;
-    const val=Math.round(maxC-(maxC*i/4));
-    return `<line x1="${pL}" x2="${w-pR}" y1="${y}" y2="${y}"/><text x="${pL-10}" y="${y+4}" text-anchor="end">${val}</text>`;
-  }).join("");
-  const kmAxis=[0,1,2,3,4].map(i=>{
-    const y=pT+i*plotH/4;
-    const val=Math.round(maxK-(maxK*i/4));
-    return `<text x="${w-pR+10}" y="${y+4}" text-anchor="start">${val}</text>`;
-  }).join("");
-  const points=rows.map((r,i)=>`<g class="hover-point"><circle cx="${x(i)}" cy="${yC(r.consegne)}" r="5"><title>${r.data}: ${gfCount(r.consegne,'fermata','fermate')}</title></circle><circle class="km" cx="${x(i)}" cy="${yK(r.km)}" r="5"><title>${r.data}: ${fmtNumber(r.km,2)} km</title></circle></g>`).join("");
-  el.innerHTML = `<svg viewBox="0 0 ${w} ${h}" class="report-svg line improved">
-    <defs>
-      <linearGradient id="reportTrendFill" x1="0" x2="0" y1="0" y2="1">
-        <stop offset="0%" stop-opacity=".18"></stop>
-        <stop offset="100%" stop-opacity="0"></stop>
-      </linearGradient>
-    </defs>
-    <g class="grid">${grid}${kmAxis}</g>
-    <path class="area-consegne" d="${areaC}"/>
-    <path class="line-consegne" d="${pathC}"/><path class="line-km" d="${pathK}"/>
-    ${points}${labels}
-    <g class="legend"><circle cx="${pL+90}" cy="20" r="5"/><text x="${pL+102}" y="24">Fermate</text><circle class="km" cx="${pL+180}" cy="20" r="5"/><text x="${pL+192}" y="24">Km pianificati</text></g>
-    <text class="axis-title left" x="${pL}" y="18">Fermate</text>
-    <text class="axis-title right" x="${w-pR}" y="18" text-anchor="end">Km</text>
-  </svg>`;
+// Le prime voci con il proprio colore; oltre l'ottava si raccolgono in «Altri».
+function reportTopSegments(rows, key, labelFn = r => r.nome){
+  const sorted=[...(rows||[])].filter(r=>Number(r[key])>0).sort((a,b)=>Number(b[key])-Number(a[key]));
+  const head=sorted.length > 8 ? sorted.slice(0,7) : sorted;
+  const segments=head.map((r,i)=>({label: labelFn(r), value: Number(r[key]), tone: i+1}));
+  if(sorted.length > 8) segments.push({label: "Altri", value: sorted.slice(7).reduce((s,r)=>s+Number(r[key]),0), tone: 8});
+  return segments;
 }
 
-function svgBarChart(id, rows, key="costo", suffix="€"){
-  const el=document.getElementById(id); if(!el) return;
-  rows=(rows||[]).slice(-10);
-  if(!rows.length){ chartEmpty(id); return; }
-  if(rows.length === 1){ reportSinglePointCard(id, rows[0], "fuel"); return; }
-
-  const w=560,h=310,pL=46,pR=24,pT=34,pB=48;
-  const plotW=w-pL-pR, plotH=h-pT-pB;
-  const max=Math.max(1,...rows.map(r=>Number(r[key])||0));
-  const slot=plotW/rows.length;
-  const bw=Math.min(44, slot*.58);
-  const grid=[0,1,2,3,4].map(i=>{
-    const y=pT+i*plotH/4;
-    const val=max-(max*i/4);
-    return `<line x1="${pL}" x2="${w-pR}" y1="${y}" y2="${y}"/><text x="${pL-8}" y="${y+4}" text-anchor="end">${fmtNumber(val,0)}</text>`;
-  }).join("");
-  const bars=rows.map((r,i)=>{
-    const val=Number(r[key])||0, bh=Math.max(2, val/max*plotH);
-    const x=pL+i*slot+(slot-bw)/2, y=pT+plotH-bh;
-    return `<g class="bar-item"><rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="10"><title>${r.data||r.nome}: ${fmtMoney(val)}</title></rect><text x="${x+bw/2}" y="${h-16}" text-anchor="middle">${esc(compactDateLabel(r.data||r.nome))}</text></g>`;
-  }).join("");
-  el.innerHTML=`<svg viewBox="0 0 ${w} ${h}" class="report-svg bar improved">
-    <g class="grid">${grid}</g>${bars}
-    <g class="legend"><rect x="46" y="14" width="12" height="12" rx="3"></rect><text x="66" y="24">Costo energetico stimato (€)</text></g>
-  </svg>`;
+const REPORT_FUEL_TONES = {gasolio: 2, benzina: 4, elettrico: 3, gpl: 1, metano: 7, ibrido_benzina: 5, ibrido_diesel: 6, ibrido_plugin_benzina: 5, ibrido_plugin_diesel: 6};
+function reportFuelOf(vehicleId){
+  const v=(vehiclesCache||[]).find(x=>String(x.id)===String(vehicleId));
+  return v ? (v.alimentazione || "gasolio") : "";
+}
+function reportFuelLabel(type){
+  if(!type) return "Senza mezzo";
+  const labels = typeof GF_FUEL_LABELS_V895 !== "undefined" ? GF_FUEL_LABELS_V895 : {};
+  return labels[type] || type;
 }
 
-
-function svgDonutChart(id, rows){
-  const el=document.getElementById(id); if(!el) return;
-  rows=(rows||[]).slice(0,6);
-  const total=rows.reduce((a,r)=>a+(Number(r.consegne)||0),0);
-  if(!rows.length || !total){ chartEmpty(id); return; }
-  const cx=130, cy=130, r=82, c=2*Math.PI*r;
-  let acc=0;
-  const slices=rows.map((row,i)=>{
-    const val=Number(row.consegne)||0;
-    const len=val/total*c;
-    const dash=`${len} ${c-len}`;
-    const off=-acc;
-    acc+=len;
-    return `<circle class="slice s${i}" cx="${cx}" cy="${cy}" r="${r}" stroke-dasharray="${dash}" stroke-dashoffset="${off}"><title>${row.nome}: ${gfCount(val,'fermata','fermate')}</title></circle>`;
-  }).join("");
-  const legend=rows.map((r,i)=>`<div><span class="donut-dot s${i}"></span><strong>${esc(r.nome)}</strong><small>${Math.round((r.consegne/total)*100)}%</small></div>`).join("");
-  el.innerHTML=`<div class="report-donut-wrap"><svg viewBox="0 0 260 260" class="report-svg donut"><circle class="base" cx="${cx}" cy="${cy}" r="${r}"></circle>${slices}<text x="${cx}" y="${cy-5}" text-anchor="middle">${fmtNumber(total)}</text><text x="${cx}" y="${cy+18}" text-anchor="middle">fermate</text></svg><div class="report-donut-legend">${legend}</div></div>`;
+const REPORT_DRIVER_METRICS = {
+  consegne: {sub: "Fermate nel periodo", format: {}},
+  km: {sub: "Km pianificati nel periodo", format: {suffix: " km"}},
+  ore: {sub: "Ore di guida, rilevate o stimate", format: {suffix: " h", decimals: 1}},
+  costo: {sub: "Energia stimata nel periodo", format: {prefix: "€ ", decimals: 2}}
+};
+let reportDriverMetric = "consegne";
+function setReportDriverMetric(metric){
+  if(!REPORT_DRIVER_METRICS[metric]) return;
+  reportDriverMetric = metric;
+  document.querySelectorAll("#reportDriverMetric [data-metric]").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.metric === metric)));
+  renderReportDriversChart();
+}
+function renderReportDriversChart(){
+  const rows=(reportData?.charts?.autisti || []).slice(0,8);
+  const sub=document.getElementById("reportDriversChartSub");
+  const meta=REPORT_DRIVER_METRICS[reportDriverMetric];
+  if(sub) sub.textContent = `${meta.sub}, un colore per autista`;
+  if(!rows.length){ chartEmpty("reportDriversChart"); return; }
+  // Il colore segue l'autista (ordine alfabetico), l'ordine delle colonne segue la misura scelta.
+  const tones=new Map([...rows].sort((a,b)=>String(a.nome).localeCompare(String(b.nome),"it")).map((r,i)=>[r.id ?? r.nome, i+1]));
+  const sorted=[...rows].sort((a,b)=>Number(b[reportDriverMetric]||0)-Number(a[reportDriverMetric]||0));
+  const short=name=>{ const p=String(name||"").trim().split(/\s+/); return p.length > 1 ? `${p[0]} ${p[1][0]}.` : (p[0] || "–"); };
+  reportChart("reportDriversChart", "columns", {
+    label: "Rendimento per autista", labels: sorted.map(r=>short(r.nome)), titles: sorted.map(r=>r.nome),
+    series: [{name: meta.sub, values: sorted.map(r=>Number(r[reportDriverMetric])||0), tones: sorted.map(r=>tones.get(r.id ?? r.nome))}],
+    format: meta.format, showValues: true, height: 250
+  });
 }
 
-function svgHorizontalBars(id, rows, key="consegne", suffix=""){
+function reportBarList(id, rows, key, tone){
   const el=document.getElementById(id); if(!el) return;
-  rows=(rows||[]).slice(0,7);
-  if(!rows.length){ chartEmpty(id); return; }
+  rows=(rows||[]).filter(r=>Number(r[key])>0).slice(0,8);
+  if(!rows.length){ el.innerHTML = `<div class="gf-empty"><p>Nessun dato nel periodo</p></div>`; return; }
   const max=Math.max(1,...rows.map(r=>Number(r[key])||0));
   el.innerHTML = `<ul class="gf-bar-chart">${rows.map(r=>{
-    const val=Number(r[key])||0, pct=Math.max(5, Math.round(val/max*20)*5);
-    return `<li class="gf-bar-chart__row"><span class="gf-bar-chart__label">${esc(r.nome)}</span><span class="gf-bar-chart__track"><span class="gf-bar-chart__fill" data-gf-width="${pct}"></span></span><span class="gf-bar-chart__value">${fmtNumber(val, key==='costo'?2:0)}${suffix}</span></li>`;
+    const v=Number(r[key])||0;
+    return `<li class="gf-bar-chart__row"><span class="gf-bar-chart__label">${esc(r.nome || "Cliente")}</span><span class="gf-bar-chart__track"><span class="gf-bar-chart__fill" data-tone="${tone}" data-gf-width="${reportWidthStep(v, max)}"></span></span><span class="gf-bar-chart__value">${fmtNumber(v)}</span></li>`;
   }).join("")}</ul>`;
 }
 
+function reportWidthStep(value, max){
+  const v=Number(value)||0;
+  return v > 0 ? Math.max(5, Math.round(v/(max||1)*20)*5) : 0;
+}
+function reportCellBar(value, max, tone, label){
+  return `<div class="gf-cellbar"><span class="gf-bar-chart__track"><span class="gf-bar-chart__fill" data-tone="${tone}" data-gf-width="${reportWidthStep(value, max)}"></span></span><span>${label}</span></div>`;
+}
+
 function renderReportCharts(charts){
-  svgLineChart("reportLineChart", charts.andamento || []);
-  svgBarChart("reportCostChart", charts.andamento || [], "costo", "€");
-  svgDonutChart("reportAgentDonut", charts.agenti || []);
-  svgHorizontalBars("reportDriversChart", charts.autisti || [], "consegne", "");
-  svgHorizontalBars("reportVehiclesChart", charts.mezzi || [], "km", " km");
-  svgHorizontalBars("reportCustomersChart", charts.clienti || [], "consegne", "");
+  const days=charts.andamento || [];
+  const labels=days.map(r=>compactDateLabel(r.data)), titles=days.map(r=>reportDayTitle(r.data));
+  const sparks=[["reportSparkStops","consegne",1],["reportSparkKm","km",2],["reportSparkCost","costo",7]];
+  sparks.forEach(([id,key,tone])=>{
+    const host=document.getElementById(id); if(!host) return;
+    if(days.length < 2){ const c=host.querySelector(".gf-chart__canvas"); if(c) c.innerHTML=""; return; }
+    reportChart(id, "spark", {values: days.map(r=>Number(r[key])||0), tone});
+  });
+  if(!days.length){ chartEmpty("reportKmChart"); chartEmpty("reportCostChart"); }
+  else{
+    reportChart("reportKmChart", "area", {label: "Chilometri al giorno", labels, titles, series: [{name: "Km", tone: 2, values: days.map(r=>Number(r.km)||0)}], format: {suffix: " km"}});
+    reportChart("reportCostChart", "area", {label: "Energia al giorno", labels, titles, series: [{name: "Energia", tone: 7, values: days.map(r=>Number(r.costo)||0)}], format: {prefix: "€ ", decimals: 2}});
+  }
+
+  const tables=reportData?.tables || {};
+  const vehicles=tables.mezzi || charts.mezzi || [];
+  const stops=reportTopSegments(vehicles, "consegne", r=>r.nome || "Nessun mezzo");
+  if(stops.length) reportChart("reportVehiclesChart", "pie", {label: "Fermate per mezzo", segments: stops});
+  else chartEmpty("reportVehiclesChart");
+
+  const byFuel=new Map();
+  vehicles.forEach(r=>{ const t=reportFuelOf(r.id); byFuel.set(t, (byFuel.get(t)||0) + (Number(r.costo)||0)); });
+  const fuel=[...byFuel.entries()].filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).map(([t,v])=>({label: reportFuelLabel(t), value: v, tone: REPORT_FUEL_TONES[t] || 8}));
+  const fuelTotal=fuel.reduce((s,x)=>s+x.value,0);
+  if(fuel.length) reportChart("reportEnergyChart", "donut", {label: "Spesa per alimentazione", segments: fuel, format: {prefix: "€ ", decimals: 2}, thickness: 24, center: {value: fuelTotal >= 1000 ? "€ " + fmtNumber(fuelTotal) : fmtMoney(fuelTotal), label: "energia stimata"}});
+  else chartEmpty("reportEnergyChart");
+
+  renderReportDriversChart();
+  reportBarList("reportCustomersChart", charts.clienti || [], "consegne", 5);
+
+  const agents=reportTopSegments(charts.agenti || [], "consegne");
+  if(agents.length) reportChart("reportAgentDonut", "donut", {label: "Fermate per agente", segments: agents, center: {value: fmtNumber(agents.reduce((s,x)=>s+x.value,0)), label: "fermate"}});
+  else chartEmpty("reportAgentDonut");
 }
 
 function sortReportTable(table, key){
@@ -287,17 +312,27 @@ function renderReportTables(){
   let drivers=[...(t.autisti||[])].filter(r=>!driverQ || String(r.nome||"").toLowerCase().includes(driverQ));
   const s=reportSort.drivers || {key:"consegne", dir:-1};
   drivers.sort((a,b)=>((a[s.key]>b[s.key])?1:-1)*s.dir);
+  const maxDriver=Math.max(1,...(t.autisti||[]).map(r=>Number(r.consegne)||0));
   const driverBody=document.getElementById("reportDriversBody");
-  if(driverBody) driverBody.innerHTML=drivers.map(r=>`<tr><td data-label="Autista"><strong>${esc(r.nome)}</strong></td><td data-label="Giri">${r.giri}</td><td data-label="Fermate">${r.consegne}</td><td data-label="Km">${fmtNumber(r.km,2)}</td><td data-label="Ore">${fmtNumber(r.ore,2)}</td><td data-label="Costo">${fmtMoney(r.costo)}</td><td data-label="Fermate/giro">${fmtNumber(r.consegne_per_giro,2)}</td></tr>`).join("") || `<tr><td colspan="7"><div class="gf-empty"><p>Nessun dato</p></div></td></tr>`;
+  if(driverBody) driverBody.innerHTML=drivers.map(r=>`<tr><td data-label="Autista"><strong>${esc(r.nome)}</strong></td><td data-label="Giri">${r.giri}</td><td data-label="Fermate">${reportCellBar(r.consegne, maxDriver, 1, fmtNumber(r.consegne))}</td><td data-label="Km">${fmtNumber(r.km,2)}</td><td data-label="Ore">${fmtNumber(r.ore,2)}</td><td data-label="Costo">${fmtMoney(r.costo)}</td><td data-label="Fermate/giro">${fmtNumber(r.consegne_per_giro,2)}</td></tr>`).join("") || `<tr><td colspan="7"><div class="gf-empty"><p>Nessun dato</p></div></td></tr>`;
 
   const agentBody=document.getElementById("reportAgentsBody");
   const agents=t.agenti||[];
   if(agentBody) agentBody.innerHTML=agents.map(r=>`<tr><td data-label="Agente"><strong>${esc(r.nome)}</strong></td><td data-label="Giri">${r.giri}</td><td data-label="Fermate">${r.consegne}</td><td data-label="Km">${fmtNumber(r.km,2)}</td><td data-label="Costo">${fmtMoney(r.costo)}</td><td data-label="Fermate/giro">${fmtNumber(r.consegne_per_giro,2)}</td></tr>`).join("") || `<tr><td colspan="6"><div class="gf-empty"><p>Nessun dato</p></div></td></tr>`;
 
+  const vehicleBody=document.getElementById("reportVehiclesBody");
+  const vehicles=[...(t.mezzi||[])].sort((a,b)=>(Number(b.km)||0)-(Number(a.km)||0));
+  const maxKm=Math.max(1,...vehicles.map(r=>Number(r.km)||0));
+  if(vehicleBody) vehicleBody.innerHTML=vehicles.map(r=>{
+    const fuel=reportFuelOf(r.id);
+    return `<tr><td data-label="Mezzo"><strong>${esc(r.nome || "Nessun mezzo")}</strong></td><td data-label="Alimentazione"><span class="gf-badge" data-status="${fuel === "elettrico" ? "success" : "neutral"}">${esc(reportFuelLabel(fuel))}</span></td><td data-label="Km">${reportCellBar(r.km, maxKm, 2, fmtNumber(r.km,0) + " km")}</td><td data-label="Energia">${fmtMoney(r.costo)}</td></tr>`;
+  }).join("") || `<tr><td colspan="4"><div class="gf-empty"><p>Nessun dato</p></div></td></tr>`;
+
   const customerQ=(document.getElementById("reportCustomersSearch")?.value || "").toLowerCase();
   const customerBody=document.getElementById("reportCustomersBody");
+  const maxCustomer=Math.max(1,...(t.clienti||[]).map(r=>Number(r.consegne)||0));
   const customers=(t.clienti||[]).filter(r=>!customerQ || String(r.nome||"").toLowerCase().includes(customerQ)).slice(0,80);
-  if(customerBody) customerBody.innerHTML=customers.map(r=>`<tr><td data-label="Cliente"><strong>${esc(r.nome||"Cliente")}</strong></td><td data-label="Fermate">${r.consegne}</td><td data-label="Giri">${r.giri}</td><td data-label="Km tappe">${fmtNumber(r.km_tappe,2)} km</td></tr>`).join("") || `<tr><td colspan="4"><div class="gf-empty"><p>Nessun cliente trovato</p></div></td></tr>`;
+  if(customerBody) customerBody.innerHTML=customers.map(r=>`<tr><td data-label="Cliente"><strong>${esc(r.nome||"Cliente")}</strong></td><td data-label="Fermate">${reportCellBar(r.consegne, maxCustomer, 5, fmtNumber(r.consegne))}</td><td data-label="Giri">${r.giri}</td><td data-label="Km tappe">${fmtNumber(r.km_tappe,2)} km</td></tr>`).join("") || `<tr><td colspan="4"><div class="gf-empty"><p>Nessun cliente trovato</p></div></td></tr>`;
 }
 
 function renderReportInsights(rows){

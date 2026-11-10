@@ -5,6 +5,14 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Report rifatto (variante B scelta il 10 novembre):
+  - quattro card colorate: consegne riuscite con anello, fermate, km ed energia con il mini andamento;
+  - chilometri ed energia al giorno in due grafici ad area separati (prima un grafico con due scale);
+  - torta delle fermate per mezzo, ciambella della spesa per alimentazione, «Rendimento per autista»
+    a colonne con un colore per autista e i pulsanti Fermate · Km · Ore · Costo;
+  - scorciatoie di periodo (Tutto, Ultimi 7 giorni, Questo mese, Mese scorso, Quest'anno);
+  - tabelle con barre nelle celle e nuova tabella Flotta; dati, filtri, CSV, stampa e report AI invariati.
+  - Nuovo componente grafico nel sistema di stile (otto colori dei grafici, `charts.js`) e nel catalogo.
 - Collaudo totale (10 novembre, ambiente isolato con due aziende, autisti, collaboratori, agente, Super Admin):
   - Import clienti: civico, telefono e provincia restano come scritti (prima «12.0», «811111111.0», «NA»
     perso); file con «;» accettati; in caso di errore si vede la riga da correggere, non «Errore import».

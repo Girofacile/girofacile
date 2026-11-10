@@ -1,9 +1,9 @@
 /* GiroFacile · Dashboard: regole che restano fuori dai componenti.
-   Solo variabili di theme.css. Tre gruppi:
+   Solo variabili di theme.css. Due gruppi:
    1. stati di visibilità comandati dagli script della Dashboard;
    2. pulsanti dei moduli condivisi con i portali (riepilogo percorso, tracking, prove di consegna),
-      che generano ancora le classi storiche btn-secondary / btn-mini;
-   3. grafici SVG del Report, in attesa del componente grafico proposto per il catalogo. */
+      che generano ancora le classi storiche btn-secondary / btn-mini.
+   I grafici del Report usano il componente .gf-chart del sistema di stile. */
 
 /* 1. Stati di visibilità ------------------------------------------------------ */
 .hidden{display:none!important}
@@ -35,40 +35,3 @@ html[data-gf-agents="off"] [data-gf-agents-only]{display:none!important}
 .btn-mini:hover{border-color:var(--gf-color-primary)}
 .btn-secondary:focus-visible,.btn-mini:focus-visible{outline:0;box-shadow:var(--gf-focus-ring)}
 .btn-secondary:disabled,.btn-mini:disabled{opacity:.65;cursor:not-allowed}
-
-/* 3. Grafici del Report ----------------------------------------------------------- */
-.report-svg{width:100%;height:280px;overflow:visible}
-.report-svg .grid line{stroke:var(--gf-color-border);stroke-width:1}
-.report-svg text{font-size:var(--gf-font-xs);fill:var(--gf-color-muted)}
-.report-svg.line path{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
-.report-svg.line .line-consegne{stroke:var(--gf-color-primary)}
-.report-svg.line .line-km{stroke:var(--gf-color-info);opacity:.75;stroke-dasharray:7 7}
-.report-svg.line .area-consegne{fill:var(--gf-color-primary);opacity:.12}
-.report-svg.line circle{fill:var(--gf-color-primary);stroke:var(--gf-color-surface);stroke-width:2}
-.report-svg.line circle.km{fill:var(--gf-color-info)}
-.report-svg.line .hover-point circle{transition:var(--gf-motion-duration) ease}
-.report-svg.line .hover-point:hover circle{r:7}
-.report-svg.line .axis-title{font-size:var(--gf-font-xs);font-weight:var(--gf-weight-bold);fill:var(--gf-color-muted)}
-.report-svg.bar rect{fill:var(--gf-color-primary);transition:var(--gf-motion-duration) ease}
-.report-svg.bar .bar-item:hover rect{opacity:.86}
-.report-svg.bar .legend rect{fill:var(--gf-color-primary)}
-.report-svg.donut{height:260px}
-.report-svg.donut .base{fill:none;stroke:var(--gf-color-border);stroke-width:30}
-.report-svg.donut .slice{fill:none;stroke-width:30;transform:rotate(-90deg);transform-origin:130px 130px;transition:var(--gf-motion-duration)}
-.report-svg.donut .slice:hover{stroke-width:34}
-.report-svg.donut text:first-of-type{font:var(--gf-weight-bold) var(--gf-font-xl) var(--gf-font-display);fill:var(--gf-color-text)}
-.report-donut-wrap{display:grid;grid-template-columns:260px 1fr;gap:var(--gf-space-3);align-items:center}
-.report-donut-legend{display:grid;gap:var(--gf-space-2)}
-.report-donut-legend div{display:grid;grid-template-columns:12px 1fr auto;gap:var(--gf-space-2);align-items:center;font-size:var(--gf-font-sm)}
-.donut-dot{display:block;width:10px;height:10px;border-radius:var(--gf-radius-pill)}
-/* Una tinta del tema per ogni fetta (in attesa di una palette categoriale dedicata). */
-.report-svg.donut .s0,.donut-dot.s0{stroke:var(--gf-color-primary);background:var(--gf-color-primary)}
-.report-svg.donut .s1,.donut-dot.s1{stroke:var(--gf-color-success);background:var(--gf-color-success)}
-.report-svg.donut .s2,.donut-dot.s2{stroke:var(--gf-color-warning);background:var(--gf-color-warning)}
-.report-svg.donut .s3,.donut-dot.s3{stroke:var(--gf-color-info);background:var(--gf-color-info)}
-.report-svg.donut .s4,.donut-dot.s4{stroke:var(--gf-color-nav-muted);background:var(--gf-color-nav-muted)}
-.report-svg.donut .s5,.donut-dot.s5{stroke:var(--gf-color-danger);background:var(--gf-color-danger)}
-/* Contenuto sotto i 992 px (finestra di 1300 px tolti sidebar e margini), già scalato da --gf-ui-scale. */
-@container gf-content (max-width:992px){
-  .report-donut-wrap{grid-template-columns:1fr}
-}

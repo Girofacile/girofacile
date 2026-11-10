@@ -11,7 +11,7 @@
 <title>GiroFacile</title>
 <!-- Temporaneo: su smartphone si usa l'interfaccia desktop (larghezza fissa, zoom con le dita). -->
 <meta name="viewport" content="width=1440">
-<link href="/static/dashboard/css/core.css?v=gf_scala_20261101" rel="stylesheet">
+<link href="/static/dashboard/css/core.css?v=gf_grafici_20261110" rel="stylesheet">
 <link href="/static/password-strength.css?v=password_policy_20261008_1" rel="stylesheet">
 <script src="/api/billing/catalog.js"></script>
 <script src="/static/dashboard/js/billing.js?v=gf_banner_unico_20261101"></script>
@@ -32,12 +32,13 @@
 <script src="/static/dashboard/js/drivers.js?v=gf_audit_20261020"></script>
 
 <!-- Shared GiroFacile design system; legacy sheets retain feature layout. -->
-<link rel="stylesheet" href="/static/design-system/theme.css?v=gf_tendine_20261108">
-<link rel="stylesheet" href="/static/design-system/components.css?v=gf_collaudo_20261110">
+<link rel="stylesheet" href="/static/design-system/theme.css?v=gf_grafici_20261110">
+<link rel="stylesheet" href="/static/design-system/components.css?v=gf_grafici_20261110">
 <link rel="stylesheet" href="/static/design-system/layout.css?v=gf_banner_unico_20261101">
 <link rel="stylesheet" href="/static/design-system/workspace.css?v=gf_selection_20261016">
 <link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007_reference_2">
 <script src="/static/design-system/design-system.js?v=gf_schede_2_20261108" defer></script>
+<script src="/static/design-system/charts.js?v=gf_grafici_20261110" defer></script>
 <script src="/static/design-system/shell.js?v=gf_scala_20261101" defer></script>
 <link rel="stylesheet" href="/static/dashboard/css/dashboard-real-map.css?v=gf_route_detail_20261020b">
 <link rel="stylesheet" href="/static/dashboard/css/in-progress-reference.css?v=gf_selection_20261016">
@@ -811,6 +812,13 @@
           <div class="gf-panel__body gf-cluster">
             <button type="button" id="reportFilterToggleBtn" class="gf-button" data-variant="secondary" aria-expanded="false" aria-controls="reportFilterPanel" onclick="toggleReportFilters()">⌄ Mostra filtri</button>
             <span id="reportFilterSummary" class="gf-muted">Nessun filtro applicato</span>
+            <div class="gf-cluster" id="reportPeriod" role="group" aria-label="Periodo">
+              <button type="button" class="gf-chip" aria-pressed="true" data-period="" onclick="setReportPeriod('')">Tutto</button>
+              <button type="button" class="gf-chip" aria-pressed="false" data-period="7" onclick="setReportPeriod('7')">Ultimi 7 giorni</button>
+              <button type="button" class="gf-chip" aria-pressed="false" data-period="month" onclick="setReportPeriod('month')">Questo mese</button>
+              <button type="button" class="gf-chip" aria-pressed="false" data-period="last-month" onclick="setReportPeriod('last-month')">Mese scorso</button>
+              <button type="button" class="gf-chip" aria-pressed="false" data-period="year" onclick="setReportPeriod('year')">Quest’anno</button>
+            </div>
           </div>
           <div id="reportFilterPanel" class="gf-panel__body gf-stack hidden">
             <div class="gf-form-grid">
@@ -828,28 +836,56 @@
 
         <div id="reportAiSummaryV67" class="gf-alert hidden" data-status="info" aria-live="polite"></div>
 
-        <div class="gf-grid" data-cols="4" data-size="sm" aria-label="Indicatori del report">
-          <article class="gf-stat-card"><span class="gf-stat-card__label">1. Giri effettuati</span><strong class="gf-stat-card__value" id="repGiri">0</strong></article>
-          <article class="gf-stat-card"><span class="gf-stat-card__label">2. Fermate previste</span><strong class="gf-stat-card__value" id="repConsegne">0</strong></article>
-          <article class="gf-stat-card"><span class="gf-stat-card__label">3. Km pianificati</span><strong class="gf-stat-card__value" id="repKm">0 km</strong></article>
-          <article class="gf-stat-card"><span class="gf-stat-card__label">4. Ore rilevate / stimate</span><strong class="gf-stat-card__value" id="repOre">0 h</strong></article>
-          <article class="gf-stat-card"><span class="gf-stat-card__label">5. Litri stimati</span><strong class="gf-stat-card__value" id="repLitri">0 L</strong></article>
-          <article class="gf-stat-card"><span class="gf-stat-card__label">6. Energia stimata</span><strong class="gf-stat-card__value" id="repCosto">€ 0</strong></article>
-          <article class="gf-stat-card"><span class="gf-stat-card__label">7. Energia media/giro</span><strong class="gf-stat-card__value" id="repCostoGiro">€ 0</strong></article>
-          <article class="gf-stat-card"><span class="gf-stat-card__label">8. Energia media/fermata</span><strong class="gf-stat-card__value" id="repCostoConsegna">€ 0</strong></article>
-          <article class="gf-stat-card"><span class="gf-stat-card__label">9. Km medi/giro</span><strong class="gf-stat-card__value" id="repKmGiro">0 km</strong></article>
-          <article class="gf-stat-card"><span class="gf-stat-card__label">10. Fermate medie/giro</span><strong class="gf-stat-card__value" id="repConsegneGiro">0</strong></article>
+        <div class="gf-grid" data-cols="4" aria-label="Indicatori del report">
+          <article class="gf-stat-card" data-tone="6">
+            <div class="gf-stat-card__chart gf-chart" data-place="side" id="reportKpiRing"><div class="gf-chart__canvas"></div></div>
+            <span class="gf-stat-card__label">Consegne riuscite</span>
+            <strong class="gf-stat-card__value" id="repRiuscite">0%</strong>
+            <span class="gf-stat-card__change"><span id="repConsegnate">0</span> consegnate · <span id="repMancate">0</span> mancate</span>
+          </article>
+          <article class="gf-stat-card" data-tone="1">
+            <span class="gf-stat-card__label"><i class="gf-stat-card__dot"></i>Fermate previste</span>
+            <strong class="gf-stat-card__value" id="repConsegne">0</strong>
+            <span class="gf-stat-card__change">in <span id="repGiri">0</span> giri · <span id="repConsegneGiro">0</span> a giro</span>
+            <div class="gf-stat-card__chart gf-chart" data-place="bottom" id="reportSparkStops"><div class="gf-chart__canvas"></div></div>
+          </article>
+          <article class="gf-stat-card" data-tone="2">
+            <span class="gf-stat-card__label"><i class="gf-stat-card__dot"></i>Km pianificati</span>
+            <strong class="gf-stat-card__value" id="repKm">0 km</strong>
+            <span class="gf-stat-card__change"><span id="repKmGiro">0 km</span> a giro · <span id="repOre">0 h</span> di guida</span>
+            <div class="gf-stat-card__chart gf-chart" data-place="bottom" id="reportSparkKm"><div class="gf-chart__canvas"></div></div>
+          </article>
+          <article class="gf-stat-card" data-tone="7">
+            <span class="gf-stat-card__label"><i class="gf-stat-card__dot"></i>Energia stimata</span>
+            <strong class="gf-stat-card__value" id="repCosto">€ 0</strong>
+            <span class="gf-stat-card__change"><span id="repCostoConsegna">€ 0</span> a fermata · <span id="repLitri">0 L</span></span>
+            <div class="gf-stat-card__chart gf-chart" data-place="bottom" id="reportSparkCost"><div class="gf-chart__canvas"></div></div>
+          </article>
+        </div>
+
+        <div class="gf-grid" data-cols="2">
+          <section class="gf-panel"><div class="gf-panel__body"><div class="gf-chart" id="reportKmChart"><div class="gf-chart__head"><div><h2 class="gf-chart__title">Chilometri al giorno</h2><p class="gf-chart__sub">Km pianificati nei giri del periodo</p></div></div><div class="gf-chart__canvas"></div></div></div></section>
+          <section class="gf-panel"><div class="gf-panel__body"><div class="gf-chart" id="reportCostChart"><div class="gf-chart__head"><div><h2 class="gf-chart__title">Energia al giorno</h2><p class="gf-chart__sub">Costo stimato di carburante ed elettricità · <span id="repCostoGiro">€ 0</span> a giro</p></div></div><div class="gf-chart__canvas"></div></div></div></section>
+        </div>
+
+        <div class="gf-grid" data-cols="2">
+          <section class="gf-panel"><div class="gf-panel__body"><div class="gf-chart" id="reportVehiclesChart"><div class="gf-chart__head"><div><h2 class="gf-chart__title">Fermate per mezzo</h2><p class="gf-chart__sub">Come si divide il lavoro tra i mezzi</p></div></div><div class="gf-chart__split"><div class="gf-chart__canvas"></div><ul class="gf-chart__legend" data-layout="list"></ul></div></div></div></section>
+          <section class="gf-panel"><div class="gf-panel__body"><div class="gf-chart" id="reportEnergyChart"><div class="gf-chart__head"><div><h2 class="gf-chart__title">Spesa per alimentazione</h2><p class="gf-chart__sub">Energia stimata secondo l’alimentazione del mezzo</p></div></div><div class="gf-chart__split"><div class="gf-chart__canvas"></div><ul class="gf-chart__legend" data-layout="list"></ul></div></div></div></section>
         </div>
 
         <div class="gf-grid" data-cols="main-side">
-          <section class="gf-panel"><header class="gf-panel__header"><div><h2 class="gf-panel__title">Andamento fermate e km</h2><p class="gf-muted">Confronto tra numero di fermate e chilometri nel periodo filtrato.</p></div></header><div id="reportLineChart" class="gf-panel__body"></div></section>
-          <section class="gf-panel"><header class="gf-panel__header"><div><h2 class="gf-panel__title">Costo carburante</h2><p class="gf-muted">Costo stimato per giorno nel periodo selezionato.</p></div></header><div id="reportCostChart" class="gf-panel__body"></div></section>
-        </div>
-        <div class="gf-grid" data-cols="2">
-          <section class="gf-panel" data-gf-agents-only><header class="gf-panel__header"><div><h2 class="gf-panel__title">Distribuzione per agente</h2></div></header><div id="reportAgentDonut" class="gf-panel__body"></div></section>
-          <section class="gf-panel"><header class="gf-panel__header"><div><h2 class="gf-panel__title">Performance autisti</h2></div></header><div id="reportDriversChart" class="gf-panel__body"></div></section>
-          <section class="gf-panel"><header class="gf-panel__header"><div><h2 class="gf-panel__title">Utilizzo mezzi</h2></div></header><div id="reportVehiclesChart" class="gf-panel__body"></div></section>
-          <section class="gf-panel"><header class="gf-panel__header"><div><h2 class="gf-panel__title">Top clienti</h2></div></header><div id="reportCustomersChart" class="gf-panel__body"></div></section>
+          <section class="gf-panel"><div class="gf-panel__body"><div class="gf-chart" id="reportDriversChart">
+            <div class="gf-chart__head"><div><h2 class="gf-chart__title">Rendimento per autista</h2><p class="gf-chart__sub" id="reportDriversChartSub">Fermate nel periodo, un colore per autista</p></div>
+              <div class="gf-cluster" id="reportDriverMetric" role="group" aria-label="Misura del grafico">
+                <button type="button" class="gf-chip" aria-pressed="true" data-metric="consegne" onclick="setReportDriverMetric('consegne')">Fermate</button>
+                <button type="button" class="gf-chip" aria-pressed="false" data-metric="km" onclick="setReportDriverMetric('km')">Km</button>
+                <button type="button" class="gf-chip" aria-pressed="false" data-metric="ore" onclick="setReportDriverMetric('ore')">Ore</button>
+                <button type="button" class="gf-chip" aria-pressed="false" data-metric="costo" onclick="setReportDriverMetric('costo')">Costo</button>
+              </div>
+            </div>
+            <div class="gf-chart__canvas"></div>
+          </div></div></section>
+          <section class="gf-panel"><div class="gf-panel__body gf-stack"><div class="gf-chart__head"><div><h2 class="gf-chart__title">Clienti più serviti</h2><p class="gf-chart__sub">Fermate nel periodo</p></div></div><div id="reportCustomersChart"></div></div></section>
         </div>
 
         <div class="gf-grid" data-cols="main-side">
@@ -858,8 +894,13 @@
         </div>
 
         <div class="gf-grid" data-cols="2">
-          <section class="gf-panel" data-gf-agents-only><header class="gf-panel__header"><h2 class="gf-panel__title">Riepilogo per agente</h2></header><div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards"><thead><tr><th scope="col">Agente</th><th scope="col">Giri</th><th scope="col">Fermate</th><th scope="col">Km</th><th scope="col">Costo</th><th scope="col">Fermate/giro</th></tr></thead><tbody id="reportAgentsBody"></tbody></table></div></section>
+          <section class="gf-panel"><header class="gf-panel__header"><div><h2 class="gf-panel__title">Flotta</h2><p class="gf-muted">Km ed energia per mezzo, con l’alimentazione</p></div></header><div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards"><thead><tr><th scope="col">Mezzo</th><th scope="col">Alimentazione</th><th scope="col">Km</th><th scope="col">Energia</th></tr></thead><tbody id="reportVehiclesBody"></tbody></table></div></section>
           <section class="gf-panel"><header class="gf-panel__header"><h2 class="gf-panel__title">Riepilogo clienti</h2><input class="gf-input" type="search" id="reportCustomersSearch" oninput="renderReportTables()" placeholder="Cerca cliente..." aria-label="Cerca cliente..."></header><div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards"><thead><tr><th scope="col">Cliente</th><th scope="col">Fermate</th><th scope="col">Giri</th><th scope="col">Km tappe</th></tr></thead><tbody id="reportCustomersBody"></tbody></table></div></section>
+        </div>
+
+        <div class="gf-grid" data-cols="main-side" data-gf-agents-only>
+          <section class="gf-panel"><header class="gf-panel__header"><h2 class="gf-panel__title">Riepilogo per agente</h2></header><div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards"><thead><tr><th scope="col">Agente</th><th scope="col">Giri</th><th scope="col">Fermate</th><th scope="col">Km</th><th scope="col">Costo</th><th scope="col">Fermate/giro</th></tr></thead><tbody id="reportAgentsBody"></tbody></table></div></section>
+          <section class="gf-panel"><div class="gf-panel__body"><div class="gf-chart" id="reportAgentDonut" data-shape="round"><div class="gf-chart__head"><div><h2 class="gf-chart__title">Fermate per agente</h2></div></div><div class="gf-chart__canvas"></div><ul class="gf-chart__legend" data-layout="list"></ul></div></div></section>
         </div>
       </section>
 
@@ -1593,7 +1634,7 @@
   <button type="button" class="gf-button" data-variant="primary" onclick="acceptCookieNotice()">Ho capito</button>
 </div>
 
-<script src="/static/dashboard/js/reports.js?v=gf_format_20261020"></script>
+<script src="/static/dashboard/js/reports.js?v=gf_grafici_20261110"></script>
 <script src="/static/dashboard/js/customers.js?v=gf_collaudo_20261110"></script>
 <script src="/static/dashboard/js/navigation.js?v=gf_collaudo2_20261110"></script>
 <script src="/static/dashboard/js/history.js?v=gf_collaudo_20261110"></script>
