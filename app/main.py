@@ -112,8 +112,8 @@ app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 # Archivio POD locale (solo sviluppo): link firmati e temporanei, come quelli S3.
 @app.get("/api/pod-local", include_in_schema=False)
-def pod_local_file(key: str, exp: int, dl: int = 0, sig: str = ""):
-    return serve_local_object(key, exp, dl, sig)
+def pod_local_file(key: str, exp: int, dl: int = 0, sig: str = "", fn: str = ""):
+    return serve_local_object(key, exp, dl, sig, fn)
 
 
 # Stato del servizio per healthcheck Docker e monitor esterni: nessun dettaglio interno.

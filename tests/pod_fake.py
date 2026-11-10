@@ -20,7 +20,7 @@ class FakeStorage:
     def read(self, key):
         return self.objects[key]
 
-    def signed_url(self, key, content_type, download=False):
+    def signed_url(self, key, content_type, download=False, filename=None):
         assert key in self.objects
         return 'https://storage.example.test/' + key + '?expires=900'
 

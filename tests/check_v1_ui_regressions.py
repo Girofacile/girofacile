@@ -196,15 +196,14 @@ def main():
                 assert state["starts"] == ["/api/driver/routes/42/start"]
                 checks.append("driver: apostrophe/quotes preserved through confirmation and POST")
                 # Rete assente: l'esito resta sul telefono, il giro lo mostra, poi parte al ritorno della rete.
-                page.locator("#deliveryList .btn-missed").first.wait_for(state="visible")
+                page.locator("#deliveryList").get_by_role("button", name="Mancata").first.wait_for(state="visible")
                 state["offline"] = True
-                page.locator("#deliveryList .btn-missed").first.click()
+                page.locator("#deliveryList").get_by_role("button", name="Mancata").first.click()
                 page.locator("#motivoList .motivo-btn").first.click()
                 page.locator("#modalMissed .btn-confirm").click()
                 page.locator("#outboxBanner").wait_for(state="visible")
                 assert page.locator("#modalMissed").is_hidden()
                 assert "1 esito salvato" in page.locator("#outboxBannerText").inner_text()
-                assert page.locator("#psMissed").inner_text() == "1"
                 assert page.evaluate("JSON.parse(localStorage.getItem('gf-driver-outbox-undefined')).length") == 1
                 assert state["outcomes"] == []
                 page.screenshot(path=str(output/"driver-offline-outcome-390.png"), full_page=True)

@@ -27,14 +27,16 @@
         if(tab==='depositi')return {target:el('newDepositBtn'),placement:'bottom-end',title:'Premi «Nuovo deposito»',text:'Il deposito è il punto da cui partono e rientrano i giri.'};
         return go('depositi','Depositi','Registra il magazzino da cui partono i giri.');
       case 'vehicle':
-        if(isOpen('vehicleDrawer'))return save('saveVehicleBtn','Salva mezzo','targa e nome del mezzo');
+        if(isOpen('vehicleDrawer'))return save('saveVehicleBtn','Salva mezzo','targa, nome, alimentazione e consumo (scheda «Consumi e pedaggi»)');
         if(tab==='mezzi')return {target:el('newVehicleBtn'),placement:'bottom-end',title:'Premi «Nuovo mezzo»',text:'Si apre la scheda del veicolo da compilare.'};
         return go('mezzi','Mezzi','Registra il veicolo con cui partirà il giro.');
       case 'driver':
-        if(isOpen('driverFormOverlay'))return save('saveDriverBtn','Salva autista','i dati dell’autista');
+        if(isOpen('driverFormOverlay'))return save('saveDriverBtn','Salva autista','nome, cognome ed email dell’autista');
         if(tab==='autisti')return {target:el('newDriverBtn'),placement:'bottom-end',title:'Premi «Nuovo autista»',text:'Con l’email l’autista riceve l’invito all’app.'};
         return go('autisti','Autisti','Aggiungi chi guiderà il mezzo.');
       case 'customer':
+        // «Nuovo cliente» apre la finestra a schede; la scheda laterale resta per le modifiche rapide.
+        if(isOpen('customerOverlay'))return save('saveCustomerBtn','Salva cliente','nome, indirizzo completo e tempo di scarico');
         if(isOpen('customerDrawerScrim')){const button=document.querySelector('#customerDrawer [data-cx-save]');return {...save('','Salva','nome, indirizzo e città del cliente'),target:button};}
         if(tab==='clienti')return {target:el('newCustomerBtn'),placement:'bottom-end',title:'Premi «Nuovo cliente»',text:'Il cliente è il punto in cui l’autista consegna.'};
         return go('clienti','Clienti','Registra il primo cliente da servire.');

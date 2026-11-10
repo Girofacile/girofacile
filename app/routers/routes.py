@@ -1081,14 +1081,17 @@ def depart_route_now(route_id: int, db: Session = Depends(get_db), user: User = 
         raise HTTPException(409, "Si può spostare la partenza solo di un giro programmato non ancora avviato.")
     if plan.data_giro != local_today():
         raise HTTPException(409, "Il giro era previsto per un altro giorno: riprogrammalo o annullalo.")
-    plan.orario_partenza = departure_now()
+    departure = departure_now()
+    if departure is None:
+        raise HTTPException(409, "È quasi mezzanotte: riprogramma il giro per domani o annullalo.")
+    plan.orario_partenza = departure
     try:
         enrich_final_route(db, plan, force=True, requested_at=utc_now())
     except ValueError as exc:
         raise HTTPException(400, str(exc))
     db.commit()
     db.refresh(plan)
-    return serialize_route(plan)
+    return serialize_route(plan, include_legs=False)
 
 
 @router.post("/api/routes/{route_id}/cancel")

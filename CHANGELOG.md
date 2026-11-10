@@ -5,6 +5,21 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Collaudo completo del 10 novembre, correzioni:
+  - «Sposta la partenza ad adesso» non falliva più solo quando il minuto era un multiplo di 5: la nuova
+    partenza è sempre i prossimi 5 minuti tondi dopo adesso (alle 09:35 → 09:40); vicino a mezzanotte
+    chiede di riprogrammare. Risposta senza tracciati del traffico (da ~150 KB a pochi KB).
+  - Giri programmati: avviso per i giri dei giorni scorsi mai avviati, con «Annulla i N giri» (gli ordini
+    tornano da pianificare).
+  - Clienti: «Nuovo cliente» apre la finestra a schede con i campi obbligatori concordati.
+  - Ordini: dopo una verifica non riuscita si vede subito il motivo (es. «Google ha trovato solo la zona»)
+    invece di «Operazione non riuscita»; selezionando il primo ordine l'elenco non scende più (la barra di
+    selezione è in fondo alla pagina); il banner dei cookie sale sopra le barre in basso invece di coprirle.
+  - Nuovo mezzo / nuovo autista: il limite del piano si vede prima di compilare la finestra.
+  - Collaboratori: il titolare può eliminarli (sessioni e inviti revocati subito).
+  - Storico: un orario che cade in un altro giorno mostra la data («00:18 del 10/11»).
+  - POD scaricata con un nome leggibile: «POD-2026-11-10-Bar-Roma-1085.pdf».
+  - Test: non scrivono più falsi errori SMTP in «Errori sistema» del database locale.
 - Widget iPhone del Super Admin (Server › Widget iPhone): ticket aperti e di oggi, aziende (registrate,
   in prova, abbonate, nuove nel mese), MRR stimato, giri in corso e di oggi, errori delle ultime 24 ore,
   in un widget dell'app Scriptable. «Genera chiave e copia script» crea una chiave dedicata (nel database

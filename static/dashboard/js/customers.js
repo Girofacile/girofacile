@@ -225,7 +225,7 @@ function renderCustomerDirectory(){
     const none=!state.all.length;
     html='<div class="gf-empty"><p><strong>'+(none?'Nessun cliente registrato':'Nessun cliente trovato')+'</strong></p><p>'
       +(none?'Aggiungi il primo cliente oppure importa un file CSV/Excel.':'Prova a cambiare la ricerca o i filtri.')+'</p>'
-      +(none?'<button type="button" class="gf-button" data-variant="primary" data-size="sm" onclick="openCustomerDrawer(null,\'new\')">'+cxIcon('plus')+'Nuovo cliente</button>'
+      +(none?'<button type="button" class="gf-button" data-variant="primary" data-size="sm" onclick="openCustomerModal()">'+cxIcon('plus')+'Nuovo cliente</button>'
             :'<button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="clearCustomerListAllFilters()">Azzera ricerca e filtri</button>')+'</div>';
   }else if(state.view==='list'){
     // Intestazione solo descrittiva, come in Ordini: niente "seleziona tutti", l'ordinamento sta nella barra sopra.

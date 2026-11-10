@@ -181,13 +181,13 @@ class ObjectStorage:
         except Exception:
             raise unavailable() from None
 
-    def signed_url(self, key, content_type, download=False):
+    def signed_url(self, key, content_type, download=False, filename=None):
         if not self._private_checked:
             self.verify_configuration()
         try:
             return self.client.generate_presigned_url('get_object', Params={
                 'Bucket': self.bucket, 'Key': key, 'ResponseContentType': content_type,
-                'ResponseContentDisposition': ('attachment' if download else 'inline') + '; filename="' + key.rsplit('/', 1)[1] + '"'},
+                'ResponseContentDisposition': ('attachment' if download else 'inline') + '; filename="' + (safe_filename(filename) or key.rsplit('/', 1)[1]) + '"'},
                 ExpiresIn=self.seconds)
         except Exception:
             raise unavailable() from None
@@ -263,17 +263,30 @@ class LocalObjectStorage:
             raise unavailable()
         return raw
 
-    def signed_url(self, key, content_type, download=False):
+    def signed_url(self, key, content_type, download=False, filename=None):
         _generic_key(key)
         expires, dl = int(time.time()) + self.seconds, 1 if download else 0
-        return '/api/pod-local?' + urlencode({'key': key, 'exp': expires, 'dl': dl,
-                                             'sig': _local_signature(self._secret, key, expires, dl)})
+        params = {'key': key, 'exp': expires, 'dl': dl, 'sig': _local_signature(self._secret, key, expires, dl)}
+        if safe_filename(filename):
+            params['fn'] = safe_filename(filename)
+        return '/api/pod-local?' + urlencode(params)
 
     def delete(self, key):
         self._path(key).unlink(missing_ok=True)
 
 
-def serve_local_object(key, exp, dl, sig):
+def safe_filename(name):
+    """Nome di file leggibile e sicuro per Content-Disposition: lettere, cifre, punto, trattino."""
+    import re
+    import unicodedata
+    if not name:
+        return ''
+    ascii_name = unicodedata.normalize('NFKD', str(name)).encode('ascii', 'ignore').decode()
+    cleaned = re.sub(r'[^A-Za-z0-9.]+', '-', ascii_name).strip('-.')
+    return cleaned[:120]
+
+
+def serve_local_object(key, exp, dl, sig, fn=''):
     """Serve a file of the local archive through its expiring signed link."""
     values = _local_configuration_values()
     if backend() != 'local' or values is None:
@@ -292,7 +305,7 @@ def serve_local_object(key, exp, dl, sig):
     disposition = 'attachment' if download else 'inline'
     return FileResponse(path, media_type=content_type, headers={
         'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff',
-        'Content-Disposition': f'{disposition}; filename="{path.name}"'})
+        'Content-Disposition': f'{disposition}; filename="{safe_filename(fn) or path.name}"'})
 
 
 def get_storage():

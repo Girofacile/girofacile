@@ -135,6 +135,24 @@ def update(collaborator_id: int, data: CollaboratorIn, owner: User = Depends(cur
     return save(data, owner, db, actor)
 
 
+@router.delete("/api/collaborators/{collaborator_id}")
+def delete(collaborator_id: int, owner: User = Depends(current_user), db: Session = Depends(get_db)):
+    """Elimina un collaboratore: sessioni, inviti e link di reset smettono subito di valere.
+
+    Solo il titolare: le richieste DELETE non hanno una regola di permesso, quindi un collaboratore riceve 403.
+    """
+    owner = lock_plan_owner(owner, db)
+    actor = db.query(CompanyCollaborator).filter_by(id=collaborator_id, user_id=owner.id).with_for_update().populate_existing().first()
+    if not actor:
+        raise HTTPException(404, "Collaboratore non trovato")
+    revoke_invitations(db, actor)
+    db.query(PasswordResetToken).filter_by(account_type="collaborator", account_id=actor.id).delete(synchronize_session=False)
+    db.query(CollaboratorInvitation).filter_by(collaborator_id=actor.id).delete(synchronize_session=False)
+    db.delete(actor)
+    db.commit()
+    return {"ok": True}
+
+
 @router.post("/api/collaborators/{collaborator_id}/invite")
 def invite(collaborator_id: int, owner: User = Depends(current_user), db: Session = Depends(get_db)):
     owner = lock_plan_owner(owner, db)

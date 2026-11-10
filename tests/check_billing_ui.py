@@ -68,8 +68,11 @@ def main():
                     if route.request.method not in ('GET', 'HEAD'):
                         route.fulfill(status=405, json={'detail': 'Read-only UI fixture'}); return
                     route.fulfill(json={'/api/me': owner, '/api/billing/overview': OVERVIEW,
+                                        '/api/vehicles': [], '/api/drivers': [], '/api/customers': [], '/api/deposits': [], '/api/agents': [],
                                         '/api/billing/my-plan': dict(owner, billing={}, usage={}),
-                                        '/api/notifications/count': dict(unread=0)}.get(path, {}))
+                                        '/api/notifications/count': dict(unread=0),
+                                        # Configurazione completata: il pannello di benvenuto non si apre sopra la pagina.
+                                        '/api/onboarding/status': dict(completed=True, workspace_operational=True, steps=[])}.get(path, {}))
 
                 page.route('**/*', handle)
                 page.goto('http://billing.test/dashboard', wait_until='networkidle')

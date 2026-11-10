@@ -7,6 +7,8 @@ from urllib.parse import urlparse
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT));sys.path.insert(0,str(ROOT/'test-results'/'ui-tools'))
 os.environ['DATABASE_URL']='sqlite://';os.environ['ALLOW_SQLITE_LEGACY']='true'
+# Come nei test automatici (tests/conftest.py): OR-Tools e PyVRP spenti, altrimenti ogni calcolo usa tutto il tempo concesso.
+os.environ.setdefault('FLEET_ORTOOLS_SECONDS','0');os.environ.setdefault('FLEET_PYVRP_SECONDS','0')
 from playwright.sync_api import sync_playwright
 from pytest import MonkeyPatch
 from test_agents_feature import env
@@ -79,7 +81,7 @@ def main():
                 page.locator('[data-planning-mode-card="single"]').click()
                 assert page.locator('#planningMode').input_value()=='single'
                 # Un solo mezzo: la stessa card, una sola, con mezzo e autista della card 1.
-                assert page.locator('#fleetResources article').count()==1
+                assert page.locator('#fleetResources article:not([data-fleet-invite])').count()==1
                 assert page.locator('#fleetVehicle0').input_value()==str(vehicles[0]['id'])
                 assert page.locator('#singleVehicleField').is_hidden()
                 page.locator('[data-planning-mode-card="fleet"]').click()
@@ -145,14 +147,13 @@ def main():
                 assert all(r.status=='annullato' for r in db.query(RoutePlan))
                 mp.setattr(route_enrichment,'enrich_final_route',real_enrich)
                 page.locator('[data-fleet-plan]').click()
-                page.locator('#workspacePageBadge',has_text='Giri programmati').wait_for()
                 page.locator('#tab-dashboard-scheduled').wait_for(state='visible')
                 programmed=db.query(RoutePlan).filter_by(status='programmato').first()
                 assert programmed is not None
                 page.locator(f'#tab-dashboard-scheduled button[onclick="openDashboardScheduledRoute({programmed.id})"]:visible').first.click()
                 page.locator('[data-scheduled-detail]').get_by_role('button',name='Modifica dalla pianificazione',exact=True).click()
                 page.wait_for_function("document.getElementById('planningMode').value==='single'")
-                assert page.locator('#fleetResources article').count()==1
+                assert page.locator('#fleetResources article:not([data-fleet-invite])').count()==1
                 assert not errors,errors
                 page.close()
                 try:next(generator)

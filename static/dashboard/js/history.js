@@ -158,7 +158,7 @@ window.GFHistory = (() => {
     const planned = gfPlannedArrivalDates(r, rows);
     const breaks = after => GFDriverBreaks.cards(r, after, 'li');
     return `<ol class="gf-stop-list"${autoHeight ? ' data-height="auto"' : ''} aria-label="Fermate del giro">${breaks(0)}${rows.map((d, idx) => {
-      const st = status(d), note = d.note_operatore || d.note_autista || d.note || '', real = gfRealArrival(d);
+      const st = status(d), note = d.note_operatore || d.note_autista || d.note || '', real = gfRealArrival(d, r.data_giro);
       return `<li class="gf-stop${st === 'completata' ? ' is-done' : st === 'mancata' ? ' is-miss' : ''}"><span class="gf-stop__number">${esc(d.ordine || idx+1)}</span>
         <span class="gf-stop__main"><span class="gf-stop__name">${esc(d.cliente_nome || '-')}</span>
           <span class="gf-stop__meta">${esc(d.indirizzo || '-')} · previsto ${esc(gfPlannedArrival(d))}${real ? ` · reale ${esc(real)}` : ''} ${gfDeltaBadge(planned[idx], gfRealArrivalDate(d))}</span>
@@ -175,12 +175,12 @@ window.GFHistory = (() => {
     const energy = gfRouteEnergyMetric(r);
     const outcome = [[`${done} consegnate`,'success'], [plural(missed,'mancata','mancate'),'danger', missed], [plural(absent,'cliente assente','clienti assenti'),'warning', absent], [plural(closed,'locale chiuso','locali chiusi'),'warning', closed], [`${rows.length-done-missed} non gestite`,'info', rows.length-done-missed]]
       .filter(([, , show]) => show === undefined || show > 0).map(([text, tone]) => `<span class="gf-badge" data-status="${tone}">${esc(text)}</span>`).join('');
-    const start = gfTimeFromIso(r.started_at) || r.orario_partenza || '-';
-    const end = gfTimeFromIso(r.completed_at) || r.rientro_stimato_aggiornato || r.orario_rientro_stimato || '-';
+    const start = gfTimeOnRouteDay(r.started_at, r.data_giro) || r.orario_partenza || '-';
+    const end = gfTimeOnRouteDay(r.completed_at, r.data_giro) || r.rientro_stimato_aggiornato || r.orario_rientro_stimato || '-';
     const realMinutes = r.started_at && r.completed_at ? Math.round((new Date(r.completed_at) - new Date(r.started_at)) / 60000) : null;
     const planned = gfPlannedArrivalDates(r, rows);
     const tableRows = rows.map((d, idx) => {
-      const st = status(d), note = d.note_operatore || d.note_autista || d.note || '', real = gfRealArrival(d);
+      const st = status(d), note = d.note_operatore || d.note_autista || d.note || '', real = gfRealArrival(d, r.data_giro);
       return `<tr>
         <td data-label="#">${esc(d.ordine || idx+1)}</td>
         <td data-label="Cliente"><strong>${esc(d.cliente_nome || '-')}</strong><br><small class="gf-muted">${esc(d.indirizzo || '-')}</small></td>

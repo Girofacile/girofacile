@@ -202,7 +202,7 @@ def api_handler(case, mutations, blocked_external):
             "/api/resources/availability": dict(vehicles=case["vehicles"], drivers=case["drivers"]),
             "/api/company-profile": dict(owner, company_email="demo@example.test"),
             "/api/account-profile": dict(name="Demo", email="demo@example.test", role="admin"),
-            "/api/onboarding/status": dict(completed=case["operational"], workspace_operational=case["operational"], steps=[]),
+            "/api/onboarding/status": dict(completed=case["operational"], workspace_operational=case["operational"], steps=[], dismissed=True),  # guida già chiusa: non copre la pagina
             "/api/notifications": dict(items=[], unread=0),
             "/api/notifications/count": dict(unread=0),
             "/api/driver/admin/chat-threads": [],

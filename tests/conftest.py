@@ -73,3 +73,11 @@ def _ortools_off_by_default(monkeypatch):
     monkeypatch.setenv('FLEET_ORTOOLS_SECONDS', '0')
     # Lo stesso per PyVRP: si accende solo in tests/test_fleet_pyvrp.py.
     monkeypatch.setenv('FLEET_PYVRP_SECONDS', '0')
+
+
+@pytest.fixture(autouse=True)
+def _email_failures_not_logged_in_real_database(monkeypatch):
+    # Il registro degli errori email apre una sessione propria (SessionLocal): nei test punterebbe
+    # al database del .env e riempirebbe «Errori sistema» del gestionale locale di falsi errori SMTP.
+    from app.services import email
+    monkeypatch.setattr(email, '_log_email_failure', lambda *args, **kwargs: None)

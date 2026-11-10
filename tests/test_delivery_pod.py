@@ -470,3 +470,16 @@ def test_driver_completion_saves_signature_photo_and_pod_in_local_archive(env, l
         served = object_storage.serve_local_object(*_local_link(url))
         assert served.headers['content-disposition'].startswith('attachment' if kind == 'pod' else 'inline')
     assert (local_storage / state.pod_object_key).read_bytes().startswith(b'%PDF')
+
+
+def test_pod_download_has_readable_filename(local_storage):
+    from app.services import object_storage
+    assert object_storage.safe_filename('POD 2026-11-10 Caffè «Dal Più» 12.pdf') == 'POD-2026-11-10-Caffe-Dal-Piu-12.pdf'
+    assert object_storage.safe_filename('../../etc/passwd') == 'etc-passwd'
+    storage = object_storage.get_storage()
+    key = object_storage.object_key(1, 2, 3, 'pod')
+    storage.upload(key, b'%PDF-1.4', 'application/pdf')
+    from urllib.parse import parse_qs, urlsplit
+    params = {k: v[0] for k, v in parse_qs(urlsplit(storage.signed_url(key, 'application/pdf', download=True, filename='POD Bar Roma.pdf')).query).items()}
+    served = object_storage.serve_local_object(params['key'], int(params['exp']), int(params['dl']), params['sig'], params['fn'])
+    assert served.headers['content-disposition'] == 'attachment; filename="POD-Bar-Roma.pdf"'

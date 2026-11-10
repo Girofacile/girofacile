@@ -252,8 +252,11 @@ def main():
                         assert name in nav,name
                     assert "giro" not in nav,"Planning opens after selecting orders or customers"
                     assert page.locator("#tab-giro").count() == 1
+                    # Si misura dopo che il layout base è applicato (prima l'SVG ha la dimensione predefinita).
+                    page.wait_for_function('document.body.dataset.gfLayout==="base" && getComputedStyle(document.querySelector("#app .gf-sidebar__item .gf-sidebar__icon")).width.startsWith("1")')
                     sidebar_icon = styles(page.locator("#app .gf-sidebar__item .gf-sidebar__icon").first,("width","height","boxShadow"))
-                    assert sidebar_icon == dict(width="18px",height="18px",boxShadow="none"),sidebar_icon
+                    # Le dimensioni in rem possono dare 17.99px: si confronta al pixel.
+                    assert round(float(sidebar_icon["width"][:-2])) == 18 and round(float(sidebar_icon["height"][:-2])) == 18 and sidebar_icon["boxShadow"] == "none",sidebar_icon
                     assert page.locator("#app .gf-sidebar__brand-name").evaluate("""el => {
                         const probe=document.createElement('span');probe.style.color='var(--gf-color-on-primary)';
                         el.append(probe);const match=getComputedStyle(el).color===getComputedStyle(probe).color;

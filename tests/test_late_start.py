@@ -46,7 +46,9 @@ def test_infeasible_delay_needs_the_office_before_thirty_minutes(monkeypatch):
 
 def test_departure_now_rounds_to_the_next_five_minutes():
     assert late_start.departure_now(at("09:12")) == time(9, 15)
-    assert late_start.departure_now(at("09:15")) == time(9, 15)
+    # Allo scoccare dei 5 minuti si passa ai successivi: «adesso» è già passato.
+    assert late_start.departure_now(at("09:15")) == time(9, 20)
+    assert late_start.departure_now(at("23:57")) is None
 
 
 def test_saved_legs_detect_window_violations_when_leaving_now(routing_env):

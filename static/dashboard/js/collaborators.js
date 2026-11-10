@@ -45,6 +45,8 @@
     for(const [key,selector] of Object.entries(controls)) if(!can(key)) document.querySelectorAll(selector).forEach(el=>denied.add(el));
     const actions = [
       [/openNewCustomer|openCustomerImport|importCustomers/,'customers.create'],
+      // «Nuovo cliente» apre la finestra a schede senza id (con un id è una modifica).
+      [/openCustomerModal\(\s*(?:null|undefined)?\s*\)/,'customers.create'],
       // openCustomerDrawer(null,'new') crea; con un id esistente in modifica serve customers.update.
       [/openCustomerDrawer\(\s*(?:null|undefined)?\s*[,)]/,'customers.create'],
       [/openCustomerDrawer\(\s*(?!null\b|undefined\b)[^\s,)][^,)]*,\s*['"]edit['"]/,'customers.update'],
@@ -207,6 +209,7 @@
     document.getElementById('collaboratorActive').checked=record?record.is_active:true;
     document.getElementById('collaboratorInvitationNote').textContent=record?invitationDescription(record):'L’azienda non sceglie e non riceve la password. Quando l’accesso è abilitato inviamo automaticamente un’email con un link personale: il collaboratore sceglie la propria password prima di accedere.';
     document.getElementById('collaboratorResendInvite').hidden=!(record && record.is_active && setupRequired(record));
+    document.getElementById('collaboratorDeleteSection').hidden=!record;
     document.getElementById('collaboratorError').textContent='';
     const groups=[...new Set(catalog.map(p=>p.group))];
     document.getElementById('collaboratorPermissions').innerHTML=groups.map(group=>`<div class="gf-stack" data-gap="sm" role="group" aria-label="${escape(group)}"><strong class="gf-field__label">${escape(group)}</strong>${catalog.filter(p=>p.group===group).map(p=>`<label class="gf-check"><input type="checkbox" value="${escape(p.key)}" ${record?.permissions.includes(p.key)?'checked':''}> <span>${escape(p.label)}</span></label>`).join('')}</div>`).join('');
@@ -264,5 +267,18 @@
     }catch(e){document.getElementById('collaboratorError').textContent=e.message;}
     finally{button.disabled=false;saveButton.disabled=false;}
   }
-  window.GFCollaborators={load,render,edit,save,invite,expand,selectPreset,customize};
+  async function remove(){
+    const record=records.find(item=>item.id===editId);
+    if(!record||!confirm(`Eliminare ${record.full_name}?
+
+Perde subito l’accesso al gestionale e il posto del piano si libera. L’operazione non si può annullare.`))return;
+    const button=document.getElementById('collaboratorDelete');button.disabled=true;
+    try{
+      await api('/api/collaborators/'+record.id,{method:'DELETE'});
+      document.getElementById('collaboratorDialog').close();
+      await load();toast('Collaboratore eliminato');
+    }catch(e){document.getElementById('collaboratorError').textContent=e.message;}
+    finally{button.disabled=false;}
+  }
+  window.GFCollaborators={load,render,edit,save,invite,expand,selectPreset,customize,remove};
 })();

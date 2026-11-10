@@ -2699,7 +2699,15 @@ function closeDriverModal(ev){
   const overlay = document.getElementById("driverFormOverlay");
   if(overlay) overlay.classList.add("hidden");
 }
-function openNewDriverModal(){
+async function openNewDriverModal(){
+  // Limite del piano controllato prima di aprire, non dopo aver compilato tutto.
+  try{
+    const drivers = (await api('/api/billing/my-plan'))?.usage?.resources?.drivers;
+    if(drivers && drivers.limit != null && drivers.remaining <= 0){
+      toast(`Hai raggiunto il limite di ${drivers.limit} autisti del tuo piano. Passa a un piano superiore per aggiungerne altri.`);
+      return;
+    }
+  }catch(e){}
   resetDriverForm();
   openDriverModal();
 }
@@ -3099,11 +3107,19 @@ function resetCustomerForm(){
 async function saveCustomer(){
   if(globalThis.GFFormTabs && !GFFormTabs.check(document.getElementById('customerOverlay'))) return;
   return withButtonLoading("saveCustomerBtn", "Salvataggio...", async()=>{
-    const payload = customerPayloadFromModal();
+    let payload = customerPayloadFromModal();
     if(!payload.nome){ alert("Inserisci il nome del cliente"); return; }
     if(!payload.indirizzo){ alert("Inserisci l'indirizzo del cliente"); return; }
     if(!payload.lat || !payload.lon){
-      const ok = confirm("Indirizzo non verificato con Google. Vuoi salvare comunque il cliente senza coordinate?");
+      // Indirizzo non ancora verificato: prima si prova la verifica, poi si chiede solo se non riesce.
+      try{
+        setCustomerAddressStatus("Verifica Google in corso...", "loading");
+        applyCustomerModalGeocode(await api("/api/customers/verify-address-preview", {method:"POST", body:JSON.stringify(payload)}));
+        payload = customerPayloadFromModal();
+      }catch(e){ setCustomerAddressStatus("Indirizzo non verificato.", "warn"); }
+    }
+    if(!payload.lat || !payload.lon){
+      const ok = confirm("Google non ha confermato l’indirizzo. Salvare comunque il cliente? Resterà «da verificare» e non potrà entrare in un giro finché l’indirizzo non è verificato.");
       if(!ok) return;
     }
     const id = val("cId");
@@ -4409,8 +4425,17 @@ function gfRealArrivalDate(d){
     return Number.isNaN(parsed.getTime()) ? null : parsed;
   }catch(e){ return null; }
 }
-function gfRealArrival(d){
-  return gfTimeFromIso(d.arrivo_reale || d.arrived_at || d.completata_il || d.signed_at || '');
+function gfRealArrival(d, routeDay=''){
+  return gfTimeOnRouteDay(d.arrivo_reale || d.arrived_at || d.completata_il || d.signed_at || '', routeDay);
+}
+// Orario di un istante; se cade in un giorno diverso da quello del giro, con la data (es. «00:18 del 10/11»).
+function gfTimeOnRouteDay(value, routeDay=''){
+  const time = gfTimeFromIso(value);
+  if(!time || !routeDay) return time;
+  const d = new Date(value);
+  if(Number.isNaN(d.getTime())) return time;
+  const day = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  return day === routeDay ? time : `${time} del ${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
 }
 function gfPlannedArrival(d){
   return d.arrivo_stimato || d.arrivo_previsto || '-';
@@ -4982,7 +5007,40 @@ function renderDashboardScheduledSubpage(routes, selectedRoute){
     gfDrawRouteMap(selectedRoute, page);
     return;
   }
-  page.innerHTML = dashboardScheduledWeekHtml() + dashboardScheduledDayHtml();
+  page.innerHTML = dashboardStaleRoutesHtml() + dashboardScheduledWeekHtml() + dashboardScheduledDayHtml();
+}
+
+// Giri dei giorni passati mai avviati: restano «programmati» e tengono legati i loro ordini.
+// Un avviso li conta e permette di annullarli tutti (gli ordini tornano da pianificare).
+function dashboardStaleRoutes(){
+  const today = todayIso();
+  return dashboardScheduledRoutes.filter(r => r.data_giro && r.data_giro < today && r.status === 'programmato' && !r.started_at);
+}
+function dashboardStaleRoutesHtml(){
+  const stale = dashboardStaleRoutes();
+  if(!stale.length) return '';
+  const oldest = stale.map(r => r.data_giro).sort()[0];
+  const canManage = !window.GFCompanyAccess?.isCollaborator() || window.GFCompanyAccess.can('routes.manage');
+  return `<div class="gf-alert" data-status="warning" role="note" data-stale-routes><div class="gf-alert__body">
+    <p class="gf-alert__title">${gfCount(stale.length, 'giro dei giorni scorsi mai avviato', 'giri dei giorni scorsi mai avviati')}</p>
+    <p class="gf-alert__text">Dal ${esc(gfDateIt(oldest))}: i loro ordini restano assegnati. Riprogrammali dalla settimana, oppure annullali: gli ordini tornano da pianificare.</p>
+    ${canManage ? `<div class="gf-cluster"><button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="cancelStaleScheduledRoutes(this)">Annulla ${stale.length === 1 ? 'il giro' : `i ${stale.length} giri`}</button></div>` : ''}
+  </div></div>`;
+}
+async function cancelStaleScheduledRoutes(button){
+  const stale = dashboardStaleRoutes();
+  if(!stale.length || !confirm(`Annullare ${gfCount(stale.length, 'giro mai avviato', 'giri mai avviati')} dei giorni scorsi?
+
+Gli ordini collegati tornano da pianificare. I giri restano nello Storico come annullati.`)) return;
+  if(button) button.disabled = true;
+  let done = 0; const failed = [];
+  for(const r of stale){
+    try{ await api(`/api/routes/${Number(r.id)}/cancel`, {method:"POST", body:"{}"}); done++; }
+    catch(e){ failed.push(r.nome || `Giro ${r.id}`); }
+  }
+  toast(failed.length ? `${gfCount(done, 'giro annullato', 'giri annullati')}; non riuscito: ${failed.slice(0, 3).join(', ')}` : `${gfCount(done, 'giro annullato', 'giri annullati')}: gli ordini sono di nuovo da pianificare.`);
+  await loadDashboardScheduledPage();
+  Promise.allSettled([loadDashboardHome()]);
 }
 
 // "Giri completati" confluisce nello Storico: si apre lo Storico con il pannello del giro scelto.

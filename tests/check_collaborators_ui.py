@@ -368,7 +368,7 @@ def main():
                     page.evaluate("showTab('clienti')")
                     page.locator("#tab-clienti").wait_for(state="visible")
                     page.wait_for_timeout(100)
-                    assert page.locator("[onclick=\"openCustomerDrawer(null,'new')\"]:visible").count() == 0
+                    assert page.locator("[onclick=\"openCustomerModal()\"]:visible").count() == 0
                     assert not page.evaluate("GFCompanyAccess.can('customers.update')")
                     assert not page.evaluate("GFCompanyAccess.allowedTab('settings')")
                     forbidden_areas()
@@ -380,7 +380,7 @@ def main():
                     assert page.locator("#companyNameInput").is_enabled()
                     assert page.locator("#companySizeInput").is_enabled()
                     page.evaluate("showTab('clienti')")
-                    page.locator("[onclick=\"openCustomerDrawer(null,'new')\"]").first.wait_for(state="visible")
+                    page.locator("[onclick=\"openCustomerModal()\"]").first.wait_for(state="visible")
                     state["requests"].clear()
                     page.evaluate("openProfilePanel()")
                     page.locator("#profileOverlay").wait_for(state="visible")

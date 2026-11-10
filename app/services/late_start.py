@@ -100,7 +100,11 @@ def ensure_can_start(plan, now=None):
 
 
 def departure_now(now=None):
-    """Nuova partenza: adesso, arrotondata ai 5 minuti successivi."""
+    """Nuova partenza: i prossimi 5 minuti tondi, sempre dopo adesso.
+
+    Alle 09:35 diventa 09:40: «09:35» sarebbe già passato (i secondi corrono) e il ricalcolo
+    lo rifiuterebbe. None se il prossimo orario tondo cade nel giorno dopo.
+    """
     current = _now(now)
-    rounded = current + timedelta(minutes=(-current.minute) % 5)
-    return rounded.time()
+    rounded = current + timedelta(minutes=5 - current.minute % 5)
+    return rounded.time() if rounded.date() == current.date() else None

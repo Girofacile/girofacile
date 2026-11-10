@@ -28,12 +28,12 @@
 <link rel="stylesheet" href="/static/tracking/company.css?v=20261004_design">
 <script src="/static/tracking/company.js?v=gf_plans_20261023"></script>
 <script src="/static/format.js?v=gf_driver_flow_20261020"></script>
-<script src="/static/dashboard/js/vehicles.js?v=gf_base_20261015u"></script>
+<script src="/static/dashboard/js/vehicles.js?v=gf_collaudo_20261110"></script>
 <script src="/static/dashboard/js/drivers.js?v=gf_audit_20261020"></script>
 
 <!-- Shared GiroFacile design system; legacy sheets retain feature layout. -->
 <link rel="stylesheet" href="/static/design-system/theme.css?v=gf_tendine_20261108">
-<link rel="stylesheet" href="/static/design-system/components.css?v=gf_riga_stato_20261108">
+<link rel="stylesheet" href="/static/design-system/components.css?v=gf_collaudo_20261110">
 <link rel="stylesheet" href="/static/design-system/layout.css?v=gf_banner_unico_20261101">
 <link rel="stylesheet" href="/static/design-system/workspace.css?v=gf_selection_20261016">
 <link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007_reference_2">
@@ -650,13 +650,6 @@
               <label class="gf-field" for="ordersDirection"><span class="gf-field__label">Direzione</span><select class="gf-select" id="ordersDirection" onchange="GFOrders.load(true)"><option value="desc">Decrescente</option><option value="asc">Crescente</option></select></label>
             </div>
 
-            <section id="ordersSelection" class="gf-savebar" data-floating hidden aria-label="Ordini selezionati">
-              <span class="gf-badge" data-status="info" data-orders-selection-count aria-hidden="true">0</span><p id="ordersSelectionCount" role="status"></p>
-              <div id="ordersSelectionRoutes" class="gf-cluster"></div>
-              <button class="gf-button" data-variant="ghost" data-size="sm" data-order-selection-action type="button" onclick="GFOrderPlanning.clear()">Deseleziona</button>
-              <button class="gf-button" data-variant="danger" data-size="sm" data-order-selection-action type="button" onclick="GFOrderPlanning.cancelSelected()">Elimina</button>
-              <button id="ordersGoPlanning" class="gf-button" data-variant="primary" data-size="sm" type="button" onclick="GFOrderPlanning.go()">Vai alla pianificazione</button>
-            </section>
           </div>
 
           <div id="ordersResults"></div>
@@ -668,6 +661,14 @@
               <button type="button" id="ordersNext" class="gf-button" data-variant="secondary" data-size="sm" onclick="GFOrders.page(1)" aria-label="Pagina successiva">›</button>
             </div>
           </footer>
+        </section>
+        <!-- Barra della selezione: in fondo alla pagina, così lo spazio riservato non sposta l’elenco. -->
+        <section id="ordersSelection" class="gf-savebar" data-floating hidden aria-label="Ordini selezionati">
+          <span class="gf-badge" data-status="info" data-orders-selection-count aria-hidden="true">0</span><p id="ordersSelectionCount" role="status"></p>
+          <div id="ordersSelectionRoutes" class="gf-cluster"></div>
+          <button class="gf-button" data-variant="ghost" data-size="sm" data-order-selection-action type="button" onclick="GFOrderPlanning.clear()">Deseleziona</button>
+          <button class="gf-button" data-variant="danger" data-size="sm" data-order-selection-action type="button" onclick="GFOrderPlanning.cancelSelected()">Elimina</button>
+          <button id="ordersGoPlanning" class="gf-button" data-variant="primary" data-size="sm" type="button" onclick="GFOrderPlanning.go()">Vai alla pianificazione</button>
         </section>
       </section>
       <dialog id="orderModal" class="gf-modal" data-size="lg" aria-labelledby="orderModalTitle">
@@ -717,7 +718,7 @@
             <div><h2 class="gf-panel__title" id="customerListTitle">Elenco <span data-gf-label="customers">clienti</span></h2><p class="gf-muted">Cerca rapidamente oppure apri i filtri avanzati quando servono.</p></div>
             <div id="customersPanelActions" class="gf-cluster">
               <button type="button" class="gf-button" data-variant="secondary" onclick="openCustomerImportModal()"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12 M7 10l5 5 5-5 M5 21h14"/></svg>Importa clienti</button>
-              <button type="button" id="newCustomerBtn" class="gf-button" data-variant="primary" onclick="openCustomerDrawer(null,'new')"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14 M5 12h14"/></svg>Nuovo <span data-gf-label="customer">cliente</span></button>
+              <button type="button" id="newCustomerBtn" class="gf-button" data-variant="primary" onclick="openCustomerModal()"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14 M5 12h14"/></svg>Nuovo <span data-gf-label="customer">cliente</span></button>
             </div>
           </header>
           <div class="gf-panel__body gf-stack">
@@ -1506,7 +1507,7 @@
     <header class="gf-modal__header"><div><h2 class="gf-modal__title" id="collaboratorFormTitle">Invita collaboratore</h2></div><button type="button" class="gf-icon-button" aria-label="Chiudi gestione collaboratore" onclick="document.getElementById('collaboratorDialog').close()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12 M18 6L6 18"/></svg></button></header>
     <div class="gf-modal__body gf-stack">
 <div class="gf-stack" data-gf-form-tabs><div class="gf-tabs" role="tablist" aria-label="Sezioni collaboratore"><button type="button" class="gf-button" data-variant="ghost" role="tab" data-gf-tab="main" aria-selected="true">Dati principali</button><button type="button" class="gf-button" data-variant="ghost" role="tab" data-gf-tab="permissions" aria-selected="false">Funzioni</button></div>
-<div role="tabpanel" class="gf-stack" data-gf-tab-panel="main"><label class="gf-field" for="collaboratorName"><span class="gf-field__label">Nome e cognome<span class="gf-field__required" aria-hidden="true"> *</span></span><input class="gf-input" id="collaboratorName" required minlength="2" maxlength="160" autocomplete="off"></label><label class="gf-field" for="collaboratorEmail"><span class="gf-field__label">Email di accesso<span class="gf-field__required" aria-hidden="true"> *</span></span><input class="gf-input" id="collaboratorEmail" type="email" required maxlength="200" autocomplete="off" aria-describedby="collaboratorEmailHint"><small id="collaboratorEmailHint" class="gf-field__hint">Se cambi l’email, il collaboratore riceverà un nuovo invito e dovrà scegliere una nuova password.</small></label><label class="gf-field" for="collaboratorPreset"><span class="gf-field__label">Profilo di accesso<span class="gf-field__required" aria-hidden="true"> *</span></span><select class="gf-select" id="collaboratorPreset" aria-describedby="collaboratorPresetDescription" onchange="GFCollaborators.selectPreset()" required></select><span id="collaboratorPresetDescription" class="gf-field__hint"></span></label><label class="gf-check" for="collaboratorActive"><input id="collaboratorActive" type="checkbox" checked> <span>Accesso abilitato</span></label><div class="gf-alert" data-status="info"><div class="gf-stack" data-gap="sm"><p id="collaboratorInvitationNote" aria-live="polite"></p><div><button id="collaboratorResendInvite" type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="GFCollaborators.invite()" hidden>Invia nuovo invito</button></div><small>Un nuovo invito sostituisce il link precedente. Salva eventuali modifiche al collaboratore prima di inviarlo di nuovo.</small></div></div></div>
+<div role="tabpanel" class="gf-stack" data-gf-tab-panel="main"><label class="gf-field" for="collaboratorName"><span class="gf-field__label">Nome e cognome<span class="gf-field__required" aria-hidden="true"> *</span></span><input class="gf-input" id="collaboratorName" required minlength="2" maxlength="160" autocomplete="off"></label><label class="gf-field" for="collaboratorEmail"><span class="gf-field__label">Email di accesso<span class="gf-field__required" aria-hidden="true"> *</span></span><input class="gf-input" id="collaboratorEmail" type="email" required maxlength="200" autocomplete="off" aria-describedby="collaboratorEmailHint"><small id="collaboratorEmailHint" class="gf-field__hint">Se cambi l’email, il collaboratore riceverà un nuovo invito e dovrà scegliere una nuova password.</small></label><label class="gf-field" for="collaboratorPreset"><span class="gf-field__label">Profilo di accesso<span class="gf-field__required" aria-hidden="true"> *</span></span><select class="gf-select" id="collaboratorPreset" aria-describedby="collaboratorPresetDescription" onchange="GFCollaborators.selectPreset()" required></select><span id="collaboratorPresetDescription" class="gf-field__hint"></span></label><label class="gf-check" for="collaboratorActive"><input id="collaboratorActive" type="checkbox" checked> <span>Accesso abilitato</span></label><div class="gf-alert" data-status="info"><div class="gf-stack" data-gap="sm"><p id="collaboratorInvitationNote" aria-live="polite"></p><div><button id="collaboratorResendInvite" type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="GFCollaborators.invite()" hidden>Invia nuovo invito</button></div><small>Un nuovo invito sostituisce il link precedente. Salva eventuali modifiche al collaboratore prima di inviarlo di nuovo.</small></div></div><div id="collaboratorDeleteSection" class="gf-setting" hidden><div class="gf-setting__copy"><strong>Elimina collaboratore</strong><p>Toglie l’accesso e libera il posto del piano. Lo storico delle operazioni resta.</p></div><div class="gf-setting__control"><button type="button" id="collaboratorDelete" class="gf-button" data-variant="danger" data-size="sm" onclick="GFCollaborators.remove()">Elimina collaboratore</button></div></div></div>
 <div role="tabpanel" class="gf-stack" data-gf-tab-panel="permissions" hidden><div id="collaboratorPermissionsDetails" class="gf-stack" data-gap="sm"><span id="collaboratorPermissionsCount" class="gf-muted"></span>
           <p class="gf-muted">Puoi modificare ogni funzione del profilo. Le letture necessarie vengono selezionate automaticamente; per rimuoverle, deseleziona prima le funzioni che le richiedono.</p>
           <div id="collaboratorPermissions" class="gf-grid" data-cols="2" onchange="GFCollaborators.customize()"></div>
@@ -1593,31 +1594,31 @@
 </div>
 
 <script src="/static/dashboard/js/reports.js?v=gf_format_20261020"></script>
-<script src="/static/dashboard/js/customers.js?v=gf_indirizzo_campi_20261107"></script>
+<script src="/static/dashboard/js/customers.js?v=gf_collaudo_20261110"></script>
 <script src="/static/dashboard/js/navigation.js?v=gf_pianifica_settimana_20261107"></script>
-<script src="/static/dashboard/js/history.js?v=gf_storico_pianifica_20261105"></script>
+<script src="/static/dashboard/js/history.js?v=gf_collaudo_20261110"></script>
 <script src="/static/password-strength.js?v=gf_driver_flow_20261020"></script>
-<script src="/static/dashboard/js/collaborators.js?v=gf_senza_avvisi_20261107"></script>
-<script src="/static/dashboard/js/orders.js?v=gf_telefono_ordine_20261108"></script>
-<script src="/static/dashboard/js/order-import.js?v=gf_telefono_ordine_20261108"></script>
-<script src="/static/dashboard/js/order-sources.js?v=gf_telefono_ordine_20261108"></script>
+<script src="/static/dashboard/js/collaborators.js?v=gf_collaudo_20261110"></script>
+<script src="/static/dashboard/js/orders.js?v=gf_collaudo_20261110"></script>
+<script src="/static/dashboard/js/order-import.js?v=gf_collaudo_20261110"></script>
+<script src="/static/dashboard/js/order-sources.js?v=gf_collaudo_20261110"></script>
 <script src="/static/dashboard/js/dashboard-real-map.js?v=gf_priority_hero_20261025"></script>
 <script src="/static/dashboard/js/in-progress-reference.js?v=gf_chiudi_giro_20261110"></script>
-<script src="/static/dashboard/js/core.js?v=gf_punti_aperti_20261110"></script>
+<script src="/static/dashboard/js/core.js?v=gf_collaudo_20261110"></script>
 <script src="/static/dashboard/js/dashboard-mobile.js?v=gf_dashboard_mobile_20261019"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=orders_2"></script>
 <link rel="stylesheet" href="/static/dashboard/css/fleet-review.css?v=gf_suddivisione_20261025">
 <script src="/static/dashboard/js/fleet-review.js?v=gf_barra_pianifica_20261107"></script>
 <link rel="stylesheet" href="/static/driver-schedule.css?v=gf_break_row_20261021">
 <script src="/static/driver-schedule.js?v=gf_break_row_20261021"></script>
-<script src="/static/dashboard/js/driver-schedules.js?v=gf_base_20261015u"></script>
+<script src="/static/dashboard/js/driver-schedules.js?v=gf_collaudo_20261110"></script>
 <script src="/static/dashboard/js/fleet-planning.js?v=gf_turno_pausa_etichetta_20261108"></script>
 <script src="/static/dashboard/js/selected-addresses.js?v=gf_verifica_severa_20261107"></script>
 <script src="/static/dashboard/js/selected-customer-addresses.js?v=gf_customer_selected_addresses_20261020"></script>
 <script src="/static/dashboard/js/order-planning.js?v=gf_bozze_20261026"></script>
 <script src="/static/dashboard/js/planning-pickers.js?v=gf_aggiungi_20261102"></script>
 <script src="/static/dashboard/js/planning-drafts.js?v=gf_elimina_torna_20261107"></script>
-<script src="/static/dashboard/js/tutor.js?v=gf_giro_prova_20261030"></script>
+<script src="/static/dashboard/js/tutor.js?v=gf_collaudo_20261110"></script>
 
 <script>
 function toggleLoginPassword(){

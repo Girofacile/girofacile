@@ -185,5 +185,10 @@ def evidence_response(db, route, delivery, kind):
     content_type = {'signature': 'image/png', 'delivery_photo': 'image/jpeg', 'pod': 'application/pdf'}[kind]
     from fastapi.responses import JSONResponse
     storage = object_storage.get_storage()
-    return JSONResponse({'url': storage.signed_url(key, content_type, download=kind == 'pod'),
+    # Il POD si scarica con un nome leggibile: data del giro, cliente, numero della consegna.
+    filename = None
+    if kind == 'pod':
+        day = route.data_giro.isoformat() if route.data_giro else ''
+        filename = f"POD {day} {getattr(delivery, 'cliente_nome', '') or ''} {delivery.id}.pdf"
+    return JSONResponse({'url': storage.signed_url(key, content_type, download=kind == 'pod', filename=filename),
                          'expires_in': storage.seconds}, headers={'Cache-Control': 'no-store'})

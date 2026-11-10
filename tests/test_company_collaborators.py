@@ -342,3 +342,21 @@ def test_other_presets_do_not_modify_anagraphics_or_company_settings(company, pr
     assert client.delete(f"/api/customers/{first.id}").status_code == 403
     assert client.put("/api/company-profile", json={"company_name": "Forbidden"}).status_code == 403
     assert client.put("/api/settings", json={}).status_code == 403
+
+
+def test_owner_deletes_collaborator_and_old_session_stops_working(company):
+    client,db,owner,other,actor,_,_,login_owner,login_actor=company
+    from app.models import CompanyCollaborator
+    login_actor(['customers.read'])
+    old=client.cookies.get('session')
+    # Un collaboratore, anche con permessi, non può eliminare altri account.
+    assert client.delete(f'/api/collaborators/{actor.id}').status_code==403
+    foreign=CompanyCollaborator(user_id=other.id,full_name='Other',email='foreign-del@example.test',password_hash='x')
+    db.add(foreign);db.commit()
+    login_owner()
+    assert client.delete(f'/api/collaborators/{foreign.id}').status_code==404
+    assert client.delete(f'/api/collaborators/{actor.id}').status_code==200
+    assert db.get(CompanyCollaborator,foreign.id) is not None
+    assert actor.id not in [r['id'] for r in client.get('/api/collaborators').json()]
+    client.cookies.clear();client.cookies.set('session',old)
+    assert client.get('/api/customers').status_code==401

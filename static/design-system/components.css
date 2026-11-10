@@ -866,6 +866,12 @@ body[data-gf-surface] .gf-banner{
   border:var(--gf-border);border-radius:var(--gf-radius-lg);background:var(--gf-color-surface);box-shadow:var(--gf-shadow-dialog);
 }
 body[data-gf-surface] .gf-banner[data-embedded]{position:static;transform:none;width:100%}
+/* Con una barra flottante visibile (es. ordini selezionati, Programma giro) il banner sale sopra la barra
+   invece di coprirla. */
+body[data-gf-surface]:has(:is(.tab:not(.hidden),.gf-header) .gf-savebar[data-floating]:not(.hidden):not([hidden])) .gf-banner:not([data-embedded]){bottom:calc(var(--gf-space-12) * 2 + var(--gf-space-5))}
+@media (max-width:1024px){
+  body[data-gf-surface]:has(:is(.tab:not(.hidden),.gf-header) .gf-savebar[data-floating]:not(.hidden):not([hidden])) .gf-banner:not([data-embedded]){bottom:calc(var(--gf-bottom-nav-height) + var(--gf-space-12) * 2 + var(--gf-space-6))}
+}
 body[data-gf-surface] .gf-banner__icon{display:grid;place-items:center;width:var(--gf-control-touch);height:var(--gf-control-touch);border-radius:var(--gf-radius-md);background:var(--gf-color-info-bg);color:var(--gf-color-primary)}
 body[data-gf-surface] .gf-banner__icon svg{width:var(--gf-icon-size);height:var(--gf-icon-size);fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 body[data-gf-surface] .gf-banner__text{display:grid;gap:2px}

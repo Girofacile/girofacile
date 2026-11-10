@@ -39,6 +39,8 @@
     if(!response.ok){
       let message=data.detail;
       if(Array.isArray(message))message=message.map(e=>`${labelOf(e.loc?.[1])||'Dati ordine'}: ${e.msg?.startsWith('Value error, ')?e.msg.slice(13):'verifica formato, limiti e campi obbligatori.'}`).join('\n');
+      // Alcuni errori arrivano come oggetto con il motivo (es. indirizzo trovato solo come zona).
+      if(message&&typeof message==='object'&&typeof message.message==='string')message=message.message;
       throw new Error(typeof message==='string'?message:'Operazione non riuscita. Riprova.');
     }
     return data;
@@ -305,8 +307,12 @@
       const updated=el('orderActionMessage');if(updated)updated.textContent='Ordine aggiornato.';
       load();
     }catch(err){
+      // Verifica non riuscita: il server ha registrato il problema, si ricarica l'ordine per mostrarlo.
+      if(action==='verify-address'){
+        try{current=await orderApi(`/api/orders/${current.id}`);detail();load();}catch(e){}
+      }
       const target=el('orderActionMessage');if(target)target.textContent=err.message||String(err);
-      buttons.forEach(b=>b.disabled=false);
+      el('orderModalContent')?.querySelectorAll('button').forEach(b=>b.disabled=false);
     }
   }
 

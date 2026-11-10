@@ -80,6 +80,9 @@ def open_dashboard(browser, store, errors):
                            stops=3, orders=3, stage='anteprima', fleet_plan_id=None, updated_at='2026-10-29T10:00:00')] if store['route'] == 'bozza' else []
             route.fulfill(json=dict(drafts=drafts, routes=[])); return
         data = {'/api/me': owner, '/api/resources/availability': dict(vehicles=[], drivers=[]),
+                # Il salvataggio del nuovo cliente verifica prima l'indirizzo (Google simulato).
+                '/api/customers/verify-address-preview': dict(result=dict(status='verificato'), suggested=dict(
+                    lat=40.85, lon=14.25, stato_geocodifica='verificato', indirizzo='Via Toledo 25, 80134 Napoli NA', fonte_geocodifica='google')),
                 '/api/order-planning/selection': dict(version=1, order_ids=[], configuration={}, stops=None, routes=[]),
                 '/api/orders': dict(items=[], total=0, page=1, page_size=25, counts={}, metrics={})}
         route.fulfill(json=data.get(path, [] if path.rstrip('/').split('/')[-1] in LISTS else {}))
@@ -149,6 +152,9 @@ def main():
             page.screenshot(path=str(output / '4-mezzo-salva.png'))
             page.fill('#vNome', 'Furgone bianco')
             assert page.locator('#vNome').locator('xpath=ancestor::label[@data-invalid]').count() == 0
+            # Obbligatori anche targa, alimentazione e consumo (scheda «Consumi e pedaggi»).
+            page.fill('#vTarga', 'AB123CD'); page.select_option('#vFuelType', 'gasolio')
+            page.locator('#vehicleDrawer [data-gf-tab="energy"]').click(); page.fill('#vConsumo', '9')
             page.locator('#saveVehicleBtn').click()
             assert 'Autisti' in tip_on(page, '#app .gf-sidebar__item[data-tab="autisti"]')
 
@@ -159,20 +165,20 @@ def main():
             tip_on(page, '#saveDriverBtn')
             page.locator('#saveDriverBtn').click()
             page.locator('#drNome').locator('xpath=ancestor::label[@data-invalid]').wait_for()
-            page.fill('#drNome', 'Marco')
+            page.fill('#drNome', 'Marco'); page.fill('#drCognome', 'Rossi'); page.fill('#drEmail', 'marco@example.test')
             page.locator('#saveDriverBtn').click()
             # Cliente: la guida passa dai Clienti, non dagli ordini.
             assert 'Clienti' in tip_on(page, '#app .gf-sidebar__item[data-tab="clienti"]')
             page.locator('#app .gf-sidebar__item[data-tab="clienti"]').click()
             assert 'Nuovo cliente' in tip_on(page, '#newCustomerBtn')
             page.locator('#newCustomerBtn').click()
-            assert 'Salva' in tip_on(page, '#customerDrawer [data-cx-save]')
-            page.locator('#customerDrawer [data-cx-save]').click()
-            page.locator('#cxName').locator('xpath=ancestor::*[@data-invalid][1]').wait_for()
+            assert 'Salva cliente' in tip_on(page, '#saveCustomerBtn')
+            page.locator('#saveCustomerBtn').click()
+            page.wait_for_timeout(300)
             assert not store['customers']
             page.screenshot(path=str(output / '5-cliente-salva.png'))
-            page.fill('#cxName', 'Bar Vesuvio'); page.fill('#cxStreet', 'Via Toledo'); page.fill('#cxNumber', '25'); page.fill('#cxCap', '80134'); page.fill('#cxCity', 'Napoli')
-            page.locator('#customerDrawer [data-cx-save]').click()
+            page.fill('#cNome', 'Bar Vesuvio'); page.fill('#cVia', 'Via Toledo'); page.fill('#cCivico', '25'); page.fill('#cCap', '80134'); page.fill('#cComune', 'Napoli'); page.fill('#cProvincia', 'NA')
+            page.locator('#saveCustomerBtn').click()
             # Cliente salvato: il fumetto chiede di selezionarlo e poi di andare in pianificazione.
             assert 'Seleziona il cliente' in tip_on(page, '#tab-clienti .cx-cb')
             page.locator('#tab-clienti .cx-cb').first.check()
@@ -215,10 +221,11 @@ def main():
             store = dict(state='attivo', company=False, deposits=[], vehicles=[], drivers=[], customers=[], route=None, tutor_posts=[])
             page = open_dashboard(browser, store, errors)
             group = '#app details[data-sidebar-group="sistema"] > summary'
-            assert page.evaluate('!document.querySelector(`#app details[data-sidebar-group="sistema"]`).open')
-            assert 'Azienda e sistema' in tip_on(page, group) and near(page, group)
-            page.screenshot(path=str(output / '0-gruppo-menu-chiuso.png'))
-            page.locator(group).click()
+            # I gruppi del menu ora partono aperti; se il gruppo è chiuso il fumetto indica prima il gruppo.
+            if not page.evaluate('document.querySelector(`#app details[data-sidebar-group="sistema"]`).open'):
+                assert 'Azienda e sistema' in tip_on(page, group) and near(page, group)
+                page.screenshot(path=str(output / '0-gruppo-menu-chiuso.png'))
+                page.locator(group).click()
             assert 'Azienda' in tip_on(page, '#app .gf-sidebar__item[data-tab="company"]')
             assert near(page, '#app .gf-sidebar__item[data-tab="company"]')
             page.locator('#app .gf-sidebar__item[data-tab="company"]').click()

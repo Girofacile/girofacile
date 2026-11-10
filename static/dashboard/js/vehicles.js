@@ -67,7 +67,14 @@ function renderFleetPlanNotice(usage){
  const message=usage?.over_limit?(usage.message||'La flotta supera i limiti del piano. Apri Crea mezzo per consultare gli slot disponibili.'):usage?.plan_active===false?'Abbonamento non attivo: rinnova il piano per aggiungere mezzi.':'';
  node.textContent=message;node.classList.toggle('hidden',!message);
 }
-function createFleetVehicle(){if(document.getElementById('saveVehicleBtn')?.disabled)return;resetVehicleForm();openVehicleDrawer(false);}
+// Limite del piano controllato prima di aprire: non si compila tutta la finestra per scoprirlo al salvataggio.
+async function createFleetVehicle(){
+ if(document.getElementById('saveVehicleBtn')?.disabled)return;
+ let usage=null;try{usage=await api('/api/vehicles/usage');}catch(e){}
+ if(usage&&usage.can_add_electric===false&&usage.can_add_non_electric===false){toast(usage.message||'Hai raggiunto il limite di mezzi del tuo piano.');return;}
+ resetVehicleForm();openVehicleDrawer(false);
+ if(usage&&usage.can_add_electric&&usage.can_add_non_electric===false)toast('Mezzi standard al completo: puoi aggiungere solo mezzi elettrici (posti bonus del piano).');
+}
 function openVehicleDrawer(editing=false){
  const dialog=document.getElementById('vehicleDrawer');if(!dialog)return;
  document.getElementById('vehicleFormTitle').textContent=editing?'Modifica mezzo':'Crea mezzo';
