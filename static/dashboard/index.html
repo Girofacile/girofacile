@@ -33,7 +33,7 @@
 
 <!-- Shared GiroFacile design system; legacy sheets retain feature layout. -->
 <link rel="stylesheet" href="/static/design-system/theme.css?v=gf_grafici_20261110">
-<link rel="stylesheet" href="/static/design-system/components.css?v=gf_grafici_20261110">
+<link rel="stylesheet" href="/static/design-system/components.css?v=gf_grafici_2_20261110">
 <link rel="stylesheet" href="/static/design-system/layout.css?v=gf_banner_unico_20261101">
 <link rel="stylesheet" href="/static/design-system/workspace.css?v=gf_selection_20261016">
 <link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007_reference_2">
@@ -800,27 +800,24 @@
 
       <section id="tab-report" class="tab hidden gf-stack" data-gap="lg">
         <div class="gf-cluster" data-justify="between">
-          <p class="gf-muted">Analizza i giri completati. Km, consumi e costi energetici sono stime; le ore sono rilevate quando disponibili, altrimenti stimate. Costi del personale, pedaggi e manutenzione non sono inclusi. Le fermate includono mancate e non gestite. Nei filtri cliente/agente, km, ore e costi sono ripartiti per numero di fermate; le ore storiche senza rilevazioni UTC affidabili restano stimate.</p>
+          <div class="gf-segmented" id="reportPeriod" role="group" aria-label="Periodo">
+            <button type="button" aria-pressed="true" data-period="" onclick="setReportPeriod('')">Tutto</button>
+            <button type="button" aria-pressed="false" data-period="7" onclick="setReportPeriod('7')">Ultimi 7 giorni</button>
+            <button type="button" aria-pressed="false" data-period="month" onclick="setReportPeriod('month')">Questo mese</button>
+            <button type="button" aria-pressed="false" data-period="last-month" onclick="setReportPeriod('last-month')">Mese scorso</button>
+            <button type="button" aria-pressed="false" data-period="year" onclick="setReportPeriod('year')">Quest’anno</button>
+          </div>
           <div class="gf-cluster">
+            <span id="reportFilterSummary" class="gf-muted">Nessun filtro applicato</span>
+            <button type="button" id="reportFilterToggleBtn" class="gf-button" data-variant="secondary" aria-expanded="false" aria-controls="reportFilterPanel" onclick="toggleReportFilters()">⌄ Mostra filtri</button>
             <button type="button" class="gf-button" data-variant="secondary" onclick="generateReportAIv67()">Genera report AI</button>
-            <button type="button" class="gf-button" data-variant="secondary" onclick="printReport()">Stampa / Salva PDF</button>
-            <button type="button" class="gf-button" data-variant="primary" onclick="exportReportCsv()">Scarica CSV</button>
+            <button type="button" class="gf-button" data-variant="secondary" onclick="exportReportCsv()">Scarica CSV</button>
+            <button type="button" class="gf-button" data-variant="primary" onclick="printReport()">Stampa / Salva PDF</button>
           </div>
         </div>
 
-        <section class="gf-panel">
-          <div class="gf-panel__body gf-cluster">
-            <button type="button" id="reportFilterToggleBtn" class="gf-button" data-variant="secondary" aria-expanded="false" aria-controls="reportFilterPanel" onclick="toggleReportFilters()">⌄ Mostra filtri</button>
-            <span id="reportFilterSummary" class="gf-muted">Nessun filtro applicato</span>
-            <div class="gf-cluster" id="reportPeriod" role="group" aria-label="Periodo">
-              <button type="button" class="gf-chip" aria-pressed="true" data-period="" onclick="setReportPeriod('')">Tutto</button>
-              <button type="button" class="gf-chip" aria-pressed="false" data-period="7" onclick="setReportPeriod('7')">Ultimi 7 giorni</button>
-              <button type="button" class="gf-chip" aria-pressed="false" data-period="month" onclick="setReportPeriod('month')">Questo mese</button>
-              <button type="button" class="gf-chip" aria-pressed="false" data-period="last-month" onclick="setReportPeriod('last-month')">Mese scorso</button>
-              <button type="button" class="gf-chip" aria-pressed="false" data-period="year" onclick="setReportPeriod('year')">Quest’anno</button>
-            </div>
-          </div>
-          <div id="reportFilterPanel" class="gf-panel__body gf-stack hidden">
+        <section id="reportFilterPanel" class="gf-panel hidden">
+          <div class="gf-panel__body gf-stack">
             <div class="gf-form-grid">
               <label class="gf-field" for="reportDateFrom"><span class="gf-field__label">Da data</span><input class="gf-input" id="reportDateFrom" type="date" onchange="updateReportFilterSummary(); loadReport()"></label>
               <label class="gf-field" for="reportDateTo"><span class="gf-field__label">A data</span><input class="gf-input" id="reportDateTo" type="date" onchange="updateReportFilterSummary(); loadReport()"></label>
@@ -847,19 +844,19 @@
             <span class="gf-stat-card__label"><i class="gf-stat-card__dot"></i>Fermate previste</span>
             <strong class="gf-stat-card__value" id="repConsegne">0</strong>
             <span class="gf-stat-card__change">in <span id="repGiri">0</span> giri · <span id="repConsegneGiro">0</span> a giro</span>
-            <div class="gf-stat-card__chart gf-chart" data-place="bottom" id="reportSparkStops"><div class="gf-chart__canvas"></div></div>
+            <div class="gf-stat-card__chart gf-chart" data-place="end" id="reportSparkStops"><div class="gf-chart__canvas"></div></div>
           </article>
           <article class="gf-stat-card" data-tone="2">
             <span class="gf-stat-card__label"><i class="gf-stat-card__dot"></i>Km pianificati</span>
             <strong class="gf-stat-card__value" id="repKm">0 km</strong>
             <span class="gf-stat-card__change"><span id="repKmGiro">0 km</span> a giro · <span id="repOre">0 h</span> di guida</span>
-            <div class="gf-stat-card__chart gf-chart" data-place="bottom" id="reportSparkKm"><div class="gf-chart__canvas"></div></div>
+            <div class="gf-stat-card__chart gf-chart" data-place="end" id="reportSparkKm"><div class="gf-chart__canvas"></div></div>
           </article>
           <article class="gf-stat-card" data-tone="7">
             <span class="gf-stat-card__label"><i class="gf-stat-card__dot"></i>Energia stimata</span>
             <strong class="gf-stat-card__value" id="repCosto">€ 0</strong>
             <span class="gf-stat-card__change"><span id="repCostoConsegna">€ 0</span> a fermata · <span id="repLitri">0 L</span></span>
-            <div class="gf-stat-card__chart gf-chart" data-place="bottom" id="reportSparkCost"><div class="gf-chart__canvas"></div></div>
+            <div class="gf-stat-card__chart gf-chart" data-place="end" id="reportSparkCost"><div class="gf-chart__canvas"></div></div>
           </article>
         </div>
 
@@ -876,11 +873,11 @@
         <div class="gf-grid" data-cols="main-side">
           <section class="gf-panel"><div class="gf-panel__body"><div class="gf-chart" id="reportDriversChart">
             <div class="gf-chart__head"><div><h2 class="gf-chart__title">Rendimento per autista</h2><p class="gf-chart__sub" id="reportDriversChartSub">Fermate nel periodo, un colore per autista</p></div>
-              <div class="gf-cluster" id="reportDriverMetric" role="group" aria-label="Misura del grafico">
-                <button type="button" class="gf-chip" aria-pressed="true" data-metric="consegne" onclick="setReportDriverMetric('consegne')">Fermate</button>
-                <button type="button" class="gf-chip" aria-pressed="false" data-metric="km" onclick="setReportDriverMetric('km')">Km</button>
-                <button type="button" class="gf-chip" aria-pressed="false" data-metric="ore" onclick="setReportDriverMetric('ore')">Ore</button>
-                <button type="button" class="gf-chip" aria-pressed="false" data-metric="costo" onclick="setReportDriverMetric('costo')">Costo</button>
+              <div class="gf-segmented" id="reportDriverMetric" role="group" aria-label="Misura del grafico">
+                <button type="button" aria-pressed="true" data-metric="consegne" onclick="setReportDriverMetric('consegne')">Fermate</button>
+                <button type="button" aria-pressed="false" data-metric="km" onclick="setReportDriverMetric('km')">Km</button>
+                <button type="button" aria-pressed="false" data-metric="ore" onclick="setReportDriverMetric('ore')">Ore</button>
+                <button type="button" aria-pressed="false" data-metric="costo" onclick="setReportDriverMetric('costo')">Costo</button>
               </div>
             </div>
             <div class="gf-chart__canvas"></div>
@@ -902,6 +899,7 @@
           <section class="gf-panel"><header class="gf-panel__header"><h2 class="gf-panel__title">Riepilogo per agente</h2></header><div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards"><thead><tr><th scope="col">Agente</th><th scope="col">Giri</th><th scope="col">Fermate</th><th scope="col">Km</th><th scope="col">Costo</th><th scope="col">Fermate/giro</th></tr></thead><tbody id="reportAgentsBody"></tbody></table></div></section>
           <section class="gf-panel"><div class="gf-panel__body"><div class="gf-chart" id="reportAgentDonut" data-shape="round"><div class="gf-chart__head"><div><h2 class="gf-chart__title">Fermate per agente</h2></div></div><div class="gf-chart__canvas"></div><ul class="gf-chart__legend" data-layout="list"></ul></div></div></section>
         </div>
+        <p class="gf-muted">Analizza i giri completati. Km, consumi e costi energetici sono stime; le ore sono rilevate quando disponibili, altrimenti stimate. Costi del personale, pedaggi e manutenzione non sono inclusi. Le fermate includono mancate e non gestite. Nei filtri cliente/agente, km, ore e costi sono ripartiti per numero di fermate; le ore storiche senza rilevazioni UTC affidabili restano stimate.</p>
       </section>
 
       <section id="tab-settings" class="tab hidden gf-stack" data-gap="lg">
@@ -1634,7 +1632,7 @@
   <button type="button" class="gf-button" data-variant="primary" onclick="acceptCookieNotice()">Ho capito</button>
 </div>
 
-<script src="/static/dashboard/js/reports.js?v=gf_grafici_20261110"></script>
+<script src="/static/dashboard/js/reports.js?v=gf_grafici_2_20261110"></script>
 <script src="/static/dashboard/js/customers.js?v=gf_collaudo_20261110"></script>
 <script src="/static/dashboard/js/navigation.js?v=gf_collaudo2_20261110"></script>
 <script src="/static/dashboard/js/history.js?v=gf_collaudo_20261110"></script>

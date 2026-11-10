@@ -157,13 +157,15 @@ function renderReportMetrics(m){
   setText("repMancate", fmtNumber(m.mancate));
   setText("repGiri", fmtNumber(m.giri_effettuati));
   setText("repConsegne", fmtNumber(m.consegne_totali));
-  setText("repKm", fmtNumber(m.km_totali, Number(m.km_totali) >= 100 ? 0 : 2) + " km");
-  setText("repOre", fmtNumber(m.ore_totali,2) + " h");
-  setText("repLitri", fmtNumber(m.litri_stimati,2) + " L");
+  // Nelle card i numeri grandi senza decimali, così la riga resta corta (le tabelle restano precise).
+  const short=(v)=>fmtNumber(v, Number(v) >= 100 ? 0 : 2);
+  setText("repKm", short(m.km_totali) + " km");
+  setText("repOre", short(m.ore_totali) + " h");
+  setText("repLitri", short(m.litri_stimati) + " L");
   setText("repCosto", fmtMoney(m.costo_carburante));
   setText("repCostoGiro", fmtMoney(m.costo_medio_giro));
   setText("repCostoConsegna", fmtMoney(m.costo_medio_consegna));
-  setText("repKmGiro", fmtNumber(m.km_medi_giro,2) + " km");
+  setText("repKmGiro", short(m.km_medi_giro) + " km");
   setText("repConsegneGiro", fmtNumber(m.consegne_medie_giro,2));
   reportChart("reportKpiRing", "ring", {value: success, tone: 6, label: "Consegne riuscite", display: total ? fmtNumber(success) + "%" : "–", note: `${fmtNumber(done)} su ${fmtNumber(total)} fermate`});
 }
@@ -273,8 +275,8 @@ function renderReportCharts(charts){
   });
   if(!days.length){ chartEmpty("reportKmChart"); chartEmpty("reportCostChart"); }
   else{
-    reportChart("reportKmChart", "area", {label: "Chilometri al giorno", labels, titles, series: [{name: "Km", tone: 2, values: days.map(r=>Number(r.km)||0)}], format: {suffix: " km"}});
-    reportChart("reportCostChart", "area", {label: "Energia al giorno", labels, titles, series: [{name: "Energia", tone: 7, values: days.map(r=>Number(r.costo)||0)}], format: {prefix: "€ ", decimals: 2}});
+    reportChart("reportKmChart", "area", {label: "Chilometri al giorno", labels, titles, series: [{name: "Km", tone: 2, values: days.map(r=>Number(r.km)||0)}], format: {suffix: " km"}, height: 200});
+    reportChart("reportCostChart", "area", {label: "Energia al giorno", labels, titles, series: [{name: "Energia", tone: 7, values: days.map(r=>Number(r.costo)||0)}], format: {prefix: "€ ", decimals: 2}, height: 200});
   }
 
   const tables=reportData?.tables || {};

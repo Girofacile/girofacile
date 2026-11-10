@@ -10,7 +10,8 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
   - chilometri ed energia al giorno in due grafici ad area separati (prima un grafico con due scale);
   - torta delle fermate per mezzo, ciambella della spesa per alimentazione, «Rendimento per autista»
     a colonne con un colore per autista e i pulsanti Fermate · Km · Ore · Costo;
-  - scorciatoie di periodo (Tutto, Ultimi 7 giorni, Questo mese, Mese scorso, Quest'anno);
+  - in alto una sola riga come nell'anteprima: periodo a pillola (Tutto, Ultimi 7 giorni, Questo mese,
+    Mese scorso, Quest'anno) e pulsanti Filtri, Report AI, CSV, Stampa; la nota sui calcoli è in fondo;
   - tabelle con barre nelle celle e nuova tabella Flotta; dati, filtri, CSV, stampa e report AI invariati.
   - Nuovo componente grafico nel sistema di stile (otto colori dei grafici, `charts.js`) e nel catalogo.
 - Collaudo totale (10 novembre, ambiente isolato con due aziende, autisti, collaboratori, agente, Super Admin):
