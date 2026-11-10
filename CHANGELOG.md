@@ -5,6 +5,11 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Widget iPhone del Super Admin (Server › Widget iPhone): ticket aperti e di oggi, aziende (registrate,
+  in prova, abbonate, nuove nel mese), MRR stimato, giri in corso e di oggi, errori delle ultime 24 ore,
+  in un widget dell'app Scriptable. «Genera chiave e copia script» crea una chiave dedicata (nel database
+  solo la sua impronta), la inserisce nello script da incollare sull'iPhone; «Revoca chiave» la disattiva.
+  Servizio GET /api/widget/stats in sola lettura, 60 letture al minuto per indirizzo.
 - Punti aperti dalla prova del flusso: programmando un giro, se il ricalcolo con il traffico sposta il
   rientro di 10 minuti o più il messaggio lo dice («il rientro passa dalle 09:04 alle 08:04»); nei Giri in
   corso un giro partito in un giorno precedente mostra «Aperto dal …» e c'è «Chiudi giro» per chiuderlo e

@@ -294,6 +294,22 @@
                 </div>
               </div>
             </section>
+            <section class="gf-panel" id="widget-key-panel" aria-labelledby="widget-key-title">
+              <header class="gf-panel__header"><div><h3 class="gf-panel__title" id="widget-key-title">Widget iPhone</h3><p class="gf-muted">Ticket aperti, aziende, giri in corso ed errori in un widget sulla schermata Home, con l'app gratuita Scriptable. La chiave legge solo i numeri riassuntivi e si può revocare in qualsiasi momento.</p></div><span class="gf-badge" data-status="neutral" id="widget-key-state">Nessuna chiave</span></header>
+              <div class="gf-panel__body gf-stack">
+                <ol class="gf-text">
+                  <li>Sull'iPhone installa <strong>Scriptable</strong> dall'App Store.</li>
+                  <li>Qui premi <strong>Genera chiave e copia script</strong>: lo script con la chiave viene copiato negli appunti.</li>
+                  <li>Mandalo all'iPhone (Note, AirDrop o email), apri Scriptable, tocca <strong>+</strong>, incolla lo script e chiamalo «GiroFacile».</li>
+                  <li>Tieni premuto sulla schermata Home › <strong>+</strong> › <strong>Scriptable</strong> › scegli la grandezza › <strong>Aggiungi widget</strong>.</li>
+                  <li>Tieni premuto sul widget › <strong>Modifica widget</strong> › Script: <strong>GiroFacile</strong>.</li>
+                </ol>
+                <p class="gf-muted" id="widget-key-detail"></p>
+                <p class="gf-alert gf-hidden" data-status="success" id="widget-key-result" role="status"></p>
+                <label class="gf-field gf-hidden" id="widget-script-field" for="widget-script"><span class="gf-field__label">Script per Scriptable (mostrato solo ora: contiene la chiave)</span><textarea class="gf-textarea" id="widget-script" rows="6" readonly></textarea></label>
+              </div>
+              <footer class="gf-panel__footer"><button type="button" class="gf-button" data-variant="danger" id="widget-key-revoke" onclick="revokeWidgetKey()">Revoca chiave</button><button type="button" class="gf-button" data-variant="primary" onclick="createWidgetKey()">Genera chiave e copia script</button></footer>
+            </section>
             <section class="gf-panel gf-hidden" id="local-addresses-panel" aria-labelledby="local-addresses-title">
               <header class="gf-panel__header"><div><h3 class="gf-panel__title" id="local-addresses-title">Indirizzi per i test in locale</h3><p class="gf-muted">Con quale indirizzo telefoni e altri computer aprono ogni app: lo usano i link per autisti e agenti, le email, il tracking e i QR. Solo fuori produzione.</p></div><span class="gf-badge" data-status="info" id="local-addresses-current"></span></header>
               <form id="local-addresses-form" onsubmit="event.preventDefault();saveLocalAddresses()">
@@ -1178,9 +1194,52 @@ async function loadServerMaintenance(){
     document.getElementById('server-console-url').value = data.settings?.server_console_url || '';
     gfShow(loading, false); gfShow(content, true);
     loadLocalAddresses();
+    loadWidgetKey();
   }catch(e){ gfShow(loading, false); showToast(e.message,'error'); }
 }
 // Indirizzi per i test in locale: indirizzo dei link (inviti, email, QR) e collegamenti dei portali.
+// Widget iPhone: chiave dedicata (solo impronta nel database) e script per Scriptable con indirizzo e chiave.
+function widgetDate(value){ return value ? new Date(value + (value.endsWith('Z') ? '' : 'Z')).toLocaleString('it-IT', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'}) : ''; }
+function renderWidgetKey(data){
+  const badge = document.getElementById('widget-key-state');
+  badge.textContent = data.configured ? 'Chiave attiva' : 'Nessuna chiave';
+  badge.dataset.status = data.configured ? 'success' : 'neutral';
+  document.getElementById('widget-key-detail').textContent = data.configured
+    ? `Creata il ${widgetDate(data.created_at)} · ${data.last_used_at ? 'ultimo aggiornamento del widget ' + widgetDate(data.last_used_at) : 'il widget non l’ha ancora usata'}.`
+    : 'Nessun widget collegato.';
+  gfShow('widget-key-revoke', !!data.configured);
+}
+async function loadWidgetKey(){
+  try{ const data = await api('/api/admin/widget-key'); if(data) renderWidgetKey(data); }
+  catch(e){ gfShow('widget-key-panel', false); }
+}
+async function createWidgetKey(){
+  const active = document.getElementById('widget-key-state').dataset.status === 'success';
+  if(active && !confirm('Generare una nuova chiave? Il widget già installato smetterà di funzionare finché non incolli il nuovo script.')) return;
+  try{
+    const data = await api('/api/admin/widget-key', {method:'POST', body:'{}'}); if(!data) return;
+    const template = await (await fetch('/static/admin/widget-scriptable.js', {cache:'no-store'})).text();
+    const script = template.replace('__GF_URL__', location.origin).replace('__GF_KEY__', data.key);
+    document.getElementById('widget-script').value = script;
+    gfShow('widget-script-field', true);
+    const result = document.getElementById('widget-key-result');
+    let copied = false;
+    try{ await navigator.clipboard.writeText(script); copied = true; }catch(_){ document.getElementById('widget-script').select(); }
+    result.textContent = copied ? 'Script copiato negli appunti: incollalo in Scriptable sull’iPhone. Non verrà più mostrato.'
+      : 'Copia lo script qui sotto (è già selezionato) e incollalo in Scriptable sull’iPhone. Non verrà più mostrato.';
+    gfShow(result, true);
+    renderWidgetKey(data);
+  }catch(e){ showToast(e.message, 'error'); }
+}
+async function revokeWidgetKey(){
+  if(!confirm('Revocare la chiave? Il widget sull’iPhone smetterà subito di mostrare i dati.')) return;
+  try{
+    const data = await api('/api/admin/widget-key', {method:'DELETE'}); if(!data) return;
+    document.getElementById('widget-script').value = '';
+    gfShow('widget-script-field', false); gfShow('widget-key-result', false);
+    renderWidgetKey(data); showToast('Chiave del widget revocata');
+  }catch(e){ showToast(e.message, 'error'); }
+}
 async function loadLocalAddresses(){
   const panel=document.getElementById('local-addresses-panel');
   try{
