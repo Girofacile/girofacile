@@ -51,6 +51,14 @@ def create_order(db, user_id, data, actor):
     # Serializes first-source creation; the uniqueness constraint is a second guard.
     from .plans import consume_order_quota
     owner = db.query(User).filter_by(id=user_id).with_for_update().populate_existing().one()
+    # Stesso numero di un ordine ancora attivo: quasi sempre un doppione (l'import li evita già).
+    number = (data.number or '').strip()
+    if number:
+        from sqlalchemy import func
+        clash = db.query(Order.id).filter(Order.user_id == user_id, func.lower(Order.number) == number.lower(),
+                                          Order.status != 'annullato').first()
+        if clash:
+            raise HTTPException(409, f'Esiste già un ordine con il numero {number}: aprilo dall’elenco oppure usa un numero diverso.')
     received_at = consume_order_quota(owner, db)
     source = db.query(OrderSource).filter_by(user_id=user_id, key='manual').first()
     if source is None:

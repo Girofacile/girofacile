@@ -228,6 +228,7 @@ function render(params){
  target.classList.add('fleet-review-page');
  target.innerHTML='<section class="gf-stack" data-gap="lg" data-fleet-review>'+
  (saved?'<div class="gf-alert" data-status="warning" role="status"><div class="gf-alert__body"><strong class="gf-alert__title">Giri in bozza, programmazione non completata</strong><p>Puoi riprovare con “Pianifica giri”. Non verranno duplicati giri.</p></div></div>':'')+
+ (globalThis.sameDayDuplicatesAlert?globalThis.sameDayDuplicatesAlert(plan.clienti_gia_programmati):'')+
  totals(plan,assignment,dirty)+
  // «Da sistemare» accanto al confronto (stessa altezza), il giro scelto con la mappa sotto, a tutta larghezza.
  '<div class="gf-grid" data-cols="main-side">'+table(plan,assignment,dirty)+fixes(plan,assignment,dirty)+'</div>'+lane(plan,assignment,dirty,selected,busy)+

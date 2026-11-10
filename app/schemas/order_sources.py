@@ -35,6 +35,8 @@ class SourceAction(BaseModel):
 class RunConfirm(BaseModel):
     model_config=ConfigDict(extra='forbid')
     confirm: Literal[True]
+    # Anteprima con righe sbagliate: importa soltanto quelle valide (le altre restano da correggere nel file).
+    skip_invalid: bool=False
 
 class Acquisition(BaseModel):
     model_config=ConfigDict(extra='forbid')

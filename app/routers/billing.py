@@ -142,6 +142,8 @@ def billing_overview(db: Session = Depends(get_db), user: User = Depends(current
 @router.put("/billing-details")
 def update_billing_details(payload: dict, db: Session = Depends(get_db), user: User = Depends(current_user)):
     """Aggiorna i dati fiscali mostrati nell'area fatturazione."""
+    from ..services.fiscal import validate_fiscal
+    validate_fiscal(payload)
     allowed = {
         "company_name", "company_email", "company_vat", "company_fiscal_code",
         "company_pec", "company_sdi", "company_legal_address", "company_billing_address"

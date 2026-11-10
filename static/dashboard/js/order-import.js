@@ -44,9 +44,17 @@
     const refresh='<div><button type="button" class="gf-button" data-variant="secondary" onclick="GFOrderImport.validate()">Aggiorna anteprima</button></div>';
     render(`<div class="gf-panel__body gf-stack">${steps(2)}<h2 class="gf-panel__title">Controlla l’anteprima</h2><p class="gf-muted">${esc(filename)} · ${stage.total} ${stage.total===1?'ordine':'ordini'} · ${esc(source.name)}</p>${fieldChoices(excluded,'import',!can('orders.integrations'))}${refresh}<div id="orderImportPreview"></div><details class="gf-panel" id="orderImportMapping" ${!mapping.number||!mapping.external_id?'open':''}><summary class="gf-panel__header">Le colonne non corrispondono? Modifica le associazioni</summary><div class="gf-panel__body gf-stack"><div class="gf-form-grid">${basic.map(select).join('')}</div><details class="gf-panel"><summary class="gf-panel__header">Altri dati e codice univoco</summary><div class="gf-panel__body gf-stack"><p class="gf-muted">Il codice univoco riconosce lo stesso ordine nei successivi import. Di solito coincide con il numero ordine.</p><div class="gf-form-grid">${fields.filter(k=>!basic.includes(k)).map(select).join('')}</div></div></details>${refresh}</div></details><div id="orderImportReport"></div><div id="orderImportConfirm"></div><div><button type="button" class="gf-button" data-variant="ghost" onclick="GFOrderImport.start()">← Cambia file</button></div></div>`);previewRows();confirmation();
   }
+  // Indirizzo a campi separati: in anteprima si mostra composto come verrà importato.
+  function previewValue(row,key){
+    const value=row[mapping[key]];
+    if(key!=='delivery_address'||(value!==undefined&&value!==null&&String(value).trim()))return value;
+    const part=k=>String(row[mapping[k]]??'').trim();
+    const street=[part('street'),part('street_number')].filter(Boolean).join(' '),place=[part('postal_code'),part('city'),part('province')].filter(Boolean).join(' ');
+    return [street,place].filter(Boolean).join(', ')||null;
+  }
   function previewRows(){
     const keys=['number','recipient_name','delivery_address','requested_date','packages'].filter(k=>!excluded.includes(k));
-    el('orderImportPreview').innerHTML='<div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards"><thead><tr>'+keys.map(k=>`<th scope="col">${labels[k]}</th>`).join('')+'</tr></thead><tbody>'+stage.sample.map(row=>'<tr>'+keys.map(k=>`<td data-label="${labels[k]}">${esc(String(row[mapping[k]]??'—'))}</td>`).join('')+'</tr>').join('')+'</tbody></table></div><p class="gf-field__hint">Prime '+stage.sample.length+' righe. Potrai completare i dati mancanti negli ordini.</p>';
+    el('orderImportPreview').innerHTML='<div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards"><thead><tr>'+keys.map(k=>`<th scope="col">${labels[k]}</th>`).join('')+'</tr></thead><tbody>'+stage.sample.map(row=>'<tr>'+keys.map(k=>`<td data-label="${labels[k]}">${esc(String(previewValue(row,k)??'—'))}</td>`).join('')+'</tr>').join('')+'</tbody></table></div><p class="gf-field__hint">Prime '+stage.sample.length+' righe. Potrai completare i dati mancanti negli ordini.</p>';
   }
   function changed(){report=null;excluded=readChoices('import');mapping={};document.querySelectorAll('[data-import-field]').forEach(n=>{if(n.value)mapping[n.dataset.importField]=n.value;});previewRows();el('orderImportReport').replaceChildren();confirmation();}
   async function validate(){
@@ -65,12 +73,18 @@
   }
   function confirmation(){
     const ready=report?.status==='preview_ready',allowed=can('orders.import')&&(source.status==='active'||can('orders.integrations'));
+    // Righe sbagliate: si possono importare intanto quelle valide.
+    const wrong=Number(report?.report?.invalid||0),valid=Math.max(0,Number(report?.report?.total||0)-wrong);
+    if(report?.status==='preview_invalid'&&valid&&wrong&&allowed){
+      el('orderImportConfirm').innerHTML=`<div class="gf-cluster"><p>${esc(gfCount(wrong,'riga ha','righe hanno'))} errori: correggile nel file, oppure importa intanto le altre.</p><button type="button" id="orderImportCommitValid" class="gf-button" data-variant="secondary" onclick="GFOrderImport.commit(true)">Importa solo ${esc(gfCount(valid,'ordine valido','ordini validi'))}</button></div>`;
+      return;
+    }
     el('orderImportConfirm').innerHTML=ready?(allowed?`<div class="gf-cluster"><p>Confermi l’importazione in “${esc(source.name)}”. Le impostazioni saranno ricordate.</p><button type="button" id="orderImportCommit" class="gf-button" data-variant="primary" onclick="GFOrderImport.commit()">Importa ${report.report.total} ${report.report.total===1?'ordine':'ordini'}</button></div>`:'<p class="gf-muted">Chiedi al responsabile di attivare l’elenco o il permesso di importazione.</p>'):'<p class="gf-muted">Controlla le associazioni e aggiorna l’anteprima per continuare.</p>';
   }
-  function commit(){return work(async()=>{
-    if(report?.status!=='preview_ready')throw new Error('Aggiorna l’anteprima prima di importare.');
+  function commit(onlyValid=false){return work(async()=>{
+    if(report?.status!=='preview_ready'&&!(onlyValid&&report?.status==='preview_invalid'))throw new Error('Aggiorna l’anteprima prima di importare.');
     if(source.status!=='active')source=await api('/'+source.id+'/action',post({version:source.version,action:'activate',run_id:stage.run_id}));
-    report=await api(`/${source.id}/runs/${stage.run_id}/commit`,post({confirm:true}));
+    report=await api(`/${source.id}/runs/${stage.run_id}/commit`,post({confirm:true,...(onlyValid?{skip_invalid:true}:{})}));
     if(report.status==='completed')render(`<div class="gf-panel__body gf-stack">${steps(3)}<h2 class="gf-panel__title">I tuoi ordini sono stati importati</h2><p class="gf-muted">Controlla gli indirizzi e i dati mancanti. Quando sono pronti, selezionali per creare il giro.</p><div id="orderImportReport"></div><div class="gf-cluster"><button type="button" class="gf-button" data-variant="primary" onclick="GFOrderImport.viewOrders()">Vai agli ordini importati</button><button type="button" class="gf-button" data-variant="secondary" onclick="GFOrderImport.start()">Importa un altro file</button></div></div>`);
     renderReport();if(report.status!=='completed')confirmation();
   });}

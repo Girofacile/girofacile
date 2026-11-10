@@ -86,5 +86,5 @@ test('dashboard greeting refreshes every minute only while the dashboard is visi
 });
 
 test('dashboard navigation script cache version is refreshed', () => {
-  assert.match(html, /navigation\.js\?v=gf_pagina_f5_20261104/);
+  assert.match(html, /navigation\.js\?v=gf_collaudo2_20261110/);
 });

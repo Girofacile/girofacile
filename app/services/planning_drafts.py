@@ -51,7 +51,21 @@ def list_drafts(db, user_id, actor):
                         'created_at': r.created_at} for r in routes]}
 
 
+PROGRAMMED_FLEET = ('saved', 'programmed')
+
+
+def _programmed_fleet_plan(db, user_id, plan_id):
+    """Il piano su più mezzi di una bozza è già stato salvato o programmato: riprenderlo creerebbe doppioni."""
+    if not plan_id:
+        return False
+    from ..fleet_models import FleetPlan
+    plan = db.query(FleetPlan).filter_by(id=plan_id, user_id=user_id).first()
+    return bool(plan and plan.status in PROGRAMMED_FLEET)
+
+
 def create(db, user_id, actor, data):
+    if data.stage == 'suddivisione' and _programmed_fleet_plan(db, user_id, data.fleet_plan_id):
+        raise HTTPException(409, 'Questi giri sono già stati programmati: li trovi in «Giri programmati».')
     if data.source == 'orders':
         row = selection(db, user_id, actor, lock=True)
         check_version(row, data.selection_version)
@@ -87,6 +101,8 @@ def owned(db, user_id, actor, draft_id, lock=False):
 
 def resume(db, user_id, actor, draft_id, data):
     draft = owned(db, user_id, actor, draft_id, lock=True)
+    if draft.stage == 'suddivisione' and _programmed_fleet_plan(db, user_id, draft.fleet_plan_id):
+        raise HTTPException(409, 'I giri di questa bozza sono già stati programmati: la bozza non serve più, puoi eliminarla.')
     dropped = 0
     result = {'source': draft.source, 'configuration': draft.configuration, 'stops': draft.stops,
               'stage': draft.stage, 'fleet_plan_id': draft.fleet_plan_id}

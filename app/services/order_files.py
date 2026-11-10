@@ -101,8 +101,12 @@ def mapped(row,mapping):
         if value is not None and key in ('weight_kg','pallets','volume_m3','packages') and isinstance(value,str):
             value=value.replace(',','.')
         if value is not None and key=='requested_date' and isinstance(value,str):
-            if '/' in value: value=datetime.strptime(value,'%d/%m/%Y').date().isoformat()
-            elif 'T' in value: value=datetime.fromisoformat(value).date().isoformat()
+            try:
+                if '/' in value: value=datetime.strptime(value,'%d/%m/%Y').date().isoformat()
+                elif 'T' in value: value=datetime.fromisoformat(value).date().isoformat()
+                else: value=datetime.strptime(value,'%Y-%m-%d').date().isoformat()
+            except ValueError:
+                raise ValueError(f'Data consegna «{value}» non valida: usa GG/MM/AAAA (es. 12/11/2026).') from None
         if value is not None and key=='items' and isinstance(value,str): value=json.loads(value)
         data[key]=value
     if data.get('items') is None: data['items']=[]

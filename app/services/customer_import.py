@@ -70,10 +70,12 @@ async def read_customer_import(file):
         raise HTTPException(400, "Il file supera il limite di 10 MB")
     name = (file.filename or "").lower()
     try:
+        # Tutto come testo: «NA» (Napoli) non diventa «dato mancante», civico e telefono
+        # restano come scritti («12», «0811111111») invece di diventare 12.0 / 811111111.0.
         if name.endswith('.csv'):
-            return pd.read_csv(io.BytesIO(content))
+            return pd.read_csv(io.BytesIO(content), dtype=str, keep_default_na=False, sep=None, engine='python')
         if name.endswith('.xlsx'):
-            return pd.read_excel(io.BytesIO(content))
+            return pd.read_excel(io.BytesIO(content), dtype=str, keep_default_na=False)
     except Exception:
         raise HTTPException(400, "File non leggibile: verifica formato e intestazioni")
     raise HTTPException(400, "Usa un file CSV o XLSX")

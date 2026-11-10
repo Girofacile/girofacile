@@ -99,8 +99,10 @@ def preflight(db,src,rows,mapping,expected=None):
             entry['error']=str(exc)
         except ValidationError as exc:
             entry['error']='; '.join(f"{'.'.join(map(str,e['loc']))}: formato o valore non valido" for e in exc.errors(include_input=False,include_url=False))[:1000]
-        except (ValueError,TypeError,OverflowError):
-            entry['error']='Controlla identificativi univoci, formati, date e valori; gli ordini già assegnati o modificati dopo l’anteprima richiedono una nuova verifica.'
+        except (ValueError,TypeError,OverflowError) as exc:
+            # I messaggi scritti per l'utente (data, Sì/No, codici) si mostrano così come sono.
+            text=str(exc)
+            entry['error']=text if isinstance(exc,ValueError) and text[:1].isupper() and len(text)<200 else 'Controlla identificativi univoci, formati, date e valori; gli ordini già assegnati o modificati dopo l’anteprima richiedono una nuova verifica.'
         if 'error' in entry: report['invalid']+=1
         report['rows'].append(entry);parsed.append(data)
     return report,parsed
@@ -174,14 +176,22 @@ def execute(db,src,item,rows,mapping,actor,expected=None):
     return item
 
 
-def commit_file(db,src,item,actor):
+def commit_file(db,src,item,actor,skip_invalid=False):
     if src.status!='active': raise HTTPException(409,'Attiva la fonte prima di importare.')
     if src.kind!='file': raise HTTPException(422,'I campioni API servono alla verifica e non vengono importati dalla pagina.')
     if item.status=='completed': return item
     check_payload(item)
-    if item.status!='preview_ready' or item.source_version!=src.version: raise HTTPException(409,'Configurazione cambiata o anteprima non valida: ripeti la verifica.')
-    expected={r['external_id']:r['version'] for r in item.report['rows']}
-    return execute(db,src,item,item.payload['rows'],src.configuration['mapping'],actor,expected)
+    if item.source_version!=src.version: raise HTTPException(409,'Configurazione cambiata o anteprima non valida: ripeti la verifica.')
+    rows=item.payload['rows'];report_rows=item.report['rows']
+    if item.status=='preview_invalid' and skip_invalid:
+        # Solo le righe senza errori nell'anteprima; le altre si correggono nel file e si reimportano.
+        keep=[i for i,r in enumerate(report_rows) if 'error' not in r]
+        if not keep: raise HTTPException(422,'Nessuna riga valida da importare: correggi il file.')
+        rows=[rows[i] for i in keep];report_rows=[report_rows[i] for i in keep]
+    elif item.status!='preview_ready':
+        raise HTTPException(409,'Configurazione cambiata o anteprima non valida: ripeti la verifica.')
+    expected={r['external_id']:r['version'] for r in report_rows}
+    return execute(db,src,item,rows,src.configuration['mapping'],actor,expected)
 
 
 def acquire(db,src,data):

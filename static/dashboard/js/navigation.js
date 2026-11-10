@@ -181,7 +181,9 @@ function restoreTabFromUrl(fallback){
 }
 if(typeof window!=="undefined" && typeof window.addEventListener==="function"){
   window.addEventListener("popstate",()=>{
-    const name=tabFromUrl();
+    const saved=tabFromUrl();
+    // Indietro/Avanti verso una pagina che dipende da qualcosa aperto a metà: si apre la pagina da cui si parte.
+    const name=saved ? (GF_TAB_RESTORE_PARENT[saved] || saved) : null;
     if(!name || name===visibleTab()) return;
     showTabFromHistory(name);
     // Cambio annullato (per esempio il giro da non mandare in bozza): l'indirizzo torna alla pagina aperta.
@@ -228,6 +230,8 @@ function showTab(name){
   if(name==="chat-autisti") loadDriverChatCenter();
   if(name==="settings"){ loadSettingsV41(); loadUniversalFeaturesV89(); }
   if(name==="plan-account"){ renderUpgradeCards(); syncPlanPageHeaderV874(); }
+  // Anche ricaricando la pagina o tornando con Indietro: la fatturazione si carica sempre.
+  if(name==="billing-account" && typeof loadBillingOverviewV63==="function") window.gfBillingLoad = loadBillingOverviewV63();
   if(name==="integrations") renderIntegrationsV52();
 
   if(name === 'dashboard') applyWorkspaceStateV49(gfWorkspaceOperationalV49);

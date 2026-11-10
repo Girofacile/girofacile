@@ -107,3 +107,20 @@ def test_draft_remembers_stage_and_fleet_preview(drafts):
     state = selection(client)
     other = client.post('/api/planning-drafts', json={'source': 'orders', 'selection_version': state['version'], 'stage': 'configurazione', 'fleet_plan_id': 42}).json()
     assert other['stage'] == 'configurazione' and other['fleet_plan_id'] is None
+
+
+def test_programmed_fleet_plan_cannot_become_a_draft_again(drafts):
+    # Collaudo 10/11: uscendo durante «Pianifica giri» la bozza riprendeva un piano già programmato → giri doppi.
+    from app.fleet_models import FleetPlan
+    ctx, _ = drafts
+    client, db, owner, *_ = ctx
+    plan = FleetPlan(user_id=owner.id, actor='x', status='preview', configuration={}, result={})
+    db.add(plan); db.commit()
+    state, _ = preview(drafts, [ready(ctx, 'ORD-1')])
+    draft = client.post('/api/planning-drafts', json={'source': 'orders', 'selection_version': state['version'], 'stage': 'suddivisione', 'fleet_plan_id': plan.id}).json()
+    plan.status = 'programmed'; db.commit()
+    resumed = client.post(f'/api/planning-drafts/{draft["id"]}/resume', json={'selection_version': selection(client)['version']})
+    assert resumed.status_code == 409 and 'già stati programmati' in resumed.json()['detail']
+    state = selection(client)
+    again = client.post('/api/planning-drafts', json={'source': 'orders', 'selection_version': state['version'], 'stage': 'suddivisione', 'fleet_plan_id': plan.id})
+    assert again.status_code == 409

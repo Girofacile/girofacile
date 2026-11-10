@@ -350,6 +350,7 @@ async function saveSettingsV41(){
   }
 }
 
+window.addEventListener('unhandledrejection', event => { if(event.reason && event.reason.gfHandled) event.preventDefault(); });
 async function withButtonLoading(buttonId, loadingText, fn){
   const btn = document.getElementById(buttonId);
   const oldText = btn ? btn.textContent : '';
@@ -363,6 +364,9 @@ async function withButtonLoading(buttonId, loadingText, fn){
     return await fn();
   }catch(e){
     alert(e.message || 'Errore durante il salvataggio.');
+    // Già spiegato all'utente: chi aspetta il risultato riceve comunque l'errore,
+    // ma dai pulsanti (onclick) non diventa un «errore non gestito» in console.
+    if(e && typeof e === 'object') e.gfHandled = true;
     throw e;
   }finally{
     if(btn){
@@ -730,8 +734,8 @@ async function openBillingPanel(){
   if(current !== "billing-account") _billingReturnTabV876 = current || "plan-account";
   closeProfilePanel();
   document.getElementById("billingOverlay")?.classList.add("hidden");
-  showTab("billing-account");
-  await loadBillingOverviewV63();
+  showTab("billing-account"); // carica anche i dati della fatturazione
+  await window.gfBillingLoad;
   window.scrollTo({top:0, behavior:"smooth"});
 }
 function closeBillingPanel(){
@@ -1372,21 +1376,50 @@ function setSignupWizardStep(step){
   if(next) next.classList.toggle("hidden", signupWizardCurrentStep === 4);
   if(create) create.classList.toggle("hidden", signupWizardCurrentStep !== 4);
 }
+// Errore della registrazione sotto il campo (stile del gestionale), non in un avviso del browser.
+function signupInvalid(id, message){
+  const control = document.getElementById(id);
+  if(!control){ alert(message); return false; }
+  control.setCustomValidity(message);
+  control.reportValidity();
+  control.addEventListener("input", () => control.setCustomValidity(""), {once:true});
+  return false;
+}
+// Stessi controlli del server (app/services/fiscal.py): vuoto ammesso, altrimenti formato plausibile.
+function signupVatError(raw){
+  let v = String(raw || "").replace(/[\s.-]/g, "").toUpperCase();
+  if(!v) return "";
+  if(v.startsWith("IT")) v = v.slice(2);
+  else if(/^[A-Z]{2}[A-Z0-9]{2,13}$/.test(v)) return "";
+  if(!/^\d{11}$/.test(v)) return "La partita IVA italiana ha 11 cifre.";
+  let total = 0;
+  for(let i = 0; i < 10; i++){ let n = Number(v[i]); if(i % 2){ n *= 2; if(n > 9) n -= 9; } total += n; }
+  return (10 - total % 10) % 10 === Number(v[10]) ? "" : "Partita IVA non valida: controlla le cifre.";
+}
 function validateSignupStep(step){
   if(step === 1){
-    if(!val("signupCompany")){ alert("Inserisci il nome azienda."); return false; }
-    if(!val("signupUser") || val("signupUser").length < 3){ alert("Inserisci un nome utente di almeno 3 caratteri."); return false; }
-    if(!val("signupEmail")){ alert("Inserisci l'email dell'account."); return false; }
+    if(!val("signupCompany")) return signupInvalid("signupCompany", "Inserisci il nome azienda.");
+    if(!val("signupUser") || val("signupUser").length < 3) return signupInvalid("signupUser", "Inserisci un nome utente di almeno 3 caratteri.");
+    if(!val("signupEmail") || !document.getElementById("signupEmail").checkValidity()) return signupInvalid("signupEmail", "Inserisci un'email valida per l'account.");
     const passwordCheck=passwordSecurityAssessment(val("signupPass"),passwordContextForSignup());
-    if(!passwordCheck.acceptable){ alert(passwordCheck.message); return false; }
+    if(!passwordCheck.acceptable) return signupInvalid("signupPass", passwordCheck.message);
   }
   if(step === 2){
+    const vatError = signupVatError(val("signupVat"));
+    if(vatError) return signupInvalid("signupVat", vatError);
+    const cf = val("signupFiscalCode").replace(/\s/g, "").toUpperCase();
+    if(cf && !/^\d{11}$/.test(cf) && !/^[A-Z]{6}\d{2}[A-Z]\d{2}[A-Z]\d{3}[A-Z]$/.test(cf)) return signupInvalid("signupFiscalCode", "Il codice fiscale ha 16 caratteri (persona) oppure 11 cifre (azienda).");
     if(!val("signupVat")){
       const ok = confirm("Non hai inserito la Partita IVA. Vuoi continuare comunque?");
       if(!ok) return false;
     }
   }
-
+  if(step === 3){
+    const pec = val("signupPec");
+    if(pec && !/^[^@\s]+@[^@\s]+\.[A-Za-z]{2,}$/.test(pec)) return signupInvalid("signupPec", "Indirizzo PEC non valido.");
+    const sdi = val("signupSdi").toUpperCase();
+    if(sdi && !/^[A-Z0-9]{6,7}$/.test(sdi)) return signupInvalid("signupSdi", "Il codice SDI ha 7 caratteri (6 per la Pubblica Amministrazione).");
+  }
   return true;
 }
 function signupWizardNext(){
@@ -1453,7 +1486,7 @@ async function confirmPasswordReset(){
 }
 async function signup(){
   try{
-    if(!validateSignupStep(1) || !validateSignupStep(4)) return;
+    if(!validateSignupStep(1) || !validateSignupStep(2) || !validateSignupStep(3) || !validateSignupStep(4)) return;
     const plan = getSelectedPlan();
     const createBtn = document.getElementById("signupCreateBtn");
     if(createBtn){ createBtn.disabled = true; createBtn.textContent = "Creazione account..."; }
@@ -3179,7 +3212,12 @@ async function importCustomers(){
   if(!file){ alert("Scegli un file CSV o Excel"); return; }
   const fd = new FormData(); fd.append("file", file);
   const res = await fetch("/api/customers/import", {method:"POST", body:fd});
-  if(!res.ok){ alert("Errore import"); return; }
+  if(!res.ok){
+    // Il server spiega cosa correggere (es. «Riga 5: tempo_scarico_min non è un numero valido»).
+    const err = await res.json().catch(()=>({}));
+    alert(typeof err.detail === "string" ? err.detail : "Import non riuscito: controlla il file e riprova.");
+    return;
+  }
   const j = await res.json();
   toast(`Import completato. Creati: ${j.created}, aggiornati: ${j.updated}.`);
   await loadCustomers();
@@ -3744,6 +3782,15 @@ async function programCurrentRoute(){
 
 // «Elimina» nell'anteprima: la bozza viene annullata, gli ordini tornano da pianificare e
 // si torna alla pianificazione con le fermate ancora compilate.
+// Clienti già serviti da un altro giro programmato lo stesso giorno: probabile doppione.
+function sameDayDuplicatesAlert(list){
+  if(!Array.isArray(list) || !list.length) return "";
+  const rows = list.slice(0, 5).map(x => `${esc(x.cliente_nome)} — già nel giro «${esc(x.route_nome || 'Giro')}»${x.orario_partenza ? ' delle ' + esc(x.orario_partenza) : ''}`).join('<br>');
+  const more = list.length > 5 ? `<br>e altri ${list.length - 5}` : '';
+  return `<div class="gf-alert" data-status="warning" role="note" data-same-day-duplicates><div class="gf-alert__body"><p class="gf-alert__title">${gfCount(list.length, 'cliente ha', 'clienti hanno')} già una consegna programmata lo stesso giorno</p><p class="gf-alert__text">${rows}${more}</p><p class="gf-alert__text">Controlla che non sia un doppione prima di programmare.</p></div></div>`;
+}
+window.sameDayDuplicatesAlert = sameDayDuplicatesAlert;
+
 // Consegne previste di notte (22:00–6:00): spesso i clienti sono chiusi. Solo un avviso, non blocca.
 function nightDeliveriesAlert(consegne){
   const night = (consegne || []).filter(c => {
@@ -3897,6 +3944,7 @@ function renderRouteResult(r, targetId="routeResult", fromHistory=false){
     ${inPreviewTab ? "" : gfRouteDetailHeader(kicker+" · "+crew, r.nome || title, `<span class="gf-badge" data-status="${badge.status}" data-dot>${esc(badge.text)}</span>`)}
     ${r.driver_schedule_error ? `<div class="gf-alert" data-status="danger" role="alert"><div class="gf-alert__body"><p class="gf-alert__text">${esc(r.driver_schedule_error)}</p></div></div>` : ""}
     ${nightDeliveriesAlert(consegne)}
+    ${sameDayDuplicatesAlert(r.clienti_gia_programmati)}
     <div class="gf-stat-strip" data-icons="side" data-fit data-preview-metrics aria-label="Numeri del giro">
       ${gfStatCell("home","neutral","Partenza", r.orario_partenza || "-", r.orario_rientro_stimato ? "rientro "+r.orario_rientro_stimato : "dal deposito")}
       ${gfStatCell("route","2","Percorso", r.totale_km == null ? "-" : gfDecimal(r.totale_km), "km")}
@@ -5566,6 +5614,7 @@ function ensureSupportModalV60(){
         <p id="supportTicketLinkedErrorV60" class="gf-alert hidden" data-status="warning"></p>
         <div><button type="button" id="supportTicketAiBtnV67" class="gf-button hidden" data-variant="secondary" onclick="generateSupportTicketTextAIv67()">Genera testo assistito AI</button></div>
         <p id="supportTicketAiHintV67" class="gf-muted hidden">Disponibile solo per ticket collegati a un errore sistema e piano Pro.</p>
+        <section class="gf-stack" data-gap="sm" id="supportTicketHistoryV1" hidden aria-label="Le tue richieste"></section>
         <div class="gf-cluster" data-legal="support"><span class="gf-muted">Informazioni legali</span>
           <a href="/sicurezza" target="_blank" rel="noopener">Sicurezza</a>
           <a href="/dpa-responsabile-trattamento" target="_blank" rel="noopener">DPA</a>
@@ -5605,6 +5654,25 @@ function openSupportPanelV49(errorId=null, suggestedMessage=""){
     aiHint?.classList.add("hidden");
   }
   modal.classList.remove("hidden");
+  loadSupportTicketHistoryV1();
+}
+// Le richieste già inviate con il loro stato: la risposta arriva per email alla chiusura.
+async function loadSupportTicketHistoryV1(){
+  const host = document.getElementById("supportTicketHistoryV1");
+  if(!host) return;
+  if(window.GFCompanyAccess?.isCollaborator() && !GFCompanyAccess.can('support.read')){ host.hidden = true; return; }
+  try{
+    const res = await api("/api/support/tickets");
+    const items = (Array.isArray(res) ? res : (res.items || [])).slice(0, 5);
+    if(!items.length){ host.hidden = true; host.innerHTML = ""; return; }
+    const label = {aperto:["Aperta","warning"], in_lavorazione:["In lavorazione","info"], chiuso:["Risolta","success"]};
+    host.innerHTML = `<strong class="gf-field__label">Le tue richieste</strong><ul class="gf-list">${items.map(t => {
+      const [text, tone] = label[t.status] || [t.status || "—", "info"];
+      const when = t.created_at ? new Date(t.created_at.endsWith("Z") ? t.created_at : t.created_at + "Z").toLocaleDateString("it-IT", {day:"2-digit", month:"2-digit"}) : "";
+      return `<li class="gf-list-item"><div class="gf-list-item__main"><strong>${esc(t.oggetto || "Richiesta assistenza")}</strong><small class="gf-muted">${esc(when)}${t.status === "chiuso" ? " · risposta inviata via email" : ""}</small></div><span class="gf-badge" data-status="${tone}">${esc(text)}</span></li>`;
+    }).join("")}</ul>`;
+    host.hidden = false;
+  }catch(e){ host.hidden = true; }
 }
 
 function closeSupportTicketModalV60(){

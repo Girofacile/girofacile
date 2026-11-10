@@ -425,9 +425,11 @@ async def import_customers(
     created, updated = 0, 0
 
     def get(row, col, default=None):
-        if col not in row or pd.isna(row[col]):
+        # Celle vuote (lette come testo) valgono come assenti.
+        if col not in row or pd.isna(row[col]) or str(row[col]).strip() == "":
             return default
-        return row[col]
+        value = row[col]
+        return value.strip() if isinstance(value, str) else value
 
     def b(x):
         return str(x).strip().lower() in ["1", "si", "sì", "yes", "true", "vero"]

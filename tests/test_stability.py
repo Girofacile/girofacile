@@ -239,3 +239,21 @@ def test_backup_credentials_are_not_in_command_arguments():
     url,env=postgres_connection('postgresql+psycopg2://u:s%40cret@localhost:5432/test?sslmode=require')
     assert 's%40cret' not in url and 'sslmode=require' in url
     assert env['PGPASSWORD']=='s@cret'
+
+
+@pytest.mark.parametrize('sep', [',', ';'])
+def test_import_keeps_house_number_phone_and_province_as_written(env, sep):
+    # Collaudo 10/11: «NA» diventava «dato mancante», civico 12 → «12.0», telefono 0811111111 → «811111111.0».
+    from app.models import Customer
+    client, db, owner, *_ = env
+    rows = ['codice_cliente,nome,via,civico,cap,comune,provincia,telefono,tempo_scarico_min',
+            'IMP01,Salumeria Uno,Via San Felice,12,80035,Nola,NA,0811111111,8',
+            'IMP02,Panificio Due,Corso Vittorio Emanuele,50,80011,Acerra,NA,,']
+    data = '\n'.join(r.replace(',', sep) for r in rows).encode()
+    response = client.post('/api/customers/import', files={'file': ('data.csv', data, 'text/csv')})
+    assert response.status_code == 200, response.text
+    one = db.query(Customer).filter_by(user_id=owner.id, codice_cliente='IMP01').one()
+    assert (one.indirizzo, one.cap, one.comune, one.provincia, one.telefono, one.tempo_scarico_min) == \
+        ('Via San Felice 12', '80035', 'Nola', 'NA', '0811111111', 8)
+    two = db.query(Customer).filter_by(user_id=owner.id, codice_cliente='IMP02').one()
+    assert two.indirizzo == 'Corso Vittorio Emanuele 50' and two.telefono == '' and two.tempo_scarico_min == 10

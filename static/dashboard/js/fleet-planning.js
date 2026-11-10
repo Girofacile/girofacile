@@ -223,7 +223,7 @@
     const routes=plan.routes?.length||0,giri=routes===1?'1 giro':`${routes} giri`;
     const wait=globalThis.GFDesignSystem?.showWait(name==='revise'
       ?{title:'Sto ricalcolando i giri',messages:['Aggiorno le fermate spostate…','Ricalcolo percorsi e orari…','Controllo orari, peso e colli…']}
-      :{title:routes?`Sto programmando ${giri}`:'Sto programmando i giri',minMs:1000,messages:['Salvo i giri…','Preparo le consegne per il portale degli autisti…']});
+      :{title:routes?`Sto programmando ${giri}`:'Sto programmando i giri',hint:'Calcolo anche il traffico previsto: di solito servono 10–30 secondi. Non chiudere la pagina.',minMs:1000,messages:['Salvo i giri…','Ricalcolo gli orari con il traffico previsto…','Preparo le consegne per il portale degli autisti…']});
     try{
       if(name==='revise'){
         const payload={version:plan.version,assignments:reviewAssignments()};
@@ -255,6 +255,7 @@
           // Pianificatore vuoto, come dopo «Programma giro»: la prossima selezione riparte da zero.
           clearRouteWorkspace();
           Promise.allSettled([loadDashboardHome(),refreshResourceAvailability()]);
+          busy=false; // giri programmati: ora si può lasciare la pianificazione
           showTab('dashboard-scheduled');
         }
       }
@@ -359,5 +360,7 @@
   }
   // La card del mezzo c'è da subito, anche prima di scegliere data e orario.
   refresh();
-  window.GFFleetPlanning={active,config,restore,reset,refresh,missing,calculate,current,open};
+  // Calcolo o programmazione in corso: la pianificazione non va lasciata (né messa in bozza) a metà.
+  const isBusy=()=>busy;
+  window.GFFleetPlanning={active,config,restore,reset,refresh,missing,calculate,current,open,isBusy};
 })();

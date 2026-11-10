@@ -95,7 +95,10 @@ def source_action(source_id:int,data:SourceAction,request:Request,response:Respo
     if data.action=='activate':
         item=service.run(db,user.id,source_id,data.run_id)
         service.check_payload(item)
-        if item.status!='preview_ready' or item.source_version!=src.version: raise HTTPException(409,'Verifica un campione valido con la configurazione corrente prima di attivare.')
+        # Basta una riga valida per dimostrare che le associazioni funzionano (le altre si possono escludere).
+        report=item.report or {}
+        partially_valid=item.status=='preview_invalid' and (report.get('total') or 0)>(report.get('invalid') or 0)
+        if (item.status!='preview_ready' and not partially_valid) or item.source_version!=src.version: raise HTTPException(409,'Verifica un campione valido con la configurazione corrente prima di attivare.')
         src.status='active';src.configuration={**src.configuration,'validated':True}
         item.source_version=src.version+1
     elif data.action=='resume':
@@ -171,7 +174,7 @@ def commit_import(source_id:int,run_id:int,data:RunConfirm,request:Request,db:Se
         src=service.source(db,user.id,source_id,lock=True)
         require_source_feature(user,src)
         item=service.run(db,user.id,source_id,run_id)
-        service.commit_file(db,src,item,actor_key(request,user));db.commit()
+        service.commit_file(db,src,item,actor_key(request,user),skip_invalid=data.skip_invalid);db.commit()
         return JSONResponse(jsonable_encoder(service.public_run(item)),status_code=422 if item.status=='failed' else 200)
     except Exception:
         db.rollback();raise

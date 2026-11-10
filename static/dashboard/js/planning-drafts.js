@@ -69,6 +69,8 @@ window.GFPlanningDrafts=(()=>{
   // Chiamata da showTab: true blocca la navigazione (conferma o salvataggio in corso).
   function guard(name){
     if(leaving||busy||PLANNING.includes(name)||!openTab())return false;
+    // Giri in programmazione: uscendo adesso si metterebbe in bozza un piano già programmato (doppioni).
+    if(globalThis.GFFleetPlanning?.isBusy?.()){alert('Programmazione dei giri in corso: attendi qualche secondo prima di cambiare pagina.');return true;}
     const kind=pending();if(!kind)return false;
     const text=kind==='route'
       ?'Attenzione: stai lasciando questo giro in bozza. Lo ritrovi in «Giri in bozza» per riprenderlo e programmarlo. Continuare?'

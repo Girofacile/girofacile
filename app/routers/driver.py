@@ -439,7 +439,7 @@ def get_driver_direct_chat(since_id: int = 0, da: DriverAccount = Depends(get_cu
             m.read_at = utc_now()
     db.commit()
     return [{"id": m.id, "sender_type": m.sender_type, "sender_name": m.sender_name,
-             "message": m.message, "created_at": m.created_at.isoformat()} for m in msgs]
+             "message": m.message, "created_at": m.created_at.isoformat() + "Z"} for m in msgs]
 
 
 @router.post("/chat/direct")
@@ -473,7 +473,7 @@ def get_driver_chat(route_id: int, since_id: int = 0, da: DriverAccount = Depend
             m.read_at = utc_now()
     db.commit()
     return [{"id": m.id, "sender_type": m.sender_type, "sender_name": m.sender_name,
-             "message": m.message, "created_at": m.created_at.isoformat()} for m in msgs]
+             "message": m.message, "created_at": m.created_at.isoformat() + "Z"} for m in msgs]
 
 @router.post("/chat/{route_id}")
 def send_driver_message(route_id: int, payload: dict, da: DriverAccount = Depends(get_current_driver), db: Session = Depends(get_db)):
@@ -536,7 +536,7 @@ def list_admin_chat_threads(db: Session = Depends(get_db), user: User = Depends(
             "unread": unread,
             "last_message": (last.message if last else None),
             "last_sender_type": (last.sender_type if last else None),
-            "last_message_at": (last.created_at.isoformat() if last else None),
+            "last_message_at": (last.created_at.isoformat() + "Z" if last else None),
         })
     out.sort(key=lambda x: (x["last_message_at"] or "", x["driver_name"]), reverse=True)
     out.sort(key=lambda x: x["unread"] <= 0)
@@ -561,7 +561,7 @@ def get_admin_chat(route_id: int, since_id: int = 0, mark_read: bool = True, db:
         db.commit()
     return {
         "messages": [{"id": m.id, "sender_type": m.sender_type, "sender_name": m.sender_name,
-                      "message": m.message, "created_at": m.created_at.isoformat(),
+                      "message": m.message, "created_at": m.created_at.isoformat() + "Z",
                       "read_at": m.read_at.isoformat() if m.read_at else None} for m in msgs],
         "unread": unread
     }
@@ -604,7 +604,7 @@ def get_admin_direct_chat(driver_id: int, since_id: int = 0, mark_read: bool = T
         db.commit()
     return {
         "messages": [{"id": m.id, "sender_type": m.sender_type, "sender_name": m.sender_name,
-                      "message": m.message, "created_at": m.created_at.isoformat(),
+                      "message": m.message, "created_at": m.created_at.isoformat() + "Z",
                       "read_at": m.read_at.isoformat() if m.read_at else None} for m in msgs],
         "unread": unread
     }

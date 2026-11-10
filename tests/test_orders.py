@@ -253,3 +253,13 @@ def test_unverifiable_address_is_flagged_as_a_problem(orders, monkeypatch):
     fixed=client.put(f"/api/orders/{row['id']}",json={'version':client.get(f"/api/orders/{row['id']}").json()['version'],'number':'P-1','recipient_name':'Destinatario','delivery_address':'Via Roma 10, 80026 Casoria NA'})
     assert fixed.status_code==200,fixed.text
     assert fixed.json()['address_problem'] is None
+
+
+def test_manual_order_with_number_of_an_active_order_is_refused(orders):
+    # Collaudo 10/11: «MAN-07412» inserito due volte creava due ordini con lo stesso numero.
+    client, db, *_ = orders
+    first = create(client, number='DUP-1')
+    again = client.post('/api/orders', json={'number': 'dup-1', 'recipient_name': 'Altro', 'delivery_address': 'Via Test 11, Roma'})
+    assert again.status_code == 409 and 'DUP-1'.lower() in again.json()['detail'].lower()
+    assert client.post(f"/api/orders/{first['id']}/status", json={'version': first['version'], 'status': 'annullato'}).status_code == 200
+    assert client.post('/api/orders', json={'number': 'DUP-1', 'recipient_name': 'Nuovo', 'delivery_address': 'Via Test 12, Roma'}).status_code == 201

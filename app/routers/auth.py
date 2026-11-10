@@ -11,7 +11,7 @@ import hashlib
 import io
 import secrets
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, Response
 from sqlalchemy import func, or_, text
 from sqlalchemy.orm import Session
 
@@ -44,7 +44,9 @@ def _workspace_operational_for_user(user: User) -> bool:
 
 
 @router.post("/api/signup")
-def signup(data: SignupIn, response: Response, db: Session = Depends(get_db)):
+def signup(data: SignupIn, response: Response, db: Session = Depends(get_db), background: BackgroundTasks = None):
+    # Email dopo la risposta (un server email lento non rallenta la registrazione); senza coda, subito.
+    later = background.add_task if background is not None else (lambda fn, *a, **k: fn(*a, **k))
     require_registration(db)
     username = (data.username or "").strip()
     password = data.password or ""
@@ -59,6 +61,9 @@ def signup(data: SignupIn, response: Response, db: Session = Depends(get_db)):
         raise HTTPException(400, "Nome utente già registrato")
     if email and db.query(User).filter(User.email == email).first():
         raise HTTPException(400, "Email già registrata")
+    from ..services.fiscal import validate_fiscal
+    validate_fiscal({"company_vat": data.company_vat, "company_fiscal_code": data.company_fiscal_code,
+                     "company_pec": data.company_pec, "company_sdi": data.company_sdi})
     ensure_login_email_available(db, email, "user")
     configured_trial_days = trial_days(db)
     trial_ends = utc_now() + timedelta(days=configured_trial_days)
@@ -115,7 +120,8 @@ def signup(data: SignupIn, response: Response, db: Session = Depends(get_db)):
     # Email di benvenuto al cliente. _send registra già gli eventuali errori SMTP.
     if email:
         from ..services.email import send_welcome
-        send_welcome(
+        # Dopo la risposta: un server email lento non rallenta la registrazione.
+        later(send_welcome,
             to_email=email,
             username=username,
             company_name=data.company_name or username,
@@ -128,7 +134,7 @@ def signup(data: SignupIn, response: Response, db: Session = Depends(get_db)):
     admin_email = ((profile.email if profile else None) or ERROR_NOTIFICATIONS_EMAIL or "").strip()
     if notify_new_companies and admin_email:
         from ..services.email import send_new_company_registration
-        send_new_company_registration(
+        later(send_new_company_registration,
             to_email=admin_email,
             customer_code=f"{user.customer_number:04d}",
             company_name=user.company_name or user.username,
@@ -883,6 +889,8 @@ def update_company_profile(payload: dict, user: User = Depends(current_user), db
         "has_refrigerated_goods", "has_ztl", "needs_tail_lift",
         "unload_base_min", "unload_seconds_per_package", "unload_max_min"
     }
+    from ..services.fiscal import validate_fiscal
+    validate_fiscal(payload)
     if payload.get("company_logo_url") == company_logo_src(user):
         # Il modulo rimanda l'indirizzo del logo già salvato: nessuna modifica.
         payload = {key: value for key, value in payload.items() if key != "company_logo_url"}

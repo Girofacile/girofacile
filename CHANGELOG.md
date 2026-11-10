@@ -5,6 +5,22 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Collaudo totale (10 novembre, ambiente isolato con due aziende, autisti, collaboratori, agente, Super Admin):
+  - Import clienti: civico, telefono e provincia restano come scritti (prima «12.0», «811111111.0», «NA»
+    perso); file con «;» accettati; in caso di errore si vede la riga da correggere, non «Errore import».
+  - Più mezzi: durante «Pianifica giri» non si può uscire dalla pagina; il server rifiuta bozze di piani
+    già programmati (prima si potevano programmare due volte gli stessi clienti).
+  - Anteprima e revisione su più mezzi: avviso se un cliente ha già una consegna programmata quel giorno.
+  - Chat autisti: orari nell'ora italiana (prima un'ora indietro).
+  - Registrazione: errori sotto i campi invece degli avvisi del browser; partita IVA, codice fiscale, PEC
+    e SDI controllati (anche in Azienda e Fatturazione); email inviate dopo la risposta (accesso immediato).
+  - Ordini: numero già usato da un ordine attivo rifiutato; import con «Importa solo le righe valide»;
+    data impossibile spiegata («Data consegna «31/02/2026» non valida»); anteprima con l'indirizzo composto.
+  - Pianificazione da ordini: gli ordini dello stesso destinatario e indirizzo diventano una sola fermata.
+  - Fatturazione: si carica anche ricaricando la pagina; Indietro/Avanti non aprono pagine vuote.
+  - Assistenza: nella finestra compaiono le richieste inviate con il loro stato.
+  - Errori di salvataggio già mostrati non risultano più «non gestiti»; «Elimina cliente» in Dati principali;
+    pagina di primo accesso autista senza stili in linea.
 - Collaudo completo del 10 novembre, correzioni:
   - «Sposta la partenza ad adesso» non falliva più solo quando il minuto era un multiplo di 5: la nuova
     partenza è sempre i prossimi 5 minuti tondi dopo adesso (alle 09:35 → 09:40); vicino a mezzanotte

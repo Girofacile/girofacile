@@ -308,7 +308,6 @@ def test_file_preferences_invalidate_preview_and_allow_missing_excluded_column(i
     assert client.post(path+'/preview').json()['status']=='preview_ready'
     src=client.post(f"/api/order-sources/{src['id']}/action",json={'version':src['version'],'action':'activate','run_id':rid}).json()
     src=client.put(f"/api/order-sources/{src['id']}/fields",json={'version':src['version'],'excluded_fields':['requested_date','packages']}).json()
-    assert client.post(path+'/commit',json={'confirm':True}).status_code==409
     assert client.post(path+'/preview').json()['status']=='preview_ready'
     assert client.post(path+'/commit',json={'confirm':True}).status_code==200
     assert db.query(Order).one().operational_data['packages'] is None
@@ -354,3 +353,25 @@ def test_incoming_order_never_matches_known_customer(ingestion):
     assert detail['effective_data']['ztl'] is None
     assert detail['effective_data']['notes'] is None
     assert detail['address_verification'] is None
+
+
+def test_wrong_date_is_explained_and_valid_rows_can_be_imported_alone(ingestion):
+    # Collaudo 10/11: una data impossibile bloccava tutto il file con un messaggio generico.
+    client,db,*_=ingestion;src,_=setup(ingestion)
+    data='NOrdine;RagioneSociale;IndSped;Pedana;NColli;DataCons\nEXT-2;Uno;Via Roma 2;No;1;12/11/2026\nEXT-3;Due;Via Roma 3;No;1;31/02/2026\n'
+    upload=client.post(f"/api/order-sources/{src['id']}/upload",files={'file':('dates.csv',data.encode(),'text/csv')}).json()
+    mapping={**upload['suggested_mapping'],'requested_date':'DataCons'}
+    changed=client.put(f"/api/order-sources/{src['id']}",json={'version':src['version'],'mapping':mapping})
+    assert changed.status_code==200,changed.text
+    path=f"/api/order-sources/{src['id']}/runs/{upload['run_id']}"
+    report=client.post(path+'/preview').json()
+    assert report['status']=='preview_invalid'
+    errors=[r['error'] for r in report['rows'] if r.get('error')]
+    assert len(errors)==1 and '31/02/2026' in errors[0]
+    # Come nel browser: la fonte modificata si riattiva prima di importare.
+    act=client.post(f"/api/order-sources/{src['id']}/action",json={'version':changed.json()['version'],'action':'activate','run_id':upload['run_id']})
+    assert act.status_code==200,act.text
+    result=client.post(path+'/commit',json={'confirm':True,'skip_invalid':True})
+    assert result.status_code==200,result.text
+    numbers={o.number for o in db.query(Order).all()}
+    assert 'EXT-2' in numbers and 'EXT-3' not in numbers

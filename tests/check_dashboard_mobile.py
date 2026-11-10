@@ -225,6 +225,8 @@ def api_handler(case, mutations, blocked_external):
 def open_dashboard(page, case, base):
     page.clock.set_fixed_time(FIXED_TIME)
     page.goto(base + "/static/dashboard/index.html", wait_until="networkidle")
+    # Sotto carico gli script arrivano dopo «networkidle»: si aspetta che il gestionale sia pronto.
+    page.wait_for_function("typeof showGestionaleAfterLogin === 'function'", timeout=60000)
     page.evaluate("""async owner => {
         // Isolate map providers while retaining the application map host and layout.
         const placeholder = element => {

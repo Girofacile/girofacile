@@ -362,10 +362,24 @@ def build_vehicle_dict(vehicle, driver_schedule=None):
 # Serializzazione
 # -----------------------------------------------------------------------
 
+def same_day_duplicates(plan, customer_ids):
+    """Giro non ancora programmato: clienti già serviti da un altro giro lo stesso giorno."""
+    if computed_route_status(plan) != "bozza":
+        return []
+    try:
+        from sqlalchemy.orm import object_session
+        from ..services.same_day import already_planned
+        sess = object_session(plan)
+        return already_planned(sess, plan.user_id, plan.data_giro, customer_ids, (plan.id,)) if sess else []
+    except Exception:
+        return []
+
+
 def route_response(plan, result):
     route_orders.refresh_references(plan, result["ordered"])
     live_sched = live_route_schedule(plan, {})
     return {
+        "clienti_gia_programmati": same_day_duplicates(plan, [d.get("customer_id") for d in result["ordered"]]),
         "id": plan.id, "nome": plan.nome, "data_giro": date_to_iso(plan.data_giro),
         "orario_partenza": time_to_hhmm(plan.orario_partenza), "orario_rientro_stimato": time_to_hhmm(plan.orario_rientro_stimato),
         "started_at": (plan.started_at.isoformat() if getattr(plan, "started_at", None) else None),
@@ -408,6 +422,7 @@ def serialize_route(plan, include_legs=True):
     live_sched = live_route_schedule(plan, status_map)
     live_delivery_times = live_sched.get("delivery_times", {})
     response = {
+        "clienti_gia_programmati": same_day_duplicates(plan, [d.customer_id for d in consegne]),
         "id": plan.id, "nome": plan.nome, "data_giro": date_to_iso(plan.data_giro),
         "orario_partenza": time_to_hhmm(plan.orario_partenza), "orario_rientro_stimato": time_to_hhmm(plan.orario_rientro_stimato),
         "started_at": (plan.started_at.isoformat() if getattr(plan, "started_at", None) else None),
@@ -952,7 +967,7 @@ def list_operational_routes(include_cancelled: bool = False, db: Session = Depen
             "next_delivery": next_delivery,
             "unread_driver_messages": unread_driver_messages,
             "last_driver_message": (last_driver_msg.message if last_driver_msg else None),
-            "last_driver_message_at": (last_driver_msg.created_at.isoformat() if last_driver_msg else None),
+            "last_driver_message_at": (last_driver_msg.created_at.isoformat() + "Z" if last_driver_msg else None),
             "status": status, "status_label": route_status_label(status),
         })
     return result
