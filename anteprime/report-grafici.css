@@ -1,0 +1,96 @@
+/* Anteprime Report · proposta di nuovi componenti grafici del design system.
+   Se approvati, i colori dei dati passano in theme.css e i componenti in components.css.
+   Tavolozza a 8 colori in ordine fisso (validata: separazione per daltonismo ΔE ≥ 9,
+   distinzione a vista ΔE ≥ 19); aqua, giallo e rosa hanno poco contrasto sul bianco,
+   per questo ogni grafico mostra sempre il valore scritto. */
+:root{
+  --gf-chart-1:#2a78d6; /* blu */
+  --gf-chart-2:#eb6834; /* arancio */
+  --gf-chart-3:#1baf7a; /* acqua */
+  --gf-chart-4:#eda100; /* giallo */
+  --gf-chart-5:#e87ba4; /* rosa */
+  --gf-chart-6:#008300; /* verde */
+  --gf-chart-7:#6250d6; /* viola */
+  --gf-chart-8:#e34948; /* rosso */
+  --gf-chart-grid:#e6e9f0;
+  --gf-chart-axis:#c9cfdb;
+  --gf-chart-track:#eef1f6;
+  --gf-chart-ok:var(--gf-color-success);
+  --gf-chart-ko:var(--gf-color-danger);
+}
+
+/* Riquadro grafico: titolo, sottotitolo, area del disegno, legenda. */
+.gf-chart{position:relative;display:grid;gap:var(--gf-space-3);min-width:0}
+.gf-chart__head{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--gf-space-3)}
+.gf-chart__title{margin:0;font-family:var(--gf-font-display);font-size:var(--gf-font-md);font-weight:700;color:var(--gf-color-text)}
+.gf-chart__sub{margin:2px 0 0;font-size:var(--gf-font-sm);color:var(--gf-color-muted)}
+.gf-chart__canvas{position:relative;min-width:0}
+.gf-chart__canvas svg{display:block;width:100%;height:auto;overflow:visible}
+.gf-chart__split .gf-chart__canvas{max-width:220px;justify-self:center;width:100%}
+.gf-chart:is([data-chart="pie"],[data-chart="donut"]) > .gf-chart__canvas{max-width:230px;width:100%;justify-self:center}
+.gf-chart[data-chart="gauge"] > .gf-chart__canvas{max-width:280px;width:100%;justify-self:center;align-self:center}
+.gf-chart[data-chart="ring"] > .gf-chart__canvas{max-width:150px;width:100%;justify-self:center}
+.gf-chart__canvas text{font-family:var(--gf-font-family);fill:var(--gf-color-muted);font-size:11px}
+.gf-chart__canvas .gf-chart__value{fill:var(--gf-color-text);font-weight:600}
+.gf-chart__canvas .gf-chart__center{fill:var(--gf-color-text);font-family:var(--gf-font-display);font-weight:700}
+.gf-chart__mark{transition:opacity .15s ease}
+.gf-chart__canvas:hover .gf-chart__mark{opacity:.45}
+.gf-chart__canvas .gf-chart__mark:hover,.gf-chart__canvas .gf-chart__mark.is-active{opacity:1}
+.gf-chart__legend{display:flex;flex-wrap:wrap;gap:var(--gf-space-2) var(--gf-space-4);margin:0;padding:0;list-style:none;font-size:var(--gf-font-sm);color:var(--gf-color-muted)}
+.gf-chart__legend li{display:flex;align-items:center;gap:6px}
+.gf-chart__legend b{color:var(--gf-color-text);font-weight:600}
+.gf-chart__legend[data-layout="list"]{display:grid;gap:var(--gf-space-2)}
+.gf-chart__legend[data-layout="list"] li{display:grid;grid-template-columns:12px minmax(0,1fr) auto auto;gap:var(--gf-space-2)}
+.gf-chart__swatch{width:10px;height:10px;border-radius:3px;flex:none;background:var(--swatch)}
+.gf-chart__tooltip{position:absolute;z-index:5;pointer-events:none;min-width:120px;padding:8px 10px;border-radius:var(--gf-radius-md);background:var(--gf-color-nav);color:var(--gf-color-on-primary);font-size:var(--gf-font-sm);box-shadow:var(--gf-shadow-dialog);transform:translate(-50%,calc(-100% - 10px));white-space:nowrap}
+.gf-chart__tooltip[hidden]{display:none}
+.gf-chart__tooltip strong{display:block;font-weight:600;margin-bottom:2px}
+.gf-chart__tooltip span{display:flex;align-items:center;gap:6px;color:var(--gf-color-nav-text)}
+
+/* Disposizione: grafico a ciambella con legenda accanto. */
+.gf-chart__split{display:grid;grid-template-columns:minmax(150px,200px) minmax(0,1fr);gap:var(--gf-space-5);align-items:center}
+@media (max-width:640px){.gf-chart__split{grid-template-columns:minmax(0,1fr)}}
+
+/* Indicatore con andamento (stat tile). */
+.gf-kpi{display:grid;gap:4px;min-width:0;padding:var(--gf-space-4);border-radius:var(--gf-radius-lg);background:var(--gf-color-surface);border:var(--gf-border);box-shadow:var(--gf-shadow-sm)}
+.gf-kpi__label{display:flex;align-items:center;gap:8px;font-size:var(--gf-font-sm);color:var(--gf-color-muted)}
+.gf-kpi__dot{width:8px;height:8px;border-radius:50%;background:var(--kpi)}
+.gf-kpi__value{font-family:var(--gf-font-display);font-size:var(--gf-font-stat);font-weight:700;line-height:1.1;color:var(--gf-color-text);font-variant-numeric:tabular-nums}
+.gf-kpi__unit{font-size:var(--gf-font-md);font-weight:500;color:var(--gf-color-muted);margin-left:2px}
+.gf-kpi__delta{font-size:var(--gf-font-sm);color:var(--gf-color-muted)}
+.gf-kpi__delta[data-trend="up"]{color:var(--gf-color-success)}
+.gf-kpi__delta[data-trend="down"]{color:var(--gf-color-danger)}
+.gf-kpi__spark{height:36px}
+.gf-kpi__spark svg{width:100%;height:36px;display:block}
+.gf-kpi[data-tone]{background:color-mix(in srgb,var(--kpi) 9%,var(--gf-color-surface));border-color:color-mix(in srgb,var(--kpi) 25%,var(--gf-color-border))}
+.gf-kpi[data-layout="ring"]{grid-template-columns:auto minmax(0,1fr);align-items:center;column-gap:var(--gf-space-4)}
+
+/* Barre orizzontali in classifica. */
+.gf-rank{display:grid;gap:var(--gf-space-3);margin:0;padding:0;list-style:none}
+.gf-rank li{display:grid;grid-template-columns:minmax(0,150px) minmax(0,1fr) minmax(56px,auto);gap:var(--gf-space-3);align-items:center;font-size:var(--gf-font-sm)}
+.gf-rank__name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--gf-color-text)}
+.gf-rank__track{display:block;height:12px;border-radius:999px;background:var(--gf-chart-track);overflow:hidden}
+.gf-rank__fill{display:block;height:100%;border-radius:999px;background:var(--bar,var(--gf-chart-1));width:var(--w)}
+.gf-rank__value{text-align:right;white-space:nowrap;font-weight:600;color:var(--gf-color-text);font-variant-numeric:tabular-nums}
+
+/* Tabella con barra nella cella. */
+.gf-cellbar{display:grid;grid-template-columns:minmax(60px,1fr) auto;gap:var(--gf-space-2);align-items:center;min-width:120px}
+.gf-cellbar__track{display:block;height:8px;border-radius:999px;background:var(--gf-chart-track);overflow:hidden}
+.gf-cellbar__fill{display:block;height:100%;border-radius:999px;background:var(--bar,var(--gf-chart-1));width:var(--w)}
+.gf-cellbar span{font-variant-numeric:tabular-nums}
+.gf-avatar-dot{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:color-mix(in srgb,var(--kpi) 15%,var(--gf-color-surface));color:var(--kpi);font-size:11px;font-weight:700;margin-right:8px}
+
+/* Mappa di calore (giorni × fasce orarie). */
+.gf-heat{display:grid;grid-template-columns:44px repeat(var(--cols),minmax(0,1fr));gap:4px;font-size:11px;color:var(--gf-color-muted)}
+.gf-heat__cell{height:30px;border-radius:6px;background:color-mix(in srgb,var(--heat) calc(var(--v) * 100%),var(--gf-chart-track))}
+.gf-heat__label{display:flex;align-items:center}
+.gf-heat__scale{display:flex;justify-content:flex-end;margin-top:var(--gf-space-2);align-items:center;gap:6px;font-size:11px;color:var(--gf-color-muted)}
+.gf-heat__scale i{display:inline-block;width:90px;height:8px;border-radius:999px;background:linear-gradient(90deg,var(--gf-chart-track),var(--heat))}
+
+/* Selettore di periodo dell'anteprima. */
+.gf-period{display:inline-flex;gap:4px;padding:4px;border-radius:999px;background:var(--gf-color-surface);border:var(--gf-border)}
+.gf-period button{border:0;background:transparent;padding:6px 14px;border-radius:999px;font:inherit;font-size:var(--gf-font-sm);color:var(--gf-color-muted);cursor:pointer}
+.gf-period button[aria-pressed="true"]{background:var(--gf-color-primary);color:var(--gf-color-on-primary)}
+
+/* Fila di anelli (uno per autista o per mezzo): vanno a capo da soli su schermi stretti. */
+.gf-chart__rings{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:var(--gf-space-4)}
