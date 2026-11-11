@@ -61,24 +61,8 @@ function resetReportFilters(){
   loadReport();
 }
 
-function toggleReportFilters(forceOpen){
-  const panel = document.getElementById("reportFilterPanel");
-  const btn = document.getElementById("reportFilterToggleBtn");
-  if(!panel) return;
-  const shouldOpen = typeof forceOpen === "boolean" ? forceOpen : panel.classList.contains("hidden");
-  panel.classList.toggle("hidden", !shouldOpen);
-  if(btn){
-    btn.setAttribute("aria-expanded", String(shouldOpen));
-    btn.textContent = `${shouldOpen ? '⌃' : '⌄'} ${shouldOpen ? 'Nascondi filtri' : 'Mostra filtri'}`;
-  }
-}
-
+// Il periodo scelto si vede dal pulsante evidenziato (nessun riquadro filtri separato).
 function updateReportFilterSummary(){
-  const summary = document.getElementById("reportFilterSummary");
-  if(!summary) return;
-  const ids = ["reportDateFrom","reportDateTo","reportAgent","reportCustomer","reportDriver","reportVehicle","reportStatus"];
-  const active = ids.filter(id=>{ const el=document.getElementById(id); return el && String(el.value || "").trim(); }).length;
-  summary.textContent = active ? `${active} filtro${active>1?'i':''} applicat${active>1?'i':'o'}` : "Nessun filtro applicato";
   syncReportPeriodChips();
 }
 
@@ -96,10 +80,16 @@ function reportPeriodRange(kind, today=new Date()){
 function syncReportPeriodChips(){
   if(typeof document.querySelectorAll !== "function") return;
   const from=val("reportDateFrom") || "", to=val("reportDateTo") || "";
+  let matched=false;
   document.querySelectorAll("#reportPeriod [data-period]").forEach(b=>{
     const [a,c]=reportPeriodRange(b.dataset.period);
-    b.setAttribute("aria-pressed", String(a === from && c === to));
+    const on = a === from && c === to;
+    matched = matched || on;
+    b.setAttribute("aria-pressed", String(on));
   });
+  // Date scelte a mano: resta evidenziato «Personalizzato».
+  const custom=document.getElementById("reportCustomPeriod");
+  if(custom) custom.toggleAttribute("data-active", !matched);
 }
 
 function setReportPeriod(kind){
@@ -107,8 +97,41 @@ function setReportPeriod(kind){
   const [from,to]=reportPeriodRange(kind);
   set("reportDateFrom", from);
   set("reportDateTo", to);
+  closeReportCustomPeriod();
   updateReportFilterSummary();
   loadReport();
+}
+
+function closeReportCustomPeriod(){
+  const custom=document.getElementById("reportCustomPeriod");
+  if(custom) custom.open = false;
+  const error=document.getElementById("reportCustomError");
+  if(error){ error.hidden = true; error.textContent = ""; }
+}
+
+// «Personalizzato»: intervallo di date scelto dall'utente (anche un solo estremo).
+function applyReportCustomPeriod(){
+  if(showLockedOrProceed("report")) return;
+  const from=val("reportDateFrom") || "", to=val("reportDateTo") || "";
+  const error=document.getElementById("reportCustomError");
+  const fail=text=>{ if(error){ error.textContent = text; error.hidden = false; } };
+  if(!from && !to){ fail("Scegli almeno una data."); return; }
+  if(from && to && from > to){ fail("La data «Dal» deve venire prima della data «Al»."); return; }
+  closeReportCustomPeriod();
+  updateReportFilterSummary();
+  loadReport();
+}
+
+// Il riquadro delle date si chiude cliccando fuori o con Esc.
+if(typeof document !== "undefined" && typeof document.addEventListener === "function"){
+  document.addEventListener("click", e=>{
+    const custom=document.getElementById("reportCustomPeriod");
+    if(custom?.open && !custom.contains(e.target)) custom.open = false;
+  });
+  document.addEventListener("keydown", e=>{
+    const custom=document.getElementById("reportCustomPeriod");
+    if(e.key === "Escape" && custom?.open){ custom.open = false; custom.querySelector("summary")?.focus(); }
+  });
 }
 
 let reportRequest = 0;

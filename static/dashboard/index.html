@@ -33,7 +33,7 @@
 
 <!-- Shared GiroFacile design system; legacy sheets retain feature layout. -->
 <link rel="stylesheet" href="/static/design-system/theme.css?v=gf_grafici_20261110">
-<link rel="stylesheet" href="/static/design-system/components.css?v=gf_grafici_2_20261110">
+<link rel="stylesheet" href="/static/design-system/components.css?v=gf_periodo_20261111">
 <link rel="stylesheet" href="/static/design-system/layout.css?v=gf_banner_unico_20261101">
 <link rel="stylesheet" href="/static/design-system/workspace.css?v=gf_selection_20261016">
 <link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007_reference_2">
@@ -806,30 +806,22 @@
             <button type="button" aria-pressed="false" data-period="month" onclick="setReportPeriod('month')">Questo mese</button>
             <button type="button" aria-pressed="false" data-period="last-month" onclick="setReportPeriod('last-month')">Mese scorso</button>
             <button type="button" aria-pressed="false" data-period="year" onclick="setReportPeriod('year')">Quest’anno</button>
+            <details class="gf-dropdown" id="reportCustomPeriod">
+              <summary aria-label="Scegli le date del periodo">Personalizzato</summary>
+              <div data-gf-menu data-align="start" class="gf-stack">
+                <label class="gf-field" for="reportDateFrom"><span class="gf-field__label">Dal</span><input class="gf-input" id="reportDateFrom" type="date"></label>
+                <label class="gf-field" for="reportDateTo"><span class="gf-field__label">Al</span><input class="gf-input" id="reportDateTo" type="date"></label>
+                <p class="gf-field__hint" id="reportCustomError" role="alert" hidden></p>
+                <div class="gf-cluster"><button type="button" class="gf-button" data-variant="primary" data-size="sm" onclick="applyReportCustomPeriod()">Mostra</button><button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="setReportPeriod('')">Azzera</button></div>
+              </div>
+            </details>
           </div>
           <div class="gf-cluster">
-            <span id="reportFilterSummary" class="gf-muted">Nessun filtro applicato</span>
-            <button type="button" id="reportFilterToggleBtn" class="gf-button" data-variant="secondary" aria-expanded="false" aria-controls="reportFilterPanel" onclick="toggleReportFilters()">⌄ Mostra filtri</button>
             <button type="button" class="gf-button" data-variant="secondary" onclick="generateReportAIv67()">Genera report AI</button>
             <button type="button" class="gf-button" data-variant="secondary" onclick="exportReportCsv()">Scarica CSV</button>
             <button type="button" class="gf-button" data-variant="primary" onclick="printReport()">Stampa / Salva PDF</button>
           </div>
         </div>
-
-        <section id="reportFilterPanel" class="gf-panel hidden">
-          <div class="gf-panel__body gf-stack">
-            <div class="gf-form-grid">
-              <label class="gf-field" for="reportDateFrom"><span class="gf-field__label">Da data</span><input class="gf-input" id="reportDateFrom" type="date" onchange="updateReportFilterSummary(); loadReport()"></label>
-              <label class="gf-field" for="reportDateTo"><span class="gf-field__label">A data</span><input class="gf-input" id="reportDateTo" type="date" onchange="updateReportFilterSummary(); loadReport()"></label>
-              <label class="gf-field" for="reportAgent" data-gf-agents-only><span class="gf-field__label">Agente</span><select class="gf-select" id="reportAgent" onchange="updateReportFilterSummary(); loadReport()"><option value="">Tutti gli agenti</option><option value="interno">Cliente interno</option></select></label>
-              <label class="gf-field" for="reportCustomer"><span class="gf-field__label">Cliente</span><select class="gf-select" id="reportCustomer" onchange="updateReportFilterSummary(); loadReport()"><option value="">Tutti i clienti</option></select></label>
-              <label class="gf-field" for="reportDriver"><span class="gf-field__label">Autista</span><select class="gf-select" id="reportDriver" onchange="updateReportFilterSummary(); loadReport()"><option value="">Tutti gli autisti</option></select></label>
-              <label class="gf-field" for="reportVehicle"><span class="gf-field__label">Mezzo</span><select class="gf-select" id="reportVehicle" onchange="updateReportFilterSummary(); loadReport()"><option value="">Tutti i mezzi</option></select></label>
-              <label class="gf-field" for="reportStatus"><span class="gf-field__label">Stato giro</span><select class="gf-select" id="reportStatus" onchange="updateReportFilterSummary(); loadReport()"><option value="">Solo giri completati</option><option value="completato">Completato</option></select></label>
-            </div>
-            <div class="gf-cluster"><button type="button" class="gf-button" data-variant="primary" onclick="updateReportFilterSummary(); loadReport()">Applica filtri</button><button type="button" class="gf-button" data-variant="secondary" onclick="resetReportFilters()">Reset</button></div>
-          </div>
-        </section>
 
         <div id="reportAiSummaryV67" class="gf-alert hidden" data-status="info" aria-live="polite"></div>
 
@@ -1632,7 +1624,7 @@
   <button type="button" class="gf-button" data-variant="primary" onclick="acceptCookieNotice()">Ho capito</button>
 </div>
 
-<script src="/static/dashboard/js/reports.js?v=gf_grafici_2_20261110"></script>
+<script src="/static/dashboard/js/reports.js?v=gf_periodo_20261111"></script>
 <script src="/static/dashboard/js/customers.js?v=gf_collaudo_20261110"></script>
 <script src="/static/dashboard/js/navigation.js?v=gf_collaudo2_20261110"></script>
 <script src="/static/dashboard/js/history.js?v=gf_collaudo_20261110"></script>

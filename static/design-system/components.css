@@ -783,9 +783,15 @@ body[data-gf-surface] .gf-stat-card__chart[data-place="end"]{grid-column:2;grid-
 body[data-gf-surface] .gf-stat-card__chart[data-place="end"] svg{width:100%;height:44px}
 /* Selettore a pillola (periodo, misura di un grafico): pulsanti con aria-pressed, quello scelto in blu. */
 body[data-gf-surface] .gf-segmented{display:inline-flex;flex-wrap:wrap;gap:var(--gf-space-1);padding:var(--gf-space-1);border:var(--gf-border);border-radius:var(--gf-radius-pill);background:var(--gf-color-surface);max-width:100%}
-body[data-gf-surface] .gf-segmented>button{min-height:var(--gf-control-height-sm);padding:var(--gf-space-1) var(--gf-space-4);border:0;border-radius:var(--gf-radius-pill);background:transparent;color:var(--gf-color-muted);font:var(--gf-weight-medium) var(--gf-font-sm)/1.2 var(--gf-font-family);cursor:pointer;transition:background var(--gf-motion-duration),color var(--gf-motion-duration)}
-body[data-gf-surface] .gf-segmented>button:hover{color:var(--gf-color-text);background:var(--gf-color-surface-subtle)}
-body[data-gf-surface] .gf-segmented>button[aria-pressed="true"]{background:var(--gf-color-primary);color:var(--gf-color-on-primary)}
+body[data-gf-surface] :is(.gf-segmented>button,.gf-segmented>.gf-dropdown>summary){min-height:var(--gf-control-height-sm);padding:var(--gf-space-1) var(--gf-space-4);border:0;border-radius:var(--gf-radius-pill);background:transparent;color:var(--gf-color-muted);font:var(--gf-weight-medium) var(--gf-font-sm)/1.2 var(--gf-font-family);cursor:pointer;transition:background var(--gf-motion-duration),color var(--gf-motion-duration)}
+body[data-gf-surface] :is(.gf-segmented>button,.gf-segmented>.gf-dropdown>summary):hover{color:var(--gf-color-text);background:var(--gf-color-surface-subtle)}
+body[data-gf-surface] :is(.gf-segmented>button[aria-pressed="true"],.gf-segmented>.gf-dropdown[data-active]>summary){background:var(--gf-color-primary);color:var(--gf-color-on-primary)}
+/* Una voce del selettore può aprire un riquadro (es. «Personalizzato» con le date): details.gf-dropdown. */
+body[data-gf-surface] .gf-segmented>.gf-dropdown>summary{display:inline-flex;align-items:center}
+body[data-gf-surface] .gf-dropdown [data-gf-menu][data-align="start"]{left:0;right:auto}
+body[data-gf-surface] .gf-dropdown [data-gf-menu].gf-stack{display:grid;gap:var(--gf-space-3);min-width:260px;padding:var(--gf-space-4)}
+body[data-gf-surface] .gf-dropdown [data-gf-menu].gf-stack .gf-cluster .gf-button{width:auto}
+@media (max-width:640px){body[data-gf-surface] .gf-dropdown [data-gf-menu][data-align="start"]{left:auto;right:0}}
 /* Barra dentro una cella di tabella. */
 body[data-gf-surface] .gf-cellbar{display:grid;grid-template-columns:minmax(60px,1fr) auto;align-items:center;gap:var(--gf-space-2);min-width:120px;font-variant-numeric:tabular-nums}
 body[data-gf-surface] .gf-cellbar .gf-bar-chart__track{height:var(--gf-space-2)}

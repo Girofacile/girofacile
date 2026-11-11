@@ -11,7 +11,8 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
   - torta delle fermate per mezzo, ciambella della spesa per alimentazione, «Rendimento per autista»
     a colonne con un colore per autista e i pulsanti Fermate · Km · Ore · Costo;
   - in alto una sola riga come nell'anteprima: periodo a pillola (Tutto, Ultimi 7 giorni, Questo mese,
-    Mese scorso, Quest'anno) e pulsanti Filtri, Report AI, CSV, Stampa; la nota sui calcoli è in fondo;
+    Mese scorso, Quest'anno, Personalizzato con le date Dal/Al in un riquadro) e pulsanti Report AI, CSV,
+    Stampa; tolto il riquadro «Mostra filtri» (cliente, autista, mezzo, agente); la nota sui calcoli è in fondo;
   - tabelle con barre nelle celle e nuova tabella Flotta; dati, filtri, CSV, stampa e report AI invariati.
   - Nuovo componente grafico nel sistema di stile (otto colori dei grafici, `charts.js`) e nel catalogo.
 - Collaudo totale (10 novembre, ambiente isolato con due aziende, autisti, collaboratori, agente, Super Admin):
