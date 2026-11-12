@@ -964,16 +964,16 @@ body[data-gf-surface] .gf-auth__backdrop::before{
    accendendo le linee al loro passaggio; fuori dalle onde la griglia resta com'era. */
 @property --gf-auth-wave{syntax:"<percentage>";inherits:false;initial-value:-60%}
 body[data-gf-surface] .gf-auth__backdrop::after{
-  --gf-auth-wave-rest:color-mix(in srgb,var(--gf-color-nav) 33%,transparent);
+  --gf-auth-wave-rest:color-mix(in srgb,var(--gf-color-nav) 22%,transparent);
   background-image:
-    linear-gradient(color-mix(in srgb,var(--gf-color-on-nav) 60%,transparent) 1px,transparent 1px),
-    linear-gradient(90deg,color-mix(in srgb,var(--gf-color-on-nav) 60%,transparent) 1px,transparent 1px);
+    linear-gradient(color-mix(in srgb,var(--gf-color-on-nav) 90%,transparent) 1px,transparent 1px),
+    linear-gradient(90deg,color-mix(in srgb,var(--gf-color-on-nav) 90%,transparent) 1px,transparent 1px);
   background-size:var(--gf-space-12) var(--gf-space-12);
   mask-image:
     radial-gradient(circle at 75% 50%,
-      var(--gf-auth-wave-rest) calc(var(--gf-auth-wave) - 56%),var(--gf-color-nav) calc(var(--gf-auth-wave) - 40%),
-      var(--gf-auth-wave-rest) calc(var(--gf-auth-wave) - 24%),var(--gf-auth-wave-rest) calc(var(--gf-auth-wave) - 16%),
-      var(--gf-color-nav) var(--gf-auth-wave),var(--gf-auth-wave-rest) calc(var(--gf-auth-wave) + 16%)),
+      var(--gf-auth-wave-rest) calc(var(--gf-auth-wave) - 60%),var(--gf-color-nav) calc(var(--gf-auth-wave) - 40%),
+      var(--gf-auth-wave-rest) calc(var(--gf-auth-wave) - 20%),var(--gf-auth-wave-rest) calc(var(--gf-auth-wave) - 20%),
+      var(--gf-color-nav) var(--gf-auth-wave),var(--gf-auth-wave-rest) calc(var(--gf-auth-wave) + 20%)),
     radial-gradient(75% 85% at 75% 50%,var(--gf-color-nav) 40%,transparent 90%);
   mask-composite:intersect;
   animation:gf-auth-wave 9s linear infinite;
