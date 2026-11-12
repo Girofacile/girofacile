@@ -1815,6 +1815,10 @@ function updateRoutePlanningGateV68(){
   const workbench = document.getElementById("deliveryWorkbenchStep");
   const missing = routePlanningMissingFieldsV68();
   const ready = missing.length === 0;
+  // «Elimina» e «Calcola percorso» compaiono solo con i dati del giro completi
+  // (data, orario, deposito, almeno un mezzo con autista, carburante).
+  const actions = document.getElementById("routePlanningActions");
+  if(actions) actions.hidden = !ready;
   if(btn){
     btn.disabled = false;
     btn.textContent = ready ? (customerPlanningStepOpenedV68 ? "Clienti aperti" : "Inserisci clienti") : "Completa dati giro";
@@ -1831,7 +1835,8 @@ function updateRoutePlanningGateV68(){
     if(btn)btn.textContent='Modifica selezione clienti';
     if(ready&&hint)hint.textContent='Clienti selezionati: completa le quantità e calcola il percorso.';
     picker?.classList.add("hidden");
-    workbench?.classList.toggle("hidden",!ready);
+    // I clienti scelti si vedono subito, anche prima di completare i dati del giro.
+    workbench?.classList.remove("hidden");
   }else if(!ready){
     customerPlanningStepOpenedV68 = false;
     picker?.classList.add("hidden");

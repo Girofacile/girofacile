@@ -583,7 +583,7 @@
         <p id="orderPlanningProceedMessage" class="gf-alert" data-status="danger" role="alert" tabindex="-1" hidden></p>
 
         <!-- Barra fissa: numeri del giro e calcolo del percorso -->
-        <div id="routePlanningActions" class="gf-savebar" data-floating role="region" aria-label="Riepilogo e calcolo del percorso">
+        <div id="routePlanningActions" class="gf-savebar" data-floating hidden role="region" aria-label="Riepilogo e calcolo del percorso">
           <span><strong id="statDeliveries">0</strong> consegne · <strong id="statColli">0</strong> colli · <strong id="statWarnings">0</strong> con ZTL o sponda</span>
           <span id="statFuelGroup">Carburante <strong id="statFuel"></strong> <small id="statFuelHint">Seleziona un mezzo</small></span>
           <button type="button" id="routePlanningDelete" class="gf-button" data-variant="danger" onclick="GFPlanningDrafts.discard()">Elimina</button>
@@ -1633,7 +1633,7 @@
 <script src="/static/dashboard/js/order-sources.js?v=gf_collaudo_20261110"></script>
 <script src="/static/dashboard/js/dashboard-real-map.js?v=gf_priority_hero_20261025"></script>
 <script src="/static/dashboard/js/in-progress-reference.js?v=gf_chiudi_giro_20261110"></script>
-<script src="/static/dashboard/js/core.js?v=gf_verifica_automatica_20261112"></script>
+<script src="/static/dashboard/js/core.js?v=gf_pianificazione_barra_20261112"></script>
 <script src="/static/dashboard/js/dashboard-mobile.js?v=gf_dashboard_mobile_20261019"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=gf_verifica_automatica_20261112"></script>
 <link rel="stylesheet" href="/static/dashboard/css/fleet-review.css?v=gf_suddivisione_20261025">
@@ -1647,7 +1647,7 @@
 <script src="/static/dashboard/js/order-planning.js?v=gf_collaudo2_20261110"></script>
 <script src="/static/dashboard/js/planning-pickers.js?v=gf_aggiungi_20261102"></script>
 <script src="/static/dashboard/js/planning-drafts.js?v=gf_collaudo2_20261110"></script>
-<script src="/static/dashboard/js/tutor.js?v=gf_guida_passo6_20261112"></script>
+<script src="/static/dashboard/js/tutor.js?v=gf_guida_dati_giro_20261112"></script>
 
 <script>
 function toggleLoginPassword(){

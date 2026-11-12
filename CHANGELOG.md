@@ -5,6 +5,10 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Pianificazione giro: i clienti selezionati compaiono subito nell’elenco delle fermate. La barra
+  in basso con «Elimina» e «Calcola percorso» compare solo con i dati del giro completi: data,
+  orario, deposito, almeno un mezzo con autista e carburante. Nella guida al primo giro il passo
+  «Calcolo del giro» indica prima data e orario, poi mezzo e autista, infine «Calcola percorso».
 - Clienti: selezionando un cliente la tabella non scende più lasciando uno spazio vuoto sotto i
   filtri. La barra «clienti selezionati» è in fondo alla pagina e riserva il suo spazio sotto la tabella.
 - Guida al primo giro, passo 6 «Seleziona il cliente»: il riquadro verde compare sotto la riga

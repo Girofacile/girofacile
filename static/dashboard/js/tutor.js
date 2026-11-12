@@ -41,7 +41,19 @@
         if(tab==='clienti')return {target:el('newCustomerBtn'),placement:'bottom-end',title:'Premi «Nuovo cliente»',text:'Il cliente è il punto in cui l’autista consegna.'};
         return go('clienti','Clienti','Registra il primo cliente da servire.');
       case 'route': {
-        if(tab==='giro')return {target:el('routeCalculateBtn'),placement:'top-end',title:'Premi «Calcola percorso»',text:'Scegli data, deposito, mezzo e autista: GiroFacile ordina le fermate per te.'};
+        if(tab==='giro'){
+          // Prima i dati del giro, poi mezzo e autista; solo allora compare «Calcola percorso».
+          const missing=globalThis.routePlanningMissingFieldsV68?.()||[];
+          const day=['data','orario partenza','deposito'].find(field=>missing.includes(field));
+          if(day)return {target:el({data:'routeDate','orario partenza':'routeStart',deposito:'routeDeposit'}[day]),placement:'bottom',title:'Scegli data e orario',text:'Indica il giorno del giro e l’orario di partenza dal deposito.'};
+          if(missing.length){
+            // Primo menu ancora vuoto nelle schede dei mezzi (anche con un solo mezzo si usa la scheda).
+            const empty=[...document.querySelectorAll('#fleetSetup select')].find(select=>visible(select)&&!select.disabled&&!select.value);
+            return {target:empty||el('fleetSetup'),placement:empty?'right':'top',
+              title:'Scegli mezzo e autista',text:'Seleziona il mezzo e chi lo guida: poi compare in basso il pulsante per calcolare il percorso.'};
+          }
+          return {target:el('routeCalculateBtn'),placement:'top-end',title:'Premi «Calcola percorso»',text:'I dati del giro sono pronti: GiroFacile ordina le fermate per te.'};
+        }
         if(tab!=='clienti')return go('clienti','Clienti','Scegli i clienti del primo giro.');
         const proceed=el('customersGoPlanning');
         if(visible(proceed)&&!proceed.disabled)return {target:proceed,placement:'top-end',title:'Premi «Vai alla pianificazione»',text:'I clienti selezionati diventano le fermate del giro.'};
