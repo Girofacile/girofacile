@@ -5,6 +5,9 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Pagina di accesso: la composizione occupa tutta la larghezza dello schermo; il titolo con i punti di forza è
+  al centro della parte bianca e il riquadro di accesso al centro della parte blu (prima stavano in un blocco
+  centrale largo 1200 px, con il testo attaccato alla parte blu).
 - Nuova pagina di accesso (variante C, sfondo «Rete», scelta il 12 novembre): logo in alto a sinistra; a sinistra
   sul bianco il titolo e i tre punti di forza; a destra, su un'area blu notte con bordo curvo, griglia sottile e un
   percorso di consegna a puntini con le fermate luminose, il riquadro «Accedi a GiroFacile». Le garanzie

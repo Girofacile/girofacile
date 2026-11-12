@@ -974,10 +974,13 @@ body[data-gf-surface] .gf-auth__route circle[data-kind="depot"]{fill:var(--gf-co
 body[data-gf-surface] .gf-auth__top{display:flex;align-items:center;justify-content:space-between;gap:var(--gf-space-4);padding:var(--gf-space-6) var(--gf-space-8)}
 body[data-gf-surface] .gf-auth[data-backdrop] .gf-auth__brand{display:flex;align-items:center;gap:var(--gf-space-3);color:var(--gf-color-text);font:inherit;text-decoration:none}
 body[data-gf-surface] .gf-auth__stage{flex:1;display:grid;place-items:center;padding:var(--gf-space-6) var(--gf-space-4) var(--gf-space-10)}
-body[data-gf-surface] .gf-auth__stage>.gf-grid{width:min(var(--gf-content-width),100%);align-items:center;justify-items:center}
+/* Due metà vere della pagina: il racconto al centro della parte bianca, il modulo al centro della parte blu
+   (il bordo curvo è a 50% − space-12 dal margine sinistro, come la colonna). */
+body[data-gf-surface] .gf-auth__stage{padding-inline:0}
+body[data-gf-surface] .gf-auth__stage>.gf-grid{width:100%;grid-template-columns:calc(50% - var(--gf-space-12)) minmax(0,1fr);gap:0;align-items:center;justify-items:center}
 body[data-gf-surface] .gf-auth__stage>.gf-grid:has(.gf-auth__card[data-size="lg"]:not(.hidden)){grid-template-columns:minmax(0,1fr)}
 body[data-gf-surface] .gf-auth__stage>.gf-grid:has(.gf-auth__card[data-size="lg"]:not(.hidden)) .gf-auth__pitch{display:none}
-body[data-gf-surface] .gf-auth[data-backdrop] .gf-auth__main{display:block;place-items:normal;padding:0;width:100%}
+body[data-gf-surface] .gf-auth[data-backdrop] .gf-auth__main{display:block;place-items:normal;padding:0 var(--gf-space-6);width:100%}
 body[data-gf-surface] .gf-auth[data-backdrop] .gf-auth__main>.gf-stack{justify-items:center}
 body[data-gf-surface] .gf-auth[data-backdrop] .gf-auth__card{padding:var(--gf-space-10) var(--gf-space-8);gap:var(--gf-space-6);border:0;box-shadow:var(--gf-shadow-dialog)}
 body[data-gf-surface] .gf-auth__pitch{display:grid;gap:var(--gf-space-6);max-width:var(--gf-auth-width);color:var(--gf-color-on-nav)}
