@@ -78,3 +78,15 @@ test('contextual back buttons return to the existing planner while new-route act
   assert.match(core,/onclick="openPlanningSelection\(\)">Seleziona consegne/);
   assert.match(core,/onclick="openPlanningSelection\(\)">Pianifica un giro/);
 });
+
+test('a departure time already passed today counts as missing, a future day does not',()=>{
+  const f=planningFixture();
+  const now=new Date(),pad=n=>String(n).padStart(2,'0');
+  const today=`${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+  Object.assign(f.fields,{routeDate:today,routeStart:'00:00',routeVehicle:'1',routeDriver:'1'});
+  assert.ok(f.run('routePlanningMissingFieldsV68()').includes('orario partenza'));
+  f.fields.routeStart=`${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  assert.ok(f.run('routePlanningMissingFieldsV68()').includes('orario partenza'));
+  f.fields.routeDate='2099-01-01';f.fields.routeStart='00:00';
+  assert.ok(!f.run('routePlanningMissingFieldsV68()').includes('orario partenza'));
+});

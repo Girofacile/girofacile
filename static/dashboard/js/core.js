@@ -1627,25 +1627,6 @@ function routeDateIsValid(){
   return !!d && d >= today;
 }
 
-// Partenza nella data di oggi a un orario già passato o uguale a quello attuale: non ammessa.
-function routeStartInPast(){
-  const date = val("routeDate"), start = val("routeStart");
-  if(!date || !start || date !== todayIso()) return false;
-  const [hours, minutes] = start.split(":").map(Number);
-  const now = new Date();
-  return hours * 60 + minutes <= now.getHours() * 60 + now.getMinutes();
-}
-// Errore subito sotto il campo, appena l'orario è completo (stessa scritta rossa dei campi obbligatori).
-function checkRouteStartTime(){
-  const input = document.getElementById("routeStart");
-  if(!input) return false;
-  const past = routeStartInPast();
-  input.setCustomValidity(past ? "Orario già passato: scegli un orario successivo a quello attuale." : "");
-  if(past) input.checkValidity();
-  else input.closest(".gf-field")?.removeAttribute("data-invalid");
-  return !past;
-}
-
 function enforceRouteDateMin(){
   const el = document.getElementById("routeDate");
   if(!el) return true;
@@ -1770,6 +1751,26 @@ function routePlanningMissingFieldsV68(){
   if(fuelType !== "elettrico" && (!fuel || fuel <= 0)) missing.push("prezzo carburante");
   if(["elettrico","ibrido_plugin_benzina","ibrido_plugin_diesel"].includes(fuelType) && (!electricity || electricity <= 0)) missing.push("prezzo energia");
   return missing;
+}
+
+// Partenza nella data di oggi a un orario già passato o uguale a quello attuale: non ammessa.
+function routeStartInPast(){
+  const date = val("routeDate"), start = val("routeStart");
+  const now = new Date();
+  const today = [now.getFullYear(), String(now.getMonth()+1).padStart(2,"0"), String(now.getDate()).padStart(2,"0")].join("-");
+  if(!date || !start || date !== today) return false;
+  const [hours, minutes] = start.split(":").map(Number);
+  return hours * 60 + minutes <= now.getHours() * 60 + now.getMinutes();
+}
+// Errore subito sotto il campo, appena l'orario è completo (stessa scritta rossa dei campi obbligatori).
+function checkRouteStartTime(){
+  const input = document.getElementById("routeStart");
+  if(!input) return false;
+  const past = routeStartInPast();
+  input.setCustomValidity(past ? "Orario già passato: scegli un orario successivo a quello attuale." : "");
+  if(past) input.checkValidity();
+  else input.closest(".gf-field")?.removeAttribute("data-invalid");
+  return !past;
 }
 
 function routePlanningDetailsCompleteV68(){
