@@ -5,8 +5,8 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
-- Pagina di accesso: la parte blu occupa circa il 60% della pagina, il riquadro di accesso è
-  più grande (più largo, campi e testi più grandi) e il testo di presentazione è ingrandito.
+- Pagina di accesso: la parte blu occupa circa il 55% della pagina, il riquadro di accesso è
+  più grande (campi e testi più grandi, più spazio tra le righe) e il testo di presentazione è ingrandito.
 - Giri programmati: l’avviso dei giri dei giorni scorsi mai avviati non sta più in cima alla
   pagina. È una riga grigia in fondo, sotto la tabella del giorno, con il comando per annullarli.
 - Pagina di accesso: la griglia dello sfondo blu ora si anima con onde di luce lente e continue che
