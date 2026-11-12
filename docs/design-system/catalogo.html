@@ -6,7 +6,7 @@
 <title>Catalogo componenti · GiroFacile</title>
 <link rel="icon" href="/static/favicon-32x32.png">
 <link rel="stylesheet" href="/static/design-system/theme.css?v=gf_grafici_20261110">
-<link rel="stylesheet" href="/static/design-system/components.css?v=gf_avvisi_riga_20261112">
+<link rel="stylesheet" href="/static/design-system/components.css?v=gf_accesso_rete_20261112">
 <link rel="stylesheet" href="/static/design-system/layout.css?v=gf_banner_unico_20261101">
 <script src="/static/design-system/design-system.js?v=gf_schede_2_20261108" defer></script>
 <script src="/static/design-system/charts.js?v=gf_grafici_20261110" defer></script>
@@ -627,6 +627,21 @@
     </div>
   </div>
   <p class="gf-muted">.gf-auth: schermata di accesso e registrazione del gestionale (sotto i 1024 px resta solo il modulo).</p>
+  <section class="gf-auth" data-backdrop data-embedded aria-label="Esempio di accesso con sfondo decorativo">
+    <div class="gf-auth__backdrop" aria-hidden="true">
+      <svg class="gf-auth__route" viewBox="0 0 600 800" preserveAspectRatio="xMaxYMid slice">
+        <path d="M190 655 C 260 705, 420 695, 510 625 S 578 480, 530 420 S 488 300, 545 220 S 562 122, 470 105"/>
+        <circle data-kind="depot" cx="190" cy="655" r="10"/><circle cx="510" cy="625" r="8"/><circle cx="530" cy="420" r="8"/><circle cx="545" cy="220" r="8"/>
+      </svg>
+    </div>
+    <div class="gf-auth__top"><span class="gf-auth__brand"><strong class="gf-subtitle">GiroFacile</strong></span></div>
+    <div class="gf-auth__stage"><div class="gf-grid" data-cols="2">
+      <div class="gf-auth__pitch" data-on="surface"><h3 class="gf-title">I tuoi giri di consegna, sempre sotto controllo.</h3><ul class="gf-auth__features"><li><strong>Pianifica</strong><span>Giri calcolati in automatico</span></li></ul></div>
+      <div class="gf-auth__card"><h3 class="gf-title">Accedi a GiroFacile</h3><label class="gf-field"><span class="gf-field__label">Utente o email</span><input class="gf-input" placeholder="Email o nome utente"></label><button class="gf-button" data-variant="primary" type="button">Accedi</button></div>
+    </div></div>
+    <nav class="gf-auth__footer" aria-label="Informazioni legali (esempio)">© 2026 GiroFacile · Privacy · Termini · Cookie</nav>
+  </section>
+  <p class="gf-muted">.gf-auth[data-backdrop]: accesso con sfondo decorativo (approvato il 12/11/2026). Area blu notte con bordo curvo, griglia e percorso a puntini (__backdrop, __route); logo in alto (__top); racconto sul bianco (__pitch data-on="surface") e modulo (__card) in __stage; informazioni legali in __footer. Con la registrazione aperta resta solo il modulo; sotto i 1024 px lo sfondo diventa un bagliore in alto a destra.</p>
   <div class="gf-banner" data-embedded role="region" aria-label="Avviso cookie">
     <span class="gf-banner__icon" data-catalog-icon="document"></span>
     <div class="gf-banner__text"><strong>Cookie tecnici</strong><p>GiroFacile usa solo cookie tecnici necessari per login, sicurezza e funzionamento del servizio.</p></div>

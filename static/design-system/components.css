@@ -942,6 +942,59 @@ body[data-gf-surface] .gf-auth__card{
   border:var(--gf-border);border-radius:var(--gf-radius-lg);background:var(--gf-color-surface);box-shadow:var(--gf-shadow-sm);
 }
 body[data-gf-surface] .gf-auth__card[data-size="lg"]{width:min(var(--gf-content-narrow),100%)}
+/* Accesso con sfondo decorativo (.gf-auth[data-backdrop]) — approvato il 12/11/2026, variante C «Rete».
+   Pagina bianca; a destra un'area blu notte con bordo curvo, griglia sottile come una mappa e una luce
+   dietro al riquadro; sopra, un percorso di consegna a puntini con le fermate luminose.
+   __backdrop livello decorativo (con dentro __route)   __top logo in alto   __stage area centrale
+   __pitch testo di presentazione (data-on="surface" sul bianco)   __footer informazioni legali in basso.
+   Con la registrazione aperta (__card[data-size="lg"]) resta solo il modulo, a tutta larghezza. */
+body[data-gf-surface] .gf-auth[data-backdrop]{
+  position:relative;display:flex;flex-direction:column;min-height:var(--gf-viewport-height);
+  overflow:hidden;isolation:isolate;background:var(--gf-color-surface);
+}
+body[data-gf-surface] .gf-auth__backdrop{position:absolute;inset:0;z-index:-1;pointer-events:none}
+body[data-gf-surface] .gf-auth__backdrop::before,body[data-gf-surface] .gf-auth__backdrop::after{content:"";position:absolute;inset:0;clip-path:ellipse(calc(50% + var(--gf-space-12)) 120% at 100% 50%)}
+body[data-gf-surface] .gf-auth__backdrop::before{
+  background:
+    radial-gradient(34% 44% at 74% 50%,color-mix(in srgb,var(--gf-color-primary) 60%,transparent),transparent 75%),
+    radial-gradient(30% 34% at 96% 10%,color-mix(in srgb,var(--gf-chart-7) 45%,transparent),transparent 75%),
+    var(--gf-color-nav);
+}
+body[data-gf-surface] .gf-auth__backdrop::after{
+  background-image:
+    linear-gradient(color-mix(in srgb,var(--gf-color-on-nav) 20%,transparent) 1px,transparent 1px),
+    linear-gradient(90deg,color-mix(in srgb,var(--gf-color-on-nav) 20%,transparent) 1px,transparent 1px);
+  background-size:var(--gf-space-12) var(--gf-space-12);
+  mask-image:radial-gradient(75% 85% at 75% 50%,var(--gf-color-nav) 40%,transparent 90%);
+}
+body[data-gf-surface] .gf-auth__route{position:absolute;right:0;bottom:0;width:calc(50% + var(--gf-space-12));height:100%;color:var(--gf-color-on-nav)}
+body[data-gf-surface] .gf-auth__route path{fill:none;stroke:color-mix(in srgb,currentColor 75%,transparent);stroke-width:4;stroke-dasharray:0 13;stroke-linecap:round}
+body[data-gf-surface] .gf-auth__route circle{fill:currentColor;filter:drop-shadow(0 0 var(--gf-space-3) var(--gf-color-brand-accent))}
+body[data-gf-surface] .gf-auth__route circle[data-kind="depot"]{fill:var(--gf-color-brand-accent)}
+body[data-gf-surface] .gf-auth__top{display:flex;align-items:center;justify-content:space-between;gap:var(--gf-space-4);padding:var(--gf-space-6) var(--gf-space-8)}
+body[data-gf-surface] .gf-auth[data-backdrop] .gf-auth__brand{display:flex;align-items:center;gap:var(--gf-space-3);color:var(--gf-color-text);font:inherit;text-decoration:none}
+body[data-gf-surface] .gf-auth__stage{flex:1;display:grid;place-items:center;padding:var(--gf-space-6) var(--gf-space-4) var(--gf-space-10)}
+body[data-gf-surface] .gf-auth__stage>.gf-grid{width:min(var(--gf-content-width),100%);align-items:center;justify-items:center}
+body[data-gf-surface] .gf-auth__stage>.gf-grid:has(.gf-auth__card[data-size="lg"]:not(.hidden)){grid-template-columns:minmax(0,1fr)}
+body[data-gf-surface] .gf-auth__stage>.gf-grid:has(.gf-auth__card[data-size="lg"]:not(.hidden)) .gf-auth__pitch{display:none}
+body[data-gf-surface] .gf-auth[data-backdrop] .gf-auth__main{display:block;place-items:normal;padding:0;width:100%}
+body[data-gf-surface] .gf-auth[data-backdrop] .gf-auth__main>.gf-stack{justify-items:center}
+body[data-gf-surface] .gf-auth[data-backdrop] .gf-auth__card{padding:var(--gf-space-10) var(--gf-space-8);gap:var(--gf-space-6);border:0;box-shadow:var(--gf-shadow-dialog)}
+body[data-gf-surface] .gf-auth__pitch{display:grid;gap:var(--gf-space-6);max-width:var(--gf-auth-width);color:var(--gf-color-on-nav)}
+body[data-gf-surface] .gf-auth__pitch .gf-title{color:var(--gf-color-on-nav);font-size:var(--gf-font-3xl)}
+body[data-gf-surface] .gf-auth__pitch .gf-auth__features span{color:var(--gf-color-nav-text)}
+body[data-gf-surface] .gf-auth__pitch[data-on="surface"]{color:var(--gf-color-text)}
+body[data-gf-surface] .gf-auth__pitch[data-on="surface"] :is(.gf-title,.gf-auth__features strong){color:var(--gf-color-text)}
+body[data-gf-surface] .gf-auth__pitch[data-on="surface"] .gf-auth__features span{color:var(--gf-color-muted)}
+body[data-gf-surface] .gf-auth[data-backdrop] .gf-auth__footer{margin:0;padding:0 var(--gf-space-8) var(--gf-space-6);color:var(--gf-color-muted)}
+body[data-gf-surface] .gf-auth[data-backdrop] .gf-auth__footer a{color:var(--gf-color-primary)}
+@media (max-width:1024px){
+  body[data-gf-surface] .gf-auth__backdrop::before,body[data-gf-surface] .gf-auth__backdrop::after{clip-path:circle(36% at 100% 0)}
+  body[data-gf-surface] .gf-auth__route,body[data-gf-surface] .gf-auth__pitch{display:none}
+  body[data-gf-surface] .gf-auth__stage>.gf-grid{grid-template-columns:minmax(0,1fr)}
+  body[data-gf-surface] .gf-auth__top{padding:var(--gf-space-4)}
+  body[data-gf-surface] .gf-auth[data-backdrop] .gf-auth__card{padding:var(--gf-space-8) var(--gf-space-6)}
+}
 /* Banner in basso -------------------------------------------------------- */
 body[data-gf-surface] .gf-banner{
   position:fixed;left:50%;bottom:var(--gf-space-5);z-index:var(--gf-z-menu);transform:translateX(-50%);

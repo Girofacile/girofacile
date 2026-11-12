@@ -589,7 +589,10 @@ test('login page uses the shared access screen with the same content and actions
   const html=read('static/dashboard/index.html');
   const login=html.slice(html.indexOf('<section id="loginCard"'),html.indexOf('<div id="app"'));
   // Componente approvato del catalogo al posto del vecchio login.css.
-  assert.match(login,/<section id="loginCard" class="gf-auth">/);
+  assert.match(login,/<section id="loginCard" class="gf-auth" data-backdrop>/);
+  // Sfondo decorativo approvato il 12/11/2026 (variante C «Rete»): percorso, logo in alto, racconto e modulo.
+  for(const part of ['gf-auth__backdrop','gf-auth__route','gf-auth__top','gf-auth__stage','gf-auth__pitch" data-on="surface"','gf-auth__footer'])
+    assert.ok(login.includes(part),part);
   assert.doesNotMatch(html,/\/static\/dashboard\/css\/login\.css/);
   assert.doesNotMatch(login,/\sstyle="/);
   // Stessi contenuti: tre punti di forza, informazioni legali, accesso, registrazione e recupero.
@@ -598,7 +601,7 @@ test('login page uses the shared access screen with the same content and actions
   for(const [href,label] of [['privacy-policy','Privacy'],['termini-condizioni','Termini'],['cookie-policy','Cookie']])
     assert.match(login,new RegExp('href="/'+href+'"[^>]*>'+label+'</a>'));
   assert.match(login,/id="loginUser"/);assert.match(login,/id="loginPass"[^>]*type="password"/);
-  assert.match(login,/onclick="login\(\)"[^>]*data-variant="primary">Accedi a GiroFacile →</);
+  assert.match(login,/onclick="login\(\)"[^>]*data-variant="primary">Accedi</);
   assert.match(login,/onclick="toggleSignup\(true\)">Registrati gratis</);
   assert.match(login,/<label class="gf-field__label" for="loginPass">Password<\/label><button type="button" id="forgotPasswordBtn"[^>]*onclick="toggleForgotPassword\(true\)">Password dimenticata\?</);
   // Registrazione a passaggi con il componente gf-steps; stato gestito con aria-current.
@@ -609,6 +612,7 @@ test('login page uses the shared access screen with the same content and actions
   assert.doesNotMatch(core,/loginCard\.style\.display|app\.style\.display/);
   const components=read(assets+'components.css');
   assert.match(components,/\.gf-auth__card\[data-size="lg"\]\{/);
+  assert.match(components,/\.gf-auth\[data-backdrop\]\{/);
 });
 
 test('every stylesheet resolves its referenced custom properties',()=>{

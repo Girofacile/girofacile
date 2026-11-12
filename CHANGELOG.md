@@ -5,6 +5,12 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Nuova pagina di accesso (variante C, sfondo «Rete», scelta il 12 novembre): logo in alto a sinistra; a sinistra
+  sul bianco il titolo e i tre punti di forza; a destra, su un'area blu notte con bordo curvo, griglia sottile e un
+  percorso di consegna a puntini con le fermate luminose, il riquadro «Accedi a GiroFacile». Le garanzie
+  (connessione cifrata, dati nell'UE, assistenza in italiano) sono nella riga in fondo. Recupero password,
+  nuova password e registrazione restano uguali; con la registrazione aperta resta solo il modulo.
+  Nuovo componente `.gf-auth[data-backdrop]` nel sistema di stile e nel catalogo.
 - Manutenzione e avvisi (Super Admin › Server): un solo riquadro «Manutenzione e avvisi» al posto dei due
   interruttori doppi.
   - Manutenzione immediata oppure programmata (inizio, fine prevista, da quando mostrare l'avviso, nota):

@@ -33,7 +33,7 @@
 
 <!-- Shared GiroFacile design system; legacy sheets retain feature layout. -->
 <link rel="stylesheet" href="/static/design-system/theme.css?v=gf_grafici_20261110">
-<link rel="stylesheet" href="/static/design-system/components.css?v=gf_avvisi_riga_20261112">
+<link rel="stylesheet" href="/static/design-system/components.css?v=gf_accesso_rete_20261112">
 <link rel="stylesheet" href="/static/design-system/layout.css?v=gf_banner_unico_20261101">
 <link rel="stylesheet" href="/static/design-system/workspace.css?v=gf_selection_20261016">
 <link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007_reference_2">
@@ -49,31 +49,40 @@
 </head>
 <body data-gf-surface="workspace" data-gf-layout="base" data-gf-auth="checking">
 
-<section id="loginCard" class="gf-auth">
-  <aside class="gf-auth__aside">
-    <div class="gf-stack" data-gap="sm"><div class="gf-cluster"><img class="gf-sidebar__mark" src="/static/girofacile-logo.png" alt="Logo GiroFacile" width="36" height="36"><span class="gf-auth__brand">GiroFacile</span></div><span>Gestione percorsi e consegne</span></div>
-    <h2 class="gf-title">I tuoi giri di consegna, sempre sotto controllo.</h2>
-    <ul class="gf-auth__features">
-      <li><strong>Pianifica</strong><span>Giri calcolati in automatico, anche su più furgoni</span></li>
-      <li><strong>Monitora</strong><span>Autisti e consegne aggiornati in tempo reale</span></li>
-      <li><strong>Analizza</strong><span>Report su chilometri, tempi e costi</span></li>
-    </ul>
-    <nav class="gf-auth__footer" aria-label="Informazioni legali">© 2026 GiroFacile · Tutti i diritti riservati · <a href="/privacy-policy" target="_blank">Privacy</a> · <a href="/termini-condizioni" target="_blank">Termini</a> · <a href="/cookie-policy" target="_blank">Cookie</a></nav>
-  </aside>
+<section id="loginCard" class="gf-auth" data-backdrop>
+  <div class="gf-auth__backdrop" aria-hidden="true">
+    <svg class="gf-auth__route" viewBox="0 0 600 800" preserveAspectRatio="xMaxYMid slice">
+      <path d="M190 655 C 260 705, 420 695, 510 625 S 578 480, 530 420 S 488 300, 545 220 S 562 122, 470 105"/>
+      <circle data-kind="depot" cx="190" cy="655" r="10"/>
+      <circle cx="510" cy="625" r="8"/><circle cx="530" cy="420" r="8"/><circle cx="545" cy="220" r="8"/><circle cx="470" cy="105" r="8"/>
+    </svg>
+  </div>
+  <div class="gf-auth__top">
+    <a class="gf-auth__brand" href="/"><img class="gf-sidebar__mark" src="/static/girofacile-logo.png" alt="" width="36" height="36"><strong class="gf-subtitle">GiroFacile</strong></a>
+  </div>
+  <div class="gf-auth__stage">
+   <div class="gf-grid" data-cols="2">
+    <div class="gf-auth__pitch" data-on="surface">
+      <h2 class="gf-title">I tuoi giri di consegna, sempre sotto controllo.</h2>
+      <ul class="gf-auth__features">
+        <li><strong>Pianifica</strong><span>Giri calcolati in automatico, anche su più furgoni</span></li>
+        <li><strong>Monitora</strong><span>Autisti e consegne aggiornati in tempo reale</span></li>
+        <li><strong>Analizza</strong><span>Report su chilometri, tempi e costi</span></li>
+      </ul>
+    </div>
 
   <main class="gf-auth__main">
     <div class="gf-stack">
 
     <!-- PANNELLO LOGIN -->
     <div class="gf-auth__card" id="loginPanel">
-      <div class="gf-cluster"><img class="gf-sidebar__mark" src="/static/girofacile-logo.png" alt="" width="36" height="36"><div><strong class="gf-subtitle">GiroFacile</strong><p class="gf-muted">Gestione percorsi e consegne</p></div></div>
-      <div class="gf-stack" data-gap="sm"><h2 class="gf-title">Bentornato</h2><p class="gf-muted">Accedi alla tua area riservata GiroFacile</p></div>
+      <div class="gf-stack" data-gap="sm"><h1 class="gf-title">Accedi a GiroFacile</h1><p class="gf-muted">Bentornato nella tua area riservata.</p></div>
       <label class="gf-field" for="loginUser"><span class="gf-field__label">Utente o email</span><input class="gf-input" id="loginUser" placeholder="Email o nome utente" value="" autocomplete="username" onkeydown="if(event.key==='Enter')login()"></label>
       <div class="gf-field">
         <div class="gf-cluster" data-justify="between"><label class="gf-field__label" for="loginPass">Password</label><button type="button" id="forgotPasswordBtn" class="gf-button" data-variant="link" onclick="toggleForgotPassword(true)">Password dimenticata?</button></div>
         <div class="gf-cluster"><input class="gf-input" id="loginPass" type="password" placeholder="La tua password" value="" autocomplete="current-password" onkeydown="if(event.key==='Enter')login()"><button type="button" class="gf-icon-button" onclick="toggleLoginPassword()" aria-label="Mostra o nascondi password"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.8 12s3.3-5.7 9.2-5.7 9.2 5.7 9.2 5.7-3.3 5.7-9.2 5.7S2.8 12 2.8 12Z M12 14.7a2.7 2.7 0 1 0 0-5.4 2.7 2.7 0 0 0 0 5.4z"/></svg></button></div>
       </div>
-      <button type="button" onclick="login()" class="gf-button" data-variant="primary">Accedi a GiroFacile →</button>
+      <button type="button" onclick="login()" class="gf-button" data-variant="primary">Accedi</button>
       <p class="gf-muted">Non hai un account? <button type="button" class="gf-button" data-variant="link" onclick="toggleSignup(true)">Registrati gratis</button></p>
       <div id="forgotBox" class="gf-stack hidden" data-gap="sm">
         <h3 class="gf-subtitle">Recupero password</h3>
@@ -82,11 +91,6 @@
         <button type="button" id="forgotPasswordSubmitBtn" class="gf-button" data-variant="primary" onclick="requestPasswordReset()">Invia link di recupero</button>
         <div><button type="button" id="forgotPasswordCancelBtn" class="gf-button" data-variant="link" onclick="toggleForgotPassword(false)">Annulla</button></div>
       </div>
-      <ul class="gf-trust" aria-label="Garanzie">
-        <li><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Connessione cifrata</li>
-        <li><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4 10-10"/></svg>Dati su server nell'Unione Europea</li>
-        <li><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 14v-2a8 8 0 0 1 16 0v2 M4 14h3v5H5a1 1 0 0 1-1-1z M20 14h-3v5h2a1 1 0 0 0 1-1z"/></svg>Assistenza in italiano</li>
-      </ul>
     </div>
 
     <!-- PANNELLO RESET PASSWORD -->
@@ -178,9 +182,11 @@
       <p class="gf-muted">Hai già un account? <button type="button" class="gf-button" data-variant="link" onclick="toggleSignup(false)">Accedi</button></p>
     </div>
 
-    <p class="gf-muted">© 2026 GiroFacile · <a href="/privacy-policy" target="_blank">Privacy</a> · <a href="/termini-condizioni" target="_blank">Termini</a> · <a href="/cookie-policy" target="_blank">Cookie</a></p>
     </div>
   </main>
+   </div>
+  </div>
+  <nav class="gf-auth__footer" aria-label="Informazioni legali">© 2026 GiroFacile · <a href="/privacy-policy" target="_blank">Privacy</a> · <a href="/termini-condizioni" target="_blank">Termini</a> · <a href="/cookie-policy" target="_blank">Cookie</a> · Connessione cifrata · Dati su server nell'Unione Europea · Assistenza in italiano</nav>
 </section>
 
 <div id="app" class="gf-shell hidden" data-gf-shell>
