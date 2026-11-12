@@ -960,7 +960,7 @@ body[data-gf-surface] .gf-auth__backdrop::before{
     radial-gradient(30% 34% at 96% 10%,color-mix(in srgb,var(--gf-chart-7) 45%,transparent),transparent 75%),
     var(--gf-color-nav);
 }
-/* Griglia con onde di luce: due anelli partono da dietro al riquadro e si allargano lentamente,
+/* Griglia con onde di luce continue: gli anelli partono da dietro al riquadro e si allargano lentamente,
    accendendo le linee al loro passaggio; fuori dalle onde la griglia resta com'era. */
 @property --gf-auth-wave{syntax:"<percentage>";inherits:false;initial-value:-60%}
 body[data-gf-surface] .gf-auth__backdrop::after{
@@ -970,15 +970,15 @@ body[data-gf-surface] .gf-auth__backdrop::after{
     linear-gradient(90deg,color-mix(in srgb,var(--gf-color-on-nav) 90%,transparent) 1px,transparent 1px);
   background-size:var(--gf-space-12) var(--gf-space-12);
   mask-image:
-    radial-gradient(circle at 75% 50%,
-      var(--gf-auth-wave-rest) calc(var(--gf-auth-wave) - 60%),var(--gf-color-nav) calc(var(--gf-auth-wave) - 40%),
-      var(--gf-auth-wave-rest) calc(var(--gf-auth-wave) - 20%),var(--gf-auth-wave-rest) calc(var(--gf-auth-wave) - 20%),
-      var(--gf-color-nav) var(--gf-auth-wave),var(--gf-auth-wave-rest) calc(var(--gf-auth-wave) + 20%)),
+    repeating-radial-gradient(circle at 75% 50%,
+      var(--gf-auth-wave-rest) var(--gf-auth-wave),var(--gf-auth-wave-rest) calc(var(--gf-auth-wave) + 10%),
+      var(--gf-color-nav) calc(var(--gf-auth-wave) + 20%),var(--gf-auth-wave-rest) calc(var(--gf-auth-wave) + 30%),
+      var(--gf-auth-wave-rest) calc(var(--gf-auth-wave) + 40%)),
     radial-gradient(75% 85% at 75% 50%,var(--gf-color-nav) 40%,transparent 90%);
   mask-composite:intersect;
-  animation:gf-auth-wave 9s linear infinite;
+  animation:gf-auth-wave 6s linear infinite;
 }
-@keyframes gf-auth-wave{from{--gf-auth-wave:-15%}to{--gf-auth-wave:160%}}
+@keyframes gf-auth-wave{from{--gf-auth-wave:-40%}to{--gf-auth-wave:0%}}
 @media (prefers-reduced-motion:reduce){body[data-gf-surface] .gf-auth__backdrop::after{animation:none}}
 body[data-gf-surface] .gf-auth__route{position:absolute;right:0;bottom:0;width:calc(50% + var(--gf-space-12));height:100%;color:var(--gf-color-on-nav)}
 body[data-gf-surface] .gf-auth__route path{fill:none;stroke:color-mix(in srgb,currentColor 75%,transparent);stroke-width:4;stroke-dasharray:0 13;stroke-linecap:round}
