@@ -5,6 +5,8 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Guida al primo giro: durante un caricamento (per esempio «Sto calcolando il giro») il riquadro
+  e la barra della guida si nascondono, e ricompaiono al passo successivo quando il caricamento finisce.
 - Pianificazione giro: un orario di partenza già passato o uguale a quello attuale (nella data
   di oggi) viene segnalato subito sotto il campo, appena l’orario è completo. Finché non è
   corretto, «Calcola percorso» non compare.

@@ -96,6 +96,8 @@
     const program=document.querySelector('#tab-route-preview [data-preview-program]'),label=testing()?'Programma giro di prova':'Programma giro';
     if(program&&program.textContent!==label)program.textContent=label;
     if(!status||(!finished&&status.state!=='attivo')){hide();return;}
+    // Durante un caricamento (es. «Sto calcolando il giro») la guida sparisce e torna al passo successivo.
+    if(document.querySelector('.gf-wait')){hide();return;}
     const steps=status.steps||[],index=steps.findIndex(step=>step.key===status.current);
     let step=finished==='prova'?{target:null,placement:'bottom',title:'Giro di prova completato!',text:'Ecco come funziona la programmazione: il giro di prova non è stato inviato all’autista. Ora puoi pianificare i giri veri.'}
       :finished?{target:null,placement:'bottom',title:'Complimenti, il primo giro è programmato!',text:'Lo trovi in «Giri programmati». La guida finisce qui.'}:plan(status.current);
