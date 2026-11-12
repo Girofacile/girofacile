@@ -5,6 +5,9 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Importazione ordini da file: accettate anche le date tipiche dei gestionali AS400 (20261113,
+  13/11/26, 13-11-2026, 13.11.2026) e riconosciute da sole colonne come NUMORD, RAGSOC, DTCONS,
+  NRCOLLI e LOCALI. Le date a 6 cifre senza separatori restano un errore perché ambigue.
 - Fonte API (variante B): la pagina è un elenco di righe come le Impostazioni (dati da importare,
   chiave API, verifica, istruzioni) con lo stato della ricezione a destra. I dati si scelgono in una
   finestra con gli interruttori; la nuova chiave compare in una finestra con «Copia chiave» e l’avviso

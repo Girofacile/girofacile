@@ -10,16 +10,35 @@ from ..schemas.order_sources import MAX_BYTES,MAX_ROWS,ExternalOrder
 from .order_grouping import normalize
 
 FIELDS=list(ExternalOrder.model_fields)
-ALIASES={'external_id':['idordine','id','nordine','numeroordine'], 'number':['numeroordine','nordine','numero'],
- 'external_customer_id':['codcli','codicecliente'], 'recipient_name':['ragionesociale','cliente','destinatario'],
+# Nomi abbreviati tipici dei gestionali AS400 (es. NUMORD, RAGSOC, DTCONS, LOCALI) compresi.
+ALIASES={'external_id':['idordine','id','nordine','numeroordine','numord','nrord','nrordine'], 'number':['numeroordine','nordine','numero','numord','nrord','nrordine'],
+ 'external_customer_id':['codcli','codicecliente'], 'recipient_name':['ragionesociale','cliente','destinatario','ragsoc','ragsociale','destin','nominativo'],
  'phone':['telefono','tel','cellulare','recapito','telefonodestinatario'],
- 'delivery_address':['indsped','indirizzo','indirizzoconsegna'], 'requested_date':['datacons','dataconsegna'],
- 'weight_kg':['peso','pesokg'],'packages':['ncolli','colli'],'tail_lift':['pedana','sponda'],
+ 'delivery_address':['indsped','indirizzo','indirizzoconsegna','indir'], 'requested_date':['datacons','dataconsegna','dtcons','dtconsegna'],
+ 'weight_kg':['peso','pesokg'],'packages':['ncolli','colli','nrcolli'],'tail_lift':['pedana','sponda'],
  'pallet_truck':['transpallet'],'ztl':['ztl'],'notes':['note'],'time_from':['dalle'],'time_to':['alle'],
  'pallets':['pallet'],'volume_m3':['volume'],'requirements':['requisiti'],
  # Indirizzo a campi separati: via, civico, CAP, comune, provincia.
  'street':['via','strada'],'street_number':['civico','numerocivico','ncivico','numero civico'],
- 'postal_code':['cap'],'city':['comune','citta','città','localita','località'],'province':['provincia','prov']}
+ 'postal_code':['cap'],'city':['comune','citta','città','localita','località','locali'],'province':['provincia','prov']}
+
+
+def requested_date(value):
+    """Data consegna dai formati più comuni, compresi quelli dei gestionali AS400.
+
+    GG/MM/AAAA, GG/MM/AA, GG-MM-AAAA, GG.MM.AAAA, AAAA-MM-GG, AAAAMMGG e GGMMAAAA.
+    Le 6 cifre senza separatori (GGMMAA o AAMMGG) sono ambigue e restano un errore."""
+    text=value.strip()
+    if 'T' in text: return datetime.fromisoformat(text).date().isoformat()
+    if text.isdigit() and len(text)==8:
+        return datetime.strptime(text,'%Y%m%d' if int(text[:4])>=1900 else '%d%m%Y').date().isoformat()
+    if len(text)>=5 and text[:4].isdigit() and text[4]=='-':
+        return datetime.strptime(text,'%Y-%m-%d').date().isoformat()
+    for separator in '/-.':
+        if separator in text:
+            year='%Y' if len(text.rsplit(separator,1)[-1])==4 else '%y'
+            return datetime.strptime(text,f'%d{separator}%m{separator}{year}').date().isoformat()
+    raise ValueError(text)
 
 
 def suggestions(headers):
@@ -29,6 +48,9 @@ def suggestions(headers):
         candidates=[h for h in headers if key(h) in {key(target),*(key(a) for a in ALIASES.get(target,[]))}]
         if len(candidates)==1: result[target]=candidates[0]
     if 'external_id' not in result and 'number' in result: result['external_id']=result['number']
+    # CAP e comune in colonne proprie: la colonna «Indirizzo» contiene solo via e civico (tipico dell'AS400).
+    if {'postal_code','city'}<=result.keys() and 'delivery_address' in result and 'street' not in result:
+        result['street']=result.pop('delivery_address')
     return result
 
 
@@ -100,13 +122,12 @@ def mapped(row,mapping):
             value=value.casefold() in true
         if value is not None and key in ('weight_kg','pallets','volume_m3','packages') and isinstance(value,str):
             value=value.replace(',','.')
+        # Da Excel una data AS400 come 20261113 può arrivare come numero.
+        if key=='requested_date' and type(value) in (int,float) and float(value).is_integer(): value=str(int(value))
         if value is not None and key=='requested_date' and isinstance(value,str):
-            try:
-                if '/' in value: value=datetime.strptime(value,'%d/%m/%Y').date().isoformat()
-                elif 'T' in value: value=datetime.fromisoformat(value).date().isoformat()
-                else: value=datetime.strptime(value,'%Y-%m-%d').date().isoformat()
+            try: value=requested_date(value)
             except ValueError:
-                raise ValueError(f'Data consegna «{value}» non valida: usa GG/MM/AAAA (es. 12/11/2026).') from None
+                raise ValueError(f'Data consegna «{value}» non valida: usa GG/MM/AAAA (es. 12/11/2026) oppure AAAAMMGG (es. 20261112).') from None
         if value is not None and key=='items' and isinstance(value,str): value=json.loads(value)
         data[key]=value
     if data.get('items') is None: data['items']=[]
