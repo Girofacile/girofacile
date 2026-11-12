@@ -5,6 +5,12 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Piani e abbonamento:
+  - un piano scaduto, disdetto o da pagare ora si può rinnovare anche con lo stesso piano
+    (pulsante «Rinnova in modalità di prova»); se su Stripe c'è un pagamento in sospeso si apre la sua pagina;
+  - se un checkout è stato pagato senza tornare in GiroFacile (webhook non ricevuto), al primo cambio o
+    acquisto il piano si riallinea con Stripe e lo dice («Il piano Pro è già attivo: stato aggiornato»)
+    invece di rispondere solo «Piano già attivo».
 - Report rifatto (variante B scelta il 10 novembre):
   - quattro card colorate: consegne riuscite con anello, fermate, km ed energia con il mini andamento;
   - chilometri ed energia al giorno in due grafici ad area separati (prima un grafico con due scale);

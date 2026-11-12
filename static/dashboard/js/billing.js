@@ -183,7 +183,7 @@ function renderSubscriptionControls(data) {
     ${b.subscription ? `<button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="managePaymentMethodsV876()">Metodo di pagamento e documenti</button>
       <button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="subscriptionAction('${b.cancel_at_period_end?'resume':'cancel'}')">${b.cancel_at_period_end?'Ripristina rinnovo':'Disdici a fine periodo'}</button>`:''}</div>` : ''}`;
   const button = document.getElementById('btnConfirmUpgrade');
-  if (button) { button.disabled = !b.checkout_enabled; button.textContent = b.subscription ? 'Modifica piano di prova' : 'Acquista in modalità di prova'; button.title = b.checkout_enabled ? '' : 'Acquisti non ancora disponibili'; }
+  if (button) { button.disabled = !b.checkout_enabled; button.textContent = _selectedUpgradePlan === _currentPlan ? 'Rinnova in modalità di prova' : b.subscription ? 'Modifica piano di prova' : 'Acquista in modalità di prova'; button.title = b.checkout_enabled ? '' : 'Acquisti non ancora disponibili'; }
 }
 
 async function subscriptionAction(action) {
@@ -198,6 +198,16 @@ async function subscriptionAction(action) {
   } catch(e) { alert(e.message); }
 }
 
+// Dopo un riallineamento con Stripe il piano attuale può essere cambiato: ridisegna la pagina dei piani.
+async function refreshPlanPageAfterBilling() {
+  try {
+    await loadPlanInfo();
+    _selectedUpgradePlan = _currentPlan;
+    renderUpgradeCards();
+    syncPlanPageHeaderV874();
+  } catch(error) { console.warn('Aggiornamento pagina piani non riuscito', error); }
+}
+
 async function checkoutOrChangePlan() {
   if(window.GFCompanyAccess?.isCollaborator()) return;
   const plan = _selectedUpgradePlan || _currentPlan;
@@ -206,7 +216,8 @@ async function checkoutOrChangePlan() {
   try {
     const state = await api('/api/billing/my-plan');
     if (!state.billing.checkout_enabled) throw new Error('Acquisti non disponibili; incassi reali disabilitati.');
-    if (state.billing.subscription && ['active','past_due'].includes(state.plan_status)) {
+    // Stesso piano = rinnovo: il server riallinea l'abbonamento esistente o apre un nuovo checkout.
+    if (plan !== _currentPlan && state.billing.subscription && ['active','past_due'].includes(state.plan_status)) {
       const preview = await api('/api/billing/change-preview', {method:'POST', body:JSON.stringify({plan})});
       let message = preview.direction === 'upgrade' ? `Conguaglio di prova: ${fmtEuroV63(preview.amount_due_cents/100)}. Il nuovo piano si attiva dopo il pagamento. Confermi?` :
         `Passare a ${plan} dal ${new Date(preview.effective_at*1000).toLocaleDateString('it-IT')}?`;
@@ -217,10 +228,14 @@ async function checkoutOrChangePlan() {
       if (result.payment_url) window.location.assign(result.payment_url);
       else await subscriptionAction('sync');
     } else {
-      if (!confirm(`Aprire il checkout di prova per ${plan} a ${fmtEuroV63(window.GF_PLANS[plan].price_eur)}/mese? Nessun denaro reale verrà addebitato.`)) return;
+      const name = window.GF_PLANS[plan].name || plan;
+      if (!confirm(`${plan === _currentPlan ? `Rinnovare ${name}` : `Aprire il checkout di prova per ${name}`} a ${fmtEuroV63(window.GF_PLANS[plan].price_eur)}/mese? Nessun denaro reale verrà addebitato.`)) return;
       const result = await api('/api/billing/create-checkout-session', {method:'POST',body:JSON.stringify({plan})});
-      window.location.assign(result.checkout_url);
+      const url = result.checkout_url || result.payment_url;
+      if (result.message) toast(result.message);
+      if (url) window.location.assign(url);
+      else await refreshPlanPageAfterBilling();
     }
-  } catch(e) { alert(e.message); }
+  } catch(e) { alert(e.message); await refreshPlanPageAfterBilling(); }
   finally { if(button) button.disabled = false; }
 }

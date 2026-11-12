@@ -995,10 +995,16 @@ function renderPlanChangeBar(){
   const bar = document.getElementById("planChangeBar");
   if(!bar) return;
   const plan = window.GF_PLANS?.[_selectedUpgradePlan], current = window.GF_PLANS?.[_currentPlan];
-  bar.hidden = !plan || _selectedUpgradePlan === _currentPlan;
+  // Piano scaduto, disdetto o da pagare: si può rinnovare anche lo stesso piano.
+  const renewal = _selectedUpgradePlan === _currentPlan && planNeedsRenewal();
+  bar.hidden = !plan || (_selectedUpgradePlan === _currentPlan && !renewal);
   if(bar.hidden) return;
-  const when = current && plan.price_eur < current.price_eur ? "dal prossimo rinnovo" : "conguaglio calcolato alla conferma";
-  document.getElementById("planChangeSummary").textContent = `${plan.name} · ${fmtEuroV63(plan.price_eur)}/mese + IVA · ${when}`;
+  const when = renewal ? "rinnovo dello stesso piano" : current && plan.price_eur < current.price_eur ? "dal prossimo rinnovo" : "conguaglio calcolato alla conferma";
+  document.getElementById("planChangeSummary").textContent = `${renewal?"Rinnova ":""}${plan.name} · ${fmtEuroV63(plan.price_eur)}/mese + IVA · ${when}`;
+}
+function planNeedsRenewal(){
+  const status = typeof currentSessionUser === "undefined" ? null : currentSessionUser?.plan_status;
+  return ["expired","cancelled","incomplete","past_due"].includes(status);
 }
 
 function renderPlanComparisonV875(){

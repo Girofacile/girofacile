@@ -265,14 +265,69 @@ def test_checkout_is_reused_and_redirect_does_not_activate(billing_env, monkeypa
     assert len(calls)==1 and user.plan_status=='trial' and user.plan=='business'
 
 
-def test_checkout_blocks_existing_subscription(billing_env,monkeypatch):
+def existing_subscription_stripe(sub, sessions):
+    no_items=lambda **k:SimpleNamespace(auto_paging_iter=lambda:iter([]))
+    return SimpleNamespace(
+        Subscription=SimpleNamespace(list=lambda **k:SimpleNamespace(auto_paging_iter=lambda:iter([sub])),retrieve=lambda *a,**k:sub),
+        Invoice=SimpleNamespace(list=no_items),
+        checkout=SimpleNamespace(Session=SimpleNamespace(create=lambda **k:sessions.append(k))))
+
+
+def test_checkout_with_paid_subscription_syncs_instead_of_new_checkout(billing_env,monkeypatch):
+    # Checkout pagato senza tornare in GiroFacile: il piano locale era rimasto Business.
     from app.services import billing
     client,db,user,*_=billing_env
+    configure_prices(monkeypatch)
+    user.billing_source='stripe_test';user.stripe_customer_id='cus_test';user.plan='business';user.plan_status='active';db.commit()
+    monkeypatch.setattr(billing,'price_for',lambda *a:'price_pro')
+    sessions=[]
+    monkeypatch.setattr(billing,'stripe_client',lambda *a:existing_subscription_stripe(subscription(user),sessions))
+    result=client.post('/api/billing/create-checkout-session',json={'plan':'pro'})
+    assert result.status_code==200,result.text
+    assert result.json()['synced'] and 'già attivo' in result.json()['message'] and not sessions
+    db.refresh(user)
+    assert user.plan=='pro' and user.plan_status=='active' and user.stripe_subscription_id=='sub_test'
+
+
+def test_renewal_of_unpaid_subscription_opens_invoice_payment(billing_env,monkeypatch):
+    from app.services import billing
+    client,db,user,*_=billing_env
+    configure_prices(monkeypatch)
+    user.billing_source='stripe_test';user.stripe_customer_id='cus_test';user.plan='business';user.plan_status='past_due';db.commit()
+    monkeypatch.setattr(billing,'price_for',lambda *a:'price_business')
+    sub=subscription(user,'past_due',price='price_business',paid=False)
+    sub['latest_invoice']['hosted_invoice_url']='https://invoice.stripe.com/rinnovo'
+    sessions=[]
+    monkeypatch.setattr(billing,'stripe_client',lambda *a:existing_subscription_stripe(sub,sessions))
+    result=client.post('/api/billing/create-checkout-session',json={'plan':'business'})
+    assert result.status_code==200,result.text
+    assert result.json()['payment_url']=='https://invoice.stripe.com/rinnovo' and not sessions
+
+
+def test_checkout_blocks_existing_subscription_not_payable(billing_env,monkeypatch):
+    from app.services import billing
+    client,db,user,*_=billing_env
+    configure_prices(monkeypatch)
     user.billing_source='stripe_test';user.stripe_customer_id='cus_test';db.commit()
     monkeypatch.setattr(billing,'price_for',lambda *a:'price_pro')
-    fake=SimpleNamespace(Subscription=SimpleNamespace(list=lambda **k:SimpleNamespace(auto_paging_iter=lambda:iter([{'id':'sub_test','status':'active'}]))))
-    monkeypatch.setattr(billing,'stripe_client',lambda *a:fake)
+    sessions=[]
+    monkeypatch.setattr(billing,'stripe_client',lambda *a:existing_subscription_stripe(subscription(user,'incomplete',paid=False),sessions))
     assert client.post('/api/billing/create-checkout-session',json={'plan':'pro'}).status_code==409
+    assert not sessions
+
+
+def test_change_preview_syncs_plan_paid_outside_girofacile(billing_env,monkeypatch):
+    from app.services import billing
+    client,db,user,*_=billing_env
+    configure_prices(monkeypatch)
+    user.billing_source='stripe_test';user.stripe_customer_id='cus_test';user.stripe_subscription_id='sub_test'
+    user.plan='business';user.plan_status='active';db.commit()
+    fake=SimpleNamespace(Subscription=SimpleNamespace(retrieve=lambda *a,**k:subscription(user)))
+    monkeypatch.setattr(billing,'stripe_client',lambda *a:fake);monkeypatch.setattr(billing,'price_for',lambda *a:'price_pro')
+    result=client.post('/api/billing/change-preview',json={'plan':'pro'})
+    assert result.status_code==409 and 'Pro è già attivo' in result.json()['detail']
+    db.refresh(user)
+    assert user.plan=='pro' and user.plan_status=='active'
 
 
 def test_upgrade_requires_matching_quote_and_uses_pending_payment(billing_env,monkeypatch):

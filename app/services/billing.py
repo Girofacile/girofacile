@@ -195,6 +195,27 @@ def select_current_subscription(stripe, user):
         user.stripe_subscription_id = active[0]["id"]
 
 
+def existing_subscription(db, user, stripe, plan):
+    """The company already has a Stripe subscription: align it instead of opening a second checkout.
+
+    Covers a checkout paid without returning to GiroFacile (webhook not received) and the
+    renewal of a subscription waiting for payment, which is completed on Stripe's invoice page.
+    """
+    sub = reconcile(db, user, stripe)
+    db.commit()
+    current = subscription_plan(sub)
+    name = PLAN_LIMITS[current]["name"]
+    invoice = sub.get("latest_invoice")
+    if (sub.get("status") in ("past_due", "unpaid", "incomplete") and isinstance(invoice, dict)
+            and invoice.get("status") == "open" and invoice.get("hosted_invoice_url")):
+        return {"payment_url": invoice["hosted_invoice_url"], "message": f"Completa il pagamento del piano {name}"}
+    if user.plan_status == "active":
+        if current == plan:
+            return {"synced": True, "message": f"Il piano {name} è già attivo: stato aggiornato"}
+        return {"synced": True, "message": f"L'abbonamento risulta sul piano {name}: stato aggiornato. Ora puoi cambiare piano"}
+    raise HTTPException(409, "Abbonamento già presente: aggiorna lo stato o gestisci il piano")
+
+
 def checkout(db, user, plan):
     stripe = stripe_client(user)
     user = lock_user(db, user)
@@ -213,8 +234,7 @@ def checkout(db, user, plan):
         sub = stripe_dict(sub)
         if sub.get("status") not in ("canceled", "incomplete_expired"):
             user.stripe_subscription_id = sub["id"]
-            db.commit()
-            raise HTTPException(409, "Abbonamento già presente: aggiorna lo stato o gestisci il piano")
+            return existing_subscription(db, user, stripe, plan)
     if user.billing_checkout_id and not user.billing_checkout_id.startswith("pending_") and user.billing_checkout_expires and user.billing_checkout_expires > utc_now():
         session = assert_test(stripe.checkout.Session.retrieve(user.billing_checkout_id))
         if session.get("status") == "open":
@@ -274,13 +294,17 @@ def downgrade_excess(db, user, plan):
 
 def change_preview(db, user, plan):
     stripe = stripe_client(user)
+    user = lock_user(db, user)
     price = price_for(stripe, plan)
     sub = retrieve_subscription(stripe, user)
     current = subscription_plan(sub)
+    # Stripe is the authority: a change paid outside GiroFacile must be visible before comparing plans.
+    sync_subscription(db, user, sub)
+    db.commit()
     if sub.get("status") != "active" or sub.get("pending_update") or sub.get("schedule"):
         raise HTTPException(409, "Completa o annulla prima il pagamento/cambio piano pendente")
     if plan == current:
-        raise HTTPException(400, "Questo piano è già attivo")
+        raise HTTPException(409, f"Il piano {PLAN_LIMITS[current]['name']} è già attivo sul tuo abbonamento: stato aggiornato")
     item = sub["items"]["data"][0]
     if PLAN_PRICES[plan]["price_cents"] < PLAN_PRICES[current]["price_cents"]:
         excess = downgrade_excess(db, user, plan)
@@ -302,7 +326,7 @@ def change_plan(db, user, plan, preview):
     item = sub["items"]["data"][0]
     current = subscription_plan(sub)
     if current == plan:
-        raise HTTPException(409, "Piano già attivo")
+        raise HTTPException(409, f"Il piano {PLAN_LIMITS[current]['name']} è già attivo sul tuo abbonamento")
     if PLAN_PRICES[plan]["price_cents"] < PLAN_PRICES[current]["price_cents"]:
         if user.billing_pending_plan != plan or not user.billing_change_key:
             user.billing_change_key = uuid4().hex
