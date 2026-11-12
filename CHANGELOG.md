@@ -5,6 +5,11 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Widget iPhone ridisegnato con fondo chiaro, blu GiroFacile e riquadri arrotondati:
+  ticket e aziende in evidenza, due righe per gli altri indicatori e fascia MRR.
+  Il formato grande conserva tutti i dieci dati e distribuisce gli spazi sull’intera
+  altezza; medio e piccolo mantengono rispettivamente sei e due indicatori.
+  [Istruzioni di aggiornamento](docs/widget-iphone.md).
 - Pagina di accesso: la composizione occupa tutta la larghezza dello schermo; il titolo con i punti di forza è
   al centro della parte bianca e il riquadro di accesso al centro della parte blu (prima stavano in un blocco
   centrale largo 1200 px, con il testo attaccato alla parte blu).
