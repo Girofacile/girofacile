@@ -17,10 +17,12 @@ def default_plan(db):
 
 
 def require_registration(db):
-    if setting_bool(db, 'maintenance_mode') or not setting_bool(db, 'registrations_enabled', True):
+    from .maintenance import maintenance_active
+    if maintenance_active(db) or not setting_bool(db, 'registrations_enabled', True):
         raise HTTPException(503, 'Le nuove registrazioni sono temporaneamente sospese')
 
 
 def require_available(db):
-    if setting_bool(db, 'maintenance_mode'):
+    from .maintenance import maintenance_active
+    if maintenance_active(db):
         raise HTTPException(503, 'Servizio temporaneamente in manutenzione. Riprova più tardi.')

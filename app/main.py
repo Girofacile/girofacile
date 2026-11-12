@@ -63,16 +63,18 @@ app.add_middleware(IngestionBodyLimit)
 @app.middleware("http")
 async def platform_maintenance(request: Request, call_next):
     from starlette.concurrency import run_in_threadpool
-    from .services.platform_settings import setting_bool
+
     from .database import SessionLocal
     path = request.url.path
-    exempt = path.startswith(('/api/admin/', '/api/billing/', '/api/support', '/api/password-reset')) or path.endswith('/logout')
+    exempt = path.startswith(('/api/admin/', '/api/billing/', '/api/support', '/api/password-reset', '/api/public/status')) or path.endswith('/logout')
     if path.startswith('/api/') and not exempt:
         def enabled():
+            from .services.maintenance import maintenance_active
             with SessionLocal() as db:
-                return setting_bool(db, 'maintenance_mode')
+                return maintenance_active(db)
         if await run_in_threadpool(enabled):
-            return JSONResponse(status_code=503, content={'detail': 'Servizio temporaneamente in manutenzione. Riprova più tardi.'}, headers={'Retry-After': '60'})
+            # Le pagine leggono /api/public/status e mostrano la pagina di manutenzione.
+            return JSONResponse(status_code=503, content={'detail': 'Servizio temporaneamente in manutenzione. Riprova più tardi.', 'maintenance': True}, headers={'Retry-After': '60'})
     return await call_next(request)
 
 
@@ -153,6 +155,8 @@ app.include_router(admin_widget.router)
 app.include_router(admin_support.router)
 app.include_router(admin_billing.router)
 app.include_router(billing.router)
+from .routers import public_status as public_status_router
+app.include_router(public_status_router.router)
 app.include_router(operator.router)
 app.include_router(notifications.router)
 app.include_router(settings.router)

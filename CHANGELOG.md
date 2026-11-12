@@ -5,6 +5,16 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Manutenzione e avvisi (Super Admin › Server): un solo riquadro «Manutenzione e avvisi» al posto dei due
+  interruttori doppi.
+  - Manutenzione immediata oppure programmata (inizio, fine prevista, da quando mostrare l'avviso, nota):
+    all'ora di inizio si attiva da sola, all'ora di fine si spegne; «Termina manutenzione» la chiude prima.
+  - Avviso agli utenti: un messaggio libero, attivabile e disattivabile.
+  - Landing, accesso, gestionale e portali (autisti, agenti, collaboratori, operatore, mobile) mostrano
+    l'avviso in basso con icona e ✕; quello della manutenzione ricompare nell'ultima mezz'ora prima dell'inizio.
+  - Durante la manutenzione, al posto degli errori, una pagina «Siamo in manutenzione» con l'ora di ritorno,
+    che si ricarica da sola a lavori finiti. Il Super Admin continua a lavorare.
+  - Il riquadro avvisa se ci sono giri in corso (gli autisti non potrebbero registrare le consegne).
 - Meno chiamate a Google per verificare gli indirizzi:
   - un ordine diretto a un cliente già in anagrafica e verificato (stesso indirizzo) prende le sue coordinate
     senza chiamare Google, anche nella verifica di più ordini insieme;

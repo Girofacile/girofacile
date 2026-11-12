@@ -262,3 +262,22 @@ def admin_local_addresses_save(payload: dict, request: Request, db: Session = De
     db.commit()
     links.set_override(value, portals)
     return _local_addresses_payload(request)
+
+
+@router.get("/maintenance")
+def admin_maintenance(db: Session = Depends(get_db), superadmin: dict = Depends(require_superadmin)):
+    """Manutenzione immediata o programmata e avviso agli utenti (riquadro unico del Super Admin)."""
+    _require_perm(superadmin, "view_server_maintenance")
+    from ..services.maintenance import admin_settings, public_status
+    return {**admin_settings(db), "preview": public_status(db)}
+
+
+@router.put("/maintenance")
+def admin_maintenance_save(payload: dict, db: Session = Depends(get_db), superadmin: dict = Depends(require_superadmin)):
+    _require_perm(superadmin, "view_server_maintenance")
+    _require_perm(superadmin, "toggle_maintenance")
+    from ..services.maintenance import save_admin_settings
+    for change in save_admin_settings(db, payload or {}):
+        _activity(db, superadmin.get("username"), "maintenance_mode_updated", change, "warning")
+    db.commit()
+    return admin_maintenance(db, superadmin)

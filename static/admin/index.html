@@ -218,7 +218,6 @@
         <div class="gf-panel__body gf-stack">
           <div>
             <div class="gf-setting"><div class="gf-setting__copy"><strong>Registrazioni nuove aziende</strong><p>Permette o blocca nuove registrazioni.</p></div><div class="gf-setting__control"><label class="gf-switch"><input id="platform-registrations" type="checkbox" role="switch" aria-label="Registrazioni nuove aziende"></label></div></div>
-            <div class="gf-setting"><div class="gf-setting__copy"><strong>Modalità manutenzione</strong><p>Segnale operativo per futuri blocchi manutenzione.</p></div><div class="gf-setting__control"><label class="gf-switch"><input id="platform-maintenance" type="checkbox" role="switch" aria-label="Modalità manutenzione"></label></div></div>
           </div>
           <div class="gf-form-grid">
             <label class="gf-field" for="platform-trial-days"><span class="gf-field__label">Giorni trial</span><input id="platform-trial-days" type="number" class="gf-input" min="0" max="365"></label>
@@ -265,6 +264,32 @@
           <div id="server-loading" class="gf-loading" role="status">Caricamento…</div>
           <div id="server-content" class="gf-stack gf-hidden" data-gap="lg">
             <div class="gf-grid" data-cols="4" id="server-status-cards"></div>
+            <section class="gf-panel" id="maintenance-panel" aria-labelledby="maintenance-title">
+              <header class="gf-panel__header"><div><h3 class="gf-panel__title" id="maintenance-title">Manutenzione e avvisi</h3><p class="gf-muted">Durante la manutenzione aziende, autisti e agenti vedono una pagina di attesa; il Super Admin continua a lavorare.</p></div><span class="gf-badge" id="maintenance-state-badge" data-status="neutral">—</span></header>
+              <div class="gf-panel__body gf-stack" data-gap="lg">
+                <p class="gf-alert" data-status="warning" id="maintenance-running-routes" role="status" hidden></p>
+                <div class="gf-setting"><div class="gf-setting__copy"><strong>Manutenzione immediata</strong><p>Blocca subito l'uso del gestionale e dei portali finché non la spegni.</p></div><div class="gf-setting__control"><label class="gf-switch"><input type="checkbox" role="switch" id="maintenance-now" aria-label="Manutenzione immediata" onchange="toggleMaintenanceNow(this)"></label></div></div>
+                <div class="gf-stack" data-gap="sm">
+                  <h4 class="gf-subtitle">Manutenzione programmata</h4>
+                  <p class="gf-muted">All'ora di inizio si attiva da sola e all'ora di fine si spegne. Prima dell'inizio gli utenti vedono un avviso.</p>
+                  <div class="gf-form-grid">
+                    <label class="gf-field" for="maintenance-start"><span class="gf-field__label">Inizio</span><input class="gf-input" type="datetime-local" id="maintenance-start"></label>
+                    <label class="gf-field" for="maintenance-end"><span class="gf-field__label">Fine prevista</span><input class="gf-input" type="datetime-local" id="maintenance-end"></label>
+                    <label class="gf-field" for="maintenance-notice-from"><span class="gf-field__label">Mostra l'avviso dal</span><input class="gf-input" type="datetime-local" id="maintenance-notice-from"><span class="gf-field__hint">Vuoto: l'avviso compare subito.</span></label>
+                    <label class="gf-field" data-span="full" for="maintenance-message"><span class="gf-field__label">Nota per gli utenti (facoltativa)</span><textarea class="gf-textarea" id="maintenance-message" rows="2" maxlength="300" placeholder="Es. Aggiorniamo il server per renderlo più veloce."></textarea></label>
+                  </div>
+                  <div class="gf-cluster"><button class="gf-button" data-variant="primary" data-size="sm" type="button" onclick="saveMaintenanceSchedule()">Programma manutenzione</button><button class="gf-button" data-variant="secondary" data-size="sm" type="button" id="maintenance-end-now" onclick="endMaintenanceNow()">Termina manutenzione</button><button class="gf-button" data-variant="ghost" data-size="sm" type="button" onclick="clearMaintenanceSchedule()">Annulla programmazione</button></div>
+                </div>
+                <div class="gf-stack" data-gap="sm">
+                  <h4 class="gf-subtitle">Avviso agli utenti</h4>
+                  <p class="gf-muted">Un messaggio libero mostrato nella landing, nell'accesso, nel gestionale e nei portali (es. una novità o un problema noto).</p>
+                  <label class="gf-field" for="platform-notice-text"><span class="gf-field__label">Testo dell'avviso</span><textarea class="gf-textarea" id="platform-notice-text" rows="2" maxlength="300"></textarea></label>
+                  <div class="gf-setting"><div class="gf-setting__copy"><strong>Mostra l'avviso</strong><p>Gli utenti possono chiuderlo; ricompare se cambi il testo.</p></div><div class="gf-setting__control"><label class="gf-switch"><input type="checkbox" role="switch" id="platform-notice-enabled" aria-label="Mostra l'avviso agli utenti"></label></div></div>
+                  <div><button class="gf-button" data-variant="primary" data-size="sm" type="button" onclick="savePlatformNotice()">Salva avviso</button></div>
+                </div>
+                <p class="gf-muted" id="maintenance-preview" role="status" aria-live="polite"></p>
+              </div>
+            </section>
             <section class="gf-panel" id="database-viewer-panel-v71">
               <header class="gf-panel__header">
                 <div><h3 class="gf-panel__title">Database Viewer</h3><p class="gf-muted">Visualizzazione in sola lettura delle tabelle database, stile Excel, con campi sensibili mascherati.</p></div>
@@ -340,13 +365,12 @@
             </div>
             <div class="gf-grid" data-cols="2">
               <section class="gf-panel">
-                <header class="gf-panel__header"><h3 class="gf-panel__title">Impostazioni manutenzione</h3></header>
+                <header class="gf-panel__header"><h3 class="gf-panel__title">Impostazioni server</h3></header>
                 <div class="gf-panel__body gf-stack">
                   <div class="gf-form-grid">
                     <label class="gf-field" for="server-backup-frequency"><span class="gf-field__label">Frequenza backup</span><select class="gf-select" id="server-backup-frequency" disabled title="Automazione disponibile soltanto tramite scheduler di deploy"><option value="manuale">Manuale</option></select></label>
                     <label class="gf-field" for="server-backup-target"><span class="gf-field__label">Storage backup</span><input class="gf-input" id="server-backup-target" value="locale" disabled title="La directory effettiva è configurata sul server con BACKUP_DIR"></label>
                   </div>
-                  <div class="gf-setting"><div class="gf-setting__copy"><strong>Modalità manutenzione</strong><p>Blocca/avvisa gli utenti durante attività tecniche.</p></div><div class="gf-setting__control"><label class="gf-switch"><input type="checkbox" role="switch" id="server-maintenance-mode" aria-label="Modalità manutenzione"></label></div></div>
                   <div class="gf-cluster"><button class="gf-button" data-variant="primary" data-size="sm" type="button" onclick="saveServerSettings()">Salva impostazioni</button><button class="gf-button" data-variant="secondary" data-size="sm" type="button" onclick="requestAppRestart()">Riavvia app</button></div>
                 </div>
               </section>
@@ -1065,7 +1089,6 @@ async function loadPlatformSettings(){
     document.getElementById('platform-main-domain').value = data.main_domain || '';
     document.getElementById('platform-error-email').value = data.error_notification_email || '';
     document.getElementById('platform-registrations').checked = String(data.registrations_enabled || 'true').toLowerCase() === 'true';
-    document.getElementById('platform-maintenance').checked = String(data.maintenance_mode || 'false').toLowerCase() === 'true';
     document.getElementById('platform-trial-days').value = data.trial_days || '14';
     document.getElementById('platform-default-plan').value = data.default_plan || 'starter';
     document.getElementById('platform-ai-enabled').checked = String(data.ai_enabled || 'false').toLowerCase() === 'true';
@@ -1096,7 +1119,6 @@ async function savePlatformSettings(){
       main_domain: document.getElementById('platform-main-domain').value,
       error_notification_email: document.getElementById('platform-error-email').value,
       registrations_enabled: document.getElementById('platform-registrations').checked,
-      maintenance_mode: document.getElementById('platform-maintenance').checked,
       trial_days: document.getElementById('platform-trial-days').value,
       default_plan: document.getElementById('platform-default-plan').value,
       ai_enabled: document.getElementById('platform-ai-enabled').checked,
@@ -1168,6 +1190,57 @@ async function loadAdminActivity(){
 let serverMaintenanceData = null;
 function fmtBytes(bytes){ bytes=Number(bytes||0); if(bytes<1024) return bytes+' B'; const units=['KB','MB','GB','TB']; let i=-1; do{ bytes/=1024; i++; }while(bytes>=1024&&i<units.length-1); return bytes.toFixed(bytes>=10?1:2)+' '+units[i]; }
 function serviceBadge(ok){ return badge(ok?'active':'cancelled', ok?'Configurato':'Non configurato'); }
+// Manutenzione e avvisi (12/11/2026): manutenzione immediata o programmata e avviso libero agli utenti.
+function renderMaintenance(data){
+  const badge=document.getElementById('maintenance-state-badge');
+  if(!badge) return;
+  const [label,status]=data.active?['In manutenzione','danger']:data.upcoming?['Programmata','warning']:['Servizio attivo','success'];
+  badge.textContent=label; badge.dataset.status=status;
+  document.getElementById('maintenance-now').checked=!!data.manual;
+  document.getElementById('maintenance-start').value=data.start||'';
+  document.getElementById('maintenance-end').value=data.end||'';
+  document.getElementById('maintenance-notice-from').value=data.notice_from||'';
+  document.getElementById('maintenance-message').value=data.message||'';
+  document.getElementById('platform-notice-text').value=data.notice_text||'';
+  document.getElementById('platform-notice-enabled').checked=!!data.notice_enabled;
+  gfShow(document.getElementById('maintenance-end-now'), !!data.active);
+  const running=document.getElementById('maintenance-running-routes');
+  running.hidden=!data.running_routes;
+  running.textContent=data.running_routes?`${data.running_routes===1?'C’è 1 giro in corso':`Ci sono ${data.running_routes} giri in corso`}: durante la manutenzione gli autisti non possono registrare le consegne. Meglio programmarla la sera, a giri chiusi.`:'';
+  const notices=(data.preview?.notices||[]).map(n=>n.text);
+  document.getElementById('maintenance-preview').textContent=data.preview?.maintenance
+    ?`Gli utenti vedono la pagina di manutenzione${data.preview.maintenance.until_label?` fino a ${data.preview.maintenance.until_label}`:''}.`
+    :notices.length?`Avvisi visibili ora: ${notices.join(' · ')}`:'Nessun avviso visibile agli utenti in questo momento.';
+}
+async function loadMaintenance(){ try{ const data=await api('/api/admin/maintenance'); if(data) renderMaintenance(data); }catch(e){ showToast(e.message,'error'); } }
+async function saveMaintenance(payload, done){
+  try{ const data=await api('/api/admin/maintenance',{method:'PUT',body:JSON.stringify(payload)}); if(data) renderMaintenance(data); showToast(done,'success'); return true; }
+  catch(e){ showToast(e.message,'error'); await loadMaintenance(); return false; }
+}
+async function toggleMaintenanceNow(input){
+  const running=document.getElementById('maintenance-running-routes');
+  const warn=!running.hidden?`\n\n${running.textContent}`:'';
+  if(input.checked && !confirm(`Attivare subito la manutenzione? Aziende, autisti e agenti non potranno usare GiroFacile finché non la spegni.${warn}`)){ input.checked=false; return; }
+  await saveMaintenance({maintenance_mode:input.checked}, input.checked?'Manutenzione attiva':'Manutenzione spenta');
+}
+async function saveMaintenanceSchedule(){
+  const start=document.getElementById('maintenance-start').value;
+  if(!start){ showToast('Indica l’inizio della manutenzione.','error'); return; }
+  await saveMaintenance({maintenance_start:start, maintenance_end:document.getElementById('maintenance-end').value,
+    maintenance_notice_from:document.getElementById('maintenance-notice-from').value,
+    maintenance_message:document.getElementById('maintenance-message').value}, 'Manutenzione programmata');
+}
+async function clearMaintenanceSchedule(){
+  if(!confirm('Annullare la manutenzione programmata? L’avviso sparisce per tutti.')) return;
+  await saveMaintenance({maintenance_start:'', maintenance_end:'', maintenance_notice_from:''}, 'Programmazione annullata');
+}
+async function endMaintenanceNow(){
+  if(!confirm('Lavori finiti? GiroFacile torna subito utilizzabile per tutti.')) return;
+  await saveMaintenance({end_now:true}, 'Manutenzione terminata');
+}
+async function savePlatformNotice(){
+  await saveMaintenance({notice_text:document.getElementById('platform-notice-text').value, notice_enabled:document.getElementById('platform-notice-enabled').checked}, 'Avviso salvato');
+}
 async function loadServerMaintenance(){
   const loading=document.getElementById('server-loading'), content=document.getElementById('server-content');
   if(!loading || !content) return;
@@ -1190,11 +1263,11 @@ async function loadServerMaintenance(){
       <li class="gf-list-item"><div class="gf-list-item__main"><strong>${escapeHtml(b.filename)}</strong><small>${fmtBytes(b.size_bytes)} · ${fmtDateTime(b.created_at)}</small></div><button class="gf-button" data-variant="ghost" data-size="sm" type="button" onclick="downloadBackup('${escapeHtml(b.filename)}')">Scarica</button></li>`).join('') : '<li class="gf-empty"><p>Nessun backup creato.</p></li>';
     document.getElementById('server-backup-frequency').value = data.settings?.backup_frequency || 'manuale';
     document.getElementById('server-backup-target').value = data.settings?.backup_storage_target || 'locale';
-    document.getElementById('server-maintenance-mode').checked = !!data.settings?.maintenance_mode;
     document.getElementById('server-console-url').value = data.settings?.server_console_url || '';
     gfShow(loading, false); gfShow(content, true);
     loadLocalAddresses();
     loadWidgetKey();
+    loadMaintenance();
   }catch(e){ gfShow(loading, false); showToast(e.message,'error'); }
 }
 // Indirizzi per i test in locale: indirizzo dei link (inviti, email, QR) e collegamenti dei portali.
@@ -1300,7 +1373,7 @@ async function checkRoutingHealth(){
 async function testServerService(service){ try{ const r=await api('/api/admin/server-maintenance/test-service',{method:'POST',body:JSON.stringify({service})}); showToast(r.message, r.ok?'success':'error'); }catch(e){ showToast(e.message,'error'); } }
 async function createServerBackup(){ try{ const r=await api('/api/admin/server-maintenance/backups',{method:'POST'}); showToast('Backup creato', 'success'); await loadServerMaintenance(); }catch(e){ showToast(e.message,'error'); } }
 function downloadBackup(filename){ window.open('/api/admin/server-maintenance/backups/'+encodeURIComponent(filename),'_blank'); }
-async function saveServerSettings(){ try{ await api('/api/admin/server-maintenance/settings',{method:'PUT',body:JSON.stringify({maintenance_mode:document.getElementById('server-maintenance-mode').checked,backup_frequency:document.getElementById('server-backup-frequency').value,backup_storage_target:document.getElementById('server-backup-target').value,server_console_url:document.getElementById('server-console-url').value})}); showToast('Impostazioni server salvate','success'); await loadServerMaintenance(); }catch(e){ showToast(e.message,'error'); } }
+async function saveServerSettings(){ try{ await api('/api/admin/server-maintenance/settings',{method:'PUT',body:JSON.stringify({backup_frequency:document.getElementById('server-backup-frequency').value,backup_storage_target:document.getElementById('server-backup-target').value,server_console_url:document.getElementById('server-console-url').value})}); showToast('Impostazioni server salvate','success'); await loadServerMaintenance(); }catch(e){ showToast(e.message,'error'); } }
 async function saveServerKeys(){ try{ const payload={}; const g=document.getElementById('server-key-google').value.trim(); const o=document.getElementById('server-key-openai').value.trim(); const st=document.getElementById('server-key-stripe').value.trim(); const sh=document.getElementById('server-key-shopify').value.trim(); if(g) payload.google_maps_api_key=g; if(o) payload.openai_api_key=o; if(st) payload.stripe_secret_key=st; if(sh) payload.shopify_domain=sh; if(!Object.keys(payload).length){showToast('Inserisci almeno una chiave da aggiornare','error');return;} await api('/api/admin/server-maintenance/keys',{method:'PUT',body:JSON.stringify(payload)}); ['server-key-google','server-key-openai','server-key-stripe','server-key-shopify'].forEach(id=>document.getElementById(id).value=''); showToast('Chiavi aggiornate','success'); await loadServerMaintenance(); }catch(e){ showToast(e.message,'error'); } }
 async function requestAppRestart(){ if(!confirm('Confermi la richiesta di riavvio applicazione?')) return; try{ const r=await api('/api/admin/server-maintenance/restart-app',{method:'POST'}); showToast(r.message,'success'); }catch(e){ showToast(e.message,'error'); } }
 async function advancedServerAccess(){ try{ const r=await api('/api/admin/server-maintenance/advanced-access',{method:'POST',body:JSON.stringify({host:document.getElementById('server-ssh-host').value,username:document.getElementById('server-ssh-user').value,password:document.getElementById('server-ssh-password').value})}); document.getElementById('server-ssh-password').value=''; showToast(r.message,'success'); }catch(e){ showToast(e.message,'error'); } }
