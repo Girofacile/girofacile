@@ -5,6 +5,8 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Pagina iniziale: scrivendo l’email e premendo «Prova gratis per 14 giorni» si apre subito
+  il modulo di registrazione con l’email già inserita (prima si apriva l’accesso).
 - Pagina di accesso: la parte blu occupa circa il 55% della pagina, il riquadro di accesso è
   più grande (campi e testi più grandi, più spazio tra le righe) e il testo di presentazione è ingrandito.
 - Giri programmati: l’avviso dei giri dei giorni scorsi mai avviati non sta più in cima alla

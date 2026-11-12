@@ -1205,7 +1205,12 @@ async function checkLogin(){
       window.location.href = me.redirect_url || (me.role === "driver" ? "/driver" : "/agent");
       return;
     }
-    if(!me.authenticated) markAuthReady();
+    if(!me.authenticated){
+      markAuthReady();
+      // Email scritta nella pagina iniziale («Prova gratis per 14 giorni»): si apre subito la
+      // registrazione, con l'email già inserita da updateSignupPlanFeatures.
+      if(new URLSearchParams(window.location.search).get('email')) toggleSignup(true);
+    }
     if(me.authenticated){
       // Foto, nome ed email salvati nel browser sono dell'ultimo account collegato: con un altro account si scartano.
       const previousAccount = localStorage.getItem("girofacile_account_name");
