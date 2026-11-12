@@ -5,6 +5,10 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Indirizzi verificati in automatico: nel nuovo cliente e nella consegna occasionale non c’è più
+  il pulsante «Verifica indirizzo con Google». La verifica parte premendo «Salva». Se Google non
+  trova l’indirizzo il pannello resta aperto con il motivo (indirizzo inesistente o solo simile);
+  per il cliente, un secondo «Salva» lo registra comunque come da verificare.
 - Registrazione: nome azienda, nome utente, email, password e sede operativa completa
   (via, città, CAP, paese) sono obbligatori e segnati con l’asterisco, anche nel controllo
   del server. Tolta la sezione «Funzioni utili» dall’ultimo passaggio: valgono le impostazioni

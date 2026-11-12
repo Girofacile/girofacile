@@ -10,9 +10,8 @@ function occasionalProofMatches(proof, address){
 function invalidateOccasionalAddress(){
   occasionalVerificationVersion++;
   occasionalAddressProof = null;
-  document.getElementById('osVerificationStatus').textContent = 'Indirizzo da verificare';
-  document.getElementById('osSave').disabled = true;
-  document.getElementById('osVerify').disabled = false;
+  document.getElementById('osVerificationStatus').textContent = 'L’indirizzo viene verificato con Google quando salvi.';
+  document.getElementById('osSave').disabled = false;
 }
 
 function openOccasionalStopModal(index=null){
@@ -41,37 +40,39 @@ function closeOccasionalStopModal(){
   document.getElementById('occasionalStopDialog').close();
 }
 
+// Verifica automatica al salvataggio: true se l'indirizzo è confermato da Google.
 async function verifyOccasionalAddress(){
   const address = val('osAddress');
   invalidateOccasionalAddress();
-  if(address.length < 4) return;
-  const version = occasionalVerificationVersion;
-  const button = document.getElementById('osVerify');
   const status = document.getElementById('osVerificationStatus');
+  if(address.length < 4){ status.textContent = 'Scrivi via, numero civico e comune.'; return false; }
+  const version = occasionalVerificationVersion;
+  const button = document.getElementById('osSave');
   button.disabled = true;
-  status.textContent = 'Verifica in corso…';
+  status.textContent = 'Verifica dell’indirizzo con Google in corso…';
   try{
     const result = await api('/api/routes/verify-stop-address',{method:'POST',body:JSON.stringify({indirizzo:address})});
-    if(version !== occasionalVerificationVersion || val('osAddress') !== address) return;
-    if(!occasionalProofMatches(result,result.indirizzo)) throw new Error('Indirizzo da verificare');
+    if(version !== occasionalVerificationVersion || val('osAddress') !== address) return false;
+    if(!occasionalProofMatches(result,result.indirizzo)) throw new Error('Indirizzo inesistente o non trovato da Google: controlla via, numero civico e comune.');
     occasionalAddressProof = result;
     set('osAddress',result.indirizzo);
     status.textContent = '✓ Indirizzo verificato';
-    document.getElementById('osSave').disabled = false;
+    return true;
   }catch(e){
-    if(version === occasionalVerificationVersion) status.textContent = e.message || 'Indirizzo da verificare';
+    if(version === occasionalVerificationVersion) status.textContent = e.message || 'Indirizzo inesistente o non trovato da Google: controlla via, numero civico e comune.';
+    return false;
   }finally{
     if(version === occasionalVerificationVersion) button.disabled = false;
   }
 }
 
-function saveOccasionalStop(){
+// Salvando, l'indirizzo non ancora confermato si verifica da solo; se Google non lo trova
+// la finestra resta aperta con il motivo.
+async function saveOccasionalStop(){
   if(!document.getElementById('occasionalStopForm').reportValidity()) return;
   if(!val('osName')){ document.getElementById('osName').focus(); return; }
+  if(!occasionalProofMatches(occasionalAddressProof,val('osAddress')) && !await verifyOccasionalAddress()) return;
   const address = val('osAddress');
-  if(!occasionalProofMatches(occasionalAddressProof,address)){
-    invalidateOccasionalAddress(); return;
-  }
   const f = deliveries[occasionalStopIndex]?.order_refs?.length ? {...gfUniversalFeaturesV891,has_time_windows:true,has_ztl:true,needs_tail_lift:true} : gfUniversalFeaturesV891;
   const windowValue = id => f.has_time_windows ? val(id)||null : null;
   const d = {customer_id:null,cliente_nome:val('osName'),indirizzo:address,

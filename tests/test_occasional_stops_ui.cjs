@@ -26,15 +26,13 @@ function fixture(){
   return {node,context,proof,run:s=>vm.runInContext(s,context),calls:()=>calls,invalidations:()=>invalidations};
 }
 
-test('creation requires verification, creates null customer and preserves all stop fields',async()=>{
+test('saving verifies the address automatically, creates null customer and preserves all stop fields',async()=>{
   const f=fixture();f.run('openOccasionalStopModal()');
   f.node('osName').value='Cantiere';f.node('osAddress').value='Via Roma';
-  f.run('saveOccasionalStop()');assert.equal(f.context.deliveries.length,0);
-  await f.run('verifyOccasionalAddress()');
-  assert.equal(f.node('osVerificationStatus').textContent,'✓ Indirizzo verificato');
   f.node('osWeight').value='25';f.node('osPackages').value='3';f.node('osNotes').value='Cancello B';
   f.node('osMorningFrom').value='09:00';f.node('osZtl').value='true';
-  f.run('saveOccasionalStop()');
+  await f.run('saveOccasionalStop()');
+  assert.equal(f.node('osVerificationStatus').textContent,'✓ Indirizzo verificato');
   const d=f.context.deliveries[0];
   assert.equal(d.customer_id,null);assert.equal(d.peso_kg,25);assert.equal(d.colli,3);assert.equal(d.ztl,true);
   assert.equal(d.scarico_mattina_da,'09:00');assert.equal(d.geocoding_token,'signed');
@@ -46,15 +44,19 @@ test('creation requires verification, creates null customer and preserves all st
 
 test('editing description reuses proof, address edit invalidates it and stale response cannot verify it',async()=>{
   const f=fixture();f.context.deliveries.push({...f.proof,customer_id:null,cliente_nome:'Old'});
-  f.run('openOccasionalStopModal(0)');f.node('osName').value='New';f.run('saveOccasionalStop()');
+  f.run('openOccasionalStopModal(0)');f.node('osName').value='New';await f.run('saveOccasionalStop()');
   assert.equal(f.context.deliveries[0].cliente_nome,'New');assert.equal(f.calls(),0);
-  f.run('openOccasionalStopModal(0)');f.node('osAddress').value='Other address';f.run('invalidateOccasionalAddress();saveOccasionalStop()');
-  assert.equal(f.node('osSave').disabled,true);assert.equal(f.context.deliveries[0].indirizzo,f.proof.indirizzo);
+  // Indirizzo non trovato: la finestra resta aperta con il motivo e la consegna non cambia.
+  f.context.api=async()=>({indirizzo:'Other address',stato_geocodifica:'non_trovato'});
+  f.run('openOccasionalStopModal(0)');f.node('osAddress').value='Other address';f.run('invalidateOccasionalAddress()');
+  await f.run('saveOccasionalStop()');
+  assert.match(f.node('osVerificationStatus').textContent,/non trovato/);
+  assert.equal(f.node('occasionalStopDialog').open,true);assert.equal(f.context.deliveries[0].indirizzo,f.proof.indirizzo);
   let resolve;f.context.api=()=>new Promise(r=>{resolve=r;});
-  const pending=f.run('verifyOccasionalAddress()');
+  const pending=f.run('saveOccasionalStop()');
   f.node('osAddress').value='Changed while verifying';f.run('invalidateOccasionalAddress()');
   resolve(f.proof);await pending;
-  assert.equal(f.node('osSave').disabled,true);assert.equal(f.node('osAddress').value,'Changed while verifying');
+  assert.equal(f.context.deliveries[0].indirizzo,f.proof.indirizzo);assert.equal(f.node('osAddress').value,'Changed while verifying');
   f.run("updateDeliveryField(0,'indirizzo','Inline changed')");
   assert.equal(f.context.deliveries[0].geocoding_token,null);assert.equal(f.context.deliveries[0].lat,null);
 });

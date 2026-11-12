@@ -965,7 +965,7 @@ def optimize_route(db: Session, deposit, deliveries, vehicle=None, return_depot=
         else:
             missing.append(d.get("cliente_nome") or d.get("indirizzo") or "Cliente")
     if missing:
-        raise ValueError("Clienti senza coordinate Google valide: " + ", ".join(missing[:8]) + ". Apri il cliente e usa “Verifica indirizzo con Google”.")
+        raise ValueError("Clienti senza coordinate Google valide: " + ", ".join(missing[:8]) + ". Apri il cliente e salvalo: l’indirizzo viene verificato con Google.")
     deliveries, excluded = _exclude_ferry_deliveries(depot_coord, deliveries)
     validate_vehicle_load(deliveries, vehicle)
 
@@ -1038,7 +1038,7 @@ def recalculate_manual_route(db: Session, deposit, deliveries, vehicle=None, ret
         else:
             missing.append(d.get("cliente_nome") or d.get("indirizzo") or "Cliente")
     if missing:
-        raise ValueError("Clienti senza coordinate Google valide: " + ", ".join(missing[:8]) + ". Apri il cliente e usa “Verifica indirizzo con Google”.")
+        raise ValueError("Clienti senza coordinate Google valide: " + ", ".join(missing[:8]) + ". Apri il cliente e salvalo: l’indirizzo viene verificato con Google.")
     deliveries, excluded = _exclude_ferry_deliveries(depot_coord, deliveries)
     validate_vehicle_load(deliveries, vehicle)
 

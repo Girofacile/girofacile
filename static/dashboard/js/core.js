@@ -554,7 +554,7 @@ function setupAddressAutocomplete(inputId, options={}){
 
 function initAddressAutocomplete(){
   // Il cliente non usa più la ricerca live Google mentre si scrive:
-  // l'indirizzo viene verificato solo dal pulsante "Verifica indirizzo con Google".
+  // l'indirizzo viene verificato al salvataggio (saveCustomer).
   setupAddressAutocomplete("depIndirizzo");
   setupAddressAutocomplete("dIndirizzo");
 }
@@ -3056,9 +3056,15 @@ function fillCustomerModalAddress(c){
   syncCustomerModalAddress();
 }
 
+// Indirizzo non confermato da Google che l'utente ha deciso di salvare comunque (secondo «Salva»).
+let customerUnverifiedConfirmed = "";
+function customerAddressKey(p){
+  return [p.indirizzo, p.cap, p.comune, p.provincia].map(v=>String(v || "").trim().toLowerCase()).join("|");
+}
 function clearCustomerModalGeocode(){
   ["cLat","cLon","cGeoStatus","cGeoProvider","cGeoConfidence","cGooglePlaceId","cGeocodedAddress"].forEach(id=>set(id,""));
-  setCustomerAddressStatus("Indirizzo modificato: verifica con Google prima di salvare.", "warn");
+  customerUnverifiedConfirmed = "";
+  setCustomerAddressStatus("Indirizzo modificato: lo verifichiamo con Google quando salvi.", "muted");
 }
 
 function applyCustomerModalGeocode(data){
@@ -3108,22 +3114,6 @@ function customerPayloadFromModal(){
   };
 }
 
-async function verifyCustomerModalAddress(){
-  const payload = customerPayloadFromModal();
-  if(!payload.indirizzo || payload.indirizzo.trim().length < 4 || !/^\d{5}$/.test(payload.cap || "") || !payload.comune){
-    alert("Indica via, civico, CAP (5 cifre) e comune prima di verificare con Google.");
-    return;
-  }
-  try{
-    setCustomerAddressStatus("Verifica Google in corso...", "loading");
-    const data = await api("/api/customers/verify-address-preview", {method:"POST", body:JSON.stringify(payload)});
-    applyCustomerModalGeocode(data);
-  }catch(e){
-    setCustomerAddressStatus("Errore durante la verifica Google.", "error");
-    alert(e.message);
-  }
-}
-
 async function loadCustomers(){
   return refreshCustomerDirectory();
 }
@@ -3135,34 +3125,49 @@ function editCustomer(id, fromModal=false){
   set("cLat", c.lat ?? ""); set("cLon", c.lon ?? ""); set("cGeoStatus", c.stato_geocodifica || "da_verificare"); set("cGeoProvider", c.fonte_geocodifica || "");
   set("cGeoConfidence", c.affidabilita_geocodifica ?? ""); set("cGooglePlaceId", c.google_place_id || ""); set("cGeocodedAddress", c.indirizzo_geocodificato || "");
   if(c.stato_geocodifica === "verificato") setCustomerAddressStatus("Indirizzo già verificato con Google.", "ok");
-  else if(c.stato_geocodifica === "da_verificare") setCustomerAddressStatus("Indirizzo da verificare con Google.", "warn");
-  else if(c.stato_geocodifica === "non_trovato") setCustomerAddressStatus("Indirizzo non trovato da Google.", "error");
-  else setCustomerAddressStatus("Indirizzo non ancora verificato.", "muted");
+  else if(c.stato_geocodifica === "non_trovato") setCustomerAddressStatus("Indirizzo non trovato da Google: correggilo e salva, lo verifichiamo di nuovo.", "error");
+  else setCustomerAddressStatus("Indirizzo da verificare: lo verifichiamo con Google quando salvi.", "warn");
+  customerUnverifiedConfirmed = "";
   if(!fromModal) document.getElementById("customerOverlay")?.classList.remove("hidden");
 }
 function resetCustomerForm(){
   ["cId","cCodice","cNome","cIndirizzo","cVia","cCivico","cCap","cComune","cProvincia","cTelefono","cEmail","cReferente","cAgent","cMattinaDa","cMattinaA","cPomeriggioDa","cPomeriggioA","cNote","cLat","cLon","cGeoStatus","cGeoProvider","cGeoConfidence","cGooglePlaceId","cGeocodedAddress"].forEach(id=>set(id,""));
   set("cScarico",10); set("cZtl","false"); set("cSponda","false");
   document.getElementById("customerDeleteSection")?.classList.add("hidden");
-  setCustomerAddressStatus("Indirizzo non ancora verificato.", "muted");
+  customerUnverifiedConfirmed = "";
+  setCustomerAddressStatus("L’indirizzo viene verificato con Google quando salvi.", "muted");
 }
+// Al salvataggio l'indirizzo si verifica da solo. Se Google non lo conferma il pannello resta aperto
+// con il motivo; premendo di nuovo «Salva» con lo stesso indirizzo il cliente si salva «da verificare».
 async function saveCustomer(){
   if(globalThis.GFFormTabs && !GFFormTabs.check(document.getElementById('customerOverlay'))) return;
   return withButtonLoading("saveCustomerBtn", "Salvataggio...", async()=>{
     let payload = customerPayloadFromModal();
     if(!payload.nome){ alert("Inserisci il nome del cliente"); return; }
     if(!payload.indirizzo){ alert("Inserisci l'indirizzo del cliente"); return; }
-    if(!payload.lat || !payload.lon){
-      // Indirizzo non ancora verificato: prima si prova la verifica, poi si chiede solo se non riesce.
+    const key = customerAddressKey(payload);
+    const verified = () => payload.lat && payload.lon && payload.stato_geocodifica === "verificato";
+    if(!verified() && customerUnverifiedConfirmed !== key){
+      if(!/^\d{5}$/.test(payload.cap || "") || !payload.comune){
+        setCustomerAddressStatus("Completa via, civico, CAP (5 cifre) e comune: servono per verificare l’indirizzo.", "error");
+        return;
+      }
+      let unavailable = false;
       try{
-        setCustomerAddressStatus("Verifica Google in corso...", "loading");
+        setCustomerAddressStatus("Verifica dell’indirizzo con Google in corso…", "loading");
         applyCustomerModalGeocode(await api("/api/customers/verify-address-preview", {method:"POST", body:JSON.stringify(payload)}));
         payload = customerPayloadFromModal();
-      }catch(e){ setCustomerAddressStatus("Indirizzo non verificato.", "warn"); }
-    }
-    if(!payload.lat || !payload.lon){
-      const ok = confirm("Google non ha confermato l’indirizzo. Salvare comunque il cliente? Resterà «da verificare» e non potrà entrare in un giro finché l’indirizzo non è verificato.");
-      if(!ok) return;
+      }catch(e){ unavailable = true; }
+      if(!verified()){
+        const similar = val("cGeocodedAddress");
+        const reason = unavailable ? "Verifica con Google non disponibile in questo momento."
+          : payload.stato_geocodifica === "da_verificare" ? `Google ha trovato solo un indirizzo simile${similar ? `: ${similar}` : ""}. Controlla via, civico, CAP e comune.`
+          : "Indirizzo inesistente o non trovato da Google. Controlla via, civico, CAP e comune.";
+        customerUnverifiedConfirmed = key;
+        setCustomerAddressStatus(`${reason} Se è giusto così, premi di nuovo «Salva cliente»: resterà da verificare e non potrà entrare nei giri.`,
+          unavailable || payload.stato_geocodifica === "da_verificare" ? "warn" : "error");
+        return;
+      }
     }
     const id = val("cId");
     await api(id?`/api/customers/${id}`:"/api/customers", {method:id?"PUT":"POST", body:JSON.stringify(payload)});
@@ -3170,7 +3175,7 @@ async function saveCustomer(){
     resetCustomerForm();
     await loadCustomers();
     await loadCustomerPicker();
-    toast(id ? "Cliente aggiornato." : "Cliente creato.");
+    toast(`${id ? "Cliente aggiornato" : "Cliente creato"}${verified() ? "." : ": indirizzo da verificare."}`);
   });
 }
 async function deleteCustomerFromModal(){

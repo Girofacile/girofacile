@@ -165,9 +165,8 @@ def create_customer(data: CustomerIn, db: Session = Depends(get_db), user: User 
         agent = owned(db.query(Agent), Agent, user).filter(Agent.id == payload["agent_id"]).first()
         if not agent:
             raise HTTPException(400, "Agente non trovato")
-    # La geocodifica non parte più automaticamente al salvataggio.
-    # Le coordinate vengono salvate solo se l'utente ha premuto
-    # "Verifica indirizzo con Google" nel pop-up cliente.
+    # La geocodifica avviene nel browser prima del salvataggio (verify-address-preview):
+    # qui arrivano le coordinate già verificate, oppure il cliente resta «da verificare».
     payload["stato_geocodifica"] = payload.get("stato_geocodifica") or "da_verificare"
     item = Customer(**payload, user_id=user.id)
     db.add(item)

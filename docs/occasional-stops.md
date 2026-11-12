@@ -3,8 +3,9 @@
 Il pulsante **+ Fermata occasionale**, nella selezione clienti, apre un modulo
 responsive. Nome e indirizzo sono obbligatori; peso, colli, finestre, scarico,
 ZTL, sponda e note seguono le normali consegne e le preferenze aziendali.
-La verifica si avvia dal pulsante **Verifica indirizzo con Google**, come
-nell'anagrafica. Cambiare l'indirizzo annulla la verifica. Nome e specifiche
+La verifica parte da sola quando si salva la fermata, come nell'anagrafica:
+se Google non trova l'indirizzo la finestra resta aperta con il motivo.
+Cambiare l'indirizzo annulla la verifica. Nome e specifiche
 possono essere modificati senza ripetere la richiesta Google.
 
 ## Verifica server
