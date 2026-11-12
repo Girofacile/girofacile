@@ -5,6 +5,9 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Pagina di accesso: la griglia dello sfondo blu ora si anima con onde di luce lente che
+  partono da dietro al riquadro e accendono le linee al loro passaggio. Il resto della
+  pagina è invariato; chi ha attivato la riduzione del movimento vede la griglia ferma.
 - Widget iPhone ridisegnato con fondo chiaro, blu GiroFacile e riquadri arrotondati:
   ticket e aziende in evidenza, due righe per gli altri indicatori e fascia MRR.
   Il formato grande conserva tutti i dieci dati e distribuisce gli spazi sull’intera
