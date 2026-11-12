@@ -53,6 +53,13 @@ def signup(data: SignupIn, response: Response, db: Session = Depends(get_db), ba
     email = (data.email or "").strip().lower() or None
     if len(username) < 3:
         raise HTTPException(400, "Inserisci un nome utente di almeno 3 caratteri")
+    if not email or "@" not in email:
+        raise HTTPException(400, "Inserisci un'email valida per l'account")
+    # Sede operativa obbligatoria e completa, come nel modulo di registrazione.
+    for value, label in ((data.company_address, "la sede operativa"), (data.company_city, "la città della sede operativa"),
+                         (data.company_zip, "il CAP della sede operativa"), (data.company_country, "il paese della sede operativa")):
+        if not (value or "").strip():
+            raise HTTPException(400, f"Inserisci {label}")
     try:
         validate_password_strength(password, context_values=(username, email, data.company_name))
     except ValueError as exc:

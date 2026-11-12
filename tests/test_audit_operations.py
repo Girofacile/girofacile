@@ -229,18 +229,25 @@ def test_registration_policy_and_trial_catalog(env, monkeypatch):
     from app.schemas import SignupIn
     _, db, *_ = env
     monkeypatch.setattr(auth, 'ERROR_NOTIFICATIONS_EMAIL', '')
+    ADDRESS = dict(email='audit-new@example.com', company_address='Via Roma 1', company_city='Napoli',
+                   company_zip='80100', company_country='Italia')
     set_platform_setting(db, 'registrations_enabled', 'false'); db.commit()
     with pytest.raises(HTTPException) as error:
-        signup(SignupIn(username='audit-new', password='Audit-password-2026'), Response(), db)
+        signup(SignupIn(**ADDRESS, username='audit-new', password='Audit-password-2026'), Response(), db)
     assert error.value.status_code == 503
     set_platform_setting(db, 'registrations_enabled', 'true')
     set_platform_setting(db, 'trial_days', '7')
     set_platform_setting(db, 'default_plan', 'business'); db.commit()
     # Enabled registration still rejects passwords based on the account identity.
     with pytest.raises(HTTPException) as error:
-        signup(SignupIn(username='audit-new', password='Audit-password-2026'), Response(), db)
+        signup(SignupIn(**ADDRESS, username='audit-new', password='Audit-password-2026'), Response(), db)
     assert error.value.status_code == 400
-    result = signup(SignupIn(username='audit-new', password='Orbit!River47Cedar#'), Response(), db)
+    # Email e sede operativa sono obbligatorie.
+    for missing in ('email', 'company_address', 'company_city', 'company_zip'):
+        with pytest.raises(HTTPException) as error:
+            signup(SignupIn(**{**ADDRESS, missing: ''}, username='audit-new', password='Orbit!River47Cedar#'), Response(), db)
+        assert error.value.status_code == 400
+    result = signup(SignupIn(**ADDRESS, username='audit-new', password='Orbit!River47Cedar#'), Response(), db)
     from app.models import User
     created = db.query(User).filter_by(username='audit-new').one()
     assert created.plan == 'business'

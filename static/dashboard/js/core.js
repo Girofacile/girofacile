@@ -1363,16 +1363,8 @@ function updateSignupPlanFeatures(){
     select.dataset.planInitialized='true';
   }
   const plan=window.GF_PLANS[getSelectedPlan()] || {};
-  for(const [id,key] of [['signupNeedsSignature','has_delivery_signature'],['signupNeedsPhotoProof','has_photo_proof']]) {
-    const input=document.getElementById(id);if(!input) continue;
-    input.disabled=plan[key]!==true;if(input.disabled)input.checked=false;
-    input.title=input.disabled?'Disponibile dal piano Business':'';
-  }
   const summary=document.getElementById('signupPlanSummary');
   if(summary)summary.textContent=`${plan.name}: ${plan.max_orders_per_month} ordini/mese, ${plan.max_customers} clienti, ${plan.max_collaborators} collaboratori. Portale autista e GPS inclusi.${plan.has_delivery_signature?'':' Firma e foto sono disponibili dal piano Business.'}`;
-}
-function signupBool(id){
-  return !!document.getElementById(id)?.checked;
 }
 function setSignupWizardStep(step){
   signupWizardCurrentStep = Math.max(1, Math.min(4, Number(step) || 1));
@@ -1420,6 +1412,12 @@ function validateSignupStep(step){
     if(!passwordCheck.acceptable) return signupInvalid("signupPass", passwordCheck.message);
   }
   if(step === 2){
+    // Sede operativa completa: serve come partenza dei giri e per il profilo azienda.
+    if(!val("signupAddress")) return signupInvalid("signupAddress", "Inserisci la sede operativa (via e numero civico).");
+    if(!val("signupCity")) return signupInvalid("signupCity", "Inserisci la città della sede operativa.");
+    if(!val("signupZip")) return signupInvalid("signupZip", "Inserisci il CAP della sede operativa.");
+    if(/^italia$/i.test(val("signupCountry")) && !/^\d{5}$/.test(val("signupZip"))) return signupInvalid("signupZip", "Il CAP italiano ha 5 cifre.");
+    if(!val("signupCountry")) return signupInvalid("signupCountry", "Inserisci il paese della sede operativa.");
     const vatError = signupVatError(val("signupVat"));
     if(vatError) return signupInvalid("signupVat", vatError);
     const cf = val("signupFiscalCode").replace(/\s/g, "").toUpperCase();
@@ -1526,12 +1524,8 @@ async function signup(){
       company_activity_type: val("signupActivityType"),
       company_size: val("signupCompanySize"),
       daily_deliveries: val("signupDailyDeliveries"),
-      has_time_windows: signupBool("signupHasTimeWindows"),
-      needs_signature: window.GF_PLANS[plan]?.has_delivery_signature === true && signupBool("signupNeedsSignature"),
-      needs_photo_proof: window.GF_PLANS[plan]?.has_photo_proof === true && signupBool("signupNeedsPhotoProof"),
-      has_refrigerated_goods: signupBool("signupRefrigerated"),
-      has_ztl: signupBool("signupZtl"),
-      needs_tail_lift: signupBool("signupTailLift")
+      // Le funzioni (finestre orarie, firma, foto, ZTL, sponda) non si scelgono più qui:
+      // valgono le impostazioni predefinite, modificabili poi dalle Impostazioni.
     })});
     // Nuovo account: si riparte da una pagina pulita, senza dati rimasti in memoria da un accesso precedente.
     window.location.href = "/dashboard";

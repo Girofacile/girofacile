@@ -5,6 +5,10 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Registrazione: nome azienda, nome utente, email, password e sede operativa completa
+  (via, città, CAP, paese) sono obbligatori e segnati con l’asterisco, anche nel controllo
+  del server. Tolta la sezione «Funzioni utili» dall’ultimo passaggio: valgono le impostazioni
+  predefinite, modificabili poi dalle Impostazioni.
 - Pagina iniziale: scrivendo l’email e premendo «Prova gratis per 14 giorni» si apre subito
   il modulo di registrazione con l’email già inserita (prima si apriva l’accesso).
 - Pagina di accesso: la parte blu occupa circa il 55% della pagina, il riquadro di accesso è
