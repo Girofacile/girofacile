@@ -1627,6 +1627,25 @@ function routeDateIsValid(){
   return !!d && d >= today;
 }
 
+// Partenza nella data di oggi a un orario già passato o uguale a quello attuale: non ammessa.
+function routeStartInPast(){
+  const date = val("routeDate"), start = val("routeStart");
+  if(!date || !start || date !== todayIso()) return false;
+  const [hours, minutes] = start.split(":").map(Number);
+  const now = new Date();
+  return hours * 60 + minutes <= now.getHours() * 60 + now.getMinutes();
+}
+// Errore subito sotto il campo, appena l'orario è completo (stessa scritta rossa dei campi obbligatori).
+function checkRouteStartTime(){
+  const input = document.getElementById("routeStart");
+  if(!input) return false;
+  const past = routeStartInPast();
+  input.setCustomValidity(past ? "Orario già passato: scegli un orario successivo a quello attuale." : "");
+  if(past) input.checkValidity();
+  else input.closest(".gf-field")?.removeAttribute("data-invalid");
+  return !past;
+}
+
 function enforceRouteDateMin(){
   const el = document.getElementById("routeDate");
   if(!el) return true;
@@ -1738,7 +1757,7 @@ let customerPlanningStepOpenedV68 = false;
 function routePlanningMissingFieldsV68(){
   const missing = [];
   if(!val("routeDate") || !routeDateIsValid()) missing.push("data");
-  if(!val("routeStart")) missing.push("orario partenza");
+  if(!val("routeStart") || routeStartInPast()) missing.push("orario partenza");
   if(!val("routeDeposit")) missing.push("deposito");
   if(globalThis.GFFleetPlanning?.active()) return missing.concat(GFFleetPlanning.missing());
   missing.push(...(globalThis.GFDriverSchedules?.missing()||[]));
@@ -1948,14 +1967,28 @@ function initRoutePlanningGateV68(){
     const el = document.getElementById(id);
     if(!el || el.dataset.gfGateBound === "1") return;
     el.dataset.gfGateBound = "1";
+    if(id === "routeStart" || id === "routeDate"){
+      el.addEventListener("input", checkRouteStartTime);
+      el.addEventListener("change", checkRouteStartTime);
+    }
     el.addEventListener("input", updateRoutePlanningGateV68);
     el.addEventListener("change", updateRoutePlanningGateV68);
     if(id === "routeVehicle"){
       el.addEventListener("change", updateRouteEnergyPricingV895);
     }
   });
+  checkRouteStartTime();
   updateRoutePlanningGateV68();
   updateRouteEnergyPricingV895();
+  // Con la pagina aperta l'orario scelto può diventare passato: si ricontrolla ogni 30 secondi.
+  if(!initRoutePlanningGateV68.timer){
+    initRoutePlanningGateV68.timer = setInterval(()=>{
+      const input = document.getElementById("routeStart");
+      if(!input?.value || input.closest(".tab")?.classList.contains("hidden")) return;
+      const wasValid = !input.validationMessage;
+      if(checkRouteStartTime() !== wasValid) updateRoutePlanningGateV68();
+    }, 30000);
+  }
 }
 
 function fmtEuro(v){ return "€ " + (Number(v||0)).toFixed(1).replace(".", ","); }

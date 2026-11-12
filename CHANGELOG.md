@@ -5,6 +5,9 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Pianificazione giro: un orario di partenza già passato o uguale a quello attuale (nella data
+  di oggi) viene segnalato subito sotto il campo, appena l’orario è completo. Finché non è
+  corretto, «Calcola percorso» non compare.
 - Pianificazione giro: i clienti selezionati compaiono subito nell’elenco delle fermate. La barra
   in basso con «Elimina» e «Calcola percorso» compare solo con i dati del giro completi: data,
   orario, deposito, almeno un mezzo con autista e carburante. Nella guida al primo giro il passo
