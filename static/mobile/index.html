@@ -24,7 +24,7 @@
   document.querySelectorAll('.plan-card[data-plan]').forEach(el=>{
     const p=window.GF_PLANS?.[el.dataset.plan];if(!p)return;
     el.querySelector('.plan-price').textContent=`€${p.price_eur}/mese`;
-    el.querySelector('.plan-desc').textContent=`${p.max_orders_per_month} ordini/mese · ${p.max_customers} clienti · ${p.max_vehicles} mezzi · ${p.max_drivers} autisti · ${p.max_collaborators} collaboratori`;
+    el.querySelector('.plan-desc').textContent=`${p.max_orders_per_month} ordini/mese · ${p.max_routes_per_month} giri/mese · ${p.max_customers} clienti · ${p.max_vehicles} mezzi · ${p.max_drivers} autisti · ${p.max_collaborators} collaboratori`;
     const bonus=document.createElement('div');bonus.className='gf-electric-benefit';
     bonus.textContent=window.GiroFacileElectricVehicles?.planBenefit(p)||'';
     if(bonus.textContent)el.appendChild(bonus);

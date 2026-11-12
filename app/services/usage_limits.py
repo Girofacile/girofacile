@@ -4,7 +4,7 @@ from ..core.utils import local_now
 from ..models import User, RoutePlan, RouteUsage
 from .route_start import ensure_new_route_can_start
 from .plans import (get_plan_limits, require_active_plan, vehicle_usage,
-                    monthly_order_usage, collaborator_usage)
+                    monthly_order_usage, monthly_route_usage, collaborator_usage)
 
 
 def backfill_started_routes(db):
@@ -50,7 +50,7 @@ def usage_summary(db, user):
         ),
     }
     resources["collaborators"] = collaborator_usage(user, db)
-    return {"month": orders["month"], "orders": orders, "resources": resources}
+    return {"month": orders["month"], "orders": orders, "routes": monthly_route_usage(user, db), "resources": resources}
 
 
 def start_route_usage(db, route, check_late=True):

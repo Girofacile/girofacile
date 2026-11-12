@@ -995,6 +995,8 @@ def program_route(
     if status not in ("bozza", "programmato"):
         raise HTTPException(400, "Puoi programmare solo un giro non ancora avviato.")
     check_daily_route_limit(user, db, plan.data_giro, exclude_route_id=plan.id)
+    from ..services.plans import check_monthly_route_quota, consume_route_quota
+    check_monthly_route_quota(user, db, [plan.id])  # prima del calcolo col traffico a pagamento
     from ..services.route_execution import lock_route_resources
     lock_route_resources(db, plan)
     _check_resource_overlap(db, user, plan, minutes_from_hhmm(plan.orario_partenza) or 0, (minutes_from_hhmm(plan.orario_partenza) or 0) + int(plan.totale_minuti or 0), exclude_route_id=plan.id)
@@ -1016,6 +1018,7 @@ def program_route(
         db.commit()
         raise
     route_orders.sync_route_orders(db, plan, "scheduled")
+    consume_route_quota(user, db, [plan.id])
     plan.status = "programmato"
     plan.completed_at = None
     plan.cancelled_at = None

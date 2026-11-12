@@ -23,7 +23,7 @@ def test_catalog_matches_approved_offer(billing_env):
     assert [p['limits']['max_deposits'] for p in plans] == [1, 3, 20]
     assert [p['limits']['max_orders_per_month'] for p in plans] == [300, 1200, 6000]
     assert [p['limits']['max_collaborators'] for p in plans] == [2, 5, 10]
-    assert all(p['limits']['max_routes_per_month'] is None for p in plans)
+    assert [p['limits']['max_routes_per_month'] for p in plans] == [80, 250, 1200]
     assert all(p['limits']['max_deliveries_per_month'] is None for p in plans)
     assert [p['limits']['has_ai'] for p in plans] == [False, False, True]
     for feature in ('has_export', 'has_geocoding', 'has_mobile', 'has_collaborators'):
@@ -115,13 +115,14 @@ def make_route(db, user, deliveries=1, status='bozza'):
     return route
 
 
-def test_routes_have_no_monthly_commercial_quota(billing_env, monkeypatch):
+def test_starting_routes_does_not_consume_route_quota(billing_env, monkeypatch):
+    # La quota giri si consuma alla programmazione (calcolo col traffico), non all'avvio.
     from app.services.usage_limits import start_route_usage, usage_summary
     from app.services.plan_catalog import PLAN_LIMITS
     _, db, user, *_ = billing_env
     monkeypatch.setitem(PLAN_LIMITS['business'],'max_routes_per_month',1)
     route=make_route(db,user)
-    assert 'routes' not in usage_summary(db,user)
+    assert usage_summary(db,user)['routes']['used'] == 0
     start_route_usage(db,route);db.commit()
     start_route_usage(db,route);db.commit()
     route.status='annullato';db.commit();db.delete(route);db.commit()
@@ -129,6 +130,58 @@ def test_routes_have_no_monthly_commercial_quota(billing_env, monkeypatch):
     next_route=make_route(db,user);next_route.id=500;db.commit()
     start_route_usage(db,next_route);db.commit()
     assert next_route.status=='in_corso'
+
+
+def test_route_quota_counts_scheduled_routes_once_and_keeps_cancelled(billing_env, monkeypatch):
+    from app.services.plans import check_monthly_route_quota, consume_route_quota, monthly_route_usage
+    from app.services.plan_catalog import PLAN_LIMITS
+    _, db, user, *_ = billing_env
+    monkeypatch.setitem(PLAN_LIMITS['business'],'max_routes_per_month',2)
+    first, second = make_route(db,user), make_route(db,user)
+    assert check_monthly_route_quota(user,db,[first.id]) == [first.id]
+    consume_route_quota(user,db,[first.id]); db.commit()
+    # Riprogrammare lo stesso giro non consuma un altro giro.
+    assert check_monthly_route_quota(user,db,[first.id]) == []
+    consume_route_quota(user,db,[first.id]); db.commit()
+    assert monthly_route_usage(user,db)['used'] == 1
+    # Un giro annullato ed eliminato resta contato: il costo del traffico c'è stato.
+    first.status='annullato'; db.commit(); db.delete(first); db.commit()
+    consume_route_quota(user,db,[second.id]); db.commit()
+    assert monthly_route_usage(user,db)['used'] == 2
+    third=make_route(db,user); third.id=900; db.commit()
+    with pytest.raises(HTTPException) as exc:
+        check_monthly_route_quota(user,db,[third.id])
+    assert exc.value.status_code == 403 and 'Quota mensile giri raggiunta: 2/2' in exc.value.detail
+
+
+def test_multi_route_programming_needs_room_for_every_route(billing_env, monkeypatch):
+    from app.services.plans import check_monthly_route_quota, consume_route_quota
+    from app.services.plan_catalog import PLAN_LIMITS
+    _, db, user, *_ = billing_env
+    monkeypatch.setitem(PLAN_LIMITS['business'],'max_routes_per_month',3)
+    done=make_route(db,user); consume_route_quota(user,db,[done.id]); db.commit()
+    routes=[make_route(db,user) for _ in range(3)]
+    with pytest.raises(HTTPException) as exc:
+        check_monthly_route_quota(user,db,[r.id for r in routes])
+    assert 'richiede 3 giri' in exc.value.detail
+    assert check_monthly_route_quota(user,db,[r.id for r in routes[:2]]) == [r.id for r in routes[:2]]
+
+
+def test_program_endpoint_blocks_before_paid_traffic(billing_env, monkeypatch):
+    from app.routers import routes as routes_router
+    from app.services.plans import consume_route_quota
+    from app.services.plan_catalog import PLAN_LIMITS
+    client, db, user, *_ = billing_env
+    client.app.include_router(routes_router.router)
+    monkeypatch.setitem(PLAN_LIMITS['business'],'max_routes_per_month',1)
+    done=make_route(db,user); consume_route_quota(user,db,[done.id]); db.commit()
+    route=make_route(db,user)
+    calls=[]
+    monkeypatch.setattr(routes_router,'enrich_final_route',lambda *a,**k:calls.append(a))
+    monkeypatch.setattr(routes_router,'lock_route_resources',lambda *a,**k:None,raising=False)
+    response=client.post(f'/api/routes/{route.id}/program',json={})
+    assert response.status_code == 403, response.text
+    assert 'Quota mensile giri' in response.json()['detail'] and not calls
 
 
 def test_deliveries_have_no_monthly_cap_and_expiry_preserves_running_routes(billing_env, monkeypatch):

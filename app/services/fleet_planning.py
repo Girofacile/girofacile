@@ -944,6 +944,8 @@ def _program_saved(db,user,actor,plan_id,data):
                 or row.vehicle_id!=expected.vehicle_id or row.driver_id!=expected.driver_id):
                 raise HTTPException(409,'Un giro e stato modificato o programmato separatamente: gestiscilo dallo storico.')
         return rows
+    from .plans import check_monthly_route_quota, consume_route_quota
+    check_monthly_route_quota(user,db,list(plan.route_ids))  # prima del calcolo col traffico a pagamento
     for row,proposal in zip(drafts(),plan.result['routes']):
         enrich_final_route(db,row,cached_traffic=reusable_traffic(proposal,row))
     db.commit()  # Persist timing and provider accounting before releasing route locks.
@@ -973,6 +975,8 @@ def _program_saved(db,user,actor,plan_id,data):
             raise HTTPException(409,'Con il traffico aggiornato un giro supera la fine della giornata. Anticipa la partenza o sposta alcune consegne, poi ricalcola.')
         start=opt.parse_hhmm(departure)
         _check_resource_overlap(db,user,row,start,start+math.ceil(row.totale_minuti),exclude_route_id=row.id)
+    check_monthly_route_quota(user,db,[row.id for row in rows])
+    consume_route_quota(user,db,[row.id for row in rows])
     from ..models import RouteToken
     from secrets import token_urlsafe
     for row in rows:

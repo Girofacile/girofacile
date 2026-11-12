@@ -161,6 +161,16 @@ class RouteUsage(Base):
     started_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
 
 
+class RouteScheduleUsage(Base):
+    """Giri programmati nel mese (quota del piano). Contati alla prima programmazione, quando
+    parte il calcolo col traffico a pagamento; annullare o eliminare il giro non restituisce il credito."""
+    __tablename__ = "route_schedule_usage"
+    route_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    month: Mapped[str] = mapped_column(String(7), index=True)
+    scheduled_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+
+
 class BillingNotice(Base):
     __tablename__ = "billing_notices"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)

@@ -3,7 +3,7 @@ from datetime import datetime
 from .core.clock import utc_now
 from sqlalchemy import inspect, text
 
-LATEST = '20261108_01'
+LATEST = '20261112_01'
 LOCK_ID = 7640152404
 
 
@@ -262,6 +262,12 @@ def run_migrations(engine):
                     if 'users' in set(inspect(conn).get_table_names()) and 'company_brand_color' not in {c['name'] for c in inspect(conn).get_columns('users')}:
                         conn.execute(text('ALTER TABLE users ADD COLUMN company_brand_color VARCHAR(7)'))
                     conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261108_01', 'now': utc_now()})
+            if '20261112_01' not in applied:
+                # Quota giri al mese: registro dei giri programmati (il conteggio parte da questo mese).
+                from .models import RouteScheduleUsage
+                with engine.begin() as conn:
+                    RouteScheduleUsage.__table__.create(conn, checkfirst=True)
+                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261112_01', 'now': utc_now()})
         finally:
             if postgres:
                 lock.execute(text('SELECT pg_advisory_unlock(:key)'), {'key': LOCK_ID})

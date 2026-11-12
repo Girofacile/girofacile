@@ -699,7 +699,7 @@ function adminPlanSummary(plan) {
   if (!p) return '<p class="gf-muted">Catalogo del piano non disponibile.</p>';
   const count = value => value == null ? '—' : escapeHtml(Number(value).toLocaleString('it-IT'));
   const rows = [
-    ['Ordini al mese', count(p.max_orders_per_month)], ['Clienti in anagrafica', count(p.max_customers)],
+    ['Ordini al mese', count(p.max_orders_per_month)], ['Giri al mese', count(p.max_routes_per_month)], ['Clienti in anagrafica', count(p.max_customers)],
     ['Depositi', count(p.max_deposits)], ['Mezzi standard', count(p.max_vehicles)],
     ['Autisti', count(p.max_drivers)], ['Collaboratori aggiuntivi', count(p.max_collaborators)],
     ['Bonus mezzi elettrici', '+' + count(p.electric_vehicle_bonus)], ['Integrazione AI', p.has_ai ? 'Inclusa' : 'Non inclusa'],

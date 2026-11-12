@@ -5,6 +5,11 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Torna il limite di giri al mese: Starter 80, Business 250, Pro 1.200 (il 23 ottobre era stato sostituito
+  dalla quota ordini, ma pianificando dall'anagrafica clienti si potevano creare giri senza limite).
+  Un giro conta quando viene programmato, prima del calcolo col traffico (che ha un costo); riprogrammarlo
+  non conta di nuovo, annullarlo non restituisce il giro. Visibile nelle card dei piani, nel confronto,
+  nei consumi («Giri del mese»), nella landing, nella versione mobile e nel Super Admin.
 - Prezzi senza IVA da aggiungere (regime fiscale del titolare): tolti «+ IVA» e «IVA esclusa» da piani,
   landing, versione mobile e Super Admin; la colonna delle fatture si chiama «Importo». Il pagamento su Stripe
   era già dell'importo esatto del piano.

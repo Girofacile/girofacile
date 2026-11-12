@@ -5,10 +5,11 @@ TRIAL_DAYS = 14
 GRACE_DAYS = 7
 PLAN_LIMITS = {}
 PLAN_PRICES = {}
-for key, name, price, customers, drivers, depots, orders, collaborators, electric_bonus in (
-    ("starter", "Starter", 29, 150, 3, 1, 300, 2, 1),
-    ("business", "Business", 59, 500, 10, 3, 1200, 5, 2),
-    ("pro", "Pro", 99, 5000, 50, 20, 6000, 10, 5),
+# Giri al mese (12/11/2026): ogni giro programmato consuma la quota, perché il calcolo col traffico ha un costo.
+for key, name, price, customers, drivers, depots, orders, collaborators, electric_bonus, routes in (
+    ("starter", "Starter", 29, 150, 3, 1, 300, 2, 1, 80),
+    ("business", "Business", 59, 500, 10, 3, 1200, 5, 2, 250),
+    ("pro", "Pro", 99, 5000, 50, 20, 6000, 10, 5, 1200),
 ):
     PLAN_PRICES[key] = dict(name=name, price_eur=price, price_cents=price * 100,
                            stripe_price_id=os.getenv(f"STRIPE_PRICE_{key.upper()}", ""))
@@ -16,8 +17,8 @@ for key, name, price, customers, drivers, depots, orders, collaborators, electri
         name=name, max_customers=customers, max_drivers=drivers, max_vehicles=drivers,
         electric_vehicle_bonus=electric_bonus,
         max_deposits=depots, max_orders_per_month=orders, max_collaborators=collaborators,
-        # Compatibility keys: routes and deliveries have no commercial monthly cap.
-        max_routes_per_day=None, max_routes_per_month=None, max_deliveries_per_month=None,
+        # Deliveries have no commercial monthly cap; routes are counted when scheduled.
+        max_routes_per_day=None, max_routes_per_month=routes, max_deliveries_per_month=None,
         has_collaborators=True, has_agents=key != "starter",
         has_reports=key != "starter", has_export=True, has_geocoding=True,
         has_mobile=True, has_driver_chat=key != "starter", has_ai=key == "pro",

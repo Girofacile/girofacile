@@ -7,6 +7,7 @@ Il catalogo condiviso da server, dashboard, sito e amministrazione è
 | --- | ---: | ---: | ---: |
 | Prezzo mensile | €29 | €59 | €99 |
 | Ordini acquisiti al mese | 300 | 1.200 | 6.000 |
+| Giri programmati al mese | 80 | 250 | 1.200 |
 | Clienti registrati | 150 | 500 | 5.000 |
 | Depositi | 1 | 3 | 20 |
 | Autisti | 3 | 10 | 50 |
@@ -30,8 +31,17 @@ agli ordini nuovi inseriti manualmente o acquisiti dalle fonti di importazione.
 Aggiornamenti e reinvii riconosciuti come duplicati non consumano altri ordini.
 Un'importazione che supera il residuo viene respinta interamente. Anteprime e
 importazioni fallite non consumano la quota; annullamento o eliminazione di un
-ordine acquisito non restituiscono il credito. Non esiste un limite commerciale
-mensile separato per giri, ricalcoli o consegne.
+ordine acquisito non restituiscono il credito.
+
+Dal 12 novembre 2026 c'è anche la quota **giri al mese** (80 / 250 / 1.200): ogni
+giro consuma un giro quando viene programmato, perché in quel momento parte il
+calcolo con il traffico, che ha un costo. Il controllo avviene prima del calcolo,
+quindi un giro oltre la quota non costa nulla. Riprogrammare lo stesso giro non
+consuma un altro giro; annullarlo o eliminarlo non restituisce il credito. La
+programmazione su più mezzi richiede posto per tutti i giri insieme. L'avvio
+del giro non consuma quota. Il conteggio parte dal 12/11/2026 (migrazione
+`20261112_01`): i giri programmati prima non sono contati. Anteprime e ricalcoli
+non hanno un limite separato; le consegne non hanno un limite mensile.
 
 I posti collaboratore escludono il titolare e comprendono gli account attivi
 con invito ancora in attesa. Disattivare un account libera il posto; riattivarlo

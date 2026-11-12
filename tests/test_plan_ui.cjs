@@ -5,7 +5,7 @@ const billing=fs.readFileSync('static/dashboard/js/billing.js','utf8');
 function catalog(){
   return Object.fromEntries(['starter','business','pro'].map((key,index)=>[key,{
     name:['Starter','Business','Pro'][index],price_eur:[29,59,99][index],
-    max_orders_per_month:[300,1200,6000][index],max_customers:[150,500,5000][index],
+    max_orders_per_month:[300,1200,6000][index],max_routes_per_month:[80,250,1200][index],max_customers:[150,500,5000][index],
     max_deposits:[1,3,20][index],max_vehicles:[3,10,50][index],max_drivers:[3,10,50][index],
     electric_vehicle_bonus:[1,2,5][index],max_collaborators:[2,5,10][index],
     ...Object.fromEntries(['has_customer_tracking','has_fleet_planning','has_driver_chat','has_agents',
@@ -25,14 +25,15 @@ function fixture(plan='starter'){
   vm.runInContext(billing,ctx);
   return {ctx,node,messages,run:code=>vm.runInContext(code,ctx)};
 }
-test('plan cards use monthly orders and retain all resource caps and portal GPS access',()=>{
+test('plan cards use monthly orders and routes and retain all resource caps and portal GPS access',()=>{
   const f=fixture();
-  for(const [key,orders,seats] of [['starter',300,2],['business',1200,5],['pro',6000,10]]){
+  for(const [key,orders,routes,seats] of [['starter',300,80,2],['business',1200,250,5],['pro',6000,1200,10]]){
     const plan=f.run(`planFeatures('${key}')`);
     assert.equal(plan.features[0],orders+' ordini/mese');
+    assert.equal(plan.features[1],routes+' giri/mese');
     assert.ok(plan.resourceFeatures.includes(seats+' collaboratori aziendali'));
     assert.ok(plan.features.includes('Portale autista e GPS autista'));
-    assert.ok(!plan.features.some(label=>/giri\/mese|consegne\/mese/.test(label)));
+    assert.ok(!plan.features.some(label=>/consegne\/mese/.test(label)));
   }
   for(const label of ['Tracking clienti','Firma alla consegna','Foto prova consegna','Prova di consegna PDF','Integrazione AI']){
     assert.ok(f.run("planFeatures('starter')").missing.includes(label));
@@ -41,7 +42,7 @@ test('plan cards use monthly orders and retain all resource caps and portal GPS 
   assert.ok(f.run("planFeatures('pro')").features.includes('Integrazione AI'));
   const keys=f.run('planComparisonRows().map(row=>row[1])');
   assert.ok(keys.includes('max_orders_per_month') && keys.includes('max_collaborators'));
-  assert.ok(!keys.includes('max_routes_per_month') && !keys.includes('max_deliveries_per_month'));
+  assert.ok(keys.includes('max_routes_per_month') && !keys.includes('max_deliveries_per_month'));
 });
 test('landing and account use the same compact capability groups derived from catalogue flags',()=>{
   const f=fixture('business');

@@ -696,6 +696,7 @@ async function loadPlanInfo(){
       if(usageRows){
         const rows = [
           {label:"Ordini del mese", used:planUsage.usage.orders?.used || 0, max:limits.max_orders_per_month},
+          {label:"Giri del mese", used:planUsage.usage.routes?.used || 0, max:limits.max_routes_per_month},
           {label:"Collaboratori", used:planUsage.usage.resources.collaborators?.used || 0, max:limits.max_collaborators},
           {label:"Clienti", used: planUsage.usage.resources.customers.used, max: limits.max_customers},
           {label:"Mezzi standard", used: vehicleUsage.standard_used, max: vehicleUsage.standard_limit},
@@ -970,7 +971,7 @@ function renderUpgradeCards(){
     const isSelected = p === _selectedUpgradePlan;
     const bonus = Number(window.GF_PLANS[p].electric_vehicle_bonus || 0);
     const q = window.GF_PLANS[p], n = value => Number(value).toLocaleString("it-IT",{useGrouping:"always"});
-    const limits = [`${n(q.max_orders_per_month)} ordini/mese`, `${n(q.max_customers)} clienti`,
+    const limits = [`${n(q.max_orders_per_month)} ordini/mese`, `${n(q.max_routes_per_month)} giri/mese`, `${n(q.max_customers)} clienti`,
       `${n(q.max_deposits)} ${Number(q.max_deposits)===1?"deposito":"depositi"}`, `${n(q.max_vehicles)} mezzi · ${n(q.max_drivers)} autisti`,
       `${n(q.max_collaborators)} collaboratori aziendali`, ...(bonus ? [`+${bonus} ${bonus===1?"veicolo elettrico":"veicoli elettrici"} bonus`] : [])];
     const badge = isCurrent ? '<span class="gf-badge" data-status="success">Piano attuale</span>'

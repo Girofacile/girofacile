@@ -10,7 +10,7 @@ from ..core.utils import parse_date_value
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from ..models import User, Customer, Vehicle, Driver, Deposit, RoutePlan, CompanyCollaborator
+from ..models import User, Customer, Vehicle, Driver, Deposit, RoutePlan, CompanyCollaborator, RouteScheduleUsage
 from ..order_models import Order, OrderMonthlyUsage
 from ..core.utils import local_today_iso
 
@@ -126,6 +126,46 @@ def consume_order_quota(user: User, db: Session, additional: int = 1,
     counter.used = usage["used"] + additional
     db.flush()
     return instant
+
+
+def monthly_route_usage(user: User, db: Session, reference: datetime | None = None) -> dict:
+    """Giri programmati nel mese italiano corrente, confrontati con la quota del piano."""
+    month, _, _ = order_quota_period(reference)
+    used = int(db.query(func.count(RouteScheduleUsage.route_id)).filter(
+        RouteScheduleUsage.user_id == user.id, RouteScheduleUsage.month == month).scalar() or 0)
+    maximum = get_plan_limits(user.plan or "starter")["max_routes_per_month"]
+    return {"month": month, "used": used, "limit": maximum,
+            "remaining": max(0, maximum - used) if maximum is not None else None,
+            "percent": round(100 * used / maximum, 1) if maximum else 0,
+            "warning": maximum is not None and used >= maximum * .8,
+            "over_limit": maximum is not None and used > maximum}
+
+
+def check_monthly_route_quota(user: User, db: Session, route_ids) -> list[int]:
+    """Da chiamare prima del calcolo col traffico: blocca senza costi se la quota non basta.
+
+    Un giro già programmato (riprogrammazione) non consuma un altro giro.
+    Ritorna gli id dei giri da contare."""
+    user = lock_plan_owner(user, db)
+    require_active_plan(user)
+    new = [rid for rid in dict.fromkeys(route_ids) if not db.get(RouteScheduleUsage, rid)]
+    usage = monthly_route_usage(user, db)
+    if new and usage["limit"] is not None and usage["used"] + len(new) > usage["limit"]:
+        requested = "1 giro" if len(new) == 1 else f"{len(new)} giri"
+        raise HTTPException(403,
+            f"Quota mensile giri raggiunta: {usage['used']}/{usage['limit']} giri programmati questo mese "
+            f"con il piano {get_plan_limits(user.plan or 'starter')['name']}. L'operazione richiede {requested}. "
+            "I giri già programmati restano validi; scegli un piano superiore o attendi il prossimo mese.")
+    return new
+
+
+def consume_route_quota(user: User, db: Session, route_ids) -> None:
+    """Registra i giri appena programmati, nella stessa transazione della programmazione."""
+    month, _, _ = order_quota_period()
+    for rid in dict.fromkeys(route_ids):
+        if not db.get(RouteScheduleUsage, rid):
+            db.add(RouteScheduleUsage(route_id=rid, user_id=user.id, month=month, scheduled_at=utc_now()))
+    db.flush()
 
 
 def collaborator_usage(user: User, db: Session, plan: str | None = None) -> dict:

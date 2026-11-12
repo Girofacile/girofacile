@@ -12,7 +12,7 @@ const GF_PLAN_FEATURES = [
   ['has_ai', 'Integrazione AI']
 ];
 function planComparisonRows() {
-  return [['Ordini al mese','max_orders_per_month'], ['Clienti','max_customers'],
+  return [['Ordini al mese','max_orders_per_month'], ['Giri al mese','max_routes_per_month'], ['Clienti','max_customers'],
     ['Depositi','max_deposits'], ['Autisti','max_drivers'], ['Mezzi standard','max_vehicles'],
     ['Veicoli elettrici bonus','electric_vehicle_bonus'], ['Collaboratori aziendali','max_collaborators'],
     ['Portale autista e GPS','has_driver_portal'], ...GF_PLAN_FEATURES.map(([key,label])=>[label,key])];
@@ -45,7 +45,7 @@ function planFeatureGroups(plan) {
 }
 function planFeatures(plan) {
   const p = window.GF_PLANS[plan];
-  const resourceFeatures = [`${p.max_orders_per_month} ordini/mese`, `${p.max_customers} clienti`,
+  const resourceFeatures = [`${p.max_orders_per_month} ordini/mese`, `${p.max_routes_per_month} giri/mese`, `${p.max_customers} clienti`,
     `${p.max_deposits} ${Number(p.max_deposits)===1?'deposito':'depositi'}`,
     `${p.max_vehicles} mezzi · ${p.max_drivers} autisti`, `${p.max_collaborators} collaboratori aziendali`];
   const features = [...resourceFeatures, 'Portale autista e GPS autista',
@@ -122,9 +122,10 @@ function monthlyOrderUsageMarkup(usage) {
 
 // Consumi del mese nella pagina Piani: barra dei numeri con icone, come nelle altre pagine.
 function planUsageStripMarkup(usage) {
-  const r=usage.resources || {},orders=usage.orders,fmt=n=>Number(n||0).toLocaleString('it-IT',{useGrouping:'always'});
+  const r=usage.resources || {},orders=usage.orders,routes=usage.routes,fmt=n=>Number(n||0).toLocaleString('it-IT',{useGrouping:'always'});
   const width=(used,limit)=>limit?Math.round(Math.min(100,used/limit*100)/5)*5:0;
   const icons={orders:'M9 4h6v3H9z M7 5H6a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1h-1 M9 12h6 M9 16h6',
+    routes:'M6 19a3 3 0 1 0 0-.01 M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15 M18 5a3 3 0 1 0 0-.01',
     customers:'M16 20v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1 M9.5 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z M21 20v-1a4 4 0 0 0-3-3.9 M16 4.1a3.5 3.5 0 0 1 0 6.8',
     vehicles:'M2 6h11v10H2z M13 9h5l3 3v4h-8z M6.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z M17.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z',
     drivers:'M3 5h18a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z M5 16h4 M14 10h5 M14 14h5 M7 11.5a1.5 1.5 0 1 0 0-.01'};
@@ -133,6 +134,10 @@ function planUsageStripMarkup(usage) {
   if(orders){
     const used=Math.max(0,Number(orders.used)||0),limit=Math.max(0,Number(orders.limit)||0);
     cells.push(cell('orders','1','Ordini del mese',used,limit,`su ${fmt(limit)}`,`<span class="gf-progress__track" role="progressbar" aria-label="Ordini utilizzati nel mese" aria-valuemin="0" aria-valuemax="${limit}" aria-valuenow="${Math.min(used,limit)}" aria-valuetext="${used} ordini utilizzati su ${limit}"><span class="gf-progress__done" data-gf-width="${width(used,limit)}"></span></span>`));
+  }
+  if(routes){
+    const used=Math.max(0,Number(routes.used)||0),limit=Math.max(0,Number(routes.limit)||0);
+    cells.push(cell('routes','2','Giri del mese',used,limit,`su ${fmt(limit)}`,`<span class="gf-progress__track" role="progressbar" aria-label="Giri programmati nel mese" aria-valuemin="0" aria-valuemax="${limit}" aria-valuenow="${Math.min(used,limit)}" aria-valuetext="${used} giri programmati su ${limit}"><span class="gf-progress__done" data-gf-width="${width(used,limit)}"></span></span>`));
   }
   if(r.customers) cells.push(cell('customers','1','Clienti',r.customers.used,r.customers.limit,`su ${r.customers.limit==null?'∞':fmt(r.customers.limit)}`));
   const v=r.vehicles;
@@ -148,6 +153,7 @@ function planUsageStripMarkup(usage) {
   return `${cells.length?`<div class="gf-stat-strip" data-icons="side" aria-label="Consumi del piano · ${esc(usage.month || '')}">${cells.join('')}</div>`:''}
     ${extra.length||orders?`<p class="gf-muted">${extra.join(' · ')}${extra.length&&orders?'. ':''}${orders?`${fmt(remaining)} ordini ancora disponibili questo mese: la quota si rinnova ogni mese.`:''}</p>`:''}
     ${warning?`<p class="gf-alert" data-status="warning" role="status">${remaining===0?'Quota mensile ordini esaurita.':'Hai utilizzato almeno l’80% degli ordini mensili.'} Puoi valutare un piano superiore.</p>`:''}
+    ${routes && routes.limit && routes.used>=routes.limit*.8?`<p class="gf-alert" data-status="warning" role="status">${routes.used>=routes.limit?'Quota mensile giri esaurita: i nuovi giri si potranno programmare dal prossimo mese.':'Hai programmato almeno l’80% dei giri del mese.'} Puoi valutare un piano superiore.</p>`:''}
     ${v?.over_limit?`<p class="gf-alert" data-status="warning" role="status">${esc(v.message||'La flotta supera i limiti del piano. I mezzi esistenti sono conservati.')}</p>`:''}`;
 }
 
