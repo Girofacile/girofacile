@@ -5,6 +5,8 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Guida al primo giro, passo 6 «Seleziona il cliente»: il riquadro verde compare sotto la riga
+  del cliente, con la freccia sulla casella, invece di coprire nome e indirizzo.
 - Indirizzi verificati in automatico: nel nuovo cliente e nella consegna occasionale non c’è più
   il pulsante «Verifica indirizzo con Google». La verifica parte premendo «Salva». Se Google non
   trova l’indirizzo il pannello resta aperto con il motivo (indirizzo inesistente o solo simile);

@@ -846,6 +846,9 @@ body[data-gf-surface] .gf-coach__tip[data-embedded]{position:relative;margin-top
 body[data-gf-surface] .gf-coach__tip:is(:popover-open,[data-embedded]){display:grid;gap:var(--gf-space-2)}
 body[data-gf-surface] .gf-coach__tip::before{content:"";position:absolute;width:var(--gf-space-4);height:var(--gf-space-4);background:inherit;transform:rotate(45deg);top:calc(-1 * var(--gf-space-2));left:calc(50% - var(--gf-space-2))}
 body[data-gf-surface] .gf-coach__tip[data-placement="bottom-end"]{position-area:bottom span-left;margin-right:0}
+/* Sotto l'elemento e allineato al suo inizio: per le caselle di una riga, che resta tutta visibile. */
+body[data-gf-surface] .gf-coach__tip[data-placement="bottom-start"]{position-area:bottom span-right;margin-left:0}
+body[data-gf-surface] .gf-coach__tip[data-placement="bottom-start"]::before{left:var(--gf-space-3)}
 body[data-gf-surface] .gf-coach__tip[data-placement="bottom-end"]::before{left:auto;right:var(--gf-space-12)}
 body[data-gf-surface] .gf-coach__tip[data-placement="top-end"]{position-area:top span-left;margin-right:0}
 body[data-gf-surface] .gf-coach__tip[data-placement="top-end"]::before{top:auto;bottom:calc(-1 * var(--gf-space-2));left:auto;right:var(--gf-space-12)}

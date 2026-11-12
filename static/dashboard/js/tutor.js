@@ -45,7 +45,7 @@
         if(tab!=='clienti')return go('clienti','Clienti','Scegli i clienti del primo giro.');
         const proceed=el('customersGoPlanning');
         if(visible(proceed)&&!proceed.disabled)return {target:proceed,placement:'top-end',title:'Premi «Vai alla pianificazione»',text:'I clienti selezionati diventano le fermate del giro.'};
-        return {target:[...document.querySelectorAll('#tab-clienti .cx-cb')].find(box=>visible(box)&&!box.disabled),placement:'right',title:'Seleziona il cliente',text:'Spunta i clienti da mettere nel primo giro.'};
+        return {target:[...document.querySelectorAll('#tab-clienti .cx-cb')].find(box=>visible(box)&&!box.disabled),placement:'bottom-start',title:'Seleziona il cliente',text:'Spunta la casella accanto al nome del cliente da mettere nel primo giro.'};
       }
       case 'program':
         if(tab==='route-preview')return {target:document.querySelector('#tab-route-preview [data-preview-program]'),placement:'top-end',title:'Premi «Programma giro di prova»',text:'È una prova: il giro non va all’autista e non conta nel piano. Deposito, mezzo, autista e cliente restano.'};
