@@ -5065,11 +5065,11 @@ function renderDashboardScheduledSubpage(routes, selectedRoute){
     gfDrawRouteMap(selectedRoute, page);
     return;
   }
-  page.innerHTML = dashboardStaleRoutesHtml() + dashboardScheduledWeekHtml() + dashboardScheduledDayHtml();
+  page.innerHTML = dashboardScheduledWeekHtml() + dashboardScheduledDayHtml() + dashboardStaleRoutesHtml();
 }
 
 // Giri dei giorni passati mai avviati: restano «programmati» e tengono legati i loro ordini.
-// Un avviso li conta e permette di annullarli tutti (gli ordini tornano da pianificare).
+// Una riga discreta in fondo alla pagina li conta e permette di annullarli tutti (gli ordini tornano da pianificare).
 function dashboardStaleRoutes(){
   const today = todayIso();
   return dashboardScheduledRoutes.filter(r => r.data_giro && r.data_giro < today && r.status === 'programmato' && !r.started_at);
@@ -5079,11 +5079,10 @@ function dashboardStaleRoutesHtml(){
   if(!stale.length) return '';
   const oldest = stale.map(r => r.data_giro).sort()[0];
   const canManage = !window.GFCompanyAccess?.isCollaborator() || window.GFCompanyAccess.can('routes.manage');
-  return `<div class="gf-alert" data-status="warning" role="note" data-stale-routes><div class="gf-alert__body">
-    <p class="gf-alert__title">${gfCount(stale.length, 'giro dei giorni scorsi mai avviato', 'giri dei giorni scorsi mai avviati')}</p>
-    <p class="gf-alert__text">Dal ${esc(gfDateIt(oldest))}: i loro ordini restano assegnati. Riprogrammali dalla settimana, oppure annullali: gli ordini tornano da pianificare.</p>
-    ${canManage ? `<div class="gf-cluster"><button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="cancelStaleScheduledRoutes(this)">Annulla ${stale.length === 1 ? 'il giro' : `i ${stale.length} giri`}</button></div>` : ''}
-  </div></div>`;
+  const action = canManage
+    ? ` oppure <button type="button" class="gf-button" data-variant="link" onclick="cancelStaleScheduledRoutes(this)">${stale.length === 1 ? 'annullalo' : `annulla i ${stale.length} giri`}</button> (gli ordini tornano da pianificare)`
+    : '';
+  return `<p class="gf-muted" role="note" data-stale-routes>${gfCount(stale.length, 'giro dei giorni scorsi mai avviato', 'giri dei giorni scorsi mai avviati')} (dal ${esc(gfDateIt(oldest))}): i loro ordini restano assegnati. ${stale.length === 1 ? 'Riprogrammalo' : 'Riprogrammali'} dalla settimana${action}.</p>`;
 }
 async function cancelStaleScheduledRoutes(button){
   const stale = dashboardStaleRoutes();
