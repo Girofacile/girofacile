@@ -953,7 +953,7 @@ body[data-gf-surface] .gf-auth[data-backdrop]{
   overflow:hidden;isolation:isolate;background:var(--gf-color-surface);
 }
 body[data-gf-surface] .gf-auth__backdrop{position:absolute;inset:0;z-index:-1;pointer-events:none}
-body[data-gf-surface] .gf-auth__backdrop::before,body[data-gf-surface] .gf-auth__backdrop::after{content:"";position:absolute;inset:0;clip-path:ellipse(calc(50% + var(--gf-space-12)) 120% at 100% 50%)}
+body[data-gf-surface] .gf-auth__backdrop::before,body[data-gf-surface] .gf-auth__backdrop::after{content:"";position:absolute;inset:0;clip-path:ellipse(calc(60% + var(--gf-space-12)) 120% at 100% 50%)}
 body[data-gf-surface] .gf-auth__backdrop::before{
   background:
     radial-gradient(34% 44% at 74% 50%,color-mix(in srgb,var(--gf-color-primary) 60%,transparent),transparent 75%),
@@ -990,14 +990,27 @@ body[data-gf-surface] .gf-auth__stage{flex:1;display:grid;place-items:center;pad
 /* Due metà vere della pagina: il racconto al centro della parte bianca, il modulo al centro della parte blu
    (il bordo curvo è a 50% − space-12 dal margine sinistro, come la colonna). */
 body[data-gf-surface] .gf-auth__stage{padding-inline:0}
-body[data-gf-surface] .gf-auth__stage>.gf-grid{width:100%;grid-template-columns:calc(50% - var(--gf-space-12)) minmax(0,1fr);gap:0;align-items:center;justify-items:center}
+body[data-gf-surface] .gf-auth__stage>.gf-grid{width:100%;grid-template-columns:calc(40% - var(--gf-space-12)) minmax(0,1fr);gap:0;align-items:center;justify-items:center}
 body[data-gf-surface] .gf-auth__stage>.gf-grid:has(.gf-auth__card[data-size="lg"]:not(.hidden)){grid-template-columns:minmax(0,1fr)}
 body[data-gf-surface] .gf-auth__stage>.gf-grid:has(.gf-auth__card[data-size="lg"]:not(.hidden)) .gf-auth__pitch{display:none}
 body[data-gf-surface] .gf-auth[data-backdrop] .gf-auth__main{display:block;place-items:normal;padding:0 var(--gf-space-6);width:100%}
 body[data-gf-surface] .gf-auth[data-backdrop] .gf-auth__main>.gf-stack{justify-items:center}
-body[data-gf-surface] .gf-auth[data-backdrop] .gf-auth__card{padding:var(--gf-space-10) var(--gf-space-8);gap:var(--gf-space-6);border:0;box-shadow:var(--gf-shadow-dialog)}
+body[data-gf-surface] .gf-auth[data-backdrop] .gf-auth__card{padding:var(--gf-space-12);gap:var(--gf-space-6);border:0;box-shadow:var(--gf-shadow-dialog)}
+body[data-gf-surface] .gf-auth[data-backdrop] .gf-auth__card:not([data-size="lg"]){
+  --gf-control-height:var(--gf-control-touch);
+  width:min(calc(var(--gf-auth-width) + var(--gf-space-12) * 3),100%);font-size:var(--gf-font-lg);
+}
+body[data-gf-surface] .gf-auth[data-backdrop] .gf-auth__card:not([data-size="lg"]) .gf-title{font-size:var(--gf-font-2xl)}
+body[data-gf-surface] .gf-auth[data-backdrop] .gf-auth__card:not([data-size="lg"]) :is(.gf-muted,.gf-field__label){font-size:var(--gf-font-lg)}
+/* I campi e i pulsanti hanno la dimensione fissata con !important nel sistema: qui va superata allo stesso modo, come in .gf-signup. */
+body[data-gf-surface] .gf-auth[data-backdrop] .gf-auth__card:not([data-size="lg"]) :is(.gf-input,.gf-button){font-size:var(--gf-font-lg) !important}
 body[data-gf-surface] .gf-auth__pitch{display:grid;gap:var(--gf-space-6);max-width:var(--gf-auth-width);color:var(--gf-color-on-nav)}
 body[data-gf-surface] .gf-auth__pitch .gf-title{color:var(--gf-color-on-nav);font-size:var(--gf-font-3xl)}
+body[data-gf-surface] .gf-auth[data-backdrop] .gf-auth__pitch{gap:var(--gf-space-8);max-width:calc(var(--gf-auth-width) + var(--gf-space-12) * 2)}
+body[data-gf-surface] .gf-auth[data-backdrop] .gf-auth__pitch .gf-title{font-size:var(--gf-font-hero)}
+body[data-gf-surface] .gf-auth[data-backdrop] .gf-auth__features{gap:var(--gf-space-6)}
+body[data-gf-surface] .gf-auth[data-backdrop] .gf-auth__features strong{font-size:var(--gf-font-xl)}
+body[data-gf-surface] .gf-auth[data-backdrop] .gf-auth__features span{font-size:var(--gf-font-lg)}
 body[data-gf-surface] .gf-auth__pitch .gf-auth__features span{color:var(--gf-color-nav-text)}
 body[data-gf-surface] .gf-auth__pitch[data-on="surface"]{color:var(--gf-color-text)}
 body[data-gf-surface] .gf-auth__pitch[data-on="surface"] :is(.gf-title,.gf-auth__features strong){color:var(--gf-color-text)}
