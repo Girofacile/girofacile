@@ -43,6 +43,16 @@ del giro non consuma quota. Il conteggio parte dal 12/11/2026 (migrazione
 `20261112_01`): i giri programmati prima non sono contati. Anteprime e ricalcoli
 non hanno un limite separato; le consegne non hanno un limite mensile.
 
+**Clienti eliminati:** un cliente eliminato continua a occupare il suo posto fino
+alla fine del mese in cui è stato eliminato; il posto si libera dal mese successivo.
+Così eliminare e reimportare clienti non fa ripetere la verifica degli indirizzi
+su Google (ogni verifica ha un costo).
+
+**Ordini verso clienti in anagrafica:** se l'indirizzo di un ordine coincide con
+quello di un cliente già verificato (via e civico, CAP, comune; provincia facoltativa;
+maiuscole e punteggiatura non contano), l'ordine usa le coordinate del cliente
+senza chiamare Google.
+
 I posti collaboratore escludono il titolare e comprendono gli account attivi
 con invito ancora in attesa. Disattivare un account libera il posto; riattivarlo
 richiede un posto disponibile.

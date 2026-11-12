@@ -46,6 +46,7 @@ def needs_google(db,order,retry):
     """Same checks as the verification loop, without locks: only decides what to ask in advance."""
     if orders.address_is_verified(db,order) and order.status=='pronto':return False
     if orders._existing_order_proof(db,order,order.delivery_address):return False
+    if orders._customer_proof(db,order,order.delivery_address):return False  # cliente già in anagrafica
     return retry or cached_failure(db,order) is None
 
 
@@ -84,7 +85,7 @@ def verify_selected(db,user_id,actor,data):
         order=orders.get_order(db,user_id,order_id,lock=True)
         orders.editable(db,order,order.version)
         if orders.address_is_verified(db,order) and order.status=='pronto':continue
-        proof=orders._existing_order_proof(db,order,order.delivery_address)
+        proof=orders._existing_order_proof(db,order,order.delivery_address) or orders._customer_proof(db,order,order.delivery_address)
         previous=None if data.retry or proof else cached_failure(db,order)
         if previous:
             if order.status!='da_verificare':

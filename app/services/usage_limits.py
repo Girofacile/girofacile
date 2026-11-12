@@ -35,9 +35,10 @@ def usage_summary(db, user):
                 "percent": round(100 * used / maximum, 1) if maximum else 0,
                 "warning": maximum is not None and used >= maximum * .8,
                 "over_limit": maximum is not None and used > maximum}
-    from ..models import Customer, Driver, Deposit
-    resources = {}
-    for model, key in ((Customer, "customers"), (Driver, "drivers"), (Deposit, "deposits")):
+    from ..models import Driver, Deposit
+    from .plans import customers_in_use
+    resources = {"customers": quota(customers_in_use(user, db), limits["max_customers"])}
+    for model, key in ((Driver, "drivers"), (Deposit, "deposits")):
         count = db.query(model).filter(model.user_id == user.id, model.deleted_at.is_(None)).count()
         resources[key] = quota(count, limits["max_" + key])
     fleet = vehicle_usage(user, db)

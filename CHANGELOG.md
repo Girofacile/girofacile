@@ -5,6 +5,11 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Meno chiamate a Google per verificare gli indirizzi:
+  - un ordine diretto a un cliente già in anagrafica e verificato (stesso indirizzo) prende le sue coordinate
+    senza chiamare Google, anche nella verifica di più ordini insieme;
+  - un cliente eliminato occupa il suo posto nel piano fino a fine mese (prima si liberava subito: eliminando
+    e reimportando si poteva far ripetere la verifica all'infinito). Il messaggio di limite lo spiega.
 - Torna il limite di giri al mese: Starter 80, Business 250, Pro 1.200 (il 23 ottobre era stato sostituito
   dalla quota ordini, ma pianificando dall'anagrafica clienti si potevano creare giri senza limite).
   Un giro conta quando viene programmato, prima del calcolo col traffico (che ha un costo); riprogrammarlo

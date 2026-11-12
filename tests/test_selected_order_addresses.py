@@ -184,3 +184,52 @@ def test_distinct_addresses_are_asked_to_google_in_parallel_and_logged(selected_
     assert peak[0]>1  # le richieste sono partite insieme
     assert [i['reason'] for i in result.json()['issues']]==['non_trovato']
     assert db.query(ApiUsageLog).filter(ApiUsageLog.service=='google_geocoding').count()==3
+
+
+def registry_customer(ctx, deleted=False, **values):
+    from app.core.clock import utc_now
+    from app.models import Customer
+    db, owner = ctx[1], ctx[2]
+    fields = dict(user_id=owner.id, nome='Bar Roma', indirizzo='Via Roma 10', cap='80100', comune='Napoli',
+                  provincia='NA', lat=40.85, lon=14.25, stato_geocodifica='verificato',
+                  indirizzo_geocodificato='Via Roma, 10, 80100 Napoli NA, Italia')
+    row = Customer(**{**fields, **values})
+    if deleted:
+        row.deleted_at = utc_now()
+    db.add(row); db.commit()
+    return row
+
+
+def test_order_to_registry_customer_reuses_coordinates_without_google(selected_orders, monkeypatch):
+    # Destinatario già in anagrafica e verificato: nessuna chiamata a Google (12/11/2026).
+    ctx=selected_orders;client=ctx[0]
+    from app.services import orders as service
+    calls=[]
+    monkeypatch.setattr(service,'verify_stop_address',lambda db,user_id,address,**k:calls.append(address) or proof(ctx,address))
+    registry_customer(ctx)
+    same=create(client,number='A',delivery_address='via roma 10, 80100 NAPOLI')       # senza provincia, maiuscole diverse
+    other=create(client,number='B',delivery_address='Via Roma 12, 80100 Napoli NA')   # altro civico
+    state=select(ctx,[same['id'],other['id']])
+    result=verify(ctx,state,state['order_ids'])
+    assert result.status_code==200,result.text
+    assert calls==['Via Roma 12, 80100 Napoli NA']
+    reused=client.get(f"/api/orders/{same['id']}").json()
+    assert reused['status']=='pronto'
+    db=ctx[1]
+    from app.order_models import Order
+    verification=db.get(Order,same['id']).address_verification
+    assert verification['lat']==40.85 and verification['indirizzo']=='Via Roma, 10, 80100 Napoli NA, Italia'
+
+
+def test_deleted_or_unverified_customer_is_not_reused(selected_orders, monkeypatch):
+    ctx=selected_orders;client=ctx[0]
+    from app.services import orders as service
+    calls=[]
+    monkeypatch.setattr(service,'verify_stop_address',lambda db,user_id,address,**k:calls.append(address) or proof(ctx,address))
+    registry_customer(ctx, deleted=True)
+    registry_customer(ctx, cap='80121', stato_geocodifica='da_verificare')
+    rows=[create(client,number='A',delivery_address='Via Roma 10, 80100 Napoli NA'),
+          create(client,number='B',delivery_address='Via Roma 10, 80121 Napoli NA')]
+    state=select(ctx,[r['id'] for r in rows])
+    assert verify(ctx,state,state['order_ids']).status_code==200
+    assert sorted(calls)==['Via Roma 10, 80100 Napoli NA','Via Roma 10, 80121 Napoli NA']

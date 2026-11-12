@@ -7,7 +7,7 @@ from zoneinfo import ZoneInfo
 from ..core.clock import utc_now
 from fastapi import HTTPException
 from ..core.utils import parse_date_value
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from ..models import User, Customer, Vehicle, Driver, Deposit, RoutePlan, CompanyCollaborator, RouteScheduleUsage
@@ -187,6 +187,17 @@ def check_collaborator_limit(user: User, db: Session):
             "Disattiva un collaboratore o scegli un piano superiore. Il titolare non occupa un posto.")
 
 
+def customers_in_use(user: User, db: Session) -> int:
+    """Clienti che occupano un posto del piano: quelli attivi più quelli eliminati in questo mese.
+
+    Un cliente eliminato libera il posto solo dal mese successivo, così eliminare e
+    reimportare clienti non fa ripetere all'infinito la verifica degli indirizzi su Google."""
+    _, month_start, _ = order_quota_period()
+    return db.query(Customer).filter(
+        Customer.user_id == user.id,
+        or_(Customer.deleted_at.is_(None), Customer.deleted_at >= month_start)).count()
+
+
 def check_customer_limit(user: User, db: Session, additional: int = 1):
     """Controlla se l'utente ha raggiunto il limite clienti del piano."""
     user = lock_plan_owner(user, db)
@@ -195,11 +206,13 @@ def check_customer_limit(user: User, db: Session, additional: int = 1):
     max_c = limits.get("max_customers")
     if max_c is None:
         return  # illimitato
-    count = db.query(Customer).filter(Customer.user_id == user.id, Customer.deleted_at.is_(None)).count()
+    count = customers_in_use(user, db)
     if additional > 0 and count + additional > max_c:
+        deleted = count - db.query(Customer).filter(Customer.user_id == user.id, Customer.deleted_at.is_(None)).count()
+        note = (f" {deleted} clienti eliminati questo mese occupano ancora il posto fino a fine mese." if deleted else "")
         raise HTTPException(
             status_code=403,
-            detail=f"Hai raggiunto il limite di {max_c} clienti per il piano {limits['name']}. Effettua l'upgrade per aggiungerne altri."
+            detail=f"Hai raggiunto il limite di {max_c} clienti per il piano {limits['name']}.{note} Effettua l'upgrade per aggiungerne altri."
         )
 
 

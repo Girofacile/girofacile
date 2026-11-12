@@ -132,6 +132,28 @@ def test_starting_routes_does_not_consume_route_quota(billing_env, monkeypatch):
     assert next_route.status=='in_corso'
 
 
+def test_deleted_customer_keeps_its_slot_until_month_end(billing_env, monkeypatch):
+    from datetime import timedelta
+    from app.core.clock import utc_now
+    from app.models import Customer
+    from app.services.plans import check_customer_limit, customers_in_use
+    from app.services.plan_catalog import PLAN_LIMITS
+    from app.services.usage_limits import usage_summary
+    _, db, user, *_ = billing_env
+    base = customers_in_use(user, db)  # l'ambiente di prova parte già con qualche cliente
+    monkeypatch.setitem(PLAN_LIMITS['business'],'max_customers',base+2)
+    def customer(name, deleted_at=None):
+        db.add(Customer(user_id=user.id, nome=name, indirizzo='Via Roma 1', deleted_at=deleted_at)); db.commit()
+    customer('Attivo')
+    customer('Eliminato oggi', utc_now())
+    customer('Eliminato mesi fa', utc_now()-timedelta(days=62))
+    assert customers_in_use(user, db) == base+2
+    assert usage_summary(db, user)['resources']['customers']['used'] == base+2
+    with pytest.raises(HTTPException) as exc:
+        check_customer_limit(user, db)
+    assert 'eliminati questo mese' in exc.value.detail
+
+
 def test_route_quota_counts_scheduled_routes_once_and_keeps_cancelled(billing_env, monkeypatch):
     from app.services.plans import check_monthly_route_quota, consume_route_quota, monthly_route_usage
     from app.services.plan_catalog import PLAN_LIMITS
