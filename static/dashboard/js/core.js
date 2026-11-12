@@ -764,7 +764,7 @@ async function loadBillingOverviewV63(){
     const payments = data.payments || [];
     const setText=(id,v)=>{ const el=document.getElementById(id); if(el) el.textContent=v; };
     const longDate = value => value ? new Date(value).toLocaleDateString("it-IT",{day:"numeric",month:"long",year:"numeric"}) : "—";
-    const price = plan.monthly_price ? `${fmtEuroV63(plan.monthly_price)} + IVA al mese` : "";
+    const price = plan.monthly_price ? `${fmtEuroV63(plan.monthly_price)} al mese` : "";
     const planLine = [plan.name ? `Piano ${plan.name}` : "", price].filter(Boolean);
     let title = "Nessun addebito programmato";
     if(plan.next_charge_at){ title = `Prossimo addebito il ${longDate(plan.next_charge_at)}`; planLine.push("rinnovo automatico"); }
@@ -853,7 +853,7 @@ function renderBillingInvoicesV63(invoices){
     <tr>
       <td data-label="Documento"><strong>${inv.is_test ? "Documento di prova" : "Fattura"} ${esc(inv.number || "—")}</strong><br><small class="gf-muted">${fmtDateV63(inv.date)}</small></td>
       <td data-label="Descrizione">Piano ${esc(inv.plan_name || "—")}<br><small class="gf-muted">${fmtDateV63(inv.period_start)} – ${fmtDateV63(inv.period_end)}</small></td>
-      <td data-label="Importo IVA inclusa"><strong>${fmtEuroV63(inv.total)}</strong> <span class="gf-badge" data-status="${BILLING_STATUS_TONE_V63[inv.status] || "neutral"}">${billingStatusLabelV63(inv.status)}</span></td>
+      <td data-label="Importo"><strong>${fmtEuroV63(inv.total)}</strong> <span class="gf-badge" data-status="${BILLING_STATUS_TONE_V63[inv.status] || "neutral"}">${billingStatusLabelV63(inv.status)}</span></td>
       <td data-label="PDF"><button type="button" class="gf-button" data-variant="secondary" data-size="sm" ${inv.pdf_available ? "" : "disabled"} onclick="${inv.pdf_available ? `window.open('/api/billing/invoices/${inv.id}/download','_blank')` : "toast('PDF fattura in preparazione')"}">Scarica PDF</button></td>
     </tr>`).join("");
 }
@@ -917,7 +917,7 @@ function syncPlanPageHeaderV874(){
   if(badge){ badge.textContent=state[0]; badge.dataset.status=state[1]; }
   if(status){
     const price = window.GF_PLANS?.[_currentPlan]?.price_eur;
-    const parts = price != null ? [`${fmtEuroV63(price)}/mese + IVA`] : [];
+    const parts = price != null ? [`${fmtEuroV63(price)}/mese`] : [];
     const date = value => value ? new Date(value).toLocaleDateString("it-IT",{day:"numeric",month:"long",year:"numeric"}) : "";
     if(me?.plan_status === "trial" && me.trial_ends_at) parts.push(`prova gratuita fino al ${date(me.trial_ends_at)}`);
     else if(me?.plan_expires_at) parts.push(`${me.cancel_at_period_end?"attivo fino al":"rinnovo il"} ${date(me.plan_expires_at)}`);
@@ -1003,7 +1003,7 @@ function renderPlanChangeBar(){
   bar.hidden = !plan || (_selectedUpgradePlan === _currentPlan && !renewal);
   if(bar.hidden) return;
   const when = renewal ? "rinnovo dello stesso piano" : current && plan.price_eur < current.price_eur ? "dal prossimo rinnovo" : "conguaglio calcolato alla conferma";
-  document.getElementById("planChangeSummary").textContent = `${renewal?"Rinnova ":""}${plan.name} · ${fmtEuroV63(plan.price_eur)}/mese + IVA · ${when}`;
+  document.getElementById("planChangeSummary").textContent = `${renewal?"Rinnova ":""}${plan.name} · ${fmtEuroV63(plan.price_eur)}/mese · ${when}`;
 }
 function planNeedsRenewal(){
   const status = typeof currentSessionUser === "undefined" ? null : currentSessionUser?.plan_status;

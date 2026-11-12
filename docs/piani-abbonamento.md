@@ -1,7 +1,7 @@
 # Piani GiroFacile
 
 Il catalogo condiviso da server, dashboard, sito e amministrazione è
-`app/services/plan_catalog.py`. Gli importi mensili sono IVA esclusa.
+`app/services/plan_catalog.py`. Gli importi mensili sono finali: non si aggiunge IVA (regime fiscale del titolare, confermato il 12/11/2026).
 
 | Risorsa | Starter | Business | Pro |
 | --- | ---: | ---: | ---: |

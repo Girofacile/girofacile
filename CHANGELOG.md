@@ -5,6 +5,9 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Prezzi senza IVA da aggiungere (regime fiscale del titolare): tolti «+ IVA» e «IVA esclusa» da piani,
+  landing, versione mobile e Super Admin; la colonna delle fatture si chiama «Importo». Il pagamento su Stripe
+  era già dell'importo esatto del piano.
 - Avvisi azzurri e gialli senza riquadro, in tutte le pagine: diventano una riga di testo (grigia per le
   informazioni, con un pallino ambra per l'attenzione). Restano riquadri solo i messaggi di riuscita (verdi) e
   di errore (rossi). In Piani e abbonamento il piano programmato si legge nella riga sotto il nome del piano

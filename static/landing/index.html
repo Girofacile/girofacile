@@ -258,7 +258,7 @@
         return '<section class="gf-panel pricing-card" data-recommended="' + recommended + '">'
           + '<header class="gf-panel__header"><h3 class="gf-panel__title">' + escapePublicPlan(p.name) + '</h3>' + (recommended ? '<span class="gf-badge" data-status="info">Consigliato</span>' : '') + '</header>'
           + '<div class="gf-panel__body gf-stack">'
-          + '<p class="gf-cluster"><strong class="gf-stat-strip__value">€ ' + escapePublicPlan(p.price_eur) + '</strong><small class="gf-stat-strip__unit">al mese, IVA esclusa</small></p>'
+          + '<p class="gf-cluster"><strong class="gf-stat-strip__value">€ ' + escapePublicPlan(p.price_eur) + '</strong><small class="gf-stat-strip__unit">al mese, prezzo finale</small></p>'
           + '<a class="gf-button" data-variant="' + (recommended ? 'primary' : 'secondary') + '" href="/login?plan=' + encodeURIComponent(key) + '">' + escapePublicPlan(publicTrialAction()) + '</a>'
           + bonusHtml
           + '<ul class="gf-list gf-stack" data-gap="sm">' + resourceHtml + capabilityHtml + '</ul>'
@@ -273,7 +273,7 @@
     renderPublicTrial();
     </script>
       <div class="gf-stack" data-gap="sm">
-        <p class="gf-muted">Prezzi mensili IVA esclusa. Tutti i piani includono inserimento manuale e importazione CSV/Excel degli ordini, pianificazione su un mezzo, storico ed esportazione dati. I collaboratori sono accessi aggiuntivi al titolare.</p>
+        <p class="gf-muted">Prezzi mensili finali, senza IVA da aggiungere. Tutti i piani includono inserimento manuale e importazione CSV/Excel degli ordini, pianificazione su un mezzo, storico ed esportazione dati. I collaboratori sono accessi aggiuntivi al titolare.</p>
         <p class="gf-muted" data-public-trial-copy="note">Consulta i piani e le condizioni di attivazione.</p>
       </div>
     </div>
