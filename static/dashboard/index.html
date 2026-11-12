@@ -709,6 +709,34 @@
         <div class="gf-field" data-invalid><p id="orderSourceMessage" class="gf-field__error" role="status"></p></div>
         <div id="orderSourceDetail" class="gf-stack" data-gap="lg"></div>
       </section>
+      <!-- Finestre della fonte API fuori dalla scheda: si aprono anche dalla schermata di modifica. -->
+      <dialog class="gf-modal" id="sourceFieldsDialog" data-size="lg" aria-labelledby="sourceFieldsDialogTitle">
+        <header class="gf-modal__header"><div><p class="gf-kicker">Dati da importare</p><h2 class="gf-modal__title" id="sourceFieldsDialogTitle">Quali dati arrivano dal gestionale?</h2></div></header>
+        <div class="gf-modal__body gf-stack">
+          <p class="gf-muted">Destinatario e indirizzo arrivano sempre. Spegni i dati che il tuo gestionale non invia: le scelte valgono per i prossimi ordini, quelli già presenti restano invariati.</p>
+          <div class="gf-grid" data-cols="2" id="sourceFieldsList"></div>
+          <p id="sourceFieldsDialogMessage" class="gf-muted" role="status"></p>
+        </div>
+        <footer class="gf-modal__footer gf-cluster" data-justify="end">
+          <button type="button" class="gf-button" data-variant="secondary" onclick="document.getElementById('sourceFieldsDialog').close()">Chiudi</button>
+          <button type="button" class="gf-button" data-variant="primary" id="sourceFieldsSave" onclick="GFOrderSources.saveFields()">Salva dati</button>
+        </footer>
+      </dialog>
+      <dialog class="gf-modal" id="sourceKeyDialog" aria-labelledby="sourceKeyDialogTitle">
+        <header class="gf-modal__header"><div><p class="gf-kicker">Chiave API</p><h2 class="gf-modal__title" id="sourceKeyDialogTitle">Ecco la tua nuova chiave</h2></div></header>
+        <div class="gf-modal__body gf-stack">
+          <p>Copiala e incollala nel tuo gestionale. <strong>Per sicurezza la vediamo solo adesso</strong>: chiusa questa finestra non sarà più visibile.</p>
+          <div class="gf-cluster">
+            <input class="gf-input" id="sourceToken" readonly autocomplete="off" spellcheck="false" aria-label="Chiave API generata">
+            <button type="button" class="gf-button" data-variant="primary" onclick="GFOrderSources.copyToken()">Copia chiave</button>
+          </div>
+          <p id="sourceTokenMessage" class="gf-muted" role="status"></p>
+          <p class="gf-alert" data-status="warning">Se la perdi non si recupera: ne generi una nuova e quella vecchia smette di funzionare.</p>
+        </div>
+        <footer class="gf-modal__footer gf-cluster" data-justify="end">
+          <button type="button" class="gf-button" data-variant="secondary" id="sourceKeyDone" disabled onclick="document.getElementById('sourceKeyDialog').close()">Ho salvato la chiave</button>
+        </footer>
+      </dialog>
       <section id="tab-clienti" class="tab hidden gf-stack" data-gap="lg">
         <section class="gf-stat-strip" data-icons="side" id="customerKpis" aria-label="Riepilogo clienti"></section>
         <section class="gf-panel" id="customerListPanel" aria-labelledby="customerListTitle">
@@ -1629,8 +1657,8 @@
 <script src="/static/password-strength.js?v=gf_driver_flow_20261020"></script>
 <script src="/static/dashboard/js/collaborators.js?v=gf_collaudo_20261110"></script>
 <script src="/static/dashboard/js/orders.js?v=gf_collaudo_20261110"></script>
-<script src="/static/dashboard/js/order-import.js?v=gf_collaudo2_20261110"></script>
-<script src="/static/dashboard/js/order-sources.js?v=gf_collaudo_20261110"></script>
+<script src="/static/dashboard/js/order-import.js?v=gf_fonte_api_b_20261112"></script>
+<script src="/static/dashboard/js/order-sources.js?v=gf_fonte_api_b_20261112"></script>
 <script src="/static/dashboard/js/dashboard-real-map.js?v=gf_priority_hero_20261025"></script>
 <script src="/static/dashboard/js/in-progress-reference.js?v=gf_chiudi_giro_20261110"></script>
 <script src="/static/dashboard/js/core.js?v=gf_orario_passato2_20261112"></script>

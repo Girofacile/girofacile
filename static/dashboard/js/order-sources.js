@@ -28,7 +28,15 @@
     try{await work();el('sourceMessage').textContent='';}catch(err){el('sourceMessage').textContent=err.message;}
     finally{busy=false;}
   }
-  function hideSecret(){const box=el('sourceCredential');if(box)box.replaceChildren();const secret=el('connectorSecret');if(secret)secret.value='';}
+  function hideSecret(){const dialog=el('sourceKeyDialog');if(dialog?.open)dialog.close();const token=el('sourceToken');if(token)token.value='';const secret=el('connectorSecret');if(secret)secret.value='';}
+  // La chiave appena generata si vede solo in questa finestra: chiudendola il valore viene cancellato.
+  // «Ho salvato la chiave» si abilita dopo la copia, così è difficile chiudere senza averla copiata.
+  function showKey(secret){
+    const dialog=el('sourceKeyDialog');if(!dialog)return;
+    el('sourceToken').value=secret;el('sourceTokenMessage').textContent='';el('sourceKeyDone').disabled=true;
+    if(!dialog.dataset.bound){dialog.dataset.bound='1';dialog.addEventListener('close',()=>{el('sourceToken').value='';});dialog.addEventListener('cancel',event=>{if(el('sourceKeyDone').disabled)event.preventDefault();});}
+    dialog.showModal();
+  }
   function sourceCard(s){
     const isRemoved=s.status==='removed';
     const isApi=s.kind==='api';
@@ -152,17 +160,35 @@
     }
     return {orders:[row]};
   }
+  // Fonte API (variante B, approvata il 12/11/2026): impostazioni a righe come nella pagina Impostazioni;
+  // la scelta dei dati si apre nella finestra sourceFieldsDialog, la nuova chiave nella finestra sourceKeyDialog.
+  function apiFieldRows(excluded,disabled){
+    return GFOrderImport.fieldOptions().map(({key,label},i)=>`<div class="gf-setting"><div class="gf-setting__copy"><strong id="sourceField${i}">${esc(label)}</strong></div><div class="gf-setting__control"><label class="gf-switch"><input type="checkbox" role="switch" data-choice="api" value="${key}" aria-labelledby="sourceField${i}" ${excluded.includes(key)?'':'checked'} ${disabled?'disabled':''}></label></div></div>`).join('');
+  }
+  function apiFieldsSummary(excluded){
+    const options=GFOrderImport.fieldOptions(),on=options.filter(o=>!excluded.includes(o.key)).length;
+    return `Destinatario e indirizzo sempre, più ${on} dati facoltativi su ${options.length}.`;
+  }
+  function openFields(){
+    const dialog=el('sourceFieldsDialog');if(!dialog||!current)return;
+    const canManage=manage();
+    el('sourceFieldsList').innerHTML=apiFieldRows(current.excluded_fields||[],!canManage);
+    el('sourceFieldsDialogMessage').textContent=canManage?'':'Chiedi al responsabile di modificare queste impostazioni.';
+    el('sourceFieldsSave').hidden=!canManage;
+    dialog.showModal();
+  }
   function apiDetailPage(s){
     const ownerUser=owner(), canManage=manage();
     const keyButton=canManage&&ownerUser
       ?`<button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="GFOrderSources.action('rotate')">${s.has_credential?'Genera nuova chiave':'Genera chiave API'}</button>`
       :'';
     const revokeButton=canManage&&ownerUser&&s.has_credential&&s.status==='active'
-      ?'<button type="button" class="gf-button" data-variant="danger" data-size="sm" onclick="GFOrderSources.action(\'revoke\')">Disattiva chiave</button>'
+      ?'<button type="button" class="gf-button" data-variant="ghost" data-size="sm" onclick="GFOrderSources.action(\'revoke\')">Disattiva chiave</button>'
       :'';
-    const keyState=s.has_credential
-      ?'<div class="gf-alert" data-status="success"><div class="gf-alert__body"><strong class="gf-alert__title">✓ Chiave API configurata</strong><p>Per sicurezza la chiave esistente non può essere visualizzata. Generane una nuova solo se devi sostituirla.</p></div></div>'
-      :'<div class="gf-alert" data-status="warning"><div class="gf-alert__body"><strong class="gf-alert__title">Nessuna chiave generata</strong><p>Genera una chiave e copiala subito: verrà mostrata una sola volta.</p></div></div>';
+    const keyBadge=s.has_credential?'<span class="gf-badge" data-status="success">Attiva</span>':'<span class="gf-badge" data-status="warning">Da generare</span>';
+    const keyCopy=s.has_credential
+      ?'Per sicurezza la chiave esistente non può essere visualizzata: se l’hai persa, generane una nuova.'
+      :'Genera la chiave da inserire nel tuo gestionale: la vedrai una sola volta.';
     const waiting=!s.last_success;
     const receptionTitle=waiting?'In attesa del primo ordine':'Ricezione attiva';
     const receptionCopy=waiting
@@ -170,32 +196,27 @@
       :`Ultima acquisizione riuscita: ${esc(new Date(s.last_success+'Z').toLocaleString('it-IT'))}.`;
     el('orderSourceDetail').innerHTML=`
       <div class="gf-grid" data-cols="main-side" data-source-api-settings>
-        <div class="gf-stack" data-gap="lg">
-          <section class="gf-panel"><div class="gf-panel__body gf-stack">${GFOrderImport.fieldChoices(s.excluded_fields||[],'api',!canManage)}${canManage?'<div><button type="button" class="gf-button" data-variant="primary" onclick="GFOrderSources.saveFields()">Salva dati da importare</button></div>':''}<p id="sourceFieldsMessage" class="gf-muted" role="status"></p></div></section>
-          <section class="gf-panel">
-            <header class="gf-panel__header"><h2 class="gf-panel__title">Chiave API</h2><div class="gf-cluster">${keyButton}${revokeButton}</div></header>
-            <div class="gf-panel__body gf-stack">
-              ${keyState}
-              <div id="sourceCredential"></div>
-            </div>
-          </section>
-
-          <section class="gf-panel">
-            <header class="gf-panel__header"><h2 class="gf-panel__title">Verifica connessione</h2><button type="button" class="gf-button" data-variant="primary" onclick="GFOrderSources.testConnection()"><span aria-hidden="true">➤</span> Esegui test</button></header>
-            <div class="gf-panel__body gf-stack">
-              <div><strong>Verifica con un ordine di esempio</strong><p class="gf-muted">GiroFacile ha già preparato un payload di prova. Esegui il test per controllare la formattazione e attivare definitivamente la fonte senza dover scrivere codice.</p></div>
-              <div id="sourceConnectionResult"></div>
-              <div><button type="button" class="gf-button" data-variant="secondary" onclick="GFOrderSources.downloadInstructions()">Scarica istruzioni per il tuo gestionale</button></div>
-            </div>
-          </section>
-        </div>
+        <section class="gf-panel">
+          <header class="gf-panel__header"><h2 class="gf-panel__title">Collegamento con il gestionale</h2></header>
+          <div class="gf-panel__body">
+            <div class="gf-setting"><div class="gf-setting__copy"><strong>Dati da importare</strong><p class="gf-muted">${apiFieldsSummary(s.excluded_fields||[])}</p><p id="sourceFieldsMessage" class="gf-muted" role="status"></p></div>
+              <div class="gf-setting__control"><button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="GFOrderSources.openFields()">${canManage?'Scegli dati':'Vedi dati'}</button></div></div>
+            <div class="gf-setting"><div class="gf-setting__copy"><strong>Chiave API ${keyBadge}</strong><p class="gf-muted">${keyCopy}</p></div>
+              <div class="gf-setting__control gf-cluster">${revokeButton}${keyButton}</div></div>
+            <div class="gf-setting"><div class="gf-setting__copy"><strong>Verifica con un ordine di esempio</strong><p class="gf-muted">Inviamo un ordine di prova per controllare il formato e attivare la fonte, senza scrivere codice.</p><div id="sourceConnectionResult"></div></div>
+              <div class="gf-setting__control"><button type="button" class="gf-button" data-variant="primary" data-size="sm" onclick="GFOrderSources.testConnection()">Esegui test</button></div></div>
+            <div class="gf-setting"><div class="gf-setting__copy"><strong>Istruzioni per il tuo gestionale</strong><p class="gf-muted">Indirizzo, formato dell’ordine ed esempio pronto da girare a chi gestisce il software.</p></div>
+              <div class="gf-setting__control"><button type="button" class="gf-button" data-variant="ghost" data-size="sm" onclick="GFOrderSources.downloadInstructions()" aria-label="Scarica istruzioni per il tuo gestionale">Scarica</button></div></div>
+          </div>
+        </section>
 
         <aside class="gf-panel">
           <header class="gf-panel__header"><h2 class="gf-panel__title">Stato ricezione</h2></header>
           <div class="gf-panel__body gf-stack">
             <span class="gf-badge" data-dot data-status="${waiting?'warning':'success'}">${receptionTitle}</span>
             <p class="gf-muted">${receptionCopy}</p>
-            <dl class="gf-details"><div class="gf-details__item"><dt>Ordini acquisiti</dt><dd><strong>${Number(s.order_count||0)}</strong></dd></div></dl>
+            <dl class="gf-details"><div class="gf-details__item"><dt>Ordini acquisiti</dt><dd><strong>${Number(s.order_count||0)}</strong></dd></div>
+            <div class="gf-details__item"><dt>Chiave API</dt><dd>${s.has_credential?'Attiva':'Da generare'}</dd></div></dl>
           </div>
         </aside>
       </div>`;
@@ -260,7 +281,7 @@
   }
   function editor(){
     hideSecret();const s=current;el('sourceWizard').hidden=false;
-    el('sourceWizard').innerHTML=`<div class="gf-panel__body gf-stack"><h2 class="gf-panel__title">${esc(s.name)} · ${statuses[s.status]}</h2><div class="gf-cluster">${manage()&&s.status==='active'?button('Metti in pausa',"action('pause')"):''}${manage()&&s.status==='paused'?button('Riattiva',"action('resume')"):''}${manage()&&s.status!=='removed'?button('Rimuovi fonte',"action('remove')"):''}</div>${s.status==='paused'||s.status==='removed'?'<p class="gf-alert" data-status="warning">La fonte non riceve ordini. Gli ordini acquisiti restano disponibili.</p>':`<h3 class="gf-subtitle">2. Carica un campione</h3><p class="gf-muted">Massimo 2 MB e 1000 ordini. L'anteprima è disponibile per 24 ore.</p>${s.kind==='file'?'<label class="gf-field"><span class="gf-field__label">File CSV o XLSX</span><input id="sourceFile" type="file" accept=".csv,.xlsx"></label><p class="gf-field__hint">Un solo foglio, senza formule. Mantieni i codici con zeri iniziali come testo.</p>':`<label class="gf-field"><span class="gf-field__label">Campione JSON</span><textarea class="gf-textarea" id="sourceSample" rows="10" spellcheck="false">${esc(JSON.stringify(example,null,2))}</textarea></label><p class="gf-field__hint">Il campione verifica i dati ma non importa ordini.</p>`}<div>${button('Carica campione','upload()')}</div><div id="sourceMapping"></div><div id="sourceReport"></div><div id="sourceConfirm" class="gf-cluster"></div>`}${s.kind==='api'&&s.status==='active'?`<h3 class="gf-subtitle">Invio dal gestionale</h3><p>Endpoint: <code class="gf-code">POST /api/order-ingestion</code>. Autenticazione Bearer. Aggiungi un batch_id univoco e invia ordini completi, non modifiche parziali.</p><p class="gf-muted">${s.has_credential?'Credenziale presente.':'Credenziale mancante: generala per autorizzare gli invii.'}</p>${manage()&&owner()?`<div class="gf-cluster">${button(s.has_credential?'Ruota credenziale':'Genera credenziale',"action('rotate')")}${s.has_credential?button('Revoca credenziale',"action('revoke')"):''}</div>`:'<p class="gf-muted">Le credenziali sono gestite dal titolare.</p>'}<div id="sourceCredential"></div>`:''}</div>`;
+    el('sourceWizard').innerHTML=`<div class="gf-panel__body gf-stack"><h2 class="gf-panel__title">${esc(s.name)} · ${statuses[s.status]}</h2><div class="gf-cluster">${manage()&&s.status==='active'?button('Metti in pausa',"action('pause')"):''}${manage()&&s.status==='paused'?button('Riattiva',"action('resume')"):''}${manage()&&s.status!=='removed'?button('Rimuovi fonte',"action('remove')"):''}</div>${s.status==='paused'||s.status==='removed'?'<p class="gf-alert" data-status="warning">La fonte non riceve ordini. Gli ordini acquisiti restano disponibili.</p>':`<h3 class="gf-subtitle">2. Carica un campione</h3><p class="gf-muted">Massimo 2 MB e 1000 ordini. L'anteprima è disponibile per 24 ore.</p>${s.kind==='file'?'<label class="gf-field"><span class="gf-field__label">File CSV o XLSX</span><input id="sourceFile" type="file" accept=".csv,.xlsx"></label><p class="gf-field__hint">Un solo foglio, senza formule. Mantieni i codici con zeri iniziali come testo.</p>':`<label class="gf-field"><span class="gf-field__label">Campione JSON</span><textarea class="gf-textarea" id="sourceSample" rows="10" spellcheck="false">${esc(JSON.stringify(example,null,2))}</textarea></label><p class="gf-field__hint">Il campione verifica i dati ma non importa ordini.</p>`}<div>${button('Carica campione','upload()')}</div><div id="sourceMapping"></div><div id="sourceReport"></div><div id="sourceConfirm" class="gf-cluster"></div>`}${s.kind==='api'&&s.status==='active'?`<h3 class="gf-subtitle">Invio dal gestionale</h3><p>Endpoint: <code class="gf-code">POST /api/order-ingestion</code>. Autenticazione Bearer. Aggiungi un batch_id univoco e invia ordini completi, non modifiche parziali.</p><p class="gf-muted">${s.has_credential?'Credenziale presente.':'Credenziale mancante: generala per autorizzare gli invii.'}</p>${manage()&&owner()?`<div class="gf-cluster">${button(s.has_credential?'Ruota credenziale':'Genera credenziale',"action('rotate')")}${s.has_credential?button('Revoca credenziale',"action('revoke')"):''}</div>`:'<p class="gf-muted">Le credenziali sono gestite dal titolare.</p>'}`:''}</div>`;
   }
   function upload(){return task(async()=>{
     if(current.kind==='file'){
@@ -301,10 +322,7 @@
       if(detailOpen){staged=verified=null;detailPage();}
       else if(action==='activate'){editor();if(staged){mapping();renderReport(verified,'sourceReport',current.id);confirmation();}}
       else{staged=verified=null;editor();}
-      if(secret){
-        const credentialBox=el('sourceCredential');
-        if(credentialBox){credentialBox.innerHTML='<div class="gf-alert" data-status="success" role="region" aria-label="Nuova chiave API"><div class="gf-alert__body gf-stack" data-gap="sm"><strong class="gf-alert__title">✓ Nuova chiave generata con successo</strong><p>Copia la chiave adesso e conservala in modo sicuro. Non sarà più mostrata.</p><div class="gf-cluster"><input class="gf-input" id="sourceToken" readonly autocomplete="off" spellcheck="false" aria-label="Chiave API generata"><button class="gf-button" data-variant="primary" type="button" onclick="GFOrderSources.copyToken()">▣&nbsp; Copia</button></div><p id="sourceTokenMessage" role="status"></p></div></div>';el('sourceToken').value=secret;}
-      }
+      if(secret)showKey(secret);
       await refresh();
     });
   }
@@ -358,16 +376,19 @@
       input.focus();input.select();
       if(notice)notice.textContent='Copia automatica non consentita. La chiave è selezionata: usa Ctrl+C.';
     }
+    const done=el('sourceKeyDone');if(done)done.disabled=false;
   }
 
   function saveFields(){if(!requireIntegration())return;return task(async()=>{
-    try{current=await request('/'+current.id+'/fields',{method:'PUT',body:JSON.stringify({version:current.version,excluded_fields:GFOrderImport.readChoices('api')})});el('sourceFieldsMessage').textContent='Scelte salvate per i prossimi ordini.';}
-    catch(error){el('sourceFieldsMessage').textContent=error.message;}
+    try{
+      current=await request('/'+current.id+'/fields',{method:'PUT',body:JSON.stringify({version:current.version,excluded_fields:GFOrderImport.readChoices('api')})});
+      el('sourceFieldsDialog')?.close();detailPage();el('sourceFieldsMessage').textContent='Scelte salvate per i prossimi ordini.';
+    }catch(error){(el('sourceFieldsDialog')?.open?el('sourceFieldsDialogMessage'):el('sourceFieldsMessage')).textContent=error.message;}
   });}
   function history(id,next=0){return task(async()=>{
     const data=await request(`/${id}/runs?offset=${next}`);el('sourceHistory').hidden=false;
     el('sourceHistory').innerHTML='<header class="gf-panel__header"><h2 class="gf-panel__title">Storico della fonte</h2></header><div class="gf-panel__body gf-stack">'+data.items.map(r=>`<p class="gf-cluster"><span>${esc(new Date(r.created_at+'Z').toLocaleString('it-IT'))} · ${statuses[r.status]||esc(r.status)}</span> ${button('Report #'+r.id,`report(${id},${r.id},0,'sourceHistoryReport')`)}</p>`).join('')+`<div class="gf-cluster">${next?button('Precedenti',`history(${id},${next-20})`):''}${next+20<data.total?button('Successivi',`history(${id},${next+20})`):''}</div><div id="sourceHistoryReport"></div></div>`;el('sourceHistory').scrollIntoView({block:'start'});
   });}
   function report(sid,rid,next,target){return task(async()=>renderReport(await request(`/${sid}/runs/${rid}?offset=${next}`),target,sid));}
-  window.GFOrderSources={createConnector,deleteFromList,saveFields,load,hideSecret,downloadInstructions,copyToken,unavailable,invalidate,createForm,create,open,back,deleteSource,testConnection,upload,preview,commit,action,history,report,page(delta){offset=Math.max(0,offset+delta*50);load();}};
+  window.GFOrderSources={createConnector,deleteFromList,saveFields,openFields,load,hideSecret,downloadInstructions,copyToken,unavailable,invalidate,createForm,create,open,back,deleteSource,testConnection,upload,preview,commit,action,history,report,page(delta){offset=Math.max(0,offset+delta*50);load();}};
 })();

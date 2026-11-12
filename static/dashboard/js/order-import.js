@@ -95,6 +95,11 @@
     const choice=(k,required=false)=>`<label class="gf-check"><input type="checkbox" data-choice="${prefix}" value="${k}" ${required||!ignored.includes(k)?'checked':''} ${required||disabled?'disabled':''} ${prefix==='import'?'onchange="GFOrderImport.changed()"':''}> <span>${k==='time_from'?'Fascia oraria':labels[k]}${required?' (obbligatorio)':''}</span></label>`;
     return `<section class="gf-stack"><h3 class="gf-subtitle">Quali dati vuoi importare?</h3><p class="gf-muted">Nome destinatario e indirizzo sono sempre richiesti. Il numero ordine serve a evitare duplicati.</p><div class="gf-form-grid">${essential.map(k=>choice(k,true)).join('')}${choice('requested_date')}</div><p class="gf-muted">Disattiva la data consegna per scegliere liberamente il giorno del giro.</p><details class="gf-panel"><summary class="gf-panel__header">Altri dati facoltativi</summary><div class="gf-panel__body gf-form-grid">${optional.filter(k=>k!=='requested_date').map(k=>choice(k)).join('')}</div></details><p class="gf-field__hint">Le scelte valgono per i prossimi invii di questa fonte. Gli ordini già presenti restano invariati finché non vengono reimportati.${disabled?' Chiedi al responsabile di modificare queste impostazioni.':''}</p></section>`;
   }
+  // Dati facoltativi di una fonte, con l'etichetta mostrata (la fascia oraria vale per «Dalle» e «Alle»).
+  function fieldOptions(){
+    return Object.keys(labels).filter(k=>!['external_id','number','recipient_name','delivery_address','time_to'].includes(k))
+      .map(k=>({key:k,label:k==='time_from'?'Fascia oraria':labels[k]}));
+  }
   function readChoices(prefix){const ignored=[...document.querySelectorAll(`[data-choice="${prefix}"]:not(:checked)`)].map(n=>n.value);if(ignored.includes('time_from'))ignored.push('time_to');return ignored;}
-  window.GFOrderImport={fieldChoices,readChoices,start,choose,upload,changed,commit,viewOrders,validate:()=>work(validate),reportPage(delta){return work(async()=>{report=await api(`/${source.id}/runs/${report.id}?offset=${report.offset+delta}`);renderReport();});}};
+  window.GFOrderImport={fieldChoices,fieldOptions,readChoices,start,choose,upload,changed,commit,viewOrders,validate:()=>work(validate),reportPage(delta){return work(async()=>{report=await api(`/${source.id}/runs/${report.id}?offset=${report.offset+delta}`);renderReport();});}};
 })();

@@ -5,6 +5,10 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Fonte API (variante B): la pagina è un elenco di righe come le Impostazioni (dati da importare,
+  chiave API, verifica, istruzioni) con lo stato della ricezione a destra. I dati si scelgono in una
+  finestra con gli interruttori; la nuova chiave compare in una finestra con «Copia chiave» e l’avviso
+  che non sarà più visibile. Spariti il grande riquadro dei dati facoltativi e i riquadri verdi.
 - Guida al primo giro: durante un caricamento (per esempio «Sto calcolando il giro») il riquadro
   e la barra della guida si nascondono, e ricompaiono al passo successivo quando il caricamento finisce.
 - Pianificazione giro: un orario di partenza già passato o uguale a quello attuale (nella data
