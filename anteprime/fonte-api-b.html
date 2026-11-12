@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Anteprima B · Fonte API · GiroFacile</title>
+<link rel="stylesheet" href="../static/design-system/theme.css">
+<link rel="stylesheet" href="../static/design-system/components.css">
+<link rel="stylesheet" href="../static/design-system/layout.css">
+<script src="../static/design-system/shell.js" defer></script>
+<script src="../static/design-system/design-system.js" defer></script>
+</head>
+<!-- Variante B: un elenco di righe come nelle Impostazioni; la scelta dei dati si apre in una finestra, a destra lo stato della ricezione. -->
+<body data-gf-layout="base" data-gf-surface="workspace" data-gf-nav-active="ordini" data-gf-title="GLEEM STUDIO"
+      data-gf-subtitle="Fonte API · genera la chiave e verifica il collegamento" data-gf-user-name="EDIL ROSSI" data-gf-user-role="Amministratore">
+<main data-gf-shell-content class="gf-stack" data-gap="lg">
+  <nav class="gf-cluster" aria-label="Varianti da confrontare"><a href="fonte-api-a.html">Tre passi in fila</a> · <strong>Impostazioni a righe</strong> · <a href="fonte-api-c.html">Collegamento e dati affiancati</a></nav>
+  <div class="gf-grid" data-cols="main-side">
+    <section class="gf-panel">
+      <header class="gf-panel__header"><h2 class="gf-panel__title">Collegamento con il gestionale</h2></header>
+      <div class="gf-panel__body">
+        <div class="gf-setting"><div class="gf-setting__copy"><strong>Dati da importare</strong><p class="gf-muted">Destinatario, indirizzo, data consegna e altri 10 dati.</p></div>
+          <div class="gf-setting__control"><button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="openFields()">Scegli dati</button></div></div>
+        <div class="gf-setting"><div class="gf-setting__copy"><strong>Chiave API <span class="gf-badge" data-status="success">Attiva</span></strong><p class="gf-muted">Generata il 12/11/2026. Non è più visibile: se l’hai persa, generane una nuova.</p></div>
+          <div class="gf-setting__control gf-cluster"><button type="button" class="gf-button" data-variant="ghost" data-size="sm">Disattiva</button><button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="openKey()">Genera nuova chiave</button></div></div>
+        <div class="gf-setting"><div class="gf-setting__copy"><strong>Verifica collegamento</strong><p class="gf-muted">Inviamo un ordine di prova per controllare il formato e attivare la fonte.</p></div>
+          <div class="gf-setting__control"><button type="button" class="gf-button" data-variant="primary" data-size="sm">Esegui test</button></div></div>
+        <div class="gf-setting"><div class="gf-setting__copy"><strong>Istruzioni per il tuo gestionale</strong><p class="gf-muted">Indirizzo, formato dell’ordine ed esempio pronto da girare a chi gestisce il software.</p></div>
+          <div class="gf-setting__control"><button type="button" class="gf-button" data-variant="ghost" data-size="sm">Scarica</button></div></div>
+      </div>
+    </section>
+      <aside class="gf-panel">
+        <header class="gf-panel__header"><h2 class="gf-panel__title">Stato ricezione</h2></header>
+        <div class="gf-panel__body gf-stack">
+          <span class="gf-badge" data-dot data-status="warning">In attesa del primo ordine</span>
+          <p class="gf-muted">La fonte si attiva dopo la verifica del collegamento.</p>
+          <dl class="gf-details"><div class="gf-details__item"><dt>Ordini acquisiti</dt><dd><strong>0</strong></dd></div>
+          <div class="gf-details__item"><dt>Chiave API</dt><dd>Attiva dal 12/11/2026</dd></div></dl>
+        </div>
+      </aside>
+  </div>
+
+  <dialog class="gf-modal" id="fieldsDialog" data-size="lg" aria-labelledby="fieldsDialogTitle">
+    <header class="gf-modal__header"><div><p class="gf-kicker">Dati da importare</p><h2 class="gf-modal__title" id="fieldsDialogTitle">Quali dati arrivano dal gestionale?</h2></div></header>
+    <div class="gf-modal__body gf-stack">
+      <p class="gf-muted">Destinatario e indirizzo arrivano sempre. Spegni i dati che il tuo gestionale non invia.</p>
+      <div class="gf-grid" data-cols="2"><div class="gf-setting"><div class="gf-setting__copy"><strong id="f99">Data consegna</strong></div><div class="gf-setting__control"><label class="gf-switch"><input type="checkbox" role="switch" aria-labelledby="f99" checked></label></div></div><div class="gf-setting"><div class="gf-setting__copy"><strong id="f0">Telefono</strong></div><div class="gf-setting__control"><label class="gf-switch"><input type="checkbox" role="switch" aria-labelledby="f0" checked></label></div></div><div class="gf-setting"><div class="gf-setting__copy"><strong id="f1">Colli</strong></div><div class="gf-setting__control"><label class="gf-switch"><input type="checkbox" role="switch" aria-labelledby="f1" checked></label></div></div><div class="gf-setting"><div class="gf-setting__copy"><strong id="f2">Peso</strong></div><div class="gf-setting__control"><label class="gf-switch"><input type="checkbox" role="switch" aria-labelledby="f2" checked></label></div></div><div class="gf-setting"><div class="gf-setting__copy"><strong id="f3">Codice cliente</strong></div><div class="gf-setting__control"><label class="gf-switch"><input type="checkbox" role="switch" aria-labelledby="f3" checked></label></div></div><div class="gf-setting"><div class="gf-setting__copy"><strong id="f4">Fascia oraria</strong></div><div class="gf-setting__control"><label class="gf-switch"><input type="checkbox" role="switch" aria-labelledby="f4" checked></label></div></div><div class="gf-setting"><div class="gf-setting__copy"><strong id="f5">Pallet</strong></div><div class="gf-setting__control"><label class="gf-switch"><input type="checkbox" role="switch" aria-labelledby="f5"></label></div></div><div class="gf-setting"><div class="gf-setting__copy"><strong id="f6">Volume</strong></div><div class="gf-setting__control"><label class="gf-switch"><input type="checkbox" role="switch" aria-labelledby="f6" checked></label></div></div><div class="gf-setting"><div class="gf-setting__copy"><strong id="f7">Sponda</strong></div><div class="gf-setting__control"><label class="gf-switch"><input type="checkbox" role="switch" aria-labelledby="f7" checked></label></div></div><div class="gf-setting"><div class="gf-setting__copy"><strong id="f8">Transpallet</strong></div><div class="gf-setting__control"><label class="gf-switch"><input type="checkbox" role="switch" aria-labelledby="f8"></label></div></div><div class="gf-setting"><div class="gf-setting__copy"><strong id="f9">ZTL</strong></div><div class="gf-setting__control"><label class="gf-switch"><input type="checkbox" role="switch" aria-labelledby="f9" checked></label></div></div><div class="gf-setting"><div class="gf-setting__copy"><strong id="f10">Requisiti</strong></div><div class="gf-setting__control"><label class="gf-switch"><input type="checkbox" role="switch" aria-labelledby="f10" checked></label></div></div><div class="gf-setting"><div class="gf-setting__copy"><strong id="f11">Note</strong></div><div class="gf-setting__control"><label class="gf-switch"><input type="checkbox" role="switch" aria-labelledby="f11" checked></label></div></div><div class="gf-setting"><div class="gf-setting__copy"><strong id="f12">Articoli</strong></div><div class="gf-setting__control"><label class="gf-switch"><input type="checkbox" role="switch" aria-labelledby="f12"></label></div></div></div>
+    </div>
+    <footer class="gf-modal__footer gf-cluster" data-justify="end">
+      <button type="button" class="gf-button" data-variant="secondary" onclick="document.getElementById('fieldsDialog').close()">Annulla</button>
+      <button type="button" class="gf-button" data-variant="primary" onclick="document.getElementById('fieldsDialog').close()">Salva dati</button>
+    </footer>
+  </dialog>
+
+  <dialog class="gf-modal" id="keyDialog" aria-labelledby="keyDialogTitle">
+    <header class="gf-modal__header"><div><p class="gf-kicker">Chiave API</p><h2 class="gf-modal__title" id="keyDialogTitle">Ecco la tua nuova chiave</h2></div></header>
+    <div class="gf-modal__body gf-stack">
+      <p>Copiala e incollala nel tuo gestionale. <strong>Per sicurezza la vediamo solo adesso</strong>: chiusa questa finestra non sarà più visibile.</p>
+      <div class="gf-cluster">
+        <input class="gf-input" id="keyValue" readonly value="gf_orders_10.ZYtQ9i_5czmXFFFBQFjy81z63AEEvKp2" aria-label="Chiave API">
+        <button type="button" class="gf-button" data-variant="primary" onclick="copied()">Copia chiave</button>
+      </div>
+      <p class="gf-alert" data-status="warning">Se la perdi non si recupera: ne generi una nuova e quella vecchia smette di funzionare.</p>
+    </div>
+    <footer class="gf-modal__footer gf-cluster" data-justify="end">
+      <button type="button" class="gf-button" data-variant="secondary" id="keyDone" disabled onclick="document.getElementById('keyDialog').close()">Ho salvato la chiave</button>
+    </footer>
+  </dialog>
+<script>
+function openKey(){const d=document.getElementById('keyDialog');document.getElementById('keyDone').disabled=true;d.showModal();}
+function copied(){document.getElementById('keyDone').disabled=false;}
+function openFields(){document.getElementById('fieldsDialog').showModal();}
+// ?chiave=1 apre subito la finestra (per le immagini di confronto).
+if(new URLSearchParams(location.search).get('chiave'))addEventListener('load',()=>setTimeout(openKey,300));
+</script>
+</main>
+</body>
+</html>

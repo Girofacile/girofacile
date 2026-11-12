@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Anteprima A · Fonte API · GiroFacile</title>
+<link rel="stylesheet" href="../static/design-system/theme.css">
+<link rel="stylesheet" href="../static/design-system/components.css">
+<link rel="stylesheet" href="../static/design-system/layout.css">
+<script src="../static/design-system/shell.js" defer></script>
+<script src="../static/design-system/design-system.js" defer></script>
+</head>
+<!-- Variante A: in alto i numeri della fonte; sotto un solo riquadro con i tre passi numerati (dati come etichette da accendere/spegnere, chiave, verifica). -->
+<body data-gf-layout="base" data-gf-surface="workspace" data-gf-nav-active="ordini" data-gf-title="GLEEM STUDIO"
+      data-gf-subtitle="Fonte API · genera la chiave e verifica il collegamento" data-gf-user-name="EDIL ROSSI" data-gf-user-role="Amministratore">
+<main data-gf-shell-content class="gf-stack" data-gap="lg">
+  <nav class="gf-cluster" aria-label="Varianti da confrontare"><strong>Tre passi in fila</strong> · <a href="fonte-api-b.html">Impostazioni a righe</a> · <a href="fonte-api-c.html">Collegamento e dati affiancati</a></nav>
+  <section class="gf-stat-strip" aria-label="Stato della fonte">
+    <div class="gf-stat-strip__cell"><span class="gf-stat-strip__label">Ricezione</span><strong class="gf-stat-strip__value">In attesa</strong><small class="gf-stat-strip__unit">del primo ordine</small></div>
+    <div class="gf-stat-strip__cell"><span class="gf-stat-strip__label">Ordini acquisiti</span><strong class="gf-stat-strip__value">0</strong></div>
+    <div class="gf-stat-strip__cell"><span class="gf-stat-strip__label">Chiave API</span><strong class="gf-stat-strip__value">Attiva</strong><small class="gf-stat-strip__unit">dal 12/11</small></div>
+    <div class="gf-stat-strip__cell"><span class="gf-stat-strip__label">Dati importati</span><strong class="gf-stat-strip__value">12</strong><small class="gf-stat-strip__unit">su 16</small></div>
+  </section>
+  <section class="gf-panel">
+    <div class="gf-panel__body gf-stack" data-gap="lg">
+      <ol class="gf-steps" aria-label="Configurazione della fonte">
+        <li class="gf-step is-done"><strong>Dati da importare</strong><small>12 dati scelti</small></li>
+        <li class="gf-step is-done"><strong>Chiave API</strong><small>Attiva</small></li>
+        <li class="gf-step" aria-current="step"><strong>Verifica</strong><small>Ordine di prova</small></li>
+      </ol>
+      <section class="gf-stack" aria-labelledby="aData">
+        <div class="gf-cluster" data-justify="between"><h3 class="gf-subtitle" id="aData">1 · Dati da importare</h3><button type="button" class="gf-button" data-variant="secondary" data-size="sm">Salva</button></div>
+        <p class="gf-muted">Destinatario e indirizzo arrivano sempre. Tocca un dato per includerlo o escluderlo.</p>
+        <div class="gf-cluster"><button type="button" class="gf-chip" aria-pressed="true">Data consegna</button><button type="button" class="gf-chip" aria-pressed="true">Telefono</button><button type="button" class="gf-chip" aria-pressed="true">Colli</button><button type="button" class="gf-chip" aria-pressed="true">Peso</button><button type="button" class="gf-chip" aria-pressed="true">Codice cliente</button><button type="button" class="gf-chip" aria-pressed="true">Fascia oraria</button><button type="button" class="gf-chip" aria-pressed="false">Pallet</button><button type="button" class="gf-chip" aria-pressed="true">Volume</button><button type="button" class="gf-chip" aria-pressed="true">Sponda</button><button type="button" class="gf-chip" aria-pressed="false">Transpallet</button><button type="button" class="gf-chip" aria-pressed="true">ZTL</button><button type="button" class="gf-chip" aria-pressed="true">Requisiti</button><button type="button" class="gf-chip" aria-pressed="true">Note</button><button type="button" class="gf-chip" aria-pressed="false">Articoli</button></div>
+      </section>
+      <section class="gf-stack" aria-labelledby="aKey">
+        <h3 class="gf-subtitle" id="aKey">2 · Chiave API</h3>
+        <div class="gf-setting"><div class="gf-setting__copy"><strong>Chiave attiva dal 12/11/2026</strong><p class="gf-muted">Per sicurezza non è più visibile. Generane una nuova solo se devi sostituirla.</p></div>
+          <div class="gf-setting__control gf-cluster"><button type="button" class="gf-button" data-variant="ghost" data-size="sm">Disattiva</button><button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="openKey()">Genera nuova chiave</button></div></div>
+      </section>
+      <section class="gf-stack" aria-labelledby="aTest">
+        <h3 class="gf-subtitle" id="aTest">3 · Verifica il collegamento</h3>
+        <div class="gf-setting"><div class="gf-setting__copy"><strong>Invia un ordine di prova</strong><p class="gf-muted">Controlliamo il formato e attiviamo la fonte, senza scrivere codice.</p></div>
+          <div class="gf-setting__control gf-cluster"><button type="button" class="gf-button" data-variant="ghost" data-size="sm">Istruzioni per il gestionale</button><button type="button" class="gf-button" data-variant="primary" data-size="sm">Esegui test</button></div></div>
+      </section>
+    </div>
+  </section>
+
+  <dialog class="gf-modal" id="keyDialog" aria-labelledby="keyDialogTitle">
+    <header class="gf-modal__header"><div><p class="gf-kicker">Chiave API</p><h2 class="gf-modal__title" id="keyDialogTitle">Ecco la tua nuova chiave</h2></div></header>
+    <div class="gf-modal__body gf-stack">
+      <p>Copiala e incollala nel tuo gestionale. <strong>Per sicurezza la vediamo solo adesso</strong>: chiusa questa finestra non sarà più visibile.</p>
+      <div class="gf-cluster">
+        <input class="gf-input" id="keyValue" readonly value="gf_orders_10.ZYtQ9i_5czmXFFFBQFjy81z63AEEvKp2" aria-label="Chiave API">
+        <button type="button" class="gf-button" data-variant="primary" onclick="copied()">Copia chiave</button>
+      </div>
+      <p class="gf-alert" data-status="warning">Se la perdi non si recupera: ne generi una nuova e quella vecchia smette di funzionare.</p>
+    </div>
+    <footer class="gf-modal__footer gf-cluster" data-justify="end">
+      <button type="button" class="gf-button" data-variant="secondary" id="keyDone" disabled onclick="document.getElementById('keyDialog').close()">Ho salvato la chiave</button>
+    </footer>
+  </dialog>
+<script>
+function openKey(){const d=document.getElementById('keyDialog');document.getElementById('keyDone').disabled=true;d.showModal();}
+function copied(){document.getElementById('keyDone').disabled=false;}
+function openFields(){document.getElementById('fieldsDialog').showModal();}
+// ?chiave=1 apre subito la finestra (per le immagini di confronto).
+if(new URLSearchParams(location.search).get('chiave'))addEventListener('load',()=>setTimeout(openKey,300));
+</script>
+</main>
+</body>
+</html>
