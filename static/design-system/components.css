@@ -73,9 +73,23 @@ body[data-gf-surface] .gf-badge {
   line-height: 1.25; background: var(--gf-color-surface-subtle) !important; color: var(--gf-color-muted) !important;
 }
 body[data-gf-surface] :is(.gf-badge,.gf-alert)[data-status="success"] { background: var(--gf-color-success-bg) !important; color: var(--gf-color-success) !important; }
-body[data-gf-surface] :is(.gf-badge,.gf-alert)[data-status="warning"] { background: var(--gf-color-warning-bg) !important; color: var(--gf-color-warning) !important; }
+body[data-gf-surface] .gf-badge[data-status="warning"] { background: var(--gf-color-warning-bg) !important; color: var(--gf-color-warning) !important; }
 body[data-gf-surface] :is(.gf-badge,.gf-alert)[data-status="danger"] { background: var(--gf-color-danger-bg) !important; color: var(--gf-color-danger) !important; }
-body[data-gf-surface] :is(.gf-badge,.gf-alert)[data-status="info"] { background: var(--gf-color-info-bg) !important; color: var(--gf-color-info) !important; }
+body[data-gf-surface] .gf-badge[data-status="info"] { background: var(--gf-color-info-bg) !important; color: var(--gf-color-info) !important; }
+/* Avvisi informativi e di attenzione: semplice riga di testo, senza riquadro colorato (scelta del 12 novembre 2026).
+   Info in grigio; attenzione nel colore del testo con un pallino ambra davanti. Successo ed errore restano riquadri. */
+body[data-gf-surface] .gf-alert:is([data-status="info"],[data-status="warning"]) {
+  padding: 0 !important; border: 0 !important; border-radius: 0 !important; background: transparent !important;
+  color: var(--gf-color-muted) !important; font-size: var(--gf-font-sm);
+}
+body[data-gf-surface] .gf-alert[data-status="warning"] { color: var(--gf-color-text) !important; }
+body[data-gf-surface] .gf-alert[data-status="warning"]::before {
+  content: ""; display: inline-block; flex: none; width: var(--gf-space-2); height: var(--gf-space-2);
+  margin: 0 var(--gf-space-2) 0 0; border-radius: var(--gf-radius-circle); background: var(--gf-color-warning); vertical-align: middle;
+}
+body[data-gf-surface] .gf-alert[data-status="warning"]:has(.gf-alert__body)::before { margin-top: var(--gf-space-2); }
+body[data-gf-surface] .gf-alert:is([data-status="info"],[data-status="warning"]) :is(.gf-alert__title,.gf-alert__text) { font-size: var(--gf-font-sm); color: inherit; }
+body[data-gf-surface] .gf-alert:is([data-status="info"],[data-status="warning"]) .gf-alert__title { color: var(--gf-color-text); }
 body[data-gf-surface] .gf-card {
   min-width: 0; border: 1px solid var(--gf-color-border);
   border-radius: var(--gf-radius-lg); background: var(--gf-color-surface);

@@ -170,18 +170,21 @@ function renderSubscriptionControls(data) {
   const usage = data.usage || {};
   renderOrderUsage(usage);
   const status = data.plan_status || data.plan?.status;
-  const messages = [b.checkout_enabled ? 'Ambiente di prova: nessun denaro reale viene addebitato.' :
+  // Il piano programmato e la disdetta compaiono nella riga sotto il nome del piano; qui solo note brevi in fondo.
+  window._pendingPlanV874 = b.pending_plan || null;
+  if (typeof syncPlanPageHeaderV874 === 'function') syncPlanPageHeaderV874();
+  const notes = [b.checkout_enabled ? 'Ambiente di prova: nessun denaro reale viene addebitato.' :
     'Acquisti non ancora disponibili. Nessun addebito automatico alla fine della prova.'];
-  if (b.source === 'legacy' || b.source === 'manual') messages.push('Accesso assegnato amministrativamente; non equivale a un abbonamento pagato.');
-  if (b.cancel_at_period_end) messages.push('Disdetta registrata: accesso fino alla fine del periodo pagato.');
-  if (b.pending_plan) messages.push(`Piano ${b.pending_plan} programmato dal prossimo rinnovo.`);
-  if (status === 'past_due') messages.push(`Pagamento da completare. Tolleranza fino al ${fmtDateV63(b.grace_until)}.`);
-  if (['expired','cancelled','incomplete'].includes(status)) messages.push('Puoi consultare ed esportare i dati e terminare i giri già avviati. Nuovi giri non disponibili.');
-  box.innerHTML = `${planUsageStripMarkup(usage)}${messages.length?`<div class="gf-alert" data-status="info"><div class="gf-alert__body">${messages.map(m=>`<p>${esc(m)}</p>`).join('')}</div></div>`:''}
+  if (b.source === 'legacy' || b.source === 'manual') notes.push('Accesso assegnato amministrativamente; non equivale a un abbonamento pagato.');
+  const warnings = [];
+  if (status === 'past_due') warnings.push(`Pagamento da completare. Tolleranza fino al ${fmtDateV63(b.grace_until)}.`);
+  if (['expired','cancelled','incomplete'].includes(status)) warnings.push('Puoi consultare ed esportare i dati e terminare i giri già avviati. Nuovi giri non disponibili.');
+  box.innerHTML = `${planUsageStripMarkup(usage)}${warnings.map(m=>`<p class="gf-alert" data-status="warning" role="status">${esc(m)}</p>`).join('')}
     ${b.checkout_enabled ? `<div class="gf-cluster"><button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="subscriptionAction('sync')">Aggiorna stato</button>
       <button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="subscriptionAction('cancel-checkout')">Annulla checkout aperto</button>
     ${b.subscription ? `<button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="managePaymentMethodsV876()">Metodo di pagamento e documenti</button>
-      <button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="subscriptionAction('${b.cancel_at_period_end?'resume':'cancel'}')">${b.cancel_at_period_end?'Ripristina rinnovo':'Disdici a fine periodo'}</button>`:''}</div>` : ''}`;
+      <button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="subscriptionAction('${b.cancel_at_period_end?'resume':'cancel'}')">${b.cancel_at_period_end?'Ripristina rinnovo':'Disdici a fine periodo'}</button>`:''}</div>` : ''}
+    ${notes.map(m=>`<p class="gf-muted">${esc(m)}</p>`).join('')}`;
   const button = document.getElementById('btnConfirmUpgrade');
   if (button) { button.disabled = !b.checkout_enabled; button.textContent = _selectedUpgradePlan === _currentPlan ? 'Rinnova in modalità di prova' : b.subscription ? 'Modifica piano di prova' : 'Acquista in modalità di prova'; button.title = b.checkout_enabled ? '' : 'Acquisti non ancora disponibili'; }
 }

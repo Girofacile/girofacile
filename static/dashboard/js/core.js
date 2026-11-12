@@ -921,6 +921,9 @@ function syncPlanPageHeaderV874(){
     const date = value => value ? new Date(value).toLocaleDateString("it-IT",{day:"numeric",month:"long",year:"numeric"}) : "";
     if(me?.plan_status === "trial" && me.trial_ends_at) parts.push(`prova gratuita fino al ${date(me.trial_ends_at)}`);
     else if(me?.plan_expires_at) parts.push(`${me.cancel_at_period_end?"attivo fino al":"rinnovo il"} ${date(me.plan_expires_at)}`);
+    // Cambio al piano inferiore già programmato: si legge qui, non in un riquadro separato.
+    const pending = window._pendingPlanV874;
+    if(pending && pending !== _currentPlan) parts.push(`poi passa a ${names[pending] || pending}`);
     status.textContent = parts.join(" · ") || "Gestisci il tuo abbonamento e confrontalo con gli altri piani disponibili.";
   }
 }

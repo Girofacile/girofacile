@@ -5,6 +5,10 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Avvisi azzurri e gialli senza riquadro, in tutte le pagine: diventano una riga di testo (grigia per le
+  informazioni, con un pallino ambra per l'attenzione). Restano riquadri solo i messaggi di riuscita (verdi) e
+  di errore (rossi). In Piani e abbonamento il piano programmato si legge nella riga sotto il nome del piano
+  («… · poi passa a Business») e la nota «Ambiente di prova» è in fondo, sotto i pulsanti.
 - Piani e abbonamento:
   - un piano scaduto, disdetto o da pagare ora si può rinnovare anche con lo stesso piano
     (pulsante «Rinnova in modalità di prova»); se su Stripe c'è un pagamento in sospeso si apre la sua pagina;
