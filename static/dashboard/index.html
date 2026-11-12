@@ -745,15 +745,16 @@
               <div><button class="gf-button" data-variant="ghost" type="button" onclick="clearCustomerFilters()">Azzera filtri</button></div>
             </div>
             <div class="gf-cluster" id="customerQuickFilters" role="group" aria-label="Filtri rapidi"></div>
-            <div class="gf-savebar hidden" data-floating id="customerBulkBar" role="region" aria-label="Clienti selezionati">
-              <span class="gf-badge" data-status="info" id="customerSelectionBadge" aria-hidden="true">0</span><p id="customerSelectedCount" role="status"></p>
-              <button class="gf-button" data-variant="ghost" data-size="sm" type="button" onclick="clearCustomerSelection()">Deseleziona</button>
-              <button id="customersGoPlanning" class="gf-button" data-variant="primary" data-size="sm" type="button" onclick="goCustomerPlanning()">Vai alla pianificazione</button>
-            </div>
           </div>
           <div id="customerResults"></div>
           <footer class="gf-panel__footer gf-cluster" data-justify="between"><span id="customerCount" class="gf-muted" role="status"></span><nav class="gf-cluster" id="customerPagination" aria-label="Pagine clienti"></nav></footer>
         </section>
+        <!-- Barra dei clienti selezionati: fuori dal pannello, così non sposta la tabella. -->
+        <div class="gf-savebar hidden" data-floating id="customerBulkBar" role="region" aria-label="Clienti selezionati">
+          <span class="gf-badge" data-status="info" id="customerSelectionBadge" aria-hidden="true">0</span><p id="customerSelectedCount" role="status"></p>
+          <button class="gf-button" data-variant="ghost" data-size="sm" type="button" onclick="clearCustomerSelection()">Deseleziona</button>
+          <button id="customersGoPlanning" class="gf-button" data-variant="primary" data-size="sm" type="button" onclick="goCustomerPlanning()">Vai alla pianificazione</button>
+        </div>
       </section>
       <div class="gf-overlay hidden" data-position="side" id="customerDrawerScrim" onclick="if(event.target===this)closeCustomerDrawer()">
         <aside class="gf-modal" id="customerDrawer" role="dialog" aria-modal="true" aria-label="Dettagli cliente" aria-hidden="true"></aside>

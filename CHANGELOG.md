@@ -5,6 +5,8 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Clienti: selezionando un cliente la tabella non scende più lasciando uno spazio vuoto sotto i
+  filtri. La barra «clienti selezionati» è in fondo alla pagina e riserva il suo spazio sotto la tabella.
 - Guida al primo giro, passo 6 «Seleziona il cliente»: il riquadro verde compare sotto la riga
   del cliente, con la freccia sulla casella, invece di coprire nome e indirizzo.
 - Indirizzi verificati in automatico: nel nuovo cliente e nella consegna occasionale non c’è più
