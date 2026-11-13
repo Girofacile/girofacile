@@ -279,11 +279,14 @@ function cxFindCustomer(id){return customerDirectory.all.find(x=>Number(x.id)===
 function showCustomerDetails(id){ openCustomerDrawer(id,'view'); }
 // Riquadro con titolo e righe etichetta → valore della scheda cliente (i valori arrivano già sicuri).
 function cxCard(title,inner){return '<section class="gf-card gf-stack" data-gap="sm"><h3 class="gf-subtitle">'+title+'</h3>'+inner+'</section>';}
-function cxRows(rows){return '<dl class="gf-details" data-layout="rows">'+rows.map(r=>'<div class="gf-details__item"><dt>'+r[0]+'</dt><dd>'+r[1]+'</dd></div>').join('')+'</dl>';}
+function cxRows(rows){return '<dl class="gf-details" data-layout="rows">'+rows.map(r=>'<div class="gf-details__item"'+(r[2]?' '+r[2]:'')+'><dt>'+r[0]+'</dt><dd>'+r[1]+'</dd></div>').join('')+'</dl>';}
 function openCustomerDrawer(id,mode,focusSlot){
   const drawer=cxEl('customerDrawer');if(!drawer)return;
   const existing=id!=null?cxFindCustomer(id):null;
   if(id!=null&&!existing)return;
+  // I dettagli sono solo da leggere: modificare o creare un cliente apre sempre la finestra completa
+  // (openCustomerModal), con tutti i campi in un unico posto.
+  if(!existing||mode==='edit'||mode==='new'){closeCustomerDrawer();if(typeof openCustomerModal==='function')openCustomerModal(existing?existing.id:null);return;}
   customerDrawer.mode=existing?(mode||'view'):'new';
   customerDrawer.current=existing||{id:null,nome:'',indirizzo:'',comune:'',provincia:'',codice_cliente:'',stato_geocodifica:'da_verificare',isNew:true};
   const c=customerDrawer.current, edit=customerDrawer.mode!=='view';
@@ -328,19 +331,22 @@ function openCustomerDrawer(id,mode,focusSlot){
   if(!edit){
     const contacts=[['Referente',c.referente],['Telefono',c.telefono],['Email',c.email]].filter(r=>r[1]).map(r=>[r[0],cxEsc(r[1])]);
     const flags=[cxAccessBadges(c),c.sponda?'<span class="gf-badge" data-kind="tail-lift" data-gf-feature="tail_lift">Sponda</span>':'',c.transpallet?'<span class="gf-badge" data-status="neutral">Transpallet</span>':''].join('');
-    const delivery=[['Tempo di scarico',cxEsc((c.tempo_scarico_min??10)+' min')]];
+    const delivery=[['Tempo di scarico',cxEsc((c.tempo_scarico_min??10)+' min')],
+      ['Fascia oraria',saved.length?cxEsc(saved.join(' e ')):'Fascia oraria non presente','data-gf-feature="time_windows"']];
     if(flags)delivery.push(['Accesso','<span class="gf-cluster">'+flags+'</span>']);
     if(typeof agentsFeatureEnabled==='function'&&agentsFeatureEnabled())delivery.push(['Agente',cxEsc(c.agent_name||'Cliente interno')]);
     if(c.note)delivery.push(['Note',cxEsc(c.note)]);
     extra=cxCard('Contatti',contacts.length?cxRows(contacts):'<p class="gf-muted">Nessun contatto indicato.</p>')+cxCard('Consegna',cxRows(delivery));
   }
-  // Variante B (approvata il 13/11/2026): finestra al centro su due colonne, dati a sinistra e fascia a destra.
-  const body='<div class="gf-modal__body"><div class="gf-grid" data-cols="2"><div class="gf-stack">'
-    +cxCard(edit?'Dati del cliente':'Indirizzo di consegna',address)+extra+'</div><div class="gf-stack">'+slot+'</div></div></div>';
+  // Dettagli (13/11/2026): finestra al centro, solo lettura. A sinistra indirizzo e contatti, a destra la consegna.
+  const body=edit
+    ?'<div class="gf-modal__body"><div class="gf-grid" data-cols="2"><div class="gf-stack">'+cxCard('Dati del cliente',address)+'</div><div class="gf-stack">'+slot+'</div></div></div>'
+    :'<div class="gf-modal__body"><div class="gf-grid" data-cols="2"><div class="gf-stack">'+cxCard('Indirizzo di consegna',address)
+      +extra.slice(0,extra.indexOf('<section',1))+'</div><div class="gf-stack">'+extra.slice(extra.indexOf('<section',1))+'</div></div></div>';
   const foot='<footer class="gf-modal__footer">'+(customerDrawer.mode==='view'
-      ?'<button type="button" class="gf-button" data-variant="secondary" data-cx-edit-current>'+cxIcon('edit')+'Modifica dati</button>'
-      :'<button type="button" class="gf-button" data-variant="secondary" data-cx-cancel>Annulla</button>')
-    +'<button type="button" class="gf-button" data-variant="primary" data-cx-save>Salva</button></footer>';
+      ?'<button type="button" class="gf-button" data-variant="secondary" data-cx-close>Chiudi</button>'
+        +'<button type="button" class="gf-button" data-variant="primary" data-cx-edit-current>'+cxIcon('edit')+'Modifica</button></footer>'
+      :'<button type="button" class="gf-button" data-variant="secondary" data-cx-cancel>Annulla</button><button type="button" class="gf-button" data-variant="primary" data-cx-save>Salva</button></footer>');
   drawer.innerHTML=head+body+foot;
   // Riga «Verifichiamo esattamente» aggiornata mentre si scrive.
   cxSyncExact(drawer);
@@ -505,7 +511,7 @@ if(typeof document!=='undefined'&&document.addEventListener){
       return;
     }
     const page=t.closest('[data-cx-page]');if(page&&!page.disabled){customerGoPage(Number(page.dataset.cxPage));return;}
-    const slot=t.closest('[data-cx-slot]');if(slot){openCustomerDrawer(Number(slot.dataset.cxSlot),'view',true);return;}
+    const slot=t.closest('[data-cx-slot]');if(slot){openCustomerDrawer(Number(slot.dataset.cxSlot),'edit');document.querySelector('#customerOverlay [data-gf-tab="delivery"]')?.click();return;}
     const edit=t.closest('[data-cx-edit]');if(edit){openCustomerDrawer(Number(edit.dataset.cxEdit),'edit');return;}
     const open=t.closest('[data-cx-open]');if(open){openCustomerDrawer(Number(open.dataset.cxOpen),'view');return;}
     if(t.closest('.cx-cb'))return;

@@ -5,6 +5,10 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Clienti semplificati: «Dettagli» mostra tutte le informazioni del cliente in sola lettura (la fascia
+  oraria è una riga con gli orari, oppure «Fascia oraria non presente»). La matita della riga e il pulsante
+  «Modifica» nei dettagli aprono sempre la stessa finestra completa, dove si cambia tutto: indirizzo,
+  contatti, fasce, tempo di scarico, accesso e note. Tolta la modifica rapida a metà.
 - Clienti: la scheda del cliente non è più un pannello laterale ma una finestra al centro, nello
   stile di «Nuovo cliente» (variante B). A sinistra riquadri con righe etichetta → valore
   (indirizzo, contatti, consegna), a destra la fascia di scarico con lo stato attuale in evidenza.
