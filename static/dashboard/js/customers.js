@@ -159,8 +159,7 @@ function cxSlotMarkup(x){
 }
 function cxActions(x){
   const id=Number(x.id);
-  return '<div class="gf-cluster"><button type="button" class="gf-icon-button" data-cx-edit="'+id+'" title="Modifica" aria-label="Modifica '+cxEsc(x.nome)+'">'+cxIcon('edit')+'</button>'
-    +'<button type="button" class="gf-button" data-variant="secondary" data-size="sm" data-cx-open="'+id+'">'+cxIcon('eye')+'Dettagli</button></div>';
+  return '<div class="gf-cluster"><button type="button" class="gf-button" data-variant="secondary" data-size="sm" data-cx-open="'+id+'" aria-label="Apri la scheda di '+cxEsc(x.nome)+'">'+cxIcon('eye')+'Dettagli</button></div>';
 }
 // Ogni cliente ha sempre lo stesso colore: deriva dal nome (6 toni di gf-avatar).
 function cxAvatarTone(name){
@@ -286,7 +285,13 @@ function openCustomerDrawer(id,mode,focusSlot){
   if(id!=null&&!existing)return;
   // I dettagli sono solo da leggere: modificare o creare un cliente apre sempre la finestra completa
   // (openCustomerModal), con tutti i campi in un unico posto.
-  if(!existing||mode==='edit'||mode==='new'){closeCustomerDrawer();if(typeof openCustomerModal==='function')openCustomerModal(existing?existing.id:null);return;}
+  // Scheda unica (13/11/2026): vedere, modificare e creare passano tutti dalla stessa finestra completa.
+  closeCustomerDrawer();
+  if(typeof openCustomerModal==='function'){
+    openCustomerModal(existing?existing.id:null);
+    if(focusSlot)setTimeout(()=>document.getElementById('cMattinaDa')?.focus(),50);
+  }
+  return;
   customerDrawer.mode=existing?(mode||'view'):'new';
   customerDrawer.current=existing||{id:null,nome:'',indirizzo:'',comune:'',provincia:'',codice_cliente:'',stato_geocodifica:'da_verificare',isNew:true};
   const c=customerDrawer.current, edit=customerDrawer.mode!=='view';
@@ -511,7 +516,7 @@ if(typeof document!=='undefined'&&document.addEventListener){
       return;
     }
     const page=t.closest('[data-cx-page]');if(page&&!page.disabled){customerGoPage(Number(page.dataset.cxPage));return;}
-    const slot=t.closest('[data-cx-slot]');if(slot){openCustomerDrawer(Number(slot.dataset.cxSlot),'edit');document.querySelector('#customerOverlay [data-gf-tab="delivery"]')?.click();return;}
+    const slot=t.closest('[data-cx-slot]');if(slot){openCustomerDrawer(Number(slot.dataset.cxSlot),'edit',true);return;}
     const edit=t.closest('[data-cx-edit]');if(edit){openCustomerDrawer(Number(edit.dataset.cxEdit),'edit');return;}
     const open=t.closest('[data-cx-open]');if(open){openCustomerDrawer(Number(open.dataset.cxOpen),'view');return;}
     if(t.closest('.cx-cb'))return;

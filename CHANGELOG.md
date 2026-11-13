@@ -5,6 +5,10 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Clienti: un’unica scheda per vedere e modificare. «Dettagli» (o un clic sulla riga) apre la finestra
+  con tutti i dati già nei campi, senza schede: Cliente e Indirizzo a sinistra, Consegna e Note a destra;
+  si cambia quello che serve e si preme Salva. Tolti la matita, la vista di sola lettura e i messaggi
+  «verificato con Google»: l’indirizzo si verifica da solo e compare un avviso solo se c’è da correggere.
 - Clienti semplificati: «Dettagli» mostra tutte le informazioni del cliente in sola lettura (la fascia
   oraria è una riga con gli orari, oppure «Fascia oraria non presente»). La matita della riga e il pulsante
   «Modifica» nei dettagli aprono sempre la stessa finestra completa, dove si cambia tutto: indirizzo,

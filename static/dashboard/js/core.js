@@ -3034,7 +3034,11 @@ async function deleteAgent(id){
 function openCustomerModal(id=null){
   resetCustomerForm();
   const title = document.getElementById("customerModalTitle");
-  if(title) title.textContent = id ? "Modifica cliente" : "Nuovo cliente";
+  // Scheda unica: per un cliente esistente il titolo è il suo nome e i campi sono già modificabili.
+  const existing = id ? customersCache.find(x=>x.id===id) : null;
+  if(title) title.textContent = existing?.nome || (id ? "Cliente" : "Nuovo cliente");
+  const subtitle = document.getElementById("customerModalSubtitle");
+  if(subtitle) subtitle.textContent = id ? "Controlla o cambia i dati, poi premi Salva." : "Inserisci dati, indirizzo, fasce orarie e specifiche operative del cliente.";
   document.getElementById("customerDeleteSection")?.classList.toggle("hidden", !id);
   document.getElementById("customerOverlay")?.classList.remove("hidden");
   ["cVia","cCivico","cCap","cComune","cProvincia"].forEach(fieldId=>{
@@ -3069,6 +3073,8 @@ function setCustomerAddressStatus(text, status="muted"){
   const box = document.getElementById("customerAddressVerifyStatus");
   if(!box) return;
   box.textContent = text || "";
+  // L'indirizzo si verifica da solo: si mostra solo quando c'è qualcosa da correggere.
+  box.hidden = !["warn","error"].includes(status);
   box.className = "gf-alert";
   box.dataset.status = {ok:"success", warn:"warning", error:"danger", loading:"info"}[status] || "neutral";
 }
@@ -3163,7 +3169,7 @@ function editCustomer(id, fromModal=false){
   set("cScarico",c.tempo_scarico_min); set("cZtl",c.ztl_manual?"true":"false"); set("cSponda",c.sponda?"true":"false"); set("cNote",c.note);
   set("cLat", c.lat ?? ""); set("cLon", c.lon ?? ""); set("cGeoStatus", c.stato_geocodifica || "da_verificare"); set("cGeoProvider", c.fonte_geocodifica || "");
   set("cGeoConfidence", c.affidabilita_geocodifica ?? ""); set("cGooglePlaceId", c.google_place_id || ""); set("cGeocodedAddress", c.indirizzo_geocodificato || "");
-  if(c.stato_geocodifica === "verificato") setCustomerAddressStatus("Indirizzo già verificato con Google.", "ok");
+  if(c.stato_geocodifica === "verificato") setCustomerAddressStatus("", "ok");
   else if(c.stato_geocodifica === "non_trovato") setCustomerAddressStatus("Indirizzo non trovato da Google: correggilo e salva, lo verifichiamo di nuovo.", "error");
   else setCustomerAddressStatus("Indirizzo da verificare: lo verifichiamo con Google quando salvi.", "warn");
   customerUnverifiedConfirmed = "";
@@ -3179,7 +3185,9 @@ function resetCustomerForm(){
 // Al salvataggio l'indirizzo si verifica da solo. Se Google non lo conferma il pannello resta aperto
 // con il motivo; premendo di nuovo «Salva» con lo stesso indirizzo il cliente si salva «da verificare».
 async function saveCustomer(){
-  if(globalThis.GFFormTabs && !GFFormTabs.check(document.getElementById('customerOverlay'))) return;
+  // Scheda unica senza schede: ogni campo obbligatorio vuoto diventa rosso («Campo obbligatorio»).
+  const missing = [...(document.getElementById('customerOverlay')?.querySelectorAll('input[required],select[required]')||[])].filter(control=>!control.checkValidity());
+  if(missing.length){ missing[0].focus(); return; }
   return withButtonLoading("saveCustomerBtn", "Salvataggio...", async()=>{
     let payload = customerPayloadFromModal();
     if(!payload.nome){ alert("Inserisci il nome del cliente"); return; }
