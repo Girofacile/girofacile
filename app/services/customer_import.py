@@ -76,7 +76,6 @@ COLUMN_ALIASES = {
     'provincia': ('provincia', 'prov', 'pr'),
     'telefono': ('telefono', 'tel', 'cellulare', 'cell', 'recapito'),
     'email': ('email', 'e mail', 'mail', 'posta elettronica'),
-    'referente': ('referente', 'contatto', 'persona di riferimento'),
     'note': ('note', 'annotazioni'),
     'ztl': ('ztl',),
     'sponda': ('sponda', 'sponda idraulica'),

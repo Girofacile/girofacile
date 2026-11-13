@@ -68,7 +68,6 @@ def customer_to_dict(customer) -> dict:
         "provincia": customer.provincia,
         "cap": customer.cap,
         "telefono": customer.telefono,
-        "referente": customer.referente,
         "email": customer.email,
         "scarico_mattina_da": time_to_hhmm(customer.scarico_mattina_da),
         "scarico_mattina_a": time_to_hhmm(customer.scarico_mattina_a),
@@ -470,7 +469,6 @@ async def import_customers(
         cap = str(get(row, "cap", "") or "").strip().split(".")[0].zfill(5) if get(row, "cap") else None
         item.cap = cap if cap and cap.isdigit() and len(cap) == 5 else None
         item.telefono = str(get(row, "telefono", "") or "")
-        item.referente = get(row, "referente")
         item.email = get(row, "email")
         item.scarico_mattina_da = parse_time_value(get(row, "scarico_mattina_da"))
         item.scarico_mattina_a = parse_time_value(get(row, "scarico_mattina_a"))

@@ -566,7 +566,6 @@ function customerForm(c={}){return `
   </div>
   <div class="form-group"><label>Telefono</label><input id="fTelefono" type="tel" value="${esc(c.telefono||'')}"></div>
   <div class="form-group"><label>Email</label><input id="fEmail" type="email" value="${esc(c.email||'')}"></div>
-  <div class="form-group"><label>Referente</label><input id="fReferente" value="${esc(c.referente||'')}"></div>
   <div class="form-row">
     <div class="form-group"><label>Scarico mattina da</label><input id="fMatDa" type="time" value="${esc(c.scarico_mattina_da||'')}"></div>
     <div class="form-group"><label>a</label><input id="fMatA" type="time" value="${esc(c.scarico_mattina_a||'')}"></div>
@@ -587,7 +586,7 @@ function openAddCustomer(){
     try{await api("/api/customers",{method:"POST",body:JSON.stringify({
       nome:mval("fNome"),indirizzo:mval("fIndirizzo"),codice_cliente:mval("fCodice")||null,
       comune:mval("fComune")||null,provincia:mval("fProvincia")||null,
-      telefono:mval("fTelefono")||null,email:mval("fEmail")||null,referente:mval("fReferente")||null,
+      telefono:mval("fTelefono")||null,email:mval("fEmail")||null,
       scarico_mattina_da:mval("fMatDa")||null,scarico_mattina_a:mval("fMatA")||null,
       scarico_pomeriggio_da:mval("fPomDa")||null,scarico_pomeriggio_a:mval("fPomA")||null,
       tempo_scarico_min:parseInt(mval("fTempo"))||10,
@@ -602,7 +601,7 @@ function openEditCustomer(id){
     try{await api(`/api/customers/${id}`,{method:"PUT",body:JSON.stringify({
       nome:mval("fNome"),indirizzo:mval("fIndirizzo"),codice_cliente:mval("fCodice")||null,
       comune:mval("fComune")||null,provincia:mval("fProvincia")||null,
-      telefono:mval("fTelefono")||null,email:mval("fEmail")||null,referente:mval("fReferente")||null,
+      telefono:mval("fTelefono")||null,email:mval("fEmail")||null,
       scarico_mattina_da:mval("fMatDa")||null,scarico_mattina_a:mval("fMatA")||null,
       scarico_pomeriggio_da:mval("fPomDa")||null,scarico_pomeriggio_a:mval("fPomA")||null,
       tempo_scarico_min:parseInt(mval("fTempo"))||10,

@@ -295,7 +295,6 @@ async def import_agent_customers(file: UploadFile = File(...), db: Session = Dep
         item.comune = str(get(row, "comune", "") or "")
         item.provincia = str(get(row, "provincia", "") or "")
         item.telefono = str(get(row, "telefono", "") or "")
-        item.referente = str(get(row, "referente", "") or "")
         item.email = str(get(row, "email", "") or "")
         item.scarico_mattina_da = parse_time_value(get(row, "scarico_mattina_da", ""))
         item.scarico_mattina_a = parse_time_value(get(row, "scarico_mattina_a", ""))

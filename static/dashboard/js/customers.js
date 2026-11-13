@@ -20,7 +20,7 @@ const CX_ICONS = {
   plus:'M12 5v14 M5 12h14'
 };
 const CX_PRESETS = [['Mattina','06:00','12:00'],['Pomeriggio','14:00','18:00'],['Giornata','06:00','18:00']];
-const CX_FIELDS = ['agent_id','codice_cliente','nome','indirizzo','cap','comune','provincia','telefono','referente','email',
+const CX_FIELDS = ['agent_id','codice_cliente','nome','indirizzo','cap','comune','provincia','telefono','email',
   'scarico_mattina_da','scarico_mattina_a','scarico_pomeriggio_da','scarico_pomeriggio_a','tempo_scarico_min',
   'ztl','sponda','transpallet','note','lat','lon','indirizzo_geocodificato','stato_geocodifica',
   'affidabilita_geocodifica','fonte_geocodifica','google_place_id'];
@@ -334,7 +334,7 @@ function openCustomerDrawer(id,mode,focusSlot){
     +'<p class="gf-field__hint">Gli autisti consegnano solo in questa fascia. Lascia vuoto per nessun vincolo.</p><div class="gf-field" data-invalid><p class="gf-field__error" id="cxSlotError" role="alert"></p></div></section>';
   let extra='';
   if(!edit){
-    const contacts=[['Referente',c.referente],['Telefono',c.telefono],['Email',c.email]].filter(r=>r[1]).map(r=>[r[0],cxEsc(r[1])]);
+    const contacts=[['Telefono',c.telefono],['Email',c.email]].filter(r=>r[1]).map(r=>[r[0],cxEsc(r[1])]);
     const flags=[cxAccessBadges(c),c.sponda?'<span class="gf-badge" data-kind="tail-lift" data-gf-feature="tail_lift">Sponda</span>':'',c.transpallet?'<span class="gf-badge" data-status="neutral">Transpallet</span>':''].join('');
     const delivery=[['Tempo di scarico',cxEsc((c.tempo_scarico_min??10)+' min')],
       ['Fascia oraria',saved.length?cxEsc(saved.join(' e ')):'Fascia oraria non presente','data-gf-feature="time_windows"']];

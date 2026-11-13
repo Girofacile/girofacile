@@ -5,6 +5,9 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Clienti: tolto il «Referente» da tutto il software (finestra cliente della dashboard, scheda, portale
+  agenti, app sul telefono, importazione da file e dati scambiati con il server). La colonna resta nel
+  database solo per i dati già inseriti, senza più essere letta né scritta.
 - Importazione clienti da CSV/Excel: le intestazioni sono riconosciute senza badare a maiuscole, spazi e
   accenti, con i sinonimi più comuni (Ragione sociale, Città, Località, Cod. cliente, Tel, E-mail…). Prima
   «Nome» con la maiuscola non veniva riconosciuto e il file risultava importato con 0 clienti. Se mancano

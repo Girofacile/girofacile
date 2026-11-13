@@ -3140,7 +3140,6 @@ function customerPayloadFromModal(){
     provincia: val("cProvincia").toUpperCase() || null,
     telefono: val("cTelefono"),
     email: val("cEmail"),
-    referente: val("cReferente"),
     scarico_mattina_da: val("cMattinaDa") || null,
     scarico_mattina_a: val("cMattinaA") || null,
     scarico_pomeriggio_da: val("cPomeriggioDa") || null,
@@ -3164,7 +3163,7 @@ async function loadCustomers(){
 }
 function editCustomer(id, fromModal=false){
   const c = customersCache.find(x=>x.id===id); if(!c) return;
-  set("cId",c.id); set("cCodice",c.codice_cliente); set("cNome",c.nome); set("cIndirizzo",c.indirizzo); fillCustomerModalAddress(c); set("cComune",c.comune); set("cProvincia",c.provincia); set("cTelefono",c.telefono); set("cEmail",c.email); set("cReferente",c.referente); set("cAgent", c.agent_id || "");
+  set("cId",c.id); set("cCodice",c.codice_cliente); set("cNome",c.nome); set("cIndirizzo",c.indirizzo); fillCustomerModalAddress(c); set("cComune",c.comune); set("cProvincia",c.provincia); set("cTelefono",c.telefono); set("cEmail",c.email); set("cAgent", c.agent_id || "");
   set("cMattinaDa",c.scarico_mattina_da); set("cMattinaA",c.scarico_mattina_a); set("cPomeriggioDa",c.scarico_pomeriggio_da); set("cPomeriggioA",c.scarico_pomeriggio_a);
   set("cScarico",c.tempo_scarico_min); set("cZtl",c.ztl_manual?"true":"false"); set("cSponda",c.sponda?"true":"false"); set("cNote",c.note);
   set("cLat", c.lat ?? ""); set("cLon", c.lon ?? ""); set("cGeoStatus", c.stato_geocodifica || "da_verificare"); set("cGeoProvider", c.fonte_geocodifica || "");
@@ -3176,7 +3175,7 @@ function editCustomer(id, fromModal=false){
   if(!fromModal) document.getElementById("customerOverlay")?.classList.remove("hidden");
 }
 function resetCustomerForm(){
-  ["cId","cCodice","cNome","cIndirizzo","cVia","cCivico","cCap","cComune","cProvincia","cTelefono","cEmail","cReferente","cAgent","cMattinaDa","cMattinaA","cPomeriggioDa","cPomeriggioA","cNote","cLat","cLon","cGeoStatus","cGeoProvider","cGeoConfidence","cGooglePlaceId","cGeocodedAddress"].forEach(id=>set(id,""));
+  ["cId","cCodice","cNome","cIndirizzo","cVia","cCivico","cCap","cComune","cProvincia","cTelefono","cEmail","cAgent","cMattinaDa","cMattinaA","cPomeriggioDa","cPomeriggioA","cNote","cLat","cLon","cGeoStatus","cGeoProvider","cGeoConfidence","cGooglePlaceId","cGeocodedAddress"].forEach(id=>set(id,""));
   set("cScarico",10); set("cZtl","false"); set("cSponda","false");
   document.getElementById("deleteCustomerBtn")?.classList.add("hidden");
   customerUnverifiedConfirmed = "";

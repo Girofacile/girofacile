@@ -123,7 +123,6 @@ class CustomerIn(TimeWindowsMixin, BaseModel):
     provincia: Optional[str] = None
     cap: Optional[str] = Field(default=None, pattern=r"^\d{5}$")
     telefono: Optional[str] = None
-    referente: Optional[str] = None
     email: Optional[str] = None
     scarico_mattina_da: Optional[str] = None
     scarico_mattina_a: Optional[str] = None

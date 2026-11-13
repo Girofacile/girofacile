@@ -341,6 +341,7 @@ class Customer(Base):
     provincia: Mapped[str | None] = mapped_column(String(50), nullable=True)
     cap: Mapped[str | None] = mapped_column(String(5), nullable=True)
     telefono: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    # Non più usato dal 13/11/2026 (il referente del cliente non serve a nessuna funzione); la colonna resta per i dati storici.
     referente: Mapped[str | None] = mapped_column(String(150), nullable=True)
     email: Mapped[str | None] = mapped_column(String(200), nullable=True)
     scarico_mattina_da: Mapped[object | None] = mapped_column(Time, nullable=True)
