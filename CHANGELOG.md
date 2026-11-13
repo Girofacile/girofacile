@@ -5,6 +5,9 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Tabella Clienti: 25 o 50 clienti per pagina (scelta ricordata), filtri e ordinamento in una casella che si
+  apre dal pulsante «Filtri» invece che in una fila di campi sulla pagina, casella «seleziona tutti» nell’
+  intestazione per i clienti della pagina e, nella barra in basso, «Seleziona tutti i N clienti del filtro».
 - Importazione clienti: la finestra mostra il nome del file scelto e, dopo «Importa clienti», l’esito al suo
   interno («Importazione completata: 50 clienti aggiunti, 3 aggiornati») oppure cosa correggere. Tolto il
   pulsante «Verifica indirizzi»: i clienti scelti per un giro vengono verificati da soli in pianificazione.

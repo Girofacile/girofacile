@@ -3,7 +3,7 @@
    esistenti: striscia indicatori, elenco/schede, filtri, pannello laterale per
    dettagli, modifica e nuovo cliente, selezione multipla con fascia di scarico. */
 
-const customerDirectory = {all:[], rows:[], page:1, size:8, sort:'nome', direction:'asc', view:'list', request:0, quick:'all', selected:new Set(), busy:false};
+const customerDirectory = {all:[], rows:[], visible:[], page:1, size:cxSavedPageSize(), sort:'nome', direction:'asc', view:'list', request:0, quick:'all', selected:new Set(), busy:false};
 
 const CX_ICONS = {
   check:'M5 12.5l4.5 4.5L19 7.5',
@@ -113,6 +113,24 @@ function customerFilteredRows(){
   });
 }
 function filterCustomerList(){ customerDirectory.page=1; renderCustomerDirectory(); }
+// Clienti per pagina: 25 o 50, ricordati nel browser.
+function cxSavedPageSize(){
+  try{ return Number(localStorage.getItem('gf_customers_page_size'))===50?50:25; }catch(e){ return 25; }
+}
+function setCustomerPageSize(value){
+  customerDirectory.size=Number(value)===50?50:25;
+  try{ localStorage.setItem('gf_customers_page_size',String(customerDirectory.size)); }catch(e){}
+  filterCustomerList();
+}
+// «Seleziona tutti»: i clienti della pagina (casella nell'intestazione) o tutti quelli del filtro (barra in basso).
+function toggleVisibleCustomers(on){
+  for(const x of customerDirectory.visible){const id=Number(x.id);if(on)customerDirectory.selected.add(id);else customerDirectory.selected.delete(id);}
+  renderCustomerDirectory();
+}
+function selectAllFilteredCustomers(){
+  for(const x of customerDirectory.rows)customerDirectory.selected.add(Number(x.id));
+  renderCustomerDirectory();
+}
 function setCustomerSort(value){
   const [key,direction]=String(value).split(':');
   customerDirectory.sort=key||'nome';
@@ -218,7 +236,10 @@ function renderCustomerDirectory(){
   const pages=Math.max(1,Math.ceil(rows.length/state.size));
   state.page=Math.max(1,Math.min(state.page,pages));
   const from=(state.page-1)*state.size, visible=rows.slice(from,from+state.size);
+  state.visible=visible;
   const sel=state.selected;
+  const pageSelected=visible.filter(x=>sel.has(Number(x.id))).length;
+  const allBox='<input type="checkbox" data-cx-cb-all aria-label="Seleziona tutti i clienti della pagina"'+(visible.length&&pageSelected===visible.length?' checked':'')+'>';
   let html='';
   if(!rows.length){
     const none=!state.all.length;
@@ -227,9 +248,9 @@ function renderCustomerDirectory(){
       +(none?'<button type="button" class="gf-button" data-variant="primary" data-size="sm" onclick="openCustomerModal()">'+cxIcon('plus')+'Nuovo cliente</button>'
             :'<button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="clearCustomerListAllFilters()">Azzera ricerca e filtri</button>')+'</div>';
   }else if(state.view==='list'){
-    // Intestazione solo descrittiva, come in Ordini: niente "seleziona tutti", l'ordinamento sta nella barra sopra.
+    // Nell'intestazione la casella «seleziona tutti» i clienti della pagina; l'ordinamento sta nella casella Filtri.
     html='<div class="gf-table-wrap" id="customerTableWrap"><table class="gf-table" data-gf-responsive="cards" aria-label="Elenco clienti"><thead><tr>'
-      +'<th scope="col" aria-label="Seleziona"></th><th scope="col">Cliente</th><th scope="col">Indirizzo</th>'
+      +'<th scope="col">'+allBox+'</th><th scope="col">Cliente</th><th scope="col">Indirizzo</th>'
       +'<th scope="col" data-gf-feature="time_windows">Fascia di scarico</th><th scope="col">Stato indirizzo</th><th scope="col">Azioni</th>'
       +'</tr></thead><tbody id="customersBody">'
       +visible.map(x=>{
@@ -240,7 +261,8 @@ function renderCustomerDirectory(){
           +'<td data-label="Fascia di scarico" data-gf-feature="time_windows">'+cxSlotMarkup(x)+'</td><td data-label="Stato indirizzo">'+customerStatusMarkup(x)+'</td><td data-label="Azioni">'+cxActions(x)+'</td></tr>';
       }).join('')+'</tbody></table></div>';
   }else{
-    html='<div class="gf-panel__body gf-grid" data-cols="3" id="customerCards">'+visible.map(x=>{
+    html='<div class="gf-panel__body"><label class="gf-check">'+allBox+'<span>Seleziona tutti quelli della pagina</span></label></div>'
+      +'<div class="gf-panel__body gf-grid" data-cols="3" id="customerCards">'+visible.map(x=>{
       const id=Number(x.id),on=sel.has(id);
       return '<article class="gf-card gf-stack" data-cx-row="'+id+'" aria-selected="'+on+'">'
         +'<label class="gf-check"><input type="checkbox" class="cx-cb" data-cx-cb="'+id+'" aria-label="Seleziona '+cxEsc(x.nome)+'"'+(on?' checked':'')+'><span>Seleziona</span></label>'
@@ -249,6 +271,9 @@ function renderCustomerDirectory(){
     }).join('')+'</div>';
   }
   target.innerHTML=html;
+  // Pagina selezionata solo in parte: la casella dell'intestazione mostra il trattino.
+  target.querySelectorAll('[data-cx-cb-all]').forEach(box=>{box.indeterminate=pageSelected>0&&pageSelected<visible.length;});
+  const size=cxEl('customerPageSize');if(size)size.value=String(state.size);
   const count=cxEl('customerCount');
   if(count)count.textContent=rows.length?('Mostrati '+(from+1)+'–'+(from+visible.length)+' di '+rows.length+' clienti'):'0 clienti';
   const pager=cxEl('customerPagination');
@@ -435,6 +460,10 @@ function renderCustomerSelection(){
     planning.textContent='Vai alla pianificazione ('+n+')';
   }
   const msg=cxEl('customerSelectedCount');if(msg)msg.textContent=n+(n===1?' cliente selezionato':' clienti selezionati');
+  // Filtro con più clienti di quelli in pagina: si possono selezionare tutti in un colpo.
+  const rows=customerDirectory.rows||[],missing=rows.filter(x=>!customerDirectory.selected.has(Number(x.id))).length;
+  const all=cxEl('customerSelectAllFiltered');
+  if(all){all.hidden=!n||!missing||rows.length<=customerDirectory.visible.length;all.textContent='Seleziona tutti i '+rows.length+' clienti del filtro';}
 }
 
 let customerPlanningTransferBusy=false;
@@ -525,13 +554,19 @@ if(typeof document!=='undefined'&&document.addEventListener){
   });
   document.addEventListener('change',event=>{
     const t=event.target;if(!t||!t.closest||!t.closest('#tab-clienti'))return;
+    if(t.dataset&&t.dataset.cxCbAll!==undefined){toggleVisibleCustomers(t.checked);return;}
     if(t.dataset&&t.dataset.cxCb){
       const id=Number(t.dataset.cxCb);
       if(t.checked)customerDirectory.selected.add(id);else customerDirectory.selected.delete(id);
       renderCustomerDirectory();
     }
   });
+  document.addEventListener('click',event=>{
+    const menu=cxEl('customerFiltersMenu');
+    if(menu?.open&&!menu.contains(event.target))menu.open=false;
+  });
   document.addEventListener('keydown',event=>{
+    if(event.key==='Escape'&&cxEl('customerFiltersMenu')?.open){cxEl('customerFiltersMenu').open=false;return;}
     if(event.key!=='Escape')return;
     if(customerDrawer.current)closeCustomerDrawer();
   });

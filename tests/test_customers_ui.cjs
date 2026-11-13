@@ -114,9 +114,12 @@ test('customer avatars get a stable colour from the name across the six avatar t
   assert.doesNotMatch(f.run(`cxAvatar({})`),/data-tone/);
 });
 
-test('customer list header only describes the columns: no select-all and no sorting buttons',()=>{
+test('customer list header: select-all for the page, no sorting buttons (sorting lives in the Filtri box)',()=>{
   const js=fs.readFileSync('static/dashboard/js/customers.js','utf8');
-  assert.match(js,/<thead><tr>'\s*\+'<th scope="col" aria-label="Seleziona"><\/th><th scope="col">Cliente<\/th><th scope="col">Indirizzo<\/th>/);
+  // Dal 13/11/2026 la prima colonna ha la casella «seleziona tutti» i clienti della pagina.
+  assert.match(js,/<thead><tr>'\s*\+'<th scope="col">'\+allBox\+'<\/th><th scope="col">Cliente<\/th><th scope="col">Indirizzo<\/th>/);
+  assert.match(js,/data-cx-cb-all aria-label="Seleziona tutti i clienti della pagina"/);
+  assert.match(js,/function selectAllFilteredCustomers\(\)/);
   assert.match(js,/<th scope="col" data-gf-feature="time_windows">Fascia di scarico<\/th><th scope="col">Stato indirizzo<\/th><th scope="col">Azioni<\/th>/);
   assert.doesNotMatch(js,/data-cx-sort|customerSelectPage/);
   assert.match(js,/function reverseCustomerSort\(\)/);
