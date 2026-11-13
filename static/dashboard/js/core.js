@@ -3055,7 +3055,30 @@ function closeCustomerModal(e){
   if(e && e.target && e.currentTarget && e.target !== e.currentTarget) return;
   document.getElementById("customerOverlay")?.classList.add("hidden");
 }
-function openCustomerImportModal(){ document.getElementById("customerImportOverlay")?.classList.remove("hidden"); }
+function openCustomerImportModal(){
+  // Ogni apertura riparte pulita: nessun file, nessun esito precedente.
+  const input = document.getElementById("importFile");
+  if(input) input.value = "";
+  customerImportFileChosen();
+  customerImportResult("", "");
+  const close = document.getElementById("customerImportClose");
+  if(close) close.textContent = "Annulla";
+  document.getElementById("customerImportOverlay")?.classList.remove("hidden");
+}
+// Nome del file scelto, sotto «Scegli file».
+function customerImportFileChosen(){
+  const file = document.getElementById("importFile")?.files?.[0];
+  const label = document.getElementById("importFileName");
+  if(label) label.textContent = file ? `File scelto: ${file.name} (${Math.max(1, Math.round(file.size / 1024))} KB)` : "Nessun file scelto.";
+  if(file) customerImportResult("", "");
+}
+function customerImportResult(text, status){
+  const box = document.getElementById("customerImportResult");
+  if(!box) return;
+  box.className = text ? "gf-alert" : "";
+  if(text) box.dataset.status = status; else delete box.dataset.status;
+  box.textContent = text || "";
+}
 function closeCustomerImportModal(e){
   if(e && e.target && e.currentTarget && e.target !== e.currentTarget) return;
   document.getElementById("customerImportOverlay")?.classList.add("hidden");
@@ -3268,24 +3291,36 @@ async function verifyPendingAddresses(){
 }
 
 async function importCustomers(){
-  const file = document.getElementById("importFile").files[0];
-  if(!file){ alert("Scegli un file CSV o Excel"); return; }
-  const fd = new FormData(); fd.append("file", file);
-  const res = await fetch("/api/customers/import", {method:"POST", body:fd});
-  if(!res.ok){
-    // Il server spiega cosa correggere (es. «Riga 5: tempo_scarico_min non è un numero valido»).
-    const err = await res.json().catch(()=>({}));
-    alert(typeof err.detail === "string" ? err.detail : "Import non riuscito: controlla il file e riprova.");
-    return;
-  }
-  const j = await res.json();
-  if(!j.created && !j.updated){
-    alert("Nessun cliente importato: ogni riga deve avere almeno il nome e l'indirizzo compilati.");
-    return;
-  }
-  toast(`Import completato. Creati: ${j.created}, aggiornati: ${j.updated}.`);
-  await loadCustomers();
-  await loadCustomerPicker();
+  const input = document.getElementById("importFile");
+  const file = input?.files?.[0];
+  if(!file){ customerImportResult("Scegli prima il file con i clienti.", "danger"); return; }
+  return withButtonLoading("customerImportBtn", "Importazione…", async()=>{
+    const fd = new FormData(); fd.append("file", file);
+    let res;
+    try{ res = await fetch("/api/customers/import", {method:"POST", body:fd}); }
+    catch(e){ customerImportResult("Connessione non riuscita: riprova tra poco.", "danger"); return; }
+    if(!res.ok){
+      // Il server spiega cosa correggere (es. «Riga 5: tempo_scarico_min non è un numero valido»).
+      const err = await res.json().catch(()=>({}));
+      customerImportResult(typeof err.detail === "string" ? err.detail : "Importazione non riuscita: controlla il file e riprova.", "danger");
+      return;
+    }
+    const j = await res.json();
+    if(!j.created && !j.updated){
+      customerImportResult("Nessun cliente importato: ogni riga deve avere almeno il nome e l'indirizzo compilati.", "danger");
+      return;
+    }
+    const parts = [gfCount(j.created, "cliente aggiunto", "clienti aggiunti")];
+    if(j.updated) parts.push(gfCount(j.updated, "cliente aggiornato", "clienti aggiornati"));
+    customerImportResult(`Importazione completata: ${parts.join(", ")}.`, "success");
+    if(input) input.value = "";
+    const label = document.getElementById("importFileName");
+    if(label) label.textContent = `Importato: ${file.name}. Puoi chiudere la finestra o scegliere un altro file.`;
+    const close = document.getElementById("customerImportClose");
+    if(close) close.textContent = "Chiudi";
+    // L'elenco dei clienti si aggiorna in sottofondo: l'esito resta visibile e il pulsante torna subito usabile.
+    Promise.resolve(loadCustomers()).then(()=>loadCustomerPicker()).catch(()=>{});
+  });
 }
 
 function customerIsPlannable(c){

@@ -5,6 +5,9 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Importazione clienti: la finestra mostra il nome del file scelto e, dopo «Importa clienti», l’esito al suo
+  interno («Importazione completata: 50 clienti aggiunti, 3 aggiornati») oppure cosa correggere. Tolto il
+  pulsante «Verifica indirizzi»: i clienti scelti per un giro vengono verificati da soli in pianificazione.
 - Clienti: tolto il «Referente» da tutto il software (finestra cliente della dashboard, scheda, portale
   agenti, app sul telefono, importazione da file e dati scambiati con il server). La colonna resta nel
   database solo per i dati già inseriti, senza più essere letta né scritta.

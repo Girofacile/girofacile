@@ -1372,16 +1372,17 @@
 <div id="customerImportOverlay" class="gf-overlay hidden" onclick="closeCustomerImportModal(event)">
   <div class="gf-modal" role="dialog" aria-modal="true" aria-labelledby="customerImportTitle" onclick="event.stopPropagation()">
     <header class="gf-modal__header">
-      <div><p class="gf-kicker">Importazione clienti</p><h2 class="gf-modal__title" id="customerImportTitle">Importa clienti CSV/Excel</h2><p class="gf-muted">Carica il file con i clienti e poi verifica gli indirizzi importati.</p></div>
+      <div><p class="gf-kicker">Importazione clienti</p><h2 class="gf-modal__title" id="customerImportTitle">Importa clienti CSV/Excel</h2><p class="gf-muted">Carica un file CSV o Excel con l’elenco dei tuoi clienti.</p></div>
       <button type="button" class="gf-icon-button" onclick="closeCustomerImportModal()" aria-label="Chiudi"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12 M18 6L6 18"/></svg></button>
     </header>
     <div class="gf-modal__body gf-stack">
-      <div class="gf-upload"><div class="gf-upload__copy"><strong>Seleziona file CSV/Excel</strong><label class="gf-button gf-upload__button" data-variant="secondary">Scegli file<input type="file" id="importFile" accept=".csv,.xlsx" aria-label="File clienti CSV o Excel"></label><p class="gf-field__hint">Formati supportati: .csv e .xlsx. Servono almeno le colonne «Nome» e «Indirizzo» (oppure Via, Civico, CAP, Comune): maiuscole e spazi non contano.</p></div></div>
-      <div id="addressValidationSummary" class="gf-muted" aria-live="polite"></div>
+      <div class="gf-upload"><div class="gf-upload__copy"><strong>Seleziona file CSV/Excel</strong><label class="gf-button gf-upload__button" data-variant="secondary">Scegli file<input type="file" id="importFile" accept=".csv,.xlsx" aria-label="File clienti CSV o Excel" onchange="customerImportFileChosen()"></label><p id="importFileName" class="gf-muted" role="status">Nessun file scelto.</p><p class="gf-field__hint">Formati supportati: .csv e .xlsx. Servono almeno le colonne «Nome» e «Indirizzo» (oppure Via, Civico, CAP, Comune): maiuscole e spazi non contano.</p></div></div>
+      <!-- Esito dell'importazione nella finestra stessa: clienti aggiunti e aggiornati, oppure cosa correggere. -->
+      <div id="customerImportResult" role="status" aria-live="polite"></div>
     </div>
     <footer class="gf-modal__footer">
-      <button type="button" onclick="verifyPendingAddresses()" class="gf-button" data-variant="secondary">Verifica indirizzi</button>
-      <button type="button" onclick="importCustomers()" class="gf-button" data-variant="primary">Importa clienti</button>
+      <button type="button" id="customerImportClose" onclick="closeCustomerImportModal()" class="gf-button" data-variant="secondary">Annulla</button>
+      <button type="button" id="customerImportBtn" onclick="importCustomers()" class="gf-button" data-variant="primary">Importa clienti</button>
     </footer>
   </div>
 </div>
@@ -1659,7 +1660,7 @@
 <script src="/static/dashboard/js/order-sources.js?v=gf_fonte_api_b_20261112"></script>
 <script src="/static/dashboard/js/dashboard-real-map.js?v=gf_priority_hero_20261025"></script>
 <script src="/static/dashboard/js/in-progress-reference.js?v=gf_chiudi_giro_20261110"></script>
-<script src="/static/dashboard/js/core.js?v=gf_senza_referente_20261113"></script>
+<script src="/static/dashboard/js/core.js?v=gf_import_esito_20261113"></script>
 <script src="/static/dashboard/js/dashboard-mobile.js?v=gf_dashboard_mobile_20261019"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=gf_verifica_automatica_20261112"></script>
 <link rel="stylesheet" href="/static/dashboard/css/fleet-review.css?v=gf_suddivisione_20261025">
