@@ -277,6 +277,9 @@ function renderCustomerDirectory(){
 const customerDrawer = {current:null, mode:'view', saving:false};
 function cxFindCustomer(id){return customerDirectory.all.find(x=>Number(x.id)===Number(id));}
 function showCustomerDetails(id){ openCustomerDrawer(id,'view'); }
+// Riquadro con titolo e righe etichetta → valore della scheda cliente (i valori arrivano già sicuri).
+function cxCard(title,inner){return '<section class="gf-card gf-stack" data-gap="sm"><h3 class="gf-subtitle">'+title+'</h3>'+inner+'</section>';}
+function cxRows(rows){return '<dl class="gf-details" data-layout="rows">'+rows.map(r=>'<div class="gf-details__item"><dt>'+r[0]+'</dt><dd>'+r[1]+'</dd></div>').join('')+'</dl>';}
 function openCustomerDrawer(id,mode,focusSlot){
   const drawer=cxEl('customerDrawer');if(!drawer)return;
   const existing=id!=null?cxFindCustomer(id):null;
@@ -285,15 +288,15 @@ function openCustomerDrawer(id,mode,focusSlot){
   customerDrawer.current=existing||{id:null,nome:'',indirizzo:'',comune:'',provincia:'',codice_cliente:'',stato_geocodifica:'da_verificare',isNew:true};
   const c=customerDrawer.current, edit=customerDrawer.mode!=='view';
   const second=Boolean(c.scarico_pomeriggio_da||c.scarico_pomeriggio_a);
-  const head='<header class="gf-modal__header">'+cxAvatar(c)+'<div><h2 class="gf-modal__title">'+(c.isNew?'Nuovo cliente':cxEsc(c.nome))+'</h2><p class="gf-muted">'
+  const head='<header class="gf-modal__header">'+cxAvatar(c)+'<div><p class="gf-kicker">Anagrafica cliente</p><h2 class="gf-modal__title">'+(c.isNew?'Nuovo cliente':cxEsc(c.nome))+'</h2><p class="gf-muted">'
     +cxEsc(c.isNew?'I dati potranno essere completati anche in seguito':(c.codice_cliente||'Senza codice'))+(c.isNew?'':' '+customerStatusMarkup(c))+'</p></div>'
     +'<button type="button" class="gf-icon-button" data-cx-close aria-label="Chiudi">'+cxIcon('close')+'</button></header>';
   const field=(id,label,value,attrs)=>'<label class="gf-field" for="'+id+'"><span class="gf-field__label">'+label+'</span><input class="gf-input" id="'+id+'" value="'+cxEsc(value)+'" '+(attrs||'')+'></label>';
   let address;
   if(edit){
     address=field('cxName','Nome cliente',c.nome,'autocomplete="off" maxlength="250"')
-      // Indirizzo a campi separati (variante B): via, civico, CAP e comune su una riga.
-      +'<fieldset class="gf-fieldset gf-stack" data-gap="sm" data-cx-address><legend class="gf-field__label">Indirizzo di consegna</legend><div class="gf-grid" data-cols="4">'
+      // Indirizzo a campi separati: via e civico, poi CAP e comune (due per riga nella colonna della finestra).
+      +'<fieldset class="gf-fieldset gf-stack" data-gap="sm" data-cx-address><legend class="gf-field__label">Indirizzo di consegna</legend><div class="gf-grid" data-cols="2">'
       +field('cxStreet','Via',cxStreetParts(c.indirizzo)[0],'placeholder="Via Roma" autocomplete="off"')
       +field('cxNumber','Civico',cxStreetParts(c.indirizzo)[1],'placeholder="10" maxlength="20" autocomplete="off"')
       +field('cxCap','CAP',c.cap,'placeholder="80026" maxlength="5" inputmode="numeric" autocomplete="off"')
@@ -305,31 +308,35 @@ function openCustomerDrawer(id,mode,focusSlot){
       +'<div class="gf-field" data-invalid><p class="gf-field__error" id="cxAddressError" role="alert"></p></div>'
       +'<div><button type="button" class="gf-button" data-variant="ghost" data-cx-full>Tutti i campi: contatti, vincoli'+((typeof agentsFeatureEnabled==='function'&&agentsFeatureEnabled())?', agente':'')+'</button></div>';
   }else{
-    address='<div><b>'+cxEsc(c.indirizzo||'—')+'</b><br><small class="gf-muted">'+cxEsc(cxPlace(c)||'Comune non indicato')+'</small>'
-      +(cxVerified(c)&&c.indirizzo_geocodificato?'<br><small class="gf-muted">'+cxIcon('pin')+'Verificato come: '+cxEsc(c.indirizzo_geocodificato)+'</small>':'')+'</div>'
+    address=cxRows([['Via',cxEsc(c.indirizzo||'—')],['Comune',cxEsc(cxPlace(c)||'Non indicato')],
+        ['Posizione',cxVerified(c)?'<span class="gf-badge" data-status="success">Verificata</span> '+cxEsc(c.indirizzo_geocodificato||''):customerStatusMarkup(c)]])
       +(cxVerified(c)?'':'<div><button type="button" class="gf-button" data-variant="secondary" data-size="sm" data-cx-verify>Verifica indirizzo</button></div>');
   }
   const pair=(prefix,label,from,to)=>'<div class="gf-grid" data-cols="2"><label class="gf-field" for="'+prefix+'From"><span class="gf-field__label">'+label+'dalle</span><input class="gf-input" type="time" id="'+prefix+'From" value="'+cxEsc(from||'')+'"></label>'
     +'<label class="gf-field" for="'+prefix+'To"><span class="gf-field__label">'+label+'alle</span><input class="gf-input" type="time" id="'+prefix+'To" value="'+cxEsc(to||'')+'"></label></div>';
-  const slot='<section class="gf-stack" id="cxSlotSection" data-gf-feature="time_windows"><h3 class="gf-subtitle">Fascia di scarico</h3>'
+  const saved=[[c.scarico_mattina_da,c.scarico_mattina_a],[c.scarico_pomeriggio_da,c.scarico_pomeriggio_a]].filter(w=>w[0]&&w[1]).map(w=>w[0]+'–'+w[1]);
+  const slot='<section class="gf-card gf-stack" data-gap="sm" id="cxSlotSection" data-gf-feature="time_windows"><h3 class="gf-subtitle">Fascia di scarico</h3>'
+    +'<p>'+(saved.length?'<strong>Fascia attuale</strong>: '+saved.join(' e ')+'.':'<strong>Nessuna fascia impostata</strong>: si può consegnare a qualsiasi ora.')+'</p>'
+    +'<p class="gf-field__label">Scegli una fascia pronta</p>'
     +'<div class="gf-cluster">'+CX_PRESETS.map((p,i)=>'<button type="button" class="gf-chip" data-cx-preset="'+i+'">'+p[0]+' <small>'+p[1]+'–'+p[2]+'</small></button>').join('')+'</div>'
+    +'<p class="gf-field__label">oppure indica gli orari</p>'
     +pair('cxSlot1','',c.scarico_mattina_da,c.scarico_mattina_a).replace(/>dalle</,'>Dalle<').replace(/>alle</,'>Alle<')
     +'<div id="cxSecondSlot"'+(second?'':' hidden')+'>'+pair('cxSlot2','Seconda fascia ',c.scarico_pomeriggio_da,c.scarico_pomeriggio_a)+'</div>'
     +(second?'':'<div><button type="button" class="gf-button" data-variant="ghost" data-cx-second>'+cxIcon('plus')+'Aggiungi una seconda fascia</button></div>')
-    +'<p class="gf-field__hint">Gli autisti possono consegnare solo in questa fascia. Lascia vuoto per nessun vincolo.</p><div class="gf-field" data-invalid><p class="gf-field__error" id="cxSlotError" role="alert"></p></div></section>';
+    +'<p class="gf-field__hint">Gli autisti consegnano solo in questa fascia. Lascia vuoto per nessun vincolo.</p><div class="gf-field" data-invalid><p class="gf-field__error" id="cxSlotError" role="alert"></p></div></section>';
   let extra='';
   if(!edit){
-    const rows=[];
-    if(c.referente)rows.push(['Referente',c.referente]);
-    if(c.telefono)rows.push(['Telefono',c.telefono]);
-    if(c.email)rows.push(['Email',c.email]);
-    rows.push(['Tempo di scarico',(c.tempo_scarico_min??10)+' min']);
-    if(typeof agentsFeatureEnabled==='function'&&agentsFeatureEnabled())rows.push(['Agente',c.agent_name||'Cliente interno']);
+    const contacts=[['Referente',c.referente],['Telefono',c.telefono],['Email',c.email]].filter(r=>r[1]).map(r=>[r[0],cxEsc(r[1])]);
     const flags=[cxAccessBadges(c),c.sponda?'<span class="gf-badge" data-kind="tail-lift" data-gf-feature="tail_lift">Sponda</span>':'',c.transpallet?'<span class="gf-badge" data-status="neutral">Transpallet</span>':''].join('');
-    extra='<section class="gf-stack"><h3 class="gf-subtitle">Contatti e vincoli</h3><dl class="gf-details">'+rows.map(r=>'<div class="gf-details__item"><dt>'+r[0]+'</dt><dd>'+cxEsc(r[1])+'</dd></div>').join('')+'</dl>'
-      +(flags?'<div class="gf-cluster">'+flags+'</div>':'')+(c.note?'<p class="gf-muted">'+cxEsc(c.note)+'</p>':'')+'</section>';
+    const delivery=[['Tempo di scarico',cxEsc((c.tempo_scarico_min??10)+' min')]];
+    if(flags)delivery.push(['Accesso','<span class="gf-cluster">'+flags+'</span>']);
+    if(typeof agentsFeatureEnabled==='function'&&agentsFeatureEnabled())delivery.push(['Agente',cxEsc(c.agent_name||'Cliente interno')]);
+    if(c.note)delivery.push(['Note',cxEsc(c.note)]);
+    extra=cxCard('Contatti',contacts.length?cxRows(contacts):'<p class="gf-muted">Nessun contatto indicato.</p>')+cxCard('Consegna',cxRows(delivery));
   }
-  const body='<div class="gf-modal__body gf-stack" data-gap="lg"><section class="gf-stack"><h3 class="gf-subtitle">'+(edit?'Dati del cliente':'Indirizzo')+'</h3>'+address+'</section>'+slot+extra+'</div>';
+  // Variante B (approvata il 13/11/2026): finestra al centro su due colonne, dati a sinistra e fascia a destra.
+  const body='<div class="gf-modal__body"><div class="gf-grid" data-cols="2"><div class="gf-stack">'
+    +cxCard(edit?'Dati del cliente':'Indirizzo di consegna',address)+extra+'</div><div class="gf-stack">'+slot+'</div></div></div>';
   const foot='<footer class="gf-modal__footer">'+(customerDrawer.mode==='view'
       ?'<button type="button" class="gf-button" data-variant="secondary" data-cx-edit-current>'+cxIcon('edit')+'Modifica dati</button>'
       :'<button type="button" class="gf-button" data-variant="secondary" data-cx-cancel>Annulla</button>')

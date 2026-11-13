@@ -5,6 +5,9 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Clienti: la scheda del cliente non è più un pannello laterale ma una finestra al centro, nello
+  stile di «Nuovo cliente» (variante B). A sinistra riquadri con righe etichetta → valore
+  (indirizzo, contatti, consegna), a destra la fascia di scarico con lo stato attuale in evidenza.
 - Importazione ordini da file: accettate anche le date tipiche dei gestionali AS400 (20261113,
   13/11/26, 13-11-2026, 13.11.2026) e riconosciute da sole colonne come NUMORD, RAGSOC, DTCONS,
   NRCOLLI e LOCALI. Le date a 6 cifre senza separatori restano un errore perché ambigue.
