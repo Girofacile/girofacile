@@ -120,8 +120,8 @@ def check_width(browser, width, output):
             expect(page.locator("#sourceErpOption")).to_be_visible()
             file_box = page.locator("#sourceFileOption").bounding_box()
             erp_box = page.locator("#sourceErpOption").bounding_box()
-            assert file_box["y"] + file_box["height"] <= erp_box["y"]
-            assert file_box["width"] >= erp_box["width"]
+            # Tre riquadri affiancati: il file è il primo (a sinistra, o sopra quando lo schermo è stretto).
+            assert file_box["x"] < erp_box["x"] or file_box["y"] < erp_box["y"]
             assert page.evaluate("document.documentElement.scrollWidth <= innerWidth + 2")
             page.screenshot(path=str(output / f"file-first-{width}.png"), full_page=True)
 

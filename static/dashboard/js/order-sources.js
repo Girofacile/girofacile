@@ -76,11 +76,10 @@
     fields=['external_id','number',...data.fields.filter(k=>!['external_id','number'].includes(k))];
     const canImport=can('orders.import')||manage(),canRequestSupport=can('support.write');
     el('sourceCategories').hidden=!canImport&&!manage()&&!canRequestSupport;
-    const fileOption=el('sourceFileOption'),erpOption=el('sourceErpOption'),ecommerceOption=el('sourceEcommerceOption'),additionalOptions=el('sourceAdditionalOptions');
+    const fileOption=el('sourceFileOption'),erpOption=el('sourceErpOption'),ecommerceOption=el('sourceEcommerceOption');
     if(fileOption)fileOption.hidden=!canImport;
     if(erpOption)erpOption.hidden=!manage()&&!canRequestSupport;
     if(ecommerceOption)ecommerceOption.hidden=!manage();
-    if(additionalOptions)additionalOptions.hidden=!manage()&&!canRequestSupport;
     const createTopButton=el('ordersConnectionsNewSource');
     if(createTopButton)createTopButton.hidden=!canImport;
     const upgradeNotice=el('sourcePlanUpgradeNotice');if(upgradeNotice)upgradeNotice.hidden=integrationsEnabled();

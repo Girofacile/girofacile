@@ -5,6 +5,9 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Collega i tuoi ordini: ripristinata l’impostazione a tre riquadri affiancati. Il primo è «File Excel o
+  CSV», con l’etichetta «Consigliato» e l’unico pulsante blu; seguono Gestionale aziendale (con assistenza)
+  ed E-commerce. Restano la richiesta di assistenza per il gestionale e i permessi introdotti il 13/11.
 - Tabella Clienti: in fondo tre pulsanti 10 · 25 · 50 per scegliere quanti clienti vedere, con la scritta
   «25 clienti di 65 · pagina 1 di 3» al posto del menu a tendina.
 - Tabella Clienti: 25 o 50 clienti per pagina (scelta ricordata), filtri e ordinamento in una casella che si
