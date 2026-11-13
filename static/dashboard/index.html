@@ -1376,7 +1376,7 @@
       <button type="button" class="gf-icon-button" onclick="closeCustomerImportModal()" aria-label="Chiudi"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12 M18 6L6 18"/></svg></button>
     </header>
     <div class="gf-modal__body gf-stack">
-      <div class="gf-upload"><div class="gf-upload__copy"><strong>Seleziona file CSV/Excel</strong><label class="gf-button gf-upload__button" data-variant="secondary">Scegli file<input type="file" id="importFile" accept=".csv,.xlsx,.xls" aria-label="File clienti CSV o Excel"></label><p class="gf-field__hint">Formati supportati: .csv, .xlsx, .xls</p></div></div>
+      <div class="gf-upload"><div class="gf-upload__copy"><strong>Seleziona file CSV/Excel</strong><label class="gf-button gf-upload__button" data-variant="secondary">Scegli file<input type="file" id="importFile" accept=".csv,.xlsx" aria-label="File clienti CSV o Excel"></label><p class="gf-field__hint">Formati supportati: .csv e .xlsx. Servono almeno le colonne «Nome» e «Indirizzo» (oppure Via, Civico, CAP, Comune): maiuscole e spazi non contano.</p></div></div>
       <div id="addressValidationSummary" class="gf-muted" aria-live="polite"></div>
     </div>
     <footer class="gf-modal__footer">
@@ -1659,7 +1659,7 @@
 <script src="/static/dashboard/js/order-sources.js?v=gf_fonte_api_b_20261112"></script>
 <script src="/static/dashboard/js/dashboard-real-map.js?v=gf_priority_hero_20261025"></script>
 <script src="/static/dashboard/js/in-progress-reference.js?v=gf_chiudi_giro_20261110"></script>
-<script src="/static/dashboard/js/core.js?v=gf_cliente_elimina_20261113"></script>
+<script src="/static/dashboard/js/core.js?v=gf_import_clienti_20261113"></script>
 <script src="/static/dashboard/js/dashboard-mobile.js?v=gf_dashboard_mobile_20261019"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=gf_verifica_automatica_20261112"></script>
 <link rel="stylesheet" href="/static/dashboard/css/fleet-review.css?v=gf_suddivisione_20261025">

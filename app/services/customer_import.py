@@ -64,6 +64,57 @@ def invalidate_imported_address(db, customer, previous_address):
                           user_id=customer.user_id, commit=False)
 
 
+# Intestazioni riconosciute senza badare a maiuscole, spazi, punti e accenti, con i sinonimi più comuni.
+COLUMN_ALIASES = {
+    'nome': ('nome', 'ragione sociale', 'ragsoc', 'cliente', 'nominativo', 'destinatario', 'denominazione', 'insegna'),
+    'codice_cliente': ('codice cliente', 'codice', 'cod cliente', 'codcli', 'cod'),
+    'indirizzo': ('indirizzo', 'indirizzo completo', 'indirizzo consegna'),
+    'via': ('via', 'strada'),
+    'civico': ('civico', 'numero civico', 'n civico', 'nr civico'),
+    'cap': ('cap', 'codice postale'),
+    'comune': ('comune', 'citta', 'localita', 'paese'),
+    'provincia': ('provincia', 'prov', 'pr'),
+    'telefono': ('telefono', 'tel', 'cellulare', 'cell', 'recapito'),
+    'email': ('email', 'e mail', 'mail', 'posta elettronica'),
+    'referente': ('referente', 'contatto', 'persona di riferimento'),
+    'note': ('note', 'annotazioni'),
+    'ztl': ('ztl',),
+    'sponda': ('sponda', 'sponda idraulica'),
+    'transpallet': ('transpallet',),
+    'tempo_scarico_min': ('tempo scarico min', 'tempo scarico', 'tempo di scarico', 'minuti scarico'),
+    'scarico_mattina_da': ('scarico mattina da', 'mattina dalle', 'mattina da', 'dalle'),
+    'scarico_mattina_a': ('scarico mattina a', 'mattina alle', 'mattina a', 'alle'),
+    'scarico_pomeriggio_da': ('scarico pomeriggio da', 'pomeriggio dalle', 'pomeriggio da'),
+    'scarico_pomeriggio_a': ('scarico pomeriggio a', 'pomeriggio alle', 'pomeriggio a'),
+    'codice_agente': ('codice agente', 'cod agente'),
+    'agente': ('agente',),
+}
+
+
+def _header_key(value):
+    import unicodedata
+    text = unicodedata.normalize('NFKD', str(value or '')).encode('ascii', 'ignore').decode().casefold()
+    return ' '.join(''.join(ch if ch.isalnum() else ' ' for ch in text).split())
+
+
+def normalize_columns(df):
+    """Rinomina le intestazioni nei nomi interni (es. «Ragione Sociale» -> nome, «Città» -> comune)."""
+    lookup = {_header_key(alias): field for field, aliases in COLUMN_ALIASES.items() for alias in (field, *aliases)}
+    renamed, used = {}, set()
+    for column in df.columns:
+        field = lookup.get(_header_key(column))
+        if field and field not in used:
+            renamed[column] = field
+            used.add(field)
+    original = [str(c) for c in df.columns]
+    df = df.rename(columns=renamed)
+    if 'nome' not in df.columns or not ({'indirizzo', 'via'} & set(df.columns)):
+        found = ', '.join(original[:12]) or 'nessuna'
+        raise HTTPException(400, 'Nel file mancano le colonne indispensabili: servono «Nome» (o Ragione sociale) '
+                                 f'e «Indirizzo» (oppure «Via»). Colonne trovate: {found}.')
+    return df
+
+
 async def read_customer_import(file):
     content = await file.read(10 * 1024 * 1024 + 1)
     if len(content) > 10 * 1024 * 1024:
@@ -73,12 +124,18 @@ async def read_customer_import(file):
         # Tutto come testo: «NA» (Napoli) non diventa «dato mancante», civico e telefono
         # restano come scritti («12», «0811111111») invece di diventare 12.0 / 811111111.0.
         if name.endswith('.csv'):
-            return pd.read_csv(io.BytesIO(content), dtype=str, keep_default_na=False, sep=None, engine='python')
-        if name.endswith('.xlsx'):
-            return pd.read_excel(io.BytesIO(content), dtype=str, keep_default_na=False)
+            df = pd.read_csv(io.BytesIO(content), dtype=str, keep_default_na=False, sep=None, engine='python')
+        elif name.endswith('.xlsx'):
+            df = pd.read_excel(io.BytesIO(content), dtype=str, keep_default_na=False)
+        else:
+            df = None
     except Exception:
         raise HTTPException(400, "File non leggibile: verifica formato e intestazioni")
-    raise HTTPException(400, "Usa un file CSV o XLSX")
+    if df is None:
+        if name.endswith('.xls'):
+            raise HTTPException(400, "Il formato .xls (Excel vecchio) non è supportato: in Excel usa «Salva con nome» → «Cartella di lavoro di Excel (.xlsx)» e riprova.")
+        raise HTTPException(400, "Usa un file CSV o XLSX")
+    return normalize_columns(df)
 
 
 def preflight_customer_import(df, db, user, agent_id=None):

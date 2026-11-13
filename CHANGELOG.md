@@ -5,6 +5,10 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Importazione clienti da CSV/Excel: le intestazioni sono riconosciute senza badare a maiuscole, spazi e
+  accenti, con i sinonimi più comuni (Ragione sociale, Città, Località, Cod. cliente, Tel, E-mail…). Prima
+  «Nome» con la maiuscola non veniva riconosciuto e il file risultava importato con 0 clienti. Se mancano
+  le colonne indispensabili, o nessuna riga è valida, compare un messaggio chiaro. Tolto il formato .xls.
 - Scheda cliente: al posto della sezione «Elimina cliente» c’è solo il pulsante rosso «Elimina» in basso
   a sinistra, accanto ad Annulla e Salva (non compare per un cliente nuovo).
 - Clienti: un’unica scheda per vedere e modificare. «Dettagli» (o un clic sulla riga) apre la finestra

@@ -3280,6 +3280,10 @@ async function importCustomers(){
     return;
   }
   const j = await res.json();
+  if(!j.created && !j.updated){
+    alert("Nessun cliente importato: ogni riga deve avere almeno il nome e l'indirizzo compilati.");
+    return;
+  }
   toast(`Import completato. Creati: ${j.created}, aggiornati: ${j.updated}.`);
   await loadCustomers();
   await loadCustomerPicker();
