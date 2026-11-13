@@ -103,7 +103,7 @@
     <section class="gf-stack gf-hidden" data-gap="lg" id="section-tickets" data-admin-section>
       <form class="gf-filters" aria-label="Filtra ticket" onsubmit="return false">
         <label class="gf-field" for="filter-ticket-status"><span class="gf-field__label">Stato</span><select class="gf-select" id="filter-ticket-status" onchange="loadTickets()"><option value="">Tutti</option><option value="aperto">Aperti</option><option value="in_lavorazione">In lavorazione</option><option value="chiuso">Chiusi</option></select></label>
-        <label class="gf-field" for="filter-ticket-tipo"><span class="gf-field__label">Tipo</span><select class="gf-select" id="filter-ticket-tipo" onchange="loadTickets()"><option value="">Tutti i tipi</option><option value="recupero_password">Recupero password</option><option value="supporto">Supporto</option><option value="errore_sistema">Errore sistema</option></select></label>
+        <label class="gf-field" for="filter-ticket-tipo"><span class="gf-field__label">Tipo</span><select class="gf-select" id="filter-ticket-tipo" onchange="loadTickets()"><option value="">Tutti i tipi</option><option value="collegamento_gestionale">Collegamento gestionale</option><option value="recupero_password">Recupero password</option><option value="supporto">Supporto</option><option value="errore_sistema">Errore sistema</option></select></label>
         <div class="gf-filters__chips"><span class="gf-muted" id="ticket-count"></span></div>
       </form>
       <section class="gf-panel">
@@ -662,8 +662,8 @@ function renderRecentTickets(tickets) {
     <thead><tr><th>Email</th><th>Oggetto</th><th>Stato</th></tr></thead>
     <tbody>${tickets.map(t => `
       <tr>
-        <td data-label="Email">${t.email}</td>
-        <td data-label="Oggetto">${t.oggetto || t.tipo}</td>
+        <td data-label="Email">${escapeHtml(t.email)}</td>
+        <td data-label="Oggetto">${escapeHtml(t.oggetto || ticketTypeLabel(t.tipo))}</td>
         <td data-label="Stato">${badge(t.status, ticketStatusLabel(t.status))}</td>
       </tr>`).join('')}
     </tbody>`;
@@ -831,10 +831,10 @@ async function loadTickets() {
       tbody.innerHTML = tickets.map(t => `
         <tr>
           <td data-label="#" class="gf-muted">#${t.id}</td>
-          <td data-label="Tipo"><small>${t.tipo}</small></td>
-          <td data-label="Email">${t.email}</td>
-          <td data-label="Oggetto">${t.oggetto || '—'}</td>
-          <td data-label="Utente">${t.username ? `${t.username}${t.plan ? ` ${badge(t.plan, planName(t.plan))}` : ''}` : '—'}</td>
+          <td data-label="Tipo"><small>${escapeHtml(ticketTypeLabel(t.tipo))}</small></td>
+          <td data-label="Email">${escapeHtml(t.email)}</td>
+          <td data-label="Oggetto">${escapeHtml(t.oggetto || '—')}</td>
+          <td data-label="Utente">${t.username ? `${escapeHtml(t.username)}${t.plan ? ` ${badge(t.plan, planName(t.plan))}` : ''}` : '—'}</td>
           <td data-label="Stato">${badge(t.status, ticketStatusLabel(t.status))}${t.system_error_id ? `<br>${badge('critical', 'Errore #' + t.system_error_id)}` : ''}${t.notify_on_resolution ? `<br><small class="gf-muted">Avviso risoluzione</small>` : ''}</td>
           <td data-label="Data" class="gf-muted">${fmtDate(t.created_at)}</td>
           <td data-label="Azioni"><button class="gf-button" data-variant="ghost" data-size="sm" type="button" onclick="openTicketModal(${t.id})">Apri</button></td>
@@ -851,14 +851,14 @@ async function openTicketModal(ticketId) {
   const tickets = await api('/api/admin/tickets') || [];
   const t = tickets.find(x => x.id === ticketId);
   if (!t) return;
-  const detail = (label, value) => `<div class="gf-details__item"><dt>${label}</dt><dd>${value}</dd></div>`;
+  const detail = (label, value) => `<div class="gf-details__item"><dt>${label}</dt><dd>${escapeHtml(value)}</dd></div>`;
   document.getElementById('modal-ticket-body').innerHTML = `
     <div class="gf-stack">
       <dl class="gf-details">
-        ${detail('Da', t.email)}${detail('Tipo', t.tipo)}${detail('Utente', t.username || 'Non registrato')}
+        ${detail('Da', t.email)}${detail('Tipo', ticketTypeLabel(t.tipo))}${detail('Utente', t.username || 'Non registrato')}
         ${detail('Piano', t.plan ? planName(t.plan) : '—')}${detail('Errore collegato', t.system_error_id ? `#${t.system_error_id}` : '—')}${detail('Avviso utente', t.notify_on_resolution ? 'Sì, alla chiusura' : 'No')}
       </dl>
-      <div class="gf-field"><span class="gf-field__label">Messaggio</span><p class="gf-alert" data-status="neutral">${t.messaggio || '—'}</p></div>
+      <div class="gf-field"><span class="gf-field__label">Messaggio</span><p class="gf-alert" data-status="neutral">${escapeHtml(t.messaggio || '—')}</p></div>
       <label class="gf-field" for="ticket-status"><span class="gf-field__label">Stato</span>
         <select class="gf-select" id="ticket-status">
           <option value="aperto" ${t.status==='aperto'?'selected':''}>Aperto</option>
@@ -866,7 +866,7 @@ async function openTicketModal(ticketId) {
           <option value="chiuso" ${t.status==='chiuso'?'selected':''}>Chiuso</option>
         </select></label>
       <label class="gf-field" for="ticket-note"><span class="gf-field__label">Nota interna</span>
-        <textarea class="gf-textarea" id="ticket-note" placeholder="Note interne (non visibili all'utente)...">${t.admin_note || ''}</textarea></label>
+        <textarea class="gf-textarea" id="ticket-note" placeholder="Note interne (non visibili all'utente)...">${escapeHtml(t.admin_note || '')}</textarea></label>
       ${t.system_error_id ? `<div class="gf-cluster"><button class="gf-button" data-variant="secondary" data-size="sm" type="button" onclick="analyzeTicketWithAI(${t.id})">Analizza con AI</button><button class="gf-button" data-variant="secondary" data-size="sm" type="button" onclick="insertTicketAIReply(${t.id})">Inserisci risposta suggerita</button></div><pre id="ticket-ai-box" class="gf-code gf-hidden"></pre>` : `<p class="gf-muted">AI non disponibile: questo ticket non è collegato a un errore sistema.</p>`}
     </div>
   `;
@@ -1567,6 +1567,7 @@ async function analyzeErrorWithAI(errorId){
   }catch(e){ if(box) box.textContent = e.message || 'Errore AI'; showToast(e.message, 'error'); }
 }
 
+function ticketTypeLabel(tipo) { return { collegamento_gestionale: 'Collegamento gestionale', supporto: 'Supporto', recupero_password: 'Recupero password', errore_sistema: 'Errore sistema' }[tipo] || tipo; }
 function ticketStatusLabel(s) { return { aperto: 'Aperto', in_lavorazione: 'In lavorazione', chiuso: 'Chiuso' }[s] || s; }
 function errorStatusLabel(s) { return { new: 'Nuovo', seen: 'Visto', in_progress: 'In lavorazione', resolved: 'Risolto', ignored: 'Ignorato' }[s] || s; }
 function errorSeverityLabel(s) { return { critical: 'Critico', high: 'Alto', medium: 'Medio', low: 'Basso' }[s] || s; }

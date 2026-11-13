@@ -254,7 +254,7 @@
         <button type="button" class="gf-button" data-variant="primary" data-new-route-button data-show-on-tabs="dashboard" onclick="openPlanningSelection()"><span data-gf-label="new_route">Nuovo giro</span></button>
         <!-- Giri programmati: «+ Pianifica giro» in alto accanto alle notifiche, come le azioni delle altre pagine. -->
         <button type="button" class="gf-button gf-hidden" data-variant="primary" data-show-on-tabs="dashboard-scheduled" data-scheduled-plan onclick="openPlanningSelection()">+ Pianifica giro</button>
-        <button id="ordersConnectionsNewSource" class="gf-button gf-hidden" data-show-on-tabs="ordini-collegamenti" data-variant="primary" type="button" onclick="GFOrderSources.createForm()" hidden>+ Nuova fonte</button>
+        <button id="ordersConnectionsNewSource" class="gf-button gf-hidden" data-show-on-tabs="ordini-collegamenti" data-variant="primary" type="button" onclick="GFOrderImport.start()" hidden>Carica file</button>
         <div id="ordersTopbarActionsHost" class="gf-cluster gf-hidden" data-show-on-tabs="ordini" aria-label="Azioni ordini"></div>
         <div id="orderSourceTopbarActionsHost" class="gf-cluster gf-hidden" data-show-on-tabs="ordine-fonte" aria-label="Azioni fonte ordini"></div>
         <div id="fleetTopbarActionsHost" class="gf-cluster gf-hidden" aria-label="Azioni della suddivisione"></div>
@@ -674,27 +674,33 @@
       </dialog>
       <section id="tab-ordini-collegamenti" class="tab hidden gf-stack" data-gap="lg">
         <div class="gf-field" data-invalid><p id="sourceMessage" role="status" class="gf-field__error"></p></div>
-        <p id="sourcePlanUpgradeNotice" class="gf-alert" data-status="info" hidden>API, Shopify e WooCommerce sono disponibili dal piano Business. L’importazione da file CSV/Excel è inclusa nel tuo piano.</p>
-        <div id="sourceCategories" class="gf-grid" data-cols="3">
-            <article class="gf-card gf-stack" data-source-option>
-              <span class="gf-stat-card__icon" data-tone="neutral" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="5" rx="1"/><rect x="4" y="14" width="16" height="5" rx="1"/><path d="M8 7.5h.01M8 16.5h.01M16 7.5h2M16 16.5h2"/></svg></span>
-              <h2 class="gf-subtitle">Gestionale aziendale</h2>
-              <p class="gf-muted">File esportato o API standard. Un gestionale personalizzato richiede un adattatore tecnico.</p>
-              <div><button type="button" class="gf-button" data-variant="primary" data-plan-feature="has_order_integrations" onclick="GFOrderSources.createForm('api')">Configura gestionale</button></div>
-            </article>
-            <article class="gf-card gf-stack" data-source-option>
-              <span class="gf-stat-card__icon" data-tone="neutral" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v5h5"/><path d="M8.5 15h7M8.5 18h5"/></svg></span>
-              <h2 class="gf-subtitle">File Excel o CSV</h2>
-              <p class="gf-muted">Scegli il file e controlla l’anteprima. Riconosciamo le colonne per te.</p>
-              <div><button type="button" class="gf-button" data-variant="primary" onclick="GFOrderImport.start()">Carica un file</button></div>
-            </article>
-            <article class="gf-card gf-stack" data-source-option>
-              <span class="gf-stat-card__icon" data-tone="neutral" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 5h2l2 11h10l2-8H6"/><circle cx="9" cy="19" r="1"/><circle cx="17" cy="19" r="1"/></svg></span>
-              <h2 class="gf-subtitle">E-commerce</h2>
-              <p class="gf-muted">Collega Shopify o WooCommerce per ricevere automaticamente i nuovi ordini.</p>
-              <div><button type="button" class="gf-button" data-variant="primary" data-plan-feature="has_order_integrations" onclick="GFOrderSources.unavailable('ecommerce')">Collega negozio</button></div>
-            </article>
+        <div id="sourceCategories" class="gf-stack" data-gap="lg">
+          <article id="sourceFileOption" class="gf-card gf-stack" data-variant="info" data-source-option data-order-import-primary aria-labelledby="sourceFileTitle">
+            <div class="gf-cluster"><span class="gf-stat-card__icon" data-tone="info" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v5h5M8.5 15h7M8.5 18h5"/></svg></span><span class="gf-badge" data-status="info">Importazione da file</span></div>
+            <h2 class="gf-panel__title" id="sourceFileTitle">Carica gli ordini da CSV o Excel</h2>
+            <p>Esporta gli ordini dal tuo gestionale o negozio online e carica il file in GiroFacile. Riconosciamo le colonne e ti mostriamo l’anteprima prima di importare.</p>
+            <p class="gf-muted">Le associazioni vengono salvate: i prossimi file dello stesso elenco saranno più veloci da importare.</p>
+            <div><button type="button" class="gf-button" data-variant="primary" onclick="GFOrderImport.start()">Carica un file</button></div>
+          </article>
+          <div id="sourceAdditionalOptions" class="gf-stack">
+            <h2 class="gf-subtitle">Altri modi per ricevere gli ordini</h2>
+            <div class="gf-grid" data-cols="2">
+              <article id="sourceErpOption" class="gf-card gf-stack" data-source-option aria-labelledby="sourceErpTitle">
+                <span class="gf-stat-card__icon" data-tone="neutral" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="5" rx="1"/><rect x="4" y="14" width="16" height="5" rx="1"/><path d="M8 7.5h.01M8 16.5h.01M16 7.5h2M16 16.5h2"/></svg></span>
+                <div class="gf-cluster"><h3 class="gf-subtitle" id="sourceErpTitle">Gestionale aziendale</h3><span class="gf-badge" data-status="neutral">Con assistenza</span></div>
+                <p class="gf-muted">Richiedi assistenza per verificare la compatibilità e configurare il collegamento con il tuo gestionale. Ti ricontatteremo ai recapiti dell’azienda.</p>
+                <div><button type="button" class="gf-button" data-variant="secondary" onclick="GFOrderSources.requestErpConnection()">Collega</button></div>
+              </article>
+              <article id="sourceEcommerceOption" class="gf-card gf-stack" data-source-option aria-labelledby="sourceEcommerceTitle">
+                <span class="gf-stat-card__icon" data-tone="neutral" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 5h2l2 11h10l2-8H6"/><circle cx="9" cy="19" r="1"/><circle cx="17" cy="19" r="1"/></svg></span>
+                <h3 class="gf-subtitle" id="sourceEcommerceTitle">E-commerce</h3>
+                <p class="gf-muted">Collega Shopify o WooCommerce per ricevere automaticamente i nuovi ordini.</p>
+                <div><button type="button" class="gf-button" data-variant="secondary" data-plan-feature="has_order_integrations" onclick="GFOrderSources.unavailable('ecommerce')">Collega negozio</button></div>
+              </article>
+            </div>
           </div>
+        </div>
+        <p id="sourcePlanUpgradeNotice" class="gf-alert" data-status="info" hidden>L’importazione da file CSV/Excel è inclusa nel tuo piano. L’invio automatico tramite API, Shopify o WooCommerce richiede Business o Pro; puoi comunque richiedere informazioni per il tuo gestionale.</p>
         <section id="sourceWizard" class="gf-panel" hidden></section>
         <section class="gf-panel" aria-labelledby="ordersSourcesTitle">
           <header class="gf-panel__header"><h2 class="gf-panel__title" id="ordersSourcesTitle">Le tue fonti</h2><span id="sourceCount" class="gf-badge" data-status="neutral" aria-live="polite">— fonti</span></header>
@@ -1654,13 +1660,13 @@
 
 <script src="/static/dashboard/js/reports.js?v=gf_periodo_20261111"></script>
 <script src="/static/dashboard/js/customers.js?v=gf_tabella_clienti_20261113"></script>
-<script src="/static/dashboard/js/navigation.js?v=gf_collaudo2_20261110"></script>
+<script src="/static/dashboard/js/navigation.js?v=gf_file_assistenza_20261113"></script>
 <script src="/static/dashboard/js/history.js?v=gf_collaudo_20261110"></script>
 <script src="/static/password-strength.js?v=gf_driver_flow_20261020"></script>
 <script src="/static/dashboard/js/collaborators.js?v=gf_collaudo_20261110"></script>
 <script src="/static/dashboard/js/orders.js?v=gf_collaudo_20261110"></script>
 <script src="/static/dashboard/js/order-import.js?v=gf_fonte_api_b_20261112"></script>
-<script src="/static/dashboard/js/order-sources.js?v=gf_fonte_api_b_20261112"></script>
+<script src="/static/dashboard/js/order-sources.js?v=gf_file_assistenza_20261113"></script>
 <script src="/static/dashboard/js/dashboard-real-map.js?v=gf_priority_hero_20261025"></script>
 <script src="/static/dashboard/js/in-progress-reference.js?v=gf_chiudi_giro_20261110"></script>
 <script src="/static/dashboard/js/core.js?v=gf_import_esito_20261113"></script>

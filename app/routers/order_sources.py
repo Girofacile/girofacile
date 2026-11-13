@@ -8,7 +8,7 @@ from pydantic import ValidationError
 from sqlalchemy.orm import Session
 from ..core.dependencies import current_user
 from ..database import get_db
-from ..models import User
+from ..models import SupportTicket,User
 from ..order_models import OrderSource,OrderImportRun,Order,CustomerSourceMapping
 from ..schemas.order_sources import SourceCreate,SourceUpdate,SourceFields,SourceAction,RunConfirm,Acquisition,MAX_BYTES,MAX_ROWS
 from ..services import order_ingestion as service
@@ -43,9 +43,17 @@ def list_sources(offset:int=Query(0,ge=0),db:Session=Depends(get_db),user:User=D
 @router.post('/api/order-sources',status_code=201)
 def create_source(data:SourceCreate,db:Session=Depends(get_db),user:User=Depends(current_user)):
     user=db.query(User).filter_by(id=user.id).with_for_update().populate_existing().one()
-    if data.kind=='api': require_feature(user,'has_order_integrations')
+    configuration={'software':data.software,'mapping':{}}
+    if data.kind=='api':
+        require_feature(user,'has_order_integrations')
+        # New ERP connections start with an assistance request. Existing sources
+        # keep their configuration and credentials; a ticket is not staff approval.
+        ticket=db.query(SupportTicket).filter_by(user_id=user.id,tipo='collegamento_gestionale').order_by(SupportTicket.created_at.desc(),SupportTicket.id.desc()).first()
+        if ticket is None:
+            raise HTTPException(403,'Per collegare il gestionale, invia prima una richiesta di assistenza da Collega i tuoi ordini.')
+        configuration['support_ticket_id']=ticket.id
     if db.query(OrderSource).filter(OrderSource.user_id==user.id,OrderSource.kind.in_(('file','api'))).count()>=100: raise HTTPException(422,'Limite tecnico: massimo 100 fonti per azienda.')
-    src=OrderSource(user_id=user.id,key='source-'+str(uuid4()),name=data.name,kind=data.kind,status='draft',configuration={'software':data.software,'mapping':{}})
+    src=OrderSource(user_id=user.id,key='source-'+str(uuid4()),name=data.name,kind=data.kind,status='draft',configuration=configuration)
     db.add(src);db.commit();return service.public_source(db,src)
 
 

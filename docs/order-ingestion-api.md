@@ -14,9 +14,29 @@
 
 ## Configurazione iniziale
 
-Il titolare apre Ordini → Collega i tuoi ordini → Configura gestionale, indica nome/software e sceglie API standard. Carica un campione JSON reale anonimizzato, controlla le associazioni proposte, verifica e attiva la fonte. Il campione **non importa ordini**. Il titolare genera quindi una credenziale dedicata; viene mostrata una sola volta. Copiarla nel gestore segreti del gestionale, mai in file pubblici o URL. Il gestionale deve implementare l'invio: lo stato Attiva indica disponibilità dell'endpoint, non certifica un collegamento con il fornitore.
+In **Ordini → Collega i tuoi ordini**, il percorso principale è **Carica un file**: importa il CSV o Excel esportato dal gestionale e controlla l'anteprima. Non occorrono configurazioni API.
 
-Comunica al tecnico: URL HTTPS dell'installazione, nome/versione del gestionale, esempio del tracciato, identificativi stabili di ordini/clienti, associazioni dei campi e frequenza prevista. Nessun connettore proprietario universale, accesso email o sincronizzazione e-commerce è incluso.
+Per valutare l'invio automatico dal gestionale, il pulsante **Collega** nella scheda **Gestionale aziendale** apre una richiesta di assistenza. Il modulo chiede nome del software, descrizione dell'esigenza, versione e telefono facoltativi. Il supporto riceve un ticket aziendale e usa l'email del Profilo azienda, con l'email dell'account come alternativa. La richiesta resta consultabile nello storico dell'assistenza; non attiva una fonte e non certifica la compatibilità del gestionale. Non inserire password o chiavi API nel messaggio.
+
+Il modulo usa `POST /api/support/erp-connection`, autenticato e soggetto al permesso `support.write`, con questi campi JSON:
+
+```json
+{
+  "software": "Nome gestionale",
+  "version": "Versione facoltativa",
+  "message": "Come riceviamo gli ordini e cosa vorremmo importare",
+  "phone": "Recapito facoltativo",
+  "notify_on_resolution": true
+}
+```
+
+La risposta segue il contratto dei ticket: `ok: true` e un oggetto `ticket` con numero, tipo `collegamento_gestionale`, email, oggetto, messaggio e stato. Il ticket è collegato all'azienda autenticata; azienda ed email non vengono accettate dal corpo della richiesta. Non viene inviata un'email alla creazione.
+
+La creazione tecnica di una nuova fonte con `POST /api/order-sources` e `kind: "api"` richiede una precedente richiesta `collegamento_gestionale` della stessa azienda. La fonte conserva il riferimento al ticket scelto dal server. Questo controllo richiede la richiesta di assistenza, senza introdurre una nuova approvazione amministrativa. Restano necessari il piano Business o Pro e i normali permessi di integrazione. Le fonti API già esistenti mantengono le proprie impostazioni e continuano a funzionare.
+
+Durante la configurazione tecnica si carica un campione JSON reale anonimizzato, si controllano le associazioni proposte, quindi si verifica e attiva la fonte. Il campione **non importa ordini**. La credenziale dedicata viene mostrata una sola volta: copiarla nel gestore segreti del gestionale, mai in file pubblici o URL. Il gestionale deve implementare l'invio: lo stato Attiva indica disponibilità dell'endpoint, non certifica un collegamento con il fornitore.
+
+Per la valutazione tecnica servono URL HTTPS dell'installazione, nome/versione del gestionale, esempio del tracciato, identificativi stabili di ordini/clienti, associazioni dei campi e frequenza prevista. Non esiste un connettore proprietario universale. Per i collegamenti specifici Shopify e WooCommerce vedere [collegamenti automatici](order-connectors.md).
 
 ## Richiesta standard
 
@@ -84,6 +104,6 @@ with urllib.request.urlopen(request, timeout=60) as response:
 
 ## File CSV / XLSX
 
-Stesso percorso con modalità File: caricare, associare colonne, verificare, attivare e **Conferma importazione**. CSV UTF-8 (anche BOM) o Windows-1252, separatore virgola/punto e virgola/tab; XLSX singolo foglio, senza formule, macro o collegamenti esterni. Massimo 2 MB, 1000 righe, 50 intestazioni univoche e celle di 5000 caratteri. Decimali con virgola e Sì/No sono riconosciuti. Date ISO o GG/MM/AAAA; fasce orarie complete e ordinate.
+Aprire **Carica un file** dalla pagina di collegamento oppure **Importa file** da Ordini. Il percorso guidato **Carica file → Controlla dati → Fatto** riconosce e verifica le colonne; le associazioni si possono correggere prima della conferma. La conferma attiva le impostazioni file e importa gli ordini. CSV UTF-8 (anche BOM) o Windows-1252, separatore virgola/punto e virgola/tab; XLSX singolo foglio, senza formule, macro o collegamenti esterni. Massimo 2 MB, 1000 righe, 50 intestazioni univoche e celle di 5000 caratteri. Decimali con virgola e Sì/No sono riconosciuti. Date ISO o GG/MM/AAAA; fasce orarie complete e ordinate.
 
 Ripetere un file con gli stessi identificativi e contenuti non duplica ordini. Correzioni delle associazioni richiedono una nuova verifica e attivazione. L'anteprima scade dopo 24 ore; i campioni completati vengono eliminati subito, quelli scaduti al prossimo caricamento aziendale. Gli ordini e i report restano nell'archivio. Una modifica concorrente dopo l'anteprima blocca l'importazione e richiede una nuova verifica.

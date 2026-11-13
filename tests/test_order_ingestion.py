@@ -6,6 +6,7 @@ from copy import deepcopy
 from openpyxl import Workbook
 from test_orders import orders
 from app.order_models import Order,OrderSource,OrderImportRun
+from app.models import SupportTicket
 
 CSV='NOrdine;RagioneSociale;IndSped;Pedana;NColli\nEXT-1;Recipient;Via Roma 1;No;3\n'
 
@@ -20,8 +21,17 @@ def ingestion(orders):
     return orders
 
 
+def erp_request(ctx):
+    """An assistance request precedes configuration of every new ERP API source."""
+    _,db,owner,*_=ctx
+    ticket=SupportTicket(user_id=owner.id,tipo='collegamento_gestionale',email='orders@example.test',oggetto='Collegamento gestionale',messaggio='Gestionale demo')
+    db.add(ticket);db.commit()
+    return ticket
+
+
 def setup(ctx,kind='file'):
     client=ctx[0]
+    if kind=='api': erp_request(ctx)
     result=client.post('/api/order-sources',json={'name':'ERP export','kind':kind,'software':'Custom ERP'})
     assert result.status_code==201,result.text
     src=result.json()
@@ -44,6 +54,52 @@ def api_source(ctx):
     result=ctx[0].post(f"/api/order-sources/{src['id']}/action",json={'version':src['version'],'action':'rotate'})
     assert result.status_code==200,result.text
     return result.json(),{'Authorization':'Bearer '+result.json()['credential']}
+
+
+def test_new_api_source_requires_own_erp_assistance_request(ingestion):
+    client,db,owner,other=ingestion
+    payload={'name':'Gestionale API','kind':'api','software':'Gestionale demo'}
+    denied=client.post('/api/order-sources',json=payload)
+    assert denied.status_code==403 and 'richiesta di assistenza' in denied.json()['detail']
+    assert db.query(OrderSource).count()==0
+
+    # Neither another company's ERP ticket nor this company's generic support
+    # ticket qualifies as a request to connect this company's ERP.
+    db.add_all([
+        SupportTicket(user_id=other.id,tipo='collegamento_gestionale',email='other@example.test'),
+        SupportTicket(user_id=owner.id,tipo='supporto',email='owner@example.test'),
+    ])
+    db.commit()
+    assert client.post('/api/order-sources',json=payload).status_code==403
+    file_source=client.post('/api/order-sources',json={'name':'Esportazione CSV','kind':'file'})
+    assert file_source.status_code==201
+    assert 'support_ticket_id' not in db.get(OrderSource,file_source.json()['id']).configuration
+
+    first=erp_request(ingestion)
+    latest=erp_request(ingestion)
+    first.status='chiuso'
+    db.commit()
+    created=client.post('/api/order-sources',json=payload)
+    assert created.status_code==201,created.text
+    source=db.get(OrderSource,created.json()['id'])
+    assert source.configuration['support_ticket_id']==latest.id
+    assert source.status=='draft' and source.credential_hash is None
+    # The caller cannot associate a different tenant's ticket or invent one.
+    assert client.post('/api/order-sources',json={**payload,'support_ticket_id':1}).status_code==422
+
+
+def test_existing_api_source_still_operates_without_assistance_ticket(ingestion):
+    client,db,owner,*_=ingestion
+    source=OrderSource(user_id=owner.id,key='existing-api',name='Gestionale già attivo',kind='api',status='active',
+                       configuration={'validated':True,'mapping':{'external_id':'external_id','number':'number'}})
+    db.add(source);db.commit()
+    assert db.query(SupportTicket).count()==0
+    rotated=client.post(f'/api/order-sources/{source.id}/action',json={'version':source.version,'action':'rotate'})
+    assert rotated.status_code==200,rotated.text
+    result=client.post('/api/order-ingestion',headers={'Authorization':'Bearer '+rotated.json()['credential']},
+                       json={'batch_id':'existing-api-batch','orders':[{'external_id':'OLD-1','number':'OLD-1'}]})
+    assert result.status_code==200,result.text
+    assert db.query(Order).count()==1
 
 
 def test_file_preview_confirmation_repeat_and_false(ingestion):
@@ -251,6 +307,7 @@ def test_numeric_file_codes_and_api_preview_validate_optional_fields(ingestion):
 def test_draft_api_key_generation_before_activation(ingestion):
     """The owner can generate/copy the key first, but ingestion stays blocked until activation."""
     client, db, owner, other = ingestion
+    erp_request(ingestion)
     src = client.post('/api/order-sources', json={'name': 'Gestionale demo', 'kind': 'api'}).json()
     result = client.post(f"/api/order-sources/{src['id']}/action",
                          json={'version': src['version'], 'action': 'rotate'})

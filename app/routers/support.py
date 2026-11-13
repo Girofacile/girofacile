@@ -4,7 +4,7 @@ from datetime import datetime
 from ..core.clock import utc_now
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session
 
 from ..core.dependencies import current_user
@@ -22,6 +22,16 @@ class SupportTicketIn(BaseModel):
     notify_on_resolution: bool = True
     system_error_id: int | None = None
     tipo: str = Field(default="supporto", max_length=80)
+
+
+class ERPConnectionRequestIn(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    software: str = Field(min_length=1, max_length=160)
+    version: str = Field(default="", max_length=160)
+    message: str = Field(min_length=1, max_length=3000)
+    phone: str = Field(default="", max_length=100)
+    notify_on_resolution: bool = True
 
 
 def support_ticket_to_dict(t: SupportTicket) -> dict:
@@ -137,6 +147,36 @@ def create_support_ticket(
     db.commit()
     db.refresh(ticket)
     return {"ok": True, "ticket": support_ticket_to_dict(ticket)}
+
+
+@router.post("/erp-connection")
+def request_erp_connection(
+    payload: ERPConnectionRequestIn,
+    db: Session = Depends(get_db),
+    user: User = Depends(current_user),
+):
+    """Richiede assistenza per un gestionale senza attivare una fonte API."""
+    details = [
+        "Richiesta di assistenza per collegare il gestionale a GiroFacile.",
+        f"Gestionale: {payload.software}",
+    ]
+    if payload.version:
+        details.append(f"Versione: {payload.version}")
+    details.append(f"Azienda: {user.company_name or user.username}")
+    phone = payload.phone or (user.company_phone or "").strip()
+    if phone:
+        details.append(f"Telefono per il ricontatto: {phone}")
+    details.extend(["", "Esigenze dell’azienda:", payload.message])
+    return create_support_ticket(
+        SupportTicketIn(
+            oggetto=f"Collegamento gestionale — {payload.software}",
+            messaggio="\n".join(details),
+            tipo="collegamento_gestionale",
+            notify_on_resolution=payload.notify_on_resolution,
+        ),
+        db=db,
+        user=user,
+    )
 
 
 @router.get("/tickets")

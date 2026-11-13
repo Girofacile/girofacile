@@ -17,12 +17,13 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 from app.database import Base,get_db
-from app.models import User, Deposit, Vehicle, Driver, Customer
+from app.models import User, Deposit, Vehicle, Driver, Customer, SupportTicket
 from app.core.dependencies import current_user
 from app.routers.orders import router
 from app.routers.order_planning import router as planning_router
 from app.routers.planning_drafts import router as drafts_router
 from app.routers.order_sources import router as sources_router
+from app.routers.support import router as support_router
 from check_management_design import ME,LIMITS,VEHICLES,DRIVERS,DEPOSITS,USAGE
 
 
@@ -49,14 +50,14 @@ def select_ready(page):
 def main():
     output=ROOT/'test-results'/'orders-responsive';output.mkdir(parents=True,exist_ok=True)
     with sync_playwright() as pw:
-        browser=pw.chromium.launch(headless=True, channel=os.getenv("GF_TEST_BROWSER_CHANNEL") or None)
+        browser=pw.chromium.launch(headless=True, channel=os.getenv("GF_TEST_BROWSER_CHANNEL") or None, executable_path=os.getenv("GF_TEST_BROWSER_EXECUTABLE") or None)
         for width in (390,768,1024,1440):
             engine=create_engine('sqlite://',poolclass=StaticPool,connect_args={'check_same_thread':False})
             Base.metadata.create_all(engine)
             with Session(engine) as db:
-                user=User(username='browser-test',password_hash='test',plan='business',plan_status='active');db.add(user);db.commit()
+                user=User(username='browser-test',password_hash='test',plan='business',plan_status='active',company_email='azienda@example.test');db.add(user);db.commit()
                 db.add_all([Deposit(user_id=user.id,nome='Depot',indirizzo='Via Roma 1',lat=45.46,lon=9.19),Vehicle(user_id=user.id,nome='Van'),Driver(user_id=user.id,nome='Driver')]);db.commit()
-                app=FastAPI();app.include_router(router);app.include_router(planning_router);app.include_router(drafts_router);app.include_router(sources_router)
+                app=FastAPI();app.include_router(router);app.include_router(planning_router);app.include_router(drafts_router);app.include_router(sources_router);app.include_router(support_router)
                 app.dependency_overrides[get_db]=lambda:db
                 app.dependency_overrides[current_user]=lambda:user
                 with TestClient(app) as client:
@@ -66,7 +67,7 @@ def main():
                     def handle(route):
                         parsed=urlparse(route.request.url);path=parsed.path
                         if parsed.hostname!='orders.test':route.abort();return
-                        if path.startswith(('/api/orders','/api/order-planning','/api/order-sources','/api/planning-drafts')):
+                        if path.startswith(('/api/orders','/api/order-planning','/api/order-sources','/api/planning-drafts','/api/support')):
                             # Exercise selection latency beyond the former 150 ms polling delay.
                             if path=='/api/order-planning/selection' and route.request.method=='PUT':
                                 sleep(0.25)
@@ -215,8 +216,8 @@ def main():
                     page.wait_for_function("document.getElementById('ordersMessage').textContent.includes('Nessun ordine')")
                     page.get_by_role('button',name='Collega i tuoi ordini',exact=True).click()
                     assert page.locator('#tab-ordini-collegamenti').is_visible()
-                    # L'importazione da file è nella scheda "File Excel o CSV" (E-commerce non è ancora disponibile).
-                    page.locator('[data-source-option]').filter(has=page.get_by_role('heading',name='File Excel o CSV',exact=True)).get_by_role('button',name='Carica un file',exact=True).click()
+                    # Il file è il percorso principale, distinto dai collegamenti assistiti.
+                    page.locator('#sourceFileOption').get_by_role('button',name='Carica un file',exact=True).click()
                     page.locator('#orderImportName').fill('Magazzino <script>test</script>')
                     csv_file={'name':'ordini.csv','mimeType':'text/csv','buffer':b'NOrdine;RagioneSociale;IndSped;Pedana;NColli;DataCons\nIMPORT-001;Destinatario;Via Roma 1;No;3;2099-01-16\n'}
                     page.locator('#orderImportFile').set_input_files(csv_file)
@@ -289,21 +290,42 @@ def main():
                     page.once('dialog',lambda dialog:dialog.accept())  # il giro aperto va in bozza
                     page.evaluate("showTab('ordini-collegamenti')")
                     page.locator('#tab-ordini-collegamenti').wait_for(state='visible')
-                    page.get_by_role('button',name='Configura gestionale',exact=True).click()
-                    page.locator('#sourceName').fill('API gestionale')
-                    page.get_by_role('button',name='Crea fonte e prosegui',exact=True).click()
+                    page.locator('#sourceErpOption').get_by_role('button',name='Collega',exact=True).click()
+                    page.locator('#erpSoftware').fill('Gestionale di prova')
+                    page.locator('#erpVersion').fill('Versione 1')
+                    page.locator('#erpMessage').fill('Vorrei trasferire gli ordini del gestionale in GiroFacile.')
+                    page.locator('#erpPhone').fill('+39 020000000')
+                    page.locator('#erpRequestSubmit').click()
+                    expect(page.locator('#erpRequestSuccess')).to_contain_text('inviata')
+                    ticket=db.query(SupportTicket).filter_by(user_id=user.id,tipo='collegamento_gestionale').one()
+                    assert ticket.email=='azienda@example.test'
+                    assert 'Gestionale di prova' in ticket.messaggio
+                    # Una fonte predisposta dopo la richiesta resta gestibile dall'interfaccia.
+                    # La sua creazione tecnica usa solo il TestClient e il database isolati.
+                    response=client.post('/api/order-sources',json={'name':'API gestionale','kind':'api','software':'Gestionale di prova'})
+                    assert response.status_code==201,response.text
+                    source_id=response.json()['id']
+                    page.get_by_role('button',name='Chiudi',exact=True).click()
+                    page.evaluate('GFOrderSources.load()')
+                    api_card=page.locator('#sourceList article').filter(has=page.get_by_role('heading',name='API gestionale',exact=True))
+                    api_card.get_by_role('button',name='Apri',exact=True).click()
                     page.locator('#tab-ordine-fonte').wait_for(state='visible')
+                    page.get_by_role('button',name='Scegli dati',exact=True).click()
+                    expect(page.locator('#sourceFieldsDialog')).to_be_visible()
                     page.locator('[data-choice="api"][value="requested_date"]').uncheck()
-                    page.get_by_role('button',name='Salva dati da importare',exact=True).click()
-                    page.wait_for_function("document.getElementById('sourceFieldsMessage').textContent.includes('Scelte salvate')")
-                    page.get_by_role('button',name='Esegui test',exact=False).click()
-                    page.wait_for_function("document.getElementById('sourceConnectionResult').textContent.includes('verificato')")
+                    page.locator('#sourceFieldsSave').click()
+                    expect(page.locator('#sourceFieldsDialog')).to_be_hidden()
+                    expect(page.locator('#sourceFieldsMessage')).to_contain_text('Scelte salvate')
+                    assert 'requested_date' in client.get('/api/order-sources').json()['items'][0]['excluded_fields']
+                    page.get_by_role('button',name='Esegui test',exact=True).click()
+                    expect(page.locator('#sourceConnectionResult')).to_contain_text('verificato')
                     page.once('dialog',lambda dialog:dialog.accept())
                     page.get_by_role('button',name='Genera chiave API',exact=True).click()
-                    page.locator('#sourceToken').wait_for(state='visible')
+                    expect(page.locator('#sourceKeyDialog')).to_be_visible()
                     assert page.locator('#sourceToken').input_value().startswith('gf_orders_')
                     page.evaluate("showTab('ordini')")
-                    assert page.locator('#sourceToken').count()==0
+                    expect(page.locator('#sourceKeyDialog')).to_be_hidden()
+                    assert page.locator('#sourceToken').input_value()==''
                     assert db.query(Order).count()==3
                     # Customers use the same selection-first flow, also without time windows.
                     assert page.locator('.gf-sidebar__item[data-tab="giro"]').count()==0
@@ -392,6 +414,6 @@ def main():
                     context.close()
             engine.dispose()
         browser.close()
-    print('Orders: create, edit, escaping, filters, independent orders, persisted selection, immediate planning stops and bottom calculation action, three-step file import, repeat without duplicates, imported-order planning errors and recovery, current API setup, credential clearing and layout passed at 390/768/1024/1440px')
+    print('Orders: create, edit, escaping, filters, independent orders, persisted selection, immediate planning stops and bottom calculation action, three-step file import, repeat without duplicates, imported-order planning errors and recovery, assisted ERP request and existing API management, credential clearing and layout passed at 390/768/1024/1440px')
 
 if __name__=='__main__':main()

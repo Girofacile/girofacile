@@ -3,7 +3,7 @@ const WORKSPACE_TOPBAR_META = {
   ordini: {title:"Ordini",subtitle:"Gestisci gli ordini ricevuti e prepara le tue consegne."},
   "ordine-dettaglio": {title:"Dettaglio ordine",subtitle:"Dati operativi e storico delle correzioni."},
   "ordine-modifica": {title:"Modifica ordine",subtitle:"Completa le informazioni disponibili."},
-  "ordini-collegamenti": {title:"Collega i tuoi ordini",subtitle:"Importa un file o prepara l’invio dal tuo gestionale. Controlla sempre l’anteprima prima di attivare una fonte."},
+  "ordini-collegamenti": {title:"Collega i tuoi ordini",subtitle:"Carica gli ordini da un file CSV o Excel e controlla l’anteprima. Per collegare il gestionale, richiedi assistenza."},
   "ordini-importa": {title:"Importa ordini",subtitle:"Carica il file, controlla i dati e conferma.",back:{label:"Torna agli ordini",go:()=>showTab("ordini")}},
   "ordine-fonte": {title:"Fonte ordini",subtitle:"Gestione fonte e validazione dei dati in ingresso."},
   collaboratori: {title:"Collaboratori",subtitle:"Accessi personali al gestionale, con le funzioni che decidi di assegnare."},

@@ -4,7 +4,17 @@ Il percorso principale è ora **Carica file → Controlla dati → Fatto**. Dall
 
 Le colonne riconosciute vengono associate e verificate automaticamente. L'anteprima mostra dati comprensibili (numero, destinatario, indirizzo, data, colli); le associazioni e gli avvisi dettagliati sono richiudibili. Un solo comando conferma l'attivazione delle impostazioni file e l'importazione. Gli elenchi esistenti vengono proposti per evitare di creare una nuova fonte a ogni caricamento; si possono scegliere tutti gli elenchi anche quando superano la prima pagina API. La conferma porta direttamente agli ordini della fonte, azzerando i precedenti filtri di ricerca/data/stato.
 
-La pagina API e la nuova grafica fonti arrivate nel frattempo su main sono conservate. Il nuovo modulo `order-import.js` separa il percorso file dalla configurazione tecnica. Non vengono simulate integrazioni native e-commerce o lettura email. Autorizzazioni, verifiche, idempotenza, gestione degli errori e conservazione degli originali continuano a usare i servizi esistenti.
+Il modulo `order-import.js` separa il percorso file dalla configurazione tecnica. Autorizzazioni, verifiche, idempotenza, gestione degli errori e conservazione degli originali continuano a usare i servizi esistenti.
+
+## Collegamento gestionale tramite assistenza — 13 novembre 2026
+
+In **Collega i tuoi ordini**, l'importazione CSV/Excel occupa il riquadro principale e il comando della barra superiore apre direttamente il caricamento file. Gestionale ed e-commerce sono presentati come alternative secondarie.
+
+**Gestionale aziendale → Collega** apre un modulo di assistenza, con nome del gestionale e descrizione obbligatori, versione e telefono facoltativi. Il modulo non chiede chiavi o password. Il server ricava azienda ed email dal profilo autenticato; la richiesta viene salvata come ticket `collegamento_gestionale`, visibile all'azienda e nell'assistenza amministrativa. L'utente riceve il numero del ticket e può consultare lo storico. La richiesta non attiva automaticamente un'integrazione e non promette compatibilità o tempi di collegamento.
+
+La richiesta di assistenza è disponibile anche prima di passare a un piano con integrazioni, nel rispetto del permesso `support.write`. Per l'uso delle API restano necessari Business o Pro e i permessi di integrazione. La creazione di una nuova fonte API richiede un precedente ticket gestionale della stessa azienda; il riferimento al ticket viene scelto dal server. Il requisito riguarda la richiesta di supporto e non introduce un'approvazione amministrativa separata.
+
+Le fonti API esistenti conservano configurazione e gestione delle credenziali. I collegamenti Shopify e WooCommerce mantengono il proprio percorso; per i requisiti e i limiti effettivi vedere [collegamenti automatici](order-connectors.md). I dettagli del contratto tecnico e del modulo sono in [Invio ordini a GiroFacile](order-ingestion-api.md). Nel pannello amministratore il filtro **Collegamento gestionale** permette di trovare i ticket dedicati; il testo inserito dall'azienda viene visualizzato come testo anche quando contiene simboli HTML.
 
 ## Prosegui
 
@@ -14,7 +24,7 @@ Quando si entra senza una configurazione già salvata e gli ordini hanno una sol
 
 Il file originale usato dall'utente non era disponibile: il caso verificato è un ordine realmente importato con data richiesta diversa dal giro. Il test accerta errore visibile, selezione conservata e caricamento riuscito dopo la correzione. La verifica indirizzo nei test usa coordinate e firma sintetiche, senza provider esterni.
 
-## Verifica
+## Verifica del precedente percorso semplificato
 
 - 24 test Python passati: pianificazione, acquisizione e permessi, inclusa la restituzione delle date richieste.
 - Chrome con API reale e database isolato a 390/768/1024/1440 px: importazione guidata, seconda importazione senza duplicati, conservazione escaping, passaggio dell'ordine importato alle fermate, errore data e recupero, configurazione API recente e pulizia della chiave visibile.

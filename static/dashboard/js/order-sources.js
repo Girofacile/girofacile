@@ -13,7 +13,7 @@
   const actions={new:'Nuovo',updated:'Da aggiornare',unchanged:'Invariato'};
   const sourceStatusTone=status=>status==='active'?'success':status==='paused'?'warning':status==='draft'?'info':'neutral';
   const sourceStatusBadge=status=>`<span class="gf-badge" data-dot data-status="${sourceStatusTone(status)}">${esc(statuses[status]||status)}</span>`;
-  let sources=[],fields=[],offset=0,current=null,staged=null,verified=null,busy=false;
+  let sources=[],fields=[],offset=0,current=null,staged=null,verified=null,busy=false,erpRequestPending=false;
   const example={orders:[{external_id:'ORD-001',number:'ORD-001',external_customer_id:'CLI-001',recipient_name:'Esempio cliente',delivery_address:'Via Roma 1, Milano',packages:3,weight_kg:12.5,tail_lift:false}]};
   const button=(label,call)=>`<button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="GFOrderSources.${call}">${label}</button>`;
   const post=body=>({method:'POST',body:JSON.stringify(body)});
@@ -74,9 +74,15 @@
     const data=await request('?offset='+offset);
     sources=data.items;
     fields=['external_id','number',...data.fields.filter(k=>!['external_id','number'].includes(k))];
-    el('sourceCategories').hidden=!manage();
+    const canImport=can('orders.import')||manage(),canRequestSupport=can('support.write');
+    el('sourceCategories').hidden=!canImport&&!manage()&&!canRequestSupport;
+    const fileOption=el('sourceFileOption'),erpOption=el('sourceErpOption'),ecommerceOption=el('sourceEcommerceOption'),additionalOptions=el('sourceAdditionalOptions');
+    if(fileOption)fileOption.hidden=!canImport;
+    if(erpOption)erpOption.hidden=!manage()&&!canRequestSupport;
+    if(ecommerceOption)ecommerceOption.hidden=!manage();
+    if(additionalOptions)additionalOptions.hidden=!manage()&&!canRequestSupport;
     const createTopButton=el('ordersConnectionsNewSource');
-    if(createTopButton)createTopButton.hidden=!manage();
+    if(createTopButton)createTopButton.hidden=!canImport;
     const upgradeNotice=el('sourcePlanUpgradeNotice');if(upgradeNotice)upgradeNotice.hidden=integrationsEnabled();
     document.querySelectorAll('[data-plan-feature="has_order_integrations"]').forEach(button=>{button.disabled=!integrationsEnabled();button.title=integrationsEnabled()?'':'Disponibile dal piano Business';});
     const count=el('sourceCount');
@@ -101,12 +107,12 @@
   }
   function load(){hideSecret();return task(refresh);}
   function unavailable(kind){
-    if(!manage()||busy)return;hideSecret();current=staged=verified=null;el('sourceWizard').hidden=false;
+    if(!manage()||busy||erpRequestPending)return;hideSecret();current=staged=verified=null;el('sourceWizard').hidden=false;
     const email=kind==='email';
     if(!email && !requireIntegration()){showIntegrationUpgrade();return;}
     if(email){el('sourceWizard').innerHTML='<div class="gf-panel__body gf-stack"><h2 class="gf-panel__title">Email · In fase di sviluppo</h2><p class="gf-muted">Stiamo studiando la ricezione automatica degli ordini via email. La configurazione non è ancora disponibile.</p></div>';return;}
     const field=(label,control,hidden)=>`<label class="gf-field"${hidden?' hidden':''}><span class="gf-field__label">${label}</span>${control}</label>`;
-    el('sourceWizard').innerHTML=`<div class="gf-panel__body gf-stack"><h2 class="gf-panel__title">${email?'Ricevi ordini via email':'Collega il negozio online'}</h2><p class="gf-muted">${email?'Ogni azienda riceve un indirizzo dedicato: imposta una regola di inoltro nella casella dove arrivano gli ordini.':'Scegli la piattaforma. Dopo il collegamento, i nuovi ordini arrivano automaticamente in GiroFacile, da verificare prima del giro.'}</p>${!owner()?'<p class="gf-alert" data-status="info">Il titolare deve configurare questo collegamento.</p>':`<form class="gf-stack" onsubmit="GFOrderSources.createConnector(event)"><div class="gf-form-grid">${field('Nome collegamento',`<input class="gf-input" id="connectorName" maxlength="160" required placeholder="${email?'Ordini via email':'Negozio online'}">`)}${field('Piattaforma',`<select class="gf-select" id="connectorProvider"><option value="${email?'email':'shopify'}">${email?'Email':'Shopify'}</option>${email?'':'<option value="woocommerce">WooCommerce</option>'}</select>`,email)}${email?'':field('Dominio del negozio','<input class="gf-input" id="connectorStore" required placeholder="negozio.myshopify.com">')+field('Chiave di firma','<input class="gf-input" id="connectorSecret" type="password" autocomplete="new-password" minlength="16" maxlength="500" required>')}</div>${email?'<p class="gf-muted">Importazione automatica da allegati CSV/Excel e messaggi con righe Numero ordine:, Destinatario:, Indirizzo:. PDF, immagini e testo libero vanno controllati manualmente e sono segnalati nello storico.</p>':'<details class="gf-panel" open><summary class="gf-panel__header">Dove trovare la chiave</summary><div class="gf-panel__body gf-stack"><p>Shopify: Impostazioni → Notifiche → Webhook, chiave di firma. WooCommerce: scegli una chiave di almeno 16 caratteri e usa la stessa nella configurazione del webhook.</p><p>Dopo il salvataggio ti mostreremo l’indirizzo da inserire nel negozio. Non viene letto lo storico degli ordini.</p></div></details>'}<div><button class="gf-button" data-variant="primary" type="submit">${email?'Crea indirizzo di ricezione':'Prepara collegamento'}</button></div><p id="connectorMessage" class="gf-muted" role="status"></p></form>`}${email?'':'<details class="gf-panel"><summary class="gf-panel__header">Uso un’altra piattaforma</summary><div class="gf-panel__body gf-stack"><p>Il fornitore del negozio può collegarsi tramite le API standard di GiroFacile. Ogni piattaforma richiede una configurazione compatibile.</p><div><button type="button" class="gf-button" data-variant="secondary" onclick="GFOrderSources.createForm(\'api\')">Configura API standard</button></div></div></details>'}</div>`;
+    el('sourceWizard').innerHTML=`<div class="gf-panel__body gf-stack"><h2 class="gf-panel__title">${email?'Ricevi ordini via email':'Collega il negozio online'}</h2><p class="gf-muted">${email?'Ogni azienda riceve un indirizzo dedicato: imposta una regola di inoltro nella casella dove arrivano gli ordini.':'Scegli la piattaforma. Dopo il collegamento, i nuovi ordini arrivano automaticamente in GiroFacile, da verificare prima del giro.'}</p>${!owner()?'<p class="gf-alert" data-status="info">Il titolare deve configurare questo collegamento.</p>':`<form class="gf-stack" onsubmit="GFOrderSources.createConnector(event)"><div class="gf-form-grid">${field('Nome collegamento',`<input class="gf-input" id="connectorName" maxlength="160" required placeholder="${email?'Ordini via email':'Negozio online'}">`)}${field('Piattaforma',`<select class="gf-select" id="connectorProvider"><option value="${email?'email':'shopify'}">${email?'Email':'Shopify'}</option>${email?'':'<option value="woocommerce">WooCommerce</option>'}</select>`,email)}${email?'':field('Dominio del negozio','<input class="gf-input" id="connectorStore" required placeholder="negozio.myshopify.com">')+field('Chiave di firma','<input class="gf-input" id="connectorSecret" type="password" autocomplete="new-password" minlength="16" maxlength="500" required>')}</div>${email?'<p class="gf-muted">Importazione automatica da allegati CSV/Excel e messaggi con righe Numero ordine:, Destinatario:, Indirizzo:. PDF, immagini e testo libero vanno controllati manualmente e sono segnalati nello storico.</p>':'<details class="gf-panel" open><summary class="gf-panel__header">Dove trovare la chiave</summary><div class="gf-panel__body gf-stack"><p>Shopify: Impostazioni → Notifiche → Webhook, chiave di firma. WooCommerce: scegli una chiave di almeno 16 caratteri e usa la stessa nella configurazione del webhook.</p><p>Dopo il salvataggio ti mostreremo l’indirizzo da inserire nel negozio. Non viene letto lo storico degli ordini.</p></div></details>'}<div><button class="gf-button" data-variant="primary" type="submit">${email?'Crea indirizzo di ricezione':'Prepara collegamento'}</button></div><p id="connectorMessage" class="gf-muted" role="status"></p></form>`}${email?'':'<details class="gf-panel"><summary class="gf-panel__header">Uso un’altra piattaforma</summary><div class="gf-panel__body gf-stack"><p>Per un’altra piattaforma, richiedi assistenza per valutare la compatibilità con le API di GiroFacile.</p><div><button type="button" class="gf-button" data-variant="secondary" onclick="GFOrderSources.requestErpConnection()">Richiedi assistenza</button></div></div></details>'}</div>`;
     el('sourceWizard').scrollIntoView({block:'start'});
   }
   function createConnector(event){event.preventDefault();if(!requireIntegration())return;return task(async()=>{
@@ -122,17 +128,67 @@
     el('orderSourceDetail').innerHTML=`<section class="gf-panel"><div class="gf-panel__body gf-stack"><h2 class="gf-panel__title">${email?'Inoltra qui gli ordini': 'Completa il collegamento nel negozio'}</h2><label class="gf-field"><span class="gf-field__label">${email?'Indirizzo dedicato all’azienda':'Indirizzo di ricezione'}</span><input class="gf-input" readonly value="${esc(email?c.address:c.webhook_url)}" onclick="this.select()"></label>${email?'<ol><li>Nella casella aziendale crea una regola che inoltri solo le email degli ordini a questo indirizzo.</li><li>Invia un ordine con allegato CSV/Excel oppure con righe Numero ordine:, Destinatario:, Indirizzo:.</li><li>Apri Ordini per controllare la consegna.</li></ol><p>PDF e messaggi non strutturati sono segnalati nello storico: consulta l’email originale e inserisci l’ordine manualmente. L’indirizzo dedicato va condiviso solo con chi deve inviare ordini.</p>':`<ol><li>${c.provider==='shopify'?'Shopify: Impostazioni → Notifiche → Webhook. Crea un webhook Ordine creato, formato JSON.':'WooCommerce: Impostazioni → Avanzate → Webhook. Crea un webhook Ordine creato, stato Attivo.'}</li><li>Incolla l’indirizzo di ricezione qui sopra. Usa la stessa chiave di firma inserita in GiroFacile.</li><li>Crea un ordine di prova con nome e indirizzo di spedizione completi.</li></ol><p class="gf-muted">Si ricevono i nuovi ordini. Modifiche, annullamenti e ordini precedenti devono essere gestiti separatamente.</p>`}<p class="gf-alert" data-status="${c.received?'success':'info'}" role="status">${c.received?'Ricezione verificata: almeno un messaggio autenticato è arrivato. Controlla gli esiti nello storico.':'In attesa del primo invio reale. La creazione del collegamento non verifica l’inoltro.'}</p>${s.last_run?.summary?.error?`<p class="gf-alert" data-status="danger">${esc(s.last_run.summary.error)}</p>`:''}</div></section><section class="gf-panel"><div class="gf-panel__body gf-stack">${GFOrderImport.fieldChoices(s.excluded_fields||[],'api',!manage())}${manage()?'<div><button type="button" class="gf-button" data-variant="primary" onclick="GFOrderSources.saveFields()">Salva dati da importare</button></div>':''}<p id="sourceFieldsMessage" class="gf-muted" role="status"></p></div></section>`;
   }
   function invalidate(){verified=null;el('sourceConfirm')?.replaceChildren();}
+  // I nuovi collegamenti gestionali partono da una richiesta di assistenza.
+  // Le impostazioni delle fonti già esistenti restano accessibili dai relativi dettagli.
   function createForm(kind){
-    kind=kind || (integrationsEnabled()?'api':'file');
-    if(kind==='file'){GFOrderImport.start();return;}
-    if(!manage()||busy)return;
-    if(!requireIntegration()){showIntegrationUpgrade();return;}
-    current=staged=verified=null;hideSecret();
-    el('sourceWizard').hidden=false;
-    el('sourceWizard').innerHTML=`<div class="gf-panel__body gf-stack"><h2 class="gf-panel__title">1. Scegli la fonte</h2><form class="gf-stack" onsubmit="GFOrderSources.create(event)"><div class="gf-form-grid"><label class="gf-field"><span class="gf-field__label">Nome della fonte</span><input class="gf-input" id="sourceName" required maxlength="160" placeholder="Es. Gestionale magazzino"></label><label class="gf-field"><span class="gf-field__label">Software utilizzato (facoltativo)</span><input class="gf-input" id="sourceSoftware" maxlength="160" placeholder="Nome del gestionale"></label><label class="gf-field"><span class="gf-field__label">Modalità disponibile</span><select class="gf-select" id="sourceKind"><option value="file" ${kind==='file'?'selected':''}>File Excel o CSV</option><option value="api" ${kind==='api'?'selected':''}>API standard</option><option value="custom">Collegamento personalizzato: informazioni</option></select></label></div><p class="gf-muted">Le API richiedono la configurazione dell'invio da parte di chi gestisce il tuo software. Nessun connettore proprietario viene attivato automaticamente.</p><div><button class="gf-button" data-variant="primary" type="submit">Crea fonte e prosegui</button></div></form></div>`;
-    el('sourceWizard').scrollIntoView({block:'start'});
+    if(!kind||kind==='file'){GFOrderImport.start();return;}
+    return requestErpConnection();
   }
-  function create(event){event.preventDefault();if(el('sourceKind').value==='api' && !requireIntegration())return;if(el('sourceKind').value==='custom'){el('sourceMessage').textContent='Collegamento personalizzato da predisporre con il fornitore: comunica nome e versione del software, esempio anonimo del tracciato, identificativi stabili e frequenza degli invii. Le modalità operative disponibili sono file o API standard: selezionane una per proseguire.';return;}return task(async()=>{current=await request('',post({name:el('sourceName').value,kind:el('sourceKind').value,software:el('sourceSoftware').value}));staged=verified=null;if(current.kind==='api'){current=await request('/'+current.id+'/fields',{method:'PUT',body:JSON.stringify({version:current.version,excluded_fields:[]})});await refresh();current=sources.find(s=>s.id===current.id)||current;showTab('ordine-fonte');detailPage();window.scrollTo({top:0,behavior:'auto'});}else{editor();await refresh();}});}
+  function create(event){event.preventDefault();return requestErpConnection();}
+  function closeErpRequest(){
+    if(erpRequestPending)return;
+    el('sourceWizard').hidden=true;
+    el('sourceErpOption')?.querySelector('button')?.focus();
+  }
+  function requestErpConnection(){
+    if(busy||erpRequestPending)return;
+    hideSecret();current=staged=verified=null;
+    const wizard=el('sourceWizard');wizard.hidden=false;
+    if(!can('support.write')){
+      wizard.innerHTML='<div class="gf-panel__body gf-stack"><h2 class="gf-panel__title">Richiedi il collegamento del gestionale</h2><p class="gf-alert" data-status="info">Per inviare la richiesta serve il permesso di scrivere all’assistenza. Chiedi al titolare dell’azienda di inviarla o di abilitarti.</p><div><button type="button" class="gf-button" data-variant="secondary" onclick="GFOrderSources.closeErpRequest()">Chiudi</button></div></div>';
+      wizard.scrollIntoView({block:'start'});return;
+    }
+    wizard.innerHTML=`<div class="gf-panel__body gf-stack">
+      <div><p class="gf-kicker">Collegamento con assistenza</p><h2 class="gf-panel__title" id="erpRequestTitle">Quale gestionale vuoi collegare?</h2></div>
+      <p class="gf-muted">Descrivi il software e gli ordini da ricevere. Il supporto ti ricontatterà per verificare la compatibilità e aiutarti nella configurazione. Nel frattempo puoi importare gli ordini da CSV o Excel.</p>
+      <form id="erpRequestForm" class="gf-stack" aria-labelledby="erpRequestTitle" onsubmit="GFOrderSources.submitErpRequest(event)">
+        <fieldset id="erpRequestFields" class="gf-fieldset gf-stack">
+          <div class="gf-form-grid">
+            <label class="gf-field" for="erpSoftware"><span class="gf-field__label">Nome del gestionale *</span><input class="gf-input" id="erpSoftware" name="software" required maxlength="160" placeholder="Es. nome del software aziendale"></label>
+            <label class="gf-field" for="erpVersion"><span class="gf-field__label">Versione o fornitore (facoltativo)</span><input class="gf-input" id="erpVersion" name="version" maxlength="160" placeholder="Se lo conosci"></label>
+            <label class="gf-field" for="erpPhone"><span class="gf-field__label">Telefono per ricontattarti (facoltativo)</span><input class="gf-input" id="erpPhone" name="phone" type="tel" autocomplete="tel" maxlength="100"></label>
+          </div>
+          <label class="gf-field" for="erpMessage"><span class="gf-field__label">Cosa vuoi collegare? *</span><textarea class="gf-textarea" id="erpMessage" name="message" rows="4" required maxlength="3000" aria-describedby="erpMessageHint" placeholder="Come ricevi gli ordini oggi? Quali dati vorresti trasferire in GiroFacile?"></textarea><span class="gf-field__hint" id="erpMessageHint">Non inserire password, chiavi API o dati dei tuoi clienti.</span></label>
+          <p class="gf-muted">Useremo l’indirizzo email del profilo azienda per risponderti.</p>
+          <label class="gf-check"><input type="checkbox" id="erpRequestNotify" checked>Avvisami via email quando la richiesta viene chiusa</label>
+          <div class="gf-cluster"><button id="erpRequestSubmit" class="gf-button" data-variant="primary" type="submit">Invia richiesta di assistenza</button><button type="button" class="gf-button" data-variant="ghost" onclick="GFOrderSources.closeErpRequest()">Annulla</button></div>
+        </fieldset>
+        <p id="erpRequestStatus" class="gf-field__error" role="alert" tabindex="-1"></p>
+      </form>
+    </div>`;
+    wizard.scrollIntoView({block:'start'});el('erpSoftware').focus({preventScroll:true});
+  }
+  async function submitErpRequest(event){
+    event.preventDefault();
+    if(erpRequestPending)return;
+    const status=el('erpRequestStatus');
+    if(!can('support.write')){status.textContent='Non hai il permesso di inviare richieste di assistenza. Chiedi al titolare dell’azienda.';status.focus();return;}
+    const payload={software:el('erpSoftware').value.trim(),version:el('erpVersion').value.trim(),message:el('erpMessage').value.trim(),phone:el('erpPhone').value.trim(),notify_on_resolution:el('erpRequestNotify').checked};
+    if(!payload.software||!payload.message){status.textContent='Inserisci il nome del gestionale e una descrizione della richiesta.';status.focus();return;}
+    erpRequestPending=true;status.textContent='';
+    const form=el('erpRequestForm'),fieldset=el('erpRequestFields'),submit=el('erpRequestSubmit');
+    fieldset.disabled=true;form.setAttribute('aria-busy','true');submit.textContent='Invio in corso…';
+    try{
+      const response=await fetch('/api/support/erp-connection',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      const data=await response.json();
+      if(!response.ok)throw new Error(typeof data.detail==='string'?data.detail:'Controlla i campi e riprova.');
+      const ticket=data.ticket;
+      if(!ticket?.id)throw new Error('Non è stato possibile confermare la richiesta. Controlla le tue richieste di assistenza prima di riprovare.');
+      el('sourceWizard').innerHTML=`<div class="gf-panel__body gf-stack"><h2 class="gf-panel__title" id="erpRequestSuccess" tabindex="-1">Richiesta #${esc(ticket.id)} inviata</h2><p>Il supporto ti ricontatterà all’indirizzo <strong>${esc(ticket.email)}</strong> per valutare il collegamento del gestionale.</p><p class="gf-muted">La richiesta non attiva automaticamente il collegamento. Puoi già usare un file CSV o Excel per importare i tuoi ordini.</p><div class="gf-cluster"><button type="button" class="gf-button" data-variant="primary" onclick="GFOrderImport.start()">Carica un file</button>${can('support.read')?'<button type="button" class="gf-button" data-variant="secondary" onclick="openSupportPanelV49()">Le mie richieste</button>':''}<button type="button" class="gf-button" data-variant="ghost" onclick="GFOrderSources.closeErpRequest()">Chiudi</button></div></div>`;
+      el('erpRequestSuccess').focus();
+    }catch(error){status.textContent=error.message||'Invio non riuscito. Riprova tra poco.';status.focus();}
+    finally{erpRequestPending=false;if(form.isConnected){fieldset.disabled=false;form.setAttribute('aria-busy','false');submit.textContent='Invia richiesta di assistenza';}}
+  }
   function sourceSubtitle(s){if(s.connector)return 'Ricezione automatica degli ordini aziendali';return s.kind==='api'?'Genera la chiave API e verifica il collegamento per attivare la fonte.':'Gestione fonte file e validazione degli ordini importati.';}
   function sourceTopActions(s,mobile=false){
     if(!manage())return '';
@@ -390,5 +446,5 @@
     el('sourceHistory').innerHTML='<header class="gf-panel__header"><h2 class="gf-panel__title">Storico della fonte</h2></header><div class="gf-panel__body gf-stack">'+data.items.map(r=>`<p class="gf-cluster"><span>${esc(new Date(r.created_at+'Z').toLocaleString('it-IT'))} · ${statuses[r.status]||esc(r.status)}</span> ${button('Report #'+r.id,`report(${id},${r.id},0,'sourceHistoryReport')`)}</p>`).join('')+`<div class="gf-cluster">${next?button('Precedenti',`history(${id},${next-20})`):''}${next+20<data.total?button('Successivi',`history(${id},${next+20})`):''}</div><div id="sourceHistoryReport"></div></div>`;el('sourceHistory').scrollIntoView({block:'start'});
   });}
   function report(sid,rid,next,target){return task(async()=>renderReport(await request(`/${sid}/runs/${rid}?offset=${next}`),target,sid));}
-  window.GFOrderSources={createConnector,deleteFromList,saveFields,openFields,load,hideSecret,downloadInstructions,copyToken,unavailable,invalidate,createForm,create,open,back,deleteSource,testConnection,upload,preview,commit,action,history,report,page(delta){offset=Math.max(0,offset+delta*50);load();}};
+  window.GFOrderSources={requestErpConnection,submitErpRequest,closeErpRequest,createConnector,deleteFromList,saveFields,openFields,load,hideSecret,downloadInstructions,copyToken,unavailable,invalidate,createForm,create,open,back,deleteSource,testConnection,upload,preview,commit,action,history,report,page(delta){offset=Math.max(0,offset+delta*50);load();}};
 })();

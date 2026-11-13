@@ -185,7 +185,7 @@ rule("GET", ["/api/driver/admin/chat-threads", "/api/driver/admin/chat/{route_id
              "/api/driver/admin/direct-chat/{driver_id}"], "chat.read")
 rule("POST", ["/api/driver/admin/chat/{route_id}", "/api/driver/admin/direct-chat/{driver_id}"], "chat.write")
 rule("GET", ["/api/support/tickets"], "support.read")
-rule("POST", ["/api/support/tickets", "/api/support/tickets/assist-text"], "support.write")
+rule("POST", ["/api/support/tickets", "/api/support/tickets/assist-text", "/api/support/erp-connection"], "support.write")
 rule("GET", ["/api/notifications", "/api/notifications/count"], "notifications.read")
 rule("POST", ["/api/notifications/{notification_id}/read", "/api/notifications/read-all"], "notifications.read")
 rule("GET", ["/api/address/search"], "routes.plan", "customers.create", "customers.update", "deposits.create", "deposits.update")
