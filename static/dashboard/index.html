@@ -783,7 +783,7 @@
             <div class="gf-cluster" id="customerQuickFilters" role="group" aria-label="Filtri rapidi"></div>
           </div>
           <div id="customerResults"></div>
-          <footer class="gf-panel__footer gf-cluster" data-justify="between"><div class="gf-cluster"><span id="customerCount" class="gf-muted" role="status"></span><label class="gf-cluster" for="customerPageSize"><span class="gf-muted">Mostra</span><select class="gf-select" id="customerPageSize" onchange="setCustomerPageSize(this.value)"><option value="25">25</option><option value="50">50</option></select><span class="gf-muted">per pagina</span></label></div><nav class="gf-cluster" id="customerPagination" aria-label="Pagine clienti"></nav></footer>
+          <footer class="gf-panel__footer gf-cluster" data-justify="between"><div class="gf-cluster"><span id="customerCount" class="gf-muted" role="status"></span><div class="gf-segmented" id="customerPageSize" role="group" aria-label="Clienti per pagina"><button type="button" aria-pressed="false" data-cx-size="10" onclick="setCustomerPageSize(10)">10</button><button type="button" aria-pressed="false" data-cx-size="25" onclick="setCustomerPageSize(25)">25</button><button type="button" aria-pressed="false" data-cx-size="50" onclick="setCustomerPageSize(50)">50</button></div></div><nav class="gf-cluster" id="customerPagination" aria-label="Pagine clienti"></nav></footer>
         </section>
         <!-- Barra dei clienti selezionati: fuori dal pannello, così non sposta la tabella. -->
         <div class="gf-savebar hidden" data-floating id="customerBulkBar" role="region" aria-label="Clienti selezionati">
@@ -1659,7 +1659,7 @@
 </div>
 
 <script src="/static/dashboard/js/reports.js?v=gf_periodo_20261111"></script>
-<script src="/static/dashboard/js/customers.js?v=gf_tabella_clienti_20261113"></script>
+<script src="/static/dashboard/js/customers.js?v=gf_clienti_per_pagina_20261113"></script>
 <script src="/static/dashboard/js/navigation.js?v=gf_file_assistenza_20261113"></script>
 <script src="/static/dashboard/js/history.js?v=gf_collaudo_20261110"></script>
 <script src="/static/password-strength.js?v=gf_driver_flow_20261020"></script>

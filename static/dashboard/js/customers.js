@@ -113,12 +113,13 @@ function customerFilteredRows(){
   });
 }
 function filterCustomerList(){ customerDirectory.page=1; renderCustomerDirectory(); }
-// Clienti per pagina: 25 o 50, ricordati nel browser.
+// Clienti per pagina: 10, 25 o 50 (pulsanti in fondo alla tabella), ricordati nel browser.
+const CX_PAGE_SIZES=[10,25,50];
 function cxSavedPageSize(){
-  try{ return Number(localStorage.getItem('gf_customers_page_size'))===50?50:25; }catch(e){ return 25; }
+  try{ const saved=Number(localStorage.getItem('gf_customers_page_size')); return CX_PAGE_SIZES.includes(saved)?saved:25; }catch(e){ return 25; }
 }
 function setCustomerPageSize(value){
-  customerDirectory.size=Number(value)===50?50:25;
+  customerDirectory.size=CX_PAGE_SIZES.includes(Number(value))?Number(value):25;
   try{ localStorage.setItem('gf_customers_page_size',String(customerDirectory.size)); }catch(e){}
   filterCustomerList();
 }
@@ -273,9 +274,9 @@ function renderCustomerDirectory(){
   target.innerHTML=html;
   // Pagina selezionata solo in parte: la casella dell'intestazione mostra il trattino.
   target.querySelectorAll('[data-cx-cb-all]').forEach(box=>{box.indeterminate=pageSelected>0&&pageSelected<visible.length;});
-  const size=cxEl('customerPageSize');if(size)size.value=String(state.size);
+  document.querySelectorAll('#customerPageSize [data-cx-size]').forEach(button=>button.setAttribute('aria-pressed',String(Number(button.dataset.cxSize)===state.size)));
   const count=cxEl('customerCount');
-  if(count)count.textContent=rows.length?('Mostrati '+(from+1)+'–'+(from+visible.length)+' di '+rows.length+' clienti'):'0 clienti';
+  if(count)count.textContent=rows.length?(visible.length+(visible.length===1?' cliente':' clienti')+' di '+rows.length+(rows.length>state.size?' · pagina '+state.page+' di '+pages:'')):'0 clienti';
   const pager=cxEl('customerPagination');
   if(pager){
     if(pages<=1){pager.innerHTML='';}
