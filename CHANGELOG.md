@@ -5,6 +5,8 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Scheda cliente: al posto della sezione «Elimina cliente» c’è solo il pulsante rosso «Elimina» in basso
+  a sinistra, accanto ad Annulla e Salva (non compare per un cliente nuovo).
 - Clienti: un’unica scheda per vedere e modificare. «Dettagli» (o un clic sulla riga) apre la finestra
   con tutti i dati già nei campi, senza schede: Cliente e Indirizzo a sinistra, Consegna e Note a destra;
   si cambia quello che serve e si preme Salva. Tolti la matita, la vista di sola lettura e i messaggi

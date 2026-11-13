@@ -96,7 +96,7 @@ test('customer deletion is available only inside edit modal',()=>{
  assert.doesNotMatch(html,/deleteAllCustomers\s*\(/);
  assert.doesNotMatch(html,/Elimina tutti i clienti/);
  assert.doesNotMatch(js,/customer-delete[^\n]*deleteCustomer\s*\(/);
- assert.match(html,/id="customerDeleteSection"[^>]*hidden/);
+ assert.match(html,/id="deleteCustomerBtn" class="gf-button hidden" data-variant="danger"/);
  assert.match(html,/id="deleteCustomerBtn"/);
  assert.match(core,/deleteCustomerFromModal/);
  assert.match(core,/Questa operazione è irreversibile/);

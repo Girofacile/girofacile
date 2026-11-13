@@ -3039,7 +3039,7 @@ function openCustomerModal(id=null){
   if(title) title.textContent = existing?.nome || (id ? "Cliente" : "Nuovo cliente");
   const subtitle = document.getElementById("customerModalSubtitle");
   if(subtitle) subtitle.textContent = id ? "Controlla o cambia i dati, poi premi Salva." : "Inserisci dati, indirizzo, fasce orarie e specifiche operative del cliente.";
-  document.getElementById("customerDeleteSection")?.classList.toggle("hidden", !id);
+  document.getElementById("deleteCustomerBtn")?.classList.toggle("hidden", !id);
   document.getElementById("customerOverlay")?.classList.remove("hidden");
   ["cVia","cCivico","cCap","cComune","cProvincia"].forEach(fieldId=>{
     const el = document.getElementById(fieldId);
@@ -3178,7 +3178,7 @@ function editCustomer(id, fromModal=false){
 function resetCustomerForm(){
   ["cId","cCodice","cNome","cIndirizzo","cVia","cCivico","cCap","cComune","cProvincia","cTelefono","cEmail","cReferente","cAgent","cMattinaDa","cMattinaA","cPomeriggioDa","cPomeriggioA","cNote","cLat","cLon","cGeoStatus","cGeoProvider","cGeoConfidence","cGooglePlaceId","cGeocodedAddress"].forEach(id=>set(id,""));
   set("cScarico",10); set("cZtl","false"); set("cSponda","false");
-  document.getElementById("customerDeleteSection")?.classList.add("hidden");
+  document.getElementById("deleteCustomerBtn")?.classList.add("hidden");
   customerUnverifiedConfirmed = "";
   setCustomerAddressStatus("L’indirizzo viene verificato con Google quando salvi.", "muted");
 }
