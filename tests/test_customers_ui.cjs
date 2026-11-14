@@ -120,7 +120,8 @@ test('customer list header: select-all for the page, no sorting buttons (sorting
   assert.match(js,/<thead><tr>'\s*\+'<th scope="col">'\+allBox\+'<\/th><th scope="col">Cliente<\/th><th scope="col">Indirizzo<\/th>/);
   assert.match(js,/data-cx-cb-all aria-label="Seleziona tutti i clienti della pagina"/);
   assert.match(js,/function selectAllFilteredCustomers\(\)/);
-  assert.match(js,/<th scope="col" data-gf-feature="time_windows">Fascia di scarico<\/th><th scope="col">Stato indirizzo<\/th><th scope="col">Azioni<\/th>/);
+  assert.match(js,/<th scope="col" data-gf-feature="time_windows">Fascia di scarico<\/th><th scope="col">Scarico \(min\)<\/th><th scope="col">Azioni<\/th>/);
+  assert.match(js,/data-cx-unload="'\+id\+'"/);
   assert.doesNotMatch(js,/data-cx-sort|customerSelectPage/);
   assert.match(js,/function reverseCustomerSort\(\)/);
 });

@@ -5,6 +5,8 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Tabella Clienti: al posto di «Stato indirizzo» (la verifica avviene da sola) c’è la colonna «Scarico»
+  con i minuti modificabili direttamente dalla riga; si salva da solo al cambio del numero.
 - Importazione ordini: le colonne si riconoscono anche dalle parole che contengono, con intestazioni scritte
   «a mano» come «N° Ord.», «Rag. Sociale Cliente», «Tel. cliente», «Orario da», «Zona ZTL», «Annotazioni».
 - Importazione ordini da file in un pop-up (variante A) al posto della pagina «Importa ordini»: si sceglie il

@@ -163,6 +163,29 @@ function cxFillPlaceFilters(){
 }
 
 /* ---------- Render ---------- */
+// Minuti di scarico modificabili dalla tabella: si salva da solo al cambio del numero.
+function cxUnloadField(x){
+  const id=Number(x.id),value=Number(x.tempo_scarico_min??10);
+  return '<input class="gf-input" type="number" min="1" max="1440" step="1" inputmode="numeric" id="cxUnload'+id+'" data-cx-unload="'+id+'" value="'+value+'" aria-label="Minuti di scarico di '+cxEsc(x.nome)+'" title="Minuti di scarico">';
+}
+async function saveCustomerUnload(input){
+  const id=Number(input.dataset.cxUnload),c=cxFindCustomer(id);if(!c)return;
+  const minutes=Number(input.value),previous=Number(c.tempo_scarico_min??10);
+  if(!Number.isInteger(minutes)||minutes<1||minutes>1440){input.value=previous;toast('Il tempo di scarico va da 1 a 1440 minuti.');return;}
+  if(minutes===previous)return;
+  // Stessi dati del salvataggio della scheda: cambia solo il tempo di scarico.
+  const payload=Object.fromEntries(CX_FIELDS.map(k=>[k,c[k]??null]));
+  ['ztl','sponda','transpallet'].forEach(k=>payload[k]=Boolean(payload[k]));
+  payload.ztl=Boolean(c.ztl_manual ?? c.ztl);
+  payload.tempo_scarico_min=minutes;
+  input.disabled=true;
+  try{
+    await api('/api/customers/'+id,{method:'PUT',body:JSON.stringify(payload)});
+    c.tempo_scarico_min=minutes;
+    toast('Tempo di scarico di '+(c.nome||'cliente')+': '+minutes+' min.');
+  }catch(e){input.value=previous;toast(e.message||'Tempo di scarico non salvato.');}
+  finally{input.disabled=false;}
+}
 function customerStatusMarkup(x){
   return cxVerified(x)
     ? '<span class="gf-badge" data-status="success">'+cxIcon('check')+'Verificato</span>'
@@ -252,14 +275,14 @@ function renderCustomerDirectory(){
     // Nell'intestazione la casella «seleziona tutti» i clienti della pagina; l'ordinamento sta nella casella Filtri.
     html='<div class="gf-table-wrap" id="customerTableWrap"><table class="gf-table" data-gf-responsive="cards" aria-label="Elenco clienti"><thead><tr>'
       +'<th scope="col">'+allBox+'</th><th scope="col">Cliente</th><th scope="col">Indirizzo</th>'
-      +'<th scope="col" data-gf-feature="time_windows">Fascia di scarico</th><th scope="col">Stato indirizzo</th><th scope="col">Azioni</th>'
+      +'<th scope="col" data-gf-feature="time_windows">Fascia di scarico</th><th scope="col">Scarico (min)</th><th scope="col">Azioni</th>'
       +'</tr></thead><tbody id="customersBody">'
       +visible.map(x=>{
         const id=Number(x.id),on=sel.has(id);
         return '<tr data-cx-row="'+id+'" aria-selected="'+on+'">'
           +'<td data-label="Seleziona"><input type="checkbox" class="cx-cb" data-cx-cb="'+id+'" aria-label="Seleziona '+cxEsc(x.nome)+'"'+(on?' checked':'')+'></td>'
           +'<td data-label="Cliente">'+cxNameCell(x)+'</td><td data-label="Indirizzo">'+cxAddressCell(x)+'</td>'
-          +'<td data-label="Fascia di scarico" data-gf-feature="time_windows">'+cxSlotMarkup(x)+'</td><td data-label="Stato indirizzo">'+customerStatusMarkup(x)+'</td><td data-label="Azioni">'+cxActions(x)+'</td></tr>';
+          +'<td data-label="Fascia di scarico" data-gf-feature="time_windows">'+cxSlotMarkup(x)+'</td><td data-label="Scarico (min)">'+cxUnloadField(x)+'</td><td data-label="Azioni">'+cxActions(x)+'</td></tr>';
       }).join('')+'</tbody></table></div>';
   }else{
     html='<div class="gf-panel__body"><label class="gf-check">'+allBox+'<span>Seleziona tutti quelli della pagina</span></label></div>'
@@ -268,7 +291,7 @@ function renderCustomerDirectory(){
       return '<article class="gf-card gf-stack" data-cx-row="'+id+'" aria-selected="'+on+'">'
         +'<label class="gf-check"><input type="checkbox" class="cx-cb" data-cx-cb="'+id+'" aria-label="Seleziona '+cxEsc(x.nome)+'"'+(on?' checked':'')+'><span>Seleziona</span></label>'
         +cxNameCell(x)+cxAddressCell(x)
-        +'<div class="gf-cluster"><span data-gf-feature="time_windows">'+cxSlotMarkup(x)+'</span>'+customerStatusMarkup(x)+'</div>'+cxActions(x)+'</article>';
+        +'<div class="gf-cluster"><span data-gf-feature="time_windows">'+cxSlotMarkup(x)+'</span>'+cxUnloadField(x)+'</div>'+cxActions(x)+'</article>';
     }).join('')+'</div>';
   }
   target.innerHTML=html;
@@ -555,6 +578,7 @@ if(typeof document!=='undefined'&&document.addEventListener){
   });
   document.addEventListener('change',event=>{
     const t=event.target;if(!t||!t.closest||!t.closest('#tab-clienti'))return;
+    if(t.dataset&&t.dataset.cxUnload){saveCustomerUnload(t);return;}
     if(t.dataset&&t.dataset.cxCbAll!==undefined){toggleVisibleCustomers(t.checked);return;}
     if(t.dataset&&t.dataset.cxCb){
       const id=Number(t.dataset.cxCb);
