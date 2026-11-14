@@ -22,8 +22,6 @@ test('directory searches, combines optional filters and sorts codes numerically'
 test('customer KPI cards refresh after loading the directory',async()=>{
   const f=fixture();
   f.fields.customerMetricTotal={textContent:'—'};
-  f.fields.customerMetricVerified={textContent:'—'};
-  f.fields.customerMetricPending={textContent:'—'};
   f.fields.customerMetricActive={textContent:'—'};
   f.ctx.api=async()=>[
     {id:1,stato_geocodifica:'verificato'},
@@ -32,8 +30,6 @@ test('customer KPI cards refresh after loading the directory',async()=>{
   ];
   await f.run('refreshCustomerDirectory()');
   assert.equal(f.fields.customerMetricTotal.textContent,3);
-  assert.equal(f.fields.customerMetricVerified.textContent,2);
-  assert.equal(f.fields.customerMetricPending.textContent,1);
   assert.equal(f.fields.customerMetricActive.textContent,3);
 });
 
@@ -128,7 +124,7 @@ test('customer list header: select-all for the page, no sorting buttons (sorting
 
 test('verified addresses and unloading-window KPIs show only the count, without "su N"',()=>{
   const js=fs.readFileSync('static/dashboard/js/customers.js','utf8');
-  assert.match(js,/cell\('pin','all','Indirizzi verificati',ver,/);
+  assert.doesNotMatch(js,/Indirizzi verificati|'unverified','Da verificare'/);
   assert.match(js,/cell\('clock','noSlot','Con fascia di scarico',wf,/);
   assert.doesNotMatch(js,/<small> su /);
 });

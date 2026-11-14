@@ -5,6 +5,8 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Pagina Clienti: tolti in cima i riquadri «Indirizzi verificati» e «Da verificare» e il filtro rapido
+  «Da verificare», perché la verifica degli indirizzi ora avviene da sola.
 - Tabella Clienti: al posto di «Stato indirizzo» (la verifica avviene da sola) c’è la colonna «Scarico»
   con i minuti modificabili direttamente dalla riga; si salva da solo al cambio del numero.
 - Importazione ordini: le colonne si riconoscono anche dalle parole che contengono, con intestazioni scritte
