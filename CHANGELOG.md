@@ -5,6 +5,7 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Barra laterale: «Impostazioni» ha ora l’icona dell’ingranaggio (prima un sole), con lo stesso tratto delle altre.
 - Tempo di scarico in base ai colli: tolto «Massimo minuti», anche dal calcolo. Lo scarico stimato è ora
   minuti fissi + secondi per collo, senza tetto (resta solo il limite tecnico di 24 ore di una fermata).
 - Impostazioni › Tempo di scarico in base ai colli: ora è un interruttore (spento finché l’operatore non lo
