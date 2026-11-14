@@ -14,8 +14,10 @@ quando valgono 10 minuti: non è possibile dedurne la provenienza dal numero.
 import math
 
 DEFAULT_MINUTES = 10
-DEFAULTS = {'unload_base_min': 4, 'unload_seconds_per_package': 15, 'unload_max_min': 30}
-LIMITS = {'unload_base_min': (0, 120), 'unload_seconds_per_package': (0, 600), 'unload_max_min': (1, 240)}
+DEFAULTS = {'unload_base_min': 4, 'unload_seconds_per_package': 15}
+LIMITS = {'unload_base_min': (0, 120), 'unload_seconds_per_package': (0, 600)}
+# Nessun massimo scelto dall'azienda: solo il limite tecnico di una fermata (24 ore, come nello schema).
+TECHNICAL_MAX_MIN = 1440
 
 
 def settings(user):
@@ -39,7 +41,7 @@ def estimate(packages, user):
         return None
     rule = settings(user)
     minutes = math.ceil(rule['unload_base_min'] + packages * rule['unload_seconds_per_package'] / 60)
-    return max(1, min(rule['unload_max_min'], minutes))
+    return max(1, min(TECHNICAL_MAX_MIN, minutes))
 
 
 def customer_known(customer):

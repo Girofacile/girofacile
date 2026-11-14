@@ -12,7 +12,7 @@ from app.services import unload_time
 COMPANY = SimpleNamespace(unload_by_packages=True)  # stima attiva, nessuna formula salvata: valori predefiniti
 
 
-@pytest.mark.parametrize('packages,minutes', [(3, 5), (10, 7), (20, 9), (40, 14), (100, 29), (500, 30)])
+@pytest.mark.parametrize('packages,minutes', [(3, 5), (10, 7), (20, 9), (40, 14), (100, 29), (500, 129)])
 def test_default_formula(packages, minutes):
     assert unload_time.estimate(packages, COMPANY) == minutes
 
@@ -22,8 +22,9 @@ def test_no_packages_means_no_estimate():
 
 
 def test_company_formula():
-    company = SimpleNamespace(unload_by_packages=True, unload_base_min=2, unload_seconds_per_package=30, unload_max_min=20)
-    assert unload_time.estimate(10, company) == 7 and unload_time.estimate(100, company) == 20
+    company = SimpleNamespace(unload_by_packages=True, unload_base_min=2, unload_seconds_per_package=30)
+    assert unload_time.estimate(10, company) == 7 and unload_time.estimate(100, company) == 52
+    assert unload_time.estimate(1000, SimpleNamespace(unload_by_packages=True, unload_seconds_per_package=600)) == 1440
 
 
 def test_priority_rules():
@@ -55,11 +56,11 @@ def test_company_profile_saves_formula(routing_env):  # noqa: F811
     client = routing_env[0]
     client.app.include_router(auth.router)
     profile = client.get('/api/company-profile').json()
-    assert (profile['unload_base_min'], profile['unload_seconds_per_package'], profile['unload_max_min']) == (4, 15, 30)
-    saved = client.put('/api/company-profile', json={'unload_base_min': 2, 'unload_seconds_per_package': 30, 'unload_max_min': 20})
+    assert (profile['unload_base_min'], profile['unload_seconds_per_package']) == (4, 15) and 'unload_max_min' not in profile
+    saved = client.put('/api/company-profile', json={'unload_base_min': 2, 'unload_seconds_per_package': 30})
     assert saved.status_code == 200, saved.text
-    assert saved.json()['company']['unload_max_min'] == 20
-    assert client.put('/api/company-profile', json={'unload_max_min': 0}).status_code == 422
+    assert saved.json()['company']['unload_seconds_per_package'] == 30
+    assert client.put('/api/company-profile', json={'unload_seconds_per_package': -1}).status_code == 422
     assert client.put('/api/company-profile', json={'unload_base_min': 'tanti'}).status_code == 422
 
 

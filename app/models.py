@@ -69,7 +69,7 @@ class User(Base):
     # Stima del tempo di scarico dai colli (unload_time.py); vuoto = valori predefiniti.
     unload_base_min: Mapped[int | None] = mapped_column(Integer, nullable=True)
     unload_seconds_per_package: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    unload_max_min: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # unload_max_min: colonna rimasta nel database ma non più usata dal 14 novembre 2026 (niente tetto allo scarico).
     # Stima dai colli attivata dall'operatore; vuoto = spenta (10 minuti o il tempo del cliente).
     unload_by_packages: Mapped[bool | None] = mapped_column(Boolean, nullable=True, default=False)
     # Costo orario dell'autista (€): con il carburante sceglie l'ordine delle fermate. Vuoto = 15 €.

@@ -894,7 +894,7 @@ def update_company_profile(payload: dict, user: User = Depends(current_user), db
         "company_activity_type", "company_size", "daily_deliveries",
         "has_time_windows", "needs_signature", "needs_photo_proof",
         "has_refrigerated_goods", "has_ztl", "needs_tail_lift", "unload_by_packages",
-        "unload_base_min", "unload_seconds_per_package", "unload_max_min"
+        "unload_base_min", "unload_seconds_per_package"
     }
     from ..services.fiscal import validate_fiscal
     validate_fiscal(payload)

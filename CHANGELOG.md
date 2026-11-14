@@ -5,6 +5,8 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Tempo di scarico in base ai colli: tolto «Massimo minuti», anche dal calcolo. Lo scarico stimato è ora
+  minuti fissi + secondi per collo, senza tetto (resta solo il limite tecnico di 24 ore di una fermata).
 - Impostazioni › Tempo di scarico in base ai colli: ora è un interruttore (spento finché l’operatore non lo
   attiva; spento = 10 minuti o il tempo del cliente). Sopra titolo e spiegazione, sotto i tre valori in riga
   e alcuni esempi (1, 10, 30, 60, 120 colli) che si ricalcolano mentre si cambiano i numeri.
