@@ -5,6 +5,9 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Portale autista: il tasto blu al centro della barra in basso ha la casa e apre la Home (giri attivi e,
+  sotto, i giri programmati). «Giri» apre solo l’elenco dei giri pianificati; dal giro aperto «‹» torna
+  alla pagina da cui si è partiti. La navigazione verso la prossima consegna resta nel giro aperto («Naviga»).
 - Barra laterale: «Impostazioni» ha ora l’icona dell’ingranaggio (prima un sole), con lo stesso tratto delle altre.
 - Tempo di scarico in base ai colli: tolto «Massimo minuti», anche dal calcolo. Lo scarico stimato è ora
   minuti fissi + secondi per collo, senza tetto (resta solo il limite tecnico di 24 ore di una fermata).

@@ -94,8 +94,8 @@ test('annullamento usa il giro selezionato e aggiorna elenco solo dopo il succes
 test('autista vede il giro in corso vecchio anche con oltre tre giri recenti',()=>{
   const html=read('static/driver/index.html');
   const source=html.slice(html.indexOf('function renderRoutes()'),html.indexOf('function renderRouteCard('));
-  const box={innerHTML:''};
-  const context={document:{getElementById:()=>box},Date,
+  const box={innerHTML:''},planned={innerHTML:''};
+  const context={document:{getElementById:id=>id==='plannedRoutesList'?planned:box},Date,
     allRoutes:[...Array.from({length:5},(_,i)=>({id:i,data_giro:'2020-01-02',status:'completato'})),
       {id:99,data_giro:'2020-01-01',status:'in_corso'}],
     localIsoDate:()=>'2026-01-10',longDateIt:x=>x,routeArea:()=>'',esc:x=>String(x),fmt:x=>String(x),gfCount:(n,a,b)=>n+' '+(n===1?a:b),
@@ -105,6 +105,10 @@ test('autista vede il giro in corso vecchio anche con oltre tre giri recenti',()
   assert.equal(box.innerHTML.split('[route:99]').length-1,1);
   assert.ok(box.innerHTML.indexOf('[route:99]')<box.innerHTML.indexOf('Storico'));
   assert.doesNotMatch(box.innerHTML,/\[route:[0-4]\]/);
+  // Pagina «Giri»: solo il giro ancora da chiudere, in corso.
+  assert.match(planned.innerHTML,/openExecution\(99\)/);
+  assert.match(planned.innerHTML,/In corso/);
+  assert.doesNotMatch(planned.innerHTML,/openExecution\([0-4]\)/);
 });
 
 test('nuovo layout giri in corso mantiene i dati reali e le azioni operative',()=>{

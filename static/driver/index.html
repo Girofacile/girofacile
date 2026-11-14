@@ -318,16 +318,22 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
 
   <div class="app-main">
 
-    <!-- I MIEI GIRI: il giro di oggi in grande, poi i prossimi giorni; i passati sono nello Storico -->
+    <!-- HOME (tasto centrale): il giro di oggi in grande, poi i giri programmati; i passati sono nello Storico -->
     <div id="view-dashboard" class="view active">
       <div class="page-head"><h2 id="dashGreeting">I miei giri</h2></div>
       <div id="routesList" class="delivery-list gf-stack"></div>
     </div>
 
+    <!-- GIRI: solo l'elenco dei giri pianificati per l'autista, dal più vicino -->
+    <div id="view-giri" class="view">
+      <div class="page-head"><h2>Giri pianificati</h2></div>
+      <div id="plannedRoutesList" class="gf-stack" data-gap="sm"></div>
+    </div>
+
     <!-- GIRO IN CORSO: avanzamento, prossima consegna in una scheda, tutte le fermate -->
     <div id="view-execution" class="view">
       <div class="exec-header">
-        <button class="back-btn" onclick="exitExecution()">‹ Giri</button>
+        <button class="back-btn" id="execBackBtn" onclick="exitExecution()">‹ Home</button>
         <div class="gf-stack" data-gap="sm"><div class="exec-title" id="execTitle">Caricamento giro…</div><small class="gf-muted" id="execMeta"></small></div>
       </div>
       <div id="outboxBanner" class="gf-alert hidden" data-status="warning" role="status">
@@ -391,11 +397,11 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
 
   </div>
 
-  <!-- MENU IN BASSO: Giri, Storico, Naviga (prossima consegna), Chat, Posizione -->
+  <!-- MENU IN BASSO: Giri, Storico, Home (tasto blu al centro), Chat, Posizione -->
   <nav class="gf-bottom-nav" aria-label="Menu dell’app autista">
-    <button type="button" class="gf-bottom-nav__item" data-nav="dashboard" aria-current="page" onclick="showView('dashboard')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h7v7H3z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7H3z"/></svg><span>Giri</span></button>
+    <button type="button" class="gf-bottom-nav__item" data-nav="giri" onclick="showView('giri')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13 M8 12h13 M8 18h13 M3 6h.01 M3 12h.01 M3 18h.01"/></svg><span>Giri</span></button>
     <button type="button" class="gf-bottom-nav__item" data-nav="storico" onclick="showView('storico')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7 M3 4v5h5 M12 7v5l3 2"/></svg><span>Storico</span></button>
-    <button type="button" class="gf-bottom-nav__item" data-primary onclick="navigateNextStop()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l19-9-9 19-2-8z"/></svg><span>Prossima consegna</span></button>
+    <button type="button" class="gf-bottom-nav__item" data-primary data-nav="dashboard" aria-current="page" onclick="showView('dashboard')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5 M5 9v12h14V9 M10 21v-6h4v6"/></svg><span>Home</span></button>
     <button type="button" class="gf-bottom-nav__item" data-nav="chat" onclick="showView('chat')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg><span>Chat</span><span class="gf-badge hidden" data-status="danger" id="chatBadge">0</span></button>
     <button type="button" class="gf-bottom-nav__item" data-nav="posizione" onclick="showView('posizione')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z M12 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/></svg><span>Posizione</span></button>
   </nav>
@@ -661,43 +667,18 @@ function showView(name) {
   markNav(name);
   if(name === 'storico') loadStorico();
   if(name === 'chat') { chatLastId = 0; loadChat(); }
-  if(name === 'dashboard') loadRoutes();
+  if(name === 'dashboard' || name === 'giri') { loadRoutes(); executionReturnView = name; }
   if(name === 'posizione') GiroFacileGPS.check?.();
   document.querySelector('.app-main')?.scrollTo?.(0, 0);
 }
-// Voce attiva del menu in basso: il giro aperto conta come «Giri».
+// Voce attiva del menu in basso: il giro aperto conta come la vista da cui è stato aperto.
+let executionReturnView = 'dashboard';
 function markNav(name) {
-  const current = name === 'execution' ? 'dashboard' : name;
+  const current = name === 'execution' ? executionReturnView : name;
   document.querySelectorAll('.gf-bottom-nav__item[data-nav]').forEach(b => {
     if(b.dataset.nav === current) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
   });
 }
-// Tasto centrale: dipende da dove si trova l'autista.
-// - Nel giro aperto e avviato: Google Maps verso la prossima consegna (come «Naviga» nella scheda).
-// - Altrove: apre il giro di oggi e mostra la prossima consegna, senza partire con la navigazione.
-// - Giro non ancora avviato: lo apre e ricorda di avviarlo.
-async function navigateNextStop() {
-  const inRoute = document.getElementById('view-execution')?.classList.contains('active') && currentRouteData;
-  if(inRoute) {
-    const data = currentRouteData;
-    if(data.route?.status === 'annullato') { driverNotice('Giro annullato dall’ufficio: non servono altre consegne.', 'warning'); return; }
-    if(['programmato','bozza'].includes(data.route?.status)) {
-      const future = data.route?.data_giro > localIsoDate();
-      driverNotice(future ? `Questo giro si avvia ${longDateIt(data.route.data_giro)}: per ora puoi vedere le consegne.` : 'Avvia il giro per navigare verso la prima consegna.', 'warning');
-      return;
-    }
-    const next = data.consegne?.[data.progress?.prossima_idx];
-    if(!next) { driverNotice('Nessuna consegna da raggiungere in questo giro.', 'warning'); return; }
-    window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(next.indirizzo)}`, '_blank');
-    return;
-  }
-  const today = localIsoDate();
-  const route = allRoutes.find(r => r.status === 'in_corso')
-    || allRoutes.find(r => r.data_giro === today && !['completato','annullato'].includes(r.status));
-  if(!route) { driverNotice('Nessun giro da fare oggi.', 'warning'); return; }
-  await openExecution(route.id);
-}
-
 // ============================================================
 // ROUTES LIST
 // ============================================================
@@ -744,15 +725,29 @@ function renderRoutes() {
     .sort((a, b) => (a.data_giro + (a.orario_partenza||'')).localeCompare(b.data_giro + (b.orario_partenza||'')));
   let html = todays.length ? todays.map(r => renderRouteCard(r, today)).join('')
     : `<div class="gf-empty"><p>Nessun giro da fare oggi.</p></div>`;
-  if(next.length) {
-    html += `<h3 class="gf-subtitle">Prossimi giri</h3><div class="gf-stack" data-gap="sm">${next.map(r => `
-      <div class="gf-panel"><button type="button" class="gf-list-item" onclick="openExecution(${Number(r.id)})" aria-label="Apri il giro di ${esc(longDateIt(r.data_giro))}"><span class="gf-avatar" data-tone="2" aria-hidden="true">${Number(r.data_giro.split('-')[2])}</span>
-        <span class="gf-list-item__main"><strong>${esc(longDateIt(r.data_giro))}${r.orario_partenza?` · ${esc(r.orario_partenza)}`:''}</strong>
-        <small>${routeArea(r)?`${esc(routeArea(r))} · `:''}${esc(gfCount(r.n_consegne,'fermata','fermate'))}${r.totale_km?` · ${esc(fmt(r.totale_km))} km`:''}</small></span>
-        <span class="gf-badge" data-status="warning">Programmato</span></button></div>`).join('')}</div>`;
-  }
+  if(next.length) html += `<h3 class="gf-subtitle">Giri programmati</h3><div class="gf-stack" data-gap="sm">${next.map(r => routeRow(r, today)).join('')}</div>`;
   html += `<button type="button" class="gf-button" data-variant="link" onclick="showView('storico')">Giri passati nello Storico ›</button>`;
   box.innerHTML = html;
+  renderPlannedRoutes(today);
+}
+// Pagina «Giri»: tutti i giri ancora da fare (in corso, oggi, prossimi giorni) in ordine di data.
+function renderPlannedRoutes(today = localIsoDate()) {
+  const box = document.getElementById('plannedRoutesList');
+  if(!box) return;
+  const closed = r => r.status === 'completato' || r.status === 'annullato';
+  const planned = allRoutes.filter(r => !closed(r) && (r.status === 'in_corso' || r.data_giro >= today))
+    .sort((a, b) => (a.status === 'in_corso' ? -1 : 0) - (b.status === 'in_corso' ? -1 : 0)
+      || (a.data_giro + (a.orario_partenza||'')).localeCompare(b.data_giro + (b.orario_partenza||'')));
+  box.innerHTML = planned.length ? planned.map(r => routeRow(r, today)).join('')
+    : `<div class="gf-empty"><p>Nessun giro pianificato.</p></div>`;
+}
+function routeRow(r, today) {
+  const running = r.status === 'in_corso';
+  const [label, status] = running ? ['In corso', 'info'] : r.data_giro === today ? ['Oggi', 'success'] : ['Programmato', 'warning'];
+  return `<div class="gf-panel"><button type="button" class="gf-list-item" onclick="openExecution(${Number(r.id)})" aria-label="Apri il giro di ${esc(longDateIt(r.data_giro))}"><span class="gf-avatar" data-tone="2" aria-hidden="true">${Number(String(r.data_giro||'').split('-')[2]) || ''}</span>
+        <span class="gf-list-item__main"><strong>${esc(longDateIt(r.data_giro))}${r.orario_partenza?` · ${esc(r.orario_partenza)}`:''}</strong>
+        <small>${routeArea(r)?`${esc(routeArea(r))} · `:''}${esc(gfCount(r.n_consegne,'fermata','fermate'))}${r.totale_km?` · ${esc(fmt(r.totale_km))} km`:''}</small></span>
+        <span class="gf-badge" data-status="${status}">${label}</span></button></div>`;
 }
 
 // Un solo giro alla volta: con un giro in corso gli altri si avviano dopo averlo chiuso.
@@ -832,6 +827,8 @@ async function openExecution(routeId) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById('view-execution').classList.add('active');
   markNav('execution');
+  const back = document.getElementById('execBackBtn');
+  if(back) back.textContent = executionReturnView === 'giri' ? '‹ Giri' : '‹ Home';
   document.querySelector('.app-main')?.scrollTo?.(0, 0);
   await loadExecution();
   if(execPollInterval) clearInterval(execPollInterval);
@@ -842,7 +839,7 @@ function exitExecution() {
   if(execPollInterval) clearInterval(execPollInterval);
   currentRoute = null;
   currentRouteData = null;
-  showView('dashboard');
+  showView(executionReturnView);
 }
 
 async function loadExecution() {
