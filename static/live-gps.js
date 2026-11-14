@@ -6,7 +6,10 @@
   // Stato → colore (avvisi .gf-alert e pallino [data-gps-badge] nell'intestazione) e titolo.
   // ready = permesso concesso ma nessun giro in corso.
   const TONE = {active:'success', ready:'success', denied:'danger', error:'warning', idle:'info'};
-  const TITLE = {active:'Posizione attiva', ready:'Posizione consentita', denied:'Posizione bloccata', error:'Posizione in pausa', idle:'Posizione'};
+  const TITLE = {active:'Posizione attiva', ready:'Posizione consentita', denied:'Posizione bloccata', error:'Posizione in pausa', idle:'Posizione spenta'};
+  const LABEL = {active:'Attiva', ready:'Consentita', denied:'Bloccata', error:'In pausa', idle:'Spenta'};
+  // Dove c'è il tasto della guida (portale autista) i messaggi rimandano lì.
+  const fix = () => document.querySelector('[data-gps-guide]') ? 'Tocca «Guida alla configurazione».' : 'Sbloccalo nelle impostazioni del telefono.';
   function paint(nextState, text) {
     state = nextState; message = text;
     hosts().forEach(host => {
@@ -18,6 +21,8 @@
       if (note) note.textContent = message;
       const retry = host.querySelector('[data-gps-retry]');
       if (retry) retry.hidden = !['denied', 'error'].includes(state);
+      const label = host.querySelector('[data-gps-state-label]');
+      if (label) { label.textContent = LABEL[state]; label.dataset.status = state === 'idle' ? 'neutral' : TONE[state]; }
     });
     document.querySelectorAll('[data-gps-badge]').forEach(badge => {
       badge.dataset.status = state === 'idle' ? 'neutral' : TONE[state];
@@ -33,7 +38,7 @@
       const apply = () => {
         if (status.state === 'denied') {
           denied = true;
-          paint('denied', 'Il telefono non permette a GiroFacile di leggere la posizione. Segui le istruzioni qui sotto per sbloccarla.');
+          paint('denied', 'Il telefono non dà il permesso. ' + fix());
         } else if (denied || !route) {
           denied = false;
           if (route) tick();
@@ -60,7 +65,7 @@
     }, error => {
       if (error.code === 1) {
         denied = true;
-        paint('denied', 'Il permesso è stato negato. Sbloccalo nelle impostazioni seguendo le istruzioni qui sotto.');
+        paint('denied', 'Permesso negato. ' + fix());
       } else paint('error', 'Posizione non disponibile ora: controlla che la localizzazione del telefono sia accesa.');
     }, {enableHighAccuracy:false, maximumAge:60000, timeout:15000});
   }

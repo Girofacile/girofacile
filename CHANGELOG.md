@@ -5,6 +5,9 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Portale autista › Posizione più semplice: un solo pannello con lo stato del GPS, il tasto «Attiva posizione»,
+  due righe («Perché serve», «Cosa vede l’azienda») e «Guida alla configurazione», che apre un pop-up dove si
+  sceglie iPhone o Android (parte da quello in uso) e si leggono tre passaggi. Anteprime eliminate.
 - Portale autista: il tasto blu al centro della barra in basso ha la casa e apre la Home (giri attivi e,
   sotto, i giri programmati). «Giri» apre solo l’elenco dei giri pianificati; dal giro aperto «‹» torna
   alla pagina da cui si è partiti. La navigazione verso la prossima consegna resta nel giro aperto («Naviga»).

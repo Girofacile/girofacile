@@ -250,6 +250,8 @@ body[data-gf-surface] .gf-grid[data-cols="side-main"]{grid-template-columns:minm
 body[data-gf-surface] .gf-title{margin:0;font:var(--gf-weight-bold) var(--gf-font-section)/var(--gf-line-height-tight) var(--gf-font-display);letter-spacing:-.015em;color:var(--gf-color-text)}
 body[data-gf-surface] .gf-subtitle{margin:0;font:var(--gf-weight-bold) var(--gf-font-lg)/1.2 var(--gf-font-display);color:var(--gf-color-text)}
 body[data-gf-surface] .gf-text{margin:0;font-size:var(--gf-font-md);line-height:var(--gf-line-height)}
+/* Elenchi numerati o puntati: rientro fisso, anche nelle pagine che azzerano margini e spazi. */
+body[data-gf-surface] :is(ol,ul).gf-text{padding-left:var(--gf-space-5)}
 body[data-gf-surface] .gf-muted{margin:0;color:var(--gf-color-muted);font-size:var(--gf-font-sm)}
 body[data-gf-surface] .gf-kicker{margin:0;color:var(--gf-color-muted);font-size:var(--gf-font-xs);font-weight:var(--gf-weight-semibold);text-transform:uppercase;letter-spacing:.06em}
 
@@ -686,7 +688,7 @@ body[data-gf-surface] .gf-overlay[data-position="side"]{place-items:stretch end;
 body[data-gf-surface] .gf-overlay[data-position="side"] .gf-modal{width:min(var(--gf-drawer-width),100%);max-height:none;height:100%;border-radius:var(--gf-radius-lg) 0 0 var(--gf-radius-lg)}
 body[data-gf-surface] .gf-overlay[data-position="side"][data-embedded] .gf-modal{height:auto}
 /* Stessa finestra su <dialog> nativo (showModal): lo sfondo è il ::backdrop. */
-body[data-gf-surface] dialog.gf-modal{padding:0;color:var(--gf-color-text);outline:none}
+body[data-gf-surface] dialog.gf-modal{padding:0;margin:auto;color:var(--gf-color-text);outline:none}
 body[data-gf-surface] dialog.gf-modal:not([open]){display:none}
 body[data-gf-surface] dialog.gf-modal::backdrop{background:var(--gf-color-overlay)}
 html:has(body[data-gf-surface] dialog.gf-modal[open]){overflow:hidden}
