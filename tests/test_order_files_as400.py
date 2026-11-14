@@ -30,3 +30,16 @@ def test_as400_export_is_read_and_mapped_automatically():
     order = of.mapped(rows[0], {k: v for k, v in mapping.items() if k in of.FIELDS})
     assert order['number'] == '0000452' and order['recipient_name'] == 'CAFFÈ DELLA PIAZZA'
     assert order['requested_date'] == '2026-11-13' and order['weight_kg'] == 4.25
+
+
+def test_handwritten_headers_are_recognised_by_words():
+    headers = ['N° Ord.', 'Data Cons.', 'Rag. Sociale Cliente', 'Cod Cli', 'Indirizzo di consegna', 'C.A.P.', "Citta'", 'Prov',
+               'Tel. cliente', 'Nr colli', 'Peso (kg)', 'Pallet n.', 'Orario da', 'Orario a', 'Sponda?', 'Zona ZTL', 'Annotazioni', 'Agente vendita']
+    found = of.suggestions(headers)
+    assert found['number'] == found['external_id'] == 'N° Ord.'
+    assert found['recipient_name'] == 'Rag. Sociale Cliente' and found['external_customer_id'] == 'Cod Cli'
+    assert found['street'] == 'Indirizzo di consegna'  # CAP e città in colonne proprie: è la via
+    assert found['phone'] == 'Tel. cliente' and found['pallets'] == 'Pallet n.'
+    assert found['time_from'] == 'Orario da' and found['time_to'] == 'Orario a'
+    assert found['ztl'] == 'Zona ZTL' and found['notes'] == 'Annotazioni'
+    assert 'Agente vendita' not in found.values()

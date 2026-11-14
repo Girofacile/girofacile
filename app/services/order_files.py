@@ -41,12 +41,49 @@ def requested_date(value):
     raise ValueError(text)
 
 
+# Riconoscimento per parole, dopo quello esatto: intestazioni scritte «a mano» come «N° Ord.»,
+# «Rag. Sociale Cliente», «Tel. cliente», «Orario da». Le regole si provano in quest'ordine;
+# ogni intestazione va a un solo dato e ogni dato a una sola intestazione.
+def _has(*words): return lambda t: any(w in t for w in words)
+def _all(*groups): return lambda t: all(any(w in t for w in g) for g in groups)
+KEYWORD_RULES=[
+    ('external_customer_id', _all({'cod','codice','id'},{'cli','cliente','clienti'})),
+    ('phone', _has('tel','telefono','cell','cellulare','telefonico','recapito','phone')),
+    ('requested_date', lambda t: _has('data','dt','giorno')(t) and not _has('ordine','ord')(t) or _has('consegna','evasione')(t) and _has('data','dt','giorno')(t)),
+    ('number', lambda t: _has('ord','ordine','ordini','order','doc','documento')(t) and not _has('data','dt','cliente','cod')(t)),
+    ('recipient_name', lambda t: _has('rag','ragione','sociale','destinatario','destin','denominazione','nominativo','intestatario','cliente','nome','insegna')(t) and not _has('cod','codice','tel','telefono','indirizzo')(t)),
+    ('street_number', _has('civico','civ')),
+    ('delivery_address', _has('indirizzo','ind','indir','address','recapito consegna')),
+    ('postal_code', _has('cap','postale')),
+    ('city', _has('citta','comune','localita','loc','paese','city')),
+    ('province', _has('prov','provincia','pr')),
+    ('packages', _has('colli','collo','pacchi','cartoni')),
+    ('weight_kg', _has('peso','kg','chili')),
+    ('pallet_truck', _has('transpallet')),
+    ('pallets', _has('pallet','pallets','bancali','bancale','pedane')),
+    ('time_from', lambda t: _has('dalle','apertura')(t) or _has('orario','ora','fascia')(t) and _has('da','inizio','min')(t)),
+    ('time_to', lambda t: _has('alle','chiusura')(t) or _has('orario','ora','fascia')(t) and _has('a','fine','max')(t)),
+    ('tail_lift', _has('sponda')),
+    ('ztl', _has('ztl')),
+    ('volume_m3', _has('volume','m3','mc')),
+    ('requirements', _has('requisiti','esigenze')),
+    ('notes', _has('note','nota','annotazioni','commenti','istruzioni','osservazioni')),
+]
+
+
 def suggestions(headers):
     def key(value): return normalize(value).replace(' ','').replace('_','')
     result={}
     for target in FIELDS:
         candidates=[h for h in headers if key(h) in {key(target),*(key(a) for a in ALIASES.get(target,[]))}]
         if len(candidates)==1: result[target]=candidates[0]
+    used=set(result.values())
+    for header in headers:
+        if header in used: continue
+        tokens=set(normalize(header).replace('_',' ').split())
+        for target,rule in KEYWORD_RULES:
+            if target not in result and rule(tokens):
+                result[target]=header;used.add(header);break
     if 'external_id' not in result and 'number' in result: result['external_id']=result['number']
     # CAP e comune in colonne proprie: la colonna «Indirizzo» contiene solo via e civico (tipico dell'AS400).
     if {'postal_code','city'}<=result.keys() and 'delivery_address' in result and 'street' not in result:

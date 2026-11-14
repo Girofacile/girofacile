@@ -5,6 +5,8 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Importazione ordini: le colonne si riconoscono anche dalle parole che contengono, con intestazioni scritte
+  «a mano» come «N° Ord.», «Rag. Sociale Cliente», «Tel. cliente», «Orario da», «Zona ZTL», «Annotazioni».
 - Importazione ordini da file in un pop-up (variante A) al posto della pagina «Importa ordini»: si sceglie il
   file e si passa da soli al passo 2, con un’unica tabella «Dato · Colonna del tuo file · Importa» e l’anteprima
   che si aggiorna da sola; poi «Importa N ordini» e l’esito. L’elenco non si sceglie più: GiroFacile usa quello
