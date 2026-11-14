@@ -704,7 +704,13 @@
         </section>
         <section id="sourceHistory" class="gf-panel" hidden></section>
       </section>
-      <section id="tab-ordini-importa" class="tab hidden gf-stack" data-gap="lg"><div><button type="button" class="gf-button" data-variant="ghost" onclick="showTab('ordini')">← Ordini</button></div><div class="gf-field" data-invalid><p id="orderImportMessage" role="alert" tabindex="-1" class="gf-field__error"></p></div><section id="orderImportWizard" class="gf-panel"></section></section>
+      <section id="tab-ordini-importa" class="tab hidden gf-stack" data-gap="lg"></section>
+      <!-- Importazione ordini da file in un pop-up (variante A, 13/11/2026): carica il file, scegli cosa importare, importa. -->
+      <dialog id="orderImportDialog" class="gf-modal" data-size="lg" aria-labelledby="orderImportTitle">
+        <header class="gf-modal__header"><div><p class="gf-kicker" id="orderImportStep">Passo 1 di 3 · Carica il file</p><h2 class="gf-modal__title" id="orderImportTitle">Importa ordini da file</h2></div><button type="button" class="gf-icon-button" onclick="GFOrderImport.close()" aria-label="Chiudi"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12 M18 6L6 18"/></svg></button></header>
+        <div class="gf-modal__body gf-stack" data-gap="lg"><div class="gf-field" data-invalid><p id="orderImportMessage" class="gf-field__error" role="alert" tabindex="-1"></p></div><div id="orderImportWizard" class="gf-stack" data-gap="lg"></div></div>
+        <footer class="gf-modal__footer gf-cluster" data-justify="between" id="orderImportFooter"></footer>
+      </dialog>
       <section id="tab-ordine-fonte" class="tab hidden gf-stack" data-gap="lg">
         <div id="orderSourceMobileHead" class="gf-cluster" data-justify="between"></div>
         <div class="gf-field" data-invalid><p id="orderSourceMessage" class="gf-field__error" role="status"></p></div>
@@ -1660,7 +1666,7 @@
 <script src="/static/password-strength.js?v=gf_driver_flow_20261020"></script>
 <script src="/static/dashboard/js/collaborators.js?v=gf_collaudo_20261110"></script>
 <script src="/static/dashboard/js/orders.js?v=gf_collaudo_20261110"></script>
-<script src="/static/dashboard/js/order-import.js?v=gf_fonte_api_b_20261112"></script>
+<script src="/static/dashboard/js/order-import.js?v=gf_import_popup_20261114"></script>
 <script src="/static/dashboard/js/order-sources.js?v=gf_collegamenti_tre_riquadri_20261113"></script>
 <script src="/static/dashboard/js/dashboard-real-map.js?v=gf_priority_hero_20261025"></script>
 <script src="/static/dashboard/js/in-progress-reference.js?v=gf_chiudi_giro_20261110"></script>

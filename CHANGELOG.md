@@ -5,6 +5,10 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Importazione ordini da file in un pop-up (variante A) al posto della pagina «Importa ordini»: si sceglie il
+  file e si passa da soli al passo 2, con un’unica tabella «Dato · Colonna del tuo file · Importa» e l’anteprima
+  che si aggiorna da sola; poi «Importa N ordini» e l’esito. L’elenco non si sceglie più: GiroFacile usa quello
+  dei file (o ne crea uno la prima volta), così ricorda le colonne e non crea doppioni.
 - Collega i tuoi ordini: ripristinata l’impostazione a tre riquadri affiancati. Il primo è «File Excel o
   CSV», con l’etichetta «Consigliato» e l’unico pulsante blu; seguono Gestionale aziendale (con assistenza)
   ed E-commerce. Restano la richiesta di assistenza per il gestionale e i permessi introdotti il 13/11.
