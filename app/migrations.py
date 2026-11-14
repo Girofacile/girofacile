@@ -268,6 +268,12 @@ def run_migrations(engine):
                 with engine.begin() as conn:
                     RouteScheduleUsage.__table__.create(conn, checkfirst=True)
                     conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261112_01', 'now': utc_now()})
+            if '20261114_01' not in applied:
+                # Tempo di scarico dai colli: interruttore dell'azienda, spento finché non lo attiva.
+                with engine.begin() as conn:
+                    if 'users' in set(inspect(conn).get_table_names()) and 'unload_by_packages' not in {c['name'] for c in inspect(conn).get_columns('users')}:
+                        conn.execute(text('ALTER TABLE users ADD COLUMN unload_by_packages BOOLEAN'))
+                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261114_01', 'now': utc_now()})
         finally:
             if postgres:
                 lock.execute(text('SELECT pg_advisory_unlock(:key)'), {'key': LOCK_ID})

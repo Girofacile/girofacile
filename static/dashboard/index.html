@@ -950,7 +950,7 @@
         <section class="gf-panel" aria-labelledby="settingsPlanningTitle">
           <header class="gf-panel__header">
             <div><h2 class="gf-panel__title" id="settingsPlanningTitle">Pianificazione dei giri</h2><p class="gf-muted">Vincoli di clienti e mezzi considerati quando calcoli un giro.</p></div>
-            <span class="gf-panel__meta" data-settings-count="featureTimeWindowsV89 featureZtlV89 featureTailLiftV89 featureRefrigeratedV89"></span>
+            <span class="gf-panel__meta" data-settings-count="featureTimeWindowsV89 featureZtlV89 featureTailLiftV89 featureUnloadPackagesV89 featureRefrigeratedV89"></span>
           </header>
           <div class="gf-panel__body">
             <div class="gf-setting">
@@ -965,9 +965,14 @@
               <div class="gf-setting__copy"><strong id="settingsTitle5">Sponda idraulica / transpallet</strong><p id="settingsDescription5">Gestisci compatibilità tra esigenze del cliente e mezzo.</p><p class="gf-field__hint">Attiva questa preferenza per gestire i requisiti di sponda idraulica e transpallet.</p></div>
               <div class="gf-setting__control"><label class="gf-switch"><input id="featureTailLiftV89" type="checkbox" role="switch" aria-labelledby="settingsTitle5" aria-describedby="settingsDescription5" onchange="markSettingsDirtyV893()"></label></div>
             </div>
-            <div class="gf-setting">
-              <div class="gf-setting__copy"><strong id="settingsTitleUnload">Tempo di scarico stimato dai colli</strong><p id="settingsDescriptionUnload">Per clienti e ordini senza un tempo di scarico proprio: minuti fissi più un tempo per ogni collo.</p><p class="gf-field__hint">Con i valori predefiniti: 3 colli 5 minuti, 40 colli 14 minuti. Il tempo scritto a mano sul cliente o misurato nelle consegne reali ha sempre la precedenza; senza colli restano 10 minuti. Lo scarico deve finire entro la fascia oraria del cliente.</p></div>
-              <div class="gf-setting__control"><div class="gf-form-grid" aria-labelledby="settingsTitleUnload"><label class="gf-field" for="unloadBaseMin"><span class="gf-field__label">Minuti fissi</span><input class="gf-input" id="unloadBaseMin" type="number" min="0" max="120" step="1" inputmode="numeric" onchange="markSettingsDirtyV893()"><span class="gf-field__hint">per ogni consegna</span></label><label class="gf-field" for="unloadSecondsPerPackage"><span class="gf-field__label">Secondi per collo</span><input class="gf-input" id="unloadSecondsPerPackage" type="number" min="0" max="600" step="1" inputmode="numeric" onchange="markSettingsDirtyV893()"><span class="gf-field__hint">aggiunti per ogni collo</span></label><label class="gf-field" for="unloadMaxMin"><span class="gf-field__label">Massimo minuti</span><input class="gf-input" id="unloadMaxMin" type="number" min="1" max="240" step="1" inputmode="numeric" onchange="markSettingsDirtyV893()"><span class="gf-field__hint">tetto per consegna</span></label></div></div>
+<div class="gf-setting">
+              <div class="gf-setting__copy"><strong id="settingsTitleUnload">Tempo di scarico in base ai colli</strong><p id="settingsDescriptionUnload">Se attiva, il tempo di scarico di ogni consegna si calcola dal numero di colli: minuti fissi più qualche secondo per ogni collo, fino a un massimo.</p><p class="gf-field__hint">Vale solo per clienti e ordini senza un tempo proprio: il tempo scritto sul cliente o misurato nelle consegne reali ha sempre la precedenza. Se è spenta, o la consegna non ha colli, lo scarico dura 10 minuti.</p></div>
+              <div class="gf-setting__control"><label class="gf-switch"><input id="featureUnloadPackagesV89" type="checkbox" role="switch" aria-labelledby="settingsTitleUnload" aria-describedby="settingsDescriptionUnload" onchange="markSettingsDirtyV893();updateUnloadPreview()"></label></div>
+            </div>
+            <div class="gf-stack" data-gap="md" id="unloadRuleDetails" aria-labelledby="settingsTitleUnload" hidden>
+              <div class="gf-form-grid"><label class="gf-field" for="unloadBaseMin"><span class="gf-field__label">Minuti fissi</span><input class="gf-input" id="unloadBaseMin" type="number" min="0" max="120" step="1" inputmode="numeric" value="4" oninput="updateUnloadPreview()" onchange="markSettingsDirtyV893()"><span class="gf-field__hint">per ogni consegna, anche con pochi colli</span></label><label class="gf-field" for="unloadSecondsPerPackage"><span class="gf-field__label">Secondi per collo</span><input class="gf-input" id="unloadSecondsPerPackage" type="number" min="0" max="600" step="1" inputmode="numeric" value="15" oninput="updateUnloadPreview()" onchange="markSettingsDirtyV893()"><span class="gf-field__hint">aggiunti per ogni collo scaricato</span></label><label class="gf-field" for="unloadMaxMin"><span class="gf-field__label">Massimo minuti</span><input class="gf-input" id="unloadMaxMin" type="number" min="1" max="240" step="1" inputmode="numeric" value="30" oninput="updateUnloadPreview()" onchange="markSettingsDirtyV893()"><span class="gf-field__hint">lo scarico non supera mai questo tempo</span></label></div>
+              <p class="gf-field__hint" id="unloadPreviewFormula">Esempio con i valori scritti sopra:</p>
+              <section class="gf-stat-strip" id="unloadPreview" aria-label="Esempi di tempo di scarico" aria-live="polite"></section>
             </div>
             <div class="gf-setting">
               <div class="gf-setting__copy"><strong id="settingsTitle6">Merce refrigerata <span class="gf-badge" data-status="neutral">In sviluppo</span></strong><p id="settingsDescription6">La gestione della catena del freddo non è ancora disponibile. Questa opzione sarà attivabile al completamento della funzione.</p></div>
@@ -1670,7 +1675,7 @@
 <script src="/static/dashboard/js/order-sources.js?v=gf_collegamenti_tre_riquadri_20261113"></script>
 <script src="/static/dashboard/js/dashboard-real-map.js?v=gf_priority_hero_20261025"></script>
 <script src="/static/dashboard/js/in-progress-reference.js?v=gf_chiudi_giro_20261110"></script>
-<script src="/static/dashboard/js/core.js?v=gf_import_esito_20261113"></script>
+<script src="/static/dashboard/js/core.js?v=gf_scarico_colli_20261114"></script>
 <script src="/static/dashboard/js/dashboard-mobile.js?v=gf_dashboard_mobile_20261019"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=gf_verifica_automatica_20261112"></script>
 <link rel="stylesheet" href="/static/dashboard/css/fleet-review.css?v=gf_suddivisione_20261025">

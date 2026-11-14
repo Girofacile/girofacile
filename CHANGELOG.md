@@ -5,6 +5,9 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Impostazioni › Tempo di scarico in base ai colli: ora è un interruttore (spento finché l’operatore non lo
+  attiva; spento = 10 minuti o il tempo del cliente). Sopra titolo e spiegazione, sotto i tre valori in riga
+  e alcuni esempi (1, 10, 30, 60, 120 colli) che si ricalcolano mentre si cambiano i numeri.
 - Pagina Clienti: tolti in cima i riquadri «Indirizzi verificati» e «Da verificare» e il filtro rapido
   «Da verificare», perché la verifica degli indirizzi ora avviene da sola.
 - Tabella Clienti: al posto di «Stato indirizzo» (la verifica avviene da sola) c’è la colonna «Scarico»

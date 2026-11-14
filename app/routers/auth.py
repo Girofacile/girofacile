@@ -893,7 +893,7 @@ def update_company_profile(payload: dict, user: User = Depends(current_user), db
         "company_legal_address", "company_billing_address", "company_sector",
         "company_activity_type", "company_size", "daily_deliveries",
         "has_time_windows", "needs_signature", "needs_photo_proof",
-        "has_refrigerated_goods", "has_ztl", "needs_tail_lift",
+        "has_refrigerated_goods", "has_ztl", "needs_tail_lift", "unload_by_packages",
         "unload_base_min", "unload_seconds_per_package", "unload_max_min"
     }
     from ..services.fiscal import validate_fiscal
@@ -917,7 +917,7 @@ def update_company_profile(payload: dict, user: User = Depends(current_user), db
                 value = normalize_sector_key(value)
             # I booleani devono restare True/False: `value or None` trasformava
             # False in NULL e causava il 500 sulle colonne NOT NULL.
-            if key in {"has_time_windows", "needs_signature", "needs_photo_proof", "has_refrigerated_goods", "has_ztl", "needs_tail_lift"}:
+            if key in {"has_time_windows", "needs_signature", "needs_photo_proof", "has_refrigerated_goods", "has_ztl", "needs_tail_lift", "unload_by_packages"}:
                 setattr(user, key, bool(value))
             elif key in UNLOAD_LIMITS:
                 setattr(user, key, _unload_setting(key, value))

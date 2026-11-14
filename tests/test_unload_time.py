@@ -9,7 +9,7 @@ from test_order_planning import planning, ready, preview  # noqa: F401
 from stop_fixture import verified_stop
 from app.services import unload_time
 
-COMPANY = SimpleNamespace()  # nessuna formula salvata: valori predefiniti
+COMPANY = SimpleNamespace(unload_by_packages=True)  # stima attiva, nessuna formula salvata: valori predefiniti
 
 
 @pytest.mark.parametrize('packages,minutes', [(3, 5), (10, 7), (20, 9), (40, 14), (100, 29), (500, 30)])
@@ -22,7 +22,7 @@ def test_no_packages_means_no_estimate():
 
 
 def test_company_formula():
-    company = SimpleNamespace(unload_base_min=2, unload_seconds_per_package=30, unload_max_min=20)
+    company = SimpleNamespace(unload_by_packages=True, unload_base_min=2, unload_seconds_per_package=30, unload_max_min=20)
     assert unload_time.estimate(10, company) == 7 and unload_time.estimate(100, company) == 20
 
 
@@ -65,13 +65,15 @@ def test_company_profile_saves_formula(routing_env):  # noqa: F811
 
 def test_order_stop_uses_packages(planning):  # noqa: F811
     ctx, _ = planning
+    owner = ctx[2]; owner.unload_by_packages = True; ctx[1].commit()  # stima dai colli attiva
     state, _ = preview(planning, [ready(ctx, packages=40, weight_kg=200)])
     stop = state['stops'][0]
     assert stop['tempo_scarico_min'] == 14 and stop['tempo_scarico_auto'] is True
 
 
 def test_route_estimates_unknown_stop_and_keeps_manual(routing_env):  # noqa: F811
-    client, _, owner, *_ = routing_env
+    client, db, owner, *_ = routing_env
+    owner.unload_by_packages = True; db.commit()  # stima dai colli attiva
     data = payload(routing_env)
     data['consegne'][0]['colli'] = 40  # tempo 20 scelto a mano: resta
     data['consegne'].append(verified_stop(owner.id, cliente_nome='Nuovo', indirizzo='Via Nuova', lat=45.2, lon=9.2, colli=40))
@@ -111,3 +113,21 @@ def test_manual_ten_minutes_survives_api_save_and_manual_recalculation(routing_e
     assert again.status_code == 200, again.text
     assert again.json()['consegne'][0]['tempo_scarico_min'] == 10
     assert again.json()['consegne'][0]['tempo_scarico_auto'] is False
+
+
+def test_estimate_is_off_until_the_company_turns_it_on():
+    assert unload_time.estimate(40, SimpleNamespace()) is None
+    assert unload_time.estimate(40, SimpleNamespace(unload_by_packages=False)) is None
+    stop = {'tempo_scarico_min': 14, 'tempo_scarico_auto': True, 'colli': 40}
+    unload_time.apply(stop, SimpleNamespace(), SimpleNamespace(tempo_scarico_min=None))
+    assert stop['tempo_scarico_min'] == 10 and stop['tempo_scarico_auto'] is False
+
+
+def test_company_profile_saves_the_switch(routing_env):  # noqa: F811
+    from app.routers import auth
+    client = routing_env[0]
+    client.app.include_router(auth.router)
+    assert client.get('/api/company-profile').json()['unload_by_packages'] is False
+    saved = client.put('/api/company-profile', json={'unload_by_packages': True})
+    assert saved.status_code == 200, saved.text
+    assert saved.json()['company']['unload_by_packages'] is True

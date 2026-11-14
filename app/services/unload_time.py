@@ -2,7 +2,7 @@
 
 1. Tempo scritto dall'operatore sul cliente o sulla fermata.
 2. Tempo imparato dalle consegne reali del cliente (route_execution).
-3. Stima dai colli, con la formula dell'azienda: minuti fissi + secondi per collo.
+3. Stima dai colli, solo se l'azienda la attiva: minuti fissi + secondi per collo.
 4. 10 minuti.
 
 Il calcolo degli orari esige che lo scarico finisca entro la fascia: con 15 minuti
@@ -23,11 +23,14 @@ def settings(user):
     for key, default in DEFAULTS.items():
         value = getattr(user, key, None)
         values[key] = int(value) if value is not None else default
+    values['unload_by_packages'] = bool(getattr(user, 'unload_by_packages', False))
     return values
 
 
 def estimate(packages, user):
-    """Minuti stimati dai colli, oppure None senza colli."""
+    """Minuti stimati dai colli, oppure None senza colli o con la stima spenta."""
+    if not getattr(user, 'unload_by_packages', False):
+        return None
     try:
         packages = int(packages or 0)
     except (TypeError, ValueError):

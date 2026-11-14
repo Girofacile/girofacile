@@ -6170,6 +6170,7 @@ async function saveAllSettingsV893(){
     has_ztl:!!document.getElementById('featureZtlV89')?.checked,
     needs_tail_lift:!!document.getElementById('featureTailLiftV89')?.checked,
     has_refrigerated_goods:!!document.getElementById('featureRefrigeratedV89')?.checked,
+    unload_by_packages:!!document.getElementById('featureUnloadPackagesV89')?.checked,
     // Formula del tempo di scarico stimato dai colli.
     unload_base_min:Number(document.getElementById('unloadBaseMin')?.value),unload_seconds_per_package:Number(document.getElementById('unloadSecondsPerPackage')?.value),unload_max_min:Number(document.getElementById('unloadMaxMin')?.value)
   };
@@ -6227,12 +6228,14 @@ async function loadUniversalFeaturesV89(){
       needs_photo_proof:!!c.needs_photo_proof,
       has_ztl:!!c.has_ztl,
       needs_tail_lift:!!c.needs_tail_lift,
-      has_refrigerated_goods:!!c.has_refrigerated_goods
+      has_refrigerated_goods:!!c.has_refrigerated_goods,
+      unload_by_packages:!!c.unload_by_packages
     };
-    const map={featureTimeWindowsV89:'has_time_windows',featurePhotoProofV89:'needs_photo_proof',featureZtlV89:'has_ztl',featureTailLiftV89:'needs_tail_lift',featureRefrigeratedV89:'has_refrigerated_goods'};
+    const map={featureTimeWindowsV89:'has_time_windows',featurePhotoProofV89:'needs_photo_proof',featureZtlV89:'has_ztl',featureTailLiftV89:'needs_tail_lift',featureRefrigeratedV89:'has_refrigerated_goods',featureUnloadPackagesV89:'unload_by_packages'};
     Object.entries(map).forEach(([id,key])=>{const el=document.getElementById(id);if(el)el.checked=!!gfUniversalFeaturesV891[key];});
     [['unloadBaseMin','unload_base_min'],['unloadSecondsPerPackage','unload_seconds_per_package'],['unloadMaxMin','unload_max_min']]
       .forEach(([id,key])=>{const el=document.getElementById(id);if(el&&c[key]!=null)el.value=c[key];});
+    updateUnloadPreview();
     applyUniversalFeaturesV891();
     applyPlanFeatureControls();
     updateSettingsCountsV893();
@@ -6246,6 +6249,7 @@ async function saveUniversalFeaturesV89(){
     has_ztl:!!document.getElementById('featureZtlV89')?.checked,
     needs_tail_lift:!!document.getElementById('featureTailLiftV89')?.checked,
     has_refrigerated_goods:!!document.getElementById('featureRefrigeratedV89')?.checked,
+    unload_by_packages:!!document.getElementById('featureUnloadPackagesV89')?.checked,
     unload_base_min:Number(document.getElementById('unloadBaseMin')?.value),unload_seconds_per_package:Number(document.getElementById('unloadSecondsPerPackage')?.value),unload_max_min:Number(document.getElementById('unloadMaxMin')?.value)
   };
   try{
@@ -6255,6 +6259,25 @@ async function saveUniversalFeaturesV89(){
     if(state)state.textContent='Funzionalità aggiornate.'; toast('Funzionalità salvate.');
   }catch(e){ if(state)state.textContent='Errore salvataggio: '+e.message; alert(e.message); }
 }
+// Tempo di scarico dai colli: mostra i valori solo a stima attiva e, sotto, quanto dura lo scarico
+// per alcuni numeri di colli, ricalcolato a ogni cifra (stessa formula di unload_time.py).
+const UNLOAD_EXAMPLE_PACKAGES=[1,10,30,60,120];
+function unloadMinutesFor(packages,base,seconds,max){return Math.max(1,Math.min(max,Math.ceil(base+packages*seconds/60)));}
+function updateUnloadPreview(){
+  const on=!!document.getElementById('featureUnloadPackagesV89')?.checked;
+  const box=document.getElementById('unloadRuleDetails');if(box)box.hidden=!on;
+  const root=document.getElementById('unloadPreview');if(!root)return;
+  const read=(id,fallback)=>{const el=document.getElementById(id),n=Number(el?.value);return el&&el.value!==''&&Number.isFinite(n)?n:fallback;};
+  const base=read('unloadBaseMin',4),seconds=read('unloadSecondsPerPackage',15),max=Math.max(1,read('unloadMaxMin',30));
+  const formula=document.getElementById('unloadPreviewFormula');
+  if(formula)formula.textContent='Come cambia: '+base+' min + '+seconds+' secondi per ogni collo, arrotondato al minuto e mai oltre '+max+' min. Esempi:';
+  root.innerHTML=UNLOAD_EXAMPLE_PACKAGES.map(n=>{
+    const m=unloadMinutesFor(n,base,seconds,max),capped=Math.ceil(base+n*seconds/60)>max;
+    return '<div class="gf-stat-strip__cell"><span class="gf-stat-strip__label">'+n+(n===1?' collo':' colli')+'</span><strong class="gf-stat-strip__value">'+m+'</strong><small class="gf-stat-strip__unit">'
+      +(capped?'<span class="gf-badge" data-status="warning">min · al massimo</span>':'min')+'</small></div>';
+  }).join('');
+}
+window.updateUnloadPreview=updateUnloadPreview;
 window.applyUniversalFeaturesV891=applyUniversalFeaturesV891;
 window.loadUniversalFeaturesV89=loadUniversalFeaturesV89;
 window.saveUniversalFeaturesV89=saveUniversalFeaturesV89;

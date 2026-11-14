@@ -70,6 +70,8 @@ class User(Base):
     unload_base_min: Mapped[int | None] = mapped_column(Integer, nullable=True)
     unload_seconds_per_package: Mapped[int | None] = mapped_column(Integer, nullable=True)
     unload_max_min: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # Stima dai colli attivata dall'operatore; vuoto = spenta (10 minuti o il tempo del cliente).
+    unload_by_packages: Mapped[bool | None] = mapped_column(Boolean, nullable=True, default=False)
     # Costo orario dell'autista (€): con il carburante sceglie l'ordine delle fermate. Vuoto = 15 €.
     universal_features_initialized: Mapped[bool] = mapped_column(Boolean, default=False)
     onboarding_completed: Mapped[bool] = mapped_column(Boolean, default=False)
