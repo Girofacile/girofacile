@@ -232,10 +232,10 @@ function cxAddressCell(x){
 function renderCustomerKpis(){
   const root=cxEl('customerKpis');if(!root)return;
   const all=customerDirectory.all,t=all.length,wf=all.filter(cxHasSlot).length;
-  // Media dei minuti di scarico (10 dove non c'è un tempo) e clienti con tempo misurato nelle consegne reali.
-  const avg=t?Math.round(all.reduce((s,x)=>s+Number(x.tempo_scarico_min??10),0)/t):'—',measured=all.filter(x=>Number(x.tempo_scarico_rilevazioni||0)>0).length;
+  // Media dei minuti di scarico (10 dove non c'è un tempo, come nel calcolo dei giri).
+  const avg=t?Math.round(all.reduce((s,x)=>s+Number(x.tempo_scarico_min??10),0)/t):'—';
   // Icone e colori condivisi con le altre barre dei numeri.
-  const icons={customers:['1','M16 20v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1 M9.5 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z M21 20v-1a4 4 0 0 0-3-3.9 M16 4.1a3.5 3.5 0 0 1 0 6.8'],pin:['2','M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z M12 12a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z'],alert:['5','M12 3 2 20h20L12 3z M12 10v4 M12 17h.01'],clock:['3','M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 7v5l3 2'],box:['4','M21 8l-9-5-9 5 9 5 9-5z M3 8v8l9 5 9-5V8 M12 13v8']};
+  const icons={customers:['1','M16 20v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1 M9.5 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z M21 20v-1a4 4 0 0 0-3-3.9 M16 4.1a3.5 3.5 0 0 1 0 6.8'],pin:['2','M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z M12 12a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z'],alert:['5','M12 3 2 20h20L12 3z M12 10v4 M12 17h.01'],clock:['3','M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 7v5l3 2'],unload:['4','M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 7v5l3 2']};
   const cell=(icon,quick,label,value,note,warn,bar,feature,id)=>'<button type="button" class="gf-stat-strip__cell" data-cx-quick="'+quick+'"'+(feature?' data-gf-feature="'+feature+'"':'')+'>'
     +'<span class="gf-stat-strip__icon" data-tone="'+icons[icon][0]+'" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="'+icons[icon][1]+'"/></svg></span>'
     +'<span class="gf-stat-strip__label">'+label+'</span><strong class="gf-stat-strip__value" id="'+id+'">'+value+'</strong><small class="gf-stat-strip__unit">'+(warn?'<span class="gf-badge" data-status="warning">'+note+'</span>':note)+'</small>'
@@ -243,7 +243,7 @@ function renderCustomerKpis(){
   root.innerHTML=
     cell('customers','all','Totale clienti',t,'Tutti i clienti registrati',false,null,'','customerMetricTotal')+
     cell('clock','noSlot','Con fascia di scarico',wf,wf<t?(t-wf)+' da impostare':'Tutte impostate',wf<t,t?Math.round(wf/t*100):0,'time_windows','customerMetricWithSlot')+
-    cell('box','all','Tempo medio di scarico',avg,'min a cliente'+(measured?' · '+measured+' misurati nelle consegne':''),false,null,'','customerMetricUnload');
+    cell('unload','all','Tempo medio di scarico',avg,'minuti a cliente',false,null,'','customerMetricUnload');
 }
 function renderCustomerQuick(){
   const root=cxEl('customerQuickFilters');

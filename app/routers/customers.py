@@ -74,8 +74,6 @@ def customer_to_dict(customer) -> dict:
         "scarico_pomeriggio_da": time_to_hhmm(customer.scarico_pomeriggio_da),
         "scarico_pomeriggio_a": time_to_hhmm(customer.scarico_pomeriggio_a),
         "tempo_scarico_min": customer.tempo_scarico_min,
-        # Consegne reali da cui è stato misurato il tempo di scarico (riquadro «Tempo medio di scarico»).
-        "tempo_scarico_rilevazioni": int(customer.tempo_scarico_rilevazioni or 0),
         "ztl": customer.ztl,
         **customer_ztl(customer),
         "sponda": customer.sponda,
