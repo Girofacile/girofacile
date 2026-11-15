@@ -802,6 +802,12 @@ body[data-gf-surface] .gf-segmented{display:inline-flex;flex-wrap:wrap;gap:var(-
 body[data-gf-surface] :is(.gf-segmented>button,.gf-segmented>.gf-dropdown>summary){min-height:var(--gf-control-height-sm);padding:var(--gf-space-1) var(--gf-space-4);border:0;border-radius:var(--gf-radius-pill);background:transparent;color:var(--gf-color-muted);font:var(--gf-weight-medium) var(--gf-font-sm)/1.2 var(--gf-font-family);cursor:pointer;transition:background var(--gf-motion-duration),color var(--gf-motion-duration)}
 body[data-gf-surface] :is(.gf-segmented>button,.gf-segmented>.gf-dropdown>summary):hover{color:var(--gf-color-text);background:var(--gf-color-surface-subtle)}
 body[data-gf-surface] :is(.gf-segmented>button[aria-pressed="true"],.gf-segmented>.gf-dropdown[data-active]>summary){background:var(--gf-color-primary);color:var(--gf-color-on-primary)}
+/* Selettore della vista (elenco / schede): stesso bordo, altezza e angoli di .gf-button, senza blu. */
+body[data-gf-surface] .gf-segmented[data-variant="view"]{flex-wrap:nowrap;align-items:center;gap:var(--gf-space-1);min-height:var(--gf-control-height);padding:var(--gf-space-1);border-radius:var(--gf-radius-sm)}
+body[data-gf-surface] .gf-segmented[data-variant="view"]>button{display:inline-flex;align-items:center;justify-content:center;min-height:0;width:calc(var(--gf-control-height) - var(--gf-space-2) - 2px);height:calc(var(--gf-control-height) - var(--gf-space-2) - 2px);padding:0;border-radius:var(--gf-radius-xs)}
+body[data-gf-surface] .gf-segmented[data-variant="view"]>button svg{width:var(--gf-icon-size);height:var(--gf-icon-size);fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+body[data-gf-surface] .gf-segmented[data-variant="view"]>button[aria-pressed="true"]{background:var(--gf-color-border);color:var(--gf-color-text)}
+@media (max-width:640px){body[data-gf-surface] .gf-segmented[data-variant="view"]{min-height:var(--gf-control-touch)}body[data-gf-surface] .gf-segmented[data-variant="view"]>button{width:calc(var(--gf-control-touch) - var(--gf-space-2) - 2px);height:calc(var(--gf-control-touch) - var(--gf-space-2) - 2px)}}
 /* Una voce del selettore può aprire un riquadro (es. «Personalizzato» con le date): details.gf-dropdown. */
 body[data-gf-surface] .gf-segmented>.gf-dropdown>summary{display:inline-flex;align-items:center}
 body[data-gf-surface] .gf-dropdown [data-gf-menu][data-align="start"]{left:0;right:auto}

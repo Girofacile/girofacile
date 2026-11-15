@@ -5,6 +5,8 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Tasti «vista elenco / vista schede» (Ordini, Clienti, Agenti, Depositi, Mezzi, Autisti): ora un unico riquadro
+  con lo stesso bordo, altezza e angoli degli altri tasti; la vista scelta è grigia, senza blu.
 - Portale autista › Posizione più semplice: un solo pannello con lo stato del GPS, il tasto «Attiva posizione»,
   due righe («Perché serve», «Cosa vede l’azienda») e «Guida alla configurazione», che apre un pop-up dove si
   sceglie iPhone o Android (parte da quello in uso) e si leggono tre passaggi. Anteprime eliminate.

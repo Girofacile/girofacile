@@ -33,7 +33,7 @@
 
 <!-- Shared GiroFacile design system; legacy sheets retain feature layout. -->
 <link rel="stylesheet" href="/static/design-system/theme.css?v=gf_grafici_20261110">
-<link rel="stylesheet" href="/static/design-system/components.css?v=gf_posizione_guida_20261114">
+<link rel="stylesheet" href="/static/design-system/components.css?v=gf_tasti_vista_20261115">
 <link rel="stylesheet" href="/static/design-system/layout.css?v=gf_banner_unico_20261101">
 <link rel="stylesheet" href="/static/design-system/workspace.css?v=gf_selection_20261016">
 <link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007_reference_2">
@@ -634,9 +634,9 @@
                 <option value="requested_date">Data richiesta</option>
                 <option value="number">Numero ordine</option>
               </select>
-              <div class="gf-cluster" role="group" aria-label="Vista ordini">
-                <button type="button" id="ordersView-table" class="gf-chip" aria-label="Vista elenco" aria-pressed="true" onclick="GFOrders.view('table')"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h1M3 12h1M3 18h1"/></svg></button>
-                <button type="button" id="ordersView-cards" class="gf-chip" aria-label="Vista griglia" aria-pressed="false" onclick="GFOrders.view('cards')"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="15" y="3" width="6" height="6" rx="1"/><rect x="3" y="15" width="6" height="6" rx="1"/><rect x="15" y="15" width="6" height="6" rx="1"/></svg></button>
+              <div class="gf-segmented" data-variant="view" role="group" aria-label="Vista ordini">
+                <button type="button" id="ordersView-table" aria-label="Vista elenco" aria-pressed="true" onclick="GFOrders.view('table')"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h1M3 12h1M3 18h1"/></svg></button>
+                <button type="button" id="ordersView-cards" aria-label="Vista griglia" aria-pressed="false" onclick="GFOrders.view('cards')"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="15" y="3" width="6" height="6" rx="1"/><rect x="3" y="15" width="6" height="6" rx="1"/><rect x="15" y="15" width="6" height="6" rx="1"/></svg></button>
               </div>
             </div>
 
@@ -776,9 +776,9 @@
                   <div class="gf-cluster" data-justify="between"><button class="gf-button" data-variant="ghost" type="button" onclick="clearCustomerFilters()">Azzera filtri</button><button class="gf-button" data-variant="secondary" type="button" onclick="document.getElementById('customerFiltersMenu').open=false">Chiudi</button></div>
                 </div>
               </details>
-              <div class="gf-cluster" role="group" aria-label="Vista">
-                <button type="button" class="gf-chip" id="customerListView" aria-pressed="true" aria-label="Vista elenco" onclick="setCustomerView('list')"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13 M8 12h13 M8 18h13 M3 6h.01 M3 12h.01 M3 18h.01"/></svg></button>
-                <button type="button" class="gf-chip" id="customerGridView" aria-pressed="false" aria-label="Vista schede" onclick="setCustomerView('grid')"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4z M13 4h7v7h-7z M4 13h7v7H4z M13 13h7v7h-7z"/></svg></button>
+              <div class="gf-segmented" data-variant="view" role="group" aria-label="Vista">
+                <button type="button" id="customerListView" aria-pressed="true" aria-label="Vista elenco" onclick="setCustomerView('list')"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13 M8 12h13 M8 18h13 M3 6h.01 M3 12h.01 M3 18h.01"/></svg></button>
+                <button type="button" id="customerGridView" aria-pressed="false" aria-label="Vista schede" onclick="setCustomerView('grid')"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4z M13 4h7v7h-7z M4 13h7v7H4z M13 13h7v7h-7z"/></svg></button>
               </div>
             </div>
             <div class="gf-cluster" id="customerQuickFilters" role="group" aria-label="Filtri rapidi"></div>
@@ -813,7 +813,7 @@
             <input class="gf-input" id="agentSearch" type="search" aria-label="Cerca agente per nome, codice, zona o contatti" placeholder="Cerca agente o zona…" oninput="renderAgentDirectory()">
             <select class="gf-select" id="agentStatusFilter" onchange="renderAgentDirectory()" aria-label="Filtra stato agenti"><option value="">Tutti gli stati</option><option value="attivi">Attivi</option><option value="non_attivi">Non attivi</option></select>
             <select class="gf-select" id="agentSort" onchange="renderAgentDirectory()" aria-label="Ordina agenti"><option value="name">Nome: A–Z</option><option value="name_desc">Nome: Z–A</option><option value="clients">Clienti assegnati</option><option value="zone">Zona</option></select>
-            <div class="gf-cluster" role="group" aria-label="Vista agenti"><button id="agentListView" class="gf-chip" type="button" aria-label="Vista tabella" aria-pressed="true" onclick="setAgentView('table')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13 M8 12h13 M8 18h13 M3 6h.01 M3 12h.01 M3 18h.01"/></svg></button><button id="agentGridView" class="gf-chip" type="button" aria-label="Vista card" aria-pressed="false" onclick="setAgentView('cards')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h7v7H3z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7H3z"/></svg></button></div>
+            <div class="gf-segmented" data-variant="view" role="group" aria-label="Vista agenti"><button id="agentListView" type="button" aria-label="Vista tabella" aria-pressed="true" onclick="setAgentView('table')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13 M8 12h13 M8 18h13 M3 6h.01 M3 12h.01 M3 18h.01"/></svg></button><button id="agentGridView" type="button" aria-label="Vista card" aria-pressed="false" onclick="setAgentView('cards')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h7v7H3z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7H3z"/></svg></button></div>
           </div>
           <div id="agentTableWrap" class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards"><thead><tr><th>Codice</th><th>Agente</th><th>Contatti</th><th>Zona</th><th>Stato</th><th>Clienti</th><th>Azioni</th></tr></thead><tbody id="agentsBody"></tbody></table></div>
           <div id="agentCards" class="gf-panel__body gf-grid hidden" aria-live="polite"></div>
@@ -1021,9 +1021,9 @@
           <div class="gf-panel__body gf-cluster">
             <input class="gf-input" id="depositSearch" type="search" aria-label="Cerca depositi" placeholder="Cerca deposito…" oninput="renderDepositDirectory()">
             <select class="gf-select" id="depositSort" aria-label="Ordina depositi" onchange="renderDepositDirectory()"><option value="name">Nome: A–Z</option><option value="name_desc">Nome: Z–A</option><option value="default">Predefinito prima</option></select>
-            <div class="gf-cluster" role="group" aria-label="Vista depositi">
-              <button id="depositListView" class="gf-chip" type="button" aria-label="Vista tabella" aria-pressed="true" onclick="setDepositView('list')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13 M8 12h13 M8 18h13 M3 6h.01 M3 12h.01 M3 18h.01"/></svg></button>
-              <button id="depositGridView" class="gf-chip" type="button" aria-label="Vista card" aria-pressed="false" onclick="setDepositView('grid')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h7v7H3z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7H3z"/></svg></button>
+            <div class="gf-segmented" data-variant="view" role="group" aria-label="Vista depositi">
+              <button id="depositListView" type="button" aria-label="Vista tabella" aria-pressed="true" onclick="setDepositView('list')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13 M8 12h13 M8 18h13 M3 6h.01 M3 12h.01 M3 18h.01"/></svg></button>
+              <button id="depositGridView" type="button" aria-label="Vista card" aria-pressed="false" onclick="setDepositView('grid')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h7v7H3z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7H3z"/></svg></button>
             </div>
           </div>
           <div id="depositTableWrap" class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards"><thead><tr><th scope="col">Nome</th><th scope="col">Indirizzo</th><th scope="col">Predefinito</th><th scope="col">Azioni</th></tr></thead><tbody id="depositsBody"><tr><td colspan="4"><div class="gf-loading" role="status">Caricamento depositi...</div></td></tr></tbody></table></div>
@@ -1073,9 +1073,9 @@
             <input class="gf-input" id="fleetSearch" type="search" aria-label="Cerca mezzo per nome, targa o modello" placeholder="Cerca mezzo o targa…" oninput="renderFleetDirectory()">
             <select class="gf-select" id="fleetStatusFilter" aria-label="Filtra disponibilità veicoli" onchange="renderFleetDirectory()"><option value="">Tutti gli stati</option><option value="available">Disponibili</option><option value="busy">In uso</option></select>
             <select class="gf-select" id="fleetSort" aria-label="Ordina mezzi" onchange="renderFleetDirectory()"><option value="name">Nome: A–Z</option><option value="name_desc">Nome: Z–A</option><option value="plate">Targa</option><option value="status">Stato</option></select>
-            <div class="gf-cluster" role="group" aria-label="Vista mezzi">
-              <button id="fleetTableButton" class="gf-chip" type="button" aria-label="Vista tabella" aria-pressed="false" onclick="setFleetView('table')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h1M3 12h1M3 18h1"/></svg></button>
-              <button id="fleetCardsButton" class="gf-chip" type="button" aria-label="Vista card" aria-pressed="true" onclick="setFleetView('cards')"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="15" y="3" width="6" height="6" rx="1"/><rect x="3" y="15" width="6" height="6" rx="1"/><rect x="15" y="15" width="6" height="6" rx="1"/></svg></button>
+            <div class="gf-segmented" data-variant="view" role="group" aria-label="Vista mezzi">
+              <button id="fleetTableButton" type="button" aria-label="Vista tabella" aria-pressed="false" onclick="setFleetView('table')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h1M3 12h1M3 18h1"/></svg></button>
+              <button id="fleetCardsButton" type="button" aria-label="Vista card" aria-pressed="true" onclick="setFleetView('cards')"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="15" y="3" width="6" height="6" rx="1"/><rect x="3" y="15" width="6" height="6" rx="1"/><rect x="15" y="15" width="6" height="6" rx="1"/></svg></button>
             </div>
           </div>
           <p id="fleetPlanNotice" class="gf-alert hidden" data-status="warning" role="status"></p>
@@ -1137,9 +1137,9 @@
             <input class="gf-input" id="driverSearch" type="search" aria-label="Cerca autista per nome, telefono, email o patente" placeholder="Cerca autista…" oninput="renderDrivers()">
             <select class="gf-select" id="driverStatusFilter" aria-label="Filtra stato autisti" onchange="renderDrivers()"><option value="">Tutti gli stati</option><option value="Disponibile">Disponibili</option><option value="In servizio">In servizio</option><option value="In riposo">In riposo</option></select>
             <select class="gf-select" id="driverSort" aria-label="Ordina autisti" onchange="renderDrivers()"><option value="name">Nome: A–Z</option><option value="name_desc">Nome: Z–A</option><option value="routes">Giri assegnati</option><option value="expiry">Scadenza patente</option></select>
-            <div class="gf-cluster" role="group" aria-label="Vista autisti">
-              <button id="driverListView" class="gf-chip" type="button" aria-label="Vista tabella" aria-pressed="false" onclick="setDriverView('table')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h1M3 12h1M3 18h1"/></svg></button>
-              <button id="driverGridView" class="gf-chip" type="button" aria-label="Vista card" aria-pressed="true" onclick="setDriverView('cards')"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="15" y="3" width="6" height="6" rx="1"/><rect x="3" y="15" width="6" height="6" rx="1"/><rect x="15" y="15" width="6" height="6" rx="1"/></svg></button>
+            <div class="gf-segmented" data-variant="view" role="group" aria-label="Vista autisti">
+              <button id="driverListView" type="button" aria-label="Vista tabella" aria-pressed="false" onclick="setDriverView('table')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h1M3 12h1M3 18h1"/></svg></button>
+              <button id="driverGridView" type="button" aria-label="Vista card" aria-pressed="true" onclick="setDriverView('cards')"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="15" y="3" width="6" height="6" rx="1"/><rect x="3" y="15" width="6" height="6" rx="1"/><rect x="15" y="15" width="6" height="6" rx="1"/></svg></button>
             </div>
           </div>
           <p id="driverDirectoryError" class="gf-alert hidden" data-status="danger" role="status"></p>
