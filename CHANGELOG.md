@@ -5,6 +5,8 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Pagina Clienti: nella barra in alto il terzo riquadro «Tempo medio di scarico» (media dei minuti dei clienti,
+  10 dove manca un tempo, con quanti sono misurati nelle consegne reali); si aggiorna cambiando i minuti in tabella.
 - Tasti «vista elenco / vista schede» (Ordini, Clienti, Agenti, Depositi, Mezzi, Autisti): ora un unico riquadro
   con lo stesso bordo, altezza e angoli degli altri tasti; la vista scelta è grigia, senza blu.
 - Portale autista › Posizione più semplice: un solo pannello con lo stato del GPS, il tasto «Attiva posizione»,

@@ -125,6 +125,16 @@ test('customer list header: select-all for the page, no sorting buttons (sorting
 test('verified addresses and unloading-window KPIs show only the count, without "su N"',()=>{
   const js=fs.readFileSync('static/dashboard/js/customers.js','utf8');
   assert.doesNotMatch(js,/Indirizzi verificati|'unverified','Da verificare'/);
+  assert.match(js,/cell\('box','all','Tempo medio di scarico',avg,/);
   assert.match(js,/cell\('clock','noSlot','Con fascia di scarico',wf,/);
   assert.doesNotMatch(js,/<small> su /);
+});
+
+test('tempo medio di scarico: media dei minuti, 10 dove manca, e si aggiorna',()=>{
+  const f=fixture();
+  const root={innerHTML:''};f.fields.customerKpis=root;
+  f.run("customerDirectory.all=[{id:1,tempo_scarico_min:20,tempo_scarico_rilevazioni:3},{id:2,tempo_scarico_min:null},{id:3,tempo_scarico_min:15}]");
+  f.run('renderCustomerKpis()');
+  assert.match(root.innerHTML,/id="customerMetricUnload">15</);
+  assert.match(root.innerHTML,/min a cliente · 1 misurati nelle consegne/);
 });
