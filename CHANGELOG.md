@@ -5,6 +5,11 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Pop-up dell'ordine (variante A): si apre già modificabile, tutto in un unico pop-up a due colonne
+  (Destinatario, Indirizzo, Consegna · Merce, Mezzo, Note) con la distinta articoli apribile in fondo.
+  Niente più «Modifica dati», «Altre informazioni» né «Verifica indirizzo ora»: l'indirizzo cambiato si
+  verifica da solo al salvataggio e la ZTL non si sceglie più (si rileva dall'indirizzo). «Salva modifiche»
+  e «Annulla modifiche» compaiono solo dopo una modifica; con modifiche aperte il pop-up non si chiude.
 - CRM commerciale operativo nel Super Admin: aziende, referenti, trattative in EUR,
   attività, follow-up, dashboard e report, export CSV e storico delle modifiche.
   Accesso esplicito dei collaboratori e isolamento del portafoglio assegnato;

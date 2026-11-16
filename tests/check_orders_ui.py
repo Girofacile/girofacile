@@ -107,7 +107,7 @@ def main():
                     page.locator('#orderField-postal_code').fill('20121')
                     page.locator('#orderField-city').fill('Milano')
                     assert 'Via Roma 10, 20121 Milano' in page.locator('[data-order-address-exact]').inner_text()
-                    page.locator('#orderFormFields [data-order-form-optional] summary').click()
+                    # Pop-up unico (16/11/2026): tutti i campi sono già visibili, niente sezione facoltativa.
                     page.locator('#orderField-tail_lift').select_option('false')
                     page.locator('#orderField-time_from').fill('14:00')
                     page.locator('#orderSave').click()
@@ -118,11 +118,12 @@ def main():
                     page.wait_for_function("document.getElementById('orderModalContent').textContent.includes('ORD-001')")
                     assert page.locator('#orderModal').is_visible()
                     assert page.locator('#orderModalContent script').count()==0
-                    page.get_by_role('button',name='Modifica dati',exact=True).click()
-                    page.locator('#orderFormFields [data-order-form-optional] summary').click()
+                    # L'ordine si apre già modificabile: «Salva modifiche» compare solo dopo una modifica.
+                    assert not page.locator('#orderSave').is_visible()
                     page.locator('#orderField-packages').fill('5')
                     page.locator('#orderSave').click()
-                    page.wait_for_function("document.getElementById('orderModalContent').textContent.includes('Modifica dati')")
+                    page.wait_for_function("document.getElementById('orderActionMessage').textContent.includes('Modifiche salvate')")
+                    assert not page.locator('#orderSave').is_visible()
                     from app.order_models import Order
                     page.evaluate('GFOrders.open('+str(db.query(Order).one().id)+')')
                     assert page.locator('#orderCustomerPanel').count()==0

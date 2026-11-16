@@ -14,11 +14,11 @@
 
   // Da pianificare come «In servizio» della Dashboard, così non si confonde con «Assegnato» (azzurro); annullato in rosso chiaro.
   const statusTone={nuovo:'warning',da_verificare:'warning',pronto:'warning',assegnato:'info',in_consegna:'info',consegnato:'success',non_consegnato:'danger',annullato:'danger'};
-  const fields={number:'Numero ordine',recipient_name:'Destinatario',phone:'Telefono destinatario',street:'Via',street_number:'Civico',postal_code:'CAP',city:'Comune',requested_date:'Data richiesta',time_from:'Fascia oraria: dalle',time_to:'Alle',weight_kg:'Peso (kg)',packages:'Colli',pallets:'Pallet',volume_m3:'Volume (m³)',tail_lift:'Sponda',pallet_truck:'Transpallet',ztl:'ZTL',requirements:'Requisiti operativi',notes:'Note'};
+  const fields={number:'Numero ordine',recipient_name:'Destinatario',phone:'Telefono destinatario',street:'Via',street_number:'Civico',postal_code:'CAP',city:'Comune',requested_date:'Data richiesta',time_from:'Fascia oraria: dalle',time_to:'Alle',weight_kg:'Peso (kg)',packages:'Colli',pallets:'Pallet',volume_m3:'Volume (m³)',tail_lift:'Sponda idraulica',pallet_truck:'Transpallet',requirements:'Requisiti operativi',notes:'Note ordine'};
   // Etichette anche dei campi che non sono nel modulo (storico delle modifiche, errori).
-  const labelOf=key=>fields[key]||({delivery_address:'Indirizzo di consegna',province:'Provincia'})[key];
-  const numeric=['weight_kg','packages','pallets','volume_m3'], bools=['tail_lift','pallet_truck','ztl'];
-  let page=1, sequence=0, detailSequence=0, view='table', current=null, last=null, timer, modalScrollY=0, bulkVerifying=false, stopBulkVerification=false;
+  const labelOf=key=>fields[key]||({delivery_address:'Indirizzo di consegna',province:'Provincia',ztl:'ZTL'})[key];
+  const numeric=['weight_kg','packages','pallets','volume_m3'], bools=['tail_lift','pallet_truck'];
+  let page=1, sequence=0, detailSequence=0, view='table', current=null, last=null, timer, modalScrollY=0, bulkVerifying=false, stopBulkVerification=false, dirty=false, snapshot=null;
   const el=id=>document.getElementById(id);
   const can=key=>!window.GFCompanyAccess || GFCompanyAccess.can(key);
   const display=value=>value===null || value===undefined || value===''?'Non indicato':value===true?'Sì':value===false?'No':String(value);
@@ -94,54 +94,68 @@
     el('ordersPrevious').disabled=page<=1;el('ordersNext').disabled=page*25>=last.total;
     for(const mode of ['table','cards'])el('ordersView-'+mode).setAttribute('aria-pressed',String(mode===view));
   }
-  function form(data={}){
-    el('orderFormFields').innerHTML=Object.entries(fields).map(([key,label])=>{
-      const value=data[key], id='orderField-'+key;
-      if(bools.includes(key))return `<label class="gf-field" for="${id}"><span class="gf-field__label">${label}</span><select class="gf-select" id="${id}" name="${key}"><option value="">Non indicato</option><option value="true" ${value===true?'selected':''}>Sì</option><option value="false" ${value===false?'selected':''}>No</option></select></label>`;
-      if(['notes','requirements'].includes(key))return `<label class="gf-field" data-span="full" for="${id}"><span class="gf-field__label">${label}</span><textarea class="gf-textarea" id="${id}" name="${key}" maxlength="${key==='notes'?5000:2000}">${esc(value||'')}</textarea></label>`;
-      const type=numeric.includes(key)?'number':key==='requested_date'?'date':key.startsWith('time_')?'time':key==='phone'?'tel':'text';
-      return `<label class="gf-field" for="${id}"><span class="gf-field__label">${label}</span><input class="gf-input" id="${id}" name="${key}" type="${type}" value="${esc(value??'')}" ${key==='number'?'required maxlength="160"':key==='recipient_name'?'maxlength="200"':key==='street'?'maxlength="300" autocomplete="off"':key==='street_number'?'maxlength="20" autocomplete="off"':key==='postal_code'?'maxlength="5" inputmode="numeric" pattern="\\d{5}" autocomplete="off"':key==='city'?'maxlength="150" autocomplete="off"':''} ${type==='number'?`min="0" max="${key==='packages'?1000000:100000000}" step="${key==='packages'?1:'any'}"`:''}></label>`;
-    }).join('');
-    // Keep the everyday workflow compact; optional logistics remain available on demand.
-    const container=el('orderFormFields');
-    const basic=document.createElement('div');
-    basic.className='gf-form-grid';
-    const optional=document.createElement('details');
-    optional.className='gf-panel';
-    optional.dataset.orderFormOptional='';
-    const title=document.createElement('summary');
-    title.className='gf-panel__header';
-    title.textContent='Altre informazioni (facoltative)';
-    const otherFields=document.createElement('div');
-    otherFields.className='gf-panel__body gf-form-grid';
-    // Indirizzo a campi separati (variante B): via, civico, CAP e comune su una riga e, sotto,
-    // l'indirizzo esatto che arriverà a Google per la verifica.
-    const ADDRESS=['street','street_number','postal_code','city'];
-    const essential=new Set(['number','recipient_name']);
-    const address=document.createElement('fieldset');
-    address.className='gf-fieldset gf-stack';address.dataset.gap='sm';address.dataset.orderAddress='';
-    address.innerHTML='<legend class="gf-field__label">Indirizzo di consegna</legend>';
-    const addressGrid=document.createElement('div');
-    addressGrid.className='gf-grid';addressGrid.dataset.cols='4';
-    for(const label of Array.from(container.children)){
-      const input=label.querySelector('input,select,textarea');
-      if(ADDRESS.includes(input?.name))addressGrid.appendChild(label);
-      else if(essential.has(input?.name))basic.appendChild(label);
-      else otherFields.appendChild(label);
+  function fieldHtml(key,value){
+    const label=fields[key], id='orderField-'+key;
+    if(bools.includes(key))return `<label class="gf-field" for="${id}"><span class="gf-field__label">${label}</span><select class="gf-select" id="${id}" name="${key}"><option value="">Non indicato</option><option value="true" ${value===true?'selected':''}>Sì</option><option value="false" ${value===false?'selected':''}>No</option></select></label>`;
+    if(['notes','requirements'].includes(key))return `<label class="gf-field" for="${id}"><span class="gf-field__label">${label}</span><textarea class="gf-textarea" id="${id}" name="${key}" maxlength="${key==='notes'?5000:2000}">${esc(value||'')}</textarea></label>`;
+    const type=numeric.includes(key)?'number':key==='requested_date'?'date':key.startsWith('time_')?'time':key==='phone'?'tel':'text';
+    return `<label class="gf-field" for="${id}"><span class="gf-field__label">${label}</span><input class="gf-input" id="${id}" name="${key}" type="${type}" value="${esc(value??'')}" ${key==='number'?'required maxlength="160"':key==='recipient_name'?'maxlength="200"':key==='street'?'maxlength="300" autocomplete="off"':key==='street_number'?'maxlength="20" autocomplete="off"':key==='postal_code'?'maxlength="5" inputmode="numeric" pattern="\\d{5}" autocomplete="off"':key==='city'?'maxlength="150" autocomplete="off"':''} ${type==='number'?`min="0" max="${key==='packages'?1000000:100000000}" step="${key==='packages'?1:'any'}"`:''}></label>`;
+  }
+  const group=(keys,data)=>'<div class="gf-form-grid">'+keys.map(k=>fieldHtml(k,data[k])).join('')+'</div>';
+  const card=(title,body,meta='')=>`<section class="gf-card gf-stack" data-gap="sm"><div class="gf-cluster" data-justify="between"><h3 class="gf-subtitle">${title}</h3>${meta}</div>${body}</section>`;
+  // Stato dell'indirizzo nella scheda «Indirizzo»: la verifica è automatica, nessun tasto.
+  function addressState(o){
+    if(!o)return {badge:'',note:''};
+    const access=accessBadges(o);
+    if(o.address_problem)return {badge:'<span class="gf-badge" data-status="danger" data-dot data-order-problem>Indirizzo da correggere</span>',
+      note:`<div class="gf-field" data-invalid><p class="gf-field__error" data-order-problem>${esc(o.address_problem.message||'Google non ha trovato questo indirizzo.')} Correggi i campi e salva: l’indirizzo si riverifica da solo.</p></div>`+access};
+    const verified=!!o.address_verification&&!o.anomalies?.some(a=>a.code==='verification');
+    if(verified){
+      const manual=o.address_verification?.confirmed_manually;
+      return {badge:`<span class="gf-badge" data-status="success" data-dot>${manual?'Posizione confermata':'Indirizzo verificato'}</span>`,
+        note:`<p class="gf-field__hint">${manual?'Posizione scelta e confermata da un operatore.':'Verificato in automatico: '+esc(o.address_verification?.indirizzo||o.operational_data?.delivery_address||'')+'.'} Se cambi l’indirizzo si riverifica al salvataggio; anche la ZTL si rileva da sola.</p>`+access};
     }
-    const exact=document.createElement('p');
-    exact.className='gf-field__hint';exact.dataset.orderAddressExact='';
-    const province=document.createElement('input');
-    province.type='hidden';province.name='province';province.value=data.province||'';
-    address.append(addressGrid,exact,province);
+    return {badge:'<span class="gf-badge" data-status="neutral" data-dot>Da verificare</span>',
+      note:'<p class="gf-field__hint">Si verifica da solo quando salvi un indirizzo nuovo o metti l’ordine in un giro; anche la ZTL si rileva da sola.</p>'+access};
+  }
+  // Variante A (16/11/2026): un solo pop-up già modificabile, a due colonne; distinta apribile sotto.
+  function form(data={},o=null){
+    const state=addressState(o);
+    const items=o?.items||[];
+    const itemsHtml=items.length?`<details class="gf-card" data-order-items><summary><strong>Distinta articoli</strong> <span class="gf-muted">· ${gfCount(items.length,'riga','righe')}</span></summary><dl class="gf-details" data-layout="rows">${items.map((item,index)=>`<div class="gf-details__item"><dt>${esc(item.description||item.name||`Articolo ${index+1}`)}</dt><dd>${esc(display(item.quantity))}</dd></div>`).join('')}</dl></details>`:'';
+    el('orderFormFields').innerHTML=`<div class="gf-grid" data-cols="2">
+        <div class="gf-stack">
+          ${card('Destinatario',group(['number','recipient_name','phone'],data))}
+          ${card('Indirizzo',`<fieldset class="gf-fieldset gf-stack" data-gap="sm" data-order-address><legend class="gf-field__label" hidden>Indirizzo di consegna</legend>${group(['street','street_number','postal_code','city'],data)}<p class="gf-field__hint" data-order-address-exact></p><input type="hidden" name="province" value="${esc(data.province||'')}"></fieldset>${state.note}`,state.badge)}
+          ${card('Consegna',group(['requested_date','time_from','time_to'],data))}
+        </div>
+        <div class="gf-stack">
+          ${card('Merce',group(['packages','weight_kg','pallets','volume_m3'],data))}
+          ${card('Mezzo',group(['tail_lift','pallet_truck'],data))}
+          ${card('Note',group(['requirements','notes'],data))}
+        </div>
+      </div>${itemsHtml}`;
+    // Sotto i campi dell'indirizzo, l'indirizzo esatto che arriverà a Google per la verifica.
+    const box=el('orderFormFields').querySelector('[data-order-address]'),exact=box.querySelector('[data-order-address-exact]');
     const preview=()=>{
-      const part=name=>(addressGrid.querySelector(`[name="${name}"]`)?.value||'').trim();
-      const line=[[part('street'),part('street_number')].filter(Boolean).join(' '),[part('postal_code'),part('city'),province.value].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+      const part=name=>(box.querySelector(`[name="${name}"]`)?.value||'').trim();
+      const line=[[part('street'),part('street_number')].filter(Boolean).join(' '),[part('postal_code'),part('city'),part('province')].filter(Boolean).join(' ')].filter(Boolean).join(', ');
       exact.innerHTML=line?`Verifichiamo esattamente: <strong>${esc(line)}</strong>`:'Indica via, civico, CAP e comune: li verifichiamo così come li scrivi.';
     };
-    addressGrid.addEventListener('input',preview);preview();
-    optional.append(title,otherFields);
-    container.replaceChildren(basic,address,optional);
+    box.addEventListener('input',preview);preview();
+  }
+  // «Salva modifiche» solo quando un campo cambia davvero (come la pagina Azienda).
+  const formValues=()=>{const f=el('orderForm');return f?JSON.stringify([...new FormData(f)]):null;};
+  function trackChanges(){
+    const f=el('orderForm');snapshot=formValues();dirty=false;
+    if(!f||f.dataset.creating)return;
+    const update=()=>{
+      dirty=formValues()!==snapshot;
+      const clean=el('orderModalContent').querySelector('[data-order-clean]'),changed=el('orderModalContent').querySelector('[data-order-dirty]');
+      if(clean)clean.hidden=dirty;if(changed)changed.hidden=!dirty;
+      if(!dirty&&el('orderEditorError'))el('orderEditorError').textContent='';
+    };
+    f.addEventListener('input',update);f.addEventListener('change',update);
   }
   function modal(){return el('orderModal');}
   function showOrderModal(){
@@ -152,7 +166,15 @@
       document.documentElement.classList.add('order-modal-open');
     }
   }
-  function closeModal(){
+  function closeModal(force=false){
+    // Con modifiche non salvate bisogna scegliere «Salva modifiche» o «Annulla modifiche».
+    if(dirty&&force!==true){
+      const message=el('orderEditorError');
+      if(message)message.textContent='Hai modifiche non salvate: scegli «Salva modifiche» oppure «Annulla modifiche».';
+      el('orderSave')?.focus();
+      return;
+    }
+    dirty=false;
     const dialog=modal();
     ++detailSequence;
     if(dialog?.open)dialog.close();
@@ -161,20 +183,27 @@
     current=null;
   }
   function renderEditor(data={},creating=false){
-    const title=creating?'Nuovo ordine':`Modifica ${esc(current?.number||'ordine')}`;
-    el('orderModalContent').innerHTML=`<header class="gf-modal__header">
-        <div><h2 class="gf-modal__title" id="orderModalTitle">${title}</h2><p class="gf-muted">${creating?'Inserisci i dati disponibili per creare un nuovo ordine.':'Aggiorna i dati operativi. I dati originali ricevuti restano conservati nello storico.'}</p></div>
-        <button class="gf-icon-button" type="button" data-order-modal-close onclick="GFOrders.close()" aria-label="Chiudi"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
-      </header>
-      <form onsubmit="GFOrders.save(event)">
-        <div class="gf-modal__body gf-stack"><div id="orderFormFields" class="gf-stack"></div>
-        <div class="gf-field" data-invalid><p id="orderEditorError" class="gf-field__error" role="alert"></p></div></div>
-        <footer class="gf-modal__footer">
-          <button class="gf-button" data-variant="secondary" type="button" onclick="GFOrders.cancelEdit()">Annulla</button>
-          <button id="orderSave" class="gf-button" data-variant="primary" type="submit">${creating?'Crea ordine':'Salva modifiche'}</button>
-        </footer>
+    const o=creating?null:current;
+    const editable=creating||(can('orders.update')&&['nuovo','da_verificare','pronto'].includes(o?.status)&&!o?.assignments?.length);
+    const close='<button class="gf-icon-button" type="button" data-order-modal-close onclick="GFOrders.close()" aria-label="Chiudi"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>';
+    const header=creating
+      ?`<header class="gf-modal__header"><div><h2 class="gf-modal__title" id="orderModalTitle">Nuovo ordine</h2><p class="gf-muted">Inserisci i dati disponibili per creare un nuovo ordine.</p></div>${close}</header>`
+      :`<header class="gf-modal__header"><div><div class="gf-cluster"><h2 class="gf-modal__title" id="orderModalTitle">${esc(o.number)}</h2>${statusBadge(o.status,o.address_problem)}<span class="gf-badge" data-status="neutral">${esc(o.source_name)}</span></div><p class="gf-muted">${esc(display(data.recipient_name))} · ricevuto il ${esc(receivedDate(o.received_at))}</p></div>${close}</header>`;
+    const cancelOrder=!creating&&editable?'<button type="button" class="gf-button" data-variant="danger" onclick="GFOrders.cancel()">Annulla ordine</button>':'';
+    const actions=creating
+      ?'<div class="gf-cluster"><button class="gf-button" data-variant="secondary" type="button" onclick="GFOrders.close(true)">Annulla</button><button id="orderSave" class="gf-button" data-variant="primary" type="submit">Crea ordine</button></div>'
+      :`<div class="gf-cluster" data-order-clean><button type="button" class="gf-button" data-variant="secondary" onclick="GFOrders.close()">Chiudi</button></div>
+        <div class="gf-cluster" data-order-dirty hidden role="status" aria-live="polite"><span class="gf-muted">Modifiche non salvate</span><button type="button" class="gf-button" data-variant="secondary" onclick="GFOrders.cancelEdit()">Annulla modifiche</button><button id="orderSave" class="gf-button" data-variant="primary" type="submit">Salva modifiche</button></div>`;
+    el('orderModalContent').innerHTML=`${header}
+      <form id="orderForm" onsubmit="GFOrders.save(event)"${creating?' data-creating="1"':''}>
+        <div class="gf-modal__body gf-stack" data-gap="lg">
+          <p id="orderActionMessage" class="gf-muted" role="status" hidden></p>
+          <fieldset class="gf-fieldset" ${editable?'':'disabled'}><legend class="gf-field__label" hidden>Dati dell’ordine</legend><div id="orderFormFields" class="gf-stack"></div></fieldset>
+          <div class="gf-field" data-invalid><p id="orderEditorError" class="gf-field__error" role="alert"></p></div>
+        </div>
+        <footer class="gf-modal__footer gf-cluster" data-justify="between"><span>${cancelOrder}</span>${actions}</footer>
       </form>`;
-    showOrderModal();form(data);el('orderEditorError').textContent='';
+    showOrderModal();form(data,o);trackChanges();
   }
   function newOrder(){++detailSequence;current=null;renderEditor({},true);}
   async function open(id){
@@ -199,100 +228,30 @@
     return ({received:'Acquisizione ordine',source_updated:'Aggiornamento dalla fonte',route_status:'Stato consegna',route_released:'Rimosso dal giro',route_snapshot:'Fermata salvata',created:'Creazione ordine',corrected:'Modifica dati',address_verified:'Indirizzo verificato',status_changed:'Cambio stato'})[kind]||kind;
   }
   function detail(){
-    const o=current;if(!o)return;
-    const data=o.operational_data||{};
-    const allowed=can('orders.update') && ['nuovo','da_verificare','pronto'].includes(o.status) && !o.assignments.length;
-    const verified=!!o.address_verification&&!o.anomalies?.some(a=>a.code==='verification');
-    const requested=data.requested_date?esc(gfDateIt(data.requested_date)):'Non indicata';
-    const hhmm=t=>String(t||'—').slice(0,5);
-    const timeRange=data.time_from||data.time_to?`${esc(hhmm(data.time_from))} – ${esc(hhmm(data.time_to))}`:'Non indicata';
-    const boolValue=value=>value===true?'Sì':value===false?'No':'N/D';
-    const sourceChip=`<span class="gf-badge" data-status="neutral">${esc(o.source_name)}</span>`;
-    const items=o.items?.length?o.items.map((item,index)=>`<div class="gf-details__item"><dt>${esc(item.description||item.name||`Articolo ${index+1}`)}</dt><dd><strong>${esc(display(item.quantity))}</strong></dd></div>`).join(''):'<p class="gf-muted">Nessun articolo indicato.</p>';
-    const notes=data.notes?`<p>“${esc(data.notes)}”</p>`:'<p class="gf-muted">Nessuna nota ordine.</p>';
-    const addressText=esc(display(data.delivery_address));
-    const problem=o.address_problem;
-    const actionCard=problem
-      ?`<section class="gf-alert" data-status="danger" data-order-problem><div class="gf-alert__body">
-            <p class="gf-kicker">Problema da risolvere</p>
-            <strong class="gf-alert__title">Indirizzo non verificato</strong>
-            <p>${esc(problem.message||'Google non ha trovato questo indirizzo.')} L’ordine non si può pianificare finché l’indirizzo non è corretto.</p>
-            ${allowed?'<div class="gf-cluster"><button type="button" class="gf-button" data-variant="primary" data-size="sm" onclick="GFOrders.edit()">Correggi indirizzo</button><button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="GFOrders.action(\'verify-address\')">Verifica di nuovo</button></div>':''}
-        </div></section>`
-      :!verified
-      ?`<section class="gf-alert" data-status="warning"><div class="gf-alert__body">
-            <p class="gf-kicker">Azione necessaria</p>
-            <strong class="gf-alert__title">Indirizzo da confermare</strong>
-            <p>Verifica l’indirizzo “${addressText}”. Se è valido, l’ordine diventa subito pianificabile.</p>
-            ${allowed?'<div><button type="button" class="gf-button" data-variant="primary" data-size="sm" onclick="GFOrders.action(\'verify-address\')">Verifica indirizzo ora</button></div>':''}
-        </div></section>`
-      :`<section class="gf-alert" data-status="success"><div class="gf-alert__body">
-            <strong class="gf-alert__title">${o.address_verification?.confirmed_manually?'Posizione confermata manualmente':'✓ Verifica completata'}</strong>
-            <p>${o.address_verification?.confirmed_manually?'La posizione è stata scelta e confermata da un operatore.':'L’indirizzo di consegna è stato verificato ed è pronto per la pianificazione.'}</p>
-        </div></section>`;
-    const readyButton=''; // Verification makes the order ready without confirmation.
-    const editButton=allowed?'<button type="button" class="gf-button" data-variant="primary" onclick="GFOrders.edit()">Modifica dati</button>':'';
-    const cancelButton=allowed?'<button type="button" class="gf-button" data-variant="ghost" onclick="GFOrders.cancel()">Annulla ordine</button>':'';
-    const item=(label,value)=>`<div class="gf-details__item"><dt>${label}</dt><dd><strong>${value}</strong></dd></div>`;
-
-    el('orderModalContent').innerHTML=`
-      <header class="gf-modal__header">
-        <div>
-          <div class="gf-cluster"><h2 class="gf-modal__title" id="orderModalTitle">${esc(o.number)}</h2>${statusBadge(o.status,o.address_problem)}${sourceChip}</div>
-          <p class="gf-muted">Acquisito il ${esc(date(o.received_at))}</p>
-        </div>
-        <button class="gf-icon-button" type="button" data-order-modal-close onclick="GFOrders.close()" aria-label="Chiudi"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
-      </header>
-      <div class="gf-modal__body gf-stack">
-        <p id="orderActionMessage" class="gf-muted" role="status"></p>
-        <div class="gf-grid" data-cols="main-side">
-          <div class="gf-stack">
-            <section class="gf-panel">
-              <header class="gf-panel__header"><h3 class="gf-panel__title">Dati di consegna</h3></header>
-              <div class="gf-panel__body"><dl class="gf-details">
-                ${item('Destinatario',esc(display(data.recipient_name)))}${item('Telefono',esc(display(data.phone)))}${item('Indirizzo di consegna',addressText+accessBadges(o))}${item('Data richiesta',requested)}${item('Fascia oraria',timeRange)}
-              </dl></div>
-            </section>
-            <section class="gf-panel">
-              <header class="gf-panel__header"><h3 class="gf-panel__title">Specifiche merce e logistica</h3></header>
-              <div class="gf-panel__body"><dl class="gf-details">
-                ${item('Peso (kg)',esc(display(data.weight_kg)))}${item('Colli',esc(display(data.packages)))}${item('Pallet',esc(display(data.pallets)))}${item('Volume (m³)',esc(display(data.volume_m3)))}
-                ${item('Sponda idraulica',boolValue(data.tail_lift))}${item('Transpallet',boolValue(data.pallet_truck))}${item('Permesso ZTL',boolValue(data.ztl))}${item('Req. operativi',esc(display(data.requirements)))}
-              </dl></div>
-            </section>
-            <div class="gf-grid" data-cols="2">
-              <section class="gf-panel">
-                <header class="gf-panel__header"><h3 class="gf-panel__title">Distinta articoli</h3><span class="gf-panel__meta">${o.items?.length||0} ${(o.items?.length||0)===1?'riga':'righe'}</span></header>
-                <div class="gf-panel__body"><dl class="gf-details">${items}</dl></div>
-              </section>
-              <section class="gf-panel">
-                <header class="gf-panel__header"><h3 class="gf-panel__title">Note ordine</h3></header>
-                <div class="gf-panel__body">${notes}</div>
-              </section>
-            </div>
-          </div>
-          <aside>${actionCard}</aside>
-        </div>
-      </div>
-      <footer class="gf-modal__footer">
-        <div class="gf-cluster">${cancelButton}</div>
-        <div class="gf-cluster">
-          <button type="button" class="gf-button" data-variant="secondary" onclick="GFOrders.close()">Chiudi</button>
-          ${readyButton}
-          ${editButton}
-        </div>
-      </footer>`;
+    if(!current)return;
+    renderEditor(current.operational_data||{},false);
   }
-  function edit(){if(!current)return;renderEditor(current.operational_data||{},false);}
-  function cancelEdit(){current?detail():closeModal();}
+  // Compatibilità: «Modifica» porta al primo campo; «Annulla modifiche» rimette i valori salvati.
+  function edit(){if(!current)return;el('orderField-number')?.focus();}
+  function cancelEdit(){dirty=false;current?detail():closeModal(true);}
   async function save(event){
     event.preventDefault();const data={};
     for(const [key,value] of new FormData(event.target))data[key]=value===''?null:numeric.includes(key)?Number(value):bools.includes(key)?value==='true':value;
     const editing=!!current;if(editing)data.version=current.version;
+    const ADDRESS=['street','street_number','postal_code','city'];
+    const before=current?.operational_data||{};
+    const addressChanged=!editing||ADDRESS.some(k=>String(before[k]??'')!==String(data[k]??''))||!!current?.address_problem;
     el('orderSave').disabled=true;el('orderEditorError').textContent='';
     try{
       current=await orderApi('/api/orders'+(editing?'/'+current.id:''),{method:editing?'PUT':'POST',body:JSON.stringify(data)});
+      dirty=false;
+      if(addressChanged&&!current.address_verification&&can('orders.update')){
+        // Verifica automatica: se Google non trova l'indirizzo, il problema compare nella scheda «Indirizzo».
+        try{current=await orderApi(`/api/orders/${current.id}/verify-address`,{method:'POST',body:JSON.stringify({version:current.version})});}
+        catch(e){try{current=await orderApi(`/api/orders/${current.id}`);}catch(_){}}
+      }
       detail();
+      const done=el('orderActionMessage');if(done){done.hidden=false;done.textContent=editing?'Modifiche salvate.':'Ordine creato.';}
       load();
     }catch(err){error('orderEditorError',err);}
     finally{if(el('orderSave'))el('orderSave').disabled=false;}
@@ -300,18 +259,18 @@
   async function action(action,status){
     if(!current)return;
     const root=el('orderModalContent'),buttons=root.querySelectorAll('button');buttons.forEach(b=>b.disabled=true);
-    const message=el('orderActionMessage');if(message)message.textContent='Operazione in corso…';
+    const message=el('orderActionMessage');if(message){message.hidden=false;message.textContent='Operazione in corso…';}
     try{
       current=await orderApi(`/api/orders/${current.id}/${action}`,{method:'POST',body:JSON.stringify({version:current.version,...(status?{status}:{})})});
       detail();
-      const updated=el('orderActionMessage');if(updated)updated.textContent='Ordine aggiornato.';
+      const updated=el('orderActionMessage');if(updated){updated.hidden=false;updated.textContent='Ordine aggiornato.';}
       load();
     }catch(err){
       // Verifica non riuscita: il server ha registrato il problema, si ricarica l'ordine per mostrarlo.
       if(action==='verify-address'){
         try{current=await orderApi(`/api/orders/${current.id}`);detail();load();}catch(e){}
       }
-      const target=el('orderActionMessage');if(target)target.textContent=err.message||String(err);
+      const target=el('orderActionMessage');if(target){target.hidden=false;target.textContent=err.message||String(err);}
       el('orderModalContent')?.querySelectorAll('button').forEach(b=>b.disabled=false);
     }
   }
@@ -378,6 +337,9 @@
   if(orderDialog){
     orderDialog.addEventListener('click',event=>{if(event.target===orderDialog)closeModal();});
     orderDialog.addEventListener('cancel',event=>{event.preventDefault();closeModal();});
+    // Esc gestito prima del browser: con modifiche non salvate il pop-up resta aperto
+    // (Chrome può ignorare preventDefault sull'evento «cancel» senza un'azione recente dell'utente).
+    orderDialog.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();closeModal();}});
   }
   window.addEventListener('resize',syncActionPlacement);
   window.GFOrders={request:orderApi,bulkVerify,apply(value){current=value;detail();load();},currentItems:()=>last?.items||[],refreshSelection:render,load,open,newOrder,edit,cancelEdit,close:closeModal,save,action,cancel(){if(confirm('Annullare questo ordine? L’originale e lo storico saranno conservati.'))action('status','annullato');},search(){clearTimeout(timer);timer=setTimeout(()=>load(true),300);},page(delta){page+=delta;load();},view(mode){view=mode;render();},toggleFilters,syncActions:syncActionPlacement};
