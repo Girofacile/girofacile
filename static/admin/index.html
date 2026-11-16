@@ -15,6 +15,7 @@
 <link rel="stylesheet" href="/static/design-system/layout.css?v=gf_scala_20261101">
 <script src="/static/design-system/design-system.js?v=gf_schede_2_20261108" defer></script>
 <script src="/static/design-system/shell.js?v=gf_ingranaggio_20261114" defer></script>
+<script src="/static/admin/crm.js?v=crm_20261116" defer></script>
 </head>
 <body data-gf-surface="admin" data-gf-layout="base">
 
@@ -85,20 +86,26 @@
     </section>
 
     <!-- ===== CRM COMMERCIALE ===== -->
-    <section class="gf-stack gf-hidden" data-gap="lg" id="section-crm" data-admin-section aria-labelledby="crm-title">
-      <section class="gf-panel">
-        <header class="gf-panel__header"><h2 class="gf-panel__title" id="crm-title">CRM commerciale</h2><span class="gf-badge" data-status="info">In preparazione</span></header>
-        <div class="gf-panel__body gf-stack">
-          <p>Uno spazio dedicato alle relazioni commerciali di GiroFacile, dal primo contatto alla chiusura della trattativa.</p>
-          <p class="gf-muted">La sezione è pronta per ospitare il CRM. L'inserimento dei dati e l'accesso dei commerciali autorizzati non sono ancora attivi.</p>
-        </div>
-      </section>
-      <div class="gf-grid" data-cols="2">
-        <section class="gf-panel"><header class="gf-panel__header"><h3 class="gf-panel__title">Aziende e contatti</h3></header><div class="gf-panel__body"><p>Anagrafiche delle aziende, referenti, email, numeri di telefono e storico dei contatti.</p></div></section>
-        <section class="gf-panel"><header class="gf-panel__header"><h3 class="gf-panel__title">Pipeline</h3></header><div class="gf-panel__body"><p>Trattative, interesse espresso e avanzamento dal primo contatto alla proposta commerciale.</p></div></section>
-        <section class="gf-panel"><header class="gf-panel__header"><h3 class="gf-panel__title">Follow-up</h3></header><div class="gf-panel__body"><p>Richiamate, appuntamenti e prossime attività, con scadenze e responsabili.</p></div></section>
-        <section class="gf-panel"><header class="gf-panel__header"><h3 class="gf-panel__title">Report</h3></header><div class="gf-panel__body"><p>Andamento delle opportunità, conversioni e risultati delle attività commerciali.</p></div></section>
-      </div>
+    <section class="gf-stack gf-hidden" data-gap="lg" id="section-crm" data-admin-section aria-label="CRM commerciale">
+      <nav class="gf-cluster" id="crm-tabs" aria-label="Sezioni CRM"></nav>
+      <div class="gf-cluster" id="crm-selection"></div>
+      <div class="gf-cluster" id="crm-toolbar"></div>
+      <form class="gf-filters gf-hidden" id="crm-filters" role="search" aria-label="Filtra CRM">
+        <label class="gf-field" id="crm-search-field"><span class="gf-field__label">Cerca azienda, email, telefono o partita IVA</span><input class="gf-input" type="search" id="crm-search" maxlength="200"></label>
+        <label class="gf-field" id="crm-status-field"><span class="gf-field__label">Stato / interesse</span><select class="gf-select" id="crm-status"><option value="">Tutti</option></select></label>
+        <label class="gf-field" id="crm-archive-field"><span class="gf-field__label">Mostra archiviate</span><input type="checkbox" id="crm-archived"></label>
+        <button class="gf-button" data-variant="secondary" type="submit">Cerca</button>
+      </form>
+      <p class="gf-muted gf-hidden" id="crm-message" role="status" aria-live="polite"></p>
+      <div class="gf-stack" data-gap="lg" id="crm-content"></div>
+      <button class="gf-button" data-variant="link" type="button" data-crm-action="retry">Aggiorna dati</button>
+      <dialog class="gf-modal" data-size="lg" id="crm-dialog" aria-labelledby="crm-dialog-title">
+        <form id="crm-form">
+          <header class="gf-modal__header"><h2 class="gf-modal__title" id="crm-dialog-title">CRM</h2><button class="gf-button" data-variant="secondary" type="button" id="crm-close">Chiudi</button></header>
+          <div class="gf-modal__body gf-stack"><p id="crm-form-company"></p><div class="gf-grid" data-cols="2" id="crm-form-fields"></div><p id="crm-form-error" role="alert"></p></div>
+          <footer class="gf-modal__footer"><button class="gf-button" data-variant="primary" type="submit" id="crm-save">Salva</button></footer>
+        </form>
+      </dialog>
     </section>
 
     <!-- ===== UTENTI ===== -->
@@ -558,9 +565,13 @@ function badge(value, label){ return `<span class="gf-badge" data-status="${badg
 // Larghezze delle barre in passi del 5% (niente stili inline).
 function pct5(value){ return Math.max(0, Math.min(100, Math.round(Number(value || 0) / 5) * 5)); }
 
+function adminCRMAllowed(){ return currentAdminMe?.role === 'superadmin' || currentAdminMe?.permissions?.crm_access === true; }
+const adminSectionPermissions={overview:'view_overview',users:'view_users',tickets:'view_tickets',errors:'view_errors',revenue:'view_revenue','api-costs':'view_revenue',platform:'manage_platform',collaborators:'manage_collaborators',server:'view_server_maintenance',profile:'manage_platform',activity:'view_activity'};
+function adminPermission(key){ return currentAdminMe?.role === 'superadmin' || currentAdminMe?.permissions?.all === true || currentAdminMe?.permissions?.[key] === true; }
 // ---- NAVIGATION ----
 function navigate(section) {
-  if (section === 'crm' && currentAdminMe?.role !== 'superadmin') return;
+  if (section === 'crm' && !adminCRMAllowed()) return;
+  if (section !== 'crm' && currentAdminMe && !adminPermission(adminSectionPermissions[section])) return;
   if (section === 'crm') history.replaceState(null, '', '#crm');
   else if (location.hash === '#crm') history.replaceState(null, '', location.pathname + location.search);
   document.querySelectorAll('[data-admin-nav]').forEach(el => {
@@ -569,6 +580,7 @@ function navigate(section) {
   document.querySelectorAll('[data-admin-section]').forEach(el => gfShow(el, el.id === `section-${section}`));
   const titles = { crm: 'CRM commerciale', overview: 'Overview', users: 'Gestione Utenti', tickets: 'Ticket di Supporto', errors: 'Errori Sistema', revenue: 'Revenue & Abbonamenti', 'api-costs': 'Costi API', platform: 'Impostazioni SaaS', collaborators: 'Collaboratori', profile: 'Profilo Admin', activity: 'Registro attività', server: 'Server / Manutenzione' };
   document.getElementById('page-title').textContent = titles[section] || section;
+  if (section === 'crm') window.GFCRM?.open();
   if (section === 'overview') loadOverview();
   if (section === 'users') loadUsers();
   if (section === 'tickets') loadTickets();
@@ -1172,6 +1184,9 @@ async function loadAdminProfile(){
     document.getElementById('profile-notify-companies').checked = !!data.notify_new_companies;
     document.getElementById('profile-notify-payments').checked = !!data.notify_new_payments;
     document.getElementById('profile-last-access').textContent = fmtDateTime(data.last_access_at);
+    document.querySelectorAll('[data-admin-mobile-section]').forEach(n=>gfShow(n, adminPermission(adminSectionPermissions[n.dataset.adminMobileSection])));
+    document.querySelector('.gf-header__user').disabled=!adminPermission('manage_platform');
+    document.querySelector('.gf-header__actions [aria-label="Errori sistema"]').classList.toggle('gf-hidden',!adminPermission('view_errors'));
     document.getElementById('admin-name').textContent = data.display_name || data.username || 'Admin';
     document.getElementById('admin-avatar').textContent = data.avatar_initials || 'A';
   }catch(e){ showToast(e.message, 'error'); }
@@ -1471,7 +1486,7 @@ function showDatabaseRowDetailV71(idx){
 // ---- COLLABORATORI v65 ----
 function permissionLabel(key){ return collaboratorPermissions[key] || key; }
 function permissionShort(key){
-  return {view_overview:'Overview',view_users:'Vedi aziende',manage_users:'Modifica aziende',suspend_users:'Sospendi aziende',view_tickets:'Vedi ticket',manage_tickets:'Gestisci ticket',view_errors:'Vedi errori',manage_errors:'Gestisci errori',view_revenue:'Revenue',view_activity:'Registro',manage_platform:'Impostazioni',manage_collaborators:'Collaboratori',view_server_maintenance:'Vedi server',manage_service_keys:'Gestisci chiavi',test_service_connections:'Test servizi',create_backups:'Crea backup',download_backups:'Scarica backup',restart_application:'Riavvia app',toggle_maintenance:'Manutenzione',advanced_server_access:'Accesso server',view_database:'Vedi database',export_database:'Export database'}[key] || key;
+  return {crm_access:'Accesso CRM',crm_write:'Gestione CRM',crm_view_all:'Tutto il portafoglio CRM',crm_export:'Export CRM',view_overview:'Overview',view_users:'Vedi aziende',manage_users:'Modifica aziende',suspend_users:'Sospendi aziende',view_tickets:'Vedi ticket',manage_tickets:'Gestisci ticket',view_errors:'Vedi errori',manage_errors:'Gestisci errori',view_revenue:'Revenue',view_activity:'Registro',manage_platform:'Impostazioni',manage_collaborators:'Collaboratori',view_server_maintenance:'Vedi server',manage_service_keys:'Gestisci chiavi',test_service_connections:'Test servizi',create_backups:'Crea backup',download_backups:'Scarica backup',restart_application:'Riavvia app',toggle_maintenance:'Manutenzione',advanced_server_access:'Accesso server',view_database:'Vedi database',export_database:'Export database'}[key] || key;
 }
 function collaboratorCanManage(){ return currentAdminMe?.role === 'superadmin' || currentAdminMe?.permissions?.manage_collaborators || currentAdminMe?.permissions?.all; }
 async function ensureCollaboratorPermissions(){
@@ -1483,7 +1498,7 @@ function renderPermissionInputs(selected={}){
   box.innerHTML = Object.entries(collaboratorPermissions).map(([key,label])=>`
     <div class="gf-setting">
       <div class="gf-setting__copy"><strong>${escapeHtml(permissionShort(key))}</strong><p>${escapeHtml(label)}</p></div>
-      <div class="gf-setting__control"><label class="gf-switch"><input type="checkbox" role="switch" aria-label="${escapeHtml(permissionShort(key))}" data-permission="${key}" ${selected[key]?'checked':''}></label></div>
+      <div class="gf-setting__control"><label class="gf-switch"><input type="checkbox" role="switch" aria-label="${escapeHtml(permissionShort(key))}" data-permission="${key}" ${selected[key]?'checked':''} ${key.startsWith('crm_') && currentAdminMe?.role !== 'superadmin' ? 'disabled' : ''}></label></div>
     </div>`).join('');
 }
 async function loadCollaborators(){
@@ -1633,15 +1648,20 @@ async function init() {
     const me = await api('/api/admin/me');
     if (!me?.authenticated || !['superadmin','collaborator'].includes(me?.role)) { window.location.href = '/admin/login'; return; }
     currentAdminMe = me;
-    gfShow('admin-crm-nav', me.role === 'superadmin');
+    gfShow('admin-crm-nav', adminCRMAllowed());
+    if(me.role === 'collaborator'){
+      const sections=adminSectionPermissions;
+      document.querySelectorAll('[data-admin-nav]').forEach(n=>{if(n.dataset.adminNav!=='crm')gfShow(n,adminPermission(sections[n.dataset.adminNav]));});
+    }
     document.getElementById('admin-name').textContent = me.display_name || me.username;
     document.getElementById('admin-avatar').textContent = (me.display_name || me.username || 'A')[0].toUpperCase();
     document.getElementById('admin-role').textContent = me.role === 'collaborator' ? 'Collaboratore' : 'Proprietario';
     if(me.role === 'superadmin' || me.permissions?.manage_platform || me.permissions?.all){ loadAdminProfile(); }
   } catch { window.location.href = '/admin/login'; return; }
-  if (location.hash === '#crm' && currentAdminMe?.role === 'superadmin') navigate('crm');
-  else loadOverview();
-  updateErrorBadge();
+  if (adminCRMAllowed() && (location.hash === '#crm' || !adminPermission('view_overview'))) navigate('crm');
+  else if(adminPermission('view_overview')) loadOverview();
+  else { const first=document.querySelector('[data-admin-nav]:not(.gf-hidden)'); if(first)navigate(first.dataset.adminNav); else document.getElementById('overview-loading').textContent='Nessuna sezione autorizzata. Contatta il Super Admin.'; }
+  if(adminPermission('view_errors')) updateErrorBadge();
 }
 
 init();

@@ -163,6 +163,8 @@ def admin_create_backup(db: Session = Depends(get_db), superadmin: dict = Depend
 @router.get("/server-maintenance/backups/{filename}")
 def admin_download_backup(filename: str, superadmin: dict = Depends(require_superadmin)):
     _require_perm(superadmin, "download_backups")
+    if superadmin.get("role") != "superadmin":
+        raise HTTPException(403, "I backup completi sono riservati al proprietario")
     path = _safe_backup_name(filename)
     return FileResponse(str(path), media_type="application/octet-stream", filename=path.name)
 

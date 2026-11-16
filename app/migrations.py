@@ -290,6 +290,15 @@ def run_migrations(engine):
                     if 'users' in set(inspect(conn).get_table_names()) and 'unload_by_packages' not in {c['name'] for c in inspect(conn).get_columns('users')}:
                         conn.execute(text('ALTER TABLE users ADD COLUMN unload_by_packages BOOLEAN'))
                     conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261114_01', 'now': utc_now()})
+            if '20261116_01' not in applied:
+                from .crm_models import CRM_TABLES
+                from .models import SuperAdminCollaborator
+                with engine.begin() as conn:
+                    # Legacy snapshots may predate the platform collaborator table.
+                    SuperAdminCollaborator.__table__.create(conn, checkfirst=True)
+                    for table in CRM_TABLES:
+                        table.create(conn, checkfirst=True)
+                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261116_01', 'now': utc_now()})
         finally:
             if postgres:
                 lock.execute(text('SELECT pg_advisory_unlock(:key)'), {'key': LOCK_ID})

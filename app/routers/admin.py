@@ -5,9 +5,10 @@ aggregate is retained for existing standalone integrations and tests only.
 """
 from fastapi import APIRouter
 
-from . import admin_billing, admin_database, admin_profile, admin_server, admin_support, admin_users
+from . import admin_crm, admin_billing, admin_database, admin_profile, admin_server, admin_support, admin_users
 
 router = APIRouter()
+router.include_router(admin_crm.router)
 router.include_router(admin_profile.router)
 router.include_router(admin_server.router)
 router.include_router(admin_database.router)

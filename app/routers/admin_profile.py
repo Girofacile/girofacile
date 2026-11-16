@@ -14,6 +14,7 @@ from ..database import get_db
 from ..models import SuperAdminActivityLog, SuperAdminCollaborator
 from ..services.email import send_superadmin_collaborator_invitation
 from ..core.security import hash_password
+from ..services.crm_permissions import guard_grants, guard_account
 from .admin_helpers import (
     COLLABORATOR_PERMISSIONS,
     _activity,
@@ -200,6 +201,7 @@ def admin_create_collaborator(payload: dict, db: Session = Depends(get_db), supe
     if exists:
         raise HTTPException(400, "Esiste già un collaboratore con questa email")
     temporary = _temporary_password()
+    guard_grants(superadmin, payload.get("permissions") or {})
     permissions_json = _permissions_to_json(payload)
     collab = SuperAdminCollaborator(
         full_name=full_name,
@@ -236,6 +238,8 @@ def admin_update_collaborator(collaborator_id: int, payload: dict, db: Session =
     collab = db.get(SuperAdminCollaborator, collaborator_id)
     if not collab:
         raise HTTPException(404, "Collaboratore non trovato")
+    guard_account(superadmin, collab)
+    guard_grants(superadmin, payload.get("permissions") or {}, _collaborator_permissions(collab))
     collab.full_name = (payload.get("full_name") or collab.full_name).strip()[:180]
     collab.phone = (payload.get("phone") or "").strip()[:80]
     collab.role_label = (payload.get("role_label") or "Collaboratore").strip()[:120]
@@ -254,6 +258,7 @@ def admin_resend_collaborator(collaborator_id: int, db: Session = Depends(get_db
     collab = db.query(SuperAdminCollaborator).filter_by(id=collaborator_id).with_for_update().populate_existing().first()
     if not collab:
         raise HTTPException(404, "Collaboratore non trovato")
+    guard_account(superadmin, collab)
     temporary = _temporary_password()
     collab.password_hash = hash_password(temporary)
     collab.invited_at = utc_now()
@@ -279,6 +284,10 @@ def admin_delete_collaborator(collaborator_id: int, db: Session = Depends(get_db
     collab = db.get(SuperAdminCollaborator, collaborator_id)
     if not collab:
         raise HTTPException(404, "Collaboratore non trovato")
+    guard_account(superadmin, collab)
+    from ..crm_models import CRMCompany
+    if db.query(CRMCompany).filter(CRMCompany.owner_id == collaborator_id).first():
+        raise HTTPException(409, "Riassegna le aziende CRM prima di eliminare il commerciale")
     _activity(db, superadmin.get("username"), "collaborator_deleted", f"Eliminato collaboratore {collab.full_name}", "warning")
     db.delete(collab)
     db.commit()

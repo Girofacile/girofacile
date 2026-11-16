@@ -22,7 +22,10 @@ from ..services.platform_settings import google_maps_api_key, openai_api_key
 PLAN_MRR = {key: info["price_eur"] for key, info in PLAN_PRICES.items()}
 
 
+from ..services.crm_permissions import CRM_PERMISSIONS
+
 COLLABORATOR_PERMISSIONS = {
+    **CRM_PERMISSIONS,
     "view_overview": "Vedere overview e KPI generali",
     "view_users": "Vedere aziende/clienti",
     "manage_users": "Modificare piani e dati aziende",

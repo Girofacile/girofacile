@@ -40,7 +40,7 @@ def _allowed_database_tables() -> list[str]:
     tables = []
     for name in insp.get_table_names():
         lname = name.lower()
-        if lname.startswith("pg_") or lname.startswith("sql_") or lname in DATABASE_VIEWER_EXCLUDED_TABLES:
+        if lname.startswith("crm_") or lname.startswith("pg_") or lname.startswith("sql_") or lname in DATABASE_VIEWER_EXCLUDED_TABLES:
             continue
         tables.append(name)
     return sorted(tables)

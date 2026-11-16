@@ -5,6 +5,13 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- CRM commerciale operativo nel Super Admin: aziende, referenti, trattative in EUR,
+  attività, follow-up, dashboard e report, export CSV e storico delle modifiche.
+  Accesso esplicito dei collaboratori e isolamento del portafoglio assegnato;
+  permessi CRM e account commerciali gestiti soltanto dal proprietario.
+  Migrazione additiva 20261116_01, controlli sulle modifiche concorrenti e
+  protezione dei dati CRM dal Database Viewer e dai backup scaricabili da collaboratori.
+
 - ZTL solo come avviso: tolta l'impostazione «ZTL e zone difficili» e il permesso «Accesso ZTL» dalla scheda e
   dalla tabella dei mezzi (anche nell'app). Il calcolo dei giri non usa più il permesso del mezzo: la consegna in ZTL,
   riconosciuta dall'indirizzo, mostra solo l'avviso «In ZTL».
