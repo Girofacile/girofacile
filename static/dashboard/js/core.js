@@ -40,7 +40,10 @@ let lastRouteResult = null;
 let draggedStopIndex = null;
 let reportData = null;
 let reportSort = {drivers:{key:'consegne', dir:-1}};
-let profilePhotoData = localStorage.getItem("girofacile_profile_photo") || "";
+// La foto del profilo è il logo dell'azienda, salvato sul server (prima restava solo nel browser
+// e spariva accedendo con un altro account). La vecchia copia nel browser si elimina.
+let profilePhotoData = "";
+try{ localStorage.removeItem("girofacile_profile_photo"); }catch(e){}
 let currentSessionUser = null;
 
 
@@ -402,9 +405,7 @@ function handleImageUpload(ev, targetId, previewId, fallback){
 // Logo aziendale: qualsiasi immagine leggibile dal browser (anche SVG o foto dal telefono) diventa
 // un PNG dritto, con la trasparenza, al massimo 512 px: identico nel gestionale e nel PDF di consegna.
 const GF_LOGO_MAX_SIDE = 512;
-async function handleLogoUpload(ev){
-  const input = ev?.target, file = input?.files?.[0];
-  if(!file) return;
+async function gfLogoDataUrl(file){
   const url = URL.createObjectURL(file);
   try{
     const img = new Image();
@@ -418,12 +419,20 @@ async function handleLogoUpload(ev){
     canvas.width = Math.max(1, Math.round(w * scale));
     canvas.height = Math.max(1, Math.round(h * scale));
     canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
-    set("companyLogoUrl", canvas.toDataURL("image/png"));
+    return canvas.toDataURL("image/png");
+  }finally{
+    URL.revokeObjectURL(url);
+  }
+}
+async function handleLogoUpload(ev){
+  const input = ev?.target, file = input?.files?.[0];
+  if(!file) return;
+  try{
+    set("companyLogoUrl", await gfLogoDataUrl(file));
     setImagePreview("companyLogoPreview", "companyLogoUrl", "GF");
   }catch(e){
     toast("Formato non leggibile: carica il logo in PNG, JPEG, WebP o SVG.");
   }finally{
-    URL.revokeObjectURL(url);
     input.value = "";
   }
 }
@@ -590,7 +599,11 @@ function loadProfilePanel(){
     || accountName;
   const email = localStorage.getItem("girofacile_profile_email") || currentSessionUser?.email || "";
   const role = localStorage.getItem("girofacile_profile_role") || currentSessionUser?.role || "Amministratore";
-  const photo = localStorage.getItem("girofacile_profile_photo") || "";
+  const photo = currentSessionUser?.company_logo_url || "";
+  // Il logo è dell'azienda: un collaboratore senza permesso di modificarla non può cambiarlo.
+  const access = globalThis.GFCompanyAccess;
+  const canChangeLogo = !access?.isCollaborator?.() || access.can("company.update");
+  document.querySelectorAll?.('label[for="profilePhoto"]').forEach(label => { label.hidden = !canChangeLogo; });
   const initials = (accountName || "Admin").trim().charAt(0).toUpperCase() || "A";
   const setText = (id,val)=>{ const el=document.getElementById(id); if(el) el.textContent=val; };
   // La testata identifica l'azienda; il modal modifica invece l'account dell'operatore.
@@ -1089,17 +1102,19 @@ function closeProfilePanel(ev){
   if(profileBaselineV9 !== null && profileSnapshotV9() !== profileBaselineV9) resetProfileChanges();
   toggleProfilePasswordPanel(false);
 }
-function previewProfilePhoto(event){
-  const file = event.target.files && event.target.files[0];
+async function previewProfilePhoto(event){
+  const input = event.target, file = input.files && input.files[0];
   if(!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    profilePhotoData = reader.result;
+  try{
+    profilePhotoData = await gfLogoDataUrl(file);
     const preview = document.getElementById("profilePreview");
     if(preview) preview.innerHTML = `<img src="${profilePhotoData}" alt="Profilo">`;
     updateProfileSaveBar();
-  };
-  reader.readAsDataURL(file);
+  }catch(e){
+    toast("Formato non leggibile: carica l'immagine in PNG, JPEG, WebP o SVG.");
+  }finally{
+    input.value = "";
+  }
 }
 async function saveProfilePanel(){
   try{
@@ -1112,8 +1127,13 @@ async function saveProfilePanel(){
     localStorage.setItem("girofacile_account_name", account.username || "Admin");
     localStorage.setItem("girofacile_profile_email", account.email || "");
     localStorage.setItem("girofacile_profile_role", account.role || "Amministratore");
-    if(profilePhotoData) localStorage.setItem("girofacile_profile_photo", profilePhotoData);
     currentSessionUser = {...(currentSessionUser || {}), username:account.username, email:account.email};
+    if(profilePhotoData){
+      // La nuova foto diventa il logo dell'azienda, salvato sul server per tutti gli accessi.
+      const saved = await api("/api/company-profile", {method:"PUT", body:JSON.stringify({company_logo_url: profilePhotoData})});
+      currentSessionUser.company_logo_url = saved?.company?.company_logo_url || currentSessionUser.company_logo_url;
+      if(document.getElementById("companyLogoUrl")){ set("companyLogoUrl", currentSessionUser.company_logo_url || ""); setCompanyLogoPreview(); }
+    }
     profilePhotoData = null;
     loadProfilePanel();
     profileBaselineV9 = profileSnapshotV9();
@@ -5366,7 +5386,7 @@ async function loadCompanyProfile(showToast=false){
     window.GFCompanyReference?.setColor?.(data.company_brand_color);
     setCompanyProfileBaselineV29();
     localStorage.setItem("girofacile_company_name", data.company_name || currentSessionUser?.company_name || "");
-    currentSessionUser = {...(currentSessionUser || {}), company_name: data.company_name || currentSessionUser?.company_name || ""};
+    currentSessionUser = {...(currentSessionUser || {}), company_name: data.company_name || currentSessionUser?.company_name || "", company_logo_url: data.company_logo_url || ""};
     // Nome/logo aziendale e identità dell'account sono due domini distinti:
     // il profilo operatore non deve essere sovrascritto dai dati aziendali.
     loadProfilePanel();

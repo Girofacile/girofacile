@@ -5,6 +5,9 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Foto del profilo: è il logo dell'azienda salvato sul server, quindi non sparisce più accedendo con un
+  altro account o da un altro dispositivo (prima restava solo nel browser). Cambiarla dal profilo aggiorna
+  il logo dell'azienda e viceversa; un collaboratore senza permesso sull'azienda non la può cambiare.
 - Server: librerie aggiornate (Pillow 13, Certifi, OpenTelemetry) e controllo vulnerabilità nei test di GitHub;
   immagini aperte solo nel formato dichiarato; password del database con caratteri speciali gestita; app nel
   container senza privilegi; backup e pulizia cache eseguiti dentro il container; guida di messa online riscritta.
