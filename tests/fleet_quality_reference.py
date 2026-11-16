@@ -129,7 +129,6 @@ def route_replay(case, resource, order, start=None):
         cursor = ready + duration
         result["wait_min"] += wait
         result["mismatches"] += int(_flag(stop.get("sponda")) and not _flag(settings.get("ha_sponda")))
-        result["mismatches"] += int(_flag(stop.get("ztl")) and not _flag(settings.get("accesso_ztl")))
         result["timings"].append({
             "index": index, "arrival": arrival, "service_start": ready,
             "service_end": cursor, "wait": wait,

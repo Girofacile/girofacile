@@ -103,7 +103,7 @@ def test_plan_metrics_detects_duplicates_and_soft_equipment_requirements():
     case = make_case(stops=[{"tempo_scarico_min": 0, "sponda": True, "ztl": True}],
                      resources=resources, travel=10)
     valid = plan_metrics(case, [[0], []])
-    assert valid["feasible"] and valid["mismatches"] == 2
+    assert valid["feasible"] and valid["mismatches"] == 1  # solo la sponda: la ZTL è un avviso
     assert valid["served"] == 1 and valid["used"] == 1 and valid["makespan"] == 10
     assert not plan_metrics(case, [[0], [0]])["feasible"]
     assert not plan_metrics(case, [[1]])["feasible"]
@@ -164,11 +164,11 @@ def test_automatic_reference_keeps_missing_tail_lift_and_ztl_advisory():
                      travel=10)
     missing = route_replay(case, 0, [0])
     assert missing["feasible"] and missing["errors"] == []
-    assert missing["mismatches"] == 2
+    assert missing["mismatches"] == 1  # solo la sponda: la ZTL è un avviso
     assert all(metrics["served"] == 1 for metrics in solve_exact(case).values())
     case["resources"][0]["ha_sponda"] = True
     allowed = route_replay(case, 0, [0])
-    assert allowed["feasible"] and allowed["mismatches"] == 1
+    assert allowed["feasible"] and allowed["mismatches"] == 0  # con la sponda nessun problema: la ZTL non conta
     assert solve_exact(case)["efficient"]["served"] == 1
 
 

@@ -132,8 +132,7 @@ def improve(rows, vehicles, matrix, start_time, return_depot, limits, initial, s
     # Contare prima: 100 consegne × 10 orari × 2 fasce arrivano a 40 milioni
     # di Edge, anche quando la ricerca è limitata a pochi secondi.
     copy_count = sum(len(domains) for signature in clocks for domains in signature)
-    profile_count = len({(signature_of[v][0], bool((vehicle or {}).get('ha_sponda')),
-                         bool((vehicle or {}).get('accesso_ztl')))
+    profile_count = len({(signature_of[v][0], bool((vehicle or {}).get('ha_sponda')))
                         for v, vehicle in enumerate(vehicles)})
     model_edges = (copy_count + 1) ** 2 * profile_count
     dimensions = {'copies': copy_count, 'clocks': len(clocks), 'profiles': profile_count,
@@ -144,8 +143,8 @@ def improve(rows, vehicles, matrix, start_time, return_depot, limits, initial, s
         return skipped('time-limit', **dimensions)
 
     def mismatches(vehicle, row):
-        return (int(bool(row.get('sponda')) and not (vehicle or {}).get('ha_sponda', False))
-                + int(bool(row.get('ztl')) and not (vehicle or {}).get('accesso_ztl', False)))
+        # La ZTL è solo un avviso: nessuna penalità per il mezzo.
+        return int(bool(row.get('sponda')) and not (vehicle or {}).get('ha_sponda', False))
 
     # Consegna esclusa: almeno 100.000 km, e comunque più di quanto possa mai costare servirla
     # (andata e ritorno sulla tratta più lunga, due incompatibilità di attrezzatura e un'intera
@@ -201,7 +200,7 @@ def improve(rows, vehicles, matrix, start_time, return_depot, limits, initial, s
     profiles = {}
     for v, vehicle in enumerate(vehicles):
         clock, _ = signature_of[v]
-        key = (clock, int(bool((vehicle or {}).get('ha_sponda'))), int(bool((vehicle or {}).get('accesso_ztl'))))
+        key = (clock, int(bool((vehicle or {}).get('ha_sponda'))))
         if key in profiles:
             continue
         profile = model.add_profile()
@@ -233,7 +232,7 @@ def improve(rows, vehicles, matrix, start_time, return_depot, limits, initial, s
             continue   # mezzo senza alcuna consegna possibile (turno che inizia dopo la partenza)
         caps = tuple(math.floor(float(vehicle[k]) * s) if (vehicle or {}).get(k) is not None else 10 ** 12
                      for k, s in (('capacita_kg', WEIGHT_SCALE), ('capacita_colli', 1)))
-        profile_key = (clock, int(bool((vehicle or {}).get('ha_sponda'))), int(bool((vehicle or {}).get('accesso_ztl'))))
+        profile_key = (clock, int(bool((vehicle or {}).get('ha_sponda'))))
         per_km, per_min = rates(vehicle)
         costs = (round(COST_PER_METER * per_km), round(COST_PER_METER * per_min))
         members.setdefault((profile_key, caps, costs, horizon), []).append(v)

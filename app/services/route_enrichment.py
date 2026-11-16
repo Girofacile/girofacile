@@ -142,7 +142,7 @@ def evaluate_legs(snapshot, legs, plan, *, return_depot=None):
               for i, leg in enumerate(legs[:len(rows)])}
     if plan.rientro_deposito and len(legs) > len(rows):
         matrix[len(rows), 0] = {"km": snapshot["base_legs"][-1]["km"], "min": legs[-1]["duration"] / 60}
-    vehicle = {"ha_sponda": bool(plan.vehicle.ha_sponda), "accesso_ztl": bool(plan.vehicle.accesso_ztl)} if plan.vehicle else None
+    vehicle = {"ha_sponda": bool(plan.vehicle.ha_sponda)} if plan.vehicle else None
     vehicle={**(vehicle or {}),"driver_schedule":getattr(plan,"driver_schedule",None) or {}}
     include_return = plan.rientro_deposito if return_depot is None else return_depot
     return _evaluate_fixed_sequence(rows[:min(len(rows), len(legs))], matrix, [],

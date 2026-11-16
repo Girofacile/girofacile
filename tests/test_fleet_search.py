@@ -51,18 +51,16 @@ def test_fleet_reconsiders_membership_and_preserves_schedule(identifier, served,
 
 
 @pytest.mark.parametrize("strategy", ["efficient", "balanced"])
-def test_combined_equipment_is_reserved_when_compatible_plan_exists(strategy):
+def test_tail_lift_is_reserved_and_ztl_is_not_a_constraint(strategy):
+    # La ZTL è solo un avviso (16/11/2026): conta solo la sponda.
     case = make_case(
-        "scarce-combined-equipment", "equipment",
+        "scarce-tail-lift", "equipment",
         [stop(0, sponda=True), stop(1, ztl=True), stop(2, sponda=True, ztl=True)],
         uniform_matrix(3),
-        [resource(1, ha_sponda=True, accesso_ztl=True),
-         resource(1, ha_sponda=True, accesso_ztl=False),
-         resource(1, ha_sponda=False, accesso_ztl=True)])
+        [resource(1, ha_sponda=True), resource(1, ha_sponda=True), resource(1, ha_sponda=False)])
     actual = _execute(case, strategy)
     assert actual["metrics"]["served"] == 3
     assert actual["metrics"]["mismatches"] == 0
-    assert actual["metrics"]["orders"][0] == [2]
 
 
 @pytest.mark.parametrize("strategy", ["efficient", "balanced"])
@@ -75,7 +73,7 @@ def test_missing_tail_lift_keeps_delivery_assigned_with_warning(strategy):
     actual = _execute(case, strategy)
     assert actual["metrics"]["served"] == 1
     assert actual["unassigned"] == []
-    assert actual["metrics"]["mismatches"] == 2
+    assert actual["metrics"]["mismatches"] == 1  # solo la sponda: la ZTL è un avviso
     assert any('sponda' in warning.lower() for warning in actual['warnings'])
 
 

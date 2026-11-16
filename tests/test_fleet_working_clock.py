@@ -56,7 +56,7 @@ def test_lift_requirement_is_advisory_while_weight_and_parcels_still_block():
 
 
 @pytest.mark.parametrize('strategy', ['efficient', 'balanced'])
-def test_plan_preference_counts_lift_and_ztl_after_service_coverage(strategy):
+def test_plan_preference_counts_lift_after_service_coverage_and_ignores_ztl(strategy):
     rows = [dict(sponda=True, ztl=True), {}]
     resources = [vehicle(ha_sponda=False, accesso_ztl=False), vehicle()]
     score = {'_objective': (1.0, 5.0, 0.0, 0), 'total_km': 1.0, 'total_min': 5.0}
@@ -65,5 +65,5 @@ def test_plan_preference_counts_lift_and_ztl_after_service_coverage(strategy):
     advisory = _plan_key(((0,), (1,)), scores, rows, resources, strategy)
     partial = _plan_key(((), (1,)), (None, score), rows, resources, strategy)
     assert compatible < advisory < partial
-    assert advisory[:2] == (-2, 2)
+    assert advisory[:2] == (-2, 1)  # solo la sponda: la ZTL è un avviso
 

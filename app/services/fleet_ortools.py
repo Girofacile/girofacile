@@ -79,8 +79,8 @@ def improve(rows, vehicles, matrix, start_time, return_depot, limits, initial, s
         if node == 0:
             return 0
         row = rows[node - 1]
-        return (int(bool(row.get('sponda')) and not vehicle.get('ha_sponda', False))
-                + int(bool(row.get('ztl')) and not vehicle.get('accesso_ztl', False)))
+        # La ZTL è solo un avviso (16/11/2026): il permesso dipende dal singolo mezzo, non dal tipo.
+        return int(bool(row.get('sponda')) and not vehicle.get('ha_sponda', False))
 
     for v, vehicle in enumerate(vehicles):
         # Efficient: metri più tempo di guida e scarico convertito in metri (km equivalenti × 1000).

@@ -394,6 +394,7 @@ class Vehicle(Base):
     capacita_kg: Mapped[float] = mapped_column(Float, default=1000)
     capacita_colli: Mapped[int] = mapped_column(Integer, default=100)
     ha_sponda: Mapped[bool] = mapped_column(Boolean, default=False)
+    # Non più usato dal 16/11/2026: la ZTL è solo un avviso, il permesso non è una caratteristica del mezzo.
     accesso_ztl: Mapped[bool] = mapped_column(Boolean, default=False)
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
     photo_url: Mapped[str | None] = mapped_column(Text, nullable=True)

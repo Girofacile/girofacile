@@ -247,8 +247,7 @@ def _refresh_tail_lift_warnings(result,vehicles):
     updated=deepcopy(result)
     updated['search']={**updated.get('search',{}),'tail_lift_required':False,
                        'equipment_policy':'prefer-compatible-with-warning-fallback'}
-    updated['resource_capabilities']=[{'has_tail_lift':bool(v.ha_sponda),
-        'has_ztl_access':bool(v.accesso_ztl)} for v in vehicles]
+    updated['resource_capabilities']=[{'has_tail_lift':bool(v.ha_sponda)} for v in vehicles]
     updated['warnings']=[warning for warning in updated.get('warnings',[])
                          if 'richiede la sponda' not in warning.lower()]
     for route in updated['routes']:
@@ -323,7 +322,7 @@ def distribute(db,user,data,assignments=None):
         for item in result['unassigned']: item['index']=kept[item['index']]
     else:
         result={'routes':[],'unassigned':[],'search':{'method':'ferry-exclusion'},
-                'resource_capabilities':[{'has_tail_lift':bool(v.ha_sponda),'has_ztl_access':bool(v.accesso_ztl)} for v in vehicles],
+                'resource_capabilities':[{'has_tail_lift':bool(v.ha_sponda)} for v in vehicles],
                 'warnings':[],'validated_depot':{'id':deposit.id,'indirizzo':deposit.indirizzo,'lat':deposit.lat,'lon':deposit.lon},'source':'osrm'}
     result['unassigned']=sorted(result['unassigned']+[{'index':index,'reason':reason} for index,reason in ferry.items()],key=lambda item:item['index'])
     result['validated_stops']=deepcopy(rows)
@@ -476,7 +475,7 @@ def _distribute(db,user,data,assignments=None,tighten=None):
                     key=(sum(distances),sum(raw_minutes),sum(bool(route) for route in routes if route)+int(not sequence))
                 else: key=(0 if sequence else 1,delta,evaluated['total_km'])
                 # Equipment is advisory: prefer compatibility after coverage.
-                equipment_penalty=int(bool(row.get('sponda')) and not vehicles[resource].ha_sponda)+int(bool(row.get('ztl')) and not vehicles[resource].accesso_ztl)
+                equipment_penalty=int(bool(row.get('sponda')) and not vehicles[resource].ha_sponda)
                 key=(equipment_penalty,*key)
                 if best is None or key<best[0]: best=(key,resource,candidate,evaluated)
             if failures:
@@ -493,7 +492,6 @@ def _distribute(db,user,data,assignments=None,tighten=None):
         def equipment(sequence, resource):
             return sum(
                 int(bool(rows[i].get('sponda')) and not vehicles[resource].ha_sponda)
-                + int(bool(rows[i].get('ztl')) and not vehicles[resource].accesso_ztl)
                 for i in sequence)
         def membership_compatible(sequence,resource):
             selected=[rows[i] for i in sequence]
@@ -545,7 +543,7 @@ def _distribute(db,user,data,assignments=None,tighten=None):
             return common+((-used,max(work,default=0),sum(value*value for value in work),sum(work),km)
                            if data.strategy=='balanced' else (sum(opt.objective_cost(score) for score in scores if score),km,sum(minutes),used))
         initial_routes,initial_results=min(initial_candidates,key=initial_key)
-        signature_fields=('driver_schedule','ha_sponda','accesso_ztl','capacita_kg','capacita_colli')
+        signature_fields=('driver_schedule','ha_sponda','capacita_kg','capacita_colli')
         signatures=[json.dumps({key:v.get(key) for key in signature_fields},sort_keys=True,default=str)+':'+str(limit)
                     for v,limit in zip(vehicle_data,limits)]
         proposed,optimized_results,search=optimize_fleet(
@@ -791,12 +789,8 @@ def _distribute(db,user,data,assignments=None,tighten=None):
             for index in route['stop_indexes']:
                 if rows[index].get('sponda'):
                     warnings.append(f"Giro {route['resource']+1} · {rows[index]['cliente_nome']}: attenzione, questa consegna richiede la sponda, ma il mezzo non la possiede.")
-        if not vehicles[route['resource']].accesso_ztl:
-            for index in route['stop_indexes']:
-                if rows[index].get('ztl'):
-                    warnings.append(f"Giro {route['resource']+1} · {rows[index]['cliente_nome']}: attenzione, questa consegna è in ZTL, ma il mezzo non è abilitato all’accesso.")
     return {'routes':output,'unassigned':[{'index':i,'reason':reason} for i,reason in sorted(unresolved.items())],
-            'search':search,'resource_capabilities':[{'has_tail_lift':bool(v.ha_sponda),'has_ztl_access':bool(v.accesso_ztl)} for v in vehicles],
+            'search':search,'resource_capabilities':[{'has_tail_lift':bool(v.ha_sponda)} for v in vehicles],
             'warnings':warnings,'validated_stops':frozen,'validated_depot':{'id':deposit.id,'indirizzo':deposit.indirizzo,'lat':deposit.lat,'lon':deposit.lon},'source':getattr(matrix,'source','osrm')}
 
 
@@ -987,7 +981,7 @@ def _program_saved(db,user,actor,plan_id,data):
     updated=deepcopy(plan.result)
     updated['search']={**updated.get('search',{}),'tail_lift_required':False,
                        'equipment_policy':'prefer-compatible-with-warning-fallback'}
-    updated['resource_capabilities']=[{'has_tail_lift':bool(db.get(Vehicle,r.vehicle_id).ha_sponda),'has_ztl_access':bool(db.get(Vehicle,r.vehicle_id).accesso_ztl)} for r in settings.resources]
+    updated['resource_capabilities']=[{'has_tail_lift':bool(db.get(Vehicle,r.vehicle_id).ha_sponda)} for r in settings.resources]
     for proposal,row in zip(updated['routes'],rows):
         proposal['result'].update(driver_breaks=row.driver_breaks or [],total_min=row.totale_minuti,return_time=row.orario_rientro_stimato.strftime('%H:%M'))
         for stop,delivery in zip(proposal['result']['ordered'],sorted(row.deliveries,key=lambda d:d.ordine)):
@@ -1001,10 +995,6 @@ def _program_saved(db,user,actor,plan_id,data):
             for delivery in row.deliveries:
                 if delivery.sponda:
                     updated['warnings'].append(f'{delivery.cliente_nome}: attenzione, questa consegna richiede la sponda, ma il mezzo {row.vehicle.nome} non la possiede.')
-        if not row.vehicle.accesso_ztl:
-            for delivery in row.deliveries:
-                if delivery.ztl:
-                    updated['warnings'].append(f'{delivery.cliente_nome}: attenzione, questa consegna è in ZTL, ma il mezzo {row.vehicle.nome} non è abilitato all’accesso.')
     plan.result=updated
     plan.status='programmed';plan.version+=1
     db.commit()

@@ -668,7 +668,7 @@ function mobileVehiclePayload(){
   return {nome:mval("fNome"),targa:mval("fTarga")||null,toll_class:mval("fTollClass")||"B",
     alimentazione:fuel,consumo_primario_100km:primary,consumo_l_100km:primary,consumo_kwh_100km:electric,
     capacita_kg:parseFloat(mval("fKg"))||1000,capacita_colli:parseInt(mval("fColli"))||100,
-    ha_sponda:mcheck("fSponda"),accesso_ztl:mcheck("fZtl"),note:mval("fNote")||null};
+    ha_sponda:mcheck("fSponda"),note:mval("fNote")||null};
 }
 function vehicleForm(v={}){
  const fuel=v.alimentazione||"gasolio";
@@ -686,7 +686,6 @@ function vehicleForm(v={}){
     <div class="form-group"><label for="fColli">Capacità (colli)</label><input id="fColli" type="number" value="${v.capacita_colli||100}"></div>
   </div>
   <label class="check-row"><input id="fSponda" type="checkbox" ${v.ha_sponda?"checked":""}><span>Ha sponda</span></label>
-  <label class="check-row"><input id="fZtl" type="checkbox" ${v.accesso_ztl?"checked":""}><span>Accesso ZTL</span></label>
   <div class="form-group"><label for="fNote">Note</label><textarea id="fNote" rows="3" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:9px;font-size:14px;background:var(--bg)">${esc(v.note||'')}</textarea></div>`;
 }
 async function openAddVehicle(){

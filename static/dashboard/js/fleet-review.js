@@ -34,12 +34,13 @@ const overtime=r=>withTraffic(r)?Number(r.traffic.overtime_min)||0:0;
 // Partenza del giro: quella calcolata (più tarda se evita attese), altrimenti l'orario comune o l'inizio turno.
 const departure=(plan,i)=>{const own=(plan.routes||[]).find(r=>r.resource===i)?.departure;if(own)return own;const c=plan.configuration,s=c.resources[i]?.driver_schedule?.start;return s&&s>c.orario_partenza?s:c.orario_partenza;};
 const duration=min=>{const m=Math.round(Number(min)||0);return m>=60?Math.floor(m/60)+' h '+(m%60?m%60+' min':''):m+' min';};
-// Avvisi di una fermata nel giro in cui si trova ora (sponda e ZTL seguono subito il mezzo scelto).
+// Avvisi di una fermata nel giro in cui si trova ora: la sponda segue il mezzo scelto; la ZTL è solo un'informazione
+// sulla consegna (non conta tra le cose da sistemare).
 function warnings(plan,dirty,index,lane){
  const delivery=plan.configuration.consegne[index],caps=lane===null?null:plan.resource_capabilities?.[lane];
  return {
   tailLift:lane!==null&&delivery.sponda&&caps?.has_tail_lift===false,
-  ztl:lane!==null&&delivery.ztl&&caps?.has_ztl_access===false,
+  ztl:lane!==null&&!!delivery.ztl,
   late:!dirty&&lane!==null?lateStops(plan).find(item=>item.stop_index===index):null
  };
 }
@@ -99,7 +100,7 @@ function table(plan,assignment,dirty){
  plan.configuration.resources.map((_,i)=>{
   const info=names(plan,i),route=info.r,stops=ordered(plan,assignment,i);
   const valid=!dirty&&route;
-  const alerts=stops.filter(k=>{const w=warnings(plan,dirty,k,i);return w.tailLift||w.ztl||w.late;}).length+(valid&&overtime(route)?1:0);
+  const alerts=stops.filter(k=>{const w=warnings(plan,dirty,k,i);return w.tailLift||w.late;}).length+(valid&&overtime(route)?1:0);
   const later=departure(plan,i)!==plan.configuration.orario_partenza?' · parte alle '+departure(plan,i):'';
   return '<tr data-fleet-lane="'+i+'"><td><div class="gf-cluster"><span class="gf-avatar" data-tone="'+tone(i)+'" aria-hidden="true">'+esc(initials(info.driver))+'</span><div><strong>Giro '+(i+1)+' · '+esc(info.driver)+'</strong><br><span class="gf-muted">'+esc([info.vehicle,info.plate].filter(Boolean).join(' · ')+later)+'</span></div></div></td>'+
   '<td>'+stops.length+'</td><td>'+(valid?Number(route.result.total_km).toLocaleString('it-IT',{maximumFractionDigits:1}):'—')+'</td><td>'+(valid?money(route.fuel_cost):'—')+'</td><td>'+esc(valid?routeReturn(route)||'—':'—')+'</td>'+

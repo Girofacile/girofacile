@@ -2738,16 +2738,16 @@ function editVehicle(id){
   const t=document.getElementById("vTarga"); if(t){t.dataset.lookupProvider=x.lookup_provider||"";t.dataset.lookupPlate=x.targa||"";t.dataset.lookupAt="";t.dataset.lookupToken="";}
   setVehiclePlateLookupStateV896(x.lookup_provider?`Dati targa già acquisiti · Fonte ${String(x.lookup_provider).toUpperCase()}`:"Puoi aggiornare i dati del mezzo effettuando una nuova ricerca targa.",x.lookup_provider?"ok":"");
   clearVehicleLookupHighlightsV8966(); if(x.lookup_provider) markVehicleLookupResultV8966({...x,provider:x.lookup_provider});
-  set("vSponda",x.ha_sponda?"true":"false"); set("vZtl",x.accesso_ztl?"true":"false"); set("vPhotoUrl", x.photo_url || ""); clearFileInput("vPhotoFile"); setVehiclePhotoPreview();
+  set("vSponda",x.ha_sponda?"true":"false"); set("vPhotoUrl", x.photo_url || ""); clearFileInput("vPhotoFile"); setVehiclePhotoPreview();
   if(typeof openVehicleDrawer==='function') openVehicleDrawer(true);
 }
-function resetVehicleForm(){ clearVehicleLookupHighlightsV8966(); ["vId","vNome","vTarga","vMarca","vModello","vAnnoImmatricolazione","vCarrozzeria","vCilindrata","vPotenzaKw","vClasseEuro","vPhotoUrl"].forEach(id=>set(id,"")); const t=document.getElementById("vTarga"); if(t){t.dataset.lookupProvider="";t.dataset.lookupPlate="";t.dataset.lookupAt="";t.dataset.lookupToken="";} setVehiclePlateLookupStateV896("Inserisci la targa per compilare automaticamente i dati disponibili."); set("vTollClass","B"); set("vFuelType","gasolio"); set("vConsumo",8.5); set("vConsumoKwh",0); updateVehicleEnergyFieldsV895(); set("vKg",1000); set("vColli",100); set("vSponda","false"); set("vZtl","false"); clearFileInput("vPhotoFile"); setVehiclePhotoPreview(); }
+function resetVehicleForm(){ clearVehicleLookupHighlightsV8966(); ["vId","vNome","vTarga","vMarca","vModello","vAnnoImmatricolazione","vCarrozzeria","vCilindrata","vPotenzaKw","vClasseEuro","vPhotoUrl"].forEach(id=>set(id,"")); const t=document.getElementById("vTarga"); if(t){t.dataset.lookupProvider="";t.dataset.lookupPlate="";t.dataset.lookupAt="";t.dataset.lookupToken="";} setVehiclePlateLookupStateV896("Inserisci la targa per compilare automaticamente i dati disponibili."); set("vTollClass","B"); set("vFuelType","gasolio"); set("vConsumo",8.5); set("vConsumoKwh",0); updateVehicleEnergyFieldsV895(); set("vKg",1000); set("vColli",100); set("vSponda","false"); set("false"); clearFileInput("vPhotoFile"); setVehiclePhotoPreview(); }
 async function saveVehicle(){
   if(globalThis.GFFormTabs && !GFFormTabs.check(document.getElementById('vehicleDrawer'))) return;
   return withButtonLoading("saveVehicleBtn", "Salvataggio...", async()=>{
     normalizeVehiclePlateInputV896();
     const plateEl=document.getElementById("vTarga");
-    const payload = {nome:val("vNome"), targa:val("vTarga"), toll_class:val("vTollClass")||"B", marca:val("vMarca")||null, modello:val("vModello")||null, anno_immatricolazione:val("vAnnoImmatricolazione")?parseInt(val("vAnnoImmatricolazione")):null, cilindrata_cc:val("vCilindrata")?parseInt(val("vCilindrata")):null, potenza_kw:val("vPotenzaKw")?parseFloat(val("vPotenzaKw")):null, classe_euro:val("vClasseEuro")||null, carrozzeria:val("vCarrozzeria")||null, lookup_provider:plateEl?.dataset?.lookupProvider||null, lookup_at:plateEl?.dataset?.lookupAt||null, lookup_token:plateEl?.dataset?.lookupToken||null, alimentazione:val("vFuelType")||"gasolio", consumo_primario_100km:parseFloat(val("vConsumo")||0), consumo_kwh_100km:parseFloat(val("vConsumoKwh")||0), consumo_l_100km:parseFloat(val("vConsumo")||0), capacita_kg:parseFloat(val("vKg")||1000), capacita_colli:parseInt(val("vColli")||100), ha_sponda:boolVal("vSponda"), accesso_ztl:boolVal("vZtl"), photo_url:val("vPhotoUrl") || null};
+    const payload = {nome:val("vNome"), targa:val("vTarga"), toll_class:val("vTollClass")||"B", marca:val("vMarca")||null, modello:val("vModello")||null, anno_immatricolazione:val("vAnnoImmatricolazione")?parseInt(val("vAnnoImmatricolazione")):null, cilindrata_cc:val("vCilindrata")?parseInt(val("vCilindrata")):null, potenza_kw:val("vPotenzaKw")?parseFloat(val("vPotenzaKw")):null, classe_euro:val("vClasseEuro")||null, carrozzeria:val("vCarrozzeria")||null, lookup_provider:plateEl?.dataset?.lookupProvider||null, lookup_at:plateEl?.dataset?.lookupAt||null, lookup_token:plateEl?.dataset?.lookupToken||null, alimentazione:val("vFuelType")||"gasolio", consumo_primario_100km:parseFloat(val("vConsumo")||0), consumo_kwh_100km:parseFloat(val("vConsumoKwh")||0), consumo_l_100km:parseFloat(val("vConsumo")||0), capacita_kg:parseFloat(val("vKg")||1000), capacita_colli:parseInt(val("vColli")||100), ha_sponda:boolVal("vSponda"), photo_url:val("vPhotoUrl") || null};
     if(!payload.nome){ document.getElementById("vNome")?.reportValidity(); return; }
     const id = val("vId");
     await api(id?`/api/vehicles/${id}`:"/api/vehicles", {method:id?"PUT":"POST", body:JSON.stringify(payload)});
@@ -6187,7 +6187,6 @@ async function saveAllSettingsV893(){
   const features={
     has_time_windows:!!document.getElementById('featureTimeWindowsV89')?.checked,
     needs_photo_proof:planFeatureEnabled('has_photo_proof') && !!document.getElementById('featurePhotoProofV89')?.checked,
-    has_ztl:!!document.getElementById('featureZtlV89')?.checked,
     needs_tail_lift:!!document.getElementById('featureTailLiftV89')?.checked,
     has_refrigerated_goods:!!document.getElementById('featureRefrigeratedV89')?.checked,
     unload_by_packages:!!document.getElementById('featureUnloadPackagesV89')?.checked,
@@ -6225,18 +6224,19 @@ function applyUniversalFeaturesV891(){
   const f=gfUniversalFeaturesV891;
   const root=document.documentElement;
   root.dataset.gfTimeWindows=f.has_time_windows?'on':'off';
-  root.dataset.gfZtl=f.has_ztl?'on':'off';
+  // ZTL solo come avviso automatico (16/11/2026): i campi «ZTL» da scegliere a mano restano nascosti.
+  root.dataset.gfZtl='off';
   root.dataset.gfTailLift=f.needs_tail_lift?'on':'off';
   root.dataset.gfPhotoProof=f.needs_photo_proof && planFeatureEnabled('has_photo_proof')?'on':'off';
   root.dataset.gfRefrigerated=f.has_refrigerated_goods?'on':'off';
 
   // Pulisce filtri disattivati: una funzione OFF non deve continuare a influenzare le query.
-  if(!f.has_ztl){ ['pickZtl','customerFilterZtl'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';}); ['cZtl','dmZtl','vZtl'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='false';}); }
+  { ['pickZtl','customerFilterZtl'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';}); ['cZtl','dmZtl'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='false';}); }
   if(!f.needs_tail_lift){ ['pickSponda','customerFilterSponda'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';}); ['cSponda','dmSponda','vSponda'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='false';}); }
 
   const hint=document.querySelector('.customer-picker-panel .picker-header small');
   if(hint){
-    const extras=[]; if(f.has_ztl) extras.push('ZTL'); if(f.needs_tail_lift) extras.push('sponda');
+    const extras=[]; if(f.needs_tail_lift) extras.push('sponda');
     hint.textContent=extras.length ? `Usa i filtri per zona, ${extras.join(' o ')}` : 'Usa i filtri per zona';
   }
 }
@@ -6251,7 +6251,7 @@ async function loadUniversalFeaturesV89(){
       has_refrigerated_goods:!!c.has_refrigerated_goods,
       unload_by_packages:!!c.unload_by_packages
     };
-    const map={featureTimeWindowsV89:'has_time_windows',featurePhotoProofV89:'needs_photo_proof',featureZtlV89:'has_ztl',featureTailLiftV89:'needs_tail_lift',featureRefrigeratedV89:'has_refrigerated_goods',featureUnloadPackagesV89:'unload_by_packages'};
+    const map={featureTimeWindowsV89:'has_time_windows',featurePhotoProofV89:'needs_photo_proof',featureTailLiftV89:'needs_tail_lift',featureRefrigeratedV89:'has_refrigerated_goods',featureUnloadPackagesV89:'unload_by_packages'};
     Object.entries(map).forEach(([id,key])=>{const el=document.getElementById(id);if(el)el.checked=!!gfUniversalFeaturesV891[key];});
     [['unloadBaseMin','unload_base_min'],['unloadSecondsPerPackage','unload_seconds_per_package']]
       .forEach(([id,key])=>{const el=document.getElementById(id);if(el&&c[key]!=null)el.value=c[key];});
@@ -6266,7 +6266,6 @@ async function saveUniversalFeaturesV89(){
   const payload={
     has_time_windows:!!document.getElementById('featureTimeWindowsV89')?.checked,
     needs_photo_proof:planFeatureEnabled('has_photo_proof') && !!document.getElementById('featurePhotoProofV89')?.checked,
-    has_ztl:!!document.getElementById('featureZtlV89')?.checked,
     needs_tail_lift:!!document.getElementById('featureTailLiftV89')?.checked,
     has_refrigerated_goods:!!document.getElementById('featureRefrigeratedV89')?.checked,
     unload_by_packages:!!document.getElementById('featureUnloadPackagesV89')?.checked,

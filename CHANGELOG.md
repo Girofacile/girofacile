@@ -5,6 +5,9 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- ZTL solo come avviso: tolta l'impostazione «ZTL e zone difficili» e il permesso «Accesso ZTL» dalla scheda e
+  dalla tabella dei mezzi (anche nell'app). Il calcolo dei giri non usa più il permesso del mezzo: la consegna in ZTL,
+  riconosciuta dall'indirizzo, mostra solo l'avviso «In ZTL».
 - Area amministrativa: nuova voce «CRM commerciale» nella sidebar del Super Admin,
   con pagina introduttiva per aziende e contatti, pipeline, follow-up e report.
   La gestione dei dati e le autorizzazioni commerciali restano da attivare.

@@ -177,7 +177,6 @@ def _replay_at(case, resource_index, order, start=None):
         result['warnings'] += int(warning) + int(_truth(row.get('sponda')))
         result['violations'] += int(late > 0)
         result['mismatches'] += int(_truth(row.get('sponda')) and not _truth(resource.get('ha_sponda')))
-        result['mismatches'] += int(_truth(row.get('ztl')) and not _truth(resource.get('accesso_ztl')))
         # This explicit historical option does not describe current planning:
         # current fixtures keep missing tail lifts advisory, like production.
         if case.get('hard_tail_lift', False) and _truth(row.get('sponda')) and not _truth(resource.get('ha_sponda')):

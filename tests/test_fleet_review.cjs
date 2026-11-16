@@ -134,15 +134,15 @@ test('tail lift warning follows the selected vehicle immediately after a manual 
  assert.doesNotMatch(page.innerHTML,/data-fleet-warning="tail-lift"/);
 });
 
-test('ZTL warning follows the selected vehicle and coexists with the tail lift warning',()=>{
+test('ZTL is only a notice on the stop, whatever the vehicle; the tail lift warning still follows the vehicle',()=>{
  const {control,page,params}=preview();
  Object.assign(params.plan.configuration.consegne[0],{ztl:true,sponda:true});
- params.plan.resource_capabilities=[{has_tail_lift:false,has_ztl_access:false},{has_tail_lift:true,has_ztl_access:true}];
+ params.plan.resource_capabilities=[{has_tail_lift:false},{has_tail_lift:true}];
  control.render(params);
  assert.match(page.innerHTML,/data-fleet-warning="ztl" title="Il cliente si trova in una zona a traffico limitato.">In ZTL/);
  assert.match(page.innerHTML,/data-fleet-warning="tail-lift"/);
  control.render({...params,assignment:[1,1],dirty:true});
- assert.doesNotMatch(page.innerHTML,/data-fleet-warning="(ztl|tail-lift)"/);
+ assert.doesNotMatch(page.innerHTML,/data-fleet-warning="tail-lift"/);
 });
 
 test('approximate road estimates remain clear without a bottom notes panel',()=>{

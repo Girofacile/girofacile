@@ -102,7 +102,6 @@ def _plan_key(routes, results, rows, vehicles, strategy):
         durations.append(float(raw[1] if raw else score['total_min']) if score else 0.0)
     mismatches = sum(
         int(bool(rows[i].get('sponda')) and not vehicles[v].get('ha_sponda', False))
-        + int(bool(rows[i].get('ztl')) and not vehicles[v].get('accesso_ztl', False))
         for v, order in enumerate(routes) for i in order)
     common = (-sum(map(len, routes)), mismatches)
     used = sum(bool(order) for order in routes)

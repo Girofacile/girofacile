@@ -353,7 +353,7 @@ def build_vehicle_dict(vehicle, driver_schedule=None):
     return {
         "driver_schedule":driver_schedule,
         "id": vehicle.id, "nome": vehicle.nome, "targa": vehicle.targa,
-        "ha_sponda": bool(vehicle.ha_sponda), "accesso_ztl": bool(vehicle.accesso_ztl),
+        "ha_sponda": bool(vehicle.ha_sponda),
         "capacita_kg": vehicle.capacita_kg, "capacita_colli": vehicle.capacita_colli,
     }
 
