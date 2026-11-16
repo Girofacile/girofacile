@@ -5,6 +5,10 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Area amministrativa: nuova voce «CRM commerciale» nella sidebar del Super Admin,
+  con pagina introduttiva per aziende e contatti, pipeline, follow-up e report.
+  La gestione dei dati e le autorizzazioni commerciali restano da attivare.
+
 - Foto del profilo: è il logo dell'azienda salvato sul server, quindi non sparisce più accedendo con un
   altro account o da un altro dispositivo (prima restava solo nel browser). Cambiarla dal profilo aggiorna
   il logo dell'azienda e viceversa; un collaboratore senza permesso sull'azienda non la può cambiare.

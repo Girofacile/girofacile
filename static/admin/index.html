@@ -34,6 +34,10 @@
         <a class="gf-sidebar__item" href="#revenue" data-admin-nav="revenue" onclick="navigate('revenue');return false"><svg class="gf-sidebar__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1v22 M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span>Revenue</span></a>
         <a class="gf-sidebar__item" href="#api-costs" data-admin-nav="api-costs" onclick="navigate('api-costs');return false"><svg class="gf-sidebar__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5m4 14V9m4 10V3m4 16v-7m4 7V7"/></svg><span>Costi API</span></a>
       </div>
+      <div class="gf-sidebar__section gf-hidden" id="admin-crm-nav">
+        <p class="gf-sidebar__label">Commerciale</p>
+        <a class="gf-sidebar__item" href="#crm" data-admin-nav="crm" onclick="navigate('crm');return false"><svg class="gf-sidebar__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21h18 M5 21V7l7-4 7 4v14 M9 21v-5h6v5 M9 9h1 M14 9h1 M9 12h1 M14 12h1"/></svg><span>CRM commerciale</span></a>
+      </div>
       <div class="gf-sidebar__section">
         <p class="gf-sidebar__label">Piattaforma</p>
         <a class="gf-sidebar__item" href="#platform" data-admin-nav="platform" onclick="navigate('platform');return false"><svg class="gf-sidebar__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12.2 2h-.4a2 2 0 0 0-2 2v.2a2 2 0 0 1-1 1.7l-.4.3a2 2 0 0 1-2 0l-.2-.1a2 2 0 0 0-2.7.7l-.2.4a2 2 0 0 0 .7 2.7l.2.1a2 2 0 0 1 1 1.7v.5a2 2 0 0 1-1 1.8l-.2.1a2 2 0 0 0-.7 2.7l.2.4a2 2 0 0 0 2.7.7l.2-.1a2 2 0 0 1 2 0l.4.3a2 2 0 0 1 1 1.7v.2a2 2 0 0 0 2 2h.4a2 2 0 0 0 2-2v-.2a2 2 0 0 1 1-1.7l.4-.3a2 2 0 0 1 2 0l.2.1a2 2 0 0 0 2.7-.7l.2-.4a2 2 0 0 0-.7-2.7l-.2-.1a2 2 0 0 1-1-1.8v-.5a2 2 0 0 1 1-1.7l.2-.1a2 2 0 0 0 .7-2.7l-.2-.4a2 2 0 0 0-2.7-.7l-.2.1a2 2 0 0 1-2 0l-.4-.3a2 2 0 0 1-1-1.7V4a2 2 0 0 0-2-2z M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/></svg><span>Impostazioni SaaS</span></a>
@@ -77,6 +81,23 @@
           <section class="gf-panel"><header class="gf-panel__header"><h2 class="gf-panel__title">Ultimi iscritti</h2><button class="gf-button" data-variant="link" type="button" onclick="navigate('users')">Vedi tutti →</button></header><div class="gf-table-wrap"><table class="gf-table" id="table-recent-users" data-gf-responsive="cards"></table></div></section>
           <section class="gf-panel"><header class="gf-panel__header"><h2 class="gf-panel__title">Ticket recenti</h2><button class="gf-button" data-variant="link" type="button" onclick="navigate('tickets')">Vedi tutti →</button></header><div class="gf-table-wrap"><table class="gf-table" id="table-recent-tickets" data-gf-responsive="cards"></table></div></section>
         </div>
+      </div>
+    </section>
+
+    <!-- ===== CRM COMMERCIALE ===== -->
+    <section class="gf-stack gf-hidden" data-gap="lg" id="section-crm" data-admin-section aria-labelledby="crm-title">
+      <section class="gf-panel">
+        <header class="gf-panel__header"><h2 class="gf-panel__title" id="crm-title">CRM commerciale</h2><span class="gf-badge" data-status="info">In preparazione</span></header>
+        <div class="gf-panel__body gf-stack">
+          <p>Uno spazio dedicato alle relazioni commerciali di GiroFacile, dal primo contatto alla chiusura della trattativa.</p>
+          <p class="gf-muted">La sezione è pronta per ospitare il CRM. L'inserimento dei dati e l'accesso dei commerciali autorizzati non sono ancora attivi.</p>
+        </div>
+      </section>
+      <div class="gf-grid" data-cols="2">
+        <section class="gf-panel"><header class="gf-panel__header"><h3 class="gf-panel__title">Aziende e contatti</h3></header><div class="gf-panel__body"><p>Anagrafiche delle aziende, referenti, email, numeri di telefono e storico dei contatti.</p></div></section>
+        <section class="gf-panel"><header class="gf-panel__header"><h3 class="gf-panel__title">Pipeline</h3></header><div class="gf-panel__body"><p>Trattative, interesse espresso e avanzamento dal primo contatto alla proposta commerciale.</p></div></section>
+        <section class="gf-panel"><header class="gf-panel__header"><h3 class="gf-panel__title">Follow-up</h3></header><div class="gf-panel__body"><p>Richiamate, appuntamenti e prossime attività, con scadenze e responsabili.</p></div></section>
+        <section class="gf-panel"><header class="gf-panel__header"><h3 class="gf-panel__title">Report</h3></header><div class="gf-panel__body"><p>Andamento delle opportunità, conversioni e risultati delle attività commerciali.</p></div></section>
       </div>
     </section>
 
@@ -539,11 +560,14 @@ function pct5(value){ return Math.max(0, Math.min(100, Math.round(Number(value |
 
 // ---- NAVIGATION ----
 function navigate(section) {
+  if (section === 'crm' && currentAdminMe?.role !== 'superadmin') return;
+  if (section === 'crm') history.replaceState(null, '', '#crm');
+  else if (location.hash === '#crm') history.replaceState(null, '', location.pathname + location.search);
   document.querySelectorAll('[data-admin-nav]').forEach(el => {
     if (el.dataset.adminNav === section) el.setAttribute('aria-current', 'page'); else el.removeAttribute('aria-current');
   });
   document.querySelectorAll('[data-admin-section]').forEach(el => gfShow(el, el.id === `section-${section}`));
-  const titles = { overview: 'Overview', users: 'Gestione Utenti', tickets: 'Ticket di Supporto', errors: 'Errori Sistema', revenue: 'Revenue & Abbonamenti', 'api-costs': 'Costi API', platform: 'Impostazioni SaaS', collaborators: 'Collaboratori', profile: 'Profilo Admin', activity: 'Registro attività', server: 'Server / Manutenzione' };
+  const titles = { crm: 'CRM commerciale', overview: 'Overview', users: 'Gestione Utenti', tickets: 'Ticket di Supporto', errors: 'Errori Sistema', revenue: 'Revenue & Abbonamenti', 'api-costs': 'Costi API', platform: 'Impostazioni SaaS', collaborators: 'Collaboratori', profile: 'Profilo Admin', activity: 'Registro attività', server: 'Server / Manutenzione' };
   document.getElementById('page-title').textContent = titles[section] || section;
   if (section === 'overview') loadOverview();
   if (section === 'users') loadUsers();
@@ -1609,12 +1633,14 @@ async function init() {
     const me = await api('/api/admin/me');
     if (!me?.authenticated || !['superadmin','collaborator'].includes(me?.role)) { window.location.href = '/admin/login'; return; }
     currentAdminMe = me;
+    gfShow('admin-crm-nav', me.role === 'superadmin');
     document.getElementById('admin-name').textContent = me.display_name || me.username;
     document.getElementById('admin-avatar').textContent = (me.display_name || me.username || 'A')[0].toUpperCase();
     document.getElementById('admin-role').textContent = me.role === 'collaborator' ? 'Collaboratore' : 'Proprietario';
     if(me.role === 'superadmin' || me.permissions?.manage_platform || me.permissions?.all){ loadAdminProfile(); }
   } catch { window.location.href = '/admin/login'; return; }
-  loadOverview();
+  if (location.hash === '#crm' && currentAdminMe?.role === 'superadmin') navigate('crm');
+  else loadOverview();
   updateErrorBadge();
 }
 
