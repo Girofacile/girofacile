@@ -64,7 +64,7 @@ def signup(data: SignupIn, response: Response, db: Session = Depends(get_db), ba
         validate_password_strength(password, context_values=(username, email, data.company_name))
     except ValueError as exc:
         raise HTTPException(400, str(exc))
-    if db.query(User).filter(func.lower(User.username) == username.lower()).first():
+    if username.lower() == (APP_USER or "admin").strip().lower() or db.query(User).filter(func.lower(User.username) == username.lower()).first():
         raise HTTPException(400, "Nome utente già registrato")
     if email and db.query(User).filter(User.email == email).first():
         raise HTTPException(400, "Email già registrata")
@@ -871,7 +871,7 @@ def _validated_company_logo(value):
         if len(raw) > COMPANY_LOGO_MAX_BYTES:
             raise ValueError
         from PIL import Image
-        with Image.open(io.BytesIO(raw)) as image:
+        with Image.open(io.BytesIO(raw), formats=list(COMPANY_LOGO_FORMATS)) as image:
             fmt = image.format
             image.verify()
     except Exception:

@@ -106,7 +106,10 @@ def backup_postgres(database_url: str, folder: Path) -> Path:
 
 def main() -> int:
     load_env()
-    database_url = os.getenv("DATABASE_URL", "").strip()
+    # In Docker l'indirizzo si costruisce dai pezzi (password con caratteri speciali).
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    from app.core.database_url import compose_database_url
+    database_url = compose_database_url()
     try:
         out = backup_postgres(database_url, backup_dir())
         cleanup_old_backups(out.parent)

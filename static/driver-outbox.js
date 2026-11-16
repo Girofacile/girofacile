@@ -9,12 +9,17 @@
   function create({storage, send, key, onChange}={}){
     let items = [];
     let flushing = null;
+    let sequence = 0;
     const changed = () => { if(onChange) onChange(items.slice()); };
+    // Ogni operazione ha un identificativo proprio: dopo l'invio si toglie solo quella confermata,
+    // anche se nel frattempo un nuovo esito della stessa consegna è entrato in coda.
+    const newOpId = () => Date.now().toString(36) + '-' + (++sequence).toString(36) + '-' + Math.random().toString(36).slice(2, 8);
 
     function load(){
       try { items = JSON.parse(storage?.getItem(key) || '[]'); }
       catch(e) { items = []; }
       if(!Array.isArray(items)) items = [];
+      items = items.map(item => item && item.opId ? item : {...item, opId: newOpId()});
     }
     // Se il telefono non ha spazio l'esito resta comunque in memoria finché la pagina è aperta.
     function save(){
@@ -25,7 +30,7 @@
     function add(item){
       // Un nuovo esito per la stessa consegna e azione sostituisce quello precedente.
       items = items.filter(x => !(x.deliveryId === item.deliveryId && x.kind === item.kind));
-      items.push({...item, queuedAt: item.queuedAt || new Date().toISOString()});
+      items.push({...item, opId: newOpId(), queuedAt: item.queuedAt || new Date().toISOString()});
       const persisted = save();
       changed();
       return persisted;
@@ -47,7 +52,8 @@
             if(isRetryable(e)) break;
             rejected.push({item, message: e.message});
           }
-          items = items.slice(1);
+          // Si toglie l'operazione appena inviata, non «la prima»: potrebbe essere stata sostituita.
+          items = items.filter(x => x.opId !== item.opId);
           save();
           changed();
         }

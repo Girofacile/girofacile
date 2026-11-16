@@ -20,6 +20,13 @@ COPY app ./app
 COPY static ./static
 COPY scripts ./scripts
 
+# Utente senza privilegi (uid 10001). Sul server le cartelle montate (backups, data/ztl)
+# devono appartenere a questo uid: vedi deploy/README.md.
+RUN useradd --system --uid 10001 --no-create-home --home-dir /app girofacile \
+    && mkdir -p /app/backups /app/data/ztl \
+    && chown -R girofacile:girofacile /app/backups /app/data
+USER girofacile
+
 EXPOSE 8000
 
 # DATABASE_URL, APP_SECRET e credenziali devono essere fornite dall'ambiente.

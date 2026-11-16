@@ -278,6 +278,11 @@ def migrate_database():
 
 
 def ensure_default_user():
+    # Account di sviluppo (APP_USER/APP_PASSWORD, di default admin/admin123): solo fuori produzione.
+    # Sul server le aziende si registrano; il Super Admin ha credenziali proprie (SUPERADMIN_*).
+    from .core.production_check import is_production
+    if is_production():
+        return
     with Session(engine) as db:
         user = db.query(User).filter(User.username == APP_USER).first()
         if not user:

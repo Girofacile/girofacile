@@ -1,18 +1,34 @@
 """Explicit, locked, versioned schema upgrades: python -m app.migrations."""
 from datetime import datetime
 from .core.clock import utc_now
+import re
+from pathlib import Path
+
 from sqlalchemy import inspect, text
 
-LATEST = '20261112_01'
+# Elenco unico delle versioni, ricavato dalle migrazioni stesse: ognuna registra il proprio marker
+# con «INSERT ... {'v': 'AAAAMMGG_NN'}». Aggiungere una migrazione aggiorna da solo VERSIONS e LATEST.
+VERSIONS = tuple(sorted(set(re.findall(r"VALUES \(:v, :now\)'\), \{'v': '(\d{8}_\d{2})'",
+                                       Path(__file__).read_text(encoding='utf-8')))))
+LATEST = VERSIONS[-1]
 LOCK_ID = 7640152404
+
+
+def missing_versions(engine):
+    """Versioni non ancora applicate (tutte, non solo l'ultima)."""
+    if not inspect(engine).has_table('schema_migrations'):
+        return list(VERSIONS)
+    with engine.connect() as conn:
+        applied = set(conn.execute(text('SELECT version FROM schema_migrations')).scalars())
+    return [version for version in VERSIONS if version not in applied]
 
 
 def require_current_schema(engine):
     if not inspect(engine).has_table('schema_migrations'):
         raise RuntimeError('Database da aggiornare: eseguire python -m app.migrations prima di avviare il server')
-    with engine.connect() as conn:
-        if not conn.execute(text('SELECT version FROM schema_migrations WHERE version=:v'), {'v': LATEST}).first():
-            raise RuntimeError('Migrazioni pendenti: eseguire python -m app.migrations')
+    missing = missing_versions(engine)
+    if missing:
+        raise RuntimeError('Migrazioni pendenti (' + ', '.join(missing) + '): eseguire python -m app.migrations')
 
 
 def _preflight(engine):

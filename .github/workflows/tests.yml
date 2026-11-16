@@ -38,7 +38,12 @@ jobs:
         with:
           node-version: '22'
       - run: sudo apt-get update && sudo apt-get install -y postgresql-client-16
-      - run: pip install -r tests/requirements-v1-audit.txt
+      # Stesse versioni della produzione (Docker usa requirements.lock).
+      - run: pip install -r tests/requirements-v1-audit.txt -c requirements.lock
+      - name: Check dependencies for known vulnerabilities
+        run: |
+          pip install pip-audit
+          pip-audit -r requirements.lock --no-deps --disable-pip
       - run: python -m pytest tests -q -ra
       - run: node --test tests/*.cjs
       - name: Verify electric mobility responsive interfaces

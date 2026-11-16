@@ -1,7 +1,13 @@
 """Read and preflight imports before changing any customer record."""
 import io
+import zipfile
+
 import pandas as pd
 from fastapi import HTTPException
+from starlette.concurrency import run_in_threadpool
+
+MAX_IMPORT_ROWS = 20_000
+MAX_IMPORT_COLUMNS = 60
 from ..core.utils import parse_time_value
 from ..models import Customer
 from .plans import check_customer_limit
@@ -114,22 +120,39 @@ def normalize_columns(df):
     return df
 
 
+def _parse_customer_file(name, content):
+    try:
+        # Tutto come testo: «NA» (Napoli) non diventa «dato mancante», civico e telefono
+        # restano come scritti («12», «0811111111») invece di diventare 12.0 / 811111111.0.
+        if name.endswith('.csv'):
+            df = pd.read_csv(io.BytesIO(content), dtype=str, keep_default_na=False, sep=None, engine='python',
+                             nrows=MAX_IMPORT_ROWS + 1)
+        elif name.endswith('.xlsx'):
+            # Stessi controlli dell'import ordini: archivio non gonfiato, niente macro né collegamenti esterni.
+            with zipfile.ZipFile(io.BytesIO(content)) as archive:
+                files = archive.infolist()
+                if (len(files) > 1000 or sum(f.file_size for f in files) > 40 * 1024 * 1024
+                        or any('externallinks/' in f.filename.lower() or 'vbaproject' in f.filename.lower() for f in files)):
+                    raise HTTPException(400, "File Excel non ammesso: troppo grande una volta aperto, oppure con macro o collegamenti esterni.")
+            df = pd.read_excel(io.BytesIO(content), dtype=str, keep_default_na=False, nrows=MAX_IMPORT_ROWS + 1)
+        else:
+            return None
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(400, "File non leggibile: verifica formato e intestazioni")
+    if len(df) > MAX_IMPORT_ROWS or len(df.columns) > MAX_IMPORT_COLUMNS:
+        raise HTTPException(400, f"File troppo grande: al massimo {MAX_IMPORT_ROWS:,} clienti e {MAX_IMPORT_COLUMNS} colonne per importazione.".replace(',', '.'))
+    return df
+
+
 async def read_customer_import(file):
     content = await file.read(10 * 1024 * 1024 + 1)
     if len(content) > 10 * 1024 * 1024:
         raise HTTPException(400, "Il file supera il limite di 10 MB")
     name = (file.filename or "").lower()
-    try:
-        # Tutto come testo: «NA» (Napoli) non diventa «dato mancante», civico e telefono
-        # restano come scritti («12», «0811111111») invece di diventare 12.0 / 811111111.0.
-        if name.endswith('.csv'):
-            df = pd.read_csv(io.BytesIO(content), dtype=str, keep_default_na=False, sep=None, engine='python')
-        elif name.endswith('.xlsx'):
-            df = pd.read_excel(io.BytesIO(content), dtype=str, keep_default_na=False)
-        else:
-            df = None
-    except Exception:
-        raise HTTPException(400, "File non leggibile: verifica formato e intestazioni")
+    # La lettura del file è lenta: si fa fuori dal ciclo principale, così il server resta reattivo.
+    df = await run_in_threadpool(_parse_customer_file, name, content)
     if df is None:
         if name.endswith('.xls'):
             raise HTTPException(400, "Il formato .xls (Excel vecchio) non è supportato: in Excel usa «Salva con nome» → «Cartella di lavoro di Excel (.xlsx)» e riprova.")

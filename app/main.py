@@ -35,6 +35,13 @@ async def lifespan(app):
     from .migrations import require_current_schema
     require_production_config()
     require_current_schema(engine)
+    from .core.production_check import default_account_problems, is_production
+    if is_production():
+        from .database import SessionLocal as _Session
+        with _Session() as db:
+            problems = default_account_problems(db)
+        if problems:
+            raise RuntimeError("Configurazione di produzione non sicura: " + "; ".join(problems))
     # Indirizzo per i test in locale scelto dal portale admin (mai in produzione).
     from .core import links
     from .database import SessionLocal
@@ -96,8 +103,11 @@ async def system_error_monitor(request: Request, call_next):
     try:
         return await call_next(request)
     except Exception as exc:
+        from starlette.concurrency import run_in_threadpool
         from .services.error_monitor import log_exception
-        error_id = log_exception(request, exc)
+        # log_exception scrive nel database e può mandare un'email: fuori dal ciclo principale,
+        # così un servizio email lento non blocca le altre richieste.
+        error_id = await run_in_threadpool(log_exception, request, exc)
         return JSONResponse(
             status_code=500,
             content={

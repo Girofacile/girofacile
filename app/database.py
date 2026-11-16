@@ -44,6 +44,8 @@ def _normalize_database_url(url: str) -> str:
 
 
 _load_local_env()
+from .core.database_url import apply_composed_database_url  # noqa: E402
+apply_composed_database_url()
 
 DATABASE_URL = _normalize_database_url(os.getenv("DATABASE_URL", "postgresql+psycopg2://girofacile:girofacile_local@localhost:5432/girofacile"))
 DATABASE_ECHO = os.getenv("DATABASE_ECHO", "false").strip().lower() in ["1", "true", "yes", "si", "sì"]

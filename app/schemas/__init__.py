@@ -224,6 +224,11 @@ class DeliveryIn(TimeWindowsMixin, BaseModel):
     stato_geocodifica: Optional[str] = None
     indirizzo_geocodificato: Optional[str] = None
 
+# Tetto di un giro singolo: il calcolo dei percorsi cresce con il quadrato delle fermate
+# (150 fermate = 22.500 tratte). Il multi-mezzo ha già il suo limite di 100.
+MAX_ROUTE_STOPS = 150
+
+
 class RoutePlanIn(BaseModel):
     driver_schedule: DriverSchedule | None = None
     nome: str | None = None
@@ -238,6 +243,14 @@ class RoutePlanIn(BaseModel):
     energy_price_primary: NonNegativeFloat = 0
     energy_price_electric: NonNegativeFloat = 0
     consegne: List[DeliveryIn]
+
+    @field_validator("consegne", mode="before")
+    @classmethod
+    def _limited_stops(cls, value):
+        # Controllo prima di leggere le singole fermate: un elenco enorme non viene nemmeno elaborato.
+        if isinstance(value, (list, tuple)) and len(value) > MAX_ROUTE_STOPS:
+            raise ValueError(f"Un giro può avere al massimo {MAX_ROUTE_STOPS} consegne ({len(value)} indicate): dividile su più giri o più mezzi.")
+        return value
 
     @field_validator("data_giro", mode="before")
     @classmethod

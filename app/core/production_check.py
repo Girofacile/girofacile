@@ -100,6 +100,21 @@ def _is_true(value) -> bool:
     return (value or "").strip().lower() in {"1", "true", "yes", "si", "sì", "on"}
 
 
+DEFAULT_ACCOUNT_PASSWORDS = ("admin123", "admin", "password", "changeme")
+
+
+def default_account_problems(db, env: dict | None = None) -> list[str]:
+    """Account aziendale di sviluppo (APP_USER) ancora attivo con una password predefinita."""
+    from ..models import User
+    from .security import verify_password
+    env = os.environ if env is None else env
+    username = (env.get("APP_USER") or "admin").strip()
+    user = db.query(User).filter(User.username == username).first()
+    if user and any(verify_password(value, user.password_hash) for value in DEFAULT_ACCOUNT_PASSWORDS):
+        return [f"l'account «{username}» usa ancora una password predefinita: cambiala o elimina l'account prima di aprire il servizio"]
+    return []
+
+
 def require_production_config(env: dict | None = None) -> None:
     """Blocca l'avvio in produzione se la configurazione non è sicura."""
     if not is_production(env):

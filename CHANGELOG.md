@@ -5,6 +5,13 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Server: librerie aggiornate (Pillow 13, Certifi, OpenTelemetry) e controllo vulnerabilità nei test di GitHub;
+  immagini aperte solo nel formato dichiarato; password del database con caratteri speciali gestita; app nel
+  container senza privilegi; backup e pulizia cache eseguiti dentro il container; guida di messa online riscritta.
+- Correzioni dall'audit del 16/11/2026: elenco unico delle migrazioni con ultima versione ricavata da sola
+  (l'avvio controlla tutte le versioni); coda offline dell'autista che non perde un esito salvato durante l'invio;
+  account di sviluppo admin/admin123 mai creato in produzione (e avvio bloccato se esiste con password predefinita);
+  giro singolo al massimo 150 consegne; interruttore Google spento rispettato anche con la chiave salvata.
 - Test dell’interfaccia tutti verdi: aggiornati quelli rimasti indietro (versioni degli script, testi dei tasti,
   pagine finte senza classList o funzioni nuove); le variabili locali di stile (tinta, onda del login, tendina)
   hanno ora il valore di partenza in theme.css.

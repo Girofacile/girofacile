@@ -1,9 +1,9 @@
 [Unit]
-Description=GiroFacile - Pulizia cache Google Routes
-After=network.target
+Description=GiroFacile - Pulizia cache distanze (dentro il container dell'app)
+After=docker.service
+Requires=docker.service
 
 [Service]
 Type=oneshot
-WorkingDirectory=/opt/girofacile_saas/girofacile_saas_COMPLETO_INVITO_AUTISTA
-EnvironmentFile=-/opt/girofacile_saas/girofacile_saas_COMPLETO_INVITO_AUTISTA/.env
-ExecStart=/opt/girofacile_saas/girofacile_saas_COMPLETO_INVITO_AUTISTA/.venv/bin/python scripts/cleanup_distance_cache.py
+WorkingDirectory=/opt/girofacile
+ExecStart=/usr/bin/docker compose exec -T girofacile python scripts/cleanup_distance_cache.py

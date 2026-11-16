@@ -54,7 +54,7 @@ def _company_logo(owner):
     if not url.startswith('data:image/') or ',' not in url:
         return None
     try:
-        image = Image.open(io.BytesIO(base64.b64decode(url.split(',', 1)[1], validate=True)))
+        image = Image.open(io.BytesIO(base64.b64decode(url.split(',', 1)[1], validate=True)), formats=['PNG', 'JPEG', 'WEBP'])
         image.thumbnail((240, 240))
         return image.convert('RGBA')
     except Exception:

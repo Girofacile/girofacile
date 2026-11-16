@@ -33,7 +33,8 @@ def normalize_image(value, kind):
         raw = base64.b64decode(encoded, validate=True)
         if len(raw) > limit:
             raise ValueError()
-        with Image.open(io.BytesIO(raw)) as image:
+        # Solo il formato dichiarato: Pillow non prova altri decodificatori (APNG, TIFF, ecc.).
+        with Image.open(io.BytesIO(raw), formats=[allowed[header]]) as image:
             max_pixels = 4_000_000 if kind == 'signature' else 24_000_000
             if image.format != allowed[header] or image.width * image.height > max_pixels or getattr(image, 'n_frames', 1) != 1:
                 raise ValueError()

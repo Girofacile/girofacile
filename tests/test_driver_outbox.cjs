@@ -84,3 +84,25 @@ test('driver portal queues outcomes instead of losing them',()=>{
   assert.match(html,/addEventListener\('online'/);
   assert.match(html,/GFDriverOutbox\.overlay\(/);
 });
+
+test('a newer outcome queued while the older one is being sent is kept and sent next',async()=>{
+  const sent=[];let release;
+  const box=create({storage:memoryStorage(),key:'k',send:item=>{sent.push(item.body.note);
+    if(item.body.note==='A')return new Promise(r=>{release=r;});return Promise.resolve();}});
+  box.add({kind:'note',url:'/n',body:{note:'A'},routeId:1,deliveryId:5});
+  const running=box.flush();
+  await new Promise(r=>setImmediate(r));
+  box.add({kind:'note',url:'/n',body:{note:'B'},routeId:1,deliveryId:5});
+  release();
+  await running;
+  // Prima B andava persa (sent=[A], coda vuota); ora parte subito dopo A.
+  assert.deepEqual(sent,['A','B']);
+  assert.equal(box.count(),0);
+});
+
+test('items saved by an older version get an operation id when loaded',()=>{
+  const storage=memoryStorage();
+  storage.setItem('k',JSON.stringify([{kind:'complete',url:'/c',body:{},routeId:1,deliveryId:1}]));
+  const box=create({storage,key:'k',send:async()=>{}});
+  assert.ok(box.pending()[0].opId);
+});

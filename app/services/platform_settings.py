@@ -43,14 +43,15 @@ def google_maps_api_key(db: Session | None = None) -> str:
 
 
 def google_geocoding_enabled(db: Session | None = None) -> bool:
-    # Default da .env, ma se la chiave è salvata nel pannello Super Admin il servizio resta attivo.
+    # Se l'interruttore è salvato nel pannello Super Admin vale quello, anche spento.
+    # Altrimenti: acceso se lo dice il .env oppure se c'è una chiave Google.
     env_default = os.getenv("GOOGLE_GEOCODING_ENABLED", "false").strip().lower() in ("1", "true", "yes", "si", "sì", "on")
-    return setting_bool(db, "google_geocoding_enabled", env_default) or bool(google_maps_api_key(db))
+    return setting_bool(db, "google_geocoding_enabled", env_default or bool(google_maps_api_key(db)))
 
 
 def google_routes_enabled(db: Session | None = None) -> bool:
     env_default = os.getenv("GOOGLE_ROUTES_ENABLED", "false").strip().lower() in ("1", "true", "yes", "si", "sì", "on")
-    return setting_bool(db, "google_routes_enabled", env_default) or bool(google_maps_api_key(db))
+    return setting_bool(db, "google_routes_enabled", env_default or bool(google_maps_api_key(db)))
 
 
 def openai_api_key(db: Session | None = None) -> str:

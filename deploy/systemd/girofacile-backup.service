@@ -1,7 +1,10 @@
 [Unit]
-Description=Backup database GiroFacile
+Description=Backup database GiroFacile (dentro il container dell'app)
+After=docker.service
+Requires=docker.service
 
 [Service]
 Type=oneshot
-WorkingDirectory=/opt/girofacile_saas/girofacile_saas_COMPLETO_INVITO_AUTISTA
-ExecStart=/opt/girofacile_saas/girofacile_saas_COMPLETO_INVITO_AUTISTA/.venv/bin/python scripts/backup_database.py
+WorkingDirectory=/opt/girofacile
+# Il dump finisce in /opt/girofacile/backups (cartella montata); lo script controlla l'archivio con pg_restore.
+ExecStart=/usr/bin/docker compose exec -T girofacile python scripts/backup_database.py
