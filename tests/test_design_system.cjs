@@ -52,6 +52,9 @@ test('theme.css centrally defines palette, geometry, spacing, typography and bre
   assert.match(css,/--gf-font-display\s*:\s*"Bricolage Grotesque"/);
   assert.match(css,/--gf-font-family\s*:\s*"IBM Plex Sans"/);
   const defined=new Set([...css.matchAll(/(--gf-[\w-]+)\s*:/g)].map(match=>match[1]));
+  // Variabili animate registrate con @property (es. l'onda del login): sono definite lì.
+  for(const file of ['components.css','layout.css','workspace.css','portals.css'])
+    for(const match of read(assets+file).matchAll(/@property\s+(--gf-[\w-]+)/g))defined.add(match[1]);
   for(const file of ['components.css','layout.css','workspace.css','portals.css']){
     for(const match of read(assets+file).matchAll(/var\((--gf-[\w-]+)/g))
       assert.ok(defined.has(match[1]),file+': missing '+match[1]);
@@ -456,7 +459,7 @@ test('resource directories keep titles in the topbar and create actions inside t
   const customers=html.slice(html.indexOf('<section id="tab-clienti"'),html.indexOf('<section id="tab-depositi"'));
   // Clienti: importazione e nuovo cliente stanno nell'intestazione dell'elenco, come in Ordini.
   assert.doesNotMatch(html,/customersTopbarActionsHost/);
-  assert.match(customers,/id="customerListTitle"[^]*?id="customersPanelActions"[^]*?openCustomerImportModal\(\)[^]*?openCustomerDrawer\(null,'new'\)[^]*?<\/header>/);
+  assert.match(customers,/id="customerListTitle"[^]*?id="customersPanelActions"[^]*?openCustomerImportModal\(\)[^]*?openCustomerModal\(\)[^]*?<\/header>/);
   const deposits=html.slice(html.indexOf('<section id="tab-depositi"'),html.indexOf('id="depositOverlay"'));
   assert.match(deposits,/class="gf-panel__header"[^]*\+ Nuovo deposito/);
   const vehicles=html.slice(html.indexOf('<section id="tab-mezzi"'),html.indexOf('<section id="tab-autisti"'));

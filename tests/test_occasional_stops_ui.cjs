@@ -81,7 +81,7 @@ test('planning markup exposes occasional edit badge, responsive dialog and touch
   const html=fs.readFileSync('static/dashboard/index.html','utf8');
   // La finestra usa gf-modal; su mobile i controlli del sistema hanno l'altezza di tocco del tema.
   const css=fs.readFileSync('static/design-system/components.css','utf8');
-  assert.match(html,/\+ Fermata occasionale/);assert.match(html,/<dialog id="occasionalStopDialog"/);
+  assert.match(html,/Aggiungi fermata occasionale/);assert.match(html,/<dialog id="occasionalStopDialog"/);
   assert.match(html,/oninput="invalidateOccasionalAddress\(\)"/);
   assert.match(html,/<dialog id="occasionalStopDialog" class="gf-modal"/);
   assert.match(css,/@media\(max-width:640px\) \{ body\[data-gf-surface\] \.gf-button \{ min-height:var\(--gf-control-touch\) !important; \}/);

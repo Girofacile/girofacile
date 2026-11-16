@@ -41,6 +41,7 @@ function historyFixture(api){
   };
   vm.createContext(context);
   vm.runInContext(fs.readFileSync('static/format.js','utf8'),context);
+  vm.runInContext(sourceFunction(coreSource,'gfLateStartBadge'),context);
   vm.runInContext(weekSource,context);
   vm.runInContext(historySource,context);
   return {history:context.window.GFHistory,node,nodes,downloads,context};

@@ -18,6 +18,7 @@ function render(violation, overrides={}, fromHistory=false){
   vm.runInContext(core.slice(core.indexOf('const DASH_SCHEDULED_DAY_NAMES'),core.indexOf('async function loadDashboardScheduledPage(')),context);
   vm.runInContext(core.slice(core.indexOf('function dashScheduledDate('),core.indexOf('function dashScheduledRoutesOf(')),context);
   vm.runInContext(core.slice(core.indexOf('const GF_STAT_ICONS'),core.indexOf('function dashboardScheduledDetailHtml(')),context);
+  vm.runInContext(core.slice(core.indexOf('function sameDayDuplicatesAlert('),core.indexOf('async function cancelCurrentPreviewRoute(')),context);
   vm.runInContext(core.slice(core.indexOf('function renderRouteResult('),core.indexOf('async function loadRoadMapLibrary(')),context);
   context.route={id:1,status:'bozza',violations_count:violation?1:0,total_lateness_min:violation?5:0,
     consegne:[{ordine:1,cliente_nome:'Cliente <test>',indirizzo:'Test',arrivo_fisico:'08:40',inizio_servizio:'09:00',arrivo_stimato:'09:00',partenza_stimata:'09:15',attesa_min:20,lateness_min:violation?5:0,time_window_violation:violation?{}:null,warning:'Cliente in ZTL; Sponda richiesta'}]};
@@ -63,7 +64,8 @@ test('saved history cannot schedule or reorder stops and routes without IDs do n
 test('warnings stay next to their stop in the table, without summary cards',()=>{
   const html=render(false,{consegne:[{ordine:1,cliente_nome:'Cliente',indirizzo:'Via Roma',warning:'Percorso non fattibile'}],
     consegne_escluse:[{cliente_nome:'Cliente isola',indirizzo:'Via del Porto'}]});
-  assert.doesNotMatch(html,/Fermate da verificare|gf-alert/);
+  // Il riquadro messaggi vuoto e nascosto («gf-alert hidden») non conta come avviso.
+  assert.doesNotMatch(html,/Fermate da verificare|gf-alert(?! hidden)/);
   assert.match(html,/Percorso non fattibile/);
   const excluded=html.slice(html.indexOf('data-preview-excluded'));
   assert.match(excluded,/Cliente isola/);

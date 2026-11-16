@@ -4,10 +4,10 @@ const fs=require('node:fs');
 const vm=require('node:vm');
 const core=fs.readFileSync('static/dashboard/js/core.js','utf8');
 function fixture(){
-  const node={innerHTML:'',scrollIntoView(){},querySelector:()=>null,setAttribute(){}};
+  const node={innerHTML:'',scrollIntoView(){},querySelector:()=>null,setAttribute(){},classList:{toggle(){},add(){},remove(){},contains:()=>false}};
   const fields={},tabs=[],errors=[];
   const route={id:42,status:'programmato',nome:'Giro selezionato',data_giro:'2026-09-29',orario_partenza:'08:00',deposit_id:3,vehicle_id:4,driver_id:5,energy_price_primary:1.8,rientro_deposito:true,totale_km:0,totale_minuti:0,consegne:[{ordine:1,cliente_nome:'Cliente <test>',indirizzo:'Via Roma',delivery_status:'completata'},{ordine:2,cliente_nome:'Secondo',delivery_status:'mancata'},{ordine:3,cliente_nome:'Terzo',delivery_status:'in_attesa',note_operatore:'All\'ingresso "laterale"\nChiamare'}]};
-  const ctx=vm.createContext({document:{getElementById:()=>node,querySelector:()=>({checked:false})},deliverySignatureAction:()=>'',api:async()=>route,showTab:t=>tabs.push(t),set:(id,v)=>fields[id]=v,val:id=>fields[id]||'',todayIso:()=> '2026-09-29',refreshResourceAvailability:async()=>{},updateRouteEnergyPricingV895:async()=>{},cleanDeliveryForPayload:d=>d,updateRoutePlanningGateV68:()=>{},renderDeliveries:()=>{},toast:()=>{},alert:m=>errors.push(m),renderRouteResult:()=>{}});
+  const ctx=vm.createContext({document:{getElementById:()=>node,querySelector:()=>({checked:false,classList:{toggle(){},add(){},remove(){},contains:()=>false}})},deliverySignatureAction:()=>'',api:async()=>route,showTab:t=>tabs.push(t),set:(id,v)=>fields[id]=v,val:id=>fields[id]||'',todayIso:()=> '2026-09-29',refreshResourceAvailability:async()=>{},updateRouteEnergyPricingV895:async()=>{},cleanDeliveryForPayload:d=>d,updateRoutePlanningGateV68:()=>{},renderDeliveries:()=>{},toast:()=>{},alert:m=>errors.push(m),renderRouteResult:()=>{}});
   ctx.window=ctx;
   vm.runInContext(fs.readFileSync('static/format.js','utf8'),ctx);
   vm.runInContext(fs.readFileSync("static/driver-schedule.js","utf8"),ctx);

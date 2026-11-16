@@ -139,6 +139,16 @@
   --gf-border-width: 1px;
   --gf-border-width-strong: 2px;
   --gf-border: var(--gf-border-width) solid var(--gf-color-border);
+  /* Tinta di icone e numeri colorati; [data-tone="1…8"] in components.css la sceglie tra --gf-chart-*. */
+  --gf-tone: var(--gf-chart-1);
+  /* Elenco a comparsa delle caselle di scelta: posizione e misure le scrive design-system.js. */
+  --gf-listbox-left: 0;
+  --gf-listbox-top: auto;
+  --gf-listbox-bottom: auto;
+  --gf-listbox-width: auto;
+  --gf-listbox-max: none;
+  /* Onda della griglia del login: colore delle linee a riposo. */
+  --gf-auth-wave-rest: color-mix(in srgb, var(--gf-color-nav) 22%, transparent);
   --gf-radius-xs: 6px;
   --gf-radius-sm: 9px;
   --gf-radius-md: 10px;

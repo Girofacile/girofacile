@@ -5,6 +5,9 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Test dell’interfaccia tutti verdi: aggiornati quelli rimasti indietro (versioni degli script, testi dei tasti,
+  pagine finte senza classList o funzioni nuove); le variabili locali di stile (tinta, onda del login, tendina)
+  hanno ora il valore di partenza in theme.css.
 - Pagina Clienti: nella barra in alto il terzo riquadro «Tempo medio di scarico», con l’orologio e la scritta
   «minuti a cliente» (media dei minuti dei clienti, 10 dove manca un tempo); si aggiorna cambiando i minuti in tabella.
 - Tasti «vista elenco / vista schede» (Ordini, Clienti, Agenti, Depositi, Mezzi, Autisti): ora un unico riquadro
