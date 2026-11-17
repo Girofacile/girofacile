@@ -346,7 +346,13 @@ body[data-gf-surface] .gf-stat-strip__icon[data-tone="3"]{background:var(--gf-co
 body[data-gf-surface] .gf-stat-strip__icon[data-tone="4"]{background:var(--gf-color-avatar-4-bg);color:var(--gf-color-avatar-4)}
 body[data-gf-surface] .gf-stat-strip__icon[data-tone="5"]{background:var(--gf-color-avatar-5-bg);color:var(--gf-color-avatar-5)}
 body[data-gf-surface] .gf-stat-strip__icon[data-tone="6"]{background:var(--gf-color-avatar-6-bg);color:var(--gf-color-avatar-6)}
-body[data-gf-surface] .gf-stat-strip[data-icons="side"] .gf-stat-strip__cell{grid-template-columns:auto max-content minmax(0,1fr);column-gap:var(--gf-space-3)}
+body[data-gf-surface] .gf-stat-strip[data-icons="side"] .gf-stat-strip__cell{grid-template-columns:auto max-content minmax(0,1fr);column-gap:var(--gf-space-3);container-type:inline-size}
+/* Voce stretta (es. cinque numeri nel dettaglio di un giro): la spiegazione va sotto il numero
+   invece di finire in una colonna stretta che va a capo parola per parola. */
+@container (max-width:360px){
+  body[data-gf-surface] .gf-stat-strip[data-icons="side"] .gf-stat-strip__unit{grid-column:2/-1}
+  body[data-gf-surface] .gf-stat-strip[data-icons="side"] .gf-stat-strip__icon{grid-row:1/span 3;align-self:center}
+}
 body[data-gf-surface] .gf-stat-strip[data-icons="side"] .gf-stat-strip__icon{grid-row:1/span 2;align-self:center}
 body[data-gf-surface] .gf-stat-strip[data-icons="side"] .gf-stat-strip__label,
 body[data-gf-surface] .gf-stat-strip[data-icons="side"] .gf-stat-strip__cell>.gf-progress__track{grid-column:2/-1}
