@@ -5,6 +5,8 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Prezzi dei piani: accanto al prezzo solo «al mese»; tolte le diciture «prezzo finale» e «senza IVA da aggiungere» (landing, dashboard, app, Super Admin).
+  Nelle liste con spunta il testo lungo va a capo accanto alla spunta.
 - Landing in stile «sito moderno» (variante C): apertura scura con luci, titolo con riflesso, dashboard e telefono autista in primo piano, riquadri con foto,
   prezzi da sfogliare sul telefono e affiancati sul computer, domande a scomparsa, barra «Prova gratis» fissa sul telefono. Tutta larghezza sul computer.
   Stessi prezzi, prova gratuita e bonus elettrici di prima. Nuovi componenti nel design system (vedi docs/design-system.md).

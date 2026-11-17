@@ -11,7 +11,7 @@
 <title>GiroFacile — Pianifica le consegne in pochi minuti</title>
 <meta name="description" content="GiroFacile è il gestionale per organizzare, pianificare e monitorare i giri di consegna: percorsi su uno o più mezzi, portale autisti e tracking per i clienti.">
 <link rel="stylesheet" href="/static/design-system/theme.css?v=gf_variabili_tema_20261116">
-<link rel="stylesheet" href="/static/design-system/components.css?v=gf_landing_moderna_20261117">
+<link rel="stylesheet" href="/static/design-system/components.css?v=gf_prezzi_mensili_20261117">
 <link rel="stylesheet" href="/static/design-system/layout.css?v=gf_audit_20261020">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="/static/design-system/design-system.js?v=gf_schede_2_20261108" defer></script>
@@ -145,7 +145,7 @@
         return '<section class="gf-panel pricing-card" data-recommended="' + recommended + '">'
           + '<header class="gf-panel__header"><h3 class="gf-panel__title">' + escapePublicPlan(p.name) + '</h3>' + (recommended ? '<span class="gf-badge" data-status="info">Consigliato</span>' : '') + '</header>'
           + '<div class="gf-panel__body gf-stack">'
-          + '<p class="gf-cluster"><strong class="gf-stat-strip__value">€ ' + escapePublicPlan(p.price_eur) + '</strong><small class="gf-stat-strip__unit">al mese, prezzo finale</small></p>'
+          + '<p class="gf-cluster"><strong class="gf-stat-strip__value">€ ' + escapePublicPlan(p.price_eur) + '</strong><small class="gf-stat-strip__unit">al mese</small></p>'
           + '<a class="gf-button" data-variant="' + (recommended ? 'primary' : 'secondary') + '" href="/login?plan=' + encodeURIComponent(key) + '">' + escapePublicPlan(publicTrialAction()) + '</a>'
           + bonusHtml
           + '<ul class="gf-list gf-stack" data-gap="sm">' + resourceHtml + capabilityHtml + '</ul>'
@@ -160,7 +160,7 @@
     renderPublicTrial();
     </script>
       <div class="gf-stack" data-gap="sm">
-        <p class="gf-muted">Prezzi mensili finali, senza IVA da aggiungere. Tutti i piani includono inserimento manuale e importazione CSV/Excel degli ordini, pianificazione su un mezzo, storico ed esportazione dati. I collaboratori sono accessi aggiuntivi al titolare.</p>
+        <p class="gf-muted">Prezzi mensili. Tutti i piani includono inserimento manuale e importazione CSV/Excel degli ordini, pianificazione su un mezzo, storico ed esportazione dati. I collaboratori sono accessi aggiuntivi al titolare.</p>
         <p class="gf-muted" data-public-trial-copy="note">Consulta i piani e le condizioni di attivazione.</p>
       </div>
       <ul class="gf-trust" aria-label="Garanzie">

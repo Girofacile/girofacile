@@ -11,7 +11,7 @@
 <title>GiroFacile · Admin</title>
 <script src="/api/billing/catalog.js"></script>
 <link rel="stylesheet" href="/static/design-system/theme.css?v=gf_variabili_tema_20261116">
-<link rel="stylesheet" href="/static/design-system/components.css?v=gf_landing_moderna_20261117">
+<link rel="stylesheet" href="/static/design-system/components.css?v=gf_prezzi_mensili_20261117">
 <link rel="stylesheet" href="/static/design-system/layout.css?v=gf_scala_20261101">
 <script src="/static/design-system/design-system.js?v=gf_schede_2_20261108" defer></script>
 <script src="/static/design-system/shell.js?v=gf_ingranaggio_20261114" defer></script>
@@ -776,7 +776,7 @@ function adminPlanSummary(plan) {
     ['Autisti', count(p.max_drivers)], ['Collaboratori aggiuntivi', count(p.max_collaborators)],
     ['Bonus mezzi elettrici', '+' + count(p.electric_vehicle_bonus)], ['Integrazione AI', p.has_ai ? 'Inclusa' : 'Non inclusa'],
   ];
-  return '<div class="gf-stack" data-gap="sm"><strong>Limiti e funzioni del piano ' + escapeHtml(p.name) + '</strong><dl class="gf-details">' + rows.map(([label, value]) => '<div class="gf-details__item"><dt>' + label + '</dt><dd>' + value + '</dd></div>').join('') + '</dl><p class="gf-muted">Prezzi mensili finali, senza IVA da aggiungere. Portale e GPS autista inclusi. Tracking clienti, distribuzione automatica su più mezzi, chat, agenti, prove di consegna, integrazioni e report avanzati: ' + (['has_customer_tracking','has_fleet_planning','has_order_integrations','has_driver_chat','has_agents','has_reports','has_delivery_signature','has_photo_proof','has_pod_pdf'].every(flag=>p[flag]===true) ? 'inclusi.' : 'non inclusi.') + '</p></div>';
+  return '<div class="gf-stack" data-gap="sm"><strong>Limiti e funzioni del piano ' + escapeHtml(p.name) + '</strong><dl class="gf-details">' + rows.map(([label, value]) => '<div class="gf-details__item"><dt>' + label + '</dt><dd>' + value + '</dd></div>').join('') + '</dl><p class="gf-muted">Prezzi mensili. Portale e GPS autista inclusi. Tracking clienti, distribuzione automatica su più mezzi, chat, agenti, prove di consegna, integrazioni e report avanzati: ' + (['has_customer_tracking','has_fleet_planning','has_order_integrations','has_driver_chat','has_agents','has_reports','has_delivery_signature','has_photo_proof','has_pod_pdf'].every(flag=>p[flag]===true) ? 'inclusi.' : 'non inclusi.') + '</p></div>';
 }
 function updateAdminPlanSummary(plan) {
   const box = document.getElementById('adminPlanSummary');

@@ -322,6 +322,9 @@ body[data-gf-surface] .gf-panel__footer{
 /* Piede con contenuto a sinistra (es. riepilogo a badge) e azione a destra. */
 body[data-gf-surface] .gf-panel__footer[data-justify="between"]{justify-content:space-between;align-items:center}
 body[data-gf-surface] .gf-list{margin:0;padding:0;list-style:none}
+/* Righe con spunta e testo: il testo lungo va a capo accanto alla spunta, non sotto. */
+body[data-gf-surface] .gf-list>li.gf-cluster{flex-wrap:nowrap}
+body[data-gf-surface] .gf-list>li.gf-cluster>:last-child{min-width:0}
 body[data-gf-surface] .gf-list-item{display:flex;align-items:center;gap:var(--gf-space-4);padding:var(--gf-space-4) var(--gf-space-5)}
 body[data-gf-surface] .gf-list-item+.gf-list-item{border-top:var(--gf-border)}
 body[data-gf-surface] button.gf-list-item{width:100%;border:0;background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer}
