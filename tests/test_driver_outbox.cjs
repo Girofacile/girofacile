@@ -206,3 +206,66 @@ test('an older queue that cannot be migrated is still sent once, even after reop
   await create({storage,key:'k',send,locks:null}).flush();
   assert.deepEqual(sent,[1]);
 });
+
+// Telefono con spazio limitato: rifiuta una scrittura che porterebbe il totale oltre «limit» caratteri.
+function limitedStorage(limit){
+  const s=memoryStorage();const set=s.setItem;
+  s.setItem=(k,v)=>{let used=0;for(const [key,val] of s.data)if(key!==k)used+=key.length+val.length;
+    if(used+k.length+String(v).length>limit)throw new Error('QuotaExceededError');set(k,v);};
+  return s;
+}
+const legacyQueue=()=>JSON.stringify([
+  {kind:'complete',url:'/1',body:{},routeId:1,deliveryId:1,queuedAt:'2026-11-17T08:00:00Z'},
+  {kind:'complete',url:'/2',body:{},routeId:1,deliveryId:2,queuedAt:'2026-11-17T08:05:00Z'}]);
+
+test('an older queue only partly migrated is sent once, also after reopening',async()=>{
+  const queue=legacyQueue();
+  // Spazio per la vecchia lista e una sola voce separata: la migrazione riesce a metà.
+  const entry=JSON.stringify({...JSON.parse(queue)[0],opId:'legacy-xxxxxxx'}).length+20;
+  const storage=limitedStorage(1+queue.length+entry);storage.data.set('k',queue);
+  const sent=[];const send=async item=>{sent.push(item.deliveryId);};
+  const page=create({storage,key:'k',send,locks:null});
+  assert.equal([...storage.data.keys()].filter(k=>k.startsWith('k:')).length,1,'migrazione parziale');
+  await page.flush();
+  await create({storage,key:'k',send,locks:null}).flush();
+  assert.deepEqual(sent,[1,2]);
+  assert.equal(storage.data.size,0);
+});
+
+test('an older queue that cannot be written at all is sent once, also after reopening',async()=>{
+  const storage=memoryStorage();storage.data.set('k',legacyQueue());
+  storage.setItem=()=>{throw new Error('QuotaExceededError');};
+  const sent=[];const send=async item=>{sent.push(item.deliveryId);};
+  await create({storage,key:'k',send,locks:null}).flush();
+  await create({storage,key:'k',send,locks:null}).flush();
+  assert.deepEqual(sent,[1,2]);
+});
+
+test('replacing an outcome on a full phone never loses both copies',async()=>{
+  const offlineSend=async()=>{throw offline();};
+  // Spazio sufficiente per una sola voce: il nuovo esito prende il posto del vecchio.
+  const first=memoryStorage();
+  create({storage:first,key:'k',send:offlineSend}).add({kind:'missed',url:'/m',body:{motivo:'chiuso'},routeId:1,deliveryId:1});
+  const one=[...first.data].reduce((n,[k,v])=>n+k.length+v.length,0);
+  const storage=limitedStorage(one+5);
+  const page=create({storage,key:'k',send:offlineSend});
+  page.add({kind:'missed',url:'/m',body:{motivo:'chiuso'},routeId:1,deliveryId:1});
+  assert.equal(page.add({kind:'missed',url:'/m',body:{motivo:'assente'},routeId:1,deliveryId:1}),true);
+  let reopened=create({storage,key:'k',send:offlineSend});
+  assert.equal(reopened.count(),1);
+  assert.equal(reopened.pending()[0].body.motivo,'assente');
+  // Il nuovo esito non entra nemmeno al posto del vecchio: resta il vecchio sul telefono,
+  // la pagina aperta invia solo il nuovo.
+  const big='x'.repeat(200);
+  const sent=[];
+  const tight=create({storage,key:'k',send:async item=>{sent.push(item.body.motivo);}});
+  assert.equal(tight.add({kind:'missed',url:'/m',body:{motivo:big},routeId:1,deliveryId:1}),false);
+  assert.equal(tight.count(),1);
+  reopened=create({storage,key:'k',send:offlineSend});
+  assert.equal(reopened.count(),1,'la copia precedente non deve sparire');
+  assert.equal(reopened.pending()[0].body.motivo,'assente');
+  await tight.flush();
+  assert.deepEqual(sent,[big]);
+  // Inviato il nuovo, la copia vecchia non riparte alla riapertura.
+  assert.equal(create({storage,key:'k',send:offlineSend}).count(),0);
+});

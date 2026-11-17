@@ -20,9 +20,11 @@
     // anche se nel frattempo un nuovo esito della stessa consegna è entrato in coda.
     const newOpId = () => Date.now().toString(36) + '-' + (++sequence).toString(36) + '-' + Math.random().toString(36).slice(2, 8);
 
-    // Esiti già inviati in questa pagina: se il telefono non riesce a salvarne la rimozione,
-    // non vengono comunque rimandati.
-    const sent = new Set();
+    // Esiti da non inviare più da questa pagina: quelli già inviati (se il telefono non riesce
+    // a salvarne la rimozione) e quelli sostituiti da un esito più recente rimasto solo in pagina.
+    const hidden = new Set();
+    // Esito nuovo rimasto solo in pagina -> copie precedenti rimesse sul telefono, da togliere quando parte.
+    const superseded = new Map();
     // Ogni esito ha una voce propria sul telefono (key + ':' + opId). Togliere un esito inviato
     // è quindi una semplice cancellazione, che riesce anche a telefono pieno: riaprendo il
     // portale l'esito confermato non riparte. La lista unica sotto «key» è della versione precedente.
@@ -62,34 +64,58 @@
     function load(){
       const stored = readStored();
       const known = new Set(stored.map(x => x.opId));
-      items = stored.concat(unsaved.filter(x => !known.has(x.opId))).filter(x => !sent.has(x.opId)).sort(byQueue);
+      items = stored.concat(unsaved.filter(x => !known.has(x.opId))).filter(x => !hidden.has(x.opId)).sort(byQueue);
     }
     function persist(item){
       if(!storage) return false;
       try { storage.setItem(prefix + item.opId, JSON.stringify(item)); return true; }
       catch(e) { return false; }
     }
+    function hasEntry(opId){
+      try { return storage.getItem(prefix + opId) != null; } catch(e) { return false; }
+    }
+    // Toglie un esito ovunque sia salvato: nella sua voce e, se c'è ancora, nella lista della
+    // versione precedente (dopo una migrazione riuscita solo in parte può essere in entrambe).
     function forget(opId){
       if(!storage) return;
-      if(legacyIds.has(opId)){
-        const rest = readLegacy().filter(x => x.opId !== opId);
-        try { if(rest.length) storage.setItem(key, JSON.stringify(rest)); else storage.removeItem(key); }
-        catch(e) {}
-        return;
-      }
       try { storage.removeItem(prefix + opId); } catch(e) {}
+      const legacy = readLegacy();
+      if(!legacy.some(x => x.opId === opId)) return;
+      const rest = legacy.filter(x => x.opId !== opId && !hidden.has(x.opId));
+      // Lo spazio appena liberato può bastare a spostare gli altri esiti in voci separate:
+      // allora la vecchia lista si può cancellare senza perdere nulla.
+      const moved = rest.every(x => hasEntry(x.opId) || persist(x));
+      try {
+        if(!rest.length || moved) storage.removeItem(key);
+        else storage.setItem(key, JSON.stringify(rest));
+      } catch(e) {}
     }
     function update(change){
       load();
       const before = new Map(items.map(x => [x.opId, x]));
       const after = change(items);
       const kept = new Set(after.map(x => x.opId));
-      let persisted = true;
-      for(const opId of before.keys()) if(!kept.has(opId)){ forget(opId); unsaved = unsaved.filter(x => x.opId !== opId); }
-      for(const item of after) if(!before.has(item.opId) && !persist(item)){ persisted = false; unsaved.push(item); }
+      const removed = [...before.keys()].filter(opId => !kept.has(opId));
+      const added = after.filter(item => !before.has(item.opId));
+      // Prima si scrive il nuovo, poi si toglie il vecchio: un esito sostituito non deve sparire
+      // se il telefono non riesce a salvare quello nuovo.
+      let failed = added.filter(item => !persist(item));
+      for(const opId of removed){ forget(opId); unsaved = unsaved.filter(x => x.opId !== opId); }
+      if(failed.length && removed.length){
+        // La copia sostituita ha liberato spazio: si riprova a salvare il nuovo esito.
+        failed = failed.filter(item => !persist(item));
+        if(failed.length){
+          // Ancora niente spazio: si rimette la copia precedente, così riaprendo il portale
+          // resta almeno quella; questa pagina invia comunque solo l'esito nuovo.
+          const restored = removed.filter(opId => persist(before.get(opId)));
+          restored.forEach(opId => hidden.add(opId));
+          for(const item of failed) superseded.set(item.opId, restored);
+        }
+      }
+      for(const item of failed) unsaved.push(item);
       items = after;
       changed();
-      return persisted;
+      return failed.length === 0;
     }
     // Gli esiti della versione precedente passano a voci separate; la vecchia lista si toglie
     // solo quando tutti sono stati copiati.
@@ -124,7 +150,10 @@
         }
         // Si toglie l'operazione appena inviata, non «la prima»: potrebbe essere stata sostituita.
         update(list => list.filter(x => x.opId !== item.opId));
-        sent.add(item.opId);
+        hidden.add(item.opId);
+        // Inviato l'esito nuovo, le copie vecchie che lo aspettavano sul telefono non servono più.
+        for(const opId of superseded.get(item.opId) || []) forget(opId);
+        superseded.delete(item.opId);
       }
       return rejected;
     }

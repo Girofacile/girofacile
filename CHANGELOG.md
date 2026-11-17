@@ -11,6 +11,8 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
   e un errore del server (5xx) lascia l'esito in coda invece di scartarlo.
   Ogni esito ha una voce propria sul telefono: togliere quello inviato è una cancellazione, che riesce anche a telefono pieno,
   quindi un esito confermato non riparte nemmeno riaprendo il portale. La coda della versione precedente passa alle voci separate.
+  A telefono pieno: un esito inviato viene tolto anche dalla vecchia lista (niente reinvii dopo una migrazione a metà)
+  e un esito sostituito viene scritto prima di togliere quello vecchio, così non spariscono entrambi.
 - GPS e avvio giro bloccano giro e autista nello stesso ordine: niente più blocco reciproco.
 - Webhook ordini, invio ordini via API, caricamento file ordini, webhook Stripe e login lavorano col database fuori dal ciclo delle richieste;
   l'attesa di una riga bloccata è limitata a 5 secondi (poi «riprova»).
