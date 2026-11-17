@@ -152,18 +152,18 @@ window.GFHistory = (() => {
   }
 
   /* --- Pannello del giro -------------------------------------------------------- */
+  // Elenco accanto alla mappa, compatto come nei giri in corso della Dashboard: numero (✓ se consegnata),
+  // nome del cliente ed esito. Orari, prove di consegna e note sono nella tabella «Dettaglio completo» sotto.
   function stopsHtml(r, autoHeight=true){
     const rows = r.consegne || [];
     if(!rows.length) return '<div class="gf-empty"><p>Nessuna fermata collegata a questo giro.</p></div>';
-    const planned = gfPlannedArrivalDates(r, rows);
     const breaks = after => GFDriverBreaks.cards(r, after, 'li');
     return `<ol class="gf-stop-list"${autoHeight ? ' data-height="auto"' : ''} aria-label="Fermate del giro">${breaks(0)}${rows.map((d, idx) => {
-      const st = status(d), note = d.note_operatore || d.note_autista || d.note || '', real = gfRealArrival(d, r.data_giro);
-      return `<li class="gf-stop${st === 'completata' ? ' is-done' : st === 'mancata' ? ' is-miss' : ''}"><span class="gf-stop__number">${esc(d.ordine || idx+1)}</span>
-        <span class="gf-stop__main"><span class="gf-stop__name">${esc(d.cliente_nome || '-')}</span>
-          <span class="gf-stop__meta">${esc(d.indirizzo || '-')} · previsto ${esc(gfPlannedArrival(d))}${real ? ` · reale ${esc(real)}` : ''} ${gfDeltaBadge(planned[idx], gfRealArrivalDate(d))}</span>
-          <span class="gf-stop__meta">${deliveryStatusPill(st)}${d.motivo_mancata ? ` <small>${esc(gfMissedReason(d.motivo_mancata))}</small>` : ''} ${deliverySignatureAction(d, r.driver_name)} ${trackingButton(d, r)}${note ? ` <button type="button" class="gf-button" data-variant="ghost" data-size="sm" data-note="${esc(String(note))}" onclick="alert(this.dataset.note)">Note</button>` : ''}</span>
-        </span><span class="gf-stop__time">${esc(real || gfPlannedArrival(d))}</span></li>${breaks(idx+1)}`;
+      const st = status(d), done = st === 'completata', miss = st === 'mancata';
+      const label = done ? 'Consegnata' : miss ? 'Mancata' : 'Non gestita';
+      return `<li class="gf-stop${done ? ' is-done' : miss ? ' is-miss' : ''}"><span class="gf-stop__number" aria-hidden="true">${done ? '✓' : esc(d.ordine || idx+1)}</span>
+        <span class="gf-stop__main"><span class="gf-stop__name">${esc(d.cliente_nome || '-')}</span></span>
+        <span class="gf-badge" data-status="${done ? 'success' : miss ? 'danger' : 'neutral'}">${label}</span></li>${breaks(idx+1)}`;
     }).join('')}</ol>`;
   }
   // Dettaglio a pagina intera: barra numeri con icone, mappa con fermate ed esito, tabella apribile.

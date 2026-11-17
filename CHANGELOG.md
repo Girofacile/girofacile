@@ -5,6 +5,8 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Storico › dettaglio del giro: l’elenco delle fermate accanto alla mappa è compatto come nei giri in corso
+  (numero o ✓, nome del cliente, esito); orari, prove e note restano nella tabella «Dettaglio completo».
 - Dopo aver eliminato un giro (pagina «Nessun giro in corso» o anteprima eliminata) «Pianifica un giro» porta agli
   Ordini (o ai Clienti), non più alla programmazione vuota: un giro parte sempre da ordini o clienti.
 - Barre dei numeri con icone: in una voce stretta (es. i cinque numeri del dettaglio di un giro nello Storico)
