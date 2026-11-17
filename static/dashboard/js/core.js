@@ -3927,7 +3927,8 @@ async function cancelCurrentPreviewRoute(){
     await api(`/api/routes/${Number(lastRouteResult.id)}/cancel`, {method:"POST", body:"{}"});
     lastRouteResult = null;
     await Promise.allSettled([loadRoutes(), refreshResourceAvailability()]);
-    showTab("giro");
+    // Giro eliminato: si riparte dagli Ordini (o dai Clienti), non dalla programmazione vuota.
+    openPlanningSelection();
   }catch(e){
     alert(e.message || "Errore durante l'annullamento del giro.");
   }

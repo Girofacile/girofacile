@@ -343,7 +343,8 @@ window.GFInProgressReference=(()=>{
     const action=event.target.closest('[data-ip-action]');
     if(!action)return;
     switch(action.dataset.ipAction){
-      case 'plan':showTab('giro');break;
+      // Un giro nuovo parte sempre dagli Ordini (o dai Clienti), mai dalla programmazione vuota.
+      case 'plan':(window.openPlanningSelection||(()=>showTab('ordini')))();break;
       case 'zoom-in':state.map?.zoomIn();break;
       case 'zoom-out':state.map?.zoomOut();break;
       case 'follow':state.follow=!state.follow;drawGPS();break;

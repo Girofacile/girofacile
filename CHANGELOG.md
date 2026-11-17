@@ -5,6 +5,8 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Dopo aver eliminato un giro (pagina «Nessun giro in corso» o anteprima eliminata) «Pianifica un giro» porta agli
+  Ordini (o ai Clienti), non più alla programmazione vuota: un giro parte sempre da ordini o clienti.
 - Barre dei numeri con icone: in una voce stretta (es. i cinque numeri del dettaglio di un giro nello Storico)
   la spiegazione va sotto il numero invece di andare a capo parola per parola.
 - Super Admin › Impostazioni: nuovo riquadro «Email di invio (SMTP)» con server, porta, casella, password,
