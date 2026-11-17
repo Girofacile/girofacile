@@ -5,6 +5,8 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- «Nuovo giro» / «Pianifica giro»: si apre «Da dove vuoi partire?» con due grandi riquadri, Ordini e Clienti.
+  Se l'account può usare una sola delle due strade si va lì direttamente. Nuovo nel sistema: button.gf-card (riquadro cliccabile).
 - Super Admin › Errori sistema: tabella compatta (Quando, Sezione, Azienda, Errore, Gravità, Stato). L’errore è una frase
   breve e comprensibile e la sezione indica dove è successo (Ordini, Giri, Portale autista, Invio email…); il testo tecnico
   completo resta nel dettaglio. I testi degli errori sono ora mostrati in modo sicuro (caratteri speciali neutralizzati).

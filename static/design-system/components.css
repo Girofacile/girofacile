@@ -96,6 +96,9 @@ body[data-gf-surface] .gf-card {
   box-shadow: var(--gf-shadow-sm); padding: var(--gf-space-5);
 }
 body[data-gf-surface] .gf-card[data-variant="stat"] { padding: var(--gf-space-4); }
+/* Riquadro cliccabile (es. «Da dove vuoi partire?»): un .gf-card usato come pulsante. */
+body[data-gf-surface] button.gf-card { width: 100%; font: inherit; color: inherit; text-align: left; cursor: pointer; transition: border-color var(--gf-motion-duration), box-shadow var(--gf-motion-duration); }
+body[data-gf-surface] button.gf-card:hover { border-color: var(--gf-color-primary); box-shadow: var(--gf-shadow-md); }
 body[data-gf-surface] .gf-card[data-variant="action"] { display: flex; align-items: center; justify-content: space-between; gap: var(--gf-space-4); }
 body[data-gf-surface] .gf-card[data-variant="info"] { background: var(--gf-color-info-bg); border-color: var(--gf-color-info); }
 body[data-gf-surface] .gf-card[data-variant="warning"] { background: var(--gf-color-warning-bg); border-color: var(--gf-color-warning); }

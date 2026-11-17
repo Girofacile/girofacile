@@ -250,13 +250,33 @@ if(typeof window!=="undefined" && typeof window.setInterval==="function"){
   window.setInterval(refreshDashboardGreeting,60_000);
 }
 
-/* New routes start from a delivery selection; the planner remains available for saved routes. */
+/* Un giro nuovo parte sempre da una selezione di consegne: ordini o clienti, a scelta.
+   Con entrambe le strade si apre «Da dove vuoi partire?»; con una sola si va lì direttamente. */
+function planningStartOptions(){
+  const access=window.GFCompanyAccess;
+  return {
+    orders:!access||access.can('orders.plan'),
+    customers:!access||(access.can('routes.plan')&&access.allowedTab('clienti')),
+  };
+}
 function openPlanningSelection(){
-  if(!window.GFCompanyAccess||GFCompanyAccess.can('orders.plan')){
-    showTab('ordini');return;
+  const options=planningStartOptions();
+  if(options.orders&&options.customers){
+    const dialog=document.getElementById('planningStartDialog');
+    if(dialog&&typeof dialog.showModal==='function'){if(!dialog.open)dialog.showModal();return;}
   }
-  if(GFCompanyAccess.can('routes.plan')&&GFCompanyAccess.allowedTab('clienti')){
-    showTab('clienti');return;
-  }
+  if(options.orders){showTab('ordini');return;}
+  if(options.customers){showTab('clienti');return;}
   toast('La selezione delle consegne non è assegnata al tuo account.');
 }
+function closePlanningStart(){
+  const dialog=document.getElementById('planningStartDialog');
+  if(dialog?.open)dialog.close();
+}
+function choosePlanningStart(kind){
+  closePlanningStart();
+  showTab(kind==='customers'?'clienti':'ordini');
+}
+globalThis.document?.getElementById('planningStartDialog')?.addEventListener('click',event=>{
+  if(event.target===event.currentTarget)closePlanningStart();  // clic fuori dalla finestra
+});
