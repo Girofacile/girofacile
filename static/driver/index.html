@@ -258,7 +258,7 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
 <script src="/static/live-gps.js?v=gf_posizione_semplice_20261114"></script>
 <link rel="stylesheet" href="/static/pod.css?v=gf_driver_fix_20261020">
 <script src="/static/pod.js?v=gf_pod_azienda_20261108"></script>
-<script src="/static/driver-outbox.js?v=gf_outbox_invio_unico_20261117"></script>
+<script src="/static/driver-outbox.js?v=gf_outbox_voci_20261117"></script>
 
 <link rel="stylesheet" href="/static/design-system/theme.css?v=gf_variabili_tema_20261116">
 <link rel="stylesheet" href="/static/design-system/components.css?v=gf_prezzi_mensili_20261117">
@@ -573,7 +573,7 @@ function setupOutbox() {
   });
   window.addEventListener('online', () => flushOutbox());
   // Un'altra scheda del portale ha aggiunto o inviato esiti: si aggiorna il riepilogo.
-  window.addEventListener('storage', e => { if(e.key === 'gf-driver-outbox-' + me.driver_id) outbox.refresh(); });
+  window.addEventListener('storage', e => { const k = 'gf-driver-outbox-' + me.driver_id; if(e.key === null || e.key === k || String(e.key).startsWith(k + ':')) outbox.refresh(); });
   setInterval(() => { if(!document.hidden) flushOutbox(); }, 20000);
   renderOutboxBanner();
   flushOutbox();

@@ -5,7 +5,8 @@ const {create,isRetryable,overlay}=require('../static/driver-outbox.js');
 
 function memoryStorage(){
   const data=new Map();
-  return {getItem:k=>data.has(k)?data.get(k):null,setItem:(k,v)=>data.set(k,String(v)),data};
+  return {getItem:k=>data.has(k)?data.get(k):null,setItem:(k,v)=>data.set(k,String(v)),removeItem:k=>data.delete(k),
+    key:i=>[...data.keys()][i]??null,get length(){return data.size;},data};
 }
 const offline=()=>Object.assign(new Error('Connessione assente.'),{offline:true});
 const http=(status,message='errore')=>Object.assign(new Error(message),{status});
@@ -114,7 +115,7 @@ test('two open tabs never overwrite each other outcomes',async()=>{
   tabA.add({kind:'complete',url:'/1',body:{},routeId:1,deliveryId:1});
   tabB.add({kind:'complete',url:'/2',body:{},routeId:1,deliveryId:2});
   tabA.add({kind:'missed',url:'/3',body:{},routeId:1,deliveryId:3});
-  assert.equal(JSON.parse(storage.getItem('k')).length,3);
+  assert.equal([...storage.data.keys()].filter(k=>k.startsWith('k:')).length,3);
   assert.equal(tabA.count(),3);assert.equal(tabB.count(),3);
   online=true;
   await tabB.flush();
@@ -163,4 +164,45 @@ test('an outcome is not sent twice when the phone cannot save its removal',async
   await box.flush();await box.flush();
   assert.deepEqual(sent,[1]);
   assert.equal(box.count(),0);
+});
+
+test('a confirmed outcome is not sent again after reopening the portal when the phone cannot write',async()=>{
+  const storage=memoryStorage();const sent=[];let online=false;
+  const send=async item=>{if(!online)throw offline();sent.push(item.deliveryId);};
+  const first=create({storage,key:'k',send,locks:null});
+  first.add({kind:'complete',url:'/1',body:{},routeId:1,deliveryId:1});
+  first.add({kind:'complete',url:'/2',body:{},routeId:1,deliveryId:2});
+  // Da qui il telefono legge ma non riesce più a scrivere.
+  storage.setItem=()=>{throw new Error('QuotaExceededError');};
+  online=true;
+  await first.flush();
+  assert.deepEqual(sent,[1,2]);
+  const reopened=create({storage,key:'k',send,locks:null});
+  assert.equal(reopened.count(),0);
+  await reopened.flush();
+  assert.deepEqual(sent,[1,2]);
+});
+
+test('older single-list queues move to separate entries and are sent once',async()=>{
+  const storage=memoryStorage();const sent=[];
+  storage.setItem('k',JSON.stringify([
+    {kind:'complete',url:'/1',body:{},routeId:1,deliveryId:1,queuedAt:'2026-11-17T08:00:00Z'},
+    {kind:'missed',url:'/2',body:{motivo:'chiuso'},routeId:1,deliveryId:2,queuedAt:'2026-11-17T08:05:00Z'}]));
+  const box=create({storage,key:'k',send:async item=>{sent.push(item.deliveryId);},locks:null});
+  assert.equal(storage.getItem('k'),null);
+  assert.equal(box.count(),2);
+  await box.flush();
+  const reopened=create({storage,key:'k',send:async item=>{sent.push(item.deliveryId);},locks:null});
+  await reopened.flush();
+  assert.deepEqual(sent,[1,2]);
+});
+
+test('an older queue that cannot be migrated is still sent once, even after reopening',async()=>{
+  const storage=memoryStorage();const sent=[];
+  storage.setItem('k',JSON.stringify([{kind:'complete',url:'/1',body:{},routeId:1,deliveryId:1,queuedAt:'2026-11-17T08:00:00Z'}]));
+  storage.setItem=()=>{throw new Error('QuotaExceededError');};
+  const send=async item=>{sent.push(item.deliveryId);};
+  await create({storage,key:'k',send,locks:null}).flush();
+  await create({storage,key:'k',send,locks:null}).flush();
+  assert.deepEqual(sent,[1]);
 });

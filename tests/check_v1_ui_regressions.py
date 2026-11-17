@@ -204,14 +204,14 @@ def main():
                 page.locator("#outboxBanner").wait_for(state="visible")
                 assert page.locator("#modalMissed").is_hidden()
                 assert "1 esito salvato" in page.locator("#outboxBannerText").inner_text()
-                assert page.evaluate("JSON.parse(localStorage.getItem('gf-driver-outbox-undefined')).length") == 1
+                assert page.evaluate("Object.keys(localStorage).filter(k => k.startsWith('gf-driver-outbox-undefined:')).length") == 1
                 assert state["outcomes"] == []
                 page.screenshot(path=str(output/"driver-offline-outcome-390.png"), full_page=True)
                 state["offline"] = False
                 page.evaluate("window.dispatchEvent(new Event('online'))")
                 page.locator("#outboxBanner").wait_for(state="hidden")
                 assert [o["body"]["motivo"] for o in state["outcomes"]] == ["assente"], state["outcomes"]
-                assert page.evaluate("JSON.parse(localStorage.getItem('gf-driver-outbox-undefined')).length") == 0
+                assert page.evaluate("Object.keys(localStorage).filter(k => k.startsWith('gf-driver-outbox-undefined:')).length") == 0
                 checks.append("driver: missed outcome kept offline and sent when back online")
                 page.close()
             finally:

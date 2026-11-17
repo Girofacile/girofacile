@@ -9,7 +9,8 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
   se l'email di invito non parte, al delegato non viene mai mostrata la password e quella esistente non cambia.
 - Portale autista: gli esiti salvati sul telefono sono condivisi fra schede aperte (nessuna sovrascrive l'altra), una sola scheda invia alla volta
   e un errore del server (5xx) lascia l'esito in coda invece di scartarlo.
-  Gli esiti della versione precedente e quelli la cui rimozione non si riesce a salvare non vengono mai inviati due volte.
+  Ogni esito ha una voce propria sul telefono: togliere quello inviato è una cancellazione, che riesce anche a telefono pieno,
+  quindi un esito confermato non riparte nemmeno riaprendo il portale. La coda della versione precedente passa alle voci separate.
 - GPS e avvio giro bloccano giro e autista nello stesso ordine: niente più blocco reciproco.
 - Webhook ordini, invio ordini via API, caricamento file ordini, webhook Stripe e login lavorano col database fuori dal ciclo delle richieste;
   l'attesa di una riga bloccata è limitata a 5 secondi (poi «riprova»).
