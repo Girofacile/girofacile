@@ -4,70 +4,103 @@
  * le ripetizioni dello stesso esito, quindi un invio doppio non crea duplicati. */
 (function(root){
   'use strict';
-  const RETRY_STATUSES = new Set([0, 401, 408, 429, 502, 503, 504]);
+  // Errori temporanei: l'esito resta in coda. Gli errori 5xx del server sono sempre temporanei:
+  // scartare l'esito per un 500 farebbe perdere una consegna fatta.
+  const RETRY_STATUSES = new Set([0, 401, 408, 425, 429]);
 
-  function create({storage, send, key, onChange}={}){
+  function create({storage, send, key, onChange, locks}={}){
     let items = [];
     let flushing = null;
     let sequence = 0;
+    // Esiti che non è stato possibile scrivere sul telefono (memoria piena): restano in questa pagina.
+    let unsaved = [];
+    const lockManager = locks === undefined ? (root.navigator && root.navigator.locks) : locks;
     const changed = () => { if(onChange) onChange(items.slice()); };
     // Ogni operazione ha un identificativo proprio: dopo l'invio si toglie solo quella confermata,
     // anche se nel frattempo un nuovo esito della stessa consegna è entrato in coda.
     const newOpId = () => Date.now().toString(36) + '-' + (++sequence).toString(36) + '-' + Math.random().toString(36).slice(2, 8);
 
+    function readStored(){
+      let stored;
+      try { stored = JSON.parse(storage?.getItem(key) || '[]'); }
+      catch(e) { stored = []; }
+      if(!Array.isArray(stored)) stored = [];
+      return stored.filter(Boolean).map(item => item.opId ? item : {...item, opId: newOpId()});
+    }
+    // Il telefono è la fonte comune a tutte le schede: si rilegge sempre prima di modificare,
+    // così una seconda scheda aperta non cancella gli esiti salvati dalla prima.
     function load(){
-      try { items = JSON.parse(storage?.getItem(key) || '[]'); }
-      catch(e) { items = []; }
-      if(!Array.isArray(items)) items = [];
-      items = items.map(item => item && item.opId ? item : {...item, opId: newOpId()});
+      const stored = readStored();
+      const known = new Set(stored.map(x => x.opId));
+      items = stored.concat(unsaved.filter(x => !known.has(x.opId)));
     }
-    // Se il telefono non ha spazio l'esito resta comunque in memoria finché la pagina è aperta.
     function save(){
-      try { storage?.setItem(key, JSON.stringify(items)); return true; }
-      catch(e) { return false; }
+      try {
+        storage?.setItem(key, JSON.stringify(items));
+        unsaved = storage ? [] : items.slice();
+        return !!storage;
+      } catch(e) {
+        unsaved = items.slice();
+        return false;
+      }
     }
-
-    function add(item){
-      // Un nuovo esito per la stessa consegna e azione sostituisce quello precedente.
-      items = items.filter(x => !(x.deliveryId === item.deliveryId && x.kind === item.kind));
-      items.push({...item, opId: newOpId(), queuedAt: item.queuedAt || new Date().toISOString()});
+    function update(change){
+      load();
+      items = change(items);
       const persisted = save();
       changed();
       return persisted;
     }
 
+    function add(item){
+      // Un nuovo esito per la stessa consegna e azione sostituisce quello precedente.
+      const entry = {...item, opId: newOpId(), queuedAt: item.queuedAt || new Date().toISOString()};
+      return update(list => list.filter(x => !(x.deliveryId === item.deliveryId && x.kind === item.kind)).concat(entry));
+    }
+
     function pending(routeId){
+      load();
       return items.filter(x => routeId == null || Number(x.routeId) === Number(routeId));
     }
 
-    // Invia in ordine; si ferma al primo errore di rete per non saltare esiti.
+    // Invia in ordine; si ferma al primo errore temporaneo per non saltare esiti.
+    async function drain(){
+      const rejected = [];
+      for(;;){
+        load();
+        const item = items[0];
+        if(!item) break;
+        try { await send(item); }
+        catch(e) {
+          if(isRetryable(e)) break;
+          rejected.push({item, message: e.message});
+        }
+        // Si toglie l'operazione appena inviata, non «la prima»: potrebbe essere stata sostituita.
+        update(list => list.filter(x => x.opId !== item.opId));
+      }
+      return rejected;
+    }
+
     function flush(){
       if(flushing) return flushing;
-      flushing = (async () => {
-        const rejected = [];
-        while(items.length){
-          const item = items[0];
-          try { await send(item); }
-          catch(e) {
-            if(isRetryable(e)) break;
-            rejected.push({item, message: e.message});
-          }
-          // Si toglie l'operazione appena inviata, non «la prima»: potrebbe essere stata sostituita.
-          items = items.filter(x => x.opId !== item.opId);
-          save();
-          changed();
-        }
-        return rejected;
-      })().finally(() => { flushing = null; });
+      // Una sola scheda alla volta invia gli esiti: le altre aspettano il proprio turno.
+      const run = lockManager && typeof lockManager.request === 'function'
+        ? lockManager.request(key + ':invio', drain)
+        : drain();
+      flushing = Promise.resolve(run).finally(() => { flushing = null; });
       return flushing;
     }
 
+    // Un'altra scheda ha cambiato la coda: si aggiorna il conteggio mostrato.
+    function refresh(){ load(); changed(); }
+
     load();
-    return {add, pending, flush, count: () => items.length};
+    return {add, pending, flush, refresh, count: () => { load(); return items.length; }};
   }
 
   function isRetryable(error){
-    return !!error && (error.offline === true || RETRY_STATUSES.has(Number(error.status)));
+    const status = Number(error && error.status);
+    return !!error && (error.offline === true || RETRY_STATUSES.has(status) || (status >= 500 && status <= 599));
   }
 
   // Applica gli esiti in attesa ai dati del giro ricevuti dal server.

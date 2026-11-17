@@ -194,9 +194,28 @@ def admin_toggle_user(user_id: int, payload: dict, db: Session = Depends(get_db)
 @router.delete("/users/{user_id}")
 def admin_delete_user(user_id: int, db: Session = Depends(get_db), superadmin: dict = Depends(require_superadmin)):
     _require_perm(superadmin, "manage_users")
-    user = db.get(User, user_id)
+    user = db.query(User).filter_by(id=user_id).with_for_update().populate_existing().first()
     if not user or is_admin_user(user):
         raise HTTPException(400, "Impossibile eliminare questo utente")
+    if user.stripe_subscription_id:
+        raise HTTPException(409, "L'azienda ha un abbonamento collegato a Stripe: annullalo prima di eliminarla, "
+                                 "altrimenti i pagamenti continuerebbero")
+    delete_company_orders(db, user.id)
+    _activity(db, superadmin.get("username"), "company_deleted", f"Eliminata azienda {user.id} con tutti i dati", "warning")
     db.delete(user)
     db.commit()
     return {"ok": True}
+
+
+def delete_company_orders(db, user_id):
+    """Gli ordini importati non si cancellano da soli con l'azienda: si tolgono qui, dai più dipendenti."""
+    from ..order_models import (Order, OrderItem, OrderEvent, OrderImportRun, OrderSource, CustomerSourceMapping,
+                                RouteOrderAssignment, OrderPlanningSelection, PlanningDraft)
+    order_ids = db.query(Order.id).filter(Order.user_id == user_id)
+    for model in (RouteOrderAssignment, OrderPlanningSelection, PlanningDraft):
+        db.query(model).filter(model.user_id == user_id).delete(synchronize_session=False)
+    for model in (OrderItem, OrderEvent):
+        db.query(model).filter(model.order_id.in_(order_ids.scalar_subquery())).delete(synchronize_session=False)
+    for model in (CustomerSourceMapping, Order, OrderImportRun, OrderSource):
+        db.query(model).filter(model.user_id == user_id).delete(synchronize_session=False)
+    db.flush()

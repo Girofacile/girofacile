@@ -16,6 +16,8 @@ from ..services.order_files import read_file,suggestions,FIELDS,validate_rows
 from ..services.order_source_security import issue,credential,authenticated,throttle_ip
 from ..services.plans import require_feature
 from .orders import actor_key
+from starlette.concurrency import run_in_threadpool
+from ..core.blocking import run_db
 
 router=APIRouter(tags=['order-sources'])
 
@@ -146,7 +148,11 @@ def delete_source(source_id:int,version:int=Query(...,ge=1),db:Session=Depends(g
 @router.post('/api/order-sources/{source_id}/upload')
 async def upload(source_id:int,file:UploadFile=File(...),db:Session=Depends(get_db),user:User=Depends(current_user)):
     content=await file.read(MAX_BYTES+1)
-    headers,rows=read_file(content,file.filename or '')
+    return await run_db(db,stage_file,db,user,source_id,content,file.filename or '')
+
+
+def stage_file(db,user,source_id,content,filename):
+    headers,rows=read_file(content,filename)
     src=service.source(db,user.id,source_id,lock=True)
     if src.kind!='file': raise HTTPException(422,'Per una fonte API usa il campione JSON.')
     item=service.stage(db,src,headers,rows);db.commit()
@@ -155,9 +161,14 @@ async def upload(source_id:int,file:UploadFile=File(...),db:Session=Depends(get_
 
 @router.post('/api/order-sources/{source_id}/sample')
 async def sample(source_id:int,request:Request,db:Session=Depends(get_db),user:User=Depends(current_user)):
+    # Prima si legge la richiesta, poi si blocca la fonte: nessun blocco resta aperto mentre arrivano i dati.
+    data=await bounded_json(request)
+    return await run_db(db,stage_sample,db,user,source_id,data)
+
+
+def stage_sample(db,user,source_id,data):
     src=service.source(db,user.id,source_id,lock=True)
     require_source_feature(user,src)
-    data=await bounded_json(request)
     rows=data.get('orders') if isinstance(data,dict) else None
     if not isinstance(rows,list) or not 1<=len(rows)<=MAX_ROWS or any(not isinstance(r,dict) for r in rows): raise HTTPException(422,'Fornisci un oggetto JSON con orders: elenco di 1–1000 ordini.')
     headers=list(dict.fromkeys(k for row in rows for k in row))
@@ -205,15 +216,19 @@ async def ingest(request:Request,db:Session=Depends(get_db)):
     throttle_ip(request)
     sid,token=credential(request)
     try:
-        authenticated(db,sid,token,rate=True)
+        await run_db(db,authenticated,db,sid,token,rate=True)
         raw=await bounded_json(request)
         try: data=Acquisition.model_validate(raw)
         except ValidationError: raise HTTPException(422,'Invia batch_id univoco e orders con 1–1000 ordini, nel formato documentato.')
-        src=authenticated(db,sid,token)
-        item=service.acquire(db,src,data);db.commit()
-        return JSONResponse(jsonable_encoder(service.public_run(item)),status_code=422 if item.status in ('failed','preview_invalid') else 200,headers={'Cache-Control':'no-store'})
+        return await run_db(db,acquire_batch,db,sid,token,data)
     except Exception:
-        db.rollback();raise
+        await run_in_threadpool(db.rollback);raise
+
+
+def acquire_batch(db,sid,token,data):
+    src=authenticated(db,sid,token)
+    item=service.acquire(db,src,data);db.commit()
+    return JSONResponse(jsonable_encoder(service.public_run(item)),status_code=422 if item.status in ('failed','preview_invalid') else 200,headers={'Cache-Control':'no-store'})
 
 
 from .order_connectors import router as connectors_router

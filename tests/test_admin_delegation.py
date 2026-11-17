@@ -145,3 +145,37 @@ def test_saved_permissions_match_what_was_checked(panel):
     assert created.status_code == 200
     perms = created.json()['permissions']
     assert perms['view_tickets'] is True and not any(perms[key] for key in perms if key != 'view_tickets')
+
+
+def test_resend_cannot_take_over_a_more_privileged_account(panel, monkeypatch):
+    client, actor, delegate, helper, backups = panel
+    from app.routers import admin_profile
+    from app.models import SuperAdminCollaborator
+    monkeypatch.setattr(admin_profile, 'send_superadmin_collaborator_invitation', lambda *a, **k: False)
+    # Account autorizzato a gestire e cancellare aziende: il delegato non ha quel permesso.
+    manager = SuperAdminCollaborator(full_name='Gestore', email='gestore@example.test', password_hash='vecchia',
+                                     permissions_json=json.dumps({'manage_users': True}))
+    session = helper._sa_instance_state.session
+    session.add(manager); session.commit()
+    response = client.post(f'/api/admin/collaborators/{manager.id}/resend')
+    assert response.status_code == 403
+    session.refresh(manager)
+    assert manager.password_hash == 'vecchia'
+    # Anche su un account gestibile, senza email la password non cambia e non viene restituita.
+    response = client.post(f'/api/admin/collaborators/{helper.id}/resend')
+    assert response.status_code == 502 and 'temporary_password' not in response.text
+    session.refresh(helper)
+    assert helper.password_hash == 'x'
+    created = client.post('/api/admin/collaborators', json={'full_name': 'Nuovo', 'email': 'nuovo3@example.test',
+                                                            'permissions': {'view_tickets': True}})
+    assert created.status_code == 502 and 'temporary_password' not in created.text
+    assert session.query(SuperAdminCollaborator).filter_by(email='nuovo3@example.test').count() == 0
+
+
+def test_owner_still_gets_temporary_password_when_email_fails(panel, monkeypatch):
+    client, actor, delegate, helper, backups = panel
+    from app.routers import admin_profile
+    monkeypatch.setattr(admin_profile, 'send_superadmin_collaborator_invitation', lambda *a, **k: False)
+    actor.clear(); actor.update({'role': 'superadmin', 'username': 'owner', 'permissions': {'all': True}})
+    response = client.post(f'/api/admin/collaborators/{backups.id}/resend')
+    assert response.status_code == 200 and response.json()['temporary_password']

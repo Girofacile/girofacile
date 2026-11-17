@@ -16,6 +16,7 @@ from ..services import order_ingestion as service
 from ..services import order_connectors as adapter
 from ..services.order_source_security import throttle_ip
 from ..services.plans import require_feature
+from ..core.blocking import run_db
 
 router = APIRouter(tags=['order-connectors'])
 
@@ -111,20 +112,26 @@ async def commerce_hook(key:str,request:Request,db:Session=Depends(get_db)):
     # WooCommerce sends an unsigned reachability ping. It must never acquire orders.
     if request.headers.get('content-type','').startswith('application/x-www-form-urlencoded') and re.fullmatch(rb'webhook_id=[0-9]+',raw):
         return {'received':False,'ping':True}
+    # Il lavoro sul database gira fuori dal ciclo delle richieste: un ordine in attesa
+    # di una riga bloccata non deve rallentare le altre pagine.
+    return await run_db(db,commerce_event,db,key,request.headers,raw)
+
+
+def commerce_event(db,key,headers,raw):
     src=locked_source(db,key)
     provider=src.configuration.get('connector')
     if provider not in ('shopify','woocommerce'):
         raise HTTPException(404,'Collegamento non trovato.')
     prefix='x-shopify-' if provider=='shopify' else 'x-wc-webhook-'
-    signature=request.headers.get(prefix+('hmac-sha256' if provider=='shopify' else 'signature'))
+    signature=headers.get(prefix+('hmac-sha256' if provider=='shopify' else 'signature'))
     adapter.verify_signature(raw,signature,adapter.unseal(src.configuration['connector_secret']))
-    store=request.headers.get('x-shopify-shop-domain') if provider=='shopify' else request.headers.get('x-wc-webhook-source','').removeprefix('https://').rstrip('/')
+    store=headers.get('x-shopify-shop-domain') if provider=='shopify' else headers.get('x-wc-webhook-source','').removeprefix('https://').rstrip('/')
     if store!=src.configuration['store']:
         raise HTTPException(401,'Negozio non corrispondente al collegamento.')
-    topic=request.headers.get(prefix+'topic')
+    topic=headers.get(prefix+'topic')
     if topic!=('orders/create' if provider=='shopify' else 'order.created'):
         raise HTTPException(422,'Configura soltanto l evento di creazione ordine.')
-    event=request.headers.get(prefix+('webhook-id' if provider=='shopify' else 'delivery-id'),'')
+    event=headers.get(prefix+('webhook-id' if provider=='shopify' else 'delivery-id'),'')
     if not event or len(event)>200:
         raise HTTPException(422,'Identificativo evento mancante.')
     try:

@@ -238,7 +238,8 @@ def superadmin_me(request: Request, db: Session = Depends(get_db)):
     return {"authenticated": True, "role": "superadmin", "username": username, "display_name": username, "permissions": {"all": True}, "redirect_url": "/admin"}
 
 @router.post("/api/login")
-async def login(payload: dict, response: Response, db: Session = Depends(get_db)):
+# Sincrona di proposito: password e database girano fuori dal ciclo che serve le altre richieste.
+def login(payload: dict, response: Response, db: Session = Depends(get_db)):
     """Login unico multi-ruolo.
 
     L'utente inserisce email/username e password da /login. Il backend

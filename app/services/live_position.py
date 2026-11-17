@@ -63,14 +63,16 @@ def position_view(plan, now=None):
 
 def record_position(db, plan, payload):
     expected_owner, expected_driver = plan.user_id, plan.driver_id
-    if expected_driver is not None:
-        driver = db.query(Driver).filter_by(id=expected_driver).with_for_update().populate_existing().first()
-        if not driver or driver.user_id != expected_owner or not driver.is_active or driver.deleted_at:
-            raise HTTPException(404, 'Autista non disponibile per questo giro')
+    # Stesso ordine dei blocchi dell'avvio giro (azienda -> giro -> autista/mezzo): prima il giro,
+    # poi l'autista. L'ordine inverso faceva bloccare a vicenda GPS e avvio dello stesso giro.
     # Refresh after locking: an upload racing with completion cannot revive tracking.
     plan = db.query(RoutePlan).filter_by(id=plan.id).with_for_update().populate_existing().one()
     if (plan.user_id, plan.driver_id) != (expected_owner, expected_driver):
         raise HTTPException(409, 'Assegnazione giro modificata')
+    if expected_driver is not None:
+        driver = db.query(Driver).filter_by(id=expected_driver).with_for_update().populate_existing().first()
+        if not driver or driver.user_id != expected_owner or not driver.is_active or driver.deleted_at:
+            raise HTTPException(404, 'Autista non disponibile per questo giro')
     if plan.status != 'in_corso':
         raise HTTPException(409, 'GPS disponibile solo durante un giro in corso')
     now = utcnow()

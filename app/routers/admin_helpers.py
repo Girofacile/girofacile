@@ -82,7 +82,11 @@ def guard_delegation(actor: dict, target=None, new_permissions=None):
         if target.id == actor.get("collaborator_id"):
             raise HTTPException(403, "Non puoi modificare il tuo stesso account collaboratore")
         current = _collaborator_permissions(target)
-        if any(current.get(key) for key in OWNER_ONLY_PERMISSIONS):
+        own = actor.get("permissions") or {}
+        # Un delegato gestisce solo account con permessi uguali o inferiori ai suoi:
+        # reinvitare o modificare un account più autorizzato equivarrebbe a prenderne il posto.
+        if any(value and (key in OWNER_ONLY_PERMISSIONS or own.get(key) is not True)
+               for key, value in current.items() if key in COLLABORATOR_PERMISSIONS):
             raise HTTPException(403, "Solo il titolare può gestire questo account")
     if new_permissions is not None:
         own = actor.get("permissions") or {}

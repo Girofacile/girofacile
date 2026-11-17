@@ -265,6 +265,11 @@ def admin_create_collaborator(payload: dict, db: Session = Depends(get_db), supe
         email, full_name, temporary, ", ".join(labels[:4]) + ("..." if len(labels) > 4 else "") or "Nessun permesso operativo",
         f"{_links_base_url(APP_BASE_URL, "admin").rstrip('/')}/admin/login"
     )
+    if not sent and superadmin.get("role") != "superadmin":
+        # La password temporanea non si mostra mai a un delegato: senza email l'account non si crea.
+        db.delete(collab)
+        db.commit()
+        raise HTTPException(502, "Email di invito non inviata: riprova più tardi o chiedi al titolare")
     collab.invitation_sent = bool(sent)
     _activity(db, superadmin.get("username"), "collaborator_created", f"Creato collaboratore {full_name} ({email})")
     db.commit()
@@ -313,6 +318,10 @@ def admin_resend_collaborator(collaborator_id: int, db: Session = Depends(get_db
         collab.email, collab.full_name, temporary, ", ".join(labels[:4]) + ("..." if len(labels) > 4 else "") or "Nessun permesso operativo",
         f"{_links_base_url(APP_BASE_URL, "admin").rstrip('/')}/admin/login"
     )
+    if not sent and superadmin.get("role") != "superadmin":
+        # Senza email la password resta quella di prima e non viene mai mostrata al delegato.
+        db.rollback()
+        raise HTTPException(502, "Email di invito non inviata: la password non è stata cambiata. Riprova o chiedi al titolare")
     collab.invitation_sent = bool(sent)
     collab.updated_at = utc_now()
     _activity(db, superadmin.get("username"), "collaborator_invitation_resent", f"Reinvitato collaboratore {collab.full_name}")

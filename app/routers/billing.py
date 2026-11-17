@@ -314,6 +314,12 @@ def invoice_download(invoice_id: int, db: Session = Depends(get_db), user: User 
 
 @router.post("/webhook")
 async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
+    from ..core.blocking import run_db
+    raw = await request.body()
+    return await run_db(db, handle_stripe_event, raw, request.headers.get("stripe-signature", ""), db)
+
+
+def handle_stripe_event(raw, signature, db):
     from ..services.billing import stripe_client, assert_test, object_id, reconcile, sync_invoice, select_current_subscription
     from ..core import config
     from sqlalchemy.exc import IntegrityError
@@ -321,7 +327,7 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
     if not config.STRIPE_WEBHOOK_SECRET:
         raise HTTPException(503, "Webhook sandbox non configurato")
     try:
-        event = stripe.Webhook.construct_event(await request.body(), request.headers.get("stripe-signature", ""), config.STRIPE_WEBHOOK_SECRET)
+        event = stripe.Webhook.construct_event(raw, signature, config.STRIPE_WEBHOOK_SECRET)
     except Exception:
         raise HTTPException(400, "Firma webhook non valida")
     event = assert_test(event)

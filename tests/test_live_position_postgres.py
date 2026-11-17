@@ -78,3 +78,34 @@ def test_completion_racing_with_upload_cannot_leave_position(pg):
     with Session(pg) as db:
         assert db.get(RoutePlan,route_id).status == 'completato'
         assert db.query(RoutePosition).count() == 0
+
+
+def test_gps_and_route_start_lock_in_the_same_order(pg):
+    """L'avvio tiene il giro e poi chiede l'autista: il GPS non deve tenere l'autista aspettando il giro."""
+    import threading, time as clock
+    from app.models import RoutePlan
+    from app.services.live_position import record_position, PositionInput
+    from app.services.route_start import lock_route_resources
+    route_id = seed(pg)
+    outcome = {}
+    with Session(pg) as start:
+        # Come start_route_usage: blocca prima il giro...
+        plan = start.query(RoutePlan).filter_by(id=route_id).with_for_update().one()
+
+        def upload():
+            with Session(pg) as db:
+                try:
+                    outcome['gps'] = record_position(db, db.get(RoutePlan, route_id), PositionInput(
+                        latitude=45, longitude=9, accuracy=10, captured_at=datetime.now(timezone.utc)))
+                    db.commit()
+                except Exception as exc:  # un deadlock rilevato da PostgreSQL finirebbe qui
+                    outcome['gps'] = exc
+        worker = threading.Thread(target=upload); worker.start()
+        clock.sleep(0.5)  # il GPS ora aspetta il giro
+        # ...poi l'autista e il mezzo, con un limite di attesa per non restare appesi.
+        start.execute(text("SET LOCAL lock_timeout = '3s'"))
+        lock_route_resources(start, plan)
+        start.commit()
+        worker.join(10)
+    assert not worker.is_alive()
+    assert isinstance(outcome['gps'], dict), outcome['gps']

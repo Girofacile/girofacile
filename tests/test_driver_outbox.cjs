@@ -43,7 +43,7 @@ test('a rejected outcome is dropped and reported, temporary errors are kept',asy
   assert.equal(rejected.length,1);
   assert.equal(rejected[0].item.label,'Bar Roma');
   assert.equal(box.count(),0);
-  for(const status of [401,502,503,504])assert.ok(isRetryable(http(status)),status);
+  for(const status of [401,429,500,502,503,504])assert.ok(isRetryable(http(status)),status);
   for(const status of [400,403,404,409,422])assert.ok(!isRetryable(http(status)),status);
 });
 
@@ -105,4 +105,41 @@ test('items saved by an older version get an operation id when loaded',()=>{
   storage.setItem('k',JSON.stringify([{kind:'complete',url:'/c',body:{},routeId:1,deliveryId:1}]));
   const box=create({storage,key:'k',send:async()=>{}});
   assert.ok(box.pending()[0].opId);
+});
+
+test('two open tabs never overwrite each other outcomes',async()=>{
+  const storage=memoryStorage();const sent=[];let online=false;
+  const send=async item=>{if(!online)throw offline();sent.push(item.deliveryId);};
+  const tabA=create({storage,key:'k',send,locks:null}), tabB=create({storage,key:'k',send,locks:null});
+  tabA.add({kind:'complete',url:'/1',body:{},routeId:1,deliveryId:1});
+  tabB.add({kind:'complete',url:'/2',body:{},routeId:1,deliveryId:2});
+  tabA.add({kind:'missed',url:'/3',body:{},routeId:1,deliveryId:3});
+  assert.equal(JSON.parse(storage.getItem('k')).length,3);
+  assert.equal(tabA.count(),3);assert.equal(tabB.count(),3);
+  online=true;
+  await tabB.flush();
+  assert.deepEqual(sent,[1,2,3]);
+  assert.equal(tabA.count(),0);
+});
+
+test('a server error keeps the outcome in the queue',async()=>{
+  let status=500;const sent=[];
+  const box=create({storage:memoryStorage(),key:'k',send:async item=>{if(status)throw http(status);sent.push(item.deliveryId);}});
+  box.add({kind:'complete',url:'/1',body:{},routeId:1,deliveryId:1});
+  for(const code of [500,502,503,504,507]){status=code;assert.deepEqual(await box.flush(),[]);assert.equal(box.count(),1,String(code));}
+  status=0;await box.flush();
+  assert.deepEqual(sent,[1]);assert.equal(box.count(),0);
+});
+
+test('only one tab sends at a time when the browser offers locks',async()=>{
+  let held=Promise.resolve();
+  const locks={request:(name,fn)=>{const run=held.then(fn);held=run.catch(()=>{});return run;}};
+  const storage=memoryStorage();let active=0,maxActive=0;const sent=[];
+  const send=async item=>{active++;maxActive=Math.max(maxActive,active);await new Promise(r=>setTimeout(r,5));sent.push(item.deliveryId);active--;};
+  const tabA=create({storage,key:'k',send,locks}),tabB=create({storage,key:'k',send,locks});
+  tabA.add({kind:'complete',url:'/1',body:{},routeId:1,deliveryId:1});
+  tabB.add({kind:'complete',url:'/2',body:{},routeId:1,deliveryId:2});
+  await Promise.all([tabA.flush(),tabB.flush()]);
+  assert.equal(maxActive,1);
+  assert.deepEqual(sent,[1,2]);
 });
