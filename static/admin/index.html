@@ -254,6 +254,18 @@
           <div><button class="gf-button" data-variant="primary" type="button" onclick="savePlatformSettings()">Salva impostazioni SaaS</button></div>
         </div>
       </section>
+      <section class="gf-panel" aria-labelledby="platformEmailTitle">
+        <header class="gf-panel__header"><div><h2 class="gf-panel__title" id="platformEmailTitle">Email di invio (SMTP)</h2><p class="gf-muted">Casella da cui partono inviti, recupero password e avvisi. Per IONOS: server smtp.ionos.it, porta 587.</p></div></header>
+        <div class="gf-panel__body gf-form-grid">
+          <label for="platform-smtp-host" class="gf-field"><span class="gf-field__label">Server SMTP</span><input id="platform-smtp-host" class="gf-input" placeholder="smtp.ionos.it" autocomplete="off"></label>
+          <label for="platform-smtp-port" class="gf-field"><span class="gf-field__label">Porta</span><input id="platform-smtp-port" class="gf-input" type="number" min="1" max="65535" placeholder="587"></label>
+          <label for="platform-smtp-user" class="gf-field"><span class="gf-field__label">Utente (indirizzo della casella)</span><input id="platform-smtp-user" class="gf-input" type="email" autocomplete="off"></label>
+          <label for="platform-smtp-password" class="gf-field"><span class="gf-field__label">Password della casella</span><input id="platform-smtp-password" class="gf-input" type="password" autocomplete="new-password"><span class="gf-field__hint">Lascia vuoto per non cambiarla.</span></label>
+          <label for="platform-smtp-from" class="gf-field"><span class="gf-field__label">Mittente</span><input id="platform-smtp-from" class="gf-input" type="email" placeholder="uguale all’utente"></label>
+          <label for="platform-smtp-from-name" class="gf-field"><span class="gf-field__label">Nome del mittente</span><input id="platform-smtp-from-name" class="gf-input" placeholder="GiroFacile"></label>
+          <div data-span="full" class="gf-field"><div class="gf-cluster"><button class="gf-button" data-variant="primary" type="button" onclick="savePlatformSettings()">Salva email</button><button class="gf-button" data-variant="secondary" type="button" onclick="sendPlatformTestEmail()">Invia email di prova</button></div><span class="gf-field__hint">La prova arriva all’«Email notifiche errori» impostata qui sopra.</span></div>
+        </div>
+      </section>
       <section class="gf-panel">
         <header class="gf-panel__header"><div><h2 class="gf-panel__title">Routing, traffico e pedaggi</h2><p class="gf-muted">L’ordine delle fermate è calcolato da GiroFacile. Il traffico viene richiesto alla programmazione o all’aggiornamento degli ETA.</p></div></header>
         <div class="gf-panel__body gf-form-grid">
@@ -1137,6 +1149,13 @@ async function loadPlatformSettings(){
     document.getElementById('platform-mapbox-cost').value = data.mapbox_traffic_cost_eur || '0';
     document.getElementById('platform-toll-rates').value = data.toll_rates_json || '{}';
     document.getElementById('platform-toll-dataset').value = data.toll_dataset_path || '';
+    document.getElementById('platform-smtp-host').value = data.smtp_host || '';
+    document.getElementById('platform-smtp-port').value = data.smtp_port || '587';
+    document.getElementById('platform-smtp-user').value = data.smtp_user || '';
+    document.getElementById('platform-smtp-password').value = '';
+    document.getElementById('platform-smtp-password').placeholder = data.smtp_password ? 'Password salvata' : '';
+    document.getElementById('platform-smtp-from').value = data.smtp_from || '';
+    document.getElementById('platform-smtp-from-name').value = data.smtp_from_name || 'GiroFacile';
   }catch(e){ showToast(e.message, 'error'); }
 }
 async function savePlatformSettings(){
@@ -1161,6 +1180,15 @@ async function savePlatformSettings(){
       openai_model: document.getElementById('platform-openai-model').value,
     };
     if(openaiKey && !openaiKey.includes('•')) payload.openai_api_key = openaiKey;
+    Object.assign(payload, {
+      smtp_host: document.getElementById('platform-smtp-host').value.trim(),
+      smtp_port: document.getElementById('platform-smtp-port').value.trim() || '587',
+      smtp_user: document.getElementById('platform-smtp-user').value.trim(),
+      smtp_from: document.getElementById('platform-smtp-from').value.trim(),
+      smtp_from_name: document.getElementById('platform-smtp-from-name').value.trim(),
+    });
+    const smtpPassword=document.getElementById('platform-smtp-password').value;
+    if(smtpPassword) payload.smtp_password=smtpPassword;
     const mapboxToken=document.getElementById('platform-mapbox-token').value.trim();
     if(mapboxToken && !mapboxToken.includes('•')) payload.mapbox_access_token=mapboxToken;
     const saved = await api('/api/admin/platform-settings', { method:'PUT', body: JSON.stringify(payload)});
@@ -1169,6 +1197,12 @@ async function savePlatformSettings(){
       document.getElementById('platform-openai-model').value = saved.openai_model || 'gpt-4o-mini';
     }
     showToast('Impostazioni SaaS e AI salvate', 'success');
+  }catch(e){ showToast(e.message, 'error'); }
+}
+async function sendPlatformTestEmail(){
+  try{
+    const result = await api('/api/admin/platform-settings/test-email', {method:'POST', body: JSON.stringify({to: document.getElementById('platform-error-email').value.trim()})});
+    if(result) showToast('Email di prova inviata a ' + result.to, 'success');
   }catch(e){ showToast(e.message, 'error'); }
 }
 async function loadAdminProfile(){

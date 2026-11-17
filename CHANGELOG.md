@@ -5,6 +5,8 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Super Admin › Impostazioni: nuovo riquadro «Email di invio (SMTP)» con server, porta, casella, password,
+  mittente e il tasto «Invia email di prova». I valori salvati qui valgono al posto di quelli del .env del server.
 - Pop-up dell'ordine (variante A): si apre già modificabile, tutto in un unico pop-up a due colonne
   (Destinatario, Indirizzo, Consegna · Merce, Mezzo, Note) con la distinta articoli apribile in fondo.
   Niente più «Modifica dati», «Altre informazioni» né «Verifica indirizzo ora»: l'indirizzo cambiato si

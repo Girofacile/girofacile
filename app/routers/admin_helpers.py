@@ -212,9 +212,9 @@ def _safe_backup_name(filename: str) -> Path:
 def _service_key_status(db: Session) -> list[dict]:
     google_key = google_maps_api_key(db)
     openai_key = openai_api_key(db)
-    smtp_host = os.getenv("SMTP_HOST", "").strip()
-    smtp_user = os.getenv("SMTP_USER", "").strip()
-    smtp_password = os.getenv("SMTP_PASSWORD", "").strip()
+    from ..services.email import smtp_config
+    smtp = smtp_config()
+    smtp_host, smtp_user, smtp_password = str(smtp["host"] or "").strip(), str(smtp["user"] or "").strip(), str(smtp["password"] or "").strip()
     stripe_key = os.getenv("STRIPE_SECRET_KEY", "")
     shopify_domain = _setting_value(db, "shopify_domain", "")
     backup_target = str(backup_directory())

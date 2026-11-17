@@ -16,6 +16,29 @@ SMTP_USER = os.getenv("SMTP_USER", "")
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
 SMTP_FROM = os.getenv("SMTP_FROM", SMTP_USER)
 SMTP_FROM_NAME = os.getenv("SMTP_FROM_NAME", "GiroFacile")
+SMTP_SETTING_KEYS = ("host", "port", "user", "password", "from", "from_name")
+
+
+def smtp_config() -> dict:
+    """Impostazioni di invio: quelle salvate nel pannello Super Admin, altrimenti il file .env."""
+    config = {"host": SMTP_HOST, "port": SMTP_PORT, "user": SMTP_USER, "password": SMTP_PASSWORD,
+              "from": os.getenv("SMTP_FROM", ""), "from_name": SMTP_FROM_NAME}
+    try:
+        from ..database import SessionLocal
+        from .platform_settings import get_platform_setting
+        with SessionLocal() as db:
+            for key in SMTP_SETTING_KEYS:
+                value = get_platform_setting(db, "smtp_" + key, "")
+                if value:
+                    config[key] = value
+    except Exception:
+        pass  # database non raggiungibile: restano i valori del .env
+    try:
+        config["port"] = int(config["port"] or 587)
+    except (TypeError, ValueError):
+        config["port"] = 587
+    config["from"] = config["from"] or config["user"]
+    return config
 
 
 _EMAIL_FAILURE_LOGGING = False
@@ -50,6 +73,7 @@ def _log_email_failure(subject: str, to_email: str, reason: str, severity: str =
         from ..database import SessionLocal
         from ..models import SystemErrorLog
 
+        cfg = smtp_config()
         db = SessionLocal()
         try:
             row = SystemErrorLog(
@@ -62,11 +86,11 @@ def _log_email_failure(subject: str, to_email: str, reason: str, severity: str =
                 technical_details=(
                     f"Destinatario: {to_email or '—'}\n"
                     f"Oggetto: {subject or '—'}\n"
-                    f"SMTP_HOST: {SMTP_HOST or '—'}\n"
-                    f"SMTP_PORT: {SMTP_PORT or '—'}\n"
-                    f"SMTP_USER presente: {'sì' if SMTP_USER else 'no'}\n"
-                    f"SMTP_PASSWORD presente: {'sì' if SMTP_PASSWORD else 'no'}\n"
-                    f"SMTP_FROM: {SMTP_FROM or '—'}"
+                    f"Server SMTP: {cfg['host'] or '—'}\n"
+                    f"Porta: {cfg['port'] or '—'}\n"
+                    f"Utente presente: {'sì' if cfg['user'] else 'no'}\n"
+                    f"Password presente: {'sì' if cfg['password'] else 'no'}\n"
+                    f"Mittente: {cfg['from'] or '—'}"
                 )[:12000],
                 severity=severity,
                 status="new",
@@ -85,23 +109,24 @@ def _log_email_failure(subject: str, to_email: str, reason: str, severity: str =
 
 def _send(to_email: str, subject: str, html_body: str) -> bool:
     """Invia una email HTML. Ritorna True se ok, False se errore."""
-    if not SMTP_USER or not SMTP_PASSWORD:
-        reason = "SMTP non configurato correttamente: SMTP_USER o SMTP_PASSWORD mancante"
+    cfg = smtp_config()
+    if not cfg["user"] or not cfg["password"]:
+        reason = "Email non configurata: mancano utente o password SMTP (pannello Super Admin › Email)"
         _console(f"[EMAIL] {reason} — email a {to_email} non inviata")
         _log_email_failure(subject, to_email, reason, severity="critical")
         return False
     try:
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject
-        msg["From"] = f"{SMTP_FROM_NAME} <{SMTP_FROM}>"
+        msg["From"] = f"{cfg['from_name']} <{cfg['from']}>"
         msg["To"] = to_email
         msg.attach(MIMEText(html_body, "html", "utf-8"))
 
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=15) as server:
+        with smtplib.SMTP(cfg["host"], cfg["port"], timeout=15) as server:
             server.ehlo()
             server.starttls()
-            server.login(SMTP_USER, SMTP_PASSWORD)
-            server.sendmail(SMTP_FROM, [to_email], msg.as_string())
+            server.login(cfg["user"], cfg["password"])
+            server.sendmail(cfg["from"], [to_email], msg.as_string())
     except Exception as e:
         reason = f"Errore invio email: {e}"
         _console(f"[EMAIL] Errore invio a {to_email}: {e}")

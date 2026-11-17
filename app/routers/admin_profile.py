@@ -94,12 +94,19 @@ def admin_platform_settings(db: Session = Depends(get_db), superadmin: dict = De
         "toll_rates_json": os.getenv("TOLL_RATES_JSON", "{}"),
         "toll_dataset_path": os.getenv("TOLL_DATASET_PATH", ""),
         "stripe_secret_key": os.getenv("STRIPE_SECRET_KEY", ""),
+        # Email di invio (SMTP): se non salvate qui valgono quelle del file .env del server.
+        "smtp_host": os.getenv("SMTP_HOST", "smtp.ionos.it"),
+        "smtp_port": os.getenv("SMTP_PORT", "587"),
+        "smtp_user": os.getenv("SMTP_USER", ""),
+        "smtp_password": os.getenv("SMTP_PASSWORD", ""),
+        "smtp_from": os.getenv("SMTP_FROM", ""),
+        "smtp_from_name": os.getenv("SMTP_FROM_NAME", "GiroFacile"),
         "shopify_domain": "",
         "backup_storage_target": "locale",
         "backup_frequency": "manuale",
         "server_console_url": "",
     }
-    secret_keys = {"openai_api_key", "google_maps_api_key", "mapbox_access_token", "stripe_secret_key"}
+    secret_keys = {"openai_api_key", "google_maps_api_key", "mapbox_access_token", "stripe_secret_key", "smtp_password"}
     environment_only = {"stripe_secret_key", "backup_frequency", "backup_storage_target"}
     return {key: (value if key in environment_only else _setting_value(db, key, value)) for key, value in defaults.items()
             if key not in secret_keys or _has_perm(superadmin, "manage_service_keys")}
@@ -118,9 +125,10 @@ def admin_update_platform_settings(payload: dict, db: Session = Depends(get_db),
         "ai_enabled", "openai_api_key", "openai_model",
         "osrm_url", "osrm_cache_version", "osrm_table_max_coordinates", "osrm_allow_public_fallback",
         "traffic_provider", "mapbox_access_token", "mapbox_traffic_cost_eur", "toll_rates_json", "toll_dataset_path",
-        "google_maps_api_key", "google_geocoding_enabled", "google_routes_enabled", "shopify_domain", "backup_storage_target", "backup_frequency", "server_console_url"
+        "google_maps_api_key", "google_geocoding_enabled", "google_routes_enabled", "shopify_domain", "backup_storage_target", "backup_frequency", "server_console_url",
+        "smtp_host", "smtp_port", "smtp_user", "smtp_password", "smtp_from", "smtp_from_name"
     }
-    if {"openai_api_key", "google_maps_api_key", "mapbox_access_token", "stripe_secret_key"}.intersection(payload):
+    if {"openai_api_key", "google_maps_api_key", "mapbox_access_token", "stripe_secret_key", "smtp_password"}.intersection(payload):
         _require_perm(superadmin, "manage_service_keys")
     if "maintenance_mode" in payload:
         _require_perm(superadmin, "toggle_maintenance")
@@ -149,6 +157,14 @@ def admin_update_platform_settings(payload: dict, db: Session = Depends(get_db),
                 raise HTTPException(400, "Tariffe pedaggio: oggetto JSON con classi A, B, 3, 4, 5 e importi non negativi")
         if key in ("maintenance_mode", "registrations_enabled", "ai_enabled", "google_geocoding_enabled", "google_routes_enabled", "osrm_allow_public_fallback"):
             value = _bool_to_str(value)
+        if key == "smtp_port":
+            try:
+                if not 1 <= int(value) <= 65535:
+                    raise ValueError()
+            except (TypeError, ValueError):
+                raise HTTPException(400, "Porta SMTP non valida (di solito 587)")
+        if key in ("smtp_user", "smtp_from") and value and "@" not in str(value):
+            raise HTTPException(400, "Utente e mittente email devono essere indirizzi email")
         if key == "trial_days":
             try:
                 value = str(max(0, min(int(value), 365)))
@@ -158,6 +174,22 @@ def admin_update_platform_settings(payload: dict, db: Session = Depends(get_db),
     _activity(db, superadmin.get("username"), "platform_settings_updated", "Impostazioni SaaS aggiornate")
     db.commit()
     return admin_platform_settings(db, superadmin)
+
+
+@router.post("/platform-settings/test-email")
+def admin_test_email(payload: dict, db: Session = Depends(get_db), superadmin: dict = Depends(require_superadmin)):
+    """Invia un'email di prova con le impostazioni salvate, per controllare che l'invio funzioni."""
+    _require_perm(superadmin, "manage_platform")
+    from ..services.email import _send, smtp_config
+    to_email = str(payload.get("to") or "").strip() or _setting_value(db, "error_notification_email", "") or smtp_config()["from"]
+    if "@" not in to_email:
+        raise HTTPException(400, "Indica l'indirizzo a cui mandare l'email di prova")
+    ok = _send(to_email, "GiroFacile · email di prova", "<p>Questa è un'email di prova inviata dal pannello Super Admin di GiroFacile.</p><p>Se la leggi, l'invio delle email funziona.</p>")
+    if not ok:
+        raise HTTPException(502, "Invio non riuscito: controlla server, porta, utente e password (dettagli in Errori sistema)")
+    _activity(db, superadmin.get("username"), "platform_test_email", f"Email di prova inviata a {to_email}")
+    db.commit()
+    return {"ok": True, "to": to_email}
 
 
 @router.get("/activity")
