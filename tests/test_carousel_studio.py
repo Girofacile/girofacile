@@ -29,9 +29,9 @@ class CarouselTests(unittest.TestCase):
     def test_default_brief_is_ready_without_user_input(self):
         brand = studio.brand_profile()
         brief = brand["default_brief"]
-        # Una riga per ogni blocco funzione della landing (oggi 4), più le slide di apertura e chiusura.
-        self.assertEqual(len(brief["facts"].splitlines()), 4)
-        self.assertEqual(brief["count"], 7)
+        # Una riga per ogni riquadro funzione della landing (oggi 6), più le slide di apertura e chiusura.
+        self.assertEqual(len(brief["facts"].splitlines()), 6)
+        self.assertEqual(brief["count"], 9)
         self.assertIn("https://girofacile.it/login", brief["cta"])
         result = studio.generate(brief)
         studio.validate_output(result, studio.brief_input(brief))
@@ -39,8 +39,11 @@ class CarouselTests(unittest.TestCase):
 
     def test_brief_tracks_source_copy_changes(self):
         landing = (studio.ROOT / "static/landing/index.html").read_text(encoding="utf-8")
-        changed = landing.replace("Chat con l'ufficio per gli imprevisti", "Chat con l'ufficio sempre aperta")
-        self.assertIn("Chat con l'ufficio sempre aperta", studio.project_brief(changed)["brief"]["facts"])
+        changed = landing.replace("Prova di consegna in PDF, salvata in automatico.", "Prova di consegna sempre disponibile.")
+        self.assertIn("Firma e foto: Prova di consegna sempre disponibile.", studio.project_brief(changed)["brief"]["facts"])
+        # Un cambio di grafica (classi e tag diversi) non deve rompere l'estrazione.
+        restyled = changed.replace('class="gf-photo-tile"', 'class="altro-stile"').replace("<article", "<div").replace("</article>", "</div>")
+        self.assertEqual(studio.project_brief(restyled)["features"], studio.project_brief(changed)["features"])
         with self.assertRaises(ValueError):
             studio.project_brief("<h1>Landing incompleta</h1>")
 

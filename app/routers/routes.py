@@ -478,6 +478,13 @@ def serialize_route(plan, include_legs=True):
     return response
 
 
+def primary_energy_price(data):
+    """Uno 0 inviato è un prezzo valido: il campo storico vale solo se il nuovo manca."""
+    if "energy_price_primary" in data.model_fields_set:
+        return float(data.energy_price_primary or 0)
+    return float(data.prezzo_carburante_litro or 0)
+
+
 def save_route_result(db, user, data, result, vehicle, route_id=None, *, commit=True):
     check_daily_route_limit(user, db, data.data_giro, exclude_route_id=route_id)
     if result.get("driver_schedule_error"): raise HTTPException(422,result["driver_schedule_error"])
@@ -503,7 +510,7 @@ def save_route_result(db, user, data, result, vehicle, route_id=None, *, commit=
     plugin = fuel_type in ("ibrido_plugin_benzina", "ibrido_plugin_diesel")
     primary_qty = 0.0 if electric_only else result["total_km"] * primary_cons / 100
     electric_qty = result["total_km"] * electric_cons / 100 if (electric_only or plugin) else 0.0
-    primary_price = float(data.energy_price_primary or data.prezzo_carburante_litro or 0)
+    primary_price = primary_energy_price(data)
     electric_price = float(data.energy_price_electric or 0)
     costo_carburante = primary_qty * primary_price + electric_qty * electric_price
     litri = primary_qty

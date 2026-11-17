@@ -14,10 +14,12 @@
   let lastMode='single',parked=[]; // parked: le card di «Più mezzi» mentre si è passati a un solo mezzo
   const ready=()=>typeof resourcesDateTimeReady!=='function'||resourcesDateTimeReady();
   const value=id=>el(id)?.value??'',put=(id,v)=>{const node=el(id);if(node)node.value=v;};
+  // Campo vuoto o non valido: valore predefinito. Uno 0 scritto resta 0.
+  const priceOr=(raw,fallback)=>{const text=String(raw??'').trim();const n=Number(text);return text!==''&&Number.isFinite(n)&&n>=0?n:fallback;};
   function fromFields(){
     const mode=document.querySelector?.('input[name="energyPriceMode"]:checked')?.value==='automatic'?'automatic':'manual';
     return {...blank(),vehicle_id:Number(value('routeVehicle'))||0,driver_id:Number(value('routeDriver'))||0,
-      energy_price_primary:Number(value('fuelPrice'))||1.75,energy_price_electric:Number(value('electricityPrice'))||0.30,
+      energy_price_primary:priceOr(value('fuelPrice'),1.75),energy_price_electric:priceOr(value('electricityPrice'),0.30),
       energy_price_mode:mode,driver_schedule:globalThis.GFDriverSchedules?.routePayload().driver_schedule};
   }
   function toFields(r){

@@ -202,9 +202,6 @@ def test_energy_prices_change_estimate_but_not_the_declared_fleet_objective(qual
     assert [r['fuel_cost'] for r in second['routes']] == [round(r['fuel_cost']*10, 2) for r in first['routes']]
 
 
-@pytest.mark.xfail(strict=True, raises=AssertionError, reason=(
-    'Known audit finding: save_route_result replaces an explicit zero primary energy price '
-    'with RoutePlanIn.prezzo_carburante_litro default 1.75 (app/routers/routes.py:477).'))
 def test_explicit_zero_manual_energy_price_matches_preview_after_confirmation(quality_api):
     from app.models import RoutePlan
     ctx = quality_api

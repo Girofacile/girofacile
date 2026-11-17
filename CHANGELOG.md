@@ -5,6 +5,12 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Sicurezza pannello Super Admin: un collaboratore con «Creare e gestire collaboratori» non può più darsi altri permessi,
+  assegnare i permessi riservati al titolare (backup, chiavi, server, database, impostazioni, collaboratori) né gestire account che li hanno.
+- Email: cambiare server, utente o mittente SMTP e l'invio di prova richiedono il permesso sulle chiavi; la connessione verifica il certificato del server.
+- Termini e condizioni: prezzi allineati al listino (29 / 59 / 99 € al mese). FAQ della landing: a fine prova «ci contatti e attiviamo il piano».
+- Generatore di caroselli: legge la landing da segnaposti `data-brief` stabili, così un cambio di grafica non lo blocca.
+- Prezzo carburante: uno 0 scritto resta 0 (prima poteva diventare 1,75 € al salvataggio).
 - Prezzi dei piani: accanto al prezzo solo «al mese»; tolte le diciture «prezzo finale» e «senza IVA da aggiungere» (landing, dashboard, app, Super Admin).
   Nelle liste con spunta il testo lungo va a capo accanto alla spunta.
 - Landing in stile «sito moderno» (variante C): apertura scura con luci, titolo con riflesso, dashboard e telefono autista in primo piano, riquadri con foto,

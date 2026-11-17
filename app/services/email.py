@@ -4,6 +4,7 @@ Servizio email — invio tramite SMTP Ionos.
 import os
 from ..core.clock import utc_now
 import smtplib
+import ssl
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
@@ -124,7 +125,8 @@ def _send(to_email: str, subject: str, html_body: str) -> bool:
 
         with smtplib.SMTP(cfg["host"], cfg["port"], timeout=15) as server:
             server.ehlo()
-            server.starttls()
+            # Verifica certificato e nome del server prima di inviare la password.
+            server.starttls(context=ssl.create_default_context())
             server.login(cfg["user"], cfg["password"])
             server.sendmail(cfg["from"], [to_email], msg.as_string())
     except Exception as e:

@@ -65,6 +65,33 @@ def _require_perm(superadmin: dict, perm: str):
         raise HTTPException(status_code=403, detail="Permesso collaboratore non abilitato")
 
 
+# Permessi che solo il titolare (Super Admin) può assegnare: danno accesso a dati
+# completi, segreti o al server. Chi li possiede non è gestibile da un delegato.
+OWNER_ONLY_PERMISSIONS = {
+    "manage_collaborators", "manage_platform", "view_server_maintenance", "manage_service_keys",
+    "test_service_connections", "create_backups", "download_backups", "restart_application",
+    "toggle_maintenance", "advanced_server_access", "view_database", "export_database",
+}
+
+
+def guard_delegation(actor: dict, target=None, new_permissions=None):
+    """Un collaboratore delegato non può aumentare privilegi né prendere il controllo di account sensibili."""
+    if actor.get("role") == "superadmin":
+        return
+    if target is not None:
+        if target.id == actor.get("collaborator_id"):
+            raise HTTPException(403, "Non puoi modificare il tuo stesso account collaboratore")
+        current = _collaborator_permissions(target)
+        if any(current.get(key) for key in OWNER_ONLY_PERMISSIONS):
+            raise HTTPException(403, "Solo il titolare può gestire questo account")
+    if new_permissions is not None:
+        own = actor.get("permissions") or {}
+        for key in COLLABORATOR_PERMISSIONS:
+            if new_permissions.get(key) is True or new_permissions.get(key) in (1, "true"):
+                if key in OWNER_ONLY_PERMISSIONS or not own.get(key):
+                    raise HTTPException(403, f"Solo il titolare può assegnare il permesso «{COLLABORATOR_PERMISSIONS[key]}»")
+
+
 def _temporary_password(length: int = 10) -> str:
     alphabet = string.ascii_letters + string.digits
     return ''.join(secrets.choice(alphabet) for _ in range(length))

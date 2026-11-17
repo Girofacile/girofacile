@@ -48,16 +48,23 @@ def project_brief(landing):
         fragment = re.sub(r"<svg\b.*?</svg>", "", fragment, flags=re.S)
         return " ".join(unescape(re.sub(r"<[^>]+>", " ", fragment)).split())
 
-    title = re.search(r"<h1\b[^>]*>(.*?)</h1>", landing, re.S)
-    # Blocchi funzione della landing: «01 · Ordini», titolo e punti elenco.
-    features = re.findall(r'<p class="gf-kicker">\s*\d+\s*·[^<]*</p>\s*<h2[^>]*>(.*?)</h2>\s*<ul\b[^>]*>(.*?)</ul>', landing, re.S)
-    action = re.search(r'<a\b[^>]*class="gf-button"[^>]*data-variant="primary"[^>]*href="(https://[^"\s]+)"[^>]*>(.*?)</a>', landing, re.S)
+    # Legge solo attributi data-brief stabili: un cambio di grafica o di classi CSS
+    # della landing non deve rompere il generatore.
+    def marked(name, html):
+        return [m.group(2) for m in re.finditer(rf'<(\w+)\b[^>]*\b{name}(?=[\s>])[^>]*>(.*?)</\1>', html, re.S)]
+
+    title = marked(r'data-brief="topic"', landing)
+    features = []
+    for block in marked(r'data-brief="feature"', landing):
+        heading, texts = marked("data-brief-title", block), marked("data-brief-text", block)
+        if heading and texts:
+            features.append((heading[0], texts))
+    action = re.search(r'<a\b(?=[^>]*\bdata-brief="cta")[^>]*\bhref="(https://[^"\s]+)"[^>]*>(.*?)</a>', landing, re.S)
     if not title or not features or not action:
-        raise ValueError("La landing è cambiata: aggiorna l'estrazione del brief automatico.")
-    points = [f"{plain(heading)}: {'; '.join(plain(item) for item in re.findall(r'<li\b[^>]*>(.*?)</li>', items, re.S))}"
-              for heading, items in features]
+        raise ValueError("La landing non ha i segnaposti data-brief (topic, feature, cta) per il brief automatico.")
+    points = [f"{plain(heading)}: {'; '.join(plain(text) for text in texts)}" for heading, texts in features]
     selected = points[:6]
-    brief = {"topic": plain(title.group(1)),
+    brief = {"topic": plain(title[0]),
              "audience": "responsabili aziendali che organizzano le consegne e coordinano gli autisti",
              "facts": "\n".join(selected), "cta": f"{plain(action.group(2))}: {unescape(action.group(1))}",
              "stage": "ALL", "count": max(5, len(selected) + 3), "mode": "local", "format": 1350}

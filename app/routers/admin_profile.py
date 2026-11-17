@@ -25,6 +25,7 @@ from .admin_helpers import (
     _permissions_to_json,
     _profile_to_dict,
     _require_perm,
+    guard_delegation,
     _set_setting_value,
     _setting_value,
     _temporary_password,
@@ -128,7 +129,15 @@ def admin_update_platform_settings(payload: dict, db: Session = Depends(get_db),
         "google_maps_api_key", "google_geocoding_enabled", "google_routes_enabled", "shopify_domain", "backup_storage_target", "backup_frequency", "server_console_url",
         "smtp_host", "smtp_port", "smtp_user", "smtp_password", "smtp_from", "smtp_from_name"
     }
-    if {"openai_api_key", "google_maps_api_key", "mapbox_access_token", "stripe_secret_key", "smtp_password"}.intersection(payload):
+    # Tutta la configurazione email è protetta come le chiavi: cambiare il server
+    # farebbe arrivare la password già salvata a una destinazione diversa.
+    # Il pannello rimanda sempre i campi email: conta solo un valore davvero cambiato.
+    from ..services.email import smtp_config
+    current_smtp = smtp_config()
+    smtp_changed = bool(payload.get("smtp_password")) or any(
+        key in payload and str(payload.get(key) or "").strip() != str(current_smtp.get(key[5:]) or "").strip()
+        for key in ("smtp_host", "smtp_port", "smtp_user", "smtp_from", "smtp_from_name"))
+    if smtp_changed or {"openai_api_key", "google_maps_api_key", "mapbox_access_token", "stripe_secret_key"}.intersection(payload):
         _require_perm(superadmin, "manage_service_keys")
     if "maintenance_mode" in payload:
         _require_perm(superadmin, "toggle_maintenance")
@@ -180,6 +189,7 @@ def admin_update_platform_settings(payload: dict, db: Session = Depends(get_db),
 def admin_test_email(payload: dict, db: Session = Depends(get_db), superadmin: dict = Depends(require_superadmin)):
     """Invia un'email di prova con le impostazioni salvate, per controllare che l'invio funzioni."""
     _require_perm(superadmin, "manage_platform")
+    _require_perm(superadmin, "manage_service_keys")
     from ..services.email import _send, smtp_config
     to_email = str(payload.get("to") or "").strip() or _setting_value(db, "error_notification_email", "") or smtp_config()["from"]
     if "@" not in to_email:
@@ -234,6 +244,7 @@ def admin_create_collaborator(payload: dict, db: Session = Depends(get_db), supe
         raise HTTPException(400, "Esiste già un collaboratore con questa email")
     temporary = _temporary_password()
     guard_grants(superadmin, payload.get("permissions") or {})
+    guard_delegation(superadmin, None, payload.get("permissions") or {})
     permissions_json = _permissions_to_json(payload)
     collab = SuperAdminCollaborator(
         full_name=full_name,
@@ -271,6 +282,7 @@ def admin_update_collaborator(collaborator_id: int, payload: dict, db: Session =
     if not collab:
         raise HTTPException(404, "Collaboratore non trovato")
     guard_account(superadmin, collab)
+    guard_delegation(superadmin, collab, payload.get("permissions") or {})
     guard_grants(superadmin, payload.get("permissions") or {}, _collaborator_permissions(collab))
     collab.full_name = (payload.get("full_name") or collab.full_name).strip()[:180]
     collab.phone = (payload.get("phone") or "").strip()[:80]
@@ -291,6 +303,7 @@ def admin_resend_collaborator(collaborator_id: int, db: Session = Depends(get_db
     if not collab:
         raise HTTPException(404, "Collaboratore non trovato")
     guard_account(superadmin, collab)
+    guard_delegation(superadmin, collab)
     temporary = _temporary_password()
     collab.password_hash = hash_password(temporary)
     collab.invited_at = utc_now()
@@ -317,6 +330,7 @@ def admin_delete_collaborator(collaborator_id: int, db: Session = Depends(get_db
     if not collab:
         raise HTTPException(404, "Collaboratore non trovato")
     guard_account(superadmin, collab)
+    guard_delegation(superadmin, collab)
     from ..crm_models import CRMCompany
     if db.query(CRMCompany).filter(CRMCompany.owner_id == collaborator_id).first():
         raise HTTPException(409, "Riassegna le aziende CRM prima di eliminare il commerciale")
