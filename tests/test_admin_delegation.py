@@ -179,3 +179,20 @@ def test_owner_still_gets_temporary_password_when_email_fails(panel, monkeypatch
     actor.clear(); actor.update({'role': 'superadmin', 'username': 'owner', 'permissions': {'all': True}})
     response = client.post(f'/api/admin/collaborators/{backups.id}/resend')
     assert response.status_code == 200 and response.json()['temporary_password']
+
+
+@pytest.mark.parametrize('stored', [{'all': True}, {'download_backups': 'true'}, {'all': 1}])
+def test_delegate_cannot_manage_accounts_with_legacy_or_global_permissions(panel, stored):
+    client, actor, delegate, helper, backups = panel
+    from app.models import SuperAdminCollaborator
+    session = helper._sa_instance_state.session
+    legacy = SuperAdminCollaborator(full_name='Storico', email='storico@example.test', password_hash='x',
+                                    permissions_json=json.dumps(stored), is_active=True)
+    session.add(legacy); session.commit()
+    # Né disattivarlo, né modificarlo, né reinvitarlo, né eliminarlo.
+    response = client.put(f'/api/admin/collaborators/{legacy.id}', json={'full_name': 'Storico', 'is_active': False, 'permissions': {}})
+    assert response.status_code == 403
+    assert client.post(f'/api/admin/collaborators/{legacy.id}/resend').status_code == 403
+    assert client.delete(f'/api/admin/collaborators/{legacy.id}').status_code == 403
+    session.refresh(legacy)
+    assert legacy.is_active is True and json.loads(legacy.permissions_json) == stored

@@ -143,3 +143,24 @@ test('only one tab sends at a time when the browser offers locks',async()=>{
   assert.equal(maxActive,1);
   assert.deepEqual(sent,[1,2]);
 });
+
+test('an outcome from the older queue is sent exactly once',async()=>{
+  const storage=memoryStorage();const sent=[];
+  storage.setItem('k',JSON.stringify([{kind:'complete',url:'/c',body:{tempo_scarico:5},routeId:1,deliveryId:1,queuedAt:'2026-11-17T08:00:00Z'}]));
+  const send=async item=>{sent.push(item.deliveryId);};
+  const tabA=create({storage,key:'k',send,locks:null}),tabB=create({storage,key:'k',send,locks:null});
+  assert.equal(tabA.pending()[0].opId,tabB.pending()[0].opId);
+  await tabA.flush();await tabB.flush();await tabA.flush();
+  assert.deepEqual(sent,[1]);
+  assert.equal(tabB.count(),0);
+});
+
+test('an outcome is not sent twice when the phone cannot save its removal',async()=>{
+  const storage=memoryStorage();const sent=[];
+  const box=create({storage,key:'k',send:async item=>{sent.push(item.deliveryId);}});
+  box.add({kind:'complete',url:'/1',body:{},routeId:1,deliveryId:1});
+  storage.setItem=()=>{throw new Error('QuotaExceededError');};
+  await box.flush();await box.flush();
+  assert.deepEqual(sent,[1]);
+  assert.equal(box.count(),0);
+});

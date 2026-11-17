@@ -197,8 +197,10 @@ def admin_delete_user(user_id: int, db: Session = Depends(get_db), superadmin: d
     user = db.query(User).filter_by(id=user_id).with_for_update().populate_existing().first()
     if not user or is_admin_user(user):
         raise HTTPException(400, "Impossibile eliminare questo utente")
-    if user.stripe_subscription_id:
-        raise HTTPException(409, "L'azienda ha un abbonamento collegato a Stripe: annullalo prima di eliminarla, "
+    # Blocca solo un abbonamento ancora vivo: uno annullato o scaduto lascia salvato
+    # il suo identificativo ma non incassa più nulla.
+    if user.stripe_subscription_id and user.plan_status not in ("cancelled", "expired"):
+        raise HTTPException(409, "L'azienda ha un abbonamento Stripe ancora attivo: annullalo prima di eliminarla, "
                                  "altrimenti i pagamenti continuerebbero")
     delete_company_orders(db, user.id)
     _activity(db, superadmin.get("username"), "company_deleted", f"Eliminata azienda {user.id} con tutti i dati", "warning")

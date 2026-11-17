@@ -5,14 +5,15 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
-- Collaboratori Super Admin: un delegato gestisce (modifica, reinvita, elimina) solo account con permessi uguali o inferiori ai suoi;
+- Collaboratori Super Admin: un delegato gestisce (modifica, disattiva, reinvita, elimina) solo account con accesso effettivo uguale o inferiore al suo, compreso il vecchio permesso globale;
   se l'email di invito non parte, al delegato non viene mai mostrata la password e quella esistente non cambia.
 - Portale autista: gli esiti salvati sul telefono sono condivisi fra schede aperte (nessuna sovrascrive l'altra), una sola scheda invia alla volta
   e un errore del server (5xx) lascia l'esito in coda invece di scartarlo.
+  Gli esiti della versione precedente e quelli la cui rimozione non si riesce a salvare non vengono mai inviati due volte.
 - GPS e avvio giro bloccano giro e autista nello stesso ordine: niente più blocco reciproco.
 - Webhook ordini, invio ordini via API, caricamento file ordini, webhook Stripe e login lavorano col database fuori dal ciclo delle richieste;
   l'attesa di una riga bloccata è limitata a 5 secondi (poi «riprova»).
-- Eliminare un'azienda toglie anche fonti e ordini importati; con un abbonamento Stripe collegato l'eliminazione è rifiutata con un messaggio chiaro.
+- Eliminare un'azienda toglie anche fonti e ordini importati; con un abbonamento Stripe ancora attivo l'eliminazione è rifiutata (uno annullato o scaduto non la blocca).
 - Permessi dei collaboratori: accettati solo valori true/false veri (una stringa come "false" veniva salvata come permesso attivo).
 - Sicurezza pannello Super Admin: un collaboratore con «Creare e gestire collaboratori» non può più darsi altri permessi,
   assegnare i permessi riservati al titolare (backup, chiavi, server, database, impostazioni, collaboratori) né gestire account che li hanno.

@@ -77,3 +77,36 @@ def test_company_with_stripe_subscription_is_not_deleted(pg):
     assert response.status_code == 409 and 'Stripe' in response.json()['detail']
     with Session(pg) as db:
         assert db.get(User, company_id) is not None
+
+
+def test_company_with_cancelled_stripe_subscription_can_be_deleted(pg):
+    from app.database import Base, get_db
+    from app.models import User
+    from app.core.dependencies import require_superadmin
+    from app.routers.admin_users import router
+    Base.metadata.create_all(pg)
+    with Session(pg) as db:
+        ended = [User(username=f'ex{i}', password_hash='test', stripe_subscription_id=f'sub_{i}', plan_status=status)
+                 for i, status in enumerate(('cancelled', 'expired'))]
+        live = User(username='attiva', password_hash='test', stripe_subscription_id='sub_live', plan_status='past_due')
+        db.add_all(ended + [live]); db.commit()
+        ended_ids, live_id = [u.id for u in ended], live.id
+    sessions = sessionmaker(bind=pg)
+    app = FastAPI(); app.include_router(router)
+
+    def session():
+        db = sessions()
+        try:
+            yield db
+        finally:
+            db.close()
+    app.dependency_overrides[get_db] = session
+    app.dependency_overrides[require_superadmin] = lambda: {'role': 'superadmin', 'username': 'owner'}
+    with TestClient(app) as client:
+        for user_id in ended_ids:
+            assert client.delete(f'/api/admin/users/{user_id}').status_code == 200
+        # Un abbonamento con pagamento in sospeso è ancora vivo: resta bloccato.
+        assert client.delete(f'/api/admin/users/{live_id}').status_code == 409
+    with Session(pg) as db:
+        assert all(db.get(User, user_id) is None for user_id in ended_ids)
+        assert db.get(User, live_id) is not None

@@ -20,19 +20,25 @@
     // anche se nel frattempo un nuovo esito della stessa consegna è entrato in coda.
     const newOpId = () => Date.now().toString(36) + '-' + (++sequence).toString(36) + '-' + Math.random().toString(36).slice(2, 8);
 
+    // Esiti già inviati in questa pagina: se il telefono non riesce a salvarne la rimozione,
+    // non vengono comunque rimandati.
+    const sent = new Set();
+
     function readStored(){
       let stored;
       try { stored = JSON.parse(storage?.getItem(key) || '[]'); }
       catch(e) { stored = []; }
       if(!Array.isArray(stored)) stored = [];
-      return stored.filter(Boolean).map(item => item.opId ? item : {...item, opId: newOpId()});
+      // Esiti della versione precedente, senza identificativo: ne ricevono uno ricavato dal contenuto,
+      // uguale a ogni lettura e in ogni scheda, così l'esito inviato si riconosce e si toglie.
+      return stored.filter(Boolean).map(item => item.opId ? item : {...item, opId: legacyOpId(item)});
     }
     // Il telefono è la fonte comune a tutte le schede: si rilegge sempre prima di modificare,
     // così una seconda scheda aperta non cancella gli esiti salvati dalla prima.
     function load(){
       const stored = readStored();
       const known = new Set(stored.map(x => x.opId));
-      items = stored.concat(unsaved.filter(x => !known.has(x.opId)));
+      items = stored.concat(unsaved.filter(x => !known.has(x.opId))).filter(x => !sent.has(x.opId));
     }
     function save(){
       try {
@@ -76,6 +82,7 @@
           rejected.push({item, message: e.message});
         }
         // Si toglie l'operazione appena inviata, non «la prima»: potrebbe essere stata sostituita.
+        sent.add(item.opId);
         update(list => list.filter(x => x.opId !== item.opId));
       }
       return rejected;
@@ -95,7 +102,16 @@
     function refresh(){ load(); changed(); }
 
     load();
+    // Gli identificativi dati agli esiti della versione precedente si salvano subito.
+    if(storage && items.some(x => String(x.opId).startsWith('legacy-'))) save();
     return {add, pending, flush, refresh, count: () => { load(); return items.length; }};
+  }
+
+  function legacyOpId(item){
+    const text = JSON.stringify([item.kind, item.deliveryId, item.routeId, item.url, item.queuedAt, item.body]);
+    let hash = 5381;
+    for(let i = 0; i < text.length; i++) hash = ((hash * 33) ^ text.charCodeAt(i)) >>> 0;
+    return 'legacy-' + hash.toString(36);
   }
 
   function isRetryable(error){
