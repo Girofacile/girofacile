@@ -99,6 +99,29 @@ body[data-gf-surface] .gf-card[data-variant="stat"] { padding: var(--gf-space-4)
 /* Riquadro cliccabile (es. «Da dove vuoi partire?»): un .gf-card usato come pulsante. */
 body[data-gf-surface] button.gf-card { width: 100%; font: inherit; color: inherit; text-align: left; cursor: pointer; transition: border-color var(--gf-motion-duration), box-shadow var(--gf-motion-duration); }
 body[data-gf-surface] button.gf-card:hover { border-color: var(--gf-color-primary); box-shadow: var(--gf-shadow-md); }
+/* Scelta grande (data-variant="choice"): icona illustrata grande al centro, titolo e frase brevi sotto. */
+body[data-gf-surface] button.gf-card[data-variant="choice"] { display: grid; justify-items: center; align-content: start; gap: var(--gf-space-2); padding: var(--gf-space-8) var(--gf-space-6) var(--gf-space-6); text-align: center; }
+body[data-gf-surface] .gf-card__icon { display: grid; place-items: center; width: calc(var(--gf-space-12) * 2.5); height: calc(var(--gf-space-12) * 2.5); margin-bottom: var(--gf-space-3); border-radius: var(--gf-radius-circle); transition: transform var(--gf-motion-duration); }
+body[data-gf-surface] .gf-card__icon[data-tone="1"] { background: var(--gf-color-avatar-1-bg); color: var(--gf-color-avatar-1); box-shadow: 0 0 0 var(--gf-space-2) color-mix(in srgb, var(--gf-color-avatar-1-bg) 45%, transparent); }
+body[data-gf-surface] .gf-card__icon[data-tone="2"] { background: var(--gf-color-avatar-2-bg); color: var(--gf-color-avatar-2); box-shadow: 0 0 0 var(--gf-space-2) color-mix(in srgb, var(--gf-color-avatar-2-bg) 45%, transparent); }
+body[data-gf-surface] .gf-card__icon svg { width: calc(var(--gf-space-12) * 1.6); height: calc(var(--gf-space-12) * 1.6); fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+body[data-gf-surface] .gf-card__icon .gf-card__icon-fill { fill: currentColor; fill-opacity: .2; stroke: none; }
+body[data-gf-surface] button.gf-card[data-variant="choice"]:hover .gf-card__icon { transform: scale(1.06); }
+body[data-gf-surface] button.gf-card[data-variant="choice"] strong { font-size: var(--gf-font-lg); }
+body[data-gf-surface] button.gf-card[data-variant="choice"] .gf-muted { font-size: var(--gf-font-sm); }
+/* Le scelte grandi restano sempre affiancate, anche sul telefono. */
+body[data-gf-surface] .gf-grid[data-cols="2"]:has(> button.gf-card[data-variant="choice"]) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+/* Sul telefono: finestra più stretta dello schermo, riquadri, icone e testi più piccoli. */
+@media (max-width: 640px) {
+  body[data-gf-surface] .gf-modal:has(button.gf-card[data-variant="choice"]) { width: calc(100% - var(--gf-space-10)); }
+  body[data-gf-surface] .gf-grid[data-cols="2"]:has(> button.gf-card[data-variant="choice"]) { gap: var(--gf-space-3); }
+  body[data-gf-surface] button.gf-card[data-variant="choice"] { gap: var(--gf-space-1); padding: var(--gf-space-5) var(--gf-space-3) var(--gf-space-4); }
+  body[data-gf-surface] .gf-card__icon { width: calc(var(--gf-space-12) * 1.5); height: calc(var(--gf-space-12) * 1.5); margin-bottom: var(--gf-space-2); }
+  body[data-gf-surface] .gf-card__icon[data-tone] { box-shadow: 0 0 0 var(--gf-space-1) color-mix(in srgb, currentColor 8%, transparent); }
+  body[data-gf-surface] .gf-card__icon svg { width: var(--gf-space-12); height: var(--gf-space-12); }
+  body[data-gf-surface] button.gf-card[data-variant="choice"] strong { font-size: var(--gf-font-md); }
+  body[data-gf-surface] button.gf-card[data-variant="choice"] .gf-muted { font-size: var(--gf-font-xs); }
+}
 body[data-gf-surface] .gf-card[data-variant="action"] { display: flex; align-items: center; justify-content: space-between; gap: var(--gf-space-4); }
 body[data-gf-surface] .gf-card[data-variant="info"] { background: var(--gf-color-info-bg); border-color: var(--gf-color-info); }
 body[data-gf-surface] .gf-card[data-variant="warning"] { background: var(--gf-color-warning-bg); border-color: var(--gf-color-warning); }

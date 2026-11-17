@@ -5,6 +5,8 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- «Da dove vuoi partire?»: riquadri con icona illustrata grande (pacco per gli ordini, negozio per i clienti) e testo più piccolo;
+  sul telefono restano affiancati e la finestra è più stretta dello schermo. Nuovo nel sistema: button.gf-card data-variant="choice".
 - «Nuovo giro» / «Pianifica giro»: si apre «Da dove vuoi partire?» con due grandi riquadri, Ordini e Clienti.
   Se l'account può usare una sola delle due strade si va lì direttamente. Nuovo nel sistema: button.gf-card (riquadro cliccabile).
 - Super Admin › Errori sistema: tabella compatta (Quando, Sezione, Azienda, Errore, Gravità, Stato). L’errore è una frase

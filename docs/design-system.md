@@ -82,7 +82,7 @@ pagina; l'aspetto di un componente deve cambiare nel foglio condiviso.
 | Input/select/textarea | `.gf-input`, `.gf-select`, `.gf-textarea`; label associata |
 | Switch/checkbox | `.gf-switch` con checkbox nativa `role="switch"`; stati/focus nativi |
 | Badge | `.gf-badge`, `data-status="success\|warning\|danger\|info\|neutral"` |
-| Card | `.gf-card`, `data-variant="standard\|stat\|action\|info\|warning"` |
+| Card | `.gf-card`, `data-variant="standard\|stat\|action\|info\|warning\|choice"`; `button.gf-card` è cliccabile; `choice` = scelta grande con `.gf-card__icon` (sempre affiancata) |
 | Stat card | `.gf-stat` |
 | Table/lista mobile | `.gf-table`, `data-gf-responsive="cards"`, celle `data-label` |
 | Modal | `dialog.gf-dialog`; gli overlay legacy conservano il loro box a schermo intero |
