@@ -85,7 +85,7 @@ test('electric section and price cards share responsive styles without hiding be
   assert.doesNotMatch(landing, /<style[\s>]|\sstyle="/, 'No page-specific CSS or inline styles');
   assert.match(landing, /class="gf-panel electric-inner"/);
   assert.match(landing, /class="gf-cluster" id="electricPlanBonuses"/);
-  assert.match(landing, /class="gf-grid pricing-grid" data-cols="3" id="publicPricing"/);
+  assert.match(landing, /class="gf-snap pricing-grid" id="publicPricing"/);
   assert.match(landing, /class="gf-badge electric-plan-bonus"/);
   assert.match(landing, /aria-labelledby="electricMobilityTitle"/);
 });
