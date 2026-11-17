@@ -124,3 +124,24 @@ def test_terms_prices_match_plan_catalog():
     for plan in PLAN_PRICES.values():
         assert f"<td>{plan['name']}</td><td>{plan['price_eur']} € al mese</td>" in terms
     assert 'IVA' not in terms.split('<h2>5.')[1].split('<h2>7.')[0]
+
+
+@pytest.mark.parametrize('value', ['false', 'true', 'False', '0', '1', 1, 0, None, [], {}])
+def test_non_boolean_permissions_are_rejected_before_saving(panel, value):
+    client, actor, delegate, helper, backups = panel
+    created = client.post('/api/admin/collaborators', json={
+        'full_name': 'Nuovo', 'email': 'nuovo@example.test',
+        'permissions': {'download_backups': value, 'manage_service_keys': value}})
+    assert created.status_code == 422
+    assert update(client, helper, {'view_tickets': True, 'download_backups': value}).status_code == 422
+
+
+def test_saved_permissions_match_what_was_checked(panel):
+    client, actor, delegate, helper, backups = panel
+    from app.routers.admin_helpers import clean_permissions
+    assert clean_permissions({'download_backups': False, 'view_tickets': True})['download_backups'] is False
+    created = client.post('/api/admin/collaborators', json={
+        'full_name': 'Nuovo', 'email': 'nuovo2@example.test', 'permissions': {'view_tickets': True, 'download_backups': False}})
+    assert created.status_code == 200
+    perms = created.json()['permissions']
+    assert perms['view_tickets'] is True and not any(perms[key] for key in perms if key != 'view_tickets')

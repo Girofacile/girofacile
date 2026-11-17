@@ -86,9 +86,10 @@ def guard_delegation(actor: dict, target=None, new_permissions=None):
             raise HTTPException(403, "Solo il titolare può gestire questo account")
     if new_permissions is not None:
         own = actor.get("permissions") or {}
-        for key in COLLABORATOR_PERMISSIONS:
-            if new_permissions.get(key) is True or new_permissions.get(key) in (1, "true"):
-                if key in OWNER_ONLY_PERMISSIONS or not own.get(key):
+        # Stessa normalizzazione del salvataggio: ciò che si controlla è ciò che si salva.
+        for key, granted in clean_permissions(new_permissions).items():
+            if granted:
+                if key in OWNER_ONLY_PERMISSIONS or own.get(key) is not True:
                     raise HTTPException(403, f"Solo il titolare può assegnare il permesso «{COLLABORATOR_PERMISSIONS[key]}»")
 
 
@@ -97,10 +98,20 @@ def _temporary_password(length: int = 10) -> str:
     return ''.join(secrets.choice(alphabet) for _ in range(length))
 
 
+def clean_permissions(permissions) -> dict:
+    """Solo true/false veri: una stringa come "false" non deve mai diventare un permesso attivo."""
+    if permissions is None:
+        permissions = {}
+    if not isinstance(permissions, dict):
+        raise HTTPException(422, "Permessi non validi")
+    for key, value in permissions.items():
+        if key in COLLABORATOR_PERMISSIONS and not isinstance(value, bool):
+            raise HTTPException(422, "Ogni permesso deve essere attivato o disattivato esplicitamente (true/false)")
+    return {key: permissions.get(key) is True for key in COLLABORATOR_PERMISSIONS}
+
+
 def _permissions_to_json(payload: dict) -> str:
-    permissions = payload.get("permissions") or {}
-    clean = {key: bool(permissions.get(key)) for key in COLLABORATOR_PERMISSIONS}
-    return json.dumps(clean, ensure_ascii=False)
+    return json.dumps(clean_permissions(payload.get("permissions")), ensure_ascii=False)
 
 
 def _collaborator_permissions(c: SuperAdminCollaborator) -> dict:

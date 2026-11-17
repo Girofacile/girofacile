@@ -5,6 +5,7 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Permessi dei collaboratori: accettati solo valori true/false veri (una stringa come "false" veniva salvata come permesso attivo).
 - Sicurezza pannello Super Admin: un collaboratore con «Creare e gestire collaboratori» non può più darsi altri permessi,
   assegnare i permessi riservati al titolare (backup, chiavi, server, database, impostazioni, collaboratori) né gestire account che li hanno.
 - Email: cambiare server, utente o mittente SMTP e l'invio di prova richiedono il permesso sulle chiavi; la connessione verifica il certificato del server.
