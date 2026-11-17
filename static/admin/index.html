@@ -156,7 +156,7 @@
         <div id="errors-loading" class="gf-loading" role="status">Caricamento…</div>
         <div class="gf-table-wrap gf-hidden" id="errors-table-wrap">
           <table class="gf-table" data-gf-responsive="cards">
-            <thead><tr><th>#</th><th>Ora</th><th>Azienda</th><th>Azione</th><th>Errore</th><th>Gravità</th><th>Stato</th><th>Email</th><th>Azioni</th></tr></thead>
+            <thead><tr><th scope="col">Quando</th><th scope="col">Sezione</th><th scope="col">Azienda</th><th scope="col">Errore</th><th scope="col">Gravità</th><th scope="col">Stato</th><th scope="col"><span class="gf-hidden">Azioni</span></th></tr></thead>
             <tbody id="errors-tbody"></tbody>
           </table>
         </div>
@@ -963,19 +963,19 @@ async function loadErrors() {
     document.getElementById('error-count').textContent = `${rows.length} errori`;
     const tbody = document.getElementById('errors-tbody');
     if (!rows.length) {
-      tbody.innerHTML = '<tr><td colspan="9"><div class="gf-empty"><p>Nessun errore trovato</p></div></td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7"><div class="gf-empty"><p>Nessun errore trovato</p></div></td></tr>';
     } else {
+      // Una riga breve per errore: quando, in quale sezione, per quale azienda e cosa è successo in parole semplici.
+      // Il testo tecnico completo resta nel dettaglio («Apri»).
       tbody.innerHTML = rows.map(e => `
         <tr>
-          <td data-label="#" class="gf-muted">#${e.id}</td>
-          <td data-label="Ora" class="gf-muted">${fmtDateTime(e.created_at)}</td>
-          <td data-label="Azienda"><strong>${e.company_name || '—'}</strong><br><small class="gf-muted">${e.username || 'utente non rilevato'}</small></td>
-          <td data-label="Azione">${e.action || e.path || '—'}<br><small class="gf-muted">${e.method || ''} ${e.path || ''}</small></td>
-          <td data-label="Errore">${e.error_type}: ${e.error_message || '—'}</td>
+          <td data-label="Quando"><strong>${escapeHtml(errorWhen(e.created_at))}</strong><br><small class="gf-muted">#${Number(e.id)}</small></td>
+          <td data-label="Sezione"><strong>${escapeHtml(errorArea(e))}</strong>${e.action && e.action !== errorArea(e) ? `<br><small class="gf-muted">${escapeHtml(e.action)}</small>` : ''}</td>
+          <td data-label="Azienda">${escapeHtml(e.company_name || 'Nessuna')}${e.username ? `<br><small class="gf-muted">${escapeHtml(e.username)}</small>` : ''}</td>
+          <td data-label="Errore">${escapeHtml(errorSummary(e))}<br><small class="gf-muted">${escapeHtml(e.error_type || '')}</small></td>
           <td data-label="Gravità">${badge(e.severity, errorSeverityLabel(e.severity))}</td>
-          <td data-label="Stato">${badge(e.status, errorStatusLabel(e.status))}</td>
-          <td data-label="Email">${e.email_sent ? '✓ inviata' : '—'}</td>
-          <td data-label="Azioni"><button class="gf-button" data-variant="ghost" data-size="sm" type="button" onclick="openErrorModal(${e.id})">Apri</button></td>
+          <td data-label="Stato">${badge(e.status, errorStatusLabel(e.status))}${e.email_sent ? '<br><small class="gf-muted">avviso inviato</small>' : ''}</td>
+          <td data-label="Azioni"><button class="gf-button" data-variant="secondary" data-size="sm" type="button" onclick="openErrorModal(${Number(e.id)})">Apri</button></td>
         </tr>
       `).join('');
     }
@@ -983,6 +983,40 @@ async function loadErrors() {
     gfShow('errors-table-wrap', true);
     updateErrorBadge();
   } catch(e) { showToast(e.message, 'error'); }
+}
+
+// --- Errori sistema: data breve, sezione del gestionale e frase comprensibile al posto del testo tecnico.
+function errorWhen(iso) {
+  if (!iso) return '—';
+  try { return new Date(iso).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(',', ''); }
+  catch { return iso; }
+}
+const ERROR_AREAS = [
+  ['email-service', 'Invio email'], ['/api/planning-drafts', 'Bozze dei giri'], ['/api/order-planning', 'Pianificazione da ordini'],
+  ['/api/order-sources', 'Collegamenti ordini'], ['/api/orders', 'Ordini'], ['/api/fleet-planning', 'Giri con più mezzi'],
+  ['/api/routes', 'Giri'], ['/api/customers', 'Clienti'], ['/api/driver', 'Portale autista'], ['/api/operator', 'Portale operatore'],
+  ['/api/agent', 'Portale agente'], ['/api/vehicle', 'Mezzi'], ['/api/drivers', 'Autisti'], ['/api/deposits', 'Depositi'],
+  ['/api/company-profile', 'Azienda'], ['/api/settings', 'Impostazioni'], ['/api/billing', 'Abbonamento'], ['/api/admin', 'Pannello Super Admin'],
+  ['/api/collaborators', 'Collaboratori'], ['/api/support', 'Assistenza'], ['/api/reports', 'Report'], ['/api/tracking', 'Tracking cliente'],
+  ['/api/login', 'Accesso'], ['/api/signup', 'Registrazione'], ['/api/password-reset', 'Recupero password'], ['/api/onboarding', 'Guida iniziale'],
+];
+function errorArea(e) {
+  const path = String(e.path || '');
+  const hit = ERROR_AREAS.find(([prefix]) => path.startsWith(prefix));
+  return hit ? hit[1] : (e.action || path || 'Non indicata');
+}
+function errorSummary(e) {
+  const type = String(e.error_type || ''), raw = String(e.error_message || '');
+  if (/SMTP/i.test(type) || /SMTP/i.test(raw)) return 'Email non inviata: impostazioni email mancanti o non valide.';
+  if (/StorageUnavailable/.test(type) || /Archivio POD/i.test(raw)) return 'Archivio foto e firme non disponibile: firma o foto non salvate.';
+  if (/UndefinedTable/.test(raw)) return 'Database non aggiornato: manca una tabella (migrazione non eseguita).';
+  if (/UndefinedColumn/.test(raw)) return 'Database non aggiornato: manca una colonna (migrazione non eseguita).';
+  if (/UndefinedFunction|operatore di uguaglianza/i.test(raw)) return 'Errore interno in una ricerca nel database.';
+  if (/OperationalError|could not connect|connection/i.test(type + raw)) return 'Database non raggiungibile in quel momento.';
+  if (/Timeout/i.test(type + raw)) return 'Un servizio esterno non ha risposto in tempo.';
+  // Altrimenti la prima frase del messaggio, senza query SQL e dettagli tecnici.
+  const text = raw.split(/\[SQL:|LINE \d|\(Background on this error/)[0].replace(/\([a-z0-9_.]+\)\s*/gi, '').trim();
+  return text.length > 140 ? text.slice(0, 137).trimEnd() + '…' : (text || type || 'Errore senza descrizione');
 }
 
 async function openErrorModal(errorId) {
@@ -994,9 +1028,10 @@ async function openErrorModal(errorId) {
     <div class="gf-stack">
       <dl class="gf-details">
         ${detail('Azienda', e.company_name || '—')}${detail('Utente', e.username || '—')}${detail('Settore', e.company_sector || '—')}${detail('Ora', fmtDateTime(e.created_at))}
-        ${detail('Azione', e.action || '—')}${detail('Pagina/API', `${e.method} ${e.path}`)}${detail('Gravità', badge(e.severity, errorSeverityLabel(e.severity)))}${detail('Email notifica', e.email_sent ? 'Inviata' : 'Non inviata / SMTP non configurato')}
+        ${detail('Sezione', escapeHtml(errorArea(e)))}${detail('Azione', escapeHtml(e.action || '—'))}${detail('Pagina/API', escapeHtml(`${e.method || ''} ${e.path || ''}`))}${detail('Gravità', badge(e.severity, errorSeverityLabel(e.severity)))}${detail('Email notifica', e.email_sent ? 'Inviata' : 'Non inviata / SMTP non configurato')}
       </dl>
-      <div class="gf-field"><span class="gf-field__label">Messaggio errore</span><p class="gf-alert" data-status="danger">${e.error_type}: ${e.error_message || '—'}</p></div>
+      <div class="gf-field"><span class="gf-field__label">Cosa è successo</span><p class="gf-alert" data-status="danger">${escapeHtml(errorSummary(e))}</p></div>
+      <div class="gf-field"><span class="gf-field__label">Messaggio tecnico</span><p class="gf-muted">${escapeHtml((e.error_type || '') + ': ' + (e.error_message || '—'))}</p></div>
       <label class="gf-field" for="error-status"><span class="gf-field__label">Stato</span>
         <select class="gf-select" id="error-status">
           <option value="new" ${e.status==='new'?'selected':''}>Nuovo</option>

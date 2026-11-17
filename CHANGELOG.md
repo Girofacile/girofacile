@@ -5,6 +5,9 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Super Admin › Errori sistema: tabella compatta (Quando, Sezione, Azienda, Errore, Gravità, Stato). L’errore è una frase
+  breve e comprensibile e la sezione indica dove è successo (Ordini, Giri, Portale autista, Invio email…); il testo tecnico
+  completo resta nel dettaglio. I testi degli errori sono ora mostrati in modo sicuro (caratteri speciali neutralizzati).
 - Storico › dettaglio del giro: l’elenco delle fermate accanto alla mappa è compatto come nei giri in corso
   (numero o ✓, nome del cliente, esito); orari, prove e note restano nella tabella «Dettaglio completo».
 - Dopo aver eliminato un giro (pagina «Nessun giro in corso» o anteprima eliminata) «Pianifica un giro» porta agli
