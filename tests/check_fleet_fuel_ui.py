@@ -53,11 +53,15 @@ def main():
                 page.route('**/*', handle)
                 page.goto('http://fuel.test/dashboard', wait_until='networkidle')
                 page.evaluate('async () => { acceptCookieNotice(); await checkLogin(); document.getElementById("onboardingOverlay")?.classList.add("hidden"); showTab("giro"); }')
-                page.evaluate('v => { vehiclesCache = v; resourcesAvailabilityCache = {vehicles: v, drivers: []}; }', VEHICLES)
+                # Dati del giro completi (deposito, mezzo e autista): la barra di «Calcola percorso», con il
+                # riepilogo del carburante, compare solo allora.
+                page.evaluate('f => { vehiclesCache = f.v; driversCache = f.d; resourcesAvailabilityCache = {vehicles: f.v, drivers: f.d}; document.getElementById("routeDeposit").innerHTML = "<option value=1>Deposito</option>"; }', {'v': VEHICLES, 'd': DRIVERS})
                 page.locator('#routeDate').fill('2099-01-15'); page.locator('#routeStart').fill('08:00'); page.locator('#routeStart').blur()
                 page.evaluate('refreshResourceAvailability()')
                 page.locator('#fleetVehicle0 option[value="1"]').wait_for(state='attached')
                 page.locator('#fleetVehicle0').select_option('1')
+                page.locator('#fleetDriver0').select_option('1')
+                page.evaluate('updateRoutePlanningGateV68()')
                 # Il costo carburante sta nella card del mezzo anche con un solo mezzo; il vecchio riquadro resta nascosto.
                 old_box = page.locator('#routeEnergyPriceBoxV895')
                 box = page.locator('#fleetFuel0')
@@ -65,6 +69,9 @@ def main():
                 assert box.is_visible() and fuel.is_visible() and old_box.is_hidden()
                 page.locator('[data-planning-mode-card="fleet"]').click()
                 assert page.locator('#planningMode').input_value() == 'fleet'
+                page.locator('#fleetVehicle1').select_option('2')
+                page.locator('#fleetDriver1').select_option('2')
+                page.evaluate('updateRoutePlanningGateV68()')
                 # Più mezzi: il costo resta nelle card, niente prezzo nella barra; la mappa prende tutta la riga.
                 assert old_box.is_hidden() and fuel.is_hidden() and box.is_visible()
                 assert page.locator('#statDeliveries').is_visible()

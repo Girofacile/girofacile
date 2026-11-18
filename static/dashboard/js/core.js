@@ -2052,6 +2052,8 @@ function dashboardEmptyRouteAction(source="ordini"){
     return;
   }
   if(source==="clienti"){showTab("clienti");return;}
+  // La scelta è già fatta qui («Dagli ordini»): niente seconda domanda nel pop-up «Da dove vuoi partire?».
+  if(typeof planningStartOptions!=="function"||planningStartOptions().orders){showTab("ordini");return;}
   openPlanningSelection();
 }
 

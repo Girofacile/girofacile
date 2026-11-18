@@ -164,15 +164,15 @@ def check_width(browser, width, output):
             expect(page.locator("#supportTicketHistoryV1")).to_contain_text(ticket.oggetto)
             page.evaluate("closeSupportTicketModalV60()")
             page.locator("#ordersConnectionsNewSource").click()
-            expect(page.locator("#orderImportFile")).to_be_visible()
-            page.locator("#orderImportName").fill("Ordini di prova")
+            # Nuovo import (14/11): pop-up con «Scegli file»; il campo file è dentro il pulsante, nascosto.
+            expect(page.locator("#orderImportDialog")).to_be_visible()
+            expect(page.locator("#orderImportDialog").get_by_text("Scegli file", exact=True)).to_be_visible()
             page.locator("#orderImportFile").set_input_files({
                 "name": "ordini.csv", "mimeType": "text/csv",
                 "buffer": b"NOrdine;RagioneSociale;IndSped;Pedana;NColli\nPROVA-001;Cliente;Via Roma 1;No;3\n",
             })
-            page.get_by_role("button", name="Continua", exact=True).click()
             page.locator("#orderImportCommit").click()
-            expect(page.locator("#orderImportReport")).to_contain_text("Importazione completata")
+            expect(page.locator("#orderImportDialog")).to_contain_text("1 ordine importato")
             assert db.query(Order).one().external_id == "PROVA-001"
             assert db.query(OrderSource).one().kind == "file"
             assert not errors, errors

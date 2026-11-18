@@ -153,9 +153,9 @@ def main():
                     page.locator('#tab-giro').wait_for(state='visible')
                     expect(page.locator('#orderPlanningBanner')).to_have_count(0)
                     expect(page.locator('#openCustomerStepBtn')).to_have_count(0)
-                    page.locator('#routeCalculateBtn').click()
-                    expect(page.locator('#orderPlanningProceedMessage')).to_contain_text('l’autista')
-                    expect(page.locator('#orderPlanningProceedMessage')).to_contain_text('il mezzo')
+                    # «Calcola percorso» compare solo con i dati del giro completi (data, orario, deposito,
+                    # mezzo con autista): prima non si può premere.
+                    expect(page.locator('#routePlanningActions')).to_be_hidden()
                     expect(page.locator('#statDeliveries')).to_have_text('2')
                     expect(page.locator('#statColli')).to_have_text('8')
                     assert page.locator('#deliveryWorkbenchStep').is_visible()
@@ -177,9 +177,13 @@ def main():
                     page.evaluate('GFOrderPlanning.beforeCalculate()')
                     page.wait_for_function("deliveries.length===2")
                     expect(page.locator('#orderPlanningProceedMessage')).to_be_hidden()
+                    page.evaluate('updateRoutePlanningGateV68()')
+                    expect(page.locator('#routeCalculateBtn')).to_be_visible()
                     page.locator('#deliveryTableArea').get_by_role('button',name='Aggiungi fermata occasionale',exact=True).click()
                     assert page.locator('#occasionalStopDialog').is_visible()
-                    assert page.locator('#osSave').is_disabled()
+                    # Dal 12/11 l'indirizzo si verifica da solo al salvataggio: «Aggiungi fermata» è attivo.
+                    assert page.locator('#osSave').is_enabled()
+                    assert 'quando salvi' in page.locator('#osVerificationStatus').inner_text()
                     page.evaluate('closeOccasionalStopModal()')
                     page.locator('#deliveryTableArea').get_by_role('button',name='Aggiungi cliente',exact=True).click()
                     assert page.locator('#planningCustomerDialog').is_visible()
@@ -219,37 +223,36 @@ def main():
                     assert page.locator('#tab-ordini-collegamenti').is_visible()
                     # Il file è il percorso principale, distinto dai collegamenti assistiti.
                     page.locator('#sourceFileOption').get_by_role('button',name='Carica un file',exact=True).click()
-                    page.locator('#orderImportName').fill('Magazzino <script>test</script>')
-                    csv_file={'name':'ordini.csv','mimeType':'text/csv','buffer':b'NOrdine;RagioneSociale;IndSped;Pedana;NColli;DataCons\nIMPORT-001;Destinatario;Via Roma 1;No;3;2099-01-16\n'}
+                    # Nuovo import (14/11): pop-up in tre passi. File → colonne riconosciute con anteprima → importa.
+                    dialog=page.locator('#orderImportDialog')
+                    csv_file={'name':'ordini.csv','mimeType':'text/csv','buffer':b'NOrdine;RagioneSociale;IndSped;Pedana;NColli;DataCons'+bytes([10])+b'IMPORT-001;Destinatario;Via Roma 1;No;3;2099-01-16'+bytes([10])}
+                    expect(dialog).to_be_visible()
                     page.locator('#orderImportFile').set_input_files(csv_file)
-                    page.get_by_role('button',name='Continua',exact=True).click()
                     page.locator('#orderImportCommit').wait_for(state='visible')
-                    assert not page.locator('#orderImportMapping').evaluate('(n)=>n.open')
                     date_choice=page.locator('[data-choice="import"][value="requested_date"]')
-                    assert page.locator('[data-choice="import"][value="recipient_name"]').is_disabled()
+                    # Il destinatario si importa sempre: non ha l'interruttore.
+                    assert page.locator('[data-choice="import"][value="recipient_name"]').count()==0
                     date_choice.uncheck()
-                    assert page.locator('#orderImportCommit').count()==0
-                    page.get_by_role('button',name='Aggiorna anteprima',exact=True).first.click()
+                    page.wait_for_function("!document.getElementById('orderImportPreview').textContent.includes('Data consegna')")
                     page.locator('#orderImportCommit').wait_for(state='visible')
-                    assert 'Data consegna' not in page.locator('#orderImportPreview').inner_text()
                     date_choice.check()
-                    page.get_by_role('button',name='Aggiorna anteprima',exact=True).first.click()
+                    page.wait_for_function("document.getElementById('orderImportPreview').textContent.includes('Data consegna')")
                     page.locator('#orderImportCommit').wait_for(state='visible')
-
                     assert page.locator('#orderImportWizard script').count()==0
                     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 2')
                     page.screenshot(path=str(output/f'import-review-{width}.png'),full_page=True)
                     page.locator('#orderImportCommit').click()
-                    page.wait_for_function("document.getElementById('orderImportReport').textContent.includes('Importazione completata')")
+                    expect(dialog).to_contain_text('1 ordine importato')
                     assert db.query(Order).filter_by(external_id='IMPORT-001').count()==1
-                    page.get_by_role('button',name='Importa un altro file',exact=True).click()
+                    # Stesso file una seconda volta: riconosciuto come già presente, nessun duplicato.
+                    page.locator('#orderImportFooter').get_by_role('button',name='Chiudi',exact=True).click()
+                    page.locator('#sourceFileOption').get_by_role('button',name='Carica un file',exact=True).click()
                     page.locator('#orderImportFile').set_input_files(csv_file)
-                    page.get_by_role('button',name='Continua',exact=True).click()
                     page.locator('#orderImportCommit').wait_for(state='visible')
-                    assert 'già presenti' in page.locator('#orderImportReport').inner_text()
                     page.locator('#orderImportCommit').click()
-                    page.wait_for_function("document.getElementById('orderImportReport').textContent.includes('Importazione completata')")
-                    page.get_by_role('button',name='Vai agli ordini importati',exact=True).click()
+                    expect(dialog).to_contain_text('Già presenti, invariati')
+                    assert db.query(Order).filter_by(external_id='IMPORT-001').count()==1
+                    page.locator('#orderImportFooter').get_by_role('button',name='Vai agli ordini',exact=True).click()
                     page.wait_for_function("document.getElementById('ordersResults').textContent.includes('IMPORT-001')")
                     imported=db.query(Order).filter_by(external_id='IMPORT-001').one()
                     imported.status='pronto';imported.address_verification={'input_address':imported.delivery_address,'indirizzo':imported.delivery_address,'stato_geocodifica':'verificato','lat':45.47,'lon':9.2,'geocoding_token':sign_stop_address(user.id,imported.delivery_address,45.47,9.2)}

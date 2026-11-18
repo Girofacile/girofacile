@@ -5,6 +5,12 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Note dell'autista: una nota già accettata e reinviata dalla coda si conferma senza errori anche a giro chiuso o annullato.
+  Le note salvate prima dell'ora di scrittura tornano «ora sconosciuta» (migrazione 20261118_03 annulla l'ora data da 20261118_02):
+  una modifica offline con testo diverso le sostituisce; con l'ora su entrambe vince la più recente. Un esito senza nota non cancella più la nota salvata.
+- Dashboard vuota: «Dagli ordini» porta subito agli ordini, senza chiedere di nuovo «Da dove vuoi partire?».
+- Collaudi browser aggiornati alle schermate attuali: prezzi a carosello, «Calcola percorso» che compare solo con i dati completi,
+  nuovo import ordini in pop-up, scheda cliente unica, GPS nella scheda «Posizione», stato pubblico negli inviti, tutor, carburante.
 - Portale autista: la risposta di un esito chiude solo la finestra da cui è partito; se l'autista ha aperto un'altra
   fermata, la sua finestra e la bozza restano. «Invia ora» dice se gli esiti sono solo nella schermata (telefono pieno).
 - Note salvate prima dell'ora di scrittura: ricevono l'ora della migrazione 20261118_02, così una nota vecchia

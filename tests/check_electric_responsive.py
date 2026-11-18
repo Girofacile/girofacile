@@ -77,6 +77,9 @@ def main():
             if not element.is_visible():
                 continue
             visible += 1
+            # I prezzi su telefono sono un carosello: ogni scheda si misura dopo averla portata
+            # in vista, come fa chi scorre, invece di pretendere che siano tutte visibili insieme.
+            element.evaluate("(el) => el.scrollIntoView({block: 'nearest', inline: 'nearest'})")
             box = element.bounding_box()
             assert box and box["width"] > 0, selector
             assert box["x"] >= -1 and box["x"] + box["width"] <= page.viewport_size["width"] + 1, (

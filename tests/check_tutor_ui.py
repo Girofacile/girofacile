@@ -185,9 +185,10 @@ def main():
             assert 'pianificazione' in tip_on(page, '#customersGoPlanning')
             page.screenshot(path=str(output / '6-cliente-pianifica.png'))
 
-            # In pianificazione il fumetto indica "Calcola percorso" (il calcolo è simulato nel server finto).
+            # In pianificazione il fumetto chiede prima data e orario: «Calcola percorso» compare solo
+            # con i dati del giro completi (il calcolo è simulato nel server finto).
             page.evaluate('showTab("giro")')
-            assert 'Calcola percorso' in tip_on(page, '#routeCalculateBtn')
+            assert 'Scegli data e orario' in tip_on(page, '#routeStart')  # la data è già proposta
             store['route'] = 'bozza'
             page.evaluate('async () => { await GFTutor.refresh(); showTab("dashboard"); }')
             assert 'bozza' in tip_on(page, '#sidebarDraftsItem')

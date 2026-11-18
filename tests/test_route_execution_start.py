@@ -124,3 +124,38 @@ def test_an_outcome_written_earlier_keeps_the_newer_note(env, action):
     db.refresh(status)
     assert status.status == ('mancata' if action == 'missed' else 'completata')
     assert status.note_operatore == 'Citofono rotto, chiamare'
+
+
+def test_an_accepted_note_sent_again_after_the_route_closed_is_confirmed(env):
+    from app.models import DeliveryStatus
+    client, db, _, route, delivery = prepare(env)
+    note = {'note': 'Lasciato al bar accanto', 'scritta_il': '2026-01-10T08:00:00Z'}
+    assert client.post(path('driver', 'note', route, delivery), json=note).status_code == 200
+    assert client.post(path('driver', 'complete', route, delivery), json={'tempo_scarico': 5, 'note': note['note'],
+                                                                            'scritta_il': '2026-01-10T08:01:00Z'}).status_code == 200
+    db.refresh(route)
+    assert route.status == 'completato'
+    # La vecchia coda rimanda la nota già accettata: confermata senza errori e senza effetti.
+    response = client.post(path('driver', 'note', route, delivery), json=note)
+    assert response.status_code == 200, response.text
+    # Una nota davvero nuova su un giro chiuso resta rifiutata.
+    assert client.post(path('driver', 'note', route, delivery), json={'note': 'Altro', 'scritta_il': '2026-01-10T09:00:00Z'}).status_code == 409
+
+
+def test_an_offline_note_beats_a_saved_note_whose_time_is_unknown(env):
+    from app.models import DeliveryStatus
+    client, db, _, route, delivery = prepare(env)
+    assert client.post(path('driver', 'note', route, delivery), json={'note': 'Prima versione'}).status_code == 200
+    status = db.query(DeliveryStatus).filter_by(delivery_id=delivery.id).one()
+    status.note_scritta_il = None  # nota salvata prima che esistesse l'ora di scrittura
+    db.commit()
+    # Modifica scritta offline e rimasta nella coda del telefono: più recente di quella salvata.
+    body = {'note': 'Versione corretta offline', 'scritta_il': '2026-01-10T08:00:00Z'}
+    assert client.post(path('driver', 'note', route, delivery), json=body).status_code == 200
+    db.refresh(status)
+    assert status.note_operatore == 'Versione corretta offline'
+    # Ripetuta, non cambia nulla; una mancata senza nota non la cancella.
+    assert client.post(path('driver', 'note', route, delivery), json=body).status_code == 200
+    assert client.post(path('driver', 'missed', route, delivery), json={'motivo': 'chiuso'}).status_code == 200
+    db.refresh(status)
+    assert status.note_operatore == 'Versione corretta offline' and status.status == 'mancata'

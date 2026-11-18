@@ -17,7 +17,7 @@ from urllib.parse import urlparse
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "test-results" / "ui-tools"))
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, expect
 
 REFERENCE = ["dashboard", "clienti", "company", "depositi"]
 PAGES = REFERENCE + ["giro", "route-preview", "dashboard-scheduled", "dashboard-in-progress",
@@ -306,13 +306,10 @@ def main():
                     page.locator("#customerFilterToggle").click()
                     page.locator("#customerGridView").click()
                     assert page.locator("#customerCards").is_visible()
-                    page.locator("#customerCards").get_by_role("button", name="Dettagli", exact=True).first.click()
-                    # I dettagli si aprono nel pannello laterale; "Tutti i campi" porta al modulo completo.
-                    drawer = page.locator("#customerDrawer")
-                    drawer.wait_for(state="visible")
+                    page.locator("#customerCards").get_by_role("button", name="Apri la scheda di Cliente Demo").first.click()
+                    # Dal 13/11 «Dettagli» apre direttamente la scheda unica del cliente (finestra completa):
+                    # il vecchio pannello laterale non si usa più.
                     capture(page, "customer-details", width)
-                    drawer.get_by_role("button", name="Modifica dati").click()
-                    drawer.locator("[data-cx-full]").click()
                     page.locator("#customerOverlay").wait_for(state="visible")
                     assert page.locator("#cNome").input_value() == "Cliente Demo"
                     page.locator("#customerOverlay").get_by_role("button", name="Annulla", exact=True).click()

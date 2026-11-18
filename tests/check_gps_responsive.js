@@ -59,13 +59,17 @@ async function main() {
       });
       await page.route(/^https:\/\//, route=>route.abort());
       await page.goto(portal==='operator'?base+'/giro/test-route':base+'/static/driver/index.html');
+      // Portale autista: il pannello della posizione è nella scheda «Posizione» del menu in basso.
+      const showPanel=async()=>{ if(portal==='driver') await page.locator('[data-nav="posizione"]').click(); };
       if(portal==='driver') await page.evaluate(()=>openExecution(1));
+      await showPanel();
       await page.locator('[data-gps-status]').waitFor({state:'visible'});
       assert.equal(uploads,0); assert.equal(await page.evaluate(()=>window.gpsCalls),0);
       if(portal==='operator') await page.locator('#operatorStartGPS').click();
       else await page.evaluate(()=>startRoute(1));
       await page.waitForFunction(()=>document.querySelector('[data-gps-status]').dataset.state==='active');
       assert.equal(uploads,1);
+      await showPanel();
       if(portal==='operator') {
         assert.equal(await page.locator('#loadingScreen').isVisible(),false);
         assert.equal(await page.locator('#errorScreen').isVisible(),false);
@@ -89,7 +93,9 @@ async function main() {
       await page.clock.fastForward(60000);
       assert.equal(await page.evaluate(()=>window.gpsCalls),deniedCalls);
       await page.evaluate(()=>window.gpsMode='ok');
-      await page.locator('[data-gps-retry]').click();
+      // Recupero dopo il permesso negato: «Riprova» nel portale operatore, «Attiva posizione» per l'autista.
+      if(portal==='operator') await page.locator('[data-gps-retry]').click();
+      else await page.locator('[data-gps-status] [data-gps-request]').click();
       await page.waitForFunction(()=>document.querySelector('[data-gps-status]').dataset.state==='active');
       outage=true;
       await page.clock.fastForward(31000);

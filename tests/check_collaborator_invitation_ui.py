@@ -86,6 +86,8 @@ def main():
                                         hasFragment: !!location.hash,
                                         sameOrigin: address.origin === location.origin,
                                         hasQuery: !!address.search,
+                                        href: address.href,
+                                        body: typeof options.body === 'string' ? options.body : '',
                                         private: options.credentials === 'omit' &&
                                                  options.cache === 'no-store' &&
                                                  options.referrerPolicy === 'no-referrer'
@@ -145,6 +147,10 @@ def main():
                                         route.fulfill(json=dict(ok=True, message="Password impostata. Ora puoi accedere con la tua email.",
                                                                redirect_url="/dashboard"))
                                 return
+                            if path == "/api/public/status" and method == "GET":
+                                # Stato pubblico per gli avvisi di manutenzione: nessun dato dell'invito.
+                                route.fulfill(json=dict(maintenance=False, notices=[]))
+                                return
                             if path.startswith("/api/") or method not in ("GET", "HEAD"):
                                 unexpected_requests.append(dict(width=width, category="unexpected-api", path=path, method=method))
                                 route.fulfill(status=405, json=dict(detail="Unexpected API blocked in UI test"))
@@ -168,11 +174,18 @@ def main():
                         return context, page, state, info_response
 
                     def assert_private(page, expected_info, expected_accept):
-                        requests = page.evaluate("window.__inviteRequestChecks")
+                        every = page.evaluate("window.__inviteRequestChecks")
+                        # Solo le chiamate dell'invito portano il token: POST privati, senza query né frammento.
+                        requests = [r for r in every if "/collaborator-invitations/" in r["path"]]
+                        others = [r for r in every if r not in requests]
                         assert sum(r["path"].endswith("/info") for r in requests) == expected_info, requests
                         assert sum(r["path"].endswith("/accept") for r in requests) == expected_accept, requests
                         assert all(r["method"] == "POST" and r["sameOrigin"] and r["private"] and
                                    not r["hasFragment"] and not r["hasQuery"] for r in requests), requests
+                        # Le altre chiamate della pagina (es. lo stato pubblico per gli avvisi di manutenzione)
+                        # sono ammesse solo se non contengono il token in nessuna parte.
+                        assert all(r["path"] == "/api/public/status" and r["method"] == "GET" for r in others), others
+                        assert not any(TOKEN in r["href"] or TOKEN in r["body"] for r in others), others
                         assert page.evaluate("Object.keys(localStorage).length === 0 && Object.keys(sessionStorage).length === 0")
                         assert not page.context.cookies(), "Invitation must not automatically create a login session"
                         assert not urlparse(page.url).fragment

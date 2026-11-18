@@ -35,6 +35,30 @@ def written_at(data):
     return min(value, now)
 
 
+def clean_note(value):
+    return (value or '').strip() or None
+
+
+def note_wins(status, data, *, clears=True):
+    """La nota in arrivo sostituisce quella salvata?
+
+    - stesso testo: è un reinvio, non cambia nulla;
+    - esito (consegnata/mancata) senza nota: non cancella la nota già salvata;
+    - nota salvata senza ora nota (prima dell'ora di scrittura): vince la nota in arrivo, che
+      viene dalla coda del telefono e non è ancora stata accettata;
+    - entrambe con l'ora: vince la più recente.
+    """
+    incoming = clean_note(data.get('note'))
+    current = clean_note(status.note_operatore) if status else None
+    if incoming == current:
+        return False
+    if incoming is None and not clears:
+        return False
+    if status is None or status.note_scritta_il is None:
+        return True
+    return written_at(data) > status.note_scritta_il
+
+
 def get_or_create_delivery_status(delivery_id, route_plan_id, db):
     # Serialize creation even before a DeliveryStatus row exists.
     db.query(RoutePlan).filter_by(id=route_plan_id).with_for_update().one()
@@ -87,11 +111,15 @@ def _apply_delivery_update(db, delivery, payload, action):
     route = db.query(RoutePlan).filter_by(id=delivery.route_plan_id).with_for_update().populate_existing().one()
     if db.query(Delivery.id).filter_by(id=delivery.id, route_plan_id=route.id).first() is None:
         raise HTTPException(409, 'Le fermate sono cambiate: ricarica il giro')
+    status = db.query(DeliveryStatus).filter_by(delivery_id=delivery.id, route_plan_id=route.id).first()
+    if action == 'note' and status is not None and not note_wins(status, data):
+        # Reinvio di una nota già accettata o più vecchia: si conferma senza effetti, anche
+        # se nel frattempo il giro è stato chiuso o annullato.
+        return status
     if route.status == 'annullato':
         raise HTTPException(409, 'Il giro è annullato')
     owner = db.get(User, route.user_id)
     require_evidence_access(owner, data, action)
-    status = db.query(DeliveryStatus).filter_by(delivery_id=delivery.id, route_plan_id=route.id).first()
     target = {'complete': 'completata', 'missed': 'mancata'}.get(action)
     if target and status and status.status == target:
         return status  # Retries never change evidence, timestamps or statistics.
@@ -109,10 +137,9 @@ def _apply_delivery_update(db, delivery, payload, action):
         status.status = target
         # La nota dell'esito vale solo se è la più recente: un esito scritto prima e arrivato dopo
         # (dalla coda del telefono) non cancella una nota scritta nel frattempo.
-        written = written_at(data)
-        if not status.note_scritta_il or written > status.note_scritta_il:
-            status.note_operatore = data['note'] or None
-            status.note_scritta_il = written
+        if note_wins(status, data, clears=False):
+            status.note_operatore = clean_note(data['note'])
+            status.note_scritta_il = written_at(data)
         status.completata_il = local_now().replace(tzinfo=None)
         if action == 'complete':
             status.tempo_scarico_effettivo = data['tempo_scarico']
@@ -126,12 +153,8 @@ def _apply_delivery_update(db, delivery, payload, action):
         sync_route_orders(db, route, "delivered" if action == "complete" else "missed", delivery)
         refresh_route_completion(route.id, db)
     elif action == 'note':
-        written = written_at(data)
-        # Una nota uguale ripetuta o scritta prima di quella salvata non cambia nulla.
-        if status.note_scritta_il and written <= status.note_scritta_il:
-            return status
-        status.note_operatore = (data['note'] or '').strip() or None
-        status.note_scritta_il = written
+        status.note_operatore = clean_note(data['note'])
+        status.note_scritta_il = written_at(data)
     if action in ('complete', 'signature'):
         save_delivery_evidence(db, route, delivery, status, data, owner, action)
     return status

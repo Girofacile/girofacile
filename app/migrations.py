@@ -1,5 +1,5 @@
 """Explicit, locked, versioned schema upgrades: python -m app.migrations."""
-from datetime import datetime
+from datetime import datetime, timedelta
 from .core.clock import utc_now
 import re
 from pathlib import Path
@@ -308,13 +308,25 @@ def run_migrations(engine):
             if '20261118_02' not in applied:
                 # Note già salvate senza ora di scrittura: ricevono l'ora di questa migrazione, così una
                 # nota più vecchia rimasta in una coda offline non le sovrascrive.
+                # Ritirata: assegnava l'ora della migrazione, che non è l'ora vera della nota (vedi 20261118_03).
                 with engine.begin() as conn:
-                    columns = ({c['name'] for c in inspect(conn).get_columns('delivery_statuses')}
-                               if 'delivery_statuses' in set(inspect(conn).get_table_names()) else set())
-                    if {'note_operatore', 'note_scritta_il'} <= columns:
-                        conn.execute(text('UPDATE delivery_statuses SET note_scritta_il = :now '
-                                          'WHERE note_operatore IS NOT NULL AND note_scritta_il IS NULL'), {'now': utc_now()})
                     conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261118_02', 'now': utc_now()})
+            if '20261118_03' not in applied:
+                # Le note che avevano ricevuto l'ora di 20261118_02 tornano «ora sconosciuta»: quell'ora non era
+                # quella vera e faceva scartare modifiche offline più recenti. La regola per le note senza ora
+                # è in route_execution.note_wins. Si riconoscono dall'ora, uguale per tutte e scritta pochi istanti
+                # prima della registrazione di 20261118_02 (mentre l'applicazione non serviva richieste).
+                with engine.begin() as conn:
+                    tables = set(inspect(conn).get_table_names())
+                    columns = {c['name'] for c in inspect(conn).get_columns('delivery_statuses')} if 'delivery_statuses' in tables else set()
+                    applied_02 = conn.execute(text("SELECT applied_at FROM schema_migrations WHERE version = '20261118_02'")).scalar()
+                    if isinstance(applied_02, str):  # SQLite restituisce il testo
+                        applied_02 = datetime.fromisoformat(applied_02)
+                    if 'note_scritta_il' in columns and applied_02 is not None:
+                        conn.execute(text('UPDATE delivery_statuses SET note_scritta_il = NULL '
+                                          'WHERE note_scritta_il BETWEEN :start AND :end'),
+                                     {'start': applied_02 - timedelta(seconds=5), 'end': applied_02})
+                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261118_03', 'now': utc_now()})
         finally:
             if postgres:
                 lock.execute(text('SELECT pg_advisory_unlock(:key)'), {'key': LOCK_ID})

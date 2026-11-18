@@ -71,8 +71,9 @@ def main():
                 assert page.locator('[data-planning-mode-card="fleet"]').get_attribute('aria-pressed')=='true'
                 assert page.locator('#fleetSetup').is_visible()
                 assert page.evaluate("document.getElementById('routeAutoNameTitle').compareDocumentPosition(document.getElementById('planningModeTitle')) & Node.DOCUMENT_POSITION_FOLLOWING")
-                page.locator('#routeCalculateBtn').click()
-                assert 'un autista diverso per ogni giro' in page.locator('#orderPlanningProceedMessage').inner_text()
+                # Senza mezzi e autisti «Calcola percorso» non compare: si sceglie prima per ogni giro.
+                page.evaluate('updateRoutePlanningGateV68()')
+                assert page.locator('#routePlanningActions').is_hidden()
                 assert page.locator('#tab-giro').is_visible()
                 for i in range(2):
                     page.locator(f'#fleetVehicle{i}').select_option(str(vehicles[i]['id']))
@@ -95,6 +96,7 @@ def main():
                 assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 2')
                 page.evaluate('window.scrollTo(0,0)');page.screenshot(path=str(output/f'setup-{width}.png'),full_page=True)
                 page.evaluate('rows=>{deliveries=rows;renderDeliveries();}',data['consegne'][:6])
+                page.evaluate('updateRoutePlanningGateV68()')
                 page.locator('#routeCalculateBtn').click()
                 page.get_by_role('heading',name='Controlla la suddivisione').wait_for()
                 # Variante C: si vede un giro alla volta; la somma delle fermate dei giri è 6.
