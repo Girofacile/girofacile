@@ -19,10 +19,10 @@ router = APIRouter(prefix="/api/billing", tags=["billing"])
 
 def billing_state(user):
     from ..core import config
-    from ..services.billing import billing_available
+    from ..services.billing import billing_available, has_current_subscription
     return {"mode": config.BILLING_MODE, "live_enabled": config.BILLING_MODE == "live",
             "checkout_enabled": billing_available(user),
-            "source": user.billing_source or "legacy", "subscription": bool(user.stripe_subscription_id),
+            "source": user.billing_source or "legacy", "subscription": has_current_subscription(user),
             "cancel_at_period_end": bool(user.billing_cancel_at_period_end),
             "pending_plan": user.billing_pending_plan,
             "grace_until": _date_iso(user.billing_grace_until)}
@@ -241,11 +241,11 @@ def cancel_checkout(db: Session = Depends(get_db), user: User = Depends(current_
 
 @router.post("/sync")
 def sync_billing(db: Session = Depends(get_db), user: User = Depends(current_user)):
-    from ..services.billing import reconcile, stripe_client, lock_user, select_current_subscription
+    from ..services.billing import reconcile, stripe_client, lock_user, select_current_subscription, has_current_subscription
     stripe = stripe_client(user)
     user = lock_user(db, user)
     select_current_subscription(stripe, user)
-    if user.stripe_subscription_id:
+    if has_current_subscription(user):
         reconcile(db, user, stripe)
     db.commit()
     return {"ok": True, **user_plan_info(user)}

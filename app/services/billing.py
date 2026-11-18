@@ -34,6 +34,11 @@ def billing_available(user):
     return config.BILLING_MODE == "test" and user.id in config.BILLING_TEST_USER_IDS
 
 
+def has_current_subscription(user):
+    """Abbonamento della modalità attiva: in live quello della sandbox non conta (su Stripe reale non esiste)."""
+    return bool(user.stripe_subscription_id) and user.billing_source == billing_source()
+
+
 def stripe_client(user=None):
     if config.BILLING_MODE not in ("test", "live"):
         raise HTTPException(503, "Acquisti non ancora disponibili")

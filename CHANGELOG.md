@@ -5,6 +5,8 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Pagamenti reali: un account con abbonamento della sandbox non resta bloccato su «Nessun abbonamento collegato»;
+  la pagina Piani apre un acquisto nuovo e «Aggiorna stato» non legge più l'abbonamento di prova.
 - Promemoria via email ogni giorno alle 9:00 (timer `girofacile-reminders`): fine prova entro 3 giorni e a scadenza,
   pagamento non riuscito, disdetta. Con i pagamenti reali invitano ad acquistare dalla pagina Piani; niente avvisi per
   prove scadute da più di 7 giorni, aziende sospese o amministratore; un'azienda bloccata per volta durante l'invio.

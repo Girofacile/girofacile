@@ -156,3 +156,26 @@ def test_billing_configuration_is_checked_at_startup(changes, message):
         assert problems == []
     else:
         assert any(message in p for p in problems), problems
+
+
+def test_sandbox_subscription_does_not_block_live_purchase(billing_env, live, monkeypatch):
+    """Account usato per il collaudo: abbonamento sandbox attivo, poi si passa ai pagamenti reali."""
+    from app.services import billing
+    client, db, user, *_ = billing_env
+    user.plan, user.plan_status = 'pro', 'active'
+    user.stripe_customer_id, user.stripe_subscription_id, user.billing_source = 'cus_sandbox', 'sub_sandbox', 'stripe_test'
+    db.commit()
+    state = client.get('/api/billing/my-plan').json()['billing']
+    # La pagina non tenta un cambio piano su un abbonamento che su Stripe reale non esiste.
+    assert state['subscription'] is False and state['checkout_enabled'] is True
+    monkeypatch.setattr(billing, 'stripe_client', lambda *a: webhook_stripe({}))
+    monkeypatch.setattr(billing, 'reconcile', lambda *a: pytest.fail('nessuna lettura dell\'abbonamento sandbox'))
+    synced = client.post('/api/billing/sync', json={})
+    assert synced.status_code == 200, synced.text
+    configure_prices(monkeypatch)
+    calls, sessions = [], {}
+    monkeypatch.setattr(billing, 'stripe_client', lambda *a: live_stripe(calls, sessions))
+    bought = client.post('/api/billing/create-checkout-session', json={'plan': 'starter'})
+    assert bought.status_code == 200 and bought.json()['mode'] == 'live'
+    db.refresh(user)
+    assert (user.stripe_customer_id, user.billing_source) == ('cus_live', 'stripe_live')
