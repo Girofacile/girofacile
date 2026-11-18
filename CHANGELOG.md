@@ -5,6 +5,12 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Note: lo stesso testo confermato più tardi aggiorna l'ora della nota, così una nota diversa scritta prima e arrivata dopo
+  non la scavalca. Migrazione 20261118_03 più precisa: azzera solo l'ora esatta scritta dalla vecchia 02 e non tocca nulla
+  nei database che non l'hanno mai eseguita.
+- Testata del sito fino a 360 px: resta solo «Registrati» (porta comunque all'accesso) e il nome si accorcia prima di uscire.
+- Confronto flotta: la rivalutazione dei giri parte all'inizio del turno dell'autista se è più tardi dell'orario comune
+  (prima segnalava come fuori turno un autista che inizia alle 9:00).
 - Note dell'autista: una nota già accettata e reinviata dalla coda si conferma senza errori anche a giro chiuso o annullato.
   Le note salvate prima dell'ora di scrittura tornano «ora sconosciuta» (migrazione 20261118_03 annulla l'ora data da 20261118_02):
   una modifica offline con testo diverso le sostituisce; con l'ora su entrambe vince la più recente. Un esito senza nota non cancella più la nota salvata.

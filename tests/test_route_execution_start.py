@@ -159,3 +159,21 @@ def test_an_offline_note_beats_a_saved_note_whose_time_is_unknown(env):
     assert client.post(path('driver', 'missed', route, delivery), json={'motivo': 'chiuso'}).status_code == 200
     db.refresh(status)
     assert status.note_operatore == 'Versione corretta offline' and status.status == 'mancata'
+
+
+@pytest.mark.parametrize('confirm', ['note', 'complete'])
+def test_a_later_confirmation_keeps_its_time_against_an_older_offline_note(env, confirm):
+    from app.models import DeliveryStatus
+    client, db, _, route, delivery = prepare(env)
+    note = path('driver', 'note', route, delivery)
+    assert client.post(note, json={'note': 'Scala B', 'scritta_il': '2026-01-10T08:00:00Z'}).status_code == 200
+    # Alle 8:10 lo stesso testo viene confermato (di nuovo come nota o con la consegna).
+    body = {'note': 'Scala B', 'scritta_il': '2026-01-10T08:10:00Z', 'tempo_scarico': 5}
+    assert client.post(path('driver', confirm, route, delivery), json=body).status_code == 200
+    # Arriva in ritardo una nota diversa scritta alle 8:05: è più vecchia della conferma.
+    late = client.post(note, json={'note': 'Scala A', 'scritta_il': '2026-01-10T08:05:00Z'})
+    status = db.query(DeliveryStatus).filter_by(delivery_id=delivery.id).one()
+    db.refresh(status)
+    assert status.note_operatore == 'Scala B'
+    assert status.note_scritta_il.strftime('%H:%M') == '08:10'
+    assert late.status_code in (200, 409)  # 409 solo se il giro è stato chiuso dalla consegna

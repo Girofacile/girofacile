@@ -305,6 +305,9 @@ def run_migrations(engine):
                     if 'delivery_statuses' in set(inspect(conn).get_table_names()) and 'note_scritta_il' not in {c['name'] for c in inspect(conn).get_columns('delivery_statuses')}:
                         conn.execute(text('ALTER TABLE delivery_statuses ADD COLUMN note_scritta_il TIMESTAMP'))
                     conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261118_01', 'now': utc_now()})
+            # Vero se 20261118_02 gira adesso, con il codice ritirato che non assegna più nessuna ora:
+            # allora 20261118_03 non ha nulla da annullare.
+            retired_02_now = '20261118_02' not in applied
             if '20261118_02' not in applied:
                 # Note già salvate senza ora di scrittura: ricevono l'ora di questa migrazione, così una
                 # nota più vecchia rimasta in una coda offline non le sovrascrive.
@@ -322,10 +325,16 @@ def run_migrations(engine):
                     applied_02 = conn.execute(text("SELECT applied_at FROM schema_migrations WHERE version = '20261118_02'")).scalar()
                     if isinstance(applied_02, str):  # SQLite restituisce il testo
                         applied_02 = datetime.fromisoformat(applied_02)
-                    if 'note_scritta_il' in columns and applied_02 is not None:
-                        conn.execute(text('UPDATE delivery_statuses SET note_scritta_il = NULL '
-                                          'WHERE note_scritta_il BETWEEN :start AND :end'),
-                                     {'start': applied_02 - timedelta(seconds=5), 'end': applied_02})
+                    if 'note_scritta_il' in columns and applied_02 is not None and not retired_02_now:
+                        # La vecchia 02 scriveva un'unica ora, calcolata un istante prima di registrarsi:
+                        # si azzera solo quel valore esatto (il più recente nell'ultimo secondo), non le ore
+                        # autentiche vicine.
+                        window = {'start': applied_02 - timedelta(seconds=1), 'end': applied_02}
+                        synthetic = conn.execute(text('SELECT MAX(note_scritta_il) FROM delivery_statuses '
+                                                      'WHERE note_scritta_il BETWEEN :start AND :end'), window).scalar()
+                        if synthetic is not None:
+                            conn.execute(text('UPDATE delivery_statuses SET note_scritta_il = NULL '
+                                              'WHERE note_scritta_il = :value'), {'value': synthetic})
                     conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261118_03', 'now': utc_now()})
         finally:
             if postgres:

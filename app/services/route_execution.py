@@ -59,6 +59,19 @@ def note_wins(status, data, *, clears=True):
     return written_at(data) > status.note_scritta_il
 
 
+def confirm_note_time(status, data):
+    """Stesso testo confermato più tardi: la nota resta, ma la sua ora diventa quella della conferma.
+
+    Così una nota diversa scritta prima della conferma e arrivata dopo dalla coda non la scavalca
+    (nota alle 8:00, stesso testo confermato alle 8:10, nota diversa delle 8:05 arrivata in ritardo).
+    """
+    if status is None or clean_note(data.get('note')) != clean_note(status.note_operatore):
+        return
+    written = written_at(data)
+    if status.note_scritta_il is None or written > status.note_scritta_il:
+        status.note_scritta_il = written
+
+
 def get_or_create_delivery_status(delivery_id, route_plan_id, db):
     # Serialize creation even before a DeliveryStatus row exists.
     db.query(RoutePlan).filter_by(id=route_plan_id).with_for_update().one()
@@ -113,8 +126,9 @@ def _apply_delivery_update(db, delivery, payload, action):
         raise HTTPException(409, 'Le fermate sono cambiate: ricarica il giro')
     status = db.query(DeliveryStatus).filter_by(delivery_id=delivery.id, route_plan_id=route.id).first()
     if action == 'note' and status is not None and not note_wins(status, data):
-        # Reinvio di una nota già accettata o più vecchia: si conferma senza effetti, anche
+        # Reinvio di una nota già accettata o più vecchia: si conferma senza cambiare il testo, anche
         # se nel frattempo il giro è stato chiuso o annullato.
+        confirm_note_time(status, data)
         return status
     if route.status == 'annullato':
         raise HTTPException(409, 'Il giro è annullato')
@@ -140,6 +154,8 @@ def _apply_delivery_update(db, delivery, payload, action):
         if note_wins(status, data, clears=False):
             status.note_operatore = clean_note(data['note'])
             status.note_scritta_il = written_at(data)
+        else:
+            confirm_note_time(status, data)
         status.completata_il = local_now().replace(tzinfo=None)
         if action == 'complete':
             status.tempo_scarico_effettivo = data['tempo_scarico']

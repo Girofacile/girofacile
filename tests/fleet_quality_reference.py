@@ -75,7 +75,14 @@ def route_replay(case, resource, order, start=None):
     """
     settings = case["resources"][resource] if isinstance(resource, int) else resource
     # A route may depart later than the common start when that removes waiting.
-    start = float(case.get("start_min", 480) if start is None else start)
+    # Senza un orario esplicito, il giro parte all'orario comune o, se più tardi, all'inizio del turno
+    # dell'autista: come fa il motore (un autista che inizia alle 9:00 non parte alle 8:00).
+    if start is None:
+        start = case.get("start_min", 480)
+        shift_start = (settings.get("driver_schedule") or {}).get("start")
+        if shift_start:
+            start = max(start, _minute(shift_start))
+    start = float(start)
     result = {
         "feasible": True, "errors": [], "km": 0.0, "minutes": 0.0,
         "end": start, "wait_min": 0.0, "drive_min": 0.0,

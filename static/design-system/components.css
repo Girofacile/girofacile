@@ -1266,6 +1266,15 @@ body[data-gf-surface] .gf-site-footer__bottom div{display:flex;flex-wrap:wrap;ga
   body[data-gf-surface] .gf-site-footer__top{grid-template-columns:repeat(3,minmax(0,1fr))}
   body[data-gf-surface] .gf-site-footer__brand{grid-column:1/-1}
 }
+/* Testata: le azioni non si stringono mai; il nome si accorcia prima di uscire dallo schermo. */
+body[data-gf-surface] .gf-site-header__inner{min-width:0}
+body[data-gf-surface] .gf-site-header__brand{min-width:0;flex:0 1 auto;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+body[data-gf-surface] .gf-site-header__actions{flex:none}
+/* Telefoni molto stretti (fino a 360 px): resta solo l'azione principale; quella secondaria
+   (ghost, es. «Accedi») si toglie perché con un carattere più largo non entrerebbe. */
+@media (max-width:360px){
+  body[data-gf-surface] .gf-site-header__actions>.gf-button[data-variant="ghost"]{display:none}
+}
 @media (max-width:768px){
   body[data-gf-surface] .gf-showcase__body{grid-template-columns:minmax(0,1fr)}
   body[data-gf-surface] .gf-showcase__nav{display:none}
