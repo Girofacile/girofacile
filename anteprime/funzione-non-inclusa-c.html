@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Anteprima C · Pop-up funzione non inclusa · GiroFacile</title>
+<link rel="stylesheet" href="../static/design-system/theme.css">
+<link rel="stylesheet" href="../static/design-system/components.css">
+<link rel="stylesheet" href="../static/design-system/layout.css">
+<script src="../static/design-system/shell.js" defer></script>
+<script src="../static/design-system/design-system.js" defer></script>
+</head>
+<!-- Variante C: pop-up con la scelta del piano: schede dei piani che includono la funzione (Business e Pro, o solo Pro), si sceglie e si passa. -->
+<body data-gf-layout="base" data-gf-surface="workspace" data-gf-nav-active="dashboard" data-gf-title="Dashboard"
+      data-gf-subtitle="Panoramica della giornata." data-gf-user-name="SUPERMERCATI IORIO" data-gf-user-role="admin">
+<main data-gf-shell-content class="gf-stack" data-gap="lg">
+  <nav class="gf-cluster" aria-label="Varianti da confrontare"><a href="funzione-non-inclusa-a.html">A · Essenziale</a> · <a href="funzione-non-inclusa-b.html">B · Confronto con il tuo piano</a> · <strong>C · Scegli il piano</strong></nav>
+  <section class="gf-panel">
+    <header class="gf-panel__header"><div><h2 class="gf-panel__title">Prova il pop-up</h2>
+      <p class="gf-muted">Piano attuale: Starter. Clicca una funzione non inclusa per vedere il pop-up.</p></div></header>
+    <div class="gf-panel__body gf-cluster" id="features"></div>
+  </section>
+  <div class="gf-overlay" id="lockOverlay" hidden>
+    <div class="gf-modal" data-size="lg" role="dialog" aria-modal="true" aria-labelledby="lockTitle" id="lockModal"></div>
+  </div>
+
+<script>
+// Solo per l'anteprima: dati d'esempio, nessun acquisto parte da qui.
+const PLANS = {
+  starter: {name:'Starter', price:29},
+  business: {name:'Business', price:59, extra:['Chat autisti','Agenti commerciali e portale','Report avanzati','Firma, foto e prova di consegna','Tracking clienti e più mezzi','API, Shopify e WooCommerce']},
+  pro: {name:'Pro', price:99, extra:['Tutto il piano Business','Integrazione AI','6.000 ordini e 1.200 giri al mese','50 mezzi e 50 autisti']}
+};
+const FEATURES = {
+  agenti: {name:'Agenti', plan:'business', what:'Assegna i clienti ai tuoi venditori: ognuno ha il suo portale con clienti, ordini e risultati.'},
+  report: {name:'Report', plan:'business', what:'Analizza giri, consegne, chilometri e costi per periodo, mezzo e autista.'},
+  chat: {name:'Chat autisti', plan:'business', what:'Scrivi agli autisti durante il giro e ricevi le risposte in tempo reale.'},
+  firma: {name:'Firma e foto alla consegna', plan:'business', what:'Il cliente firma sul telefono dell’autista; foto e prova di consegna in PDF restano allegate al giro.'},
+  integrazioni: {name:'API, Shopify e WooCommerce', plan:'business', what:'Gli ordini arrivano da soli dal tuo negozio o gestionale, senza importare file.'},
+  ai: {name:'Integrazione AI', plan:'pro', what:'L’assistente spiega i giri, risponde alle domande sui dati e prepara i riepiloghi.'}
+};
+const euro = n => n + ' € al mese';
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function plansWith(key){ return FEATURES[key].plan === 'pro' ? ['pro'] : ['business','pro']; }
+function openLock(key){
+  const f = FEATURES[key];
+  document.getElementById('lockModal').innerHTML = render(key, f, PLANS[f.plan]);
+  document.getElementById('lockOverlay').hidden = false;
+  document.querySelector('#lockModal .gf-button[data-variant="primary"]')?.focus();
+}
+function closeLock(){ document.getElementById('lockOverlay').hidden = true; }
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closeLock(); });
+document.getElementById('lockOverlay').addEventListener('click', e => { if(e.target.id === 'lockOverlay') closeLock(); });
+document.getElementById('features').innerHTML = Object.entries(FEATURES).map(([k,f]) =>
+  `<button type="button" class="gf-button" data-variant="secondary" onclick="openLock('${k}')">${esc(f.name)}</button>`).join('');
+addEventListener('DOMContentLoaded', () => openLock('agenti'));
+
+// C: scegli tra i piani che includono la funzione.
+let chosen = null;
+function pick(plan){ chosen = plan; document.querySelectorAll('[data-plan-choice]').forEach(b => b.dataset.planChoice === plan ? b.setAttribute('data-variant','info') : b.removeAttribute('data-variant'));
+  document.getElementById('lockGo').textContent = 'Passa a ' + PLANS[plan].name; }
+function render(key, f, plan){
+  const options = plansWith(key);
+  chosen = options[0];
+  const card = p => `<label class="gf-card gf-planning-choice gf-stack" data-gap="sm" data-plan-choice="${p}" ${p===chosen ? 'data-variant="info"' : ''}>
+      <input type="radio" name="lockPlan" class="gf-hidden" value="${p}" ${p===chosen ? 'checked' : ''} onchange="pick('${p}')">
+      <span class="gf-cluster" data-justify="between"><strong class="gf-subtitle">${PLANS[p].name}</strong>${p===options[0] ? '<span class="gf-badge" data-status="info">Consigliato</span>' : ''}</span>
+      <span class="gf-muted">${euro(PLANS[p].price)}</span>
+      <ul class="gf-list">${PLANS[p].extra.slice(0,3).map(x => `<li>✓ ${esc(x)}</li>`).join('')}</ul></label>`;
+  return `<header class="gf-modal__header"><div><p class="gf-kicker">Non incluso nel piano Starter</p>
+      <h2 class="gf-modal__title" id="lockTitle">${esc(f.name)}</h2></div><button type="button" class="gf-icon-button" aria-label="Chiudi" onclick="closeLock()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12 M18 6L6 18"/></svg></button></header>
+    <div class="gf-modal__body gf-stack" data-gap="lg">
+      <p>${esc(f.what)}</p>
+      <p class="gf-muted">${options.length > 1 ? 'La trovi in questi piani:' : 'La trovi nel piano:'}</p>
+      <div class="gf-grid" data-cols="${options.length}">${options.map(card).join('')}</div>
+    </div>
+    <footer class="gf-modal__footer"><button type="button" class="gf-button" data-variant="secondary" onclick="closeLock()">Non ora</button>
+      <button type="button" class="gf-button" data-variant="primary" id="lockGo">Passa a ${PLANS[chosen].name}</button></footer>`;
+}
+
+</script>
+</main>
+</body>
+</html>
