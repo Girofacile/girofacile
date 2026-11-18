@@ -68,4 +68,27 @@ def invalid_settings(env: dict | None = None) -> list[str]:
     for name in BOOL_SETTINGS:
         if not parse_bool(env.get(name), False)[1]:
             problems.append(f"{name} non valido: usa true oppure false (trovato «{env.get(name)}»)")
+    problems += billing_problems(env)
+    return problems
+
+
+def billing_problems(env: dict) -> list[str]:
+    """Pagamenti: una modalità sconosciuta o una chiave dell'altra modalità bloccano l'avvio."""
+    mode = (env.get("BILLING_MODE") or "disabled").strip().lower()
+    if mode not in {"disabled", "test", "live"}:
+        return [f"BILLING_MODE non valido: usa disabled, test oppure live (trovato «{env.get('BILLING_MODE')}»)"]
+    if mode == "disabled":
+        return []
+    problems = []
+    key = (env.get("STRIPE_SECRET_KEY") or "").strip()
+    expected = ("sk_live_", "rk_live_") if mode == "live" else ("sk_test_", "rk_test_")
+    if not key.startswith(expected):
+        problems.append(f"BILLING_MODE={mode} richiede una STRIPE_SECRET_KEY che inizia con {expected[0]} o {expected[1]}")
+    if not (env.get("STRIPE_WEBHOOK_SECRET") or "").strip():
+        problems.append(f"BILLING_MODE={mode} richiede STRIPE_WEBHOOK_SECRET")
+    if mode == "live":
+        missing = [name for name in ("STRIPE_PRICE_STARTER", "STRIPE_PRICE_BUSINESS", "STRIPE_PRICE_PRO")
+                   if not (env.get(name) or "").strip()]
+        if missing:
+            problems.append("BILLING_MODE=live richiede i prezzi Stripe reali: manca " + ", ".join(missing))
     return problems

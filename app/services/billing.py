@@ -1,4 +1,4 @@
-"""Sandbox-only billing. Stripe is the authority; redirects never grant access."""
+"""Abbonamenti Stripe in prova (sandbox) o reali (live). Stripe decide; i ritorni dal checkout non danno accesso."""
 from datetime import datetime, timedelta, timezone
 from ..core.clock import utc_now
 from uuid import uuid4
@@ -19,14 +19,29 @@ def object_id(value):
     return value.get("id") if isinstance(value, dict) else value
 
 
+def is_live():
+    return config.BILLING_MODE == "live"
+
+
+def billing_source():
+    """Origine registrata sugli account: sandbox e reale non si mescolano mai."""
+    return "stripe_live" if is_live() else "stripe_test"
+
+
+def billing_available(user):
+    if config.BILLING_MODE == "live":
+        return True
+    return config.BILLING_MODE == "test" and user.id in config.BILLING_TEST_USER_IDS
+
+
 def stripe_client(user=None):
-    # Live mode intentionally cannot be enabled in this release, even by a live key.
-    if config.BILLING_MODE != "test":
-        raise HTTPException(503, "Acquisti non disponibili: incassi reali disabilitati")
-    if user is not None and user.id not in config.BILLING_TEST_USER_IDS:
+    if config.BILLING_MODE not in ("test", "live"):
+        raise HTTPException(503, "Acquisti non ancora disponibili")
+    if user is not None and not billing_available(user):
         raise HTTPException(403, "Checkout di prova riservato agli account di collaudo")
-    if not config.STRIPE_SECRET_KEY.startswith(("sk_test_", "rk_test_")):
-        raise HTTPException(503, "Configurare una chiave Stripe sandbox")
+    prefixes = ("sk_live_", "rk_live_") if is_live() else ("sk_test_", "rk_test_")
+    if not config.STRIPE_SECRET_KEY.startswith(prefixes):
+        raise HTTPException(503, "Chiave Stripe non adatta alla modalità di pagamento configurata")
     import stripe
     stripe.api_key = config.STRIPE_SECRET_KEY
     stripe.api_version = config.STRIPE_API_VERSION
@@ -40,9 +55,10 @@ def stripe_dict(obj):
 
 
 def assert_test(obj):
+    """L'oggetto Stripe deve appartenere alla modalità attiva (sandbox o reale)."""
     obj = stripe_dict(obj)
-    if obj.get("livemode") is not False:
-        raise HTTPException(400, "Oggetto Stripe non appartenente alla sandbox")
+    if obj.get("livemode") is not is_live():
+        raise HTTPException(400, "Oggetto Stripe di un'altra modalità di pagamento")
     return obj
 
 
@@ -51,7 +67,7 @@ def price_for(stripe, plan):
         raise HTTPException(400, "Piano non valido")
     info = PLAN_PRICES[plan]
     if not info["stripe_price_id"]:
-        raise HTTPException(503, "Prezzo sandbox non configurato per il piano")
+        raise HTTPException(503, "Prezzo Stripe non configurato per il piano")
     price = assert_test(stripe.Price.retrieve(info["stripe_price_id"]))
     recurring = price.get("recurring") or {}
     if (not price.get("active") or price.get("currency") != "eur"
@@ -66,8 +82,8 @@ def lock_user(db, user):
 
 
 def retrieve_subscription(stripe, user):
-    if not user.stripe_subscription_id or user.billing_source != "stripe_test":
-        raise HTTPException(400, "Nessun abbonamento di prova collegato")
+    if not user.stripe_subscription_id or user.billing_source != billing_source():
+        raise HTTPException(400, "Nessun abbonamento collegato")
     sub = assert_test(stripe.Subscription.retrieve(user.stripe_subscription_id, expand=["latest_invoice"]))
     if object_id(sub.get("customer")) != user.stripe_customer_id:
         raise HTTPException(409, "Abbonamento non associato all'azienda")
@@ -94,7 +110,7 @@ def sync_subscription(db, user, sub):
     item = sub["items"]["data"][0]
     end = utc(item.get("current_period_end") or sub.get("current_period_end"))
     user.stripe_subscription_id = sub["id"]
-    user.billing_source = "stripe_test"
+    user.billing_source = billing_source()
     user.billing_cancel_at_period_end = bool(sub.get("cancel_at_period_end"))
     user.plan_expires_at = end
     if status == "active":
@@ -159,7 +175,7 @@ def sync_invoice(db, user, invoice):
     row.plan_name = invoice_plan_name(invoice) or row.plan_name or "Abbonamento"
     row.subtotal, row.total = (invoice.get("subtotal") or 0) / 100, (invoice.get("total") or 0) / 100
     row.vat_amount = sum(t.get("amount", 0) for t in (invoice.get("total_taxes") or invoice.get("total_tax_amounts") or [])) / 100
-    row.currency, row.status, row.pdf_path, row.is_test = invoice.get("currency", "eur").upper(), invoice.get("status", "open"), invoice.get("invoice_pdf"), True
+    row.currency, row.status, row.pdf_path, row.is_test = invoice.get("currency", "eur").upper(), invoice.get("status", "open"), invoice.get("invoice_pdf"), not is_live()
     db.flush()
     payment = db.query(BillingPayment).filter_by(user_id=user.id, transaction_id=invoice["id"]).first()
     if invoice.get("status") == "paid" or invoice.get("attempted"):
@@ -167,7 +183,7 @@ def sync_invoice(db, user, invoice):
             payment = BillingPayment(user_id=user.id, invoice_id=row.id, transaction_id=invoice["id"])
             db.add(payment)
         payment.amount = (invoice.get("amount_paid") or 0) / 100
-        payment.currency, payment.payment_method, payment.is_test = row.currency, "Stripe sandbox", True
+        payment.currency, payment.payment_method, payment.is_test = row.currency, ("Stripe" if is_live() else "Stripe sandbox"), not is_live()
         payment.payment_status = "paid" if invoice.get("status") == "paid" else "failed"
         payment.paid_at = utc((invoice.get("status_transitions") or {}).get("paid_at"))
 
@@ -184,7 +200,7 @@ def reconcile(db, user, stripe=None):
 
 def select_current_subscription(stripe, user):
     """Find the current subscription, including repurchases after cancellation."""
-    if not user.stripe_customer_id or user.billing_source != "stripe_test":
+    if not user.stripe_customer_id or user.billing_source != billing_source():
         return
     subscriptions = stripe.Subscription.list(customer=user.stripe_customer_id, status="all", limit=100)
     candidates = (assert_test(s) for s in subscriptions.auto_paging_iter())
@@ -220,13 +236,17 @@ def checkout(db, user, plan):
     stripe = stripe_client(user)
     user = lock_user(db, user)
     price = price_for(stripe, plan)
-    if user.stripe_customer_id and user.billing_source != "stripe_test":
-        raise HTTPException(409, "Account storico: collegare un account dedicato al collaudo")
+    if is_live() and user.stripe_customer_id and user.billing_source == "stripe_test":
+        # Cliente creato nella sandbox: nell'account reale non esiste, se ne crea uno nuovo.
+        user.stripe_customer_id = user.stripe_subscription_id = None
+        user.billing_checkout_id = user.billing_checkout_url = user.billing_checkout_expires = user.billing_checkout_plan = None
+    if user.stripe_customer_id and user.billing_source != billing_source():
+        raise HTTPException(409, "Account storico: contattare l'assistenza per collegare l'abbonamento")
     if not user.stripe_customer_id:
         customer = assert_test(stripe.Customer.create(email=user.company_email or user.email,
             name=user.company_name or user.username, metadata={"user_id": str(user.id)},
-            idempotency_key=f"gf-test-customer-{user.id}"))
-        user.stripe_customer_id, user.billing_source = customer["id"], "stripe_test"
+            idempotency_key=f"gf-{config.BILLING_MODE}-customer-{user.id}"))
+        user.stripe_customer_id, user.billing_source = customer["id"], billing_source()
         db.commit()
         user = lock_user(db, user)
     subs = stripe.Subscription.list(customer=user.stripe_customer_id, status="all", limit=100)
@@ -239,7 +259,7 @@ def checkout(db, user, plan):
         session = assert_test(stripe.checkout.Session.retrieve(user.billing_checkout_id))
         if session.get("status") == "open":
             if (session.get("metadata") or {}).get("plan") == plan:
-                return {"checkout_url": session["url"], "mode": "test"}
+                return {"checkout_url": session["url"], "mode": config.BILLING_MODE}
             raise HTTPException(409, "Checkout già aperto per un altro piano. Annullalo prima di cambiare")
         if session.get("status") == "complete":
             raise HTTPException(409, "Checkout completato: aggiorna lo stato prima di un nuovo acquisto")
@@ -261,13 +281,16 @@ def checkout(db, user, plan):
     base = _links_base_url(config.APP_BASE_URL, "app").rstrip("/")
     session = assert_test(stripe.checkout.Session.create(customer=user.stripe_customer_id,
         mode="subscription", payment_method_types=["card"], line_items=[{"price": price, "quantity": 1}],
+        # Dati per la fattura: indirizzo e partita IVA restano sul cliente Stripe.
+        billing_address_collection="required", tax_id_collection={"enabled": True},
+        customer_update={"name": "auto", "address": "auto"},
         metadata={"user_id": str(user.id), "plan": plan}, subscription_data={"metadata": {"user_id": str(user.id)}},
         success_url=base + "/dashboard?checkout=success", cancel_url=base + "/dashboard?checkout=cancelled",
         expires_at=int(user.billing_checkout_expires.replace(tzinfo=timezone.utc).timestamp()), idempotency_key=key))
     user.billing_checkout_id, user.billing_checkout_url = session["id"], session["url"]
     user.billing_checkout_expires = utc(session["expires_at"])
     db.commit()
-    return {"checkout_url": session["url"], "mode": "test"}
+    return {"checkout_url": session["url"], "mode": config.BILLING_MODE}
 
 
 def downgrade_excess(db, user, plan):

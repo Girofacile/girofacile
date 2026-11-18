@@ -57,7 +57,7 @@ ERROR_NOTIFICATIONS_ENABLED = os.getenv("ERROR_NOTIFICATIONS_ENABLED", "true").s
 ERROR_NOTIFICATIONS_EMAIL = os.getenv("ERROR_NOTIFICATIONS_EMAIL", "").strip()
 ERROR_NOTIFICATION_MIN_SEVERITY = os.getenv("ERROR_NOTIFICATION_MIN_SEVERITY", "high").strip().lower()
 
-# Single commercial catalogue; payment processing remains sandbox-only.
+# Listino unico; BILLING_MODE: disabled (default), test (sandbox, solo account di collaudo) o live (incassi reali).
 from ..services.plan_catalog import PLAN_PRICES, TRIAL_DAYS
 BILLING_MODE = os.getenv("BILLING_MODE", "disabled").strip().lower()
 BILLING_TEST_USER_IDS = {int(v) for v in os.getenv("BILLING_TEST_USER_IDS", "").split(",") if v.strip().isdigit()}

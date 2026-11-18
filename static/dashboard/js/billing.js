@@ -1,4 +1,4 @@
-/* Commercial catalogue and explicit sandbox subscription controls. */
+/* Listino e controlli dell'abbonamento: modalità di prova (sandbox) o pagamenti reali. */
 const GF_PLAN_FEATURES = [
   ['has_customer_tracking', 'Tracking clienti'],
   ['has_fleet_planning', 'Suddivisione automatica su più mezzi'],
@@ -179,8 +179,10 @@ function renderSubscriptionControls(data) {
   // Il piano programmato e la disdetta compaiono nella riga sotto il nome del piano; qui solo note brevi in fondo.
   window._pendingPlanV874 = b.pending_plan || null;
   if (typeof syncPlanPageHeaderV874 === 'function') syncPlanPageHeaderV874();
-  const notes = [b.checkout_enabled ? 'Ambiente di prova: nessun denaro reale viene addebitato.' :
-    'Acquisti non ancora disponibili. Nessun addebito automatico alla fine della prova.'];
+  const live = b.mode === 'live';
+  const notes = [!b.checkout_enabled ? 'Acquisti non ancora disponibili. Nessun addebito automatico alla fine della prova.' :
+    live ? 'Pagamento con carta tramite Stripe. Il rinnovo è mensile e puoi disdirlo quando vuoi.' :
+    'Ambiente di prova: nessun denaro reale viene addebitato.'];
   if (b.source === 'legacy' || b.source === 'manual') notes.push('Accesso assegnato amministrativamente; non equivale a un abbonamento pagato.');
   const warnings = [];
   if (status === 'past_due') warnings.push(`Pagamento da completare. Tolleranza fino al ${fmtDateV63(b.grace_until)}.`);
@@ -192,7 +194,8 @@ function renderSubscriptionControls(data) {
       <button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="subscriptionAction('${b.cancel_at_period_end?'resume':'cancel'}')">${b.cancel_at_period_end?'Ripristina rinnovo':'Disdici a fine periodo'}</button>`:''}</div>` : ''}
     ${notes.map(m=>`<p class="gf-muted">${esc(m)}</p>`).join('')}`;
   const button = document.getElementById('btnConfirmUpgrade');
-  if (button) { button.disabled = !b.checkout_enabled; button.textContent = _selectedUpgradePlan === _currentPlan ? 'Rinnova in modalità di prova' : b.subscription ? 'Modifica piano di prova' : 'Acquista in modalità di prova'; button.title = b.checkout_enabled ? '' : 'Acquisti non ancora disponibili'; }
+  if (button) { button.disabled = !b.checkout_enabled; button.textContent = live ? (_selectedUpgradePlan === _currentPlan ? 'Rinnova' : b.subscription ? 'Cambia piano' : 'Acquista') :
+    (_selectedUpgradePlan === _currentPlan ? 'Rinnova in modalità di prova' : b.subscription ? 'Modifica piano di prova' : 'Acquista in modalità di prova'); button.title = b.checkout_enabled ? '' : 'Acquisti non ancora disponibili'; }
 }
 
 async function subscriptionAction(action) {
@@ -224,11 +227,12 @@ async function checkoutOrChangePlan() {
   if (button) button.disabled = true;
   try {
     const state = await api('/api/billing/my-plan');
-    if (!state.billing.checkout_enabled) throw new Error('Acquisti non disponibili; incassi reali disabilitati.');
+    if (!state.billing.checkout_enabled) throw new Error('Acquisti non ancora disponibili.');
+    const live = state.billing.mode === 'live';
     // Stesso piano = rinnovo: il server riallinea l'abbonamento esistente o apre un nuovo checkout.
     if (plan !== _currentPlan && state.billing.subscription && ['active','past_due'].includes(state.plan_status)) {
       const preview = await api('/api/billing/change-preview', {method:'POST', body:JSON.stringify({plan})});
-      let message = preview.direction === 'upgrade' ? `Conguaglio di prova: ${fmtEuroV63(preview.amount_due_cents/100)}. Il nuovo piano si attiva dopo il pagamento. Confermi?` :
+      let message = preview.direction === 'upgrade' ? `${live ? 'Conguaglio da pagare ora' : 'Conguaglio di prova'}: ${fmtEuroV63(preview.amount_due_cents/100)}. Il nuovo piano si attiva dopo il pagamento. Confermi?` :
         `Passare a ${plan} dal ${new Date(preview.effective_at*1000).toLocaleDateString('it-IT')}?`;
       if(preview.resources_over_limit?.length)message+=' Le risorse già presenti saranno conservate; le nuove aggiunte resteranno bloccate finché rientri nei limiti: '+preview.resources_over_limit.join(', ')+'.';
       if (!confirm(message)) return;
@@ -238,7 +242,10 @@ async function checkoutOrChangePlan() {
       else await subscriptionAction('sync');
     } else {
       const name = window.GF_PLANS[plan].name || plan;
-      if (!confirm(`${plan === _currentPlan ? `Rinnovare ${name}` : `Aprire il checkout di prova per ${name}`} a ${fmtEuroV63(window.GF_PLANS[plan].price_eur)}/mese? Nessun denaro reale verrà addebitato.`)) return;
+      const price = `${fmtEuroV63(window.GF_PLANS[plan].price_eur)} al mese`;
+      const question = live ? `${plan === _currentPlan ? `Rinnovare ${name}` : `Acquistare ${name}`} a ${price}? Si apre la pagina di pagamento sicura di Stripe.` :
+        `${plan === _currentPlan ? `Rinnovare ${name}` : `Aprire il checkout di prova per ${name}`} a ${price}? Nessun denaro reale verrà addebitato.`;
+      if (!confirm(question)) return;
       const result = await api('/api/billing/create-checkout-session', {method:'POST',body:JSON.stringify({plan})});
       const url = result.checkout_url || result.payment_url;
       if (result.message) toast(result.message);

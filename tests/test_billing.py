@@ -41,7 +41,7 @@ def test_old_plan_endpoint_cannot_activate_or_extend_trial(billing_env):
     assert (user.plan, user.plan_status, user.trial_ends_at) == before
 
 
-@pytest.mark.parametrize('mode,key', [('disabled','sk_test_x'), ('live','sk_live_x'), ('test','sk_live_x'), ('test','')])
+@pytest.mark.parametrize('mode,key', [('disabled','sk_test_x'), ('live','sk_test_x'), ('live',''), ('test','sk_live_x'), ('test',''), ('produzione','sk_live_x')])
 def test_real_payments_fail_closed(monkeypatch, mode, key):
     from app.core import config
     from app.services.billing import stripe_client
@@ -304,6 +304,7 @@ def test_webhook_duplicates_and_stale_events_use_current_state(billing_env, monk
     from app.models import BillingEvent
     client,db,user,*_=billing_env
     user.billing_source='stripe_test';user.stripe_customer_id='cus_test';user.stripe_subscription_id='sub_test';db.commit()
+    monkeypatch.setattr(config,'BILLING_MODE','test')
     monkeypatch.setattr(config,'BILLING_TEST_USER_IDS',{user.id});monkeypatch.setattr(config,'STRIPE_WEBHOOK_SECRET','whsec_test')
     event={'id':'evt_old','livemode':False,'type':'customer.subscription.updated','data':{'object':{'id':'sub_test','customer':'cus_test','status':'active'}}}
     fake=SimpleNamespace(Webhook=SimpleNamespace(construct_event=lambda *a:event),

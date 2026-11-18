@@ -5,6 +5,11 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Pagamenti reali con Stripe: nuova modalità `BILLING_MODE=live`, aperta a tutte le aziende. Accetta solo chiavi e oggetti
+  Stripe reali, non mescola mai clienti della sandbox (un account con cliente di prova ne riceve uno nuovo al primo acquisto)
+  e conta i pagamenti negli incassi reali. Il checkout chiede indirizzo e partita IVA. All'avvio il server si rifiuta di
+  partire se la modalità è sconosciuta, la chiave è dell'altra modalità o mancano webhook e prezzi. Pagina piani senza
+  scritte «di prova» in modalità reale.
 - Note: lo stesso testo confermato più tardi aggiorna l'ora della nota, così una nota diversa scritta prima e arrivata dopo
   non la scavalca. Migrazione 20261118_03 più precisa: azzera solo l'ora esatta scritta dalla vecchia 02 e non tocca nulla
   nei database che non l'hanno mai eseguita.

@@ -111,6 +111,24 @@ def main():
                 assert saved[-1]['company_sdi'] == ''
                 assert 'Mancano: codice SDI o PEC' in tab.locator('#billingDetailsCheckV9').inner_text()
                 assert page.locator('#billingSaveBarV9').is_hidden()
+
+                # Pagina piani: con i pagamenti reali spariscono le scritte «di prova».
+                for mode, button_text, note in (
+                        ('live', 'Acquista', 'Pagamento con carta tramite Stripe'),
+                        ('test', 'Acquista in modalità di prova', 'nessun denaro reale'),
+                        ('disabled', 'Acquista in modalità di prova', 'Acquisti non ancora disponibili')):
+                    shown = page.evaluate('''([mode, enabled]) => {
+                        _selectedUpgradePlan = 'business'; _currentPlan = 'starter';
+                        renderSubscriptionControls({plan_status: 'trial', usage: {},
+                            billing: {mode, checkout_enabled: enabled, subscription: false}});
+                        const button = document.getElementById('btnConfirmUpgrade');
+                        return {button: button.textContent, disabled: button.disabled,
+                                notes: document.getElementById('subscriptionControls').innerText}; }''',
+                        [mode, mode != 'disabled'])
+                    assert shown['button'] == button_text, (mode, shown)
+                    assert shown['disabled'] == (mode == 'disabled'), (mode, shown)
+                    assert note in shown['notes'], (mode, shown)
+                    assert (mode == 'live') == ('prova' not in shown['notes']), (mode, shown)
                 page.close()
         finally:
             browser.close()

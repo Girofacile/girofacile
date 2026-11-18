@@ -13,7 +13,7 @@ La presentazione fiscale e lo SDI non sono attivati da questa integrazione.
 
 ## Garanzie di questa versione
 
-- `BILLING_MODE=disabled` è il default. Anche `live` viene rifiutato.
+- `BILLING_MODE=disabled` è il default; `test` usa la sandbox, `live` i pagamenti reali (sezione dedicata sotto).
 - Solo chiavi `sk_test_` / `rk_test_` e oggetti Stripe con `livemode=false`.
 - Checkout e portale solo per gli ID elencati in `BILLING_TEST_USER_IDS`.
 - Non riutilizzare un account aziendale reale per il collaudo.
@@ -25,6 +25,29 @@ La presentazione fiscale e lo SDI non sono attivati da questa integrazione.
 - Tolleranza di 7 giorni per rinnovi falliti di account precedentemente paganti.
 - I webhook rileggono lo stato corrente Stripe e registrano gli eventi elaborati.
 - Nessun documento di prova viene contato negli incassi reali.
+
+## Pagamenti reali (`BILLING_MODE=live`)
+
+- Acquisti aperti a tutte le aziende; `BILLING_TEST_USER_IDS` non serve.
+- Solo chiavi `sk_live_` / `rk_live_` e oggetti Stripe con `livemode=true`: un evento o un prezzo della sandbox viene rifiutato.
+- Gli account con origine `stripe_live` sono i paganti (MRR); quelli `stripe_test` restano fuori e, se acquistano,
+  ricevono un nuovo cliente Stripe reale (il cliente sandbox non esiste nell'account reale).
+- Il checkout raccoglie indirizzo di fatturazione e partita IVA sul cliente Stripe.
+- Il prezzo addebitato è quello del listino (2900, 5900, 9900 centesimi al mese), senza imposte aggiunte da Stripe.
+- La fattura elettronica (SDI) non è emessa da GiroFacile: va emessa a parte finché non si collega un servizio dedicato.
+- All'avvio il server non parte se manca uno di questi valori o se la chiave è di un'altra modalità:
+
+```
+BILLING_MODE=live
+STRIPE_SECRET_KEY=<chiave segreta reale o chiave limitata rk_live_>
+STRIPE_WEBHOOK_SECRET=<segreto dell'endpoint reale>
+STRIPE_PRICE_STARTER=<price reale Starter>
+STRIPE_PRICE_BUSINESS=<price reale Business>
+STRIPE_PRICE_PRO=<price reale Pro>
+```
+
+Nell'account reale vanno creati di nuovo prodotti, prezzi ed endpoint webhook (`https://girofacile.it/api/billing/webhook`,
+stessi eventi della sandbox): quelli della sandbox non vengono copiati.
 
 ## Configurazione di collaudo (solo sul server di test)
 

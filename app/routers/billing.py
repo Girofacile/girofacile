@@ -1,6 +1,6 @@
 """
 Router billing - gestione piani e abbonamenti Stripe.
-Acquisti sandbox riservati agli account di collaudo; incassi reali bloccati.
+In modalità test gli acquisti sono riservati agli account di collaudo; in live sono aperti a tutti.
 """
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
@@ -19,8 +19,9 @@ router = APIRouter(prefix="/api/billing", tags=["billing"])
 
 def billing_state(user):
     from ..core import config
-    return {"mode": config.BILLING_MODE, "live_enabled": False,
-            "checkout_enabled": config.BILLING_MODE == "test" and user.id in config.BILLING_TEST_USER_IDS,
+    from ..services.billing import billing_available
+    return {"mode": config.BILLING_MODE, "live_enabled": config.BILLING_MODE == "live",
+            "checkout_enabled": billing_available(user),
             "source": user.billing_source or "legacy", "subscription": bool(user.stripe_subscription_id),
             "cancel_at_period_end": bool(user.billing_cancel_at_period_end),
             "pending_plan": user.billing_pending_plan,
@@ -278,18 +279,18 @@ def resume_subscription(db: Session = Depends(get_db), user: User = Depends(curr
 
 @router.post("/portal")
 def billing_portal(db: Session = Depends(get_db), user: User = Depends(current_user)):
-    from ..services.billing import stripe_client, retrieve_subscription
+    from ..services.billing import stripe_client, retrieve_subscription, is_live
     from ..core.config import APP_BASE_URL
     from ..core.links import base_url as _links_base_url
     stripe = stripe_client(user)
     retrieve_subscription(stripe, user)
     # Isolated portal configuration prevents unmanaged plan changes/cancellation.
     configuration = stripe.billing_portal.Configuration.create(
-        business_profile={"headline": "GiroFacile - pagamenti di prova"},
+        business_profile={"headline": "GiroFacile" if is_live() else "GiroFacile - pagamenti di prova"},
         features={"customer_update": {"enabled": True, "allowed_updates": ["email", "address", "tax_id"]},
                   "invoice_history": {"enabled": True}, "payment_method_update": {"enabled": True},
                   "subscription_cancel": {"enabled": False}, "subscription_update": {"enabled": False}},
-        idempotency_key="gf-sandbox-portal-v1")
+        idempotency_key="gf-live-portal-v1" if is_live() else "gf-sandbox-portal-v1")
     session = stripe.billing_portal.Session.create(customer=user.stripe_customer_id,
         configuration=configuration["id"], return_url=_links_base_url(APP_BASE_URL, "app").rstrip("/") + "/dashboard")
     return {"url": session["url"]}
@@ -320,12 +321,13 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
 
 
 def handle_stripe_event(raw, signature, db):
-    from ..services.billing import stripe_client, assert_test, object_id, reconcile, sync_invoice, select_current_subscription
+    from ..services.billing import (stripe_client, assert_test, object_id, reconcile, sync_invoice,
+                                    select_current_subscription, billing_source, billing_available, is_live)
     from ..core import config
     from sqlalchemy.exc import IntegrityError
     stripe = stripe_client()
     if not config.STRIPE_WEBHOOK_SECRET:
-        raise HTTPException(503, "Webhook sandbox non configurato")
+        raise HTTPException(503, "Webhook Stripe non configurato")
     try:
         event = stripe.Webhook.construct_event(raw, signature, config.STRIPE_WEBHOOK_SECRET)
     except Exception:
@@ -335,8 +337,8 @@ def handle_stripe_event(raw, signature, db):
         return {"ok": True, "duplicate": True}
     data = event["data"]["object"]
     customer = object_id(data.get("customer"))
-    user = db.query(User).filter(User.stripe_customer_id == customer, User.billing_source == "stripe_test").with_for_update().populate_existing().first() if customer else None
-    if not user or user.id not in config.BILLING_TEST_USER_IDS:
+    user = db.query(User).filter(User.stripe_customer_id == customer, User.billing_source == billing_source()).with_for_update().populate_existing().first() if customer else None
+    if not user or not billing_available(user):
         return {"ok": True, "ignored": True}
     if db.get(BillingEvent, event["id"]):
         return {"ok": True, "duplicate": True}
@@ -395,6 +397,6 @@ def handle_stripe_event(raw, signature, db):
                 plan=user.plan or "starter",
                 amount=(paid_invoice.get("amount_paid") or 0) / 100,
                 currency=(paid_invoice.get("currency") or "eur").upper(),
-                is_test=True,
+                is_test=not is_live(),
             )
     return {"ok": True}

@@ -260,13 +260,18 @@ def _service_key_status(db: Session) -> list[dict]:
     smtp = smtp_config()
     smtp_host, smtp_user, smtp_password = str(smtp["host"] or "").strip(), str(smtp["user"] or "").strip(), str(smtp["password"] or "").strip()
     stripe_key = os.getenv("STRIPE_SECRET_KEY", "")
+
+    def _billing_mode_label():
+        from ..core import config
+        return {"live": "Abbonamenti con pagamenti reali", "test": "Abbonamenti in prova (sandbox, solo account di collaudo)"}.get(
+            config.BILLING_MODE, "Acquisti disattivati")
     shopify_domain = _setting_value(db, "shopify_domain", "")
     backup_target = str(backup_directory())
     return [
         {"key":"google", "name":"Google Maps Platform", "configured": bool(google_key), "masked": _mask_secret(google_key), "details":"Geocoding, verifica indirizzi, Routes API", "last_error":"Controlla Errori sistema / Consumi API"},
         {"key":"openai", "name":"OpenAI / AI", "configured": bool(openai_key), "masked": _mask_secret(openai_key), "details":"Spiegazione giri, ticket, report AI", "last_error":"Controlla Consumi API e chiavi"},
         {"key":"smtp", "name":"SMTP Email", "configured": bool(smtp_host and smtp_user and smtp_password), "masked": _mask_secret(smtp_user), "details": f"Host: {smtp_host or 'non configurato'}", "last_error":"Errore registrato se password SMTP mancante o invio fallito"},
-        {"key":"stripe", "name":"Stripe / Pagamenti", "configured": bool(stripe_key), "masked": _mask_secret(stripe_key), "details":"Preparato per abbonamenti e fatture", "last_error":"Non ancora collegato a billing reale"},
+        {"key":"stripe", "name":"Stripe / Pagamenti", "configured": bool(stripe_key), "masked": _mask_secret(stripe_key), "details": _billing_mode_label(), "last_error":""},
         {"key":"shopify", "name":"Shopify", "configured": bool(shopify_domain), "masked": shopify_domain, "details":"Preparato per settore e-commerce", "last_error":"Integrazione API reale da completare"},
         {"key":"backup", "name":"Backup storage", "configured": True, "masked": backup_target, "details":"Backup locale database", "last_error":""},
     ]
