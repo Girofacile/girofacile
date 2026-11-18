@@ -292,3 +292,40 @@ test('two replacements in a row on a full phone do not bring back the first note
   assert.deepEqual(sent,['tre tre tre']);
   assert.equal(create({storage,key:'k',send:offlineSend}).count(),0,'la prima nota non ricompare');
 });
+
+test('a rejected replacement brings back the valid note it was replacing',async()=>{
+  const storage=memoryStorage();const sent=[];let online=false;
+  const send=async item=>{
+    if(!online)throw offline();
+    if(item.body.note.length>500)throw http(422,'Nota troppo lunga');
+    sent.push(item.body.note);
+  };
+  const box=create({storage,key:'k',send,locks:null});
+  box.add({kind:'note',url:'/n',body:{note:'nota valida'},routeId:1,deliveryId:1});
+  box.add({kind:'note',url:'/n',body:{note:'x'.repeat(501)},routeId:1,deliveryId:1});
+  assert.equal(box.count(),1);
+  // Riaprendo il portale prima dell'invio, la copia valida è ancora sul telefono.
+  assert.equal(create({storage,key:'k',send,locks:null}).count(),1);
+  online=true;
+  const rejected=await box.flush();
+  assert.equal(rejected.length,1);
+  assert.deepEqual(sent,['nota valida']);
+  assert.equal(create({storage,key:'k',send,locks:null}).count(),0);
+});
+
+test('outcomes from the older version are sent with the time they were queued',async()=>{
+  const storage=memoryStorage();const bodies=[];
+  storage.setItem('k',JSON.stringify([{kind:'note',url:'/n',body:{note:'vecchia'},routeId:1,deliveryId:1,queuedAt:'2026-11-17T08:00:00.000Z'}]));
+  await create({storage,key:'k',send:async item=>{bodies.push(item.body);},locks:null}).flush();
+  assert.deepEqual(bodies,[{note:'vecchia',scritta_il:'2026-11-17T08:00:00.000Z'}]);
+});
+
+test('outcomes kept only in the open page are counted apart',()=>{
+  const storage=memoryStorage();
+  const box=create({storage,key:'k',send:async()=>{throw offline();},locks:null});
+  box.add({kind:'complete',url:'/1',body:{},routeId:1,deliveryId:1});
+  storage.setItem=()=>{throw new Error('QuotaExceededError');};
+  assert.equal(box.add({kind:'complete',url:'/2',body:{},routeId:1,deliveryId:2}),false);
+  assert.equal(box.count(),2);
+  assert.equal(box.memoryOnly(),1);
+});

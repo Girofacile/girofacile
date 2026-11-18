@@ -20,11 +20,9 @@
     // anche se nel frattempo un nuovo esito della stessa consegna è entrato in coda.
     const newOpId = () => Date.now().toString(36) + '-' + (++sequence).toString(36) + '-' + Math.random().toString(36).slice(2, 8);
 
-    // Esiti da non inviare più da questa pagina: quelli già inviati (se il telefono non riesce
-    // a salvarne la rimozione) e quelli sostituiti da un esito più recente rimasto solo in pagina.
+    // Esiti da non inviare più da questa pagina: quelli già inviati, anche se il telefono non
+    // riesce a salvarne la rimozione.
     const hidden = new Set();
-    // Esito nuovo rimasto solo in pagina -> copie precedenti rimesse sul telefono, da togliere quando parte.
-    const superseded = new Map();
     // Ogni esito ha una voce propria sul telefono (key + ':' + opId). Togliere un esito inviato
     // è quindi una semplice cancellazione, che riesce anche a telefono pieno: riaprendo il
     // portale l'esito confermato non riparte. La lista unica sotto «key» è della versione precedente.
@@ -61,25 +59,27 @@
     const byQueue = (a, b) => String(a.queuedAt || '').localeCompare(String(b.queuedAt || '')) || (a.order || 0) - (b.order || 0);
     // Il telefono è la fonte comune a tutte le schede: si rilegge sempre prima di modificare,
     // così una seconda scheda aperta non cancella gli esiti salvati dalla prima.
+    // Un esito che ne sostituisce altri li tiene da parte («replaces») finché il server non lo
+    // accetta: se viene rifiutato, la copia precedente torna in coda e non va persa.
     function load(){
       const stored = readStored();
       const known = new Set(stored.map(x => x.opId));
-      items = stored.concat(unsaved.filter(x => !known.has(x.opId))).filter(x => !hidden.has(x.opId)).sort(byQueue);
+      const all = stored.concat(unsaved.filter(x => !known.has(x.opId))).filter(x => !hidden.has(x.opId));
+      const replaced = new Set(all.flatMap(x => x.replaces || []));
+      items = all.filter(x => !replaced.has(x.opId)).sort(byQueue);
     }
     function persist(item){
       if(!storage) return false;
       try { storage.setItem(prefix + item.opId, JSON.stringify(item)); return true; }
       catch(e) { return false; }
     }
-    function isStored(opId){
-      return hasEntry(opId) || readLegacy().some(x => x.opId === opId);
-    }
     function hasEntry(opId){
       try { return storage.getItem(prefix + opId) != null; } catch(e) { return false; }
     }
-    // Toglie un esito ovunque sia salvato: nella sua voce e, se c'è ancora, nella lista della
+    // Toglie un esito ovunque sia: in pagina, nella sua voce e, se c'è ancora, nella lista della
     // versione precedente (dopo una migrazione riuscita solo in parte può essere in entrambe).
     function forget(opId){
+      unsaved = unsaved.filter(x => x.opId !== opId);
       if(!storage) return;
       try { storage.removeItem(prefix + opId); } catch(e) {}
       const legacy = readLegacy();
@@ -93,35 +93,6 @@
         else storage.setItem(key, JSON.stringify(rest));
       } catch(e) {}
     }
-    function update(change){
-      load();
-      const before = new Map(items.map(x => [x.opId, x]));
-      const after = change(items);
-      const kept = new Set(after.map(x => x.opId));
-      const removed = [...before.keys()].filter(opId => !kept.has(opId));
-      const added = after.filter(item => !before.has(item.opId));
-      // Copie ancora più vecchie che aspettavano sul telefono uno degli esiti tolti ora.
-      const carried = removed.flatMap(opId => superseded.get(opId) || []);
-      removed.forEach(opId => superseded.delete(opId));
-      // Prima si scrive il nuovo; il vecchio si toglie solo se il nuovo è salvato davvero.
-      // Mai cancellare prima di scrivere: se il telefono permette di cancellare ma non di
-      // scrivere, si perderebbero entrambe le copie.
-      const failed = added.filter(item => !persist(item));
-      unsaved = unsaved.filter(x => !removed.includes(x.opId));
-      if(!failed.length){
-        for(const opId of removed.concat(carried)) forget(opId);
-      } else {
-        // Il nuovo resta solo in questa pagina: le copie precedenti restano sul telefono, così
-        // riaprendo il portale c'è almeno quella. Questa pagina non le invia e, appena parte
-        // l'esito nuovo, le toglie.
-        const keep = removed.filter(isStored).concat(carried);
-        keep.forEach(opId => hidden.add(opId));
-        for(const item of failed){ superseded.set(item.opId, keep); unsaved.push(item); }
-      }
-      items = after;
-      changed();
-      return failed.length === 0;
-    }
     // Gli esiti della versione precedente passano a voci separate; la vecchia lista si toglie
     // solo quando tutti sono stati copiati.
     function migrate(){
@@ -131,14 +102,36 @@
     }
 
     function add(item){
-      // Un nuovo esito per la stessa consegna e azione sostituisce quello precedente.
-      const entry = {...item, opId: newOpId(), queuedAt: item.queuedAt || new Date().toISOString(), order: Date.now() * 1000 + (sequence % 1000)};
-      return update(list => list.filter(x => !(x.deliveryId === item.deliveryId && x.kind === item.kind)).concat(entry));
+      load();
+      // Un nuovo esito per la stessa consegna e azione sostituisce i precedenti, che restano da
+      // parte (anche sul telefono) finché il nuovo non è accettato dal server.
+      const older = items.filter(x => Number(x.deliveryId) === Number(item.deliveryId) && x.kind === item.kind);
+      const replaces = [...new Set(older.flatMap(x => [x.opId, ...(x.replaces || [])]))];
+      const entry = {...item, opId: newOpId(), queuedAt: item.queuedAt || new Date().toISOString(),
+                     order: Date.now() * 1000 + (sequence % 1000), replaces};
+      const persisted = persist(entry);
+      if(!persisted) unsaved.push(entry);
+      load();
+      changed();
+      return persisted;
     }
 
     function pending(routeId){
       load();
       return items.filter(x => routeId == null || Number(x.routeId) === Number(routeId));
+    }
+
+    // Esiti che esistono solo nella pagina aperta (telefono pieno): si perdono ricaricando.
+    function memoryOnly(){
+      load();
+      return items.filter(x => !hasEntry(x.opId) && !legacyIds.has(x.opId)).length;
+    }
+
+    // Ogni esito porta l'ora in cui è stato scritto: anche quelli della versione precedente
+    // (dalla loro ora di accodamento), così il server non li fa passare per i più recenti.
+    function withWrittenAt(item){
+      if(!item.body || item.body.scritta_il || !item.queuedAt) return item;
+      return {...item, body: {...item.body, scritta_il: item.queuedAt}};
     }
 
     // Invia in ordine; si ferma al primo errore temporaneo per non saltare esiti.
@@ -148,15 +141,19 @@
         load();
         const item = items[0];
         if(!item) break;
-        try { await send(item); }
+        let accepted = true;
+        try { await send(withWrittenAt(item)); }
         catch(e) {
           if(isRetryable(e)) break;
+          accepted = false;
           rejected.push({item, message: e.message});
         }
         // Si toglie l'operazione appena inviata, non «la prima»: potrebbe essere stata sostituita.
-        // Togliendo l'esito inviato si tolgono anche le copie vecchie che lo aspettavano sul telefono.
-        update(list => list.filter(x => x.opId !== item.opId));
-        hidden.add(item.opId);
+        // Se il server l'ha accettata si tolgono anche le copie che sostituiva; se l'ha rifiutata,
+        // quelle tornano in coda e partono al giro successivo.
+        const done = accepted ? [item.opId, ...(item.replaces || [])] : [item.opId];
+        done.forEach(opId => { forget(opId); hidden.add(opId); });
+        changed();
       }
       return rejected;
     }
@@ -176,7 +173,7 @@
 
     if(storage) migrate();
     load();
-    return {add, pending, flush, refresh, count: () => { load(); return items.length; }};
+    return {add, pending, flush, refresh, memoryOnly, count: () => { load(); return items.length; }};
   }
 
   function legacyOpId(item){

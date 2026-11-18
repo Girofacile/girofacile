@@ -258,7 +258,7 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
 <script src="/static/live-gps.js?v=gf_posizione_semplice_20261114"></script>
 <link rel="stylesheet" href="/static/pod.css?v=gf_driver_fix_20261020">
 <script src="/static/pod.js?v=gf_pod_azienda_20261108"></script>
-<script src="/static/driver-outbox.js?v=gf_outbox_copie_20261118"></script>
+<script src="/static/driver-outbox.js?v=gf_outbox_sostituzioni_20261118"></script>
 
 <link rel="stylesheet" href="/static/design-system/theme.css?v=gf_variabili_tema_20261116">
 <link rel="stylesheet" href="/static/design-system/components.css?v=gf_prezzi_mensili_20261117">
@@ -408,7 +408,7 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
       <div class="modal-sub">Seleziona il tempo di scarico effettivo</div>
       <div class="tempo-grid" id="tempoGrid"></div>
       <div class="modal-sub">Note (opzionale)</div>
-      <textarea class="note-textarea" id="noteDone" placeholder="Es. lasciato a portineria..."></textarea>
+      <textarea class="note-textarea" id="noteDone" maxlength="500" placeholder="Es. lasciato a portineria..."></textarea>
 
       <div id="signatureRequestCard" class="signature-request-card hidden">
         <div class="signature-request-info">
@@ -451,7 +451,7 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
       <div class="modal-sub">Seleziona il motivo</div>
       <div class="motivo-list" id="motivoList"></div>
       <div class="modal-sub">Note (opzionale)</div>
-      <textarea class="note-textarea" id="noteMissed" placeholder="Aggiungi dettagli..."></textarea>
+      <textarea class="note-textarea" id="noteMissed" maxlength="500" placeholder="Aggiungi dettagli..."></textarea>
       <button class="btn-confirm red" onclick="confirmMissed()">Conferma mancata consegna</button>
     </div>
   </div>
@@ -462,7 +462,7 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
   <div class="modal">
     <div class="modal-header"><h3><svg class="gf-i" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 3h10l4 4v14H5Z"/><path d="M14 3v5h5M8 12h8M8 16h5"/></svg> Aggiungi nota</h3><button class="modal-close" onclick="closeModal()">×</button></div>
     <div class="modal-body">
-      <textarea class="note-textarea" id="noteText" placeholder="Scrivi una nota..." style="min-height:120px"></textarea>
+      <textarea class="note-textarea" id="noteText" maxlength="500" placeholder="Scrivi una nota..." style="min-height:120px"></textarea>
       <button class="btn-confirm blue" onclick="confirmNote()">Salva nota</button>
     </div>
   </div>
@@ -583,10 +583,15 @@ function renderOutboxBanner() {
   const banner = document.getElementById('outboxBanner');
   if(!banner || !outbox) return;
   const count = outbox.count();
+  const memory = outbox.memoryOnly();
+  const saved = count - memory;
   banner.classList.toggle('hidden', count === 0);
-  document.getElementById('outboxBannerText').textContent = count === 1
-    ? '1 esito salvato sul telefono: verrà inviato appena torna la rete. Non uscire dal portale.'
-    : `${count} esiti salvati sul telefono: verranno inviati appena torna la rete. Non uscire dal portale.`;
+  const parts = [];
+  if(saved) parts.push(saved === 1 ? '1 esito salvato sul telefono' : `${saved} esiti salvati sul telefono`);
+  if(memory) parts.push(memory === 1
+    ? '1 esito solo in questa schermata (telefono pieno): non ricaricare né chiudere il portale'
+    : `${memory} esiti solo in questa schermata (telefono pieno): non ricaricare né chiudere il portale`);
+  document.getElementById('outboxBannerText').textContent = parts.join('; ') + '. Partono appena torna la rete.';
 }
 
 async function flushOutbox(manual=false) {
@@ -603,25 +608,40 @@ async function flushOutbox(manual=false) {
 
 // Appena registrato un esito, la fermata chiusa sparisce subito e compare la successiva:
 // senza aspettare il nuovo caricamento del giro, i pulsanti non puntano più alla fermata chiusa.
-function showOutcomeNow(kind, body, result) {
-  if(!currentRouteData) return;
-  const data = GFDriverOutbox.overlay(currentRouteData, [{kind, body, deliveryId: currentDeliveryId}]);
-  const delivery = (data.consegne || []).find(c => Number(c.id) === Number(currentDeliveryId));
+function showOutcomeNow(kind, body, result, target) {
+  // Se nel frattempo l'autista è passato a un altro giro, quello aperto non va toccato.
+  if(!currentRouteData || Number(target.routeId) !== Number(currentRoute)) return;
+  const data = GFDriverOutbox.overlay(currentRouteData, [{kind, body, deliveryId: target.deliveryId}]);
+  const delivery = (data.consegne || []).find(c => Number(c.id) === Number(target.deliveryId));
   if(delivery && result === 'sent') delete delivery.in_attesa_invio;
   currentRouteData = data;
   renderExecution(data);
 }
 
 // Invia subito; se manca la rete l'esito resta sul telefono e parte dopo.
-async function submitOutcome(kind, url, body) {
+// La fermata e il giro si fissano alla conferma: se l'autista apre un'altra fermata mentre
+// la richiesta è in corso, l'esito resta legato a quella confermata.
+function outcomeTarget() {
+  return {deliveryId: currentDeliveryId, routeId: currentRoute};
+}
+const NOTE_MAX = 500;
+function noteTooLong(text) {
+  if(String(text || '').length <= NOTE_MAX) return false;
+  driverNotice(`La nota può avere al massimo ${NOTE_MAX} caratteri: accorciala prima di confermare.`);
+  return true;
+}
+
+async function submitOutcome(kind, target, body) {
+  const url = `/api/driver/delivery/${target.deliveryId}/${kind}`;
   try {
     await api(url, {method:'POST', body:JSON.stringify(body)});
     return 'sent';
   } catch(e) {
     if(!outbox || !GFDriverOutbox.isRetryable(e)) throw e;
-    const delivery = (currentRouteData?.consegne || []).find(x => Number(x.id) === Number(currentDeliveryId));
-    const persisted = outbox.add({kind, url, body, routeId: currentRoute, deliveryId: currentDeliveryId, label: delivery?.cliente_nome || ''});
-    if(!persisted) driverNotice('Esito salvato solo in questa schermata: tieni aperto il portale finché torna la rete.', 'warning');
+    const data = Number(target.routeId) === Number(currentRoute) ? currentRouteData : null;
+    const delivery = (data?.consegne || []).find(x => Number(x.id) === Number(target.deliveryId));
+    const persisted = outbox.add({kind, url, body, routeId: target.routeId, deliveryId: target.deliveryId, label: delivery?.cliente_nome || ''});
+    if(!persisted) driverNotice('Telefono pieno: questo esito è solo in questa schermata. Non ricaricare né chiudere il portale finché torna la rete.', 'warning');
     return 'queued';
   }
 }
@@ -1133,7 +1153,9 @@ function selectTempo(val, btn) {
   btn.classList.add('sel');
 }
 async function confirmDone() {
+  const target = outcomeTarget();
   if(!selectedTempo) { driverNotice('Seleziona il tempo di scarico'); return; }
+  if(noteTooLong(document.getElementById('noteDone').value)) return;
   const sigEnabled = podFeatureEnabled('has_delivery_signature', currentRouteData) && !!currentRouteData?.settings?.delivery_signature_enabled;
   const payload = {
     tempo_scarico:selectedTempo,
@@ -1151,8 +1173,8 @@ async function confirmDone() {
   }
   try {
     Object.assign(payload, await podPhotoPayload(!!currentRouteData?.settings?.delivery_photo_required, currentRouteData));
-    const result = await submitOutcome('complete', `/api/driver/delivery/${currentDeliveryId}/complete`, payload);
-    closeModal(); showOutcomeNow('complete', payload, result); await loadExecution();
+    const result = await submitOutcome('complete', target, payload);
+    closeModal(); showOutcomeNow('complete', payload, result, target); await loadExecution();
   } catch(e) { driverNotice(e.message); }
 }
 
@@ -1176,11 +1198,13 @@ function selectMotivo(val, btn) {
   btn.classList.add('sel');
 }
 async function confirmMissed() {
+  const target = outcomeTarget();
   if(!selectedMotivo) { driverNotice('Seleziona il motivo'); return; }
+  if(noteTooLong(document.getElementById('noteMissed').value)) return;
   try {
     const body = {motivo:selectedMotivo, note:document.getElementById('noteMissed').value, scritta_il:new Date().toISOString()};
-    const result = await submitOutcome('missed', `/api/driver/delivery/${currentDeliveryId}/missed`, body);
-    closeModal(); showOutcomeNow('missed', body, result); await loadExecution();
+    const result = await submitOutcome('missed', target, body);
+    closeModal(); showOutcomeNow('missed', body, result, target); await loadExecution();
   } catch(e) { driverNotice(e.message); }
 }
 
@@ -1194,10 +1218,12 @@ function openNote(id) {
   document.getElementById('modalNote').classList.remove('hidden');
 }
 async function confirmNote() {
+  const target = outcomeTarget();
+  if(noteTooLong(document.getElementById('noteText').value)) return;
   try {
     const body = {note:document.getElementById('noteText').value, scritta_il:new Date().toISOString()};
-    const result = await submitOutcome('note', `/api/driver/delivery/${currentDeliveryId}/note`, body);
-    closeModal(); showOutcomeNow('note', body, result); await loadExecution();
+    const result = await submitOutcome('note', target, body);
+    closeModal(); showOutcomeNow('note', body, result, target); await loadExecution();
   } catch(e) { driverNotice(e.message); }
 }
 

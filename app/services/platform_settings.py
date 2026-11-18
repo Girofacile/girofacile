@@ -77,7 +77,9 @@ def osrm_url(db: Session | None = None) -> str:
     if parsed.scheme not in ("http", "https") or not parsed.hostname or parsed.username or parsed.password:
         raise ValueError("OSRM_URL deve essere un URL HTTP(S) senza credenziali")
     public = parsed.hostname.lower() in ("router.project-osrm.org", "routing.openstreetmap.de")
-    production = os.getenv("APP_ENV", os.getenv("ENVIRONMENT", "production")).lower() in ("production", "prod")
+    from ..core.environment import is_production
+    # Senza APP_ENV (né ENVIRONMENT) si assume la produzione: il server pubblico OSRM resta escluso.
+    production = is_production({"APP_ENV": os.getenv("APP_ENV") or os.getenv("ENVIRONMENT") or "production"})
     allow_public = routing_setting(db, "osrm_allow_public_fallback", "false").lower() in ("1", "true", "yes", "on")
     if public and (production or not allow_public):
         raise ValueError("In produzione OSRM richiede un'istanza propria; il server pubblico è solo per sviluppo esplicito")

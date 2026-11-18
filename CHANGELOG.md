@@ -5,6 +5,16 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Coda autista: un esito che ne sostituisce un altro tiene da parte la copia precedente finché il server non lo accetta;
+  se viene rifiutato (per esempio nota troppo lunga) la copia valida torna in coda. Gli esiti della versione precedente
+  partono con l'ora in cui erano stati accodati. L'avviso distingue gli esiti salvati sul telefono da quelli solo nella schermata.
+- Portale autista: l'esito resta legato alla fermata e al giro confermati, anche se l'autista apre un'altra fermata mentre
+  la richiesta è in corso. Le note oltre 500 caratteri vengono fermate prima di essere accodate.
+- Server: un esito (consegnata o mancata) scritto prima di una nota più recente non la sovrascrive più.
+- Configurazione: «prod» e «production» sono riconosciuti allo stesso modo in tutti i moduli; APP_ENV sconosciuto, sì/no con
+  un refuso (es. COOKIE_SECURE=tru) o COOKIE_SAMESITE non valido bloccano l'avvio, e un refuso non spegne mai il cookie sicuro.
+- Termini e pagina prezzi: il piano si attiva su richiesta a info@girofacile.it, che comunica le modalità di pagamento;
+  tolto l'elenco di metodi (PayPal, Klarna, Apple Pay) non offerti.
 - Collaboratori Super Admin: un delegato gestisce (modifica, disattiva, reinvita, elimina) solo account con accesso effettivo uguale o inferiore al suo, compreso il vecchio permesso globale;
   se l'email di invito non parte, al delegato non viene mai mostrata la password e quella esistente non cambia.
 - Portale autista: gli esiti salvati sul telefono sono condivisi fra schede aperte (nessuna sovrascrive l'altra), una sola scheda invia alla volta

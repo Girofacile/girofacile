@@ -25,8 +25,8 @@ S3_SETTINGS = tuple("OBJECT_STORAGE_" + name for name in ("ENDPOINT", "REGION", 
 
 
 def is_production(env: dict | None = None) -> bool:
-    env = os.environ if env is None else env
-    return (env.get("APP_ENV") or "development").strip().lower() in PRODUCTION_ENVS
+    from .environment import is_production as shared
+    return shared(env)
 
 
 def production_config_problems(env: dict | None = None) -> list[str]:
@@ -36,9 +36,10 @@ def production_config_problems(env: dict | None = None) -> list[str]:
     così un valore assente viene riconosciuto come assente.
     """
     env = os.environ if env is None else env
-    problems: list[str] = []
+    from .environment import invalid_settings
+    problems: list[str] = list(invalid_settings(env))
 
-    secret = (env.get("APP_SECRET") or "").strip()
+    secret =(env.get("APP_SECRET") or "").strip()
     if not secret:
         problems.append("APP_SECRET non impostato")
     elif secret.lower() in DEFAULT_SECRETS:
@@ -116,7 +117,15 @@ def default_account_problems(db, env: dict | None = None) -> list[str]:
 
 
 def require_production_config(env: dict | None = None) -> None:
-    """Blocca l'avvio in produzione se la configurazione non è sicura."""
+    """Blocca l'avvio in produzione se la configurazione non è sicura.
+
+    I valori non riconosciuti (APP_ENV sbagliato, sì/no con un refuso) bloccano l'avvio in
+    qualsiasi ambiente: un APP_ENV scritto male farebbe saltare tutti i controlli di produzione.
+    """
+    from .environment import invalid_settings
+    invalid = invalid_settings(env)
+    if invalid:
+        raise RuntimeError("Avvio bloccato, impostazioni non valide: " + "; ".join(invalid))
     if not is_production(env):
         return
     problems = production_config_problems(env)

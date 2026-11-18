@@ -124,6 +124,10 @@ def test_terms_prices_match_plan_catalog():
     for plan in PLAN_PRICES.values():
         assert f"<td>{plan['name']}</td><td>{plan['price_eur']} € al mese</td>" in terms
     assert 'IVA' not in terms.split('<h2>5.')[1].split('<h2>7.')[0]
+    payments = terms.split('<h2>6.')[1].split('<h2>7.')[0]
+    # Solo ciò che il servizio offre davvero: attivazione su richiesta, nessun metodo inventato.
+    assert 'info@girofacile.it' in payments
+    assert not any(name in payments for name in ('PayPal', 'Klarna', 'Apple Pay'))
 
 
 @pytest.mark.parametrize('value', ['false', 'true', 'False', '0', '1', 1, 0, None, [], {}])

@@ -107,8 +107,12 @@ def _apply_delivery_update(db, delivery, payload, action):
     db.add(status)
     if target:
         status.status = target
-        status.note_operatore = data['note'] or None
-        status.note_scritta_il = written_at(data)
+        # La nota dell'esito vale solo se è la più recente: un esito scritto prima e arrivato dopo
+        # (dalla coda del telefono) non cancella una nota scritta nel frattempo.
+        written = written_at(data)
+        if not status.note_scritta_il or written > status.note_scritta_il:
+            status.note_operatore = data['note'] or None
+            status.note_scritta_il = written
         status.completata_il = local_now().replace(tzinfo=None)
         if action == 'complete':
             status.tempo_scarico_effettivo = data['tempo_scarico']

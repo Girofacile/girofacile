@@ -107,3 +107,20 @@ def test_an_older_queued_note_never_overwrites_a_newer_one(env):
     assert client.post(note, json={'note': 'Aggiornata ora'}).status_code == 200
     db.refresh(status)
     assert status.note_operatore == 'Aggiornata ora'
+
+
+@pytest.mark.parametrize('action', ['missed', 'complete'])
+def test_an_outcome_written_earlier_keeps_the_newer_note(env, action):
+    from app.models import DeliveryStatus
+    client, db, _, route, delivery = prepare(env)
+    note = path('driver', 'note', route, delivery)
+    assert client.post(note, json={'note': 'Citofono rotto, chiamare', 'scritta_il': '2026-01-10T09:00:00Z'}).status_code == 200
+    # L'esito era stato scritto alle 8:50 senza rete ed è arrivato dopo dalla coda del telefono.
+    body = {'note': 'Bozza', 'scritta_il': '2026-01-10T08:50:00Z', 'motivo': 'assente', 'tempo_scarico': 5}
+    assert client.post(path('driver', action, route, delivery), json=body).status_code == 200
+    # Lo stesso esito ripetuto dalla coda non ha altri effetti.
+    assert client.post(path('driver', action, route, delivery), json=body).status_code == 200
+    status = db.query(DeliveryStatus).filter_by(delivery_id=delivery.id).one()
+    db.refresh(status)
+    assert status.status == ('mancata' if action == 'missed' else 'completata')
+    assert status.note_operatore == 'Citofono rotto, chiamare'

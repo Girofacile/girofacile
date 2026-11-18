@@ -28,7 +28,9 @@ APP_PASSWORD = os.getenv("APP_PASSWORD", "admin123")
 SUPERADMIN_USERNAME = os.getenv("SUPERADMIN_USERNAME", APP_USER).strip()
 SUPERADMIN_PASSWORD = os.getenv("SUPERADMIN_PASSWORD", APP_PASSWORD).strip()
 APP_SECRET = os.getenv("APP_SECRET", "dev-secret-change-me")
-APP_ENV = os.getenv("APP_ENV", "development").strip().lower()
+# Nome normalizzato («prod» diventa «production»): tutti i moduli lo leggono allo stesso modo.
+from .environment import app_env as _app_env
+APP_ENV = _app_env()
 PASSWORD_PEPPER = os.getenv("PASSWORD_PEPPER", "").strip()
 PASSWORD_PBKDF2_ITERATIONS = int(os.getenv("PASSWORD_PBKDF2_ITERATIONS", "260000"))
 _raw_app_base_url = os.getenv("APP_BASE_URL", "https://girofacile.it").strip().rstrip("/")

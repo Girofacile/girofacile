@@ -13,15 +13,11 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 
 
-def env_bool(name: str, default: bool = False) -> bool:
-    value = os.getenv(name)
-    if value is None:
-        return default
-    return value.strip().lower() in {"1", "true", "yes", "si", "sì", "on"}
+from .environment import app_env, env_bool, is_production
 
-
-APP_ENV = os.getenv("APP_ENV", "development").strip().lower()
-IS_PRODUCTION = APP_ENV in {"production", "prod"}
+# Un valore sì/no non riconosciuto vale il predefinito: COOKIE_SECURE=tru in produzione resta acceso.
+APP_ENV = app_env()
+IS_PRODUCTION = is_production()
 COOKIE_SECURE = env_bool("COOKIE_SECURE", IS_PRODUCTION)
 COOKIE_SAMESITE = os.getenv("COOKIE_SAMESITE", "lax").strip().lower()
 if COOKIE_SAMESITE not in {"lax", "strict", "none"}:
