@@ -5,6 +5,10 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Portale autista: la risposta di un esito chiude solo la finestra da cui è partito; se l'autista ha aperto un'altra
+  fermata, la sua finestra e la bozza restano. «Invia ora» dice se gli esiti sono solo nella schermata (telefono pieno).
+- Note salvate prima dell'ora di scrittura: ricevono l'ora della migrazione 20261118_02, così una nota vecchia
+  rimasta in una coda offline non le sovrascrive.
 - Coda autista: un esito che ne sostituisce un altro tiene da parte la copia precedente finché il server non lo accetta;
   se viene rifiutato (per esempio nota troppo lunga) la copia valida torna in coda. Gli esiti della versione precedente
   partono con l'ora in cui erano stati accodati. L'avviso distingue gli esiti salvati sul telefono da quelli solo nella schermata.

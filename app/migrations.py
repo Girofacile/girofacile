@@ -305,6 +305,16 @@ def run_migrations(engine):
                     if 'delivery_statuses' in set(inspect(conn).get_table_names()) and 'note_scritta_il' not in {c['name'] for c in inspect(conn).get_columns('delivery_statuses')}:
                         conn.execute(text('ALTER TABLE delivery_statuses ADD COLUMN note_scritta_il TIMESTAMP'))
                     conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261118_01', 'now': utc_now()})
+            if '20261118_02' not in applied:
+                # Note già salvate senza ora di scrittura: ricevono l'ora di questa migrazione, così una
+                # nota più vecchia rimasta in una coda offline non le sovrascrive.
+                with engine.begin() as conn:
+                    columns = ({c['name'] for c in inspect(conn).get_columns('delivery_statuses')}
+                               if 'delivery_statuses' in set(inspect(conn).get_table_names()) else set())
+                    if {'note_operatore', 'note_scritta_il'} <= columns:
+                        conn.execute(text('UPDATE delivery_statuses SET note_scritta_il = :now '
+                                          'WHERE note_operatore IS NOT NULL AND note_scritta_il IS NULL'), {'now': utc_now()})
+                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261118_02', 'now': utc_now()})
         finally:
             if postgres:
                 lock.execute(text('SELECT pg_advisory_unlock(:key)'), {'key': LOCK_ID})

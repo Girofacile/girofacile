@@ -601,7 +601,12 @@ async function flushOutbox(manual=false) {
   if(rejected.length) {
     driverNotice(rejected.map(r => `Esito per ${r.item.label || 'una consegna'} non accettato: ${r.message}`).join(' '));
   } else if(manual && outbox.count() === before) {
-    driverNotice('Ancora nessuna connessione. Gli esiti restano salvati sul telefono.', 'warning');
+    const memory = outbox.memoryOnly();
+    driverNotice(memory
+      ? (memory === before
+          ? 'Ancora nessuna connessione. Telefono pieno: gli esiti sono solo in questa schermata, non ricaricare né chiudere il portale.'
+          : 'Ancora nessuna connessione. Alcuni esiti sono solo in questa schermata (telefono pieno): non ricaricare né chiudere il portale.')
+      : 'Ancora nessuna connessione. Gli esiti restano salvati sul telefono.', 'warning');
   }
   if(currentRoute && before !== outbox.count()) await loadExecution();
 }
@@ -621,8 +626,14 @@ function showOutcomeNow(kind, body, result, target) {
 // Invia subito; se manca la rete l'esito resta sul telefono e parte dopo.
 // La fermata e il giro si fissano alla conferma: se l'autista apre un'altra fermata mentre
 // la richiesta è in corso, l'esito resta legato a quella confermata.
+let modalSession = 0;
 function outcomeTarget() {
-  return {deliveryId: currentDeliveryId, routeId: currentRoute};
+  return {deliveryId: currentDeliveryId, routeId: currentRoute, session: modalSession};
+}
+// Chiude la finestra solo se è ancora quella dell'esito confermato: se nel frattempo l'autista
+// ha aperto un'altra fermata, la sua finestra (e la bozza che sta scrivendo) resta aperta.
+function closeOutcomeModal(target) {
+  if(target.session === modalSession) closeModal();
 }
 const NOTE_MAX = 500;
 function noteTooLong(text) {
@@ -1144,6 +1155,7 @@ function openDone(id) {
   document.getElementById('tempoGrid').innerHTML = opts.map(t =>
     `<button class="tempo-btn" onclick="selectTempo(${t},this)">${t<60?t+' min':t===60?'1 ora':t+' min'}</button>`
   ).join('');
+  modalSession++;
   document.getElementById('modalDone').classList.remove('hidden');
 }
 function selectTempo(val, btn) {
@@ -1174,7 +1186,7 @@ async function confirmDone() {
   try {
     Object.assign(payload, await podPhotoPayload(!!currentRouteData?.settings?.delivery_photo_required, currentRouteData));
     const result = await submitOutcome('complete', target, payload);
-    closeModal(); showOutcomeNow('complete', payload, result, target); await loadExecution();
+    closeOutcomeModal(target); showOutcomeNow('complete', payload, result, target); await loadExecution();
   } catch(e) { driverNotice(e.message); }
 }
 
@@ -1189,6 +1201,7 @@ function openMissed(id) {
   document.getElementById('motivoList').innerHTML = Object.entries(motivi).map(([k,v]) =>
     `<button class="motivo-btn" onclick="selectMotivo('${k}',this)">${v}</button>`
   ).join('');
+  modalSession++;
   document.getElementById('modalMissed').classList.remove('hidden');
 }
 function selectMotivo(val, btn) {
@@ -1204,7 +1217,7 @@ async function confirmMissed() {
   try {
     const body = {motivo:selectedMotivo, note:document.getElementById('noteMissed').value, scritta_il:new Date().toISOString()};
     const result = await submitOutcome('missed', target, body);
-    closeModal(); showOutcomeNow('missed', body, result, target); await loadExecution();
+    closeOutcomeModal(target); showOutcomeNow('missed', body, result, target); await loadExecution();
   } catch(e) { driverNotice(e.message); }
 }
 
@@ -1215,6 +1228,7 @@ function openNote(id) {
   currentDeliveryId = id;
   const c = currentRouteData?.consegne?.find(x => x.id === id);
   document.getElementById('noteText').value = c?.note_operatore || '';
+  modalSession++;
   document.getElementById('modalNote').classList.remove('hidden');
 }
 async function confirmNote() {
@@ -1223,7 +1237,7 @@ async function confirmNote() {
   try {
     const body = {note:document.getElementById('noteText').value, scritta_il:new Date().toISOString()};
     const result = await submitOutcome('note', target, body);
-    closeModal(); showOutcomeNow('note', body, result, target); await loadExecution();
+    closeOutcomeModal(target); showOutcomeNow('note', body, result, target); await loadExecution();
   } catch(e) { driverNotice(e.message); }
 }
 
