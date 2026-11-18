@@ -5,6 +5,9 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Termini §6 e home: il piano si acquista dalla pagina Piani con carta tramite Stripe (rinnovo mensile, disdetta a fine
+  periodo, conguaglio per il piano superiore, piano inferiore dal rinnovo, 7 giorni di tolleranza). Da pubblicare insieme
+  all'attivazione di `BILLING_MODE=live`.
 - Pagamenti reali con Stripe: nuova modalità `BILLING_MODE=live`, aperta a tutte le aziende. Accetta solo chiavi e oggetti
   Stripe reali, non mescola mai clienti della sandbox (un account con cliente di prova ne riceve uno nuovo al primo acquisto)
   e conta i pagamenti negli incassi reali. Il checkout chiede indirizzo e partita IVA. All'avvio il server si rifiuta di

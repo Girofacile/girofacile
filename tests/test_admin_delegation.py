@@ -125,9 +125,12 @@ def test_terms_prices_match_plan_catalog():
         assert f"<td>{plan['name']}</td><td>{plan['price_eur']} € al mese</td>" in terms
     assert 'IVA' not in terms.split('<h2>5.')[1].split('<h2>7.')[0]
     payments = terms.split('<h2>6.')[1].split('<h2>7.')[0]
-    # Solo ciò che il servizio offre davvero: attivazione su richiesta, nessun metodo inventato.
-    assert 'info@girofacile.it' in payments
-    assert not any(name in payments for name in ('PayPal', 'Klarna', 'Apple Pay'))
+    # Solo ciò che il servizio offre davvero: carta tramite Stripe, tolleranza uguale al codice, nessun metodo inventato.
+    from app.services.plan_catalog import GRACE_DAYS
+    assert 'carta tramite Stripe' in payments and f'disponibile per {GRACE_DAYS} giorni' in payments
+    assert not any(name in payments for name in ('PayPal', 'Klarna', 'Apple Pay', 'info@girofacile.it'))
+    landing = (Path(__file__).resolve().parents[1] / 'static/landing/index.html').read_text(encoding='utf-8')
+    assert 'scrivici a <a href="mailto:info@girofacile.it">' not in landing and 'Ci scrivi a info@' not in landing
 
 
 @pytest.mark.parametrize('value', ['false', 'true', 'False', '0', '1', 1, 0, None, [], {}])
