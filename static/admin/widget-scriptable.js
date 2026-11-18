@@ -5,12 +5,17 @@
 const GF_URL = "__GF_URL__";
 const GF_KEY = "__GF_KEY__";
 
+// Colori adattivi di iOS, risolti dal sistema anche quando cambia il tema.
+const adaptive = (light, dark) => Color.dynamic(new Color(light), new Color(dark));
 const C = {
-  bg: new Color("f4f7fd"), white: Color.white(), blue: new Color("1665ff"),
-  ink: new Color("16213a"), muted: new Color("61718c"), soft: new Color("e8efff"),
-  green: new Color("127a52"), greenSoft: new Color("e6f4ed"),
-  danger: new Color("b33448"), dangerSoft: new Color("fdecef"), warning: new Color("9a6409"),
-  onBlue: new Color("e3edff"),
+  bg: adaptive("f2f2f7", "1c1c1e"),
+  surface: adaptive("ffffff", "2c2c2e"),
+  blue: adaptive("007aff", "64a8ff"),
+  ink: adaptive("1c1c1e", "f5f5f7"), muted: adaptive("636366", "aeaeb2"),
+  soft: adaptive("e8f0ff", "23334d"),
+  green: adaptive("248a3d", "32d74b"),
+  danger: adaptive("c93436", "ff6961"), dangerSoft: adaptive("fff0ef", "462629"),
+  warning: adaptive("946200", "ffd60a"),
 };
 const family = config.widgetFamily || "large";
 const small = family === "small";
@@ -18,12 +23,12 @@ const medium = family === "medium";
 const screen = Device.screenSize();
 const shortSide = Math.min(screen.width, screen.height);
 const compact = shortSide <= 375;
-const padding = small || medium ? 10 : compact ? 12 : 14;
+const padding = compact || medium ? 10 : 12;
 // Margine prudente rispetto alla larghezza dei widget iPhone, anche con schermo ruotato.
 const wideWidth = Math.min(380, shortSide - (shortSide > 400 ? 72 : shortSide >= 375 ? 60 : 48));
 const smallWidth = shortSide < 350 ? 136 : compact ? 146 : 156;
 const contentWidth = (small ? smallWidth : wideWidth) - padding * 2;
-const gap = small || medium ? 6 : 8;
+const gap = 6;
 
 async function load() {
   const req = new Request(GF_URL + "/api/widget/stats");
@@ -73,7 +78,7 @@ function card(parent, width, height, background, inset = 8) {
   box.layoutVertically();
   box.size = new Size(width, height);
   box.backgroundColor = background;
-  box.cornerRadius = small || medium ? 11 : 14;
+  box.cornerRadius = 12;
   box.setPadding(inset, inset, inset, inset);
   return box;
 }
@@ -83,31 +88,24 @@ function line(parent) {
   return stack;
 }
 function space(widget, flexible = false) {
-  widget.addSpacer(medium ? 6 : compact ? 7 : 9);
+  widget.addSpacer(compact ? 4 : 5);
   if (flexible) widget.addSpacer();
 }
 function header(widget) {
   const row = line(widget);
-  if (!small && !medium) {
-    icon(row, "location.fill", 15, C.blue);
-    row.addSpacer(5);
-  }
-  text(row, "GiroFacile", small || medium ? 13 : 16, C.blue, "bold");
+  icon(row, "location.fill", small || medium ? 11 : 13, C.blue);
+  row.addSpacer(5);
+  text(row, "GiroFacile", small || medium ? 12 : 14, C.ink, "bold");
   row.addSpacer();
-  text(row, "ADMIN", small ? 8 : 9, C.muted);
 }
 function hero(parent, value, label, symbol, width, subtitle, primary) {
-  const box = card(parent, width, compact ? 76 : 84, primary ? C.blue : C.soft, compact ? 7 : 8);
+  const box = card(parent, width, compact ? 56 : 62, primary ? C.soft : C.surface, 4);
   const top = line(box);
-  icon(top, symbol, 11, primary ? C.onBlue : C.blue);
+  icon(top, symbol, 10, primary ? C.blue : C.muted);
   top.addSpacer(4);
-  text(top, label, 10, primary ? C.onBlue : C.muted);
-  box.addSpacer(1);
-  text(box, count(value), compact ? 28 : 32, primary ? C.white : C.ink, "bold");
-  if (subtitle) {
-    box.addSpacer(1);
-    text(box, subtitle, 9, primary ? C.onBlue : C.muted);
-  }
+  text(top, label, 10, primary ? C.blue : C.muted);
+  text(box, count(value), compact ? 22 : 25, primary ? C.blue : C.ink, "bold");
+  if (subtitle) text(box, subtitle, compact ? 8 : 9, C.muted);
 }
 function metricRow(widget, items, dense = false) {
   const row = widget.addStack();
@@ -115,13 +113,13 @@ function metricRow(widget, items, dense = false) {
   items.forEach((item, index) => {
     if (index) row.addSpacer(gap);
     const primary = !!item.primary;
-    const box = card(row, width, dense ? 44 : compact ? 50 : 56,
-      primary ? C.blue : item.alert ? C.dangerSoft : item.green ? C.greenSoft : C.white,
-      dense ? 4 : compact ? 6 : 7);
-    text(box, item.label, dense ? 9 : 10, primary ? C.onBlue : C.muted);
-    box.addSpacer(dense ? 1 : 2);
-    text(box, count(item.value), dense ? 19 : compact ? 20 : 22,
-      primary ? C.white : item.alert ? C.danger : item.green ? C.green : C.ink, "bold");
+    const box = card(row, width, dense ? 43 : compact ? 36 : 42,
+      primary ? C.soft : item.alert ? C.dangerSoft : C.surface,
+      dense || compact ? 3 : 4);
+    text(box, item.label, dense || compact ? 8 : 9, C.muted);
+    box.addSpacer(1);
+    text(box, count(item.value), dense || compact ? 17 : 20,
+      primary ? C.blue : item.alert ? C.danger : item.green ? C.green : C.ink, "bold");
   });
 }
 function footer(widget, timestamp) {
@@ -145,9 +143,9 @@ function footer(widget, timestamp) {
 }
 function renderSmall(widget, d) {
   widget.addSpacer(7);
-  const box = card(widget, contentWidth, compact ? 56 : 60, C.blue, 7);
-  text(box, "Ticket aperti", 10, C.onBlue);
-  text(box, count(d.ticket_aperti), 24, C.white, "bold");
+  const box = card(widget, contentWidth, compact ? 48 : 52, C.soft, 6);
+  text(box, "Ticket aperti", 10, C.muted);
+  text(box, count(d.ticket_aperti), 26, C.blue, "bold");
   widget.addSpacer();
   const companies = line(widget);
   text(companies, "Aziende", 11, C.muted);
@@ -178,7 +176,7 @@ function renderLarge(widget, d) {
   hero(heroes, d.ticket_aperti, "Ticket aperti", "tray", width,
     "Ticket oggi · " + count(d.ticket_nuovi_oggi), true);
   heroes.addSpacer(gap);
-  hero(heroes, d.aziende_registrate, "Aziende", "building.2", width, "Registrate su GiroFacile", false);
+  hero(heroes, d.aziende_registrate, "Aziende", "building.2", width, "Registrate", false);
   space(widget, true);
   metricRow(widget, [
     { value: d.aziende_in_prova, label: "In prova" },
@@ -193,14 +191,14 @@ function renderLarge(widget, d) {
   ]);
   space(widget, true);
   const revenue = widget.addStack();
-  revenue.size = new Size(contentWidth, compact ? 38 : 42);
-  revenue.backgroundColor = C.soft;
+  revenue.size = new Size(contentWidth, compact ? 26 : 30);
+  revenue.backgroundColor = C.surface;
   revenue.cornerRadius = 12;
-  revenue.setPadding(6, 10, 6, 10);
+  revenue.setPadding(4, 8, 4, 8);
   revenue.centerAlignContent();
-  text(revenue, "MRR stimato", 11, C.muted);
+  text(revenue, "MRR stimato", 10, C.muted);
   revenue.addSpacer();
-  text(revenue, euros(d.mrr_stimato), compact ? 21 : 23, C.blue, "bold");
+  text(revenue, euros(d.mrr_stimato), compact ? 18 : 20, C.ink, "bold");
   space(widget, true);
 }
 function renderError(widget, error) {
@@ -235,5 +233,7 @@ try {
 // La frequenza effettiva è decisa da iOS, anche quando il widget è aggiornato.
 widget.refreshAfterDate = new Date(Date.now() + 15 * 60 * 1000);
 if (config.runsInWidget) Script.setWidget(widget);
+else if (small) await widget.presentSmall();
+else if (medium) await widget.presentMedium();
 else await widget.presentLarge();
 Script.complete();

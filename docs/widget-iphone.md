@@ -10,8 +10,9 @@ La resa dei font e delle icone va verificata in Scriptable su iPhone.
 
 ## Aspetto e formati
 
-Il tema chiaro usa il blu GiroFacile, riquadri arrotondati e numeri con contrasto
-e dimensioni maggiori per gli indicatori principali.
+Il widget segue automaticamente il tema chiaro o scuro di iOS. Usa caratteri di sistema,
+numeri arrotondati, superfici neutre e accenti blu. I riquadri compatti distribuiscono gli
+indicatori nei tre formati. L’anteprima in Scriptable rispetta il formato selezionato.
 
 - **Grande:** ticket aperti e nuovi di oggi, aziende registrate, in prova,
   abbonate e nuove nel mese, giri di oggi e in corso, errori delle ultime 24 ore

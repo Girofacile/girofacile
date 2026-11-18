@@ -5,6 +5,8 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Widget iPhone: tema chiaro/scuro automatico, superfici in stile iOS, spaziature compatte e anteprima del formato selezionato.
+
 - Cambio piano con pagina di pagamento chiusa: invece dell'errore «Completa o annulla prima il pagamento» GiroFacile
   propone di completare il pagamento o di annullare il cambio in sospeso; anche «Annulla checkout aperto» lo annulla.
 - Funzioni non incluse nel piano (Agenti, Report, Chat autisti, integrazioni, AI): al posto della pagina bloccata si apre

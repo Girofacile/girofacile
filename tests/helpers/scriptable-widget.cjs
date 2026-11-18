@@ -28,7 +28,7 @@ function texts(root) {
 
 async function runWidget({
   family = 'large', width = 390, height = 844, data = fixture, status = 200,
-  networkError = null, runsInWidget = true, now = '2026-11-12T12:11:00Z',
+  networkError = null, runsInWidget = true, dark = false, now = '2026-11-12T12:11:00Z',
   url = 'https://girofacile.example', key = 'gfw_test_only_not_a_real_key', source,
 } = {}) {
   const widgets = [];
@@ -63,6 +63,7 @@ async function runWidget({
   }
   class Color {
     constructor(hex, alpha = 1) { this.hex = '#' + hex.replace(/^#/, ''); this.alpha = alpha; }
+    static dynamic(light, night) { return dark ? night : light; }
     static white() { return new Color('ffffff'); }
     static black() { return new Color('000000'); }
   }

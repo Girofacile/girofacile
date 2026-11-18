@@ -11,7 +11,7 @@ test('large Scriptable widget preserves all ten real indicators', async () => {
   assert.ok(content.includes('Ticket oggi · 2'));
   for (const value of [7, 103, 11, 37, 5, 24, 8, 3]) assert.ok(content.includes(String(value)), String(value));
   assert.ok(content.some(value => /^1\.?184,50€$/.test(value.replace(/\s/g, ''))));
-  assert.equal(widget.backgroundColor.hex, '#f4f7fd');
+  assert.equal(widget.backgroundColor.hex, '#f2f2f7');
   assert.equal(complete, true);
 });
 
@@ -89,4 +89,20 @@ test('all supported phone widths create finite positive card sizes and preview c
   const preview = await runWidget({runsInWidget: false});
   assert.deepEqual(preview.presented, ['large']);
   assert.equal(preview.complete, true);
+});
+
+test('dark appearance keeps every indicator readable on native grouped surfaces', async () => {
+  const light = await runWidget();
+  const dark = await runWidget({dark: true});
+  assert.deepEqual(texts(dark.widget), texts(light.widget));
+  assert.equal(dark.widget.backgroundColor.hex, '#1c1c1e');
+  const darkText = walk(dark.widget).filter(node => node.type === 'text');
+  assert.ok(darkText.every(node => ['#f5f5f7', '#aeaeb2', '#64a8ff', '#32d74b', '#ff6961', '#ffd60a'].includes(node.textColor.hex)));
+});
+
+test('in-app previews match the selected widget family', async () => {
+  for (const family of ['small', 'medium', 'large']) {
+    const result = await runWidget({family, runsInWidget: false});
+    assert.deepEqual(result.presented, [family]);
+  }
 });
