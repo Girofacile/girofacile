@@ -1,0 +1,10 @@
+[Unit]
+Description=Promemoria GiroFacile su prova e abbonamento (dentro il container dell'app)
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/girofacile
+# Ogni avviso parte una sola volta per azienda: un nuovo giro nello stesso giorno non ripete gli invii.
+ExecStart=/usr/bin/docker compose exec -T girofacile python scripts/billing_reminders.py --send

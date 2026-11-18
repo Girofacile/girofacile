@@ -5,6 +5,9 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Promemoria via email ogni giorno alle 9:00 (timer `girofacile-reminders`): fine prova entro 3 giorni e a scadenza,
+  pagamento non riuscito, disdetta. Con i pagamenti reali invitano ad acquistare dalla pagina Piani; niente avvisi per
+  prove scadute da più di 7 giorni, aziende sospese o amministratore; un'azienda bloccata per volta durante l'invio.
 - Termini §6 e home: il piano si acquista dalla pagina Piani con carta tramite Stripe (rinnovo mensile, disdetta a fine
   periodo, conguaglio per il piano superiore, piano inferiore dal rinnovo, 7 giorni di tolleranza). Da pubblicare insieme
   all'attivazione di `BILLING_MODE=live`.

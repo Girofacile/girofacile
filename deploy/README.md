@@ -39,7 +39,7 @@ di partire se ne manca anche una sola.
 Installa Caddy, copia [caddy/Caddyfile](caddy/Caddyfile) in `/etc/caddy/Caddyfile`,
 sostituisci i domini e `sudo systemctl reload caddy`.
 
-## 5. Backup e pulizia cache
+## 5. Backup, pulizia cache e promemoria
 
 I servizi in [systemd](systemd/) eseguono gli script **dentro il container** con
 `docker compose exec`; se il percorso non è `/opt/girofacile` va cambiato `WorkingDirectory`.
@@ -47,9 +47,13 @@ I servizi in [systemd](systemd/) eseguono gli script **dentro il container** con
 ```bash
 sudo cp deploy/systemd/girofacile-*.service deploy/systemd/girofacile-*.timer /etc/systemd/system/
 sudo systemctl daemon-reload
-sudo systemctl enable --now girofacile-backup.timer girofacile-cache-cleanup.timer
+sudo systemctl enable --now girofacile-backup.timer girofacile-cache-cleanup.timer girofacile-reminders.timer
 sudo systemctl start girofacile-backup.service && ls -l backups/   # prova subito un backup
 ```
+
+I promemoria (fine prova, pagamento non riuscito, disdetta) partono ogni giorno alle 9:00 e richiedono SMTP
+funzionante. Per vedere quanti ne partirebbero senza inviarli:
+`docker compose exec -T girofacile python scripts/billing_reminders.py`.
 
 I dump restano sul disco del server: copiali anche fuori (snapshot del fornitore o archivio
 remoto) e prova un **ripristino** su un database vuoto prima di aprire alle aziende.

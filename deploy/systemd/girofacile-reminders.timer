@@ -1,0 +1,10 @@
+[Unit]
+Description=Promemoria giornalieri GiroFacile (fine prova, pagamenti, disdette)
+
+[Timer]
+OnCalendar=*-*-* 09:00:00
+Persistent=true
+Unit=girofacile-reminders.service
+
+[Install]
+WantedBy=timers.target

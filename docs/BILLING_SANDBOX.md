@@ -92,8 +92,9 @@ Non eseguire migrazioni o test sui dump di produzione per il collaudo.
 
 `python scripts/billing_reminders.py` mostra soltanto i conteggi.
 Con `--send` invia promemoria di fine prova (entro 3 giorni e alla scadenza),
-pagamento fallito e disdetta. Programmare giornalmente il comando sul server
-dopo aver verificato SMTP. Ogni avviso riuscito è registrato per evitare ripetizioni;
+pagamento fallito e disdetta. Sul server lo avvia ogni giorno alle 9:00 `deploy/systemd/girofacile-reminders.timer`.
+Gli avvisi di fine prova partono solo per prove scadute da non più di 7 giorni; aziende sospese e
+amministratore non ricevono avvisi. In modalità live il testo invita ad acquistare dalla pagina Piani. Ogni avviso riuscito è registrato per evitare ripetizioni;
 un crash fra invio SMTP e commit può causare una ripetizione al successivo tentativo.
 Coordinare con le email Stripe per evitare avvisi equivalenti duplicati.
 
