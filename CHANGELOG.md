@@ -5,6 +5,11 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Cambio piano con pagina di pagamento chiusa: invece dell'errore «Completa o annulla prima il pagamento» GiroFacile
+  propone di completare il pagamento o di annullare il cambio in sospeso; anche «Annulla checkout aperto» lo annulla.
+- Funzioni non incluse nel piano (Agenti, Report, Chat autisti, integrazioni, AI): al posto della pagina bloccata si apre
+  un pop-up con i piani che le includono (Business consigliato, o solo Pro) e «Passa a …» porta alla pagina Piani; si resta
+  nella pagina in cui si era. Agenti compare nel menu solo se la gestione agenti è accesa e inclusa nel piano.
 - Pagamenti reali: un account con abbonamento della sandbox non resta bloccato su «Nessun abbonamento collegato»;
   la pagina Piani apre un acquisto nuovo e «Aggiorna stato» non legge più l'abbonamento di prova.
 - Promemoria via email ogni giorno alle 9:00 (timer `girofacile-reminders`): fine prova entro 3 giorni e a scadenza,

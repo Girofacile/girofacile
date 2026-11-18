@@ -342,11 +342,14 @@ def main():
                         currentSessionUser={...currentSessionUser,plan:'starter',limits:{...currentSessionUser.limits,has_reports:false}};
                         showTab('report');
                     }""")
-                    page.locator("#tab-report").wait_for(state="visible")
-                    locked_text = page.locator("#tab-report").inner_text()
-                    assert "Contatta il titolare" in locked_text
+                    # Funzione esclusa dal piano: pop-up senza prezzi né piani, il collaboratore non può acquistare.
+                    page.locator("#planLockModal").wait_for(state="visible")
+                    locked_text = page.locator("#planLockModal").inner_text()
+                    assert "contatta il titolare" in locked_text.lower()
                     assert "€" not in locked_text and "Business" not in locked_text and "Pro" not in locked_text, locked_text
-                    assert page.locator("#tab-report [onclick*=openUpgrade]").count() == 0
+                    assert page.locator("#planLockModal [data-plan-choice], #planLockGo").count() == 0
+                    assert page.locator("#tab-report").is_hidden()
+                    page.keyboard.press("Escape")
                     assert not any(r["path"].startswith("/api/billing/") for r in state["requests"]), state["requests"]
                     capture("operator-unavailable-feature")
 

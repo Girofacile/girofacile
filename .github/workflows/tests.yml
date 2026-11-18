@@ -55,6 +55,8 @@ jobs:
         run: python tests/check_orders_ui.py
       - name: Verify plan quotas and features on desktop and mobile
         run: python tests/check_plans_ui.py
+      - name: Funzioni non incluse nel piano (pop-up)
+        run: python tests/check_plan_lock_ui.py
       - name: Preserve subscription plan screenshots
         if: always()
         uses: actions/upload-artifact@v4

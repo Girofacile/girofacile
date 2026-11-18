@@ -320,6 +320,37 @@ def downgrade_excess(db, user, plan):
     return result
 
 
+def pending_change(sub):
+    """Cambio piano in attesa di pagamento (Stripe lo tiene 23 ore): piano richiesto e pagina per pagarlo."""
+    pending = sub.get("pending_update")
+    if not pending:
+        return None
+    items = pending.get("subscription_items") or []
+    price_id = object_id(items[0].get("price")) if items else None
+    plan = next((key for key, info in PLAN_PRICES.items() if price_id and info["stripe_price_id"] == price_id), None)
+    invoice = sub.get("latest_invoice") if isinstance(sub.get("latest_invoice"), dict) else {}
+    payable = invoice.get("status") == "open" and invoice.get("hosted_invoice_url")
+    return {"plan": plan, "plan_name": PLAN_LIMITS[plan]["name"] if plan else None,
+            "payment_url": invoice.get("hosted_invoice_url") if payable else None,
+            "amount_due_cents": invoice.get("amount_due") if payable else None,
+            "invoice_id": invoice.get("id") if invoice.get("status") == "open" else None,
+            "expires_at": pending.get("expires_at")}
+
+
+def discard_pending_change(stripe, user):
+    """Annulla il cambio in attesa: la fattura del conguaglio viene annullata e Stripe scarta il cambio."""
+    sub = retrieve_subscription(stripe, user)
+    change = pending_change(sub)
+    if not change:
+        return False
+    if change["invoice_id"]:
+        stripe.Invoice.void_invoice(change["invoice_id"])
+    sub = retrieve_subscription(stripe, user)
+    if sub.get("pending_update"):
+        raise HTTPException(409, "Il cambio in attesa non si è annullato: riprova tra qualche minuto o scrivi all'assistenza")
+    return True
+
+
 def change_preview(db, user, plan):
     stripe = stripe_client(user)
     user = lock_user(db, user)
@@ -329,7 +360,11 @@ def change_preview(db, user, plan):
     # Stripe is the authority: a change paid outside GiroFacile must be visible before comparing plans.
     sync_subscription(db, user, sub)
     db.commit()
-    if sub.get("status") != "active" or sub.get("pending_update") or sub.get("schedule"):
+    change = pending_change(sub)
+    if change:
+        # Pagina del pagamento chiusa: si può riprendere il pagamento o annullare il cambio.
+        return {"direction": "pending", **change, "subscription": sub}
+    if sub.get("status") != "active" or sub.get("schedule"):
         raise HTTPException(409, "Completa o annulla prima il pagamento/cambio piano pendente")
     if plan == current:
         raise HTTPException(409, f"Il piano {PLAN_LIMITS[current]['name']} è già attivo sul tuo abbonamento: stato aggiornato")

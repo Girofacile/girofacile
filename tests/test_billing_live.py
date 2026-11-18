@@ -179,3 +179,57 @@ def test_sandbox_subscription_does_not_block_live_purchase(billing_env, live, mo
     assert bought.status_code == 200 and bought.json()['mode'] == 'live'
     db.refresh(user)
     assert (user.stripe_customer_id, user.billing_source) == ('cus_live', 'stripe_live')
+
+
+def pending_subscription(user, state):
+    from datetime import datetime, timedelta
+    end = int((datetime.now() + timedelta(days=30)).timestamp())
+    sub = {'id': 'sub_live', 'customer': user.stripe_customer_id, 'livemode': True, 'status': 'active',
+           'collection_method': 'charge_automatically', 'cancel_at_period_end': True,
+           'items': {'data': [{'id': 'si_live', 'quantity': 1, 'price': {'id': 'price_starter'}, 'current_period_end': end}]},
+           'latest_invoice': {'id': 'in_change', 'status': state['invoice'], 'amount_due': 2999,
+                              'billing_reason': 'subscription_update', 'hosted_invoice_url': 'https://invoice.stripe.com/i/change'}}
+    if state['pending']:
+        sub['pending_update'] = {'expires_at': 1795122331, 'subscription_items': [{'id': 'si_live', 'price': {'id': 'price_business'}}]}
+    return sub
+
+
+def test_closed_payment_page_of_a_plan_change_can_be_resumed_or_cancelled(billing_env, live, monkeypatch):
+    """Cambio a Business avviato, pagina di pagamento chiusa: prima il portale restava bloccato."""
+    from app.services import billing
+    client, db, user, *_ = billing_env
+    configure_prices(monkeypatch)
+    user.plan, user.plan_status = 'starter', 'active'
+    user.stripe_customer_id, user.stripe_subscription_id, user.billing_source = 'cus_live', 'sub_live', 'stripe_live'
+    db.commit()
+    state, voided = {'pending': True, 'invoice': 'open', 'void_discards': True}, []
+
+    def void_invoice(invoice_id):
+        voided.append(invoice_id)
+        state['invoice'] = 'void'
+        state['pending'] = not state['void_discards']
+
+    fake = SimpleNamespace(
+        Subscription=SimpleNamespace(retrieve=lambda *a, **k: pending_subscription(user, state)),
+        Invoice=SimpleNamespace(void_invoice=void_invoice),
+        checkout=SimpleNamespace(Session=SimpleNamespace(retrieve=lambda id: {}, expire=lambda id: None)))
+    monkeypatch.setattr(billing, 'stripe_client', lambda *a: fake)
+    monkeypatch.setattr(billing, 'price_for', lambda stripe, plan: 'price_' + plan)
+
+    preview = client.post('/api/billing/change-preview', json={'plan': 'business'})
+    assert preview.status_code == 200, preview.text
+    assert preview.json() | {} == {'direction': 'pending', 'plan': 'business', 'plan_name': 'Business',
+                                   'payment_url': 'https://invoice.stripe.com/i/change', 'amount_due_cents': 2999,
+                                   'invoice_id': 'in_change', 'expires_at': 1795122331}
+    db.refresh(user)
+    assert user.plan == 'starter'  # il cambio non pagato non dà il nuovo piano
+
+    cancelled = client.post('/api/billing/cancel-checkout', json={})
+    assert cancelled.status_code == 200 and cancelled.json()['message'] == 'Cambio piano in attesa annullato'
+    assert voided == ['in_change']
+    assert client.post('/api/billing/cancel-checkout', json={}).json()['message'] == 'Nessun pagamento in sospeso'
+
+    # Se Stripe non scarta il cambio, si dice chiaramente invece di far credere che sia annullato.
+    state.update(pending=True, invoice='open', void_discards=False)
+    stuck = client.post('/api/billing/cancel-checkout', json={})
+    assert stuck.status_code == 409 and 'non si è annullato' in stuck.json()['detail']

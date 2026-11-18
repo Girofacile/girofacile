@@ -200,6 +200,8 @@ function showTab(name){
   if(name==='integrations') name='dashboard';
   if(name !== "company" && typeof blockCompanyNavigationForUnsavedChanges === "function" && blockCompanyNavigationForUnsavedChanges()) return;
   if(blockOperationalTabV49(name)) return;
+  // Sezione non inclusa nel piano: pop-up con i piani che la includono, si resta nella pagina attuale.
+  if(openPlanLockForTab(name)) return;
   if(name === "agenti" && !agentsFeatureEnabled()) name = "settings";
   rememberTab(name);
   if(showLockedOrProceed(name)) return;

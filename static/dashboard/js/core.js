@@ -129,59 +129,122 @@ function featureLockedForTab(name){
   return limits[cfg.feature] ? null : cfg;
 }
 
-function premiumPlanCard(plan, title, price, badge, features){
-  return `<div class="gf-card gf-stack">
-    <div><span class="gf-badge" data-status="info">${esc(badge)}</span></div>
-    <h3 class="gf-subtitle">${esc(title)}</h3>
-    <p><strong>${esc(price)}</strong> <span class="gf-muted">/mese</span></p>
-    <div class="gf-stack" data-gap="sm">${features.map(f=>`<span>✓ ${esc(f)}</span>`).join("")}</div>
-    <div><button type="button" class="gf-button" data-variant="primary" onclick="openUpgradePanelFor('${plan}')">Passa a ${esc(title)}</button></div>
-  </div>`;
+// Funzione non inclusa nel piano: si apre un pop-up con i piani che la includono (variante C),
+// la pagina in cui ci si trova resta quella.
+const GF_PLAN_LOCK_FEATURES = {
+  has_agents: {label:"Agenti commerciali e portale", name:"Agenti", what:"Assegna i clienti ai tuoi venditori: ognuno ha il suo portale con clienti, ordini e risultati."},
+  has_reports: {label:"Report avanzati", name:"Report", what:"Analizza giri, consegne, chilometri e costi per periodo, mezzo e autista."},
+  has_driver_chat: {label:"Chat autisti", name:"Chat autisti", what:"Scrivi agli autisti durante il giro e ricevi le risposte in tempo reale."},
+  has_delivery_signature: {label:"Firma, foto e prova di consegna", name:"Firma e foto alla consegna", what:"Il cliente firma sul telefono dell’autista; foto e prova di consegna in PDF restano allegate al giro."},
+  has_order_integrations: {label:"API, Shopify e WooCommerce", name:"API, Shopify e WooCommerce", what:"Gli ordini arrivano da soli dal tuo negozio o gestionale, senza importare file."},
+  has_ai: {label:"Integrazione AI", name:"Integrazione AI", what:"L’assistente spiega i giri, risponde alle domande sui dati e prepara i riepiloghi."}
+};
+let gfPlanLockChoice = null;
+
+function gfPlanName(plan){ return window.GF_PLANS?.[plan]?.name || plan.charAt(0).toUpperCase() + plan.slice(1); }
+
+// Vantaggi di un piano rispetto a quello attuale; Pro, se c'è anche Business, si riassume da Business in su.
+function gfThousands(n){ return String(Math.round(Number(n) || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, "."); }
+
+function gfPlanLockHighlights(plan, options, current, feature){
+  const P = window.GF_PLANS || {};
+  const included = key => typeof GF_PLAN_PAGE_FEATURES === "undefined" ? [] :
+    GF_PLAN_PAGE_FEATURES.filter(([, inc]) => P[key] && inc(P[key])).map(([label]) => label);
+  const base = options.indexOf(plan) > 0 ? options[options.indexOf(plan) - 1] : current;
+  const known = new Set(included(base));
+  // La funzione cliccata per prima, poi le altre che il piano aggiunge.
+  const wanted = GF_PLAN_LOCK_FEATURES[feature]?.label;
+  const gained = included(plan).filter(label => !known.has(label)).sort((a, b) => (b === wanted) - (a === wanted));
+  if(base === current) return gained.slice(0, 3);
+  const p = P[plan] || {};
+  return [`Tutto il piano ${gfPlanName(base)}`, ...gained.slice(0, 1),
+    `${gfThousands(p.max_orders_per_month)} ordini e ${gfThousands(p.max_routes_per_month)} giri al mese`];
 }
 
-function renderFeatureLockedTab(name, cfg){
-  const tab = document.getElementById("tab-" + name);
-  if(!tab || !cfg) return;
-  if(window.GFCompanyAccess?.isCollaborator()){
-    tab.innerHTML = '<section class="gf-panel"><div class="gf-panel__body gf-stack"><div><span class="gf-badge" data-status="warning">🔒 Non disponibile</span></div><h2 class="gf-subtitle">'+esc(cfg.title)+'</h2><p class="gf-muted">Funzionalità non disponibile per questa azienda. Contatta il titolare.</p></div></section>';
-    return;
+function ensurePlanLockModal(){
+  let wrap = document.getElementById("planLockModal");
+  if(wrap) return wrap;
+  wrap = document.createElement("div");
+  wrap.id = "planLockModal";
+  wrap.className = "gf-overlay hidden";
+  wrap.innerHTML = '<div class="gf-modal" data-size="lg" role="dialog" aria-modal="true" aria-labelledby="planLockTitle" id="planLockDialog"></div>';
+  wrap.addEventListener("click", e => { if(e.target === wrap) closePlanLockModal(); });
+  // Esc chiude anche quando il fuoco non è nel pop-up (per esempio dopo il clic su una scheda).
+  document.addEventListener("keydown", e => { if(e.key === "Escape") closePlanLockModal(); });
+  document.body.appendChild(wrap);
+  return wrap;
+}
+
+function closePlanLockModal(){
+  const wrap = document.getElementById("planLockModal");
+  if(wrap && !wrap.classList.contains("hidden")){
+    wrap.classList.add("hidden");
+    wrap._returnFocus?.focus?.();
   }
-  tab.innerHTML = `<div class="gf-grid" data-cols="main-side">
-    <section class="gf-panel">
-      <div class="gf-panel__body gf-stack">
-        <div><span class="gf-badge" data-status="warning">🔒 Funzionalità premium</span></div>
-        <h2 class="gf-subtitle">${esc(cfg.title)}</h2>
-        <p class="gf-muted">${esc(cfg.text)} Effettua l'upgrade al piano successivo per poter usufruire di questa sezione.</p>
-        <div><button type="button" class="gf-button" data-variant="primary" onclick="openUpgradePanelFor('business')">Effettua upgrade</button></div>
-      </div>
-    </section>
-    <aside class="gf-stack">
-      <p class="gf-kicker">Piani consigliati</p>
-      ${premiumPlanCard('business','Business',`€${window.GF_PLANS.business.price_eur}`,'Consigliato',[
-        'Agenti commerciali',
-        'Report e analisi finali',
-        'Chat autisti',
-        'Export CSV'
-      ])}
-      ${premiumPlanCard('pro','Pro',`€${window.GF_PLANS.pro.price_eur}`,'Completo',[
-        `${window.GF_PLANS.pro.max_orders_per_month} ordini/mese · ${window.GF_PLANS.pro.max_customers} clienti`,
-        'Tutte le funzioni Business',
-        `${window.GF_PLANS.pro.max_vehicles} mezzi · ${window.GF_PLANS.pro.max_drivers} autisti`,
-        'Integrazione AI'
-      ])}
-    </aside>
-  </div>`;
 }
 
-function showLockedOrProceed(name){
-  const locked = featureLockedForTab(name);
-  if(!locked) return false;
-  document.querySelectorAll(".tab").forEach(x=>x.classList.add("hidden"));
-  const tab = document.getElementById("tab-" + name);
-  if(tab) tab.classList.remove("hidden");
-  if(typeof setActiveNavItem === "function") setActiveNavItem(name);
-  renderFeatureLockedTab(name, locked);
+function pickPlanLockOption(plan){
+  gfPlanLockChoice = plan;
+  document.querySelectorAll("#planLockDialog [data-plan-choice]").forEach(card => {
+    if(card.dataset.planChoice === plan) card.setAttribute("data-variant", "info"); else card.removeAttribute("data-variant");
+  });
+  const go = document.getElementById("planLockGo");
+  if(go) go.textContent = `Passa a ${gfPlanName(plan)}`;
+}
+
+function confirmPlanLockUpgrade(){
+  const plan = gfPlanLockChoice;
+  closePlanLockModal();
+  if(plan) openUpgradePanelFor(plan);
+}
+
+// feature: chiave del piano (es. "has_reports"). Restituisce true se il pop-up è stato aperto.
+function openPlanLockModal(feature){
+  const info = GF_PLAN_LOCK_FEATURES[feature] || {name:"Questa funzione", what:""};
+  const P = window.GF_PLANS || {};
+  const current = (typeof _currentPlan !== "undefined" && _currentPlan) || currentSessionUser?.plan || "starter";
+  const currentPrice = Number(P[current]?.price_eur || 0);
+  const options = Object.keys(P).filter(key => P[key]?.[feature] === true && key !== current && Number(P[key].price_eur || 0) > currentPrice)
+    .sort((a, b) => Number(P[a].price_eur) - Number(P[b].price_eur));
+  const collaborator = !!window.GFCompanyAccess?.isCollaborator();
+  const wrap = ensurePlanLockModal();
+  const dialog = document.getElementById("planLockDialog");
+  const close = '<button type="button" class="gf-icon-button" aria-label="Chiudi" onclick="closePlanLockModal()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12 M18 6L6 18"/></svg></button>';
+  const kicker = collaborator ? "Non disponibile per questa azienda" : `Non incluso nel piano ${gfPlanName(current)}`;
+  const head = `<header class="gf-modal__header"><div><p class="gf-kicker">${esc(kicker)}</p>
+      <h2 class="gf-modal__title" id="planLockTitle">${esc(info.name)}</h2></div>${close}</header>`;
+  gfPlanLockChoice = options[0] || null;
+  if(collaborator || !options.length){
+    dialog.innerHTML = `${head}<div class="gf-modal__body gf-stack" data-gap="lg"><p>${esc(info.what)}</p>
+        <p class="gf-muted">${collaborator ? "Per usarla contatta il titolare dell’azienda." : "Funzione non disponibile per questo account."}</p></div>
+      <footer class="gf-modal__footer"><button type="button" class="gf-button" data-variant="primary" onclick="closePlanLockModal()">Ho capito</button></footer>`;
+  }else{
+    const card = plan => `<label class="gf-card gf-planning-choice gf-stack" data-gap="sm" data-plan-choice="${esc(plan)}"${plan === gfPlanLockChoice ? ' data-variant="info"' : ""}>
+        <input type="radio" name="planLockPlan" class="gf-hidden" value="${esc(plan)}"${plan === gfPlanLockChoice ? " checked" : ""} onchange="pickPlanLockOption('${esc(plan)}')">
+        <span class="gf-cluster" data-justify="between"><strong class="gf-subtitle">${esc(gfPlanName(plan))}</strong>${plan === options[0] && options.length > 1 ? '<span class="gf-badge" data-status="info">Consigliato</span>' : ""}</span>
+        <span class="gf-muted">${esc(P[plan].price_eur)} € al mese</span>
+        <ul class="gf-list">${gfPlanLockHighlights(plan, options, current, feature).map(item => `<li>✓ ${esc(item)}</li>`).join("")}</ul></label>`;
+    dialog.innerHTML = `${head}<div class="gf-modal__body gf-stack" data-gap="lg"><p>${esc(info.what)}</p>
+        <p class="gf-muted">${options.length > 1 ? "La trovi in questi piani:" : "La trovi nel piano:"}</p>
+        <div class="gf-grid" data-cols="${options.length > 1 ? 2 : 1}">${options.map(card).join("")}</div></div>
+      <footer class="gf-modal__footer"><button type="button" class="gf-button" data-variant="secondary" onclick="closePlanLockModal()">Non ora</button>
+        <button type="button" class="gf-button" data-variant="primary" id="planLockGo" onclick="confirmPlanLockUpgrade()">Passa a ${esc(gfPlanName(gfPlanLockChoice))}</button></footer>`;
+  }
+  wrap._returnFocus = document.activeElement;
+  wrap.classList.remove("hidden");
+  dialog.querySelector('.gf-modal__footer .gf-button[data-variant="primary"]')?.focus();
   return true;
+}
+
+// Sezione del menu non inclusa nel piano: pop-up al posto della pagina.
+function openPlanLockForTab(name){
+  const locked = featureLockedForTab(name);
+  return locked ? openPlanLockModal(locked.feature) : false;
+}
+
+// Le funzioni delle sezioni si fermano senza disegnare nulla se la sezione non è inclusa.
+function showLockedOrProceed(name){
+  return !!featureLockedForTab(name);
 }
 
 function updatePremiumNavState(){

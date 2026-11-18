@@ -223,7 +223,7 @@ def create_checkout_session(payload: dict, db: Session = Depends(get_db), user: 
 
 @router.post("/cancel-checkout")
 def cancel_checkout(db: Session = Depends(get_db), user: User = Depends(current_user)):
-    from ..services.billing import stripe_client, assert_test, lock_user, checkout
+    from ..services.billing import stripe_client, assert_test, lock_user, checkout, has_current_subscription, discard_pending_change
     stripe = stripe_client(user)
     user = lock_user(db, user)
     if user.billing_checkout_id and user.billing_checkout_id.startswith("pending_") and user.billing_checkout_expires and user.billing_checkout_expires > utc_now():
@@ -236,7 +236,9 @@ def cancel_checkout(db: Session = Depends(get_db), user: User = Depends(current_
             stripe.checkout.Session.expire(session["id"])
     user.billing_checkout_id = user.billing_checkout_url = user.billing_checkout_expires = user.billing_checkout_plan = None
     db.commit()
-    return {"ok": True}
+    # Anche un cambio piano rimasto in attesa di pagamento si annulla da qui.
+    discarded = has_current_subscription(user) and discard_pending_change(stripe, user)
+    return {"ok": True, "message": "Cambio piano in attesa annullato" if discarded else "Nessun pagamento in sospeso"}
 
 
 @router.post("/sync")

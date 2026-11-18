@@ -232,6 +232,21 @@ async function checkoutOrChangePlan() {
     // Stesso piano = rinnovo: il server riallinea l'abbonamento esistente o apre un nuovo checkout.
     if (plan !== _currentPlan && state.billing.subscription && ['active','past_due'].includes(state.plan_status)) {
       const preview = await api('/api/billing/change-preview', {method:'POST', body:JSON.stringify({plan})});
+      // Cambio già avviato e pagina di pagamento chiusa: si riprende il pagamento o si annulla il cambio.
+      if (preview.direction === 'pending') {
+        const target = preview.plan_name || 'nuovo piano';
+        const amount = preview.amount_due_cents != null ? ` (${fmtEuroV63(preview.amount_due_cents/100)})` : '';
+        if (preview.payment_url && confirm(`Il passaggio a ${target} aspetta ancora il pagamento${amount}. Vuoi completarlo ora?`)) {
+          window.location.assign(preview.payment_url);
+          return;
+        }
+        if (!confirm(`Annullare il passaggio a ${target} in attesa? Il piano attuale resta com'è e potrai sceglierne un altro.`)) return;
+        const result = await api('/api/billing/cancel-checkout', {method:'POST', body:'{}'});
+        toast(result.message || 'Cambio annullato');
+        await refreshPlanPageAfterBilling();
+        renderSubscriptionControls(await api('/api/billing/my-plan'));
+        return;
+      }
       let message = preview.direction === 'upgrade' ? `${live ? 'Conguaglio da pagare ora' : 'Conguaglio di prova'}: ${fmtEuroV63(preview.amount_due_cents/100)}. Il nuovo piano si attiva dopo il pagamento. Confermi?` :
         `Passare a ${plan} dal ${new Date(preview.effective_at*1000).toLocaleDateString('it-IT')}?`;
       if(preview.resources_over_limit?.length)message+=' Le risorse già presenti saranno conservate; le nuove aggiunte resteranno bloccate finché rientri nei limiti: '+preview.resources_over_limit.join(', ')+'.';
