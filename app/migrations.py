@@ -299,6 +299,12 @@ def run_migrations(engine):
                     for table in CRM_TABLES:
                         table.create(conn, checkfirst=True)
                     conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261116_01', 'now': utc_now()})
+            if '20261118_01' not in applied:
+                # Ora di scrittura della nota dell'autista: le note vecchie in coda non sovrascrivono le nuove.
+                with engine.begin() as conn:
+                    if 'delivery_statuses' in set(inspect(conn).get_table_names()) and 'note_scritta_il' not in {c['name'] for c in inspect(conn).get_columns('delivery_statuses')}:
+                        conn.execute(text('ALTER TABLE delivery_statuses ADD COLUMN note_scritta_il TIMESTAMP'))
+                    conn.execute(text('INSERT INTO schema_migrations (version, applied_at) VALUES (:v, :now)'), {'v': '20261118_01', 'now': utc_now()})
         finally:
             if postgres:
                 lock.execute(text('SELECT pg_advisory_unlock(:key)'), {'key': LOCK_ID})

@@ -88,3 +88,22 @@ def test_legacy_running_route_can_close_after_expiry(env, portal):
     assert response.status_code == 200, response.text
     assert route.status == 'completato'
     assert db.query(RouteUsage).count() == 1
+
+
+def test_an_older_queued_note_never_overwrites_a_newer_one(env):
+    from app.models import DeliveryStatus
+    client, db, _, route, delivery = prepare(env)
+    note = path('driver', 'note', route, delivery)
+    assert client.post(note, json={'note': 'Prima nota', 'scritta_il': '2026-01-10T08:00:00Z'}).status_code == 200
+    assert client.post(note, json={'note': 'Nota corretta', 'scritta_il': '2026-01-10T08:05:00Z'}).status_code == 200
+    # La coda del telefono rimanda la prima nota (reinvio dopo la riapertura): non cambia nulla.
+    for repeated in ({'note': 'Prima nota', 'scritta_il': '2026-01-10T08:00:00Z'},
+                     {'note': 'Nota corretta', 'scritta_il': '2026-01-10T08:05:00Z'}):
+        assert client.post(note, json=repeated).status_code == 200
+    status = db.query(DeliveryStatus).filter_by(delivery_id=delivery.id).one()
+    db.refresh(status)
+    assert status.note_operatore == 'Nota corretta'
+    # Una nota senza ora (per esempio dall'ufficio) arriva adesso ed è la più recente.
+    assert client.post(note, json={'note': 'Aggiornata ora'}).status_code == 200
+    db.refresh(status)
+    assert status.note_operatore == 'Aggiornata ora'

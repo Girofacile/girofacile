@@ -13,6 +13,12 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
   quindi un esito confermato non riparte nemmeno riaprendo il portale. La coda della versione precedente passa alle voci separate.
   A telefono pieno: un esito inviato viene tolto anche dalla vecchia lista (niente reinvii dopo una migrazione a metà)
   e un esito sostituito viene scritto prima di togliere quello vecchio, così non spariscono entrambi.
+  La copia vecchia si toglie solo quando la nuova è salvata davvero (anche se il telefono può cancellare ma non scrivere)
+  e dopo più sostituzioni di fila nessuna nota vecchia ricompare.
+- Note dell'autista: ogni esito porta l'ora in cui è stato scritto; il server ignora una nota ripetuta o più vecchia
+  di quella salvata, quindi un reinvio dalla coda non sovrascrive mai la nota più recente (nuova colonna, migrazione 20261118_01).
+- Portale autista: appena registrato un esito la fermata chiusa sparisce e compare la successiva, senza aspettare
+  il nuovo caricamento del giro: «Consegnato» e «Mancata» non puntano più alla fermata appena chiusa.
 - GPS e avvio giro bloccano giro e autista nello stesso ordine: niente più blocco reciproco.
 - Webhook ordini, invio ordini via API, caricamento file ordini, webhook Stripe e login lavorano col database fuori dal ciclo delle richieste;
   l'attesa di una riga bloccata è limitata a 5 secondi (poi «riprova»).

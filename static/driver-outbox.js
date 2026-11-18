@@ -71,6 +71,9 @@
       try { storage.setItem(prefix + item.opId, JSON.stringify(item)); return true; }
       catch(e) { return false; }
     }
+    function isStored(opId){
+      return hasEntry(opId) || readLegacy().some(x => x.opId === opId);
+    }
     function hasEntry(opId){
       try { return storage.getItem(prefix + opId) != null; } catch(e) { return false; }
     }
@@ -97,22 +100,24 @@
       const kept = new Set(after.map(x => x.opId));
       const removed = [...before.keys()].filter(opId => !kept.has(opId));
       const added = after.filter(item => !before.has(item.opId));
-      // Prima si scrive il nuovo, poi si toglie il vecchio: un esito sostituito non deve sparire
-      // se il telefono non riesce a salvare quello nuovo.
-      let failed = added.filter(item => !persist(item));
-      for(const opId of removed){ forget(opId); unsaved = unsaved.filter(x => x.opId !== opId); }
-      if(failed.length && removed.length){
-        // La copia sostituita ha liberato spazio: si riprova a salvare il nuovo esito.
-        failed = failed.filter(item => !persist(item));
-        if(failed.length){
-          // Ancora niente spazio: si rimette la copia precedente, così riaprendo il portale
-          // resta almeno quella; questa pagina invia comunque solo l'esito nuovo.
-          const restored = removed.filter(opId => persist(before.get(opId)));
-          restored.forEach(opId => hidden.add(opId));
-          for(const item of failed) superseded.set(item.opId, restored);
-        }
+      // Copie ancora più vecchie che aspettavano sul telefono uno degli esiti tolti ora.
+      const carried = removed.flatMap(opId => superseded.get(opId) || []);
+      removed.forEach(opId => superseded.delete(opId));
+      // Prima si scrive il nuovo; il vecchio si toglie solo se il nuovo è salvato davvero.
+      // Mai cancellare prima di scrivere: se il telefono permette di cancellare ma non di
+      // scrivere, si perderebbero entrambe le copie.
+      const failed = added.filter(item => !persist(item));
+      unsaved = unsaved.filter(x => !removed.includes(x.opId));
+      if(!failed.length){
+        for(const opId of removed.concat(carried)) forget(opId);
+      } else {
+        // Il nuovo resta solo in questa pagina: le copie precedenti restano sul telefono, così
+        // riaprendo il portale c'è almeno quella. Questa pagina non le invia e, appena parte
+        // l'esito nuovo, le toglie.
+        const keep = removed.filter(isStored).concat(carried);
+        keep.forEach(opId => hidden.add(opId));
+        for(const item of failed){ superseded.set(item.opId, keep); unsaved.push(item); }
       }
-      for(const item of failed) unsaved.push(item);
       items = after;
       changed();
       return failed.length === 0;
@@ -149,11 +154,9 @@
           rejected.push({item, message: e.message});
         }
         // Si toglie l'operazione appena inviata, non «la prima»: potrebbe essere stata sostituita.
+        // Togliendo l'esito inviato si tolgono anche le copie vecchie che lo aspettavano sul telefono.
         update(list => list.filter(x => x.opId !== item.opId));
         hidden.add(item.opId);
-        // Inviato l'esito nuovo, le copie vecchie che lo aspettavano sul telefono non servono più.
-        for(const opId of superseded.get(item.opId) || []) forget(opId);
-        superseded.delete(item.opId);
       }
       return rejected;
     }

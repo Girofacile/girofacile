@@ -19,6 +19,20 @@ class DeliveryUpdate(BaseModel):
     delivery_photo_data: str | None = Field(default=None, max_length=16_000_100)
     signed_by_name: str | None = Field(default=None, max_length=200)
     signature_note: str | None = Field(default=None, max_length=2000)
+    # Ora in cui l'autista ha scritto l'esito sul telefono.
+    scritta_il: datetime | None = None
+
+
+def written_at(data):
+    """Ora di scrittura in UTC senza fuso; senza indicazione dal telefono vale l'ora di arrivo."""
+    from datetime import timezone
+    value = data.get('scritta_il')
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    if value is None:
+        return now
+    value = value.astimezone(timezone.utc).replace(tzinfo=None) if value.tzinfo else value
+    # Un orologio del telefono avanti non deve bloccare le note successive.
+    return min(value, now)
 
 
 def get_or_create_delivery_status(delivery_id, route_plan_id, db):
@@ -94,6 +108,7 @@ def _apply_delivery_update(db, delivery, payload, action):
     if target:
         status.status = target
         status.note_operatore = data['note'] or None
+        status.note_scritta_il = written_at(data)
         status.completata_il = local_now().replace(tzinfo=None)
         if action == 'complete':
             status.tempo_scarico_effettivo = data['tempo_scarico']
@@ -107,7 +122,12 @@ def _apply_delivery_update(db, delivery, payload, action):
         sync_route_orders(db, route, "delivered" if action == "complete" else "missed", delivery)
         refresh_route_completion(route.id, db)
     elif action == 'note':
+        written = written_at(data)
+        # Una nota uguale ripetuta o scritta prima di quella salvata non cambia nulla.
+        if status.note_scritta_il and written <= status.note_scritta_il:
+            return status
         status.note_operatore = (data['note'] or '').strip() or None
+        status.note_scritta_il = written
     if action in ('complete', 'signature'):
         save_delivery_evidence(db, route, delivery, status, data, owner, action)
     return status

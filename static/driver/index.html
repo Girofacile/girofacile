@@ -258,7 +258,7 @@ body.chat-open .app-main{overflow:hidden;padding-bottom:0;}
 <script src="/static/live-gps.js?v=gf_posizione_semplice_20261114"></script>
 <link rel="stylesheet" href="/static/pod.css?v=gf_driver_fix_20261020">
 <script src="/static/pod.js?v=gf_pod_azienda_20261108"></script>
-<script src="/static/driver-outbox.js?v=gf_outbox_spazio_20261118"></script>
+<script src="/static/driver-outbox.js?v=gf_outbox_copie_20261118"></script>
 
 <link rel="stylesheet" href="/static/design-system/theme.css?v=gf_variabili_tema_20261116">
 <link rel="stylesheet" href="/static/design-system/components.css?v=gf_prezzi_mensili_20261117">
@@ -599,6 +599,17 @@ async function flushOutbox(manual=false) {
     driverNotice('Ancora nessuna connessione. Gli esiti restano salvati sul telefono.', 'warning');
   }
   if(currentRoute && before !== outbox.count()) await loadExecution();
+}
+
+// Appena registrato un esito, la fermata chiusa sparisce subito e compare la successiva:
+// senza aspettare il nuovo caricamento del giro, i pulsanti non puntano più alla fermata chiusa.
+function showOutcomeNow(kind, body, result) {
+  if(!currentRouteData) return;
+  const data = GFDriverOutbox.overlay(currentRouteData, [{kind, body, deliveryId: currentDeliveryId}]);
+  const delivery = (data.consegne || []).find(c => Number(c.id) === Number(currentDeliveryId));
+  if(delivery && result === 'sent') delete delivery.in_attesa_invio;
+  currentRouteData = data;
+  renderExecution(data);
 }
 
 // Invia subito; se manca la rete l'esito resta sul telefono e parte dopo.
@@ -1126,7 +1137,8 @@ async function confirmDone() {
   const sigEnabled = podFeatureEnabled('has_delivery_signature', currentRouteData) && !!currentRouteData?.settings?.delivery_signature_enabled;
   const payload = {
     tempo_scarico:selectedTempo,
-    note:document.getElementById('noteDone').value
+    note:document.getElementById('noteDone').value,
+    scritta_il:new Date().toISOString()
   };
   if(sigEnabled){
     if(!(currentSignatureDraft?.signature_data || currentSignatureDraft?.has_signature)){
@@ -1139,8 +1151,8 @@ async function confirmDone() {
   }
   try {
     Object.assign(payload, await podPhotoPayload(!!currentRouteData?.settings?.delivery_photo_required, currentRouteData));
-    await submitOutcome('complete', `/api/driver/delivery/${currentDeliveryId}/complete`, payload);
-    closeModal(); await loadExecution();
+    const result = await submitOutcome('complete', `/api/driver/delivery/${currentDeliveryId}/complete`, payload);
+    closeModal(); showOutcomeNow('complete', payload, result); await loadExecution();
   } catch(e) { driverNotice(e.message); }
 }
 
@@ -1166,9 +1178,9 @@ function selectMotivo(val, btn) {
 async function confirmMissed() {
   if(!selectedMotivo) { driverNotice('Seleziona il motivo'); return; }
   try {
-    await submitOutcome('missed', `/api/driver/delivery/${currentDeliveryId}/missed`,
-      {motivo:selectedMotivo, note:document.getElementById('noteMissed').value});
-    closeModal(); await loadExecution();
+    const body = {motivo:selectedMotivo, note:document.getElementById('noteMissed').value, scritta_il:new Date().toISOString()};
+    const result = await submitOutcome('missed', `/api/driver/delivery/${currentDeliveryId}/missed`, body);
+    closeModal(); showOutcomeNow('missed', body, result); await loadExecution();
   } catch(e) { driverNotice(e.message); }
 }
 
@@ -1183,9 +1195,9 @@ function openNote(id) {
 }
 async function confirmNote() {
   try {
-    await submitOutcome('note', `/api/driver/delivery/${currentDeliveryId}/note`,
-      {note:document.getElementById('noteText').value});
-    closeModal(); await loadExecution();
+    const body = {note:document.getElementById('noteText').value, scritta_il:new Date().toISOString()};
+    const result = await submitOutcome('note', `/api/driver/delivery/${currentDeliveryId}/note`, body);
+    closeModal(); showOutcomeNow('note', body, result); await loadExecution();
   } catch(e) { driverNotice(e.message); }
 }
 

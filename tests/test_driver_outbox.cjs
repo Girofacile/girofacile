@@ -243,29 +243,52 @@ test('an older queue that cannot be written at all is sent once, also after reop
 
 test('replacing an outcome on a full phone never loses both copies',async()=>{
   const offlineSend=async()=>{throw offline();};
-  // Spazio sufficiente per una sola voce: il nuovo esito prende il posto del vecchio.
+  // Spazio per una sola voce: il nuovo esito non entra finché c'è il vecchio.
   const first=memoryStorage();
   create({storage:first,key:'k',send:offlineSend}).add({kind:'missed',url:'/m',body:{motivo:'chiuso'},routeId:1,deliveryId:1});
   const one=[...first.data].reduce((n,[k,v])=>n+k.length+v.length,0);
   const storage=limitedStorage(one+5);
-  const page=create({storage,key:'k',send:offlineSend});
-  page.add({kind:'missed',url:'/m',body:{motivo:'chiuso'},routeId:1,deliveryId:1});
-  assert.equal(page.add({kind:'missed',url:'/m',body:{motivo:'assente'},routeId:1,deliveryId:1}),true);
-  let reopened=create({storage,key:'k',send:offlineSend});
-  assert.equal(reopened.count(),1);
-  assert.equal(reopened.pending()[0].body.motivo,'assente');
-  // Il nuovo esito non entra nemmeno al posto del vecchio: resta il vecchio sul telefono,
-  // la pagina aperta invia solo il nuovo.
-  const big='x'.repeat(200);
   const sent=[];
-  const tight=create({storage,key:'k',send:async item=>{sent.push(item.body.motivo);}});
-  assert.equal(tight.add({kind:'missed',url:'/m',body:{motivo:big},routeId:1,deliveryId:1}),false);
-  assert.equal(tight.count(),1);
-  reopened=create({storage,key:'k',send:offlineSend});
+  const page=create({storage,key:'k',send:async item=>{sent.push(item.body.motivo);}});
+  page.add({kind:'missed',url:'/m',body:{motivo:'chiuso'},routeId:1,deliveryId:1});
+  // Il nuovo non si riesce a salvare: resta il vecchio sul telefono, la pagina invia solo il nuovo.
+  assert.equal(page.add({kind:'missed',url:'/m',body:{motivo:'assente'},routeId:1,deliveryId:1}),false);
+  assert.equal(page.count(),1);
+  let reopened=create({storage,key:'k',send:offlineSend});
   assert.equal(reopened.count(),1,'la copia precedente non deve sparire');
-  assert.equal(reopened.pending()[0].body.motivo,'assente');
-  await tight.flush();
-  assert.deepEqual(sent,[big]);
+  assert.equal(reopened.pending()[0].body.motivo,'chiuso');
+  await page.flush();
+  assert.deepEqual(sent,['assente']);
   // Inviato il nuovo, la copia vecchia non riparte alla riapertura.
   assert.equal(create({storage,key:'k',send:offlineSend}).count(),0);
+});
+
+test('replacing an outcome when the phone can delete but never write keeps the older copy',async()=>{
+  const storage=memoryStorage();const sent=[];
+  const page=create({storage,key:'k',send:async item=>{sent.push(item.body.note);}});
+  page.add({kind:'note',url:'/n',body:{note:'prima'},routeId:1,deliveryId:1});
+  storage.setItem=()=>{throw new Error('QuotaExceededError');};
+  assert.equal(page.add({kind:'note',url:'/n',body:{note:'seconda'},routeId:1,deliveryId:1}),false);
+  const reopened=create({storage,key:'k',send:async()=>{throw offline();}});
+  assert.equal(reopened.count(),1,'almeno la copia precedente resta');
+  assert.equal(reopened.pending()[0].body.note,'prima');
+  await page.flush();
+  assert.deepEqual(sent,['seconda']);
+  assert.equal(create({storage,key:'k',send:async()=>{}}).count(),0);
+});
+
+test('two replacements in a row on a full phone do not bring back the first note',async()=>{
+  const offlineSend=async()=>{throw offline();};
+  const first=memoryStorage();
+  create({storage:first,key:'k',send:offlineSend}).add({kind:'note',url:'/n',body:{note:'uno'},routeId:1,deliveryId:1});
+  const one=[...first.data].reduce((n,[k,v])=>n+k.length+v.length,0);
+  const storage=limitedStorage(one+5);const sent=[];
+  const page=create({storage,key:'k',send:async item=>{sent.push(item.body.note);}});
+  page.add({kind:'note',url:'/n',body:{note:'uno'},routeId:1,deliveryId:1});
+  assert.equal(page.add({kind:'note',url:'/n',body:{note:'due due'},routeId:1,deliveryId:1}),false);
+  assert.equal(page.add({kind:'note',url:'/n',body:{note:'tre tre tre'},routeId:1,deliveryId:1}),false);
+  assert.equal(page.count(),1);
+  await page.flush();
+  assert.deepEqual(sent,['tre tre tre']);
+  assert.equal(create({storage,key:'k',send:offlineSend}).count(),0,'la prima nota non ricompare');
 });

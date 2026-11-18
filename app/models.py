@@ -549,6 +549,9 @@ class DeliveryStatus(Base):
     motivo_mancata: Mapped[str | None] = mapped_column(String(80), nullable=True)
     tempo_scarico_effettivo: Mapped[int | None] = mapped_column(Integer, nullable=True)
     note_operatore: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    # Quando l'autista ha scritto la nota (ora del telefono, UTC): una nota ripetuta o più vecchia non
+    # sovrascrive quella più recente, anche se arriva dopo dalla coda degli esiti in attesa di rete.
+    note_scritta_il: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     completata_il: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     signature_object_key: Mapped[str | None] = mapped_column(String(500), nullable=True)
