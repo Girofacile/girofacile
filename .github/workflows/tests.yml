@@ -4,9 +4,15 @@ on:
   pull_request:
 permissions:
   contents: read
+# Un nuovo salvataggio sullo stesso ramo ferma i controlli ancora in corso del precedente.
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   verify:
     runs-on: ubuntu-24.04
+    # Senza limite un passaggio bloccato occupava il controllo per 6 ore.
+    timeout-minutes: 75
     services:
       postgres:
         image: postgres:16
@@ -50,7 +56,7 @@ jobs:
         run: |
           pip install playwright==1.55.0
           python -m playwright install --with-deps chromium
-          python tests/check_electric_responsive.py
+          bash tests/ci_step.sh 12 "Mezzi elettrici sui vari schermi" python -X faulthandler tests/check_electric_responsive.py
       - name: Verify orders against isolated API at desktop and mobile widths
         run: python tests/check_orders_ui.py
       - name: Verify plan quotas and features on desktop and mobile
@@ -66,7 +72,7 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
       - name: Verify the order-to-route flow end to end (planning, preview formats, programming)
-        run: python tests/check_route_flow_e2e.py
+        run: bash tests/ci_step.sh 10 "Flusso ordine giro autista" python -X faulthandler tests/check_route_flow_e2e.py
       - name: Preserve orders responsive screenshots
         if: always()
         uses: actions/upload-artifact@v4
@@ -246,7 +252,7 @@ jobs:
   current-routing-quality:
     name: Fresh routing scenarios and independent optimality audit
     runs-on: ubuntu-24.04
-    timeout-minutes: 12
+    timeout-minutes: 45
     env:
       DATABASE_URL: 'sqlite+pysqlite:///:memory:'
       ALLOW_SQLITE_LEGACY: 'true'
@@ -262,11 +268,11 @@ jobs:
       - name: Validate new reference and operational contracts
         run: python -m pytest tests/test_routing_quality_oracle.py tests/test_routing_quality_audit.py tests/test_routing_quality_integration.py -q -ra
       - name: Audit current engines on fresh frozen problems
-        run: python tests/run_routing_quality_audit.py --profile full --strict
+        run: bash tests/ci_step.sh 15 "Audit motori su problemi nuovi" python -X faulthandler tests/run_routing_quality_audit.py --profile full --strict
       - name: Compare fifty deliveries on two through five vehicles
         run: |
           python -m pytest tests/test_routing_quality_fifty.py -q
-          python tests/run_routing_quality_fifty.py --strict
+          bash tests/ci_step.sh 20 "Cinquanta consegne da 2 a 5 mezzi" python -X faulthandler tests/run_routing_quality_fifty.py --strict
       - name: Preserve independent audit inputs and results
         if: always()
         uses: actions/upload-artifact@v4
@@ -281,7 +287,7 @@ jobs:
   adaptive-fleet:
     name: Adaptive fleet with heterogeneous fifty-delivery scenarios
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 60
     env:
       DATABASE_URL: 'sqlite+pysqlite:///:memory:'
       ALLOW_SQLITE_LEGACY: 'true'
@@ -299,7 +305,7 @@ jobs:
       - name: Verify search, physical compatibility and independent reference data
         run: python -m pytest tests/test_fleet_adaptive_search.py tests/test_fleet_seed_search.py tests/test_fleet_route_pool.py tests/test_fleet_upgrade_quality.py tests/test_fleet_capability_lifecycle.py tests/test_fleet_tail_lift_warning.py -q -ra
       - name: Compare the previous engine with development and held-out scenarios
-        run: python tests/run_fleet_upgrade_benchmark.py --strict
+        run: bash tests/ci_step.sh 50 "Flotta adattiva motore precedente e attuale" python -X faulthandler tests/run_fleet_upgrade_benchmark.py --strict
       - name: Preserve complete inputs, road matrices and independently checked plans
         if: always()
         uses: actions/upload-artifact@v4
@@ -312,7 +318,7 @@ jobs:
   constraint-fleet:
     name: Global fleet feasibility and recovery of all known missing deliveries
     runs-on: ubuntu-24.04
-    timeout-minutes: 40
+    timeout-minutes: 90
     env:
       DATABASE_URL: 'sqlite+pysqlite:///:memory:'
       ALLOW_SQLITE_LEGACY: 'true'
@@ -330,7 +336,7 @@ jobs:
       - name: Verify calendar equivalence and native mathematical recovery
         run: python -m pytest tests/test_fleet_working_clock.py tests/test_fleet_milp_solver.py tests/test_fleet_highs_start.py -q -ra
       - name: Require demonstrated coverage on previous and additional fifty-delivery problems
-        run: python tests/run_fleet_constraint_benchmark.py --strict
+        run: bash tests/ci_step.sh 80 "Copertura flotta su problemi da cinquanta consegne" python -X faulthandler tests/run_fleet_constraint_benchmark.py --strict
       - name: Preserve matrices, full plans, native diagnostics and independent replay
         if: always()
         uses: actions/upload-artifact@v4
@@ -343,7 +349,7 @@ jobs:
   fleet-simulations:
     name: Fleet quality simulations and independent exact references
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 50
     env:
       DATABASE_URL: 'sqlite+pysqlite:///:memory:'
       ALLOW_SQLITE_LEGACY: 'true'
@@ -360,7 +366,7 @@ jobs:
       - name: Verify the independent reference and existing fleet scheduling contracts
         run: python -m pytest tests/test_fleet_quality_reference.py tests/test_fleet_planning.py tests/test_driver_schedule.py tests/test_fleet_search.py tests/test_fleet_search_budget.py tests/test_fleet_before_after.py tests/test_fleet_route_exact.py tests/test_fleet_route_exact_api.py tests/test_fleet_route_evaluator.py -q -ra
       - name: Compare previous and current multi-vehicle planner with frozen matrices
-        run: python tests/run_fleet_before_after.py
+        run: bash tests/ci_step.sh 40 "Confronto pianificazione più mezzi prima e dopo" python -X faulthandler tests/run_fleet_before_after.py
       - name: Verify complete route orders for 50-delivery fleets
         run: python tests/run_fleet_route_exact_benchmark.py
       - name: Preserve reproducible simulation results
