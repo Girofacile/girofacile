@@ -251,6 +251,8 @@ window.GFInProgressReference=(()=>{
       page.innerHTML='<section class="gf-panel"><div class="gf-empty"><h2>Nessun giro in corso</h2><p>Qui compariranno i giri quando gli autisti li avviano.</p><button type="button" class="gf-button" data-variant="primary" data-ip-action="plan">Pianifica un giro</button></div></section>';
       suspend();return;
     }
+    const draft=page.querySelector?.('#dashAdminChatInput')?.value||'';
+    const chatUnread=n(state.routes.find(r=>Number(r.id)===Number(detail.id))?.unread_driver_messages);
     const rows=detail.consegne||[],s=stat(detail),progress=s.total?Math.round(100*(s.done+s.miss)/s.total):0;
     const plan=gfPlannedArrivalDates(detail,rows),fuelLabel=gfRouteEnergyMetric(detail).electric?'Costo energia':'Carburante';
     const eta=detail.rientro_stimato_aggiornato||detail.orario_rientro_stimato||'—';
@@ -304,6 +306,7 @@ window.GFInProgressReference=(()=>{
           </div>
           <div class="gf-route-panel__footer gf-cluster">
             <button type="button" class="gf-button" data-variant="secondary" data-ip-action="refresh">${svgIcon('refresh')} Aggiorna dati</button>
+            <button type="button" class="gf-button" data-variant="secondary" data-ip-action="chat" aria-haspopup="dialog" aria-expanded="${state.chat}">${svgIcon('chat')} Chat autista${chatUnread?' <span class="gf-badge" data-status="danger">'+chatUnread+'</span>':''}</button>
             ${!window.GFCompanyAccess?.isCollaborator()||window.GFCompanyAccess.can('routes.manage')?'<button type="button" class="gf-button" data-variant="secondary" data-ip-action="complete">Chiudi giro</button><button type="button" class="gf-button" data-variant="danger" data-ip-action="cancel">Annulla giro</button>':''}
             ${detail.google_maps_url?'<a class="gf-button" data-variant="primary" href="'+esc(detail.google_maps_url)+'" target="_blank" rel="noopener noreferrer">'+svgIcon('map')+' Apri navigazione</a>':''}
           </div>
@@ -317,15 +320,19 @@ window.GFInProgressReference=(()=>{
           <tbody>${GFDriverBreaks.table(detail,0,9)}${rows.map((d,i)=>stopRow(d,i,detail,plan)+GFDriverBreaks.table(detail,i+1,9)).join('')||'<tr><td colspan="9"><div class="gf-empty"><p>Nessuna fermata registrata.</p></div></td></tr>'}${gfReturnRow(detail,[['#',''],['Cliente',GF_RETURN_TITLE],['Indirizzo',''],
             ['Arrivo previsto','<strong>'+gfReturnPlanned(detail)+'</strong>'],['Arrivo reale',''],['Differenza',''],['Scarico',''],['Stato',''],['Documenti e tracking','']])}</tbody>
         </table></div>
-        <footer class="gf-panel__footer"><button type="button" class="gf-button" data-variant="secondary" data-ip-action="chat" aria-expanded="${state.chat}">${svgIcon('chat')} ${state.chat?'Chiudi':'Apri'} chat autista</button></footer>
       </section>
-      <section class="gf-panel" data-ip-chat ${state.chat?'':'hidden'} aria-label="Chat autista">
-        <header class="gf-panel__header"><h2 class="gf-panel__title">Chat autista</h2><small class="gf-muted" id="dashChatStatus">Messaggi collegati a questo giro</small></header>
-        <div class="gf-chat">
-          <div id="dashAdminChatMessages" class="gf-chat__messages" aria-live="polite"><div class="gf-loading" role="status">Caricamento chat…</div></div>
-          <div class="gf-chat__composer"><textarea class="gf-textarea" id="dashAdminChatInput" rows="2" placeholder="Scrivi all’autista…" aria-label="Messaggio all'autista"></textarea><button type="button" class="gf-button" data-variant="primary" data-ip-action="send">Invia</button></div>
+      <div class="gf-overlay" data-ip-chat ${state.chat?'':'hidden'}>
+        <div class="gf-modal" role="dialog" aria-modal="true" aria-labelledby="dashChatTitle">
+          <header class="gf-modal__header"><div><p class="gf-kicker">${esc(detail.nome||'Giro in corso')}</p><h2 class="gf-modal__title" id="dashChatTitle">Chat con ${esc(detail.driver_name||'l’autista')}</h2><small class="gf-muted" id="dashChatStatus">Messaggi collegati a questo giro</small></div>
+            <button type="button" class="gf-icon-button" data-ip-action="chat-close" aria-label="Chiudi la chat"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12 M18 6L6 18"/></svg></button></header>
+          <div class="gf-modal__body"><div class="gf-chat">
+            <div id="dashAdminChatMessages" class="gf-chat__messages" aria-live="polite"><div class="gf-loading" role="status">Caricamento chat…</div></div>
+            <div class="gf-chat__composer"><textarea class="gf-textarea" id="dashAdminChatInput" rows="2" placeholder="Scrivi all’autista…" aria-label="Messaggio all'autista"></textarea><button type="button" class="gf-button" data-variant="primary" data-ip-action="send">Invia</button></div>
+          </div></div>
         </div>
-      </section>`;
+      </div>`;
+    // Un aggiornamento della pagina non cancella il messaggio che si sta scrivendo.
+    const input=page.querySelector('#dashAdminChatInput');if(input&&draft)input.value=draft;
     page.querySelector('[data-ip-outcome-filter]').value=state.outcome;
     paintCards();paintOutcome();drawGPS();drawMap(Number(detail.id));updateGPS();
     if(state.chat)loadDashboardRouteChat(Number(detail.id),false);
@@ -334,6 +341,8 @@ window.GFInProgressReference=(()=>{
   }
   document.addEventListener('click',async event=>{
     const page=root();if(!page||!page.contains(event.target))return;
+    // Clic sullo sfondo scuro del pop-up: la chat si chiude.
+    if(event.target.matches?.('[data-ip-chat]')){openChat(false);return;}
     const filter=event.target.closest('[data-ip-filter]');
     if(filter){state.filter=filter.dataset.ipFilter;paintCards();return;}
     const card=event.target.closest('[data-ip-route]');
@@ -376,18 +385,27 @@ window.GFInProgressReference=(()=>{
         break;
       }
       case 'chat':
-        state.chat=!state.chat;page.querySelector('[data-ip-chat]').hidden=!state.chat;
-        action.setAttribute('aria-expanded',String(state.chat));
-        action.innerHTML=icon('chat').replace('<svg ','<svg class="gf-icon" ')+(state.chat?' Chiudi chat autista':' Apri chat autista');
-        if(state.chat)loadDashboardRouteChat(Number(state.id),true);
+        openChat(true);
+        break;
+      case 'chat-close':
+        openChat(false);
         break;
       case 'send':sendDashboardRouteChat(Number(state.id));break;
     }
   });
+  // Chat dell'autista in un pop-up: si apre dal riquadro in alto, si chiude con la X, Esc o un clic fuori.
+  function openChat(open){
+    const page=root(),box=page?.querySelector('[data-ip-chat]');if(!box)return;
+    state.chat=open;box.hidden=!open;
+    page.querySelector('[data-ip-action="chat"]')?.setAttribute('aria-expanded',String(open));
+    if(open){loadDashboardRouteChat(Number(state.id),true);page.querySelector('#dashAdminChatInput')?.focus();}
+    else page.querySelector('[data-ip-action="chat"]')?.focus();
+  }
   document.addEventListener('change',event=>{
     if(event.target.matches('#tab-dashboard-in-progress [data-ip-outcome-filter]')){state.outcome=event.target.value;paintOutcome();}
   });
   document.addEventListener('keydown',event=>{
+    if(event.key==='Escape'&&state.chat&&visible()){openChat(false);return;}
     if(!event.target.matches('#tab-dashboard-in-progress [data-ip-route]'))return;
     if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key))return;
     const arr=filtered(),i=arr.findIndex(r=>Number(r.id)===Number(event.target.dataset.ipRoute));

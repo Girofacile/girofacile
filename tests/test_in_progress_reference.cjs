@@ -269,3 +269,15 @@ test('la tabella dei giri in corso mostra lo scarico e finisce con il rientro al
   assert.match(table,/<tr data-route-return>[^]*Rientro al deposito[^]*<strong>17:45<\/strong>/);
   assert.ok(table.indexOf('Cliente assente')<table.indexOf('Rientro al deposito'));
 });
+
+test('la chat autista si apre dal riquadro in alto in un pop-up, non sotto la tabella',()=>{
+  const {page,route,controller}=harness();
+  controller.render([{...route,unread_driver_messages:2}],route);
+  const html=page.innerHTML;
+  const footer=html.slice(html.indexOf('gf-route-panel__footer'),html.indexOf('Fermate del giro'));
+  assert.match(footer,/data-ip-action="chat" aria-haspopup="dialog" aria-expanded="false">[^]*Chat autista <span class="gf-badge" data-status="danger">2<\/span>/);
+  assert.match(html,/<div class="gf-overlay" data-ip-chat hidden>\s*<div class="gf-modal" role="dialog" aria-modal="true" aria-labelledby="dashChatTitle">/);
+  assert.match(html,/id="dashChatTitle">Chat con Autista Verificato</);
+  assert.match(html,/data-ip-action="chat-close" aria-label="Chiudi la chat"/);
+  assert.doesNotMatch(html,/Apri chat autista|gf-panel" data-ip-chat/);
+});

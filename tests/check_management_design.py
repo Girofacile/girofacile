@@ -155,9 +155,14 @@ def main():
                         assert live.locator('dl.gf-details dt').count() == 6
                         for label in ('Ingrandisci','Riduci','Segui il mezzo'):
                             assert live.get_by_role('button',name=label,exact=True).count() == 1
-                        live.locator('[data-ip-action="chat"]').click()
-                        assert live.locator('[data-ip-chat]').is_visible()
-                        live.locator('[data-ip-action="chat"]').click()
+                        # Chat autista: pulsante nel riquadro in alto, si apre in un pop-up e si chiude con X o Esc.
+                        live.locator('.gf-route-panel__footer [data-ip-action="chat"]').click()
+                        assert live.locator('[data-ip-chat] [role="dialog"]').is_visible()
+                        capture(page, 'dashboard-in-progress-chat', width)
+                        page.keyboard.press('Escape')
+                        assert live.locator('[data-ip-chat]').is_hidden()
+                        live.locator('.gf-route-panel__footer [data-ip-action="chat"]').click()
+                        live.locator('[data-ip-action="chat-close"]').click()
                         assert live.locator('[data-ip-chat]').is_hidden()
                         live.locator('select[aria-label="Filtra fermate per esito"]').select_option('done')
                         assert live.locator('tr[data-ip-stop]:visible').count() == 0

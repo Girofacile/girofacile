@@ -5,6 +5,8 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Giri in corso: «Chat autista» è nel riquadro in alto (con i messaggi non letti) e la chat si apre in un pop-up
+  con il nome dell'autista; si chiude con la X, Esc o un clic fuori. Il messaggio in scrittura non si perde agli aggiornamenti.
 - Giri in corso: anche la tabella «Fermate del giro» ha la colonna Scarico e l'ultima riga «Rientro al deposito».
 - Notifiche (variante A): righe con icona colorata al posto delle emoji, titolo e ora sulla stessa linea, messaggio sotto,
   raggruppate per giorno (Oggi, Ieri, data); chiusura con la X e «Segna tutte lette» in fondo.
