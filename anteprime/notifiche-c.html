@@ -68,10 +68,10 @@ function draw(){
     <div class="gf-modal__body gf-stack" data-gap="lg"><div class="gf-cluster" data-justify="between">${filters()}
       <button type="button" class="gf-button" data-variant="ghost" data-size="sm" onclick="readAll()">Segna tutte lette</button></div>
       ${grouped(list => `<div class="gf-stack" data-gap="sm">${list.map(n => `
-        <article class="gf-card gf-cluster" data-gap="lg">${icon(n)}
-          <div class="gf-list-item__main"><span class="gf-cluster"><strong>${esc(n.title)}</strong>${n.unread ? '<span class="gf-badge" data-status="info" data-dot>Nuova</span>' : ''}</span>
-            <span>${esc(n.text)}</span><small>${n.day} alle ${n.time}</small></div>
-          <div class="gf-cluster"><button type="button" class="gf-button" data-variant="primary" data-size="sm">${n.action}</button>
+        <article class="gf-card gf-stack" data-gap="sm">
+          <div class="gf-list-item">${icon(n)}<div class="gf-list-item__main"><span class="gf-cluster"><strong>${esc(n.title)}</strong>${n.unread ? '<span class="gf-badge" data-status="info" data-dot>Nuova</span>' : ''}</span>
+            <span>${esc(n.text)}</span><small>${n.day} alle ${n.time}</small></div></div>
+          <div class="gf-cluster" data-justify="end"><button type="button" class="gf-button" data-variant="primary" data-size="sm">${n.action}</button>
             ${n.unread ? `<button type="button" class="gf-button" data-variant="ghost" data-size="sm" onclick="read(${n.id})">Segna letta</button>` : ''}</div>
         </article>`).join('')}</div>`)}</div>`;
 }
