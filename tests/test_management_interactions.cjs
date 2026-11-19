@@ -43,7 +43,8 @@ test('live route detail renders stops, routing summary and chat without undeclar
   assert.deepEqual(calls, [[1,42],[0,undefined]]);
   const reference = fs.readFileSync('static/dashboard/js/in-progress-reference.js', 'utf8');
   assert.match(reference, /Nessun giro in corso/);
-  assert.match(reference, /GFDriverBreaks\.table\(detail,0,8\)/);
+  assert.match(reference, /GFDriverBreaks\.table\(detail,0,9\)/);
+  assert.match(reference, /gfReturnRow\(detail,/);
   assert.match(reference, /sendDashboardRouteChat\(Number\(state\.id\)\)/);
   assert.match(reference, /loadDashboardRouteChat\(Number\(detail\.id\),false\)/);
   assert.match(fs.readFileSync('static/dashboard/index.html','utf8'), /in-progress-reference\.js/);

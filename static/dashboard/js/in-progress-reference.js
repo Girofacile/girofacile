@@ -99,6 +99,7 @@ window.GFInProgressReference=(()=>{
       '<td data-label="Cliente"><strong>'+esc(d.cliente_nome||'—')+'</strong></td><td data-label="Indirizzo">'+esc(d.indirizzo||'—')+'</td>'+
       '<td data-label="Arrivo previsto">'+esc(gfPlannedArrival(d)||'—')+'</td><td data-label="Arrivo reale">'+esc(time||'—')+'</td>'+
       '<td data-label="Differenza">'+gfDeltaBadge(planned[i],gfRealArrivalDate(d))+'</td>'+
+      '<td data-label="Scarico">'+gfUnloadCell(d,true)+'</td>'+
       '<td data-label="Stato">'+chip(title,tone)+
       (d.motivo_mancata?'<br><small class="gf-muted">'+esc(gfMissedReason(d.motivo_mancata))+'</small>':'')+'</td>'+
       '<td data-label="Documenti e tracking"><div class="gf-cluster">'+deliverySignatureAction(d,r.driver_name)+' '+trackingButton(d,r)+
@@ -312,8 +313,9 @@ window.GFInProgressReference=(()=>{
         <header class="gf-panel__header"><div><h2 class="gf-panel__title">Fermate del giro</h2><p class="gf-muted">Confronto tra arrivo previsto e arrivo reale registrato dall’autista</p></div>
           <select class="gf-select" data-ip-outcome-filter aria-label="Filtra fermate per esito"><option value="all">Tutti gli esiti</option><option value="done">Completate</option><option value="miss">Mancate</option><option value="todo">Da fare</option></select></header>
         <div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards">
-          <thead><tr><th scope="col">#</th><th scope="col">Cliente</th><th scope="col">Indirizzo</th><th scope="col">Arrivo previsto</th><th scope="col">Arrivo reale</th><th scope="col">Differenza</th><th scope="col">Stato</th><th scope="col">Documenti e tracking</th></tr></thead>
-          <tbody>${GFDriverBreaks.table(detail,0,8)}${rows.map((d,i)=>stopRow(d,i,detail,plan)+GFDriverBreaks.table(detail,i+1,8)).join('')||'<tr><td colspan="8"><div class="gf-empty"><p>Nessuna fermata registrata.</p></div></td></tr>'}</tbody>
+          <thead><tr><th scope="col">#</th><th scope="col">Cliente</th><th scope="col">Indirizzo</th><th scope="col">Arrivo previsto</th><th scope="col">Arrivo reale</th><th scope="col">Differenza</th><th scope="col">Scarico</th><th scope="col">Stato</th><th scope="col">Documenti e tracking</th></tr></thead>
+          <tbody>${GFDriverBreaks.table(detail,0,9)}${rows.map((d,i)=>stopRow(d,i,detail,plan)+GFDriverBreaks.table(detail,i+1,9)).join('')||'<tr><td colspan="9"><div class="gf-empty"><p>Nessuna fermata registrata.</p></div></td></tr>'}${gfReturnRow(detail,[['#',''],['Cliente',GF_RETURN_TITLE],['Indirizzo',''],
+            ['Arrivo previsto','<strong>'+gfReturnPlanned(detail)+'</strong>'],['Arrivo reale',''],['Differenza',''],['Scarico',''],['Stato',''],['Documenti e tracking','']])}</tbody>
         </table></div>
         <footer class="gf-panel__footer"><button type="button" class="gf-button" data-variant="secondary" data-ip-action="chat" aria-expanded="${state.chat}">${svgIcon('chat')} ${state.chat?'Chiudi':'Apri'} chat autista</button></footer>
       </section>

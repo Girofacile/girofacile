@@ -12,7 +12,7 @@ function harness(){
     id:19,nome:'Giro aziendale',status:'in_corso',
     driver_name:'Autista Verificato',vehicle_name:'Furgone Uno',
     totale_km:42,totale_minuti:90,costo_carburante:12.3,
-    rientro_stimato_aggiornato:'17:45',toll_estimated_eur:null,
+    rientro_stimato_aggiornato:'17:45',toll_estimated_eur:null,rientro_deposito:true,
     consegne:[
       {id:4,cliente_nome:'Cliente reale',indirizzo:'Via delle Rose 1',delivery_status:'completata',ordine:1,arrivo_stimato:'09:00'},
       {id:5,cliente_nome:'Cliente successivo',indirizzo:'Via Roma 2',delivery_status:'in_attesa',ordine:2,arrivo_stimato:'10:00'},
@@ -58,6 +58,10 @@ function harness(){
   };
   context.GFDriverBreaks=vm.runInNewContext(read('static/driver-schedule.js')+';window.GFDriverBreaks',{window:{}});
   vm.runInNewContext(read('static/format.js'),context);
+  // Colonna Scarico e riga di rientro: gli stessi aiuti delle altre tabelle fermate (core.js).
+  const core=read('static/dashboard/js/core.js');
+  if(!context.esc)context.esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  vm.runInNewContext(core.slice(core.indexOf('function gfUnloadCell('),core.indexOf('function gfRouteNoticesHtml(')).replace('const GF_RETURN_TITLE','var GF_RETURN_TITLE'),context);
   vm.runInNewContext(read('static/dashboard/js/in-progress-reference.js'),context);
   return {page,picker,count,route:selectedRoute,controller:context.window.GFInProgressReference,context,handlers};
 }
@@ -252,4 +256,16 @@ test('giri attivi in tabella: prossima fermata, rientro, segnali e giro aperto',
   assert.match(rows[1],/2 messaggi/);
   assert.match(rows[1],/6\/9<\/b> consegne/);
   assert.match(rows[1],/data-label="Prossima fermata"/);
+});
+
+
+test('la tabella dei giri in corso mostra lo scarico e finisce con il rientro al deposito',()=>{
+  const {page,route,controller}=harness();
+  route.consegne[0].tempo_scarico_min=10;route.consegne[0].tempo_scarico_effettivo=14;
+  controller.render([route],route);
+  assert.match(page.innerHTML,/<th scope="col">Scarico<\/th>/);
+  assert.match(page.innerHTML,/<td data-label="Scarico">10 min<br><small class="gf-muted">reale 14 min<\/small><\/td>/);
+  const table=page.innerHTML.slice(page.innerHTML.indexOf('Fermate del giro'));
+  assert.match(table,/<tr data-route-return>[^]*Rientro al deposito[^]*<strong>17:45<\/strong>/);
+  assert.ok(table.indexOf('Cliente assente')<table.indexOf('Rientro al deposito'));
 });
