@@ -8,6 +8,12 @@ def minutes(value):
 def clock(value):
     rounded=int(round(value));return f'{rounded//60:02d}:{rounded%60:02d}'
 
+def day_clock(value):
+    """Orario da mostrare in un messaggio: oltre la mezzanotte «03:53 del giorno dopo», mai «27:53»."""
+    rounded=int(round(value));days=rounded//1440
+    text=clock(rounded%1440)
+    return text if days<=0 else text+(' del giorno dopo' if days==1 else f' di {days} giorni dopo')
+
 def resolved(override,driver):
     raw=override if override is not None else (getattr(driver,'work_schedule',None) or {})
     return DriverSchedule.model_validate(raw).model_dump(mode='json')
@@ -34,10 +40,10 @@ def service_ready(start,duration,pauses):
 def shift_error(schedule,start,end):
     if not schedule or not schedule.get('start'): return None
     if start<minutes(schedule['start']):
-        return (f"La partenza ({clock(start)}) è prima dell'inizio del turno dell'autista ({schedule['start']}–{schedule['end']}). "
+        return (f"La partenza ({day_clock(start)}) è prima dell'inizio del turno dell'autista ({schedule['start']}–{schedule['end']}). "
                 f"Sposta la partenza alle {schedule['start']} o più tardi, oppure cambia il turno.")
     if end>minutes(schedule['end']):
-        return (f"Il giro finisce alle {clock(end)}, dopo la fine del turno dell'autista ({schedule['start']}–{schedule['end']}). "
+        return (f"Il giro finisce alle {day_clock(end)}, dopo la fine del turno dell'autista ({schedule['start']}–{schedule['end']}). "
                 "Togli alcune consegne, anticipa la partenza o allunga il turno.")
     return None
 

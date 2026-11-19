@@ -5,6 +5,8 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Messaggi sul turno dell'autista: un orario oltre la mezzanotte si legge «03:53 del giorno dopo» invece di «27:53»
+  (per esempio in un giro in ritardo spostato ad adesso).
 - Pannello admin: «Accesso gratuito, senza abbonamento» nella scheda azienda (piano attivo senza pagamento né scadenza,
   etichetta «Gratuito» in lista, escluso dall'MRR). Un abbonamento Stripe annullato, rimborsato o non pagato non blocca
   più l'assegnazione: l'account viene scollegato da Stripe. Uno ancora attivo va prima annullato su Stripe.
