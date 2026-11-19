@@ -199,6 +199,23 @@ def run_implementation(module, output, label, provenance):
     return code, json.loads((output / "results.json").read_text(encoding="utf-8"))
 
 
+def short_summary(comparison):
+    """Riepilogo breve, stampato per ultimo: è la parte visibile negli avvisi dei controlli GitHub."""
+    from app.services import fleet_ortools, fleet_pyvrp
+    s, pairs = comparison["summary"], comparison["pairs"]
+    lines = [f"RIEPILOGO motori esterni: PyVRP {'attivo' if fleet_pyvrp.available() else 'ASSENTE'}, "
+             f"OR-Tools {'attivo' if fleet_ortools.available() else 'ASSENTE'}",
+             f"coppie {s['paired_runs']}, miglioramenti {s['objective_improvements']}, regressioni {s['objective_regressions']}, "
+             f"consegne perse {s['coverage_regressions']}, piani non validi dopo {s['invalid_after_runs']}"]
+    for strategy in sorted({row["strategy"] for row in pairs}):
+        rows = [row for row in pairs if row["comparable"] and row["strategy"] == strategy]
+        worse = [row for row in rows if row["objective_regression"]]
+        km_before, km_after = sum(r["before"]["km"] for r in rows), sum(r["after"]["km"] for r in rows)
+        change = (km_after - km_before) / km_before * 100 if km_before else 0.0
+        lines.append(f"{strategy}: km totali {km_before:.0f} -> {km_after:.0f} ({change:+.1f}%), regressioni {len(worse)}")
+    return "\n".join(lines)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--baseline-file", type=Path, default=BASELINE_FILE)
@@ -232,6 +249,7 @@ def main():
     print("FLEET_BEFORE_AFTER_REPORT " + json.dumps(
         dict(markdown=report, metadata=comparison["metadata"]), ensure_ascii=False), flush=True)
     summary = comparison["summary"]
+    print(short_summary(comparison), flush=True)
     # Historical failures remain visible in the artifacts. They do not fail the
     # current implementation's gate; both use the current advisory-equipment replay.
     return int(bool(after_code or summary["validity_regressions"] or summary["coverage_regressions"]
