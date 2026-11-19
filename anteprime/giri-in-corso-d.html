@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Anteprima D · Giri in corso · GiroFacile</title>
+<link rel="stylesheet" href="../static/design-system/theme.css">
+<link rel="stylesheet" href="../static/design-system/components.css">
+<link rel="stylesheet" href="../static/design-system/layout.css">
+<script src="../static/design-system/shell.js" defer></script>
+<script src="../static/design-system/design-system.js" defer></script>
+</head>
+<!-- Variante D: una striscia lunga in alto «Giri attivi» con piccoli riquadri semplici: iniziali dell'autista, nome del giro e nome dell'autista; il giro aperto è evidenziato. -->
+<body data-gf-layout="base" data-gf-surface="workspace" data-gf-nav-active="dashboard" data-gf-title="Giri in corso"
+      data-gf-subtitle="Avanzamento delle consegne, stato delle fermate e posizione GPS degli autisti." data-gf-user-name="SUPERMERCATI IORIO" data-gf-user-role="admin">
+<main data-gf-shell-content class="gf-stack" data-gap="lg">
+  <nav class="gf-cluster" aria-label="Varianti da confrontare"><a href="giri-in-corso-c.html">C · Dentro il riquadro mappa</a> · <a href="giri-in-corso-c2.html">C2 · Mappa + nomi degli autisti</a> · <a href="giri-in-corso-c3.html">C3 · Mappa + elenco completo</a> · <strong>D · Striscia Giri attivi</strong></nav>
+  <nav class="gf-cluster" aria-label="Esempio"><span class="gf-muted">Esempio:</span>
+    <a href="#tre" class="gf-chip">5 giri in corso</a><a href="#uno" class="gf-chip">1 solo giro</a></nav>
+  <div id="page" class="gf-stack" data-gap="lg"></div>
+
+<script>
+// Solo per l'anteprima: dati d'esempio, nessuna chiamata al server.
+const ROUTES = [
+  {id:1, nome:'Giro Nocera', driver:'Marco Rossi', vehicle:'Iveco Daily 35 · GF123AB', done:3, miss:1, total:12, eta:'16:31', late:0, gps:'success', gpsText:'GPS aggiornato', unread:2, next:'Bar Pompei Scavi'},
+  {id:2, nome:'Giro Salerno', driver:'Luca Esposito', vehicle:'Fiat Ducato · FD456CE', done:8, miss:0, total:10, eta:'14:05', late:12, gps:'warning', gpsText:'GPS non aggiornato', unread:0, next:'Salumeria Centro'},
+  {id:3, nome:'Giro Caserta', driver:'Anna Russo', vehicle:'Ford Transit · FT789GH', done:0, miss:0, total:7, eta:'17:20', late:0, gps:'success', gpsText:'GPS aggiornato', unread:0, next:'Alimentari Oplonti'},
+  {id:4, nome:'Giro Napoli centro', driver:'Ciro Gallo', vehicle:'Fiat Doblò · FD321ZZ', done:5, miss:0, total:9, eta:'15:10', late:0, gps:'success', gpsText:'GPS aggiornato', unread:1, next:'Bar Roma'},
+  {id:5, nome:'Giro Avellino', driver:'Sara Conte', vehicle:'Renault Master · RM654KK', done:2, miss:2, total:11, eta:'17:55', late:25, gps:'success', gpsText:'GPS aggiornato', unread:0, next:'Caseificio Irpino'}
+];
+let selected = 1;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const routes = () => location.hash === '#uno' ? ROUTES.slice(0,1) : ROUTES;
+const current = () => routes().find(r => r.id === selected) || routes()[0];
+const initials = n => n.split(' ').map(x => x[0]).join('').slice(0,2);
+const width = (v, t) => t ? Math.round(20 * v / t) * 5 : 0;
+const bar = r => `<span class="gf-progress__track" role="img" aria-label="${r.done} completate, ${r.miss} mancate"><span class="gf-progress__done" data-gf-width="${width(r.done,r.total)}"></span><span class="gf-progress__miss" data-gf-width="${width(r.miss,r.total)}"></span></span>`;
+const signals = r => [r.miss ? `<span class="gf-badge" data-status="danger">${r.miss} mancata</span>` : '',
+  r.late ? `<span class="gf-badge" data-status="warning">+${r.late} min</span>` : '',
+  `<span class="gf-badge" data-dot data-status="${r.gps}">${r.gpsText}</span>`,
+  r.unread ? `<span class="gf-badge" data-status="info">${r.unread} messaggi</span>` : ''].join('');
+const issue = r => r.miss || r.late || r.gps !== 'success';
+function choose(id){ selected = Number(id); draw(); }
+function step(delta){ const list = routes(), i = list.findIndex(r => r.id === current().id); choose(list[(i + delta + list.length) % list.length].id); }
+
+// Riquadro mappa e indicatori: come oggi (mappa sostituita da un segnaposto).
+function detail(r, headingExtra){
+  return `<section class="gf-route-panel" aria-label="Dettaglio del giro selezionato">
+    <div class="gf-route-panel__map">
+      <div class="gf-route-panel__heading">${headingExtra || `<div><h2 class="gf-title">${esc(r.nome)}</h2><p class="gf-muted">${esc(r.driver)} · ${esc(r.vehicle)}</p></div>`}
+        <div class="gf-cluster"><span class="gf-badge" data-status="info">In corso</span><a class="gf-button" data-variant="primary" data-size="sm" href="#">Apri navigazione</a></div></div>
+      <div class="gf-route-panel__canvas"><div class="gf-empty"><p>Mappa del giro (come oggi)</p></div></div>
+      <div class="gf-legend"><span><i data-state="done"></i>Completata</span><span><i></i>Da fare</span><span><i data-state="miss"></i>Mancata</span></div>
+    </div>
+    <div class="gf-route-panel__detail"><div class="gf-panel__body gf-stack"><h2 class="gf-subtitle">Indicatori del giro</h2>
+      <dl class="gf-details">
+        <div class="gf-details__item"><dt>Avanzamento</dt><dd>${Math.round(100*(r.done+r.miss)/r.total)}%</dd></div>
+        <div class="gf-details__item"><dt>Consegne</dt><dd>${r.done}/${r.total}</dd></div>
+        <div class="gf-details__item"><dt>Rientro stimato</dt><dd>${r.eta}</dd></div>
+        <div class="gf-details__item"><dt>Percorso</dt><dd>85,3 km</dd></div>
+      </dl></div>
+      <div class="gf-route-panel__footer gf-cluster"><button type="button" class="gf-button" data-variant="secondary">Aggiorna dati</button>
+        <button type="button" class="gf-button" data-variant="secondary">Chat autista${r.unread ? ` <span class="gf-badge" data-status="danger">${r.unread}</span>` : ''}</button>
+        <button type="button" class="gf-button" data-variant="secondary">Chiudi giro</button><button type="button" class="gf-button" data-variant="danger">Annulla giro</button></div>
+    </div>
+  </section>
+  <section class="gf-panel" aria-label="Fermate del giro"><header class="gf-panel__header"><div><h2 class="gf-panel__title">Fermate del giro</h2><p class="gf-muted">Come oggi</p></div></header>
+    <div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards"><thead><tr><th scope="col">#</th><th scope="col">Cliente</th><th scope="col">Arrivo previsto</th><th scope="col">Scarico</th><th scope="col">Stato</th></tr></thead>
+    <tbody><tr><td data-label="#">1</td><td data-label="Cliente"><strong>Bar Mabiro</strong></td><td data-label="Arrivo previsto">14:26</td><td data-label="Scarico">10 min</td><td data-label="Stato"><span class="gf-badge" data-status="success">Completata</span></td></tr>
+    <tr><td data-label="#">2</td><td data-label="Cliente"><strong>${esc(r.next)}</strong></td><td data-label="Arrivo previsto">15:01</td><td data-label="Scarico">15 min</td><td data-label="Stato"><span class="gf-badge" data-status="neutral">Da fare</span></td></tr></tbody></table></div>
+  </section>`;
+}
+
+// D: striscia «Giri attivi» con piccoli riquadri (iniziali, nome giro, autista); il giro aperto è evidenziato.
+function render(list, r){
+  const box = x => `<label class="gf-card gf-planning-choice"${x.id===r.id?' data-variant="info"':''}>
+      <input type="radio" name="ipRoute" class="gf-hidden" value="${x.id}"${x.id===r.id?' checked':''} onchange="choose(this.value)">
+      <span class="gf-cluster"><span class="gf-avatar" data-tone="${x.id}" aria-hidden="true">${initials(x.driver)}</span>
+        <span class="gf-list-item__main"><strong>${esc(x.nome)}</strong><small>${esc(x.driver)}</small></span></span></label>`;
+  return `<section class="gf-panel" aria-label="Giri attivi"><header class="gf-panel__header"><h2 class="gf-panel__title">Giri attivi (${list.length})</h2></header>
+      <div class="gf-panel__body gf-cluster">${list.map(box).join('')}</div></section>` + detail(r);
+}
+
+function draw(){ document.getElementById('page').innerHTML = render(routes(), current()); window.GFDesignSystem?.enhance?.(document.getElementById('page')); }
+addEventListener('hashchange', draw);
+addEventListener('DOMContentLoaded', draw);
+</script>
+</main>
+</body>
+</html>
