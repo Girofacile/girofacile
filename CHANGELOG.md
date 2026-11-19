@@ -5,6 +5,9 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Tabelle delle fermate (giri programmati, in corso, storico): colonna «Scarico» con i minuti previsti (e reali dove
+  registrati) e ultima riga «Rientro al deposito» con l'orario previsto, dopo un'eventuale pausa finale. Il pulsante
+  «Tracking cliente» diventa «Tracking» (il nome completo resta per i lettori di schermo).
 - Messaggi sul turno dell'autista: un orario oltre la mezzanotte si legge «03:53 del giorno dopo» invece di «27:53»
   (per esempio in un giro in ritardo spostato ad adesso).
 - Pannello admin: «Accesso gratuito, senza abbonamento» nella scheda azienda (piano attivo senza pagamento né scadenza,

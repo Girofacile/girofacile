@@ -5,7 +5,7 @@ function customerTrackingEnabled() {
 }
 function trackingButton(delivery, route) {
   if (!customerTrackingEnabled() || !delivery?.id || route?.status === 'bozza') return '';
-  return `<button type="button" class="btn-secondary mini-btn customer-tracking-trigger" onclick="openCustomerTracking(${Number(delivery.id)})">Tracking cliente</button>`;
+  return `<button type="button" class="btn-secondary mini-btn customer-tracking-trigger" onclick="openCustomerTracking(${Number(delivery.id)})" title="Tracking cliente" aria-label="Tracking cliente">Tracking</button>`;
 }
 
 async function openCustomerTracking(deliveryId) {

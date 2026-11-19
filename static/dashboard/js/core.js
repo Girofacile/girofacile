@@ -4725,9 +4725,9 @@ function dashboardStopRowsUnified(r, mode='live'){
   return `<div class="gf-table-wrap">
     <table class="gf-table" data-gf-responsive="cards">
       <thead>
-        <tr><th scope="col">#</th><th scope="col">Cliente</th><th scope="col">Indirizzo</th><th scope="col">Arrivo previsto</th><th scope="col">Arrivo reale</th><th scope="col">Differenza</th><th scope="col">Stato</th><th scope="col">Documenti e tracking</th><th scope="col">Note</th></tr>
+        <tr><th scope="col">#</th><th scope="col">Cliente</th><th scope="col">Indirizzo</th><th scope="col">Arrivo previsto</th><th scope="col">Arrivo reale</th><th scope="col">Differenza</th><th scope="col">Scarico</th><th scope="col">Stato</th><th scope="col">Documenti e tracking</th><th scope="col">Note</th></tr>
       </thead>
-      <tbody>${GFDriverBreaks.table(r,0,9)}
+      <tbody>${GFDriverBreaks.table(r,0,10)}
         ${rows.map((d, idx)=>{
           const st = d.delivery_status || d.status || 'in_attesa';
           const note = d.note_operatore || d.note_autista || d.note || '';
@@ -4741,11 +4741,15 @@ function dashboardStopRowsUnified(r, mode='live'){
             <td data-label="Arrivo previsto"><strong>${esc(planned)}</strong></td>
             <td data-label="Arrivo reale">${real ? `<strong>${esc(real)}</strong>` : '<span class="gf-muted">-</span>'}</td>
             <td data-label="Differenza">${gfDeltaBadge(plannedDates[idx], realDate)}</td>
+            <td data-label="Scarico">${gfUnloadCell(d, true)}</td>
             <td data-label="Stato">${deliveryStatusPill(st)}${d.motivo_mancata?`<br><small class="gf-muted">${esc(gfMissedReason(d.motivo_mancata))}</small>`:''}</td>
             <td data-label="Documenti e tracking">${deliverySignatureAction(d, r.driver_name)} ${trackingButton(d, r)}</td>
             <td data-label="Note">${note ? `<button type="button" class="gf-button" data-variant="ghost" data-size="sm" data-note="${esc(String(note))}" onclick="alert(this.dataset.note)">Note</button>` : '<span class="gf-muted">-</span>'}</td>
-          </tr>`+GFDriverBreaks.table(r,idx+1,9);
+          </tr>`+GFDriverBreaks.table(r,idx+1,10);
         }).join('')}
+        ${gfReturnRow(r, [['#',''],['Cliente',GF_RETURN_TITLE],['Indirizzo',''],['Arrivo previsto',`<strong>${gfReturnPlanned(r)}</strong>`],
+          ['Arrivo reale', r.completed_at ? `<strong>${esc(gfTimeOnRouteDay(r.completed_at, r.data_giro) || '-')}</strong>` : ''],
+          ['Differenza',''],['Scarico',''],['Stato',''],['Documenti e tracking',''],['Note','']])}
       </tbody>
     </table>
   </div>`;
@@ -5139,6 +5143,28 @@ const GF_NOTICE_ICONS = {
   lift:'M2 6h11v10H2z M13 9h5l3 3v4h-8z M15 19h7',
   box:'M3 7l9-4 9 4v10l-9 4-9-4z M3 7l9 4 9-4 M12 11v10'
 };
+// Minuti di scarico previsti per la fermata; nello storico anche quelli reali registrati dall'autista.
+function gfUnloadCell(d, withReal=false){
+  const planned = Math.round(Number(d.tempo_scarico_min) || 0);
+  const real = withReal && d.tempo_scarico_effettivo != null ? Math.round(Number(d.tempo_scarico_effettivo)) : null;
+  return `${planned} min${real != null ? `<br><small class="gf-muted">reale ${real} min</small>` : ''}`;
+}
+// Ultima riga delle tabelle fermate: il rientro al deposito, dopo eventuali pause del turno.
+// cells: colonne della tabella, in ordine, con il contenuto per il rientro ('' = vuota).
+function gfReturnRow(r, cells){
+  if(!r || !r.rientro_deposito || !(r.consegne || []).length) return '';
+  // Le colonne vuote in fondo diventano una sola cella: su telefono la scheda non mostra etichette vuote.
+  let last = cells.length - 1;
+  while(last > 0 && !cells[last][1]) last--;
+  const filled = cells.slice(0, last + 1).map(([label, html]) => html
+    ? `<td data-label="${esc(label)}">${html}</td>`
+    : '<td aria-hidden="true"></td>').join('');
+  const rest = cells.length - 1 - last;
+  return `<tr data-route-return>${filled}${rest ? `<td colspan="${rest}" aria-hidden="true"></td>` : ''}</tr>`;
+}
+function gfReturnPlanned(r){ return esc(r.rientro_stimato_aggiornato || r.orario_rientro_stimato || '-'); }
+const GF_RETURN_TITLE = '<strong>Rientro al deposito</strong><br><small class="gf-muted">Fine del giro</small>';
+
 function gfRouteNoticesHtml(rows){
   const names = list => [...new Set(list.map(d=>d.cliente_nome || 'Cliente senza nome'))];
   const item = (icon, tone, title, text) => `<div class="gf-list-item"><span class="gf-stat-strip__icon" data-tone="${tone}" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="${GF_NOTICE_ICONS[icon]}"/></svg></span><span class="gf-list-item__main"><strong>${esc(title)}</strong>${text ? `<small>${esc(text)}</small>` : ''}</span></div>`;
@@ -5168,12 +5194,14 @@ function dashboardScheduledDetailHtml(r){
       <td data-label="#">${esc(d.ordine || idx+1)}</td>
       <td data-label="Cliente"><strong>${esc(d.cliente_nome || '-')}</strong><br><small class="gf-muted">${esc(d.indirizzo || '-')}</small></td>
       <td data-label="Arrivo previsto">${esc(gfPlannedArrival(d))}${Number(d.attesa_min)>0?`<br><span class="gf-badge" data-status="warning">Attesa ${Math.round(Number(d.attesa_min))} min</span>`:''}</td>
+      <td data-label="Scarico">${gfUnloadCell(d)}</td>
       <td data-label="Finestra">${deliveryWindowLabel(d)}</td>
       <td data-label="Carico">${gfCount(parseInt(d.colli)||0,'collo','colli')} · ${gfDecimal(parseFloat(d.peso_kg)||0)} kg</td>
       <td data-label="Requisiti">${deliveryRequirementBadges(d) || '<span class="gf-muted">—</span>'}</td>
       <td data-label="Tracking e note"><div class="gf-cluster">${trackingButton(d, r)}${note ? `<button type="button" class="gf-button" data-variant="ghost" data-size="sm" data-note="${esc(String(note))}" onclick="alert(this.dataset.note)">Note</button>` : ''}</div></td>
-    </tr>`+GFDriverBreaks.table(r,idx+1,7);
-  }).join('');
+    </tr>`+GFDriverBreaks.table(r,idx+1,8);
+  }).join('') + gfReturnRow(r, [['#',''],['Cliente',GF_RETURN_TITLE],['Arrivo previsto',`<strong>${gfReturnPlanned(r)}</strong>`],
+    ['Scarico',''],['Finestra',''],['Carico',''],['Requisiti',''],['Tracking e note','']]);
   return `<div class="gf-stack" data-gap="lg" data-scheduled-detail>
     ${cancelled
       ? gfRouteDetailHeader(`Giro annullato · ${day}`, r.nome || 'Giro consegne', '<span class="gf-badge" data-status="danger" data-dot>Annullato</span>')
@@ -5206,8 +5234,8 @@ function dashboardScheduledDetailHtml(r){
     <section class="gf-panel" aria-labelledby="scheduledStopsTitle">
       <header class="gf-panel__header"><div><h3 class="gf-panel__title" id="scheduledStopsTitle">Dettaglio completo delle fermate</h3><p class="gf-muted">Finestre di scarico, carico, requisiti, tracking e note</p></div></header>
       <div id="scheduledStopsTable">${rows.length ? `<div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards">
-        <thead><tr><th scope="col">#</th><th scope="col">Cliente</th><th scope="col">Arrivo previsto</th><th scope="col">Finestra</th><th scope="col">Carico</th><th scope="col">Requisiti</th><th scope="col">Tracking e note</th></tr></thead>
-        <tbody>${GFDriverBreaks.table(r,0,7)}${tableRows}</tbody></table></div>` : '<div class="gf-empty"><p>Nessuna fermata collegata a questo giro.</p></div>'}</div>
+        <thead><tr><th scope="col">#</th><th scope="col">Cliente</th><th scope="col">Arrivo previsto</th><th scope="col">Scarico</th><th scope="col">Finestra</th><th scope="col">Carico</th><th scope="col">Requisiti</th><th scope="col">Tracking e note</th></tr></thead>
+        <tbody>${GFDriverBreaks.table(r,0,8)}${tableRows}</tbody></table></div>` : '<div class="gf-empty"><p>Nessuna fermata collegata a questo giro.</p></div>'}</div>
     </section>
   </div>`;
 }

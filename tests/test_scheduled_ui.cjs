@@ -138,7 +138,7 @@ test('driver break is an unnumbered yellow row between stops in the scheduled ta
   f.run('renderDashboardScheduledSubpage([route],route)');
   const html=f.node.innerHTML;
   const table=html.slice(html.indexOf('id="scheduledStopsTable"'));
-  assert.match(table,/<tr class="driver-break-row" data-break-after="2"><td aria-hidden="true"><\/td><td colspan="6"><strong>Pausa del turno dalle 14:00 alle 14:30<\/strong><small>30 minuti di riposo per l’autista<\/small><\/td><\/tr>/);
+  assert.match(table,/<tr class="driver-break-row" data-break-after="2"><td aria-hidden="true"><\/td><td colspan="7"><strong>Pausa del turno dalle 14:00 alle 14:30<\/strong><small>30 minuti di riposo per l’autista<\/small><\/td><\/tr>/);
   // Tra la seconda e la terza fermata, senza numero.
   assert.ok(table.indexOf('Secondo')<table.indexOf('Pausa del turno') && table.indexOf('Pausa del turno')<table.indexOf('Terzo'));
   assert.doesNotMatch(html,/Ⅱ/);
@@ -169,4 +169,29 @@ test('«+ Pianifica giro» sparisce quando si apre il dettaglio di un giro progr
   const core=fs.readFileSync('static/dashboard/js/core.js','utf8');
   assert.match(core,/querySelector\('\[data-scheduled-plan\]'\)\?\.classList\.toggle\('gf-hidden', !!selectedRoute\)/);
   assert.match(fs.readFileSync('static/dashboard/js/navigation.js','utf8'),/dashboardScheduledSelectedId\)document\.querySelector\("\[data-scheduled-plan\]"\)/);
+});
+
+
+test('stops tables end with the return to the depot and show unloading minutes',()=>{
+  const f=fixture();
+  f.route.orario_rientro_stimato='13:40';
+  f.route.consegne.forEach((d,i)=>{d.tempo_scarico_min=[10,15,5][i];});
+  f.route.consegne[0].tempo_scarico_effettivo=12;
+  f.route.driver_breaks=[{after_order:3,start:'12:30',end:'13:00',duration_min:30}];
+  f.run('renderDashboardScheduledSubpage([route],route)');
+  const table=f.node.innerHTML.slice(f.node.innerHTML.indexOf('id="scheduledStopsTable"'));
+  assert.match(table,/<th scope="col">Scarico<\/th>/);
+  assert.match(table,/<td data-label="Scarico">15 min<\/td>/);
+  // Ultima riga: rientro al deposito con l'orario previsto, dopo la pausa che segue l'ultima fermata.
+  assert.match(table,/<tr data-route-return>[^]*Rientro al deposito[^]*<td data-label="Arrivo previsto"><strong>13:40<\/strong><\/td>/);
+  assert.ok(table.indexOf('Terzo')<table.indexOf('Pausa del turno') && table.indexOf('Pausa del turno')<table.indexOf('Rientro al deposito'));
+  assert.equal((table.match(/data-route-return/g)||[]).length,1);
+  // Giri in corso e storico: stessa riga finale; lo scarico mostra anche quello reale.
+  const live=f.run('dashboardStopRowsUnified(route,"live")');
+  assert.match(live,/<td data-label="Scarico">10 min<br><small class="gf-muted">reale 12 min<\/small><\/td>/);
+  assert.match(live,/data-route-return[^]*Rientro al deposito/);
+  // Senza rientro al deposito la riga non c'è.
+  f.route.rientro_deposito=false;
+  f.run('renderDashboardScheduledSubpage([route],route)');
+  assert.doesNotMatch(f.node.innerHTML,/Rientro al deposito/);
 });

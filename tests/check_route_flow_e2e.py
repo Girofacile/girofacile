@@ -149,6 +149,9 @@ def run(browser, width, output):
             # La tabella completa delle fermate è sempre aperta, senza pulsante.
             table = detail.locator('#scheduledStopsTable')
             expect(table).to_be_visible()
+            # Colonna dei minuti di scarico e, in fondo, il rientro al deposito con l'orario previsto.
+            expect(table.locator('th', has_text='Scarico')).to_have_count(1)
+            expect(table.locator('[data-route-return]')).to_contain_text('Rientro al deposito')
             assert detail.get_by_role('button', name='Mostra tabella').count() == 0
             expect(detail.locator('[data-route-costs]')).to_contain_text('Totale')
             check_text('dettaglio giro programmato', detail.inner_text())

@@ -187,10 +187,14 @@ window.GFHistory = (() => {
         <td data-label="Previsto">${esc(gfPlannedArrival(d))}</td>
         <td data-label="Reale">${esc(real || '—')}</td>
         <td data-label="Differenza">${gfDeltaBadge(planned[idx], gfRealArrivalDate(d))}</td>
+        <td data-label="Scarico">${gfUnloadCell(d, true)}</td>
         <td data-label="Esito">${deliveryStatusPill(st)}${d.motivo_mancata ? `<br><small class="gf-muted">${esc(gfMissedReason(d.motivo_mancata))}</small>` : ''}</td>
         <td data-label="Prova e note"><div class="gf-cluster">${deliverySignatureAction(d, r.driver_name)} ${trackingButton(d, r)}${note ? `<button type="button" class="gf-button" data-variant="ghost" data-size="sm" data-note="${esc(String(note))}" onclick="alert(this.dataset.note)">Note</button>` : ''}</div></td>
-      </tr>`+GFDriverBreaks.table(r, idx+1, 7);
-    }).join('');
+      </tr>`+GFDriverBreaks.table(r, idx+1, 8);
+    }).join('') + gfReturnRow(r, [['#',''],['Cliente',GF_RETURN_TITLE],['Previsto',gfReturnPlanned(r)],
+      // Nello storico il rientro reale è la chiusura del giro registrata dall'autista.
+      ['Reale', r.completed_at ? `${esc(gfTimeOnRouteDay(r.completed_at, r.data_giro) || '—')}<br><small class="gf-muted">chiusura del giro</small>` : ''],
+      ['Differenza',''],['Scarico',''],['Esito',''],['Prova e note','']]);
     return `<div class="gf-stack" data-gap="lg">
       ${gfRouteDetailHeader(`${r.status === 'annullato' ? 'Giro annullato' : 'Giro completato'} · ${r.data_giro ? dashScheduledDayLabel(r.data_giro).toLowerCase() : '-'}`, r.nome || 'Giro consegne', statusBadge(r))}
       <div class="gf-stat-strip" data-icons="side" aria-label="Numeri del giro">
@@ -220,8 +224,8 @@ window.GFHistory = (() => {
         <header class="gf-panel__header"><div><h3 class="gf-panel__title" id="historyStopsTitle">Dettaglio completo delle fermate</h3><p class="gf-muted">Arrivi previsti e reali, esito, prove di consegna e note dell’autista</p></div>
           <button type="button" class="gf-button" data-variant="secondary" aria-controls="historyStopsTable" aria-expanded="false" onclick="gfToggleArea(this)">Mostra tabella</button></header>
         <div id="historyStopsTable" hidden>${rows.length ? `<div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards">
-          <thead><tr><th scope="col">#</th><th scope="col">Cliente</th><th scope="col">Previsto</th><th scope="col">Reale</th><th scope="col">Differenza</th><th scope="col">Esito</th><th scope="col">Prova e note</th></tr></thead>
-          <tbody>${GFDriverBreaks.table(r, 0, 7)}${tableRows}</tbody></table></div>` : '<div class="gf-empty"><p>Nessuna fermata collegata a questo giro.</p></div>'}</div>
+          <thead><tr><th scope="col">#</th><th scope="col">Cliente</th><th scope="col">Previsto</th><th scope="col">Reale</th><th scope="col">Differenza</th><th scope="col">Scarico</th><th scope="col">Esito</th><th scope="col">Prova e note</th></tr></thead>
+          <tbody>${GFDriverBreaks.table(r, 0, 8)}${tableRows}</tbody></table></div>` : '<div class="gf-empty"><p>Nessuna fermata collegata a questo giro.</p></div>'}</div>
       </section>
     </div>`;
   }
