@@ -71,21 +71,25 @@ function detail(r, headingExtra){
   </section>`;
 }
 
-// C3: come C, «Cambia giro» apre l'elenco completo di tutti i giri con i loro dati.
+// C3: come C; «Cambia giro» apre un pop-up largo con tutti i giri e i loro dati, un clic per sceglierne uno.
+let pickerOpen = location.search.includes('aperto');
+function picker(open){ pickerOpen = open; draw(); }
 function render(list, r){
   const heading = list.length > 1
-    ? `<div class="gf-stack" data-gap="sm"><div class="gf-cluster">
-          <p class="gf-kicker">${list.length} giri in corso</p>
-          <details class="gf-dropdown" open><summary class="gf-button" data-variant="secondary" data-size="sm">Cambia giro ▾</summary>
-            <div data-gf-menu class="gf-stack" data-gap="sm">${list.map(x => `
-              <button type="button" class="gf-list-item"${x.id===r.id?' aria-current="true"':''} onclick="choose(${x.id})">
-                <span class="gf-avatar" data-tone="${x.id}" aria-hidden="true">${initials(x.driver)}</span>
-                <span class="gf-list-item__main"><strong>${esc(x.driver)} · ${esc(x.nome)}</strong>
-                  <small>${x.done}/${x.total} consegne · rientro ${x.eta}</small>${bar(x)}
-                  <span class="gf-cluster">${signals(x)}</span></span></button>`).join('')}</div></details>
-        </div><div><h2 class="gf-title">${esc(r.nome)}</h2><p class="gf-muted">${esc(r.driver)} · ${esc(r.vehicle)} · rientro ${r.eta}</p></div></div>`
+    ? `<div class="gf-stack" data-gap="sm"><div class="gf-cluster"><p class="gf-kicker">Giro ${list.findIndex(x => x.id === r.id) + 1} di ${list.length}</p>
+          <button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="picker(true)">Cambia giro</button></div>
+        <div><h2 class="gf-title">${esc(r.nome)}</h2><p class="gf-muted">${esc(r.driver)} · ${esc(r.vehicle)} · rientro ${r.eta}</p></div></div>`
     : '';
-  return detail(r, heading);
+  const modal = pickerOpen && list.length > 1 ? `<div class="gf-overlay" onclick="if(event.target===this)picker(false)"><div class="gf-modal" data-size="lg" role="dialog" aria-modal="true" aria-labelledby="pickTitle">
+      <header class="gf-modal__header"><div><p class="gf-kicker">${list.length} giri in corso</p><h2 class="gf-modal__title" id="pickTitle">Scegli il giro</h2></div>
+        <button type="button" class="gf-icon-button" aria-label="Chiudi" onclick="picker(false)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12 M18 6L6 18"/></svg></button></header>
+      <div class="gf-modal__body"><div class="gf-list">${list.map(x => `
+        <button type="button" class="gf-list-item"${x.id===r.id?' aria-current="true"':''} onclick="pickerOpen=false;choose(${x.id})">
+          <span class="gf-avatar" data-tone="${x.id}" aria-hidden="true">${initials(x.driver)}</span>
+          <span class="gf-list-item__main"><strong>${esc(x.driver)} · ${esc(x.nome)}</strong><small>${esc(x.vehicle)} · rientro ${x.eta}</small></span>
+          <span class="gf-progress"><span class="gf-progress__top"><span><b>${x.done}/${x.total}</b> consegne</span></span>${bar(x)}</span>
+          <span class="gf-cluster">${signals(x)}</span></button>`).join('')}</div></div></div></div>` : '';
+  return detail(r, heading) + modal;
 }
 
 function draw(){ document.getElementById('page').innerHTML = render(routes(), current()); window.GFDesignSystem?.enhance?.(document.getElementById('page')); }
