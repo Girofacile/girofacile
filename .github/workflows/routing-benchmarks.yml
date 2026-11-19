@@ -1,0 +1,157 @@
+name: Routing engine benchmarks
+# Confronti completi del motore dei giri: lunghi (oltre un'ora sui runner di GitHub), quindi
+# partono solo quando cambia il motore, una volta a settimana o a richiesta, non a ogni salvataggio.
+on:
+  push:
+    paths:
+      - 'app/optimizer.py'
+      - 'app/services/fleet_*.py'
+      - 'app/services/optimizer_search.py'
+      - 'app/services/driver_schedule.py'
+      - 'app/services/road_routing.py'
+      - 'app/services/route_schedule.py'
+      - 'tests/run_fleet_*.py'
+      - 'tests/run_routing_*.py'
+      - 'tests/fleet_*.py'
+      - 'tests/routing_*.py'
+      - 'tests/fixtures/**'
+      - 'requirements*.txt'
+      - 'requirements.lock'
+      - '.github/workflows/routing-benchmarks.yml'
+  schedule:
+    - cron: '0 2 * * 1'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: routing-benchmarks-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  current-routing-quality:
+    name: Fresh routing scenarios and independent optimality audit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    env:
+      DATABASE_URL: 'sqlite+pysqlite:///:memory:'
+      ALLOW_SQLITE_LEGACY: 'true'
+      APP_ENV: test
+      BILLING_MODE: disabled
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Validate new reference and operational contracts
+        run: python -m pytest tests/test_routing_quality_oracle.py tests/test_routing_quality_audit.py tests/test_routing_quality_integration.py -q -ra
+      - name: Audit current engines on fresh frozen problems
+        run: bash tests/ci_step.sh 50 "Audit motori su problemi nuovi" python -X faulthandler tests/run_routing_quality_audit.py --profile full --strict
+      - name: Compare fifty deliveries on two through five vehicles
+        run: |
+          python -m pytest tests/test_routing_quality_fifty.py -q
+          bash tests/ci_step.sh 90 "Cinquanta consegne da 2 a 5 mezzi" python -X faulthandler tests/run_routing_quality_fifty.py --strict
+      - name: Preserve independent audit inputs and results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: current-routing-quality
+          path: |
+            test-results/routing-quality/
+            test-results/routing-quality-fifty/
+          if-no-files-found: error
+          retention-days: 30
+
+  adaptive-fleet:
+    name: Adaptive fleet with heterogeneous fifty-delivery scenarios
+    runs-on: ubuntu-24.04
+    timeout-minutes: 200
+    env:
+      DATABASE_URL: 'sqlite+pysqlite:///:memory:'
+      ALLOW_SQLITE_LEGACY: 'true'
+      APP_ENV: test
+      BILLING_MODE: disabled
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Verify search, physical compatibility and independent reference data
+        run: python -m pytest tests/test_fleet_adaptive_search.py tests/test_fleet_seed_search.py tests/test_fleet_route_pool.py tests/test_fleet_upgrade_quality.py tests/test_fleet_capability_lifecycle.py tests/test_fleet_tail_lift_warning.py -q -ra
+      - name: Compare the previous engine with development and held-out scenarios
+        run: bash tests/ci_step.sh 180 "Flotta adattiva motore precedente e attuale" python -X faulthandler tests/run_fleet_upgrade_benchmark.py --strict
+      - name: Preserve complete inputs, road matrices and independently checked plans
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: adaptive-fleet-comparison
+          path: test-results/fleet-upgrade/comparison/
+          if-no-files-found: error
+          retention-days: 30
+
+  constraint-fleet:
+    name: Global fleet feasibility and recovery of all known missing deliveries
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+    env:
+      DATABASE_URL: 'sqlite+pysqlite:///:memory:'
+      ALLOW_SQLITE_LEGACY: 'true'
+      APP_ENV: test
+      BILLING_MODE: disabled
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements.txt -c requirements.lock
+      - name: Verify calendar equivalence and native mathematical recovery
+        run: python -m pytest tests/test_fleet_working_clock.py tests/test_fleet_milp_solver.py tests/test_fleet_highs_start.py -q -ra
+      - name: Require demonstrated coverage on previous and additional fifty-delivery problems
+        run: bash tests/ci_step.sh 220 "Copertura flotta su problemi da cinquanta consegne" python -X faulthandler tests/run_fleet_constraint_benchmark.py --strict
+      - name: Preserve matrices, full plans, native diagnostics and independent replay
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: constraint-fleet-comparison
+          path: test-results/fleet-constraint/comparison/
+          if-no-files-found: error
+          retention-days: 30
+
+  fleet-simulations:
+    name: Fleet quality simulations and independent exact references
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      DATABASE_URL: 'sqlite+pysqlite:///:memory:'
+      ALLOW_SQLITE_LEGACY: 'true'
+      APP_ENV: test
+      BILLING_MODE: disabled
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install isolated simulation dependencies
+        run: pip install -r requirements.txt
+      - name: Verify the independent reference and existing fleet scheduling contracts
+        run: python -m pytest tests/test_fleet_quality_reference.py tests/test_fleet_planning.py tests/test_driver_schedule.py tests/test_fleet_search.py tests/test_fleet_search_budget.py tests/test_fleet_before_after.py tests/test_fleet_route_exact.py tests/test_fleet_route_exact_api.py tests/test_fleet_route_evaluator.py -q -ra
+      - name: Compare previous and current multi-vehicle planner with frozen matrices
+        run: bash tests/ci_step.sh 90 "Confronto pianificazione più mezzi prima e dopo" python -X faulthandler tests/run_fleet_before_after.py
+      - name: Verify complete route orders for 50-delivery fleets
+        run: python tests/run_fleet_route_exact_benchmark.py
+      - name: Preserve reproducible simulation results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fleet-simulation-results
+          path: test-results/fleet-simulations/
+          if-no-files-found: error
+          retention-days: 30
