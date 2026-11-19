@@ -14,9 +14,9 @@
 <body data-gf-layout="base" data-gf-surface="workspace" data-gf-nav-active="dashboard" data-gf-title="Giri in corso"
       data-gf-subtitle="Avanzamento delle consegne, stato delle fermate e posizione GPS degli autisti." data-gf-user-name="SUPERMERCATI IORIO" data-gf-user-role="admin">
 <main data-gf-shell-content class="gf-stack" data-gap="lg">
-  <nav class="gf-cluster" aria-label="Varianti da confrontare"><a href="giri-in-corso-a.html">A · Tendina compatta</a> · <a href="giri-in-corso-b.html">B · Schede dei giri</a> · <strong>C · Dentro il riquadro mappa</strong></nav>
+  <nav class="gf-cluster" aria-label="Varianti da confrontare"><strong>C · Dentro il riquadro mappa</strong> · <a href="giri-in-corso-c2.html">C2 · Mappa + nomi degli autisti</a> · <a href="giri-in-corso-c3.html">C3 · Mappa + elenco completo</a></nav>
   <nav class="gf-cluster" aria-label="Esempio"><span class="gf-muted">Esempio:</span>
-    <a href="#tre" class="gf-chip">3 giri in corso</a><a href="#uno" class="gf-chip">1 solo giro</a></nav>
+    <a href="#tre" class="gf-chip">5 giri in corso</a><a href="#uno" class="gf-chip">1 solo giro</a></nav>
   <div id="page" class="gf-stack" data-gap="lg"></div>
 
 <script>
@@ -24,7 +24,9 @@
 const ROUTES = [
   {id:1, nome:'Giro Nocera', driver:'Marco Rossi', vehicle:'Iveco Daily 35 · GF123AB', done:3, miss:1, total:12, eta:'16:31', late:0, gps:'success', gpsText:'GPS aggiornato', unread:2, next:'Bar Pompei Scavi'},
   {id:2, nome:'Giro Salerno', driver:'Luca Esposito', vehicle:'Fiat Ducato · FD456CE', done:8, miss:0, total:10, eta:'14:05', late:12, gps:'warning', gpsText:'GPS non aggiornato', unread:0, next:'Salumeria Centro'},
-  {id:3, nome:'Giro Caserta', driver:'Anna Russo', vehicle:'Ford Transit · FT789GH', done:0, miss:0, total:7, eta:'17:20', late:0, gps:'success', gpsText:'GPS aggiornato', unread:0, next:'Alimentari Oplonti'}
+  {id:3, nome:'Giro Caserta', driver:'Anna Russo', vehicle:'Ford Transit · FT789GH', done:0, miss:0, total:7, eta:'17:20', late:0, gps:'success', gpsText:'GPS aggiornato', unread:0, next:'Alimentari Oplonti'},
+  {id:4, nome:'Giro Napoli centro', driver:'Ciro Gallo', vehicle:'Fiat Doblò · FD321ZZ', done:5, miss:0, total:9, eta:'15:10', late:0, gps:'success', gpsText:'GPS aggiornato', unread:1, next:'Bar Roma'},
+  {id:5, nome:'Giro Avellino', driver:'Sara Conte', vehicle:'Renault Master · RM654KK', done:2, miss:2, total:11, eta:'17:55', late:25, gps:'success', gpsText:'GPS aggiornato', unread:0, next:'Caseificio Irpino'}
 ];
 let selected = 1;
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
