@@ -13,6 +13,10 @@ def fixture_result(strategy="efficient", **changes):
     metrics=dict(served=4,mismatches=0,used=2,km=44.0,minutes=88.0,
                  makespan=44.0,sumsq=3872.0,orders=[[0,2],[1,3]])
     metrics.update(changes)
+    # Senza attese evitabili le ore di lavoro coincidono con i minuti; punteggio = km + minuti.
+    for field,source in (("work_minutes","minutes"),("work_makespan","makespan"),("work_sumsq","sumsq")):
+        metrics.setdefault(field,metrics[source])
+    metrics.setdefault("cost",metrics["km"]+metrics["work_minutes"])
     return {"summary":{},"runs":[{
         "case_id":"known","strategy":strategy,"stage":"base","family":"curated",
         "seed":1,"stops":4,"resources":2,"return_depot":True,"permutation":None,
@@ -44,7 +48,7 @@ def test_advisory_equipment_mismatch_follows_coverage():
 
 @pytest.mark.parametrize("strategy,changes", [
     ("efficient",{"mismatches":1,"km":20,"minutes":40}),
-    ("efficient",{"used":1,"km":50,"minutes":40}),
+    ("efficient",{"used":1,"km":50,"minutes":90}),
     ("balanced",{"used":1,"km":20,"minutes":40,"makespan":40}),
 ])
 def test_strategy_priorities_are_preserved(strategy,changes):
@@ -199,3 +203,17 @@ def test_changed_baseline_source_is_recomputed_instead_of_using_cached_answer(tm
     cached,provenance=cached_baseline([case],sources,tmp_path)
     assert cached=={} and provenance['validated_answers']==0
     assert 'cached_source_differs_from_baseline' in provenance['ignored_reason']
+
+
+def test_efficient_follows_the_engine_score_of_km_and_work_hours():
+    """Qualche km in più per molto meno lavoro è un miglioramento, come per il motore."""
+    summary=compare_results(fixture_result(),fixture_result(km=50.0,minutes=60.0))["summary"]
+    assert summary["objective_improvements"]==1 and summary["objective_regressions"]==0
+
+
+def test_waiting_removed_by_a_later_departure_is_not_work():
+    """Stessi km e minuti di calendario, ma meno attesa evitabile: si confrontano le ore di lavoro."""
+    before=fixture_result("balanced",work_makespan=60.0,work_sumsq=6000.0,work_minutes=100.0)
+    after=fixture_result("balanced",work_makespan=50.0,work_sumsq=4500.0,work_minutes=90.0)
+    summary=compare_results(before,after)["summary"]
+    assert summary["objective_improvements"]==1 and summary["objective_regressions"]==0

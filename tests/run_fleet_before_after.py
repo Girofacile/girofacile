@@ -15,7 +15,20 @@ ROOT = Path(__file__).resolve().parents[1]
 BASELINE_COMMIT = "1c4bb0969dc14b9da454d5a22019e1cd5e758ab4"
 BASELINE_BLOB = "ec600f0b77f30be69b2796e603c5d9ad117ca88f"
 BASELINE_FILE = ROOT / "tests/fixtures/fleet_planning_before_20261018.py"
-FIELDS = ("served", "mismatches", "used", "km", "minutes", "makespan", "sumsq")
+FIELDS = ("served", "mismatches", "used", "km", "minutes", "makespan", "sumsq",
+          "work_minutes", "work_makespan", "work_sumsq", "cost")
+
+
+def driver_key(metrics, strategy):
+    """Chiave del motore attuale (fleet_working_clock._plan_key), misurata dal verificatore:
+    copertura, attrezzatura, poi «Riduci chilometri e tempi» = punteggio km + ore di lavoro,
+    «Distribuisci il lavoro» = mezzi usati, giro più lungo e quadrati sulle ore di lavoro.
+    Le ore di lavoro escludono le attese eliminate partendo più tardi."""
+    common = (-metrics["served"], metrics["mismatches"])
+    if strategy == "balanced":
+        return common + (-metrics["used"], metrics["work_makespan"], metrics["work_sumsq"],
+                         metrics["work_minutes"], metrics["km"])
+    return common + (metrics["cost"], metrics["km"], metrics["minutes"], metrics["used"])
 
 
 def load_baseline(path):
@@ -55,7 +68,7 @@ def index_rows(result):
 
 def objective_order(actual, reference, strategy):
     """Compare raw objectives; ignore arithmetic noise, never UI rounding."""
-    aa, rr = audit.key(actual, strategy), audit.key(reference, strategy)
+    aa, rr = driver_key(actual, strategy), driver_key(reference, strategy)
     integer_prefix = 3 if strategy == "balanced" else 2
     for index, (a, r) in enumerate(zip(aa, rr)):
         if index < integer_prefix:
@@ -212,7 +225,11 @@ def short_summary(comparison):
         worse = [row for row in rows if row["objective_regression"]]
         km_before, km_after = sum(r["before"]["km"] for r in rows), sum(r["after"]["km"] for r in rows)
         change = (km_after - km_before) / km_before * 100 if km_before else 0.0
-        lines.append(f"{strategy}: km totali {km_before:.0f} -> {km_after:.0f} ({change:+.1f}%), regressioni {len(worse)}")
+        work_before, work_after = sum(r["before"]["work_minutes"] for r in rows), sum(r["after"]["work_minutes"] for r in rows)
+        work_change = (work_after - work_before) / work_before * 100 if work_before else 0.0
+        lines.append(f"{strategy}: km totali {km_before:.0f} -> {km_after:.0f} ({change:+.1f}%), "
+                     f"ore di lavoro {work_before / 60:.0f} -> {work_after / 60:.0f} ({work_change:+.1f}%), regressioni {len(worse)}")
+        lines.extend(f"  peggiorato: {r['case_id']} ({r['variant']})" for r in worse[:15])
     return "\n".join(lines)
 
 
@@ -233,7 +250,9 @@ def main():
     comparison["metadata"] = dict(
         baseline=provenance, after_commit=after["metadata"]["tested_commit"],
         before_metadata=before["metadata"], after_metadata=after["metadata"],
-        comparison_policy="current advisory tail-lift and ZTL policy; invalid plans excluded from objective/coverage comparisons; efficient km before time; balanced workload unchanged",
+        comparison_policy="current advisory tail-lift and ZTL policy; invalid plans excluded from objective/coverage comparisons; "
+                          "objective = current engine key on independently replayed work minutes (latest useful departure): "
+                          "efficient km + work-hours score, balanced workload on work minutes",
         baseline_exit_code=before_code, current_exit_code=after_code)
     examples = {row["case_id"] for row in after["examples"]}
     comparison["examples"] = [row for row in comparison["pairs"]

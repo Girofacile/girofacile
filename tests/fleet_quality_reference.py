@@ -175,6 +175,51 @@ def _aggregate(orders, routes, extra_errors=()):
     }
 
 
+# Punteggio di «Riduci chilometri e tempi»: km + minuti di lavoro × KM_PER_HOUR / 60.
+# Copia del valore di app/optimizer.py (il verificatore non importa codice dell'app);
+# tests/test_fleet_work_metrics.py controlla che restino uguali.
+KM_PER_HOUR = 60
+
+
+def work_route(case, resource, order):
+    """Il giro con la partenza più tarda che non sposta il rientro: le attese iniziali che
+    si eliminano partendo dopo non sono lavoro dell'autista (come fa il motore)."""
+    base = route_replay(case, resource, order)
+    if not order or not base["feasible"]:
+        return base
+    start = base["end"] - base["minutes"]
+
+    def same_day(delay):
+        trial = route_replay(case, resource, order, start=start + delay)
+        return trial["feasible"] and trial["end"] <= base["end"] + _EPS
+
+    low, high = 0.0, 720.0
+    if same_day(high):
+        low = high
+    else:
+        for _ in range(40):
+            middle = (low + high) / 2
+            if same_day(middle):
+                low = middle
+            else:
+                high = middle
+    return route_replay(case, resource, order, start=start + low) if low > 0 else base
+
+
+def work_metrics(case, orders):
+    """Metro del motore attuale: ore di lavoro senza attese evitabili e punteggio km + ore."""
+    normalized = [list(order) for order in orders][:len(case["resources"])]
+    normalized += [[] for _ in range(len(case["resources"]) - len(normalized))]
+    routes = [work_route(case, resource, order) for resource, order in enumerate(normalized)]
+    minutes = [route["minutes"] for route in routes]
+    return {
+        "work_minutes": sum(minutes),
+        "work_makespan": max(minutes, default=0),
+        "work_sumsq": sum(value * value for value in minutes),
+        "cost": sum(route["km"] + route["minutes"] * KM_PER_HOUR / 60 for route in routes),
+    }
+
+
 def plan_metrics(case, orders):
     """Aggregate orders by resource; missing trailing resources mean empty routes."""
     resource_count = len(case["resources"])

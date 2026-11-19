@@ -41,11 +41,13 @@ import requests
 from app import optimizer as opt
 from app.services import fleet_planning as fleet
 from app.schemas.fleet_planning import FleetInput
-from fleet_quality_reference import route_replay, plan_metrics, solve_exact
+from fleet_quality_reference import route_replay, plan_metrics, solve_exact, work_metrics
 from fleet_simulation_cases import all_cases
 
 STRATEGIES = ("efficient", "balanced")
 METRIC_FIELDS = ("served", "mismatches", "used", "km", "minutes", "makespan", "sumsq")
+# Metro del motore attuale (partenza più tarda utile, punteggio km + ore): usato dal confronto prima/dopo.
+WORK_FIELDS = ("work_minutes", "work_makespan", "work_sumsq", "cost")
 KM_EPS, MIN_EPS = 0.02, 0.11
 SOURCE_PATHS = (
     "app/optimizer.py", "app/services/fleet_planning.py",
@@ -101,7 +103,7 @@ def clock_distance(text, raw):
 
 
 def compact(metrics):
-    return {key: deepcopy(metrics[key]) for key in (*METRIC_FIELDS, "orders", "feasible")}
+    return {key: deepcopy(metrics[key]) for key in (*METRIC_FIELDS, *WORK_FIELDS, "orders", "feasible") if key in metrics}
 
 
 def key(metrics, mode):
@@ -268,6 +270,7 @@ def execute(case, strategy):
     if any(not row.get("reason") for row in output["unassigned"]):
         errors.append("Unassigned stop has no reason")
     metrics = plan_metrics(case, orders)
+    metrics.update(work_metrics(case, orders))
     if not metrics.get("feasible", False):
         errors.append("Independent plan validation rejected the result")
     return {
