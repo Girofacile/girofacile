@@ -5619,17 +5619,33 @@ function notificationTimeLabelV30(value){
   return d.toLocaleDateString("it-IT", {day:"2-digit", month:"2-digit"});
 }
 
+// Icona colorata della notifica (stesse icone e toni degli avvisi del giro).
+const GF_NOTIFICATION_ICONS = {
+  chat: ['M21 12a8 8 0 0 1-11.6 7.1L3 21l1.9-6.4A8 8 0 1 1 21 12z', '4'],
+  agent_customer: ['M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M4 21a8 8 0 0 1 16 0', '1'],
+  route_started: ['M8 5v14l11-7z', '1'],
+  route_completed: ['M5 12l4 4 10-10', '3'],
+  delivery_missed: ['M12 9v4 M12 17h.01 M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z', '5'],
+  order_new: ['M3 7l9-4 9 4v10l-9 4-9-4z M3 7l9 4 9-4 M12 11v10', '2'],
+  address: ['M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z M12 12a2 2 0 1 0 0-4 2 2 0 0 0 0 4z', '5']
+};
 function notificationIconV30(type){
-  const map = {
-    chat: "💬",
-    agent_customer: "👤",
-    route_started: "▶️",
-    route_completed: "✅",
-    delivery_missed: "⚠️",
-    order_new: "📦",
-    address: "📍"
-  };
-  return map[type] || "🔔";
+  const [path, tone] = GF_NOTIFICATION_ICONS[type] || ['M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9 M10.3 21a1.94 1.94 0 0 0 3.4 0', 'neutral'];
+  return `<span class="gf-stat-strip__icon" data-tone="${tone}" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="${path}"/></svg></span>`;
+}
+// Gruppo della notifica: Oggi, Ieri o la data.
+function notificationDayLabelV30(value){
+  const d = new Date(value);
+  if(!value || Number.isNaN(d.getTime())) return 'Precedenti';
+  const day = x => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const diff = Math.round((day(new Date()) - day(d)) / 86400000);
+  if(diff === 0) return 'Oggi';
+  if(diff === 1) return 'Ieri';
+  return d.toLocaleDateString('it-IT', {weekday:'long', day:'numeric', month:'long'});
+}
+function notificationClockV30(value){
+  const d = new Date(value);
+  return !value || Number.isNaN(d.getTime()) ? '' : d.toLocaleTimeString('it-IT', {hour:'2-digit', minute:'2-digit'});
 }
 
 async function loadNotificationsV30(openDropdown=false){
@@ -5701,24 +5717,31 @@ async function markOrdersSeenV30(force=false){
 function renderNotificationsDropdownV30(unread){
   const list = document.getElementById("notificationList");
   const sub = document.getElementById("notificationSubtitle");
-  if(sub) sub.textContent = unread ? `${unread} da leggere` : "Tutto aggiornato";
+  if(sub) sub.textContent = unread ? `${unread} da leggere` : "Tutto letto";
+  const readAll = document.getElementById("notificationReadAll");
+  if(readAll) readAll.disabled = !unread;
   if(!list) return;
   if(!notificationsCacheV30.length){
-    list.innerHTML = `<li class="gf-empty"><p>Nessuna notifica operativa.</p></li>`;
+    list.innerHTML = `<div class="gf-empty"><p>Nessuna notifica operativa.</p></div>`;
     return;
   }
-  list.innerHTML = notificationsCacheV30.map(n=>{
+  // Variante A (19 novembre 2026): righe con icona colorata, titolo e ora sulla stessa linea, raggruppate per giorno.
+  const row = n => {
     const action = n.action_tab ? `<button type="button" class="gf-button" data-variant="link" data-size="sm" onclick="openNotificationActionV30(${n.id}, '${esc(n.action_tab)}')">${esc(n.action_label || 'Apri')}</button>` : "";
-    return `<li class="gf-notification"${n.is_read ? "" : " data-unread"}>
-      <strong>${notificationIconV30(n.type)} ${esc(n.title || 'Notifica')}</strong>
-      <p>${esc(n.message || '')}</p>
-      <small>${esc(notificationTimeLabelV30(n.created_at))}</small>
-      <div class="gf-cluster">
-        ${action}
-        ${!n.is_read ? `<button type="button" class="gf-button" data-variant="ghost" data-size="sm" onclick="markNotificationReadV30(${n.id})">Segna letta</button>` : ""}
-      </div>
-    </li>`;
-  }).join("");
+    return `<div class="gf-list-item"${n.is_read ? "" : ' aria-current="true"'}>${notificationIconV30(n.type)}
+      <span class="gf-list-item__main">
+        <span class="gf-cluster" data-justify="between"><strong>${esc(n.title || 'Notifica')}</strong><small title="${esc(notificationTimeLabelV30(n.created_at))}">${esc(notificationClockV30(n.created_at))}</small></span>
+        <small>${esc(n.message || '')}</small>
+        <span class="gf-cluster">${action}${!n.is_read ? `<button type="button" class="gf-button" data-variant="ghost" data-size="sm" onclick="markNotificationReadV30(${n.id})">Segna letta</button>` : ""}</span>
+      </span></div>`;
+  };
+  const groups = [];
+  notificationsCacheV30.forEach(n => {
+    const day = notificationDayLabelV30(n.created_at);
+    const last = groups[groups.length - 1];
+    if(last && last.day === day) last.items.push(n); else groups.push({day, items:[n]});
+  });
+  list.innerHTML = groups.map(g => `<div class="gf-notification"><p class="gf-kicker">${esc(g.day)}</p></div><div class="gf-list">${g.items.map(row).join("")}</div>`).join("");
 }
 
 function showNotificationsDropdownV30(show){

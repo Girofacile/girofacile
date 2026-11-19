@@ -5,6 +5,8 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Notifiche (variante A): righe con icona colorata al posto delle emoji, titolo e ora sulla stessa linea, messaggio sotto,
+  raggruppate per giorno (Oggi, Ieri, data); chiusura con la X e «Segna tutte lette» in fondo.
 - Tabelle delle fermate (giri programmati, in corso, storico): colonna «Scarico» con i minuti previsti (e reali dove
   registrati) e ultima riga «Rientro al deposito» con l'orario previsto, dopo un'eventuale pausa finale. Il pulsante
   «Tracking cliente» diventa «Tracking» (il nome completo resta per i lettori di schermo).
