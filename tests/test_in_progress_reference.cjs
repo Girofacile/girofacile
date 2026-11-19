@@ -281,3 +281,14 @@ test('la chat autista si apre dal riquadro in alto in un pop-up, non sotto la ta
   assert.match(html,/data-ip-action="chat-close" aria-label="Chiudi la chat"/);
   assert.doesNotMatch(html,/Apri chat autista|gf-panel" data-ip-chat/);
 });
+
+test('«Apri navigazione» sta accanto al nome del giro, non tra i pulsanti in basso',()=>{
+  const {page,route,controller}=harness();
+  controller.render([route],{...route,google_maps_url:'https://www.google.com/maps/dir/a/b'});
+  const html=page.innerHTML;
+  const heading=html.slice(html.indexOf('gf-route-panel__heading'),html.indexOf('gf-route-panel__canvas')>0?html.indexOf('gf-route-panel__canvas'):html.indexOf('Indicatori del giro'));
+  assert.match(heading,/In corso[^]*href="https:\/\/www.google.com\/maps\/dir\/a\/b"[^]*Apri navigazione/);
+  const footer=html.slice(html.indexOf('gf-route-panel__footer'),html.indexOf('Fermate del giro'));
+  assert.doesNotMatch(footer,/Apri navigazione/);
+  assert.match(footer,/Aggiorna dati[^]*Chat autista/);
+});

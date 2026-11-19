@@ -51,6 +51,7 @@ ROUTES = [dict(id=i, nome="Giro Milano " + str(i), data_giro="2026-10-03", statu
                vehicle_name="Furgone consegne · AB123CD", totale_km=42, totale_minuti=95,
                costo_carburante=6.5, litri_stimati=3.57, consegne_count=1,
                orario_partenza="08:00", orario_rientro_stimato="09:35", rientro_deposito=True,
+               google_maps_url="https://www.google.com/maps/dir/?api=1",
                consegne=[dict(id=i, customer_id=1, cliente_nome="Cliente Demo", ordine=1,
                              indirizzo="Via Verdi 10, Milano", lat=45.47, lon=9.2,
                              stato="consegnata" if status == "completato" else "da_consegnare",
@@ -156,6 +157,9 @@ def main():
                         for label in ('Ingrandisci','Riduci','Segui il mezzo'):
                             assert live.get_by_role('button',name=label,exact=True).count() == 1
                         # Chat autista: pulsante nel riquadro in alto, si apre in un pop-up e si chiude con X o Esc.
+                        # «Apri navigazione» accanto al nome del giro, non tra i pulsanti in basso.
+                        assert live.locator('.gf-route-panel__heading').get_by_role('link', name='Apri navigazione').is_visible()
+                        assert live.locator('.gf-route-panel__footer').get_by_role('link', name='Apri navigazione').count() == 0
                         live.locator('.gf-route-panel__footer [data-ip-action="chat"]').click()
                         assert live.locator('[data-ip-chat] [role="dialog"]').is_visible()
                         capture(page, 'dashboard-in-progress-chat', width)

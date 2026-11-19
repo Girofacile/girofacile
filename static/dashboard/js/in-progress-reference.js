@@ -278,7 +278,8 @@ window.GFInProgressReference=(()=>{
       </section>
       <section class="gf-route-panel" aria-label="Dettaglio del giro selezionato">
         <div class="gf-route-panel__map">
-          <div class="gf-route-panel__heading"><div><h2 class="gf-title">${esc(detail.nome||'Giro consegne')}</h2><p class="gf-muted">Percorso stradale pianificato e posizione GPS dell’autista</p></div>${chip('In corso')}</div>
+          <div class="gf-route-panel__heading"><div><h2 class="gf-title">${esc(detail.nome||'Giro consegne')}</h2><p class="gf-muted">Percorso stradale pianificato e posizione GPS dell’autista</p></div>
+            <div class="gf-cluster">${chip('In corso')}${detail.google_maps_url?'<a class="gf-button" data-variant="primary" data-size="sm" href="'+esc(detail.google_maps_url)+'" target="_blank" rel="noopener noreferrer">'+svgIcon('map')+' Apri navigazione</a>':''}</div></div>
           <div class="gf-ip-map-wrap">
             <div class="gf-ip-map-canvas" aria-label="Mappa del giro selezionato"></div>
             <div class="gf-ip-map-badge unknown"></div>
@@ -308,7 +309,6 @@ window.GFInProgressReference=(()=>{
             <button type="button" class="gf-button" data-variant="secondary" data-ip-action="refresh">${svgIcon('refresh')} Aggiorna dati</button>
             <button type="button" class="gf-button" data-variant="secondary" data-ip-action="chat" aria-haspopup="dialog" aria-expanded="${state.chat}">${svgIcon('chat')} Chat autista${chatUnread?' <span class="gf-badge" data-status="danger">'+chatUnread+'</span>':''}</button>
             ${!window.GFCompanyAccess?.isCollaborator()||window.GFCompanyAccess.can('routes.manage')?'<button type="button" class="gf-button" data-variant="secondary" data-ip-action="complete">Chiudi giro</button><button type="button" class="gf-button" data-variant="danger" data-ip-action="cancel">Annulla giro</button>':''}
-            ${detail.google_maps_url?'<a class="gf-button" data-variant="primary" href="'+esc(detail.google_maps_url)+'" target="_blank" rel="noopener noreferrer">'+svgIcon('map')+' Apri navigazione</a>':''}
           </div>
         </div>
       </section>

@@ -5,6 +5,8 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Giri in corso: «Apri navigazione» accanto al nome del giro e allo stato «In corso»; in basso restano Aggiorna dati,
+  Chat autista, Chiudi giro e Annulla giro.
 - Giri in corso: «Chat autista» è nel riquadro in alto (con i messaggi non letti) e la chat si apre in un pop-up
   con il nome dell'autista; si chiude con la X, Esc o un clic fuori. Il messaggio in scrittura non si perde agli aggiornamenti.
 - Giri in corso: anche la tabella «Fermate del giro» ha la colonna Scarico e l'ultima riga «Rientro al deposito».
