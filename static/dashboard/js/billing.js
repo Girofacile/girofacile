@@ -183,7 +183,8 @@ function renderSubscriptionControls(data) {
   const notes = [!b.checkout_enabled ? 'Acquisti non ancora disponibili. Nessun addebito automatico alla fine della prova.' :
     live ? 'Pagamento con carta tramite Stripe. Il rinnovo è mensile e puoi disdirlo quando vuoi.' :
     'Ambiente di prova: nessun denaro reale viene addebitato.'];
-  if (b.source === 'legacy' || b.source === 'manual') notes.push('Accesso assegnato amministrativamente; non equivale a un abbonamento pagato.');
+  if (b.source === 'complimentary') notes.push('Accesso gratuito assegnato da GiroFacile: nessun pagamento richiesto.');
+  else if (b.source === 'legacy' || b.source === 'manual') notes.push('Accesso assegnato amministrativamente; non equivale a un abbonamento pagato.');
   const warnings = [];
   if (status === 'past_due') warnings.push(`Pagamento da completare. Tolleranza fino al ${fmtDateV63(b.grace_until)}.`);
   if (['expired','cancelled','incomplete'].includes(status)) warnings.push('Puoi consultare ed esportare i dati e terminare i giri già avviati. Nuovi giri non disponibili.');

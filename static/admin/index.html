@@ -755,7 +755,7 @@ function renderUsers(users) {
       </td>
       <td data-label="Azienda" class="gf-muted">${u.company_name || '—'}</td>
       <td data-label="Piano">${badge(u.plan, planName(u.plan))}</td>
-      <td data-label="Stato">${badge(u.plan_status, statusLabel(u.plan_status))}</td>
+      <td data-label="Stato">${badge(u.plan_status, statusLabel(u.plan_status))}${u.billing_source==='complimentary' ? ' <span class="gf-badge" data-status="info">Gratuito</span>' : ''}</td>
       <td data-label="Iscritto" class="gf-muted">${fmtDate(u.created_at)}</td>
       <td data-label="Clienti">${u.customers_count}</td>
       <td data-label="Giri">${u.routes_count}</td>
@@ -813,6 +813,8 @@ async function openUserModal(userId) {
               <option value="cancelled" ${u.plan_status==='cancelled'?'selected':''}>Cancellato</option>
             </select></label>
         </div>
+        <label class="gf-check" for="edit-complimentary"><input type="checkbox" id="edit-complimentary" ${u.billing_source==='complimentary'?'checked':''}> Accesso gratuito, senza abbonamento: il piano resta attivo senza pagamento né scadenza</label>
+        ${u.stripe_subscription_id ? '<p class="gf-field__hint">Salvando, l’account viene scollegato da Stripe. Un abbonamento ancora attivo va prima annullato su Stripe.</p>' : ''}
         <section id="adminPlanSummary" class="gf-card" aria-live="polite">${adminPlanSummary(u.plan)}</section>
         ${u.trial_ends_at ? `<p class="gf-alert" data-status="warning">⏱ Trial scade: ${fmtDate(u.trial_ends_at)}</p>` : ''}
         ${u.stripe_subscription_id ? `<p class="gf-muted">Stripe: ${u.stripe_subscription_id}</p>` : ''}
@@ -835,6 +837,7 @@ async function savePlan() {
       body: JSON.stringify({
         plan: document.getElementById('edit-plan').value,
         plan_status: document.getElementById('edit-status').value,
+        complimentary: document.getElementById('edit-complimentary')?.checked === true,
       })
     });
     showToast('Piano aggiornato', 'success');
@@ -1080,7 +1083,7 @@ async function loadRevenue() {
     document.getElementById('rev-mrr').textContent = `€${data.mrr}`;
     let billingNote=document.getElementById('billingRevenueNote');
     if(!billingNote){billingNote=document.createElement('p');billingNote.id='billingRevenueNote';billingNote.className='gf-muted';document.getElementById('rev-mrr').parentElement.appendChild(billingNote);}
-    billingNote.textContent=`Incassi reali: €${data.actual_receipts_eur || 0} · Account test: ${data.test_accounts || 0} · Accessi amministrativi: ${data.manual_accounts || 0}. Test e accessi gratuiti esclusi dall’MRR.`;
+    billingNote.textContent=`Incassi reali: €${data.actual_receipts_eur || 0} · Account test: ${data.test_accounts || 0} · Accessi amministrativi: ${data.manual_accounts || 0} · Accessi gratuiti: ${data.complimentary_accounts || 0}. Test e accessi gratuiti esclusi dall’MRR.`;
     document.getElementById('rev-arr').textContent = `ARR stimato: €${data.arr}`;
     const stat = (label, value) => `<div class="gf-stat-card"><span class="gf-stat-card__label">${label}</span><strong class="gf-stat-card__value">${value}</strong></div>`;
     document.getElementById('rev-kpi').innerHTML =

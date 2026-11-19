@@ -5,6 +5,9 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Pannello admin: «Accesso gratuito, senza abbonamento» nella scheda azienda (piano attivo senza pagamento né scadenza,
+  etichetta «Gratuito» in lista, escluso dall'MRR). Un abbonamento Stripe annullato, rimborsato o non pagato non blocca
+  più l'assegnazione: l'account viene scollegato da Stripe. Uno ancora attivo va prima annullato su Stripe.
 - Widget iPhone: tema chiaro/scuro automatico, superfici in stile iOS, spaziature compatte e anteprima del formato selezionato.
 
 - Cambio piano con pagina di pagamento chiusa: invece dell'errore «Completa o annulla prima il pagamento» GiroFacile

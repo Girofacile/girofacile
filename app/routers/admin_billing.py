@@ -125,6 +125,7 @@ def admin_revenue(db: Session = Depends(get_db), superadmin: dict = Depends(requ
         "mrr": mrr,
         "test_accounts": sum(u.billing_source == "stripe_test" for u in all_users),
         "manual_accounts": sum(u.billing_source in (None, "manual", "legacy") and get_user_plan_status(u) == "active" for u in all_users),
+        "complimentary_accounts": sum(u.billing_source == "complimentary" and get_user_plan_status(u) == "active" for u in all_users),
         "actual_receipts_eur": float(db.query(func.coalesce(func.sum(BillingPayment.amount), 0)).filter(BillingPayment.is_test.is_(False), BillingPayment.payment_status == "paid", BillingPayment.currency == "EUR").scalar() or 0),
         "arr": arr,
         "abbonamenti_attivi": len(paying),

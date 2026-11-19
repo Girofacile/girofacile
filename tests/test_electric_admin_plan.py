@@ -54,3 +54,45 @@ def test_admin_plan_assignment_checks_current_stripe_link_after_lock(admin_fleet
     assert response.status_code == 409
     assert "Stripe" in response.json()["detail"]
     assert user.plan == original_plan
+
+
+def test_complimentary_access_has_no_payment_and_no_expiry(admin_fleet):
+    """Account scelti dall'amministratore: piano attivo senza abbonamento né scadenza."""
+    from datetime import timedelta
+    from app.core.clock import utc_now
+    from app.services.plans import get_user_plan_status
+    client, db, user, *_ = admin_fleet
+    user.plan, user.plan_status, user.plan_expires_at = "starter", "expired", utc_now() - timedelta(days=1)
+    db.commit()
+    response = client.put(f"/api/admin/users/{user.id}/plan", json={"plan": "pro", "plan_status": "expired", "complimentary": True})
+    assert response.status_code == 200, response.text
+    db.refresh(user)
+    assert (user.plan, user.plan_status, user.plan_expires_at, user.billing_source) == ("pro", "active", None, "complimentary")
+    assert get_user_plan_status(user) == "active"
+    detail = client.get(f"/api/admin/users/{user.id}").json()
+    assert detail["billing_source"] == "complimentary" and detail["plan_status"] == "active"
+
+
+def test_refunded_stripe_account_can_receive_free_access(admin_fleet):
+    """Abbonamento rimborsato o non pagato: non blocca più l'assegnazione e Stripe viene scollegato."""
+    client, db, user, *_ = admin_fleet
+    user.plan, user.plan_status, user.billing_source = "starter", "incomplete", "stripe_live"
+    user.stripe_customer_id, user.stripe_subscription_id, user.billing_cancel_at_period_end = "cus_live", "sub_live", True
+    db.commit()
+    response = client.put(f"/api/admin/users/{user.id}/plan", json={"plan": "business", "complimentary": True})
+    assert response.status_code == 200, response.text
+    db.refresh(user)
+    assert user.stripe_customer_id is None and user.stripe_subscription_id is None
+    assert not user.billing_cancel_at_period_end
+    assert (user.plan, user.plan_status, user.billing_source) == ("business", "active", "complimentary")
+
+
+def test_still_paying_stripe_subscription_is_not_overwritten(admin_fleet):
+    client, db, user, *_ = admin_fleet
+    user.plan, user.plan_status, user.billing_source = "business", "active", "stripe_live"
+    user.stripe_customer_id, user.stripe_subscription_id, user.billing_cancel_at_period_end = "cus_live", "sub_live", False
+    db.commit()
+    response = client.put(f"/api/admin/users/{user.id}/plan", json={"plan": "pro", "complimentary": True})
+    assert response.status_code == 409 and "annullalo prima su Stripe" in response.json()["detail"]
+    db.refresh(user)
+    assert (user.plan, user.billing_source, user.stripe_subscription_id) == ("business", "stripe_live", "sub_live")

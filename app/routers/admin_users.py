@@ -152,11 +152,24 @@ def admin_update_plan(user_id: int, payload: dict, db: Session = Depends(get_db)
     if not user:
         raise HTTPException(404, "Utente non trovato")
     user = lock_vehicle_owner(user, db)
-    if user.stripe_subscription_id:
-        raise HTTPException(409, "Account collegato a Stripe: usare sincronizzazione e gestione abbonamento")
+    # Un abbonamento Stripe che incassa ancora non si sovrascrive: si annulla prima su Stripe.
+    # Uno annullato, rimborsato o mai pagato non blocca più l'assegnazione dal pannello.
+    paying = user.plan_status in ("active", "past_due") and not user.billing_cancel_at_period_end
+    if user.stripe_subscription_id and paying:
+        raise HTTPException(409, "Account collegato a un abbonamento Stripe ancora attivo: annullalo prima su Stripe")
     reason = (payload.get("reason") or "Assegnazione amministrativa dal pannello").strip()[:500]
-    user.billing_source = "manual"
-    _activity(db, superadmin.get("username"), "manual_plan_change", f"Account {user.id}: {user.plan} -> {payload.get('plan', user.plan)}. {reason}", "warning")
+    complimentary = payload.get("complimentary") is True
+    if user.stripe_subscription_id or user.stripe_customer_id:
+        # L'account non dipende più da Stripe: i vecchi riferimenti restano solo nell'attività.
+        reason += f" Stripe scollegato (cliente {user.stripe_customer_id or '-'}, abbonamento {user.stripe_subscription_id or '-'})."
+        user.stripe_subscription_id = user.stripe_customer_id = None
+        user.billing_checkout_id = user.billing_checkout_url = user.billing_checkout_expires = user.billing_checkout_plan = None
+        user.billing_pending_plan = user.billing_change_key = None
+        user.billing_cancel_at_period_end = False
+        user.billing_grace_until = None
+    user.billing_source = "complimentary" if complimentary else "manual"
+    label = "Accesso gratuito senza scadenza" if complimentary else "Assegnazione manuale"
+    _activity(db, superadmin.get("username"), "manual_plan_change", f"Account {user.id}: {user.plan} -> {payload.get('plan', user.plan)}. {label}. {reason}", "warning")
     valid_plans = ("starter", "business", "pro")
     valid_statuses = ("trial", "active", "expired", "cancelled")
     if payload.get("plan") in valid_plans:
@@ -168,6 +181,11 @@ def admin_update_plan(user_id: int, payload: dict, db: Session = Depends(get_db)
             user.plan_expires_at = datetime.fromisoformat(payload["plan_expires_at"])
         except Exception:
             pass
+    if complimentary:
+        # Accesso gratuito: piano attivo finché non lo cambi tu, senza pagamento né scadenza.
+        user.plan_status = "active"
+        user.plan_expires_at = None
+        user.billing_suspended = False
     db.commit()
     fleet = vehicle_usage(user, db)
     return {"ok": True, "plan": user.plan, "plan_status": user.plan_status,
