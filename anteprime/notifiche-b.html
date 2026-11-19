@@ -45,10 +45,10 @@ let filter = 'all';
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const icon = n => `<span class="gf-stat-strip__icon" data-tone="${ICONS[n.type][1]}" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="${ICONS[n.type][0]}"/></svg></span>`;
 function visible(){ return NOTES.filter(n => filter === 'all' || (filter === 'unread' ? n.unread : KIND[n.type] === filter)); }
-function grouped(render){
+function grouped(render, dayWrap = day => `<p class="gf-kicker">${day}</p>`){
   const days = [...new Set(visible().map(n => n.day))];
   if(!days.length) return '<div class="gf-empty"><p>Nessuna notifica in questa vista.</p></div>';
-  return days.map(day => `<p class="gf-kicker">${day}</p>${render(visible().filter(n => n.day === day))}`).join('');
+  return days.map(day => `${dayWrap(day)}${render(visible().filter(n => n.day === day))}`).join('');
 }
 function read(id){ const n = NOTES.find(x => x.id === id); if(n) n.unread = false; draw(); }
 function readAll(){ NOTES.forEach(n => n.unread = false); draw(); }

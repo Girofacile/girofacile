@@ -45,10 +45,10 @@ let filter = 'all';
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const icon = n => `<span class="gf-stat-strip__icon" data-tone="${ICONS[n.type][1]}" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="${ICONS[n.type][0]}"/></svg></span>`;
 function visible(){ return NOTES.filter(n => filter === 'all' || (filter === 'unread' ? n.unread : KIND[n.type] === filter)); }
-function grouped(render){
+function grouped(render, dayWrap = day => `<p class="gf-kicker">${day}</p>`){
   const days = [...new Set(visible().map(n => n.day))];
   if(!days.length) return '<div class="gf-empty"><p>Nessuna notifica in questa vista.</p></div>';
-  return days.map(day => `<p class="gf-kicker">${day}</p>${render(visible().filter(n => n.day === day))}`).join('');
+  return days.map(day => `${dayWrap(day)}${render(visible().filter(n => n.day === day))}`).join('');
 }
 function read(id){ const n = NOTES.find(x => x.id === id); if(n) n.unread = false; draw(); }
 function readAll(){ NOTES.forEach(n => n.unread = false); draw(); }
@@ -65,14 +65,14 @@ function toggleNotifications(open){ const p = document.getElementById('notifPane
 function draw(){
   document.getElementById('notifPanel').innerHTML = `
     <div class="gf-notifications__head"><div><strong>Notifiche</strong><small>${unreadLabel()}</small></div><button type="button" class="gf-icon-button" aria-label="Chiudi" onclick="toggleNotifications(false)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12 M18 6L6 18"/></svg></button></div>
-    <div class="gf-notifications__list gf-stack" data-gap="sm">${grouped(list => `<div class="gf-list">${list.map(n => `
+    <div class="gf-notifications__list">${grouped(list => `<div class="gf-list">${list.map(n => `
       <div class="gf-list-item"${n.unread ? ' aria-current="true"' : ''}>${icon(n)}
         <span class="gf-list-item__main">
           <span class="gf-cluster" data-justify="between"><strong>${esc(n.title)}</strong><small>${n.time}</small></span>
           <small>${esc(n.text)}</small>
           <span class="gf-cluster"><button type="button" class="gf-button" data-variant="link" data-size="sm">${n.action}</button>
           ${n.unread ? `<button type="button" class="gf-button" data-variant="ghost" data-size="sm" onclick="read(${n.id})">Segna letta</button>` : ''}</span>
-        </span></div>`).join('')}</div>`)}</div>
+        </span></div>`).join('')}</div>`, day => `<div class="gf-notification"><p class="gf-kicker">${day}</p></div>`)}</div>
     <footer class="gf-modal__footer"><button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="readAll()">Segna tutte lette</button></footer>`;
 }
 toggleNotifications(true);
