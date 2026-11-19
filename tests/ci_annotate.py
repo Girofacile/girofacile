@@ -7,7 +7,9 @@ import sys
 from pathlib import Path
 
 MAX_LINES = 60
-MAX_CHARS = 6000
+# GitHub taglia i messaggi lunghi: righe accorciate e totale contenuto, così la fine resta visibile.
+MAX_LINE = 300
+MAX_CHARS = 3500
 
 
 def escape(text: str) -> str:
@@ -16,7 +18,8 @@ def escape(text: str) -> str:
 
 
 def annotation(title: str, log_text: str) -> str:
-    tail = "\n".join(log_text.splitlines()[-MAX_LINES:])[-MAX_CHARS:]
+    lines = [line if len(line) <= MAX_LINE else line[:MAX_LINE] + " …" for line in log_text.splitlines()[-MAX_LINES:]]
+    tail = "\n".join(lines)[-MAX_CHARS:]
     safe_title = title.replace("%", "%25").replace("\n", " ").replace("::", ": ").replace(",", ";")
     return f"::error title={safe_title}::{escape(tail or '(nessuna uscita)')}"
 
