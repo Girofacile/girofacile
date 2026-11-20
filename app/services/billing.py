@@ -312,21 +312,29 @@ def release_for_manual_plan(user):
     """Prima di scollegare Stripe (accesso gratuito o piano manuale) nessuna pagina di pagamento resta valida.
 
     Chiude i checkout ancora aperti del cliente e rifiuta se su Stripe c'è un abbonamento che
-    incasserebbe ancora: dopo lo scollegamento GiroFacile ne ignorerebbe gli eventi.
+    incasserebbe ancora o una fattura ancora pagabile: dopo lo scollegamento GiroFacile ne ignorerebbe gli eventi.
     """
     if not user.stripe_customer_id or user.billing_source != billing_source() or config.BILLING_MODE not in ("test", "live"):
         return
     stripe = stripe_client()
+    for sub in stripe.Subscription.list(customer=user.stripe_customer_id, status="all", limit=100).auto_paging_iter():
+        sub = assert_test(sub)
+        if sub.get("status") not in ("canceled", "incomplete_expired") and not sub.get("cancel_at_period_end"):
+            raise HTTPException(409, "Account collegato a un abbonamento Stripe ancora attivo: annullalo prima su Stripe")
+    # Una fattura ancora pagabile (per esempio un rinnovo in ritardo con disdetta programmata) verrebbe
+    # incassata senza più essere associata all'account: va prima annullata o incassata su Stripe.
+    for status in ("open", "draft"):
+        for invoice in stripe.Invoice.list(customer=user.stripe_customer_id, status=status, limit=100).auto_paging_iter():
+            invoice = assert_test(invoice)
+            raise HTTPException(409, f"Fattura Stripe {invoice.get('number') or invoice['id']} ancora da pagare: "
+                                     "annullala o incassala su Stripe prima dell'accesso gratuito")
+    # Solo dopo i controlli: si chiudono le pagine di checkout ancora aperte.
     for session in stripe.checkout.Session.list(customer=user.stripe_customer_id, status="open", limit=100).auto_paging_iter():
         session = assert_test(session)
         try:
             stripe.checkout.Session.expire(session["id"])
         except Exception:
             raise HTTPException(409, "Un pagamento Stripe di questa azienda è appena stato completato: aggiorna lo stato e riprova")
-    for sub in stripe.Subscription.list(customer=user.stripe_customer_id, status="all", limit=100).auto_paging_iter():
-        sub = assert_test(sub)
-        if sub.get("status") not in ("canceled", "incomplete_expired") and not sub.get("cancel_at_period_end"):
-            raise HTTPException(409, "Account collegato a un abbonamento Stripe ancora attivo: annullalo prima su Stripe")
 
 
 def downgrade_excess(db, user, plan):

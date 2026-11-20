@@ -17,14 +17,16 @@ function harness() {
   let timerId = 0;
   const requests = [];
   let holdPreview = null;
-  const source = {id: 1, kind: 'file', status: 'active', version: 1, fields_configured: true, excluded_fields: [],
-    mapping: {external_id: 'ID', number: 'Num', recipient_name: 'Nome', delivery_address: 'Indirizzo'}};
+  const make = id => ({id, kind: 'file', status: 'active', version: 1, fields_configured: true, excluded_fields: [],
+    mapping: {external_id: 'ID', number: 'Num', recipient_name: 'Nome', delivery_address: 'Indirizzo'}});
+  const sources = {1: make(1), 2: make(2)};
   const respond = (path, options) => {
     const body = options?.body && typeof options.body === 'string' ? JSON.parse(options.body) : null;
     requests.push({path, method: options?.method || 'GET', body});
-    if (path === '/api/order-sources') return {items: [source], fields: ['external_id', 'number', 'recipient_name', 'delivery_address', 'phone'], total: 1};
+    if (path === '/api/order-sources') return {items: Object.values(sources), fields: ['external_id', 'number', 'recipient_name', 'delivery_address', 'phone'], total: 1};
     if (path.endsWith('/upload')) return {headers: ['ID', 'Num', 'Nome', 'Indirizzo', 'Telefono'], sample: [], total: 2, run_id: 5, suggested_mapping: {}};
-    if (path === '/api/order-sources/1' && body) { Object.assign(source, {mapping: body.mapping, version: source.version + 1}); return {...source}; }
+    const saved = path.match(/^\/api\/order-sources\/(\d+)$/);
+    if (saved && body) { const source = sources[saved[1]]; Object.assign(source, {mapping: body.mapping, version: source.version + 1}); return {...source}; }
     if (path.endsWith('/preview')) return {status: 'preview_ready', report: {total: 2}, rows: [], offset: 0};
     throw new Error('richiesta inattesa ' + path);
   };
@@ -49,7 +51,7 @@ function harness() {
   const api = context.window.GFOrderImport;
   return {
     api, nodes, requests, selects,
-    select(field, value) { selects.push({dataset: {importField: field}, value}); },
+    select(field, value) { const found = selects.find(s => s.dataset.importField === field); if (found) found.value = value; else selects.push({dataset: {importField: field}, value}); },
     async runTimers() { const pending = [...timers.values()]; timers.clear(); pending.forEach(fn => fn()); for (let i = 0; i < 10; i += 1) await tick(); },
     hold() { let resolve; holdPreview = {promise: new Promise(r => { resolve = r; })}; return () => { holdPreview = null; resolve(); }; },
   };
@@ -90,4 +92,30 @@ test('a column changed while the check is running is checked again and the impor
   await h.runTimers();
   assert.match(h.nodes.orderImportConfirm.innerHTML, /orderImportCommit/);
   assert.equal(h.requests.filter(r => r.path.endsWith('/preview')).length, 2);
+});
+
+test('choosing the unique-code column as order number and back still keeps the unique code', async () => {
+  const h = harness();
+  await uploaded(h);
+  h.select('number', 'ID');
+  h.api.changed();
+  h.select('number', 'Num');
+  h.select('phone', 'Telefono');
+  h.api.changed();
+  await h.runTimers();
+  const saved = h.requests.filter(r => r.path === '/api/order-sources/1' && r.method === 'PUT');
+  assert.equal(saved.length, 1);
+  assert.equal(saved[0].body.mapping.external_id, 'ID');
+});
+
+test('closing and opening another source cancels the pending check of the first one', async () => {
+  const h = harness();
+  await uploaded(h);
+  h.select('phone', 'Telefono');
+  h.api.changed();
+  h.api.close();
+  await h.api.start(2);
+  await h.runTimers();
+  assert.deepEqual(h.requests.filter(r => r.method === 'PUT'), []);
+  assert.equal(h.requests.filter(r => r.path.endsWith('/preview')).length, 1);
 });

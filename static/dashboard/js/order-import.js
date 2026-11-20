@@ -4,6 +4,10 @@
   const el=id=>document.getElementById(id),can=k=>!window.GFCompanyAccess||GFCompanyAccess.can(k);
   const labels={number:'Numero ordine',recipient_name:'Destinatario',phone:'Telefono',delivery_address:'Indirizzo',requested_date:'Data consegna',packages:'Colli',weight_kg:'Peso',external_id:'Codice univoco',external_customer_id:'Codice cliente',time_from:'Dalle',time_to:'Alle',pallets:'Pallet',volume_m3:'Volume',tail_lift:'Sponda',pallet_truck:'Transpallet',ztl:'ZTL',requirements:'Requisiti',notes:'Note',items:'Articoli'};
   let sources=[],fields=[],source=null,stage=null,report=null,mapping={},excluded=[],busy=false,filename='';
+  // ownCode: codice univoco proprio del file (diverso dal numero ordine), fissato al caricamento.
+  // session: cambia a ogni apertura, chiusura, cambio file o caricamento; i controlli di prima si fermano.
+  let ownCode=null,session=0,changeTimer=null;
+  function cancelPending(){session+=1;clearTimeout(changeTimer);}
   const post=value=>({method:'POST',body:JSON.stringify(value)});
   async function api(path,options={}){
     const res=await fetch('/api/order-sources'+path,{...options,headers:options.body instanceof FormData?{}:{'Content-Type':'application/json'}}),data=await res.json();
@@ -25,11 +29,12 @@
   }
   function open(){const dialog=el('orderImportDialog');if(dialog&&!dialog.open)dialog.showModal();}
   function close(){
+    cancelPending();
     const dialog=el('orderImportDialog');if(dialog?.open)dialog.close();
     // Gli ordini appena importati compaiono subito nell'elenco.
     if(report?.status==='completed'&&!el('tab-ordini')?.classList.contains('hidden'))window.GFOrders?.load?.();
   }
-  function start(id){if(busy)return;el('orderImportMessage').textContent='';open();return work(async()=>{
+  function start(id){if(busy)return;cancelPending();el('orderImportMessage').textContent='';open();return work(async()=>{
     const data=await api('');sources=data.items;fields=data.fields;
     for(let offset=50;offset<data.total;offset+=50)sources.push(...(await api('?offset='+offset)).items);
     sources=sources.filter(s=>s.kind==='file'&&['draft','active'].includes(s.status));
@@ -37,6 +42,7 @@
     source=sources.find(s=>s.id===id)||sources.find(s=>s.status==='active')||sources[0]||null;stage=report=null;form();
   });}
   function form(){
+    cancelPending();
     const cancel='<button type="button" class="gf-button" data-variant="secondary" onclick="GFOrderImport.close()">Annulla</button>';
     if(!can('orders.import')&&!can('orders.integrations')){render('<div class="gf-empty"><p><strong>Importazione non abilitata</strong></p><p>Chiedi al responsabile di abilitare il tuo account.</p></div>',cancel);return;}
     render(`<div class="gf-empty"><span class="gf-empty__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 16V4 M7 9l5-5 5 5 M4 20h16"/></svg></span>
@@ -45,7 +51,7 @@
       <p class="gf-field__hint">Servono almeno destinatario e indirizzo · fino a 1000 ordini e 2 MB · un solo foglio, senza formule.</p></div>`,cancel,1);
   }
   function choose(){source=sources.find(s=>s.id===Number(el('orderImportSource').value))||null;el('orderImportNameLabel').hidden=!!source;}
-  function upload(event){event?.preventDefault?.();return work(async()=>{
+  function upload(event){event?.preventDefault?.();cancelPending();return work(async()=>{
     const file=el('orderImportFile')?.files?.[0];if(!file)throw new Error('Scegli il file da importare.');
     if(file.size>2097152)throw new Error('Il file supera 2 MB. Dividilo in file più piccoli.');
     if(!/\.(csv|xlsx)$/i.test(file.name))throw new Error('Scegli un file Excel (.xlsx) o CSV.');
@@ -53,7 +59,8 @@
     const body=new FormData();body.append('file',file);stage=await api('/'+source.id+'/upload',{method:'POST',body});filename=file.name;
     // Colonne ricordate dall'ultimo file, se ci sono tutte; altrimenti quelle riconosciute in questo file.
     const saved=source.mapping||{},fits=Object.keys(saved).length&&Object.values(saved).every(v=>stage.headers.includes(v));
-    mapping=fits?{...saved}:{...stage.suggested_mapping};excluded=[...(source.excluded_fields||[])];report=null;review();
+    mapping=fits?{...saved}:{...stage.suggested_mapping};excluded=[...(source.excluded_fields||[])];report=null;
+    ownCode=mapping.external_id&&mapping.external_id!==mapping.number?mapping.external_id:null;review();
     if(mapping.number&&mapping.external_id&&Object.entries(mapping).every(([k,v])=>excluded.includes(k)||stage.headers.includes(v)))await validate();
   });}
   // Passo 2: una sola tabella «Dato · Colonna del tuo file · Importa», poi l'anteprima e l'esito del controllo.
@@ -91,31 +98,38 @@
     const keys=['number','recipient_name','delivery_address','requested_date','packages'].filter(k=>!excluded.includes(k));
     el('orderImportPreview').innerHTML='<div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards"><thead><tr>'+keys.map(k=>`<th scope="col">${labels[k]}</th>`).join('')+'</tr></thead><tbody>'+stage.sample.map(row=>'<tr>'+keys.map(k=>`<td data-label="${labels[k]}">${esc(String(previewValue(row,k)??'—'))}</td>`).join('')+'</tr>').join('')+'</tbody></table></div><p class="gf-field__hint">Prime '+stage.sample.length+' righe. Potrai completare i dati mancanti negli ordini.</p>';
   }
-  let changeTimer=null;
   function changed(){
-    // Il codice univoco non ha un menu: se il file ne ha uno suo (diverso dal numero ordine) resta quello,
-    // altrimenti segue il numero ordine (stessa regola dei suggerimenti del server). Così un nuovo
-    // caricamento riconosce ancora gli ordini già importati.
-    const own=mapping.external_id&&mapping.external_id!==mapping.number&&stage.headers.includes(mapping.external_id)?mapping.external_id:null;
+    // Il codice univoco non ha un menu: se il file ne ha uno suo (fissato al caricamento) resta quello,
+    // qualunque modifica si faccia nel frattempo; altrimenti segue il numero ordine (stessa regola dei
+    // suggerimenti del server). Così un nuovo caricamento riconosce ancora gli ordini già importati.
     report=null;excluded=readChoices('import');mapping={};
     document.querySelectorAll('[data-import-field]').forEach(n=>{if(n.value)mapping[n.dataset.importField]=n.value;});
-    if(own)mapping.external_id=own;else if(mapping.number)mapping.external_id=mapping.number;
+    if(ownCode&&stage.headers.includes(ownCode))mapping.external_id=ownCode;else if(mapping.number)mapping.external_id=mapping.number;
     previewRows();el('orderImportReport').replaceChildren();confirmation();
     scheduleValidate();
   }
   // Controllo dopo una modifica; se ne è già in corso un altro, si riprova appena finisce.
   function scheduleValidate(){
-    clearTimeout(changeTimer);
-    changeTimer=setTimeout(()=>{if(!(mapping.number&&mapping.recipient_name))return;if(busy){scheduleValidate();return;}work(validate);},400);
+    clearTimeout(changeTimer);const token=session;
+    changeTimer=setTimeout(()=>{if(token!==session||!(mapping.number&&mapping.recipient_name))return;if(busy){scheduleValidate();return;}work(validate);},400);
   }
+  // Ogni richiesta usa la fonte e il caricamento di quando il controllo è partito; se nel frattempo
+  // l'importazione è stata chiusa, riaperta o il file cambiato, il controllo si ferma senza salvare.
   async function validate(){
-    const selection=JSON.stringify({mapping,excluded});
-    if(JSON.stringify(Object.entries(mapping).sort())!==JSON.stringify(Object.entries(source.mapping).sort())){
+    const token=session,src=source,run=stage,selection=JSON.stringify({mapping,excluded});
+    let current=src;
+    if(JSON.stringify(Object.entries(mapping).sort())!==JSON.stringify(Object.entries(src.mapping).sort())){
       if(!can('orders.integrations'))throw new Error('Le colonne sono cambiate. Chiedi al responsabile di aggiornare le associazioni.');
-      source=await api('/'+source.id,{method:'PUT',body:JSON.stringify({version:source.version,mapping})});
+      current=await api('/'+src.id,{method:'PUT',body:JSON.stringify({version:src.version,mapping})});
+      if(token!==session)return;source=current;
     }
-    if(can('orders.integrations')&&(!source.fields_configured||JSON.stringify([...excluded].sort())!==JSON.stringify([...(source.excluded_fields||[])].sort())))source=await api('/'+source.id+'/fields',{method:'PUT',body:JSON.stringify({version:source.version,excluded_fields:excluded})});
-    report=await api(`/${source.id}/runs/${stage.run_id}/preview`,post({}));if(selection!==JSON.stringify({mapping,excluded})){report=null;el('orderImportReport').replaceChildren();confirmation();scheduleValidate();return;}renderReport();confirmation();
+    if(can('orders.integrations')&&(!current.fields_configured||JSON.stringify([...excluded].sort())!==JSON.stringify([...(current.excluded_fields||[])].sort()))){
+      current=await api('/'+src.id+'/fields',{method:'PUT',body:JSON.stringify({version:current.version,excluded_fields:excluded})});
+      if(token!==session)return;source=current;
+    }
+    const result=await api(`/${src.id}/runs/${run.run_id}/preview`,post({}));
+    if(token!==session)return;report=result;
+    if(selection!==JSON.stringify({mapping,excluded})){report=null;el('orderImportReport').replaceChildren();confirmation();scheduleValidate();return;}renderReport();confirmation();
   }
   function renderReport(){
     const r=report.report,invalid=r.invalid||report.status==='failed';

@@ -267,7 +267,7 @@ def _pages(items):
     return SimpleNamespace(auto_paging_iter=lambda: iter(items))
 
 
-@pytest.mark.parametrize('case', ['open_checkout', 'paid_meanwhile', 'live_subscription'])
+@pytest.mark.parametrize('case', ['open_checkout', 'paid_meanwhile', 'live_subscription', 'open_invoice', 'draft_invoice'])
 def test_free_access_closes_open_stripe_payments_first(billing_env, live, monkeypatch, case):
     """Accesso gratuito con un checkout ancora aperto: la pagina Stripe si chiude prima di scollegare."""
     from app.services import billing
@@ -288,7 +288,10 @@ def test_free_access_closes_open_stripe_payments_first(billing_env, live, monkey
     fake = SimpleNamespace(
         checkout=SimpleNamespace(Session=SimpleNamespace(
             list=lambda **k: _pages([{'id': 'cs_live', 'livemode': True, 'status': 'open'}]), expire=expire)),
-        Subscription=SimpleNamespace(list=lambda **k: _pages(subs)))
+        Subscription=SimpleNamespace(list=lambda **k: _pages(subs)),
+        # Rinnovo in ritardo con disdetta programmata: la fattura resta pagabile.
+        Invoice=SimpleNamespace(list=lambda **k: _pages(
+            [{'id': 'in_late', 'number': 'GF-7', 'livemode': True, 'status': k['status']}] if case == k['status'] + '_invoice' else [])))
     monkeypatch.setattr(billing, 'stripe_client', lambda *a: fake)
     response = client.put(f'/api/admin/users/{user.id}/plan', json={'plan': 'pro', 'complimentary': True})
     db.refresh(user)
@@ -299,6 +302,8 @@ def test_free_access_closes_open_stripe_payments_first(billing_env, live, monkey
     else:
         assert response.status_code == 409
         assert (user.billing_source, user.stripe_customer_id) == ('stripe_live', 'cus_live')
+        if case.endswith('_invoice'):
+            assert 'GF-7' in response.json()['detail']
 
 
 def test_old_invoices_stay_downloadable_after_free_access(billing_env, live, monkeypatch):

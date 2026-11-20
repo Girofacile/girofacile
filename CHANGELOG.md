@@ -5,6 +5,11 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Importazione ordini: il codice univoco proprio del file resta fissato dal caricamento anche dopo più modifiche
+  delle colonne; chiudendo o riaprendo l'importazione (o cambiando file) i controlli in attesa si annullano e
+  non salvano più le associazioni in un'altra fonte.
+- Accesso gratuito: si ferma anche se su Stripe c'è una fattura ancora da pagare (per esempio un rinnovo in ritardo
+  con disdetta programmata); i checkout aperti si chiudono solo dopo tutti i controlli.
 - Accesso gratuito dal pannello admin: prima di scollegare Stripe si chiudono i checkout ancora aperti dell'azienda;
   se nel frattempo un pagamento è stato completato o c'è un abbonamento che incassa ancora, l'assegnazione si ferma.
 - Cambio piano annullato: la fattura del conguaglio annullata non segna più l'account come pagamento incompleto;
