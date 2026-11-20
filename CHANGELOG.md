@@ -5,6 +5,10 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Card di autisti, mezzi e clienti (variante A): intestazione con nome e stato (o selezione), poi ogni dato su una riga
+  con l'etichetta a sinistra e il valore a destra, azioni in fondo a destra. I mezzi mostrano anche la portata.
+  Nei clienti la verifica dell'indirizzo non compare più: ci sono la fascia di scarico («Imposta fascia» se manca)
+  e il tempo di scarico con la sua etichetta.
 - Importazione ordini: il codice univoco proprio del file resta fissato dal caricamento anche dopo più modifiche
   delle colonne; chiudendo o riaprendo l'importazione (o cambiando file) i controlli in attesa si annullano e
   non salvano più le associazioni in un'altra fonte.

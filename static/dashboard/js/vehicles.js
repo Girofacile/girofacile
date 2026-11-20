@@ -39,6 +39,13 @@ function setVehiclePhotoPreview(){
    ? `<img src="${esc(url)}" alt="Foto mezzo" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span class="fleet-photo-placeholder" hidden>${vehiclePlaceholderSvg('is-preview')}</span>`
    : `<span class="fleet-photo-placeholder">${vehiclePlaceholderSvg('is-preview')}</span>`;
 }
+// Portata della card: peso e colli, quando indicati.
+function fleetCapacityLabel(x){
+ const parts=[];
+ if(Number(x.capacita_kg)>0)parts.push(Number(x.capacita_kg).toLocaleString('it-IT')+' kg');
+ if(Number(x.capacita_colli)>0)parts.push(Number(x.capacita_colli).toLocaleString('it-IT')+' colli');
+ return parts.join(' · ')||'Non indicata';
+}
 function fleetStatus(x){return `<span class="gf-badge" data-dot data-status="${fleetIsAvailable(x)?'success':'warning'}">${esc(x.stato||'Stato non disponibile')}</span>`;}
 function fleetActions(x){return `<div class="gf-cluster"><button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="editVehicle(${Number(x.id)})" aria-label="Modifica ${esc(x.nome)}">${fleetIcon('edit')}Modifica</button><button type="button" class="gf-button" data-variant="danger" data-size="sm" onclick="deleteVehicle(${Number(x.id)})" aria-label="Elimina ${esc(x.nome)}">${fleetIcon('trash')}Elimina</button></div>`;}
 function setFleetView(view){
@@ -53,7 +60,7 @@ function renderFleetDirectory(){
  write('fleetMetricAvailable',vehiclesCache.filter(fleetIsAvailable).length);
  write('fleetMetricBusy',vehiclesCache.filter(x=>!fleetIsAvailable(x)).length);
  const rows=fleetFilteredVehicles();
- cards.innerHTML=rows.map(x=>`<article class="gf-card gf-stack"><div class="gf-cluster">${fleetPhoto(x)}<div><h3 class="gf-subtitle">${esc(x.nome||'Mezzo')}</h3><span class="gf-muted">${esc(x.targa||'Targa non indicata')}</span></div>${fleetStatus(x)}</div><dl class="gf-details">${[['Tipo veicolo',x.carrozzeria||'Non specificato'],['Alimentazione',GF_FUEL_LABELS_V895[x.alimentazione]||x.alimentazione||'Non specificata'],['Consumo',energyConsumptionLabelV895(x)]].map(([label,value])=>`<div class="gf-details__item"><dt>${label}</dt><dd>${esc(value)}</dd></div>`).join('')}</dl>${fleetActions(x)}</article>`).join('');
+ cards.innerHTML=rows.map(x=>`<article class="gf-card gf-stack"><div class="gf-cluster" data-justify="between"><div class="gf-cluster">${fleetPhoto(x)}<div><h3 class="gf-subtitle">${esc(x.nome||'Mezzo')}</h3><small class="gf-muted">${esc(x.targa||'Targa non indicata')}</small></div></div>${fleetStatus(x)}</div><dl class="gf-details" data-layout="rows">${[['Tipo veicolo',x.carrozzeria||'Non specificato'],['Alimentazione',GF_FUEL_LABELS_V895[x.alimentazione]||x.alimentazione||'Non specificata'],['Consumo',energyConsumptionLabelV895(x)],['Portata',fleetCapacityLabel(x)]].map(([label,value])=>`<div class="gf-details__item"><dt class="gf-muted">${label}</dt><dd>${esc(value)}</dd></div>`).join('')}</dl><div class="gf-cluster" data-justify="end">${fleetActions(x)}</div></article>`).join('');
  body.innerHTML=rows.map(x=>`<tr><td data-label="Mezzo"><div class="gf-cluster">${fleetPhoto(x)}<strong>${esc(x.nome||'Mezzo')}</strong></div></td><td data-label="Targa">${esc(x.targa||'—')}</td><td data-label="Tipo veicolo">${esc(x.carrozzeria||'Non specificato')}</td><td data-label="Alimentazione">${esc(GF_FUEL_LABELS_V895[x.alimentazione]||x.alimentazione||'—')}</td><td data-label="Consumo">${esc(energyConsumptionLabelV895(x))}</td><td data-label="Stato">${fleetStatus(x)}</td><td data-label="Sponda" data-gf-feature="tail_lift">${x.ha_sponda?'Sì':'No'}</td><td data-label="Azioni">${fleetActions(x)}</td></tr>`).join('');
  cards.classList.toggle('hidden',fleetView!=='cards'||!rows.length);
  document.getElementById('fleetTable').classList.toggle('hidden',fleetView!=='table'||!rows.length);

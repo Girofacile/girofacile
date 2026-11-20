@@ -193,11 +193,13 @@ function customerStatusMarkup(x){
       ? '<span class="gf-badge" data-status="danger">Non trovato</span>'
       : '<span class="gf-badge" data-status="warning">Da verificare</span>';
 }
-function cxSlotMarkup(x){
+function cxSlotMarkup(x,card){
   const slots=cxSlots(x);
   return slots.length
     ? '<span class="gf-badge" data-status="info">'+cxIcon('clock')+cxEsc(slots.join(' / '))+'</span>'
-    : '<button type="button" class="gf-button" data-variant="link" data-size="sm" data-cx-slot="'+Number(x.id)+'" title="Imposta la fascia di scarico">Non impostata</button>';
+    : card
+      ? '<button type="button" class="gf-button" data-variant="secondary" data-size="sm" data-cx-slot="'+Number(x.id)+'" aria-label="Imposta la fascia di scarico di '+cxEsc(x.nome)+'">'+cxIcon('clock')+'Imposta fascia</button>'
+      : '<button type="button" class="gf-button" data-variant="link" data-size="sm" data-cx-slot="'+Number(x.id)+'" title="Imposta la fascia di scarico">Non impostata</button>';
 }
 function cxActions(x){
   const id=Number(x.id);
@@ -289,10 +291,15 @@ function renderCustomerDirectory(){
     html='<div class="gf-panel__body"><label class="gf-check">'+allBox+'<span>Seleziona tutti quelli della pagina</span></label></div>'
       +'<div class="gf-panel__body gf-grid" data-cols="3" id="customerCards">'+visible.map(x=>{
       const id=Number(x.id),on=sel.has(id);
+      // Variante A: intestazione con selezione, righe etichetta e valore (indirizzo, fascia e tempo di scarico), azioni in fondo.
+      const row=(label,value,feature)=>'<div class="gf-details__item"'+(feature?' data-gf-feature="'+feature+'"':'')+'><dt class="gf-muted">'+label+'</dt><dd>'+value+'</dd></div>';
       return '<article class="gf-card gf-stack" data-cx-row="'+id+'" aria-selected="'+on+'">'
-        +'<label class="gf-check"><input type="checkbox" class="cx-cb" data-cx-cb="'+id+'" aria-label="Seleziona '+cxEsc(x.nome)+'"'+(on?' checked':'')+'><span>Seleziona</span></label>'
-        +cxNameCell(x)+cxAddressCell(x)
-        +'<div class="gf-cluster"><span data-gf-feature="time_windows">'+cxSlotMarkup(x)+'</span>'+cxUnloadField(x)+'</div>'+cxActions(x)+'</article>';
+        +'<div class="gf-cluster" data-justify="between">'+cxNameCell(x)
+        +'<label class="gf-check"><input type="checkbox" class="cx-cb" data-cx-cb="'+id+'" aria-label="Seleziona '+cxEsc(x.nome)+'"'+(on?' checked':'')+'></label></div>'
+        +'<dl class="gf-details" data-layout="rows">'+row('Indirizzo',cxAddressCell(x))
+        +row('Fascia di scarico',cxSlotMarkup(x,true),'time_windows')
+        +row('Tempo di scarico (min)',cxUnloadField(x))+'</dl>'
+        +'<div class="gf-cluster" data-justify="end">'+cxActions(x)+'</div></article>';
     }).join('')+'</div>';
   }
   target.innerHTML=html;
