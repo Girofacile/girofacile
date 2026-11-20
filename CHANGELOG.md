@@ -5,6 +5,8 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Giri in corso (variante D): in alto una striscia «Giri attivi» con un riquadro semplice per giro (iniziali
+  dell'autista, nome del giro, nome dell'autista); il giro aperto è evidenziato. Tolta la tabella con filtri e segnali.
 - Giri in corso: «Apri navigazione» accanto al nome del giro e allo stato «In corso»; in basso restano Aggiorna dati,
   Chat autista, Chiudi giro e Annulla giro.
 - Giri in corso: «Chat autista» è nel riquadro in alto (con i messaggi non letti) e la chat si apre in un pop-up

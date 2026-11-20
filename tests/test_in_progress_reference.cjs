@@ -128,8 +128,8 @@ test('nuovo layout giri in corso mantiene i dati reali e le azioni operative',()
   assert.match(page.innerHTML,/Firma/);
   assert.match(page.innerHTML,/Chat autista/);
   assert.match(picker.innerHTML,/Autista Verificato/);
-  assert.match(picker.innerHTML,/Furgone Uno/);
-  assert.equal(count.textContent,'1 giro attivo');
+  assert.match(picker.innerHTML,/Giro aziendale/);
+  assert.equal(count.textContent,'1');
   assert.doesNotMatch(page.innerHTML,/Alessandro Paglietta|Supermercati Iorio|GIRI=/);
 });
 
@@ -236,28 +236,22 @@ test('zero-valued GPS coordinates remain valid',()=>{
   assert.equal(f.state.vehicle.coord[0],0);assert.equal(f.state.vehicle.coord[1],0);
 });
 
-test('giri attivi in tabella: prossima fermata, rientro, segnali e giro aperto',()=>{
-  const {picker,route,controller}=harness();
-  const late={...route,id:20,driver_name:'Seconda Autista',vehicle_name:'Furgone Due',consegne:undefined,
-    consegne_count:9,completed_count:6,missed_count:1,orario_rientro_stimato:'13:40',rientro_stimato_aggiornato:'13:52',
-    next_delivery:{cliente_nome:'Pasticceria Del Corso',indirizzo:'Corso Umberto I 2, Cicciano',ordine:8},unread_driver_messages:2};
-  controller.render([route,late],route);
-  const rows=picker.innerHTML.split('<tr ').slice(1);
-  assert.equal(rows.length,2);
-  assert.match(rows[0],/Aperto sotto/);
-  assert.match(rows[0],/aria-pressed="true"/);
-  assert.match(rows[1],/>Apri</);
-  assert.match(rows[1],/Pasticceria Del Corso/);
-  assert.match(rows[1],/Corso Umberto I 2, Cicciano/);
-  assert.match(rows[1],/<strong>13:52<\/strong>/);
-  assert.match(rows[1],/Previsto 13:40/);
-  assert.match(rows[1],/\+12 min/);
-  assert.match(rows[1],/1 mancata/);
-  assert.match(rows[1],/2 messaggi/);
-  assert.match(rows[1],/6\/9<\/b> consegne/);
-  assert.match(rows[1],/data-label="Prossima fermata"/);
+test('striscia giri attivi: un riquadro semplice per giro, il giro aperto evidenziato',()=>{
+  const {page,picker,route,controller}=harness();
+  const other={...route,id:20,nome:'Giro Salerno',driver_name:'Seconda Autista',consegne:undefined};
+  controller.render([route,other],route);
+  const boxes=picker.innerHTML.split('<label ').slice(1);
+  assert.equal(boxes.length,2);
+  assert.match(boxes[0],/data-variant="info"/);
+  assert.match(boxes[0],/<strong>Giro aziendale<\/strong><small>Autista Verificato<\/small>/);
+  assert.match(boxes[0],/class="gf-avatar" data-tone="1" aria-hidden="true">AV</);
+  assert.match(boxes[0],/name="ipRoute" value="19" data-ip-route="19" checked/);
+  assert.doesNotMatch(boxes[1],/data-variant="info"|checked/);
+  assert.match(boxes[1],/Giro Salerno[^]*Seconda Autista/);
+  // Niente più tabella con filtri, prossima fermata e segnali in questa sezione.
+  assert.doesNotMatch(page.innerHTML,/data-ip-filter|Prossima fermata<\/th>|Aperto sotto/);
+  assert.match(page.innerHTML,/role="radiogroup" aria-label="Scegli il giro da aprire"/);
 });
-
 
 test('la tabella dei giri in corso mostra lo scarico e finisce con il rientro al deposito',()=>{
   const {page,route,controller}=harness();

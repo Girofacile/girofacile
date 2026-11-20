@@ -51,43 +51,23 @@ window.GFInProgressReference=(()=>{
     const [y,m,g]=r.data_giro.split('-').map(Number);
     return new Intl.DateTimeFormat('it-IT',{weekday:'short',day:'numeric',month:'long'}).format(new Date(y,m-1,g));
   }
+  // Variante D (20 novembre 2026): striscia «Giri attivi» con un riquadro semplice per giro.
   function routeCard(r,index){
-    const s=stat(r),p=state.gps.get(Number(r.id)),chosen=Number(state.id)===Number(r.id),late=delay(r);
-    const next=r.next_delivery,eta=r.rientro_stimato_aggiornato||r.orario_rientro_stimato||'—';
-    const etaNote=late?'Previsto '+esc(r.orario_rientro_stimato):r.rientro_stimato_aggiornato?'In orario':'Orario previsto';
-    const unread=n(r.unread_driver_messages);
-    return '<tr data-ip-route="'+Number(r.id)+'"'+(chosen?' aria-current="true"':'')+'>'+
-      '<td data-label="Autista e mezzo"><div class="gf-cluster"><span class="gf-avatar" data-tone="'+(index%6+1)+'" aria-hidden="true">'+esc(initials(r.driver_name))+'</span>'+
-        '<div><strong>'+esc(r.driver_name||'Autista non assegnato')+'</strong><br><small class="gf-muted">'+esc(r.vehicle_name||'Mezzo non assegnato')+'</small></div></div></td>'+
-      '<td data-label="Avanzamento"><div class="gf-progress"><div class="gf-progress__top"><span><b>'+s.done+'/'+s.total+'</b> consegne</span><span>'+s.todo+' da fare</span></div>'+bar(r)+'</div></td>'+
-      '<td data-label="Prossima fermata">'+(next?'<strong>'+esc(next.cliente_nome||'Fermata '+(next.ordine||''))+'</strong><br><small class="gf-muted">'+esc(next.indirizzo||'')+'</small>':'<span class="gf-muted">Tutte le fermate gestite</span>')+'</td>'+
-      '<td data-label="Rientro stimato"><strong>'+esc(eta)+'</strong><br><small class="gf-muted">'+etaNote+'</small></td>'+
-      '<td data-label="Segnali"><div class="gf-cluster">'+
-        (openSince(r)?'<span class="gf-badge" data-status="warning">Aperto dal '+esc(openSince(r))+'</span>':'')+
-        (s.miss?'<span class="gf-badge" data-status="danger">'+gfCount(s.miss,'mancata','mancate')+'</span>':'')+
-        (late?'<span class="gf-badge" data-status="warning">+'+late+' min</span>':'')+
-        '<span class="gf-badge" data-dot data-status="'+gpsTone(p)+'">'+esc(gpsText(p))+'</span>'+
-        (unread?'<span class="gf-badge" data-status="info">'+gfCount(unread,'messaggio','messaggi')+'</span>':'')+
-      '</div></td>'+
-      '<td data-label="Dettaglio"><button type="button" class="gf-button" data-size="sm" data-variant="'+(chosen?'primary':'secondary')+'" data-ip-route="'+Number(r.id)+'" aria-pressed="'+chosen+'">'+(chosen?'Aperto sotto':'Apri')+'</button></td></tr>';
+    const chosen=Number(state.id)===Number(r.id);
+    return '<label class="gf-card gf-planning-choice"'+(chosen?' data-variant="info"':'')+'>'+
+      '<span class="gf-cluster"><span class="gf-avatar" data-tone="'+(index%6+1)+'" aria-hidden="true">'+esc(initials(r.driver_name))+'</span>'+
+      '<span class="gf-list-item__main"><strong>'+esc(r.nome||'Giro consegne')+'</strong><small>'+esc(r.driver_name||'Autista non assegnato')+'</small></span>'+
+      '<input type="radio" name="ipRoute" value="'+Number(r.id)+'" data-ip-route="'+Number(r.id)+'"'+(chosen?' checked':'')+
+      ' aria-label="'+esc((r.nome||'Giro consegne')+' · '+(r.driver_name||'Autista non assegnato'))+'"></span></label>';
   }
-  function filtered(){
-    return state.routes.filter(r=>state.filter==='issue'?issue(r):
-      state.filter==='gps'?(state.gps.get(Number(r.id))?.state||'fresh')!=='fresh':true);
-  }
+  function filtered(){ return state.routes; }
   function paintCards(){
     const page=root();if(!page)return;
     const box=page.querySelector('[data-ip-picker]');if(!box)return;
     const visible=filtered();
-    box.innerHTML=visible.length?visible.map(r=>routeCard(r,state.routes.indexOf(r))).join(''):'<tr><td colspan="6"><div class="gf-empty"><p>Nessun giro corrisponde al filtro selezionato.</p></div></td></tr>';
-    const issueCount=state.routes.filter(issue).length;
-    const gpsCount=state.routes.filter(r=>state.gps.has(Number(r.id))&&state.gps.get(Number(r.id)).state!=='fresh').length;
-    [['all','Tutti ('+state.routes.length+')'],['issue','Con mancate o ritardi ('+issueCount+')'],['gps','GPS da controllare ('+gpsCount+')']].forEach(([key,label])=>{
-      const b=page.querySelector('[data-ip-filter="'+key+'"]');
-      if(b){b.textContent=label;b.setAttribute('aria-pressed',String(state.filter===key));}
-    });
+    box.innerHTML=visible.map(r=>routeCard(r,state.routes.indexOf(r))).join('');
     const count=page.querySelector('[data-ip-count]');
-    if(count)count.textContent=state.routes.length+' '+(state.routes.length===1?'giro attivo':'giri attivi');
+    if(count)count.textContent=String(state.routes.length);
   }
   function stopRow(d,i,r,planned){
     const type=outcome(d),notes=d.note_operatore||d.note_autista||d.note||'';
@@ -262,19 +242,9 @@ window.GFInProgressReference=(()=>{
     page.innerHTML=`
       <section class="gf-panel" aria-label="Giri attivi">
         <header class="gf-panel__header">
-          <div><h2 class="gf-panel__title">Giri attivi</h2><p class="gf-muted"><span data-ip-count></span> · aggiornamento automatico ogni 30 secondi, ultimo alle ${esc(updated)}</p></div>
-          <div class="gf-cluster" role="group" aria-label="Filtra i giri">
-            <button type="button" class="gf-chip" data-ip-filter="all">Tutti</button>
-            <button type="button" class="gf-chip" data-ip-filter="issue">Con mancate o ritardi</button>
-            <button type="button" class="gf-chip" data-ip-filter="gps">GPS da controllare</button>
-          </div>
+          <div><h2 class="gf-panel__title">Giri attivi (<span data-ip-count></span>)</h2><p class="gf-muted">Aggiornamento automatico ogni 30 secondi, ultimo alle ${esc(updated)}</p></div>
         </header>
-        <div class="gf-table-wrap">
-          <table class="gf-table" data-gf-responsive="cards" aria-label="Giri attivi">
-            <thead><tr><th scope="col">Autista e mezzo</th><th scope="col">Avanzamento</th><th scope="col">Prossima fermata</th><th scope="col">Rientro stimato</th><th scope="col">Segnali</th><th scope="col"><span class="gf-muted">Dettaglio</span></th></tr></thead>
-            <tbody data-ip-picker></tbody>
-          </table>
-        </div>
+        <div class="gf-panel__body gf-cluster" data-ip-picker role="radiogroup" aria-label="Scegli il giro da aprire"></div>
       </section>
       <section class="gf-route-panel" aria-label="Dettaglio del giro selezionato">
         <div class="gf-route-panel__map">
@@ -406,13 +376,6 @@ window.GFInProgressReference=(()=>{
   });
   document.addEventListener('keydown',event=>{
     if(event.key==='Escape'&&state.chat&&visible()){openChat(false);return;}
-    if(!event.target.matches('#tab-dashboard-in-progress [data-ip-route]'))return;
-    if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key))return;
-    const arr=filtered(),i=arr.findIndex(r=>Number(r.id)===Number(event.target.dataset.ipRoute));
-    if(i<0||!arr.length)return;
-    event.preventDefault();
-    const next=arr[(i+(['ArrowRight','ArrowDown'].includes(event.key)?1:-1)+arr.length)%arr.length];
-    openDashboardInProgressPage(next.id);
   });
   return {render,suspend,refresh};
 })();
