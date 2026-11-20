@@ -139,6 +139,9 @@ def route_replay(case, resource, order, start=None):
         result["timings"].append({
             "index": index, "arrival": arrival, "service_start": ready,
             "service_end": cursor, "wait": wait,
+            # Attesa per l'apertura del cliente (non per una pausa): solo questa può
+            # spostare la partenza, come nel motore (optimizer.opening_wait).
+            "opened": any(abs(ready - opening) < 1e-6 for opening, _ in windows),
         })
     if case.get("return_depot", True):
         travel(0)
@@ -179,31 +182,38 @@ def _aggregate(orders, routes, extra_errors=()):
 # Copia del valore di app/optimizer.py (il verificatore non importa codice dell'app);
 # tests/test_fleet_work_metrics.py controlla che restino uguali.
 KM_PER_HOUR = 60
+# Passo con cui il motore sposta la partenza (optimizer.realizable_departure_slack).
+DEPARTURE_STEP = 5
 
 
 def work_route(case, resource, order):
     """Il giro con la partenza più tarda che non sposta il rientro: le attese iniziali che
-    si eliminano partendo dopo non sono lavoro dell'autista (come fa il motore)."""
+    si eliminano partendo dopo non sono lavoro dell'autista (come fa il motore).
+
+    Stesse regole del motore (optimizer.realizable_departure_slack): ritardo a passi di
+    5 minuti, al massimo pari alle attese per l'apertura dei clienti (una pausa da sola
+    non sposta mai la partenza), e nessuno spostamento per una partenza fissa.
+    """
     base = route_replay(case, resource, order)
-    if not order or not base["feasible"]:
+    settings = case["resources"][resource] if isinstance(resource, int) else resource
+    if not order or not base["feasible"] or settings.get("_flexible_departure", True) is False:
         return base
     start = base["end"] - base["minutes"]
+    opening_wait = sum(stop["wait"] for stop in base["timings"] if stop["opened"])
 
-    def same_day(delay):
-        trial = route_replay(case, resource, order, start=start + delay)
+    def same_day(steps):
+        trial = route_replay(case, resource, order, start=start + steps * DEPARTURE_STEP)
         return trial["feasible"] and trial["end"] <= base["end"] + _EPS
 
-    low, high = 0.0, 720.0
-    if same_day(high):
-        low = high
-    else:
-        for _ in range(40):
-            middle = (low + high) / 2
-            if same_day(middle):
-                low = middle
-            else:
-                high = middle
-    return route_replay(case, resource, order, start=start + low) if low > 0 else base
+    # Con viaggi e scarichi «primo arrivato, primo servito» le partenze valide sono un prefisso.
+    low, high = 0, int(math.floor((opening_wait + 1e-9) / DEPARTURE_STEP))
+    while low < high:
+        middle = (low + high + 1) // 2
+        if same_day(middle):
+            low = middle
+        else:
+            high = middle - 1
+    return route_replay(case, resource, order, start=start + low * DEPARTURE_STEP) if low else base
 
 
 def work_metrics(case, orders):

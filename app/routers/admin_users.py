@@ -160,6 +160,8 @@ def admin_update_plan(user_id: int, payload: dict, db: Session = Depends(get_db)
     reason = (payload.get("reason") or "Assegnazione amministrativa dal pannello").strip()[:500]
     complimentary = payload.get("complimentary") is True
     if user.stripe_subscription_id or user.stripe_customer_id:
+        from ..services.billing import release_for_manual_plan
+        release_for_manual_plan(user)
         # L'account non dipende più da Stripe: i vecchi riferimenti restano solo nell'attività.
         reason += f" Stripe scollegato (cliente {user.stripe_customer_id or '-'}, abbonamento {user.stripe_subscription_id or '-'})."
         user.stripe_subscription_id = user.stripe_customer_id = None

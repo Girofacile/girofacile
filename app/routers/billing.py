@@ -301,14 +301,16 @@ def billing_portal(db: Session = Depends(get_db), user: User = Depends(current_u
 @router.get("/invoices/{invoice_id}/download")
 def invoice_download(invoice_id: int, db: Session = Depends(get_db), user: User = Depends(current_user)):
     from fastapi.responses import RedirectResponse
-    from ..services.billing import stripe_client, assert_test, object_id
+    from ..services.billing import stripe_client, assert_test, is_live
     row = db.query(BillingInvoice).filter_by(id=invoice_id, user_id=user.id).first()
     if not row or not row.stripe_invoice_id:
         raise HTTPException(404, "Documento non disponibile")
+    if bool(row.is_test) == is_live():
+        raise HTTPException(404, "Documento della modalità di prova: non più scaricabile")
     stripe = stripe_client(user)
+    # La riga nasce solo da una fattura già verificata per questa azienda: resta scaricabile anche
+    # dopo che Stripe è stato scollegato (accesso gratuito) o sostituito da un nuovo cliente.
     invoice = assert_test(stripe.Invoice.retrieve(row.stripe_invoice_id))
-    if object_id(invoice.get("customer")) != user.stripe_customer_id:
-        raise HTTPException(404, "Documento non disponibile")
     url = invoice.get("invoice_pdf")
     if not url or not url.startswith("https://"):
         raise HTTPException(404, "PDF non disponibile")

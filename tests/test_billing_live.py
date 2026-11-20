@@ -233,3 +233,85 @@ def test_closed_payment_page_of_a_plan_change_can_be_resumed_or_cancelled(billin
     state.update(pending=True, invoice='open', void_discards=False)
     stuck = client.post('/api/billing/cancel-checkout', json={})
     assert stuck.status_code == 409 and 'non si è annullato' in stuck.json()['detail']
+
+
+def test_discarded_plan_change_keeps_the_paid_plan_active(billing_env, live, monkeypatch):
+    """Dopo l'annullamento di un cambio piano la fattura annullata non blocca il piano già pagato."""
+    from app.services.billing import sync_subscription
+    client, db, user, *_ = billing_env
+    configure_prices(monkeypatch)
+    user.plan, user.plan_status = 'starter', 'active'
+    user.stripe_customer_id, user.stripe_subscription_id, user.billing_source = 'cus_live', 'sub_live', 'stripe_live'
+    sync_subscription(db, user, pending_subscription(user, {'pending': False, 'invoice': 'void'}))
+    assert (user.plan, user.plan_status) == ('starter', 'active')
+    # Anche chi era già stato segnato «incompleto» per errore torna attivo alla sincronizzazione.
+    user.plan_status = 'incomplete'
+    sync_subscription(db, user, pending_subscription(user, {'pending': False, 'invoice': 'void'}))
+    assert user.plan_status == 'active'
+    # Un conguaglio ancora da pagare, invece, non attiva nulla.
+    user.plan_status = 'incomplete'
+    sync_subscription(db, user, pending_subscription(user, {'pending': False, 'invoice': 'open'}))
+    assert user.plan_status == 'incomplete'
+
+
+def _admin(env):
+    from app.core.dependencies import require_superadmin
+    from app.routers.admin_users import router
+    client = env[0]
+    client.app.include_router(router)
+    client.app.dependency_overrides[require_superadmin] = lambda: {
+        "username": "test-admin", "role": "superadmin", "permissions": {"all": True}}
+
+
+def _pages(items):
+    return SimpleNamespace(auto_paging_iter=lambda: iter(items))
+
+
+@pytest.mark.parametrize('case', ['open_checkout', 'paid_meanwhile', 'live_subscription'])
+def test_free_access_closes_open_stripe_payments_first(billing_env, live, monkeypatch, case):
+    """Accesso gratuito con un checkout ancora aperto: la pagina Stripe si chiude prima di scollegare."""
+    from app.services import billing
+    client, db, user, *_ = billing_env
+    _admin(billing_env)
+    user.plan, user.plan_status = 'starter', 'trial'
+    user.stripe_customer_id, user.billing_source = 'cus_live', 'stripe_live'
+    user.billing_checkout_id = 'cs_live'
+    db.commit()
+    expired = []
+
+    def expire(session_id):
+        if case == 'paid_meanwhile':
+            raise RuntimeError('session already complete')
+        expired.append(session_id)
+
+    subs = [{'id': 'sub_x', 'livemode': True, 'status': 'active', 'cancel_at_period_end': False}] if case == 'live_subscription' else []
+    fake = SimpleNamespace(
+        checkout=SimpleNamespace(Session=SimpleNamespace(
+            list=lambda **k: _pages([{'id': 'cs_live', 'livemode': True, 'status': 'open'}]), expire=expire)),
+        Subscription=SimpleNamespace(list=lambda **k: _pages(subs)))
+    monkeypatch.setattr(billing, 'stripe_client', lambda *a: fake)
+    response = client.put(f'/api/admin/users/{user.id}/plan', json={'plan': 'pro', 'complimentary': True})
+    db.refresh(user)
+    if case == 'open_checkout':
+        assert response.status_code == 200, response.text
+        assert expired == ['cs_live']
+        assert (user.billing_source, user.stripe_customer_id, user.billing_checkout_id) == ('complimentary', None, None)
+    else:
+        assert response.status_code == 409
+        assert (user.billing_source, user.stripe_customer_id) == ('stripe_live', 'cus_live')
+
+
+def test_old_invoices_stay_downloadable_after_free_access(billing_env, live, monkeypatch):
+    from app.models import BillingInvoice
+    from app.services import billing
+    client, db, user, *_ = billing_env
+    user.stripe_customer_id, user.billing_source = None, 'complimentary'
+    row = BillingInvoice(user_id=user.id, invoice_number='GF-1', stripe_invoice_id='in_old', is_test=False)
+    sandbox = BillingInvoice(user_id=user.id, invoice_number='GF-T', stripe_invoice_id='in_sandbox', is_test=True)
+    db.add_all([row, sandbox]); db.commit()
+    fake = SimpleNamespace(Invoice=SimpleNamespace(retrieve=lambda id: {
+        'id': id, 'livemode': True, 'customer': 'cus_old', 'invoice_pdf': 'https://pay.stripe.com/invoice/old/pdf'}))
+    monkeypatch.setattr(billing, 'stripe_client', lambda *a: fake)
+    response = client.get(f'/api/billing/invoices/{row.id}/download', follow_redirects=False)
+    assert response.status_code in (302, 307) and response.headers['location'].endswith('/pdf')
+    assert client.get(f'/api/billing/invoices/{sandbox.id}/download', follow_redirects=False).status_code == 404

@@ -31,3 +31,27 @@ def test_route_without_waiting_keeps_its_minutes():
     case = make_case("no-wait", "curated", [stop(0, service=10), stop(1, service=10)],
                      uniform_matrix(2, km=5.0, minutes=10.0), [resource()])
     assert work_route(case, 0, [0, 1])["minutes"] == route_replay(case, 0, [0, 1])["minutes"]
+
+
+def test_departure_moves_like_the_engine_in_five_minute_steps_within_opening_waits():
+    from fleet_quality_reference import DEPARTURE_STEP
+    assert DEPARTURE_STEP == 5
+    # Apertura alle 8:23 a 10 minuti dalla partenza delle 8:00: 13 minuti di attesa, il motore
+    # sposta la partenza di 10 (passi da 5), non di 13.
+    stops = [stop(0, service=10, scarico_mattina_da="08:23", scarico_mattina_a="11:00"), stop(1, service=10)]
+    case = make_case("odd-opening", "curated", stops, uniform_matrix(2, km=5.0, minutes=10.0), [resource()])
+    calendar, work = route_replay(case, 0, [0, 1]), work_route(case, 0, [0, 1])
+    assert calendar["minutes"] - work["minutes"] == 10
+    # Partenza fissa: nessuno spostamento.
+    case["resources"][0]["_flexible_departure"] = False
+    assert work_route(case, 0, [0, 1])["minutes"] == calendar["minutes"]
+
+
+def test_a_pause_alone_never_moves_the_departure():
+    # Pausa fissa 8:00-8:30 alla partenza, senza fasce dei clienti: partire alle 8:30 non
+    # cambierebbe il rientro, ma per il motore una pausa da sola non sposta la partenza.
+    stops = [stop(0, service=10), stop(1, service=10)]
+    pause = {"breaks": [{"start": "08:00", "end": "08:30"}]}
+    case = make_case("pause-only", "curated", stops, uniform_matrix(2, km=5.0, minutes=10.0), [resource(schedule=pause)])
+    calendar = route_replay(case, 0, [0, 1])
+    assert work_route(case, 0, [0, 1])["minutes"] == calendar["minutes"]

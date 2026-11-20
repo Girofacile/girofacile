@@ -133,11 +133,19 @@ def admin_update_platform_settings(payload: dict, db: Session = Depends(get_db),
     # farebbe arrivare la password già salvata a una destinazione diversa.
     # Il pannello rimanda sempre i campi email: conta solo un valore davvero cambiato.
     from ..services.email import smtp_config
+    # Una chiave o password vuota significa «lasciala com'è»: non si cancella mai di nascosto,
+    # nemmeno da chi non ha il permesso sulle chiavi.
+    secret_keys = ("smtp_password", "openai_api_key", "google_maps_api_key", "mapbox_access_token", "stripe_secret_key")
+    payload = {key: value for key, value in payload.items() if key not in secret_keys or str(value or "").strip()}
     current_smtp = smtp_config()
+    # Il pannello rimanda i valori che mostra; possono differire da quelli effettivi (per esempio il
+    # mittente vuoto che usa l'utente). Conta come cambio solo un valore diverso da entrambi.
+    shown = admin_platform_settings(db, superadmin)
     smtp_changed = bool(payload.get("smtp_password")) or any(
-        key in payload and str(payload.get(key) or "").strip() != str(current_smtp.get(key[5:]) or "").strip()
+        key in payload and str(payload.get(key) or "").strip() not in (
+            str(current_smtp.get(key[5:]) or "").strip(), str(shown.get(key) or "").strip())
         for key in ("smtp_host", "smtp_port", "smtp_user", "smtp_from", "smtp_from_name"))
-    if smtp_changed or {"openai_api_key", "google_maps_api_key", "mapbox_access_token", "stripe_secret_key"}.intersection(payload):
+    if smtp_changed or set(secret_keys[1:]).intersection(payload):
         _require_perm(superadmin, "manage_service_keys")
     if "maintenance_mode" in payload:
         _require_perm(superadmin, "toggle_maintenance")

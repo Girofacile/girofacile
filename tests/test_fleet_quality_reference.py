@@ -31,7 +31,7 @@ def test_driving_is_interrupted_by_fixed_break():
     assert route["break_drive_min"] == 30
     assert route["timings"] == [{
         "index": 0, "arrival": 530, "service_start": 530,
-        "service_end": 540, "wait": 0,
+        "service_end": 540, "wait": 0, "opened": False,
     }]
 
 

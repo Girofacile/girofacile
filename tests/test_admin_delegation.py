@@ -90,6 +90,32 @@ def test_email_server_requires_service_keys_permission(panel, monkeypatch):
     assert client.post('/api/admin/platform-settings/test-email', json={'to': 'a@example.test'}).status_code == 403
 
 
+def test_collaborator_cannot_clear_the_email_password(panel, monkeypatch):
+    """Senza il permesso sulle chiavi una password vuota non cancella quella salvata."""
+    client, actor, *_ = panel
+    from app.routers import admin_profile
+    from app.services import email
+    monkeypatch.setattr(email, 'smtp_config', lambda: {'host': 'smtp.ionos.it', 'port': 587, 'user': '', 'password': 'segreta',
+                                                        'from': '', 'from_name': 'GiroFacile'})
+    response = client.put('/api/admin/platform-settings', json={'platform_name': 'GiroFacile', 'smtp_password': '', 'openai_api_key': ''})
+    assert response.status_code == 200, response.text
+    saved = {}
+    monkeypatch.setattr(admin_profile, '_set_setting_value', lambda db, key, value: saved.setdefault(key, value))
+    client.put('/api/admin/platform-settings', json={'platform_name': 'GiroFacile', 'smtp_password': ''})
+    assert 'smtp_password' not in saved and saved.get('platform_name') == 'GiroFacile'
+
+
+def test_general_settings_save_with_the_shown_email_sender(panel, monkeypatch):
+    """Mittente vuoto nel pannello (si usa l'utente): salvare le altre impostazioni non chiede il permesso sulle chiavi."""
+    client, *_ = panel
+    from app.services import email
+    monkeypatch.setattr(email, 'smtp_config', lambda: {'host': 'smtp.ionos.it', 'port': 587, 'user': 'info@example.test',
+                                                        'password': 'segreta', 'from': 'info@example.test', 'from_name': 'GiroFacile'})
+    shown = client.get('/api/admin/platform-settings').json()
+    payload = {'platform_name': 'GiroFacile', **{k: shown[k] for k in ('smtp_host', 'smtp_port', 'smtp_user', 'smtp_from', 'smtp_from_name')}}
+    assert client.put('/api/admin/platform-settings', json=payload).status_code == 200
+
+
 def test_smtp_verifies_server_certificate(monkeypatch):
     from app.services import email
     seen = {}

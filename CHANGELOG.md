@@ -5,6 +5,18 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Accesso gratuito dal pannello admin: prima di scollegare Stripe si chiudono i checkout ancora aperti dell'azienda;
+  se nel frattempo un pagamento è stato completato o c'è un abbonamento che incassa ancora, l'assegnazione si ferma.
+- Cambio piano annullato: la fattura del conguaglio annullata non segna più l'account come pagamento incompleto;
+  resta attivo il piano già pagato.
+- Fatture: i PDF delle vecchie fatture restano scaricabili dopo l'accesso gratuito o un nuovo cliente Stripe.
+- Importazione ordini: cambiando una colonna, un codice univoco del file diverso dal numero ordine non viene più
+  sostituito (niente duplicati al caricamento successivo); una colonna cambiata durante il controllo automatico
+  viene ricontrollata e il pulsante «Importa» compare.
+- Impostazioni email (Super Admin): una password vuota non cancella più quella salvata, e salvare le impostazioni
+  generali con il mittente mostrato dal pannello non chiede più il permesso sulle chiavi.
+- Benchmark della flotta: il verificatore sposta la partenza come il motore (passi di 5 minuti, solo per le attese
+  d'apertura dei clienti, mai per una pausa o una partenza fissa).
 - Giri in corso (variante D): in alto una striscia «Giri attivi» con un riquadro semplice per giro (iniziali
   dell'autista, nome del giro, nome dell'autista); il giro aperto è evidenziato. Tolta la tabella con filtri e segnali.
 - Giri in corso: «Apri navigazione» accanto al nome del giro e allo stato «In corso»; in basso restano Aggiorna dati,

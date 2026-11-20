@@ -93,12 +93,20 @@
   }
   let changeTimer=null;
   function changed(){
+    // Il codice univoco non ha un menu: se il file ne ha uno suo (diverso dal numero ordine) resta quello,
+    // altrimenti segue il numero ordine (stessa regola dei suggerimenti del server). Così un nuovo
+    // caricamento riconosce ancora gli ordini già importati.
+    const own=mapping.external_id&&mapping.external_id!==mapping.number&&stage.headers.includes(mapping.external_id)?mapping.external_id:null;
     report=null;excluded=readChoices('import');mapping={};
     document.querySelectorAll('[data-import-field]').forEach(n=>{if(n.value)mapping[n.dataset.importField]=n.value;});
-    // Il codice univoco segue il numero ordine (stessa regola dei suggerimenti del server).
-    if(mapping.number)mapping.external_id=mapping.number;
+    if(own)mapping.external_id=own;else if(mapping.number)mapping.external_id=mapping.number;
     previewRows();el('orderImportReport').replaceChildren();confirmation();
-    clearTimeout(changeTimer);changeTimer=setTimeout(()=>{if(mapping.number&&mapping.recipient_name)work(validate);},400);
+    scheduleValidate();
+  }
+  // Controllo dopo una modifica; se ne è già in corso un altro, si riprova appena finisce.
+  function scheduleValidate(){
+    clearTimeout(changeTimer);
+    changeTimer=setTimeout(()=>{if(!(mapping.number&&mapping.recipient_name))return;if(busy){scheduleValidate();return;}work(validate);},400);
   }
   async function validate(){
     const selection=JSON.stringify({mapping,excluded});
@@ -107,7 +115,7 @@
       source=await api('/'+source.id,{method:'PUT',body:JSON.stringify({version:source.version,mapping})});
     }
     if(can('orders.integrations')&&(!source.fields_configured||JSON.stringify([...excluded].sort())!==JSON.stringify([...(source.excluded_fields||[])].sort())))source=await api('/'+source.id+'/fields',{method:'PUT',body:JSON.stringify({version:source.version,excluded_fields:excluded})});
-    report=await api(`/${source.id}/runs/${stage.run_id}/preview`,post({}));if(selection!==JSON.stringify({mapping,excluded})){report=null;el('orderImportReport').replaceChildren();confirmation();return;}renderReport();confirmation();
+    report=await api(`/${source.id}/runs/${stage.run_id}/preview`,post({}));if(selection!==JSON.stringify({mapping,excluded})){report=null;el('orderImportReport').replaceChildren();confirmation();scheduleValidate();return;}renderReport();confirmation();
   }
   function renderReport(){
     const r=report.report,invalid=r.invalid||report.status==='failed';
