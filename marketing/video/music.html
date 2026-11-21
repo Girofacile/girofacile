@@ -1,0 +1,38 @@
+<!doctype html><html><body><script>
+// Nuova base: 122 BPM, house leggera e positiva (D – A – Bm – G), drop sull'esplosione blu.
+window.renderAudio=async function(DUR,DROP){
+  const sr=44100,A=new OfflineAudioContext(2,Math.ceil(sr*DUR),sr),BPM=122,B=60/BPM;
+  const master=A.createGain();master.gain.value=0.9;const comp=A.createDynamicsCompressor();comp.threshold.value=-18;comp.ratio.value=4;comp.attack.value=0.004;comp.release.value=0.12;master.connect(comp).connect(A.destination);
+  const nb=A.createBuffer(1,sr*2,sr);const nd=nb.getChannelData(0);let s=99;for(let i=0;i<nd.length;i++){s=(s*1103515245+12345)&0x7fffffff;nd[i]=s/0x3fffffff-1;}
+  const env=(g,t,a,v,d)=>{g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(v,t+a);g.gain.exponentialRampToValueAtTime(0.0001,t+a+d);};
+  const kick=(t,v)=>{const o=A.createOscillator(),g=A.createGain();o.frequency.setValueAtTime(150,t);o.frequency.exponentialRampToValueAtTime(48,t+0.1);env(g,t,0.002,v,0.3);o.connect(g).connect(master);o.start(t);o.stop(t+0.4);};
+  const nz=(t,type,f,q,v,d)=>{const n=A.createBufferSource();n.buffer=nb;const fl=A.createBiquadFilter();fl.type=type;fl.frequency.value=f;fl.Q.value=q;const g=A.createGain();env(g,t,0.002,v,d);n.connect(fl).connect(g).connect(master);n.start(t,(t*5.3)%1.5);n.stop(t+d+0.05);};
+  const syn=(t,f,d,v,type,cut,q=1)=>{const o=A.createOscillator(),lp=A.createBiquadFilter(),g=A.createGain();o.type=type;o.frequency.value=f;lp.type='lowpass';lp.frequency.setValueAtTime(cut,t);lp.frequency.exponentialRampToValueAtTime(Math.max(200,cut/4),t+d);lp.Q.value=q;env(g,t,0.004,v,d);o.connect(lp).connect(g).connect(master);o.start(t);o.stop(t+d+0.05);};
+  const CH=[[293.7,370,440],[277.2,329.6,440],[246.9,293.7,370],[196,246.9,293.7]]; // D A Bm G
+  const BS=[73.42,55,61.74,49];
+  // intro (prima del drop): stab filtrati + riser
+  for(let t=0;t<DROP;t+=B/2){const c=0;CH[c].forEach(f=>syn(t,f*2,0.12,0.03,'square',1200+t*2500));}
+  const r=A.createBufferSource();r.buffer=nb;r.loop=true;const rf=A.createBiquadFilter();rf.type='bandpass';rf.Q.value=1.5;rf.frequency.setValueAtTime(400,0);rf.frequency.exponentialRampToValueAtTime(6000,DROP);
+  const rg=A.createGain();rg.gain.setValueAtTime(0.02,0);rg.gain.exponentialRampToValueAtTime(0.25,DROP-0.02);rg.gain.linearRampToValueAtTime(0.0001,DROP);r.connect(rf).connect(rg).connect(master);r.start(0);r.stop(DROP+0.05);
+  // dopo il drop
+  const end=DUR-2.2;
+  for(let k=0;;k++){const t=DROP+k*B;if(t>=DUR)break;const bar=Math.floor(k/4),c=bar%4,beat=k%4;
+    if(t<end){kick(t,0.8);nz(t+B/2,'highpass',7000,0.8,0.12,0.09);nz(t+B/4,'highpass',10000,0.7,0.04,0.03);nz(t+3*B/4,'highpass',10000,0.7,0.04,0.03);
+      if(beat%2===1)nz(t,'bandpass',1800,1,0.22,0.12);
+      syn(t+B/2,BS[c],B*0.45,0.22,'sawtooth',700,4);syn(t,BS[c]/2,B*0.3,0.18,'sine',300);
+      if(beat===0||beat===2)CH[c].forEach(f=>syn(t+B/2,f*2,0.18,0.05,'sawtooth',3500,2));
+      if(beat===1||beat===3)CH[c].forEach(f=>syn(t+B*0.75,f*2,0.12,0.035,'sawtooth',3000,2));
+      const ar=[0,1,2,1];syn(t+B/4,CH[c][ar[beat]]*4,0.1,0.025,'triangle',5000);}
+  }
+  // chiusura: accordo aperto sul logo
+  CH[0].concat([146.8]).forEach(f=>{[0.996,1.004].forEach(k=>{const o=A.createOscillator(),lp=A.createBiquadFilter(),g=A.createGain();o.type='sawtooth';o.frequency.value=f*k;lp.type='lowpass';lp.frequency.value=1400;
+    g.gain.setValueAtTime(0.0001,end);g.gain.linearRampToValueAtTime(0.03,end+0.05);g.gain.linearRampToValueAtTime(0.0001,DUR);o.connect(lp).connect(g).connect(master);o.start(end);o.stop(DUR);});});
+  kick(end,0.9);nz(end,'bandpass',1500,0.7,0.3,0.6);
+  const buf=await A.startRendering();
+  let pk=0;for(let c=0;c<2;c++){const d=buf.getChannelData(c);for(let i=0;i<d.length;i++)pk=Math.max(pk,Math.abs(d[i]));}
+  const g=0.8/pk,n=buf.length,dv=new DataView(new ArrayBuffer(44+n*4));const ws=(o,s)=>{for(let i=0;i<s.length;i++)dv.setUint8(o+i,s.charCodeAt(i));};
+  ws(0,'RIFF');dv.setUint32(4,36+n*4,true);ws(8,'WAVE');ws(12,'fmt ');dv.setUint32(16,16,true);dv.setUint16(20,1,true);dv.setUint16(22,2,true);dv.setUint32(24,sr,true);dv.setUint32(28,sr*4,true);dv.setUint16(32,4,true);dv.setUint16(34,16,true);ws(36,'data');dv.setUint32(40,n*4,true);
+  const L=buf.getChannelData(0),R=buf.getChannelData(1);for(let i=0;i<n;i++){dv.setInt16(44+i*4,Math.max(-1,Math.min(1,L[i]*g))*32767,true);dv.setInt16(46+i*4,Math.max(-1,Math.min(1,R[i]*g))*32767,true);}
+  const bytes=new Uint8Array(dv.buffer);let bin='';for(let i=0;i<bytes.length;i+=0x8000)bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+0x8000));return btoa(bin);
+};
+</script></body></html>

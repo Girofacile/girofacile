@@ -1,0 +1,4 @@
+node_modules/
+video/.hyperframes/
+capture/profile/
+out.mp4
