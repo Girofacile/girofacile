@@ -4,6 +4,14 @@ Versione Remotion del Reel 9:16 della campagna carburante (1080×1920, 30 fps, 2
 Ricrea la v4 approvata (`marketing/video/reference/GiroFacile_campagna_carburante_9x16_v4.mp4`):
 regole di stile e di messaggio in `marketing/video/CLAUDE.md`, valgono anche qui.
 
+## Versioni
+
+- `GiroFacileCarburante` (v1, 25 s): la v4 rifatta scena per scena (`src/scenes/`).
+- `GiroFacileCarburanteV2` (v2 "La giornata di un furgone", 30 s, `src/v2/`): stessa logica, più facile da seguire.
+  Lunedì 6:30 giro a occhio → lunedì sera un clic (orari, ZTL, sponda, 3 giri) → martedì 6:30 stesso furgone sul giro più corto
+  → costo del gasolio prima di partire → outro. Una cosa alla volta per schermata. Musica: `public/audio/music-v2.wav` (30 s, drop a 2,7 s).
+  Render: `COMP=GiroFacileCarburanteV2 OUT=GiroFacile_carburante_giornata_v2.mp4 ./scripts/finalize.sh`.
+
 ## Struttura
 
 - `src/Root.tsx`: una composizione per scena (cartella "Scene") + `GiroFacileCarburante` (principale, 750 fotogrammi).
