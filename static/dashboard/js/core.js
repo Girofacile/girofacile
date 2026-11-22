@@ -137,7 +137,8 @@ const GF_PLAN_LOCK_FEATURES = {
   has_driver_chat: {label:"Chat autisti", name:"Chat autisti", what:"Scrivi agli autisti durante il giro e ricevi le risposte in tempo reale."},
   has_delivery_signature: {label:"Firma, foto e prova di consegna", name:"Firma e foto alla consegna", what:"Il cliente firma sul telefono dell’autista; foto e prova di consegna in PDF restano allegate al giro."},
   has_order_integrations: {label:"API, Shopify e WooCommerce", name:"API, Shopify e WooCommerce", what:"Gli ordini arrivano da soli dal tuo negozio o gestionale, senza importare file."},
-  has_ai: {label:"Integrazione AI", name:"Integrazione AI", what:"L’assistente spiega i giri, risponde alle domande sui dati e prepara i riepiloghi."}
+  has_ai: {label:"Integrazione AI", name:"Integrazione AI", what:"L’assistente spiega i giri, risponde alle domande sui dati e prepara i riepiloghi."},
+  has_fleet_planning: {label:"Suddivisione automatica su più mezzi", name:"Più mezzi", what:"GiroFacile divide da solo le consegne tra mezzi e autisti, rispettando carichi, turni e orari; puoi spostare le fermate prima di confermare."}
 };
 let gfPlanLockChoice = null;
 

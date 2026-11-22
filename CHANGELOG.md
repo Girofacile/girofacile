@@ -5,6 +5,8 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Piano Starter: «Usa più mezzi» apre il pop-up dei piani (Business consigliato, Pro) come Report e Chat,
+  invece dell'avviso in basso.
 - Scheda cliente: per un cliente già salvato «Annulla» e «Salva cliente» compaiono solo dopo una modifica;
   «Annulla» rimette i dati salvati. Per un nuovo cliente restano sempre visibili.
 - Autisti: «Invita / Reinvita al portale» anche nella vista a tabella e nel pop-up dei dettagli (per chi ha l'email).

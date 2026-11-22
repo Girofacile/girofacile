@@ -65,6 +65,8 @@ function planAccessLimits() {
 function planFeatureEnabled(key) { return planAccessLimits()[key] === true; }
 function requirePlanFeature(key,label) {
   if(planFeatureEnabled(key)) return true;
+  // Funzione con il pop-up dei piani (come Report): si mostra quello, con i piani che la includono.
+  if(typeof GF_PLAN_LOCK_FEATURES!=='undefined'&&GF_PLAN_LOCK_FEATURES[key]&&typeof openPlanLockModal==='function'){openPlanLockModal(key);return false;}
   const message=`${label || 'Questa funzione'} è disponibile ${key==='has_ai'?'nel piano Pro':'dal piano Business'}.`;
   if(typeof toast==='function') toast(message);
   return false;

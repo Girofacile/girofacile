@@ -98,6 +98,18 @@ def main():
                 page.locator('#planLockDialog').get_by_role('button', name='Non ora').click()
                 assert not modal.is_visible()
 
+                # «Usa più mezzi» con lo Starter: lo stesso pop-up dei piani, non un avviso; la modalità non cambia.
+                page.evaluate("showTab('giro')")
+                page.evaluate("selectPlanningModeCard('fleet')")
+                assert modal.is_visible()
+                assert 'Più mezzi' in page.locator('#planLockTitle').inner_text()
+                assert choices.first.get_attribute('data-plan-choice') == 'business'
+                assert choices.first.locator('li').first.inner_text() == '✓ Suddivisione automatica su più mezzi'
+                assert page.evaluate("document.getElementById('planningMode')?.value") != 'fleet'
+                page.screenshot(path=str(output / f'piu-mezzi-{width}.png'))
+                page.keyboard.press('Escape')
+                assert not modal.is_visible()
+
                 # «Passa a Business» porta alla pagina Piani con Business selezionato.
                 page.evaluate("showTab('report')")
                 page.locator('#planLockGo').click()
