@@ -5,6 +5,8 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Piani: «Annulla checkout aperto» compare solo quando c'è davvero un pagamento Stripe aperto; un checkout non
+  pagato scade da solo dopo 31 minuti (il minimo accettato da Stripe è 30).
 - Piano Starter: «Usa più mezzi» apre il pop-up dei piani (Business consigliato, Pro) come Report e Chat,
   invece dell'avviso in basso.
 - Scheda cliente: per un cliente già salvato «Annulla» e «Salva cliente» compaiono solo dopo una modifica;

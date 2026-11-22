@@ -19,12 +19,14 @@ router = APIRouter(prefix="/api/billing", tags=["billing"])
 
 def billing_state(user):
     from ..core import config
-    from ..services.billing import billing_available, has_current_subscription
+    from ..services.billing import billing_available, has_current_subscription, checkout_open
     return {"mode": config.BILLING_MODE, "live_enabled": config.BILLING_MODE == "live",
             "checkout_enabled": billing_available(user),
             "source": user.billing_source or "legacy", "subscription": has_current_subscription(user),
             "cancel_at_period_end": bool(user.billing_cancel_at_period_end),
             "pending_plan": user.billing_pending_plan,
+            # Il pulsante «Annulla checkout aperto» compare solo se c'è davvero una pagina di pagamento aperta.
+            "checkout_open": checkout_open(user), "checkout_plan": user.billing_checkout_plan if checkout_open(user) else None,
             "grace_until": _date_iso(user.billing_grace_until)}
 
 

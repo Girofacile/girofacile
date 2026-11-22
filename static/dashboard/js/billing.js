@@ -192,7 +192,7 @@ function renderSubscriptionControls(data) {
   if (['expired','cancelled','incomplete'].includes(status)) warnings.push('Puoi consultare ed esportare i dati e terminare i giri già avviati. Nuovi giri non disponibili.');
   box.innerHTML = `${planUsageStripMarkup(usage)}${warnings.map(m=>`<p class="gf-alert" data-status="warning" role="status">${esc(m)}</p>`).join('')}
     ${b.checkout_enabled ? `<div class="gf-cluster"><button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="subscriptionAction('sync')">Aggiorna stato</button>
-      <button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="subscriptionAction('cancel-checkout')">Annulla checkout aperto</button>
+      ${b.checkout_open ? `<button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="subscriptionAction('cancel-checkout')">Annulla checkout aperto</button>` : ''}
     ${b.subscription ? `<button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="managePaymentMethodsV876()">Metodo di pagamento e documenti</button>
       <button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="subscriptionAction('${b.cancel_at_period_end?'resume':'cancel'}')">${b.cancel_at_period_end?'Ripristina rinnovo':'Disdici a fine periodo'}</button>`:''}</div>` : ''}
     ${notes.map(m=>`<p class="gf-muted">${esc(m)}</p>`).join('')}`;

@@ -339,6 +339,19 @@ def test_checkout_is_reused_and_redirect_does_not_activate(billing_env, monkeypa
     assert first.status_code==200,first.text
     assert client.post('/api/billing/create-checkout-session',json={'plan':'pro'}).json()==first.json()
     assert len(calls)==1 and user.plan_status=='trial' and user.plan=='business'
+    # Il checkout scade da solo dopo il minimo accettato da Stripe e lo stato dice che è aperto.
+    import time
+    assert 30*60 < calls[0]['expires_at'] - time.time() <= 31*60 + 5
+    state=client.get('/api/billing/my-plan').json()['billing']
+    assert state['checkout_open'] is True and state['checkout_plan']=='pro'
+
+
+def test_no_open_checkout_hides_cancel(billing_env):
+    client,db,user,*_=billing_env
+    state=client.get('/api/billing/my-plan').json()['billing']
+    assert state['checkout_open'] is False and state['checkout_plan'] is None
+    user.billing_checkout_id,user.billing_checkout_expires='cs_old',utc_now()-timedelta(minutes=1);db.commit()
+    assert client.get('/api/billing/my-plan').json()['billing']['checkout_open'] is False
 
 
 def existing_subscription_stripe(sub, sessions):

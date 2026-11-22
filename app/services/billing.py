@@ -28,6 +28,16 @@ def billing_source():
     return "stripe_live" if is_live() else "stripe_test"
 
 
+# Un checkout non pagato scade da solo: Stripe non accetta meno di 30 minuti, si usa il minimo
+# (31 per il margine tra il calcolo qui e la creazione su Stripe).
+CHECKOUT_MINUTES = 31
+
+
+def checkout_open(user):
+    """Pagina di pagamento Stripe ancora valida per questa azienda."""
+    return bool(user.billing_checkout_id and user.billing_checkout_expires and user.billing_checkout_expires > utc_now())
+
+
 def billing_available(user):
     if config.BILLING_MODE == "live":
         return True
@@ -282,7 +292,7 @@ def checkout(db, user, plan):
     if not user.billing_checkout_expires or user.billing_checkout_expires <= utc_now():
         user.billing_checkout_id = "pending_" + uuid4().hex
         user.billing_checkout_plan = plan
-        user.billing_checkout_expires = utc_now() + timedelta(hours=1)
+        user.billing_checkout_expires = utc_now() + timedelta(minutes=CHECKOUT_MINUTES)
         db.commit()
         user = lock_user(db, user)
     key = user.billing_checkout_id
