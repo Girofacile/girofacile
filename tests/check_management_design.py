@@ -321,8 +321,21 @@ def main():
                     capture(page, "customer-details", width)
                     page.locator("#customerOverlay").wait_for(state="visible")
                     assert page.locator("#cNome").input_value() == "Cliente Demo"
+                    # Senza modifiche niente Annulla/Salva; compaiono alla prima modifica, Annulla rimette i dati.
+                    actions = page.locator("#customerEditActions")
+                    assert not actions.is_visible()
+                    page.locator("#cNote").fill("Citofonare")
+                    assert actions.is_visible() and page.locator("#saveCustomerBtn").is_visible()
                     page.locator("#customerOverlay").get_by_role("button", name="Annulla", exact=True).click()
+                    assert not actions.is_visible() and page.locator("#cNote").input_value() == ""
+                    page.locator("#cNote").fill("Citofonare")
+                    page.locator("#cNote").fill("")
+                    assert not actions.is_visible()
+                    page.locator("#customerOverlay").get_by_role("button", name="Chiudi").first.click()
                     assert not page.locator("#customerOverlay").is_visible()
+                    page.evaluate("openCustomerModal()")
+                    assert page.locator("#saveCustomerBtn").is_visible()
+                    page.evaluate("closeCustomerModal()")
                     page.locator("#customerListView").click()
                     interactions.append(f"{width}: customer filters, list/grid, details and edit dialog")
                     page.evaluate("showTab('mezzi')")

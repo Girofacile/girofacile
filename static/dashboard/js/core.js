@@ -3135,6 +3135,33 @@ function openCustomerModal(id=null){
   });
   syncCustomerModalAddress();
   if(id) editCustomer(id, true);
+  const overlay = document.getElementById("customerOverlay");
+  if(overlay && overlay.dataset.dirtyReady !== "true"){
+    overlay.dataset.dirtyReady = "true";
+    overlay.addEventListener("input", syncCustomerModalDirty);
+    overlay.addEventListener("change", syncCustomerModalDirty);
+  }
+  // Cliente esistente: «Annulla» e «Salva cliente» compaiono solo dopo una modifica. Nuovo cliente: sempre.
+  customerModalSnapshot = id ? customerModalValues() : null;
+  syncCustomerModalDirty();
+}
+let customerModalSnapshot = null;
+function customerModalValues(){
+  return [...document.querySelectorAll("#customerOverlay .gf-modal__body input:not([type=hidden]), #customerOverlay .gf-modal__body select, #customerOverlay .gf-modal__body textarea")]
+    .map(field=>field.id + "=" + field.value).join("|");
+}
+function syncCustomerModalDirty(){
+  const actions = document.getElementById("customerEditActions");
+  if(actions) actions.classList.toggle("hidden", customerModalSnapshot !== null && customerModalValues() === customerModalSnapshot);
+}
+// Annulla: per un cliente esistente rimette i dati salvati e nasconde i pulsanti; per uno nuovo chiude.
+function cancelCustomerModalChanges(){
+  const id = Number(document.getElementById("cId")?.value || 0);
+  if(!id || customerModalSnapshot === null){ closeCustomerModal(); return; }
+  editCustomer(id, true);
+  syncCustomerModalAddress();
+  customerModalSnapshot = customerModalValues();
+  syncCustomerModalDirty();
 }
 function closeCustomerModal(e){
   if(e && e.target && e.currentTarget && e.target !== e.currentTarget) return;

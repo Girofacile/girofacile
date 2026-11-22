@@ -5,6 +5,8 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Scheda cliente: per un cliente già salvato «Annulla» e «Salva cliente» compaiono solo dopo una modifica;
+  «Annulla» rimette i dati salvati. Per un nuovo cliente restano sempre visibili.
 - Autisti: «Invita / Reinvita al portale» anche nella vista a tabella e nel pop-up dei dettagli (per chi ha l'email).
 - Card di autisti, mezzi e clienti (variante A): intestazione con nome e stato (o selezione), poi ogni dato su una riga
   con l'etichetta a sinistra e il valore a destra, azioni in fondo a destra. I mezzi mostrano anche la portata.
