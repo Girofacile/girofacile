@@ -5,6 +5,7 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Autisti: «Invita / Reinvita al portale» anche nella vista a tabella e nel pop-up dei dettagli (per chi ha l'email).
 - Card di autisti, mezzi e clienti (variante A): intestazione con nome e stato (o selezione), poi ogni dato su una riga
   con l'etichetta a sinistra e il valore a destra, azioni in fondo a destra. I mezzi mostrano anche la portata.
   Nei clienti la verifica dell'indirizzo non compare più: ci sono la fascia di scarico («Imposta fascia» se manca)
