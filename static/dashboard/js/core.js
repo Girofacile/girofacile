@@ -4103,22 +4103,27 @@ function renderRouteResult(r, targetId="routeResult", fromHistory=false){
     const paths = {clock:'<circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/>',return:'<path d="M9 7H5l4-4M5 7h10a5 5 0 0 1 0 10H9m0-4-4 4 4 4"/>',distance:'<path d="m12 3 6 9-6 9-6-9zM6 12h12m-6-9v18"/>',fuel:'<path d="M5 21V4h9v17M5 9h9m0 4h2v5a2 2 0 0 0 4 0v-8l-3-3M3 21h13"/>',euro:'<path d="M17 6a7 7 0 1 0 0 12M4 10h11M4 14h10"/>',print:'<path d="M7 9V3h10v6M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M7 14h10v7H7z"/>',calendar:'<rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4m8-4v4M4 11h16m-11 4h2m3 0h2m-7 3h2"/>',map:'<path d="m3 5 6-2 6 2 6-2v16l-6 2-6-2-6 2zM9 3v16m6-14v16"/>',truck:'<path d="M3 5h12v13H3zM15 10h3l3 4v4h-6"/><circle cx="7" cy="19" r="2"/><circle cx="18" cy="19" r="2"/>'};
     return '<svg viewBox="0 0 24 24" aria-hidden="true">'+paths[name]+'</svg>';
   };
+  // Tabella delle fermate come quella dei più mezzi (24/11/2026): #, Cliente con indirizzo, Avvisi, Arrivo, Scarico, Km, Azioni.
   const previewDepot = {...r, consegne};
-  let rows = gfDepartureRow(previewDepot, [['#',''],['Cliente',GF_DEPARTURE_TITLE],['Indirizzo',''],['Arrivo',''],
-    ['Partenza',`<strong>${gfDeparturePlanned(r)}</strong>`],['Attesa',''],['Km tappa',''],['Avvisi',''],['Azioni','']]) + GFDriverBreaks.table(r,0,9);
+  const stopCells = (title, arrival) => [['#',''],['Cliente',title],['Avvisi',''],['Arrivo',arrival],['Scarico',''],['Km tappa',''],['Azioni','']];
+  const stopAlerts = warning => warning ? warningBadges(warning) : '<span class="gf-muted">—</span>';
+  let rows = gfDepartureRow(previewDepot, stopCells(GF_DEPARTURE_TITLE, `<strong>${gfDeparturePlanned(r)}</strong>`)) + GFDriverBreaks.table(r,0,7);
   consegne.forEach((d,idx)=>{
     const dragAttrs = fromHistory ? "" : `draggable="true" ondragstart="resultDragStart(event, ${idx})" ondragover="resultDragOver(event)" ondrop="resultDrop(event, ${idx})"`;
+    // Maniglia a sinistra del numero: la riga si trascina per cambiare l'ordine delle fermate.
+    const handle = fromHistory ? '' : `<span class="gf-icon-button" title="Trascina per spostare la fermata" aria-hidden="true"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14"/></svg></span>`;
+    const arrival = d.arrivo_fisico || d.arrivo_stimato || "-", start = d.inizio_servizio || d.arrivo_stimato || "";
+    const wait = Math.round(parseFloat(d.attesa_min) || 0);
+    const startNote = start && start !== arrival ? `<br><small class="gf-muted">Inizio scarico: ${esc(start)}${wait ? ` · attesa ${wait} min` : ''}</small>` : '';
     rows += `<tr data-preview-stop ${dragAttrs}>
-      <td data-label="#"><span aria-hidden="true">☰</span> <strong>${esc(d.ordine ?? idx+1)}</strong></td>
-      <td data-label="Cliente"><strong>${esc(d.cliente_nome)}</strong>${d.time_window_violation ? `<br><span class="gf-badge" data-status="danger">Finestra non rispettata · ${Number(d.lateness_min||0).toFixed(1)} min</span>` : ""}</td>
-      <td data-label="Indirizzo">${esc(d.indirizzo)}</td>
-      <td data-label="Arrivo">${esc(d.arrivo_fisico||"-")}<br><small class="gf-muted">Inizio scarico: ${esc(d.inizio_servizio||d.arrivo_stimato||"-")}</small></td>
-      <td data-label="Partenza">${esc(d.partenza_stimata||"-")}</td>
-      <td data-label="Attesa">${Math.round(parseFloat(d.attesa_min)||0)} min</td>
+      <td data-label="#"><span class="gf-cluster" data-gap="xs">${handle}<span class="gf-stop__number">${esc(d.ordine ?? idx+1)}</span></span></td>
+      <td data-label="Cliente"><strong>${esc(d.cliente_nome)}</strong><br><span class="gf-muted">${esc(d.indirizzo)}</span>${d.time_window_violation ? `<br><span class="gf-badge" data-status="danger">Finestra non rispettata · ${Number(d.lateness_min||0).toFixed(1)} min</span>` : ""}</td>
+      <td data-label="Avvisi">${stopAlerts(d.warning)}</td>
+      <td data-label="Arrivo">${esc(arrival)}${startNote}</td>
+      <td data-label="Scarico">${gfUnloadCell(d)}</td>
       <td data-label="Km tappa">${d.km_tappa == null ? "-" : gfDecimal(d.km_tappa)}</td>
-      <td data-label="Avvisi">${warningBadges(d.warning)}</td>
       <td data-label="Azioni"><details class="gf-dropdown" data-preview-stop-actions><summary class="gf-icon-button" aria-label="Azioni fermata ${idx+1}">›</summary><div data-gf-menu data-preview-stop-tools><a class="gf-button" data-variant="ghost" target="_blank" rel="noopener" href="${mapsAddressUrl(d.indirizzo, d)}" title="Apri fermata su Maps">📍 Apri su Maps</a><button type="button" class="gf-button" data-variant="ghost" onclick="copyText('${esc(d.indirizzo).replace(/'/g,"\\'")}', 'Indirizzo copiato')" title="Copia indirizzo">⧉ Copia indirizzo</button>${deliverySignatureAction(d, r.driver_name)} ${trackingButton(d, r)}</div></details></td>
-    </tr>`+GFDriverBreaks.table(r,idx+1,9);
+    </tr>`+GFDriverBreaks.table(r,idx+1,7);
   });
   // Clienti raggiungibili solo in traghetto: esclusi dal giro fino alla gestione dei biglietti.
   // Come ogni altro avviso, compaiono nella tabella accanto alla fermata, non in un riquadro.
@@ -4126,15 +4131,13 @@ function renderRouteResult(r, targetId="routeResult", fromHistory=false){
   excluded.forEach(d=>{
     rows += `<tr data-preview-excluded>
       <td data-label="#">—</td>
-      <td data-label="Cliente"><strong>${esc(d.cliente_nome)}</strong></td>
-      <td data-label="Indirizzo">${esc(d.indirizzo||"-")}</td>
-      <td data-label="Arrivo">-</td><td data-label="Partenza">-</td><td data-label="Attesa">-</td><td data-label="Km tappa">-</td>
+      <td data-label="Cliente"><strong>${esc(d.cliente_nome)}</strong><br><span class="gf-muted">${esc(d.indirizzo||"-")}</span></td>
       <td data-label="Avvisi"><span class="gf-badge" data-status="danger">Esclusa dal giro: raggiungibile solo in traghetto, pianificala a parte</span></td>
+      <td data-label="Arrivo">-</td><td data-label="Scarico">-</td><td data-label="Km tappa">-</td>
       <td data-label="Azioni"></td>
     </tr>`;
   });
-  rows += gfReturnRow(previewDepot, [['#',''],['Cliente',GF_RETURN_TITLE],['Indirizzo',''],['Arrivo',`<strong>${gfReturnPlanned(r)}</strong>`],
-    ['Partenza',''],['Attesa',''],['Km tappa',''],['Avvisi',''],['Azioni','']]);
+  rows += gfReturnRow(previewDepot, stopCells(GF_RETURN_TITLE, `<strong>${gfReturnPlanned(r)}</strong>`));
   const day = r.data_giro ? dashScheduledDayLabel(r.data_giro).toLowerCase() : "";
   const kicker = [fromHistory ? "Giro salvato" : "Anteprima", day].filter(Boolean).join(" · ");
   const badge = isProgrammable
@@ -4183,7 +4186,7 @@ function renderRouteResult(r, targetId="routeResult", fromHistory=false){
         </span>
       </header>
       <div id="routeAiExplanationV67" class="gf-alert hidden" data-status="info"></div>
-      <div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards"><thead><tr><th scope="col">#</th><th scope="col">Cliente</th><th scope="col">Indirizzo</th><th scope="col">Arrivo</th><th scope="col">Partenza</th><th scope="col">Attesa</th><th scope="col">Km tappa</th><th scope="col">Avvisi</th><th scope="col">Azioni</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards"><thead><tr><th scope="col">#</th><th scope="col">Cliente</th><th scope="col">Avvisi</th><th scope="col">Arrivo</th><th scope="col">Scarico</th><th scope="col">Km tappa</th><th scope="col">Azioni</th></tr></thead><tbody>${rows}</tbody></table></div>
     </section>
     <div class="gf-stack" data-gap="lg" data-preview-layout>
       ${r.id ? `<section class="gf-panel" data-preview-map aria-labelledby="previewMapTitle">

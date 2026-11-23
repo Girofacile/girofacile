@@ -30,7 +30,7 @@ function render(violation, overrides={}, fromHistory=false){
 test('zero violations has no urgent window alarm, preserves operational warnings and timings',()=>{
   const html=render(false);
   assert.doesNotMatch(html,/Finestre orarie non rispettate|Finestra non rispettata/);
-  for(const text of ['08:40','Inizio scarico: 09:00','09:15','20 min','ZTL','Sponda','Programma giro']) assert.ok(html.includes(text),text);
+  for(const text of ['08:40','Inizio scarico: 09:00 · attesa 20 min','ZTL','Sponda','Programma giro','<th scope="col">Scarico</th>']) assert.ok(html.includes(text),text);
 });
 
 test('clean preview: five metrics, stops above the map panel, print and scheduling actions',()=>{

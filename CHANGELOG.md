@@ -5,6 +5,9 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Anteprima del giro singolo: tabella delle fermate come quella dei più mezzi (#, Cliente con indirizzo, Avvisi,
+  Arrivo con inizio scarico e attesa solo se diversi, Scarico, Km tappa, Azioni); maniglia di spostamento a sinistra.
+- Più mezzi: la maniglia per trascinare una fermata è a sinistra del numero; in Azioni resta «Togli dai giri».
 - Ordini e Clienti: un clic sulla riga (o sulla card) seleziona l'ordine o il cliente per la pianificazione;
   i dettagli si aprono con «Apri» / «Dettagli». Un secondo clic deseleziona.
 - Tabelle delle fermate: icona nel cerchio della colonna «#» per «Partenza dal deposito» (freccia che esce) e

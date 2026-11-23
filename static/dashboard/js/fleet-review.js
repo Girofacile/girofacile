@@ -87,12 +87,12 @@ function stop(plan,dirty,index,lane,position,busy){
  const handle=plan.status==='preview'?'<button type="button" class="gf-icon-button" data-fleet-drag draggable="true" title="Trascina su un giro della tabella" aria-label="Trascina '+esc(delivery.cliente_nome)+'"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14"/></svg></button>':'';
  // Togliere una consegna dai giri: diventa "non assegnata" e non viene programmata (si può riassegnare da "Da sistemare").
  const remove=plan.status==='preview'&&lane!==null?'<button type="button" class="gf-icon-button" data-fleet-remove="'+index+'" title="Togli dai giri" aria-label="Togli '+esc(delivery.cliente_nome)+' dai giri"'+(busy?' disabled':'')+'><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>':'';
- return '<tr data-fleet-stop="'+index+'"><td><span class="gf-stop__number">'+(position+1)+'</span></td>'+
+ return '<tr data-fleet-stop="'+index+'"><td><span class="gf-cluster" data-gap="xs">'+handle+'<span class="gf-stop__number">'+(position+1)+'</span></span></td>'+
  '<td><strong>'+esc(delivery.cliente_nome)+'</strong><br><span class="gf-muted">'+esc(delivery.indirizzo)+'</span></td>'+
  '<td>'+(badges?'<span class="gf-cluster">'+badges+'</span>':'<span class="gf-muted">—</span>')+'</td>'+
  '<td>'+esc(timing?.arrivo_stimato||'—')+'</td>'+
  '<td data-label="Scarico">'+gfUnloadCell(delivery)+'</td>'+
- (plan.status==='preview'?'<td>'+(moveTo||'<span class="gf-muted">—</span>')+'</td><td><span class="gf-cluster">'+handle+remove+'</span></td>':'')+'</tr>';
+ (plan.status==='preview'?'<td>'+(moveTo||'<span class="gf-muted">—</span>')+'</td><td><span class="gf-cluster">'+remove+'</span></td>':'')+'</tr>';
 }
 // Tabella di confronto: una riga per giro, che è anche il punto in cui rilasciare una fermata trascinata.
 function table(plan,assignment,dirty){
