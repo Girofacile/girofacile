@@ -5,6 +5,11 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Tabelle delle fermate: prima riga «Partenza dal deposito» con l'orario di partenza (e l'avvio reale dove
+  registrato) in anteprima del giro, più mezzi, programmati, in corso, storico e stampa; l'anteprima del giro singolo
+  e la stampa hanno anche l'ultima riga «Rientro al deposito».
+- Suddivisione su più mezzi: colonna «Scarico» con i minuti, ultima riga «Rientro al deposito» con l'orario stimato,
+  menu «Sposta…» più stretto (Giro N · nome dell'autista).
 - Importazione ordini, passo finale (variante B): esito al centro con «N ordini importati», nome del file,
   etichette colorate (nuovi, aggiornati, già presenti, saltati) e «Vai agli ordini» in evidenza; Chiudi in basso.
 - Pixel di Meta (ID 1444449421091767) sul sito pubblico, solo con consenso: banner «Cookie per la pubblicità» con

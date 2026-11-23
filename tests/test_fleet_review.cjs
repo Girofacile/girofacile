@@ -21,6 +21,9 @@ function preview(){
  const sandbox={window:{},document,console,requestAnimationFrame(){},setTimeout(){}};
  sandbox.GFDriverBreaks=vm.runInNewContext(read('static/driver-schedule.js')+';window.GFDriverBreaks',{window:{}});
  vm.runInNewContext(read('static/format.js'),sandbox);
+ // Righe di partenza/rientro e colonna Scarico: aiuti condivisi di core.js.
+ const core=read('static/dashboard/js/core.js');
+ vm.runInNewContext((typeof sandbox.esc==='function'?'':'var esc=v=>String(v??"");')+core.slice(core.indexOf('function gfUnloadCell('),core.indexOf('function gfRouteNoticesHtml('))+';Object.assign(globalThis,{gfUnloadCell,gfReturnRow,gfDepartureRow,GF_RETURN_TITLE,GF_DEPARTURE_TITLE});',sandbox);
  vm.runInNewContext(read('static/dashboard/js/fleet-review.js'),sandbox);
  const plan={
   id:15,version:1,status:'preview',
@@ -120,7 +123,10 @@ test('unassigned deliveries stay visible with address, reason and reassignment',
  assert.match(page.innerHTML,/data-fleet-drag draggable="true"/);
  // La fermata del giro 1 si può spostare nel giro 2 dal menu "Sposta in…".
  assert.match(page.innerHTML,/<select class="gf-select" data-fleet-move-to="0" aria-label="Sposta Alimentari Rossi in un altro giro">/);
- assert.match(page.innerHTML,/<option value="1">Giro 2 · /);
+ assert.match(page.innerHTML,/<option value="1"[^>]*>Giro 2 · /);
+ // Fermate del giro: partenza in cima, colonna Scarico, rientro in fondo con l'orario stimato.
+ assert.match(page.innerHTML,/<th>Scarico<\/th>/);
+ assert.match(page.innerHTML,/<tr data-route-departure>[\s\S]*data-fleet-stop="0"[\s\S]*<tr data-route-return>[^]*?<strong>09:30<\/strong>/);
  assert.match(page.innerHTML,/data-fleet-accept-unassigned/);
 });
 

@@ -225,7 +225,8 @@ window.GFHistory = (() => {
           <button type="button" class="gf-button" data-variant="secondary" aria-controls="historyStopsTable" aria-expanded="false" onclick="gfToggleArea(this)">Mostra tabella</button></header>
         <div id="historyStopsTable" hidden>${rows.length ? `<div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards">
           <thead><tr><th scope="col">#</th><th scope="col">Cliente</th><th scope="col">Previsto</th><th scope="col">Reale</th><th scope="col">Differenza</th><th scope="col">Scarico</th><th scope="col">Esito</th><th scope="col">Prova e note</th></tr></thead>
-          <tbody>${GFDriverBreaks.table(r, 0, 8)}${tableRows}</tbody></table></div>` : '<div class="gf-empty"><p>Nessuna fermata collegata a questo giro.</p></div>'}</div>
+          <tbody>${gfDepartureRow(r, [['#',''],['Cliente',GF_DEPARTURE_TITLE],['Previsto',gfDeparturePlanned(r)],['Reale', r.started_at ? `${esc(gfTimeOnRouteDay(r.started_at, r.data_giro) || '—')}<br><small class="gf-muted">avvio del giro</small>` : ''],
+            ['Differenza',''],['Scarico',''],['Esito',''],['Prova e note','']])}${GFDriverBreaks.table(r, 0, 8)}${tableRows}</tbody></table></div>` : '<div class="gf-empty"><p>Nessuna fermata collegata a questo giro.</p></div>'}</div>
       </section>
     </div>`;
   }

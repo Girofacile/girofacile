@@ -82,8 +82,8 @@ function stop(plan,dirty,index,lane,position,busy){
  (w.ztl?'<span class="gf-badge" data-kind="ztl" data-fleet-warning="ztl" title="Il cliente si trova in una zona a traffico limitato.">In ZTL</span>':'')+
  (moved&&lane!==null?'<span class="gf-badge" data-status="info">Spostata</span>':'');
  const others=plan.configuration.resources.map((_,i)=>i).filter(i=>i!==lane);
- const moveTo=plan.status==='preview'&&others.length?'<span><select class="gf-select" data-fleet-move-to="'+index+'" aria-label="Sposta '+esc(delivery.cliente_nome)+' in un altro giro"'+(busy?' disabled':'')+'><option value="" selected>Sposta in…</option>'+
- others.map(i=>'<option value="'+i+'">Giro '+(i+1)+' · '+esc(names(plan,i).driver)+'</option>').join('')+'</select></span>':'';
+ const moveTo=plan.status==='preview'&&others.length?'<span><select class="gf-select" data-fleet-move-to="'+index+'" aria-label="Sposta '+esc(delivery.cliente_nome)+' in un altro giro"'+(busy?' disabled':'')+'><option value="" selected>Sposta…</option>'+
+ others.map(i=>'<option value="'+i+'" title="Giro '+(i+1)+' · '+esc(names(plan,i).driver)+'">Giro '+(i+1)+' · '+esc(String(names(plan,i).driver).split(/\s+/)[0])+'</option>').join('')+'</select></span>':'';
  const handle=plan.status==='preview'?'<button type="button" class="gf-icon-button" data-fleet-drag draggable="true" title="Trascina su un giro della tabella" aria-label="Trascina '+esc(delivery.cliente_nome)+'"><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14"/></svg></button>':'';
  // Togliere una consegna dai giri: diventa "non assegnata" e non viene programmata (si può riassegnare da "Da sistemare").
  const remove=plan.status==='preview'&&lane!==null?'<button type="button" class="gf-icon-button" data-fleet-remove="'+index+'" title="Togli dai giri" aria-label="Togli '+esc(delivery.cliente_nome)+' dai giri"'+(busy?' disabled':'')+'><svg class="gf-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>':'';
@@ -91,6 +91,7 @@ function stop(plan,dirty,index,lane,position,busy){
  '<td><strong>'+esc(delivery.cliente_nome)+'</strong><br><span class="gf-muted">'+esc(delivery.indirizzo)+'</span></td>'+
  '<td>'+(badges?'<span class="gf-cluster">'+badges+'</span>':'<span class="gf-muted">—</span>')+'</td>'+
  '<td>'+esc(timing?.arrivo_stimato||'—')+'</td>'+
+ '<td data-label="Scarico">'+gfUnloadCell(delivery)+'</td>'+
  (plan.status==='preview'?'<td>'+(moveTo||'<span class="gf-muted">—</span>')+'</td><td><span class="gf-cluster">'+handle+remove+'</span></td>':'')+'</tr>';
 }
 // Tabella di confronto: una riga per giro, che è anche il punto in cui rilasciare una fermata trascinata.
@@ -108,6 +109,14 @@ function table(plan,assignment,dirty){
   '<td><button type="button" class="gf-button" data-variant="ghost" data-size="sm" data-fleet-select="'+i+'" aria-pressed="'+(i===selected)+'">Vedi</button></td></tr>';
  }).join('')+'</tbody></table></div></section>';
 }
+// Prima e ultima riga delle fermate: partenza dal deposito e, se previsto, rientro (orario solo con stime valide).
+function depotRows(plan,valid,route,i,all,where){
+ const r={consegne:all,rientro_deposito:plan.configuration.rientro_deposito!==false};
+ const extra=plan.status==='preview'?[['Sposta in',''],['Azioni','']]:[];
+ return where==='start'
+  ?gfDepartureRow(r,[['#',''],['Cliente',GF_DEPARTURE_TITLE],['Avvisi',''],['Arrivo','<strong>'+esc(departure(plan,i))+'</strong>'],['Scarico',''],...extra])
+  :gfReturnRow(r,[['#',''],['Cliente',GF_RETURN_TITLE],['Avvisi',''],['Arrivo','<strong>'+esc(valid?routeReturn(route)||'—':'—')+'</strong>'],['Scarico',''],...extra]);
+}
 // Il giro scelto: mappa e fermate in ordine, con gli avvisi del mezzo come etichette.
 function lane(plan,assignment,dirty,i,busy){
  const all=ordered(plan,assignment,i),info=names(plan,i),route=info.r,valid=!dirty&&route;
@@ -115,8 +124,8 @@ function lane(plan,assignment,dirty,i,busy){
  const routeId=plan.status==='programmed'&&route?plan.route_ids?.[plan.routes.indexOf(route)]:null;
  return '<section class="gf-panel" data-fleet-lane="'+i+'" aria-labelledby="fleetLaneTitle"><header class="gf-panel__header"><div><h2 class="gf-panel__title" id="fleetLaneTitle">Giro '+(i+1)+' · '+esc(info.driver)+'</h2><p class="gf-muted">'+esc([info.vehicle,info.plate].filter(Boolean).join(' · '))+' · '+esc(metrics)+'</p></div><span class="gf-badge" data-status="info" data-dot>'+gfCount(all.length,'fermata','fermate')+'</span></header>'+
  '<div class="gf-panel__body"><div class="gf-route-panel__canvas" data-fleet-map role="region" aria-label="Mappa della suddivisione dei giri"></div></div>'+
- (all.length?'<div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards" aria-label="Fermate del giro '+(i+1)+'"><thead><tr><th>#</th><th>Cliente</th><th>Avvisi</th><th>Arrivo</th>'+
- (plan.status==='preview'?'<th>Sposta in</th><th>Azioni</th>':'')+'</tr></thead><tbody>'+all.map((k,j)=>stop(plan,dirty,k,i,j,busy)).join('')+'</tbody></table></div>':
+ (all.length?'<div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards" aria-label="Fermate del giro '+(i+1)+'"><thead><tr><th>#</th><th>Cliente</th><th>Avvisi</th><th>Arrivo</th><th>Scarico</th>'+
+ (plan.status==='preview'?'<th>Sposta in</th><th>Azioni</th>':'')+'</tr></thead><tbody>'+depotRows(plan,valid,route,i,all,'start')+all.map((k,j)=>stop(plan,dirty,k,i,j,busy)).join('')+depotRows(plan,valid,route,i,all,'end')+'</tbody></table></div>':
  '<div class="gf-empty"><p>Nessuna fermata</p><small>Sposta qui una consegna con «Sposta in…» o trascinandola sulla riga del giro.</small></div>')+
  (valid&&route.result.driver_breaks?.length?'<details class="fleet-lane-breaks"><summary>Turno e pause</summary>'+GFDriverBreaks.cards(route.result,0,'div')+route.stop_indexes.map((_,j)=>GFDriverBreaks.cards(route.result,j+1,'div')).join('')+'</details>':'')+
  (routeId?'<footer class="gf-panel__footer"><button type="button" class="gf-button" data-variant="secondary" data-size="sm" data-open="'+Number(routeId)+'">Apri giro programmato</button></footer>':'')+'</section>';
