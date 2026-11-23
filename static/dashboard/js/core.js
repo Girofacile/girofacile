@@ -1611,6 +1611,8 @@ async function signup(){
       // Le funzioni (finestre orarie, firma, foto, ZTL, sponda) non si scelgono più qui:
       // valgono le impostazioni predefinite, modificabili poi dalle Impostazioni.
     })});
+    // Registrazione completata per le campagne Meta: solo con il consenso dato sul sito (al massimo 1 secondo).
+    await window.GFMarketing?.track?.("CompleteRegistration", {content_name: plan});
     // Nuovo account: si riparte da una pagina pulita, senza dati rimasti in memoria da un accesso precedente.
     window.location.href = "/dashboard";
   }catch(e){ alert(e.message); }

@@ -5,6 +5,10 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Pixel di Meta (ID 1444449421091767) sul sito pubblico, solo con consenso: banner «Cookie per la pubblicità» con
+  Rifiuta/Accetta e «Preferenze cookie» nel piè di pagina. Nell'area riservata nessun banner né visita registrata;
+  alla registrazione completata parte l'evento CompleteRegistration solo per chi ha accettato. Cookie Policy e
+  Privacy Policy da aggiornare prima della pubblicazione.
 - Navigazione: «Naviga» dell'autista, il portale operatore, «Apri su Maps» e il link del giro portano alle coordinate
   verificate della fermata (lo stesso punto usato per il calcolo), non al testo dell'indirizzo. Un indirizzo scritto
   male ma verificato non dà più «indirizzo non esistente»; vale anche per i giri già creati.
