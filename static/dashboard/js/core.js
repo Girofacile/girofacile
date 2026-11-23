@@ -5189,19 +5189,21 @@ function gfUnloadCell(d, withReal=false){
 // cells: colonne della tabella, in ordine, con il contenuto per il rientro ('' = vuota).
 function gfReturnRow(r, cells){
   if(!r || !r.rientro_deposito || !(r.consegne || []).length) return '';
-  return gfDepotRow('data-route-return', cells);
+  return gfDepotRow('data-route-return', cells, 'M21 12H9 M13 8l-4 4 4 4 M7 4H4v16h3');
 }
 // Prima riga delle tabelle fermate: la partenza dal deposito, prima di eventuali pause iniziali.
 function gfDepartureRow(r, cells){
   if(!r || !(r.consegne || []).length) return '';
-  return gfDepotRow('data-route-departure', cells);
+  return gfDepotRow('data-route-departure', cells, 'M3 12h12 M11 8l4 4-4 4 M17 4h3v16h-3');
 }
-function gfDepotRow(attr, cells){
+// icon: freccia che esce dal deposito (partenza) o rientra (rientro), nel cerchio della colonna «#».
+function gfDepotRow(attr, cells, icon){
   // Le colonne vuote in fondo diventano una sola cella: su telefono la scheda non mostra etichette vuote.
   let last = cells.length - 1;
   while(last > 0 && !cells[last][1]) last--;
-  const filled = cells.slice(0, last + 1).map(([label, html]) => html
+  const filled = cells.slice(0, last + 1).map(([label, html], i) => html
     ? `<td data-label="${esc(label)}">${html}</td>`
+    : i === 0 && icon ? `<td aria-hidden="true"><span class="gf-stop__number"><svg class="gf-icon" viewBox="0 0 24 24"><path d="${icon}"/></svg></span></td>`
     : '<td aria-hidden="true"></td>').join('');
   const rest = cells.length - 1 - last;
   return `<tr ${attr}>${filled}${rest ? `<td colspan="${rest}" aria-hidden="true"></td>` : ''}</tr>`;

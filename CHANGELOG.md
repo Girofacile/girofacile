@@ -5,6 +5,8 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Tabelle delle fermate: icona nel cerchio della colonna «#» per «Partenza dal deposito» (freccia che esce) e
+  «Rientro al deposito» (freccia che rientra).
 - Tabelle delle fermate: prima riga «Partenza dal deposito» con l'orario di partenza (e l'avvio reale dove
   registrato) in anteprima del giro, più mezzi, programmati, in corso, storico e stampa; l'anteprima del giro singolo
   e la stampa hanno anche l'ultima riga «Rientro al deposito».
