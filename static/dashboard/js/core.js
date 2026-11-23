@@ -633,7 +633,7 @@ function initAddressAutocomplete(){
 }
 
 
-function mapsAddressUrl(address){ return "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(address || ""); }
+function mapsAddressUrl(address, stop){ return "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(stop ? gfNavDestination({...stop, indirizzo:address}) : (address || "")); }
 async function copyText(text, msg="Copiato negli appunti"){
   try{
     await navigator.clipboard.writeText(text || "");
@@ -4112,7 +4112,7 @@ function renderRouteResult(r, targetId="routeResult", fromHistory=false){
       <td data-label="Attesa">${Math.round(parseFloat(d.attesa_min)||0)} min</td>
       <td data-label="Km tappa">${d.km_tappa == null ? "-" : gfDecimal(d.km_tappa)}</td>
       <td data-label="Avvisi">${warningBadges(d.warning)}</td>
-      <td data-label="Azioni"><details class="gf-dropdown" data-preview-stop-actions><summary class="gf-icon-button" aria-label="Azioni fermata ${idx+1}">›</summary><div data-gf-menu data-preview-stop-tools><a class="gf-button" data-variant="ghost" target="_blank" rel="noopener" href="${mapsAddressUrl(d.indirizzo)}" title="Apri fermata su Maps">📍 Apri su Maps</a><button type="button" class="gf-button" data-variant="ghost" onclick="copyText('${esc(d.indirizzo).replace(/'/g,"\\'")}', 'Indirizzo copiato')" title="Copia indirizzo">⧉ Copia indirizzo</button>${deliverySignatureAction(d, r.driver_name)} ${trackingButton(d, r)}</div></details></td>
+      <td data-label="Azioni"><details class="gf-dropdown" data-preview-stop-actions><summary class="gf-icon-button" aria-label="Azioni fermata ${idx+1}">›</summary><div data-gf-menu data-preview-stop-tools><a class="gf-button" data-variant="ghost" target="_blank" rel="noopener" href="${mapsAddressUrl(d.indirizzo, d)}" title="Apri fermata su Maps">📍 Apri su Maps</a><button type="button" class="gf-button" data-variant="ghost" onclick="copyText('${esc(d.indirizzo).replace(/'/g,"\\'")}', 'Indirizzo copiato')" title="Copia indirizzo">⧉ Copia indirizzo</button>${deliverySignatureAction(d, r.driver_name)} ${trackingButton(d, r)}</div></details></td>
     </tr>`+GFDriverBreaks.table(r,idx+1,9);
   });
   // Clienti raggiungibili solo in traghetto: esclusi dal giro fino alla gestione dei biglietti.

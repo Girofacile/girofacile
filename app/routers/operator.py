@@ -1,6 +1,7 @@
 from ..services.driver_schedule import metadata as driver_schedule_metadata
 from ..services.route_execution import apply_delivery_update, get_or_create_delivery_status, update_customer_unload_time, refresh_route_completion
 from ..services.route_enrichment import routing_metadata, json_data, TIMING_DETAILS
+from ..optimizer import plan_navigation_url
 """
 Router portale operatore.
 Accessibile tramite token senza login — /giro/{token}
@@ -182,7 +183,7 @@ def get_operator_route(token: str, db: Session = Depends(get_db)):
             "orario_rientro_stimato": time_to_hhmm(plan.orario_rientro_stimato),
             "totale_km": plan.totale_km,
             "totale_minuti": plan.totale_minuti,
-            "google_maps_url": plan.google_maps_url,
+            "google_maps_url": plan_navigation_url(plan),
             "deposit_nome": plan.deposit.nome if plan.deposit else None,
             "deposit_indirizzo": plan.deposit.indirizzo if plan.deposit else None,
             "driver_nome": (

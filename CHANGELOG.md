@@ -5,6 +5,9 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Navigazione: «Naviga» dell'autista, il portale operatore, «Apri su Maps» e il link del giro portano alle coordinate
+  verificate della fermata (lo stesso punto usato per il calcolo), non al testo dell'indirizzo. Un indirizzo scritto
+  male ma verificato non dà più «indirizzo non esistente»; vale anche per i giri già creati.
 - Avvisi (variante A, stile A3): gli avvisi di attenzione in tutta l'app diventano un riquadro ambra tenue senza
   bordo con «!» in un cerchio bianco. Nuovo componente `.gf-notice` (icona, titolo, spiegazione e pulsante) nel
   design system e nel catalogo: nella pagina Piani gli avvisi su ordini, giri, mezzi e pagamento stanno in alto,

@@ -20,7 +20,7 @@ from ..core.dependencies import current_user, owned
 from ..core.utils import local_now, local_today, local_today_iso, minutes_from_hhmm, parse_date_value, parse_time_value, date_to_iso, time_to_hhmm
 from ..database import get_db
 from ..models import Customer, Delivery, DeliveryStatus, Deposit, Driver, RoutePlan, User, Vehicle, ChatMessage
-from ..optimizer import window_summary, enrich_saved_schedule, optimize_route, recalculate_manual_route, validate_vehicle_load
+from ..optimizer import plan_navigation_url, window_summary, enrich_saved_schedule, optimize_route, recalculate_manual_route, validate_vehicle_load
 from ..schemas import ManualRoutePlanIn, RoutePlanIn, StopAddressIn
 from ..services.plans import check_daily_route_limit
 from ..services.error_monitor import log_exception
@@ -398,7 +398,7 @@ def route_response(plan, result):
         "energy_quantity_primary": plan.energy_quantity_primary, "energy_quantity_electric": plan.energy_quantity_electric,
         "totale_km": plan.totale_km, "totale_minuti": plan.totale_minuti,
         "litri_stimati": plan.litri_stimati, "costo_carburante": plan.costo_carburante,
-        "costo_totale": plan.costo_totale, "google_maps_url": plan.google_maps_url,
+        "costo_totale": plan.costo_totale, "google_maps_url": plan_navigation_url(plan),
         **routing_metadata(plan, include_legs=True),
         **shifts.metadata(plan),
         "status": computed_route_status(plan), "status_label": route_status_label(computed_route_status(plan)),
@@ -441,7 +441,7 @@ def serialize_route(plan, include_legs=True):
         "energy_quantity_primary": plan.energy_quantity_primary, "energy_quantity_electric": plan.energy_quantity_electric,
         "totale_km": plan.totale_km, "totale_minuti": plan.totale_minuti,
         "litri_stimati": plan.litri_stimati, "costo_carburante": plan.costo_carburante,
-        "costo_totale": plan.costo_totale, "google_maps_url": plan.google_maps_url,
+        "costo_totale": plan.costo_totale, "google_maps_url": plan_navigation_url(plan),
         **routing_metadata(plan, include_legs=include_legs),
         **shifts.metadata(plan),
         "status": computed_route_status(plan), "status_label": route_status_label(computed_route_status(plan)),
@@ -1193,7 +1193,7 @@ def get_route_map_data(route_id: int, db: Session = Depends(get_db), user: User 
         **shifts.metadata(plan),
         "route_id": plan.id,
         "name": plan.nome,
-        "google_maps_url": plan.google_maps_url,
+        "google_maps_url": plan_navigation_url(plan),
         "return_depot": bool(plan.rientro_deposito),
         "road_polyline": road_polyline,
         "depot": {

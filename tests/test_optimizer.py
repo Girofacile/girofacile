@@ -244,7 +244,9 @@ def test_public_entrypoints_use_one_stub_matrix(monkeypatch, entrypoint, return_
     assert all("_matrix_index" not in d for d in result["ordered"])
     assert "score" not in result and "violations" not in result
     assert "_sequence" not in result and "departure_slack_min" not in result
-    assert result["google_maps_url"].endswith("/Deposito") is return_depot
+    # Il deposito nel link è il suo punto verificato (coordinate), come le fermate.
+    depot = opt.navigation_point(result["depot_coord"]) or "Deposito"
+    assert result["google_maps_url"].endswith("/" + depot) is return_depot
     if entrypoint is opt.recalculate_manual_route:
         assert ids(result) == [1, 2]
 

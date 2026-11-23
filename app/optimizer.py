@@ -341,11 +341,41 @@ def _matrix_leg(matrix, points, origin_idx, dest_idx):
         raise ValueError("Matrice stradale incompleta. Verifica coordinate e copertura dell'indirizzo.")
     return road_routing.estimated_leg(points[origin_idx], points[dest_idx])
 
-def build_google_maps_url(depot_address, deliveries, return_depot):
-    stops = [depot_address] + [d["indirizzo"] for d in deliveries]
+def navigation_point(item):
+    """Coordinate verificate «lat,lon» per Google Maps, oppure None.
+
+    La navigazione usa lo stesso punto del calcolo del giro: un indirizzo scritto male ma
+    verificato (es. comune «Italia») porta comunque nel posto giusto.
+    """
+    item = item or {}
+    source = item.get("coord") if isinstance(item.get("coord"), dict) else item
+    try:
+        lat, lon = float(source["lat"]), float(source["lon"])
+    except (KeyError, TypeError, ValueError):
+        return None
+    if not (-90 <= lat <= 90 and -180 <= lon <= 180) or (lat == 0 and lon == 0):
+        return None
+    return f"{lat:.6f},{lon:.6f}"
+
+
+def build_google_maps_url(depot_address, deliveries, return_depot, depot_coord=None):
+    depot = navigation_point(depot_coord) or depot_address
+    stops = [depot] + [navigation_point(d) or d["indirizzo"] for d in deliveries]
     if return_depot:
-        stops.append(depot_address)
-    return "https://www.google.com/maps/dir/" + "/".join(quote(x) for x in stops)
+        stops.append(depot)
+    return "https://www.google.com/maps/dir/" + "/".join(quote(x, safe=",") for x in stops)
+
+
+def plan_navigation_url(plan):
+    """Link del giro rifatto con le coordinate salvate di fermate e deposito (anche per giri già creati)."""
+    from .services.route_enrichment import json_data
+    deliveries = sorted(plan.deliveries or [], key=lambda d: d.ordine or 0)
+    deposit = plan.deposit
+    if not deliveries or deposit is None or not deposit.indirizzo:
+        return plan.google_maps_url
+    items = [{**(json_data(d.optimizer_details) or {}), "indirizzo": d.indirizzo} for d in deliveries]
+    depot = {"lat": deposit.lat, "lon": deposit.lon} if deposit.lat is not None and deposit.lon is not None else None
+    return build_google_maps_url(deposit.indirizzo, items, bool(plan.rientro_deposito), depot)
 
 def truthy_flag(value):
     if isinstance(value, bool):
@@ -1021,7 +1051,7 @@ def optimize_route(db: Session, deposit, deliveries, vehicle=None, return_depot=
         last_index = points.index(result["ordered"][-1]["coord"])
         result["base_return_leg"] = dict(matrix.get((last_index, 0)) or {})
 
-    result["google_maps_url"] = build_google_maps_url(deposit.indirizzo, result["ordered"], return_depot)
+    result["google_maps_url"] = build_google_maps_url(deposit.indirizzo, result["ordered"], return_depot, depot_coord)
     result["consegne_escluse"] = excluded
     return result
 
@@ -1065,6 +1095,6 @@ def recalculate_manual_route(db: Session, deposit, deliveries, vehicle=None, ret
         last_index = points.index(result["ordered"][-1]["coord"])
         result["base_return_leg"] = dict(matrix.get((last_index, 0)) or {})
 
-    result["google_maps_url"] = build_google_maps_url(deposit.indirizzo, result["ordered"], return_depot)
+    result["google_maps_url"] = build_google_maps_url(deposit.indirizzo, result["ordered"], return_depot, depot_coord)
     result["consegne_escluse"] = excluded
     return result

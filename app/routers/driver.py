@@ -4,6 +4,7 @@ from ..services.route_orders import route_order_phones
 from ..services.identity import ensure_login_email_available
 from ..services.route_execution import apply_delivery_update, get_or_create_delivery_status, update_customer_unload_time, refresh_route_completion
 from ..services.route_enrichment import routing_metadata, json_data, TIMING_DETAILS
+from ..optimizer import plan_navigation_url
 """
 Portale autista — autenticazione separata, giri assegnati, chat, monitoraggio.
 """
@@ -355,7 +356,7 @@ def get_driver_route_detail(route_id: int, da: DriverAccount = Depends(get_curre
             "id": r.id, "nome": r.nome, "data_giro": date_to_iso(r.data_giro),
             "orario_partenza": time_to_hhmm(r.orario_partenza), "orario_rientro_stimato": time_to_hhmm(r.orario_rientro_stimato),
             "totale_km": r.totale_km, "totale_minuti": r.totale_minuti,
-            "status": r.status, "google_maps_url": r.google_maps_url,
+            "status": r.status, "google_maps_url": plan_navigation_url(r),
             "deposit_nome": r.deposit.nome if r.deposit else None,
             "deposit_indirizzo": r.deposit.indirizzo if r.deposit else None,
             "vehicle_nome": r.vehicle.nome if r.vehicle else None,
