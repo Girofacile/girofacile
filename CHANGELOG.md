@@ -5,6 +5,10 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Avvisi (variante A, stile A3): gli avvisi di attenzione in tutta l'app diventano un riquadro ambra tenue senza
+  bordo con «!» in un cerchio bianco. Nuovo componente `.gf-notice` (icona, titolo, spiegazione e pulsante) nel
+  design system e nel catalogo: nella pagina Piani gli avvisi su ordini, giri, mezzi e pagamento stanno in alto,
+  sopra i numeri, con il pulsante per risolverli («Vedi i piani», «Gestisci i mezzi», «Metodo di pagamento»).
 - Piani: «Annulla checkout aperto» compare solo quando c'è davvero un pagamento Stripe aperto; un checkout non
   pagato scade da solo dopo 31 minuti (il minimo accettato da Stripe è 30).
 - Piano Starter: «Usa più mezzi» apre il pop-up dei piani (Business consigliato, Pro) come Report e Chat,

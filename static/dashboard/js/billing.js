@@ -122,6 +122,36 @@ function monthlyOrderUsageMarkup(usage) {
   return `<section class="gf-card gf-stack" data-gap="sm" aria-label="Utilizzo ordini mensili"><div class="gf-cluster" data-justify="between"><strong>Ordini del mese · ${esc(usage.month || '')}</strong><span>${used.toLocaleString('it-IT')} / ${limit.toLocaleString('it-IT')}</span></div><div class="gf-progress__track" role="progressbar" aria-label="Ordini utilizzati nel mese" aria-valuemin="0" aria-valuemax="${limit}" aria-valuenow="${Math.min(used,limit)}" aria-valuetext="${used} ordini utilizzati su ${limit}"><span class="gf-progress__done" data-gf-width="${Math.round(percent/5)*5}"></span></div><p class="gf-muted">${remaining.toLocaleString('it-IT')} ordini ancora disponibili questo mese. La quota si rinnova ogni mese.</p>${warning?`<p class="gf-alert" data-status="warning" role="status">${remaining===0?'Quota mensile ordini esaurita.':'Hai utilizzato almeno l’80% degli ordini mensili.'} Puoi valutare un piano superiore.</p>`:''}</section>`;
 }
 
+// Avviso della pagina Piani (variante A, stile A3): icona, titolo, spiegazione e pulsante per risolverlo.
+const PLAN_NOTICE_ICONS={orders:'M9 4h6v3H9z M7 5H6a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1h-1 M9 12h6 M9 16h6',
+  routes:'M6 19a3 3 0 1 0 0-.01 M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15 M18 5a3 3 0 1 0 0-.01',
+  vehicles:'M2 6h11v10H2z M13 9h5l3 3v4h-8z M6.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z M17.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z',
+  card:'M3 6h18v12H3z M3 10h18 M7 15h3',alert:'M12 3 2 20h20L12 3Z M12 10v4 M12 17h.01'};
+const PLAN_NOTICE_ACTIONS={plans:["Vedi i piani","document.getElementById('upgradePlanCards')?.scrollIntoView({behavior:'smooth',block:'start'})"],
+  vehicles:["Gestisci i mezzi","showTab('mezzi')"],payment:["Metodo di pagamento","managePaymentMethodsV876()"]};
+function planNoticeMarkup(icon,title,text,action){
+  const [label,handler]=PLAN_NOTICE_ACTIONS[action]||[];
+  return `<div class="gf-notice" role="status"><span class="gf-notice__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="${PLAN_NOTICE_ICONS[icon]}"/></svg></span><div class="gf-notice__body"><p class="gf-notice__title">${esc(title)}</p><p class="gf-notice__text">${esc(text)}</p></div>${label?`<button type="button" class="gf-button" data-variant="primary" data-size="sm" onclick="${handler}">${label}</button>`:''}</div>`;
+}
+// Avvisi sui consumi del piano: ordini, giri e mezzi oltre i limiti.
+function planUsageNotices(usage) {
+  const r=usage.resources || {},orders=usage.orders,routes=usage.routes,v=r.vehicles,fmt=n=>Number(n||0).toLocaleString('it-IT',{useGrouping:'always'});
+  const notices=[];
+  if(orders && (orders.warning || (orders.limit>0 && orders.used>=orders.limit*.8))){
+    const used=Number(orders.used||0),limit=Number(orders.limit||0),done=used>=limit;
+    notices.push(planNoticeMarkup('orders',done?'Quota mensile ordini esaurita':'Hai utilizzato almeno l’80% degli ordini mensili',
+      done?`Hai usato ${fmt(used)} ordini su ${fmt(limit)}. Gli ordini già presenti restano; per importarne altri questo mese puoi valutare un piano superiore.`
+        :`Hai usato ${fmt(used)} ordini su ${fmt(limit)}. La quota si rinnova ogni mese; puoi valutare un piano superiore.`,'plans'));
+  }
+  if(routes && routes.limit && routes.used>=routes.limit*.8){
+    const done=routes.used>=routes.limit;
+    notices.push(planNoticeMarkup('routes',done?'Quota mensile giri esaurita':'Hai programmato almeno l’80% dei giri del mese',
+      done?'I nuovi giri si potranno programmare dal prossimo mese; puoi valutare un piano superiore.':`Hai programmato ${fmt(routes.used)} giri su ${fmt(routes.limit)}. Puoi valutare un piano superiore.`,'plans'));
+  }
+  if(v?.over_limit) notices.push(planNoticeMarkup('vehicles','Mezzi oltre i limiti del piano',v.message||'La flotta supera i limiti del piano. I mezzi esistenti sono conservati.','vehicles'));
+  return notices.join('');
+}
+
 // Consumi del mese nella pagina Piani: barra dei numeri con icone, come nelle altre pagine.
 function planUsageStripMarkup(usage) {
   const r=usage.resources || {},orders=usage.orders,routes=usage.routes,fmt=n=>Number(n||0).toLocaleString('it-IT',{useGrouping:'always'});
@@ -151,12 +181,8 @@ function planUsageStripMarkup(usage) {
   const extra=[['Depositi',r.deposits],['Collaboratori (attivi e inviti in attesa)',r.collaborators]].filter(([,q])=>q)
     .map(([label,q])=>`${label} ${fmt(q.used)} su ${q.limit==null?'∞':fmt(q.limit)}`);
   const remaining=orders?Math.max(0,Number(orders.limit||0)-Number(orders.used||0)):0;
-  const warning=orders && (orders.warning || (orders.limit>0 && orders.used>=orders.limit*.8));
   return `${cells.length?`<div class="gf-stat-strip" data-icons="side" aria-label="Consumi del piano · ${esc(usage.month || '')}">${cells.join('')}</div>`:''}
-    ${extra.length||orders?`<p class="gf-muted">${extra.join(' · ')}${extra.length&&orders?'. ':''}${orders?`${fmt(remaining)} ordini ancora disponibili questo mese: la quota si rinnova ogni mese.`:''}</p>`:''}
-    ${warning?`<p class="gf-alert" data-status="warning" role="status">${remaining===0?'Quota mensile ordini esaurita.':'Hai utilizzato almeno l’80% degli ordini mensili.'} Puoi valutare un piano superiore.</p>`:''}
-    ${routes && routes.limit && routes.used>=routes.limit*.8?`<p class="gf-alert" data-status="warning" role="status">${routes.used>=routes.limit?'Quota mensile giri esaurita: i nuovi giri si potranno programmare dal prossimo mese.':'Hai programmato almeno l’80% dei giri del mese.'} Puoi valutare un piano superiore.</p>`:''}
-    ${v?.over_limit?`<p class="gf-alert" data-status="warning" role="status">${esc(v.message||'La flotta supera i limiti del piano. I mezzi esistenti sono conservati.')}</p>`:''}`;
+    ${extra.length||orders?`<p class="gf-muted">${extra.join(' · ')}${extra.length&&orders?'. ':''}${orders?`${fmt(remaining)} ordini ancora disponibili questo mese: la quota si rinnova ogni mese.`:''}</p>`:''}`;
 }
 
 function renderOrderUsage(usage) {
@@ -187,10 +213,11 @@ function renderSubscriptionControls(data) {
     'Ambiente di prova: nessun denaro reale viene addebitato.'];
   if (b.source === 'complimentary') notes.push('Accesso gratuito assegnato da GiroFacile: nessun pagamento richiesto.');
   else if (b.source === 'legacy' || b.source === 'manual') notes.push('Accesso assegnato amministrativamente; non equivale a un abbonamento pagato.');
+  // Variante A: gli avvisi stanno in alto, sopra i numeri del piano.
   const warnings = [];
-  if (status === 'past_due') warnings.push(`Pagamento da completare. Tolleranza fino al ${fmtDateV63(b.grace_until)}.`);
-  if (['expired','cancelled','incomplete'].includes(status)) warnings.push('Puoi consultare ed esportare i dati e terminare i giri già avviati. Nuovi giri non disponibili.');
-  box.innerHTML = `${planUsageStripMarkup(usage)}${warnings.map(m=>`<p class="gf-alert" data-status="warning" role="status">${esc(m)}</p>`).join('')}
+  if (status === 'past_due') warnings.push(planNoticeMarkup('card','Pagamento da completare',`Aggiorna il metodo di pagamento: il piano resta attivo fino al ${fmtDateV63(b.grace_until)}.`,'payment'));
+  if (['expired','cancelled','incomplete'].includes(status)) warnings.push(planNoticeMarkup('alert','Piano non attivo','Puoi consultare ed esportare i dati e terminare i giri già avviati. Per programmare nuovi giri scegli un piano.','plans'));
+  box.innerHTML = `${warnings.join('')}${planUsageNotices(usage)}${planUsageStripMarkup(usage)}
     ${b.checkout_enabled ? `<div class="gf-cluster"><button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="subscriptionAction('sync')">Aggiorna stato</button>
       ${b.checkout_open ? `<button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="subscriptionAction('cancel-checkout')">Annulla checkout aperto</button>` : ''}
     ${b.subscription ? `<button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="managePaymentMethodsV876()">Metodo di pagamento e documenti</button>

@@ -92,7 +92,7 @@ pagina; l'aspetto di un componente deve cambiare nel foglio condiviso.
 | Pagination/tabs | `.gf-pagination`, `.gf-tabs`; stato e ruoli espliciti |
 | Toolbar/filters/search | `.gf-toolbar`, `.gf-search` |
 | Empty/loading | `.gf-empty`, `.gf-loading[role="status"]` |
-| Alert/toast | `.gf-alert[data-status]`, `.gf-toast[role="status"]`; dal 12/11/2026 `info` e `warning` sono righe di testo senza riquadro (grigio; testo con pallino ambra), da mettere in fondo al riquadro o accanto al dato, mai come blocco al centro della pagina; `success` e `danger` restano riquadri; nei portali gli errori di convalida usano `.gf-alert[data-status="danger"][data-portal-notice]` dentro la finestra aperta, al posto degli avvisi del browser |
+| Alert/toast | `.gf-alert[data-status]`, `.gf-toast[role="status"]`; `info` è una riga di testo grigio senza riquadro (dal 12/11/2026); dal 23/11/2026 `warning` è un riquadro ambra tenue senza bordo con «!» in un cerchio bianco (stile A3); `success` e `danger` restano riquadri; nei portali gli errori di convalida usano `.gf-alert[data-status="danger"][data-portal-notice]` dentro la finestra aperta, al posto degli avvisi del browser |
 | Page header | `.gf-page-header`: titolo, descrizione e azione principale |
 | Disposizione | `.gf-stack[data-gap]`, `.gf-cluster[data-justify]`, `.gf-grid[data-cols="2\|3\|4\|7\|main-side"]` (7: una colonna per giorno della settimana) |
 | Testo | `.gf-title`, `.gf-subtitle`, `.gf-text`, `.gf-muted`, `.gf-kicker` |
@@ -104,6 +104,7 @@ pagina; l'aspetto di un componente deve cambiare nel foglio condiviso.
 | Barra flottante di salvataggio/selezione | `.gf-savebar[data-floating]`: compare dal basso, scura, con le azioni (Annulla/Salva, Deseleziona/Vai alla pianificazione). Usata in Profilo azienda, Impostazioni, revisione flotta, selezione Clienti e Ordini. I menu interni si aprono verso l'alto. |
 | Campi | `.gf-form-grid`, `.gf-field` (`__label`, `__hint`, `__error`, `[data-invalid]`; per un campo `required` vuoto `design-system.js` mette `data-invalid` e la scritta rossa «Campo obbligatorio» al posto del fumetto del browser), `.gf-fieldset`, `.gf-check`, `.gf-form-actions` |
 | Mappa + fermate | `.gf-route-panel` (`__map`, `__canvas`, `__detail`, `__footer`), `.gf-route-map__*`, `.gf-crew`, `.gf-progress`, `.gf-stop-list` / `.gf-stop.is-done\|is-miss\|is-next` |
+| Avviso con azione | `.gf-notice` con `__icon`, `__body`, `__title`, `__text` e un `.gf-button` (23/11/2026, stile A3): per limiti del piano e cose da sistemare, in alto nella pagina; su telefono il pulsante va sotto il testo |
 | Avvisi operativi | `.gf-alert[data-kind="ztl\|tail-lift"]` con `__icon`, `__title`, `__text`; badge `.gf-badge[data-kind]` |
 | Filtri | `.gf-filters` con campi `.gf-field` e `.gf-chip[aria-pressed]` |
 | Vista elenco / schede | `.gf-segmented[data-variant="view"]` con due `button[aria-pressed]` a sola icona: stesso bordo, altezza e angoli di `.gf-button`, la voce scelta in grigio (niente blu) |

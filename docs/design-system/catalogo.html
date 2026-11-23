@@ -6,7 +6,7 @@
 <title>Catalogo componenti · GiroFacile</title>
 <link rel="icon" href="/static/favicon-32x32.png">
 <link rel="stylesheet" href="/static/design-system/theme.css?v=gf_variabili_tema_20261116">
-<link rel="stylesheet" href="/static/design-system/components.css?v=gf_testata_stretta_20261118">
+<link rel="stylesheet" href="/static/design-system/components.css?v=gf_avvisi_a3_20261123">
 <link rel="stylesheet" href="/static/design-system/layout.css?v=gf_banner_unico_20261101">
 <script src="/static/design-system/design-system.js?v=gf_schede_2_20261108" defer></script>
 <script src="/static/design-system/charts.js?v=gf_grafici_20261110" defer></script>
@@ -279,7 +279,7 @@
 </section>
 
 <section class="gf-panel gf-catalog-section" id="avvisi" aria-labelledby="avvisi-title">
-  <header class="gf-panel__header"><h2 class="gf-panel__title" id="avvisi-title">Avvisi e messaggi</h2><span class="gf-panel__meta">.gf-alert · .gf-toast · .gf-empty</span></header>
+  <header class="gf-panel__header"><h2 class="gf-panel__title" id="avvisi-title">Avvisi e messaggi</h2><span class="gf-panel__meta">.gf-alert · .gf-notice · .gf-toast · .gf-empty</span></header>
   <div class="gf-panel__body gf-stack">
     <div class="gf-grid" data-cols="2">
       <div class="gf-alert" data-kind="ztl" role="note"><svg class="gf-alert__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17h.01"/></svg><div class="gf-alert__body"><p class="gf-alert__title">Cliente in ZTL</p><p class="gf-alert__text">3 fermate richiedono il permesso di accesso: controlla gli orari del varco.</p></div></div>
@@ -287,9 +287,10 @@
     </div>
     <p class="gf-alert" data-status="success">Giro salvato e assegnato a Marco Rossi.</p>
     <p class="gf-alert" data-status="warning">Controlla i dati prima di continuare: 2 indirizzi non sono stati trovati.</p>
+    <div class="gf-notice" role="status"><span class="gf-notice__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 4h6v3H9z M7 5H6a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1h-1 M9 12h6 M9 16h6"/></svg></span><div class="gf-notice__body"><p class="gf-notice__title">Quota mensile ordini esaurita</p><p class="gf-notice__text">Hai usato 300 ordini su 300. Gli ordini già presenti restano; per importarne altri questo mese puoi valutare un piano superiore.</p></div><button type="button" class="gf-button" data-variant="primary" data-size="sm">Vedi i piani</button></div>
     <p class="gf-alert" data-status="danger">Non è stato possibile salvare. I dati inseriti restano disponibili.</p>
     <p class="gf-alert" data-status="info">Gli orari sono tempi stradali stimati.</p>
-    <p class="gf-muted">Info e attenzione sono righe di testo senza riquadro: info in grigio, attenzione con il pallino ambra. Mettile in fondo al riquadro o accanto al dato a cui si riferiscono. Successo ed errore restano riquadri colorati.</p>
+    <p class="gf-muted">Info è una riga di testo grigio. Attenzione è un riquadro ambra tenue con «!» in un cerchio bianco; quando serve un pulsante per risolvere (limiti del piano, cose da sistemare) si usa .gf-notice, in alto nella pagina. Successo ed errore restano riquadri colorati.</p>
     <div class="gf-cluster"><button class="gf-button" data-variant="secondary" id="kitToast" type="button">Mostra toast</button></div>
     <div class="gf-grid" data-cols="2">
       <div class="gf-card"><div class="gf-loading" role="status" aria-live="polite">Caricamento in corso…</div></div>
