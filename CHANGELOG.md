@@ -5,6 +5,8 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Importazione ordini, passo finale (variante B): esito al centro con «N ordini importati», nome del file,
+  etichette colorate (nuovi, aggiornati, già presenti, saltati) e «Vai agli ordini» in evidenza; Chiudi in basso.
 - Pixel di Meta (ID 1444449421091767) sul sito pubblico, solo con consenso: banner «Cookie per la pubblicità» con
   Rifiuta/Accetta e «Preferenze cookie» nel piè di pagina. Nell'area riservata nessun banner né visita registrata;
   alla registrazione completata parte l'evento CompleteRegistration solo per chi ha accettato. Cookie Policy e

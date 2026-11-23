@@ -250,9 +250,9 @@ def main():
                     page.locator('#orderImportFile').set_input_files(csv_file)
                     page.locator('#orderImportCommit').wait_for(state='visible')
                     page.locator('#orderImportCommit').click()
-                    expect(dialog).to_contain_text('Già presenti, invariati')
+                    expect(dialog).to_contain_text('1 già presente')
                     assert db.query(Order).filter_by(external_id='IMPORT-001').count()==1
-                    page.locator('#orderImportFooter').get_by_role('button',name='Vai agli ordini',exact=True).click()
+                    page.locator('#orderImportDialog').get_by_role('button',name='Vai agli ordini',exact=True).click()
                     page.wait_for_function("document.getElementById('ordersResults').textContent.includes('IMPORT-001')")
                     imported=db.query(Order).filter_by(external_id='IMPORT-001').one()
                     imported.status='pronto';imported.address_verification={'input_address':imported.delivery_address,'indirizzo':imported.delivery_address,'stato_geocodifica':'verificato','lat':45.47,'lon':9.2,'geocoding_token':sign_stop_address(user.id,imported.delivery_address,45.47,9.2)}

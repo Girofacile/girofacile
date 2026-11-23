@@ -154,11 +154,15 @@
     report=await api(`/${source.id}/runs/${stage.run_id}/commit`,post({confirm:true,...(onlyValid?{skip_invalid:true}:{})}));
     if(report.status==='completed'){
       const r=report.report,imported=Number(r.new||0)+Number(r.updated||0);
-      const line=(label,value)=>value?`<div class="gf-details__item"><dt>${label}</dt><dd>${value}</dd></div>`:'';
+      // Variante B (23/11/2026): esito al centro, etichette colorate con i numeri, «Vai agli ordini» in evidenza.
+      const badge=(n,one,many,status)=>n?`<span class="gf-badge" data-status="${status}">${esc(gfCount(n,one,many))}</span>`:'';
+      const badges=[badge(Number(r.new||0),'nuovo','nuovi','success'),badge(Number(r.updated||0),'aggiornato','aggiornati','info'),
+        badge(Number(r.unchanged||0),'già presente','già presenti','neutral'),badge(Number(r.invalid||0),'saltato per errori','saltati per errori','danger')].filter(Boolean).join(' ');
       render(`<div class="gf-empty"><span class="gf-empty__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12l4 4 10-10"/></svg></span>
-        <p><strong>${esc(gfCount(imported,'ordine importato','ordini importati'))}</strong></p><p>Li trovi nell’elenco degli ordini, pronti da controllare e pianificare.</p></div>
-        <dl class="gf-details" data-layout="rows">${line('Nuovi',r.new)}${line('Aggiornati',r.updated)}${line('Già presenti, invariati',r.unchanged)}${line('Saltati per errori',r.invalid)}</dl>`,
-        '<button type="button" class="gf-button" data-variant="secondary" onclick="GFOrderImport.close()">Chiudi</button><button type="button" class="gf-button" data-variant="primary" onclick="GFOrderImport.viewOrders()">Vai agli ordini</button>',3);
+        <h3 class="gf-title">${esc(gfCount(imported,'ordine importato','ordini importati'))}</h3>${filename?`<p class="gf-muted">${esc(filename)}</p>`:''}
+        ${badges?`<p>${badges}</p>`:''}<p>Li trovi nell’elenco degli ordini, pronti da controllare e pianificare.</p>
+        <p><button type="button" class="gf-button" data-variant="primary" onclick="GFOrderImport.viewOrders()">Vai agli ordini</button></p></div>`,
+        '<span></span><button type="button" class="gf-button" data-variant="secondary" onclick="GFOrderImport.close()">Chiudi</button>',3);
       return;
     }
     renderReport();confirmation();
