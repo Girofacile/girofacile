@@ -333,6 +333,12 @@
     drawer.classList.toggle('hidden',!open);
     button.setAttribute('aria-expanded',String(open));
   }
+  // Clic sulla riga (o sulla card) di un ordine: lo seleziona per la pianificazione. «Apri» mostra i dettagli.
+  document.addEventListener('click',event=>{
+    const t=event.target,row=t?.closest?.('#ordersResults tr, #ordersResults article');
+    if(!row||t.closest('button,a,input,select,label,textarea,summary')||String(window.getSelection?.()||''))return;
+    row.querySelector('input.order-select:not(:disabled)')?.click();
+  });
   const orderDialog=modal();
   if(orderDialog){
     orderDialog.addEventListener('click',event=>{if(event.target===orderDialog)closeModal();});

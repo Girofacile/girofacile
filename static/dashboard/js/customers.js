@@ -581,8 +581,9 @@ if(typeof document!=='undefined'&&document.addEventListener){
     const edit=t.closest('[data-cx-edit]');if(edit){openCustomerDrawer(Number(edit.dataset.cxEdit),'edit');return;}
     const open=t.closest('[data-cx-open]');if(open){openCustomerDrawer(Number(open.dataset.cxOpen),'view');return;}
     if(t.closest('.cx-cb'))return;
+    // Clic sulla riga (o sulla card): seleziona il cliente per la pianificazione. I dettagli si aprono da «Dettagli».
     const row=t.closest('[data-cx-row]');
-    if(row&&!t.closest('button,a,input,select,label'))openCustomerDrawer(Number(row.dataset.cxRow),'view');
+    if(row&&!t.closest('button,a,input,select,label,textarea,summary')&&!String(window.getSelection?.()||''))row.querySelector('.cx-cb')?.click();
   });
   document.addEventListener('change',event=>{
     const t=event.target;if(!t||!t.closest||!t.closest('#tab-clienti'))return;

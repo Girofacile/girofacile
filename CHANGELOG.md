@@ -5,6 +5,8 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Ordini e Clienti: un clic sulla riga (o sulla card) seleziona l'ordine o il cliente per la pianificazione;
+  i dettagli si aprono con «Apri» / «Dettagli». Un secondo clic deseleziona.
 - Tabelle delle fermate: icona nel cerchio della colonna «#» per «Partenza dal deposito» (freccia che esce) e
   «Rientro al deposito» (freccia che rientra).
 - Tabelle delle fermate: prima riga «Partenza dal deposito» con l'orario di partenza (e l'avvio reale dove

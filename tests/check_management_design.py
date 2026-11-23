@@ -315,6 +315,12 @@ def main():
                     page.locator("#customerFilterToggle").click()
                     page.locator("#customerGridView").click()
                     assert page.locator("#customerCards").is_visible()
+                    # Clic sulla card: seleziona il cliente (non apre la scheda); un secondo clic lo deseleziona.
+                    card = page.locator("#customerCards [data-cx-row]").first
+                    card.locator("strong, b").first.click()
+                    assert card.locator(".cx-cb").is_checked() and not page.locator("#customerOverlay").is_visible()
+                    page.locator("#customerCards [data-cx-row]").first.locator("strong, b").first.click()
+                    assert not page.locator("#customerCards [data-cx-row]").first.locator(".cx-cb").is_checked()
                     page.locator("#customerCards").get_by_role("button", name="Apri la scheda di Cliente Demo").first.click()
                     # Dal 13/11 «Dettagli» apre direttamente la scheda unica del cliente (finestra completa):
                     # il vecchio pannello laterale non si usa più.
