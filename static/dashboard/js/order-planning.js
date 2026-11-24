@@ -164,7 +164,7 @@
   // Uscendo da Ordini e Pianificazione senza aver programmato, la selezione degli ordini si azzera (24/11/2026).
   // Se la selezione ha già giri collegati (bozze o programmati) resta com'è.
   async function leaveSection(){
-    if(!allowed()||busy||opening||!state.order_ids.length||state.routes?.length)return;
+    if(!allowed()||busy||opening||!state?.order_ids?.length||state.routes?.length)return;
     busy=true;
     try{
       await flush();
