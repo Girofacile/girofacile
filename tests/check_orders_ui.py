@@ -263,6 +263,13 @@ def main():
                     # Un clic sulla riga (fuori da pulsanti e caselle) seleziona l'ordine, non apre i dettagli.
                     page.locator('#ordersResults tr',has_text='IMPORT-001').locator('td[data-label="Ricevuto"]').click()
                     page.wait_for_function("document.getElementById('ordersSelectionCount').textContent.startsWith('1 ordine')")
+                    # Uscendo da Ordini senza programmare la selezione si azzera; poi si riseleziona.
+                    page.evaluate("showTab('clienti')")
+                    page.wait_for_function("!GFOrderPlanning.selection().order_ids.length")
+                    page.evaluate("showTab('ordini')")
+                    page.wait_for_function("document.getElementById('ordersSelectionCount').textContent.startsWith('0 ordini')")
+                    page.locator('#ordersResults tr',has_text='IMPORT-001').locator('td[data-label="Ricevuto"]').click()
+                    page.wait_for_function("document.getElementById('ordersSelectionCount').textContent.startsWith('1 ordine')")
                     assert not page.locator('#orderModal[open], dialog#orderModal[open]').count()
                     page.locator('#ordersGoPlanning').click()
                     page.locator('#tab-giro').wait_for(state='visible')

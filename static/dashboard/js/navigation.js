@@ -196,6 +196,8 @@ function showTab(name){
   if(window.GFCompanyAccess && !GFCompanyAccess.allowedTab(name)){toast("Funzione non assegnata al tuo account");return;}
   // Lasciando la pianificazione il giro va in bozza, dopo una conferma.
   if(window.GFPlanningDrafts?.guard(name)) return;
+  // Fuori da Ordini e Pianificazione la selezione degli ordini non programmati si azzera.
+  if(!["ordini","ordini-importa","ordine-fonte","ordine-dettaglio","ordine-modifica","ordini-collegamenti","giro","route-preview"].includes(name)) window.GFOrderPlanning?.leaveSection?.();
   if(name!=="dashboard-in-progress")window.GFInProgressReference?.suspend();
   if(name==='integrations') name='dashboard';
   if(name !== "company" && typeof blockCompanyNavigationForUnsavedChanges === "function" && blockCompanyNavigationForUnsavedChanges()) return;

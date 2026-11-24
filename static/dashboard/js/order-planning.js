@@ -161,6 +161,18 @@
     await loadSelection();
     if(state.order_ids.length&&state.routes.length&&!state.routes.some(r=>r.status==='bozza'))await change('clear');
   }
+  // Uscendo da Ordini e Pianificazione senza aver programmato, la selezione degli ordini si azzera (24/11/2026).
+  // Se la selezione ha già giri collegati (bozze o programmati) resta com'è.
+  async function leaveSection(){
+    if(!allowed()||busy||opening||!state.order_ids.length||state.routes?.length)return;
+    busy=true;
+    try{
+      await flush();
+      state=await api('/api/order-planning/selection',{method:'PUT',body:JSON.stringify({version:state.version,action:'clear',order_ids:[],filters:{}})});
+      enabled=false;loadedStops=false;dirty=false;
+    }catch(e){await loadSelection().catch(()=>{});}
+    finally{busy=false;controls();GFOrders.refreshSelection?.();}
+  }
   function leave(){feedback('');editingRouteId=null;enabled=false;loadedStops=false;dirty=false;regeneratePending=false;clearTimeout(timer);gate();}
   function describe(row){
     if(!row.order_refs?.length)return '';
@@ -173,7 +185,7 @@
   }
   document.addEventListener('change',e=>{if(ids.includes(e.target.id)||e.target.name==='energyPriceMode')changed();});
   window.addEventListener('beforeunload',e=>{if(enabled&&(dirty||saving)){e.preventDefault();e.returnValue='';}});
-  window.GFOrderPlanning={selection:()=>state,config,acceptSelection:value=>{state=value;controls();},loadSelection,checkbox,headerCheckbox,isSelected,controls,metadata,describe,active:()=>enabled,gate,go,proceed,changed,flush,beforeCalculate,leave,afterProgram,cancelSelected,
+  window.GFOrderPlanning={selection:()=>state,config,acceptSelection:value=>{state=value;controls();},loadSelection,checkbox,headerCheckbox,isSelected,controls,metadata,describe,active:()=>enabled,gate,go,proceed,changed,flush,beforeCalculate,leave,leaveSection,afterProgram,cancelSelected,
     regroup(){if(loadedStops && !confirm('Rigenerare le fermate dai dati degli ordini? Le modifiche alle sole fermate verranno sostituite.')){el('orderGroupOrders').checked=!el('orderGroupOrders').checked;return;}changed();proceed(true);},
     save:()=>flush().catch(e=>message(e.message)),
     select:(id,checked)=>change(checked?'add':'remove',[id]),

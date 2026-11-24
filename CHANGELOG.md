@@ -5,6 +5,8 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Ordini: uscendo da Ordini e Pianificazione senza aver programmato, la selezione degli ordini si azzera da sola
+  (resta solo se ha già giri collegati, per esempio una bozza).
 - Anteprima del giro singolo: tabella delle fermate come quella dei più mezzi (#, Cliente con indirizzo, Avvisi,
   Arrivo con inizio scarico e attesa solo se diversi, Scarico, Km tappa, Azioni); maniglia di spostamento a sinistra.
 - Più mezzi: la maniglia per trascinare una fermata è a sinistra del numero; in Azioni resta «Togli dai giri».
