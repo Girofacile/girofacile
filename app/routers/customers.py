@@ -413,6 +413,16 @@ def verify_pending_addresses(
     return {"processed": len(rows), **stats}
 
 
+# File di esempio per l'importazione dei clienti: intestazioni riconosciute da sole e due righe compilate.
+@router.get("/import-template.xlsx")
+def customer_import_template(user: User = Depends(current_user)):
+    from ..services.import_templates import workbook
+    return workbook("clienti", ["Nome", "Codice cliente", "Via", "Civico", "CAP", "Comune", "Provincia", "Telefono", "Email",
+                                "Tempo di scarico", "Dalle", "Alle", "Note"],
+                    [["Alimentari Rossi", "C001", "Via Roma", "12", "80100", "Napoli", "NA", "081 1234567", "info@example.it", 10, "08:00", "12:00", "Citofonare"],
+                     ["Bar Centrale", "C002", "Corso Italia", "5", "80121", "Napoli", "NA", "", "", 5, "", "", ""]])
+
+
 @router.post("/import")
 async def import_customers(
     file: UploadFile = File(...),

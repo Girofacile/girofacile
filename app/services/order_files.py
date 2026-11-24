@@ -1,5 +1,7 @@
 """Bounded CSV/XLSX reader. Uses the existing openpyxl dependency, no customer import changes."""
 import csv
+import hashlib
+import re
 import io
 import json
 import zipfile
@@ -63,6 +65,7 @@ KEYWORD_RULES=[
     ('pallets', _has('pallet','pallets','bancali','bancale','pedane')),
     ('time_from', lambda t: _has('dalle','apertura')(t) or _has('orario','ora','fascia')(t) and _has('da','inizio','min')(t)),
     ('time_to', lambda t: _has('alle','chiusura')(t) or _has('orario','ora','fascia')(t) and _has('a','fine','max')(t)),
+    ('time_from', _has('finestra','fascia')),
     ('tail_lift', _has('sponda')),
     ('ztl', _has('ztl')),
     ('volume_m3', _has('volume','m3','mc')),
@@ -78,6 +81,12 @@ def suggestions(headers):
         candidates=[h for h in headers if key(h) in {key(target),*(key(a) for a in ALIASES.get(target,[]))}]
         if len(candidates)==1: result[target]=candidates[0]
     used=set(result.values())
+    # Una colonna «Finestra/Fascia di consegna» vale più degli orari di apertura del negozio.
+    if 'time_from' not in result and 'time_to' not in result:
+        for header in headers:
+            tokens=set(normalize(header).replace('_',' ').split())
+            if header not in used and tokens&{'finestra','fascia'} and not tokens&{'dalle','alle','da','a'}:
+                result['time_from']=header;used.add(header);break
     for header in headers:
         if header in used: continue
         tokens=set(normalize(header).replace('_',' ').split())
@@ -92,57 +101,110 @@ def suggestions(headers):
 
 
 def validate_rows(headers, rows):
-    if not headers or len(headers)>50 or any(not h or len(h)>160 for h in headers) or len(set(headers))!=len(headers):
-        raise HTTPException(422,'Usa fino a 50 intestazioni univoche e non vuote (massimo 160 caratteri).')
+    from openpyxl.utils import get_column_letter
+    if not headers: raise HTTPException(422,'La prima riga deve contenere le intestazioni delle colonne.')
+    if len(headers)>50: raise HTTPException(422,'Il file ha più di 50 colonne: tieni solo quelle utili agli ordini.')
+    for i,h in enumerate(headers):
+        if not h: raise HTTPException(422,f'La colonna {get_column_letter(i+1)} ha dati ma nessuna intestazione: scrivi il suo nome nella prima riga.')
+        if len(h)>160: raise HTTPException(422,f'L\'intestazione della colonna {get_column_letter(i+1)} è troppo lunga (massimo 160 caratteri).')
+    doubles=sorted({h for h in headers if headers.count(h)>1})
+    if doubles: raise HTTPException(422,'Ci sono intestazioni ripetute: '+', '.join('«'+h+'»' for h in doubles)+'. Rinominale in modo che siano tutte diverse.')
     if not rows or len(rows)>MAX_ROWS: raise HTTPException(422,f'Il file deve contenere da 1 a {MAX_ROWS} ordini. Suddividi i file più grandi.')
     for row in rows:
         if len(row)>50 or any(len(str(v))>5000 for v in row.values()): raise HTTPException(422,'Troppi campi o una cella supera 5000 caratteri.')
     return headers,rows
 
 
-def read_file(content,filename):
-    if len(content)>MAX_BYTES: raise HTTPException(413,'Il file supera il limite tecnico di 2 MB.')
-    try:
-        if filename.lower().endswith('.csv'):
-            try: text=content.decode('utf-8-sig')
-            except UnicodeDecodeError: text=content.decode('cp1252')
-            try: dialect=csv.Sniffer().sniff(text[:8192],delimiters=',;\t')
-            except csv.Error: dialect=csv.excel
-            reader=csv.reader(io.StringIO(text),dialect)
-            headers=[h.strip() for h in next(reader)]
-            rows=[]
-            for values in reader:
-                if not any(v.strip() for v in values): continue
-                if len(values)!=len(headers): raise ValueError('columns')
-                rows.append(dict(zip(headers,values)))
-                if len(rows)>MAX_ROWS: raise ValueError('rows')
-        elif filename.lower().endswith('.xlsx'):
+class ChooseSheet(HTTPException):
+    """Il file Excel ha più fogli: l'utente sceglie quale importare."""
+    def __init__(self, sheets):
+        super().__init__(422, {'code': 'choose_sheet', 'sheets': sheets,
+                               'message': f'Il file ha {len(sheets)} fogli: scegli quale contiene gli ordini.'})
+
+
+def _cell_name(cell):
+    from openpyxl.utils import get_column_letter
+    return f'{get_column_letter(cell.column)}{cell.row}'
+
+
+def _drop_empty_columns(headers, rows):
+    """Colonne senza intestazione e senza dati (tipiche dei file formattati) vengono ignorate."""
+    keep = [i for i, h in enumerate(headers) if h or any(i < len(r) and r[i] not in (None, '') for r in rows)]
+    return [headers[i] for i in keep], [[r[i] if i < len(r) else None for i in keep] for r in rows]
+
+
+def read_file(content,filename,sheet=None):
+    """Legge CSV o XLSX. Ogni problema ha il suo messaggio, per correggere il file senza tentativi."""
+    if len(content)>MAX_BYTES: raise HTTPException(413,'Il file supera il limite di 2 MB: dividilo in file più piccoli.')
+    name=filename.lower()
+    if name.endswith('.xls'): raise HTTPException(422,'Il formato .xls (Excel vecchio) non è supportato: in Excel usa «Salva con nome» → «Cartella di lavoro di Excel (.xlsx)».')
+    if not name.endswith(('.csv','.xlsx')): raise HTTPException(422,'Usa un file Excel (.xlsx) o CSV.')
+    too_many=f'Il file ha più di {MAX_ROWS} ordini: dividilo in più file.'
+    if name.endswith('.csv'):
+        try: text=content.decode('utf-8-sig')
+        except UnicodeDecodeError: text=content.decode('cp1252',errors='replace')
+        try: dialect=csv.Sniffer().sniff(text[:8192],delimiters=',;\t')
+        except csv.Error:
+            # Righe con un numero di colonne diverso confondono il riconoscimento: vale il separatore più usato nell'intestazione.
+            first=text.split(chr(10),1)[0]
+            class dialect(csv.excel): delimiter=max((';',',',chr(9)),key=first.count)
+        reader=csv.reader(io.StringIO(text),dialect)
+        try: headers=[h.strip() for h in next(reader)]
+        except StopIteration: raise HTTPException(422,'Il file è vuoto.') from None
+        data=[]
+        for line,values in enumerate(reader,start=2):
+            if not any(v.strip() for v in values): continue
+            if len(values)!=len(headers):
+                raise HTTPException(422,f'La riga {line} ha {len(values)} colonne invece di {len(headers)}: controlla separatori (; o ,) e virgolette.')
+            data.append(values)
+            if len(data)>MAX_ROWS: raise HTTPException(422,too_many)
+    else:
+        try:
             with zipfile.ZipFile(io.BytesIO(content)) as archive:
                 files=archive.infolist()
                 if len(files)>1000 or sum(f.file_size for f in files)>20*1024*1024 or any('externallinks/' in f.filename.lower() or 'vbaproject' in f.filename.lower() for f in files):
-                    raise ValueError('unsafe archive')
+                    raise HTTPException(422,'Il file Excel contiene macro o collegamenti ad altri file, oppure è troppo grande una volta aperto: salvalo come semplice .xlsx senza collegamenti.')
             book=load_workbook(io.BytesIO(content),read_only=True,data_only=False,keep_links=False)
-            try:
-                if len(book.worksheets)!=1: raise ValueError('Use one sheet')
-                sheet=book.worksheets[0]
-                if (sheet.max_row or 0)>MAX_ROWS+1 or (sheet.max_column or 0)>50: raise ValueError('dimensions')
-                data=[]
-                for cells in sheet.iter_rows():
-                    values=[]
-                    for cell in cells:
-                        if cell.data_type in ('f','e'): raise ValueError('formula/error')
-                        value=cell.value
-                        values.append(value.isoformat() if isinstance(value,(datetime,date,time)) else value)
-                    if any(v is not None for v in values): data.append(values)
-                    if len(data)>MAX_ROWS+1: raise ValueError('rows')
-                headers=[str(v or '').strip() for v in data[0]]
-                rows=[dict(zip(headers,r)) for r in data[1:]]
-            finally: book.close()
-        else: raise HTTPException(422,'Usa un file CSV o XLSX con un solo foglio, senza formule.')
-        return validate_rows(headers,rows)
-    except HTTPException: raise
-    except Exception:
-        raise HTTPException(422,'File non leggibile o fuori limite: verifica intestazioni, colonne, massimo 1000 righe, un solo foglio XLSX e assenza di formule/link esterni.')
+        except HTTPException: raise
+        except Exception:
+            raise HTTPException(422,'Il file non è un Excel valido (.xlsx): aprilo in Excel e salvalo di nuovo come .xlsx.') from None
+        try:
+            sheets=book.worksheets
+            if sheet is not None:
+                chosen=[ws for ws in sheets if ws.title==sheet]
+                if not chosen: raise HTTPException(422,f'Il foglio «{sheet}» non c\'è nel file: caricalo di nuovo.')
+                ws=chosen[0]
+            elif len(sheets)>1:
+                def count(w):
+                    filled=0
+                    for values in w.iter_rows(values_only=True):
+                        if any(v not in (None,'') for v in values): filled+=1
+                        if filled>MAX_ROWS+1: break
+                    return max(0,filled-1)
+                raise ChooseSheet([{'name':w.title,'rows':count(w)} for w in sheets])
+            else:
+                ws=sheets[0]
+            if (ws.max_column or 0)>50: raise HTTPException(422,'Il foglio ha più di 50 colonne: tieni solo quelle utili agli ordini.')
+            data=[]
+            for cells in ws.iter_rows():
+                values=[]
+                for cell in cells:
+                    if cell.data_type=='f':
+                        raise HTTPException(422,f'La cella {_cell_name(cell)} contiene una formula: in Excel seleziona tutto, copia e usa «Incolla valori», poi salva.')
+                    if cell.data_type=='e':
+                        raise HTTPException(422,f'La cella {_cell_name(cell)} contiene un errore di Excel (#N/D, #VALORE!…): correggila e salva di nuovo.')
+                    value=cell.value
+                    values.append(value.isoformat() if isinstance(value,(datetime,date,time)) else value)
+                if any(v is not None and v!='' for v in values): data.append(values)
+                if len(data)>MAX_ROWS+1: raise HTTPException(422,too_many)
+        finally: book.close()
+        if not data: raise HTTPException(422,'Il foglio è vuoto.')
+        headers=[str(v if v is not None else '').strip() for v in data[0]]
+        data=data[1:]
+    headers,data=_drop_empty_columns(headers,data)
+    if not data: raise HTTPException(422,'Il file ha solo la riga delle intestazioni: aggiungi gli ordini sotto.')
+    rows=[dict(zip(headers,r)) for r in data]
+    return validate_rows(headers,rows)
 
 
 def mapped(row,mapping):
@@ -167,5 +229,19 @@ def mapped(row,mapping):
                 raise ValueError(f'Data consegna «{value}» non valida: usa GG/MM/AAAA (es. 12/11/2026) oppure AAAAMMGG (es. 20261112).') from None
         if value is not None and key=='items' and isinstance(value,str): value=json.loads(value)
         data[key]=value
+    # Fascia oraria scritta in una sola colonna («09:00-12:00»): si divide in «dalle» e «alle».
+    window=data.get('time_from')
+    if isinstance(window,str) and not data.get('time_to'):
+        match=re.fullmatch(r'\s*(\d{1,2})[:.](\d{2})\s*(?:-|–|—|/|alle|a)\s*(\d{1,2})[:.](\d{2})\s*',window)
+        if match:
+            h1,m1,h2,m2=match.groups()
+            data['time_from'],data['time_to']=f'{int(h1):02d}:{m1}',f'{int(h2):02d}:{m2}'
+    # Senza numero ordine nel file: codice stabile ricavato dai dati della riga. Ricaricando lo stesso
+    # file gli ordini identici vengono riconosciuti; se una riga cambia, diventa un ordine nuovo.
+    if 'number' not in mapping and not data.get('external_id'):
+        basis='|'.join(f'{k}={data[k]}' for k in sorted(data) if k not in ('number','external_id','items') and data[k] is not None)
+        code='AUTO-'+hashlib.sha1(basis.encode('utf-8')).hexdigest()[:8].upper()
+        data['number']=data['external_id']=code
+    elif 'number' not in mapping and not data.get('number'): data['number']=data['external_id']
     if data.get('items') is None: data['items']=[]
     return ExternalOrder.model_validate(data).model_dump(mode='json')

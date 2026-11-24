@@ -432,3 +432,74 @@ def test_wrong_date_is_explained_and_valid_rows_can_be_imported_alone(ingestion)
     assert result.status_code==200,result.text
     numbers={o.number for o in db.query(Order).all()}
     assert 'EXT-2' in numbers and 'EXT-3' not in numbers
+
+
+def _xlsx(*sheets):
+    book=Workbook();book.remove(book.active)
+    for title,rows in sheets:
+        sheet=book.create_sheet(title)
+        for row in rows: sheet.append(row)
+    buffer=io.BytesIO();book.save(buffer);return buffer.getvalue()
+
+
+def test_file_with_several_sheets_asks_which_one_and_reads_it(ingestion):
+    """Excel con più fogli: invece di un errore generico si sceglie il foglio da importare."""
+    client,*_=ingestion
+    content=_xlsx(('Clienti',[['Cliente','Indirizzo'],['Bar Roma','Via Roma 1, Napoli'],['Bar Sole','Via Sole 2, Napoli']]),('Guida',[['Note'],['leggimi']]))
+    src=client.post('/api/order-sources',json={'name':'File','kind':'file','software':''}).json()
+    first=client.post(f"/api/order-sources/{src['id']}/upload",files={'file':('demo.xlsx',content)})
+    assert first.status_code==422
+    detail=first.json()['detail']
+    assert detail['code']=='choose_sheet' and [s['name'] for s in detail['sheets']]==['Clienti','Guida'] and detail['sheets'][0]['rows']==2
+    chosen=client.post(f"/api/order-sources/{src['id']}/upload",files={'file':('demo.xlsx',content)},data={'sheet':'Clienti'})
+    assert chosen.status_code==200,chosen.text
+    assert chosen.json()['total']==2 and chosen.json()['headers']==['Cliente','Indirizzo']
+
+
+def test_order_number_is_optional_and_reimport_recognises_the_same_rows(ingestion):
+    client,db,*_=ingestion
+    content=_xlsx(('Ordini',[['Cliente','Indirizzo','Finestra consegna'],['Bar Roma','Via Roma 1, Napoli','09:00-12:00'],['Bar Sole','Via Sole 2, Napoli','']]))
+    src=client.post('/api/order-sources',json={'name':'File','kind':'file','software':''}).json()
+    upload=client.post(f"/api/order-sources/{src['id']}/upload",files={'file':('ordini.xlsx',content)}).json()
+    mapping=upload['suggested_mapping']
+    assert 'number' not in mapping and mapping['time_from']=='Finestra consegna'
+    src=client.put(f"/api/order-sources/{src['id']}",json={'version':src['version'],'mapping':mapping})
+    assert src.status_code==200,src.text;src=src.json()
+    path=f"/api/order-sources/{src['id']}/runs/{upload['run_id']}"
+    preview=client.post(path+'/preview').json();assert preview['status']=='preview_ready',preview
+    src=client.post(f"/api/order-sources/{src['id']}/action",json={'version':src['version'],'action':'activate','run_id':upload['run_id']}).json()
+    assert client.post(path+'/commit',json={'confirm':True}).status_code==200
+    orders=db.query(Order).order_by(Order.id).all()
+    assert len(orders)==2 and all(o.number.startswith('AUTO-') and o.external_id==o.number for o in orders)
+    assert str(orders[0].operational_data.get('time_from')).startswith('09:00') and str(orders[0].operational_data.get('time_to')).startswith('12:00')
+    again=client.post(f"/api/order-sources/{src['id']}/upload",files={'file':('ordini.xlsx',content)}).json()
+    assert client.post(f"/api/order-sources/{src['id']}/runs/{again['run_id']}/preview").json()['report']['unchanged']==2
+
+
+@pytest.mark.parametrize('content,name,message',[
+    (lambda: _xlsx(('O',[['Cliente','Totale'],['Bar','=1+1']])),'o.xlsx','La cella B2 contiene una formula'),
+    (lambda: b'Cliente;Indirizzo\nBar;Via Roma;extra\n','o.csv','La riga 2 ha 3 colonne invece di 2'),
+    (lambda: _xlsx(('O',[['Cliente',None,'Note'],['Bar','Via Roma','x']])),'o.xlsx','La colonna B ha dati ma nessuna intestazione'),
+    (lambda: b'old','o.xls','Il formato .xls'),
+    (lambda: b'non excel','o.xlsx','non è un Excel valido'),
+    (lambda: _xlsx(('O',[['Cliente','Indirizzo']])),'o.xlsx','solo la riga delle intestazioni'),
+])
+def test_file_errors_say_exactly_what_to_fix(content,name,message):
+    from app.services.order_files import read_file
+    from fastapi import HTTPException
+    with pytest.raises(HTTPException) as error:
+        read_file(content(),name)
+    assert message in str(error.value.detail)
+
+
+def test_import_templates_are_excel_files_that_import_as_they_are(ingestion):
+    from app.services.order_files import read_file,suggestions
+    from app.routers.customers import router as customers_router
+    client=ingestion[0];client.app.include_router(customers_router)
+    response=client.get('/api/order-files/template.xlsx')
+    assert response.status_code==200 and response.headers['content-type'].startswith('application/vnd.openxmlformats')
+    headers,rows=read_file(response.content,'esempio.xlsx')
+    mapping=suggestions(headers)
+    assert {'number','recipient_name','requested_date','time_from','time_to','packages'}<=mapping.keys() and len(rows)==2
+    customers=client.get('/api/customers/import-template.xlsx')
+    assert customers.status_code==200 and len(customers.content)>1000

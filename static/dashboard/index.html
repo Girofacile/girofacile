@@ -1395,6 +1395,7 @@
     </header>
     <div class="gf-modal__body gf-stack">
       <div class="gf-upload"><div class="gf-upload__copy"><strong>Seleziona file CSV/Excel</strong><label class="gf-button gf-upload__button" data-variant="secondary">Scegli file<input type="file" id="importFile" accept=".csv,.xlsx" aria-label="File clienti CSV o Excel" onchange="customerImportFileChosen()"></label><p id="importFileName" class="gf-muted" role="status">Nessun file scelto.</p><p class="gf-field__hint">Formati supportati: .csv e .xlsx. Servono almeno le colonne «Nome» e «Indirizzo» (oppure Via, Civico, CAP, Comune): maiuscole e spazi non contano.</p></div></div>
+      <p><a class="gf-button" data-variant="link" href="/api/customers/import-template.xlsx" download>Scarica un file di esempio</a></p>
       <!-- Esito dell'importazione nella finestra stessa: clienti aggiunti e aggiornati, oppure cosa correggere. -->
       <div id="customerImportResult" role="status" aria-live="polite"></div>
     </div>
@@ -1674,7 +1675,7 @@
 <script src="/static/password-strength.js?v=gf_driver_flow_20261020"></script>
 <script src="/static/dashboard/js/collaborators.js?v=gf_collaudo_20261110"></script>
 <script src="/static/dashboard/js/orders.js?v=gf_riga_seleziona_20261124"></script>
-<script src="/static/dashboard/js/order-import.js?v=gf_import_esito_b_20261123"></script>
+<script src="/static/dashboard/js/order-import.js?v=gf_import_tollerante_20261125"></script>
 <script src="/static/dashboard/js/order-sources.js?v=gf_funzione_non_inclusa_20261118"></script>
 <script src="/static/dashboard/js/dashboard-real-map.js?v=gf_priority_hero_20261025"></script>
 <script src="/static/dashboard/js/in-progress-reference.js?v=gf_partenza_deposito_20261124"></script>

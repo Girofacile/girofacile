@@ -227,6 +227,19 @@ def main():
                     dialog=page.locator('#orderImportDialog')
                     csv_file={'name':'ordini.csv','mimeType':'text/csv','buffer':b'NOrdine;RagioneSociale;IndSped;Pedana;NColli;DataCons'+bytes([10])+b'IMPORT-001;Destinatario;Via Roma 1;No;3;2099-01-16'+bytes([10])}
                     expect(dialog).to_be_visible()
+                    # File di esempio scaricabile; Excel con più fogli: si sceglie il foglio invece di un errore.
+                    expect(dialog.get_by_role('link',name='Scarica un file di esempio')).to_have_attribute('href','/api/order-files/template.xlsx')
+                    import io as _io
+                    from openpyxl import Workbook as _Workbook
+                    book=_Workbook();book.active.title='Guida';book.active.append(['Leggimi'])
+                    sheet=book.create_sheet('Ordini');sheet.append(['Cliente','Indirizzo']);sheet.append(['Bar Roma','Via Roma 1, Milano'])
+                    raw=_io.BytesIO();book.save(raw)
+                    page.locator('#orderImportFile').set_input_files({'name':'due-fogli.xlsx','mimeType':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','buffer':raw.getvalue()})
+                    expect(dialog).to_contain_text('Il file ha 2 fogli')
+                    dialog.get_by_role('listitem').filter(has_text='Ordini').click()
+                    expect(dialog).to_contain_text('foglio «Ordini»')
+                    expect(dialog).to_contain_text('Il file non ha il numero ordine')
+                    dialog.get_by_role('button',name='Cambia file').first.click()
                     page.locator('#orderImportFile').set_input_files(csv_file)
                     page.locator('#orderImportCommit').wait_for(state='visible')
                     date_choice=page.locator('[data-choice="import"][value="requested_date"]')

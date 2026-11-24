@@ -5,6 +5,14 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Importazione ordini da file più tollerante:
+  - Excel con più fogli: invece di un errore si sceglie il foglio da importare (con il numero di righe);
+  - numero ordine facoltativo: senza, ogni riga riceve un codice AUTO-… ricavato dai suoi dati, così ricaricando
+    lo stesso file gli ordini identici vengono riconosciuti; bastano destinatario e indirizzo;
+  - fascia oraria in una sola colonna («09:00-12:00», «Finestra consegna», «Fascia oraria») divisa da sola in dalle/alle;
+  - messaggi d'errore precisi (cella con formula, riga con colonne in più, colonna senza intestazione, .xls vecchio,
+    file non Excel, solo intestazioni, intestazioni ripetute); colonne vuote senza intestazione ignorate;
+  - file di esempio da scaricare per ordini e per clienti.
 - Ordini: uscendo da Ordini e Pianificazione senza aver programmato, la selezione degli ordini si azzera da sola
   (resta solo se ha già giri collegati, per esempio una bozza).
 - Anteprima del giro singolo: tabella delle fermate come quella dei più mezzi (#, Cliente con indirizzo, Avvisi,

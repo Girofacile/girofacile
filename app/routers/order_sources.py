@@ -1,7 +1,7 @@
 """Source setup and controlled file import, separate from external bearer ingestion."""
 import json
 from uuid import uuid4
-from fastapi import APIRouter,Depends,Request,UploadFile,File,HTTPException,Query,Response
+from fastapi import APIRouter,Depends,Request,UploadFile,File,Form,HTTPException,Query,Response
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from pydantic import ValidationError
@@ -66,8 +66,9 @@ def configure(source_id:int,data:SourceUpdate,db:Session=Depends(get_db),user:Us
     if src.version!=data.version: raise HTTPException(409,'Fonte modificata: ricarica la pagina.')
     if src.status=='removed': raise HTTPException(409,'La fonte è stata rimossa.')
     if src.configuration.get('connector'): raise HTTPException(422,'Le associazioni del connettore sono automatiche.')
-    if not {'external_id','number'}<=data.mapping.keys() or not set(data.mapping)<=set(FIELDS) or any(not v or len(v)>160 for v in data.mapping.values()):
-        raise HTTPException(422,'Associa almeno identificativo esterno e numero ordine a colonne valide.')
+    # Il numero ordine è facoltativo: senza, ogni riga riceve un codice ricavato dai suoi dati.
+    if not set(data.mapping)<=set(FIELDS) or any(not v or len(v)>160 for v in data.mapping.values()):
+        raise HTTPException(422,'Associa le colonne a dati validi.')
     src.configuration={**src.configuration,'mapping':data.mapping,'validated':False}
     src.version+=1;src.status='draft';db.commit();return service.public_source(db,src)
 
@@ -146,13 +147,22 @@ def delete_source(source_id:int,version:int=Query(...,ge=1),db:Session=Depends(g
 
 
 @router.post('/api/order-sources/{source_id}/upload')
-async def upload(source_id:int,file:UploadFile=File(...),db:Session=Depends(get_db),user:User=Depends(current_user)):
+async def upload(source_id:int,file:UploadFile=File(...),sheet:str|None=Form(None),db:Session=Depends(get_db),user:User=Depends(current_user)):
     content=await file.read(MAX_BYTES+1)
-    return await run_db(db,stage_file,db,user,source_id,content,file.filename or '')
+    return await run_db(db,stage_file,db,user,source_id,content,file.filename or '',sheet)
 
 
-def stage_file(db,user,source_id,content,filename):
-    headers,rows=read_file(content,filename)
+# File di esempio per l'importazione degli ordini: intestazioni riconosciute da sole e due righe compilate.
+@router.get('/api/order-files/template.xlsx')
+def order_template(user:User=Depends(current_user)):
+    from ..services.import_templates import workbook
+    return workbook('ordini',['Numero ordine','Destinatario','Indirizzo','CAP','Comune','Provincia','Telefono','Data consegna','Dalle','Alle','Colli','Peso kg','Note'],
+        [['ORD-001','Alimentari Rossi','Via Roma 12','80100','Napoli','NA','081 1234567','25/11/2026','08:00','12:00',4,35.5,'Citofonare'],
+         ['ORD-002','Bar Centrale','Corso Italia 5','80121','Napoli','NA','','25/11/2026','','',2,12,'']])
+
+
+def stage_file(db,user,source_id,content,filename,sheet=None):
+    headers,rows=read_file(content,filename,sheet)
     src=service.source(db,user.id,source_id,lock=True)
     if src.kind!='file': raise HTTPException(422,'Per una fonte API usa il campione JSON.')
     item=service.stage(db,src,headers,rows);db.commit()

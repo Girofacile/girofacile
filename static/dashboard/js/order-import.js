@@ -6,12 +6,19 @@
   let sources=[],fields=[],source=null,stage=null,report=null,mapping={},excluded=[],busy=false,filename='';
   // ownCode: codice univoco proprio del file (diverso dal numero ordine), fissato al caricamento.
   // session: cambia a ogni apertura, chiusura, cambio file o caricamento; i controlli di prima si fermano.
-  let ownCode=null,session=0,changeTimer=null;
+  let ownCode=null,session=0,changeTimer=null,pendingFile=null;
+  // Per controllare servono destinatario e indirizzo (intero o a campi); il numero ordine è facoltativo.
+  const canCheck=()=>!!(mapping.recipient_name&&(mapping.delivery_address||mapping.street));
   function cancelPending(){session+=1;clearTimeout(changeTimer);}
   const post=value=>({method:'POST',body:JSON.stringify(value)});
   async function api(path,options={}){
     const res=await fetch('/api/order-sources'+path,{...options,headers:options.body instanceof FormData?{}:{'Content-Type':'application/json'}}),data=await res.json();
-    if(!res.ok&&!data.report)throw new Error(typeof data.detail==='string'?data.detail:'Controlla i dati e riprova.');return data;
+    if(!res.ok&&!data.report){
+      // Il server può spiegare cosa serve (es. scegliere il foglio): il dettaglio resta sull'errore.
+      const detail=data.detail,error=new Error(typeof detail==='string'?detail:detail?.message||'Controlla i dati e riprova.');
+      error.detail=detail;throw error;
+    }
+    return data;
   }
   async function work(callback){
     if(busy)return;busy=true;el('orderImportMessage').textContent='';
@@ -48,21 +55,30 @@
     render(`<div class="gf-empty"><span class="gf-empty__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 16V4 M7 9l5-5 5 5 M4 20h16"/></svg></span>
       <p><strong>Scegli il file con gli ordini</strong></p><p>Excel (.xlsx) o CSV esportato dal tuo negozio o gestionale.</p>
       <label class="gf-button" data-variant="primary">Scegli file<input id="orderImportFile" type="file" accept=".xlsx,.csv" hidden onchange="GFOrderImport.upload()"></label>
-      <p class="gf-field__hint">Servono almeno destinatario e indirizzo · fino a 1000 ordini e 2 MB · un solo foglio, senza formule.</p></div>`,cancel,1);
+      <p class="gf-field__hint">Servono almeno destinatario e indirizzo · fino a 1000 ordini e 2 MB · se il file ha più fogli scegli quale importare.</p>
+      <p><a class="gf-button" data-variant="link" href="/api/order-files/template.xlsx" download>Scarica un file di esempio</a></p></div>`,cancel,1);
   }
   function choose(){source=sources.find(s=>s.id===Number(el('orderImportSource').value))||null;el('orderImportNameLabel').hidden=!!source;}
-  function upload(event){event?.preventDefault?.();cancelPending();return work(async()=>{
-    const file=el('orderImportFile')?.files?.[0];if(!file)throw new Error('Scegli il file da importare.');
+  function upload(event,sheet){event?.preventDefault?.();cancelPending();return work(async()=>{
+    const file=sheet?pendingFile:el('orderImportFile')?.files?.[0];if(!file)throw new Error('Scegli il file da importare.');pendingFile=file;
     if(file.size>2097152)throw new Error('Il file supera 2 MB. Dividilo in file più piccoli.');
     if(!/\.(csv|xlsx)$/i.test(file.name))throw new Error('Scegli un file Excel (.xlsx) o CSV.');
     if(!source){if(!can('orders.integrations'))throw new Error('Chiedi al responsabile di fare la prima importazione da file.');source=await api('',post({name:'Importazione da file',kind:'file',software:''}));}
-    const body=new FormData();body.append('file',file);stage=await api('/'+source.id+'/upload',{method:'POST',body});filename=file.name;
+    const body=new FormData();body.append('file',file);if(sheet)body.append('sheet',sheet);
+    try{stage=await api('/'+source.id+'/upload',{method:'POST',body});}
+    catch(e){if(e.detail?.code==='choose_sheet'){chooseSheet(file.name,e.detail);return;}throw e;}
+    filename=file.name+(sheet?' · foglio «'+sheet+'»':'');
     // Colonne ricordate dall'ultimo file, se ci sono tutte; altrimenti quelle riconosciute in questo file.
     const saved=source.mapping||{},fits=Object.keys(saved).length&&Object.values(saved).every(v=>stage.headers.includes(v));
     mapping=fits?{...saved}:{...stage.suggested_mapping};excluded=[...(source.excluded_fields||[])];report=null;
     ownCode=mapping.external_id&&mapping.external_id!==mapping.number?mapping.external_id:null;review();
-    if(mapping.number&&mapping.external_id&&Object.entries(mapping).every(([k,v])=>excluded.includes(k)||stage.headers.includes(v)))await validate();
+    if(canCheck()&&Object.entries(mapping).every(([k,v])=>excluded.includes(k)||stage.headers.includes(v)))await validate();
   });}
+  // File Excel con più fogli: si sceglie quale importare (righe indicative accanto al nome).
+  function chooseSheet(name,detail){
+    const cancel='<button type="button" class="gf-button" data-variant="secondary" onclick="GFOrderImport.form()">Cambia file</button>';
+    render(`<p><strong>${esc(name)}</strong></p><p>${esc(detail.message)}</p><div class="gf-list" role="list">${detail.sheets.map(sh=>`<button type="button" class="gf-list-item" role="listitem" onclick="GFOrderImport.useSheet(this.dataset.sheet)" data-sheet="${esc(sh.name)}"><span class="gf-list-item__main"><strong>${esc(sh.name)}</strong><small>${esc(gfCount(sh.rows,'riga','righe'))}</small></span><span aria-hidden="true">›</span></button>`).join('')}</div>`,cancel,1);
+  }
   // Passo 2: una sola tabella «Dato · Colonna del tuo file · Importa», poi l'anteprima e l'esito del controllo.
   const ALWAYS=['recipient_name','delivery_address','street','street_number','postal_code','city','province','number'];
   const ROW_ORDER=['recipient_name','delivery_address','street','street_number','postal_code','city','province','number','requested_date','packages','weight_kg','phone','time_from','time_to','notes'];
@@ -82,6 +98,7 @@
     render(`<p><strong>${esc(filename)}</strong> <span class="gf-muted">· ${esc(gfCount(stage.total,'riga','righe'))}</span> <button type="button" class="gf-button" data-variant="link" onclick="GFOrderImport.form()">Cambia file</button></p>
       <section class="gf-stack" data-gap="sm"><h3 class="gf-subtitle">Colonne riconosciute</h3><p class="gf-muted">Le abbiamo trovate da sole: correggi quelle sbagliate e spegni i dati che non vuoi importare.${editable?'':' Chiedi al responsabile per cambiarle.'}</p>${table(found)}
       ${missing.length?`<details class="gf-panel"><summary class="gf-panel__header">Altri dati non trovati nel file (${missing.length})</summary><div class="gf-panel__body">${table(missing)}</div></details>`:''}</section>
+      ${mapping.number?'':'<p class="gf-alert" data-status="info">Il file non ha il numero ordine: ne creiamo uno per ogni riga (AUTO-…). Ricaricando lo stesso file gli ordini identici vengono riconosciuti.</p>'}
       <section class="gf-stack" data-gap="sm"><h3 class="gf-subtitle">Anteprima</h3><div id="orderImportPreview"></div></section><div id="orderImportReport"></div>`,
       '<button type="button" class="gf-button" data-variant="secondary" onclick="GFOrderImport.form()">Indietro</button><div id="orderImportConfirm" class="gf-cluster"></div>',2);
     previewRows();confirmation();
@@ -104,14 +121,14 @@
     // suggerimenti del server). Così un nuovo caricamento riconosce ancora gli ordini già importati.
     report=null;excluded=readChoices('import');mapping={};
     document.querySelectorAll('[data-import-field]').forEach(n=>{if(n.value)mapping[n.dataset.importField]=n.value;});
-    if(ownCode&&stage.headers.includes(ownCode))mapping.external_id=ownCode;else if(mapping.number)mapping.external_id=mapping.number;
+    if(ownCode&&stage.headers.includes(ownCode))mapping.external_id=ownCode;else if(mapping.number)mapping.external_id=mapping.number;else delete mapping.external_id;
     previewRows();el('orderImportReport').replaceChildren();confirmation();
     scheduleValidate();
   }
   // Controllo dopo una modifica; se ne è già in corso un altro, si riprova appena finisce.
   function scheduleValidate(){
     clearTimeout(changeTimer);const token=session;
-    changeTimer=setTimeout(()=>{if(token!==session||!(mapping.number&&mapping.recipient_name))return;if(busy){scheduleValidate();return;}work(validate);},400);
+    changeTimer=setTimeout(()=>{if(token!==session||!canCheck())return;if(busy){scheduleValidate();return;}work(validate);},400);
   }
   // Ogni richiesta usa la fonte e il caricamento di quando il controllo è partito; se nel frattempo
   // l'importazione è stata chiusa, riaperta o il file cambiato, il controllo si ferma senza salvare.
@@ -146,7 +163,7 @@
       return;
     }
     box.innerHTML=ready?(allowed?`<button type="button" id="orderImportCommit" class="gf-button" data-variant="primary" onclick="GFOrderImport.commit()">Importa ${esc(gfCount(report.report.total,'ordine','ordini'))}</button>`:'<span class="gf-muted">Chiedi al responsabile il permesso di importare.</span>')
-      :`<span class="gf-muted">${mapping.number&&mapping.recipient_name?'Controllo dei dati in corso…':'Indica almeno destinatario e numero ordine.'}</span>`;
+      :`<span class="gf-muted">${canCheck()?'Controllo dei dati in corso…':'Indica almeno destinatario e indirizzo.'}</span>`;
   }
   function commit(onlyValid=false){return work(async()=>{
     if(report?.status!=='preview_ready'&&!(onlyValid&&report?.status==='preview_invalid'))throw new Error('Attendi il controllo dei dati prima di importare.');
@@ -180,5 +197,5 @@
       .map(k=>({key:k,label:k==='time_from'?'Fascia oraria':labels[k]}));
   }
   function readChoices(prefix){const ignored=[...document.querySelectorAll(`[data-choice="${prefix}"]:not(:checked)`)].map(n=>n.value);if(ignored.includes('time_from'))ignored.push('time_to');return ignored;}
-  window.GFOrderImport={fieldChoices,fieldOptions,readChoices,start,form,close,choose,upload,changed,commit,viewOrders,validate:()=>work(validate),reportPage(delta){return work(async()=>{report=await api(`/${source.id}/runs/${report.id}?offset=${report.offset+delta}`);renderReport();});}};
+  window.GFOrderImport={useSheet:name=>upload(null,name),fieldChoices,fieldOptions,readChoices,start,form,close,choose,upload,changed,commit,viewOrders,validate:()=>work(validate),reportPage(delta){return work(async()=>{report=await api(`/${source.id}/runs/${report.id}?offset=${report.offset+delta}`);renderReport();});}};
 })();

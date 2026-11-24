@@ -112,7 +112,6 @@ def preview(db,src,item):
     check_payload(item)
     if src.status not in ('draft','active'): raise HTTPException(409,'La fonte è in pausa o rimossa.')
     mapping=src.configuration.get('mapping',{})
-    if not {'external_id','number'}<=mapping.keys(): raise HTTPException(422,'Associa identificativo esterno e numero ordine.')
     if not {v for k,v in mapping.items() if k not in src.configuration.get('excluded_fields',[])}<=set(item.payload['headers']): raise HTTPException(422,'Le colonne del file non corrispondono alla configurazione. Correggi le associazioni.')
     effective_mapping={**{key:key for key in FIELDS},**mapping} if src.kind=='api' else mapping
     report,parsed=preflight(db,src,item.payload['rows'],effective_mapping)
