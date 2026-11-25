@@ -5232,7 +5232,9 @@ function gfReturnRealCell(r, strong=false){
   const value = gfReturnReal(r);
   if(!value) return '';
   const time = esc(gfTimeOnRouteDay(value, r.data_giro) || '—');
-  return `${strong ? `<strong>${time}</strong>` : time}<br><small class="gf-muted">${r.rientro_reale && r.rientro_deposito ? 'ultima consegna + rientro' : 'chiusura del giro'}</small>`;
+  // Il rientro stimato si mostra da solo; la nota resta solo quando è la chiusura del giro.
+  const cell = strong ? `<strong>${time}</strong>` : time;
+  return r.rientro_reale ? cell : `${cell}<br><small class="gf-muted">chiusura del giro</small>`;
 }
 function gfReturnPlannedDate(r){
   const minutes = gfMinutesFromHHMM(r.orario_rientro_stimato || ''), start = gfMinutesFromHHMM(r.orario_partenza || '');
