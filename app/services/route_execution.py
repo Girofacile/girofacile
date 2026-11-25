@@ -100,12 +100,16 @@ def update_customer_unload_time(customer, tempo):
     customer.tempo_scarico_rilevazioni = count + 1
 
 
-def mark_completed(route):
+def mark_completed(route, at=None):
+    """at: ora locale dell'ultimo esito (giro chiuso dall'autista, anche offline); senza, adesso."""
     from .live_position import clear_position
+    from ..core.utils import LOCAL_TZ
     clear_position(route)
     route.status = 'completato'
-    route.completed_at = local_now().replace(tzinfo=None)
-    route.completed_at_utc = datetime.now(timezone.utc).replace(tzinfo=None)
+    now = local_now().replace(tzinfo=None)
+    completed = min(at, now) if at else now
+    route.completed_at = completed
+    route.completed_at_utc = completed.replace(tzinfo=LOCAL_TZ).astimezone(timezone.utc).replace(tzinfo=None)
     from sqlalchemy.orm import object_session
     from .route_orders import sync_route_orders
     db = object_session(route)
@@ -117,9 +121,11 @@ def refresh_route_completion(route_plan_id, db):
     if not route or route.status in ('annullato', 'completato'):
         return
     db.flush()
-    statuses = {s.delivery_id: s.status for s in db.query(DeliveryStatus).filter_by(route_plan_id=route_plan_id)}
+    rows = {s.delivery_id: s for s in db.query(DeliveryStatus).filter_by(route_plan_id=route_plan_id)}
+    statuses = {key: row.status for key, row in rows.items()}
     if route.deliveries and all(statuses.get(d.id) in ('completata', 'mancata') for d in route.deliveries):
-        mark_completed(route)
+        last = max((rows[d.id].completata_il for d in route.deliveries if rows[d.id].completata_il), default=None)
+        mark_completed(route, at=last)
 
 
 def _apply_delivery_update(db, delivery, payload, action):

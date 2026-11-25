@@ -79,3 +79,79 @@ def test_collaborators_can_download_the_import_templates(company):
     assert client.get('/api/order-files/template.xlsx').status_code == 403
     login_actor(normalize_permissions(['orders.read', 'orders.import']))
     assert client.get('/api/order-files/template.xlsx').status_code == 200
+
+
+# --- Terza revisione ----------------------------------------------------------------------
+
+def test_rejected_reprogramming_keeps_the_previous_times(routing_env, monkeypatch):
+    from app.models import RoutePlan
+    from app.routers import routes
+    client, db = routing_env[0], routing_env[1]
+    draft = saved_route(routing_env, two=True)
+    assert client.post(f"/api/routes/{draft['id']}/program", json={}).status_code == 200
+    route = db.get(RoutePlan, draft['id'])
+    start = route.orario_partenza.hour * 60 + route.orario_partenza.minute
+    before = int(route.totale_minuti or 0)
+    later = (datetime.combine(date.today(), time(0)) + timedelta(minutes=start + before + 30)).time()
+    db.add(RoutePlan(user_id=route.user_id, nome='Secondo giro', status='programmato', data_giro=route.data_giro,
+                     orario_partenza=later, totale_minuti=60, vehicle_id=route.vehicle_id))
+    db.commit()
+
+    def slower(db_, plan, **_):
+        plan.totale_minuti = before + 120
+    monkeypatch.setattr(routes, 'enrich_final_route', slower)
+    response = client.post(f"/api/routes/{route.id}/program", json={})
+    assert response.status_code == 400 and 'Mezzo non disponibile' in response.json()['detail'], response.text
+    db.expire_all()
+    assert int(db.get(RoutePlan, route.id).totale_minuti or 0) == before  # rifiutato e non salvato
+
+
+def test_failed_check_does_not_undo_a_cancellation_made_meanwhile(monkeypatch):
+    import test_orders
+    from fastapi import HTTPException
+    from app.order_models import Order
+    from app.services import orders as service
+    fixture = test_orders.orders.__wrapped__(monkeypatch)
+    client, db, owner, other = next(fixture)
+    try:
+        row = test_orders.create(client, number='X-1', delivery_address='Via Roma 10, Casoria')
+
+        def cancelled_meanwhile(session, uid, address, **kw):
+            order = session.get(Order, row['id'])  # un altro operatore annulla l'ordine
+            order.status = 'annullato'
+            service.touch(order)
+            session.commit()
+            raise HTTPException(422, {'kind': 'address', 'reason': 'non_trovato', 'message': 'Indirizzo non trovato.'})
+        monkeypatch.setattr('app.services.orders.verify_stop_address', cancelled_meanwhile)
+        response = client.post(f"/api/orders/{row['id']}/verify-address", json={'version': row['version']})
+        assert response.status_code == 422
+        assert client.get(f"/api/orders/{row['id']}").json()['status'] == 'annullato'
+        # Lo stesso nella verifica di più ordini.
+        second = test_orders.create(client, number='X-2', delivery_address='Via Napoli 3, Casoria')
+        def cancelled_second(session, uid, address, **kw):
+            order = session.get(Order, second['id'])
+            order.status = 'annullato'
+            service.touch(order)
+            session.commit()
+            raise HTTPException(422, {'kind': 'address', 'reason': 'non_trovato', 'message': 'Indirizzo non trovato.'})
+        monkeypatch.setattr('app.services.orders.verify_stop_address', cancelled_second)
+        report = client.post('/api/orders/verify-addresses', json={'limit': 10}).json()
+        assert report['failed'] == 1
+        assert client.get(f"/api/orders/{second['id']}").json()['status'] == 'annullato'
+    finally:
+        fixture.close()
+
+
+def test_offline_route_closes_at_the_last_outcome_and_reports_match_history():
+    from app.models import RoutePlan, Delivery, DeliveryStatus
+    from app.routers.reports import _actual_route_minutes
+    from app.services.route_execution import mark_completed
+    route = RoutePlan(nome='Giro', data_giro=date(2026, 11, 25), orario_partenza=time(8), rientro_deposito=False,
+                      started_at=datetime(2026, 11, 25, 8, 0), started_at_utc=datetime(2026, 11, 25, 7, 0))
+    stop = Delivery(id=1, ordine=1)
+    route.deliveries = [stop]
+    mark_completed(route, at=datetime(2026, 11, 25, 9, 0))  # esito alle 9:00, sincronizzato alle 12:00
+    assert route.completed_at == datetime(2026, 11, 25, 9, 0)
+    assert route.completed_at_utc == datetime(2026, 11, 25, 8, 0)
+    status_map = {1: DeliveryStatus(delivery_id=1, status='completata', completata_il=datetime(2026, 11, 25, 9, 0))}
+    assert _actual_route_minutes(route, status_map) == 60

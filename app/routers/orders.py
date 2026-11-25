@@ -102,6 +102,12 @@ def verify_address(order_id: int, data: OrderVersion, request: Request, db: Sess
             raise
         # Indirizzo non trovato o diverso: il motivo resta sull'ordine e lo segnala come problema.
         order = service.get_order(db, user.id, order_id, lock=True)
+        try:
+            # Annullato, modificato o messo in un giro durante la verifica: la modifica più recente vince.
+            service.editable(db, order, data.version)
+        except HTTPException:
+            db.rollback()
+            raise exc
         service.record_address_failure(db, order, actor_key(request, user), exc.detail)
         db.commit()
         raise

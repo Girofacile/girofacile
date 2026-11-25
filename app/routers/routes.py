@@ -1049,8 +1049,9 @@ def program_route(
                                 (minutes_from_hhmm(plan.orario_partenza) or 0) + int(plan.totale_minuti or 0),
                                 exclude_route_id=plan.id)
     except HTTPException:
-        # Save the computed result/logs even when the longer ETA conflicts with a booking.
-        db.commit()
+        # Con il nuovo calcolo il giro invaderebbe un altro giro dello stesso mezzo o autista:
+        # niente salvataggio, il giro resta con gli orari che aveva.
+        db.rollback()
         raise
     route_orders.sync_route_orders(db, plan, "scheduled")
     consume_route_quota(user, db, [plan.id])

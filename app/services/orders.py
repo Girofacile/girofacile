@@ -281,8 +281,10 @@ def verify_multiple(db, user_id, actor, *, after_id=0, limit=10, q='', source_id
         'has_more': len(identifiers) == limit}
     proofs = {}
     for oid in identifiers:
+        attempted_version = None
         try:
             order = get_order(db, user_id, oid, lock=True)
+            attempted_version = order.version
             # An order may be assigned or cancelled while this batch is running.
             if (order.status not in EDITABLE or db.query(RouteOrderAssignment.id)
                     .filter_by(user_id=user_id, order_id=oid).first()):
@@ -301,7 +303,7 @@ def verify_multiple(db, user_id, actor, *, after_id=0, limit=10, q='', source_id
                 continue
             address = (order.operational_data or {}).get('delivery_address')
             proof = proofs.get(address)
-            updated = verify_address(db, order, order.version, actor, reusable=proof, strict=True)
+            updated = verify_address(db, order, attempted_version, actor, reusable=proof, strict=True)
             db.commit()
             if address and updated.address_verification:
                 proofs[address] = dict(updated.address_verification)
@@ -313,7 +315,12 @@ def verify_multiple(db, user_id, actor, *, after_id=0, limit=10, q='', source_id
             if exc.status_code == 422:
                 # Indirizzo non trovato o diverso: resta segnalato sull'ordine, non solo nel riepilogo.
                 failed = get_order(db, user_id, oid, lock=True)
-                if failed.status in EDITABLE:
+                try:
+                    # Cambiato durante la verifica (annullato, modificato, in un giro): vince la modifica più recente.
+                    editable(db, failed, attempted_version)
+                except HTTPException:
+                    db.rollback()
+                else:
                     record_address_failure(db, failed, actor, exc.detail)
                     db.commit()
             if len(result['issues']) < 10:

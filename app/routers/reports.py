@@ -56,13 +56,20 @@ def _report_delivery_matches(delivery, agent_id: str = "", customer_id: str = ""
 
 
 
-def _actual_route_minutes(route) -> float:
+def _actual_route_minutes(route, status_map=None) -> float:
     """Durata reale del giro chiuso, quando disponibile.
 
     Per i report preferiamo sempre i dati finali raccolti durante
     l'esecuzione: started_at_utc/completed_at_utc. I timestamp legacy
     senza convenzione certa non vengono reinterpretati: usiamo la stima.
     """
+    try:
+        from ..services.route_schedule import actual_return
+        end = actual_return(route, status_map) if status_map is not None and getattr(route, "started_at", None) else None
+        if end and end >= route.started_at:
+            return (end - route.started_at).total_seconds() / 60
+    except Exception:
+        pass
     try:
         if getattr(route, "started_at_utc", None) and getattr(route, "completed_at_utc", None):
             diff = (route.completed_at_utc - route.started_at_utc).total_seconds() / 60
@@ -192,7 +199,7 @@ def build_report_data(
     def actuals_for(route, deliveries=None):
         if route.id not in route_actuals:
             km = _actual_route_km(route, deliveries)
-            minutes = _actual_route_minutes(route)
+            minutes = _actual_route_minutes(route, statuses_by_route.get(route.id, {}))
             liters = _actual_route_liters(route, km)
             cost = _actual_route_cost(route, liters)
             fraction = len(route_deliveries.get(route.id, [])) / len(route.deliveries) if route.deliveries else 1

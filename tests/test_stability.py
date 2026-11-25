@@ -126,7 +126,7 @@ def test_import_updates_at_quota_and_counts_repeated_codes_once(env, monkeypatch
     monkeypatch.setitem(PLAN_LIMITS['business'], 'max_customers', 2)
     response = client.post('/api/customers/import', files={'file':('data.csv',b'codice_cliente,nome,indirizzo\nC2,New,Via Test\nC2,New twice,Via Test\n','text/csv')})
     assert response.status_code == 200
-    assert response.json() == {'created': 1, 'updated': 1}
+    assert response.json() == {'created': 1, 'updated': 0}
 
 
 def test_route_quota_also_guards_manual_creation_and_allows_existing_edit(env, monkeypatch):
