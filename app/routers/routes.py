@@ -644,9 +644,13 @@ def create_and_optimize_route(
     db: Session = Depends(get_db), user: User = Depends(current_user),
 ):
     ensure_not_past_route_date(data.data_giro)
-    check_daily_route_limit(user, db, data.data_giro)
+    route_id = data.route_id
+    if route_id:
+        # Ricalcolo di un giro già salvato: si aggiorna quello, senza lasciare una bozza doppia.
+        _require_editable_route(db, user, request, route_id)
+    check_daily_route_limit(user, db, data.data_giro, exclude_route_id=route_id)
     deliveries = [c.model_dump() for c in data.consegne]
-    route_orders.require_planning_permission(request, deliveries, db, getattr(data, "route_id", None))
+    route_orders.require_planning_permission(request, deliveries, db, route_id)
     deposit, vehicle, _driver = _validate_route_tenant_scope(db, user, data, deliveries)
     _apply_route_preferences(user, deliveries)
     original_deliveries = deepcopy(deliveries)
@@ -679,8 +683,8 @@ def create_and_optimize_route(
         data = data.model_copy(update={"orario_partenza": result["departure"]})
     start_min = minutes_from_hhmm(data.orario_partenza) or 0
     end_min = start_min + int(float(result.get("total_min") or 0))
-    _check_resource_overlap(db, user, data, start_min, end_min)
-    plan = save_route_result(db, user, data, result, vehicle)
+    _check_resource_overlap(db, user, data, start_min, end_min, exclude_route_id=route_id)
+    plan = save_route_result(db, user, data, result, vehicle, route_id)
     plan, result, timed = _traffic_two_pass(db, user, data, deposit, original_deliveries, vehicle, plan, result)
     if timed:
         # Orari con il traffico salvati sul giro, come dopo «Aggiorna ETA con traffico».
@@ -752,6 +756,21 @@ def _traffic_two_pass(db, user, data, deposit, deliveries, vehicle, plan, result
             enrich_final_route(db, plan, cached_traffic=first_traffic)
             db.commit()
     return plan, result, True
+
+
+def _require_editable_route(db, user, request, route_id):
+    """Il giro da ricalcolare esiste, è dell'azienda ed è ancora in bozza o programmato."""
+    existing = owned(db.query(RoutePlan), RoutePlan, user).filter(RoutePlan.id == route_id).first()
+    if not existing:
+        raise HTTPException(404, "Giro non trovato")
+    if existing.started_at or computed_route_status(existing) not in ("bozza", "programmato"):
+        raise HTTPException(409, "Un giro già avviato, completato o annullato non può essere ricalcolato: crea un nuovo giro")
+    actor = getattr(request.state, 'company_collaborator', None)
+    if actor and computed_route_status(existing) != 'bozza':
+        from ..services.company_permissions import permissions_for
+        if 'routes.program' not in permissions_for(actor):
+            raise HTTPException(403, 'Per modificare un giro programmato serve il permesso di programmazione')
+    return existing
 
 
 @router.post("/api/routes/recalculate-manual")

@@ -37,6 +37,8 @@ let driversCache = [];
 let editingDeliveryIndex = null;
 let lastMapsUrl = "";
 let lastRouteResult = null;
+// Giro salvato che si sta modificando: resta anche quando le consegne cambiano, così il ricalcolo lo aggiorna invece di crearne un altro.
+let editingRouteId = null;
 let draggedStopIndex = null;
 let reportData = null;
 let reportSort = {drivers:{key:'consegne', dir:-1}};
@@ -3936,6 +3938,7 @@ function clearRouteWorkspace(){
   globalThis.GFOrderPlanning?.leave();
   deliveries = [];
   lastRouteResult = null;
+  editingRouteId = null;
   lastMapsUrl = "";
   editingDeliveryIndex = null;
   renderDeliveries();
@@ -4022,6 +4025,7 @@ async function cancelCurrentPreviewRoute(){
   try{
     await api(`/api/routes/${Number(lastRouteResult.id)}/cancel`, {method:"POST", body:"{}"});
     lastRouteResult = null;
+    editingRouteId = null;
     await Promise.allSettled([loadRoutes(), refreshResourceAvailability()]);
     // Giro eliminato: si riparte dagli Ordini (o dai Clienti), non dalla programmazione vuota.
     openPlanningSelection();
@@ -4056,6 +4060,7 @@ async function openProgrammedRouteForEdit(id, goToPlanning=false){
     updateRoutePlanningGateV68();
     renderDeliveries();
     lastRouteResult = r;
+    editingRouteId = ["bozza","programmato"].includes(st) ? r.id : null;
     globalThis.GFOrderPlanning?.opened(r);
     lastMapsUrl = r.google_maps_url || "";
     if(goToPlanning && (st === "programmato" || st === "bozza")){
@@ -4376,7 +4381,9 @@ async function optimizeRoute(){
   try{
     const editingOrderRoute=globalThis.GFOrderPlanning?.routeId() || (lastRouteResult?.id && deliveries.some(d=>d.order_refs?.length) ? lastRouteResult.id : null);
     if(editingOrderRoute)payload.route_id=editingOrderRoute;
+    else if(editingRouteId)payload.route_id=editingRouteId;
     const r = await api(editingOrderRoute?"/api/routes/recalculate-manual":"/api/routes/optimize", {method:"POST", body:JSON.stringify(payload)});
+    if(r?.id)editingRouteId=r.id;
     await wait?.close();
     globalThis.GFOrderPlanning?.calculated(r);
     deliveries = (r.consegne || []).map(cleanDeliveryForPayload);

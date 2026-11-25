@@ -243,6 +243,8 @@ class RoutePlanIn(BaseModel):
     energy_price_primary: NonNegativeFloat = 0
     energy_price_electric: NonNegativeFloat = 0
     consegne: List[DeliveryIn]
+    # Giro già salvato (bozza o programmato) che il ricalcolo aggiorna invece di crearne uno nuovo.
+    route_id: Optional[int] = None
 
     @field_validator("consegne", mode="before")
     @classmethod
@@ -266,4 +268,4 @@ class RoutePlanIn(BaseModel):
         return strict_time_text(value, "Orario di partenza") or "08:00"
 
 class ManualRoutePlanIn(RoutePlanIn):
-    route_id: Optional[int] = None
+    pass
