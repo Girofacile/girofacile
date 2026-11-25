@@ -12,6 +12,18 @@ from ..core.utils import minutes_from_hhmm
 LOCAL = ZoneInfo(LOCAL_TIMEZONE)
 
 
+def actual_arrival(delivery, status):
+    """Arrivo reale dal cliente: «Consegnato» si preme dopo lo scarico, quindi si tolgono i minuti
+    di scarico indicati dall'autista (o, se non li ha indicati, quelli previsti). Una consegna
+    mancata non ha scarico: l'arrivo è l'orario dell'esito. Orario locale senza fuso, come completata_il."""
+    if not status or status.status not in ('completata', 'mancata') or not status.completata_il:
+        return None
+    if status.status != 'completata':
+        return status.completata_il
+    unload = getattr(status, 'tempo_scarico_effettivo', None) or getattr(delivery, 'tempo_scarico_min', None) or 0
+    return status.completata_il - timedelta(minutes=float(unload))
+
+
 def route_schedule_datetimes(plan, status_map=None, now=None):
     statuses = status_map or {}
     start_min = minutes_from_hhmm(plan.orario_partenza) or 0
@@ -46,7 +58,8 @@ def route_schedule_datetimes(plan, status_map=None, now=None):
         closed = ds and ds.status in ('completata', 'mancata') and ds.completata_il
         if closed:
             actual = ds.completata_il.replace(tzinfo=LOCAL)
-            deliveries[delivery.id] = {'arrival': actual, 'source': 'execution', 'updated_at': actual}
+            deliveries[delivery.id] = {'arrival': actual_arrival(delivery, ds).replace(tzinfo=LOCAL),
+                                       'source': 'execution', 'updated_at': actual}
             if departure:
                 shift = actual - departure
                 source, updated = 'execution', actual

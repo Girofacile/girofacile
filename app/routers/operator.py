@@ -1,3 +1,4 @@
+from ..services.route_schedule import actual_arrival
 from ..services.driver_schedule import metadata as driver_schedule_metadata
 from ..services.route_execution import apply_delivery_update, get_or_create_delivery_status, update_customer_unload_time, refresh_route_completion
 from ..services.route_enrichment import routing_metadata, json_data, TIMING_DETAILS
@@ -76,6 +77,7 @@ def delivery_to_operator_dict(delivery: Delivery, status: DeliveryStatus | None)
         "tempo_scarico_effettivo": status.tempo_scarico_effettivo if status else None,
         "note_operatore": status.note_operatore if status else None,
         "completata_il": status.completata_il.isoformat() if status and status.completata_il else None,
+        "arrivo_reale": (lambda v: v.isoformat() if v else None)(actual_arrival(delivery, status)),
     }
 
 

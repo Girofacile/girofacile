@@ -2,7 +2,7 @@ from ..services import driver_schedule as shifts
 from ..services import unload_time
 from ..services import route_orders
 from ..services.order_planning import ORDER_FIELDS
-from ..services.route_schedule import live_route_schedule, route_schedule_datetimes
+from ..services.route_schedule import actual_arrival, live_route_schedule, route_schedule_datetimes
 from ..models import DeliveryTrackingLink
 from ..services.occasional_stops import verify_stop_address, validate_occasional_stops, STOP_VERIFICATION_FIELDS
 from ..services.customer_planning import customer_is_plannable, PLANNING_ADDRESS_ERROR
@@ -460,6 +460,8 @@ def serialize_route(plan, include_legs=True):
             "tempo_scarico_effettivo": (status_map.get(d.id).tempo_scarico_effettivo if status_map.get(d.id) else None),
             "note_operatore": (status_map.get(d.id).note_operatore if status_map.get(d.id) else None),
             "completata_il": (status_map.get(d.id).completata_il.isoformat() if status_map.get(d.id) and status_map.get(d.id).completata_il else None),
+            # Arrivo dal cliente (consegna meno scarico): è l'orario confrontato con quello previsto.
+            "arrivo_reale": iso_or_none(actual_arrival(d, status_map.get(d.id))),
             **evidence_metadata(status_map.get(d.id)),
             "signed_by_name": (status_map.get(d.id).signed_by_name if status_map.get(d.id) else None),
             "signed_at": (status_map.get(d.id).signed_at.isoformat() if status_map.get(d.id) and status_map.get(d.id).signed_at else None),
@@ -483,6 +485,10 @@ def primary_energy_price(data):
     if "energy_price_primary" in data.model_fields_set:
         return float(data.energy_price_primary or 0)
     return float(data.prezzo_carburante_litro or 0)
+
+
+def iso_or_none(value):
+    return value.isoformat() if value else None
 
 
 def save_route_result(db, user, data, result, vehicle, route_id=None, *, commit=True):

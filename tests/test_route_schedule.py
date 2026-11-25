@@ -3,7 +3,7 @@ import json
 from datetime import date, datetime, time, timedelta
 from types import SimpleNamespace as N
 import pytest
-from app.services.route_schedule import LOCAL, route_schedule_datetimes
+from app.services.route_schedule import LOCAL, actual_arrival, route_schedule_datetimes
 
 DAY = date(2099, 1, 15)
 
@@ -30,7 +30,8 @@ def test_early_completion_and_delay_consume_opening_wait(completed):
     second = stop(2, time(10), time(10, 10), travel=20, wait=30, window=(time(10), time(11)))
     actual = datetime.combine(DAY, completed)
     result = route_schedule_datetimes(plan([first, second]), {1: N(status='completata', completata_il=actual)})
-    assert result['deliveries'][1]['arrival'] == actual.replace(tzinfo=LOCAL)
+    # «Consegnato» arriva dopo lo scarico previsto (10 min): l'arrivo reale è 10 minuti prima.
+    assert result['deliveries'][1]['arrival'] == (actual - timedelta(minutes=10)).replace(tzinfo=LOCAL)
     assert result['deliveries'][2]['arrival'] == datetime.combine(DAY, time(10), LOCAL)
     assert result['deliveries'][2]['source'] == 'execution'
     assert result['deliveries'][2]['updated_at'] == actual.replace(tzinfo=LOCAL)
@@ -83,3 +84,21 @@ def test_execution_projection_keeps_fixed_pause_in_place():
 def test_unknown_leg_and_estimate_remain_unknown():
     result = route_schedule_datetimes(plan([stop(1, None, None, travel=None)], started=time(8, 30)))
     assert result['deliveries'][1]['arrival'] is None
+
+
+def test_actual_arrival_subtracts_the_unload_the_driver_entered():
+    first = stop(1, time(9), time(9, 10), unload=10)
+    delivered = datetime.combine(DAY, time(9, 19))
+    # Arrivato alle 9:09 (9 minuti di ritardo), scaricato in 10 minuti, «Consegnato» alle 9:19.
+    assert actual_arrival(first, N(status='completata', completata_il=delivered, tempo_scarico_effettivo=10)) == datetime.combine(DAY, time(9, 9))
+    # Scarico indicato dall'autista diverso da quello previsto: vale quello indicato.
+    assert actual_arrival(first, N(status='completata', completata_il=delivered, tempo_scarico_effettivo=15)) == datetime.combine(DAY, time(9, 4))
+    # Senza minuti indicati si usa lo scarico previsto; una consegna mancata non ha scarico.
+    assert actual_arrival(first, N(status='completata', completata_il=delivered, tempo_scarico_effettivo=None)) == datetime.combine(DAY, time(9, 9))
+    assert actual_arrival(first, N(status='mancata', completata_il=delivered, tempo_scarico_effettivo=None)) == delivered
+    assert actual_arrival(first, N(status='in_attesa', completata_il=None, tempo_scarico_effettivo=None)) is None
+    # Le fermate successive partono comunque dall'orario reale di fine scarico (9:19, +9 sul previsto 9:10).
+    second = stop(2, time(10), time(10, 10), travel=20)
+    result = route_schedule_datetimes(plan([first, second]), {1: N(status='completata', completata_il=delivered, tempo_scarico_effettivo=10)})
+    assert result['deliveries'][1]['arrival'] == datetime.combine(DAY, time(9, 9), LOCAL)
+    assert result['deliveries'][2]['arrival'] == datetime.combine(DAY, time(9, 39), LOCAL)
