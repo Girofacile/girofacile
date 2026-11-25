@@ -274,7 +274,7 @@ class SelectedCustomerVerification(BaseModel):
 
 class SelectedCustomerResolution(BaseModel):
     customer_id: int
-    action: Literal["correct", "manual"]
+    action: Literal["correct", "manual", "accept"]
     original_address: str
     original_comune: str = ""
     address: str = Field(min_length=1, max_length=500)
@@ -331,7 +331,8 @@ def verify_selected_customer_addresses(
         apply_geocode(customer, result)
         dc.invalidate_key(db, dc.customer_key(cid, user_id=user.id), user_id=user.id)
         if not customer_is_plannable(customer):
-            candidate = ({"lat": customer.lat, "lon": customer.lon}
+            # La proposta di Google con il suo indirizzo, per confrontarla con quello scritto.
+            candidate = ({"lat": customer.lat, "lon": customer.lon, "formatted": customer.indirizzo_geocodificato or ""}
                          if customer.lat is not None and customer.lon is not None else None)
             message = ("Google ha trovato una posizione da confermare sulla mappa."
                        if candidate else "Indirizzo non trovato. Correggilo o scegli la posizione sulla mappa.")
@@ -354,6 +355,19 @@ def resolve_selected_customer_address(
     address, city = data.address.strip(), data.comune.strip()
     if not address or not city:
         raise HTTPException(422, "Inserisci indirizzo e comune.")
+    if data.action == "accept":
+        # «Conferma»: si accetta la posizione proposta da Google, senza cambiare l'indirizzo scritto.
+        if customer.lat is None or customer.lon is None:
+            raise HTTPException(422, "Google non ha proposto una posizione: modifica l'indirizzo o scegli il punto sulla mappa.")
+        apply_geocode(customer, {
+            "status": "verificato", "lat": customer.lat, "lon": customer.lon,
+            "formatted": customer.indirizzo_geocodificato or ", ".join(x for x in [customer.indirizzo, customer.comune, customer.provincia] if x),
+            "source": "google", "confidence": customer.affidabilita_geocodifica, "place_id": customer.google_place_id,
+        })
+        dc.invalidate_key(db, dc.customer_key(customer.id, user_id=user.id), user_id=user.id)
+        db.commit()
+        db.refresh(customer)
+        return {"customer": customer_to_dict(customer)}
     if data.action == "manual":
         if data.lat is None or data.lon is None or not all((
             math.isfinite(data.lat), math.isfinite(data.lon),

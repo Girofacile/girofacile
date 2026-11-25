@@ -50,7 +50,7 @@ def test_ambiguous_address_can_be_corrected_or_position_confirmed(routing_env, m
     response = client.post("/api/customers/verify-selected", json={"customer_ids": [pending.id]})
     assert response.status_code == 200, response.text
     issue = response.json()["issues"][0]
-    assert issue["candidate"] == {"lat": 40.85, "lon": 14.26}
+    assert issue["candidate"] == {"lat": 40.85, "lon": 14.26, "formatted": "Via simile"}
     payload = {"customer_id": pending.id, "original_address": "Via Test 1",
                "original_comune": "Napoli", "address": "Via Corretta 23",
                "comune": "Napoli", "provincia": "NA"}
@@ -120,3 +120,25 @@ def test_provider_failure_aborts_remaining_selected_customer_checks(routing_env,
     assert response.json()["aborted"] is True
     assert len(response.json()["issues"]) == 2
     assert len(calls) == 1
+
+
+def test_confirm_accepts_google_position_without_changing_the_typed_address(routing_env, monkeypatch):
+    """«Conferma»: la posizione proposta da Google diventa verificata, l'indirizzo scritto resta."""
+    from app.routers import customers
+    client, db, owner, *_ = routing_env
+    pending = new_customer(db, owner)
+    monkeypatch.setattr(customers, "geocode_address", lambda *a, **kw: {
+        "status": "da_verificare", "lat": 40.85, "lon": 14.26,
+        "formatted": "Via Test 1, 80100 Napoli NA", "source": "google", "confidence": 0.5,
+    })
+    client.post("/api/customers/verify-selected", json={"customer_ids": [pending.id]})
+    payload = {"customer_id": pending.id, "action": "accept", "original_address": "Via Test 1",
+               "original_comune": "Napoli", "address": "Via Test 1", "comune": "Napoli"}
+    accepted = client.post("/api/customers/resolve-selected-address", json=payload)
+    assert accepted.status_code == 200, accepted.text
+    db.refresh(pending)
+    assert pending.stato_geocodifica == "verificato" and (pending.lat, pending.lon) == (40.85, 14.26)
+    assert pending.indirizzo == "Via Test 1" and pending.indirizzo_geocodificato == "Via Test 1, 80100 Napoli NA"
+    assert pending.fonte_geocodifica == "google"
+    again = client.post("/api/customers/verify-selected", json={"customer_ids": [pending.id]})
+    assert again.json()["issues"] == []

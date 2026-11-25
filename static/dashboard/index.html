@@ -1451,22 +1451,31 @@
   </div>
 </dialog>
 
-<dialog id="selectedCustomerAddressesDialog" class="gf-dialog" aria-labelledby="selectedCustomerAddressesTitle">
-  <div class="gf-stack">
-    <header class="gf-cluster" data-justify="between"><h2 id="selectedCustomerAddressesTitle" class="gf-subtitle">Controlla gli indirizzi dei clienti selezionati</h2><button type="button" class="gf-button" data-variant="ghost" onclick="GFCustomerAddresses.close()">Chiudi</button></header>
-    <p id="selectedCustomerAddressesMessage" class="gf-muted" role="status"></p>
-    <div id="selectedCustomerAddressesList" class="gf-stack" data-gap="sm"></div>
+<!-- Controllo indirizzi dei clienti (variante A, 25/11/2026): tabella a confronto, poi la mappa al posto della tabella. -->
+<dialog id="selectedCustomerAddressesDialog" class="gf-modal" data-size="lg" aria-labelledby="selectedCustomerAddressesTitle">
+  <header class="gf-modal__header"><div><p class="gf-kicker">Prima della pianificazione</p><h2 id="selectedCustomerAddressesTitle" class="gf-modal__title">Controlla gli indirizzi</h2><p id="selectedCustomerAddressesMessage" class="gf-muted" role="status"></p></div>
+    <button type="button" class="gf-icon-button" onclick="GFCustomerAddresses.close()" aria-label="Chiudi"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12 M18 6L6 18"/></svg></button></header>
+  <div class="gf-modal__body gf-stack">
+    <div id="selectedCustomerAddressesList"></div>
     <form id="selectedCustomerAddressEditor" class="gf-stack" hidden onsubmit="event.preventDefault();GFCustomerAddresses.correct()">
       <p><strong id="selectedCustomerAddressName"></strong></p>
-      <label class="gf-field" for="selectedCustomerAddressText"><span class="gf-field__label">Indirizzo</span><input class="gf-input" id="selectedCustomerAddressText" required maxlength="500"></label>
-      <label class="gf-field" for="selectedCustomerAddressCity"><span class="gf-field__label">Comune</span><input class="gf-input" id="selectedCustomerAddressCity" required maxlength="200"></label>
-      <label class="gf-field" for="selectedCustomerAddressProvince"><span class="gf-field__label">Provincia</span><input class="gf-input" id="selectedCustomerAddressProvince" maxlength="100"></label>
-      <div id="selectedCustomerAddressMap" class="gf-route-panel__canvas" role="region" aria-label="Scegli la posizione della consegna"></div>
-      <p id="selectedCustomerAddressPosition" class="gf-muted">Clicca sulla mappa per scegliere la posizione oppure correggi l'indirizzo e ripeti la verifica.</p>
-      <div class="gf-cluster"><button type="submit" class="gf-button" data-variant="primary">Verifica indirizzo corretto</button><button type="button" class="gf-button" data-variant="secondary" id="selectedCustomerAddressManual" onclick="GFCustomerAddresses.manual()" disabled>Conferma questa posizione</button><button type="button" class="gf-button" data-variant="ghost" onclick="GFCustomerAddresses.cancelEdit()">Annulla</button></div>
+      <div class="gf-grid" data-cols="3">
+        <label class="gf-field" for="selectedCustomerAddressText"><span class="gf-field__label">Indirizzo</span><input class="gf-input" id="selectedCustomerAddressText" required maxlength="500"></label>
+        <label class="gf-field" for="selectedCustomerAddressCity"><span class="gf-field__label">Comune</span><input class="gf-input" id="selectedCustomerAddressCity" required maxlength="200"></label>
+        <label class="gf-field" for="selectedCustomerAddressProvince"><span class="gf-field__label">Provincia</span><input class="gf-input" id="selectedCustomerAddressProvince" maxlength="100"></label>
+      </div>
+      <div id="selectedCustomerAddressMap" class="gf-route-panel__canvas" data-map role="region" aria-label="Scegli la posizione della consegna"></div>
+      <p id="selectedCustomerAddressPosition" class="gf-muted">Trascina il segnaposto o clicca sulla mappa, oppure correggi l'indirizzo e verificalo di nuovo.</p>
     </form>
-    <footer class="gf-cluster" data-justify="end"><button type="button" class="gf-button" data-variant="secondary" onclick="GFCustomerAddresses.retry()">Riprova verifica</button><button type="button" class="gf-button" data-variant="primary" id="selectedCustomerAddressesContinue" onclick="GFCustomerAddresses.continue()">Continua alla pianificazione</button></footer>
   </div>
+  <footer class="gf-modal__footer gf-cluster" data-justify="between" id="selectedCustomerAddressesListFooter">
+    <span class="gf-muted" id="selectedCustomerAddressesCount"></span>
+    <div class="gf-cluster"><button type="button" class="gf-button" data-variant="ghost" onclick="GFCustomerAddresses.retry()">Riprova verifica</button><button type="button" class="gf-button" data-variant="secondary" id="selectedCustomerAddressesAcceptAll" onclick="GFCustomerAddresses.acceptAll()" hidden>Conferma tutte le proposte</button><button type="button" class="gf-button" data-variant="primary" id="selectedCustomerAddressesContinue" onclick="GFCustomerAddresses.continue()">Vai alla pianificazione</button></div>
+  </footer>
+  <footer class="gf-modal__footer gf-cluster" data-justify="between" id="selectedCustomerAddressesEditFooter" hidden>
+    <button type="button" class="gf-button" data-variant="secondary" onclick="GFCustomerAddresses.back()">← Torna all'elenco</button>
+    <div class="gf-cluster"><button type="submit" form="selectedCustomerAddressEditor" class="gf-button" data-variant="secondary">Verifica l'indirizzo corretto</button><button type="button" class="gf-button" data-variant="primary" id="selectedCustomerAddressManual" onclick="GFCustomerAddresses.manual()" disabled>Usa questa posizione</button></div>
+  </footer>
 </dialog>
 
 <dialog id="planningCustomerDialog" class="gf-modal" data-size="lg" aria-labelledby="planningCustomerDialogTitle">
@@ -1689,7 +1698,7 @@
 <script src="/static/dashboard/js/driver-schedules.js?v=gf_collaudo_20261110"></script>
 <script src="/static/dashboard/js/fleet-planning.js?v=gf_prezzo_zero_20261117"></script>
 <script src="/static/dashboard/js/selected-addresses.js?v=gf_verifica_severa_20261107"></script>
-<script src="/static/dashboard/js/selected-customer-addresses.js?v=gf_customer_selected_addresses_20261020"></script>
+<script src="/static/dashboard/js/selected-customer-addresses.js?v=gf_indirizzi_a_20261125"></script>
 <script src="/static/dashboard/js/order-planning.js?v=gf_selezione_uscita_2_20261124"></script>
 <script src="/static/dashboard/js/planning-pickers.js?v=gf_aggiungi_20261102"></script>
 <script src="/static/dashboard/js/planning-drafts.js?v=gf_collaudo2_20261110"></script>

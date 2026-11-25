@@ -5,6 +5,10 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Controllo indirizzi dei clienti selezionati (variante A): pop-up con tabella «Cliente · Hai scritto · Google propone ·
+  Azioni»; «Conferma» accetta subito la posizione di Google, «Modifica» sostituisce la tabella con la mappa a tutta
+  larghezza (con «Torna all'elenco»), «Escludi» toglie il cliente; «Conferma tutte le proposte» con più proposte.
+  Niente più mappa in fondo al pop-up da scorrere.
 - Clienti: con due fasce di scarico la seconda compare a capo, sotto la prima, invece che di fianco.
 - Importazione ordini da file più tollerante:
   - Excel con più fogli: invece di un errore si sceglie il foglio da importare (con il numero di righe);
