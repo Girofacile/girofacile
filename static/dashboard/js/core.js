@@ -5138,6 +5138,10 @@ const GF_STAT_ICONS = {
 function gfStatCell(icon, tone, label, value, unit, kind='', size=''){
   return `<div class="gf-stat-strip__cell"${size ? ` data-size="${size}"` : ''}><span class="gf-stat-strip__icon" data-tone="${tone}" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="${GF_STAT_ICONS[icon]}"/></svg></span><span class="gf-stat-strip__label">${esc(label)}</span><strong class="gf-stat-strip__value"${kind ? ` data-kind="${kind}"` : ''}>${esc(value)}</strong><small class="gf-stat-strip__unit">${esc(unit||'')}</small></div>`;
 }
+// Voce con dettaglio: scritta piccola accanto al numero e una riga in più sotto.
+function gfStatCellDetail(icon, tone, label, value, aside, note){
+  return `<div class="gf-stat-strip__cell"><span class="gf-stat-strip__icon" data-tone="${tone}" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="${GF_STAT_ICONS[icon]}"/></svg></span><span class="gf-stat-strip__label">${esc(label)}</span><strong class="gf-stat-strip__value">${esc(value)}${aside ? `<small class="gf-stat-strip__aside">${esc(aside)}</small>` : ''}</strong>${note ? `<small class="gf-stat-strip__note">${note}</small>` : ''}</div>`;
+}
 // Dettaglio dei costi accanto alla mappa: carburante o energia, pedaggi se presenti, totale.
 function gfRouteCostsHtml(route){
   const energy = gfRouteEnergyMetric(route);

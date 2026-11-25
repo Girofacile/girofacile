@@ -205,7 +205,8 @@ window.GFHistory = (() => {
         ${gfStatCell('clock','1','Orario', `${start}–${end}`, `previsto ${r.orario_partenza || '-'}–${r.orario_rientro_stimato || '-'}`, 'text')}
         ${gfStatCell('route','2','Percorso', r.totale_km == null ? '-' : gfDecimal(r.totale_km), 'km pianificati')}
         ${gfStatCell('pin','4','Durata', realMinutes != null && realMinutes >= 0 ? dashScheduledMinutes(realMinutes) : dashScheduledMinutes(r.totale_minuti), 'prevista '+dashScheduledMinutes(r.totale_minuti))}
-        ${gfStatCell('euro','5', energy.costLabel, money(r.costo_totale ?? r.costo_carburante), `${energy.label}: ${energy.value}`)}
+        ${gfStatCellDetail('euro','5', energy.costLabel, money(r.costo_carburante), `stimati ${energy.value}`,
+          `Costo pedaggi <strong>${esc(r.toll_estimated_eur == null ? 'non disponibile' : money(r.toll_estimated_eur).replace(' ', ' '))}</strong>`)}
       </div>
       <section class="gf-route-panel" aria-label="Percorso ed esito delle fermate">
         <div class="gf-route-panel__map">
