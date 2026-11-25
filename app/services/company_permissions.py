@@ -178,6 +178,8 @@ rule("POST", ["/api/routes/{route_id}/cancel", "/api/routes/{route_id}/complete"
 rule("POST", ["/api/routes/{route_id}/generate-token", "/api/deliveries/{delivery_id}/tracking"], "routes.tracking")
 rule("DELETE", ["/api/deliveries/{delivery_id}/tracking"], "routes.tracking")
 rule("POST", ["/api/customers/import"], "customers.create")
+rule("GET", ["/api/customers/import-template.xlsx"], "customers.create")
+rule("GET", ["/api/order-files/template.xlsx"], "orders.import", "orders.integrations")
 rule("POST", ["/api/customers/verify-address-preview"], "customers.create", "customers.update")
 rule("POST", ["/api/customers/{item_id}/verify-address", "/api/customers/verify-pending"], "customers.update")
 rule("POST", ["/api/customers/verify-selected"], "routes.plan")

@@ -1111,10 +1111,19 @@ def refresh_route_traffic(route_id: int, db: Session = Depends(get_db), user: Us
         raise HTTPException(404, "Giro non trovato")
     if computed_route_status(plan) not in ("bozza", "programmato"):
         raise HTTPException(409, "Aggiorna il traffico prima di avviare il giro")
+    from ..services.route_execution import lock_route_resources
+    lock_route_resources(db, plan)
     try:
         enrich_final_route(db, plan, force=True, requested_at=requested_at)
     except ValueError as exc:
         raise HTTPException(400, str(exc))
+    # Con il traffico il giro può durare di più: non deve invadere un altro giro dello stesso mezzo o autista.
+    start_min = minutes_from_hhmm(plan.orario_partenza) or 0
+    try:
+        _check_resource_overlap(db, user, plan, start_min, start_min + int(plan.totale_minuti or 0), exclude_route_id=plan.id)
+    except HTTPException:
+        db.rollback()
+        raise
     db.commit()
     db.refresh(plan)
     return serialize_route(plan)

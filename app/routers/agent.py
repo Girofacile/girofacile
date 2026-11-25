@@ -279,6 +279,7 @@ async def import_agent_customers(file: UploadFile = File(...), db: Session = Dep
         def b(x):
             return str(x).strip().lower() in ["1", "si", "sì", "yes", "true", "vero"]
 
+        seen = {}  # codice -> cliente già letto in questo file
         for _, row in df.iterrows():
             codice = str(get(row, "codice_cliente", "") or "").strip()
             nome = str(get(row, "nome", "") or "").strip()
@@ -289,13 +290,18 @@ async def import_agent_customers(file: UploadFile = File(...), db: Session = Dep
                 indirizzo = f"{indirizzo} {civico}".strip()
             if not nome or not indirizzo:
                 continue
-            item = db.query(Customer).filter(Customer.user_id == agent.user_id, Customer.agent_id == agent.id, Customer.codice_cliente == codice, Customer.deleted_at.is_(None)).first() if codice else None
-            if not item:
-                item = Customer(user_id=agent.user_id, agent_id=agent.id)
-                db.add(item)
-                created += 1
+            if codice and codice in seen:
+                item = seen[codice]
             else:
-                updated += 1
+                item = db.query(Customer).filter(Customer.user_id == agent.user_id, Customer.agent_id == agent.id, Customer.codice_cliente == codice, Customer.deleted_at.is_(None)).first() if codice else None
+                if not item:
+                    item = Customer(user_id=agent.user_id, agent_id=agent.id)
+                    db.add(item)
+                    created += 1
+                else:
+                    updated += 1
+                if codice:
+                    seen[codice] = item
             previous_address = customer_address_key(item)
             item.codice_cliente = codice or item.codice_cliente
             item.nome = nome

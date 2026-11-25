@@ -472,6 +472,7 @@ async def import_customers(
         agent_lookup_by_code = {str(a.codice_agente or "").strip().lower(): a.id for a in agents if a.codice_agente}
         agent_lookup_by_name = {agent_full_name(a).strip().lower(): a.id for a in agents}
 
+        seen = {}  # codice -> cliente già letto in questo file (autoflush spento: la query non lo vedrebbe)
         for _, row in df.iterrows():
             codice = str(get(row, "codice_cliente", "") or "").strip()
             nome = str(get(row, "nome", "") or "").strip()
@@ -482,16 +483,21 @@ async def import_customers(
                 indirizzo = f"{indirizzo} {civico}".strip()
             if not nome or not indirizzo:
                 continue
-            item = (
-                owned(db.query(Customer), Customer, user).filter(Customer.codice_cliente == codice).first()
-                if codice else None
-            )
-            if not item:
-                item = Customer(user_id=user.id)
-                db.add(item)
-                created += 1
+            if codice and codice in seen:
+                item = seen[codice]  # stessa riga ripetuta: vale l'ultima, senza contarla due volte
             else:
-                updated += 1
+                item = (
+                    owned(db.query(Customer), Customer, user).filter(Customer.codice_cliente == codice).first()
+                    if codice else None
+                )
+                if not item:
+                    item = Customer(user_id=user.id)
+                    db.add(item)
+                    created += 1
+                else:
+                    updated += 1
+                if codice:
+                    seen[codice] = item
             previous_address = customer_address_key(item)
             item.codice_cliente = codice or None
             item.nome = nome

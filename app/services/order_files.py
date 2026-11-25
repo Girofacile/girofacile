@@ -33,7 +33,11 @@ def requested_date(value):
     text=value.strip()
     if 'T' in text: return datetime.fromisoformat(text).date().isoformat()
     if text.isdigit() and len(text)==8:
-        return datetime.strptime(text,'%Y%m%d' if int(text[:4])>=1900 else '%d%m%Y').date().isoformat()
+        for pattern in ('%Y%m%d','%d%m%Y'):
+            try: parsed=datetime.strptime(text,pattern).date()
+            except ValueError: continue
+            if 1900<=parsed.year<=2100: return parsed.isoformat()
+        raise ValueError(text)
     if len(text)>=5 and text[:4].isdigit() and text[4]=='-':
         return datetime.strptime(text,'%Y-%m-%d').date().isoformat()
     for separator in '/-.':

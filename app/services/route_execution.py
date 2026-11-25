@@ -35,6 +35,17 @@ def written_at(data):
     return min(value, now)
 
 
+def executed_at(data, route):
+    """Ora locale dell'esito: quella del telefono (anche se arriva dopo, dalla coda offline).
+
+    Mai nel futuro e mai prima della partenza del giro (orologio del telefono sbagliato)."""
+    from ..core.utils import LOCAL_TZ
+    value = written_at(data).replace(tzinfo=timezone.utc).astimezone(LOCAL_TZ).replace(tzinfo=None)
+    if route.started_at and value < route.started_at:
+        return route.started_at
+    return value
+
+
 def clean_note(value):
     return (value or '').strip() or None
 
@@ -156,7 +167,7 @@ def _apply_delivery_update(db, delivery, payload, action):
             status.note_scritta_il = written_at(data)
         else:
             confirm_note_time(status, data)
-        status.completata_il = local_now().replace(tzinfo=None)
+        status.completata_il = executed_at(data, route)
         if action == 'complete':
             status.tempo_scarico_effettivo = data['tempo_scarico']
             status.motivo_mancata = None
