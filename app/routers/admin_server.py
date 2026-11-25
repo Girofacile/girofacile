@@ -136,12 +136,29 @@ def admin_server_test_service(payload: dict, db: Session = Depends(get_db), supe
         raise HTTPException(400, "Servizio non riconosciuto")
     row = statuses[service]
     ok = bool(row.get("configured"))
-    _activity(db, superadmin.get("username"), "service_connection_test", f"Test servizio {row.get('name')}: {'ok' if ok else 'non configurato'}")
-    return {
-        "service": service,
-        "ok": ok,
-        "message": "Configurazione presente. Il test reale API può essere esteso nella prossima versione." if ok else "Servizio non configurato o chiave mancante.",
-    }
+    message = "Configurazione presente. Il test reale API può essere esteso nella prossima versione." if ok else "Servizio non configurato o chiave mancante."
+    if service == "mapbox" and ok:
+        ok, message = _test_mapbox_token(db)
+    _activity(db, superadmin.get("username"), "service_connection_test", f"Test servizio {row.get('name')}: {'ok' if ok else 'non riuscito'}")
+    return {"service": service, "ok": ok, "message": message}
+
+
+def _test_mapbox_token(db):
+    """Chiede a Mapbox se il token è valido (servizio gratuito, nessun calcolo di percorso)."""
+    import requests
+    from ..services.platform_settings import mapbox_access_token
+    try:
+        response = requests.get("https://api.mapbox.com/tokens/v2", params={"access_token": mapbox_access_token(db)}, timeout=10)
+        code = (response.json() or {}).get("code") if response.headers.get("content-type", "").startswith("application/json") else None
+    except (requests.RequestException, ValueError):
+        # L'errore di rete può contenere l'indirizzo con il token: non si riporta mai.
+        return False, "Mapbox non raggiungibile in questo momento: riprova tra qualche minuto."
+    if code == "TokenValid":
+        return True, "Token Mapbox valido: i giri useranno il traffico."
+    if code == "TokenExpired":
+        return False, "Il token Mapbox è scaduto: creane uno nuovo su account.mapbox.com → Tokens e incollalo nelle Impostazioni SaaS."
+    return False, "Mapbox rifiuta il token: creane uno nuovo su account.mapbox.com → Tokens (senza restrizioni di URL) e incollalo nelle Impostazioni SaaS."
+
 
 
 @router.post("/server-maintenance/backups")

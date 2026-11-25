@@ -16,7 +16,7 @@ from ..database import database_kind
 from ..services.backups import backup_directory, backup_files, resolve_backup
 from ..models import Customer, Driver, RoutePlan, SupportTicket, User, Vehicle, SaaSPlatformSetting, SuperAdminProfile, SuperAdminActivityLog, SuperAdminCollaborator
 from ..services.plans import get_user_plan_status
-from ..services.platform_settings import google_maps_api_key, openai_api_key
+from ..services.platform_settings import google_maps_api_key, openai_api_key, mapbox_access_token, traffic_provider_name
 
 
 PLAN_MRR = {key: info["price_eur"] for key, info in PLAN_PRICES.items()}
@@ -256,6 +256,8 @@ def _safe_backup_name(filename: str) -> Path:
 def _service_key_status(db: Session) -> list[dict]:
     google_key = google_maps_api_key(db)
     openai_key = openai_api_key(db)
+    mapbox_token = mapbox_access_token(db)
+    traffic_on = traffic_provider_name(db) == "mapbox"
     from ..services.email import smtp_config
     smtp = smtp_config()
     smtp_host, smtp_user, smtp_password = str(smtp["host"] or "").strip(), str(smtp["user"] or "").strip(), str(smtp["password"] or "").strip()
@@ -269,6 +271,9 @@ def _service_key_status(db: Session) -> list[dict]:
     backup_target = str(backup_directory())
     return [
         {"key":"google", "name":"Google Maps Platform", "configured": bool(google_key), "masked": _mask_secret(google_key), "details":"Geocoding, verifica indirizzi, Routes API", "last_error":"Controlla Errori sistema / Consumi API"},
+        {"key":"mapbox", "name":"Mapbox / Traffico", "configured": bool(mapbox_token), "masked": _mask_secret(mapbox_token),
+         "details": "Orari dei giri con il traffico" + ("" if traffic_on else " · traffico disattivato nelle Impostazioni SaaS"),
+         "last_error":"Il test verifica il token con Mapbox (gratuito)"},
         {"key":"openai", "name":"OpenAI / AI", "configured": bool(openai_key), "masked": _mask_secret(openai_key), "details":"Spiegazione giri, ticket, report AI", "last_error":"Controlla Consumi API e chiavi"},
         {"key":"smtp", "name":"SMTP Email", "configured": bool(smtp_host and smtp_user and smtp_password), "masked": _mask_secret(smtp_user), "details": f"Host: {smtp_host or 'non configurato'}", "last_error":"Errore registrato se password SMTP mancante o invio fallito"},
         {"key":"stripe", "name":"Stripe / Pagamenti", "configured": bool(stripe_key), "masked": _mask_secret(stripe_key), "details": _billing_mode_label(), "last_error":""},

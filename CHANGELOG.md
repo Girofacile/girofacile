@@ -5,6 +5,8 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Super Admin → Server: «Mapbox / Traffico» compare tra le chiavi e i servizi collegati (token mascherato); il «Test»
+  chiede a Mapbox se il token è valido (verifica gratuita) e dice cosa fare se è rifiutato o scaduto.
 - Traffico Mapbox: se Mapbox rifiuta il token (401/403) o la quota è esaurita (429), compare un errore critico in
   «Errori sistema» del Super Admin e arriva l'email di errore, al massimo una volta al giorno, con le istruzioni per
   rimediare (il token non compare mai nel messaggio).
