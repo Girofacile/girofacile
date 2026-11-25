@@ -4327,9 +4327,9 @@ async function explainRouteSequenceAIv67(routeId){
   box.innerHTML = "<strong>Perché questa sequenza?</strong><p>Generazione spiegazione AI in corso...</p>";
   try{
     const r = await api(`/api/routes/${routeId}/ai-explanation`, {method:"POST"});
-    box.innerHTML = `<strong>Perché GiroFacile ha scelto questa sequenza?</strong><p>${esc(r.text || "Nessuna spiegazione generata.")}</p>${r.fallback ? `<small>Nota: AI non configurata, testo locale di supporto.</small>` : ``}`;
+    box.innerHTML = `<strong>Perché GiroFacile ha scelto questa sequenza?</strong><p>${esc(r.text || "Nessuna spiegazione generata.")}</p>`;
   }catch(e){
-    box.innerHTML = `<strong>AI non disponibile</strong><p>${esc(e.message || "Non è stato possibile generare la spiegazione.")}</p>`;
+    box.innerHTML = `<strong>Spiegazione non disponibile</strong><p>Non è stato possibile generare la spiegazione. Riprova più tardi.</p>`;
   }
 }
 

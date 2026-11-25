@@ -9,6 +9,7 @@ from pathlib import Path
 import pandas as pd
 from fastapi import Request, APIRouter, Cookie, Depends, File, HTTPException, Response, UploadFile
 from sqlalchemy import func
+from starlette.concurrency import run_in_threadpool
 from sqlalchemy.orm import Session
 
 from ..core.config import APP_BASE_URL
@@ -262,50 +263,60 @@ def verify_agent_customer_address_preview(data: CustomerIn, db: Session = Depend
 async def import_agent_customers(file: UploadFile = File(...), db: Session = Depends(get_db), account: AgentAccount = Depends(get_current_agent)):
     agent, user = ensure_agent_owner(account, db)
     df = await read_customer_import(file)
-    preflight_customer_import(df, db, user, agent_id=agent.id)
-    created, updated = 0, 0
+    # Database e ciclo fino a 20.000 righe: fuori dal ciclo che gestisce le richieste,
+    # così un'importazione lunga o un'attesa sul database non ferma gli altri utenti.
+    def work():
+        preflight_customer_import(df, db, user, agent_id=agent.id)
+        created, updated = 0, 0
 
-    def get(row, col, default=None):
-        # Celle vuote (lette come testo) valgono come assenti.
-        if col not in row or pd.isna(row[col]) or str(row[col]).strip() == "":
-            return default
-        value = row[col]
-        return value.strip() if isinstance(value, str) else value
+        def get(row, col, default=None):
+            # Celle vuote (lette come testo) valgono come assenti.
+            if col not in row or pd.isna(row[col]) or str(row[col]).strip() == "":
+                return default
+            value = row[col]
+            return value.strip() if isinstance(value, str) else value
 
-    def b(x):
-        return str(x).strip().lower() in ["1", "si", "sì", "yes", "true", "vero"]
+        def b(x):
+            return str(x).strip().lower() in ["1", "si", "sì", "yes", "true", "vero"]
 
-    for _, row in df.iterrows():
-        codice = str(get(row, "codice_cliente", "") or "").strip()
-        nome = str(get(row, "nome", "") or "").strip()
-        indirizzo = str(get(row, "indirizzo", "") or "").strip()
-        if not nome or not indirizzo:
-            continue
-        item = db.query(Customer).filter(Customer.user_id == agent.user_id, Customer.agent_id == agent.id, Customer.codice_cliente == codice, Customer.deleted_at.is_(None)).first() if codice else None
-        if not item:
-            item = Customer(user_id=agent.user_id, agent_id=agent.id)
-            db.add(item)
-            created += 1
-        else:
-            updated += 1
-        previous_address = customer_address_key(item)
-        item.codice_cliente = codice or item.codice_cliente
-        item.nome = nome
-        item.indirizzo = indirizzo
-        item.comune = str(get(row, "comune", "") or "")
-        item.provincia = str(get(row, "provincia", "") or "")
-        item.telefono = str(get(row, "telefono", "") or "")
-        item.email = str(get(row, "email", "") or "")
-        item.scarico_mattina_da = parse_time_value(get(row, "scarico_mattina_da", ""))
-        item.scarico_mattina_a = parse_time_value(get(row, "scarico_mattina_a", ""))
-        item.scarico_pomeriggio_da = parse_time_value(get(row, "scarico_pomeriggio_da", ""))
-        item.scarico_pomeriggio_a = parse_time_value(get(row, "scarico_pomeriggio_a", ""))
-        item.tempo_scarico_min = unload_minutes(get(row, "tempo_scarico_min"), item.tempo_scarico_min if item.tempo_scarico_min is not None else 10)
-        item.ztl = b(get(row, "ztl", False))
-        item.sponda = b(get(row, "sponda", False))
-        item.transpallet = b(get(row, "transpallet", False))
-        item.note = str(get(row, "note", "") or "")
-        item.stato_geocodifica = item.stato_geocodifica or "da_verificare"
-        invalidate_imported_address(db, item, previous_address)
-    db.commit()
-    return {"ok": True, "created": created, "updated": updated}
+        for _, row in df.iterrows():
+            codice = str(get(row, "codice_cliente", "") or "").strip()
+            nome = str(get(row, "nome", "") or "").strip()
+            # Come nel portale aziendale: «indirizzo» completo oppure «via» e «civico».
+            indirizzo = str(get(row, "indirizzo", "") or get(row, "via", "") or "").strip()
+            civico = str(get(row, "civico", "") or "").strip()
+            if civico and not indirizzo.endswith(civico):
+                indirizzo = f"{indirizzo} {civico}".strip()
+            if not nome or not indirizzo:
+                continue
+            item = db.query(Customer).filter(Customer.user_id == agent.user_id, Customer.agent_id == agent.id, Customer.codice_cliente == codice, Customer.deleted_at.is_(None)).first() if codice else None
+            if not item:
+                item = Customer(user_id=agent.user_id, agent_id=agent.id)
+                db.add(item)
+                created += 1
+            else:
+                updated += 1
+            previous_address = customer_address_key(item)
+            item.codice_cliente = codice or item.codice_cliente
+            item.nome = nome
+            item.indirizzo = indirizzo
+            item.comune = str(get(row, "comune", "") or "")
+            item.provincia = str(get(row, "provincia", "") or "")
+            cap = str(get(row, "cap", "") or "").strip().split(".")[0].zfill(5) if get(row, "cap") else None
+            item.cap = cap if cap and cap.isdigit() and len(cap) == 5 else None
+            item.telefono = str(get(row, "telefono", "") or "")
+            item.email = str(get(row, "email", "") or "")
+            item.scarico_mattina_da = parse_time_value(get(row, "scarico_mattina_da", ""))
+            item.scarico_mattina_a = parse_time_value(get(row, "scarico_mattina_a", ""))
+            item.scarico_pomeriggio_da = parse_time_value(get(row, "scarico_pomeriggio_da", ""))
+            item.scarico_pomeriggio_a = parse_time_value(get(row, "scarico_pomeriggio_a", ""))
+            item.tempo_scarico_min = unload_minutes(get(row, "tempo_scarico_min"), item.tempo_scarico_min if item.tempo_scarico_min is not None else 10)
+            item.ztl = b(get(row, "ztl", False))
+            item.sponda = b(get(row, "sponda", False))
+            item.transpallet = b(get(row, "transpallet", False))
+            item.note = str(get(row, "note", "") or "")
+            item.stato_geocodifica = item.stato_geocodifica or "da_verificare"
+            invalidate_imported_address(db, item, previous_address)
+        db.commit()
+        return {"ok": True, "created": created, "updated": updated}
+    return await run_in_threadpool(work)

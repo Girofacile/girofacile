@@ -121,13 +121,13 @@ def test_starting_routes_does_not_consume_route_quota(billing_env, monkeypatch):
     from app.services.plan_catalog import PLAN_LIMITS
     _, db, user, *_ = billing_env
     monkeypatch.setitem(PLAN_LIMITS['business'],'max_routes_per_month',1)
-    route=make_route(db,user)
+    route=make_route(db,user,status='programmato')  # solo un giro programmato si avvia
     assert usage_summary(db,user)['routes']['used'] == 0
     start_route_usage(db,route);db.commit()
     start_route_usage(db,route);db.commit()
     route.status='annullato';db.commit();db.delete(route);db.commit()
     # SQLite may reuse IDs, so choose a distinct ID as PostgreSQL sequences do.
-    next_route=make_route(db,user);next_route.id=500;db.commit()
+    next_route=make_route(db,user,status='programmato');next_route.id=500;db.commit()
     start_route_usage(db,next_route);db.commit()
     assert next_route.status=='in_corso'
 
@@ -211,7 +211,7 @@ def test_deliveries_have_no_monthly_cap_and_expiry_preserves_running_routes(bill
     from app.services.plan_catalog import PLAN_LIMITS
     _, db, user, *_ = billing_env
     monkeypatch.setitem(PLAN_LIMITS['business'],'max_deliveries_per_month',1)
-    route=make_route(db,user,2)
+    route=make_route(db,user,2,status='programmato')
     start_route_usage(db,route);db.commit()
     user.plan_status='expired';db.commit()
     next_route=make_route(db,user,2)

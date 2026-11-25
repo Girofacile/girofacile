@@ -124,7 +124,7 @@ def test_driver_lifecycle_and_pod_for_occasional_delivery(routing_env, storage, 
     response=client.post('/api/routes/recalculate-manual',json=data)
     assert response.status_code==200,response.text
     route=db.get(RoutePlan,response.json()['id'])
-    route.data_giro=date.today()
+    route.data_giro=date.today();route.status='programmato'
     start_route_usage(db,route);db.commit()
     assert db.get(RouteUsage,route.id).deliveries==1
     info=client.get(f'/api/driver/routes/{route.id}')
@@ -160,7 +160,7 @@ def test_occasional_stops_respect_capacity_without_monthly_delivery_cap(routing_
     assert result.status_code==200,result.text
     route=db.get(RoutePlan,result.json()['id'])
     from app.core.utils import local_today
-    route.data_giro=local_today()
+    route.data_giro=local_today();route.status='programmato'
     db.flush()
     monkeypatch.setattr(usage_limits,'usage_summary',lambda *a:{'routes':{'used':0,'limit':10},'deliveries':{'used':10,'limit':10}})
     usage_limits.start_route_usage(db,route)

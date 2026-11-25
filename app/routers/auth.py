@@ -368,6 +368,18 @@ def _read_agent_session(raw, db):
 
 @router.get("/api/me")
 def me(request: Request, db: Session = Depends(get_db)):
+    result = _me(request, db)
+    # Se l'AI è spenta per tutta la piattaforma, i pulsanti AI non si mostrano: l'azienda non deve
+    # vedere avvisi che riguardano la configurazione del servizio.
+    limits = result.get("limits") if isinstance(result, dict) else None
+    if isinstance(limits, dict) and limits.get("has_ai"):
+        from ..services.platform_settings import ai_enabled
+        if not ai_enabled(db):
+            result["limits"] = {**limits, "has_ai": False}
+    return result
+
+
+def _me(request: Request, db: Session):
     user = read_session(request.cookies.get("session"), "user", db)
     if user:
         return {

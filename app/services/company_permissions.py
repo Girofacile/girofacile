@@ -67,6 +67,12 @@ def normalize_permissions(value):
         grants = expanded
 
 
+def actor_can(request, key):
+    """Controllo dentro l'endpoint, per dati che la regola dell'endpoint non copre da sola."""
+    actor = getattr(getattr(request, "state", None), "company_collaborator", None)
+    return actor is None or key in permissions_for(actor)
+
+
 def permissions_for(actor):
     try:
         value = json.loads(actor.permissions_json or "[]")
@@ -167,7 +173,7 @@ rule("GET", ["/api/routes", "/api/routes/operativi", "/api/routes/{route_id}",
 rule("GET", ["/api/resources/availability"], "routes.plan")
 rule("POST", ["/api/routes/optimize", "/api/routes/recalculate-manual", "/api/routes/verify-stop-address",
               "/api/routes/{route_id}/refresh-traffic", "/api/routes/{route_id}/ai-explanation"], "routes.plan")
-rule("POST", ["/api/routes/{route_id}/program"], "routes.program")
+rule("POST", ["/api/routes/{route_id}/program", "/api/routes/{route_id}/depart-now"], "routes.program")
 rule("POST", ["/api/routes/{route_id}/cancel", "/api/routes/{route_id}/complete"], "routes.manage")
 rule("POST", ["/api/routes/{route_id}/generate-token", "/api/deliveries/{delivery_id}/tracking"], "routes.tracking")
 rule("DELETE", ["/api/deliveries/{delivery_id}/tracking"], "routes.tracking")

@@ -36,7 +36,8 @@ def test_future_route_cannot_start_through_any_command(env, portal, action, stat
     client, db, _, route, delivery = prepare(env, days=1, status=state, signature=action == 'signature')
     response = client.post(path(portal, action, route, delivery), json={'note': 'Prima della partenza'})
     assert response.status_code == 409, response.text
-    assert 'futura' in response.json()['detail']
+    # Una bozza non si avvia mai (solo la programmazione consuma la quota); un giro programmato futuro nemmeno.
+    assert ('bozza' if state == 'bozza' else 'futura') in response.json()['detail']
     assert route.status == state and route.started_at is None
     assert db.query(RouteUsage).count() == db.query(DeliveryStatus).count() == 0
 

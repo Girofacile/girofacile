@@ -11,7 +11,7 @@ import secrets
 from datetime import datetime, timedelta
 from ..core.clock import utc_now
 
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from sqlalchemy.orm import Session
 
 from ..core.dependencies import current_user
@@ -102,6 +102,8 @@ def generate_route_token(
     ).first()
     if not plan:
         raise HTTPException(404, "Giro non trovato")
+    if (plan.status or "") == "bozza":
+        raise HTTPException(409, "Programma il giro prima di creare il link operativo")
 
     # Invalida eventuali token precedenti
     db.query(RouteToken).filter(RouteToken.route_plan_id == route_id).delete()
@@ -249,6 +251,7 @@ def add_delivery_note(token: str, delivery_id: int, payload: dict, db: Session =
 @router.get("/api/routes/{route_id}/live")
 def route_live_status(
     route_id: int,
+    request: Request,
     db: Session = Depends(get_db),
     user: User = Depends(current_user),
 ):
@@ -281,8 +284,10 @@ def route_live_status(
         except Exception:
             pass
 
-    # Token attivo
-    rt = db.query(RouteToken).filter(RouteToken.route_plan_id == route_id).first()
+    # Token attivo: permette di registrare gli esiti, quindi solo a chi gestisce i link operativi.
+    from ..services.company_permissions import actor_can
+    rt = (db.query(RouteToken).filter(RouteToken.route_plan_id == route_id).first()
+          if actor_can(request, "routes.tracking") else None)
 
     return {
         "route_id": route_id,

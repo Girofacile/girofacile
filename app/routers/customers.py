@@ -9,7 +9,8 @@ from pydantic import BaseModel, Field
 from typing import Literal
 
 import pandas as pd
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
+from starlette.concurrency import run_in_threadpool
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
@@ -441,68 +442,80 @@ def customer_import_template(user: User = Depends(current_user)):
 async def import_customers(
     file: UploadFile = File(...),
     db: Session = Depends(get_db), user: User = Depends(current_user),
+    request: Request = None,
 ):
     df = await read_customer_import(file)
-    preflight_customer_import(df, db, user)
-    created, updated = 0, 0
+    # Database e ciclo fino a 20.000 righe: fuori dal ciclo che gestisce le richieste,
+    # così un'importazione lunga o un'attesa sul database non ferma gli altri utenti.
+    def work():
+        preflight_customer_import(df, db, user)
+        # Chi può solo creare clienti non può sovrascrivere quelli esistenti con lo stesso codice.
+        from ..services.company_permissions import actor_can
+        if not actor_can(request, "customers.update"):
+            codes = {str(code).strip() for code in df.get("codice_cliente", pd.Series(dtype=object)).dropna() if str(code).strip()}
+            existing = owned(db.query(Customer.codice_cliente), Customer, user).filter(Customer.codice_cliente.in_(codes)).count() if codes else 0
+            if existing:
+                raise HTTPException(403, f"Il file aggiorna {existing} clienti già presenti: per modificarli serve il permesso «Modifica» dei clienti")
+        created, updated = 0, 0
 
-    def get(row, col, default=None):
-        # Celle vuote (lette come testo) valgono come assenti.
-        if col not in row or pd.isna(row[col]) or str(row[col]).strip() == "":
-            return default
-        value = row[col]
-        return value.strip() if isinstance(value, str) else value
+        def get(row, col, default=None):
+            # Celle vuote (lette come testo) valgono come assenti.
+            if col not in row or pd.isna(row[col]) or str(row[col]).strip() == "":
+                return default
+            value = row[col]
+            return value.strip() if isinstance(value, str) else value
 
-    def b(x):
-        return str(x).strip().lower() in ["1", "si", "sì", "yes", "true", "vero"]
+        def b(x):
+            return str(x).strip().lower() in ["1", "si", "sì", "yes", "true", "vero"]
 
-    agents = owned(db.query(Agent), Agent, user).all() if agents_enabled(user) else []
-    agent_lookup_by_code = {str(a.codice_agente or "").strip().lower(): a.id for a in agents if a.codice_agente}
-    agent_lookup_by_name = {agent_full_name(a).strip().lower(): a.id for a in agents}
+        agents = owned(db.query(Agent), Agent, user).all() if agents_enabled(user) else []
+        agent_lookup_by_code = {str(a.codice_agente or "").strip().lower(): a.id for a in agents if a.codice_agente}
+        agent_lookup_by_name = {agent_full_name(a).strip().lower(): a.id for a in agents}
 
-    for _, row in df.iterrows():
-        codice = str(get(row, "codice_cliente", "") or "").strip()
-        nome = str(get(row, "nome", "") or "").strip()
-        # Import a campi separati: «via» e «civico» (oppure «indirizzo» già completo), «cap», «comune».
-        indirizzo = str(get(row, "indirizzo", "") or get(row, "via", "") or "").strip()
-        civico = str(get(row, "civico", "") or "").strip()
-        if civico and not indirizzo.endswith(civico):
-            indirizzo = f"{indirizzo} {civico}".strip()
-        if not nome or not indirizzo:
-            continue
-        item = (
-            owned(db.query(Customer), Customer, user).filter(Customer.codice_cliente == codice).first()
-            if codice else None
-        )
-        if not item:
-            item = Customer(user_id=user.id)
-            db.add(item)
-            created += 1
-        else:
-            updated += 1
-        previous_address = customer_address_key(item)
-        item.codice_cliente = codice or None
-        item.nome = nome
-        item.indirizzo = indirizzo
-        codice_agente = str(get(row, "codice_agente", "") or "").strip().lower()
-        agente_nome = str(get(row, "agente", "") or "").strip().lower()
-        if agents_enabled(user):
-            item.agent_id = agent_lookup_by_code.get(codice_agente) or agent_lookup_by_name.get(agente_nome) or None
-        item.comune = get(row, "comune")
-        item.provincia = get(row, "provincia")
-        cap = str(get(row, "cap", "") or "").strip().split(".")[0].zfill(5) if get(row, "cap") else None
-        item.cap = cap if cap and cap.isdigit() and len(cap) == 5 else None
-        item.telefono = str(get(row, "telefono", "") or "")
-        item.email = get(row, "email")
-        item.scarico_mattina_da = parse_time_value(get(row, "scarico_mattina_da"))
-        item.scarico_mattina_a = parse_time_value(get(row, "scarico_mattina_a"))
-        item.scarico_pomeriggio_da = parse_time_value(get(row, "scarico_pomeriggio_da"))
-        item.scarico_pomeriggio_a = parse_time_value(get(row, "scarico_pomeriggio_a"))
-        item.tempo_scarico_min = unload_minutes(get(row, "tempo_scarico_min"))
-        item.ztl = b(get(row, "ztl", False))
-        item.sponda = b(get(row, "sponda", False))
-        item.transpallet = b(get(row, "transpallet", False))
-        item.note = get(row, "note")
-        invalidate_imported_address(db, item, previous_address)
-    db.commit()
-    return {"created": created, "updated": updated}
+        for _, row in df.iterrows():
+            codice = str(get(row, "codice_cliente", "") or "").strip()
+            nome = str(get(row, "nome", "") or "").strip()
+            # Import a campi separati: «via» e «civico» (oppure «indirizzo» già completo), «cap», «comune».
+            indirizzo = str(get(row, "indirizzo", "") or get(row, "via", "") or "").strip()
+            civico = str(get(row, "civico", "") or "").strip()
+            if civico and not indirizzo.endswith(civico):
+                indirizzo = f"{indirizzo} {civico}".strip()
+            if not nome or not indirizzo:
+                continue
+            item = (
+                owned(db.query(Customer), Customer, user).filter(Customer.codice_cliente == codice).first()
+                if codice else None
+            )
+            if not item:
+                item = Customer(user_id=user.id)
+                db.add(item)
+                created += 1
+            else:
+                updated += 1
+            previous_address = customer_address_key(item)
+            item.codice_cliente = codice or None
+            item.nome = nome
+            item.indirizzo = indirizzo
+            codice_agente = str(get(row, "codice_agente", "") or "").strip().lower()
+            agente_nome = str(get(row, "agente", "") or "").strip().lower()
+            if agents_enabled(user):
+                item.agent_id = agent_lookup_by_code.get(codice_agente) or agent_lookup_by_name.get(agente_nome) or None
+            item.comune = get(row, "comune")
+            item.provincia = get(row, "provincia")
+            cap = str(get(row, "cap", "") or "").strip().split(".")[0].zfill(5) if get(row, "cap") else None
+            item.cap = cap if cap and cap.isdigit() and len(cap) == 5 else None
+            item.telefono = str(get(row, "telefono", "") or "")
+            item.email = get(row, "email")
+            item.scarico_mattina_da = parse_time_value(get(row, "scarico_mattina_da"))
+            item.scarico_mattina_a = parse_time_value(get(row, "scarico_mattina_a"))
+            item.scarico_pomeriggio_da = parse_time_value(get(row, "scarico_pomeriggio_da"))
+            item.scarico_pomeriggio_a = parse_time_value(get(row, "scarico_pomeriggio_a"))
+            item.tempo_scarico_min = unload_minutes(get(row, "tempo_scarico_min"))
+            item.ztl = b(get(row, "ztl", False))
+            item.sponda = b(get(row, "sponda", False))
+            item.transpallet = b(get(row, "transpallet", False))
+            item.note = get(row, "note")
+            invalidate_imported_address(db, item, previous_address)
+        db.commit()
+        return {"created": created, "updated": updated}
+    return await run_in_threadpool(work)

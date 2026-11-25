@@ -32,8 +32,8 @@
 <script src="/static/dashboard/js/drivers.js?v=gf_invito_portale_20261123"></script>
 
 <!-- Shared GiroFacile design system; legacy sheets retain feature layout. -->
-<link rel="stylesheet" href="/static/design-system/theme.css?v=gf_variabili_tema_20261116">
-<link rel="stylesheet" href="/static/design-system/components.css?v=gf_costo_pedaggi_20261125">
+<link rel="stylesheet" href="/static/design-system/theme.css?v=gf_tabella_scorrevole_20261125">
+<link rel="stylesheet" href="/static/design-system/components.css?v=gf_report_20261125">
 <link rel="stylesheet" href="/static/design-system/layout.css?v=gf_banner_unico_20261101">
 <link rel="stylesheet" href="/static/design-system/workspace.css?v=gf_selection_20261016">
 <link rel="stylesheet" href="/static/design-system/portals.css?v=ds_20261007_reference_2">
@@ -922,7 +922,7 @@
 
         <div class="gf-grid" data-cols="2">
           <section class="gf-panel"><header class="gf-panel__header"><div><h2 class="gf-panel__title">Flotta</h2><p class="gf-muted">Km ed energia per mezzo, con l’alimentazione</p></div></header><div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards"><thead><tr><th scope="col">Mezzo</th><th scope="col">Alimentazione</th><th scope="col">Km</th><th scope="col">Energia</th></tr></thead><tbody id="reportVehiclesBody"></tbody></table></div></section>
-          <section class="gf-panel"><header class="gf-panel__header"><h2 class="gf-panel__title">Riepilogo clienti</h2><input class="gf-input" type="search" id="reportCustomersSearch" oninput="renderReportTables()" placeholder="Cerca cliente..." aria-label="Cerca cliente..."></header><div class="gf-table-wrap"><table class="gf-table" data-gf-responsive="cards"><thead><tr><th scope="col">Cliente</th><th scope="col">Fermate</th><th scope="col">Giri</th><th scope="col">Km tappe</th></tr></thead><tbody id="reportCustomersBody"></tbody></table></div></section>
+          <section class="gf-panel"><header class="gf-panel__header"><h2 class="gf-panel__title">Riepilogo clienti</h2><input class="gf-input" type="search" id="reportCustomersSearch" oninput="renderReportTables()" placeholder="Cerca cliente..." aria-label="Cerca cliente..."></header><div class="gf-table-wrap" data-scroll tabindex="0" aria-label="Clienti del periodo, elenco scorrevole"><table class="gf-table" data-gf-responsive="cards"><thead><tr><th scope="col">Cliente</th><th scope="col">Fermate</th><th scope="col">Giri</th><th scope="col">Km tappe</th></tr></thead><tbody id="reportCustomersBody"></tbody></table></div></section>
         </div>
 
         <div class="gf-grid" data-cols="main-side" data-gf-agents-only>
@@ -1677,7 +1677,7 @@
   <button type="button" class="gf-button" data-variant="primary" onclick="acceptCookieNotice()">Ho capito</button>
 </div>
 
-<script src="/static/dashboard/js/reports.js?v=gf_periodo_20261111"></script>
+<script src="/static/dashboard/js/reports.js?v=gf_report_20261125"></script>
 <script src="/static/dashboard/js/customers.js?v=gf_fascia_a_capo_20261125"></script>
 <script src="/static/dashboard/js/navigation.js?v=gf_pagina_in_alto_20261125"></script>
 <script src="/static/dashboard/js/history.js?v=gf_costo_pedaggi_20261125"></script>
@@ -1688,7 +1688,7 @@
 <script src="/static/dashboard/js/order-sources.js?v=gf_funzione_non_inclusa_20261118"></script>
 <script src="/static/dashboard/js/dashboard-real-map.js?v=gf_priority_hero_20261025"></script>
 <script src="/static/dashboard/js/in-progress-reference.js?v=gf_partenza_deposito_20261124"></script>
-<script src="/static/dashboard/js/core.js?v=gf_costo_pedaggi_20261125"></script>
+<script src="/static/dashboard/js/core.js?v=gf_report_20261125"></script>
 <script src="/static/dashboard/js/dashboard-mobile.js?v=gf_dashboard_mobile_20261019"></script>
 <script src="/static/dashboard/js/occasional-stops.js?v=gf_verifica_automatica_20261112"></script>
 <link rel="stylesheet" href="/static/dashboard/css/fleet-review.css?v=gf_suddivisione_20261025">

@@ -5,8 +5,8 @@
 <meta name="robots" content="noindex,nofollow">
 <title>Catalogo componenti · GiroFacile</title>
 <link rel="icon" href="/static/favicon-32x32.png">
-<link rel="stylesheet" href="/static/design-system/theme.css?v=gf_variabili_tema_20261116">
-<link rel="stylesheet" href="/static/design-system/components.css?v=gf_costo_pedaggi_20261125">
+<link rel="stylesheet" href="/static/design-system/theme.css?v=gf_tabella_scorrevole_20261125">
+<link rel="stylesheet" href="/static/design-system/components.css?v=gf_report_20261125">
 <link rel="stylesheet" href="/static/design-system/layout.css?v=gf_banner_unico_20261101">
 <script src="/static/design-system/design-system.js?v=gf_schede_2_20261108" defer></script>
 <script src="/static/design-system/charts.js?v=gf_grafici_20261110" defer></script>
@@ -161,6 +161,8 @@
   <div class="gf-stat-strip" data-icons="side" aria-label="Esempio di voce con dettaglio">
     <div class="gf-stat-strip__cell"><span class="gf-stat-strip__icon" data-tone="5" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="<path d="M17 6a7 7 0 1 0 0 12M4 10h11M4 14h10"/>"/></svg></span><span class="gf-stat-strip__label">Costo carburante</span><strong class="gf-stat-strip__value">€ 44,03<small class="gf-stat-strip__aside">stimati 24,46 L</small></strong><small class="gf-stat-strip__note">Costo pedaggi <strong>€ 22,36</strong></small></div>
   </div>
+  <p class="gf-muted">Tabella con scorrimento interno: <code>data-scroll</code> sul <code>.gf-table-wrap</code> (altezza da <code>--gf-table-scroll-height</code>, intestazione ferma).</p>
+  <section class="gf-panel"><div class="gf-table-wrap" data-scroll tabindex="0" aria-label="Esempio di tabella scorrevole"><table class="gf-table" data-gf-responsive="cards"><thead><tr><th scope="col">Cliente</th><th scope="col">Fermate</th><th scope="col">Giri</th></tr></thead><tbody><tr><td data-label="Cliente">Cliente 1</td><td data-label="Fermate">13</td><td data-label="Giri">13</td></tr><tr><td data-label="Cliente">Cliente 2</td><td data-label="Fermate">12</td><td data-label="Giri">12</td></tr><tr><td data-label="Cliente">Cliente 3</td><td data-label="Fermate">11</td><td data-label="Giri">11</td></tr><tr><td data-label="Cliente">Cliente 4</td><td data-label="Fermate">10</td><td data-label="Giri">10</td></tr><tr><td data-label="Cliente">Cliente 5</td><td data-label="Fermate">9</td><td data-label="Giri">9</td></tr><tr><td data-label="Cliente">Cliente 6</td><td data-label="Fermate">8</td><td data-label="Giri">8</td></tr><tr><td data-label="Cliente">Cliente 7</td><td data-label="Fermate">7</td><td data-label="Giri">7</td></tr><tr><td data-label="Cliente">Cliente 8</td><td data-label="Fermate">6</td><td data-label="Giri">6</td></tr><tr><td data-label="Cliente">Cliente 9</td><td data-label="Fermate">5</td><td data-label="Giri">5</td></tr><tr><td data-label="Cliente">Cliente 10</td><td data-label="Fermate">4</td><td data-label="Giri">4</td></tr><tr><td data-label="Cliente">Cliente 11</td><td data-label="Fermate">3</td><td data-label="Giri">3</td></tr><tr><td data-label="Cliente">Cliente 12</td><td data-label="Fermate">2</td><td data-label="Giri">2</td></tr></tbody></table></div></section>
   <div class="gf-grid" data-cols="2">
     <section class="gf-panel" aria-labelledby="catalogScheduledTitle">
       <header class="gf-panel__header"><h3 class="gf-panel__title" id="catalogScheduledTitle">Giri programmati</h3><span class="gf-panel__meta">3</span></header>

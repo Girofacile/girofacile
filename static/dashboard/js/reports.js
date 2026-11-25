@@ -165,9 +165,9 @@ async function generateReportAIv67(){
   box.innerHTML = `<strong>Report AI</strong><p>Generazione riepilogo assistito in corso...</p>`;
   try{
     const r = await api("/api/reports/ai-summary?" + reportParams().toString());
-    box.innerHTML = `<strong>Report AI</strong><p>${esc(r.text || "Nessun riepilogo generato.")}</p>${r.fallback ? `<small>Nota: AI non configurata, testo locale di supporto.</small>` : ``}`;
+    box.innerHTML = `<strong>Report AI</strong><p>${esc(r.text || "Nessun riepilogo generato.")}</p>`;
   }catch(e){
-    box.innerHTML = `<strong>AI non disponibile</strong><p>${esc(e.message || "Non è stato possibile generare il report AI.")}</p>`;
+    box.innerHTML = `<strong>Report AI non disponibile</strong><p>Non è stato possibile generare il report AI. Riprova più tardi.</p>`;
   }
 }
 

@@ -41,6 +41,9 @@ def ensure_new_route_can_start(db, route):
         return
     if route.status == 'annullato':
         raise HTTPException(409, 'Il giro è annullato')
+    if route.status == 'bozza':
+        # Solo la programmazione registra il giro nella quota mensile.
+        raise HTTPException(409, 'Il giro è ancora in bozza: programmalo prima di avviarlo')
     if route.data_giro > local_today():
         raise HTTPException(409, 'Non puoi avviare un giro programmato per una data futura')
     ensure_no_running_resource_conflict(db, route)

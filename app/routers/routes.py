@@ -924,7 +924,9 @@ def dashboard_completed_deliveries_today(
 
 
 @router.get("/api/routes/operativi")
-def list_operational_routes(include_cancelled: bool = False, db: Session = Depends(get_db), user: User = Depends(current_user)):
+def list_operational_routes(request: Request, include_cancelled: bool = False, db: Session = Depends(get_db), user: User = Depends(current_user)):
+    from ..services.company_permissions import actor_can
+    chat_visible = actor_can(request, "chat.read")
     from_date = (local_today() - timedelta(days=7))
     # Running routes keep resources occupied regardless of age. Never hide them
     # behind the date window or the limit for scheduled routes.
@@ -998,9 +1000,9 @@ def list_operational_routes(include_cancelled: bool = False, db: Session = Depen
             "remaining_count": max(total_count - completed_count - missed_count, 0),
             "progress_percent": round(((completed_count + missed_count) / total_count) * 100) if total_count else 0,
             "next_delivery": next_delivery,
-            "unread_driver_messages": unread_driver_messages,
-            "last_driver_message": (last_driver_msg.message if last_driver_msg else None),
-            "last_driver_message_at": (last_driver_msg.created_at.isoformat() + "Z" if last_driver_msg else None),
+            "unread_driver_messages": unread_driver_messages if chat_visible else 0,
+            "last_driver_message": (last_driver_msg.message if last_driver_msg and chat_visible else None),
+            "last_driver_message_at": (last_driver_msg.created_at.isoformat() + "Z" if last_driver_msg and chat_visible else None),
             "status": status, "status_label": route_status_label(status),
         })
     return result
@@ -1140,6 +1142,12 @@ def depart_route_now(route_id: int, db: Session = Depends(get_db), user: User = 
         enrich_final_route(db, plan, force=True, requested_at=utc_now())
     except ValueError as exc:
         raise HTTPException(400, str(exc))
+    start_min = minutes_from_hhmm(plan.orario_partenza) or 0
+    try:
+        _check_resource_overlap(db, user, plan, start_min, start_min + int(plan.totale_minuti or 0), exclude_route_id=plan.id)
+    except HTTPException:
+        db.rollback()
+        raise
     db.commit()
     db.refresh(plan)
     return serialize_route(plan, include_legs=False)

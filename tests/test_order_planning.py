@@ -145,7 +145,7 @@ def test_delivery_completion_and_manual_close_never_invent_delivery(planning):
     first=ready(ctx,'First');second=ready(ctx,'Second')
     route,_=calculate(planning,[first,second]);plan=db.get(RoutePlan,route['id'])
     from app.core.utils import local_today
-    plan.data_giro=local_today()
+    plan.data_giro=local_today();plan.status='programmato'
     db.flush()
     start_route_usage(db,plan);db.commit()
     assert first.status==second.status=='in_consegna'

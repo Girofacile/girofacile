@@ -52,7 +52,7 @@ def get_ai_model(db: Session) -> str:
 
 def ensure_company_ai_allowed(user: User, db: Session):
     if not ai_enabled(db):
-        raise HTTPException(403, "AI non attiva nelle impostazioni SaaS")
+        raise HTTPException(403, "Le funzioni AI non sono disponibili al momento")
     if get_user_plan_status(user) not in ("active", "trial", "past_due"):
         raise HTTPException(403, "AI disponibile solo con piano attivo")
     if (user.plan or "starter").lower() not in AI_ALLOWED_PLANS:
@@ -101,7 +101,7 @@ def run_ai_text(db: Session, *, task: str, system_prompt: str, user_prompt: str,
     key = get_ai_key(db)
     context = context or {}
     if not ai_enabled(db):
-        raise HTTPException(403, "AI non attiva nelle impostazioni SaaS")
+        raise HTTPException(403, "Le funzioni AI non sono disponibili al momento")
 
     if not key:
         text = _local_fallback(task, context)
