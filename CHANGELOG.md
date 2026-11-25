@@ -5,6 +5,9 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Traffico Mapbox: se Mapbox rifiuta il token (401/403) o la quota è esaurita (429), compare un errore critico in
+  «Errori sistema» del Super Admin e arriva l'email di errore, al massimo una volta al giorno, con le istruzioni per
+  rimediare (il token non compare mai nel messaggio).
 - Navigazione: cambiando sezione la pagina parte sempre dall'inizio (prima restava la posizione della pagina
   precedente, per esempio arrivando alla pianificazione dal fondo dell'elenco ordini).
 - Controllo indirizzi dei clienti selezionati (variante A): pop-up con tabella «Cliente · Hai scritto · Google propone ·

@@ -144,6 +144,41 @@ def log_exception(request: Request, exc: Exception, *, severity: str | None = No
         db.close()
 
 
+def report_service_problem(*, path: str, action: str, error_type: str, message: str, details: str = "",
+                           severity: str = "critical", once_every_hours: int = 24) -> int | None:
+    """Problema di un servizio esterno (es. token Mapbox rifiutato), senza una richiesta web da cui partire.
+
+    Compare in «Errori sistema» del Super Admin e, se grave, arriva per email. Lo stesso problema si
+    registra al massimo una volta ogni `once_every_hours` ore: niente raffiche di email a ogni giro.
+    """
+    from datetime import timedelta
+    db = SessionLocal()
+    try:
+        since = utc_now() - timedelta(hours=once_every_hours)
+        if (db.query(SystemErrorLog.id).filter(SystemErrorLog.path == path, SystemErrorLog.error_type == error_type,
+                                               SystemErrorLog.created_at >= since).first()):
+            return None
+        row = SystemErrorLog(user_role="system", method="API", path=path, action=action, error_type=error_type,
+                             error_message=message[:3000], technical_details=details[:12000], severity=severity,
+                             status="new", email_sent=False, created_at=utc_now())
+        db.add(row)
+        db.commit()
+        db.refresh(row)
+        if (ERROR_NOTIFICATIONS_ENABLED and ERROR_NOTIFICATIONS_EMAIL
+                and SEVERITY_RANK.get(severity, 0) >= SEVERITY_RANK.get(ERROR_NOTIFICATION_MIN_SEVERITY, 3)):
+            payload = {"id": row.id, "company_name": None, "username": None, "company_sector": None,
+                       "action": action, "method": "API", "path": path, "severity": severity,
+                       "error_type": error_type, "error_message": row.error_message, "technical_details": row.technical_details}
+            row.email_sent = bool(send_system_error_alert(ERROR_NOTIFICATIONS_EMAIL, payload))
+            db.commit()
+        return row.id
+    except Exception as monitor_exc:
+        print(f"[ERROR_MONITOR] Impossibile registrare il problema del servizio: {monitor_exc}")
+        return None
+    finally:
+        db.close()
+
+
 def error_log_to_dict(row: SystemErrorLog) -> dict[str, Any]:
     return {
         "id": row.id,

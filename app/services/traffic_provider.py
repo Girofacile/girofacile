@@ -68,6 +68,8 @@ class MapboxTrafficProvider:
                 outcome = "success"
             except (requests.RequestException, ValueError, KeyError, TypeError, TrafficUnavailable) as exc:
                 # Request exceptions may contain a URL with access_token: never log str(exc).
+                status = getattr(getattr(exc, "response", None), "status_code", None)
+                _report_account_problem(status)
                 raise TrafficUnavailable("Traffico Mapbox non disponibile") from exc
             finally:
                 if db is not None:
@@ -87,6 +89,26 @@ class MapboxTrafficProvider:
         return {"provider": self.name, "status": "updated", "legs": legs,
                 "geometries": geometries, "departure_time": departure,
                 "calculated_at": datetime.now(timezone.utc).isoformat(), "version": 1}
+
+
+def _report_account_problem(status):
+    """Token rifiutato o quota esaurita: non è un guasto passeggero, l'amministratore deve intervenire.
+
+    Il messaggio non contiene mai il token. Avviso in «Errori sistema» ed email, al massimo una volta al giorno.
+    """
+    if status in (401, 403):
+        error_type, message = "MapboxTokenRejected", (
+            f"Mapbox rifiuta il token (errore {status}): i giri sono calcolati senza traffico. Crea un nuovo token su "
+            "account.mapbox.com → Tokens (senza restrizioni di URL) e incollalo in Super Admin → Impostazioni → Token Mapbox.")
+    elif status == 429:
+        error_type, message = "MapboxQuotaExceeded", (
+            "Mapbox ha superato il limite di richieste (errore 429): i giri sono calcolati senza traffico finché la quota non si libera. "
+            "Controlla il piano e l'utilizzo su account.mapbox.com.")
+    else:
+        return
+    from .error_monitor import report_service_problem
+    report_service_problem(path="mapbox-traffic", action="Traffico Mapbox", error_type=error_type, message=message,
+                           details=f"Risposta Mapbox: HTTP {status}")
 
 
 _PROVIDERS = {"mapbox": MapboxTrafficProvider, "none": NoTrafficProvider}
