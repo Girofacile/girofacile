@@ -196,7 +196,8 @@ function customerStatusMarkup(x){
 function cxSlotMarkup(x,card){
   const slots=cxSlots(x);
   return slots.length
-    ? '<span class="gf-badge" data-status="info">'+cxIcon('clock')+cxEsc(slots.join(' / '))+'</span>'
+    // Doppia fascia: una per riga, la seconda a capo sotto la prima.
+    ? slots.map(slot=>'<span class="gf-badge" data-status="info">'+cxIcon('clock')+cxEsc(slot)+'</span>').join('<br>')
     : card
       ? '<button type="button" class="gf-button" data-variant="secondary" data-size="sm" data-cx-slot="'+Number(x.id)+'" aria-label="Imposta la fascia di scarico di '+cxEsc(x.nome)+'">'+cxIcon('clock')+'Imposta fascia</button>'
       : '<button type="button" class="gf-button" data-variant="link" data-size="sm" data-cx-slot="'+Number(x.id)+'" title="Imposta la fascia di scarico">Non impostata</button>';

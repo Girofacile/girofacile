@@ -5,6 +5,7 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Clienti: con due fasce di scarico la seconda compare a capo, sotto la prima, invece che di fianco.
 - Importazione ordini da file più tollerante:
   - Excel con più fogli: invece di un errore si sceglie il foglio da importare (con il numero di righe);
   - numero ordine facoltativo: senza, ogni riga riceve un codice AUTO-… ricavato dai suoi dati, così ricaricando
