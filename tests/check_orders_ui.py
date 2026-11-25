@@ -149,8 +149,12 @@ def main():
                     page.locator('#ordersView-table').click()
                     select_ready(page)
                     page.wait_for_function("document.getElementById('ordersSelectionCount').textContent.startsWith('2 ordini')")
+                    # Anche partendo dal fondo dell'elenco, la pianificazione si apre dall'inizio della pagina.
+                    page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
                     page.locator('#ordersGoPlanning').click()
                     page.locator('#tab-giro').wait_for(state='visible')
+                    page.wait_for_timeout(400)
+                    assert page.evaluate('window.scrollY') < 5, page.evaluate('window.scrollY')
                     expect(page.locator('#orderPlanningBanner')).to_have_count(0)
                     expect(page.locator('#openCustomerStepBtn')).to_have_count(0)
                     # «Calcola percorso» compare solo con i dati del giro completi (data, orario, deposito,

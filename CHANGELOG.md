@@ -5,6 +5,8 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Navigazione: cambiando sezione la pagina parte sempre dall'inizio (prima restava la posizione della pagina
+  precedente, per esempio arrivando alla pianificazione dal fondo dell'elenco ordini).
 - Controllo indirizzi dei clienti selezionati (variante A): pop-up con tabella «Cliente · Hai scritto · Google propone ·
   Azioni»; «Conferma» accetta subito la posizione di Google, «Modifica» sostituisce la tabella con la mappa a tutta
   larghezza (con «Torna all'elenco»), «Escludi» toglie il cliente; «Conferma tutte le proposte» con più proposte.

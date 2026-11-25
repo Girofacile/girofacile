@@ -207,9 +207,12 @@ function showTab(name){
   if(name === "agenti" && !agentsFeatureEnabled()) name = "settings";
   rememberTab(name);
   if(showLockedOrProceed(name)) return;
+  const previousTab = Array.from(document.querySelectorAll(".tab")).find(x=>!x.classList.contains("hidden"));
   document.querySelectorAll(".tab").forEach(x=>x.classList.add("hidden"));
   const tab = document.getElementById("tab-"+name);
   if(tab) tab.classList.remove("hidden");
+  // Cambiando sezione si parte sempre dall'inizio della pagina (prima restava la posizione della pagina precedente).
+  if(tab && tab !== previousTab) window.scrollTo?.({top:0, left:0, behavior:"instant"});
   const navTab=["ordini-importa","ordine-fonte","ordine-dettaglio","ordine-modifica","ordini-collegamenti"].includes(name)?"ordini":name;
   setActiveNavItem(navTab);
   syncWorkspaceTopbar(name);
