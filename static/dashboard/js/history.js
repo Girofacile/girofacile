@@ -2,7 +2,7 @@
    Unisce il vecchio Storico e la pagina Giri completati; legge le stesse API (/api/routes, /api/routes/{id}). */
 window.GFHistory = (() => {
   const PERIODS = {'':'Qualsiasi data','7':'Ultimi 7 giorni','30':'Ultimi 30 giorni','month':'Questo mese','last-month':'Mese scorso','90':'Ultimi 3 mesi','custom':'Date a scelta'};
-  const STATES = {'':'Tutti gli stati','completato':'Completati','annullato':'Annullati'};
+  const STATES = {'':'Tutti gli stati','completato':'Completati','annullato':'Annullati','mai_avviato':'Mai avviati'};
   const state = {routes:[], day:null, query:'', period:'', from:'', to:'', driver:'', vehicle:'', status:''};
   // Nella settimana ogni giorno mostra al massimo WEEK_LIMIT giri; "Mostra di più" apre la tabella del giorno, sotto.
   const WEEK_LIMIT = 3;
@@ -12,7 +12,10 @@ window.GFHistory = (() => {
   const shortDate = iso => iso ? String(iso).split('-').reverse().join('/') : '—';
   const money = value => value === null || value === undefined || value === '' ? '—' : '€ '+Number(value).toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2});
   const status = d => d.delivery_status || d.status || 'in_attesa';
-  const statusBadge = r => r.status === 'annullato' ? '<span class="gf-badge" data-status="danger">Annullato</span>' : '<span class="gf-badge" data-status="success">Completato</span>';
+  // Giri dei giorni passati mai avviati: restano «programmati» ma si vedono qui, con la loro etichetta.
+  const neverStarted = r => r.status === 'programmato';
+  const statusBadge = r => r.status === 'annullato' ? '<span class="gf-badge" data-status="danger">Annullato</span>'
+    : neverStarted(r) ? '<span class="gf-badge" data-status="warning">Mai avviato</span>' : '<span class="gf-badge" data-status="success">Completato</span>';
   const vehicleCell = name => { const parts = String(name || '-').split(' · '); return `<span class="gf-list-item__main"><strong>${esc(parts[0])}</strong>${parts.length > 1 ? `<small>${esc(parts.slice(1).join(' · '))}</small>` : ''}</span>`; };
 
   /* --- Ricerca e filtri -------------------------------------------------------- */
@@ -41,7 +44,7 @@ window.GFHistory = (() => {
     if(range && (!r.data_giro || r.data_giro < range[0] || r.data_giro > range[1])) return false;
     if(state.driver && (r.driver_name || '') !== state.driver) return false;
     if(state.vehicle && (r.vehicle_name || '') !== state.vehicle) return false;
-    if(state.status && r.status !== state.status) return false;
+    if(state.status && (state.status === 'mai_avviato' ? !neverStarted(r) : r.status !== state.status)) return false;
     return true;
   }
   const routesOf = iso => state.routes.filter(r => r.data_giro === iso).sort((a,b) => String(a.orario_partenza || '').localeCompare(String(b.orario_partenza || '')));
@@ -196,7 +199,7 @@ window.GFHistory = (() => {
       ['Reale', r.completed_at ? `${esc(gfTimeOnRouteDay(r.completed_at, r.data_giro) || '—')}<br><small class="gf-muted">chiusura del giro</small>` : ''],
       ['Differenza',''],['Scarico',''],['Esito',''],['Prova e note','']]);
     return `<div class="gf-stack" data-gap="lg">
-      ${gfRouteDetailHeader(`${r.status === 'annullato' ? 'Giro annullato' : 'Giro completato'} · ${r.data_giro ? dashScheduledDayLabel(r.data_giro).toLowerCase() : '-'}`, r.nome || 'Giro consegne', statusBadge(r))}
+      ${gfRouteDetailHeader(`${r.status === 'annullato' ? 'Giro annullato' : neverStarted(r) ? 'Giro mai avviato' : 'Giro completato'} · ${r.data_giro ? dashScheduledDayLabel(r.data_giro).toLowerCase() : '-'}`, r.nome || 'Giro consegne', statusBadge(r))}
       <div class="gf-stat-strip" data-icons="side" aria-label="Numeri del giro">
         ${gfStatCell('check','3','Consegnate', `${done}/${rows.length}`, missed ? plural(missed,'mancata','mancate') : 'nessuna mancata')}
         ${gfStatCell('clock','1','Orario', `${start}–${end}`, `previsto ${r.orario_partenza || '-'}–${r.orario_rientro_stimato || '-'}`, 'text')}

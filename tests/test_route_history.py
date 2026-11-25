@@ -36,7 +36,7 @@ def history(monkeypatch):
             db.flush()
             db.add_all([Delivery(route_plan_id=row.id, cliente_nome=f"Cliente {n}", indirizzo="Via Test")
                         for n in range(i % 3)])
-        db.add_all([RoutePlan(user_id=owner.id, nome=f"Aperto {i}", data_giro=date(2026, 10, 18),
+        db.add_all([RoutePlan(user_id=owner.id, nome=f"Aperto {i}", data_giro=date(2099, 10, 18),
             orario_partenza=time(8), status="programmato", created_at=datetime(2026, 10, 18)) for i in range(250)])
         db.add(RoutePlan(user_id=other.id, nome="Archivio altrui", data_giro=date(2025, 1, 1),
             orario_partenza=time(8), status="completato", created_at=datetime(2026, 10, 19)))
@@ -122,3 +122,21 @@ def test_page_queries_do_not_grow_with_route_or_stop_count(history):
     "date_from=2026-10-20&date_to=2026-10-01", "driver_id=0", "vehicle_id=0"])
 def test_invalid_history_parameters_are_rejected(history, query):
     assert history[0].get("/api/routes?"+query).status_code == 422
+
+
+def test_past_routes_never_started_are_in_history_with_their_filter(history):
+    """Giri programmati mostra solo da questa settimana: i giri passati mai avviati stanno nello Storico."""
+    from app.models import RoutePlan
+    client, db, _engine, owner_id, _other = history
+    yesterday = date.today() - timedelta(days=1)
+    db.add_all([
+        RoutePlan(user_id=owner_id, nome="Mai partito", data_giro=yesterday, orario_partenza=time(8), status="programmato"),
+        RoutePlan(user_id=owner_id, nome="Partito ma non chiuso", data_giro=yesterday, orario_partenza=time(8),
+                  status="programmato", started_at=datetime.now()),
+        RoutePlan(user_id=owner_id, nome="Di domani", data_giro=date.today() + timedelta(days=1), orario_partenza=time(8), status="programmato"),
+    ])
+    db.commit()
+    assert client.get("/api/routes").headers["x-total-count"] == "231"
+    only = client.get("/api/routes?status=mai_avviato&with_meta=true").json()["items"]
+    assert [r["nome"] for r in only] == ["Mai partito"]
+    assert client.get("/api/routes?q=Di domani").headers["x-total-count"] == "0"

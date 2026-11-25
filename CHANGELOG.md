@@ -5,6 +5,9 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Giri programmati: si vedono solo dalla settimana in corso in poi («‹ Precedente» disattivato sulla settimana
+  attuale). I giri dei giorni passati mai avviati compaiono nello Storico con l'etichetta «Mai avviato» e un filtro
+  dedicato; la riga in fondo ai programmati rimanda allo Storico e permette ancora di annullarli tutti.
 - Super Admin → Server: «Mapbox / Traffico» compare tra le chiavi e i servizi collegati (token mascherato); il «Test»
   chiede a Mapbox se il token è valido (verifica gratuita) e dice cosa fare se è rifiutato o scaduto.
 - Traffico Mapbox: se Mapbox rifiuta il token (401/403) o la quota è esaurita (429), compare un errore critico in

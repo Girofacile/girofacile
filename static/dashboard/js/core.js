@@ -4989,9 +4989,11 @@ function showAllDashboardScheduledDay(iso){
   selectDashboardScheduledDay(iso);
   document.getElementById("scheduledDayTitle")?.closest("section")?.scrollIntoView({behavior:"smooth", block:"start"});
 }
+// Giri programmati mostra solo dalla settimana in corso in poi: i giorni passati sono nello Storico.
 function shiftDashboardScheduledWeek(weeks){
   const base = dashScheduledMonday(dashboardScheduledDay || todayIso());
-  selectDashboardScheduledDay(weeks ? dashScheduledAddDays(base, weeks*7) : todayIso());
+  const target = weeks ? dashScheduledAddDays(base, weeks*7) : todayIso();
+  selectDashboardScheduledDay(target < dashScheduledMonday(todayIso()) ? todayIso() : target);
 }
 async function openDashboardScheduledRoute(routeId){
   dashboardScheduledSelectedId = routeId;
@@ -5027,7 +5029,9 @@ function dashScheduledAvatar(name){
   return `<span class="gf-avatar" data-tone="${hash % 6 + 1}" aria-hidden="true">${esc(initials)}</span>`;
 }
 function dashboardScheduledWeekHtml(){
+  if(!dashboardScheduledDay || dashboardScheduledDay < dashScheduledMonday(todayIso())) dashboardScheduledDay = todayIso();
   const monday = dashScheduledMonday(dashboardScheduledDay);
+  const firstWeek = monday <= dashScheduledMonday(todayIso());
   const days = Array.from({length:7},(_,i)=>dashScheduledAddDays(monday,i));
   const first = dashScheduledDate(days[0]), last = dashScheduledDate(days[6]);
   const range = first.getMonth()===last.getMonth()
@@ -5054,7 +5058,7 @@ function dashboardScheduledWeekHtml(){
   ].filter(Boolean).join(' · ');
   return `<section class="gf-stack" aria-labelledby="scheduledWeekTitle">
     <div class="gf-cluster" data-justify="between"><div><h2 class="gf-title" id="scheduledWeekTitle">Settimana ${esc(range)}</h2><p class="gf-muted">${esc(summary)}</p></div>
-      <div class="gf-cluster"><button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="shiftDashboardScheduledWeek(-1)">‹ Precedente</button><button type="button" class="gf-button" data-variant="ghost" data-size="sm" onclick="shiftDashboardScheduledWeek(0)">Oggi</button><button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="shiftDashboardScheduledWeek(1)">Successiva ›</button></div>
+      <div class="gf-cluster"><button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="shiftDashboardScheduledWeek(-1)"${firstWeek ? ' disabled title="Le settimane passate sono nello Storico"' : ''}>‹ Precedente</button><button type="button" class="gf-button" data-variant="ghost" data-size="sm" onclick="shiftDashboardScheduledWeek(0)">Oggi</button><button type="button" class="gf-button" data-variant="secondary" data-size="sm" onclick="shiftDashboardScheduledWeek(1)">Successiva ›</button></div>
     </div>
     <div class="gf-grid" data-cols="7">${cards}</div>
   </section>`;
@@ -5337,7 +5341,7 @@ function dashboardStaleRoutesHtml(){
   const action = canManage
     ? ` oppure <button type="button" class="gf-button" data-variant="link" onclick="cancelStaleScheduledRoutes(this)">${stale.length === 1 ? 'annullalo' : `annulla i ${stale.length} giri`}</button> (gli ordini tornano da pianificare)`
     : '';
-  return `<p class="gf-muted" role="note" data-stale-routes>${gfCount(stale.length, 'giro dei giorni scorsi mai avviato', 'giri dei giorni scorsi mai avviati')} (dal ${esc(gfDateIt(oldest))}): i loro ordini restano assegnati. ${stale.length === 1 ? 'Riprogrammalo' : 'Riprogrammali'} dalla settimana${action}.</p>`;
+  return `<p class="gf-muted" role="note" data-stale-routes>${gfCount(stale.length, 'giro dei giorni scorsi mai avviato', 'giri dei giorni scorsi mai avviati')} (dal ${esc(gfDateIt(oldest))}): i loro ordini restano assegnati. ${stale.length === 1 ? 'Lo trovi' : 'Li trovi'} nello <button type="button" class="gf-button" data-variant="link" onclick="showTab('storico')">Storico</button> come «Mai avviati»${action}.</p>`;
 }
 async function cancelStaleScheduledRoutes(button){
   const stale = dashboardStaleRoutes();

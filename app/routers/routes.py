@@ -1226,17 +1226,25 @@ def list_routes(
     q: str | None = Query(None, max_length=200),
     date_from: date | None = None,
     date_to: date | None = None,
-    status: str | None = Query(None, pattern="^(completato|annullato)$"),
+    status: str | None = Query(None, pattern="^(completato|annullato|mai_avviato)$"),
     driver_id: int | None = Query(None, ge=1),
     vehicle_id: int | None = Query(None, ge=1),
 ):
-    """Closed routes, filtered before pagination; arrays remain the default."""
+    """Closed routes, filtered before pagination; arrays remain the default.
+
+    Lo Storico comprende anche i giri dei giorni passati mai avviati: Giri programmati mostra
+    solo dalla settimana in corso in poi, quindi altrimenti non si vedrebbero da nessuna parte.
+    """
     if date_from and date_to and date_from > date_to:
         raise HTTPException(422, "La data iniziale deve precedere quella finale")
+    never_started = ((func.lower(RoutePlan.status) == "programmato") & (RoutePlan.data_giro < local_today())
+                     & RoutePlan.started_at.is_(None))
     query = owned(db.query(RoutePlan), RoutePlan, user).filter(
-        func.lower(RoutePlan.status).in_(("completato", "annullato"))
+        or_(func.lower(RoutePlan.status).in_(("completato", "annullato")), never_started)
     )
-    if status:
+    if status == "mai_avviato":
+        query = query.filter(never_started)
+    elif status:
         query = query.filter(func.lower(RoutePlan.status) == status)
     if date_from:
         query = query.filter(RoutePlan.data_giro >= date_from)
