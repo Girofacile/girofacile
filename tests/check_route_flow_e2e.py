@@ -201,7 +201,7 @@ def run(browser, width, output):
                 expect(page.locator('#modalDone .gf-upload[data-pod-photo]')).to_be_visible()
                 # Validazione nello stile del gestionale, dentro la finestra (nessun avviso del browser).
                 page.get_by_role('button', name='Conferma consegna').click()
-                expect(page.locator('#modalDone [data-portal-notice]')).to_contain_text('Seleziona il tempo di scarico')
+                expect(page.locator('#modalDone [data-portal-notice]')).to_contain_text('Indica i minuti di scarico')
                 page.screenshot(path=str(output / f'driver-done-modal-{width}.png'))
                 page.get_by_role('button', name='10 min').first.click()
                 page.get_by_role('button', name='Conferma consegna').click()

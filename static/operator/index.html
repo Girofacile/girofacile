@@ -103,10 +103,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 .modal-subtitle{font-size:13px;color:var(--gray);margin-bottom:16px;}
 
 /* TEMPO OPTIONS */
-.tempo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
-.tempo-btn{padding:14px 8px;border:2px solid var(--border);border-radius:12px;background:var(--bg);font-size:14px;font-weight:700;cursor:pointer;text-align:center;transition:all .15s;}
-.tempo-btn.selected{border-color:var(--blue);background:var(--blue-light);color:var(--blue);}
-.tempo-btn:active{border-color:var(--blue);background:var(--blue);}
 
 /* MOTIVO OPTIONS */
 .motivo-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;}
@@ -229,8 +225,12 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
       <button class="modal-close" onclick="closeModals()">×</button>
     </div>
     <div class="modal-body">
-      <div class="modal-subtitle">Seleziona il tempo di scarico effettivo</div>
-      <div class="tempo-grid" id="tempoGrid"></div>
+      <div class="gf-stack" data-gap="sm" data-unload-picker>
+        <label class="gf-field__label" for="tempoScarico">Minuti di scarico</label>
+        <div class="gf-cluster"><button type="button" class="gf-button" data-variant="secondary" onclick="stepTempo(-1)" aria-label="Un minuto in meno">−</button><input class="gf-input" id="tempoScarico" type="number" inputmode="numeric" min="1" max="1440" step="1" placeholder="Minuti" oninput="tempoChanged()"><button type="button" class="gf-button" data-variant="secondary" onclick="stepTempo(1)" aria-label="Un minuto in più">+</button></div>
+        <span class="gf-field__label">Oppure scegli</span>
+        <div class="gf-cluster" id="tempoGrid" role="group" aria-label="Scelte rapide"></div>
+      </div>
       <div class="modal-subtitle" style="margin-top:8px">Note (opzionale)</div>
       <textarea class="note-area" id="noteDone" placeholder="Es. cliente assente, lasciato a portineria..."></textarea>
       <div id="operatorSignatureBox" class="hidden">
@@ -474,19 +474,36 @@ function openDone(id) {
   document.getElementById('noteDone').value = (routeData.consegne || []).find(x => Number(x.id) === Number(id))?.note_operatore || '';
   clearOperatorSignature();
   document.getElementById('operatorSignatureBox').classList.toggle('hidden', !(podFeatureEnabled('has_delivery_signature', routeData) && routeData.delivery_signature_enabled));
-  const grid = document.getElementById('tempoGrid');
-  grid.innerHTML = routeData.tempo_scarico_options.map(t => `
-    <button class="tempo-btn" onclick="selectTempo(${t}, this)">${t < 60 ? t + ' min' : t === 60 ? '1 ora' : t + ' min'}</button>
-  `).join('');
+  resetTempo();
   document.getElementById('modalDone').classList.remove('hidden');
 }
-function selectTempo(val, btn) {
-  selectedTempo = val;
-  document.querySelectorAll('.tempo-btn').forEach(b => b.classList.remove('selected'));
-  btn.classList.add('selected');
+// Minuti di scarico (variante A, 25/11/2026): si scrivono nel campo, con − e +; 5, 10 e 15 sono scorciatoie.
+const TEMPO_RAPIDI = [5, 10, 15];
+function tempoValue() {
+  const v = Number(document.getElementById('tempoScarico')?.value);
+  return Number.isInteger(v) && v >= 1 && v <= 1440 ? v : null;
+}
+function tempoChanged() {
+  selectedTempo = tempoValue();
+  document.querySelectorAll('#tempoGrid [data-min]').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.min) === selectedTempo)));
+}
+function stepTempo(delta) {
+  const input = document.getElementById('tempoScarico');
+  input.value = Math.min(1440, Math.max(1, (Number(input.value) || 0) + delta));
+  tempoChanged();
+}
+function selectTempo(val) {
+  document.getElementById('tempoScarico').value = val;
+  tempoChanged();
+}
+function resetTempo() {
+  document.getElementById('tempoScarico').value = '';
+  document.getElementById('tempoGrid').innerHTML = TEMPO_RAPIDI.map(t =>
+    `<button type="button" class="gf-chip" aria-pressed="false" data-min="${t}" onclick="selectTempo(${t})">${t} min</button>`).join('');
+  tempoChanged();
 }
 async function confirmDone() {
-  if (!selectedTempo) return alert('Seleziona il tempo di scarico');
+  if (!selectedTempo) return alert('Indica i minuti di scarico');
   try {
     await api(`/api/operator/${token}/delivery/${currentDeliveryId}/complete`, {
       method: 'POST',
