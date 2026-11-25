@@ -4794,8 +4794,8 @@ function dashboardStopRowsUnified(r, mode='live'){
           </tr>`+GFDriverBreaks.table(r,idx+1,10);
         }).join('')}
         ${gfReturnRow(r, [['#',''],['Cliente',GF_RETURN_TITLE],['Indirizzo',''],['Arrivo previsto',`<strong>${gfReturnPlanned(r)}</strong>`],
-          ['Arrivo reale', r.completed_at ? `<strong>${esc(gfTimeOnRouteDay(r.completed_at, r.data_giro) || '-')}</strong>` : ''],
-          ['Differenza',''],['Scarico',''],['Stato',''],['Documenti e tracking',''],['Note','']])}
+          ['Arrivo reale', gfReturnRealCell(r, true)],
+          ['Differenza', gfReturnDelta(r)],['Scarico',''],['Stato',''],['Documenti e tracking',''],['Note','']])}
       </tbody>
     </table>
   </div>`;
@@ -4837,7 +4837,7 @@ function renderUnifiedRouteView(r, targetId='historyResult', context='history'){
         <div class="gf-details__item"><dt>Partenza prevista</dt><dd>${esc(r.orario_partenza || '-')}</dd></div>
         <div class="gf-details__item"><dt>Partenza reale</dt><dd>${gfTimeFromIso(r.started_at) || '-'}</dd></div>
         <div class="gf-details__item"><dt>Rientro previsto</dt><dd>${esc(r.orario_rientro_stimato || '-')}</dd></div>
-        <div class="gf-details__item"><dt>Rientro reale</dt><dd>${gfTimeFromIso(r.completed_at) || '-'}</dd></div>
+        <div class="gf-details__item"><dt>Rientro reale</dt><dd>${gfTimeFromIso(gfReturnReal(r)) || '-'}</dd></div>
       </dl>
       ${dashboardRouteSummaryCards(r, rows)}
       <div><h3 class="gf-subtitle">Fermate del giro</h3><p class="gf-muted">Confronto tra orario previsto dal software e orario reale registrato dall'autista.</p></div>
@@ -5224,7 +5224,24 @@ function gfDepotRow(attr, cells, icon){
 }
 function gfDeparturePlanned(r){ return esc(r.orario_partenza || '-'); }
 const GF_DEPARTURE_TITLE = '<strong>Partenza dal deposito</strong><br><small class="gf-muted">Inizio del giro</small>';
-function gfReturnPlanned(r){ return esc(r.rientro_stimato_aggiornato || r.orario_rientro_stimato || '-'); }
+// Giro chiuso: «previsto» è il piano originale; durante il giro è la stima aggiornata.
+function gfReturnPlanned(r){ return esc((r.completed_at ? r.orario_rientro_stimato : r.rientro_stimato_aggiornato) || r.orario_rientro_stimato || '-'); }
+// Rientro reale stimato dal server (ultima consegna + tragitto al deposito); in mancanza, la chiusura del giro.
+function gfReturnReal(r){ return r.rientro_reale || r.completed_at || ''; }
+function gfReturnRealCell(r, strong=false){
+  const value = gfReturnReal(r);
+  if(!value) return '';
+  const time = esc(gfTimeOnRouteDay(value, r.data_giro) || '—');
+  return `${strong ? `<strong>${time}</strong>` : time}<br><small class="gf-muted">${r.rientro_reale && r.rientro_deposito ? 'ultima consegna + rientro' : 'chiusura del giro'}</small>`;
+}
+function gfReturnPlannedDate(r){
+  const minutes = gfMinutesFromHHMM(r.orario_rientro_stimato || ''), start = gfMinutesFromHHMM(r.orario_partenza || '');
+  if(minutes === null || !r.data_giro) return null;
+  const date = new Date(`${r.data_giro}T00:00:00`);
+  date.setMinutes(minutes + (start !== null && minutes < start ? 1440 : 0));
+  return date;
+}
+function gfReturnDelta(r){ const real = gfReturnReal(r); return real ? gfDeltaBadge(gfReturnPlannedDate(r), new Date(real)) : ''; }
 const GF_RETURN_TITLE = '<strong>Rientro al deposito</strong><br><small class="gf-muted">Fine del giro</small>';
 
 function gfRouteNoticesHtml(rows){

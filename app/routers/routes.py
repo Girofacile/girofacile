@@ -2,7 +2,7 @@ from ..services import driver_schedule as shifts
 from ..services import unload_time
 from ..services import route_orders
 from ..services.order_planning import ORDER_FIELDS
-from ..services.route_schedule import actual_arrival, live_route_schedule, route_schedule_datetimes
+from ..services.route_schedule import actual_arrival, actual_return, live_route_schedule, route_schedule_datetimes
 from ..models import DeliveryTrackingLink
 from ..services.occasional_stops import verify_stop_address, validate_occasional_stops, STOP_VERIFICATION_FIELDS
 from ..services.customer_planning import customer_is_plannable, PLANNING_ADDRESS_ERROR
@@ -429,6 +429,7 @@ def serialize_route(plan, include_legs=True):
         "completed_at": (plan.completed_at.isoformat() if getattr(plan, "completed_at", None) else None),
         "cancelled_at": (plan.cancelled_at.isoformat() if getattr(plan, "cancelled_at", None) else None),
         "rientro_stimato_aggiornato": live_sched.get("rientro_stimato_aggiornato"),
+        "rientro_reale": iso_or_none(actual_return(plan, status_map)),
         "deposit_id": plan.deposit_id, "vehicle_id": plan.vehicle_id, "driver_id": plan.driver_id,
         "vehicle_name": ((plan.vehicle.nome + (" · " + plan.vehicle.targa if plan.vehicle.targa else "")) if plan.vehicle else None),
         "driver_name": ((plan.driver.nome + (" " + plan.driver.cognome if plan.driver.cognome else "")) if plan.driver else None),

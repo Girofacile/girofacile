@@ -24,6 +24,43 @@ def actual_arrival(delivery, status):
     return status.completata_il - timedelta(minutes=float(unload))
 
 
+def _return_leg_minutes(plan):
+    """Minuti dall'ultimo cliente al deposito: tratta con traffico se c'è, altrimenti quella base."""
+    import json
+    traffic = json.loads(plan.traffic_result_json or '{}')
+    legs = traffic.get('legs') or []
+    if legs:
+        return float(legs[-1].get('duration') or 0) / 60
+    base_legs = json.loads(plan.routing_snapshot_json or '{}').get('base_legs') or []
+    return float(base_legs[-1].get('min') or 0) if base_legs else None
+
+
+def actual_return(plan, status_map=None):
+    """Rientro reale stimato di un giro chiuso: non si sa quando l'autista entra in deposito, quindi
+    si parte dal «Consegnato» (o «Mancata») dell'ultima fermata e si aggiungono i minuti previsti
+    per tornare al deposito. Senza rientro al deposito vale l'esito dell'ultima fermata. Se l'ultima
+    fermata registrata non è l'ultima del giro, o manca la tratta, resta la chiusura del giro."""
+    completed = getattr(plan, 'completed_at', None)
+    if not completed:
+        return None
+    statuses = status_map or {}
+    ordered = sorted(plan.deliveries or [], key=lambda d: (d.ordine or 0, d.id or 0))
+    closed = [(statuses[d.id].completata_il, d) for d in ordered
+              if statuses.get(d.id) and statuses[d.id].status in ('completata', 'mancata') and statuses[d.id].completata_il]
+    if not closed:
+        return completed
+    last_time, last = max(closed, key=lambda row: row[0])
+    if not plan.rientro_deposito:
+        return last_time
+    back = _return_leg_minutes(plan)
+    if last is not ordered[-1] or back is None:
+        return completed
+    from .driver_schedule import intervals, travel_end
+    minute = last_time.hour * 60 + last_time.minute + last_time.second / 60
+    pauses = intervals(getattr(plan, 'driver_schedule', None)) if last_time.date() == plan.data_giro else []
+    return last_time + timedelta(minutes=travel_end(minute, back, pauses) - minute)
+
+
 def route_schedule_datetimes(plan, status_map=None, now=None):
     statuses = status_map or {}
     start_min = minutes_from_hhmm(plan.orario_partenza) or 0

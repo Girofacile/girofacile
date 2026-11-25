@@ -3,7 +3,7 @@ import json
 from datetime import date, datetime, time, timedelta
 from types import SimpleNamespace as N
 import pytest
-from app.services.route_schedule import LOCAL, actual_arrival, route_schedule_datetimes
+from app.services.route_schedule import LOCAL, actual_arrival, actual_return, route_schedule_datetimes
 
 DAY = date(2099, 1, 15)
 
@@ -102,3 +102,28 @@ def test_actual_arrival_subtracts_the_unload_the_driver_entered():
     result = route_schedule_datetimes(plan([first, second]), {1: N(status='completata', completata_il=delivered, tempo_scarico_effettivo=10)})
     assert result['deliveries'][1]['arrival'] == datetime.combine(DAY, time(9, 9), LOCAL)
     assert result['deliveries'][2]['arrival'] == datetime.combine(DAY, time(9, 39), LOCAL)
+
+
+def test_actual_return_is_last_delivery_plus_leg_to_depot():
+    # Come il giro del 25/11: «Consegnato» all'ultimo cliente alle 15:49:43, rientro previsto di 9,8 min.
+    first, last = stop(1, time(9), time(9, 10)), stop(2, time(10), time(10, 10))
+    route = plan([first, last])
+    route.completed_at = datetime.combine(DAY, time(15, 49, 43))
+    route.traffic_result_json = json.dumps({'legs': [{'duration': 600}, {'duration': 600}, {'duration': 588}]})
+    statuses = {1: N(status='completata', completata_il=datetime.combine(DAY, time(15))),
+                2: N(status='completata', completata_il=datetime.combine(DAY, time(15, 49, 43)))}
+    assert actual_return(route, statuses) == datetime.combine(DAY, time(15, 59, 31))
+    # Senza rientro al deposito il giro finisce all'ultima consegna.
+    route.rientro_deposito = False
+    assert actual_return(route, statuses) == datetime.combine(DAY, time(15, 49, 43))
+
+
+def test_actual_return_falls_back_to_closing_when_it_cannot_estimate():
+    first, last = stop(1, time(9), time(9, 10)), stop(2, time(10), time(10, 10))
+    route = plan([first, last])
+    assert actual_return(route, {}) is None  # giro non chiuso
+    route.completed_at = datetime.combine(DAY, time(12))
+    assert actual_return(route, {}) == route.completed_at
+    # L'ultima fermata del giro non è stata registrata: non c'è una tratta affidabile verso il deposito.
+    statuses = {1: N(status='completata', completata_il=datetime.combine(DAY, time(11)))}
+    assert actual_return(route, statuses) == route.completed_at

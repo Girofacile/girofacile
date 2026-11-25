@@ -179,8 +179,8 @@ window.GFHistory = (() => {
     const outcome = [[`${done} consegnate`,'success'], [plural(missed,'mancata','mancate'),'danger', missed], [plural(absent,'cliente assente','clienti assenti'),'warning', absent], [plural(closed,'locale chiuso','locali chiusi'),'warning', closed], [`${rows.length-done-missed} non gestite`,'info', rows.length-done-missed]]
       .filter(([, , show]) => show === undefined || show > 0).map(([text, tone]) => `<span class="gf-badge" data-status="${tone}">${esc(text)}</span>`).join('');
     const start = gfTimeOnRouteDay(r.started_at, r.data_giro) || r.orario_partenza || '-';
-    const end = gfTimeOnRouteDay(r.completed_at, r.data_giro) || r.rientro_stimato_aggiornato || r.orario_rientro_stimato || '-';
-    const realMinutes = r.started_at && r.completed_at ? Math.round((new Date(r.completed_at) - new Date(r.started_at)) / 60000) : null;
+    const end = gfTimeOnRouteDay(gfReturnReal(r), r.data_giro) || r.rientro_stimato_aggiornato || r.orario_rientro_stimato || '-';
+    const realMinutes = r.started_at && gfReturnReal(r) ? Math.round((new Date(gfReturnReal(r)) - new Date(r.started_at)) / 60000) : null;
     const planned = gfPlannedArrivalDates(r, rows);
     const tableRows = rows.map((d, idx) => {
       const st = status(d), note = d.note_operatore || d.note_autista || d.note || '', real = gfRealArrival(d, r.data_giro);
@@ -195,9 +195,9 @@ window.GFHistory = (() => {
         <td data-label="Prova e note"><div class="gf-cluster">${deliverySignatureAction(d, r.driver_name)} ${trackingButton(d, r)}${note ? `<button type="button" class="gf-button" data-variant="ghost" data-size="sm" data-note="${esc(String(note))}" onclick="alert(this.dataset.note)">Note</button>` : ''}</div></td>
       </tr>`+GFDriverBreaks.table(r, idx+1, 8);
     }).join('') + gfReturnRow(r, [['#',''],['Cliente',GF_RETURN_TITLE],['Previsto',gfReturnPlanned(r)],
-      // Nello storico il rientro reale è la chiusura del giro registrata dall'autista.
-      ['Reale', r.completed_at ? `${esc(gfTimeOnRouteDay(r.completed_at, r.data_giro) || '—')}<br><small class="gf-muted">chiusura del giro</small>` : ''],
-      ['Differenza',''],['Scarico',''],['Esito',''],['Prova e note','']]);
+      // Rientro reale: ultima consegna + minuti previsti per tornare al deposito (vedi actual_return).
+      ['Reale', gfReturnRealCell(r)],
+      ['Differenza', gfReturnDelta(r)],['Scarico',''],['Esito',''],['Prova e note','']]);
     return `<div class="gf-stack" data-gap="lg">
       ${gfRouteDetailHeader(`${r.status === 'annullato' ? 'Giro annullato' : neverStarted(r) ? 'Giro mai avviato' : 'Giro completato'} · ${r.data_giro ? dashScheduledDayLabel(r.data_giro).toLowerCase() : '-'}`, r.nome || 'Giro consegne', statusBadge(r))}
       <div class="gf-stat-strip" data-icons="side" aria-label="Numeri del giro">
