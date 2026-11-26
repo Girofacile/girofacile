@@ -40,6 +40,11 @@ def main():
             page.goto(BASE + "/")
             banner = page.locator("#gfConsentBanner")
             banner.wait_for(state="visible")
+            # Finestra centrale e bloccante: Esc non la chiude.
+            assert page.evaluate("document.getElementById('gfConsentBanner').matches(':modal')")
+            page.keyboard.press("Escape"); page.keyboard.press("Escape")
+            page.wait_for_timeout(200)
+            assert page.evaluate("document.getElementById('gfConsentBanner').open"), "chiusa senza scelta"
             assert not meta and page.evaluate("typeof window.fbq") == "undefined", "pixel prima del consenso"
             page.screenshot(path=str(OUTPUT / f"banner-{width}.png"))
             assert page.evaluate("document.documentElement.scrollWidth - innerWidth") <= 0
@@ -63,9 +68,16 @@ def main():
             assert not meta, meta
             assert page.evaluate("GFMarketing.track('CompleteRegistration')") is True
             assert any("fbevents.js" in url for url in meta)
+            # Arrivo dopo l'iscrizione: visita registrata, poi il tag sparisce dall'indirizzo.
+            meta.clear()
+            page.goto(BASE + "/static/dashboard/index.html?registrazione=ok")
+            page.wait_for_timeout(300)
+            assert any("fbevents.js" in url for url in meta)
+            assert page.evaluate("fbq.queue.some(c => c[0] === 'track' && c[1] === 'PageView')")
+            page.wait_for_function("!location.search.includes('registrazione')", timeout=4000)
             context.close()
         browser.close()
-    print("PASS: consenso cookie a 390/1440 — banner, Rifiuta senza pixel, Accetta con pixel, area riservata senza banner")
+    print("PASS: consenso cookie a 390/1440 — finestra centrale bloccante, Rifiuta senza pixel, Accetta con pixel, area riservata senza banner")
 
 
 if __name__ == "__main__":

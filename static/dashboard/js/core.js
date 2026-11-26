@@ -1617,7 +1617,8 @@ async function signup(){
     // Registrazione completata per le campagne Meta: solo con il consenso dato sul sito (al massimo 1 secondo).
     await window.GFMarketing?.track?.("CompleteRegistration", {content_name: plan});
     // Nuovo account: si riparte da una pagina pulita, senza dati rimasti in memoria da un accesso precedente.
-    window.location.href = "/dashboard";
+    // ?registrazione=ok: indirizzo usato dalla conversione personalizzata di Meta (vedi marketing-consent.js).
+    window.location.href = "/dashboard?registrazione=ok";
   }catch(e){ alert(e.message); }
   finally{
     const createBtn = document.getElementById("signupCreateBtn");

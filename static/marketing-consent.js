@@ -1,9 +1,11 @@
-/* Consenso ai cookie di marketing e pixel di Meta (23/11/2026).
+/* Consenso ai cookie di marketing e pixel di Meta (23/11/2026, finestra centrale 26/11/2026).
  *
- * Il pixel parte SOLO dopo «Accetta». Nessuna scelta salvata: si mostra il banner (pagine pubbliche).
- * Con data-gf-consent="passive" sullo <script> (pagina di accesso/area riservata) il banner non compare
- * e non si registra la visita: si invia solo un evento esplicito (es. registrazione completata)
- * a chi ha già accettato sul sito pubblico.
+ * Il pixel parte SOLO dopo «Accetta». Nessuna scelta salvata: sulle pagine pubbliche compare una
+ * finestra al centro dello schermo che blocca la pagina finché non si sceglie «Accetta» o «Rifiuta»
+ * (niente X, Esc non la chiude). «Rifiuta» resta sempre disponibile e il sito funziona lo stesso.
+ * Con data-gf-consent="passive" sullo <script> (pagina di accesso/area riservata) la finestra non compare
+ * e non si registra la visita, tranne l'arrivo dopo l'iscrizione (/dashboard?registrazione=ok):
+ * per chi ha accettato si registra quella visita, usata dalla conversione personalizzata di Meta.
  */
 (function(){
   'use strict';
@@ -31,7 +33,15 @@
     return loaded;
   }
 
-  function closeBanner(){ document.getElementById('gfConsentBanner')?.remove(); }
+  const SIGNUP_PARAM = 'registrazione';
+
+  function closeBanner(){
+    const box = document.getElementById('gfConsentBanner');
+    if(!box) return;
+    box.dataset.chosen = '1';
+    if(box.open) box.close();
+    box.remove();
+  }
   function choose(value){
     write(value);
     closeBanner();
@@ -39,21 +49,48 @@
   }
   function showBanner(){
     if(document.getElementById('gfConsentBanner')) return;
-    const box = document.createElement('div');
+    const box = document.createElement('dialog');
     box.id = 'gfConsentBanner';
-    box.className = 'gf-banner';
-    box.setAttribute('role', 'region');
-    box.setAttribute('aria-label', 'Consenso ai cookie');
-    box.innerHTML = '<span class="gf-banner__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9 4 4 0 0 1-5-5 4 4 0 0 1-4-4z M8.5 11.5h.01 M12 16h.01 M15.5 13.5h.01"/></svg></span>'
-      + '<div class="gf-banner__text"><strong>Cookie per la pubblicità</strong><p>Con il tuo consenso usiamo il pixel di Meta per misurare visite e campagne pubblicitarie. '
-      + 'Se rifiuti il sito funziona lo stesso. <a href="/cookie-policy">Cookie Policy</a></p></div>'
-      + '<div class="gf-cluster"><button type="button" class="gf-button" data-variant="secondary" data-size="sm" data-consent="rejected">Rifiuta</button>'
-      + '<button type="button" class="gf-button" data-variant="primary" data-size="sm" data-consent="accepted">Accetta</button></div>';
+    box.className = 'gf-modal';
+    box.setAttribute('aria-labelledby', 'gfConsentTitle');
+    box.setAttribute('aria-describedby', 'gfConsentText');
+    box.innerHTML = '<header class="gf-modal__header"><div><h2 class="gf-modal__title" id="gfConsentTitle">Cookie per la pubblicità</h2>'
+      + '<p class="gf-muted">Scegli per continuare sul sito</p></div></header>'
+      + '<div class="gf-modal__body gf-stack" id="gfConsentText">'
+      + '<p class="gf-text">Con il tuo consenso usiamo il pixel di Meta per misurare le visite e capire quali campagne pubblicitarie '
+      + 'portano nuovi clienti su GiroFacile.</p>'
+      + '<p class="gf-text">Se rifiuti il sito funziona lo stesso. Puoi cambiare idea quando vuoi da «Preferenze cookie» in fondo alla pagina. '
+      + '<a href="/cookie-policy">Cookie Policy</a></p></div>'
+      + '<footer class="gf-modal__footer"><button type="button" class="gf-button" data-variant="secondary" data-consent="rejected">Rifiuta</button>'
+      + '<button type="button" class="gf-button" data-variant="primary" data-consent="accepted">Accetta</button></footer>';
     box.addEventListener('click', event => {
       const button = event.target.closest('[data-consent]');
       if(button) choose(button.dataset.consent);
     });
+    // Senza una scelta la finestra non si chiude: Esc viene ignorato e, se il browser la chiude lo stesso, si riapre.
+    box.addEventListener('cancel', event => event.preventDefault());
+    box.addEventListener('close', () => {
+      if(!box.dataset.chosen && box.isConnected) setTimeout(() => { if(!box.dataset.chosen && box.isConnected && !box.open) box.showModal(); }, 0);
+    });
     document.body.appendChild(box);
+    box.showModal();
+  }
+
+  // Arrivo dopo l'iscrizione: la visita a /dashboard?registrazione=ok va a Meta (solo con il consenso),
+  // poi il tag sparisce dall'indirizzo, così un ricaricamento non conta una seconda iscrizione.
+  function signupLanding(){
+    const params = new URLSearchParams(location.search);
+    if(!params.has(SIGNUP_PARAM)) return false;
+    const clean = () => {
+      const url = new URL(location.href);
+      url.searchParams.delete(SIGNUP_PARAM);
+      history.replaceState(history.state, '', url.pathname + url.search + url.hash);
+    };
+    if(read() === 'accepted'){
+      loadPixel().then(() => setTimeout(clean, 1500));
+      window.fbq('track', 'PageView');
+    } else clean();
+    return true;
   }
 
   window.GFMarketing = {
@@ -70,8 +107,9 @@
 
   function start(){
     const choice = read();
-    if(choice === 'accepted' && !passive){ loadPixel(); window.fbq('track', 'PageView'); }
-    else if(!choice && !passive) showBanner();
+    if(passive){ signupLanding(); return; }
+    if(choice === 'accepted'){ loadPixel(); window.fbq('track', 'PageView'); }
+    else if(!choice) showBanner();
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();

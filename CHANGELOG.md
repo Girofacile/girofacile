@@ -5,6 +5,11 @@ Da qui in avanti le modifiche si annotano in questo file, la più recente in alt
 
 ## Verso la V1
 
+- Consenso cookie: la scelta sul pixel di Meta compare in una finestra al centro dello schermo che blocca la pagina
+  finché non si sceglie «Accetta» o «Rifiuta» (niente X, Esc non la chiude); «Rifiuta» resta sempre disponibile.
+- Iscrizione: dopo «Crea account gratuito» si arriva su `/dashboard?registrazione=ok`. Per chi ha accettato i cookie
+  quella visita va a Meta (conversione personalizzata «URL contiene registrazione=ok»), poi il tag sparisce
+  dall'indirizzo così un ricaricamento non conta una seconda iscrizione.
 - Giri programmati: si vedono solo dalla settimana in corso in poi («‹ Precedente» disattivato sulla settimana
   attuale). I giri dei giorni passati mai avviati compaiono nello Storico con l'etichetta «Mai avviato» e un filtro
   dedicato; la riga in fondo ai programmati rimanda allo Storico e permette ancora di annullarli tutti.
