@@ -1294,9 +1294,10 @@ async function checkLogin(){
     }
     if(!me.authenticated){
       markAuthReady();
-      // Email scritta nella pagina iniziale («Prova gratis per 14 giorni»): si apre subito la
-      // registrazione, con l'email già inserita da updateSignupPlanFeatures.
-      if(new URLSearchParams(window.location.search).get('email')) toggleSignup(true);
+      // Dalla pagina iniziale (pulsante Registrati, «Prova gratis» di un piano o email scritta)
+      // si apre subito la registrazione: piano ed email li inserisce updateSignupPlanFeatures.
+      const params = new URLSearchParams(window.location.search);
+      if(params.has('registrati') || params.get('plan') || params.get('email')) toggleSignup(true);
     }
     if(me.authenticated){
       // Foto, nome ed email salvati nel browser sono dell'ultimo account collegato: con un altro account si scartano.
