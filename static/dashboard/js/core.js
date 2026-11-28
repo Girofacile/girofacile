@@ -1342,9 +1342,8 @@ function toggleSignup(show){
   if(loginPanel) loginPanel.classList.toggle("hidden", !!show);
   if(signupPanel) signupPanel.classList.toggle("hidden", !show);
   if(show){
-    fillSectorSelectV47("signupSector", val("signupSector"));
     updateSignupPlanFeatures();
-    setSignupWizardStep(1);
+    setupSignupAddressAutocomplete();
   }
   // Quando apro la registrazione nascondo il recupero password.
   // Quando torno al login, invece, non lo richiudo automaticamente: altrimenti
@@ -1388,9 +1387,6 @@ window.toggleForgotPassword = toggleForgotPassword;
 window.requestPasswordReset = requestPasswordReset;
 window.login = login;
 window.signup = signup;
-window.signupWizardNext = signupWizardNext;
-window.signupWizardBack = signupWizardBack;
-window.setSignupWizardStep = setSignupWizardStep;
 window.confirmPasswordReset = confirmPasswordReset;
 
 function bindLoginRecoveryActions(){
@@ -1441,7 +1437,6 @@ function initPasswordStrengthUi(){
 if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",initPasswordStrengthUi,{once:true});
 else initPasswordStrengthUi();
 
-let signupWizardCurrentStep = 1;
 
 function getSelectedPlan(){
   const select = document.getElementById("signupPlanSelect");
@@ -1461,24 +1456,8 @@ function updateSignupPlanFeatures(){
   }
   const plan=window.GF_PLANS[getSelectedPlan()] || {};
   const summary=document.getElementById('signupPlanSummary');
-  if(summary)summary.textContent=`${plan.name}: ${plan.max_orders_per_month} ordini/mese, ${plan.max_customers} clienti, ${plan.max_collaborators} collaboratori. Portale autista e GPS inclusi.${plan.has_delivery_signature?'':' Firma e foto sono disponibili dal piano Business.'}`;
-}
-function setSignupWizardStep(step){
-  signupWizardCurrentStep = Math.max(1, Math.min(4, Number(step) || 1));
-  document.querySelectorAll("[data-signup-step]").forEach(panel => {
-    panel.classList.toggle("hidden", Number(panel.getAttribute("data-signup-step")) !== signupWizardCurrentStep);
-  });
-  document.querySelectorAll("[data-signup-step-dot]").forEach(dot => {
-    const n = Number(dot.getAttribute("data-signup-step-dot"));
-    if(n === signupWizardCurrentStep) dot.setAttribute("aria-current", "step"); else dot.removeAttribute("aria-current");
-    dot.classList.toggle("is-done", n < signupWizardCurrentStep);
-  });
-  const back = document.getElementById("signupBackBtn");
-  const next = document.getElementById("signupNextBtn");
-  const create = document.getElementById("signupCreateBtn");
-  if(back) back.disabled = signupWizardCurrentStep === 1;
-  if(next) next.classList.toggle("hidden", signupWizardCurrentStep === 4);
-  if(create) create.classList.toggle("hidden", signupWizardCurrentStep !== 4);
+  const days=Number(plan.trial_days ?? window.GF_TRIAL_DAYS ?? 14);
+  if(summary)summary.textContent=`Piano ${plan.name || ''}${days>0?` · ${days} giorni di prova gratuita`:''} · Nessuna carta richiesta`;
 }
 // Errore della registrazione sotto il campo (stile del gestionale), non in un avviso del browser.
 function signupInvalid(id, message){
@@ -1489,55 +1468,100 @@ function signupInvalid(id, message){
   control.addEventListener("input", () => control.setCustomValidity(""), {once:true});
   return false;
 }
-// Stessi controlli del server (app/services/fiscal.py): vuoto ammesso, altrimenti formato plausibile.
-function signupVatError(raw){
-  let v = String(raw || "").replace(/[\s.-]/g, "").toUpperCase();
-  if(!v) return "";
-  if(v.startsWith("IT")) v = v.slice(2);
-  else if(/^[A-Z]{2}[A-Z0-9]{2,13}$/.test(v)) return "";
-  if(!/^\d{11}$/.test(v)) return "La partita IVA italiana ha 11 cifre.";
-  let total = 0;
-  for(let i = 0; i < 10; i++){ let n = Number(v[i]); if(i % 2){ n *= 2; if(n > 9) n -= 9; } total += n; }
-  return (10 - total % 10) % 10 === Number(v[10]) ? "" : "Partita IVA non valida: controlla le cifre.";
+// Sede operativa in una riga: suggerimenti Google Places mentre si scrive (/api/signup/address-*).
+// Città, CAP e paese arrivano dall'indirizzo scelto. Se il servizio non risponde si accetta l'indirizzo scritto.
+let signupAddressChoice = null;
+let signupAddressServiceDown = false;
+function signupAddressSession(){
+  const raw = window.crypto?.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2);
+  return raw.replace(/[^A-Za-z0-9]/g, "").slice(0, 36);
 }
-function validateSignupStep(step){
-  if(step === 1){
-    if(!val("signupCompany")) return signupInvalid("signupCompany", "Inserisci il nome azienda.");
-    if(!val("signupUser") || val("signupUser").length < 3) return signupInvalid("signupUser", "Inserisci un nome utente di almeno 3 caratteri.");
-    if(!val("signupEmail") || !document.getElementById("signupEmail").checkValidity()) return signupInvalid("signupEmail", "Inserisci un'email valida per l'account.");
-    const passwordCheck=passwordSecurityAssessment(val("signupPass"),passwordContextForSignup());
-    if(!passwordCheck.acceptable) return signupInvalid("signupPass", passwordCheck.message);
+function setupSignupAddressAutocomplete(){
+  const input = document.getElementById("signupAddress");
+  if(!input || input.dataset.autocompleteReady === "true") return;
+  input.dataset.autocompleteReady = "true";
+  const wrap = document.createElement("div");
+  wrap.className = "gf-dropdown";
+  wrap.setAttribute("data-address-autocomplete", "");
+  input.parentNode.insertBefore(wrap, input);
+  wrap.appendChild(input);
+  const list = document.createElement("div");
+  list.className = "hidden";
+  list.setAttribute("data-gf-menu", "");
+  list.setAttribute("role", "listbox");
+  wrap.appendChild(list);
+  const hint = document.createElement("div");
+  hint.className = "gf-field__hint";
+  hint.id = "signupAddressHint";
+  hint.setAttribute("data-address-hint", "");
+  wrap.appendChild(hint);
+  let session = signupAddressSession(), timer = null, asked = 0;
+  const say = (text, status) => { hint.textContent = text; if(status) hint.dataset.status = status; else delete hint.dataset.status; };
+  const close = () => { list.classList.add("hidden"); list.innerHTML = ""; };
+  const unavailable = () => { signupAddressServiceDown = true; close(); say("Suggerimenti non disponibili: scrivi via, numero civico, CAP e città.", "warning"); };
+  say("Inizia a scrivere e scegli l'indirizzo dai suggerimenti.");
+  async function choose(row){
+    close();
+    input.value = row.label;
+    say("Verifica dell'indirizzo...");
+    try{
+      const place = await api(`/api/signup/address-details?place_id=${encodeURIComponent(row.place_id)}&session=${session}`);
+      session = signupAddressSession();
+      signupAddressChoice = place;
+      input.value = place.address || row.label;
+      input.setCustomValidity("");
+      if(place.has_street_number) say("Indirizzo verificato", "success");
+      else say("Indirizzo verificato. Se puoi, scegli un suggerimento con il numero civico.", "warning");
+    }catch(e){ unavailable(); }
   }
-  if(step === 2){
-    // Sede operativa completa: serve come partenza dei giri e per il profilo azienda.
-    if(!val("signupAddress")) return signupInvalid("signupAddress", "Inserisci la sede operativa (via e numero civico).");
-    if(!val("signupCity")) return signupInvalid("signupCity", "Inserisci la città della sede operativa.");
-    if(!val("signupZip")) return signupInvalid("signupZip", "Inserisci il CAP della sede operativa.");
-    if(/^italia$/i.test(val("signupCountry")) && !/^\d{5}$/.test(val("signupZip"))) return signupInvalid("signupZip", "Il CAP italiano ha 5 cifre.");
-    if(!val("signupCountry")) return signupInvalid("signupCountry", "Inserisci il paese della sede operativa.");
-    const vatError = signupVatError(val("signupVat"));
-    if(vatError) return signupInvalid("signupVat", vatError);
-    const cf = val("signupFiscalCode").replace(/\s/g, "").toUpperCase();
-    if(cf && !/^\d{11}$/.test(cf) && !/^[A-Z]{6}\d{2}[A-Z]\d{2}[A-Z]\d{3}[A-Z]$/.test(cf)) return signupInvalid("signupFiscalCode", "Il codice fiscale ha 16 caratteri (persona) oppure 11 cifre (azienda).");
-    if(!val("signupVat")){
-      const ok = confirm("Non hai inserito la Partita IVA. Vuoi continuare comunque?");
-      if(!ok) return false;
+  input.addEventListener("input", () => {
+    signupAddressChoice = null;
+    clearTimeout(timer);
+    if(signupAddressServiceDown) return;
+    say("Inizia a scrivere e scegli l'indirizzo dai suggerimenti.");
+    const q = input.value.trim();
+    if(q.length < 4){ close(); return; }
+    timer = setTimeout(async () => {
+      const mine = ++asked;
+      try{
+        const rows = await api(`/api/signup/address-suggestions?q=${encodeURIComponent(q)}&session=${session}`);
+        if(mine !== asked) return;
+        list.classList.remove("hidden");
+        if(!rows.length){ list.innerHTML = `<p class="gf-muted">Nessun indirizzo trovato: aggiungi la città.</p>`; return; }
+        list.innerHTML = rows.map((r, idx) => {
+          const rest = r.label.split(", ");
+          let main = rest.shift();
+          if(rest[0] && /^\d/.test(rest[0])) main += ", " + rest.shift();
+          return `<button type="button" class="gf-list-item" role="option" data-index="${idx}"><span class="gf-list-item__main"><strong>${esc(main)}</strong><small>${esc(rest.join(", "))}</small></span></button>`;
+        }).join("");
+        // mousedown: la scelta arriva prima che il campo perda il fuoco e chiuda l'elenco.
+        list.querySelectorAll("[data-index]").forEach(btn => btn.addEventListener("mousedown", event => {
+          event.preventDefault();
+          choose(rows[Number(btn.dataset.index)]);
+        }));
+      }catch(e){
+        if(mine === asked) unavailable();
+      }
+    }, 300);
+  });
+  input.addEventListener("keydown", event => {
+    if(event.key === "Escape") close();
+    if(event.key === "Enter"){
+      const first = list.querySelector("[data-index]");
+      if(first){ event.preventDefault(); first.dispatchEvent(new MouseEvent("mousedown", {cancelable:true})); }
     }
-  }
-  if(step === 3){
-    const pec = val("signupPec");
-    if(pec && !/^[^@\s]+@[^@\s]+\.[A-Za-z]{2,}$/.test(pec)) return signupInvalid("signupPec", "Indirizzo PEC non valido.");
-    const sdi = val("signupSdi").toUpperCase();
-    if(sdi && !/^[A-Z0-9]{6,7}$/.test(sdi)) return signupInvalid("signupSdi", "Il codice SDI ha 7 caratteri (6 per la Pubblica Amministrazione).");
-  }
+  });
+  input.addEventListener("blur", () => setTimeout(close, 150));
+}
+function validateSignup(){
+  if(!val("signupCompany")) return signupInvalid("signupCompany", "Inserisci il nome azienda.");
+  if(!val("signupUser") || val("signupUser").length < 3) return signupInvalid("signupUser", "Inserisci un nome utente di almeno 3 caratteri.");
+  if(!val("signupEmail") || !document.getElementById("signupEmail").checkValidity()) return signupInvalid("signupEmail", "Inserisci un'email valida per l'account.");
+  const passwordCheck=passwordSecurityAssessment(val("signupPass"),passwordContextForSignup());
+  if(!passwordCheck.acceptable) return signupInvalid("signupPass", passwordCheck.message);
+  if(val("signupAddress").length < 5) return signupInvalid("signupAddress", "Inserisci la sede operativa.");
+  if(!signupAddressChoice && !signupAddressServiceDown) return signupInvalid("signupAddress", "Scegli la sede operativa tra i suggerimenti.");
   return true;
-}
-function signupWizardNext(){
-  if(!validateSignupStep(signupWizardCurrentStep)) return;
-  setSignupWizardStep(signupWizardCurrentStep + 1);
-}
-function signupWizardBack(){
-  setSignupWizardStep(signupWizardCurrentStep - 1);
 }
 async function requestPasswordReset(){
   try{
@@ -1596,8 +1620,9 @@ async function confirmPasswordReset(){
 }
 async function signup(){
   try{
-    if(!validateSignupStep(1) || !validateSignupStep(2) || !validateSignupStep(3) || !validateSignupStep(4)) return;
+    if(!validateSignup()) return;
     const plan = getSelectedPlan();
+    const place = signupAddressChoice || {};
     const createBtn = document.getElementById("signupCreateBtn");
     if(createBtn){ createBtn.disabled = true; createBtn.textContent = "Creazione account..."; }
     await api("/api/signup", {method:"POST", body:JSON.stringify({
@@ -1606,21 +1631,13 @@ async function signup(){
       email: val("signupEmail"),
       password: val("signupPass"),
       plan: plan,
-      company_phone: val("signupPhone") || val("signupCompanyPhone"),
-      company_vat: val("signupVat"),
-      company_fiscal_code: val("signupFiscalCode"),
-      company_pec: val("signupPec"),
-      company_sdi: val("signupSdi"),
-      company_address: val("signupAddress"),
-      company_city: val("signupCity"),
-      company_zip: val("signupZip"),
-      company_country: val("signupCountry") || "Italia",
-      company_legal_address: val("signupLegalAddress") || val("signupAddress"),
-      company_billing_address: val("signupBillingAddress") || val("signupLegalAddress") || val("signupAddress"),
+      company_phone: val("signupPhone"),
+      company_address: place.street || val("signupAddress"),
+      company_city: place.city || "",
+      company_zip: place.zip || "",
+      company_country: place.country || "Italia",
       company_sector: "distribution",
-      company_activity_type: val("signupActivityType"),
       company_size: val("signupCompanySize"),
-      daily_deliveries: val("signupDailyDeliveries"),
       // Le funzioni (finestre orarie, firma, foto, ZTL, sponda) non si scelgono più qui:
       // valgono le impostazioni predefinite, modificabili poi dalle Impostazioni.
     })});

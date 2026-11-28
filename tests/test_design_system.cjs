@@ -607,11 +607,12 @@ test('login page uses the shared access screen with the same content and actions
   assert.match(login,/onclick="login\(\)"[^>]*data-variant="primary">Accedi</);
   assert.match(login,/onclick="toggleSignup\(true\)">Registrati gratis</);
   assert.match(login,/<label class="gf-field__label" for="loginPass">Password<\/label><button type="button" id="forgotPasswordBtn"[^>]*onclick="toggleForgotPassword\(true\)">Password dimenticata\?</);
-  // Registrazione a passaggi con il componente gf-steps; stato gestito con aria-current.
-  assert.equal((login.match(/class="gf-step"/g)||[]).length,4);
-  assert.equal((login.match(/data-signup-step="\d"/g)||[]).length,4);
+  // Registrazione rapida in un solo pannello: niente passaggi, sede operativa in una riga con i suggerimenti.
+  assert.equal((login.match(/data-signup-step="\d"/g)||[]).length,0);
+  assert.match(login,/id="signupAddress"[^>]*required/);
+  assert.doesNotMatch(login,/id="signupVat"|id="signupPec"|id="signupSdi"/);
   const core=read('static/dashboard/js/core.js');
-  assert.match(core,/dot\.setAttribute\("aria-current", "step"\)/);
+  assert.match(core,/\/api\/signup\/address-suggestions/);
   assert.doesNotMatch(core,/loginCard\.style\.display|app\.style\.display/);
   const components=read(assets+'components.css');
   assert.match(components,/\.gf-auth__card\[data-size="lg"\]\{/);

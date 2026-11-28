@@ -243,7 +243,7 @@ def test_registration_policy_and_trial_catalog(env, monkeypatch):
         signup(SignupIn(**ADDRESS, username='audit-new', password='Audit-password-2026'), Response(), db)
     assert error.value.status_code == 400
     # Email e sede operativa sono obbligatorie.
-    for missing in ('email', 'company_address', 'company_city', 'company_zip'):
+    for missing in ('email', 'company_address'):
         with pytest.raises(HTTPException) as error:
             signup(SignupIn(**{**ADDRESS, missing: ''}, username='audit-new', password='Orbit!River47Cedar#'), Response(), db)
         assert error.value.status_code == 400

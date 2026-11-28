@@ -43,6 +43,28 @@ def _workspace_operational_for_user(user: User) -> bool:
 
 
 
+@router.get("/api/signup/address-suggestions")
+def signup_address_suggestions(request: Request, q: str = "", session: str = "", db: Session = Depends(get_db)):
+    """Sede operativa nella registrazione: suggerimenti Google Places mentre si scrive."""
+    from ..core.http_security import _client_ip
+    from ..services import signup_address
+    require_registration(db)
+    if len((q or "").strip()) < 4:
+        return []
+    signup_address.limit_visitor(_client_ip(request))
+    return signup_address.suggestions(db, q, session)
+
+
+@router.get("/api/signup/address-details")
+def signup_address_details(request: Request, place_id: str = "", session: str = "", db: Session = Depends(get_db)):
+    """Indirizzo scelto tra i suggerimenti: via, città, CAP e paese per la sede operativa."""
+    from ..core.http_security import _client_ip
+    from ..services import signup_address
+    require_registration(db)
+    signup_address.limit_visitor(_client_ip(request))
+    return signup_address.details(db, place_id, session)
+
+
 @router.post("/api/signup")
 def signup(data: SignupIn, response: Response, db: Session = Depends(get_db), background: BackgroundTasks = None):
     # Email dopo la risposta (un server email lento non rallenta la registrazione); senza coda, subito.
@@ -55,11 +77,10 @@ def signup(data: SignupIn, response: Response, db: Session = Depends(get_db), ba
         raise HTTPException(400, "Inserisci un nome utente di almeno 3 caratteri")
     if not email or "@" not in email:
         raise HTTPException(400, "Inserisci un'email valida per l'account")
-    # Sede operativa obbligatoria e completa, come nel modulo di registrazione.
-    for value, label in ((data.company_address, "la sede operativa"), (data.company_city, "la città della sede operativa"),
-                         (data.company_zip, "il CAP della sede operativa"), (data.company_country, "il paese della sede operativa")):
-        if not (value or "").strip():
-            raise HTTPException(400, f"Inserisci {label}")
+    # Sede operativa obbligatoria: un indirizzo completo in una riga (scelto dai suggerimenti Google).
+    # Città, CAP e paese arrivano dall'indirizzo scelto; i dati fiscali si completano poi dalla pagina Azienda.
+    if len((data.company_address or "").strip()) < 5:
+        raise HTTPException(400, "Inserisci la sede operativa")
     try:
         validate_password_strength(password, context_values=(username, email, data.company_name))
     except ValueError as exc:
