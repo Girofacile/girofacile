@@ -3,12 +3,20 @@ function markAuthReady(){
   document.body.dataset.gfAuth = 'ready';
 }
 
+// Il gestionale sul telefono usa per ora l'interfaccia del computer (viewport fisso a 1440 px);
+// accesso e registrazione invece sono pensati per il telefono e usano la sua larghezza vera.
+function useAuthViewport(phone){
+  const meta = document.querySelector('meta[name="viewport"]');
+  if(meta) meta.setAttribute('content', phone ? 'width=device-width, initial-scale=1' : 'width=1440');
+}
+
 function showGestionaleAfterLogin(isAdmin=false){
   // Dashboard aziendale: non attivare mai il vecchio menu Admin SaaS qui.
   // Il Super Admin usa /admin/login e /admin, separati dal gestionale aziendale.
   isAdmin = false;
   const loginCard = document.getElementById('loginCard');
   const app = document.getElementById('app');
+  useAuthViewport(false);
   if(loginCard) loginCard.classList.add('hidden');
   if(app) app.classList.remove('hidden');
   markAuthReady();
@@ -1293,6 +1301,7 @@ async function checkLogin(){
       return;
     }
     if(!me.authenticated){
+      useAuthViewport(true);
       markAuthReady();
       // Dalla pagina iniziale (pulsante Registrati, «Prova gratis» di un piano o email scritta)
       // si apre subito la registrazione: piano ed email li inserisce updateSignupPlanFeatures.

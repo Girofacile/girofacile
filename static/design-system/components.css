@@ -1114,6 +1114,47 @@ body[data-gf-surface] .gf-auth[data-backdrop] .gf-auth__footer a{color:var(--gf-
   body[data-gf-surface] .gf-auth__top{padding:var(--gf-space-4)}
   body[data-gf-surface] .gf-auth[data-backdrop] .gf-auth__card{padding:var(--gf-space-8) var(--gf-space-6)}
 }
+/* Telefono (sotto i 640 px) — approvato il 28/11/2026, variante A «Tutto blu»: sfondo blu notte con griglia
+   e onde di luce su tutto lo schermo, logo in bianco, riquadro bianco largo quasi quanto il telefono con campi
+   da dito; nella registrazione i passaggi diventano una riga di numeri e i campi una sola colonna. */
+@media (max-width:640px){
+  body[data-gf-surface] .gf-auth[data-backdrop] .gf-auth__top{padding:var(--gf-space-5) var(--gf-space-5) var(--gf-space-2)}
+  body[data-gf-surface] .gf-auth[data-backdrop] .gf-auth__stage{place-items:center;padding:var(--gf-space-4) var(--gf-space-3) var(--gf-space-6)}
+  body[data-gf-surface] .gf-auth[data-backdrop] .gf-auth__main{padding:0}
+  body[data-gf-surface] .gf-auth[data-backdrop] .gf-auth__card,body[data-gf-surface] .gf-auth[data-backdrop] .gf-auth__card:not([data-size="lg"]){
+    --gf-control-height:var(--gf-control-touch);
+    width:100%;padding:var(--gf-space-8) var(--gf-space-5);gap:var(--gf-space-6);border-radius:var(--gf-radius-lg);
+  }
+  body[data-gf-surface] .gf-auth[data-backdrop] .gf-auth__card :is(.gf-input,.gf-select,.gf-button:not([data-variant="link"])){font-size:var(--gf-font-lg) !important;min-height:var(--gf-control-touch)}
+  body[data-gf-surface] .gf-auth[data-backdrop] .gf-auth__card>.gf-button[data-variant="primary"]{width:100%}
+  body[data-gf-surface] .gf-auth[data-backdrop] .gf-form-grid{grid-template-columns:minmax(0,1fr)}
+  body[data-gf-surface] .gf-auth[data-backdrop] .gf-auth__card>.gf-cluster:first-child{display:none}
+  body[data-gf-surface] .gf-auth[data-backdrop] .gf-steps{grid-auto-flow:column}
+  body[data-gf-surface] .gf-auth[data-backdrop] .gf-step{grid-template-columns:minmax(0,1fr);justify-items:center;text-align:center}
+  body[data-gf-surface] .gf-auth[data-backdrop] .gf-step::before{grid-row:auto}
+  body[data-gf-surface] .gf-auth[data-backdrop] .gf-step small,body[data-gf-surface] .gf-auth[data-backdrop] .gf-step:not([aria-current]) strong{display:none}
+  body[data-gf-surface] .gf-auth[data-backdrop] .gf-step strong{font-size:var(--gf-font-xs)}
+  body[data-gf-surface] .gf-auth[data-backdrop] .gf-auth__card>.gf-cluster[data-justify="between"]{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:var(--gf-space-3)}
+  body[data-gf-surface] .gf-auth__backdrop::before,body[data-gf-surface] .gf-auth__backdrop::after{clip-path:none}
+  body[data-gf-surface] .gf-auth__backdrop::before{
+    background:
+      radial-gradient(70% 40% at 50% 45%,color-mix(in srgb,var(--gf-color-primary) 60%,transparent),transparent 75%),
+      radial-gradient(60% 30% at 100% 0,color-mix(in srgb,var(--gf-chart-7) 45%,transparent),transparent 75%),
+      var(--gf-color-nav);
+  }
+  body[data-gf-surface] .gf-auth__backdrop::after{
+    background-size:var(--gf-space-10) var(--gf-space-10);
+    mask-image:
+      repeating-radial-gradient(circle at 50% 40%,
+        var(--gf-auth-wave-rest) var(--gf-auth-wave),var(--gf-auth-wave-rest) calc(var(--gf-auth-wave) + 10%),
+        var(--gf-color-nav) calc(var(--gf-auth-wave) + 20%),var(--gf-auth-wave-rest) calc(var(--gf-auth-wave) + 30%),
+        var(--gf-auth-wave-rest) calc(var(--gf-auth-wave) + 40%)),
+      radial-gradient(120% 80% at 50% 40%,var(--gf-color-nav) 40%,transparent 95%);
+  }
+  body[data-gf-surface] .gf-auth[data-backdrop] .gf-auth__brand,body[data-gf-surface] .gf-auth[data-backdrop] .gf-auth__brand .gf-subtitle{color:var(--gf-color-on-nav)}
+  body[data-gf-surface] .gf-auth[data-backdrop] .gf-auth__footer{padding:var(--gf-space-4) var(--gf-space-5) var(--gf-space-6);color:var(--gf-color-nav-muted);text-align:center}
+  body[data-gf-surface] .gf-auth[data-backdrop] .gf-auth__footer a{color:var(--gf-color-nav-text)}
+}
 /* Banner in basso -------------------------------------------------------- */
 body[data-gf-surface] .gf-banner{
   position:fixed;left:50%;bottom:var(--gf-space-5);z-index:var(--gf-z-menu);transform:translateX(-50%);
